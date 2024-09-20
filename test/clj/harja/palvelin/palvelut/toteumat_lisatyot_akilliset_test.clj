@@ -279,11 +279,13 @@
                    :urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
                    :loppupvm (pvm/->pvm "19.9.2024")
                    :toteumat [{:maara 123 :tehtava {:id 3118 :tehtava "KT-valuasfalttipaikkaus K" :yksikko "tonni", :rahavaraus nil}
-                               :sijainti sijainti}]})]
+                               :sijainti sijainti}]})
+        onnistuneen-id-1 (first (lisaa-toteuma (toteuma sijainti-ok-1)))
+        onnistuneen-id-2 (first (lisaa-toteuma (toteuma sijainti-ok-2)))]
     (is (thrown? Exception (lisaa-toteuma (toteuma sijainti-virheella-1))) "Arvo puuttuu")
     (is (thrown? Exception (lisaa-toteuma (toteuma sijainti-virheella-2))) "Arvo puuttuu")
     (is (thrown? Exception (lisaa-toteuma (toteuma sijainti-virheella-3))) "Arvo puuttuu")
     (is (thrown? Exception (lisaa-toteuma (toteuma sijainti-virheella-4))) "Osoitearvojen oltava numeerit")
 
-    (is (not (thrown? Exception (lisaa-toteuma (toteuma sijainti-ok-1)))))
-    (is (not (thrown? Exception (lisaa-toteuma (toteuma sijainti-ok-2)))))))
+    (is (pos-int? onnistuneen-id-1) "Palautuu positiivinen ID eikä synny poikkeutta")
+    (is (pos-int? onnistuneen-id-2) "Palautuu positiivinen ID eikä synny poikkeutta")))
