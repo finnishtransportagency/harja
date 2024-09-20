@@ -44,7 +44,7 @@
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.48"]
-                 [http-kit "2.5.3"]
+                 [http-kit "2.8.0"]
                  [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
