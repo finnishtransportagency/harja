@@ -68,7 +68,7 @@
               (first elementti)
               :vain-arvo)))
 
-(def ^:const +max-rivimaara+ 1000)
+(def ^:const +max-rivimaara-default+ 1000)
 
 (defn cdata
   "Käsittele arvo puhtaana tekstinä."
@@ -333,16 +333,16 @@
                            (cdata (str naytettava-arvo))
                            naytettava-arvo)]])])))))
 
-(defn- taulukko-alaosa [rivien-maara sarakkeet viimeinen-rivi-yhteenveto?]
-  (when (> rivien-maara +max-rivimaara+)
+(defn- taulukko-alaosa [rivien-maara sarakkeet viimeinen-rivi-yhteenveto? rivi-raja]
+  (when (> rivien-maara rivi-raja)
     [:fo:table-row
      [:fo:table-cell {:padding "1mm"
                       :number-columns-spanned (count sarakkeet)}
       [:fo:block {:space-after "0.5em"}]
-      [:fo:block (str "Taulukossa näytetään vain ensimmäiset " +max-rivimaara+ " rivia. "
-                      "Tarkenna hakuehtoa. "
-                      (when viimeinen-rivi-yhteenveto?
-                        "Yhteenveto on laskettu kaikista riveistä"))]]]))
+      [:fo:block (str "Taulukossa näytetään vain ensimmäiset " rivi-raja " riviä. "
+                   "Tarkenna hakuehtoa tai käytä Excel-vientiä."
+                   (when viimeinen-rivi-yhteenveto?
+                     "Yhteenveto on laskettu kaikista riveistä"))]]]))
 
 (defn taulukko-header [{:keys [oikealle-tasattavat-kentat] :as optiot} sarakkeet]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
@@ -372,11 +372,12 @@
            [:fo:block (cdata otsikko)]])
         sarakkeet)]]))
 
-(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? tyhja] :as optiot}]
+(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? tyhja rajoita-pdf-rivimaara] :as optiot}]
   (let [rivien-maara (count data)
         viimeinen-rivi (last data)
-        data (if (> (count data) +max-rivimaara+)
-               (vec (concat (take +max-rivimaara+ data)
+        rivi-raja (or rajoita-pdf-rivimaara +max-rivimaara-default+)
+        data (if (> (count data) rivi-raja)
+               (vec (concat (take rivi-raja data)
                             (when viimeinen-rivi-yhteenveto?
                               [viimeinen-rivi])))
                data)]
@@ -389,7 +390,7 @@
          [:fo:block {:space-after "0.5em"}]
          [:fo:block (or tyhja "Ei tietoja")]]])
      (taulukko-rivit sarakkeet data viimeinen-rivi optiot)
-     (taulukko-alaosa rivien-maara sarakkeet viimeinen-rivi-yhteenveto?)]))
+     (taulukko-alaosa rivien-maara sarakkeet viimeinen-rivi-yhteenveto? rivi-raja)]))
 
 (defn- skaalattu-fontin-koko [sarakkeet]
   (let [sarakkeet-lkm (count sarakkeet)]
@@ -546,12 +547,22 @@
                    (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
                      [:fo:block {:padding "1mm 0" :border "solid 0.2mm black" :margin-bottom "2mm"}
                       (muodosta-pdf [:yhteenveto tiedot])])]
+
             (keep identity
-              (mapcat #(when %
-                         (if (seq? %)
-                           (map muodosta-pdf %)
-                           [(muodosta-pdf %)]))
+              (mapcat (fn [elem]
+                        (when elem
+                          (if (seq? elem)
+                            ;; Passaa taulukolle pdf rajoitus 
+                            (map #(if (= (first %) :taulukko)
+                                    (muodosta-pdf (update % 1 assoc :rajoita-pdf-rivimaara (:rajoita-pdf-rivimaara raportin-tunnistetiedot)))
+                                    (muodosta-pdf %))
+                              elem)
+                            ;; Passaa taulukolle pdf rajoitus 
+                            (if (= (first elem) :taulukko)
+                              [(muodosta-pdf (update elem 1 assoc :rajoita-pdf-rivimaara (:rajoita-pdf-rivimaara raportin-tunnistetiedot)))]
+                              [(muodosta-pdf elem)]))))
                 sisalto))
+
             #_[[:fo:block {:id "raportti-loppu"}]])))
       {:tiedostonimi (str tiedoston-nimi ".pdf")})))
 

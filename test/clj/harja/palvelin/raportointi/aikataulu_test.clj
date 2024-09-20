@@ -256,7 +256,7 @@
         aikajana (-> vastaus (nth 2))
         kohdeluettelo (-> vastaus last)]
     (is (vector? vastaus))
-    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Ylläpidon aikataulu 2023"}))
+    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Ylläpidon aikataulu 2023" :rajoita-pdf-rivimaara nil}))
     (is (= aikajana odotettu-aikajana-2023))
     (is (= kohdeluettelo odotettu-kohdeluettelo-2023))))
 
@@ -272,6 +272,6 @@
         aikajana (-> vastaus (nth 2))
         kohdeluettelo (-> vastaus last)]
     (is (vector? vastaus))
-    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Ylläpidon aikataulu 2024"}))
+    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Ylläpidon aikataulu 2024" :rajoita-pdf-rivimaara nil}))
     (is (= aikajana odotettu-aikajana-2024))
     (is (= kohdeluettelo odotettu-kohdeluettelo-2024))))

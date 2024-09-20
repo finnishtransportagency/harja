@@ -240,7 +240,7 @@
          {:urakka (:urakka @tila/yleiset)
           :soluja (count summa-tavoite-ja-kattohinta)
           :indeksit-saatavilla? indeksit-saatavilla?}
-         {::t/hankintakustannukset {:nimi "Hankintakustannukset"
+         {::t/hankintakustannukset {:nimi "Suunnitellut hankinnat"
                                     :summat summa-hankinnat
                                     :suunnitelma-vahvistettu? hankintakustannukset-vahvistettu?}
           ::t/tavoitehintaiset-rahavaraukset {:nimi "Rahavaraukset"
@@ -351,7 +351,6 @@
                                    ;; Hankintakustannukset osio
                                    [[hankintakustannukset-osio/suunnitellut-hankinnat-grid true nil]
                                     [hankintakustannukset-osio/hankinnat-laskutukseen-perustuen-grid true nil]
-                                    #_ [hankintakustannukset-osio/rahavarausten-grid false nil]
 
                                     ;; Erillishankinnat osio
                                     [erillishankinnat-osio/erillishankinnat-grid true #{:erillishankinnat-disablerivit}]
