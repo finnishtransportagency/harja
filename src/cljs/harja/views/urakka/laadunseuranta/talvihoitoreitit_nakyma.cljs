@@ -58,7 +58,7 @@
                [:div.semibold.musta.body-text (str (:nimi rivi))]]
               [:div.body-text.harmaa (:pituus rivi)]]
 
-             [:div.basis256.grow2.shrink3.rajaus
+             [:div.basis384.grow2.shrink3.rajaus
               [:div.body-text.semibold.musta "Hoitoluokkien osuudet reitillä (km)"]
               [:div {:style {:display "flex"}}
                (doall (for [h (:hoitoluokat rivi)]
@@ -67,7 +67,7 @@
                          [:div.body-text.musta {:style {:padding-right "10px"}} (:hoitoluokka h)]
                          [:div.small-text.musta {:style {:padding-right "10px"}} (fmt/desimaaliluku-opt (:pituus h) 2) ]]))]]
 
-             [:div.basis256.grow2.shrink3.rajaus
+             [:div.basis384.grow2.shrink3.rajaus
               [:div.body-text.semibold.musta "Kalusto (kpl)"]
               [:div {:style {:display "flex"}}
                (doall (for [kalusto (:kalustot rivi)]
@@ -76,7 +76,7 @@
                          [:div.body-text.musta {:style {:padding-right "10px"}} (:kalustotyyppi kalusto)]
                          [:div.small-text.musta {:style {:padding-right "10px"}} (:kalustomaara kalusto) ]]))]]
 
-             [:div.basis256.grow2.shrink3
+             [:div.basis256.grow2.shrink2
               [:div.body-text.strong.musta ""]
               ;; Näytä valittu rivi kartalla tai piilota se
               [:<>
@@ -87,17 +87,20 @@
             ;; Otsikkokoponentin voi avata ja avaamisen jälkeen näytetään lista (grid) reiteistä
             (when (get talvihoitoreittien-tilat (:id rivi))
               (when (> reittien-maara 0)
-                [grid/grid
-                 {:salli-valiotsikoiden-piilotus? true
-                  :valiotsikoiden-alkutila :kaikki-kiinni
-                  :tunniste :id
-                  :reunaviiva? true}
-                 [{:otsikko "Tie" :nimi :tie :tyyppi :numero :tasaa :vasen}
-                  {:otsikko "Tieosoite" :nimi :formatoitu-tr :tyyppi :string :tasaa :vasen}
-                  {:otsikko "Hoitoluokka" :nimi :hoitoluokka :tyyppi :string :tasaa :vasen}
-                  {:otsikko "Suunniteltu pituus (km)" :nimi :pituus :tyyppi :numero :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea}
-                  {:otsikko "Laskettu pituus (km)" :nimi :laskettu_pituus :tyyppi :numero :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea}]
-                 (:reitit rivi)]))])))]))
+                [:div {:style {:max-width "900px"}}
+                 [grid/grid
+                  {:salli-valiotsikoiden-piilotus? true
+                   :valiotsikoiden-alkutila :kaikki-kiinni
+                   :tunniste :id
+                   :reunaviiva? true}
+                  [{:otsikko "Tie" :nimi :tie :tyyppi :string :tasaa :vasen :leveys 1}
+                   {:otsikko "Tieosoite" :nimi :formatoitu-tr :tyyppi :string :tasaa :vasen :leveys 3}
+                   {:otsikko "Hoitoluokka" :nimi :hoitoluokka :tyyppi :string :tasaa :vasen :leveys 2}
+                   {:otsikko "Suunniteltu pituus (km)" :nimi :pituus :tyyppi :numero
+                    :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea :leveys 2}
+                   {:otsikko "Laskettu pituus (km)" :nimi :laskettu_pituus :tyyppi :numero
+                    :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea :leveys 2}]
+                  (:reitit rivi)]]))])))]))
 
 (defn *talvihoitoreitit [e! app]
   (komp/luo
