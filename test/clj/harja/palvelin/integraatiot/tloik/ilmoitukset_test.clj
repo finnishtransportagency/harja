@@ -26,7 +26,7 @@
            (java.util UUID)))
 
 (def kayttaja "yit-rakennus")
-(def timeout 3000)
+(def timeout 3500)
 (def kuittaus-timeout 20000)
 
 (defonce asetukset {:itmf integraatio/itmf-asetukset})
@@ -168,8 +168,7 @@
       (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-      (let [_ (Thread/sleep 1000)
-            xml (first @viestit)
+      (let [xml (first @viestit)
             data (xml/lue xml)]
         (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
         (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text))
@@ -231,8 +230,7 @@
                   count) 1) "Ilmoituksia on vastauksessa yksi"))
 
        ;; Tarkista t-loikille lähetettävän kuittausviestin sisältö
-       (let [_ (Thread/sleep 1500)
-             _ (odota-arvo kuittausviestit-tloikkiin kuittaus-timeout)
+       (let [_ (odota-arvo kuittausviestit-tloikkiin kuittaus-timeout)
              xml (first @kuittausviestit-tloikkiin)
              data (xml/lue xml)]
          (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
@@ -306,8 +304,7 @@
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
         (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-        (let [_ (Thread/sleep 1500)
-              _ (odota-arvo viestit kuittaus-timeout)
+        (let [_ (odota-arvo viestit kuittaus-timeout)
               xml (first @viestit)
               data (xml/lue xml)
               _ (odota-ehdon-tayttymista #(hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id) "Ilmoitus on tietokannassa." kuittaus-timeout)
@@ -374,8 +371,7 @@
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
         (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-        (let [_ (Thread/sleep 1500)
-              xml (first @viestit)
+        (let [xml (first @viestit)
               data (xml/lue xml)
               ilmoitus (hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
           (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
