@@ -131,8 +131,7 @@
                                                loppupvm)))
      [:taulukko {:otsikko otsikko
                  :tyhja (if (empty? laatupoikkeamarivit) "Ei raportoitavia laatupoikkeamia.")
-                 :sheet-nimi raportin-nimi
-                 :lisaa-excel-valiotsikot true}
+                 :sheet-nimi raportin-nimi}
       [{:leveys 15 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä" :fmt :pvm}
        {:leveys 20 :otsikko "Koh\u00ADde"}
        {:leveys 10 :otsikko "Te\u00ADki\u00ADjä"}
