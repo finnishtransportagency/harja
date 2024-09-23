@@ -300,7 +300,8 @@
             ilmoitus-id (rand-int 99999999)
             sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
-        (async/<!! (async/timeout timeout))
+        ;; Lisätään odotusaikaa tähän tapaukseen
+        (async/<!! (async/timeout (+ 1000 timeout)))
         (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
 
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
@@ -367,7 +368,9 @@
             ilmoitus-id (rand-int 99999999)
             sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
-        (async/<!! (async/timeout timeout))
+
+        ;; Lisätään odotusaikaa tähän tapaukseen
+        (async/<!! (async/timeout (+ 1000 timeout)))
         (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
 
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
