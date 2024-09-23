@@ -52,6 +52,17 @@
       "separateMultipleMinor": true
     },
     {
+      "description": "Erottele minor päivitykset (jokainen minor stream erikseen) org.clojure:core.async kirjastolle",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.clojure:core.async"
+      ],
+      "separateMajorMinor": true,
+      "separateMultipleMinor": true
+    },
+    {
       "description": "Ryhmittele org.geotools:gt-* päivitykset",
       "matchDatasources": [
         "clojure"
