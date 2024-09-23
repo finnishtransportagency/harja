@@ -110,7 +110,7 @@
         "clojure"
       ],
       "matchPackageNames": [
-        "reagent"
+        "reagent:reagent"
       ],
       "separateMajorMinor": true,
       "separateMultipleMinor": true
