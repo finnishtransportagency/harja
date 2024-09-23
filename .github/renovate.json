@@ -72,7 +72,7 @@
       ],
       "groupName": "org.geotools",
       "separateMajorMinor": true,
-      "separateMultipleMajor": true,
+      "separateMultipleMajor": true
     },
     {
       "description": "Ryhmittele org.apache.poi:* päivitykset",
