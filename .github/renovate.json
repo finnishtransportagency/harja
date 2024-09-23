@@ -63,14 +63,16 @@
       "separateMultipleMinor": true
     },
     {
-      "description": "Ryhmittele org.geotools:gt-* päivitykset",
+      "description": "Ryhmittele org.geotools:gt-* päivitykset. Erottele major päivtykset omiin PR:iin",
       "matchDatasources": [
         "clojure"
       ],
       "matchPackageNames": [
         "org.geotools:gt-*"
       ],
-      "groupName": "org.geotools"
+      "groupName": "org.geotools",
+      "separateMajorMinor": true,
+      "separateMultipleMajor": true,
     },
     {
       "description": "Ryhmittele org.apache.poi:* päivitykset",
@@ -101,6 +103,17 @@
         "com.cognitect:transit-*"
       ],
       "groupName": "com.cognitect:transit"
+    },
+    {
+      "description": "Erottele Reagent päivitykset, jokainen minor stream erikseen",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "reagent"
+      ],
+      "separateMajorMinor": true,
+      "separateMultipleMinor": true
     }
   ]
 }
