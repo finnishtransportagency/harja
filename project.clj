@@ -110,7 +110,7 @@
                  [org.apache.poi/poi "5.2.5"]
                  [org.apache.poi/poi-scratchpad "5.2.5"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "0.2.6"]
+                 [org.clojure/data.json "0.2.7"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
