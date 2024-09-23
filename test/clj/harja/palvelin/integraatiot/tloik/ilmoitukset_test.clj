@@ -168,7 +168,8 @@
       (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-      (let [xml (first @viestit)
+      (let [_ (odota-arvo viestit kuittaus-timeout)
+            xml (first @viestit)
             data (xml/lue xml)]
         (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
         (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text))
@@ -371,7 +372,8 @@
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
         (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-        (let [xml (first @viestit)
+        (let [_ (odota-arvo viestit kuittaus-timeout)
+              xml (first @viestit)
               data (xml/lue xml)
               ilmoitus (hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
           (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
