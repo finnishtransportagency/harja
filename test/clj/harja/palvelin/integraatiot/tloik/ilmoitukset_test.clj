@@ -231,7 +231,7 @@
                   count) 1) "Ilmoituksia on vastauksessa yksi"))
 
        ;; Tarkista t-loikille lähetettävän kuittausviestin sisältö
-       (let [_ (Thread/sleep 1000)
+       (let [_ (Thread/sleep 1500)
              _ (odota-arvo kuittausviestit-tloikkiin kuittaus-timeout)
              xml (first @kuittausviestit-tloikkiin)
              data (xml/lue xml)]
@@ -306,7 +306,7 @@
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
         (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-        (let [_ (Thread/sleep 1000)
+        (let [_ (Thread/sleep 1500)
               _ (odota-arvo viestit kuittaus-timeout)
               xml (first @viestit)
               data (xml/lue xml)
