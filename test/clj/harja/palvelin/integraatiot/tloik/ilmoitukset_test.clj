@@ -209,7 +209,7 @@
            ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true&suljeVastauksenJalkeen=false"]
                                   kayttaja portti))
            testi-sanoma (testi-ilmoitus-sanoma)]
-       (async/<!! (async/timeout timeout))
+       (async/<!! (async/timeout (+ 1000 timeout)))
        (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ testi-sanoma)
 
        (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
@@ -370,7 +370,7 @@
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
 
         ;; Lisätään odotusaikaa tähän tapaukseen
-        (async/<!! (async/timeout (+ 1000 timeout)))
+        (async/<!! (async/timeout (+ 2000 timeout)))
         (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
 
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
