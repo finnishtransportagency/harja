@@ -103,7 +103,9 @@ BEGIN
     SELECT id INTO rv_tunneli_id FROM rahavaraus WHERE nimi = 'Tunneleiden hoito';
     SELECT id INTO rv_lupaukseen1_id FROM rahavaraus WHERE nimi ILIKE '%Tilaajan rahavaraus kannustinjärjestelmään%';
     SELECT id
-      INTO rv_muut_tavoitehintaan_id FROM rahavaraus WHERE nimi ILIKE '%Muut tavoitehintaan vaikuttavat rahavaraukset%';
+      INTO rv_muut_tavoitehintaan_id
+      FROM rahavaraus
+     WHERE nimi ILIKE '%Muut tavoitehintaan vaikuttavat rahavaraukset%';
 
     -- Haetaan tehtävien id:t
     SELECT id INTO t_tunneli_id FROM tehtava WHERE nimi ILIKE '%Tunneleiden hoito%';
@@ -366,3 +368,95 @@ UPDATE maksuera m
            JOIN urakka u ON tpi.urakka = u.id
  WHERE m.toimenpideinstanssi = tpi.id
    AND tp.koodi IN ('23116', '20107');
+
+
+-- Merkitään rahavarausosiot vahvistetuiksi, jos hankintakulut on vahvistettu ja jos Muut tavoitehintaan vaikuttavat rahavaraukset ei ole valittuna
+DO
+$$
+    DECLARE
+        rv_muut_tavoitehintaan_id INTEGER;
+        rivi                      RECORD;
+        rahavaraus_rivi           RECORD;
+        alkuvuosi                 INTEGER;
+        loppuvuosi                INTEGER;
+        suunnitelmatila           RECORD;
+    BEGIN
+        -- Haetaan 'Muut tavoitehintaan vaikuttavat rahavaraukset' rahavarauksen id
+        SELECT id
+          INTO rv_muut_tavoitehintaan_id
+          FROM rahavaraus
+         WHERE nimi ILIKE '%Muut tavoitehintaan vaikuttavat rahavaraukset%';
+
+        -- urakat ja vuodet, joiden hankintakustannukset on vahvistettu
+        FOR rivi IN
+            SELECT skt.hoitovuosi, skt.urakka, u.alkupvm, u.loppupvm, s.id AS sopimus
+              FROM suunnittelu_kustannussuunnitelman_tila skt
+                       JOIN urakka u ON skt.urakka = u.id
+                       JOIN sopimus s ON skt.urakka = s.urakka
+             WHERE skt.osio = 'hankintakustannukset'
+               AND skt.vahvistettu IS TRUE
+             ORDER BY skt.urakka, skt.hoitovuosi
+
+            LOOP
+                alkuvuosi = EXTRACT(YEAR FROM rivi.alkupvm) - 1 + rivi.hoitovuosi;
+                loppuvuosi = EXTRACT(YEAR FROM rivi.alkupvm) + rivi.hoitovuosi;
+
+                RAISE NOTICE '----------------------------------------------------------------';
+                RAISE NOTICE 'Löydettiin vahvistetut hankintakustannukset urakalle: % hoitovuodelle: % alkuvuosi: %, loppuvuosi: %',
+                    rivi.urakka, rivi.hoitovuosi, alkuvuosi, loppuvuosi;
+                -- Onko urakalla jo rahavaraus 'Muut tavoitehintaan vaikuttavat rahavaraukset' valittuna
+                SELECT *
+                  INTO rahavaraus_rivi
+                  FROM rahavaraus_urakka ru
+                 WHERE ru.rahavaraus_id = rv_muut_tavoitehintaan_id
+                   AND ru.urakka_id = rivi.urakka;
+
+                RAISE NOTICE 'Rahavaraus_rivi: %', rahavaraus_rivi;
+
+                -- Jos rahavarausta ei ole, niin voidaan vahvistaa osio
+                CASE
+                    WHEN rahavaraus_rivi IS NULL
+                        THEN RAISE NOTICE 'Merkitään vahvistetuksi kustannusarvioitu_työ -tauluun urakalle % hoitovuodelle %, alkuvuosi: %, loppuvuosi: %', rivi.urakka, rivi.hoitovuosi, alkuvuosi, loppuvuosi;
+                        -- Merkitään jokainen rahavarausrivi vahvistetuksi kustaannusarvioitu_tyo tauluun
+                             UPDATE kustannusarvioitu_tyo
+                                SET indeksikorjaus_vahvistettu = NOW()
+                              WHERE sopimus = rivi.sopimus
+                                AND osio = 'tavoitehintaiset-rahavaraukset'
+                                AND (
+                                  (vuosi = alkuvuosi AND kuukausi > 9)
+                                      OR
+                                  (vuosi = loppuvuosi AND kuukausi < 10));
+
+                        -- Merkitään itse osio vahvistetuksi
+                        -- Mutta varmistetaan, että onko sillä vielä tilaa olemassa
+                             SELECT *
+                               INTO suunnitelmatila
+                               FROM suunnittelu_kustannussuunnitelman_tila
+                              WHERE urakka = rivi.urakka
+                                AND hoitovuosi = rivi.hoitovuosi
+                                AND osio = 'tavoitehintaiset-rahavaraukset';
+
+                             RAISE NOTICE 'Suunnitelmatila: %', suunnitelmatila;
+                             CASE
+                                 WHEN suunnitelmatila IS NULL
+                                     THEN RAISE NOTICE 'Lisätään vahvistus suunnittelu_kustannussuunnitelman_tila urakka %, hoitovuosi: %, alkuvuosi: %, loppuvuosi: %',
+                                              rivi.urakka, rivi.hoitovuosi, alkuvuosi, loppuvuosi;
+                                          INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, hoitovuosi, osio, vahvistettu, luoja, luotu)
+                                          VALUES (rivi.urakka, rivi.hoitovuosi, 'tavoitehintaiset-rahavaraukset', TRUE,
+                                                  (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
+
+                                 ELSE RAISE NOTICE 'Suunnitelmatila ei ole null, joten ajetaan päivitys';
+                                      UPDATE suunnittelu_kustannussuunnitelman_tila
+                                         SET vahvistettu = TRUE,
+                                             muokkaaja   = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+                                             muokattu    = NOW()
+                                       WHERE urakka = rivi.urakka
+                                         AND hoitovuosi = rivi.hoitovuosi
+                                         AND osio = 'tavoitehintaiset-rahavaraukset';
+                                 END CASE;
+                    ELSE RAISE NOTICE 'Ei vahvisteta urakalle % hoitovuodelle %, alkuvuosi: %, loppuvuosi: % , rahavarus_id: %, rahavaraus_urakka_id: %',
+                        rivi.urakka, rivi.hoitovuosi, alkuvuosi, loppuvuosi, rv_muut_tavoitehintaan_id, rahavaraus_rivi.id;
+                    END CASE;
+            END LOOP;
+    END
+$$;
