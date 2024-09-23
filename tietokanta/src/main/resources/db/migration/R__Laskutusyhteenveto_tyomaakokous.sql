@@ -867,13 +867,13 @@ BEGIN
     FOR rahavaraus IN
         SELECT 
           rv.id, 
-          rv.nimi 
+          COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) AS nimi
         FROM rahavaraus rv 
         -- Näytetään vaan rahavaraukset mitkä urakalle asetettu (hallinta)
         JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id  
         WHERE rvu.urakka_id = ur
         -- Sorttaa aakkosilla, nämä tulee tässä järjestyksessä käyttöliittymään asti
-        ORDER BY rv.nimi
+        ORDER BY COALESCE(rvu.urakkakohtainen_nimi, rv.nimi)
     LOOP
         -- Resetoi hoitokausi / laskutetaan 
         rv_val_aika_yht := 0;
