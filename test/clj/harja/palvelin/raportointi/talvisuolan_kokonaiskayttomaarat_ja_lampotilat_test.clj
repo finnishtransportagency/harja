@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.talvisuolan_kokonaiskayttomaarat_ja_lampotilat_test
+(ns harja.palvelin.raportointi.talvisuolan-kokonaiskayttomaarat-ja-lampotilat-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [harja.pvm :as pvm]
@@ -127,7 +127,8 @@
 
       (is (= vastaus
             [:raportti {:nimi "Oulun MHU 2019-2024"
-                        :orientaatio :landscape}
+                        :orientaatio :landscape
+                        :rajoita-pdf-rivimaara nil}
              [:taulukko {:otsikko (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu 01.10.2019 - 30.09." (inc (apply max hoitovuodet))), :tyhja nil, :sheet-nimi "Talvihoitosuolat"}
               [{:otsikko "Hoitovuosi", :leveys 1, :fmt :kokonaisluku, :tasaa :vasen}
                {:otsikko "Keskilämpötilojen keskiarvo tarkastelujaksolla (°C)", :leveys 1, :fmt :numero, :tasaa :oikea}

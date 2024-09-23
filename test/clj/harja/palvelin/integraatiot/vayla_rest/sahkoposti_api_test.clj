@@ -467,7 +467,7 @@
         _ (odota-ehdon-tayttymista #(realized? vastaus) "Urakoitsija vastaa, että toimenpidepyyntö on tullut perille." ehdon-timeout)
         ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
         ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
-    (is (= "kuittaamaton" (:tila ilmoitus)))
+    (is (= "ei-valitetty" (:tila ilmoitus)))
     (is (= 0 (count ilmoitustoimenpiteet)) "Ilmoitustoimenpide ei ole valitys vaiheessa menossa.")))
 
 (deftest vastaanota-haro-sahkoposti-xml-api-rajapintaan

@@ -74,6 +74,7 @@
     [harja.palvelin.palvelut.hallinta.urakoiden-lyhytnimet :as urakoidenlyhytnimet-hallinta]
     [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
+    [harja.palvelin.palvelut.hallinta.lupaukset-palvelu :as lupaukset-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
     [harja.palvelin.palvelut.hallinta.kojelauta :as kojelauta-hallinta]
@@ -811,6 +812,11 @@
       :tarjoushinnat-hallinta
       (component/using
         (tarjoushinnat-hallinta/->TarjoushinnatHallinta)
+        [:http-palvelin :db])
+      
+      :lupaukset-hallinta
+      (component/using
+        (lupaukset-hallinta/->LupauksetHallinta)
         [:http-palvelin :db])
 
       :rahavaraukset-hallinta

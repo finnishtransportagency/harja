@@ -4,9 +4,7 @@
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
@@ -50,7 +48,8 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Soratietarkastusraportti"
-                     :orientaatio :landscape}
+                     :orientaatio :landscape
+                     :rajoita-pdf-rivimaara nil}
                     [:taulukko
                      {:korosta-rivit #{0
                                        1
