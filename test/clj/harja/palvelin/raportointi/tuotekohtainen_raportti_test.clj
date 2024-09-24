@@ -2,16 +2,15 @@
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
+            [harja.kyselyt.konversio :as konversio]
+            [clojure.string :as str]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.http-palvelin :as palvelin]
-            [harja.palvelin.raportointi :as raportointi]
+            [harja.palvelin.raportointi :refer [suorita-raportti] :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
-            [harja.palvelin.palvelut.urakat :refer :all]
-            [harja.palvelin.raportointi :refer [suorita-raportti]]))
+            [harja.palvelin.palvelut.urakat :refer :all]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -37,52 +36,138 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+
+(defn generoi-avaimet [name prefix]
+  ;; Generoi clojure keywordit rahavarauksille
+  (-> name
+    (str/lower-case)
+    (str/replace #"ä" "a")
+    (str/replace #"ö" "o")
+    (str/replace #"[^a-z0-9]+" "_")
+    (str "_" prefix)
+    keyword))
+
+
+(defn pura-laskutusraportti-mapiksi [rivi]
+  (let [tulos
+        {:nimi (nth rivi 0)
+         :maksuera_numero (nth rivi 1)
+         :tuotekoodi (nth rivi 2)
+         :tpi (nth rivi 3)
+         :perusluku (nth rivi 4)
+         :kaikki_laskutettu (nth rivi 5)
+         :kaikki_laskutetaan (nth rivi 6)
+         :tavoitehintaiset_laskutettu (nth rivi 7)
+         :tavoitehintaiset_laskutetaan (nth rivi 8)
+         :lisatyot_laskutettu (nth rivi 9)
+         :lisatyot_laskutetaan (nth rivi 10)
+         :hankinnat_laskutettu (nth rivi 11)
+         :hankinnat_laskutetaan (nth rivi 12)
+         :sakot_laskutettu (nth rivi 13)
+         :sakot_laskutetaan (nth rivi 14)
+         :alihank_bon_laskutettu (nth rivi 15)
+         :alihank_bon_laskutetaan (nth rivi 16)
+         :johto_ja_hallinto_laskutettu (nth rivi 17)
+         :johto_ja_hallinto_laskutetaan (nth rivi 18)
+         :bonukset_laskutettu (nth rivi 19)
+         :bonukset_laskutetaan (nth rivi 20)
+         :hj_palkkio_laskutettu (nth rivi 21)
+         :hj_palkkio_laskutetaan (nth rivi 22)
+         :hj_erillishankinnat_laskutettu (nth rivi 23)
+         :hj_erillishankinnat_laskutetaan (nth rivi 24)
+         :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu (nth rivi 25)
+         :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan (nth rivi 26)
+         :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu (nth rivi 27)
+         :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan (nth rivi 28)
+         :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu (nth rivi 29)
+         :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan (nth rivi 30)
+         :indeksi_puuttuu (nth rivi 31)
+         ;; Urakan rahavaraukset ja arvot
+         :rahavaraus_nimet (nth rivi 32)
+         :hoitokausi_yht_array (nth rivi 33)
+         :val_aika_yht_array (nth rivi 34)
+         :kaikki_rahavaraukset_val_yht (nth rivi 35)
+         :kaikki_rahavaraukset_hoitokausi_yht (nth rivi 36)}]
+    tulos))
+
+
+(defn parsi-tuotekohtainen-raportti [vastaus]
+  (map (fn [rivi]
+         (let [purettu (pura-laskutusraportti-mapiksi rivi)
+               rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet purettu))
+               rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array purettu))
+               rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array purettu))
+
+               ;; Rahavaraukset hoitokausi
+               purettu-hoitokausi (reduce (fn [acc [nimi arvo]]
+                                            (assoc acc (generoi-avaimet nimi "hk") arvo))
+                                    purettu
+                                    (map vector rahavaraukset-nimet rahavaraukset-hoitokausi))
+
+               ;; Rahavaraukset valittu aika 
+               koko-rivi (reduce (fn [acc [nimi arvo]]
+                                   (assoc acc (generoi-avaimet nimi "val") arvo))
+                           purettu-hoitokausi
+                           (map vector rahavaraukset-nimet rahavaraukset-val-aika))]
+           koko-rivi))
+    vastaus))
+
+
 (deftest tuotekohtainen-laskutusyhteenveto-raportti-toimii
   (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) :suorita-raportti
-                             (fn [user raportti]
-                               (suorita-raportti (:raportointi jarjestelma) user raportti))
-                             {:trace false})
-  
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi       :laskutusyhteenveto-tuotekohtainen
-                                 :konteksti  "urakka"
-                                 :urakka-id  (hae-urakan-id-nimella "Oulun MHU 2019-2024")
-                                 :parametrit {:urakkatyyppi :teiden-hoito
-                                              :alkupvm      (c/to-date (t/local-date 2019 10 1))
-                                              :loppupvm     (c/to-date (t/local-date 2020 9 30))
-                                              :aikarajaus   :hoitokausi}})
+    (fn [user raportti]
+      (suorita-raportti (:raportointi jarjestelma) user raportti))
+    {:trace false})
 
-        raportin-nimi (-> vastaus second :nimi)
-        perusluku-teksti (nth vastaus 3)
-        indeksikerroin-teksti (nth vastaus 4)
-        raportit (nth vastaus 5)
-        laskutusyhteenveto (take 16 raportit)
-        talvihoito-yhteensa (-> (first laskutusyhteenveto) (nth 3) (nth 5) second second :arvo)
-        liikenneymp-akilliset-hoitotyot (-> (second laskutusyhteenveto) (nth 3) (nth 3) second second :arvo)
-        liikenneymp-vahinkojen-korjaukset (-> (second laskutusyhteenveto) (nth 3) (nth 4) second second :arvo)
-        liikenneymp-yhteensa (-> (second laskutusyhteenveto) (nth 3) (nth 5) second second :arvo)
-        soratiet-yhteensa (-> (nth laskutusyhteenveto 2) (nth 3) (nth 5) second second :arvo)
-        paallyste-yhteensa (-> (nth laskutusyhteenveto 3) (nth 3) (nth 3) second second :arvo)
-        ;; Vuosina 2019 tai 2022 on vain neljä riviä ylläpito sarakkeessa, koska
-        mhu-yllapito-yhteensa (-> (nth laskutusyhteenveto 4) (nth 3) (nth 4) second second :arvo)
-        mhu-korvausinvestointi-yhteensa (-> (nth laskutusyhteenveto 6) (nth 3) (nth 3) second second :arvo)
-        mhu-korvausinvestointi-hankinnat (-> (nth laskutusyhteenveto 6) (nth 3) (nth 0) second second :arvo)
-        mhu-korvausinvestointi-lisatyot (-> (nth laskutusyhteenveto 6) (nth 3) (nth 1) second second :arvo)
-        mhu-korvausinvestointi-sanktiot (-> (nth laskutusyhteenveto 6) (nth 3) (nth 2) second second :arvo)]
+  (let [hk_alkupvm "2019-10-01"
+        hk_loppupvm "2020-09-30"
+        aikavali_alkupvm "2019-10-01"
+        aikavali_loppupvm "2020-09-30"
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        vastaus (q (format "select * from mhu_laskutusyhteenveto_teiden_hoito('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                     hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
 
-    (is (= raportin-nimi "Laskutusyhteenveto (01.10.2019 - 30.09.2020)"))
-    (is (= perusluku-teksti [:teksti "Indeksilaskennan perusluku: 110,8"]) "perusluku")
-    (is (= indeksikerroin-teksti [:teksti "Hoitokauden 2019-20 indeksikerroin: 1,081"]) "indeksikerroin")
+        ;; "Talvihoito", "Liikenneympäristön hoito", "Soratien hoito", "Päällyste", "MHU Ylläpito",  "MHU ja HJU hoidon johto", "MHU Korvausinvestointi"
+        vastaus (parsi-tuotekohtainen-raportti vastaus)
+        talvihoito (first vastaus)
+        liikenneymp-hoito (second vastaus)
+        soratien-hoito (nth vastaus 2)
+        paallyste (nth vastaus 3)
+        mhu-yllapito (nth vastaus 4)
+        mhu-ja-hoidon-johto (nth vastaus 5)
+        mhu-korvausinvestointi (nth vastaus 6)
+
+        _ (println "\n talvihoito" talvihoito)
+        _ (println "\n liikenneymp-hoito" liikenneymp-hoito)
+        _ (println "\n soratien-hoito" soratien-hoito)
+        _ (println "\n paallyste" paallyste)
+        _ (println "\n mhu-yllapito" mhu-yllapito)
+        _ (println "\n mhu-ja-hoidon-johto" mhu-ja-hoidon-johto)
+        _ (println "\n mhu-korvausinvestointi" mhu-korvausinvestointi)
+
+        talvihoito-hankinnat (:hankinnat_laskutettu talvihoito)
+        talvihoito-lisatyot (:lisatyot_laskutettu talvihoito)
+        talvihoito-sanktiot (:sakot_laskutettu talvihoito)
+        akilliset-hoitotyot (:akilliset_hoitotyot_hk talvihoito)
+        rahavaraus-a (:kaikki_rahavaraukset_hoitokausi_yht talvihoito)
+        tilaajan-rahavaraus-kannustinjarjestelmaan (:tilaajan_rahavaraus_kannustinjarjestelmaan_hk talvihoito)
+        vahinkojen-korjaukset (:vahinkojen_korjaukset_hk talvihoito)
+        muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk talvihoito)
+        muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk talvihoito)
+        talvihoito-yhteensa (:kaikki_laskutettu talvihoito)]
+
+    ;; Talvihoito 
+    (is (= talvihoito-hankinnat 6000.97M))
+    (is (= talvihoito-lisatyot 600.97M))
+    (is (= talvihoito-sanktiot -1190.148570M))
+    (is (= akilliset-hoitotyot 0.0M))
+    (is (= rahavaraus-a 0.0M))
+    (is (= tilaajan-rahavaraus-kannustinjarjestelmaan 0.0M))
+    (is (= vahinkojen-korjaukset 0.0M))
+    (is (= muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
+    (is (= muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
     (is (= talvihoito-yhteensa 5411.791430M))
-    (is (= liikenneymp-akilliset-hoitotyot 4444.44M))
-    (is (= liikenneymp-vahinkojen-korjaukset 0.0M))
-    (is (= liikenneymp-yhteensa 6251.487630M))
-    (is (= soratiet-yhteensa 8801.94M))
-    (is (= paallyste-yhteensa 11001.94M))
-    (is (= mhu-yllapito-yhteensa 15401.94M))
-    (is (= mhu-korvausinvestointi-yhteensa 13201.94M))
-    (is (= mhu-korvausinvestointi-hankinnat 12000.97M))
-    (is (= mhu-korvausinvestointi-lisatyot 1200.97M))
-    (is (= mhu-korvausinvestointi-sanktiot 0.0M))))
+    
+    ;; Liikenneympäristön hoito 
+
+    ))

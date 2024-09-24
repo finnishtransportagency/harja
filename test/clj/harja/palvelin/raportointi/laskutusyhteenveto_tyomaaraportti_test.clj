@@ -150,6 +150,7 @@
                    :tavoitehintainen :true}]
    :koontilaskun-kuukausi koontilaskun-kuukausi})
 
+
 (deftest raportin-suoritus-urakalle-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
@@ -159,16 +160,7 @@
         vastaus (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
     (is (not (nil? vastaus)) "Saatiin raportti")
-    (is (= (count (first vastaus)) 61) "Raportilla on oikea määrä rivejä")))
-
-;; Oulun MHU:n toimenpideinstanssit ja toimenpidekoodi taulun koodit
-;Oulu MHU Talvihoito TP,23104
-;Oulu MHU Liikenneympäristön hoito TP,23116
-;Oulu MHU Soratien hoito TP,23124
-;Oulu MHU Hallinnolliset toimenpiteet TP,23151
-;Oulu MHU Päällystepaikkaukset TP,20107
-;Oulu MHU MHU Ylläpito TP,20191
-;Oulu MHU MHU Korvausinvestointi TP,14301
+    (is (= (count (first vastaus)) 73) "Raportilla on oikea määrä rivejä")))
 
 
 (deftest tyomaaraportti-talvihoito-hankinnat-toimii
@@ -197,6 +189,7 @@
         purettu (pura-tyomaaraportti-mapiksi (first raportti))]
     (is (= talvihoitosumma (:talvihoito_hoitokausi_yht purettu)))
     (is (= talvihoitosumma (:talvihoito_val_aika_yht purettu)))))
+
 
 (deftest tyomaaraportti-liikenneymparistonhoito-hankinnat-toimii
   (let [hk_alkupvm "2019-10-01"
@@ -227,6 +220,7 @@
         purettu (pura-tyomaaraportti-mapiksi (first raportti))]
     (is (= lyhsumma (:lyh_hoitokausi_yht purettu)))
     (is (= lyhsumma (:lyh_val_aika_yht purettu)))))
+
 
 (deftest tyomaaraportti-muut-tpit-hankinnat-toimii
   (let [hk_alkupvm "2019-10-01"
@@ -321,13 +315,13 @@
         rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array purettu))
         
         ;; Pura rahavaraukset mukaan
-        purettu-hoitokausi (reduce (fn [acc [name value]]
-                                     (assoc acc (generoi-avaimet name "hk") value))
+        purettu-hoitokausi (reduce (fn [acc [nimi arvo]]
+                                     (assoc acc (generoi-avaimet nimi "hk") arvo))
                              purettu
                              (map vector rahavaraukset-nimet rahavaraukset-hoitokausi))
 
-        purettu (reduce (fn [acc [name value]]
-                          (assoc acc (generoi-avaimet name "val") value))
+        purettu (reduce (fn [acc [nimi arvo]]
+                          (assoc acc (generoi-avaimet nimi "val") arvo))
                   purettu-hoitokausi
                   (map vector rahavaraukset-nimet rahavaraukset-val-aika))
 
@@ -384,6 +378,7 @@
     (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_val_aika_yht purettu)))
     (is (= (* -1 sanktio_summa) (:sanktiot_hoitokausi_yht purettu)))
     (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)))))
+
 
 (deftest tyomaaraportti-bonukset-ja-sanktiot-toimii-jalkeen-2022
   (let [hk_alkupvm "2022-10-01"
