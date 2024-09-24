@@ -127,7 +127,6 @@
         vastaus (q (format "select * from mhu_laskutusyhteenveto_teiden_hoito('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
 
-        ;; "Talvihoito", "Liikenneympäristön hoito", "Soratien hoito", "Päällyste", "MHU Ylläpito",  "MHU ja HJU hoidon johto", "MHU Korvausinvestointi"
         vastaus (parsi-tuotekohtainen-raportti vastaus)
         talvihoito (first vastaus)
         liikenneymp-hoito (second vastaus)
@@ -137,16 +136,7 @@
         mhu-yllapito (nth vastaus 5)
         mhu-korvausinvestointi (nth vastaus 6)
 
-
-
-        _ (println "\n talvihoito" talvihoito)
-        _ (println "\n liikenneymp-hoito" liikenneymp-hoito)
-        _ (println "\n soratien-hoito" soratien-hoito)
-        _ (println "\n paallyste" paallyste)
-        _ (println "\n mhu-yllapito" mhu-yllapito)
-        _ (println "\n mhu-ja-hoidon-johto" mhu-ja-hoidon-johto)
-        _ (println "\n mhu-korvausinvestointi" mhu-korvausinvestointi)
-
+        _ (println "\n vastaus: " vastaus)
 
         talvihoito-hankinnat (:hankinnat_laskutettu talvihoito)
         talvihoito-lisatyot (:lisatyot_laskutettu talvihoito)
@@ -216,7 +206,19 @@
         mhu-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk mhu-ja-hoidon-johto)
         mhu-muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk mhu-ja-hoidon-johto)
         mhu-muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk mhu-ja-hoidon-johto)
-        mhu-yhteensa (:kaikki_laskutettu mhu-ja-hoidon-johto)]
+        mhu-yhteensa (:kaikki_laskutettu mhu-ja-hoidon-johto)
+
+        ;; Mhu korvausinvestointi
+        mhu-korvausinvestointi-hankinnat (:hankinnat_laskutettu mhu-korvausinvestointi)
+        mhu-korvausinvestointi-lisatyot (:lisatyot_laskutettu mhu-korvausinvestointi)
+        mhu-korvausinvestointi-sanktiot (:sakot_laskutettu mhu-korvausinvestointi)
+        mhu-korvausinvestointi-akilliset-hoitotyot (:akilliset_hoitotyot_hk mhu-korvausinvestointi)
+        mhu-korvausinvestointi-rahavaraus-a (:kaikki_rahavaraukset_hoitokausi_yht mhu-korvausinvestointi)
+        mhu-korvausinvestointi-tilaajan-rahavaraus (:tilaajan_rahavaraus_kannustinjarjestelmaan_hk mhu-korvausinvestointi)
+        mhu-korvausinvestointi-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk mhu-korvausinvestointi)
+        mhu-korvausinvestointi-muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk mhu-korvausinvestointi)
+        mhu-korvausinvestointi-muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk mhu-korvausinvestointi)
+        mhu-korvausinvestointi-yhteensa (:kaikki_laskutettu mhu-korvausinvestointi)]
 
     ;; Talvihoito 
     (is (= talvihoito-hankinnat 6000.97M))
@@ -273,7 +275,7 @@
     (is (= mhu-yllapito-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
     (is (= mhu-yllapito-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
     (is (= mhu-yllapito-yhteensa 15401.94M))
-    
+
     ;; Mhu hoidon johto
     (is (= mhu-johto-ja-hallintokorvaukset 10.20M))
     (is (= mhu-erillishankinnat 366.754000M))
@@ -288,4 +290,15 @@
     (is (= mhu-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
     (is (= mhu-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
     (is (= mhu-yhteensa 5544.254000M))
-    ))
+
+    ;; Mhu korvausinvenstointi
+    (is (= mhu-korvausinvestointi-hankinnat 12000.97M))
+    (is (= mhu-korvausinvestointi-lisatyot 1200.97M))
+    (is (= mhu-korvausinvestointi-sanktiot 0.0M))
+    (is (= mhu-korvausinvestointi-akilliset-hoitotyot 0.0M))
+    (is (= mhu-korvausinvestointi-rahavaraus-a 0.0M))
+    (is (= mhu-korvausinvestointi-tilaajan-rahavaraus 0.0M))
+    (is (= mhu-korvausinvestointi-vahinkojen-korjaukset 0.0M))
+    (is (= mhu-korvausinvestointi-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
+    (is (= mhu-korvausinvestointi-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
+    (is (= mhu-korvausinvestointi-yhteensa 13201.94M))))
