@@ -132,10 +132,11 @@
         talvihoito (first vastaus)
         liikenneymp-hoito (second vastaus)
         soratien-hoito (nth vastaus 2)
+        mhu-ja-hoidon-johto (nth vastaus 3)
         paallyste (nth vastaus 4)
-        mhu-yllapito (nth vastaus 3)
-        mhu-ja-hoidon-johto (nth vastaus 5)
+        mhu-yllapito (nth vastaus 5)
         mhu-korvausinvestointi (nth vastaus 6)
+
         
 
         _ (println "\n talvihoito" talvihoito)
@@ -145,6 +146,7 @@
         _ (println "\n mhu-yllapito" mhu-yllapito)
         _ (println "\n mhu-ja-hoidon-johto" mhu-ja-hoidon-johto)
         _ (println "\n mhu-korvausinvestointi" mhu-korvausinvestointi)
+
 
         talvihoito-hankinnat (:hankinnat_laskutettu talvihoito)
         talvihoito-lisatyot (:lisatyot_laskutettu talvihoito)
@@ -188,7 +190,21 @@
         paallyste-muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk paallyste)
         paallyste-muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk paallyste)
         paallyste-yhteensa (:kaikki_laskutettu paallyste)
-        ]
+
+        ;; Mhu hoidon johto
+        mhu-johto-ja-hallintokorvaukset (:johto_ja_hallinto_laskutettu mhu-ja-hoidon-johto)
+        mhu-erillishankinnat (:hj_erillishankinnat_laskutettu mhu-ja-hoidon-johto)
+        mhu-hj-palkkio (:hj_palkkio_laskutettu mhu-ja-hoidon-johto)
+        mhu-bonukset (:bonukset_laskutettu mhu-ja-hoidon-johto)
+        mhu-sanktiot (:sakot_laskutettu mhu-ja-hoidon-johto)
+        mhu-hoitovuoden-paatos-tavoitepalkkio (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu mhu-ja-hoidon-johto)
+        mhu-akilliset-hoitotyot (:akilliset_hoitotyot_hk mhu-ja-hoidon-johto)
+        mhu-rahavaraus-a (:kaikki_rahavaraukset_hoitokausi_yht mhu-ja-hoidon-johto)
+        mhu-tilaajan-rahavaraus (:tilaajan_rahavaraus_kannustinjarjestelmaan_hk mhu-ja-hoidon-johto)
+        mhu-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk mhu-ja-hoidon-johto)
+        mhu-muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk mhu-ja-hoidon-johto)
+        mhu-muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk mhu-ja-hoidon-johto)
+        mhu-yhteensa (:kaikki_laskutettu mhu-ja-hoidon-johto)]
 
     ;; Talvihoito 
     (is (= talvihoito-hankinnat 6000.97M))
@@ -200,7 +216,7 @@
     (is (= talvihoito-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
     (is (= talvihoito-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
     (is (= talvihoito-yhteensa 5411.791430M))
-    
+
     ;; Liikenneympäristön hoito 
     (is (= liikenneymp-hankinnat 2888.88M))
     (is (= liikenneymp-lisatyot 0.0M))
@@ -233,5 +249,19 @@
     (is (= paallyste-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
     (is (= paallyste-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
     (is (= paallyste-yhteensa 11001.94M))
-
+    
+    ;; Mhu hoidon johto
+    (is (= mhu-johto-ja-hallintokorvaukset 10.20M))
+    (is (= mhu-erillishankinnat 366.754000M))
+    (is (= mhu-hj-palkkio 113.80M))
+    (is (= mhu-bonukset 5634.50M))
+    (is (= mhu-sanktiot -2081.00M))
+    (is (= mhu-hoitovuoden-paatos-tavoitepalkkio 1500.00M))
+    (is (= mhu-akilliset-hoitotyot 0.0M))
+    (is (= mhu-rahavaraus-a 0.0M))
+    (is (= mhu-tilaajan-rahavaraus 0.0M))
+    (is (= mhu-vahinkojen-korjaukset 0.0M))
+    (is (= mhu-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
+    (is (= mhu-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
+    (is (= mhu-yhteensa 5544.254000M))
     ))
