@@ -5,7 +5,9 @@
 (defqueries "harja/kyselyt/talvihoitoreitit.sql"
   {:positional? true})
 
-(declare lisaa-sijainti-talvihoitoreitille<! lisaa-kalusto-sijainnille<! lisaa-talvihoitoreitti<!)
+(declare lisaa-sijainti-talvihoitoreitille<! lisaa-kalusto-sijainnille<! lisaa-talvihoitoreitti<!
+  hae-urakan-talvihoitoreitit hae-sijainti-talvihoitoreitille hae-talvihoitoreitti-ulkoisella-idlla
+  hae-leikkaavat-geometriat)
 
 (defn lisaa-kalustot-ja-reitit [db talvihoitoreitti-id data]
   ;; Lisää reitit
@@ -17,7 +19,7 @@
                                     :alkuetaisyys (:aet sijainti)
                                     :loppuosa (:losa sijainti)
                                     :loppuetaisyys (:let sijainti)
-                                    :pituus (:pituus sijainti)
+                                    :pituus (:pituus sijainti) ;; Pituus on metreinä
                                     :hoitoluokka (:hoitoluokka sijainti)}))
                 _ (doseq [kalusto (:kalustot sijainti)]
                     (lisaa-kalusto-sijainnille<! db
