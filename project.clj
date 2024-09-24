@@ -10,7 +10,7 @@
   :pedantic? false
   :dependencies [
                  ;; Clojure ja ClojureScript
-                 [org.clojure/clojure "1.10.0"]
+                 [org.clojure/clojure "1.10.3"]
                  [org.clojure/clojurescript "1.10.520"]
                  [org.clojure/spec.alpha "0.2.176"]
 
@@ -44,7 +44,7 @@
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.48"]
-                 [http-kit "2.5.3"]
+                 [http-kit "2.8.0"]
                  [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
@@ -110,7 +110,7 @@
                  [org.apache.poi/poi "5.2.5"]
                  [org.apache.poi/poi-scratchpad "5.2.5"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "0.2.6"]
+                 [org.clojure/data.json "0.2.7"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
@@ -131,7 +131,7 @@
                  [java-http-clj "0.4.3"]
 
                  ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
-                 [org.apache.ant/ant "1.10.5"]
+                 [org.apache.ant/ant "1.10.15"]
 
                  ;; Clojure(Script) assertointi
                  [com.taoensso/truss "1.5.0"]
