@@ -6,9 +6,7 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.tiedot.hallintayksikot :as hal]
-            [harja.tiedot.hallinta.tyokalut.talvihoitoreitti-tyokalu :as tiedot])
-
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.tiedot.hallinta.tyokalut.talvihoitoreitti-tyokalu :as tiedot]))
 
 (defn talvihoitoreittilomake [e! {:keys [talvihoitoreitti] :as app}]
   (let [disable-tallenna? (if (nil? (:valittu-urakka talvihoitoreitti))
@@ -56,7 +54,7 @@
         :pakollinen? true}
        {:nimi :tyhja1
         :tyyppi :komponentti
-        :komponentti (fn [n]
+        :komponentti (fn [_]
                        [:div ""])}
        {:nimi :ulkoinen-id
         :otsikko "Uniikki tunniste"
@@ -68,11 +66,11 @@
         :pakollinen? true}
        {:nimi :kalusto-otsikko
         :tyyppi :komponentti
-        :komponentti (fn [n]
+        :komponentti (fn [_]
                        [:div "Voit syöttää kahdet kalustot:"])}
        {:nimi :kalusto-otsikko2
         :tyyppi :komponentti
-        :komponentti (fn [n]
+        :komponentti (fn [_]
                        [:div ""])}
        {:nimi :kalustotyyppi
         :otsikko "Kaluston tyyppi (1)"
@@ -92,11 +90,11 @@
         :pakollinen? true}
        {:nimi :tierekisteri-otsikko
         :tyyppi :komponentti
-        :komponentti (fn [n]
+        :komponentti (fn [_]
                        [:div "Voit syöttää kaksi eri tierekisteriosoitetta:"])}
        {:nimi :tierekisteri-otsikko2
         :tyyppi :komponentti
-        :komponentti (fn [n]
+        :komponentti (fn [_]
                        [:div ""])}
        {:nimi :tierekisteriosoite
         :tyyppi :tierekisteriosoite
@@ -121,8 +119,13 @@
           [:div [:span (str (:urakka-id urakka) " ")] [:span (:urakka-nimi urakka)]])])
      [:div
       ;; Näytetään mahdollisuus lisätä oikeudet urakkaan vain, jos siihen ei vielä ole oikeuksia
-      (if (and (get-in app [:talvihoitoreitti :valittu-urakka])
-            (not (some (fn [u] (when (= (get-in app [:talvihoitoreitti :valittu-urakka :id]) (:urakka-id u)) true)) (:oikeudet-urakoihin app))))
+      (if (and
+            (get-in app [:talvihoitoreitti :valittu-urakka])
+            (not (some
+                   (fn [u]
+                     (when (= (get-in app [:talvihoitoreitti :valittu-urakka :id]) (:urakka-id u))
+                       true))
+                   (:oikeudet-urakoihin app))))
         [:div
          [:p [:b "Lisää oikeudet puuttuvaan urakkaan"]]
          [napit/tallenna (str "Lisää oikeudet urakkaan: " (get-in app [:talvihoitoreitti :valittu-urakka :nimi]))

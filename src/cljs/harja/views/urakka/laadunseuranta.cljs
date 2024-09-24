@@ -50,9 +50,9 @@
     :siltatarkastukset (and (or (= :hoito tyyppi) (= :teiden-hoito tyyppi))
                             (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
     :mobiilityokalu (not (urakka/vesivaylaurakka? urakka))
-    :talvihoitoreititys (and (= :teiden-hoito tyyppi)
-                          (roolit/jvh? @istunto/kayttaja)
-                             (oikeudet/urakat-laadunseuranta-talvihoitoreititys id))))
+    :talvihoitoreititys (and
+                          (= :teiden-hoito tyyppi)
+                          (oikeudet/urakat-laadunseuranta-talvihoitoreititys id))))
 
 (defn laadunseuranta [_ur]
   (komp/luo

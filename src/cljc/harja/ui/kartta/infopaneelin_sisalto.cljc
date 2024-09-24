@@ -845,9 +845,9 @@
 
 (defmethod infopaneeli-skeema :talvihoitoreitit [talvihoitoreitti]
   {:tyyppi :talvihoitoreitit
-   :jarjesta-fn (constantly false) #_ :id ;; Järjestetään useampi valittu listalla
-   :otsikko (str "Talvihoitoreitti: " (:nimi (:infopaneelin-tiedot talvihoitoreitti))) ;; Laita tähän vaikka päivämäärä
-   :tiedot [{:otsikko "Pituus"  :nimi :pituus}]
+   :jarjesta-fn (constantly false)
+   :otsikko (str "Talvihoitoreitti: " (:nimi (:infopaneelin-tiedot talvihoitoreitti)))
+   :tiedot [{:otsikko "Pituus (km)"  :nimi :pituus}]
    :data (:infopaneelin-tiedot talvihoitoreitti)})
 
 (defmethod infopaneeli-skeema :paikkaukset-paikkausten-paallystysilmoitukset [kohde]

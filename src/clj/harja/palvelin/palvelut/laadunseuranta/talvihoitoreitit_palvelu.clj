@@ -66,10 +66,13 @@
                                                       hoitoluokkat)
                                        rivi (-> rivi
                                               (assoc :reitit reitit)
+                                              (assoc :laskettu_pituus (reduce + (map :laskettu_pituus reitit)))
                                               (assoc :hoitoluokat hoitoluokkat)
-                                              (assoc :kalustot kalustot))]
+                                              (assoc :kalustot kalustot)
+                                              (dissoc :muokkaaja :muokattu :luotu :luoja))]
                                    rivi))
                            urakan-talvihoitoreitit)]
+    (println "talvihoitoreitit:" (map #(dissoc % :reitit) talvihoitoreitit))
     talvihoitoreitit))
 
 (defn- kasittele-excel [db urakka-id kayttaja req]

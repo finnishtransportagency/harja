@@ -484,12 +484,6 @@ tr-ikoni {:img (pinni-ikoni "musta")
    {:color puhtaat/vihrea
     :width 6}])
 
-(def talvihoitoreitit
-  [{:color puhtaat/musta-raja
-    :width 8}
-   {:color puhtaat/vihrea
-    :width 6}])
-
 (defn tehtavan-viivat-tyokoneelle [viivat]
   (let [levein (or (apply max (map :width viivat)) +normaali-leveys+)]
     (concat

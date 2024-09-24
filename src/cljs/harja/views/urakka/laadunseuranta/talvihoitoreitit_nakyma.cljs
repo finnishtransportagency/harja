@@ -1,8 +1,7 @@
 (ns harja.views.urakka.laadunseuranta.talvihoitoreitit-nakyma
-  "Sanktioiden ja bonusten välilehti"
+  "Talvihoitoreittien näkymä. Kartta ja listaus."
   (:require [harja.fmt :as fmt]
             [harja.ui.liitteet :as liitteet]
-            [reagent.core :as r]
             [tuck.core :as tuck]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.views.kartta :as kartta]
@@ -11,10 +10,9 @@
             [harja.tiedot.urakka.laadunseuranta.talvihoitoreitit-tiedot :as tiedot]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
-            [harja.ui.debug :as debug]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
-            [harja.asiakas.kommunikaatio :as k]))
+            [harja.ui.napit :as napit]))
 
 (defn talvihoitoreitit-sivu [e! app]
   (let [talvihoitoreitit (:talvihoitoreitit app)
@@ -55,9 +53,9 @@
              ;; Nimi
              [:div.basis256.nogrow.shrink3.rajaus
               [:div {:style {:display "flex"}}
-               [:span {:style {:margin-top "auto" :margin-bottom "auto" :margin-right "5px" :width "12px" :height "12px" :background-color (:vari rivi)}}]
+               [:span.talvihoitoreitti-nimi {:style {:background-color (:vari rivi)}} ]
                [:div.semibold.musta.body-text (str (:nimi rivi))]]
-              [:div.body-text.harmaa (:pituus rivi)]]
+              [:div.body-text.harmaa (:laskettu_pituus rivi)]]
 
              [:div.basis384.grow2.shrink3.rajaus
               [:div.body-text.semibold.musta "Hoitoluokkien osuudet reitillä (km)"]
@@ -65,8 +63,8 @@
                (doall (for [h (:hoitoluokat rivi)]
                         ^{:key (hash (str "hoitoluokka-" h))}
                         [:div
-                         [:div.body-text.musta {:style {:padding-right "10px"}} (:hoitoluokka h)]
-                         [:div.small-text.musta {:style {:padding-right "10px"}} (fmt/desimaaliluku-opt (:pituus h) 2) ]]))]]
+                         [:div.body-text.musta.semibold {:style {:padding-right "30px"}} (:hoitoluokka h)]
+                         [:div.small-text.musta {:style {:padding-right "30px"}} (fmt/desimaaliluku-opt (:pituus h) 2) ]]))]]
 
              [:div.basis384.grow2.shrink3.rajaus
               [:div.body-text.semibold.musta "Kalusto (kpl)"]
@@ -74,26 +72,36 @@
                (doall (for [kalusto (:kalustot rivi)]
                         ^{:key (hash kalusto)}
                         [:div
-                         [:div.body-text.musta {:style {:padding-right "10px"}} (:kalustotyyppi kalusto)]
-                         [:div.small-text.musta {:style {:padding-right "10px"}} (:kalustomaara kalusto) ]]))]]
+                         [:div.body-text.musta.semibold {:style {:padding-right "30px"}} (:kalustotyyppi kalusto)]
+                         [:div.small-text.musta {:style {:padding-right "30px"}} (:kalustomaara kalusto) ]]))]]
 
              [:div.basis256.grow2.shrink2
               [:div.body-text.strong.musta ""]
               ;; Näytä valittu rivi kartalla tai piilota se
               [:<>
                (if (contains? valitut-kohteet (:id rivi))
-                 (harja.ui.napit/avaa "Piilota kartalta" #(e! (tiedot/->PoistaValittuKohdeKartalta (:id rivi))))
-                 (harja.ui.napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle (:id rivi)))))]]]
+                 (napit/avaa "Piilota kartalta" #(e! (tiedot/->PoistaValittuKohdeKartalta (:id rivi))))
+                 (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle (:id rivi)))))]]]
 
             ;; Otsikkokoponentin voi avata ja avaamisen jälkeen näytetään lista (grid) reiteistä
             (when (get talvihoitoreittien-tilat (:id rivi))
               (when (> reittien-maara 0)
                 [:div {:style {:max-width "900px"}}
+                 [:h2 {:style {:margin-bottom "-10px"}} "Reitti"]
                  [grid/grid
                   {:salli-valiotsikoiden-piilotus? true
                    :valiotsikoiden-alkutila :kaikki-kiinni
                    :tunniste :id
-                   :reunaviiva? true}
+                   :reunaviiva? true
+                   :rivi-jalkeen-fn #(let [yhteensa-suunniteltu (reduce + 0 (map :pituus %))
+                                           yhteensa-laskettu (reduce + 0 (map :laskettu_pituus %))]
+                                       [{:teksti ""}
+                                        {:teksti "Yhteensä" :luokka "lihavoitu"}
+                                        {:teksti ""}
+                                        {:teksti (str (fmt/euro-opt false yhteensa-suunniteltu))
+                                         :tasaa :oikea :luokka "lihavoitu"}
+                                        {:teksti (str (fmt/euro-opt false yhteensa-laskettu))
+                                         :tasaa :oikea :luokka "lihavoitu"}])}
                   [{:otsikko "Tie" :nimi :tie :tyyppi :string :tasaa :vasen :leveys 1}
                    {:otsikko "Tieosoite" :nimi :formatoitu-tr :tyyppi :string :tasaa :vasen :leveys 3}
                    {:otsikko "Hoitoluokka" :nimi :hoitoluokka :tyyppi :string :tasaa :vasen :leveys 2}

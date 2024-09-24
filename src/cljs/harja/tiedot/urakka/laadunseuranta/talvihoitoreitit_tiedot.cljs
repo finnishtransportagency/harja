@@ -60,10 +60,7 @@
                                          talvihoitoreitit)))]
       (when (and (not-empty talvihoitoreitit) (not (nil? talvihoitoreitit)) @karttataso-nakyvissa?)
         (with-meta map-reitit
-          {:selitteet [{:vari (map :color asioiden-ulkoasu/talvihoitoreitit)
-                        :teksti "Talvihoitoreitit"
-                        :extent extentit}]
-           :extent extentit})))))
+          {:extent extentit})))))
 
 ;; Talvihoitoreittien excel-tiedoston lataamisessa käyttäjän informointiin tarkoitettu modal
 (defn tulos-modal [leikkaavat-virheet muut-virheet paivitetyt onnistuneet otsikko]

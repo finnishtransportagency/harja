@@ -15,10 +15,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def +mahdolliset-urakat+
-  [
-   {:id 34 :nimi "Ivalon MHU testiurakka (uusi) (aseta sopimusid 19)"}
-   {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 42)"}
-   ])
+  [{:id 34 :nimi "Ivalon MHU testiurakka (uusi) (aseta sopimusid 19)"}
+   {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 42)"}])
 
 (defn hoitoluokka-numerosta [nro]
   (case nro
@@ -33,9 +31,6 @@
     9 "K1"
     10 "K2"
     11 "K"))
-
-(defn- luo-aika-paivamaarasta [paivamaara aika]
-  (str paivamaara aika))
 
 (def alkutila {:talvihoitoreitti {:lahetysaika (pvm/jsondate (pvm/nyt))
                                   :valittu-jarjestelma "Autoyksikkö Kolehmainen"
@@ -59,34 +54,28 @@
   {:tunniste (get-in app [:talvihoitoreitti :ulkoinen-id])
    :reittinimi (get-in app [:talvihoitoreitti :reittinimi])
    ;; Reitti koostuu oikeasti useammasta tieosoitteesta
-   :sijainnit (conj [
-                     {:tie (get-in app [:talvihoitoreitti :tierekisteriosoite :numero])
+   :sijainnit (conj [{:tie (get-in app [:talvihoitoreitti :tierekisteriosoite :numero])
                       :aosa (get-in app [:talvihoitoreitti :tierekisteriosoite :alkuosa])
                       :aet (get-in app [:talvihoitoreitti :tierekisteriosoite :alkuetaisyys])
                       :losa (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuosa])
                       :let (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuetaisyys])
+                      :hoitoluokka (hoitoluokka-numerosta (yleiset/random-luku-valilta 1 9))
+                      :pituus (yleiset/random-luku-valilta 1 30000)
+                      :kalustot [{:kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi])
+                                  :kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm])}]}]
+                ;; Koska ollaan kiireessä, niin varmistetaan, että pelkkä tien numero on lisätty ja oletetaan että muutkin on
+                (when (get-in app [:talvihoitoreitti :tierekisteriosoite2 :numero])
+                  {:tie (get-in app [:talvihoitoreitti :tierekisteriosoite2 :numero])
+                   :aosa (get-in app [:talvihoitoreitti :tierekisteriosoite2 :alkuosa])
+                   :aet (get-in app [:talvihoitoreitti :tierekisteriosoite2 :alkuetaisyys])
+                   :losa (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuosa])
+                   :let (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuetaisyys])
                    :hoitoluokka (hoitoluokka-numerosta (yleiset/random-luku-valilta 1 9))
                    :pituus (yleiset/random-luku-valilta 1 30000)
-                   :kalustot [{:kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi])
-                               :kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm])}]
-                   }
-                  ]
-             ;; Koska ollaan kiireessä, niin varmistetaan, että pelkkä tien numero on lisätty ja oletetaan että muutkin on
-             (when (get-in app [:talvihoitoreitti :tierekisteriosoite2 :numero])
-               {:tie (get-in app [:talvihoitoreitti :tierekisteriosoite2 :numero])
-                :aosa (get-in app [:talvihoitoreitti :tierekisteriosoite2 :alkuosa])
-                :aet (get-in app [:talvihoitoreitti :tierekisteriosoite2 :alkuetaisyys])
-                :losa (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuosa])
-                :let (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuetaisyys])
-                :hoitoluokka (hoitoluokka-numerosta (yleiset/random-luku-valilta 1 9))
-                :pituus (yleiset/random-luku-valilta 1 30000)
-                :kalustot [{:kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi2])
-                            :kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm2])}]}))})
-
-
+                   :kalustot [{:kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi2])
+                               :kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm2])}]}))})
 
 (def valittu-urakka (atom nil))
-(def valittu-hallintayksikko (atom nil))
 (defrecord Muokkaa [talvihoitoreitti])
 (defrecord Laheta [talvihoitoreitti])
 (defrecord LahetysOnnistui [vastaus])
