@@ -1052,13 +1052,12 @@
     tavoitehintaiset-rahavaraukset))
 
 (defn tallenna-tavoitehinnan-ulkopuolinen-rahavaraus [db user {:keys [urakka-id rahavaraus-id summa loppuvuodet? vuosi] :as tiedot}]
-  (println "tallenna-tavoitehinnan-ulkopuolinen-rahavaraus :: tiedot" (pr-str tiedot))
+  (log/debug "tallenna-tavoitehinnan-ulkopuolinen-rahavaraus :: tiedot" (pr-str tiedot))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (max vuosi (pvm/vuosi (:alkupvm urakan-tiedot)))
         urakan-loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
         urakan-vuodet (if loppuvuodet? (range urakan-alkuvuosi urakan-loppuvuosi) (list vuosi))
-        _ (println "tallenna-tavoitehinnan-ulkopuolinen-rahavaraus :: urakan-vuodet" urakan-vuodet)
         sopimus-id (urakat-q/urakan-paasopimus-id db {:urakka urakka-id})
         toimenpideinstanssi-id (:id (first (ka-q/hae-tavoitehinnan-ulkopuolisen-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id})))
         ;; Haetaan Johto- ja hallintkorvaus tehtäväryhmän id
@@ -1070,18 +1069,15 @@
                                             {:vuosi vuosi
                                              :sopimus_id sopimus-id
                                              :tehtavaryhma-id tr-id})
-                  _ (println "kt-rahavaraus-kuukaudet:" vuosi (pr-str kt-rahavaraus-kuukaudet))
 
                   ;; Päivitetään tai insertoidaan rahavaraus sen mukaan, löytyikö sitä tietokanansta
                   _ (if (not (empty? kt-rahavaraus-kuukaudet))
                       (let [kk (atom 0)] ;; Lokaalisti voi olla vaikka vain kolmena kuukautena summa, vaikka pitäisi olla 12
                         (doseq [r kt-rahavaraus-kuukaudet
-                                :let [_ (println "doseq :: r:" (pr-str r))
-                                      _ (swap! kk inc)
+                                :let [_ (swap! kk inc)
                                       kuukausimaara (count kt-rahavaraus-kuukaudet)
                                       kuukausisumma (round2 2 (/ summa kuukausimaara))
-                                      viimeinen-kuukausisumma (round2 2 (- summa (* (dec kuukausimaara) kuukausisumma)))
-                                      _ (println "doseq :: kuukausimaara:" kuukausimaara "kuukausisumma:" kuukausisumma "viimeinen-kuukausisumma:" viimeinen-kuukausisumma)]]
+                                      viimeinen-kuukausisumma (round2 2 (- summa (* (dec kuukausimaara) kuukausisumma)))]]
                           (update! db ::bs/kustannusarvioitu-tyo
                             ;; Jos muokattavia kuukausia on 9 tai enemmän, niin laitetaan viimeinen mahdollisesti suurempi
                             ;; summa syyskuulle, eli hoitokauden viimeiselle kuukaudelle
