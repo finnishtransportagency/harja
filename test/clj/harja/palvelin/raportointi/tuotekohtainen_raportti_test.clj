@@ -132,10 +132,11 @@
         talvihoito (first vastaus)
         liikenneymp-hoito (second vastaus)
         soratien-hoito (nth vastaus 2)
-        paallyste (nth vastaus 3)
-        mhu-yllapito (nth vastaus 4)
+        paallyste (nth vastaus 4)
+        mhu-yllapito (nth vastaus 3)
         mhu-ja-hoidon-johto (nth vastaus 5)
         mhu-korvausinvestointi (nth vastaus 6)
+        
 
         _ (println "\n talvihoito" talvihoito)
         _ (println "\n liikenneymp-hoito" liikenneymp-hoito)
@@ -154,7 +155,7 @@
         talvihoito-muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk talvihoito)
         talvihoito-muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk talvihoito)
         talvihoito-yhteensa (:kaikki_laskutettu talvihoito)
-        
+
         ;; Liikenneympäristön hoito 
         liikenneymp-hankinnat (:hankinnat_laskutettu liikenneymp-hoito)
         liikenneymp-lisatyot (:lisatyot_laskutettu liikenneymp-hoito)
@@ -176,6 +177,17 @@
         soratien-muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk soratien-hoito)
         soratien-muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk soratien-hoito)
         soratien-yhteensa (:kaikki_laskutettu soratien-hoito)
+
+        ;; Päällyste
+        paallyste-hankinnat (:hankinnat_laskutettu paallyste)
+        paallyste-lisatyot (:lisatyot_laskutettu paallyste)
+        paallyste-sanktiot (:sakot_laskutettu paallyste)
+        paallyste-akilliset-hoitotyot (:akilliset_hoitotyot_hk paallyste)
+        paallyste-tilaajan-rahavaraus (:tilaajan_rahavaraus_kannustinjarjestelmaan_hk paallyste)
+        paallyste-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk paallyste)
+        paallyste-muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk paallyste)
+        paallyste-muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk paallyste)
+        paallyste-yhteensa (:kaikki_laskutettu paallyste)
         ]
 
     ;; Talvihoito 
@@ -210,5 +222,16 @@
     (is (= soratien-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
     (is (= soratien-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
     (is (= soratien-yhteensa 8801.94M))
+
+    ;; Päällyste
+    (is (= paallyste-hankinnat 10000.97M))
+    (is (= paallyste-lisatyot 1000.97M))
+    (is (= paallyste-sanktiot 0.0M))
+    (is (= paallyste-akilliset-hoitotyot 0.0M))
+    (is (= paallyste-tilaajan-rahavaraus 0.0M))
+    (is (= paallyste-vahinkojen-korjaukset 0.0M))
+    (is (= paallyste-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
+    (is (= paallyste-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
+    (is (= paallyste-yhteensa 11001.94M))
 
     ))
