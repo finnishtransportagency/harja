@@ -63,7 +63,7 @@
       "separateMultipleMinor": true
     },
     {
-      "description": "Ryhmittele org.geotools:gt-* päivitykset. Erottele major päivtykset omiin PR:iin",
+      "description": "Ryhmittele org.geotools:gt-* päivitykset. Erottele major päivitykset omiin PR:iin",
       "matchDatasources": [
         "clojure"
       ],
@@ -71,6 +71,17 @@
         "org.geotools:gt-*"
       ],
       "groupName": "org.geotools",
+      "separateMajorMinor": true,
+      "separateMultipleMajor": true
+    },
+    {
+      "description": "Erottele postgist-jdbc major päivitykset omiin PR:iin",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "net.postgis:postgis-jdbc"
+      ],
       "separateMajorMinor": true,
       "separateMultipleMajor": true
     },
