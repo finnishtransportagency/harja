@@ -3,7 +3,9 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
+            [harja.kyselyt.konversio :as konversio]
             [harja.testi :refer :all]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
@@ -39,6 +41,17 @@
                       urakkatieto-fixture))
 
 
+(defn generoi-avaimet [name prefix]
+  ;; Generoi clojure keywordit rahavarauksille
+  (-> name
+    (str/lower-case)
+    (str/replace #"ä" "a")
+    (str/replace #"ö" "o")
+    (str/replace #"[^a-z0-9]+" "_")
+    (str "_" prefix)
+    keyword))
+
+
 (defn pura-tyomaaraportti-mapiksi [raportti]
   (let [tulos
         {:talvihoito_hoitokausi_yht (nth raportti 0)
@@ -63,46 +76,59 @@
          :hjpalkkio_val_aika_yht (nth raportti 19)
          :hoidonjohto_hoitokausi_yht (nth raportti 20)
          :hoidonjohto_val_aika_yht (nth raportti 21)
-         :tavhin_hoitokausi_yht (nth raportti 22)
-         :tavhin_val_aika_yht (nth raportti 23)
-         :hoitokauden_tavoitehinta (nth raportti 24)
-         :hk_tavhintsiirto_ed_vuodelta (nth raportti 25)
-         :budjettia_jaljella (nth raportti 26)
-         :lisatyo_talvihoito_hoitokausi_yht (nth raportti 27)
-         :lisatyo_talvihoito_val_aika_yht (nth raportti 28)
-         :lisatyo_lyh_hoitokausi_yht (nth raportti 29)
-         :lisatyo_lyh_val_aika_yht (nth raportti 30)
-         :lisatyo_sora_hoitokausi_yht (nth raportti 31)
-         :lisatyo_sora_val_aika_yht (nth raportti 32)
-         :lisatyo_paallyste_hoitokausi_yht (nth raportti 33)
-         :lisatyo_paallyste_val_aika_yht (nth raportti 34)
-         :lisatyo_yllapito_hoitokausi_yht (nth raportti 35)
-         :lisatyo_yllapito_val_aika_yht (nth raportti 36)
-         :lisatyo_korvausinv_hoitokausi_yht (nth raportti 37)
-         :lisatyo_korvausinv_val_aika_yht (nth raportti 38)
-         :lisatyo_hoidonjohto_hoitokausi_yht (nth raportti 39)
-         :lisatyo_hoidonjohto_val_aika_yht (nth raportti 40)
-         :lisatyot_hoitokausi_yht (nth raportti 41)
-         :lisatyot_val_aika_yht (nth raportti 42)
-         :bonukset_hoitokausi_yht (nth raportti 43)
-         :bonukset_val_aika_yht (nth raportti 44)
-         :sanktiot_hoitokausi_yht (nth raportti 45)
-         :sanktiot_val_aika_yht (nth raportti 46)
-         :paatos_tavoitepalkkio_hoitokausi_yht (nth raportti 47)
-         :paatos_tavoitepalkkio_val_aika_yht (nth raportti 48)
-         :paatos_tavoiteh_ylitys_hoitokausi_yht (nth raportti 49)
-         :paatos_tavoiteh_ylitys_val_aika_yht (nth raportti 50)
-         :paatos_kattoh_ylitys_hoitokausi_yht (nth raportti 51)
-         :paatos_kattoh_ylitys_val_aika_yht (nth raportti 52)
-         :muut_kustannukset_hoitokausi_yht (nth raportti 53)
-         :muut_kustannukset_val_aika_yht (nth raportti 54)
-         :yhteensa_kaikki_hoitokausi_yht (nth raportti 55)
-         :yhteensa_kaikki_val_aika_yht (nth raportti 56)
-         :perusluku (nth raportti 57)
-         :rahavaraus_nimet (nth raportti 58)
-         :hoitokausi_yht_array (nth raportti 59)
-         :val_aika_yht_array (nth raportti 60)}]
+         :hankinnat_ja_hoidon_hk_yht (nth raportti 22)
+         :hankinnat_ja_hoidon_val_yht (nth raportti 23)
+         :tavhin_hoitokausi_yht (nth raportti 24)
+         :tavhin_val_aika_yht (nth raportti 25)
+         :hoitokauden_tavoitehinta (nth raportti 26)
+         :hk_tavhintsiirto_ed_vuodelta (nth raportti 27)
+         :budjettia_jaljella (nth raportti 28)
+         :lisatyo_talvihoito_hoitokausi_yht (nth raportti 29)
+         :lisatyo_talvihoito_val_aika_yht (nth raportti 30)
+         :lisatyo_lyh_hoitokausi_yht (nth raportti 31)
+         :lisatyo_lyh_val_aika_yht (nth raportti 32)
+         :lisatyo_sora_hoitokausi_yht (nth raportti 33)
+         :lisatyo_sora_val_aika_yht (nth raportti 34)
+         :lisatyo_paallyste_hoitokausi_yht (nth raportti 35)
+         :lisatyo_paallyste_val_aika_yht (nth raportti 36)
+         :lisatyo_yllapito_hoitokausi_yht (nth raportti 37)
+         :lisatyo_yllapito_val_aika_yht (nth raportti 38)
+         :lisatyo_korvausinv_hoitokausi_yht (nth raportti 39)
+         :lisatyo_korvausinv_val_aika_yht (nth raportti 40)
+         :lisatyo_hoidonjohto_hoitokausi_yht (nth raportti 41)
+         :lisatyo_hoidonjohto_val_aika_yht (nth raportti 42)
+         :lisatyot_hoitokausi_yht (nth raportti 43)
+         :lisatyot_val_aika_yht (nth raportti 44)
+         :bonukset_hoitokausi_yht (nth raportti 45)
+         :bonukset_val_aika_yht (nth raportti 46)
+         :sanktiot_hoitokausi_yht (nth raportti 47)
+         :sanktiot_val_aika_yht (nth raportti 48)
+         :paatos_tavoitepalkkio_hoitokausi_yht (nth raportti 49)
+         :paatos_tavoitepalkkio_val_aika_yht (nth raportti 50)
+         :paatos_tavoiteh_ylitys_hoitokausi_yht (nth raportti 51)
+         :paatos_tavoiteh_ylitys_val_aika_yht (nth raportti 52)
+         :paatos_kattoh_ylitys_hoitokausi_yht (nth raportti 53)
+         :paatos_kattoh_ylitys_val_aika_yht (nth raportti 54)
+         :muut_kustannukset_hoitokausi_yht (nth raportti 55)
+         :muut_kustannukset_val_aika_yht (nth raportti 56)
+         :yhteensa_kaikki_hoitokausi_yht (nth raportti 57)
+         :yhteensa_kaikki_val_aika_yht (nth raportti 58)
+         :perusluku (nth raportti 59)
+         :rahavaraus_nimet (nth raportti 60)
+         :hoitokausi_yht_array (nth raportti 61)
+         :val_aika_yht_array (nth raportti 62)
+         :kaikki_rahavaraukset_hoitokausi_yht (nth raportti 63)
+         :kaikki_rahavaraukset_val_yht (nth raportti 64)
+         :muut_kulut_hoitokausi (nth raportti 65)
+         :muut_kulut_val_aika (nth raportti 66)
+         :muut_kulut_hoitokausi_yht (nth raportti 67)
+         :muut_kulut_val_aika_yht (nth raportti 68)
+         :muut_kulut_ei_tavoite_hoitokausi (nth raportti 69)
+         :muut_kulut_ei_tavoite_val_aika (nth raportti 70)
+         :muut_kulut_ei_tavoite_hoitokausi_yht (nth raportti 71)
+         :muut_kulut_ei_tavoite_val_aika_yht (nth raportti 72)}]
     tulos))
+
 
 (defn luo-kulu
   "Luo tällä hetkellä aina tavoitehintaisen kulun. Lisää uusi parametri, jos se on ongelma."
@@ -290,14 +316,29 @@
 
         purettu (pura-tyomaaraportti-mapiksi (first raportti))
 
+        rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet purettu))
+        rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array purettu))
+        rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array purettu))
+        
+        ;; Pura rahavaraukset mukaan
+        purettu-hoitokausi (reduce (fn [acc [name value]]
+                                     (assoc acc (generoi-avaimet name "hk") value))
+                             purettu
+                             (map vector rahavaraukset-nimet rahavaraukset-hoitokausi))
+
+        purettu (reduce (fn [acc [name value]]
+                          (assoc acc (generoi-avaimet name "val") value))
+                  purettu-hoitokausi
+                  (map vector rahavaraukset-nimet rahavaraukset-val-aika))
+
         tavhin_hoitokausi_yht (+ (:talvihoito_hoitokausi_yht purettu) (:lyh_hoitokausi_yht purettu)
-                                (:sora_hoitokausi_yht purettu) (:paallyste_hoitokausi_yht purettu)
-                                (:yllapito_hoitokausi_yht purettu) (:korvausinv_hoitokausi_yht purettu)
-                                (:johtojahallinto_hoitokausi_yht purettu) (:erillishankinnat_hoitokausi_yht purettu)
-                                (:hjpalkkio_hoitokausi_yht purettu) (:akilliset_hoitokausi_yht purettu)
-                                (:vahingot_hoitokausi_yht purettu))
+                                 (:sora_hoitokausi_yht purettu) (:paallyste_hoitokausi_yht purettu)
+                                 (:yllapito_hoitokausi_yht purettu) (:korvausinv_hoitokausi_yht purettu)
+                                 (:johtojahallinto_hoitokausi_yht purettu) (:erillishankinnat_hoitokausi_yht purettu)
+                                 (:hjpalkkio_hoitokausi_yht purettu) (:akilliset_hoitotyot_hk purettu)
+                                 (:vahinkojen_korjaukset_hk purettu))
         budjettia_jaljella (- (+ (:hk_tavhintsiirto_ed_vuodelta purettu) (:hoitokauden_tavoitehinta purettu))
-                             (:tavhin_hoitokausi_yht purettu))]
+                              (:tavhin_hoitokausi_yht purettu))]
 
     (is (= tav_hinta (:hk_tavhintsiirto_ed_vuodelta purettu)))
     (is (= tavhin_hoitokausi_yht (:tavhin_hoitokausi_yht purettu)))
