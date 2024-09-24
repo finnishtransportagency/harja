@@ -165,6 +165,17 @@
         liikenneymp-muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk liikenneymp-hoito)
         liikenneymp-muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk liikenneymp-hoito)
         liikenneymp-yhteensa (:kaikki_laskutettu liikenneymp-hoito)
+
+        ;; Soratien hoito
+        soratien-hankinnat (:hankinnat_laskutettu soratien-hoito)
+        soratien-lisatyot (:lisatyot_laskutettu soratien-hoito)
+        soratien-sanktiot (:sakot_laskutettu soratien-hoito)
+        soratien-akilliset-hoitotyot (:akilliset_hoitotyot_hk soratien-hoito)
+        soratien-tilaajan-rahavaraus (:tilaajan_rahavaraus_kannustinjarjestelmaan_hk soratien-hoito)
+        soratien-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk soratien-hoito)
+        soratien-muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk soratien-hoito)
+        soratien-muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk soratien-hoito)
+        soratien-yhteensa (:kaikki_laskutettu soratien-hoito)
         ]
 
     ;; Talvihoito 
@@ -188,5 +199,16 @@
     (is (= liikenneymp-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
     (is (= liikenneymp-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
     (is (= liikenneymp-yhteensa 6251.487630M))
+
+    ;; Soratien hoito
+    (is (= soratien-hankinnat 8000.97M))
+    (is (= soratien-lisatyot 800.97M))
+    (is (= soratien-sanktiot 0.0M))
+    (is (= soratien-akilliset-hoitotyot 0.0M))
+    (is (= soratien-tilaajan-rahavaraus 0.0M))
+    (is (= soratien-vahinkojen-korjaukset 0.0M))
+    (is (= soratien-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
+    (is (= soratien-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
+    (is (= soratien-yhteensa 8801.94M))
 
     ))
