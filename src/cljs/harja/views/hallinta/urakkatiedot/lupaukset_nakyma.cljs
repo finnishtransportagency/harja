@@ -74,6 +74,10 @@
               :nimi :otsikko
               :tyyppi :string
               :leveys 1}
+             {:otsikko "Lupauksen järjestys"
+              :nimi :lupaus-jarjestys
+              :tyyppi :string
+              :leveys 1}
              {:otsikko "Kuvaus"
               :nimi :kuvaus
               :tyyppi :string
