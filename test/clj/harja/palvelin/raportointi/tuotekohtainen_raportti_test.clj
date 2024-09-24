@@ -137,7 +137,7 @@
         mhu-yllapito (nth vastaus 5)
         mhu-korvausinvestointi (nth vastaus 6)
 
-        
+
 
         _ (println "\n talvihoito" talvihoito)
         _ (println "\n liikenneymp-hoito" liikenneymp-hoito)
@@ -190,6 +190,18 @@
         paallyste-muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk paallyste)
         paallyste-muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk paallyste)
         paallyste-yhteensa (:kaikki_laskutettu paallyste)
+
+        ;; Mhu ylläpito
+        mhu-yllapito-hankinnat (:hankinnat_laskutettu mhu-yllapito)
+        mhu-yllapito-lisatyot (:lisatyot_laskutettu mhu-yllapito)
+        mhu-yllapito-sanktiot (:sakot_laskutettu mhu-yllapito)
+        mhu-yllapito-akilliset-hoitotyot (:akilliset_hoitotyot_hk mhu-yllapito)
+        mhu-yllapito-rahavaraus-a (:kaikki_rahavaraukset_hoitokausi_yht mhu-yllapito)
+        mhu-yllapito-tilaajan-rahavaraus (:tilaajan_rahavaraus_kannustinjarjestelmaan_hk mhu-yllapito)
+        mhu-yllapito-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk mhu-yllapito)
+        mhu-yllapito-muut-tavoitehintaan-vaikuttavat-kulut (:muut_tavoitehintaan_vaikuttavat_kulut_hk mhu-yllapito)
+        mhu-yllapito-muut-tavoitehinnan-ulkopuoliset-kulut (:muut_tavoitehinnan_ulkopuoliset_kulut_hk mhu-yllapito)
+        mhu-yllapito-yhteensa (:kaikki_laskutettu mhu-yllapito)
 
         ;; Mhu hoidon johto
         mhu-johto-ja-hallintokorvaukset (:johto_ja_hallinto_laskutettu mhu-ja-hoidon-johto)
@@ -249,6 +261,18 @@
     (is (= paallyste-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
     (is (= paallyste-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
     (is (= paallyste-yhteensa 11001.94M))
+
+    ;; Mhu ylläpito
+    (is (= mhu-yllapito-hankinnat 14000.97M))
+    (is (= mhu-yllapito-lisatyot 1400.97M))
+    (is (= mhu-yllapito-sanktiot 0.0M))
+    (is (= mhu-yllapito-akilliset-hoitotyot 0.0M))
+    (is (= mhu-yllapito-rahavaraus-a 0.0M))
+    (is (= mhu-yllapito-tilaajan-rahavaraus 0.0M))
+    (is (= mhu-yllapito-vahinkojen-korjaukset 0.0M))
+    (is (= mhu-yllapito-muut-tavoitehintaan-vaikuttavat-kulut 0.0M))
+    (is (= mhu-yllapito-muut-tavoitehinnan-ulkopuoliset-kulut 0.0M))
+    (is (= mhu-yllapito-yhteensa 15401.94M))
     
     ;; Mhu hoidon johto
     (is (= mhu-johto-ja-hallintokorvaukset 10.20M))
