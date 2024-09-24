@@ -5,7 +5,6 @@ updates:
     # Etsi GitHub Actions riippuvuuksia kaikista relevanteista hakemistoista
     # Eli, etsitään .yml tiedostoja, joissa voisi olla päivitettäviä riippuvuuksia
     directories:
-      - "/"
       - "/.github/actions/*"
       - "/.github/workflows"
     groups:
@@ -22,6 +21,13 @@ updates:
       cache-action:
         patterns:
           - "actions/cache*"
+      setup-java-action:
+        patterns:
+          - "actions/setup-java*"
+      junit-report-action:
+        patterns:
+          - "mikepenz/action-junit-report*"
+
     schedule:
       interval: "weekly"
 
