@@ -28,7 +28,7 @@ runs:
 
     - name: Cache Clojure Dependencies
       id: cache-clojure-deps
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       if: ${{ inputs.install-clojure-deps == 'true' }}
       with:
         path: ~/.m2/repository
@@ -58,7 +58,7 @@ runs:
     # https://www.voorhoede.nl/en/blog/super-fast-npm-install-on-github-actions/
     - name: Cache NPM packages
       id: cache-npm
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       if: ${{ inputs.install-node-deps == 'true' }}
       with:
         path: ~/.npm
