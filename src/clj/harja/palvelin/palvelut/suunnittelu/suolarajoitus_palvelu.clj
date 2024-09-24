@@ -21,7 +21,7 @@
     false
     true))
 
-(defn tr-osoitteen-validointi
+(defn tieosoitteen-validointi
   "Validoi tr-osoitteen lähinnä tien ja osan pituuden suhteen. Tie pitää löytyä. Ja osan pituus pitää täsmätä.
   Tierekisteriosoitteessa saa kuitenkin olla katkoja, koska tierekisterit muuttuvat mm. kun jokin liittymä poistetaan
   tieltä. Näin ollen tierekisteristä voi osasat 8 hypätä suoraan osaan 10. Näissä tilanteissa ei luoda virhettä,
@@ -87,7 +87,8 @@
 
 (defn tierekisterin-tiedot [db {:keys [urakka-id hoitokauden-alkuvuosi] :as suolarajoitus}]
   (log/debug "tierekisterin-tiedot :: suolarajoitus" suolarajoitus)
-  (let [validaatiot (tr-osoitteen-validointi db suolarajoitus)]
+  (let [validaatiot (tieverkko-kyselyt/tieosoitteen-validointi db
+                      (:tie suolarajoitus) (:aosa suolarajoitus) (:aet suolarajoitus) (:losa suolarajoitus) (:let suolarajoitus))]
     (if (:validaatiovirheet validaatiot)
       ; Jos virheitä, palauta virheet
       (do

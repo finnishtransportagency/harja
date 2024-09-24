@@ -96,18 +96,12 @@
         kalusto-rivit (group-by :nimi kalusto-rivit)
 
         reittien-nimet (keys reitti-rivit)
-        reitti-rivi-kpl (reduce (fn [acc reitin-nimi]
-                                  (+ acc (count (get-in reitti-rivit [reitin-nimi]))))
-                          0 reittien-nimet)
-        kalusto-rivi-kpl (reduce (fn [acc reitin-nimi]
-                                   (+ acc (count (get-in kalusto-rivit [reitin-nimi]))))
-                           0 reittien-nimet)
 
         ;; Reitti ja kalusto tabeilla täytyy olla sama määrä rivejä
-        _ (when (not= kalusto-rivi-kpl reitti-rivi-kpl)
+        _ (when (not= (count reitti-rivit) (count kalusto-rivit))
             (throw+ {:type :validaatiovirhe
-                     :virheet [{:virheet (str "Reittien ja kaluston määrä ei täsmää. Reittien määrä: " reitti-rivi-kpl
-                                           ", kaluston määrä: " kalusto-rivi-kpl)}]}))
+                     :virheet [{:virheet (str "Reittien ja kaluston määrä ei täsmää. Reittien määrä: " (count reitti-rivit)
+                                           ", kaluston määrä: " (count kalusto-rivit))}]}))
 
         ;; Mäpätään reitit ja kalusto yhteen
         reitit (reduce
@@ -117,12 +111,8 @@
                                            :tunniste nimi
                                            :sijainnit (map #(dissoc % :nimi) (get-in reitti-rivit [nimi]))}
                          kalustot (mapv #(dissoc % :nimi) (get-in kalusto-rivit [nimi]))
-
                          lopulliset-kalustot (mapv #(jaa-mappi-helpperi %) kalustot)
-                         reitit (map-indexed (fn [indeksi reitti]
-                                               (assoc reitti :kalustot (nth lopulliset-kalustot indeksi)))
-                                  (:sijainnit talvihoitoreitti))
-
+                         reitit (map (fn [reitti] (assoc reitti :kalustot (flatten lopulliset-kalustot))) (:sijainnit talvihoitoreitti))
                          lopullinen-talvihoitoreitti (assoc talvihoitoreitti :sijainnit reitit)]
                      (conj tulos lopullinen-talvihoitoreitti)))
                  [] reittien-nimet)]

@@ -83,7 +83,7 @@
                  [:li rivi])]]))
          (when (not (empty? muut-virheet))
            (doall
-             [:div [:h2 "Muut virheet"]
+             [:div [:h2 "Tieosoite virheet"]
               [:ul
                (for [rivi muut-virheet]
                  ^{:key (gensym)}

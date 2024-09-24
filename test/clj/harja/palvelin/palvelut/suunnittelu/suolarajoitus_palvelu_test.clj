@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :as t]
-            [clojure.string :as str]
+            [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [com.stuartsierra.component :as component]
             [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]))
 
@@ -376,20 +376,22 @@
     (is (= 3 (count (:vastaus vastaus))))
     (is (= "Tieosoite puutteellinen." (first (:vastaus vastaus))))))
 
-(deftest tr-osoitteen-validointi-test
+(deftest tieosoitteen-validointi-test
   (testing "Tieosoite on yksinkertainen ja on olemassa"
     (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
           tierekisteriosoite {:tie 130 :aosa 1 :aet 1 :losa 1 :let 100}
           suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
-          vastaus (suolarajoitus-palvelu/tr-osoitteen-validointi (:db t/jarjestelma) suolarajoitus)]
-      (is (= nil (:validaatiovirheet vastaus)) "Tierekisteriä ei löydy tietokannasta.")))
+          vastaus (tieverkko-kyselyt/tieosoitteen-validointi (:db t/jarjestelma)
+                    (:tie suolarajoitus) (:aosa suolarajoitus) (:aet suolarajoitus) (:losa suolarajoitus) (:let suolarajoitus))]
+      (is (= nil (:validaatiovirheet vastaus)) "Tieosoitetta ei löydy tietokannasta.")))
   (testing "Tieosoite on katki, eli osa 9 puuttuu tietokannasta."
     (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
           tierekisteriosoite {:tie 130 :aosa 8 :aet 1 :losa 10 :let 100}
           suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
-          vastaus (suolarajoitus-palvelu/tr-osoitteen-validointi (:db t/jarjestelma) suolarajoitus)]
+          vastaus (tieverkko-kyselyt/tieosoitteen-validointi (:db t/jarjestelma)
+                    (:tie suolarajoitus) (:aosa suolarajoitus) (:aet suolarajoitus) (:losa suolarajoitus) (:let suolarajoitus))]
       (is (= (nil? (:validaatiovirheet vastaus))))
-      (is (= "Tierekisteriosoite ei ole yhtenäinen." (first (:validaatioinfot vastaus))) "Tierekisteriosoitte ei ole yhtenäinen."))))
+      (is (= "Tieosoite ei ole yhtenäinen." (first (:validaatioinfot vastaus))) "Tieosoite ei ole yhtenäinen."))))
 
 
 (deftest laske-tierekisteriosoitteelle-pituus-vaarilla-tiedoilla-ei-onnistu-test

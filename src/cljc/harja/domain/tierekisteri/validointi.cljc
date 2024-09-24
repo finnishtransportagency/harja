@@ -1,6 +1,7 @@
 (ns harja.domain.tierekisteri.validointi
   "Yhteiset validointikäsittelyt frontille ja bäkkärille tierekisterin suhteen"
   (:require [clojure.string :as str]
+            [harja.domain.hoitoluokat :as hoitoluokat-domain]
             #?@(:clj [
                       [clj-time.core :as t]])
             #?@(:cljs [[cljs-time.core :as t]])))
@@ -16,3 +17,15 @@
                   (conj validointivirheet virheet)
                   validointivirheet)]
     virheet))
+
+(defn validoi-hoitoluokka [hoitoluokka]
+  (cond
+    ;; Ei saa olla tyhjä
+    (str/blank? hoitoluokka) "Hoitoluokka puuttuu"
+
+    ;; Täytyy löytyä lowercasena kovakoodaituista hoitoluokista
+    (nil? (hoitoluokat-domain/talvihoitoluokan-numero (str/lower-case hoitoluokka)))
+    (str "Hoitoluokka " hoitoluokka " on Harjalle tuntematon hoitoluokka.")
+
+    ;; Kaikki ok
+    :else nil))

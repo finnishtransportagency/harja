@@ -6,6 +6,7 @@
             [harja.domain.tierekisteri :as tr]
             [harja.domain.tierekisteri.validointi :as tr-validointi]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]
             [taoensso.timbre :as log]
@@ -84,63 +85,79 @@
                            (catch [:type :validaatiovirhe] {:keys [virheet]}
                              (swap! virheet-atom conj virheet)
                              nil))
-        _ (log/debug "kasittele-excel :: talvihoitoreitit:" talvihoitoreitit)
 
         ;; Käsittele jokainen talvihoitoreitti itsenäisessä loopissa
-        _ (doseq [t talvihoitoreitit]
-            (jdbc/with-db-transaction [db db]
-              (let [;; Varmista, että talvihoitoreittiä ei ole jo olemassa
-                    talvihoitoreitti-db (first (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka-id
-                                                                                                             :ulkoinen_id (:tunniste t)}))
+        _ (dorun (for [t talvihoitoreitit]
+                   (jdbc/with-db-transaction [db db]
+                     (let [;; Varmista, että talvihoitoreittiä ei ole jo olemassa
+                           talvihoitoreitti-db (first (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka-id
+                                                                                                                    :ulkoinen_id (:tunniste t)}))
 
-                    ;; Talvihoitoreitillä voi olla virheellisiä tieosoitteita
-                    tieosoite-virheet (reduce (fn [virheet r]
-                                                (let [validointivastaus (tr-validointi/validoi-tieosoite virheet (:tie r) (:aosa r) (:losa r) (:aet r) (:let r))
-                                                      v (if-not (empty? validointivastaus)
-                                                          {:virheet (str "Reitin " (:reittinimi t) ", virheet: " (str/join (vec (mapcat identity validointivastaus))))}
-                                                          nil)
-                                                      _ (when v (swap! virheet-atom conj v))]
-                                                  v))
-                                        [] (:sijainnit t))
+                           indeksi-atom (atom 6) ;; Excel alkaa rivistä 6
+                           ;; Talvihoitoreitillä voi olla virheellisiä tieosoitteita
+                           tieosoite-virheet (reduce (fn [virheet r]
+                                                       (let [;; Tietokantapohjainen validointi
+                                                             tievalidointi (tieverkko-kyselyt/tieosoitteen-validointi db (:tie r) (:aosa r) (:aet r) (:losa r) (:let r))
+                                                             tievalidointivirhe (if (and (not (nil? tievalidointi)) (not (nil? (:validaatiovirheet tievalidointi))))
+                                                                                  {:virheet (str "Rivillä " @indeksi-atom " reitin " (:reittinimi t) ", virheet: " (str/join (vec (mapcat identity (:validaatiovirheet tievalidointi)))))}
+                                                                                  nil)
 
+                                                             ;; Hoitoluokan validointi
+                                                             hoitoluokka-vastaus (tr-validointi/validoi-hoitoluokka (:hoitoluokka r))
+                                                             hoitoluokkavirhe (if-not (nil? hoitoluokka-vastaus)
+                                                                                {:virheet (str "Rivillä " @indeksi-atom " reitin " (:reittinimi t) ", hoitoluokassa virhe: " hoitoluokka-vastaus)}
+                                                                                nil)
+                                                             virheet (if (not (nil? tievalidointivirhe))
+                                                                       (conj virheet tievalidointivirhe)
+                                                                       virheet)
+                                                             virheet (if (not (nil? hoitoluokkavirhe))
+                                                                       (conj virheet hoitoluokkavirhe)
+                                                                       virheet)
+                                                             _ (swap! indeksi-atom inc)]
+                                                         virheet))
+                                               [] (:sijainnit t))
 
-                    ;; Etsitään leikkaavat geometriat vain, jos ei ole virheitä ja ei olla päivittämässä olemassa olevaa
-                    leikkaavat-geometriat (when (and (empty? tieosoite-virheet) (nil? talvihoitoreitti-db))
-                                            (reduce (fn [leikkaavat-geometriat r]
-                                                      (let [leikkaavat (talvihoitoreitit-q/hae-leikkaavat-geometriat db
-                                                                         {:urakka_id urakka-id
-                                                                          :tie (:tie r)
-                                                                          :aosa (:aosa r)
-                                                                          :losa (:losa r)
-                                                                          :aet (:aet r)
-                                                                          :let (:let r)})]
-                                                        (if-not (empty? leikkaavat)
-                                                          (conj leikkaavat-geometriat
-                                                            {:leikkaavat (format "Tieosoite: %s leikkaa jo olemassa olevan talvihoitoreitin kanssa."
-                                                                           (tr/tr-osoite-moderni-fmt
-                                                                             (:tie r) (:aosa r) (:aet r)
-                                                                             (:losa r) (:let r)))})
-                                                          leikkaavat-geometriat)))
-                                              [] (:sijainnit t)))
+                           _ (when-not (empty? tieosoite-virheet)
+                               (swap! virheet-atom conj tieosoite-virheet))
 
-                    ;; Tallennetaan mahdolliset virheet atomiin
-                    _ (swap! virheet-atom conj (conj leikkaavat-geometriat))
+                           ;; Etsitään leikkaavat geometriat vain, jos ei ole virheitä ja ei olla päivittämässä olemassa olevaa
+                           leikkaavat-geometriat (when (and (empty? tieosoite-virheet) (nil? talvihoitoreitti-db))
+                                                   (reduce (fn [leikkaavat-geometriat r]
+                                                             (let [leikkaavat (talvihoitoreitit-q/hae-leikkaavat-geometriat db
+                                                                                {:urakka_id urakka-id
+                                                                                 :tie (:tie r)
+                                                                                 :aosa (:aosa r)
+                                                                                 :losa (:losa r)
+                                                                                 :aet (:aet r)
+                                                                                 :let (:let r)})]
+                                                               (if-not (empty? leikkaavat)
+                                                                 (conj leikkaavat-geometriat
+                                                                   {:leikkaavat (format "Reitin: %s, Tieosoite: %s leikkaa jo olemassa olevan talvihoitoreitin kanssa."
+                                                                                  (:reittinimi t)
+                                                                                  (tr/tr-osoite-moderni-fmt
+                                                                                    (:tie r) (:aosa r) (:aet r)
+                                                                                    (:losa r) (:let r)))})
+                                                                 leikkaavat-geometriat)))
+                                                     [] (:sijainnit t)))
 
-                    ;; Jos talvihoitoreittiä ei löydy tietokannasta, niin tallennetaan se uutena
-                    talvihoitoreitti-id (when (and (nil? talvihoitoreitti-db) (empty? tieosoite-virheet) (empty? leikkaavat-geometriat))
-                                          (:id (talvihoitoreitit-q/lisaa-talvihoitoreitti-tietokantaan
-                                                 db t urakka-id (:id kayttaja))))
+                           ;; Tallennetaan mahdolliset virheet atomiin
+                           _ (swap! virheet-atom conj (conj leikkaavat-geometriat))
 
-                    ;; Jos talvihoitoreitti löytyy tietokannasta, niin päivitetään
-                    _ (when (and talvihoitoreitti-db (empty? tieosoite-virheet) (empty? leikkaavat-geometriat))
-                        (talvihoitoreitit-q/paivita-talvihoitoreitti-tietokantaan db t urakka-id (:id kayttaja))
-                        (swap! paivitetyt-atom conj (:reittinimi t)))]
+                           ;; Jos talvihoitoreittiä ei löydy tietokannasta, niin tallennetaan se uutena
+                           talvihoitoreitti-id (when (and (nil? talvihoitoreitti-db) (empty? tieosoite-virheet) (empty? leikkaavat-geometriat))
+                                                 (:id (talvihoitoreitit-q/lisaa-talvihoitoreitti-tietokantaan
+                                                        db t urakka-id (:id kayttaja))))
 
-                ;; Jos talvihoitoreitin perustiedot on onnistuneesti tallennettu, niin tallennetaan myös kalustot ja reitit
-                (when (and (nil? talvihoitoreitti-db) talvihoitoreitti-id)
-                  (do
-                    (talvihoitoreitit-q/lisaa-kalustot-ja-reitit db talvihoitoreitti-id t)
-                    (swap! lisatyt-atom conj (:reittinimi t)))))))
+                           ;; Jos talvihoitoreitti löytyy tietokannasta, niin päivitetään
+                           _ (when (and talvihoitoreitti-db (empty? tieosoite-virheet) (empty? leikkaavat-geometriat))
+                               (talvihoitoreitit-q/paivita-talvihoitoreitti-tietokantaan db t urakka-id (:id kayttaja))
+                               (swap! paivitetyt-atom conj (:reittinimi t)))]
+
+                       ;; Jos talvihoitoreitin perustiedot on onnistuneesti tallennettu, niin tallennetaan myös kalustot ja reitit
+                       (when (and (nil? talvihoitoreitti-db) talvihoitoreitti-id)
+                         (do
+                           (talvihoitoreitit-q/lisaa-kalustot-ja-reitit db talvihoitoreitti-id t)
+                           (swap! lisatyt-atom conj (:reittinimi t))))))))
 
         vastaus (if (and (empty? @lisatyt-atom) (empty? @virheet-atom) (empty? @paivitetyt-atom))
                   {:virheet ["Excelistä ei löydetty talvihoitoreittejä."]}
@@ -152,7 +169,6 @@
     (transit-vastaus vastaus)))
 
 (defn vastaanota-excel [db request]
-  (log/debug "vastaanota-excel :: request" request)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys
     (:kayttaja request)
     (Integer/parseInt (get (:params request) "urakka-id")))
