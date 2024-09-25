@@ -34,7 +34,8 @@
                   "kuittaamaton",
                   "vastaanotettu",
                   "aloitettu",
-                  "lopetettu"
+                  "lopetettu",
+                  "ei-valitettu"
                 ]
               },
               "alueurakkanumero": {
