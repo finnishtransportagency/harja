@@ -94,10 +94,6 @@ runs:
       if: ${{ inputs.upload-sarif == 'true' }}
       env:
         DOCKERFILE_PATH: ${{ inputs.dockerfile-path-for-sarif }}
-        # FIXME: https://github.com/aquasecurity/trivy-action/issues/389
-        #        GitHubin globaali Rate limit estää toisinaan trivy-skannauksen suorituksen.
-        #        Tämä on väliaikainen workaround
-        ACTIONS_RUNTIME_TOKEN: ${{ inputs.github-token }}
       run: |
         cat trivy-results.sarif | \
           jq '.runs[].results[].locations[].physicalLocation.artifactLocation += {"uri": "${{ env.DOCKERFILE_PATH }}","uriBaseId": "ROOTPATH"}' | \
