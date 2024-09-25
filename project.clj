@@ -52,7 +52,7 @@
                  [org.clojure/core.memoize "1.0.257"]
 
                  ;; Pattern match kirjasto
-                 [org.clojure/core.match "1.0.0"]
+                 [org.clojure/core.match "1.1.0"]
 
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
