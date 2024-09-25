@@ -25,6 +25,9 @@ inputs:
   upload-sarif:
     description: 'Upload Sarif report to GitHub'
     default: 'false'
+  github-token:
+    description: 'GitHub token for bypassing global rate limits'
+    required: false
 
 
 runs:
@@ -39,7 +42,7 @@ runs:
         # FIXME: https://github.com/aquasecurity/trivy-action/issues/389
         #        GitHubin globaali Rate limit estää toisinaan trivy-skannauksen suorituksen.
         #        Tämä on väliaikainen workaround
-        ACTION_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ACTION_RUNTIME_TOKEN: ${{ inputs.github-token }}
       with:
         image-ref: ${{ env.IMAGE_REF}}
         output: trivy.txt
@@ -72,7 +75,7 @@ runs:
         # FIXME: https://github.com/aquasecurity/trivy-action/issues/389
         #        GitHubin globaali Rate limit estää toisinaan trivy-skannauksen suorituksen.
         #        Tämä on väliaikainen workaround
-        ACTION_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ACTION_RUNTIME_TOKEN: ${{ inputs.github-token }}
       with:
         image-ref: ${{ env.IMAGE_REF}}
         format: 'sarif'
@@ -93,7 +96,7 @@ runs:
         # FIXME: https://github.com/aquasecurity/trivy-action/issues/389
         #        GitHubin globaali Rate limit estää toisinaan trivy-skannauksen suorituksen.
         #        Tämä on väliaikainen workaround
-        ACTION_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ACTION_RUNTIME_TOKEN: ${{ inputs.github-token }}
       run: |
         cat trivy-results.sarif | \
           jq '.runs[].results[].locations[].physicalLocation.artifactLocation += {"uri": "${{ env.DOCKERFILE_PATH }}","uriBaseId": "ROOTPATH"}' | \
@@ -131,7 +134,7 @@ runs:
         # FIXME: https://github.com/aquasecurity/trivy-action/issues/389
         #        GitHubin globaali Rate limit estää toisinaan trivy-skannauksen suorituksen.
         #        Tämä on väliaikainen workaround
-        ACTION_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ACTION_RUNTIME_TOKEN: ${{ inputs.github-token }}
       with:
         image-ref: ${{ env.IMAGE_REF}}
         format: 'table'
