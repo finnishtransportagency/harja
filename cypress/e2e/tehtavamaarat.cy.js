@@ -129,7 +129,13 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         cy.wait('@HaeSopimuksenTila')
         cy.viewport(1100, 2000)
 
-        cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').clear().type('666').blur()
+        // Tehdään syöttö osissa siltä varalta, että element irtoaa DOMista kesken testin.
+        // Kun elementti haetaan aliaksen avulla, cypress osaa retryttää hakuqueryn.
+        cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').as('muokattavaElementti');
+        cy.get('@muokattavaElementti').find('input').clear();
+        cy.get('@muokattavaElementti').find('input').type('666');
+        cy.get('@muokattavaElementti').find('input').blur();
+
         cy.wait('@TallennaTehtavamaarat')
     })
 
