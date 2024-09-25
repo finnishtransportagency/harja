@@ -271,6 +271,10 @@ jobs:
           ignore-unfixed: true
           # Disabloi upload-sarif, koska sarif uploadataan develop-branchin testien yhteydessä
           upload-sarif: false
+          # FIXME: https://github.com/aquasecurity/trivy-action/issues/389
+          #        GitHubin globaali Rate limit estää toisinaan trivy-skannauksen suorituksen.
+          #        Tämä on väliaikainen workaround
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   backend-tests:
     if: ${{ inputs.backend-tests == 'true' }}
