@@ -91,7 +91,7 @@
     tulos))
 
 
-(defn parsi-tuotekohtainen-raportti [vastaus]
+(defn parsi-tuotekohtainen-laskutus-vastaus [vastaus]
   (map (fn [rivi]
          (let [purettu (pura-laskutusraportti-mapiksi rivi)
                rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet purettu))
@@ -113,12 +113,7 @@
     vastaus))
 
 
-(deftest tuotekohtainen-laskutusyhteenveto-raportti-toimii
-  (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) :suorita-raportti
-    (fn [user raportti]
-      (suorita-raportti (:raportointi jarjestelma) user raportti))
-    {:trace false})
-
+(deftest tuotekohtainen-laskutusyhteenveto-sql-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
@@ -127,7 +122,7 @@
         vastaus (q (format "select * from mhu_laskutusyhteenveto_teiden_hoito('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
 
-        vastaus (parsi-tuotekohtainen-raportti vastaus)
+        vastaus (parsi-tuotekohtainen-laskutus-vastaus vastaus)
         talvihoito (first vastaus)
         liikenneymp-hoito (second vastaus)
         soratien-hoito (nth vastaus 2)
@@ -135,9 +130,8 @@
         paallyste (nth vastaus 4)
         mhu-yllapito (nth vastaus 5)
         mhu-korvausinvestointi (nth vastaus 6)
-
-        _ (println "\n vastaus: " vastaus)
-
+        
+        ;; Talvihoito
         talvihoito-hankinnat (:hankinnat_laskutettu talvihoito)
         talvihoito-lisatyot (:lisatyot_laskutettu talvihoito)
         talvihoito-sanktiot (:sakot_laskutettu talvihoito)

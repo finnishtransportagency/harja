@@ -423,22 +423,23 @@ BEGIN
 
         LOOP
 
-        -- Alusta hankitojen muuttujat, on tehtävä tässä muuten tulee virhettä
-		    SELECT NULL::numeric AS summa INTO talvihoito_rivi;
-			  SELECT NULL::numeric AS summa INTO lisatyo_talvihoito_rivi;
-		    SELECT NULL::numeric AS summa INTO lyh_rivi;
-		    SELECT NULL::numeric AS summa INTO lisatyo_lyh_rivi;
-		    SELECT NULL::numeric AS summa INTO sora_rivi;
-		    SELECT NULL::numeric AS summa INTO lisatyo_sora_rivi;
-		    SELECT NULL::numeric AS summa INTO paallyste_rivi;
-		    SELECT NULL::numeric AS summa INTO lisatyo_paallyste_rivi;
-		    SELECT NULL::numeric AS summa INTO yllapito_rivi;
-		    SELECT NULL::numeric AS summa INTO lisatyo_yllapito_rivi;
-		    SELECT NULL::numeric AS summa INTO korvausinv_rivi;
-		    SELECT NULL::numeric AS summa INTO lisatyo_korvausinv_rivi;
-		    SELECT NULL::numeric AS summa INTO lisatyo_hoidonjohto_rivi;
+            -- Alusta hankitojen muuttujat, on tehtävä tässä muuten tulee virhettä
+            SELECT NULL::numeric AS summa INTO talvihoito_rivi;
+            SELECT NULL::numeric AS summa INTO lisatyo_talvihoito_rivi;
+            SELECT NULL::numeric AS summa INTO lyh_rivi;
+            SELECT NULL::numeric AS summa INTO lisatyo_lyh_rivi;
+            SELECT NULL::numeric AS summa INTO sora_rivi;
+            SELECT NULL::numeric AS summa INTO lisatyo_sora_rivi;
+            SELECT NULL::numeric AS summa INTO paallyste_rivi;
+            SELECT NULL::numeric AS summa INTO lisatyo_paallyste_rivi;
+            SELECT NULL::numeric AS summa INTO yllapito_rivi;
+            SELECT NULL::numeric AS summa INTO lisatyo_yllapito_rivi;
+            SELECT NULL::numeric AS summa INTO korvausinv_rivi;
+            SELECT NULL::numeric AS summa INTO lisatyo_korvausinv_rivi;
+            SELECT NULL::numeric AS summa INTO lisatyo_hoidonjohto_rivi;
 
             RAISE NOTICE 'rivi: %', rivi;
+
             -- Kohdista talvihoitoon liittyvät rivit talvihoito_rivi:lle
             IF rivi.tavoitehintainen IS TRUE -- Talvihoito hankinnat ovat tavoitehintaisia
             AND rivi.toimenpideinstanssi_id = talvihoito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
@@ -536,11 +537,9 @@ BEGIN
             END IF;
 
             -- Kohdista MHU ylläpidon liittyvät rivit yllapito_rivi:lle
-            -- Katso että rivi ei myöskään kuulu kannustinjärjestelmään (T3) (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6') 
-            -- Eli uudella rahavaraustietomallilla rahavaraus_id = kannustin_id
             IF rivi.tavoitehintainen IS TRUE
-            AND rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
-               (rivi.yksiloiva_tunniste IS NULL OR (rivi.rahavaraus_id IS NULL OR rivi.rahavaraus_id != kannustin_id)) THEN
+            AND rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' 
+            AND rivi.rahavaraus_id IS NULL THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -551,10 +550,9 @@ BEGIN
             END IF;
 
             -- Kohdista MHU ylläpidon liittyvät lisätyö rivit lisatyo_yllapito_rivi:lle
-            -- Katso että ei kuulu kannustinjärjestelmään
             IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
-            AND rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
-               (rivi.yksiloiva_tunniste IS NULL OR (rivi.rahavaraus_id IS NULL OR rivi.rahavaraus_id != kannustin_id)) THEN
+            AND rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' 
+            AND rivi.rahavaraus_id IS NULL THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
