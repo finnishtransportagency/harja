@@ -34,7 +34,6 @@
 
                  ;; -- Lokitus
                  [com.taoensso/timbre "5.2.1"]
-                 [org.apache.logging.log4j/log4j-core "2.22.1"]
 
                  ;; -- Metriikkadata
                  [org.clojure/java.jmx "0.3.4"]
@@ -164,6 +163,11 @@
                          ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
                          ;;  TODO: Tämä muutos voidaan poistaa, kunhan poi-ooxml ottaa mukaan uudemman version kirjastosta.
                          [org.apache.commons/commons-compress "1.26.1"]
+
+                         ;; org.apache.poi/poi "5.2.5" kirjaston mukana tulee vanhempi log4j-api
+                         ;; Pakotetaan se uudemmaksi
+                         ;; TODO: Tämä muutos voidaan poistaa, kunhan poi ottaa mukaan uudemman version kirjastosta.
+                         [org.apache.logging.log4j/log4j-api "2.22.1"]
 
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
