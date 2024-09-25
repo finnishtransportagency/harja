@@ -416,8 +416,7 @@ BEGIN
                hoidonjohto_tpi_id
             )
         LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
-            -- Äkillisethoitotyöt ja vahingonkorjaukset niputetaan erikseen omiin laareihinsa, joten jätetään ne tässä pois
-            WHERE ( lk.rahavaraus_id NOT IN (akilliset_id, vahingot_id) OR lk.rahavaraus_id IS NULL )
+            WHERE lk.rahavaraus_id IS NULL 
               AND lk.poistettu IS NOT TRUE
               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
 
@@ -538,7 +537,8 @@ BEGIN
 
             -- Kohdista MHU ylläpidon liittyvät rivit yllapito_rivi:lle
             IF rivi.tavoitehintainen IS TRUE
-            AND rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' 
+            AND rivi.toimenpideinstanssi_id = yllapito_tpi_id 
+            AND rivi.maksueratyyppi != 'lisatyo' 
             AND rivi.rahavaraus_id IS NULL THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
@@ -551,7 +551,8 @@ BEGIN
 
             -- Kohdista MHU ylläpidon liittyvät lisätyö rivit lisatyo_yllapito_rivi:lle
             IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
-            AND rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' 
+            AND rivi.toimenpideinstanssi_id = yllapito_tpi_id 
+            AND rivi.maksueratyyppi = 'lisatyo' 
             AND rivi.rahavaraus_id IS NULL THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
