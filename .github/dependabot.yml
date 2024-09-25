@@ -1,19 +1,44 @@
 version: 2
 updates:
-  # Enable version updates for GitHub Actions
+  # GitHub Actions päivitykset
   - package-ecosystem: "github-actions"
-    directory: "/"
+    # Etsi GitHub Actions riippuvuuksia kaikista relevanteista hakemistoista
+    # Eli, etsitään .yml tiedostoja, joissa voisi olla päivitettäviä riippuvuuksia
+    directories:
+      - "/.github/actions/*"
+      - "/.github/workflows"
+    groups:
+      # Ryhmittele eri tiedostoistä löytyneet riippuvuudet samaan PR:ään
+      trivy-action:
+        patterns:
+          - "aquasecurity/trivy-action*"
+      docker-login-action:
+        patterns:
+          - "docker/login-action*"
+      sarif-upload-action:
+        patterns:
+          - "github/codeql-action/upload-sarif*"
+      cache-action:
+        patterns:
+          - "actions/cache*"
+      setup-java-action:
+        patterns:
+          - "actions/setup-java*"
+      junit-report-action:
+        patterns:
+          - "mikepenz/action-junit-report*"
+
     schedule:
       interval: "weekly"
 
-  # Enable version updates for Docker
+  # Dcoker image päivitykset
   - package-ecosystem: "docker"
     directory: "/aws/fargate/"
     # Check for updates once a week
     schedule:
       interval: "weekly"
 
-  # Enable version updates for tietokanta pom.xml maven plugins
+  # tietokanta pom.xml maven plugin päivitykset
   - package-ecosystem: "maven"
     directory: /tietokanta
     schedule:

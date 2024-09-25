@@ -21,34 +21,22 @@
              :error body}))
   {:sisalto body :otsikot headers})
 
-(defn laheta-sms [db integraatioloki kayttajatunnus salasana url sms-url apiavain numero viesti otsikot]
-  (if (and (or (empty? kayttajatunnus) (empty? salasana) (empty? url))
-        (or (empty? apiavain) (empty? sms-url)))
-    (log/warn "Tunnistautumistietoja tai URLia LinkMobilityn LinkSMS-palveluun (entinen Labyrintti) ei ole annettu. Viestiä ei voida lähettää.
-    Pilviympäristössä käytössä on api-avain ja sms-url. Vanhassa ympäristössä käyttäjätunnus, salasana ja url.")
+(defn laheta-sms [db integraatioloki sms-url apiavain numero viesti otsikot]
+  (if (or (empty? apiavain) (empty? sms-url))
+    (log/warn "Tunnistautumistietoja tai URLia LinkMobilityn LinkSMS-palveluun (entinen Labyrintti) ei ole annettu. Viestiä ei voida lähettää.")
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "labyrintti" "laheta"
       (fn [konteksti]
-        ;; TODO: #yliheitto Poista yliheiton jälkeen vaihtoehto, jossa ei lähetetä apiavainta ja http-asetukset, joissa metodi on GET.
         (let [otsikot (merge
-                        (if (empty? apiavain)
-                          {"Content-Type" "application/x-www-form-urlencoded"}
-                          {"Content-Type" "application/x-www-form-urlencoded"
-                           "x-api-key" apiavain})
+                        {"Content-Type" "application/x-www-form-urlencoded"
+                         "x-api-key" apiavain}
                         otsikot)
               parametrit {"dests" numero
                           "text" viesti}
-              http-asetukset (if (empty? apiavain)
-                               {:metodi :GET
-                                :url url
-                                :kayttajatunnus kayttajatunnus
-                                :salasana salasana
-                                :otsikot otsikot
-                                :parametrit parametrit}
-                               {:metodi :POST
-                                :url sms-url
-                                :otsikot otsikot
-                                :lomakedatana? true})       ;; Pilviympäristössä parametrit lähetetään avain-arvo-pareina form-parametreissä
+              http-asetukset {:metodi :POST
+                              :url sms-url
+                              :otsikot otsikot
+                              :lomakedatana? true}      ;; Parametrit lähetetään avain-arvo-pareina form-parametreissä
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset parametrit)]
           (kasittele-vastaus body headers))))))
 
@@ -99,7 +87,7 @@
         (kasittele-epaonnistunut-viestin-kasittely integraatioloki tapahtuma-id e)
         {:status 500}))))
 
-(defrecord Labyrintti [url kayttajatunnus salasana sms-url apiavain kuuntelijat]
+(defrecord Labyrintti [sms-url apiavain kuuntelijat]
   component/Lifecycle
   (start [{http :http-palvelin integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
@@ -107,9 +95,6 @@
       (POST "/sms" request (vastaanota-tekstiviesti integraatioloki request kuuntelijat))
       true)
     (assoc this
-      :url url
-      :kayttajatunnus kayttajatunnus
-      :salasana salasana
       :sms-url sms-url
       :apiavain apiavain))
 
@@ -126,9 +111,6 @@
   (laheta [this numero viesti otsikot]
     (laheta-sms (:db this)
                 (:integraatioloki this)
-                (:kayttajatunnus this)
-                (:salasana this)
-                (:url this)
                 (:sms-url this)
                 (:apiavain this)
                 numero
@@ -136,7 +118,7 @@
                 otsikot)))
 
 (defn luo-labyrintti [asetukset]
-  (->Labyrintti (:url asetukset) (:kayttajatunnus asetukset) (:salasana asetukset) (:sms-url asetukset) (:apiavain asetukset) (atom #{})))
+  (->Labyrintti (:sms-url asetukset) (:apiavain asetukset) (atom #{})))
 
 (defrecord FeikkiLabyrintti []
   component/Lifecycle

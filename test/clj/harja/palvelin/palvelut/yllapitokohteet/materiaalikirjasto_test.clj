@@ -381,23 +381,23 @@
   '(#:harja.domain.pot2{:dop-nro "12345abc"
                         :kaytossa ()
                         :kuulamyllyluokka "AN5"
-                        :lisaaineet ({:harja.domain.pot2/massa-id 6
-                                      :lisaaine/id 6
+                        :lisaaineet ({:harja.domain.pot2/massa-id 7
+                                      :lisaaine/id 7
                                       :lisaaine/pitoisuus 1.5M
                                       :lisaaine/tyyppi 1})
                         :litteyslukuluokka "FI15"
-                        :massa-id 6
+                        :massa-id 7
                         :max-raekoko 5
                         :nimen-tarkenne "Tarkenne"
-                        :runkoaineet [{:harja.domain.pot2/massa-id 6
+                        :runkoaineet [{:harja.domain.pot2/massa-id 7
                                        :runkoaine/esiintyma "Zatelliitti"
-                                       :runkoaine/id 9
+                                       :runkoaine/id 12
                                        :runkoaine/kuulamyllyarvo 12.1M
                                        :runkoaine/litteysluku 4.1M
                                        :runkoaine/massaprosentti 34.0M
                                        :runkoaine/tyyppi 1}]
-                        :sideaineet ({:harja.domain.pot2/massa-id 6
-                                      :sideaine/id 6
+                        :sideaineet ({:harja.domain.pot2/massa-id 7
+                                      :sideaine/id 7
                                       :sideaine/lopputuote? true
                                       :sideaine/pitoisuus 10.6M
                                       :sideaine/tyyppi 1})

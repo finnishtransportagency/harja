@@ -393,7 +393,7 @@
                                 (when (and kirjoitusoikeus? voi-muokata?)
                                   [:div.toiminnot {:style {:display "inline-block"
                                                            :float "right"}}
-                                   [napit/nappi-hover-vihjeella {:tyyppi :lisaa
+                                   [napit/nappi-hover-vihjeella {:ikoni (ikonit/action-add)
                                                                  :toiminto voi-muokata?-fn
                                                                  :hover-txt tiedot/hint-lisaa-osa}]])]))))
         muokkaa-footer (fn [g]
@@ -418,7 +418,7 @@
                                   (fn [rivi {:keys [index]} voi-muokata?]
                                     (let [yllapitokohde (-> @paallystys-tiedot/tila :paallystysilmoitus-lomakedata :perustiedot (select-keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]))]
                                       [:div.toiminnot
-                                       [napit/nappi-hover-vihjeella {:tyyppi :pilko
+                                       [napit/nappi-hover-vihjeella {:ikoni (ikonit/road-split)
                                                                      :toiminto lisaa-osa-fn
                                                                      :toiminto-args [index]
                                                                      :hover-txt tiedot/hint-pilko-osoitevali
@@ -426,7 +426,7 @@
                                                                                     (not voi-muokata?)
                                                                                     (= (:yllapitokohdetyyppi yllapitokohde) :sora))
                                                                      :data-attributes {:data-cy "lisaa-osa-nappi"}}]
-                                       [napit/nappi-hover-vihjeella {:tyyppi :poista
+                                       [napit/nappi-hover-vihjeella {:ikoni (ikonit/action-delete)
                                                                      :disabled? (or (not kirjoitusoikeus?)
                                                                                     (not voi-muokata?)
                                                                                     (= (:yllapitokohdetyyppi yllapitokohde) :sora))
@@ -574,7 +574,7 @@
                                              (when (and kirjoitusoikeus? voi-muokata?)
                                                [:div.toiminnot {:style {:display "inline-block"
                                                                         :float "right"}}
-                                                [napit/nappi-hover-vihjeella {:tyyppi :lisaa
+                                                [napit/nappi-hover-vihjeella {:ikoni (ikonit/action-add)
                                                                               :toiminto #(reset! kohdeosat-atom (tiedot/pilko-paallystekohdeosa @kohdeosat-atom 1 yllapitokohde))
                                                                               :hover-txt tiedot/hint-lisaa-osa
                                                                               :disabled? (or (not kirjoitusoikeus?)
@@ -643,7 +643,7 @@
                   :tasaa :keskita
                   :komponentti (fn [rivi {:keys [index]}]
                                  [:div.toiminnot
-                                  [napit/nappi-hover-vihjeella {:tyyppi :pilko
+                                  [napit/nappi-hover-vihjeella {:ikoni (ikonit/road-split)
                                                                 :toiminto #(do
                                                                              (muokkaa-kohdeosat! (tiedot/pilko-paallystekohdeosa @kohdeosat-atom (inc index) {}))
                                                                              (grid/validoi-grid g))
@@ -652,7 +652,7 @@
                                                                                (not voi-muokata?)
                                                                                (= (:yllapitokohdetyyppi yllapitokohde) :sora))
                                                                 :data-attributes {:data-cy (str "lisaa-osa-" otsikko)}}]
-                                  [napit/nappi-hover-vihjeella {:tyyppi :poista
+                                  [napit/nappi-hover-vihjeella {:ikoni (ikonit/action-delete)
                                                                 :disabled? (or (not kirjoitusoikeus?)
                                                                                (not voi-muokata?)
                                                                                (and esta-ainoan-osan-poisto?
@@ -795,7 +795,7 @@
           [:div
            (when-not piilota-kohdeosat?
              [yllapitokohdeosat
-             {:otsikko "Kohteen tierekisteriosoitteet"
+             {:otsikko "Kohteen tieosoitteet"
               :rivi-validointi kohteen-rivi-validointi
               :taulukko-validointi kohteen-taulukko-validointi
               :urakka urakka
@@ -822,7 +822,7 @@
               :aikataulu? aikataulu?}])
            (when-not piilota-kohdeosat?
              [yllapitokohdeosat
-             {:otsikko "Muut tierekisteriosoitteet"
+             {:otsikko "Muut tieosoitteet"
               :rivi-validointi muut-kohteen-rivi-validointi
               :taulukko-validointi muut-kohteen-taulukko-validointi
               :urakka urakka

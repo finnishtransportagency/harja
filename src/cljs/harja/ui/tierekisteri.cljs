@@ -1,5 +1,5 @@
 (ns harja.ui.tierekisteri
-  "Tierekisteriosoitteiden näyttämiseen, muokkaamiseen ja karttavalintaan liittyvät komponentit."
+  "Tieosoitteiden näyttämiseen, muokkaamiseen ja karttavalintaan liittyvät komponentit."
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]

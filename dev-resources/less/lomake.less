@@ -98,7 +98,8 @@
     top: -0.15em;
   }
 
-  .required label.control-label:after {
+  .required label:not(.cancel-required-tahti).control-label:after,
+  .required span.ala-control-label:not(.cancel-required-tahti):after {
     .required-tahti();
   }
 
@@ -143,7 +144,7 @@
     width: 100%;
   }
 
-  .tierekisteriosoite-kentta {
+  .tieosoite-kentta {
     > table {
       width: 100%;
     }

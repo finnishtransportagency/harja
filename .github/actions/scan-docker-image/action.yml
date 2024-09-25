@@ -33,7 +33,7 @@ runs:
     # Note: Currently, the trivy action must be run multiple times to achieve different goals
     # Run a full scan and show results
     - name: Run Trivy vulnerability scanner (Full scan, all vuln-types, all severities, no job failure)
-      uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
+      uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.24.0
       env:
         IMAGE_REF: ${{ inputs.image-ref }}
       with:
@@ -46,7 +46,7 @@ runs:
         trivyignores: ${{ inputs.trivyignores }}
 
     - name: Run Trivy and generate a Sarif report
-      uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
+      uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.24.0
       if: ${{ inputs.upload-sarif == 'true' }}
       env:
         IMAGE_REF: ${{ inputs.image-ref }}
@@ -94,7 +94,7 @@ runs:
 
     # To fail the job on specific severity, we have to run the scanner again
     - name: Run Trivy vulnerability scanner (Limited scan, fail job if vulns found)
-      uses: aquasecurity/trivy-action@062f2592684a31eb3aa050cc61e7ca1451cecd3d # v0.18.0
+      uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.24.0
       if: ${{ inputs.fail-job-on-severities != 'false' }}
       env:
         SEVERITIES: ${{ inputs.fail-job-on-severities }}

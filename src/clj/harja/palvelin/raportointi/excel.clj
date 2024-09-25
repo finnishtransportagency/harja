@@ -461,8 +461,7 @@
 (defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko raportin-tiedot 
                                                 viimeinen-rivi-yhteenveto? lista-tyyli?
                                                 sheet-nimi samalle-sheetille? 
-                                                rivi-ennen rivi-jalkeen hoitokausi-arvotaulukko?
-                                                lisaa-excel-valiotsikot] :as optiot}
+                                                rivi-ennen rivi-jalkeen hoitokausi-arvotaulukko?] :as optiot}
                                       sarakkeet data] workbook]
   (try
     (if hoitokausi-arvotaulukko? 
@@ -528,8 +527,8 @@
        (map-indexed
         (fn [rivi-nro rivi]
           ;; Lisää väliotsikot mikäli nämä puuttuvat 
-          (let [lisatty-otsikko (when (and (:otsikko rivi) lisaa-excel-valiotsikot)
-                               (taulukon-valiotsikko (:otsikko rivi) workbook))
+          (let [lisatty-otsikko (when (:otsikko rivi)
+                                  (taulukon-valiotsikko (:otsikko rivi) workbook))
                 rivi-nro (+ nolla 1 rivi-nro)
                 rivi-nro (if (= rivi-nro lisatty-otsikko) (inc rivi-nro) rivi-nro)
                 [data optiot] (if (map? rivi)
@@ -677,6 +676,27 @@
                                      (* 100 256)
                                      (* 1.25 (.getColumnWidth sheet i)))))))
     tiedoston-nimi))
+
+(defmethod muodosta-excel :pohjan-taytto [[_ {:keys [nimi ensimmainen-rivi sheet-nro] :as optiot} data] workbook]
+  (let [sheet (nth (excel/sheet-seq workbook) sheet-nro)]
+    (dorun
+      (map-indexed
+        (fn [rivi-nro rivi]
+          (let [rivi-nro (+ rivi-nro ensimmainen-rivi)
+                ;; Ei haluta ylikirjoittaa pohjassa olevaa riviä
+                row (or
+                      (nth (excel/row-seq sheet) rivi-nro nil)
+                      (.createRow sheet rivi-nro))]
+            (dorun
+              (map-indexed
+                (fn [sarake-nro sarake]
+                  (let [cell (or
+                               (nth (excel/cell-seq row) sarake-nro nil)
+                               (.createCell row sarake-nro))]
+                    (when sarake
+                      (excel/set-cell! cell sarake))))
+                rivi)))) data))
+    nimi))
 
 (defmethod muodosta-excel :default [elementti workbook]
   (log/debug "Excel ei tue elementtiä: " elementti)

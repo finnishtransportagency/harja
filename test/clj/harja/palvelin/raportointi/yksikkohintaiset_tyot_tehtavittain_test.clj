@@ -5,7 +5,6 @@
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
@@ -95,7 +94,8 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi        "Yksikköhintaiset työt tehtävittäin"
-                     :orientaatio :landscape}
+                     :orientaatio :landscape
+                     :rajoita-pdf-rivimaara nil}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{}
                       :otsikko                    "Pohjois-Pohjanmaa, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
@@ -132,7 +132,8 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi        "Yksikköhintaiset työt tehtävittäin"
-                     :orientaatio :landscape}
+                     :orientaatio :landscape
+                     :rajoita-pdf-rivimaara nil}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{}
                       :otsikko                    "KOKO MAA, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"

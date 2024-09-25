@@ -175,12 +175,10 @@
                          (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)))]
     (async/thread
       (try
-        (jdbc/with-db-transaction [db db
-                                   {:read-only? true}]
-          (tarkastukset/hae-urakan-tarkastukset-kartalle
-            db ch
-            (merge alue
-                   parametrit)))
+        (tarkastukset/hae-urakan-tarkastukset-kartalle
+          db ch
+          (merge alue
+            parametrit))
         (catch Throwable t
           (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 

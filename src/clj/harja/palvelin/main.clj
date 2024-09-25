@@ -74,6 +74,7 @@
     [harja.palvelin.palvelut.hallinta.urakoiden-lyhytnimet :as urakoidenlyhytnimet-hallinta]
     [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
+    [harja.palvelin.palvelut.hallinta.lupaukset-palvelu :as lupaukset-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
@@ -523,7 +524,7 @@
 
       :reikapaikkaukset (component/using
                           (reikapaikkaukset/->Reikapaikkaukset)
-                          [:http-palvelin :db])
+                          [:http-palvelin :db :excel-vienti])
 
       :mpu-kustannukset (component/using
                           (mpu-kustannukset/->MPUKustannukset)
@@ -668,7 +669,7 @@
                           [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-tyokoneenseuranta (component/using
                                (api-tyokoneenseuranta/->Tyokoneenseuranta)
-                               [:http-palvelin :db])
+                               [:http-palvelin :db :integraatioloki])
       :api-tyokoneenseuranta-puhdistus (component/using
                                          (tks-putsaus/->TyokoneenseurantaPuhdistus)
                                          [:db])
@@ -810,6 +811,11 @@
       :tarjoushinnat-hallinta
       (component/using
         (tarjoushinnat-hallinta/->TarjoushinnatHallinta)
+        [:http-palvelin :db])
+      
+      :lupaukset-hallinta
+      (component/using
+        (lupaukset-hallinta/->LupauksetHallinta)
         [:http-palvelin :db])
 
       :rahavaraukset-hallinta

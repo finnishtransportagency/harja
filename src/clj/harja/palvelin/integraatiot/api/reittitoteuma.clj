@@ -16,6 +16,7 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit-q]
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -32,6 +33,14 @@
        :doc "Etäisyys, jota lähempänä toisiaan olevat reittipisteet yhdistetään linnuntietä,
 jos niille ei löydy yhteistä tietä tieverkolta."}
 maksimi-linnuntien-etaisyys 200)
+
+(def ^{:const true
+       :doc "Toteuman oletusnopeusrajoitus, jos tehtäviä ei ole. Tehtäville määritellään kannassa nopeusrajoitus. Perustuu aiemmin kovakoodattuun arvoon."}
+  toteuma-oletusnopeusrajoitus 108)
+
+(def ^{:const true
+       :doc "Toteuman reittipisteiden tallennuksen timeout 10 minuuttia"}
+  reittipisteet-timeout (* 1000 60 10))
 
 (defn yhdista-viivat [viivat]
   (if-not (empty? viivat)
@@ -73,21 +82,22 @@ maksimi-linnuntien-etaisyys 200)
 
 (defn hae-reitti
   ([db pisteet] (hae-reitti db maksimi-linnuntien-etaisyys pisteet))
-  ([db maksimi-etaisyys pisteet]
+  ([db maksimi-etaisyys pisteet] (hae-reitti db maksimi-etaisyys toteuma-oletusnopeusrajoitus pisteet))
+  ([db maksimi-etaisyys nopeusrajoitus pisteet]
    (as-> pisteet p
          (map (fn [[x y aika]]
                 (str "\"(" x "," y "," aika ")\"")) p)
          (str/join "," p)
          (str "{" p "}")
-         (tieverkko/hae-tieviivat-pisteille-aika db p)
+         (tieverkko/hae-tieviivat-pisteille-aika db p nopeusrajoitus)
          (keep #(valin-geometria % maksimi-etaisyys) p)
          (yhdista-viivat p))))
 
-(defn luo-reitti-geometria [db reitti]
+(defn luo-reitti-geometria [db reitti nopeusrajoitus]
   (let [reitti (->> reitti
                     (sort-by (comp :aika :reittipiste))
                     (map piste)
-                    (hae-reitti db))]
+                    (hae-reitti db maksimi-linnuntien-etaisyys nopeusrajoitus))]
     (if (= reitti +yhdistamis-virhe+)
       +yhdistamis-virhe+
       (-> reitti
@@ -146,31 +156,44 @@ maksimi-linnuntien-etaisyys 200)
   ;; Poistetaan reittipistedata: pisteet, tehtävät ja materiaalit
   (toteumat-q/poista-reittipiste-toteuma-idlla! db toteuma-id))
 
-(defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja {:keys [reitti toteuma tyokone]} jsonhash]
+(defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja {:keys [reitti toteuma tyokone]} jsonhash
+                                          reittipisteet-tallennettu-chan]
   (let [toteuma (assoc toteuma
                   ;; Reitti liitetään lopuksi
                   :reitti nil)
-        toteuman-reitti (async/thread (luo-reitti-geometria db-replica reitti))]
-    (jdbc/with-db-transaction [db db]
-      (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)
-            _ (toteumat-q/lisaa-toteumalle-jsonhash! db {:id toteuma-id :hash jsonhash})]
-        (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
-        (log/debug "Aloitetaan toteuman tehtävien tallennus")
-        (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id urakka-id)
-        (log/debug "Aloitetaan toteuman materiaalien tallennus")
-        (api-toteuma/tallenna-materiaalit db kirjaaja toteuma toteuma-id urakka-id)
-        (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
-        (poista-toteuman-reitti db toteuma-id)
-        (log/debug "Aloitetaan reitin tallennus")
-        (luo-reitti db reitti toteuma-id)
-        (log/debug "Liitetään toteuman reitti")
-        (let [reitti (async/<!! toteuman-reitti)]
-          (when (= reitti +yhdistamis-virhe+)
-            (log/warn (format "Reittitoteuman reitin geometriaa ei saatu luotua. Kirjaaja oli %s, ja toteuman aikaleimat olivat %s %s"
-                               kirjaaja
-                               (pr-str (:alkanut toteuma))
-                               (pr-str (:paattynyt toteuma)))))
-          (api-toteuma/paivita-toteuman-reitti db toteuma-id (if (= reitti +yhdistamis-virhe+) nil reitti)))))))
+        ;; Käytetään tehtävien nopeusrajoituksista pienintä geometrian muodostukseen
+        tehtavat (:tehtavat toteuma)
+        nopeusrajoitus (if (empty? tehtavat)
+                         toteuma-oletusnopeusrajoitus
+                         (apply min
+                           (map #(toimenpidekoodit-q/hae-tehtavan-nopeusrajoitus db (get-in % [:tehtava :id]))
+                             (:tehtavat toteuma))))
+        toteuman-reitti (async/thread (luo-reitti-geometria db-replica reitti nopeusrajoitus))
+        toteuma-id (jdbc/with-db-transaction [db db]
+                     (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)
+                           _ (toteumat-q/lisaa-toteumalle-jsonhash! db {:id toteuma-id :hash jsonhash})]
+                       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
+                       (log/debug "Aloitetaan toteuman tehtävien tallennus")
+                       (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id urakka-id)
+                       (log/debug "Aloitetaan toteuman materiaalien tallennus")
+                       (api-toteuma/tallenna-materiaalit db kirjaaja toteuma toteuma-id urakka-id)
+                       (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
+                       (poista-toteuman-reitti db toteuma-id)
+                       (log/debug "Liitetään toteuman reitti")
+                       (let [reitti (async/<!! toteuman-reitti)]
+                         (when (= reitti +yhdistamis-virhe+)
+                           (log/warn (format "Reittitoteuman reitin geometriaa ei saatu luotua. Kirjaaja oli %s, ja toteuman aikaleimat olivat %s %s"
+                                       kirjaaja
+                                       (pr-str (:alkanut toteuma))
+                                       (pr-str (:paattynyt toteuma)))))
+                         (api-toteuma/paivita-toteuman-reitti db toteuma-id (if (= reitti +yhdistamis-virhe+) nil reitti)))
+                       toteuma-id))]
+    ;; Tehdään reittipisteet asynkronisesti, sillä niiden käsittelyssä voi kestää kauan.
+    ;; Talvisuolauksen osalta pisteille tehdään työlästä laskentaa kun päätellään rajoitusalueelle kohdistumista.
+    (log/debug "Aloitetaan reitin tallennus")
+    (async/thread
+      (luo-reitti db reitti toteuma-id)
+      (async/put! reittipisteet-tallennettu-chan true))))
 
 (defn- materiaalicachen-paivitys-ajettava?
   "Kertoo ajetaanko materiaalicachejen päivitys käsin. Kuluvan päivän toteumille menevät eräajoissa, muille kyllä."
@@ -220,16 +243,36 @@ maksimi-linnuntien-etaisyys 200)
                                                                              :loppupvm (aika-string->java-sql-timestamp viimeinen-toteuma-alkanut-str)}))))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
-  (when (:reittitoteuma data)
-    (let [jsonhash (konversio/string->md5 (pr-str (:reittitoteuma data)))]
-      (when (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in data [:reittitoteuma :toteuma :tunniste :id]))
-        (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma data) jsonhash))))
+  (let [reittipisteet-tallennettu-chan (async/chan)
+        reittitoteumien-maara (if (:reittitoteuma data)
+                                1
+                                (count (:reittitoteumat data)))]
+    ;; Odotetaan, että kaikki reittipisteet on tallennettu. Jos on mennyt kymmenen minuuttia ilman tallennettuja
+    ;; reittipisteitä, luovutetaan ja lokitetaan virhe.
+    (async/thread
+      (jdbc/with-db-transaction [db db]
+        (loop [tallennettujen-maara 0]
+          (if (= tallennettujen-maara reittitoteumien-maara)
+            (paivita-materiaalicachet! db urakka-id data)
+            (let [ [v _] (async/alts!! [reittipisteet-tallennettu-chan (async/timeout reittipisteet-timeout)])]
+              (log/debug (format "Reittipisteet tallennettu! %s/%s" (inc tallennettujen-maara) reittitoteumien-maara))
+              (if v
+                (recur (inc tallennettujen-maara))
+                (log/error "Reittipisteiden tallennuksessa kestänyt yli 10 minuuttia!")))))))
 
-  (doseq [toteuma (:reittitoteumat data)]
-    (let [jsonhash (konversio/string->md5 (pr-str toteuma))]
-      (when (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in toteuma [:reittitoteuma :toteuma :tunniste :id]))
-        (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma toteuma) jsonhash))))
-  (paivita-materiaalicachet! db urakka-id data))
+    (when (:reittitoteuma data)
+      (let [jsonhash (konversio/string->md5 (pr-str (:reittitoteuma data)))]
+        (if (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in data [:reittitoteuma :toteuma :tunniste :id]))
+          (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma data) jsonhash
+            reittipisteet-tallennettu-chan)
+          (async/put! reittipisteet-tallennettu-chan true))))
+
+    (doseq [toteuma (:reittitoteumat data)]
+      (let [jsonhash (konversio/string->md5 (pr-str toteuma))]
+        (if (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in toteuma [:reittitoteuma :toteuma :tunniste :id]))
+          (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma toteuma) jsonhash
+            reittipisteet-tallennettu-chan)
+          (async/put! reittipisteet-tallennettu-chan true))))))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]

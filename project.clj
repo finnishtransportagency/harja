@@ -4,19 +4,23 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Väylän Harja"
 
+  ;; Mitä tehdään versio-konfliktien tapahtuessa riippuvuuspuussa?
+  ;; https://github.com/technomancy/leiningen/blob/24fb93936133bd7fc30c393c127e9e69bb5f2392/sample.project.clj#L82
+  ;; Muuta asetusta, jos haluat nähdä varoitukset riippuvuuksien konflikteista
+  :pedantic? false
   :dependencies [
                  ;; Clojure ja ClojureScript
-                 [org.clojure/clojure "1.10.0"]
+                 [org.clojure/clojure "1.10.3"]
                  [org.clojure/clojurescript "1.10.520"]
                  [org.clojure/spec.alpha "0.2.176"]
 
                  ;;;;;;; Yleiset ;;;;;;;
 
                  [prismatic/schema "1.1.10"]
-                 [org.clojure/core.async "0.3.443"]
+                 [org.clojure/core.async "0.3.465"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.256"]
-                 [com.cognitect/transit-clj "0.8.313"]
+                 [com.cognitect/transit-cljs "0.8.280"]
+                 [com.cognitect/transit-clj "0.8.319"]
                  ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
                  [meta-merge "1.0.0"]
 
@@ -26,7 +30,7 @@
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki palvelimen komponenttien hallintaan
-                 [com.stuartsierra/component "1.0.0"]
+                 [com.stuartsierra/component "1.1.0"]
 
                  ;; -- Lokitus
                  [com.taoensso/timbre "5.2.1"]
@@ -36,18 +40,12 @@
                  [org.clojure/java.jmx "0.3.4"]
 
                  ;; -- JSON encode/decode
-                 [cheshire "5.11.0"]
+                 [cheshire "5.13.0"]
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.48"]
-                 [http-kit "2.5.3"]
-                 ;; Compojuren mukana tulee liian vanha commons-fileupload
-                 ;; Ja fileuploadin mukana liian vanha commons-io
-                 [commons-io/commons-io "2.15.1"]
-                 [commons-fileupload/commons-fileupload "1.5"]
-                 [compojure "1.7.0"]
-                 ;; Ring tarvitsee
-                 [javax.servlet/javax.servlet-api "3.1.0"]
+                 [http-kit "2.8.0"]
+                 [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.7.2"]
@@ -59,8 +57,8 @@
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.7.3"]
-                 [net.postgis/postgis-jdbc "2.5.0"]
+                 [org.postgresql/postgresql "42.7.4"]
+                 [net.postgis/postgis-jdbc "2.5.1"]
                  [org.locationtech.jts/jts-core "1.19.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
                  [com.mchange/c3p0 "0.9.5.4"]
@@ -78,7 +76,7 @@
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
 
                  ;; -- Kirjasto mappien avainten nimiavaruuksien käsittelyyn
-                 [namespacefy "0.4"]
+                 [namespacefy "0.5.0"]
 
                  ;; -- Sähköposti lähetys
                  [org.apache.httpcomponents/httpcore "4.4.14"]
@@ -90,7 +88,7 @@
 
 
                  ;; Ajax-kirjasto frontille
-                 [cljs-ajax "0.8.0"]
+                 [cljs-ajax "0.8.4"]
 
                  ;; React-wrapper frontille
                  [reagent "0.9.1"]
@@ -112,13 +110,13 @@
                  [org.apache.poi/poi "5.2.5"]
                  [org.apache.poi/poi-scratchpad "5.2.5"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "0.2.6"]
+                 [org.clojure/data.json "0.2.7"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
 
                  ;; Pikkukuvien (thumbnail) muodostamiseen
-                 [net.coobird/thumbnailator "0.4.8"]
+                 [net.coobird/thumbnailator "0.4.20"]
 
                  ;; JSON -validointikirjastot
                  [webjure/json-schema "0.7.4"]
@@ -133,7 +131,7 @@
                  [java-http-clj "0.4.3"]
 
                  ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
-                 [org.apache.ant/ant "1.10.5"]
+                 [org.apache.ant/ant "1.10.15"]
 
                  ;; Clojure(Script) assertointi
                  [com.taoensso/truss "1.5.0"]
@@ -153,7 +151,7 @@
                  [cljsjs/big "3.1.3-1"]
 
                  ;; Digest-algoritmeja (md5, sha-256, ...)
-                 [digest "1.4.9"]
+                 [org.clj-commons/digest "1.4.100"]
 
                  ;; data.xml tarvitaan mm. XML-tiedostojen parsimiseen ja pretty-printtaukseen
                  [org.clojure/data.xml "0.0.8"]]
@@ -182,16 +180,16 @@
                  ;; ["sonatype-snapshots" "https://oss.sonatype.org/content/repositories/snapshots/"]
                  ]
 
-  :plugins [[lein-cljsbuild "1.1.7"]
+  :plugins [[lein-cljsbuild "1.1.8"]
             ;; TODO: Pilvisiirtymän jälkeen poistetaan lein-less riippuvuus
             ;; Harjan pilviversiossa on luovuttu lein-lessistä, mutta on-prem harjassa
             ;; käytetään sitä vielä. Riippuvuus ja käyttö aliaksissa voidaan poistaa, kun
             ;; ollaan luovuttu on-premistä ja jenkinsin käytöstä.
             [lein-less "1.7.5"]
-            [lein-ancient "0.6.15"]
-            [lein-codox "0.10.6"]
-            [lein-auto "0.1.2"]
-            [lein-doo "0.1.10"]]
+            [lein-ancient "0.7.0"]
+            [lein-codox "0.10.8" :exclusions [org.clojure/clojure]]
+            [lein-auto "0.1.3"]
+            [lein-doo "0.1.11" :exclusions [org.clojure/clojure]]]
 
   ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
   :cljsbuild {:builds [{:id "test"
