@@ -7,7 +7,7 @@
 
 (declare hae-tr-osoite-valille* hae-tr-osoite* hae-trpisteiden-valinen-tieto tierekisteriosoite-viivaksi
   onko-osoitteen-etaisyydet-validit? hae-osien-pituudet onko-tie-olemassa? hae-tieosan-tiedot onko-tr-yhtenainen?
-  hae-ajoratojen-pituudet)
+  hae-ajoratojen-pituudet hae-tieosoitteet)
 
 (defn hae-tr-osoite-valille-ehka
   "Hakee TR osoitteen pisteille. Jos teille ei löydy yhteistä pistettä, palauttaa nil."

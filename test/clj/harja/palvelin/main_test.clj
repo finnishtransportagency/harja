@@ -165,7 +165,8 @@
     :urakkahenkilot-hallinta
     :api-talvihoitoreitit
     :talvihoitoreitit
-    :lupaukset-hallinta})
+    :lupaukset-hallinta
+    :tieosoitteet-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -246,7 +247,8 @@
     :urakkahenkilot-hallinta
     :api-talvihoitoreitit
     :talvihoitoreitit
-    :lupaukset-hallinta})
+    :lupaukset-hallinta
+    :tieosoitteet-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

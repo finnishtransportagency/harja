@@ -1,5 +1,5 @@
 (ns harja.tiedot.hallinta.tyokalut.talvihoitoreitti-tyokalu
-  "Toteumatyokalun ui controlleri."
+  "Talvihoitoreittien hallinnan ui controlleri."
   (:require [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
