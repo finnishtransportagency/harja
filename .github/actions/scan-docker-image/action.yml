@@ -36,6 +36,10 @@ runs:
       uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.24.0
       env:
         IMAGE_REF: ${{ inputs.image-ref }}
+        # FIXME: https://github.com/aquasecurity/trivy-action/issues/389
+        #        GitHubin globaali Rate limit estää toisinaan trivy-skannauksen suorituksen.
+        #        Tämä on väliaikainen workaround
+        ACTION_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         image-ref: ${{ env.IMAGE_REF}}
         format: 'table'
@@ -50,6 +54,10 @@ runs:
       if: ${{ inputs.upload-sarif == 'true' }}
       env:
         IMAGE_REF: ${{ inputs.image-ref }}
+        # FIXME: https://github.com/aquasecurity/trivy-action/issues/389
+        #        GitHubin globaali Rate limit estää toisinaan trivy-skannauksen suorituksen.
+        #        Tämä on väliaikainen workaround
+        ACTION_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         image-ref: ${{ env.IMAGE_REF}}
         format: 'sarif'
@@ -67,6 +75,10 @@ runs:
       if: ${{ inputs.upload-sarif == 'true' }}
       env:
         DOCKERFILE_PATH: ${{ inputs.dockerfile-path-for-sarif }}
+        # FIXME: https://github.com/aquasecurity/trivy-action/issues/389
+        #        GitHubin globaali Rate limit estää toisinaan trivy-skannauksen suorituksen.
+        #        Tämä on väliaikainen workaround
+        ACTION_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cat trivy-results.sarif | \
           jq '.runs[].results[].locations[].physicalLocation.artifactLocation += {"uri": "${{ env.DOCKERFILE_PATH }}","uriBaseId": "ROOTPATH"}' | \
@@ -101,6 +113,10 @@ runs:
         VULN_TYPES: ${{ inputs.vuln-types }}
         IGNORE_UNFIXED: ${{ inputs.ignore-unfixed }}
         IMAGE_REF: ${{ inputs.image-ref }}
+        # FIXME: https://github.com/aquasecurity/trivy-action/issues/389
+        #        GitHubin globaali Rate limit estää toisinaan trivy-skannauksen suorituksen.
+        #        Tämä on väliaikainen workaround
+        ACTION_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         image-ref: ${{ env.IMAGE_REF}}
         format: 'table'
