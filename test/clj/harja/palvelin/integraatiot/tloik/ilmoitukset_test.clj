@@ -26,7 +26,7 @@
            (java.util UUID)))
 
 (def kayttaja "yit-rakennus")
-(def timeout 3500)
+(def timeout 2000)
 (def kuittaus-timeout 20000)
 
 (defonce asetukset {:itmf integraatio/itmf-asetukset})
@@ -209,7 +209,7 @@
            ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true&suljeVastauksenJalkeen=false"]
                                   kayttaja portti))
            testi-sanoma (testi-ilmoitus-sanoma)]
-       (async/<!! (async/timeout (+ 1000 timeout)))
+       (async/<!! (async/timeout timeout))
        (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ testi-sanoma)
 
        (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
@@ -300,8 +300,8 @@
             ilmoitus-id (rand-int 99999999)
             sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
-        ;; Lisätään odotusaikaa tähän tapaukseen
-        (async/<!! (async/timeout (+ 1000 timeout)))
+
+        (async/<!! (async/timeout timeout))
         (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
 
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
@@ -369,8 +369,7 @@
             sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
 
-        ;; Lisätään odotusaikaa tähän tapaukseen
-        (async/<!! (async/timeout (+ 2000 timeout)))
+        (async/<!! (async/timeout timeout))
         (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
 
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
