@@ -121,13 +121,13 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
     })
 
     it('Määrän voi syöttää', () => {
+        cy.viewport(1100, 2000)
         cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32');
         cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('HaeSuunniteltavatTehtavat')
         cy.intercept('POST', '_/hae-sopimuksen-tila').as('HaeSopimuksenTila')
         cy.intercept('POST', '_/tallenna-tehtavamaarat').as('TallennaTehtavamaarat')
         cy.wait('@HaeSuunniteltavatTehtavat')
         cy.wait('@HaeSopimuksenTila')
-        cy.viewport(1100, 2000)
 
         // Tehdään syöttö osissa siltä varalta, että element irtoaa DOMista kesken testin.
         // Kun elementti haetaan aliaksen avulla, cypress osaa retryttää hakuqueryn.
