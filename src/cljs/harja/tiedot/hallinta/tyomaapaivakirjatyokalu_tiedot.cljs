@@ -16,10 +16,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def +mahdolliset-urakat+
-  [
-   {:id 34 :nimi "Ivalon MHU testiurakka (uusi) (aseta sopimusid 19)"}
-   {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 42)"}
-   ])
+  [{:id 34 :nimi "Ivalon MHU testiurakka (uusi) (aseta sopimusid 19)"}
+   {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 42)"}])
 
 (defn- luo-aika-paivamaarasta [paivamaara aika]
   (str paivamaara aika))
@@ -126,9 +124,9 @@
                       :tieston-toimenpiteet (generoi-tieston-toimenpiteet 3 (get-in app [:paivakirja :paivamaara])),
                       :onnettomuudet [{:onnettomuus {:kuvaus (get-in app [:paivakirja :onnettomuus1])}}],
                       :liikenteenohjaus-muutokset [{:liikenteenohjaus-muutos {:kuvaus (get-in app [:paivakirja :liikenneohjaus1])}}],
-                      :tunniste {:id "123456",
+                      :tunniste {:id (gensym),
                                  :versio versio,
-                                 :paivamaara (get-in app [:paivakirja :paivamaara]) #_(pvm/iso8601-timestamp-str->iso8601-str (get-in app [:paivakirja :lahetysaika]))},
+                                 :paivamaara (get-in app [:paivakirja :paivamaara])},
                       :poikkeukselliset-saahavainnot [{:poikkeuksellinen-saahavainto {:havaintoaika (get-in app [:paivakirja :lahetysaika]),
                                                                                       :paikka "Kauhava",
                                                                                       :kuvaus "Jäätävä sade"}}],

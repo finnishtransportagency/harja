@@ -6,9 +6,9 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
+            [harja.palvelin.palvelut.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelu]
             [harja.palvelin.integraatiot.api.tyomaapaivakirja :as api-tyomaapaivakirja]
-            [harja.palvelin.integraatiot.api.tyomaapaivakirja-test :as integraatio-test]))
+            [harja.palvelin.integraatiot.api.tyomaapaivakirja-api-test :as integraatio-test]))
 
 (def kayttaja-jvh "jvh")
 (def kayttaja-yit "yit-rakennus")
@@ -28,7 +28,7 @@
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :tyomaapaivakirja (component/using
-                              (tyomaapaivakirja/->Tyomaapaivakirja true)
+                              (tyomaapaivakirja-palvelu/->Tyomaapaivakirja true)
                               [:db :http-palvelin])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))

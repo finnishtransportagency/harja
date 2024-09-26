@@ -10,7 +10,8 @@
   #?(:cljs
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
-(declare on-oikeus? on-muu-oikeus?)
+(declare on-oikeus? on-muu-oikeus?
+  raportit-tyomaapaivakirja raportit-kommentit)
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
 #?(:clj

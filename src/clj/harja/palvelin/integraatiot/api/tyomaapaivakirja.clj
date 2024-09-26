@@ -65,17 +65,17 @@
     virheet kalustot))
 
 (defn validoi-paivystajat-ja-tyonjohtajat [tiedot omistaja-avain kuvaava-nimi virheet]
-  (reduce (fn [t t]
+  (reduce (fn [agg_virheet t]
             (let [tieto (omistaja-avain t)
                   aloitus (tyokalut-json/pvm-string->joda-date (:aloitus tieto))
                   lopetus (tyokalut-json/pvm-string->joda-date (:lopetus tieto))
-                  virheet (if (pvm/ennen? lopetus aloitus)
-                            (conj virheet (format "%s lopetusaika täytyy olla aloitusajan jälkeen." kuvaava-nimi))
-                            virheet)
-                  virheet (if (> 4 (count (:nimi tieto)))
-                            (conj virheet (format "%s nimi liian lyhyt. Oli nyt %s." kuvaava-nimi (:nimi tieto)))
-                            virheet)]
-              virheet))
+                  agg_virheet (if (pvm/ennen? lopetus aloitus)
+                                (conj agg_virheet (format "%s lopetusaika täytyy olla aloitusajan jälkeen." kuvaava-nimi))
+                                agg_virheet)
+                  agg_virheet (if (> 4 (count (:nimi tieto)))
+                                (conj agg_virheet (format "%s nimi liian lyhyt. Oli nyt %s." kuvaava-nimi (:nimi tieto)))
+                                agg_virheet)]
+              agg_virheet))
     virheet tiedot))
 
 (defn validoi-tieston-toimenpiteet [db toimenpiteet virheet]
@@ -364,7 +364,7 @@
               {:type virheet/+tyomaapaivakirja-ei-loydy+
                :virheet [{:koodi virheet/+tyomaapaivakirja-ei-loydy-virhe-koodi+
                           :viesti "Työmaapäiväkirjaa ei löytynyt. Päiväkirjan ensimmäinen versio pitää lähettää tekemällä se HTTP POST-metodilla."}]}))
-        
+
         versio (or
                  (inc (or (:versio versiotiedot) 0))
                  (get-in data [:tunniste :versio]))
