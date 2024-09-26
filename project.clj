@@ -80,8 +80,8 @@
                  [namespacefy "0.5.0"]
 
                  ;; -- Sähköposti lähetys
-                 [org.apache.httpcomponents/httpcore "4.4.14"]
-                 [org.apache.httpcomponents/httpmime "4.5.13" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
+                 [org.apache.httpcomponents/httpcore "4.4.16"]
+                 [org.apache.httpcomponents/httpmime "4.5.14" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
