@@ -352,14 +352,27 @@
                                                          :kuvaus (:kuvaus (:viranomaisen-avustus v))
                                                          :tuntimaara (:tunnit (:viranomaisen-avustus v))}))))
 
-(defn tallenna-tyomaapaivakirja [db urakka-id data kayttaja tyomaapaivakirja-id]
+(defn tallenna-tyomaapaivakirja [db urakka-id data kayttaja ensimmainen-lahetys?]
   (let [_ (log/debug "tallenna-tyomaapaivakirja :: data" (pr-str data))
-        tyomaapaivakirja-id (konv/konvertoi->int tyomaapaivakirja-id)
+        ;; Jos lähettäjä on päivittämässä jo olemassa olevaa työmaapäiväkirjaa, niin tarkistetaan, että löydetäänkö sellaista kannasta
         versiotiedot (hae-tyomaapaivakirjan-versiotiedot db kayttaja {:urakka_id urakka-id
                                                                       :paivamaara (get-in data [:tunniste :paivamaara])})
+        ;; Jos käyttäjä on lähettänyt PUT rajapintaan päivityksen, mutta versiotietoja ei löydy
+        ;; Niin päätellään, että kyseessä on ensimmäinen lähetys ja kieltäydytään ottamasta sitä vastaan ja palautetaan virhe
+        _ (when (and (nil? (:tyomaapaivakirja_id versiotiedot)) (not ensimmainen-lahetys?))
+            (throw+
+              {:type virheet/+tyomaapaivakirja-ei-loydy+
+               :virheet [{:koodi virheet/+tyomaapaivakirja-ei-loydy-virhe-koodi+
+                          :viesti "Työmaapäiväkirjaa ei löytynyt. Päiväkirjan ensimmäinen versio pitää lähettää tekemällä se HTTP POST-metodilla."}]}))
+        
         versio (or
-                 (get-in data [:tunniste :versio])
-                 (inc (or (:versio versiotiedot) 0)))
+                 (inc (or (:versio versiotiedot) 0))
+                 (get-in data [:tunniste :versio]))
+
+        ;; Jos lähettäjä on päivittämässä työmaapäiväkirjaa, niin otetaan tietokannasta id
+        tyomaapaivakirja-id (when (and versiotiedot (:tyomaapaivakirja_id versiotiedot))
+                              (:tyomaapaivakirja_id versiotiedot))
+
         tyomaapaivakirja {:urakka_id urakka-id
                           :kayttaja (:id kayttaja)
                           :paivamaara (tyokalut-json/pvm-string->java-sql-date (get-in data [:tunniste :paivamaara]))
@@ -401,14 +414,14 @@
         _ (tallenna-urakoitsijan-merkinnat db data versio tyomaapaivakirja-id urakka-id)]
     tyomaapaivakirja-id))
 
-(defn kirjaa-tyomaapaivakirja [db {:keys [id tid] :as parametrit} data kayttaja]
+(defn kirjaa-tyomaapaivakirja [db {:keys [id] :as parametrit} data kayttaja ensimmainen-lahetys?]
   (validoi-tyomaapaivakirja db data)
   (tarkista-parametrit parametrit)
   (let [urakka-id (konv/konvertoi->int id)
         tyomaapaivakirja (:tyomaapaivakirja data)
         ;; Tallenna
         tyomaapaivakirja-id (jdbc/with-db-transaction [db db]
-                              (tallenna-tyomaapaivakirja db urakka-id tyomaapaivakirja kayttaja tid))
+                              (tallenna-tyomaapaivakirja db urakka-id tyomaapaivakirja kayttaja ensimmainen-lahetys?))
         ;; Muodosta OK vastaus - Error vastaus pärähtää throwssa ja sen käsittelee kutsu-kasittelijä
         vastaus {:status "OK"
                  :tyomaapaivakirja-id tyomaapaivakirja-id}]
@@ -427,9 +440,27 @@
           json-skeemat/tyomaapaivakirja-kirjaus-request
           json-skeemat/tyomaapaivakirja-kirjaus-response
           (fn [parametrit data kayttaja db]
-            (kirjaa-tyomaapaivakirja db parametrit data kayttaja))
+            (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
           :kirjoitus))
       true)
+
+    ;; Uusi päivitykseen käytettävä rajapinta.
+    (julkaise-reitti
+      http :paivita-tyomaapaivakirja-v2
+      (PUT "/api/urakat/:id/tyomaapaivakirja" request
+        (kasittele-kutsu db
+          integraatioloki
+          :paivita-tyomaapaivakirja-v2
+          request
+          json-skeemat/tyomaapaivakirja-paivitys-request
+          json-skeemat/tyomaapaivakirja-kirjaus-response
+          (fn [parametrit data kayttaja db]
+            (kirjaa-tyomaapaivakirja db parametrit data kayttaja false))
+          :kirjoitus))
+      true)
+
+    ;; Tämä tullaan deprikoimaan jossain vaiheessa. Ei ole hyväksi, että Harja lähettää sisäisiä tunneisteitaan rajapinnan kautta
+    ;; ja vaatii kutsujia käyttämään niitä.
     (julkaise-reitti
       http :paivita-tyomaapaivakirja
       (PUT "/api/urakat/:id/tyomaapaivakirja/:tid" request
@@ -440,7 +471,7 @@
           json-skeemat/tyomaapaivakirja-paivitys-request
           json-skeemat/tyomaapaivakirja-kirjaus-response
           (fn [parametrit data kayttaja db]
-            (kirjaa-tyomaapaivakirja db parametrit data kayttaja))
+            (kirjaa-tyomaapaivakirja db parametrit data kayttaja false))
           :kirjoitus))
       true)
     (julkaise-palvelu (:http-palvelin this)

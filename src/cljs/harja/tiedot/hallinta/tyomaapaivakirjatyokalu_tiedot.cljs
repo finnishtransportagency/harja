@@ -223,17 +223,12 @@
            (let [data (koostettu-data app @versio)]
             (if urakkaid
               (go
-                (let [_ (js/console.log "Ja post seuraavaksi :: @tyomaapaivakirja-id " (pr-str @tyomaapaivakirja-id) "versio:" (pr-str @versio))
-                      params {:body (.stringify js/JSON (clj->js data))
+                (let [params {:body (.stringify js/JSON (clj->js data))
                               :content-type :json
                               :accect :json}
                       ;; Työmaapäiväkirjan päivitys käyttää http/put
-                      vastaus (if @tyomaapaivakirja-id
-                                (<! (http/put (str "api/urakat/" urakkaid "/tyomaapaivakirja/" @tyomaapaivakirja-id)
-                                      params))
-                                (<! (http/post (str "api/urakat/" urakkaid "/tyomaapaivakirja")
-                                      params)))
-                      ]
+                      vastaus (<! (http/post (str "api/urakat/" urakkaid "/tyomaapaivakirja")
+                                    params))]
                   (if (k/virhe? vastaus)
                     (virhe!)
                     (tulos!))))
