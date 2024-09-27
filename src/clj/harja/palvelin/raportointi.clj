@@ -340,7 +340,7 @@
             (let [parametrit (assoc parametrit :kasittelija kasittelija)
                   rajoita-pdf-rivimaara (:rajoita-pdf-rivimaara suoritettava-raportti)
                   _ (when-not (= nimi :ilmoitukset-raportti)
-                      (log/debug "SUORITETAAN RAPORTTI: " nimi " kontekstissa: " konteksti " parametreilla: " parametrit " PDF rajoitus: " rajoita-pdf-rivimaara))
+                      (log/info "SUORITETAAN RAPORTTI: " nimi " kontekstissa: " konteksti " parametreilla: " parametrit " PDF rajoitus: " rajoita-pdf-rivimaara))
                   suoritus-id (luo-suoritustieto-raportille
                                db 
                                kayttaja 
