@@ -6,7 +6,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.palvelut.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelu]
+            [harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelu]
             [harja.palvelin.integraatiot.api.tyomaapaivakirja :as api-tyomaapaivakirja]
             [harja.palvelin.integraatiot.api.tyomaapaivakirja-api-test :as integraatio-test]))
 
@@ -45,7 +45,7 @@
 
 (defn- hae-paivakirjat [urakka-id alkuaika loppuaika]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-    :tyomaapaivakirja-hae +kayttaja-jvh+
+    :hae-tyomaapaivakirjat +kayttaja-jvh+
     {:urakka-id urakka-id
      :alkuaika alkuaika
      :loppuaika loppuaika}))
