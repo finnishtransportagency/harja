@@ -33,23 +33,43 @@ runs:
     # Note: Currently, the trivy action must be run multiple times to achieve different goals
     # Run a full scan and show results
     - name: Run Trivy vulnerability scanner (Full scan, all vuln-types, all severities, no job failure)
-      uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
+      uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.24.0
       env:
         IMAGE_REF: ${{ inputs.image-ref }}
+        # FIXME: Tämä on väliaikainen workaround, kunnes trivyn rate limit ongelma on korjattu
+        TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
       with:
         image-ref: ${{ env.IMAGE_REF}}
-        format: 'table'
+        output: trivy.txt
+        hide-progress: true
         exit-code: '0'
         scanners: vuln,secret,misconfig
         vuln-type: 'os,library'
         severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
         trivyignores: ${{ inputs.trivyignores }}
 
+    - name: Publish Trivy Output to Summary
+      run: |
+        if [[ -s trivy.txt ]]; then
+          {
+            echo "### Security Scan Results"
+            echo "<details><summary>Click to expand</summary>"
+            echo ""
+            echo '```terraform'
+            cat trivy.txt
+            echo '```'
+            echo "</details>"
+          } >> $GITHUB_STEP_SUMMARY
+        fi
+      shell: bash
+
     - name: Run Trivy and generate a Sarif report
-      uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
+      uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.24.0
       if: ${{ inputs.upload-sarif == 'true' }}
       env:
         IMAGE_REF: ${{ inputs.image-ref }}
+        # FIXME: Tämä on väliaikainen workaround, kunnes trivyn rate limit ongelma on korjattu
+        TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
       with:
         image-ref: ${{ env.IMAGE_REF}}
         format: 'sarif'
@@ -94,13 +114,15 @@ runs:
 
     # To fail the job on specific severity, we have to run the scanner again
     - name: Run Trivy vulnerability scanner (Limited scan, fail job if vulns found)
-      uses: aquasecurity/trivy-action@062f2592684a31eb3aa050cc61e7ca1451cecd3d # v0.18.0
+      uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.24.0
       if: ${{ inputs.fail-job-on-severities != 'false' }}
       env:
         SEVERITIES: ${{ inputs.fail-job-on-severities }}
         VULN_TYPES: ${{ inputs.vuln-types }}
         IGNORE_UNFIXED: ${{ inputs.ignore-unfixed }}
         IMAGE_REF: ${{ inputs.image-ref }}
+        # FIXME: Tämä on väliaikainen workaround, kunnes trivyn rate limit ongelma on korjattu
+        TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
       with:
         image-ref: ${{ env.IMAGE_REF}}
         format: 'table'

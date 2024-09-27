@@ -314,21 +314,29 @@ SELECT u.id                           AS urakka,
        ut.tarjous_tavoitehinta        AS "tarjous-tavoitehinta",
        ut.hoitokausi,
        u.loppupvm < CURRENT_DATE      AS "urakka-paattynyt?",
+       (EXTRACT(YEAR FROM u.loppupvm) - EXTRACT(YEAR FROM u.alkupvm)) + 1   AS urakan_pituus, -- vuosista saadaan yhden liian lyhyt
        EXISTS(SELECT *
               FROM urakka_paatos up
               WHERE up.tyyppi IN ('lupausbonus', 'lupaussanktio')
                 AND up."urakka-id" = ut.urakka
                 AND up."hoitokauden-alkuvuosi" = EXTRACT(YEAR FROM u.alkupvm) + ut.hoitokausi - 1
                 AND up.poistettu = FALSE) AS "on-paatos"
-FROM urakka_tavoite ut
-         LEFT JOIN urakka u ON ut.urakka = u.id
-ORDER BY u.alkupvm DESC, ut.hoitokausi;
+FROM urakka u
+     LEFT JOIN urakka_tavoite ut ON ut.urakka = u.id
+WHERE u.tyyppi = 'teiden-hoito'
+ORDER BY u.alkupvm DESC, ut.hoitokausi, u.nimi ;
 
 
 -- name: paivita-tarjoushinta<!
 UPDATE urakka_tavoite
-SET tarjous_tavoitehinta = :tarjous-tavoitehinta
+SET tarjous_tavoitehinta = :tarjous-tavoitehinta,
+    muokkaaja = :kayttaja_id,
+    muokattu = CURRENT_TIMESTAMP
 WHERE id = :id;
+
+-- name: lisaa-tarjoushinta<!
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tarjous_tavoitehinta, luotu, luoja)
+VALUES (:urakka_id, :hoitokausi, :tarjous-tavoitehinta, CURRENT_TIMESTAMP, :kayttaja_id);
 
 -- name: hae-kiinteat-kustannukset
 -- Kiinteät kustannukset analytiikan api hakuun

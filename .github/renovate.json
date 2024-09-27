@@ -1,0 +1,130 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    ":dependencyDashboard",
+    ":semanticPrefixFixDepsChoreOthers",
+    ":ignoreModulesAndTests",
+    "group:monorepos",
+    "group:recommended",
+    "replacements:all",
+    "workarounds:all"
+  ],
+  "prConcurrentLimit": 2,
+  "timezone": "Europe/Helsinki",
+  "schedule": [
+    "before 8am on Tuesday"
+  ],
+  "vulnerabilityAlerts": {
+    "description": "Tekee PR:n välittömästi, mikäli Renovate havaitsee haavoittuvan kirjaston GitHubin Dependabot alerteista.",
+    "enabled": false,
+    "labels": [
+      "security"
+    ],
+    "automerge": false
+  },
+  "enabledManagers": [
+    "leiningen"
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": [
+        "clojure"
+      ],
+      "description": "Lisätään default clojuren pakettilähteet ja project.clj:ssä olevat muut pakettilähteet",
+      "registryUrls": [
+        "https://repo1.maven.org/maven2/",
+        "https://repo.clojars.org/",
+        "https://repo.osgeo.org/repository/geotools-releases/",
+        "https://repo.osgeo.org/repository/release/",
+        "https://maven.atlassian.com/content/repositories/atlassian-public/"
+      ]
+    },
+    {
+      "description": "Erottele patch ja minor päivitykset (jokainen minor stream erikseen) Clojure ja ClojureScript kirjastoille",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.clojure:clojure",
+        "org.clojure:clojurescript"
+      ],
+      "separateMinorPatch": true,
+      "separateMultipleMinor": true
+    },
+    {
+      "description": "Erottele minor päivitykset (jokainen minor stream erikseen) org.clojure:core.async kirjastolle",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.clojure:core.async"
+      ],
+      "separateMajorMinor": true,
+      "separateMultipleMinor": true
+    },
+    {
+      "description": "Ryhmittele org.geotools:gt-* päivitykset. Erottele major päivitykset omiin PR:iin",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.geotools:gt-*"
+      ],
+      "groupName": "org.geotools",
+      "separateMajorMinor": true,
+      "separateMultipleMajor": true
+    },
+    {
+      "description": "Erottele postgist-jdbc major päivitykset omiin PR:iin",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "net.postgis:postgis-jdbc"
+      ],
+      "separateMajorMinor": true,
+      "separateMultipleMajor": true
+    },
+    {
+      "description": "Ryhmittele org.apache.poi:* päivitykset",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.apache.poi:*"
+      ],
+      "groupName": "org.apache.poi"
+    },
+    {
+      "description": "Ryhmittele org.apache.httpcomponents:* päivitykset",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.apache.httpcomponents:*"
+      ],
+      "groupName": "org.apache.httpcomponents"
+    },
+    {
+      "description": "Ryhmittele com.cognitect:transit-* päivitykset",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "com.cognitect:transit-*"
+      ],
+      "groupName": "com.cognitect:transit"
+    },
+    {
+      "description": "Erottele Reagent päivitykset, jokainen minor stream erikseen",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "reagent:reagent"
+      ],
+      "separateMajorMinor": true,
+      "separateMultipleMinor": true
+    }
+  ]
+}
