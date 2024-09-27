@@ -38,6 +38,7 @@ runs:
         IMAGE_REF: ${{ inputs.image-ref }}
         # FIXME: Tämä on väliaikainen workaround, kunnes trivyn rate limit ongelma on korjattu
         TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+        TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
       with:
         image-ref: ${{ env.IMAGE_REF}}
         output: trivy.txt
@@ -70,6 +71,7 @@ runs:
         IMAGE_REF: ${{ inputs.image-ref }}
         # FIXME: Tämä on väliaikainen workaround, kunnes trivyn rate limit ongelma on korjattu
         TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+        TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
       with:
         image-ref: ${{ env.IMAGE_REF}}
         format: 'sarif'
@@ -123,6 +125,7 @@ runs:
         IMAGE_REF: ${{ inputs.image-ref }}
         # FIXME: Tämä on väliaikainen workaround, kunnes trivyn rate limit ongelma on korjattu
         TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+        TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
       with:
         image-ref: ${{ env.IMAGE_REF}}
         format: 'table'
