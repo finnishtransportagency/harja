@@ -49,6 +49,9 @@ schemas:
  - paikkauskustannusten-kirjaus-request: !include schemas/paikkauskustannusten-kirjaus-request.schema.json
  - paikkausten-poisto-request: !include schemas/paikkausten-poisto-request.schema.json
  - raportti-materiaaliraportti-response: !include schemas/raportti.schema.json
+ - talvihoitoreitti-kirjaus-request: !include schemas/talvihoitoreitti-kirjaus-request.schema.json
+ - talvihoitoreitti-paivitys-request: !include schemas/talvihoitoreitti-paivitys-request.schema.json
+ - talvihoitoreitti-poisto-request: !include schemas/talvihoitoreitti-poisto-request.schema.json
  - tyomaapaivakirja-kirjaus-request: !include schemas/tyomaapaivakirja-kirjaus-request.schema.json
  - tyomaapaivakirja-paivitys-request: !include schemas/tyomaapaivakirja-paivitys-request.schema.json
  - tyomaapaivakirja-kirjaus-ok-response: !include schemas/tyomaapaivakirja-kirjaus-response.schema.json
@@ -1155,7 +1158,30 @@ documentation:
                 application/json:
                   example: !include examples/virhe-response.json
                   schema: virhe-response
-
+    /talvihoitoreitti:
+          put:
+            is: [secured]
+            description: Lisää talvihoitoreitti Harjaan. Käytetään http put metodia, koska saman aineiston kun lähettää uudestaan, niin reitin nimen perusteella talvihoitoreitti päivittyy.
+            body:
+              application/json:
+                example: !include examples/talvihoitoreitti-kirjaus-request.json
+                schema: talvihoitoreitti-kirjaus-request
+            responses:
+              200:
+                body:
+                  application/json:
+                    example: !include examples/onnistunut-kirjaus-response.json
+                    schema: kirjaus-response
+              400:
+                body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: virhe-response
+              500:
+                body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: virhe-response
 
   /yhteystiedot:
     /{urakkanumero}:
