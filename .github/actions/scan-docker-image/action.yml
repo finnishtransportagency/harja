@@ -30,11 +30,26 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Cache
+    # https://octokit.github.io/rest.js/v21/#packages-get-package-version-for-organization
+    - id: trivy-db-hash
+      name: Check Trivy DB SHA
+      uses: actions/github-script@v7
+      with:
+          script: |
+            const { data } = await github.rest.packages.getPackageVersionForOrganization({
+              package_type: 'container',
+              org: 'aquasecurity',
+              package_name: 'trivy-db',
+              package_version_id: 'latest'
+            });
+            console.log(`Trivy DB sha256:${data.name.replace('sha256:', '')}`);
+            core.setOutput('sha', data.name.replace('sha256:', ''));
+
+    - name: Cache Trivy DBs
       uses: actions/cache@v4
       with:
         path: .trivy
-        key: ${{ runner.os }}-trivy-${{ github.ref_name }}
+        key: ${{ runner.os }}-trivy-${{ steps.trivy-db-hash.outputs.sha }}
         #restore-keys: ${{ runner.os }}-trivy-
 
     # Note: Currently, the trivy action must be run multiple times to achieve different goals
