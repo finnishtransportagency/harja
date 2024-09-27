@@ -85,8 +85,11 @@
 
   (is (nil? (validoi json-skeemat/raportti-materiaaliraportti-response json-esimerkit/+raportti-materiaaliraportti-response+)))
 
+  ;; Työmaapäiväkirja
   (is (nil? (validoi json-skeemat/tyomaapaivakirja-kirjaus-request json-esimerkit/+tyomaapaivakirja-kirjaus-request+)))
   (is (nil? (validoi json-skeemat/tyomaapaivakirja-paivitys-request json-esimerkit/+tyomaapaivakirja-paivitys-request+)))
+  (is (nil? (validoi json-skeemat/tyomaapaivakirja-kirjaus-v2-request json-esimerkit/+tyomaapaivakirja-kirjaus-v2-request+)))
+  (is (nil? (validoi json-skeemat/tyomaapaivakirja-paivitys-v2-request json-esimerkit/+tyomaapaivakirja-paivitys-v2-request+)))
 
   ;; Analytiikka
   (is (nil? (validoi json-skeemat/analytiikkaportaali-toteuma-vastaus json-esimerkit/+analytiikka-reittitoteumat-response+)))

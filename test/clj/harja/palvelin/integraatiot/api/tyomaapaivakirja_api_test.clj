@@ -204,7 +204,7 @@
   (is (= (get-in typa-db [:saat 0 :aseman_tunniste]) saa-asema)))
 
 ;; Testit
-(deftest kirjaa-typa-onnistuu
+(deftest kirjaa-typa-onnistuu-versio-1
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         paivamaara "2023-05-30"
         ulkoinenid "123456"
@@ -232,6 +232,34 @@
     (varmista-perustiedot vastaus vastaus-body typa-db typa-data urakka-id ulkoinenid paivamaara)
     (varmista-ensitallennus typa-db)))
 
+(deftest kirjaa-typa-onnistuu-versio-2
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        paivamaara "2023-05-30"
+        ulkoinenid "123456"
+        urakoitsija (first (q-map (format "SELECT ytunnus, nimi FROM organisaatio WHERE nimi = '%s';" "YIT Rakennus Oy")))
+        ;; Muokataan typa sopivaan muotoon
+        typa (-> "test/resurssit/api/tyomaapaivakirja-kirjaus.json"
+               slurp
+               (.replace "__URAKOITSIJA__" (:nimi urakoitsija))
+               (.replace "__YTUNNUS__" (:ytunnus urakoitsija))
+               (.replace "__VIESTITUNNISTE__" (str (rand-int 9999999)))
+               (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
+               (.replace "__ULKOINENID__" ulkoinenid)
+               (.replace "__PAIVAMAARA__" paivamaara))
+
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
+        vastaus-body (cheshire/decode (:body vastaus) true)
+
+        ;; Hae typa tietokannasta
+        versio 1
+        typa-data (cheshire/decode typa true)
+        typa-db (hae-typa (:tyomaapaivakirja-id vastaus-body) versio)
+        ;; Poista typa
+        _ (poista-viimeisin-typa)]
+    (varmista-perustiedot vastaus vastaus-body typa-db typa-data urakka-id ulkoinenid paivamaara)
+    (varmista-ensitallennus typa-db)))
+
 (deftest kirjaa-uusi-typa-PUT-rajapintaan
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         paivamaara "2023-05-30"
@@ -248,13 +276,13 @@
                (.replace "__PAIVAMAARA__" paivamaara))
 
         _ (anna-kirjoitusoikeus kayttaja-yit)
-        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)]
 
     (is (= 500 (:status vastaus)))
     (is (= "tyomaapaivakirjaa-ei-loydy" (get-in vastaus-body [:virheet 0 :virhe :koodi])))))
 
-(deftest paivita-typa-onnistuu
+(deftest paivita-typa-onnistuu-versio-1
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         paivamaara "2023-05-30"
         ulkoinenid "12345"
@@ -319,7 +347,7 @@
                (.replace "__PAIVAMAARA__" paivamaara))
 
         _ (anna-kirjoitusoikeus kayttaja-yit)
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
         ;vastaus-body (cheshire/decode (:body vastaus) true)
         ;; 2. Päivitä typa uudella json viestillä
         uusi-saa-asema "123456"
@@ -337,7 +365,7 @@
                         (.replace "__UUSI_SAA-ASEMA-TUNNISTE__" uusi-saa-asema))
 
         paivitys-typa-data (cheshire/decode paivitys-typa true)
-        paivitys-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti paivitys-typa)
+        paivitys-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti paivitys-typa)
         paivitys-vastaus-body (cheshire/decode (:body paivitys-vastaus) true)
 
         ;; Hae typa tietokannasta
@@ -365,7 +393,7 @@
                (.replace "__PAIVAMAARA__" paivamaara))
 
         _ (anna-kirjoitusoikeus kayttaja-yit)
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
         ;vastaus-body (cheshire/decode (:body vastaus) true)
         ;; 2. Päivitä typa uudella json viestillä
         uusi-saa-asema "123456"
@@ -383,7 +411,7 @@
                         (.replace "__UUSI_SAA-ASEMA-TUNNISTE__" uusi-saa-asema))
 
         paivitys-typa-data (cheshire/decode paivitys-typa true)
-        paivitys-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti paivitys-typa)
+        paivitys-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti paivitys-typa)
         paivitys-vastaus-body (cheshire/decode (:body paivitys-vastaus) true)
 
         ;; Hae typa tietokannasta
@@ -395,7 +423,7 @@
     (varmista-perustiedot paivitys-vastaus paivitys-vastaus-body typa-db paivitys-typa-data urakka-id ulkoinenid paivamaara)
     (varmista-muokatut-tiedot typa-db paivitys-typa-data uusi-saa-asema)))
 
-(deftest kirjaa-ja-paivita-typa-ilman-ei-pakollisia-attribuutteja-onnistuu
+(deftest kirjaa-ja-paivita-typa-ilman-ei-pakollisia-attribuutteja-onnistuu-versio-1
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         paivamaara "2023-05-30"
         ulkoinenid "54321"
@@ -437,6 +465,68 @@
                         (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
                         (.replace "__PAIVAMAARA__" paivamaara)
                         (.replace "__ULKOINENID__" ulkoinenid)
+                        (.replace "__VERSIO__" (str 999))
+                        ;; Muokatut tiedot
+                        (.replace "__UUSI_SAA-ASEMA-TUNNISTE__" uusi-saa-asema)
+                        ;; poistetaan sanomasta taas vapaaehtoiset tiedot
+                        (.replace "\"ilman-lampotila\": 20.0," "\"ilman-lampotila\": 20.0")
+                        (.replace "\"tien-lampotila\": 5.0," "")
+                        (.replace "\"keskituuli\": 16," "")
+                        (.replace "\"sateen-olomuoto\": 23.0," "")
+                        (.replace "\"sadesumma\": 5" "")
+                        (.replace "\"Katselmointi pidetty hyvässä ymmärryksessä\"," "\"Katselmointi pidetty hyvässä ymmärryksessä\"")
+                        (.replace "\"tunnit\": 4.75" ""))
+
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/" tid] kayttaja-yit portti paivitys-typa)
+        vastaus-body (cheshire/decode (:body vastaus) true)
+        _ (is (= (:status vastaus) 200) "Päivitys onnistui ilman ei-vaadittuja tietoja.")
+        _ (is (= (:status vastaus-body) "OK") "Päivitys onnistui ilman ei-vaadittuja tietoja.")
+
+        ;; Poista typa
+        _ (poista-viimeisin-typa)]))
+
+(deftest kirjaa-ja-paivita-typa-ilman-ei-pakollisia-attribuutteja-onnistuu-versio-2
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        paivamaara "2023-05-30"
+        ulkoinenid "54321"
+        urakoitsija (first (q-map (format "SELECT ytunnus, nimi FROM organisaatio WHERE nimi = '%s';" "YIT Rakennus Oy")))
+        ;; 1. Tallenna ensin typa
+        typa (-> "test/resurssit/api/tyomaapaivakirja-kirjaus.json"
+               slurp
+               (.replace "__URAKOITSIJA__" (:nimi urakoitsija))
+               (.replace "__YTUNNUS__" (:ytunnus urakoitsija))
+               (.replace "__VIESTITUNNISTE__" (str (rand-int 9999999)))
+               (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
+               (.replace "__ULKOINENID__" ulkoinenid)
+               (.replace "__PAIVAMAARA__" paivamaara)
+               ;; poistetaan sanomasta vapaaehtoiset tiedot
+               (.replace "\"ilman-lampotila\": 20.0," "\"ilman-lampotila\": 20.0")
+               (.replace "\"tien-lampotila\": 5.0," "")
+               (.replace "\"keskituuli\": 16," "")
+               (.replace "\"sateen-olomuoto\": 23.0," "")
+               (.replace "\"sadesumma\": 5" "")
+               (.replace "\"Katselmointi pidetty hyvässä ymmärryksessä\"," "\"Katselmointi pidetty hyvässä ymmärryksessä\"")
+               (.replace "\"tunnit\": 4.75" ""))
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
+        vastaus-body (cheshire/decode (:body vastaus) true)
+        _ (is (= (:status vastaus) 200) "Kirjaus onnistui ilman ei-vaadittuja tietoja.")
+        _ (is (= (:status vastaus-body) "OK") "Kirjaus onnistui ilman ei-vaadittuja tietoja.")
+
+        ;; Tyomaapaivakirjaid talteen
+        tid (:tyomaapaivakirja-id vastaus-body)
+
+        ;; 2. Päivitä typa uudella json viestillä
+        uusi-saa-asema "123456"
+        paivitys-typa (-> "test/resurssit/api/tyomaapaivakirja-paivitys.json"
+                        slurp
+                        (.replace "__URAKOITSIJA__" (:nimi urakoitsija))
+                        (.replace "__YTUNNUS__" (:ytunnus urakoitsija))
+                        (.replace "__VIESTITUNNISTE__" (str (rand-int 9999999)))
+                        (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
+                        (.replace "__PAIVAMAARA__" paivamaara)
+                        (.replace "__ULKOINENID__" ulkoinenid)
                         ;; Muokatut tiedot
                         (.replace "__UUSI_SAA-ASEMA-TUNNISTE__" uusi-saa-asema)
                         ;; poistetaan sanomasta taas vapaaehtoiset tiedot
@@ -457,7 +547,7 @@
         ;; Poista typa
         _ (poista-viimeisin-typa)]))
 
-(deftest virheellinen-post
+(deftest virheellinen-post-versio-1
   (let [urakka-id "jaska"
         paivamaara "2023-05-30"
         ulkoinenid "12345"
@@ -474,6 +564,26 @@
         
         _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
+        vastaus-body (cheshire/decode (:body vastaus) true)]
+    (is (= "puutteelliset-parametrit") (get-in vastaus-body [:virheet 0 :virhe :koodi]))))
+
+(deftest virheellinen-post-versio-2
+  (let [urakka-id "jaska"
+        paivamaara "2023-05-30"
+        ulkoinenid "12345"
+        urakoitsija (first (q-map (format "SELECT ytunnus, nimi FROM organisaatio WHERE nimi = '%s';" "YIT Rakennus Oy")))
+        ;; 1. Tallenna ensin typa
+        typa (-> "test/resurssit/api/tyomaapaivakirja-kirjaus.json"
+               slurp
+               (.replace "__URAKOITSIJA__" (:nimi urakoitsija))
+               (.replace "__YTUNNUS__" (:ytunnus urakoitsija))
+               (.replace "__VIESTITUNNISTE__" (str (rand-int 9999999)))
+               (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
+               (.replace "__ULKOINENID__" ulkoinenid)
+               (.replace "__PAIVAMAARA__" paivamaara))
+
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)]
     (is (= "puutteelliset-parametrit") (get-in vastaus-body [:virheet 0 :virhe :koodi]))))
 

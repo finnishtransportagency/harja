@@ -1110,7 +1110,7 @@ documentation:
     /tyomaapaivakirja:
       post:
         is: [secured]
-        description: Uuden työmaapäiväkirjan luominen. Toteutus voi vielä elää palautteen perusteella.
+        description: Deprikoituu 31.12.2025. Uuden työmaapäiväkirjan luominen.
         body:
           application/json:
             example: !include examples/tyomaapaivakirja-kirjaus-request.json
@@ -1134,7 +1134,8 @@ documentation:
       /{tyomaapaivakirjaid}:
         put:
           is: [secured]
-          description: Työmaapäiväkirjan päivittäminen. Korvaa edeltävän version. Toteutus voi vielä elää palautteen perusteella.
+          description: Deprikoituu 31.12.2024. Työmaapäiväkirjan päivittäminen.
+          depricated: 31.12.2025
           body:
             application/json:
               example: !include examples/tyomaapaivakirja-paivitys-request.json
@@ -1155,7 +1156,54 @@ documentation:
                 application/json:
                   example: !include examples/virhe-response.json
                   schema: virhe-response
-
+    /tyomaapaivakirja/v2:
+      post:
+        is: [secured]
+          description: Uuden työmaapäiväkirjan luominen. Korvaa vanhan version. Käyttää uudempaa schema tiedostoa.
+          body:
+            application/json:
+              example: !include examples/tyomaapaivakirja-kirjaus-request.json
+              schema: tyomaapaivakirja-kirjaus-v2-request
+          responses:
+            200:
+              body:
+                application/json:
+                  example: !include examples/tyomaapaivakirja-kirjaus-ok-response.json
+                  schema: tyomaapaivakirja-kirjaus-ok-response
+            400:
+              body:
+                application/json:
+                  example: !include examples/tyomaapaivakirja-kirjaus-nok-response.json
+                  schema: tyomaapaivakirja-kirjaus-nok-response
+            500:
+              body:
+                application/json:
+                  example: !include examples/tyomaapaivakirja-kirjaus-nok-response.json
+                  schema: tyomaapaivakirja-kirjaus-nok-response
+    /tyomaapaivakirja/v2:
+      put:
+        is: [secured]
+          description: Päivittää työmaapäiväkirjan. Korvaa vanhan version. Käyttää uudempaa schema tiedostoa.
+          body:
+            application/json:
+              example: !include examples/tyomaapaivakirja-paivitys-request.json
+              schema: tyomaapaivakirja-kirjaus-v2-request
+          responses:
+            200:
+              body:
+                application/json:
+                  example: !include examples/tyomaapaivakirja-kirjaus-ok-response.json
+                  schema: tyomaapaivakirja-kirjaus-ok-response
+            400:
+              body:
+                application/json:
+                  example: !include examples/tyomaapaivakirja-kirjaus-nok-response.json
+                  schema: tyomaapaivakirja-kirjaus-nok-response
+            500:
+              body:
+                application/json:
+                  example: !include examples/tyomaapaivakirja-kirjaus-nok-response.json
+                  schema: tyomaapaivakirja-kirjaus-nok-response
 
   /yhteystiedot:
     /{urakkanumero}:

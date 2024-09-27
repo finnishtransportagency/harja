@@ -430,6 +430,7 @@
 (defrecord Tyomaapaivakirja []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+    ;; Deprikoituu 31.12.2025
     (julkaise-reitti
       http :kirjaa-tyomaapaivakirja
       (POST "/api/urakat/:id/tyomaapaivakirja" request
@@ -444,23 +445,37 @@
           :kirjoitus))
       true)
 
-    ;; Uusi päivitykseen käytettävä rajapinta.
+    ;; Korvaa vanhan uuden lisäämisen rajapinnan
+    (julkaise-reitti
+      http :kirjaa-tyomaapaivakirja-v2
+      (POST "/api/urakat/:id/tyomaapaivakirja/v2" request
+        (kasittele-kutsu db
+          integraatioloki
+          :kirjaa-tyomaapaivakirja-v2
+          request
+          json-skeemat/tyomaapaivakirja-kirjaus-v2-request
+          json-skeemat/tyomaapaivakirja-kirjaus-response
+          (fn [parametrit data kayttaja db]
+            (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
+          :kirjoitus))
+      true)
+
+    ;; Korvaa vanhan päivitysrajapinnnan
     (julkaise-reitti
       http :paivita-tyomaapaivakirja-v2
-      (PUT "/api/urakat/:id/tyomaapaivakirja" request
+      (PUT "/api/urakat/:id/tyomaapaivakirja/v2" request
         (kasittele-kutsu db
           integraatioloki
           :paivita-tyomaapaivakirja-v2
           request
-          json-skeemat/tyomaapaivakirja-paivitys-request
+          json-skeemat/tyomaapaivakirja-paivitys-v2-request
           json-skeemat/tyomaapaivakirja-kirjaus-response
           (fn [parametrit data kayttaja db]
             (kirjaa-tyomaapaivakirja db parametrit data kayttaja false))
           :kirjoitus))
       true)
 
-    ;; Tämä tullaan deprikoimaan jossain vaiheessa. Ei ole hyväksi, että Harja lähettää sisäisiä tunneisteitaan rajapinnan kautta
-    ;; ja vaatii kutsujia käyttämään niitä.
+    ;; ;; Deprikoituu 31.12.2025
     (julkaise-reitti
       http :paivita-tyomaapaivakirja
       (PUT "/api/urakat/:id/tyomaapaivakirja/:tid" request
@@ -474,6 +489,7 @@
             (kirjaa-tyomaapaivakirja db parametrit data kayttaja false))
           :kirjoitus))
       true)
+
     (julkaise-palvelu (:http-palvelin this)
       :hae-tyomaapaivakirjan-versiotiedot
       (fn [user tiedot]
@@ -483,6 +499,7 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
       :kirjaa-tyomaapaivakirja
+      :kirjaa-tyomaapaivakirja-v2
       :paivita-tyomaapaivakirja
       :hae-tyomaapaivakirjan-versiotiedot)
     this))
