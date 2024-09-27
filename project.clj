@@ -34,6 +34,7 @@
 
                  ;; -- Lokitus
                  [com.taoensso/timbre "5.2.1"]
+                 ;; Figwheel tarvitsee log4j-coren
                  [org.apache.logging.log4j/log4j-core "2.22.1"]
 
                  ;; -- Metriikkadata
@@ -48,11 +49,11 @@
                  [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "0.7.2"]
+                 [org.clojure/core.cache "0.8.2"]
                  [org.clojure/core.memoize "1.0.257"]
 
                  ;; Pattern match kirjasto
-                 [org.clojure/core.match "1.0.0"]
+                 [org.clojure/core.match "1.1.0"]
 
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
@@ -79,8 +80,8 @@
                  [namespacefy "0.5.0"]
 
                  ;; -- Sähköposti lähetys
-                 [org.apache.httpcomponents/httpcore "4.4.14"]
-                 [org.apache.httpcomponents/httpmime "4.5.13" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
+                 [org.apache.httpcomponents/httpcore "4.4.16"]
+                 [org.apache.httpcomponents/httpmime "4.5.14" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
@@ -134,7 +135,7 @@
                  [org.apache.ant/ant "1.10.15"]
 
                  ;; Clojure(Script) assertointi
-                 [com.taoensso/truss "1.5.0"]
+                 [com.taoensso/truss "1.12.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.19.0"]
