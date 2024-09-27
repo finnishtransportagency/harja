@@ -1,0 +1,21 @@
+{
+  "tunniste": "__ULKOINENID__",
+  "reittinimi": "__NIMI__",
+  "sijainnit": [
+    {
+      "tie": 1,
+      "aosa": 40,
+      "aet": 0,
+      "losa": 40,
+      "let": 10,
+      "hoitoluokka": "IsE",
+      "pituus": 10,
+      "kalustot": [
+        {
+          "kalusto-lkm": 3,
+          "kalustotyyppi": "TR"
+        }
+      ]
+    }
+  ]
+}

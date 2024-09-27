@@ -44,7 +44,7 @@
         ;; Anna oikeudet käyttäjälle
         _ (anna-kirjoitusoikeus kayttaja-yit)
         ulkoinen-id (str 123456)
-        lahetysdata (-> "test/resurssit/api/talvihoitoreitti-ok.json"
+        lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-ok.json"
                       slurp
                       (.replace "__ULKOINENID__" (str ulkoinen-id))
                       (.replace "__NIMI__" "testinimi"))
@@ -68,7 +68,7 @@
         _ (anna-kirjoitusoikeus kayttaja-yit)
         ulkoinen-id 123456
         nimi "Nelostien pikkumutka"
-        lahetysdata (-> "test/resurssit/api/talvihoitoreitti-ok.json"
+        lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-ok.json"
                       slurp
                       (.replace "__ULKOINENID__" (str ulkoinen-id))
                       (.replace "__NIMI__" (str nimi)))
@@ -80,7 +80,7 @@
 
     ;; Päivitetään talvihoitoreitti
     (let [uusinimi "uusinimi"
-          lahetysdata (-> "test/resurssit/api/talvihoitoreitti-ok.json"
+          lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-ok.json"
                         slurp
                         (.replace "__ULKOINENID__" (str ulkoinen-id))
                         (.replace "__NIMI__" (str uusinimi)))
@@ -103,11 +103,11 @@
         ulkoinen-id2 654321
         nimi1 "Nelostien pikkumutka"
         nimi2 "Kotimaan lehväpolku"
-        lahetysdata1 (-> "test/resurssit/api/talvihoitoreitti-ok.json"
+        lahetysdata1 (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-ok.json"
                        slurp
                        (.replace "__ULKOINENID__" (str ulkoinen-id1))
                        (.replace "__NIMI__" (str nimi1)))
-        lahetysdata2 (-> "test/resurssit/api/talvihoitoreitti-ok.json"
+        lahetysdata2 (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti2-ok.json"
                        slurp
                        (.replace "__ULKOINENID__" (str ulkoinen-id2))
                        (.replace "__NIMI__" (str nimi2)))
@@ -116,10 +116,9 @@
         vastaus-lisays2 (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                           lahetysdata2)
         ;; HAetaan kannasta ja varmistetaan, että lisäys on onnistunut
-        talvihoitoreitti-kannassa (q-map (format "SELECT nimi FROM talvihoitoreitti
+        talvihoitoreitti-kannassa (q-map (format "SELECT id, nimi FROM talvihoitoreitti
           WHERE urakka_id = %s" urakka-id))
         _ (is (= 2 (count talvihoitoreitti-kannassa)))
-
 
         ;; Poistetaan toinen talvihoitoreitti
         delete-json (cheshire/encode {:talvihoitoreittien-tunnisteet [(str ulkoinen-id1) (str ulkoinen-id2)]})
@@ -137,7 +136,7 @@
         ;; Anna oikeudet käyttäjälle
         _ (anna-kirjoitusoikeus kayttaja-yit)
         ulkoinen-id 123456
-        lahetysdata (-> "test/resurssit/api/talvihoitoreitti-nok.json"
+        lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-nok.json"
                       slurp
                       (.replace "__ULKOINENID__" (str ulkoinen-id))
                       (.replace "__NIMI__" "testinimi"))
@@ -152,6 +151,26 @@
     (is (.contains (get-in virhe [:virhe :viesti]) ":error :invalid-enum-value"))
     (is (.contains (get-in virhe [:virhe :viesti]) "tie: Väärä tyyppi"))))
 
+(deftest tallenna-talvihoitoreitti-epaonnistuu-vaara-tieosoite
+  (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        ;; Siivotaan kanta varulta
+        _ (poista-talvihoitoreitit-urakalta urakka-id)
+        ;; Anna oikeudet käyttäjälle
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        ulkoinen-id 123456
+        lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-vaara-tieosoite.json"
+                      slurp
+                      (.replace "__ULKOINENID__" (str ulkoinen-id))
+                      (.replace "__NIMI__" "testinimi"))
+        vastaus (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+                  lahetysdata)
+        dekoodattu-body (cheshire/decode (:body vastaus) true)
+        virhe (first (:virheet dekoodattu-body))]
+
+    (is (= 400 (:status vastaus)))
+    (is (= "invalidi-json" (get-in virhe [:virhe :koodi])))
+    (is (.contains (str (get-in virhe [:virhe :viesti])) "Tiellä 1 ei ole tieosaa 40"))))
+
 
 ;; Käyttöliittymästä tehtävät haut eivät välttämättä kuulu tänne, mutta niitä on mahdoton tehdä ilman dataa
 ;; Joten käytetään API-kutsuja datan luomiseksi ja varmistetaan, että käyttöliittymän käyttävät endpointit
@@ -165,7 +184,7 @@
         _ (anna-kirjoitusoikeus kayttaja-yit)
         ulkoinen-id (str 123456)
         reittinimi "testinimi"
-        lahetysdata (-> "test/resurssit/api/talvihoitoreitti-ok.json"
+        lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-ok.json"
                       slurp
                       (.replace "__ULKOINENID__" (str ulkoinen-id))
                       (.replace "__NIMI__" reittinimi))
