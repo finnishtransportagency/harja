@@ -527,6 +527,7 @@
                         (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
                         (.replace "__PAIVAMAARA__" paivamaara)
                         (.replace "__ULKOINENID__" ulkoinenid)
+                        (.replace "__VERSIO__" (str 999))
                         ;; Muokatut tiedot
                         (.replace "__UUSI_SAA-ASEMA-TUNNISTE__" uusi-saa-asema)
                         ;; poistetaan sanomasta taas vapaaehtoiset tiedot
@@ -538,11 +539,11 @@
                         (.replace "\"Katselmointi pidetty hyvässä ymmärryksessä\"," "\"Katselmointi pidetty hyvässä ymmärryksessä\"")
                         (.replace "\"tunnit\": 4.75" ""))
 
-        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/" tid] kayttaja-yit portti paivitys-typa)
-        vastaus-body (cheshire/decode (:body vastaus) true)
+        paivitys-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/" tid] kayttaja-yit portti paivitys-typa)
+        paivitys-vastaus-body (cheshire/decode (:body paivitys-vastaus) true)
 
-        _ (is (= (:status vastaus) 200) "Päivitys onnistui ilman ei-vaadittuja tietoja.")
-        _ (is (= (:status vastaus-body) "OK") "Päivitys onnistui ilman ei-vaadittuja tietoja.")
+        _ (is (= (:status paivitys-vastaus) 200) "Päivitys onnistui ilman ei-vaadittuja tietoja.")
+        _ (is (= (:status paivitys-vastaus-body) "OK") "Päivitys onnistui ilman ei-vaadittuja tietoja.")
 
         ;; Poista typa
         _ (poista-viimeisin-typa)]))
