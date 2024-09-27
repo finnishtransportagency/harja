@@ -34,8 +34,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: .trivy
-        key: ${{ runner.os }}-trivy-${{ github.run_id }}
-        # tai key: ${{ runner.os }}-trivy-${{ github.ref_name }}
+        key: ${{ runner.os }}-trivy-${{ github.ref_name }}
         #restore-keys: ${{ runner.os }}-trivy-
 
     # Note: Currently, the trivy action must be run multiple times to achieve different goals
