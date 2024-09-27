@@ -43,16 +43,28 @@ runs:
             per_page: 10,
           });
           
+          if (data.length === 0) {
+            core.warning('No Trivy DB versions found. Skipping cache step.');
+            return;
+          }
+          
           // Filter out the latest version from the response
           const versions = data.filter((v) => v.metadata.container.tags.includes('latest'));
           console.log(JSON.stringify(versions));
+          
+          if (versions.length === 0) {
+            core.warning('No "latest" Trivy DB version found. Skipping cache step.');
+            return;
+          }
+          
           const latestVersion = versions[0];
           console.log(`Trivy DB sha256:${latestVersion.name.replace('sha256:', '')}`);
+          
           core.setOutput('sha', latestVersion.name.replace('sha256:', ''));
 
     - name: Cache Trivy DBs
       uses: actions/cache@v4
-      if: steps.trivy-db-hash.outputs.sha != ''
+      if: ${{ steps.trivy-db-hash.outputs.sha != '' }}
       with:
         path: .trivy
         key: ${{ runner.os }}-trivy-${{ steps.trivy-db-hash.outputs.sha }}
