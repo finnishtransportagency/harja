@@ -54,11 +54,11 @@
              [:div.basis256.nogrow.shrink3.rajaus
               [:div {:style {:display "flex"}}
                [:span.talvihoitoreitti-nimi {:style {:background-color (:vari rivi)}} ]
-               [:div.semibold.musta.body-text (str (:nimi rivi))]]
-              [:div.body-text.harmaa (:laskettu_pituus rivi)]]
+               [:div.body-text.semibold.musta {:style {:font-size "1rem"}} (str (:nimi rivi))]]
+              [:div.body-text.musta.semibold (fmt/desimaaliluku-opt (:laskettu_pituus rivi) 2) " km"]]
 
              [:div.basis384.grow2.shrink3.rajaus
-              [:div.body-text.semibold.musta "Hoitoluokkien osuudet reitillä (km)"]
+              [:div.body-text.semibold.musta {:style {:font-size "1rem"}} "Hoitoluokkien osuudet reitillä (km)"]
               [:div {:style {:display "flex"}}
                (doall (for [h (:hoitoluokat rivi)]
                         ^{:key (hash (str "hoitoluokka-" h))}
@@ -67,7 +67,7 @@
                          [:div.small-text.musta {:style {:padding-right "30px"}} (fmt/desimaaliluku-opt (:pituus h) 2) ]]))]]
 
              [:div.basis384.grow2.shrink3.rajaus
-              [:div.body-text.semibold.musta "Kalusto (kpl)"]
+              [:div.body-text.semibold.musta {:style {:font-size "1rem"}} "Kalusto (kpl)"]
               [:div {:style {:display "flex"}}
                (doall (for [kalusto (:kalustot rivi)]
                         ^{:key (hash kalusto)}
@@ -103,7 +103,7 @@
                                         {:teksti (str (fmt/euro-opt false yhteensa-laskettu))
                                          :tasaa :oikea :luokka "lihavoitu"}])}
                   [{:otsikko "Tie" :nimi :tie :tyyppi :string :tasaa :vasen :leveys 1}
-                   {:otsikko "Tieosoite" :nimi :formatoitu-tr :tyyppi :string :tasaa :vasen :leveys 3}
+                   {:otsikko "Osoiteväli" :nimi :formatoitu-tr :tyyppi :string :tasaa :vasen :leveys 3}
                    {:otsikko "Hoitoluokka" :nimi :hoitoluokka :tyyppi :string :tasaa :vasen :leveys 2}
                    {:otsikko "Suunniteltu pituus (km)" :nimi :pituus :tyyppi :numero
                     :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea :leveys 2}
