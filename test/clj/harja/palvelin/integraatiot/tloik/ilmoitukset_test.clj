@@ -26,7 +26,7 @@
            (java.util UUID)))
 
 (def kayttaja "yit-rakennus")
-(def timeout 3000)
+(def timeout 2000)
 (def kuittaus-timeout 20000)
 
 (defonce asetukset {:itmf integraatio/itmf-asetukset})
@@ -168,7 +168,7 @@
       (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-      (let [_ (Thread/sleep 1000)
+      (let [_ (odota-arvo viestit kuittaus-timeout)
             xml (first @viestit)
             data (xml/lue xml)]
         (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
@@ -216,7 +216,8 @@
        (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit-tloikkiin)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
        ;; Tarkista saapuneen ilmoituksen tila
-       (let [_ (odota-ehdon-tayttymista #(hae-ilmoitustoimenpide-ilmoitusidlla 123456789) "Toimenpide on tietokannassa." kuittaus-timeout)
+       (let [_ (odota-arvo kuittausviestit-tloikkiin kuittaus-timeout)
+             _ (odota-ehdon-tayttymista #(hae-ilmoitustoimenpide-ilmoitusidlla 123456789) "Toimenpide on tietokannassa." kuittaus-timeout)
              {:keys [status body] :as vastaus} @ilmoitushaku
              ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla 123456789)]
 
@@ -231,8 +232,7 @@
                   count) 1) "Ilmoituksia on vastauksessa yksi"))
 
        ;; Tarkista t-loikille lähetettävän kuittausviestin sisältö
-       (let [_ (Thread/sleep 1000)
-             _ (odota-arvo kuittausviestit-tloikkiin kuittaus-timeout)
+       (let [_ (odota-arvo kuittausviestit-tloikkiin kuittaus-timeout)
              xml (first @kuittausviestit-tloikkiin)
              data (xml/lue xml)]
          (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
@@ -300,14 +300,14 @@
             ilmoitus-id (rand-int 99999999)
             sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
+
         (async/<!! (async/timeout timeout))
         (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
 
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
         (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-        (let [_ (Thread/sleep 1000)
-              _ (odota-arvo viestit kuittaus-timeout)
+        (let [_ (odota-arvo viestit kuittaus-timeout)
               xml (first @viestit)
               data (xml/lue xml)
               _ (odota-ehdon-tayttymista #(hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id) "Ilmoitus on tietokannassa." kuittaus-timeout)
@@ -368,13 +368,14 @@
             ilmoitus-id (rand-int 99999999)
             sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
+
         (async/<!! (async/timeout timeout))
         (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
 
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
         (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-        (let [_ (Thread/sleep 1500)
+        (let [_ (odota-arvo viestit kuittaus-timeout)
               xml (first @viestit)
               data (xml/lue xml)
               ilmoitus (hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]

@@ -36,20 +36,40 @@ runs:
       uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.24.0
       env:
         IMAGE_REF: ${{ inputs.image-ref }}
+        # FIXME: Tämä on väliaikainen workaround, kunnes trivyn rate limit ongelma on korjattu
+        TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
       with:
         image-ref: ${{ env.IMAGE_REF}}
-        format: 'table'
+        output: trivy.txt
+        hide-progress: true
         exit-code: '0'
         scanners: vuln,secret,misconfig
         vuln-type: 'os,library'
         severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
         trivyignores: ${{ inputs.trivyignores }}
 
+    - name: Publish Trivy Output to Summary
+      run: |
+        if [[ -s trivy.txt ]]; then
+          {
+            echo "### Security Scan Results"
+            echo "<details><summary>Click to expand</summary>"
+            echo ""
+            echo '```terraform'
+            cat trivy.txt
+            echo '```'
+            echo "</details>"
+          } >> $GITHUB_STEP_SUMMARY
+        fi
+      shell: bash
+
     - name: Run Trivy and generate a Sarif report
       uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.24.0
       if: ${{ inputs.upload-sarif == 'true' }}
       env:
         IMAGE_REF: ${{ inputs.image-ref }}
+        # FIXME: Tämä on väliaikainen workaround, kunnes trivyn rate limit ongelma on korjattu
+        TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
       with:
         image-ref: ${{ env.IMAGE_REF}}
         format: 'sarif'
@@ -101,6 +121,8 @@ runs:
         VULN_TYPES: ${{ inputs.vuln-types }}
         IGNORE_UNFIXED: ${{ inputs.ignore-unfixed }}
         IMAGE_REF: ${{ inputs.image-ref }}
+        # FIXME: Tämä on väliaikainen workaround, kunnes trivyn rate limit ongelma on korjattu
+        TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
       with:
         image-ref: ${{ env.IMAGE_REF}}
         format: 'table'

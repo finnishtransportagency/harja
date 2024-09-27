@@ -34,6 +34,7 @@
 
                  ;; -- Lokitus
                  [com.taoensso/timbre "5.2.1"]
+                 ;; Figwheel tarvitsee log4j-coren
                  [org.apache.logging.log4j/log4j-core "2.22.1"]
 
                  ;; -- Metriikkadata
@@ -48,11 +49,11 @@
                  [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "0.7.2"]
+                 [org.clojure/core.cache "0.8.2"]
                  [org.clojure/core.memoize "1.0.257"]
 
                  ;; Pattern match kirjasto
-                 [org.clojure/core.match "1.0.0"]
+                 [org.clojure/core.match "1.1.0"]
 
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
@@ -61,7 +62,7 @@
                  [net.postgis/postgis-jdbc "2.5.1"]
                  [org.locationtech.jts/jts-core "1.19.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
-                 [com.mchange/c3p0 "0.9.5.4"]
+                 [com.mchange/c3p0 "0.10.1"]
                  ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
                  [webjure/jeesql "0.4.7"]
                  [io.github.tatut/specql "20230316" :exclusions [org.clojure/java.jdbc]]
@@ -84,7 +85,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.18.3" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.18.5" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
