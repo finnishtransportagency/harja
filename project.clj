@@ -135,7 +135,7 @@
                  [org.apache.ant/ant "1.10.15"]
 
                  ;; Clojure(Script) assertointi
-                 [com.taoensso/truss "1.5.0"]
+                 [com.taoensso/truss "1.12.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.19.0"]
