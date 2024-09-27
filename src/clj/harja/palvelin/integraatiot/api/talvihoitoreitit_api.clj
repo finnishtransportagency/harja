@@ -2,11 +2,13 @@
   "Talvihoitoreittien lisäys API:n kautta"
   (:require [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [com.stuartsierra.component :as component]
             [compojure.core :refer [PUT DELETE]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
+             [kasittele-kutsu tee-kirjausvastauksen-body tee-viallinen-kutsu-virhevastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]))
@@ -28,9 +30,39 @@
         vastaus (tee-kirjausvastauksen-body {:id (:tunniste data) :ilmoitukset "Talvihoitoreitti lisätty onnistuneesti."})]
     vastaus))
 
+(defn validoi-talvihoitoreitti [db data urakka-id]
+  (let [virheet []
+        ;; Talvihoitoreitillä voi olla virheellisiä tieosoitteita
+        rivi-atom (atom 0)
+        tieosoite-virheet (talvihoitoreitit-q/validoi-talvihoitoreitin-sijainnit db rivi-atom data)
+
+        virheet (if-not (empty? tieosoite-virheet)
+                  (conj virheet tieosoite-virheet)
+                  [])
+
+        leikkaavat-geometriat (when (empty? tieosoite-virheet)
+                                (talvihoitoreitit-q/leikkaavat-geometriat db data urakka-id))
+        ;; Leikkaavat geometriat etsitään samalla funktiolla, kuin excelin tuonnissa.
+        ;; Excelin tuonnissa näytetään käyttöliittymässä hyvin tarkkaan, että missä on vika.
+        ;; Yksittäisen talvihoitoreitin kohdalla ei ole tarvetta näyttää yhtä tarkkaa tietoa.
+        ;; Joten muutetaan mäpin avaimet virheeksi
+        leikkaavat-geometriat (if-not (empty? leikkaavat-geometriat)
+                                (map #(-> %
+                                        (assoc :virhe (:leikkaavat %))
+                                        (dissoc :leikkaavat))
+                                  leikkaavat-geometriat)
+                                virheet)
+
+
+        ;; Tallennetaan mahdolliset virheet atomiin
+        virheet (if-not (empty? leikkaavat-geometriat)
+                  (conj virheet leikkaavat-geometriat)
+                  virheet)]
+    virheet))
+
 (defn lisaa-talvihoitoreitti
   "Otetaan lisäys ja päivitys vastaan ja päätellään, että kumpi toimenpide tehdään."
-  [db data kayttaja parametrit]
+  [db data kayttaja parametrit request]
   (validointi/tarkista-urakka-ja-kayttaja db (konv/konvertoi->int (:id parametrit)) kayttaja)
   (jdbc/with-db-transaction [db db]
     (let [urakka_id (konv/konvertoi->int (:id parametrit))
@@ -38,12 +70,21 @@
 
           ;; Varmista, että talvihoitoreittiä ei ole jo olemassa
           talvihoitoreitti (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka_id
-                                                                                         :ulkoinen_id (:tunniste data)})]
-      (if (and
-            (not (nil? talvihoitoreitti))
-            (not (empty? talvihoitoreitti)))
-        (paivita-talvihoitoreitti db data kayttaja_id urakka_id)
-        (tallenna-talvihoitoreitti db data kayttaja_id urakka_id)))))
+                                                                                         :ulkoinen_id (:tunniste data)})
+          ;; Validoi talvihoitoreitti
+          virheet (validoi-talvihoitoreitti db data urakka_id)
+          vastaus (if (empty? virheet)
+                    ;; Virheitä ei löytynyt, joten jatketaan
+                    (if (and
+                          (not (nil? talvihoitoreitti))
+                          (not (empty? talvihoitoreitti)))
+                      (paivita-talvihoitoreitti db data kayttaja_id urakka_id)
+                      (tallenna-talvihoitoreitti db data kayttaja_id urakka_id))
+                    ;; Muodostetaan virhevastus
+                    (virheet/heita-viallinen-apikutsu-poikkeus
+                      {:koodi virheet/+invalidi-json-koodi+
+                       :viesti virheet}))]
+      vastaus)))
 
 (defn poista-talvihoitoreitit [db data kayttaja parametrit]
   (validointi/tarkista-urakka-ja-kayttaja db (konv/konvertoi->int (:id parametrit)) kayttaja)
@@ -67,7 +108,7 @@
           json-skeemat/talvihoitoreitti-kirjaus-request
           json-skeemat/kirjausvastaus
           (fn [parametrit data kayttaja db]
-            (lisaa-talvihoitoreitti db data kayttaja parametrit))
+            (lisaa-talvihoitoreitti db data kayttaja parametrit request))
           :kirjoitus)))
 
     (julkaise-reitti

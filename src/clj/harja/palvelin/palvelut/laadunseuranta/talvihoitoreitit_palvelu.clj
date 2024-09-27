@@ -1,12 +1,9 @@
 (ns harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-palvelu
   "Talvihoitoreittien UI:n endpointit."
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [harja.domain.tierekisteri :as tr]
-            [harja.domain.tierekisteri.validointi :as tr-validointi]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]
             [taoensso.timbre :as log]
@@ -98,50 +95,14 @@
 
                            indeksi-atom (atom 6) ;; Excel alkaa rivistä 6
                            ;; Talvihoitoreitillä voi olla virheellisiä tieosoitteita
-                           tieosoite-virheet (reduce (fn [virheet r]
-                                                       (let [;; Tietokantapohjainen validointi
-                                                             tievalidointi (tieverkko-kyselyt/tieosoitteen-validointi db (:tie r) (:aosa r) (:aet r) (:losa r) (:let r))
-                                                             tievalidointivirhe (if (and (not (nil? tievalidointi)) (not (nil? (:validaatiovirheet tievalidointi))))
-                                                                                  {:virheet (str "Rivillä " @indeksi-atom " reitin " (:reittinimi t) ", virheet: " (str/join (vec (mapcat identity (:validaatiovirheet tievalidointi)))))}
-                                                                                  nil)
-
-                                                             ;; Hoitoluokan validointi
-                                                             hoitoluokka-vastaus (tr-validointi/validoi-hoitoluokka (:hoitoluokka r))
-                                                             hoitoluokkavirhe (if-not (nil? hoitoluokka-vastaus)
-                                                                                {:virheet (str "Rivillä " @indeksi-atom " reitin " (:reittinimi t) ", hoitoluokassa virhe: " hoitoluokka-vastaus)}
-                                                                                nil)
-                                                             virheet (if (not (nil? tievalidointivirhe))
-                                                                       (conj virheet tievalidointivirhe)
-                                                                       virheet)
-                                                             virheet (if (not (nil? hoitoluokkavirhe))
-                                                                       (conj virheet hoitoluokkavirhe)
-                                                                       virheet)
-                                                             _ (swap! indeksi-atom inc)]
-                                                         virheet))
-                                               [] (:sijainnit t))
+                           tieosoite-virheet (talvihoitoreitit-q/validoi-talvihoitoreitin-sijainnit db indeksi-atom t)
 
                            _ (when-not (empty? tieosoite-virheet)
                                (swap! virheet-atom conj tieosoite-virheet))
 
                            ;; Etsitään leikkaavat geometriat vain, jos ei ole virheitä ja ei olla päivittämässä olemassa olevaa
                            leikkaavat-geometriat (when (and (empty? tieosoite-virheet) (nil? talvihoitoreitti-db))
-                                                   (reduce (fn [leikkaavat-geometriat r]
-                                                             (let [leikkaavat (talvihoitoreitit-q/hae-leikkaavat-geometriat db
-                                                                                {:urakka_id urakka-id
-                                                                                 :tie (:tie r)
-                                                                                 :aosa (:aosa r)
-                                                                                 :losa (:losa r)
-                                                                                 :aet (:aet r)
-                                                                                 :let (:let r)})]
-                                                               (if-not (empty? leikkaavat)
-                                                                 (conj leikkaavat-geometriat
-                                                                   {:leikkaavat (format "Reitin: %s, Tieosoite: %s leikkaa jo olemassa olevan talvihoitoreitin kanssa."
-                                                                                  (:reittinimi t)
-                                                                                  (tr/tr-osoite-moderni-fmt
-                                                                                    (:tie r) (:aosa r) (:aet r)
-                                                                                    (:losa r) (:let r)))})
-                                                                 leikkaavat-geometriat)))
-                                                     [] (:sijainnit t)))
+                                                   (talvihoitoreitit-q/leikkaavat-geometriat db t urakka-id))
 
                            ;; Tallennetaan mahdolliset virheet atomiin
                            _ (swap! virheet-atom conj (conj leikkaavat-geometriat))
