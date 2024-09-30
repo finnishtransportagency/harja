@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "numero": {
+      "id": "urn:harja/tieosoitevali/numero",
+      "type": "integer",
+      "minimum": 0,
+      "required": true
+    },
+    "aosa": {
+      "id": "urn:harja/tieosoitevali/aosa",
+      "type": "integer",
+      "minimum": 0,
+      "required": true
+    },
+    "aet": {
+      "id": "urn:harja/tieosoitevali/aet",
+      "type": "integer",
+      "minimum": 0,
+      "required": true
+    },
+    "let": {
+      "id": "urn:harja/tieosoitevali/let",
+      "type": "integer",
+      "minimum": 0,
+      "required": true
+    },
+    "losa": {
+      "id": "urn:harja/tieosoitevali/losa",
+      "type": "integer",
+      "minimum": 0,
+      "required": true
+    },
+    "karttapvm": {
+      "id": "urn:harja/sijainti/tie/karttapvm",
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

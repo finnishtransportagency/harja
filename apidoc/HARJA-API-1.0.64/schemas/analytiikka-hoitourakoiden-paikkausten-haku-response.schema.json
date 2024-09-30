@@ -1,0 +1,181 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "kulut": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "harjaId": {
+            "type": "integer",
+            "multipleOf": 1,
+            "description": "Kulun tunniste HARAJAssa, eli HarjaId."
+          },
+          "paivamaara": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "poistettu": {
+            "type": "boolean"
+          },
+          "urakka": {
+            "type": "integer",
+            "multipleOf": 1,
+            "description": "Urakan tunniste HARJASsa, eli HarjaId."
+          },
+          "summa": {
+            "type": "number",
+            "description": "Yksikkö: Euro."
+          },
+          "tehtavaryhma": {
+            "$ref": "#/definitions/tehtavaryhma"
+          }
+        }
+      }
+    },
+    "paikkaukset": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "harjaId": {
+            "type": "integer",
+            "multipleOf": 1,
+            "description": "Toteuman tunniste HARJAssa, eli HarjaId."
+          },
+          "urakka": {
+            "type": "integer",
+            "multipleOf": 1,
+            "description": "Urakan tunniste HARJASsa, eli HarjaId."
+          },
+          "poistettu": {
+            "type": "boolean"
+          },
+          "paivamaara": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "maara": {
+            "type": "number"
+          },
+          "yksikko": {
+            "type": "string",
+            "description": "maara-kentässä kuvatun määrän yksikkö, esim. tonni."
+          },
+          "tehtavaryhma": {
+            "$ref": "#/definitions/tehtavaryhma"
+          },
+          "tehtava": {
+            "$ref": "#/definitions/tehtava"
+          },
+          "tierekisteriosoitevali": {
+            "$ref": "#/definitions/tierekisteriosoitevali"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "tehtava": {
+      "type": "string",
+      "enum": [
+        "Kuumapäällyste, ab käsityönä",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) - kuumapäällyste",
+        "Päällysteiden paikkaus - kuumapäällyste",
+        "Päällysteiden paikkaus -kylmäpäällyste ml. SOP",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) -kylmäpäällyste ml. SOP",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) -puhallus SIP",
+        "SIP paikkaus (kesto+kylmä)",
+        "KT-valuasfalttipaikkaus K",
+        "KT-valuasfalttipaikkaus T",
+        "Konetiivistetty massasaumaus 10 cm leveä",
+        "Päällysteiden paikkaus - massasaumaus",
+        "Konetiivistetty massasaumaus 20 cm leveä",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) - massasaumaus",
+        "Päällysteiden paikkaus - Konetiivistetty massasaumaus 20 cm leveä",
+        "Kuumapäällyste, valuasfaltti",
+        "Päällysteiden paikkaus - valuasfaltti",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) - valuasvaltti",
+        "Kuumapäällyste",
+        "AB-paikkaus levittäjällä",
+        "PAB-paikkaus levittäjällä",
+        "Päällysteiden paikkaus, kylmäpäällyste",
+        "Puhallus-SIP",
+        "Päällysteiden paikkaus -saumojen juottaminen bitumilla",
+        "PAB-paikkaus käsin",
+        "Massasaumaus",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) -konetivistetty valuasvaltti",
+        "KT-reikävaluasfalttipaikkaus",
+        "Käsin tehtävät paikkaukset pikapaikkausmassalla",
+        "Valuasfaltti",
+        "Sirotepuhalluspaikkaus (SIPU)",
+        "Kannukaatosaumaus",
+        "KT-valuasfalttisaumaus",
+        "Sillan päällysteen halkeaman avarrussaumaus",
+        "Sillan kannen päällysteen päätysauman korjaukset",
+        "Reunapalkin ja päällysteen väl. sauman tiivistäminen",
+        "Reunapalkin liikuntasauman tiivistäminen"
+      ]
+    },
+    "tehtavaryhma": {
+      "type": "string",
+      "enum": [
+        "KT-Valu (Y3)",
+        "Kuumapäällyste (Y1)",
+        "Kylmäpäällyste (Y2)",
+        "Käsipaikkaus pikapaikkausmassalla (Y4)",
+        "Puhallus-SIP (Y5)",
+        "Päällysteiden paikkaus (Y)",
+        "Saumojen juottaminen bitumilla (Y6)",
+        "Siltapäällysteet (H)",
+        "Valu (Y7)"
+      ]
+    },
+    "tierekisteriosoitevali": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tienumero",
+        "aosa",
+        "aet",
+        "losa",
+        "let"
+      ],
+      "properties": {
+        "karttapaivamaara": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tienumero": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tien numero, jolle tieosoiteväli kohdistuu."
+        },
+        "aosa": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tieosoitevälin alun tieosa"
+        },
+        "aet": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Etäisyys alkuosan sisällä"
+        },
+        "losa": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tieosoitevälin lopun tieosa"
+        },
+        "let": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Etäisyys loppuosan sisällä"
+        }
+      }
+    }
+  }
+}

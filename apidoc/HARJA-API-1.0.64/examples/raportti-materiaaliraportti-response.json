@@ -1,0 +1,223 @@
+{
+  "raportti": {
+    "nimi": "Materiaaliraportti",
+    "aikavali": {
+      "alkupvm": "2022-01-01",
+      "loppupvm": "2022-01-31"
+    },
+    "alueurakkanumero": 146,
+    "materiaaliraportti": [
+      {
+        "materiaali": "Talvisuolaliuos CaCl2",
+        "maara": {
+          "yksikko": "t",
+          "maara": 1
+        }
+      },
+      {
+        "materiaali": "Talvisuolaliuos NaCl",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2.2
+        }
+      },
+      {
+        "materiaali": "Talvisuola, rakeinen NaCl",
+        "maara": {
+          "yksikko": "t",
+          "maara": 3.33
+        }
+      },
+      {
+        "materiaali": "Hiekoitushiekan suola",
+        "maara": {
+          "yksikko": "t",
+          "maara": 4
+        }
+      },
+      {
+        "materiaali": "Kaliumformiaattiliuos",
+        "maara": {
+          "yksikko": "t",
+          "maara": 1
+        }
+      },
+      {
+        "materiaali": "Natriumformiaatti",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2.2
+        }
+      },
+      {
+        "materiaali": "Natriumformiaattiliuos",
+        "maara": {
+          "yksikko": "t",
+          "maara": 3.33
+        }
+      },
+      {
+        "materiaali": "Kesäsuola sorateiden kevätkunnostus",
+        "maara": {
+          "yksikko": "t",
+          "maara": 1
+        }
+      },
+      {
+        "materiaali": "Kesäsuola sorateiden pölynsidonta",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Kesäsuola päällystettyjen teiden pölynsidonta",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Hiekoitushiekka",
+        "maara": {
+          "yksikko": "t",
+          "maara": 4
+        }
+      },
+      {
+        "materiaali": "Jätteet kaatopaikalle",
+        "maara": {
+          "yksikko": "t",
+          "maara": 4
+        }
+      },
+      {
+        "materiaali": "Rikkaruohojen torjunta-aineet",
+        "maara": {
+          "yksikko": "t",
+          "maara": 4
+        }
+      },
+      {
+        "materiaali": "Sorastusmurske",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Reunantäyttömurske",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Kelirikkomurske",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Käsin tehtävät paikkaukset pikapaikkausmassalla",
+        "maara": {
+          "yksikko": "kg",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "AB-paikkaus levittäjällä",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "PAB-paikkaus levittäjällä",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "PAB-paikkaus käsin",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "KT-valuasfalttipaikkaus T",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "KT-reikävaluasfalttipaikkaus",
+        "maara": {
+          "yksikko": "kpl",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "KT-valuasfalttisaumaus",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "KT-valuasfalttipaikkaus K",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Sirotepuhalluspaikkaus (SIPU)",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Kannukaatosaumaus",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Sillan päällysteen halkeaman avarrussaumaus",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Sillan kannen päällysteen päätysauman korjaukset",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Reunapalkin ja päällysteen väl. sauman tiivistäminen",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Reunapalkin liikuntasauman tiivistäminen",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      }
+    ]
+  }
+}
+

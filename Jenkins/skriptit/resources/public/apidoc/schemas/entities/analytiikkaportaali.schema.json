@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "reittitoteumat": {
+    "id": "urn:harja/reittitoteumat/0/reittitoteuma",
+    "type": "object",
+    "additionalProperties": false,
+    "required": false,
+    "$ref": "file:resources/api/schemas/entities/reittitoteumat.schema.json"
+  }
+}
+

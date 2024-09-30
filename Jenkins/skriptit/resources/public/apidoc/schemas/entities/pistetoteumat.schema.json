@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "array",
+  "items": {
+    "id": "urn:harja/pistetoteumat/0",
+    "type": "object",
+    "properties": {
+      "pistetoteuma": {
+        "id": "urn:harja/pistetoteumat/0/pistetoteuma",
+        "type": "object",
+        "additionalProperties": false,
+        "$ref": "file:resources/api/schemas/entities/pistetoteuma.schema.json"
+      }
+    }
+  }
+}

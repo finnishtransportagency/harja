@@ -1,0 +1,56 @@
+{
+  "ilmoitukset": [
+    {
+      "ilmoitus": {
+        "ilmoitusid": 3213123,
+        "tila": "aloitettu",
+        "tunniste": "UV-1509-1a",
+        "ilmoitettu": "2015-09-29T14:49:45",
+        "valitetty-harjaan": "2015-09-29T14:50:45",
+        "valitetty-urakkaan": "2015-09-30T14:50:45",
+        "vastaanotettu-harjaan": "2015-09-29T14:50:46",
+        "ilmoitustyyppi": "toimenpidepyynto",
+        "yhteydenottopyynto": false,
+        "ilmoittaja": {
+          "etunimi": "Matti",
+          "sukunimi": "Meikäläinen",
+          "matkapuhelin": "08023394852",
+          "tyopuhelin": "08023394852",
+          "email": "matti.meikalainen@palvelu.fi"
+        },
+        "lahettaja": {
+          "etunimi": "Pekka",
+          "sukunimi": "Päivystäjä",
+          "matkapuhelin": "08023394852",
+          "tyopuhelin": "08023394852",
+          "email": "pekka.paivystaja@livi.fi"
+        },
+        "selitteet": [
+          {
+            "selite": "auraustarve"
+          },
+          {
+            "selite": "aurausvallitNakemaesteena"
+          }
+        ],
+        "aihe": {
+          "id": 1,
+          "nimi": "Tien talvihoito"
+        },
+        "tarkenne": {
+          "id": 101,
+          "nimi": "Tie on nyt auraamatta"
+        },
+        "sijainti": {
+          "koordinaatit": {
+            "x": 641403,
+            "y": 7217403
+          }
+        },
+        "otsikko": "Vallien tasausta tarvitaan",
+        "paikankuvaus": "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.",
+        "aiheutti-toimenpiteita": true
+      }
+    }
+  ]
+}

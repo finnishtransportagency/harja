@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja/tiestotarkastuskirjaus",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "tarkastukset": {
+      "id": "urn:harja/tarkastukset",
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "id": "urn:harja/tarkastukset/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tarkastus": {
+            "id": "urn:harja/tarkastus",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/tarkastus.schema.json",
+            "required": true
+          },
+          "mittaus": {
+            "id": "urn:harja/mittaustulokset/soratie",
+            "type": "object",
+            "required": true,
+            "additionalProperties": false,
+            "properties": {
+              "hoitoluokka": {
+                "id": "urn:harja/soratie/hoitoluokka",
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2
+              },
+              "tasaisuus": {
+                "id": "urn:harja/soratie/tasaisuus",
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "kiinteys": {
+                "id": "urn:harja/soratie/kiinteys",
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "polyavyys": {
+                "id": "urn:harja/soratie/polyavyys",
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "sivukaltevuus": {
+                "id": "urn:harja/soratie/sivukaltevuus",
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

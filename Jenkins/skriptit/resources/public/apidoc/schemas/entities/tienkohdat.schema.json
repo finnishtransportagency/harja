@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "reunat": {
+      "id": "urn:harja/reunat",
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "id": "urn:harja/reunat/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reuna": {
+            "id": "urn:harja/reunat/0/reuna",
+            "enum": [
+              1,
+              2
+            ]
+          }
+        }
+      }
+    },
+    "ajourat": {
+      "id": "urn:harja/ajourat",
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "id": "urn:harja/ajourat/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ajoura": {
+            "id": "urn:harja/ajourat/0/ajoura",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "required": true
+          }
+        }
+      }
+    },
+    "ajouravalit": {
+      "id": "urn:harja/ajouravalit",
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "id": "urn:harja/ajouravalit/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ajouravali": {
+            "id": "urn:harja/ajouravalit/0/ajouravali",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "required": true
+          }
+        }
+      }
+    },
+    "keskisaumat": {
+      "id": "urn:harja/keskisaumat",
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "id": "urn:harja/keskisaumat/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "keskisauma": {
+            "id": "urn:harja/keskisaumat/0/keskisauma",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 20,
+            "required": true
+          }
+        }
+      }
+    }
+  }
+}
