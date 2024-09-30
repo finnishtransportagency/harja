@@ -174,6 +174,9 @@
                    "AN30"
                    "AN22"})
 
+(defn validoi-reunat [reunat]
+  (or (nil? reunat) (every? #(or (= 1 %) (= 2 %)) reunat)))
+
 (s/def ::alkuaika ::pvm)
 (s/def ::loppuaika ::pvm)
 (s/def ::urapaikkaus-massatyyppi massatyypit)
@@ -181,6 +184,7 @@
 (s/def ::urapaikkaus-kuulamylly kuulamyllyt)
 (s/def ::massamaara number?)
 (s/def ::pinta-ala number?)
+(s/def ::reunat validoi-reunat)
 
 (def paikkaustyomenetelmat-jotka-kiinnostaa-yhaa
   #{"UREM" "KTVA" "REPA" "SIPA" "SIPU"})
