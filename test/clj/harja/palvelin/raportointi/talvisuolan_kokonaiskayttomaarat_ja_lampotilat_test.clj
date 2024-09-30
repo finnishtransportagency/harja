@@ -92,10 +92,10 @@
           (talvisuola-rap/jasenna-raportin-otsikko urakan-tiedot hoitovuodet)))))
 
 (deftest paattele-kaytettava-keskilampotilajakso-test
-  (let [lampotila-vuodelle {:keskilampotila-1971-2000 1     ;; ennen vuotta 2014
-                            :keskilampotila-1981-2010 2     ;; ennen vuotta 2022
-                            :keskilampotila-1991-2020 3}    ;; muut
-                            ]
+  (let [lampotila-vuodelle {:keskilampotila-1971-2000 1 ;; ennen vuotta 2014
+                            :keskilampotila-1981-2010 2 ;; ennen vuotta 2022
+                            :keskilampotila-1991-2020 3} ;; muut
+        ]
     ;; Jos ei ole tiedossa, niin palautetaan nil
     (is (= nil (talvisuola-rap/paattele-kaytettava-keskilampotilajakso nil lampotila-vuodelle)))
     (is (= 1 (talvisuola-rap/paattele-kaytettava-keskilampotilajakso 2012 lampotila-vuodelle)))
@@ -112,7 +112,7 @@
         urakka-id (hae-urakan-id-nimella urakan-nimi)
         urakan-tiedot (first (q-map (str "select alkupvm, loppupvm from urakka where id = " urakka-id ";")))
         kuluva-tai-viimeinen-hoitokausi (min 2024 (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
-        hoitovuodet (range 2019 kuluva-tai-viimeinen-hoitokausi)
+        hoitovuodet (range 2019 (inc kuluva-tai-viimeinen-hoitokausi))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
