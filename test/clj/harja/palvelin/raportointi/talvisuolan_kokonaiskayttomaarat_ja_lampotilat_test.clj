@@ -112,7 +112,7 @@
         urakka-id (hae-urakan-id-nimella urakan-nimi)
         urakan-tiedot (first (q-map (str "select alkupvm, loppupvm from urakka where id = " urakka-id ";")))
         kuluva-tai-viimeinen-hoitokausi (min 2024 (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
-        hoitovuodet (range 2019 (inc kuluva-tai-viimeinen-hoitokausi))
+        hoitovuodet (range 2019 kuluva-tai-viimeinen-hoitokausi)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
