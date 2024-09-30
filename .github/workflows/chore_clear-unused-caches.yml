@@ -1,4 +1,4 @@
-name: Clear unused caches
+name: [Chore] Clear unused caches (PR)
 on:
   pull_request:
     types:
