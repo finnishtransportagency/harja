@@ -103,6 +103,7 @@ runs:
           core.setOutput('sha', targetVersion.name.replace('sha256:', ''));
 
     - name: Cache Trivy DBs
+      id: cache-trivy
       uses: actions/cache@v4
       if: ${{ steps.trivy-db-hash.outputs.sha != '' || steps.trivy-java-db-hash.outputs.sha != '' }}
       with:
@@ -220,6 +221,6 @@ runs:
         cache-dir: .trivy
 
     - name: Fix Trivy cache dir permissions
-      if: always()
+      if: ${{ steps.cache-trivy.outputs.cache-hit != 'true' }}
       run: sudo chown -R $USER:$GROUP .trivy
       shell: bash
