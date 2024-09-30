@@ -189,12 +189,22 @@
                                    :koodistot materiaalikoodistot})
           alustalomake]]))))
 
+(defn alusta-lomake [e! {:keys [alustalomake massat murskeet materiaalikoodistot perustiedot]}]
+  (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)
+        voi-muokata? (not= :lukittu (:tila perustiedot))]
+    (when alustalomake
+      [alustalomake-nakyma e! {:alustalomake alustalomake
+                               :alusta-toimenpiteet alusta-toimenpiteet
+                               :massat massat
+                               :murskeet murskeet
+                               :materiaalikoodistot materiaalikoodistot
+                               :voi-muokata? voi-muokata?}])))
+
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
-  [e! {:keys [kirjoitusoikeus? perustiedot alustalomake tr-osien-pituudet ohjauskahvat] :as app}
+  [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
    {:keys [massat murskeet materiaalikoodistot validointi virheet-atom varoitukset-atom]} alustarivit-atom]
-  (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)
-        voi-muokata? (not= :lukittu (:tila perustiedot))
+  (let [voi-muokata? (not= :lukittu (:tila perustiedot))
         ohjauskahva (:alusta ohjauskahvat)
         on-rivi-blur (fn [rivi]
                        (let [{:keys [tr-ajorata]} rivi]
@@ -202,13 +212,6 @@
                                (select-keys rivi tr/paaluvali-avaimet)
                                tr-ajorata))))]
     [:div.alusta
-     (when alustalomake
-       [alustalomake-nakyma e! {:alustalomake alustalomake
-                                :alusta-toimenpiteet alusta-toimenpiteet
-                                :massat massat
-                                :murskeet murskeet
-                                :materiaalikoodistot materiaalikoodistot
-                                :voi-muokata? voi-muokata?}])
      [grid/muokkaus-grid
       {:otsikko "Alusta"
        :tunniste :id :piilota-toiminnot? true :voi-muokata? voi-muokata?

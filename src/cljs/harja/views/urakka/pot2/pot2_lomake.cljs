@@ -308,7 +308,7 @@
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
               murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
-              alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake :tr-osien-pituudet :ohjauskahvat})
+              alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :tr-osien-pituudet :ohjauskahvat})
               paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros :tr-osien-pituudet :ohjauskahvat :kulutuskerros-muokattu?})
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
                                         #{:tekninen-osa :tila :versio})
@@ -354,6 +354,11 @@
                                                                     :varoitukset-atom pot2-tiedot/kohdeosat-varoitukset-atom}
             pot2-tiedot/kohdeosat-atom]
            [yleiset/valitys-vertical]
+           [alusta/alusta-lomake e! {:alustalomake (:alustalomake paallystysilmoitus-lomakedata)
+                                     :massat massat 
+                                     :murskeet murskeet
+                                     :materiaalikoodistot materiaalikoodistot
+                                     :perustiedot perustiedot}]
            [alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
                                          :materiaalikoodistot materiaalikoodistot
                                          :validointi (:alusta pot2-validoinnit)
