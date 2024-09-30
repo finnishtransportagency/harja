@@ -59,7 +59,7 @@
    ::paikkaus/tienkohdat [{::paikkaus/ajourat [1 2]
                                        ::paikkaus/ajorata 1
                                        ::paikkaus/ajouravalit [1]
-                                       ::paikkaus/reunat [0]}]})
+                                       ::paikkaus/reunat [1]}]})
 
 (def testipaikkaustoteuma
   {::paikkaus/selite "Testi"
@@ -148,7 +148,7 @@
       (is (= [{::paikkaus/ajourat [1 2]
                ::paikkaus/ajorata 1
                ::paikkaus/ajouravalit [1]
-               ::paikkaus/reunat [0]}]
+               ::paikkaus/reunat [1]}]
              [(dissoc (first tienkohdat)
                       ::paikkaus/tienkohta-id)])
           "Oletetut tienkohdat löytyvät"))))
@@ -269,7 +269,7 @@
       (is (= [{::paikkaus/ajourat [1 2]
                ::paikkaus/ajorata 1
                ::paikkaus/ajouravalit [1]
-               ::paikkaus/reunat [0]}]
+               ::paikkaus/reunat [1]}]
             [(dissoc (first tienkohdat)
                ::paikkaus/tienkohta-id)])
         "Oletetut tienkohdat löytyvät"))))
