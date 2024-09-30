@@ -66,7 +66,7 @@
                                                                   :id id})))))
   (hae-jarjestelmatunnuksen-lisaoikeudet db user {:kayttaja-id kayttaja-id}))
 
-(defn tallenna-kayttajalle-kirjoitusoikeus [db user {:keys [oikeudet kayttaja-id]}]
+(defn tallenna-kayttajalle-kirjoitusoikeus [db user {:keys [oikeudet]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
 
   (log/info "Tallennetaan käyttäjälle kirjoitusoikeus:" (pr-str oikeudet))

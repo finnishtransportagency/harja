@@ -78,27 +78,12 @@
                   "required": true,
                   "description": "Kaluston lukumäärä, jota kalustotyypistä käytetään. Esim. 4",
                   "minimum": 1
-                },
-                "required": ["kalustotyyppi", "kalusto-lkm"]
+                }
               }
             }
-          },
-          "required": [
-            "tie",
-            "aosa",
-            "aet",
-            "losa",
-            "let",
-            "pituus",
-            "kalustot"
-          ]
+          }
         }
       }
-    },
-    "required": [
-      "ulkoinen-id",
-      "reittinimi",
-      "sijainnit"
-    ]
+    }
   }
 }

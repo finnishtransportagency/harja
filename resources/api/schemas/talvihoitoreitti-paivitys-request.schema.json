@@ -6,7 +6,7 @@
     "tunniste": {
       "type": "string",
       "required": true,
-      "description": "Päivittää annetun ulkoinen-id arvon perusteella Harjassa olevat tiedot tässä annetuilla tiedoilla."
+      "description": "Päivittää annetun arvon perusteella Harjassa olevat tiedot tässä datassa annetuilla tiedoilla."
     },
     "reittinimi": {
       "type": "string",
@@ -78,31 +78,13 @@
                   "required": true,
                   "description": "Kaluston lukumäärä, jota kalustotyypistä käytetään. Esim. 4",
                   "minimum": 1
-                },
-                "required": [
-                  "kalustotyyppi",
-                  "kalusto-lkm"
-                ]
+                }
               }
             }
-          },
-          "required": [
-            "tie",
-            "aosa",
-            "aet",
-            "losa",
-            "let",
-            "pituus",
-            "kalustot"
-          ]
+          }
         }
       }
-    },
-    "required": [
-      "ulkoinen-id",
-      "reittinimi",
-      "sijainnit"
-    ]
+    }
   }
 }
 

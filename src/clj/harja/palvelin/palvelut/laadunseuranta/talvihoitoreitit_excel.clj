@@ -63,8 +63,7 @@
     ;; Poistetaan rivi kokonaan, mikäli nimikenttä on nil. Eli oletetaan että rivillä ei ole
     ;; annettu muutenkaan mitään asiaan liittyvää tietoa vaan rivi liittyy otsikointiin tms.
     (fn [rivi]
-      (if (nil? (first rivi))
-        nil
+      (when-not (nil? (first rivi))
         {:nimi (nth rivi 0)
          :tr (nth rivi 1) ;; Traktori
          :ka (nth rivi 2) ;; Kuorma-auto

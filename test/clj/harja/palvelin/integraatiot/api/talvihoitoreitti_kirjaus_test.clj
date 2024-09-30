@@ -151,6 +151,28 @@
     (is (.contains (get-in virhe [:virhe :viesti]) ":error :invalid-enum-value"))
     (is (.contains (get-in virhe [:virhe :viesti]) "tie: Väärä tyyppi"))))
 
+(deftest tallenna-talvihoitoreitti-epaonnistuu-vaadittuja-arvoja-puuttuu
+  (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        ;; Siivotaan kanta varulta
+        _ (poista-talvihoitoreitit-urakalta urakka-id)
+        ;; Anna oikeudet käyttäjälle
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        ulkoinen-id 123456
+        lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-vaadittuja-arvoja-puuttuu.json"
+                      slurp
+                      (.replace "__ULKOINENID__" (str ulkoinen-id))
+                      (.replace "__NIMI__" "testinimi"))
+        vastaus (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+                  lahetysdata)
+        dekoodattu-body (cheshire/decode (:body vastaus) true)
+        virhe (first (:virheet dekoodattu-body))]
+
+    (is (= 400 (:status vastaus)))
+    (is (= "invalidi-json" (get-in virhe [:virhe :koodi])))
+    (is (.contains (get-in virhe [:virhe :viesti]) "[0]/tie: Pakollinen arvo puuttuu"))
+    (is (.contains (get-in virhe [:virhe :viesti]) "sijainnit[1]/kalustot[0]/kalusto-lkm: Pakollinen arvo puuttuu"))
+    (is (.contains (get-in virhe [:virhe :viesti]) "sijainnit[2]/hoitoluokka: Pakollinen arvo puuttuu"))))
+
 (deftest tallenna-talvihoitoreitti-epaonnistuu-vaara-tieosoite
   (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         ;; Siivotaan kanta varulta
