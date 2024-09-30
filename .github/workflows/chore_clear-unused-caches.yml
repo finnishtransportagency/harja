@@ -1,4 +1,7 @@
-name: [Chore] Clear unused caches (PR)
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: "[Chore] Clear unused caches (PR)"
 on:
   pull_request:
     types:
