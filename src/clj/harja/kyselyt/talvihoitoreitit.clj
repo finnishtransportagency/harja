@@ -55,26 +55,25 @@
     ;; Jos ei tule erroreita, niin palautetaan ulkoinen-id
     (:tunniste data)))
 
-(defn validoi-talvihoitoreitin-sijainnit [db rivi-indeksi talvihoitoreitti]
+(defn validoi-talvihoitoreitin-sijainnit [db talvihoitoreitti]
   (reduce (fn [virheet r]
             (let [;; Tietokantapohjainen validointi
                   tievalidointi (tieverkko-kyselyt/tieosoitteen-validointi db (:tie r) (:aosa r) (:aet r) (:losa r) (:let r))
                   tievalidointivirhe (if (and (not (nil? tievalidointi)) (not (nil? (:validaatiovirheet tievalidointi))))
-                                       {:virheet (str "Rivillä " @rivi-indeksi " reitin " (:reittinimi talvihoitoreitti) ", virheet: " (str/join (vec (mapcat identity (:validaatiovirheet tievalidointi)))))}
+                                       {:virheet (str "Reitin " (:reittinimi talvihoitoreitti) ", virheet: " (str/join (vec (mapcat identity (:validaatiovirheet tievalidointi)))))}
                                        nil)
 
                   ;; Hoitoluokan validointi
                   hoitoluokka-vastaus (tr-validointi/validoi-hoitoluokka (:hoitoluokka r))
                   hoitoluokkavirhe (if-not (nil? hoitoluokka-vastaus)
-                                     {:virheet (str "Rivillä " @rivi-indeksi " reitin " (:reittinimi talvihoitoreitti) ", hoitoluokassa virhe: " hoitoluokka-vastaus)}
+                                     {:virheet (str "Reitin " (:reittinimi talvihoitoreitti) ", hoitoluokassa virhe: " hoitoluokka-vastaus)}
                                      nil)
                   virheet (if (not (nil? tievalidointivirhe))
                             (conj virheet tievalidointivirhe)
                             virheet)
                   virheet (if (not (nil? hoitoluokkavirhe))
                             (conj virheet hoitoluokkavirhe)
-                            virheet)
-                  _ (swap! rivi-indeksi inc)]
+                            virheet)]
               virheet))
     [] (:sijainnit talvihoitoreitti)))
 

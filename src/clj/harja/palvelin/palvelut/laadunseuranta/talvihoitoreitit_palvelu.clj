@@ -69,7 +69,6 @@
                                               (dissoc :muokkaaja :muokattu :luotu :luoja))]
                                    rivi))
                            urakan-talvihoitoreitit)]
-    (println "talvihoitoreitit:" (map #(dissoc % :reitit) talvihoitoreitit))
     talvihoitoreitit))
 
 (defn- kasittele-excel [db urakka-id kayttaja req]
@@ -85,17 +84,15 @@
                            (catch [:type :validaatiovirhe] {:keys [virheet]}
                              (swap! virheet-atom conj virheet)
                              nil))
-
+        
         ;; Käsittele jokainen talvihoitoreitti itsenäisessä loopissa
         _ (dorun (for [t talvihoitoreitit]
                    (jdbc/with-db-transaction [db db]
                      (let [;; Varmista, että talvihoitoreittiä ei ole jo olemassa
                            talvihoitoreitti-db (first (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka-id
                                                                                                                     :ulkoinen_id (:tunniste t)}))
-
-                           indeksi-atom (atom 6) ;; Excel alkaa rivistä 6
                            ;; Talvihoitoreitillä voi olla virheellisiä tieosoitteita
-                           tieosoite-virheet (talvihoitoreitit-q/validoi-talvihoitoreitin-sijainnit db indeksi-atom t)
+                           tieosoite-virheet (talvihoitoreitit-q/validoi-talvihoitoreitin-sijainnit db t)
 
                            _ (when-not (empty? tieosoite-virheet)
                                (swap! virheet-atom conj tieosoite-virheet))
