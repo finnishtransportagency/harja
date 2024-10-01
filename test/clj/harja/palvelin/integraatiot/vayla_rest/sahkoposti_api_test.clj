@@ -382,12 +382,12 @@
                                                          {:status 200
                                                           :header "jotain"
                                                           :body (onnistunut-sahkopostikuittaus viesti-id)})]
-      (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+      (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
             ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                    kayttaja-yit portti))
             viesti-id (str (UUID/randomUUID))
             ilmoitus-id (rand-int 99999999)
-            sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
+            sijainti aineisto-toimenpidepyynnot/sijainti-rovaniemen-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
         (async/<!! (async/timeout 2000))
         ;; 1. T-LOIK lähettää toimenpidepyynnön
