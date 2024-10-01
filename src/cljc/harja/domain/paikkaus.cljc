@@ -182,7 +182,7 @@
 (s/def ::urapaikkaus-massatyyppi massatyypit)
 (s/def ::raekoko number?)
 (s/def ::urapaikkaus-kuulamylly kuulamyllyt)
-(s/def ::massamaara number?)
+(s/def ::massamaara (s/nilable number?))                    ;; Niin kauan, kun massamenekki on olemassa, niin tämä voi olla nil
 (s/def ::pinta-ala number?)
 (s/def ::reunat validoi-reunat)
 
