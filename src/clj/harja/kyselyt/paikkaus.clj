@@ -334,6 +334,7 @@
   [db urakka-id kayttaja-id paikkaus]
   (let [_ (log/debug "tallenna-paikkaus :: paikkaus:" (pr-str paikkaus))
         valid? (paikkaus-validi? paikkaus)
+        _ (when-not valid? (log/error "tallenna-paikkaus :: paikkaus ei ole validi! :: paikkaus" paikkaus))
         paikkauskohde-id (when valid?
                            (::paikkaus/id
                              (tallenna-paikkauskohde db urakka-id kayttaja-id
