@@ -50,6 +50,7 @@
                                          ::paikkaus/nimi "Testikohde"}
    ::paikkaus/loppuaika #inst"2018-02-06T10:47:24.183975000-00:00"
    ::paikkaus/massamenekki 2
+   ::paikkaus/massamaara 20
    ::paikkaus/materiaalit [{::paikkaus/esiintyma "Testikivi"
                                         ::paikkaus/kuulamylly-arvo "1"
                                         ::paikkaus/muotoarvo "Muotoarvo"
@@ -274,3 +275,29 @@
                ::paikkaus/tienkohta-id)])
         "Oletetut tienkohdat löytyvät"))))
 
+(deftest luo-uusi-paikkaus-epavalidilla-massamaara-arvolla
+  (let [db (:db jarjestelma)
+        testipaikkauksen-ulkoinen-id (inc testipaikkauksen-ulkoinen-id)
+        testikohteen-ulkoinen-id (inc testikohteen-ulkoinen-id)
+        testipaikkaus (-> testipaikkaus
+                        (dissoc ::paikkaus/massamenekki)
+                        (assoc ::paikkaus/massamaara "a")
+                        (assoc ::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id)
+                        (assoc-in [::paikkaus/paikkauskohde ::paikkaus/ulkoinen-id] testikohteen-ulkoinen-id))
+        vastaus (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id testipaikkaus)]
+(is (= "Paikkaus ei ole validi. Tarkista tiedot." vastaus))))
+
+(deftest luo-uusi-paikkaus-ja-paikkauskohde-vaaralla-reunat-arvolla
+  (let [db (:db jarjestelma)
+        testipaikkauksen-ulkoinen-id (inc testipaikkauksen-ulkoinen-id)
+        testikohteen-ulkoinen-id (inc testikohteen-ulkoinen-id)
+        testipaikkaus (-> testipaikkaus
+                        (dissoc ::paikkaus/massamenekki)
+                        (assoc ::paikkaus/massamaara 260)
+                        (assoc ::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id)
+                        (assoc-in [::paikkaus/paikkauskohde ::paikkaus/ulkoinen-id] testikohteen-ulkoinen-id)
+                        ;; Virheellinen reunat arvo - pitäisi olla 1 tai 2
+                        (assoc-in [::paikkaus/tienkohdat 0 ::paikkaus/reunat] [0]))
+        vastaus (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id testipaikkaus)]
+
+    (is (= "Paikkaus ei ole validi. Tarkista tiedot." vastaus))))
