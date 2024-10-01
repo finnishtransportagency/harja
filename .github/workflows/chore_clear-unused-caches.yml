@@ -42,9 +42,13 @@ jobs:
             for (const cache of data.actions_caches) {
               console.log(`Deleting cache ${cache.key} for ${cache.ref}`)
             
-              await github.rest.actions.deleteActionsCacheById({
+              const result = await github.rest.actions.deleteActionsCacheById({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   cache_id: cache.id,
               });
+            
+              if (result.status !== 204) {
+                console.warn(`Failed to delete cache ${cache.key} for ${cache.ref}`)
+              }
             }
