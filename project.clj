@@ -17,7 +17,7 @@
                  ;;;;;;; Yleiset ;;;;;;;
 
                  [prismatic/schema "1.1.10"]
-                 [org.clojure/core.async "0.3.443"]
+                 [org.clojure/core.async "0.3.465"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
                  [com.cognitect/transit-clj "0.8.319"]
@@ -34,7 +34,8 @@
 
                  ;; -- Lokitus
                  [com.taoensso/timbre "5.2.1"]
-                 [org.apache.logging.log4j/log4j-core "2.22.1"]
+                 ;; Figwheel tarvitsee log4j-coren
+                 [org.apache.logging.log4j/log4j-core "2.24.1"]
 
                  ;; -- Metriikkadata
                  [org.clojure/java.jmx "0.3.4"]
@@ -48,20 +49,20 @@
                  [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "0.7.2"]
+                 [org.clojure/core.cache "0.8.2"]
                  [org.clojure/core.memoize "1.0.257"]
 
                  ;; Pattern match kirjasto
-                 [org.clojure/core.match "1.0.0"]
+                 [org.clojure/core.match "1.1.0"]
 
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
                  [org.postgresql/postgresql "42.7.4"]
-                 [net.postgis/postgis-jdbc "2.5.0"]
+                 [net.postgis/postgis-jdbc "2.5.1"]
                  [org.locationtech.jts/jts-core "1.19.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
-                 [com.mchange/c3p0 "0.9.5.4"]
+                 [com.mchange/c3p0 "0.10.1"]
                  ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
                  [webjure/jeesql "0.4.7"]
                  [io.github.tatut/specql "20230316" :exclusions [org.clojure/java.jdbc]]
@@ -79,12 +80,12 @@
                  [namespacefy "0.5.0"]
 
                  ;; -- Sähköposti lähetys
-                 [org.apache.httpcomponents/httpcore "4.4.14"]
-                 [org.apache.httpcomponents/httpmime "4.5.13" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
+                 [org.apache.httpcomponents/httpcore "4.4.16"]
+                 [org.apache.httpcomponents/httpmime "4.5.14" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.18.3" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.18.5" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -134,7 +135,7 @@
                  [org.apache.ant/ant "1.10.15"]
 
                  ;; Clojure(Script) assertointi
-                 [com.taoensso/truss "1.5.0"]
+                 [com.taoensso/truss "1.12.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.19.0"]

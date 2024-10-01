@@ -1,6 +1,5 @@
 (ns harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara
-  (:require [clojure.string :as str]
-            [harja.pvm :as pvm]
+  (:require [harja.pvm :as pvm]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.lampotilat :as lampotilat-kyselyt]
@@ -118,7 +117,7 @@
                         11 true
                         12 true
                         false)]
-    (if (pvm/ennen? urakan-loppupvm (pvm/nyt))
+    (if (pvm/ennen? (pvm/paivan-lopussa urakan-loppupvm) (pvm/nyt))
       (pvm/vuosi urakan-loppupvm)
       ;; Jos kuukausi on 10,11 tai 12, niin sama vuosi riittää,
       ;; muuten riittää tarkastukseksi että onko edellinen vuosi
