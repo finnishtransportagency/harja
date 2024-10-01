@@ -109,7 +109,6 @@ runs:
       with:
         path: .trivy
         key: ${{ runner.os }}-trivy-${{ steps.trivy-db-hash.outputs.sha }}-${{ steps.trivy-java-db-hash.outputs.sha }}
-        #restore-keys: ${{ runner.os }}-trivy-
 
     # Note: Currently, the trivy action must be run multiple times to achieve different goals
     # Run a full scan and show results
