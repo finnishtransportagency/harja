@@ -313,6 +313,13 @@
   (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         ;; 1. Tee ilmoitus tietokantaan - simuloi tilannetta, jossa T-LOIKilta on tullut jonon kautta ilmoituksia
+        ;; Hoitourakat eivät ala päivystämään uudella sijainnilla 1.10 hoitokauden vaihtuessa heti. Vaan
+        ;; vasta 12h päästä, joten muokataan alkupäivä alkamaan aiemmin, jos tämä testi ajetaan 1.10.
+        uusi-alkupvm (str (pvm/vuosi (pvm/nyt)) "-09-30")
+        _ (when (and
+                  (= 10 (pvm/kuukausi (pvm/nyt)))
+                  (= 1 (pvm/paiva (pvm/nyt))))
+            (u (format "UPDATE urakka SET alkupvm = '%s' WHERE id = %s" uusi-alkupvm urakka-id)))
         _ (tloik-testi-tyokalut/tuo-ilmoitus)
         ilmoitus-id 123456789
         ;; 2. Simuloidaan tilanne, jossa urakoitsija vastaa sähköpostilla, että toimenpidepyyntö on tullut perille
@@ -456,6 +463,13 @@
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         vaarallinen-sisalto "<![CDATA[<IMG SRC=http://www.example.com/siteLogo.gif onmouseover=javascript:alert(‘XSS’);>]]>"
         ;; 1. Tee ilmoitus tietokantaan - simuloi tilannetta, jossa T-LOIKilta on tullut jonon kautta ilmoituksia
+        ;; Hoitourakat eivät ala päivystämään uudella sijainnilla 1.10 hoitokauden vaihtuessa heti. Vaan
+        ;; vasta 12h päästä, joten muokataan alkupäivä alkamaan aiemmin, jos tämä testi ajetaan 1.10.
+        uusi-alkupvm (str (pvm/vuosi (pvm/nyt)) "-09-30")
+        _ (when (and
+                  (= 10 (pvm/kuukausi (pvm/nyt)))
+                  (= 1 (pvm/paiva (pvm/nyt))))
+            (u (format "UPDATE urakka SET alkupvm = '%s' WHERE id = %s" uusi-alkupvm urakka-id)))
         _ (tloik-testi-tyokalut/tuo-ilmoitus)
         ilmoitus-id 123456789
         ;; 2. Simuloidaan tilanne, jossa urakoitsija vastaa sähköpostilla, että toimenpidepyyntö on tullut perille
