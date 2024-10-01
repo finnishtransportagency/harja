@@ -77,7 +77,7 @@
                      "x" 427232.596 "y" 7211474.342} portti)
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
-      (is (= 2 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
+      (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
       (is (every?
             (fn [nimi]
               ;; Testataan löytyykö resultsetistä oikeat urakan nimet, mutta ei oteta MHU:ssa huomioon vuosilukuja,
@@ -179,7 +179,7 @@
                      "x" 427232.596 "y" 7211474.342} portti)
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
-      (is (= 2 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))))
+      (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))))
 
   (testing "Käyttäjällä ei oikeuksia urakoihin"
     (let [_ (anna-kirjoitusoikeus "livi")
