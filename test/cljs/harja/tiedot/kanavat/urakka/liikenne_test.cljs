@@ -13,8 +13,7 @@
             [harja.domain.urakka :as ur]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kayttaja :as kayttaja]
-            [harja.ui.modal :as modal]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.ui.modal :as modal]))
 
 (deftest uusi-tapahtuma
   (is (= {::lt/kuittaaja {::kayttaja/id 1}
@@ -679,8 +678,37 @@
 (deftest edellisten-haku
   (vaadi-async-kutsut
     #{tiedot/->EdellisetTiedotHaettu tiedot/->EdellisetTiedotEiHaettu}
-    (is (= {:edellisten-haku-kaynnissa? true}
-           (e! (tiedot/->HaeEdellisetTiedot {}))))))
+    (let [valittu-tapahtuma {:valittu-liikennetapahtuma
+                             {::lt/kuittaaja
+                              {::kayttaja/puhelin nil, ::kayttaja/organisaation-urakat #{},
+                               ::kayttaja/sahkoposti nil,
+                               ::kayttaja/sukunimi "Käyttäjä",
+                               ::kayttaja/kayttajanimi "Jarjestelmavastaava",
+                               ::kayttaja/roolit #{"Jarjestelmavastaava"},
+                               ::kayttaja/id 25,
+                               ::kayttaja/organisaatioroolit {},
+                               ::kayttaja/organisaatio
+                               {:id 4, :nimi "Liikennevirasto", :tyyppi "liikennevirasto"},
+                               ::kayttaja/etunimi "Jvh",
+                               ::kayttaja/urakkatyyppi :hoito,
+                               ::kayttaja/urakkaroolit {}},
+                              ::lt/tallennuksen-aika? true,
+                              ::lt/sopimus
+                              {::sop/id 59, ::sop/nimi "Saimaan huollon pääsopimus"},
+                              ::lt/urakka {::ur/id 51},
+                              ::lt/kohde nil,
+                              ::lt/toiminnot ()}
+                             :haetut-sopimukset
+                             [{::sop/ketjutus true,
+                               ::sop/id 59,
+                               ::sop/tyyppi "vesivayla-kanavien-hoito",
+                               ::sop/nimi "Saimaan huollon pääsopimus",
+                               ::sop/urakka_nimi "Saimaan kanava",
+                               ::sop/urakka_id 51}]}]
+      ;; Katsotaan että edellisten tietojen haku menee läpi ja palauttaa edellisten-haku-kaynnissa?
+      ;; Vaatii että valitulla liikennetapahtuman sopimuksella on ketjutus käytössä 
+      (is (= (merge valittu-tapahtuma {:edellisten-haku-kaynnissa? true})
+             (e! (tiedot/->HaeEdellisetTiedot {}) valittu-tapahtuma))))))
 
 (deftest edelliset-haettu
   (is (= {:edelliset {:tama {::lt/vesipinta-alaraja 1
