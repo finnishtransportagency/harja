@@ -21,10 +21,11 @@ function alustaKittilanUrakka() {
 }
 
 function taytaArvoja() {
-    let kuluvaHKVuosi = kuluvaHoitokausiAlkuvuosi();
-    let kuluvaHoitokausiNro = kuluvaHKVuosi - 2019 + 1;
+    let maxHKVuosi = kuluvaHoitokausiAlkuvuosi();
+    if(maxHKVuosi > 2023) maxHKVuosi = 2023
+    let kuluvaHoitokausiNro = maxHKVuosi - 2019 + 1;
 
-    let hoitokausiNyt = kuluvaHoitokausiNro + ". hoitovuosi (" + kuluvaHKVuosi + "—" + (kuluvaHKVuosi + 1) + ")";
+    let hoitokausiNyt = kuluvaHoitokausiNro + ". hoitovuosi (" + maxHKVuosi + "—" + (maxHKVuosi + 1) + ")";
     let valittavaHoitokausi = "3. hoitovuosi (2021—2022)";
     ks.valitseHoitokausi(hoitokausiNyt, valittavaHoitokausi);
     cy.get('#suunnitellut-hankinnat-taulukko')
@@ -106,9 +107,10 @@ describe('Testaa Kittilän MHU kustannussuunnitelmanäkymää', () => {
         cy.get('.ajax-loader', {timeout: 40000}).should('not.exist');
 
 
-        let kuluvaHKVuosi = kuluvaHoitokausiAlkuvuosi();
-        let kuluvaHoitokausiNro = kuluvaHKVuosi - 2019 + 1;
-        let hoitokausiNyt = kuluvaHoitokausiNro + ". hoitovuosi (" + kuluvaHKVuosi + "—" + (kuluvaHKVuosi + 1) + ")";
+        let maxHKVuosi = kuluvaHoitokausiAlkuvuosi();
+        if(maxHKVuosi > 2023) maxHKVuosi = 2023
+        let kuluvaHoitokausiNro = maxHKVuosi - 2019 + 1;
+        let hoitokausiNyt = kuluvaHoitokausiNro + ". hoitovuosi (" + maxHKVuosi + "—" + (maxHKVuosi + 1) + ")";
         // Valitaan 3. hoitovuosi.
         let valittavaHoitokausi = "3. hoitovuosi (2021—2022)";
         ks.valitseHoitokausi(hoitokausiNyt, valittavaHoitokausi);
