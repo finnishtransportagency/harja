@@ -1,18 +1,10 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-echo "Julkaistaan uusin Harja API:n dokumentaatio GH.pagesiin (https://finnishtransportagency.github.io/harja/)";
+echo "Julkaistaan Harja API:n dokumentaatio paikallisesta apidoc-kansiosta. Muodosta sisältö skriptillä muodosta-apidoc.sh";
 
-cd ../../harja-sivut/apidoc;
-git pull;
-rm -rf *;
-curl -O https://harja-test.solitaservices.fi/apidoc/api.zip;
-unzip api.zip;
-cp -r resources/api/ ./;
-rm -rf api.html;
-cp resources/public/apidoc/api.html ./api.html;
-rm -rf resources/;
-git add -A
-git commit -m 'Päivitä Harja API dokumentaatio';
-git push;
+git checkout gh-pages
+git add ../apidoc
+git commit -m 'Päivitä Harja API dokumentaatio'
+dgit push
 
-echo "Uusi Harjan API-dokumentaatio julkaistu GH Pagesiin (https://finnishtransportagency.github.io/harja/apidoc/api.html)";
+echo "Harjan API-dokumentaatio julkaistu paikallisesta apidoc-kansiosta.";
