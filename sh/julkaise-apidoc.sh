@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 while true; do
-read -p "Onko harja/apidoc-kansiossa uusin API-dokumentaatio? " ke
+read -p "Onko harja/apidoc-kansiossa uusin API-dokumentaatio? (K/E)" ke
 case $ke in
 [Kk]* )
     echo "Julkaistaan Harja API:n dokumentaatio paikallisesta apidoc-kansiosta.";
