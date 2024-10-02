@@ -7,7 +7,7 @@ case $ke in
     git checkout gh-pages
     git add ../apidoc
     git commit -m 'Päivitä Harja API dokumentaatio'
-    dgit push
+    git push
     break;;
 [Ee]* )
     echo "Päivitä harja/apidoc-kansion sisältö skriptillä ./muodosta-apidoc.sh"
