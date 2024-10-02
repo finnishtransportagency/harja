@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 while true; do
 read -p "Muodostetaanko API-dokumentaatio resources-kansioon tallennettujen tietojen pohjalta (raml ja skeemat)? " ke
 case $ke in

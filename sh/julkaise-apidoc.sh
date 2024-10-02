@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-
-
 while true; do
 read -p "Onko harja/apidoc-kansiossa uusin API-dokumentaatio? " ke
 case $ke in
