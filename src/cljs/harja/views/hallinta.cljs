@@ -190,7 +190,7 @@
 
     "Työmaapäiväkirjatyökalu"
     :tyomaapaivakirjatyokalu
-    (when true #_ (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
             (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
       ^{:key "tyomaapaivakirjatyokalu"}
       [paivakirjatyokalu-nakyma/simuloi-tyomaapaivakirja])
