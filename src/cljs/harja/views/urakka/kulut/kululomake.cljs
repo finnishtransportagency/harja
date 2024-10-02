@@ -357,19 +357,7 @@
                                 (:id (tiedot/avain->tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys))
                                 (:tehtavaryhma (first (:kohdistukset lomake)))))
 
-
-        {:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka)
-        alkuvuosi (pvm/vuosi alkupvm)
-        loppuvuosi (pvm/vuosi loppupvm)
-        hoitokauden-nro-vuodesta (fn [vuosi urakan-alkuvuosi urakan-loppuvuosi]
-                                   (when (and (<= urakan-alkuvuosi vuosi) (>= urakan-loppuvuosi vuosi))
-                                     (inc (- vuosi urakan-alkuvuosi))))
-        hoitokaudet-ilman-valikatselmusta (keep #(when (not= true (:paatos-tehty? %))
-                                                   (hoitokauden-nro-vuodesta (:vuosi %) alkuvuosi loppuvuosi))
-                                            (:vuosittaiset-valikatselmukset app))
-        koontilaskun-kuukaudet (for [hv hoitokaudet-ilman-valikatselmusta
-                                     kk tiedot/kuukaudet]
-                                 (str (name kk) "/" hv "-hoitovuosi"))
+        koontilaskun-kuukaudet (tiedot/palauta-urakan-mahdolliset-koontilaskun-kuukaudet app (-> @tila/tila :yleiset :urakka))
 
         tarkistukset (:tarkistukset lomake)
         laskun-nro-lukittu? (and (some? (:numerolla-tarkistettu-pvm tarkistukset))

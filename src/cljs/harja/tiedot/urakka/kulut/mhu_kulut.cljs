@@ -66,6 +66,8 @@
 (defrecord HaeUrakanRahavarauksetOnnistui [vastaus])
 (defrecord HaeUrakanRahavarauksetEpaonnistui [vastaus])
 
+(defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
+
 (def vuoden-paatoksen-kulun-tyypit
   {:tavoitepalkkio "Tavoitepalkkio"
    :tavoitehinnan-ylitys "Urakoitsija maksaa tavoitehinnan ylityksestä"
@@ -167,6 +169,21 @@
         kl (with-meta kl (tila/kulun-validointi-meta kl))]
     kl))
 
+(defn palauta-urakan-mahdolliset-koontilaskun-kuukaudet [app urakka-tila]
+  (let [{:keys [alkupvm loppupvm]} urakka-tila
+        alkuvuosi (pvm/vuosi alkupvm)
+        loppuvuosi (pvm/vuosi loppupvm)
+        hoitokauden-nro-vuodesta (fn [vuosi urakan-alkuvuosi urakan-loppuvuosi]
+                                   (when (and (<= urakan-alkuvuosi vuosi) (>= urakan-loppuvuosi vuosi))
+                                     (inc (- vuosi urakan-alkuvuosi))))
+        hoitokaudet-ilman-valikatselmusta (keep #(when (not= true (:paatos-tehty? %))
+                                                   (hoitokauden-nro-vuodesta (:vuosi %) alkuvuosi loppuvuosi))
+                                            (:vuosittaiset-valikatselmukset app))
+        koontilaskun-kuukaudet (for [hv hoitokaudet-ilman-valikatselmusta
+                                     kk kuukaudet]
+                                 (str (name kk) "/" hv "-hoitovuosi"))]
+    koontilaskun-kuukaudet))
+
 (defn alusta-lomake [app]
   (let [urakan-alkupvm (:alkupvm @navigaatio/valittu-urakka)
         kuluva-hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/nyt))
@@ -190,6 +207,15 @@
                                             kuluva-hoitovuoden-nro
                                             (not= "kk ei välillä 1-12" kuluva-kuukausi))
                                       (str kuluva-kuukausi "/" kuluva-hoitovuoden-nro "-hoitovuosi"))
+        
+        koontilaskun-kuukaudet (palauta-urakan-mahdolliset-koontilaskun-kuukaudet app (-> @tila/tila :yleiset :urakka))
+
+        ;; Jos nykyinen kk ei ole voimassa urakassa, aseta defaultti urakan viimeiseksi kuukaudeksi
+        nykyinen-hk-voimassa? (some #(= % perus-koontilaskun-kuukausi) koontilaskun-kuukaudet)
+        perus-koontilaskun-kuukausi (if nykyinen-hk-voimassa?
+                                      perus-koontilaskun-kuukausi
+                                      (last koontilaskun-kuukaudet))
+
         lomake tila/kulut-lomake-default
         lomake (-> lomake
                  (assoc :erapaiva erapaiva)
@@ -722,8 +748,6 @@
     (let [[kk hv] (str/split a #"/")]
       (str (pvm/kuukauden-nimi (pvm/kuukauden-numero kk) true) " - "
         (get kulut/hoitovuodet-strs (keyword hv))))))
-
-(defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
 
 (defn validoi-lomake [lomake]
   (let [lomake (with-meta lomake (tila/kulun-validointi-meta lomake))
