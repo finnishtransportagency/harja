@@ -186,17 +186,27 @@
 
 (defn alusta-lomake [app]
   (let [urakan-alkupvm (:alkupvm @navigaatio/valittu-urakka)
+        urakan-loppupvm (:loppupvm @navigaatio/valittu-urakka)
+        hk-loppu-pvm (pvm/hoitokauden-loppupvm (pvm/vuosi urakan-loppupvm))
         kuluva-hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/nyt))
         ;; Kuluva kuukausi ei voi olla pienempi, kuin urakan alkupvm:n kuukausi
         pienin-nyt-hetki (if (pvm/sama-tai-jalkeen? (pvm/nyt) urakan-alkupvm)
                            (pvm/nyt)
                            urakan-alkupvm)
-        ;; Jos eräpäpivä on ennen urakan alkua, niin siirretään eräpäivä urakan ensimmäiselle päivälle
-        erapaiva (if (and
-                       (= (pvm/iso8601 (get-in app [:lomake :erapaiva])) (pvm/iso8601 (pvm/nyt)))
-                       (pvm/sama-tai-jalkeen? (pvm/nyt) urakan-alkupvm))
+        erapaiva (cond
+                   ;; Nyt menee yli urakan loppupvm
+                   (pvm/jalkeen? (pvm/nyt) hk-loppu-pvm)
+                   hk-loppu-pvm
+
+                   (and
+                     (= (pvm/iso8601 (get-in app [:lomake :erapaiva])) (pvm/iso8601 (pvm/nyt)))
+                     (pvm/sama-tai-jalkeen? (pvm/nyt) urakan-alkupvm))
                    (get-in app [:lomake :erapaiva])
+                   
+                   ;; Jos eräpäpivä on ennen urakan alkua, niin siirretään eräpäivä urakan ensimmäiselle päivälle
+                   :else
                    urakan-alkupvm)
+        
         kuluva-kuukausi (pvm/kuukauden-nimi (pvm/kuukausi pienin-nyt-hetki))
         nyky-hoitokausi-lukittu? (some #(and
                                           (= (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)) (:vuosi %))
