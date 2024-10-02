@@ -169,6 +169,22 @@
         kl (with-meta kl (tila/kulun-validointi-meta kl))]
     kl))
 
+(defn palauta-hk-valitusta-kk [s]
+  ;; "joulukuu/2-hoitovuosi" -> 2
+  (when-let [[_ hoitovuosi-str] (re-find #"/(\d+)-hoitovuosi" s)]
+    (js/parseInt hoitovuosi-str)))
+
+(defn hoitovuosi-vuodeksi [alkuvuosi hoitovuosi]
+  (+ alkuvuosi (dec hoitovuosi)))
+
+(defn paatos-tehty-rivin-vuodelle? [app s]
+  ;; Onko päätös tehty vuodelle eg. "joulukuu/2-hoitovuosi" 
+  (let [hoitovuosi (palauta-hk-valitusta-kk s)
+        alkuvuosi (pvm/vuosi (:alkupvm @navigaatio/valittu-urakka))
+        rivin-vuosi (hoitovuosi-vuodeksi alkuvuosi hoitovuosi)] 
+    (some #(and (= rivin-vuosi (:vuosi %)) (:paatos-tehty? %))
+      (:vuosittaiset-valikatselmukset app))))
+
 (defn palauta-urakan-mahdolliset-koontilaskun-kuukaudet [app urakka-tila]
   (let [{:keys [alkupvm loppupvm]} urakka-tila
         alkuvuosi (pvm/vuosi alkupvm)
@@ -176,8 +192,7 @@
         hoitokauden-nro-vuodesta (fn [vuosi urakan-alkuvuosi urakan-loppuvuosi]
                                    (when (and (<= urakan-alkuvuosi vuosi) (>= urakan-loppuvuosi vuosi))
                                      (inc (- vuosi urakan-alkuvuosi))))
-        hoitokaudet-ilman-valikatselmusta (keep #(when (not= true (:paatos-tehty? %))
-                                                   (hoitokauden-nro-vuodesta (:vuosi %) alkuvuosi loppuvuosi))
+        hoitokaudet-ilman-valikatselmusta (keep #(hoitokauden-nro-vuodesta (:vuosi %) alkuvuosi loppuvuosi)
                                             (:vuosittaiset-valikatselmukset app))
         koontilaskun-kuukaudet (for [hv hoitokaudet-ilman-valikatselmusta
                                      kk kuukaudet]
@@ -356,8 +371,7 @@
     (let [;; Toimenpideinstanssi on pakko antaa ja se on saatavilla toimenpiteen tiedoista, joten asetetaan se samalla
           app (-> app
                 (assoc-in [:lomake :kohdistukset nro :toimenpide] toimenpide)
-                (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi toimenpide)))
-          ]
+                (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi toimenpide)))]
       app))
 
   LisatyonLisatieto
@@ -370,15 +384,17 @@
 
   KoontilaskunKuukausi
   (process-event [{arvo :arvo} app]
-    (let [erapaiva (kulut/koontilaskun-kuukausi->pvm
+    (println "Valittu kk: " arvo)
+    (let [paatos-tehty? (paatos-tehty-rivin-vuodelle? app arvo)
+          erapaiva (kulut/koontilaskun-kuukausi->pvm
                      arvo
                      (-> @tila/yleiset :urakka :alkupvm)
-                     (-> @tila/yleiset :urakka :loppupvm))
-          app (-> app
-                (assoc-in [:lomake :koontilaskun-kuukausi] arvo)
-                ;; Eräpäivän pitää olla aina saman koontilaskun kuukauden sisällä.
-                (assoc-in [:lomake :erapaiva] erapaiva))]
-      app))
+                     (-> @tila/yleiset :urakka :loppupvm))]
+      (-> app
+        (assoc-in [:lomake :koontilaskun-kuukausi] arvo)
+        (assoc-in [:lomake :paatos-tehty?] paatos-tehty?)
+        ;; Eräpäivän pitää olla aina saman koontilaskun kuukauden sisällä.
+        (assoc-in [:lomake :erapaiva] erapaiva))))
 
   ValitseErapaiva
   (process-event [{erapaiva :erapaiva} app]
@@ -386,8 +402,7 @@
 
   KoontilaskunNumero
   (process-event [{koontilaskunnumero :koontilaskunnumero} app]
-    (let [app (assoc-in app [:lomake :laskun-numero] koontilaskunnumero)
-          ]
+    (let [app (assoc-in app [:lomake :laskun-numero] koontilaskunnumero)]
       app))
 
   ValitseHoitokausi
@@ -606,10 +621,10 @@
 
           ;; Muuta tehtäväryhmä mäpit id:ksi
           kohdistukset (mapv
-                        (fn [kohdistus]
-                          (let [tehtavaryhmaid (get-in kohdistus [:tehtavaryhma :id])]
-                            (assoc kohdistus :tehtavaryhma tehtavaryhmaid)))
-                        kohdistukset)]
+                         (fn [kohdistus]
+                           (let [tehtavaryhmaid (get-in kohdistus [:tehtavaryhma :id])]
+                             (assoc kohdistus :tehtavaryhma tehtavaryhmaid)))
+                         kohdistukset)]
       (if (true? validi?)
         (tuck-apurit/post! :tallenna-kulu
           {:urakka-id urakka

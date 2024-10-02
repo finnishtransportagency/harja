@@ -343,6 +343,7 @@
         kohdistukset (:kohdistukset lomake)
         koontilaskun-kuukausi (:koontilaskun-kuukausi lomake)
         tehtavaryhma (:tehtavaryhma lomake)
+        paatos-tehty? (:paatos-tehty? lomake)
         ;; Jos kulun eräpäivä osuu vuodelle, josta on välikatselmus pidetty, kulu lukitaan
         erapaivan-hoitovuosi (when erapaiva
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
@@ -378,7 +379,7 @@
         lomake-validi? (tiedot/validoi-lomake lomake)]
     [:div
      [:div.row
-      #_ [debug/debug app]]
+      #_[debug/debug app]]
      [:div.row
       ;; Otsikko
       [:div.col-xs-12.col-md-6
@@ -404,12 +405,11 @@
            :teksti-nappi? true
            :style {:font-size "14px"
                    :margin-left "auto"
-                   :float "right"}}])]
-      ]
+                   :float "right"}}])]]
      ;; Onko kulu lukittu
      (when kulu-lukittu? [:div.palstat [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
 
-      #_ [debug/debug lomake]
+     #_[debug/debug lomake]
      (map-indexed
        (fn [index kohdistus]
          ^{:key (str "kohdistus-" index)}
@@ -428,19 +428,35 @@
      [:div.row
       [:div.col-xs-12.col-md-6
        [:h5 "Laskun tiedot"]]]
+
      [:div.row
       [:div.col-xs-12.col-md-6
        [:div.label-ja-alasveto
         [:span.alasvedon-otsikko "Koontilaskun kuukausi*"]
         [yleiset/livi-pudotusvalikko {:data-cy "koontilaskun-kk-dropdown"
-                                      :disabled (or kk-droppari-disabled kulu-lukittu?)
+                                      :disabled kk-droppari-disabled
                                       :tyylit {:margin-left "0px"}
                                       :vayla-tyyli? true
                                       :skrollattava? true
                                       :valinta koontilaskun-kuukausi
-                                      :valitse-fn #(e! (tiedot/->KoontilaskunKuukausi %))
-                                      :format-fn tiedot/koontilaskun-kk-formatter}
-         koontilaskun-kuukaudet]]]]
+                                      :format-fn tiedot/koontilaskun-kk-formatter
+                                      :itemit-komponentteja? true}
+         ;; Ongelma: livi-pudotusvalikko
+         ;; -> komp/klikattu-ulkopuolelle
+         ; Kutsutaan randomisti 3-5 kertaa klikillä
+         ; Jos tätä kutsutaan parillinen määrä, alasveto jää auki
+         (mapv (fn [kk]
+                 [:div.koontilaskun-kuukaudet-komp {:on-click #(e! (tiedot/->KoontilaskunKuukausi kk))}
+                  [:div  kk]
+                  [:div (when (tiedot/paatos-tehty-rivin-vuodelle? app kk) [ikonit/locked-svg])]])
+           koontilaskun-kuukaudet)]
+
+        (when (and kulu-lukittu? paatos-tehty?)
+          [:div.vihje-paatoksia-tehty
+           [yleiset/keltainen-vihjelaatikko
+            [:div
+             [:strong "Urakalle on tehty päätöksiä välikatselmuksessa ko. hoitovuodelle. "]
+             "Ota yhteyttä urakanvalvojaan, jos haluat kirjata kuluja ko. hoitovuodelle."] :info]])]]]
 
      [:div.row
       [:div.col-xs-12.col-md-2
@@ -487,7 +503,7 @@
                    ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero.")])]]
 
      [:div.row
-      [:div.col-xs-12.col-md-4 {:style {:padding-left "20px" }}
+      [:div.col-xs-12.col-md-4 {:style {:padding-left "20px"}}
        [:h5 "Määrä € *"]
        [:h2 (fmt/euro (reduce + (map :summa kohdistukset)))]]
       [:div.col-xs-12.col-md-6
@@ -497,16 +513,16 @@
       [:div.col-xs-12.col-md-6
        [:div.kulu-napit
         [:span {:style {:padding-right "16px"}}
-        [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaKulu))
-         {:vayla-tyyli? true
-          :luokka "suuri"
-          :tyylit {:padding-right "16px"}
-          :disabled (or (not lomake-validi?) kulu-lukittu?)}]]
+         [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaKulu))
+          {:vayla-tyyli? true
+           :luokka "suuri"
+           :tyylit {:padding-right "16px"}
+           :disabled (or (not lomake-validi?) kulu-lukittu?)}]]
         [:span
-        [napit/peruuta "Peruuta" #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-         {:ikoni [ikonit/remove]
-          :luokka "suuri"
-          :vayla-tyyli? true}]]]]]
+         [napit/peruuta "Peruuta" #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
+          {:ikoni [ikonit/remove]
+           :luokka "suuri"
+           :vayla-tyyli? true}]]]]]
      [:div.row
       [:div.col-xs-12.col-md-6
        (when urakoitsija-maksaa? [:div.caption.margin-top-4 "Kulu kirjataan miinusmerkkisenä"])]]]))
