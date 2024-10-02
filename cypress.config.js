@@ -2,7 +2,6 @@ const { defineConfig } = require('cypress')
 
 module.exports = defineConfig({
   watchForFileChanges: false,
-  experimentalStudio: false,
   videoUploadOnPasses: false,
   reporter: 'junit',
   reporterOptions: {
