@@ -1,5 +1,6 @@
 (ns harja.tiedot.hallinta.kojelauta
-  (:require [harja.ui.viesti :as viesti]
+  (:require [harja.pvm :as pvm]
+            [harja.ui.viesti :as viesti]
             [harja.ui.protokollat :as protokollat]
             [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
@@ -23,7 +24,7 @@
                  :kriteerit [{:nimi "Jotain"}
                              {:nimi "Jotain muuta"}]
                  :urakat []
-                 :valinnat {}}))
+                 :valinnat {:urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
 (defrecord Valitse [avain valinta])
 (defrecord HaeUrakat [])
@@ -38,7 +39,8 @@
   HaeUrakat
   (process-event [_ app]
     (tuck-apurit/post! :hae-urakat-kojelautaan
-      {}
+      {:hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
+       :urakka-idt (map :id (get-in app [:valinnat :urakat]))}
       {:onnistui ->HaeUrakatOnnistui
        :epaonnistui ->HaeUrakatEpaonnistui}))
 

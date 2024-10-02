@@ -121,6 +121,12 @@
    [bs/tabs {:style :tabs :classes "tabs-taso2"
              :active (nav/valittu-valilehti-atom :hallinta-seuranta)}
 
+    "Urakoiden tilanne"
+    :kojelauta
+    (when (oikeudet/hallinta)
+      ^{:key "kojelauta"}
+      [kojelauta/kojelauta])
+
     "Integraatiotilanne"
     :integraatiotilanne
     (when (oikeudet/hallinta-integraatiotilanne)
@@ -132,13 +138,7 @@
     :raporttitiedot
     (when (oikeudet/hallinta-indeksit)
       ^{:key "raporttien-suoritustieto"}
-      [raporttien-suoritustieto/raporttien-suoritustieto])
-
-    "Kojelauta"
-    :kojelauta
-    (when (oikeudet/hallinta)
-      ^{:key "kojelauta"}
-      [kojelauta/kojelauta])]
+      [raporttien-suoritustieto/raporttien-suoritustieto])]
 
    "Järjestelmän hallinta"
    :hallinta-jarjestelma

@@ -1,13 +1,21 @@
 (ns harja.views.hallinta.kojelauta
-  (:require [harja.ui.kentat :as kentat]
+  (:require [harja.pvm :as pvm]
+            [harja.ui.grid :as grid]
+            [harja.ui.kentat :as kentat]
+            [harja.ui.valinnat :as valinnat]
             [reagent.core :as r]
             [tuck.core :refer [tuck]]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :refer [ajax-loader]]
             [harja.tiedot.hallintayksikot :as hy]
             [harja.tiedot.hallinta.kojelauta :as tiedot])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
+
+(defn- mahdolliset-hoitokauden-alkuvuodet [pvm-nyt]
+  (range (- (pvm/vuosi pvm-nyt) 2)
+    (+ 6 (pvm/vuosi pvm-nyt))))
 
 (defn suodattimet [e! {:keys [valinnat kriteerit urakkavuodet urakkahaku] :as app}]
   [:<>
@@ -26,12 +34,12 @@
      :vayla-tyyli? true}
     (into [nil] kriteerit)]
    [yleiset/pudotusvalikko
-    "Urakkavuosi"
-    {:valitse-fn #(e! (tiedot/->Valitse :urakkavuosi %))
+    "Hoitokauden alkuvuosi"
+    {:valitse-fn  #(e! (tiedot/->Valitse :urakkavuosi %))
      :valinta (:urakkavuosi valinnat)
      :format-fn #(or % "Kaikki")
      :vayla-tyyli? true}
-    (into [nil] urakkavuodet)]
+    (mahdolliset-hoitokauden-alkuvuodet (pvm/nyt))]
 
    [:div.label-ja-alasveto
     [:label.alasvedon-otsikko-vayla {:for "urakkahaku"} "Hae urakkaa"]
@@ -51,38 +59,40 @@
                              (str (count %) " urakkaa valittu"))}
      (r/wrap (:urakat valinnat) #(e! (tiedot/->Valitse :urakat %)))]]])
 
-(defn urakkarivi [urakan-tiedot]
-  (let [nimi (:nimi urakan-tiedot)]
-    [:tr
-     [:td nimi]
-     [:td (if (every? true? (map :kustannussuunnitelma-ok? (:hoitovuodet urakan-tiedot)))
-            "Kyllä"
-            "Ei")]
-     [:td (if (every? true? (map :tehtavamaarat-ok? (:hoitovuodet urakan-tiedot)))
-            "Kyllä"
-            "Ei")]
-     [:td (if (every? true? (map :rajoitusalueet-ok? (:hoitovuodet urakan-tiedot)))
-            "Kyllä"
-            "Ei")]]))
+
 
 (defn listaus [e! {:keys [valinnat urakat urakoiden-tilat] :as app}]
   (let [valitut-urakat (:urakat valinnat)
         urakat (if (empty? valitut-urakat)
                  urakat
-                 (filter #((into #{} (map :id valitut-urakat)) (:id %)) urakat))
-        ]
+                 (filter #((into #{} (map :id valitut-urakat)) (:id %)) urakat))]
     [:div
      [debug/debug urakat]
-     [:table
-      [:thead
-       [:tr
-        [:th "Urakka"]
-        [:th "Kustannussuunnitelma vahvistettu"]
-        [:th "Tehtävät ja määrät kirjattu"]
-        [:th "Rajoitusalueet lisätty"]]]
-      [:tbody
-       (for* [urakka urakat]
-         [urakkarivi urakka])]]]))
+     [grid/grid
+      {:otsikko (str "Urakoiden tilat")
+       :tyhja (if (nil? urakat) [ajax-loader "Ladataan tietoja"] "Ei tietoja")}
+      [{:otsikko "Urakka"
+        :tyyppi :string
+        :nimi :nimi
+        :leveys 10
+        :muokattava? (constantly false)}
+       {:otsikko "Kustannus\u00ADsuunnitelma"
+        :muokattava? (constantly false)
+        :nimi :ks_tila :leveys 5
+        :tyyppi :komponentti
+        :komponentti (fn [rivi]
+                       (prn "Jarno  ks tila RIVI " rivi)
+                       (let [ks-tila (:ks_tila rivi)]
+                         (cond
+                           (= "aloittamatta" (:suunnitelman_tila ks-tila))
+                           [:div "Aloittamatta"]
+
+                           (= "aloitettu" (:suunnitelman_tila ks-tila))
+                           [:div "Aloitettu"]
+
+                           (= "vahvistettu" (:suunnitelman_tila ks-tila))
+                           [:div "Vahvistettu"])))}]
+      urakat]]))
 
 
 (defn kojelauta* [e! app]
