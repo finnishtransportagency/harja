@@ -1,6 +1,6 @@
 -- name: lisaa-talvihoitoreitti<!
-INSERT INTO talvihoitoreitti (nimi, urakka_id, ulkoinen_id, luotu, luoja)
-VALUES (:nimi, :urakka_id, :ulkoinen_id, NOW(), :kayttaja_id);
+INSERT INTO talvihoitoreitti (nimi, urakka_id, ulkoinen_id, varikoodi, luotu, luoja)
+VALUES (:nimi, :urakka_id, :ulkoinen_id, :varikoodi, NOW(), :kayttaja_id);
 
 -- name: lisaa-sijainti-talvihoitoreitille<!
 INSERT INTO talvihoitoreitti_sijainti (talvihoitoreitti_id, tie, alkuosa,
@@ -20,6 +20,7 @@ SELECT tr.id,
        tr.nimi,
        tr.urakka_id,
        tr.ulkoinen_id,
+       tr.varikoodi,
        tr.muokattu,
        tr.muokkaaja,
        tr.luotu,

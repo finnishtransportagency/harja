@@ -4,6 +4,7 @@
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [clojure.string :as str]
             [harja.domain.tierekisteri :as tr]
+            [harja.domain.laadunseuranta.talvihoitoreitit-domain :as talvihoitoreitit-domain]
             [taoensso.timbre :as log]
             [harja.domain.tierekisteri.validointi :as tr-validointi]))
 
@@ -33,10 +34,13 @@
                        :kalustotyyppi (:kalustotyyppi kalusto)}))]]))
 
 (defn lisaa-talvihoitoreitti-tietokantaan [db data urakka_id kayttaja_id]
+  ;; Generoidaan talvihoitoreitille värikoodi tietokantaan, jotta se ei vaihdu, kun käyttöliittymässä piirretään
+  ;; Talvihoitoreitti kartalle
   (lisaa-talvihoitoreitti<! db {:nimi (:reittinimi data)
                                 :ulkoinen_id (:tunniste data)
                                 :urakka_id urakka_id
-                                :kayttaja_id kayttaja_id}))
+                                :kayttaja_id kayttaja_id
+                                :varikoodi (talvihoitoreitit-domain/anna-random-vari nil)}))
 
 (defn paivita-talvihoitoreitti-tietokantaan [db data urakka_id kayttaja_id]
   (let [;; Haetaan talvihoitoreitin perustiedot ulkoisen id:n perusteella

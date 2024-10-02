@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS talvihoitoreitti
     nimi        VARCHAR(255) NOT NULL,
     urakka_id   INTEGER      NOT NULL,
     ulkoinen_id TEXT         NOT NULL, -- Lähettävän järjestelmän oma tunniste
+    varikoodi   VARCHAR(255) NOT NULL,
     muokattu    TIMESTAMP,
     muokkaaja   INTEGER,
     luotu       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

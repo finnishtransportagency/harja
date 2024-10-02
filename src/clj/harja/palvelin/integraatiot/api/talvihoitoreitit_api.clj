@@ -33,8 +33,7 @@
 (defn validoi-talvihoitoreitti [db data urakka-id]
   (let [virheet []
         ;; Talvihoitoreitillä voi olla virheellisiä tieosoitteita
-        rivi-atom (atom 0)
-        tieosoite-virheet (talvihoitoreitit-q/validoi-talvihoitoreitin-sijainnit db rivi-atom data)
+        tieosoite-virheet (talvihoitoreitit-q/validoi-talvihoitoreitin-sijainnit db data)
 
         virheet (if-not (empty? tieosoite-virheet)
                   (conj virheet tieosoite-virheet)

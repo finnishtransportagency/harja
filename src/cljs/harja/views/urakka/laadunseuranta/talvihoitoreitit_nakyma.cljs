@@ -56,7 +56,7 @@
                 ;; Nimi
                 [:div.basis256.nogrow.shrink3.rajaus
                  [:div {:style {:display "flex"}}
-                  [:span.talvihoitoreitti-nimi {:style {:background-color (:vari rivi)}}]
+                  [:span.talvihoitoreitti-nimi {:style {:background-color (:varikoodi rivi)}}]
                   [:div.body-text.semibold.musta {:style {:font-size "1rem"}} (str (:nimi rivi))]]
                  [:div.body-text.musta.semibold (fmt/desimaaliluku-opt (:laskettu_pituus rivi) 2) " km"]]
 
