@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
 
-echo "Julkaistaan Harja API:n dokumentaatio paikallisesta apidoc-kansiosta. Muodosta sisältö skriptillä muodosta-apidoc.sh";
 
-git checkout gh-pages
-git add ../apidoc
-git commit -m 'Päivitä Harja API dokumentaatio'
-dgit push
+while true; do
+read -p "Onko harja/apidoc-kansiossa uusin API-dokumentaatio? " ke
+case $ke in
+[Kk]* )
+    echo "Julkaistaan Harja API:n dokumentaatio paikallisesta apidoc-kansiosta.";
+    git checkout gh-pages
+    git add ../apidoc
+    git commit -m 'Päivitä Harja API dokumentaatio'
+    dgit push
+    break;;
+[Ee]* )
+    echo "Päivitä harja/apidoc-kansion sisältö skriptillä ./muodosta-apidoc.sh"
+    exit;;
+* )
+    echo "Vastaa kyllä (k) tai ei (e).";;
+esac
+done
 
-echo "Harjan API-dokumentaatio julkaistu paikallisesta apidoc-kansiosta.";
+
