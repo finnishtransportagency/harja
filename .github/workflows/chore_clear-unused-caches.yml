@@ -1,0 +1,54 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: "[Chore] Clear unused caches (PR)"
+on:
+  pull_request:
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      pr-number:
+        description: "PR number"
+        type: string
+        required: true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      # `actions:write` permission is required to delete caches
+      actions: write
+      contents: read
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Cleanup using GitHub Script
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr-number }}
+        with:
+          script: |
+            const ref = 'refs/pull/${{ env.PR_NUMBER }}/merge'
+            const { data } = await github.rest.actions.getActionsCacheList({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref,
+            })
+            
+            console.log(`Found ${data.actions_caches.length} caches for ${ref}`)
+            
+            for (const cache of data.actions_caches) {
+              console.log(`Deleting cache ${cache.key} for ${cache.ref}`)
+            
+              const result = await github.rest.actions.deleteActionsCacheById({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  cache_id: cache.id,
+              });
+            
+              if (result.status !== 204) {
+                console.warn(`Failed to delete cache ${cache.key} for ${cache.ref}`)
+              }
+            }

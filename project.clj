@@ -35,7 +35,7 @@
                  ;; -- Lokitus
                  [com.taoensso/timbre "5.2.1"]
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.22.1"]
+                 [org.apache.logging.log4j/log4j-core "2.24.1"]
 
                  ;; -- Metriikkadata
                  [org.clojure/java.jmx "0.3.4"]
