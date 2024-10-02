@@ -40,6 +40,15 @@ VALUES ('Saimaan huollon lisäsopimus',
          WHERE nimi = 'Saimaan huollon pääsopimus'),
         '2016-01-01', '2026-12-31', TRUE, NOW());
 
+WITH valittu_sopimus AS (
+    SELECT id
+      FROM sopimus
+     WHERE nimi IN ('Saimaan huollon pääsopimus', 'Saimaan huollon lisäsopimus')
+) INSERT INTO kan_lt_ketjutus_aktivointi (sopimus_id, ketjutus_kaytossa)
+       SELECT id, true
+         FROM valittu_sopimus
+           ON CONFLICT (sopimus_id) DO UPDATE SET ketjutus_kaytossa = true;
+
 INSERT INTO hanke (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Joensuun huolto- ja kunnossapito', '2016-07-07', '2021-05-05', TRUE, NOW());
 

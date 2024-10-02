@@ -35,7 +35,7 @@
                  ;; -- Lokitus
                  [com.taoensso/timbre "5.2.1"]
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.22.1"]
+                 [org.apache.logging.log4j/log4j-core "2.24.1"]
 
                  ;; -- Metriikkadata
                  [org.clojure/java.jmx "0.3.4"]
@@ -164,11 +164,11 @@
                          ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
                          ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
                          ;;  TODO: Tämä muutos voidaan poistaa, kunhan poi-ooxml ottaa mukaan uudemman version kirjastosta.
-                         [org.apache.commons/commons-compress "1.26.1"]
+                         [org.apache.commons/commons-compress "1.27.1"]
 
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
-                         [commons-codec "1.16.1"]]
+                         [commons-codec "1.17.1"]]
 
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
