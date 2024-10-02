@@ -42,19 +42,11 @@
                                                (mapv (fn [r]
                                                        (when (:sijainti r)
                                                          {:alue (merge {:tyyppi-kartalla :talvihoitoreitit
-                                                                        :stroke {:width 8
-                                                                                 :color (:vari reitti)}}
+                                                                        :stroke {:width 5
+                                                                                 :color (:varikoodi reitti)}}
                                                                   (:sijainti r))
                                                           :extent (harja.geo/extent (:sijainti r))
-                                                          :tyyppi-kartalla :talvihoitoreitit
-                                                          :selite {:teksti "Talvihoitoreitti"
-                                                                   :img (pinni-ikoni "sininen")}
-                                                          :infopaneelin-tiedot {:pituus (:pituus r)
-                                                                                :nimi (:nimi reitti)}
-                                                          :ikonit [{:tyyppi :merkki
-                                                                    :paikka [:loppu]
-                                                                    :zindex 21
-                                                                    :img (pinni-ikoni "sininen")}]}))
+                                                          :tyyppi-kartalla :talvihoitoreitit}))
                                                  (:reitit reitti)))
                                          talvihoitoreitit)))]
       (when (and (not-empty talvihoitoreitit) (not (nil? talvihoitoreitit)) @karttataso-nakyvissa?)

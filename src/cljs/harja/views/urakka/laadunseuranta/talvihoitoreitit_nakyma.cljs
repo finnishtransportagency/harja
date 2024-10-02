@@ -83,8 +83,8 @@
                  ;; Näytä valittu rivi kartalla tai piilota se
                  [:<>
                   (if (contains? valitut-kohteet (:id rivi))
-                    (napit/avaa "Piilota kartalta" #(e! (tiedot/->PoistaValittuKohdeKartalta (:id rivi))))
-                    (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle (:id rivi)))))]]]
+                    (napit/avaa "Piilota kartalta" #(e! (tiedot/->PoistaValittuKohdeKartalta (:id rivi))) {:luokka "talvihoitoreitti-kartan-naytto"})
+                    (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle (:id rivi))) {:luokka "talvihoitoreitti-kartan-naytto"}))]]]
 
                ;; Otsikkokoponentin voi avata ja avaamisen jälkeen näytetään lista (grid) reiteistä
                (when (get talvihoitoreittien-tilat (:id rivi))
