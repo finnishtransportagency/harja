@@ -3526,9 +3526,14 @@
 
   TallennaTavoitehintainenRahavaraus
   (process-event [{:keys [id summa indeksisumma vuosi loppuvuodet?]} app]
-    (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
+    (let [urakka (-> @tiedot/tila :yleiset :urakka :id)
+          muokattava-rahavaraus (first (filter
+                                         #(= id (:id %))
+                                         (get-in app [:domain :tavoitehintaiset-rahavaraukset])))]
       ;; Ei yritetä tallentaa, jos mitään ei ole annettu
-      (if (and summa indeksisumma)
+      ;; Paitsi, jos poistetaan jo olemassa oleva summa
+      (if (or (and summa indeksisumma)
+            (and (nil? summa) (not (nil? (:summa muokattava-rahavaraus)))))
         (tallenna-ja-odota-vastaus app
           {:palvelu :tallenna-tavoitehintainen-rahavaraus
            :payload {:urakka-id urakka

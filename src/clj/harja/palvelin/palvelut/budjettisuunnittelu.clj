@@ -1009,10 +1009,10 @@
                         (doseq [r kt-rahavaraus-kuukaudet
                                 :let [_ (swap! kk inc)
                                       kuukausimaara (count kt-rahavaraus-kuukaudet)
-                                      kuukausisumma (round2 2 (/ summa kuukausimaara))
-                                      viimeinen-kuukausisumma (round2 2 (- summa (* (dec kuukausimaara) kuukausisumma)))
-                                      kuukausi-indeksisumma (round2 2 (/ indeksisumma kuukausimaara))
-                                      viimeinen-indeksisumma (round2 2 (- indeksisumma (* (dec kuukausimaara) kuukausi-indeksisumma)))]]
+                                      kuukausisumma (when-not (nil? summa) (round2 2 (/ summa kuukausimaara))) ;; Tallenna nil kantaan, jos nil arvo on syötetty
+                                      viimeinen-kuukausisumma (when-not (nil? summa) (round2 2 (- summa (* (dec kuukausimaara) kuukausisumma))))
+                                      kuukausi-indeksisumma (when-not (nil? summa) (round2 2 (/ indeksisumma kuukausimaara)))
+                                      viimeinen-indeksisumma (when-not (nil? summa) (round2 2 (- indeksisumma (* (dec kuukausimaara) kuukausi-indeksisumma))))]]
                           (update! db ::bs/kustannusarvioitu-tyo
                             ;; Jos muokattavia kuukausia on 9 tai enemmän, niin laitetaan viimeinen mahdollisesti suurempi
                             ;; summa syyskuulle, eli hoitokauden viimeiselle kuukaudelle
