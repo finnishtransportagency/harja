@@ -168,7 +168,7 @@
 
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
-                         [commons-codec "1.16.1"]]
+                         [commons-codec "1.17.1"]]
 
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
