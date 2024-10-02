@@ -871,8 +871,8 @@ BEGIN
         -- Näytetään vaan rahavaraukset mitkä urakalle asetettu (hallinta)
         JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id  
         WHERE rvu.urakka_id = ur
-        -- Sorttaa aakkosilla, nämä tulee tässä järjestyksessä käyttöliittymään asti
-        ORDER BY COALESCE(rvu.urakkakohtainen_nimi, rv.nimi)
+        -- Sorttaa järjestysnumerolla, nämä tulee tässä järjestyksessä käyttöliittymään asti
+        ORDER BY rv.jarjestys
     LOOP
         -- Resetoi hoitokausi / laskutetaan 
         rv_val_aika_yht := 0;
