@@ -209,8 +209,10 @@
   (go
     (let [app-state {}]
       (do
+        (nav/esta-url-paivitys!)
         (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
         (nav/aseta-valittu-valilehti! :sivu :urakat)
         (nav/aseta-valittu-valilehti! :urakat :suunnittelu)
         (nav/aseta-valittu-valilehti! :suunnittelu :kustannussuunnitelma)
+        (nav/salli-url-paivitys!)
         (swap! urakka-tila/suunnittelu-kustannussuunnitelma merge app-state)))))
