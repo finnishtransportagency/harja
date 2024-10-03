@@ -6,7 +6,7 @@ case $ke in
   githaara_nykyinen=$(git rev-parse --abbrev-ref HEAD)
   githaara_vaadittu="gh-pages"
   if [ "$githaara_nykyinen" == "$githaara_vaadittu" ]; then
-      echo "Julkaistaan Harja API:n dokumentaatio apidoc-kansiosta.";
+      echo "Julkaistaan Harja API:n dokumentaatio apidoc-kansiosta viemällä muutokset versiohallintaan.";
       sgit commit -m 'Päivitä Harja API dokumentaatio'
       sgit push
   else
