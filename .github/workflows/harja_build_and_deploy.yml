@@ -58,6 +58,8 @@ jobs:
       artifact-prefix: ${{ matrix.configs.artifactPrefix }}
       # Ei tehdä turhaan lint-testausta develop-branchille. Löydökset käsitellään PR:ien yhteydessä.
       lint-clj: 'false'
+      # Ei tehdä turhaan ylimääristä skannausta testipatterin osana. Skannaus on osa deployment prosessia alla.
+      scan-docker-image: 'false'
       build-harja: 'light'
 
   # Tarkistaa testijobin yleisen statuksen ja lähettää notifikaation, mikäli jotain meni pieleen
@@ -68,7 +70,7 @@ jobs:
     steps:
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
         # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success
         # TODO: Tämä virheviesti lähtee myös jos koko deployment workflow tai testit canceloidaan.
         #       Pitäisikö erillisessä stepissä tarkastaa needs.test.result == 'cancelled' ja kertoa, että deployment peruttiin?
@@ -137,7 +139,7 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
         if: failure()
         with:
           # Slack Block Kit -tyyppinen rikastettu viesti

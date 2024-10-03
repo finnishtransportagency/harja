@@ -263,7 +263,7 @@ BEGIN
     SELECT pituus FROM tr_osien_pituudet tap WHERE tap.tie=laske_tr_osan_kohta.tie AND tap.osa=laske_tr_osan_kohta.osa INTO osan_oikea_pituus;
     keskiarvo_metri :=  1 / (osan_projektoitu_pituus / osan_oikea_pituus);
 
-    RAISE NOTICE 'TYYPPI: % ', St_GeometryType(osan_geometria);
+    --RAISE NOTICE 'TYYPPI: % ', St_GeometryType(osan_geometria);
 
     IF St_GeometryType(osan_geometria) = 'ST_MultiLineString' THEN
         -- Joskus osan geometria on multilinestring eli tienosa voi koostua useista erillisistä viivoista.
@@ -286,7 +286,7 @@ BEGIN
         lahin_piste := (SELECT ST_ClosestPoint(osan_geometria, piste));
     END IF;
 
-    RAISE NOTICE 'Lähin viiva: %', lahin_viiva;
+    --RAISE NOTICE 'Lähin viiva: %', lahin_viiva;
 
     -- Lasketaan edellä selvitettyjen tietojen perusteella pisteen etäisyys tien alkupäästä.
     -- Huomioidaan laskennassa myös tienosan kaikki pistettä lähinnä olevaa viivaa edeltävät viivat.
@@ -305,8 +305,8 @@ BEGIN
             ELSE
                 etaisyys_pisteeseen := etaisyys_pisteeseen + (St_Length(ST_GeometryN(osan_geometria, laskuri)) * keskiarvo_metri);
             END IF;
-            RAISE NOTICE 'Laskuri: %', laskuri;
-            RAISE NOTICE 'Etaisyys pisteeseen: %', etaisyys_pisteeseen;
+            --RAISE NOTICE 'Laskuri: %', laskuri;
+            --RAISE NOTICE 'Etaisyys pisteeseen: %', etaisyys_pisteeseen;
         END LOOP;
 
     -- Jos tarkasteltava piste on aivan tienosan päässä, etäisyydeksi palautuu koko osan pituus
@@ -440,7 +440,7 @@ BEGIN
         let := loppukohta.etaisyys;
 
         geomertria := tieosoitteelle_viiva(r.tie, aosa, aet, losa, let);
-        RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geomertria;
+        --RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geomertria;
         RETURN ROW (r.tie, aosa, aet, losa, let, geomertria);
 
     END IF;
@@ -485,7 +485,7 @@ BEGIN
     loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
     let := loppukohta.etaisyys;
     -- Varmista TR-osoitteen suunta ajoradan mukaan
-    RAISE NOTICE 'ajorata %', r.ajorata;
+    --RAISE NOTICE 'ajorata %', r.ajorata;
     IF (r.ajorata = 1 AND (aosa > losa OR (aosa=losa AND aet > let))) OR
        (r.ajorata = 2 AND (aosa < losa OR (aosa=losa AND aet < let))) THEN
       tmp_osa := aosa;

@@ -504,3 +504,13 @@
   ;; Tätä on alettu käyttää enemmän noin 2022 tienoilla, ainakin paikkauspuolella.
   [tie alkuosa alkuet loppuosa loppuet]
   (str tie " - " alkuosa "/" alkuet " - " loppuosa "/" loppuet))
+
+;; Hoitourakoissa on asiakkaan kanssa sovittu, että seuraaville Päällysteiden paikkaus -toimenpiteen
+;; alaisille tehtäville vaaditaan syöttölomakkeella aina sijainti
+(def tehtavat-joille-sijainti-pakollinen
+  #{"AB-paikkaus levittäjällä"
+    "PAB-paikkaus levittäjällä"
+    "KT-valuasfalttipaikkaus K"
+    "KT-valuasfalttipaikkaus T"
+    "KT-reikävaluasfalttipaikkaus"
+    "KT-valuasfalttisaumaus"})

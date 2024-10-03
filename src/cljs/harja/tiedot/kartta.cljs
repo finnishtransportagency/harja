@@ -27,6 +27,15 @@
 (defn nayta-infopaneeli! []
   (paneelin-tila/nayta-infopaneeli!))
 
+;; Määrittelee asiat, jotka ovat nykyisessä pisteessä.
+;; Avaimet:
+;; :koordinaatti  klikatun pisteen koordinatti (tai nil, jos ei valintaa)
+;; :asiat         sekvenssi asioita, joita pisteestä löytyy
+;; :haetaan?      true kun haku vielä kesken
+(defonce asiat-pisteessa (atom {:koordinaatti nil
+                                :haetaan? true
+                                :asiat nil}))
+
 (defn kasittele-infopaneelin-linkit!
   "Infopaneelin skeemat saattavat sisältää 'linkkejä', jotka käsitellään
   (tai ei käsitellä) näkymäkohtaisesti. Esimerkiksi toteumanäkymässä voidaan haluta

@@ -666,15 +666,18 @@
         (assoc-in [:valittu-liikennetapahtuma ::lt/aika] (::lt/aika t)))))
 
   HaeEdellisetTiedot
-  (process-event [{t :tapahtuma} app]
-    (let [params {::lt/urakka-id (get-in t [::lt/urakka ::ur/id])
-                  ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id])
-                  ::lt/sopimus-id (get-in t [::lt/sopimus ::sop/id])}]
-      (tt/post! :hae-edelliset-tapahtumat
-        params
-        {:onnistui ->EdellisetTiedotHaettu
-         :epaonnistui ->EdellisetTiedotEiHaettu})
-      (assoc app :edellisten-haku-kaynnissa? true)))
+  (process-event [{t :tapahtuma} {:keys [valittu-liikennetapahtuma haetut-sopimukset] :as app}]
+    ;; Ei tarvitse ketjutuksia hakea, jos tämä ei ole urakalla käytössä.
+    (if (ketjutus-kaytossa? valittu-liikennetapahtuma haetut-sopimukset)
+      (let [params {::lt/urakka-id (get-in t [::lt/urakka ::ur/id])
+                    ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id])
+                    ::lt/sopimus-id (get-in t [::lt/sopimus ::sop/id])}]
+        (tt/post! :hae-edelliset-tapahtumat
+          params
+          {:onnistui ->EdellisetTiedotHaettu
+           :epaonnistui ->EdellisetTiedotEiHaettu})
+        (assoc app :edellisten-haku-kaynnissa? true))
+      app))
 
   EdellisetTiedotHaettu
   (process-event [{t :tulos} app]
