@@ -8,4 +8,9 @@ SELECT u.id,
   FROM urakka u
            join organisaatio o ON u.hallintayksikko = o.id
  WHERE u.tyyppi = 'teiden-hoito' AND
-      (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt));
+     (:hoitokauden_alkuvuosi BETWEEN
+         (SELECT EXTRACT (YEAR FROM u.alkupvm)) AND
+         (SELECT EXTRACT (YEAR FROM u.loppupvm)) - 1) AND
+      (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
+      (:ely_id::INTEGER IS NULL OR u.hallintayksikko = :ely_id);
+

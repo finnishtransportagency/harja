@@ -1,5 +1,6 @@
 (ns harja.views.hallinta.kojelauta
   (:require [harja.pvm :as pvm]
+            [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
@@ -18,27 +19,24 @@
   (range (- (pvm/vuosi pvm-nyt) 2)
     (+ 6 (pvm/vuosi pvm-nyt))))
 
-(defn suodattimet [e! {:keys [valinnat kriteerit urakkavuodet urakkahaku] :as app}]
+(defn suodattimet [e! {:keys [valinnat urakkahaku] :as app}]
   [:<>
    [yleiset/pudotusvalikko
     "ELY"
-    {:valitse-fn #(e! (tiedot/->Valitse :ely %))
+    {:valitse-fn #(do
+                    (e! (tiedot/->Valitse :ely %))
+                    (e! (tiedot/->HaeUrakat)))
      :valinta (:ely valinnat)
-     :format-fn #(or (:nimi %) "Kaikki")
+     :format-fn #(or (hal/elynumero-ja-nimi %) "Kaikki")
      :vayla-tyyli? true}
-    (into [nil] @hy/vaylamuodon-hallintayksikot)]
-   [yleiset/pudotusvalikko
-    "Kriteerit"
-    {:valitse-fn #(e! (tiedot/->Valitse :kriteeri %))
-     :valinta (:kriteerit valinnat)
-     :format-fn #(or (:nimi %) "Kaikki")
-     :vayla-tyyli? true}
-    (into [nil] kriteerit)]
+    (into [nil] (map #(select-keys % [:id :nimi :elynumero])
+                  @hy/vaylamuodon-hallintayksikot))]
    [yleiset/pudotusvalikko
     "Hoitokauden alkuvuosi"
-    {:valitse-fn  #(e! (tiedot/->Valitse :urakkavuosi %))
+    {:valitse-fn  #(do
+                     (e! (tiedot/->Valitse :urakkavuosi %))
+                     (e! (tiedot/->HaeUrakat)))
      :valinta (:urakkavuosi valinnat)
-     :format-fn #(or % "Kaikki")
      :vayla-tyyli? true}
     (mahdolliset-hoitokauden-alkuvuodet (pvm/nyt))]
 
@@ -54,6 +52,7 @@
       :monivalinta? true
       :tarkkaile-ulkopuolisia-muutoksia? true
       :hakuikoni? true
+      :placeholder "Käytä suurennuslasia tai anna urakan nimi"
       :monivalinta-teksti #(case (count %)
                              0 "Kaikki valittu"
                              1 (:nimi (first %))
@@ -82,6 +81,17 @@
 
 (defn listaus [e! {:keys [valinnat urakat urakoiden-tilat] :as app}]
   (let [valitut-urakat (:urakat valinnat)
+        valittu-ely (get-in valinnat [:ely :id])
+        valittu-hk-alkuvuosi (:urakkavuosi valinnat)
+        ;; ely-suodatus
+        urakat (if (nil? valittu-ely)
+                 urakat
+                 (filter #(= valittu-ely (:ely_id %)) urakat))
+        ;; hoitokausisuodatus valittu-hk-alkuvuosi
+        urakat (if (nil? valittu-hk-alkuvuosi)
+                 urakat
+                 (filter #(= valittu-hk-alkuvuosi (:hoitokauden_alkuvuosi %)) urakat))
+        ;; urakkasuodatus
         urakat (if (empty? valitut-urakat)
                  urakat
                  (filter #((into #{} (map :id valitut-urakat)) (:id %)) urakat))]
@@ -89,12 +99,16 @@
      [debug/debug urakat]
      [grid/grid
       {:otsikko (str "Urakoiden tilat")
-       :tyhja (if (nil? urakat) [ajax-loader "Ladataan tietoja"] "Ei tietoja")}
+       :tyhja (if (nil? urakat) [ajax-loader "Ladataan tietoja"] "Ei tietoja, tarkistathan valitut suodattimet.")}
       [{:otsikko "Urakka"
         :tyyppi :string
         :nimi :nimi
         :leveys 5
         :muokattava? (constantly false)}
+       {:otsikko "Hoito\u00ADvuosi"
+        :muokattava? (constantly false)
+        :nimi :hoitokauden_alkuvuosi :leveys 3
+        :tyyppi :string :fmt #(pvm/hoitokausi-str-alkuvuodesta %)}
        {:otsikko "Kustannus\u00ADsuunnitelma"
         :muokattava? (constantly false)
         :nimi :ks_tila :leveys 15

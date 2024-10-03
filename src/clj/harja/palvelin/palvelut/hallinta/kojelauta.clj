@@ -7,14 +7,15 @@
             [harja.kyselyt.kojelauta :as q]))
 
 
-(defn hae-urakat-kojelautaan [db kayttaja {:keys [hoitokauden-alkuvuosi urakka-idt] :as hakuehdot}]
+(defn hae-urakat-kojelautaan [db kayttaja {:keys [hoitokauden-alkuvuosi urakka-idt ely-id] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
   (let [urakat (mapv
                  (fn [ks-tilat]
                    (update ks-tilat :ks_tila konv/jsonb->clojuremap))
                  (q/hae-urakat-kojelautaan db {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
                                                :urakat_annettu (boolean (not (empty? urakka-idt)))
-                                               :urakka_idt urakka-idt}))]
+                                               :urakka_idt urakka-idt
+                                               :ely_id ely-id}))]
     urakat))
 
 (defrecord KojelautaHallinta []

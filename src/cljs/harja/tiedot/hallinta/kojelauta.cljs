@@ -21,8 +21,6 @@
             (vec (sort-by :nimi itemit)))))))
 
 (def tila (atom {:urakkavuodet (range 2016 2025)
-                 :kriteerit [{:nimi "Jotain"}
-                             {:nimi "Jotain muuta"}]
                  :urakat []
                  :valinnat {:urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
@@ -40,9 +38,11 @@
   (process-event [_ app]
     (tuck-apurit/post! :hae-urakat-kojelautaan
       {:hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
-       :urakka-idt (map :id (get-in app [:valinnat :urakat]))}
+       :urakka-idt (map :id (get-in app [:valinnat :urakat]))
+       :ely-id (get-in app [:valinnat :ely :id])}
       {:onnistui ->HaeUrakatOnnistui
-       :epaonnistui ->HaeUrakatEpaonnistui}))
+       :epaonnistui ->HaeUrakatEpaonnistui})
+    app)
 
   HaeUrakatOnnistui
   (process-event [{:keys [vastaus]} app]
