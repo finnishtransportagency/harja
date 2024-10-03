@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "enum": [
+    "Paksuudeltaan vakio laatta",
+    "Massapintaus",
+    "Kuumennuspintaus",
+    "MP kuumalle, kuumajyrsitylle tas. pinnalle",
+    "REMIX-pintaus",
+    "2-kerroksinen remix-pintaus",
+    "PAB-O/V:n remix-pintaus",
+    "ART-pintaus",
+    "Novachip-massapintaus",
+    "Karhinta",
+    "Hienojyrsintä",
+    "Sirotepintaus",
+    "Urapaikkaus",
+    "Uraremix"
+  ]
+}
+

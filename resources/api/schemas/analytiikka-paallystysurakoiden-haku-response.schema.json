@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "paallystysurakat": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "yhaId",
+          "harjaId",
+          "yhatunnus"
+        ],
+        "properties": {
+          "yhaId": {
+            "type": "number"
+          },
+          "harjaId": {
+            "type": "number"
+          },
+          "poistettu": {
+            "type": "boolean"
+          },
+          "urakkanro": {
+            "type": "string"
+          },
+          "elyt": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "vuodet":{
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "multipleOf": 1
+            }
+          },
+          "sampotunnus":{
+            "type": "string",
+            "description": "Urakan tunnus SAMPOssa",
+            "maxLength": 50
+          },
+          "yhatunnus": {
+            "type": "string",
+            "description": "Urakan tunnus YHAssa",
+            "maxLength": 20
+          }
+        }
+      }
+    }
+  }
+}

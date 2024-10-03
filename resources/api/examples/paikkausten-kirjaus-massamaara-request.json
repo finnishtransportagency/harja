@@ -1,0 +1,93 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2018-01-30T12:00:00Z"
+  },
+  "paikkaukset": [
+    {
+      "paikkaus": {
+        "tunniste": {
+          "id": 123
+        },
+        "paikkauskohde": {
+          "nimi": "Kuusamontien paikkaus",
+          "tunniste": {
+            "id": 567
+          }
+        },
+        "alkuaika": "2018-01-30T12:00:00Z",
+        "loppuaika": "2018-01-30T18:00:00Z",
+        "sijainti": {
+          "tie": 20,
+          "aosa": 1,
+          "aet": 1,
+          "losa": 5,
+          "let": 16,
+          "ajoradat": [
+            {
+              "ajorata": 1,
+              "tienkohdat": {
+                "reunat": [
+                  {
+                    "reuna": 1
+                  }
+                ],
+                "ajourat": [
+                  {
+                    "ajoura": 2
+                  },
+                  {
+                    "ajoura": 3
+                  }
+                ],
+                "ajouravalit": [
+                  {
+                    "ajouravali": 5
+                  },
+                  {
+                    "ajouravali": 7
+                  }
+                ],
+                "keskisaumat": [
+                  {
+                    "keskisauma": 1
+                  },
+                  {
+                    "keskisauma": 1
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "tyomenetelma": "UREM",
+        "massatyyppi": "AB, Asfalttibetoni",
+        "leveys": 10,
+        "massamaara": 191472,
+        "raekoko": 1,
+        "kuulamylly": "AN5",
+        "kivi-ja-sideaineet": [
+          {
+            "kivi-ja-sideaine": {
+              "esiintyma": "testi",
+              "km-arvo": "testi",
+              "muotoarvo": "testi",
+              "sideainetyyppi": "20/30",
+              "pitoisuus": 1.2,
+              "lisa-aineet": "lisäaineet"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

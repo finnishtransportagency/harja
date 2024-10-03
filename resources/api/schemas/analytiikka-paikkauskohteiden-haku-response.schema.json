@@ -1,0 +1,213 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "paikkauskohteet": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {
+          "harjaId": {
+            "type": "integer",
+            "multipleOf": 1
+          },
+          "ulkoinenId": {
+            "type": "integer",
+            "multipleOf": 1,
+            "description": "Paikkuskohteen yksilöivä numero. Uniikki urakan sisällä."
+          },
+          "paallystyskohdeId": {
+            "type": ["integer", "null"],
+            "description": "Mahdollisen päällystyskohteen HarjaId, jos paikkauskohde liittyy päällystykseen."
+          },
+          "nimi": {
+            "type": "string"
+          },
+          "urakka": {
+            "type": "integer",
+            "multipleOf": 1,
+            "description": "Urakan ID HARJAn tietokannassa, eli HarjaId."
+          },
+          "poistettu": {
+            "type": "boolean"
+          },
+          "yhalahetyksenTila": {
+            "type": "string",
+            "enum": [
+              "Ei lähetetty",
+              "Lähetetty onnistuneesti",
+              "Epäonnistunut"
+            ]
+          },
+          "tila": {
+            "type": "string",
+            "enum": [
+              "Ehdotettu",
+              "Hylätty",
+              "Tilattu",
+              "Valmis",
+              "Tarkistettu"
+            ]
+          },
+          "paikkaustyomenetelma": {
+            "type": "string",
+            "enum": [
+              "AB-paikkaus levittäjällä",
+              "PAB-paikkaus levittäjällä",
+              "SMA-paikkaus levittäjällä",
+              "KT-valuasfalttipaikkaus (KTVA)",
+              "Konetiivistetty reikävaluasfalttipaikkaus (REPA)",
+              "Sirotepuhalluspaikkaus (SIPU)",
+              "Sirotepintauksena tehty lappupaikkaus (SIPA)",
+              "Urapaikkaus (UREM/RREM)",
+              "Jyrsintäkorjaukset (HJYR/TJYR)",
+              "Kannukaatosaumaus",
+              "Avarrussaumaus",
+              "Sillan kannen päällysteen päätysauman korjaukset",
+              "Reunapalkin ja päällysteen välisen sauman tiivistäminen",
+              "Reunapalkin liikuntasauman tiivistäminen",
+              "Käsin tehtävät paikkaukset pikapaikkausmassalla",
+              "AB-paikkaus käsin",
+              "PAB-paikkaus käsin",
+              "Muu päällysteiden paikkaustyö",
+              "Massapintaus"
+            ]
+          },
+          "tierekisteriosoitevali": {
+            "$ref": "#/definitions/tierekisteriosoitevali-kaista-ja-ajorata"
+          },
+          "geometria": {
+            "type": "string",
+            "format": "wkt",
+            "description": "Geometria WKT-muodossa, SRID 3067"
+          },
+          "suunniteltuMaara": {
+            "type": "number",
+            "description": "Alkuperäinen arvio määrästä. Yksikkö kerrotaan yksikko-kentässä."
+          },
+          "yksikko": {
+            "type": "string",
+            "description": "suunniteltuMaara-kentän yksikkö. Esimerkiksi neliömetrejä tai kappaleita."
+          },
+          "suunniteltuHinta": {
+            "type": "number",
+            "description": "Alkuperäinen arvio hinnasta"
+          },
+          "lisatiedot": {
+            "type": ["string", "null"],
+            "description": "Mahdolliset lisätiedot paikkauskohteesta."
+          },
+          "alkupvm": {
+            "type": "string",
+            "format": "date",
+            "description": "Alkuperäinen arvio aloituksesta"
+          },
+          "loppupvm": {
+            "type": "string",
+            "format": "date",
+            "description": "Alkuperäinen arvio valmistumisesta"
+          },
+          "tilattu": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "tarkistettu": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "valmistunut": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "valmisTiemerkintaan": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "ilmoitettuVirhe": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "toteutunutHinta": {
+            "type": ["number", "null"],
+            "description": "Toteutunut hinta kun kohde on valmis."
+          },
+          "tiemerkintaaTuhoutunut": {
+            "type": "boolean"
+          },
+          "takuuaika": {
+            "type": ["integer", "null"],
+            "multipleOf": 1,
+            "description": "Takuuaika vuosina"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "tierekisteriosoitevali-kaista-ja-ajorata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tienumero",
+        "aosa",
+        "aet",
+        "losa",
+        "let"
+      ],
+      "properties": {
+        "karttapaivamaara": {
+          "type": "string",
+          "format": "date"
+        },
+        "tienumero": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tien numero, jolle tieosoiteväli kohdistuu."
+        },
+        "aosa": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tieosoitevälin alun tieosa"
+        },
+        "aet": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Etäisyys alkuosan sisällä"
+        },
+        "losa": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tieosoitevälin lopun tieosa"
+        },
+        "let": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Etäisyys loppuosan sisällä"
+        },
+        "ajorata": {
+          "type": "integer"
+        },
+        "kaista": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "paikkaukset": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {
+          "harjaId": {
+            "type": "integer",
+            "multipleOf": 1
+          },
+          "paikkauskohdeId": {
+            "type": "integer",
+            "multipleOf": 1
+          },
+          "poistettu": {
+            "type": "boolean"
+          },
+          "paikkaustyomenetelma": {
+            "type": "string",
+            "enum": [
+              "AB-paikkaus levittäjällä",
+              "PAB-paikkaus levittäjällä",
+              "SMA-paikkaus levittäjällä",
+              "KT-valuasfalttipaikkaus (KTVA)",
+              "Konetiivistetty reikävaluasfalttipaikkaus (REPA)",
+              "Sirotepuhalluspaikkaus (SIPU)",
+              "Sirotepintauksena tehty lappupaikkaus (SIPA)",
+              "Urapaikkaus (UREM/RREM)",
+              "Jyrsintäkorjaukset (HJYR/TJYR)",
+              "Kannukaatosaumaus",
+              "Avarrussaumaus",
+              "Sillan kannen päällysteen päätysauman korjaukset",
+              "Reunapalkin ja päällysteen välisen sauman tiivistäminen",
+              "Reunapalkin liikuntasauman tiivistäminen",
+              "Käsin tehtävät paikkaukset pikapaikkausmassalla",
+              "AB-paikkaus käsin",
+              "PAB-paikkaus käsin",
+              "Muu päällysteiden paikkaustyö",
+              "Massapintaus"
+            ]
+          },
+          "tierekisteriosoitevali": {
+            "$ref": "#/definitions/tierekisteriosoitevali"
+          },
+          "reunat": {
+            "type": "integer",
+            "multipleOf": 1
+          },
+          "ajourat": {
+            "type": "integer",
+            "multipleOf": 1
+          },
+          "ajouravalit": {
+            "type": "integer",
+            "multipleOf": 1
+          },
+          "keskisaumat": {
+            "type": "integer",
+            "multipleOf": 1
+          },
+          "alkupvm": {
+            "type": "string",
+            "format": "date",
+            "description": "Paikkauksen aloituspäivä."
+          },
+          "loppupvm": {
+            "type": "string",
+            "format": "date",
+            "description": "Paikkauksen lopetuspäivä."
+          },
+          "leveys": {
+            "type": "number",
+            "description": "Paikkauksen leveys metreissä"
+          },
+          "raekoko": {
+            "type": "integer"
+          },
+          "kuulamylly": {
+            "type": "string",
+            "enum": [
+              "AN5",
+              "AN7",
+              "AN10",
+              "AN14",
+              "AN19",
+              "AN30",
+              "AN22"
+            ]
+          },
+          "massamaara": {
+            "type": ["number", "null"],
+            "description": "Yksikkö: t."
+          },
+          "pintaAla": {
+            "type": ["number", "null"],
+            "description": "Yksikkö: neliömetri."
+          },
+          "juoksumetri": {
+            "type": ["number", "null"],
+            "description": "Yksikkö: juoksumetri"
+          },
+          "kpl": {
+            "type": ["number", "null"],
+            "description": "Yksikkö: kappale."
+          },
+          "massamenekki": {
+            "type": ["number", "null"],
+            "description": "Yksikkö: kg/m2."
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "tierekisteriosoitevali": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tienumero",
+        "aosa",
+        "aet",
+        "losa",
+        "let"
+      ],
+      "properties": {
+        "karttapaivamaara": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tienumero": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tien numero, jolle tieosoiteväli kohdistuu."
+        },
+        "aosa": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tieosoitevälin alun tieosa"
+        },
+        "aet": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Etäisyys alkuosan sisällä"
+        },
+        "losa": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tieosoitevälin lopun tieosa"
+        },
+        "let": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Etäisyys loppuosan sisällä"
+        }
+      }
+    }
+  }
+}
