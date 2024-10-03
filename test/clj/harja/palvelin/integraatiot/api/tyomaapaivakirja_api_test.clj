@@ -248,7 +248,7 @@
                (.replace "__PAIVAMAARA__" paivamaara))
 
         _ (anna-kirjoitusoikeus kayttaja-yit)
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=2"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)
 
         ;; Hae typa tietokannasta
@@ -276,7 +276,7 @@
                (.replace "__PAIVAMAARA__" paivamaara))
 
         _ (anna-kirjoitusoikeus kayttaja-yit)
-        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=2"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)]
 
     (is (= 500 (:status vastaus)))
@@ -347,7 +347,7 @@
                (.replace "__PAIVAMAARA__" paivamaara))
 
         _ (anna-kirjoitusoikeus kayttaja-yit)
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=2"] kayttaja-yit portti typa)
         ;vastaus-body (cheshire/decode (:body vastaus) true)
         ;; 2. Päivitä typa uudella json viestillä
         uusi-saa-asema "123456"
@@ -365,7 +365,7 @@
                         (.replace "__UUSI_SAA-ASEMA-TUNNISTE__" uusi-saa-asema))
 
         paivitys-typa-data (cheshire/decode paivitys-typa true)
-        paivitys-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti paivitys-typa)
+        paivitys-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=2"] kayttaja-yit portti paivitys-typa)
         paivitys-vastaus-body (cheshire/decode (:body paivitys-vastaus) true)
 
         ;; Hae typa tietokannasta
@@ -393,8 +393,8 @@
                (.replace "__PAIVAMAARA__" paivamaara))
 
         _ (anna-kirjoitusoikeus kayttaja-yit)
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
-        ;vastaus-body (cheshire/decode (:body vastaus) true)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=2"] kayttaja-yit portti typa)
+
         ;; 2. Päivitä typa uudella json viestillä
         uusi-saa-asema "123456"
         uusi-versio 2
@@ -411,7 +411,7 @@
                         (.replace "__UUSI_SAA-ASEMA-TUNNISTE__" uusi-saa-asema))
 
         paivitys-typa-data (cheshire/decode paivitys-typa true)
-        paivitys-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti paivitys-typa)
+        paivitys-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=2"] kayttaja-yit portti paivitys-typa)
         paivitys-vastaus-body (cheshire/decode (:body paivitys-vastaus) true)
 
         ;; Hae typa tietokannasta
@@ -509,7 +509,7 @@
                (.replace "\"tunnit\": 4.75" ""))
         _ (anna-kirjoitusoikeus kayttaja-yit)
 
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=2"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)
         _ (is (= (:status vastaus) 200) "Kirjaus onnistui ilman ei-vaadittuja tietoja.")
         _ (is (= (:status vastaus-body) "OK") "Kirjaus onnistui ilman ei-vaadittuja tietoja.")
@@ -539,7 +539,7 @@
                         (.replace "\"Katselmointi pidetty hyvässä ymmärryksessä\"," "\"Katselmointi pidetty hyvässä ymmärryksessä\"")
                         (.replace "\"tunnit\": 4.75" ""))
 
-        paivitys-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/" tid] kayttaja-yit portti paivitys-typa)
+        paivitys-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=2"] kayttaja-yit portti paivitys-typa)
         paivitys-vastaus-body (cheshire/decode (:body paivitys-vastaus) true)
 
         _ (is (= (:status paivitys-vastaus) 200) "Päivitys onnistui ilman ei-vaadittuja tietoja.")
@@ -566,7 +566,7 @@
         _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)]
-    (is (= "puutteelliset-parametrit") (get-in vastaus-body [:virheet 0 :virhe :koodi]))))
+    (is (= "puutteelliset-parametrit" (get-in vastaus-body [:virheet 0 :virhe :koodi])))))
 
 (deftest virheellinen-post-versio-2
   (let [urakka-id "jaska"
@@ -584,9 +584,34 @@
                (.replace "__PAIVAMAARA__" paivamaara))
 
         _ (anna-kirjoitusoikeus kayttaja-yit)
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/v2"] kayttaja-yit portti typa)
+        ;; POST tyyppinen kutsu ei pitäisi onnistua
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=2"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)]
-    (is (= "puutteelliset-parametrit") (get-in vastaus-body [:virheet 0 :virhe :koodi]))))
+    (is (= "puutteelliset-parametrit" (get-in vastaus-body [:virheet 0 :virhe :koodi])))))
+
+(deftest virheellinen-put-versio-2
+  (let [urakka-id "jaska"
+        paivamaara "2023-05-30"
+        ulkoinenid "12345"
+        urakoitsija (first (q-map (format "SELECT ytunnus, nimi FROM organisaatio WHERE nimi = '%s';" "YIT Rakennus Oy")))
+        ;; 1. Tallenna ensin typa
+        typa (-> "test/resurssit/api/tyomaapaivakirja-kirjaus.json"
+               slurp
+               (.replace "__URAKOITSIJA__" (:nimi urakoitsija))
+               (.replace "__YTUNNUS__" (:ytunnus urakoitsija))
+               (.replace "__VIESTITUNNISTE__" (str (rand-int 9999999)))
+               (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
+               (.replace "__ULKOINENID__" ulkoinenid)
+               (.replace "__PAIVAMAARA__" paivamaara))
+
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        ;; POST tyyppinen kutsu ei pitäisi onnistua
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=1"] kayttaja-yit portti typa)
+        vastaus-body (cheshire/decode (:body vastaus) true)
+        _ (println "vastaus-body" vastaus-body)]
+    (is (= 403 (:status vastaus)))
+    (is (.contains (get-in vastaus-body [:virheet 0 :virhe :koodi]) "virheellinen-api-versio") )
+    (is (.contains (get-in vastaus-body [:virheet 0 :virhe :viesti]) "Työmaapäiväkirjan päivitys http put metodilla") )))
 
 (deftest validoi-typa-arvot-saa
   (let [saatiedot {:tyomaapaivakirja

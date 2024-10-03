@@ -11,7 +11,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.json :as tyokalut-json]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-virhevastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -434,45 +434,53 @@
     (julkaise-reitti
       http :kirjaa-tyomaapaivakirja
       (POST "/api/urakat/:id/tyomaapaivakirja" request
-        (kasittele-kutsu db
-          integraatioloki
-          :kirjaa-tyomaapaivakirja
-          request
-          json-skeemat/tyomaapaivakirja-kirjaus-request
-          json-skeemat/tyomaapaivakirja-kirjaus-response
-          (fn [parametrit data kayttaja db]
-            (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
-          :kirjoitus))
-      true)
-
-    ;; Korvaa vanhan uuden lisäämisen rajapinnan
-    (julkaise-reitti
-      http :kirjaa-tyomaapaivakirja-v2
-      (POST "/api/urakat/:id/tyomaapaivakirja/v2" request
-        (kasittele-kutsu db
-          integraatioloki
-          :kirjaa-tyomaapaivakirja-v2
-          request
-          json-skeemat/tyomaapaivakirja-kirjaus-v2-request
-          json-skeemat/tyomaapaivakirja-kirjaus-response
-          (fn [parametrit data kayttaja db]
-            (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
-          :kirjoitus))
+        (if (and
+              (get-in request [:params "api_version"])
+              (= 2 (get-in request [:params "api_version"])))
+          ;; Versio 2
+          (kasittele-kutsu db
+            integraatioloki
+            :kirjaa-tyomaapaivakirja-v2
+            request
+            json-skeemat/tyomaapaivakirja-kirjaus-v2-request
+            json-skeemat/tyomaapaivakirja-kirjaus-response
+            (fn [parametrit data kayttaja db]
+              (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
+            :kirjoitus)
+          ;; Versio 1 - Deprikoituu 31.12.2025
+          (kasittele-kutsu db
+            integraatioloki
+            :kirjaa-tyomaapaivakirja
+            request
+            json-skeemat/tyomaapaivakirja-kirjaus-request
+            json-skeemat/tyomaapaivakirja-kirjaus-response
+            (fn [parametrit data kayttaja db]
+              (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
+            :kirjoitus)))
       true)
 
     ;; Korvaa vanhan päivitysrajapinnnan
     (julkaise-reitti
       http :paivita-tyomaapaivakirja-v2
-      (PUT "/api/urakat/:id/tyomaapaivakirja/v2" request
-        (kasittele-kutsu db
-          integraatioloki
-          :paivita-tyomaapaivakirja-v2
-          request
-          json-skeemat/tyomaapaivakirja-paivitys-v2-request
-          json-skeemat/tyomaapaivakirja-kirjaus-response
-          (fn [parametrit data kayttaja db]
-            (kirjaa-tyomaapaivakirja db parametrit data kayttaja false))
-          :kirjoitus))
+      ;; Käytä queryparametri api_version=2 -> "/api/urakat/:id/tyomaapaivakirja?api_version=2"
+      (PUT "/api/urakat/:id/tyomaapaivakirja" request
+        ;; Odottaa saavansa versionumeron query parametrina
+        (let [versionumero (konv/konvertoi->int (get-in request [:params "api_version"]))]
+          (if (and versionumero (= 2 versionumero))
+            (kasittele-kutsu db
+              integraatioloki
+              :paivita-tyomaapaivakirja-v2
+              request
+              json-skeemat/tyomaapaivakirja-paivitys-v2-request
+              json-skeemat/tyomaapaivakirja-kirjaus-response
+              (fn [parametrit data kayttaja db]
+                (kirjaa-tyomaapaivakirja db parametrit data kayttaja false))
+              :kirjoitus)
+
+            ;; Palautetaan virhe ja komento käyttää uutta versiota
+            (tee-virhevastaus 403 [{:koodi "virheellinen-api-versio"
+                                    :viesti "Työmaapäiväkirjan päivitys http put metodilla ilman työmaapäiväkirjaid:tä olettaa saavansa query parametrina versionumeron.
+          Anna versionumero seuraavasti '/api/urakat/<urakkaid>/tyomaapaivakirja?api_version=2'"}] (get-in request [:headers "origin"])))))
       true)
 
     ;; ;; Deprikoituu 31.12.2025
@@ -499,7 +507,6 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
       :kirjaa-tyomaapaivakirja
-      :kirjaa-tyomaapaivakirja-v2
       :paivita-tyomaapaivakirja
       :hae-tyomaapaivakirjan-versiotiedot)
     this))
