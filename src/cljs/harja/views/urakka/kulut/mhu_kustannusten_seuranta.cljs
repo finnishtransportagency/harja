@@ -357,7 +357,7 @@
          (paaryhman-rivitys e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintakorvaus johto-ja-hallintokorvaukset rivit-paaryhmittain true)
          (paaryhman-rivitys e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio hoidonjohdonpalkkiot rivit-paaryhmittain true)
          (paaryhman-rivitys e! app "Erillishankinnat" :erillishankinnat erillishankinnat rivit-paaryhmittain true)
-         (paaryhman-rivitys e! app "Muut kulut" :muukulu-tavoitehintainen muukulut-tavoitehintainen rivit-paaryhmittain true)
+         (paaryhman-rivitys e! app "Muut kulut" :muukulu-tavoitehintainen muukulut-tavoitehintainen rivit-paaryhmittain false)
          ;; Näytetään tavoitehinnanoikaisut vain, jos niitä on oikeasti lisätty ja käytetty
          (when (> (count (get-in rivit-paaryhmittain [:tavoitehinnanoikaisu :tehtavat])) 0)
            (paaryhman-rivitys e! app "Tavoitehinnan oikaisut" :tavoitehinnanoikaisu tavoitehinnanoikaisut rivit-paaryhmittain true))

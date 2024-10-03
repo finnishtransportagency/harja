@@ -168,7 +168,7 @@
       (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-      (let [_ (Thread/sleep 1000)
+      (let [_ (odota-arvo viestit kuittaus-timeout)
             xml (first @viestit)
             data (xml/lue xml)]
         (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
@@ -216,7 +216,8 @@
        (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit-tloikkiin)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
        ;; Tarkista saapuneen ilmoituksen tila
-       (let [_ (odota-ehdon-tayttymista #(hae-ilmoitustoimenpide-ilmoitusidlla 123456789) "Toimenpide on tietokannassa." kuittaus-timeout)
+       (let [_ (odota-arvo kuittausviestit-tloikkiin kuittaus-timeout)
+             _ (odota-ehdon-tayttymista #(hae-ilmoitustoimenpide-ilmoitusidlla 123456789) "Toimenpide on tietokannassa." kuittaus-timeout)
              {:keys [status body] :as vastaus} @ilmoitushaku
              ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla 123456789)]
 
@@ -231,8 +232,7 @@
                   count) 1) "Ilmoituksia on vastauksessa yksi"))
 
        ;; Tarkista t-loikille lähetettävän kuittausviestin sisältö
-       (let [_ (Thread/sleep 1000)
-             _ (odota-arvo kuittausviestit-tloikkiin kuittaus-timeout)
+       (let [_ (odota-arvo kuittausviestit-tloikkiin kuittaus-timeout)
              xml (first @kuittausviestit-tloikkiin)
              data (xml/lue xml)]
          (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
@@ -293,21 +293,21 @@
                                             :loppu (t/now)
                                             :vastuuhenkilo true
                                             :varahenkilo true}))]
-      (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+      (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
             ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                    kayttaja portti))
             viesti-id (str (UUID/randomUUID))
             ilmoitus-id (rand-int 99999999)
-            sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
+            sijainti aineisto-toimenpidepyynnot/sijainti-rovaniemen-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
+
         (async/<!! (async/timeout timeout))
         (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
 
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
         (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-        (let [_ (Thread/sleep 1000)
-              _ (odota-arvo viestit kuittaus-timeout)
+        (let [_ (odota-arvo viestit kuittaus-timeout)
               xml (first @viestit)
               data (xml/lue xml)
               _ (odota-ehdon-tayttymista #(hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id) "Ilmoitus on tietokannassa." kuittaus-timeout)
@@ -361,20 +361,21 @@
                        :loppu (t/now)
                        :vastuuhenkilo true
                        :varahenkilo true}))]
-      (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+      (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
             ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                    kayttaja portti))
             viesti-id (str (UUID/randomUUID))
             ilmoitus-id (rand-int 99999999)
-            sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
+            sijainti aineisto-toimenpidepyynnot/sijainti-rovaniemen-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
+
         (async/<!! (async/timeout timeout))
         (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
 
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
         (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-        (let [_ (Thread/sleep 1500)
+        (let [_ (odota-arvo viestit kuittaus-timeout)
               xml (first @viestit)
               data (xml/lue xml)
               ilmoitus (hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
@@ -409,7 +410,7 @@
                                             :loppu (t/now)
                                             :vastuuhenkilo true
                                             :varahenkilo true}))]
-      (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+      (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
             ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                    kayttaja portti))
             ilmoitus-id (rand-int 99999999)
@@ -419,7 +420,7 @@
                            :ilmoittaja-sukunimi "kontakti"
                            :ilmoittaja-email "anonyymi.kontakti@example.com"
                            :ilmoittaja-tyyppi "urakoitsija" ;; Tämän toimivuus testataan tässä
-                           :sijainti-xml aineisto-toimenpidepyynnot/sijainti-oulun-alueella}]
+                           :sijainti-xml aineisto-toimenpidepyynnot/sijainti-rovaniemen-alueella}]
         (async/<!! (async/timeout timeout))
         (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-ilmoittaja-sanoma ilmoitus-data))
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)

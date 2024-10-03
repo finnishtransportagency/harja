@@ -1,5 +1,5 @@
 -- name: hae-urakan-kustannusarvioidut-tyot-nimineen
--- Lähes sama kuin hae-kustannusarvoidut-tyot mutta palauttaa tyypin, tehtavan, ja toimenpiteen nimet
+-- Haetaan kustannusarvioidut työt, joissa ei ole rahavarauksia mukana. Eli talvihoidon, liikenneympäristön hoidon, sorateiden hoidon yms.
 SELECT kat.id,
        kat.vuosi,
        kat.kuukausi,
@@ -16,7 +16,9 @@ SELECT kat.id,
            LEFT JOIN toimenpide tpik_tpi ON tpik_tpi.id = tpi.toimenpide
            LEFT JOIN tehtava tpik_t ON tpik_t.id = kat.tehtava
            LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
- WHERE tpi.urakka = :urakka;
+ WHERE tpi.urakka = :urakka
+   -- Jätetään rahavaraukset pois hausta
+   AND kat.rahavaraus_id IS NULL;
 
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!

@@ -371,7 +371,7 @@
 (defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko raportin-tiedot
                                                 viimeinen-rivi-yhteenveto? lista-tyyli?
                                                 sheet-nimi samalle-sheetille?
-                                                rivi-ennen rivi-jalkeen
+                                                rivi-ennen rivi-jalkeen hoitokausi-arvotaulukko?
                                                 lisaa-excel-valiotsikot] :as optiot}
                                       sarakkeet data] workbook]
   (try
@@ -432,38 +432,38 @@
       (taulukko-otsikkorivi otsikko-rivi sarakkeet workbook lista-tyyli?)
 
       (dorun
-        (map-indexed
-          (fn [rivi-nro rivi]
-            ;; Lisää väliotsikot mikäli nämä puuttuvat 
-            (let [lisatty-otsikko (when (and (:otsikko rivi) lisaa-excel-valiotsikot)
-                                    (taulukon-valiotsikko (:otsikko rivi) workbook))
-                  rivi-nro (+ nolla 1 rivi-nro)
-                  rivi-nro (if (= rivi-nro lisatty-otsikko) (inc rivi-nro) rivi-nro)
-                  [data optiot] (if (map? rivi)
-                                  [(:rivi rivi) rivi]
-                                  [rivi {}])
-                  row (.createRow sheet rivi-nro)]
-              (dorun
-                (map-indexed
-                  (fn [sarake-nro sarake]
-                    (let [cell (.createCell row sarake-nro)
-                          lihavoi? (or (:lihavoi? optiot)
-                                     (and viimeinen-rivi-yhteenveto?
-                                       (= rivi viimeinen-rivi)))
-                          korosta? (:korosta? optiot)
-                          korosta-hennosti? (:korosta-hennosti? optiot)
-                          varoitus? (:varoitus? optiot)
-                          huomio? (:huomio? optiot)
-                          korosta-harmaa? (:korosta-harmaa? optiot)
-                          arvo-datassa (nth data sarake-nro nil)
-                          ;; ui.yleiset/totuus-ikonin tuki toistaiseksi tämä
-                          arvo-datassa (if (= [:span.livicon-check] arvo-datassa)
-                                         "X"
-                                         arvo-datassa)
-                          sarake-fmt (:fmt sarake)
-                          solu-fmt (and (vector? arvo-datassa)
-                                     (:fmt (second arvo-datassa)))
-                          formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
+       (map-indexed
+        (fn [rivi-nro rivi]
+          ;; Lisää väliotsikot mikäli nämä puuttuvat 
+          (let [lisatty-otsikko (when (and (:otsikko rivi) lisaa-excel-valiotsikot)
+                                  (taulukon-valiotsikko (:otsikko rivi) workbook))
+                rivi-nro (+ nolla 1 rivi-nro)
+                rivi-nro (if (= rivi-nro lisatty-otsikko) (inc rivi-nro) rivi-nro)
+                [data optiot] (if (map? rivi)
+                                [(:rivi rivi) rivi]
+                                [rivi {}])
+                row (.createRow sheet rivi-nro)]
+            (dorun
+             (map-indexed
+               (fn [sarake-nro sarake]
+                 (let [cell (.createCell row sarake-nro)
+                       lihavoi? (or (:lihavoi? optiot)
+                                    (and viimeinen-rivi-yhteenveto?
+                                      (= rivi viimeinen-rivi)))
+                       korosta? (:korosta? optiot)
+                       korosta-hennosti? (:korosta-hennosti? optiot)
+                       varoitus? (:varoitus? optiot)
+                       huomio? (:huomio? optiot)
+                       korosta-harmaa? (:korosta-harmaa? optiot)
+                       arvo-datassa (nth data sarake-nro nil)
+                       ;; ui.yleiset/totuus-ikonin tuki toistaiseksi tämä
+                       arvo-datassa (if (= [:span.livicon-check] arvo-datassa)
+                                      "X"
+                                      arvo-datassa)
+                       sarake-fmt (:fmt sarake)
+                       solu-fmt (and (vector? arvo-datassa)
+                                  (:fmt (second arvo-datassa)))
+                       formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
 
                           oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
                           [naytettava-arvo solun-tyyli formaatti]

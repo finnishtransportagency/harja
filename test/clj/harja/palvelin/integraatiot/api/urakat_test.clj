@@ -73,16 +73,16 @@
           _ (anna-lukuoikeus "yit-rakennus")
           vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
                     {"urakkatyyppi" urakkatyyppi
-                     ;; Oulun lähiseutu (EPSG:3067)
-                     "x" 427232.596 "y" 7211474.342} portti)
+                     ;; Rovaniemen lähiseutu (EPSG:3067)
+                     "x" 445197 "y" 7376376} portti)
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
-      (is (= 2 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
+      (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
       (is (every?
             (fn [nimi]
               ;; Testataan löytyykö resultsetistä oikeat urakan nimet, mutta ei oteta MHU:ssa huomioon vuosilukuja,
               ;; jotka voivat vaihtua testidataa päivittäessä.
-              (some #(clojure.string/includes? nimi %) #{"Oulun MHU" "Aktiivinen Oulu Testi"}))
+              (some #(clojure.string/includes? nimi %) #{"Rovaniemen MHU" "Aktiivinen Oulu Testi"}))
             (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))
 
   (testing "Urakka ei sijaitse suomessa"
@@ -116,8 +116,8 @@
           fn-vastaus (fn [palauta-lahin-hoitourakka]
                        (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
                          {"urakkatyyppi" urakkatyyppi
-                          "x" 486225.3013260806    ;; Piste Pohjois-Pohjanmaan ulkopuolella  
-                          "y" 7086935.066015409
+                          "x" 362936.79209318693    ;; Piste Kolarissa
+                          "y" 7472377.554345913
                           "palauta-lahin-hoitourakka" palauta-lahin-hoitourakka} portti))
           
           ;; Palauta lähin hoitourakka == false 
@@ -135,7 +135,7 @@
       (is (= 200 (:status vastaus)))
       (is (every?
             (fn [nimi]
-              (some #(clojure.string/includes? nimi %) #{"Oulun MHU"}))
+              (some #(clojure.string/includes? nimi %) #{"Pellon MHU"}))
             (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))
 
   (testing "Urakkatyyppi: paallystys (sopimustyyppi = palvelusopimus)"
@@ -179,7 +179,7 @@
                      "x" 427232.596 "y" 7211474.342} portti)
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
-      (is (= 2 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))))
+      (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))))
 
   (testing "Käyttäjällä ei oikeuksia urakoihin"
     (let [_ (anna-kirjoitusoikeus "livi")

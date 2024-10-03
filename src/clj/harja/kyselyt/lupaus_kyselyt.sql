@@ -268,6 +268,7 @@ SELECT
   r.otsikko,
   r.jarjestys  AS "lupausryhma-jarjestys",
   l.id  AS "lupaus-id",
+  l.jarjestys  AS "lupaus-jarjestys",
 	l.kuvaus,
   l.pisteet,
   l.sisalto,
@@ -283,3 +284,4 @@ JOIN lupausryhma_urakka lu ON
 	r.id = lu."lupausryhma_id"
 WHERE
 	lu."urakka_id" = :urakka-id
+ORDER BY r.jarjestys, l.jarjestys;

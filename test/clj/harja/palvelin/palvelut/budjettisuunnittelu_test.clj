@@ -96,7 +96,7 @@
     (every? kokonainen-hoitokausi? (vals paivamaarat-hoitokausittain))))
 
 (deftest budjetoidut-tyot-haku
-  (let [{urakka-id :id urakan-alkupvm :alkupvm} (first (q-map "SELECT id, alkupvm FROM urakka WHERE nimi='Pellon MHU testiurakka (3. hoitovuosi)';"))
+  (let [{urakka-id :id urakan-alkupvm :alkupvm} (first (q-map "SELECT id, alkupvm FROM urakka WHERE nimi='Raahen MHU 2023-2028';"))
         budjetoidut-tyot (bs/hae-urakan-budjetoidut-tyot (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
         testaa-ajat (fn [tehtavat toimenpide]
                       (let [tehtavat-vuosittain (group-by :vuosi tehtavat)]
