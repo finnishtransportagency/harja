@@ -225,7 +225,7 @@
                               :content-type :json
                               :accect :json}
                       ;; Työmaapäiväkirjan päivitys käyttää http/put
-                      vastaus (<! (http/post (str "api/urakat/" urakkaid "/tyomaapaivakirja")
+                      vastaus (<! (http/post (str "api/urakat/" urakkaid "/tyomaapaivakirja?api_version=2")
                                     params))]
                   (if (k/virhe? vastaus)
                     (virhe!)
@@ -252,12 +252,13 @@
 
   HaeHallintayksikonUrakatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "HaeTROsoitteelleKoordinaatitOnnistui" :onnistui)
+    (viesti/nayta-toast! "HaeHallintayksikonUrakatOnnistui" :onnistui)
     (assoc app :mahdolliset-urakat vastaus))
 
   HaeHallintayksikonUrakatEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "HaeHallintayksikonUrakatEpaonnistui :: vastaus" (pr-str vastaus))
+    (js/console.error "HaeHallintayksikonUrakatEpaonnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeHallintayksikonUrakatEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
     (-> app
       (assoc :koordinaatit nil)
       (assoc :trhaku-kaynnissa? false)))
@@ -271,7 +272,8 @@
 
   HaeKayttajanOikeuksiaEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "HaeKayttajanOikeuksiaEpaonnistui :: vastaus" (pr-str vastaus))
+    (js/console.error "HaeKayttajanOikeuksiaEpaonnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeKayttajanOikeuksiaEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
     app)
 
   LisaaOikeudetUrakkaan
@@ -303,7 +305,7 @@
 
   LisaaOikeudetUrakkaanEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
+    (js/console.error "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
     app)
   
   LisaaKirjoitusOikeusOnnistui
