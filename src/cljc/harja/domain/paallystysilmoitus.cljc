@@ -87,7 +87,7 @@
    {:nimi "AN22" :koodi 7}])
 
 (def +kyylamyllyt-ja-nil+
-  (conj +kuulamyllyt+ {:nimi "Ei kuulamyllyä" :koodi nil}))
+  (conj +kuulamyllyt+  {:nimi "Ei tietoa" :koodi 9} {:nimi "Ei kuulamyllyä" :koodi nil}))
 
 (def +kuulamylly-tai-nil+ "Kuulamylly annetulla koodilla"
   (apply schema/enum (map :koodi +kyylamyllyt-ja-nil+)))

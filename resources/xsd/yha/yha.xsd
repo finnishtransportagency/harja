@@ -202,7 +202,7 @@
             <xs:element name="nimi" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
-                        <xs:maxLength value="30"/>
+                        <xs:maxLength value="50"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
@@ -234,7 +234,7 @@
             <xs:element name="nimi" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
-                        <xs:maxLength value="30"/>
+                        <xs:maxLength value="50"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
@@ -258,10 +258,10 @@
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
-            <xs:element name="alikohteet" nillable="false" minOccurs="1" maxOccurs="1">
+            <xs:element name="kulutuskerrokselle-tehdyt-toimet" nillable="false" minOccurs="1" maxOccurs="1">
                 <xs:complexType>
                     <xs:sequence>
-                        <xs:element name="alikohde" type="toteuma-alikohde" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element name="kulutuskerrokselle-tehty-toimenpide" type="kulutuskerrokselle-tehty-toimenpide" minOccurs="0" maxOccurs="unbounded"/>
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
@@ -276,24 +276,6 @@
             <xs:element name="keskimaarainen-vuorokausiliikenne" type="xs:int" minOccurs="0" maxOccurs="1"/>
             <xs:element name="yllapitoluokka" type="xs:int" minOccurs="0" maxOccurs="1"/>
             <xs:element name="nykyinen-paallyste" type="paallyste" minOccurs="0" maxOccurs="1"/>
-        </xs:sequence>
-    </xs:complexType>
-
-    <xs:complexType name="toteuma-alikohde">
-        <xs:sequence>
-            <xs:element name="yha-id" type="xs:long" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="poistettu" type="poistettu" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali-kaistalla-ja-ajoradalla" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="paallystystoimenpide" type="toteumapaallystystoimenpide" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="materiaalit" minOccurs="0" maxOccurs="1">
-                <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name="materiaali" type="materiaali" minOccurs="0" maxOccurs="unbounded">
-                        </xs:element>
-                    </xs:sequence>
-                </xs:complexType>
-            </xs:element>
         </xs:sequence>
     </xs:complexType>
 
@@ -341,45 +323,25 @@
         </xs:sequence>
     </xs:complexType>
 
-    <xs:complexType name="toteumapaallystystoimenpide">
-        <xs:complexContent>
-            <xs:extension base="paallystystoimenpide">
-                <xs:sequence>
-                    <xs:element name="leveys" type="xs:decimal" minOccurs="0" maxOccurs="1">
-                        <xs:annotation>
-                            <xs:documentation>
-                                Yksikkö: metri
-                            </xs:documentation>
-                        </xs:annotation>
-                    </xs:element>
-                    <xs:element name="pinta-ala" type="xs:decimal" minOccurs="0" maxOccurs="1">
-                        <xs:annotation>
-                            <xs:documentation>
-                                Yksikkö: neliömetri
-                            </xs:documentation>
-                        </xs:annotation>
-                    </xs:element>
-                </xs:sequence>
-            </xs:extension>
-        </xs:complexContent>
-    </xs:complexType>
-
-    <xs:complexType name="materiaali">
-        <xs:sequence>
-            <xs:element name="kiviainesesiintyman-nimi" type="xs:string" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="kiviaineksen-km-arvo" type="xs:string" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="kiviaineksen-muotoarvo" type="xs:string" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="sideainetyyppi" type="sideainetyyppi" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="sideainepitoisuus" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="lisa-aineet" type="xs:string" minOccurs="0" maxOccurs="1"/>
-        </xs:sequence>
-    </xs:complexType>
-
     <xs:complexType name="alustalle-tehty-toimenpide">
         <xs:sequence>
+            <xs:element name="harja-id" type="xs:long" nillable="false" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Harjan alustatoimenpiteen ID.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali-kaistalla-ja-ajoradalla" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="kasittelymenetelma" type="alustamenetelma" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="kasittelypaksuus" type="xs:short" nillable="true" minOccurs="0" maxOccurs="1">
+            <xs:element name="lisatty-paksuus" type="xs:short" nillable="true" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: senttimetri
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="kasittelysyvyys" type="xs:short" nillable="true" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>
                         Yksikkö: senttimetri
@@ -389,7 +351,6 @@
             <xs:element name="verkkotyyppi" type="alustan-verkkotyyppi" nillable="true" minOccurs="0" maxOccurs="1"/>
             <xs:element name="verkon-tarkoitus" type="alustan-verkon-tarkoitus" nillable="true" minOccurs="0" maxOccurs="1"/>
             <xs:element name="verkon-sijainti" type="alustan-verkon-sijainti" nillable="true" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="tekninen-toimenpide" type="alustan-tekninen-toimenpide" minOccurs="0" maxOccurs="1"/>
             <xs:element name="massamenekki" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:annotation>
@@ -400,6 +361,291 @@
                     <xs:restriction base="xs:decimal">
                         <xs:minInclusive value="0"/>
                         <xs:maxInclusive value="999"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="kokonaismassamaara" nillable="true" minOccurs="0" type="xs:decimal">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: tonni
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="massa" type="massa" nillable="true" minOccurs="0"/>
+            <xs:element name="murske" type="murske" nillable="true" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="kulutuskerrokselle-tehty-toimenpide">
+        <xs:sequence>
+            <xs:element name="yha-id" type="xs:long" nillable="true" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        YHA:sta saadun vastaavan alikohteen ID. Puuttuu, jos luotu harjassa.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="harja-id" type="xs:long" nillable="false" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Harjan alikohteen/kohdeosan ID.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="poistettu" type="xs:boolean" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali-kaistalla-ja-ajoradalla"/>
+            <xs:element name="leveys" type="xs:decimal" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: metri
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="pinta-ala" type="xs:decimal" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: neliömetri
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="paallystetyomenetelma" type="paallystetyomenetelma"/>
+            <xs:element name="massamenekki" minOccurs="0">
+                <xs:simpleType>
+                    <xs:annotation>
+                        <xs:documentation>
+                            Yksikkö: kg/m2
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:restriction base="xs:decimal">
+                        <xs:minInclusive value="0"/>
+                        <xs:maxInclusive value="999"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="rc-prosentti" minOccurs="0" maxOccurs="1">
+                <xs:simpleType>
+                    <xs:restriction base="xs:decimal">
+                        <xs:minInclusive value="0"/>
+                        <xs:maxInclusive value="100"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="kokonaismassamaara" nillable="true" minOccurs="0" type="xs:decimal">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: tonni
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="massa" type="massa" nillable="true" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="massa">
+        <xs:sequence>
+            <xs:element name="massatyyppi" type="massatyyppi"/>
+            <xs:element name="max-raekoko">
+                <xs:simpleType>
+                    <xs:restriction base="xs:int">
+                        <xs:enumeration value="5"/>
+                        <xs:enumeration value="8"/>
+                        <xs:enumeration value="11"/>
+                        <xs:enumeration value="16"/>
+                        <xs:enumeration value="22"/>
+                        <xs:enumeration value="31"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="kuulamyllyluokka" type="kuulamylly" nillable="true" minOccurs="0"/>
+            <xs:element name="yhteenlaskettu-kuulamyllyarvo" type="xs:decimal" nillable="true" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        Runkoaineiden kuulamyllyarvojen painotettu keskiarvo
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="yhteenlaskettu-litteysluku" type="xs:decimal" nillable="true" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        Runkoaineiden litteyslukujen painotettu keskiarvo
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="litteyslukuluokka" nillable="true" minOccurs="0">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="FI10"/>
+                        <xs:enumeration value="FI15"/>
+                        <xs:enumeration value="FI20"/>
+                        <xs:enumeration value="FI35"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="runkoaineet">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="runkoaine" type="runkoaine" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="sideaineet">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="sideaine" type="sideaine" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="lisaaineet" nillable="true" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="lisaaine" type="lisaaine" nillable="true" minOccurs="0"
+                                    maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="murske">
+        <xs:sequence>
+            <xs:element name="mursketyyppi" type="mursketyyppi"/>
+            <xs:element name="rakeisuus" type="xs:string"/>
+            <xs:element name="iskunkestavyys">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="LA30"/>
+                        <xs:enumeration value="LA35"/>
+                        <xs:enumeration value="LA40"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <xs:complexType name="runkoaine">
+        <xs:sequence>
+            <xs:element name="runkoainetyyppi">
+                <xs:simpleType>
+                    <xs:restriction base="xs:integer">
+                        <xs:enumeration value="1">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Kiviaines
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:enumeration>
+                        <xs:enumeration value="2">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Asfalttirouhe
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:enumeration>
+                        <xs:enumeration value="3">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Erikseen lisättävä fillerikiviaines
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:enumeration>
+                        <xs:enumeration value="4">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Masuunikuomajauhe
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:enumeration>
+                        <xs:enumeration value="5">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Ferrokromikuona (OKTO)
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:enumeration>
+                        <xs:enumeration value="6">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Teräskuona
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:enumeration>
+                        <xs:enumeration value="7">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Muu
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:enumeration>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="kuulamyllyarvo" nillable="true" minOccurs="0">
+                <xs:simpleType>
+                    <xs:restriction base="xs:decimal"/>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="litteysluku" nillable="true" minOccurs="0">
+                <xs:simpleType>
+                    <xs:restriction base="xs:decimal"/>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="massaprosentti">
+                <xs:annotation>
+                    <xs:documentation>
+                        Prosentuaalinen osuus massasta, aiemmin asfalttirouheen osalta rc-prosentti
+                    </xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:decimal"/>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="fillerityyppi" nillable="true" minOccurs="0">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="Kalkkifilleri (KF)"/>
+                        <xs:enumeration value="Lentotuhka (LT)"/>
+                        <xs:enumeration value="Muu fillerikiviaines"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="kuvaus" nillable="true" minOccurs="0">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string"/>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+
+    </xs:complexType>
+
+    <xs:complexType name="sideaine">
+        <xs:sequence>
+            <xs:element name="tyyppi" type="sideainetyyppi"/>
+            <xs:element name="pitoisuus">
+                <xs:simpleType>
+                    <xs:restriction base="xs:decimal">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Sideaineen pitoisuus prosentteina
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="lisaaine">
+        <xs:sequence>
+            <xs:element name="tyyppi" type="lisaainetyyppi"/>
+            <xs:element name="pitoisuus">
+                <xs:simpleType>
+                    <xs:restriction base="xs:decimal">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Lisäaineen pitoisuus prosentteina
+                            </xs:documentation>
+                        </xs:annotation>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
@@ -604,27 +850,27 @@
             </xs:enumeration>
             <xs:enumeration value="3">
                 <xs:annotation>
-                    <xs:documentation>N10</xs:documentation>
+                    <xs:documentation>AN10</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="4">
                 <xs:annotation>
-                    <xs:documentation>N14</xs:documentation>
+                    <xs:documentation>AN14</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="5">
                 <xs:annotation>
-                    <xs:documentation>N19</xs:documentation>
+                    <xs:documentation>AN19</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="6">
                 <xs:annotation>
-                    <xs:documentation>N30</xs:documentation>
+                    <xs:documentation>AN30</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="7">
                 <xs:annotation>
-                    <xs:documentation>N22</xs:documentation>
+                    <xs:documentation>AN22</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="9">
@@ -942,151 +1188,203 @@
             </xs:enumeration>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="alustan-tekninen-toimenpide">
-        <xs:restriction base="xs:integer">
-            <xs:enumeration value="1">
-                <xs:annotation>
-                    <xs:documentation>rakentaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="2">
-                <xs:annotation>
-                    <xs:documentation>suuntauksen parantaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="3">
-                <xs:annotation>
-                    <xs:documentation>rakenteen parantaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="4">
-                <xs:annotation>
-                    <xs:documentation>kevyt rakenteen parantaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="9">
-                <xs:annotation>
-                    <xs:documentation>ei tietoa</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-        </xs:restriction>
-    </xs:simpleType>
 
     <xs:simpleType name="sideainetyyppi">
         <xs:restriction base="xs:integer">
             <xs:enumeration value="1">
                 <xs:annotation>
-                    <xs:documentation>20/30</xs:documentation>
+                    <xs:documentation>Bitumi, 20/30</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="2">
                 <xs:annotation>
-                    <xs:documentation>35/50</xs:documentation>
+                    <xs:documentation>Bitumi, 35/50</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="3">
                 <xs:annotation>
-                    <xs:documentation>50/70</xs:documentation>
+                    <xs:documentation>Bitumi, 50/70</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="4">
                 <xs:annotation>
-                    <xs:documentation>70/100</xs:documentation>
+                    <xs:documentation>Bitumi, 70/100</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="5">
                 <xs:annotation>
-                    <xs:documentation>100/150</xs:documentation>
+                    <xs:documentation>Bitumi, 100/150</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="6">
                 <xs:annotation>
-                    <xs:documentation>160/220</xs:documentation>
+                    <xs:documentation>Bitumi, 160/220</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="7">
                 <xs:annotation>
-                    <xs:documentation>250/330</xs:documentation>
+                    <xs:documentation>Bitumi, 250/330</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="8">
                 <xs:annotation>
-                    <xs:documentation>330/430</xs:documentation>
+                    <xs:documentation>Bitumi, 330/430</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="9">
                 <xs:annotation>
-                    <xs:documentation>500/650</xs:documentation>
+                    <xs:documentation>Bitumi, 500/650</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="10">
                 <xs:annotation>
-                    <xs:documentation>650/900</xs:documentation>
+                    <xs:documentation>Bitumi, 650/900</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="11">
                 <xs:annotation>
-                    <xs:documentation>V1500</xs:documentation>
+                    <xs:documentation>Bitumi, V1500</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="12">
                 <xs:annotation>
-                    <xs:documentation>V3000</xs:documentation>
+                    <xs:documentation>Bitumi, V3000</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="13">
                 <xs:annotation>
-                    <xs:documentation>KB65</xs:documentation>
+                    <xs:documentation>Polymeerimodifioitu bitumi, PMB 75/130-65</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="14">
                 <xs:annotation>
-                    <xs:documentation>KB75</xs:documentation>
+                    <xs:documentation>Polymeerimodifioitu bitumi, PMB 75/130-70</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="15">
                 <xs:annotation>
-                    <xs:documentation>KB85</xs:documentation>
+                    <xs:documentation>Polymeerimodifioitu bitumi, PMB 40/100-70</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="16">
                 <xs:annotation>
-                    <xs:documentation>BL5</xs:documentation>
+                    <xs:documentation>Polymeerimodifioitu bitumi, PMB 40/100-75</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="17">
                 <xs:annotation>
-                    <xs:documentation>BL2K</xs:documentation>
+                    <xs:documentation>Bitumiliuokset ja fluksatut bitumit, BL0</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="18">
                 <xs:annotation>
-                    <xs:documentation>BL2 Bio</xs:documentation>
+                    <xs:documentation>Bitumiliuokset ja fluksatut bitumit, BL5</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="19">
                 <xs:annotation>
-                    <xs:documentation>BE-L</xs:documentation>
+                    <xs:documentation>Bitumiliuokset ja fluksatut bitumit, BL2Bio</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="20">
                 <xs:annotation>
-                    <xs:documentation>BE-SIP</xs:documentation>
+                    <xs:documentation>Bitumiemulsiot, BE-L</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="21">
                 <xs:annotation>
-                    <xs:documentation>BE-SOP</xs:documentation>
+                    <xs:documentation>Bitumiemulsiot, PBE-L</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="22">
                 <xs:annotation>
-                    <xs:documentation>BE-PAB</xs:documentation>
+                    <xs:documentation>Bitumiemulsiot, BE-SIP</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="23">
+                <xs:annotation>
+                    <xs:documentation>Bitumiemulsiot, BE-SOP</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="24">
+                <xs:annotation>
+                    <xs:documentation>Bitumiemulsiot, BE-AB</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="25">
+                <xs:annotation>
+                    <xs:documentation>Bitumiemulsiot, BE-PAB</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="26">
+                <xs:annotation>
+                    <xs:documentation>KF, Kalkkifilleri</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="99">
                 <xs:annotation>
                     <xs:documentation>Ei tietoa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="lisaainetyyppi">
+        <xs:restriction base="xs:integer">
+            <xs:enumeration value="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Kuitu
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="2">
+                <xs:annotation>
+                    <xs:documentation>
+                        Tartuke
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="3">
+                <xs:annotation>
+                    <xs:documentation>
+                        Sementti
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="4">
+                <xs:annotation>
+                    <xs:documentation>
+                        Bitumikaterouhe
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="5">
+                <xs:annotation>
+                    <xs:documentation>
+                        Kumi- tai muovirouhe
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="6">
+                <xs:annotation>
+                    <xs:documentation>
+                        Väriaine
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="7">
+                <xs:annotation>
+                    <xs:documentation>
+                        Muu kemiallinen aine
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="99">
+                <xs:annotation>
+                    <xs:documentation>
+                        Ei tietoa
+                    </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
         </xs:restriction>
@@ -1114,4 +1412,160 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <xs:simpleType name="massatyyppi">
+        <xs:restriction base="xs:int">
+            <xs:enumeration value="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        BET, Betoni
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="11">
+                <xs:annotation>
+                    <xs:documentation>
+                        AA, Avoin asfaltti
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="12">
+                <xs:annotation>
+                    <xs:documentation>
+                        AB, Asfalttibetoni
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="13">
+                <xs:annotation>
+                    <xs:documentation>
+                        EA, Epäjatkuva asfaltti (poistunut)
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="14">
+                <xs:annotation>
+                    <xs:documentation>
+                        SMA, Kivimastiksiasfaltti
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="15">
+                <xs:annotation>
+                    <xs:documentation>
+                        ABK, Kantavan kerroksen AB
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="16">
+                <xs:annotation>
+                    <xs:documentation>
+                        ABS, Sidekerroksen AB
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="17">
+                <xs:annotation>
+                    <xs:documentation>
+                        VA, Valuasfaltti
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="21">
+                <xs:annotation>
+                    <xs:documentation>
+                        PAB-B, Pehmeät asfalttibetonit
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="22">
+                <xs:annotation>
+                    <xs:documentation>
+                        PAB-V, Pehmeät asfalttibetonit
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="23">
+                <xs:annotation>
+                    <xs:documentation>
+                        PAB-O, Pehmeät asfalttibetonit
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="99">
+                <xs:annotation>
+                    <xs:documentation>
+                        Ei tietoa
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="566">
+                <xs:annotation>
+                    <xs:documentation>
+                        EAB, Asfalttibetoni
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="567">
+                <xs:annotation>
+                    <xs:documentation>
+                        ABtiivis
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="568">
+                <xs:annotation>
+                    <xs:documentation>
+                        EABK, Kantavan kerroksen EAB
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="569">
+                <xs:annotation>
+                    <xs:documentation>
+                        EPAB-B, Pehmeät E asfalttibetonit
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="570">
+                <xs:annotation>
+                    <xs:documentation>
+                        EPAB-V, Pehmeät asfalttibetonit
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="571">
+                <xs:annotation>
+                    <xs:documentation>
+                        Komposiittiasfaltti
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="mursketyyppi">
+        <xs:restriction base="xs:int">
+            <xs:enumeration value="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Kalliomurske
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="2">
+                <xs:annotation>
+                    <xs:documentation>
+                        Sorastusmurske
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="3">
+                <xs:annotation>
+                    <xs:documentation>
+                        (UUSIO) RA, Asfalttirouhe
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
 </xs:schema>

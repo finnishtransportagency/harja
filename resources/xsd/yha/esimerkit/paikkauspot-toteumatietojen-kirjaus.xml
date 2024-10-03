@@ -27,6 +27,7 @@
                 </tierekisteriosoitevali>
                 <alustalle-tehdyt-toimet>
                     <alustalle-tehty-toimenpide>
+                        <harja-id>7</harja-id>
                         <tierekisteriosoitevali>
                             <karttapaivamaara>2022-12-13</karttapaivamaara>
                             <tienumero>4</tienumero>
@@ -38,14 +39,18 @@
                             <kaista>11</kaista>
                         </tierekisteriosoitevali>
                         <kasittelymenetelma>23</kasittelymenetelma>
-                        <kasittelypaksuus>5</kasittelypaksuus>
-                        <tekninen-toimenpide>4</tekninen-toimenpide>
+                        <lisatty-paksuus>5</lisatty-paksuus>
+                        <murske>
+                            <mursketyyppi>1</mursketyyppi>
+                            <rakeisuus>0/40</rakeisuus>
+                            <iskunkestavyys>LA30</iskunkestavyys>
+                        </murske>
                     </alustalle-tehty-toimenpide>
                 </alustalle-tehdyt-toimet>
-                <alikohteet>
-                    <alikohde>
+                <kulutuskerrokselle-tehdyt-toimet>
+                    <kulutuskerrokselle-tehty-toimenpide>
                         <harja-id>44</harja-id>
-                        <poistettu>0</poistettu>
+                        <poistettu>false</poistettu>
                         <tierekisteriosoitevali>
                             <karttapaivamaara>2022-12-13</karttapaivamaara>
                             <tienumero>4</tienumero>
@@ -56,28 +61,40 @@
                             <ajorata>1</ajorata>
                             <kaista>11</kaista>
                         </tierekisteriosoitevali>
-                        <paallystystoimenpide>
-                            <uusi-paallyste>21</uusi-paallyste>
-                            <raekoko>11</raekoko>
-                            <massamenekki>85.4</massamenekki>
-                            <kokonaismassamaara>34</kokonaismassamaara>
-                            <kuulamylly>4</kuulamylly>
-                            <paallystetyomenetelma>12</paallystetyomenetelma>
-                            <leveys>2.00</leveys>
-                            <pinta-ala>398</pinta-ala>
-                        </paallystystoimenpide>
-                        <materiaalit>
-                            <materiaali>
-                                <kiviainesesiintyman-nimi>Suolakallio</kiviainesesiintyman-nimi>
-                                <kiviaineksen-km-arvo>12.0</kiviaineksen-km-arvo>
-                                <kiviaineksen-muotoarvo>FI15</kiviaineksen-muotoarvo>
-                                <sideainetyyppi>8</sideainetyyppi>
-                                <sideainepitoisuus>2.8</sideainepitoisuus>
-                                <lisa-aineet>Tartuke: 0.3%</lisa-aineet>
-                            </materiaali>
-                        </materiaalit>
-                    </alikohde>
-                </alikohteet>
+                        <leveys>2.00</leveys>
+                        <pinta-ala>398</pinta-ala>
+                        <paallystetyomenetelma>12</paallystetyomenetelma>
+                        <massamenekki>85.4</massamenekki>
+                        <kokonaismassamaara>34</kokonaismassamaara>
+                        <massa>
+                            <massatyyppi>21</massatyyppi>
+                            <max-raekoko>11</max-raekoko>
+                            <kuulamyllyluokka>4</kuulamyllyluokka>
+                            <litteyslukuluokka>FI15</litteyslukuluokka>
+                            <runkoaineet>
+                                <runkoaine>
+                                    <runkoainetyyppi>1</runkoainetyyppi>
+                                    <kuulamyllyarvo>12.0</kuulamyllyarvo>
+                                    <litteysluku>8.5</litteysluku>
+                                    <massaprosentti>55.0</massaprosentti>
+                                    <kuvaus>Kelpo runkoaine tämä.</kuvaus>
+                                </runkoaine>
+                            </runkoaineet>
+                            <sideaineet>
+                                <sideaine>
+                                    <tyyppi>8</tyyppi>
+                                    <pitoisuus>2.8</pitoisuus>
+                                </sideaine>
+                            </sideaineet>
+                            <lisaaineet>
+                                <lisaaine>
+                                    <tyyppi>2</tyyppi>
+                                    <pitoisuus>0.3</pitoisuus>
+                                </lisaaine>
+                            </lisaaineet>
+                        </massa>
+                    </kulutuskerrokselle-tehty-toimenpide>
+                </kulutuskerrokselle-tehdyt-toimet>
             </kohde>
         </kohteet>
     </urakka>

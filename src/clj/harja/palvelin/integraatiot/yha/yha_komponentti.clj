@@ -1,9 +1,15 @@
 (ns harja.palvelin.integraatiot.yha.yha-komponentti
-  (:require [com.stuartsierra.component :as component]
-            [hiccup.core :refer [html]]
-            [taoensso.timbre :as log]
-            [harja.domain.paallystysilmoitus :as pot-domain]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.set :as set]
+            [clojure.string :as clj-str]
+            [com.stuartsierra.component :as component]
+            [harja.domain.pot2 :as pot2-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
+            [harja.kyselyt.yha :as q-yha-tiedot]
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.yha.sanomat
              [urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus]
@@ -11,16 +17,11 @@
              [kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
              [kohteen-lahetysvastaussanoma :as kohteen-lahetysvastaussanoma]
              [kohteen-poistovastaussanoma :as kohteen-poistovastaussanoma]]
-            [harja.kyselyt.yha :as q-yha-tiedot]
-            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
-            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
-            [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konv]
-            [clojure.string :as clj-str]
-            [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yha-yhteiset :as yha-yhteiset]
-            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
+            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
+            [harja.pvm :as pvm]
+            [harja.tyokalut.dev-tyokalut :as dev-tyokalut]
+            [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -80,8 +81,8 @@
   (mapv (fn [{:keys [kohde-yha-id selite]}]
           (str (when kohde-yha-id
                  (let [{:keys [nimi tunnus kohdenumero]} (some #(when (= (:yhaid %) kohde-yha-id)
-                                                      %)
-                                                   virheellisen-kohteen-tiedot)]
+                                                                  %)
+                                                           virheellisen-kohteen-tiedot)]
                    (str "Kohde id: " kohde-yha-id
                         (when kohdenumero
                           (str ", kohdenumero: " kohdenumero))
@@ -154,45 +155,64 @@
                                             (apply max (konv/pgarray->vector vuodet))))]
     (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
 
-(defn hae-alikohteet [db kohde-id paallystysilmoitus]
-  (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
-        osoitteet (if (= (:versio paallystysilmoitus) 2)
-                    (map
-                      (fn [rivi]
-                        (assoc rivi :kuulamylly (pot-domain/kuulamylly-koodi-nimella (:kuulamyllyluokka rivi))
-                                    :raekoko (:max-raekoko rivi)))
-                      (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)}))
-                    (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))]
-    (mapv (fn [alikohde]
-            (let [id (:id alikohde)
-                  ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))]
-              (apply merge ilmoitustiedot alikohde)))
-          alikohteet)))
 
-(defn hae-kohteen-tiedot [db kohde-id]
+(defn muodosta-alustatoimenpide [alustatoimenpide]
+  (-> alustatoimenpide
+    (update :massat #(-> (konv/sarakkeet-vektoriin % {:runkoaine :runkoaineet
+                                                      :lisaaine :lisaaineet
+                                                      :sideaine :sideaineet})
+                       (first)))
+    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa))
+                                  (-> massa
+                                    (assoc :yhteenlaskettu-kuulamyllyarvo (pot2-domain/laske-painotettu-keskiarvo (:runkoaineet massa) :massaprosentti :kuulamyllyarvo))
+                                    (assoc :yhteenlaskettu-litteysluku (pot2-domain/laske-painotettu-keskiarvo (:runkoaineet massa) :massaprosentti :litteysluku))))))
+    (update :murske (fn [murske] (when-not (nil? (:tyyppi murske)) murske)))
+    (set/rename-keys {:massat :massa})))
+
+
+(defn hae-alustarivit [db paallystysilmoitus]
+  (as->
+    (q-paallystys/hae-pot2-alustarivit db
+      {:pot2_id (:id paallystysilmoitus)}) atp
+    (konv/sarakkeet-vektoriin (map konv/alaviiva->rakenne atp)
+      {:massa :massat})
+    (map muodosta-alustatoimenpide atp)))
+
+
+(defn muodosta-kulutuskerrostoimenpide [kulutuskerrostoimenpide]
+  (-> kulutuskerrostoimenpide
+    (update :massat #(->
+                       (konv/sarakkeet-vektoriin % {:runkoaine :runkoaineet
+                                                    :lisaaine :lisaaineet
+                                                    :sideaine :sideaineet})
+                       (first)))
+    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
+    (set/rename-keys {:massat :massa})))
+
+(defn hae-kulutuskerrosrivit [db paallystysilmoitus]
+  (as->
+    (q-paallystys/hae-pot2-kulutuskerrokset db
+      {:pot2_id (:id paallystysilmoitus)}) kktp
+    (konv/sarakkeet-vektoriin (map konv/alaviiva->rakenne kktp)
+      {:massa :massat} :alikohde)
+    (map muodosta-kulutuskerrostoimenpide kktp)))
+
+(defn hae-kohteen-tiedot-pot2 [db kohde-id]
   (if-let [kohde (-> (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
-                     first
-                     ;; Uudessa YHA-mallissa pääkohteella ei ole ajorataa taikka kaistaa
-                     (dissoc :tr-ajorata :tr-kaista))]
+                   first
+                     ;; YHA-skeemassa pääkohteella ei ole ajorataa taikka kaistaa
+                   (dissoc :tr-ajorata :tr-kaista))]
     (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
                                    db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
           paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
           paallystysilmoitus (if (yllapitokohde-domain/eritellyt-maaramuutokset-kaytossa? (:vuodet paallystysilmoitus))
                                (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
                                paallystysilmoitus)
-          paallystysilmoitus (if (= (:versio paallystysilmoitus) 2)
-                               (let [keep-some (fn [map-jossa-on-nil]
-                                                 (into {} (filter
-                                                            (fn [[_ arvo]] (some? arvo))
-                                                            map-jossa-on-nil)))
-                                     alustatoimet (->> (q-paallystys/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})
-                                                       (map keep-some)
-                                                       (into []))]
-                                 (assoc-in paallystysilmoitus [:ilmoitustiedot :alustatoimet] alustatoimet))
-                               paallystysilmoitus)
-          alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
+          alustatp  (hae-alustarivit db paallystysilmoitus)
+          kulutuskerrostp (hae-kulutuskerrosrivit db paallystysilmoitus)]
       {:kohde kohde
-       :alikohteet alikohteet
+       :alustalle-tehdyt-toimet alustatp
+       :kulutuskerrokselle-tehdyt-toimet kulutuskerrostp
        :paallystysilmoitus paallystysilmoitus})
     (let [virhe (format "Tuntematon kohde (id: %s)." kohde-id)]
       (log/error virhe)
@@ -268,7 +288,7 @@
         (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
           (let [urakka (assoc urakka :harjaid urakka-id
                                      :sampoid (yhaan-lahetettava-sampoid urakka))
-                kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
+                kohteet (mapv #(hae-kohteen-tiedot-pot2 db %) kohde-idt)
                 url (str url "toteumatiedot")
                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
                 otsikot (yha-yhteiset/yha-otsikot api-key false)
@@ -322,3 +342,19 @@
     (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt))
   (poista-kohde [this yha-kohde-id]
     (poista-kohde-yhasta (:integraatioloki this) (:db this) asetukset yha-kohde-id)))
+
+
+(comment
+  (defn kirjoita-urakan-pot2-kohteet-tiedostoon
+    "Funktiolla on generoitu testi xml-tiedostoja YHA:lle"
+    [urakka-id] (let [db (:db harja.palvelin.main/harja-jarjestelma)
+                      urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))
+                      urakka (assoc urakka :harjaid urakka-id
+                               :sampoid (yhaan-lahetettava-sampoid urakka))
+                      kohde-idt  (repl-tyokalut/q (str "SELECT id FROM yllapitokohde WHERE urakka =" urakka-id " and vuodet @> ARRAY [2023]"))
+                      _ (prn "kohde-idt" kohde-idt)
+                      kohteet (mapv #(hae-kohteen-tiedot-pot2 db %) kohde-idt)
+                      sanomat  (kohteen-lahetyssanoma/muodosta urakka kohteet)
+                      _ (dev-tyokalut/kirjoita-tiedostoon sanomat (str "urakka-" urakka-id "-2023-kaikki") true ".xml")
+                      _ (prn "kirjoitettu tiedostoon!")]))
+  (kirjoita-urakan-pot2-kohteet-tiedostoon 575))

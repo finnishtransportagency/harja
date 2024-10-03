@@ -13,7 +13,7 @@
             "kaista": 1,
             "ajorata": 1
           },
-          "harjaId": 46,
+          "harjaId": 49,
           "paallystystoimenpide": {
             "paallystetyomenetelma": "Ei menetelmää"
           },
@@ -31,7 +31,7 @@
             "kaista": 1,
             "ajorata": 1
           },
-          "harjaId": 47,
+          "harjaId": 50,
           "paallystystoimenpide": {
             "paallystetyomenetelma": "Ei menetelmää"
           },
@@ -49,7 +49,7 @@
             "kaista": 1,
             "ajorata": 1
           },
-          "harjaId": 48,
+          "harjaId": 51,
           "paallystystoimenpide": {
             "paallystetyomenetelma": "Ei menetelmää"
           },
@@ -68,9 +68,9 @@
       },
       "kohdetyyppi": "paallystys",
       "tunnus": "ANALYTIIKKA1",
-      "urakka": 53,
+      "urakka": 54,
       "nimi": "Kirkonkylä - Toppinen",
-      "harjaId": 33,
+      "harjaId": 35,
       "poistettu": false,
       "yhaId": 1234,
       "pituus": 1300,
