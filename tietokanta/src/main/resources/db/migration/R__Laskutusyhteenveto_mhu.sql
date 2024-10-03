@@ -762,7 +762,6 @@ BEGIN
                     AND tpi.id = t.tpi
                     AND lk.poistettu IS NOT TRUE
                     AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-                    AND lk.maksueratyyppi IN ('akillinen-hoitotyo', 'muu')
             LOOP
               IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
                   -- Rahavaraus X Hoitokausi yhteensä 
