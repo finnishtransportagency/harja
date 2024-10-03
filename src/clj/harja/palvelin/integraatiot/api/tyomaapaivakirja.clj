@@ -430,33 +430,34 @@
 (defrecord Tyomaapaivakirja []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    ;; Deprikoituu 31.12.2025
     (julkaise-reitti
       http :kirjaa-tyomaapaivakirja
       (POST "/api/urakat/:id/tyomaapaivakirja" request
-        (if (and
-              (get-in request [:params "api_version"])
-              (= 2 (get-in request [:params "api_version"])))
-          ;; Versio 2
-          (kasittele-kutsu db
-            integraatioloki
-            :kirjaa-tyomaapaivakirja-v2
-            request
-            json-skeemat/tyomaapaivakirja-kirjaus-v2-request
-            json-skeemat/tyomaapaivakirja-kirjaus-response
-            (fn [parametrit data kayttaja db]
-              (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
-            :kirjoitus)
-          ;; Versio 1 - Deprikoituu 31.12.2025
-          (kasittele-kutsu db
-            integraatioloki
-            :kirjaa-tyomaapaivakirja
-            request
-            json-skeemat/tyomaapaivakirja-kirjaus-request
-            json-skeemat/tyomaapaivakirja-kirjaus-response
-            (fn [parametrit data kayttaja db]
-              (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
-            :kirjoitus)))
+        ;; Jos query parametrina lisätään versio 2 tai jos nykyhetki on myöhemmin, kuin 31.12.2025 niin käytetään versiota 2
+        (let [versionumero (konv/konvertoi->int (get-in request [:params "api_version"]))]
+          (if (or
+                (and versionumero (= 2 versionumero))
+                (pvm/sama-tai-jalkeen? (pvm/nyt) (pvm/->pvm "01.01.2026")))
+            ;; Versio 2
+            (kasittele-kutsu db
+              integraatioloki
+              :kirjaa-tyomaapaivakirja-v2
+              request
+              json-skeemat/tyomaapaivakirja-kirjaus-v2-request
+              json-skeemat/tyomaapaivakirja-kirjaus-response
+              (fn [parametrit data kayttaja db]
+                (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
+              :kirjoitus)
+            ;; Versio 1 - Deprikoituu 31.12.2025
+            (kasittele-kutsu db
+              integraatioloki
+              :kirjaa-tyomaapaivakirja
+              request
+              json-skeemat/tyomaapaivakirja-kirjaus-request
+              json-skeemat/tyomaapaivakirja-kirjaus-response
+              (fn [parametrit data kayttaja db]
+                (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
+              :kirjoitus))))
       true)
 
     ;; Korvaa vanhan päivitysrajapinnnan
@@ -466,7 +467,9 @@
       (PUT "/api/urakat/:id/tyomaapaivakirja" request
         ;; Odottaa saavansa versionumeron query parametrina
         (let [versionumero (konv/konvertoi->int (get-in request [:params "api_version"]))]
-          (if (and versionumero (= 2 versionumero))
+          (if (or
+                (and versionumero (= 2 versionumero))
+                (pvm/sama-tai-jalkeen? (pvm/nyt) (pvm/->pvm "01.01.2026")))
             (kasittele-kutsu db
               integraatioloki
               :paivita-tyomaapaivakirja-v2

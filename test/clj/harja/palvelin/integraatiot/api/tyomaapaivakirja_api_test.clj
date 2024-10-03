@@ -4,6 +4,7 @@
             [cheshire.core :as cheshire]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date sql-timestamp-str->utc-timestr]]
+            [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [clojure.test :refer :all]
             [slingshot.test :refer :all]
@@ -589,8 +590,34 @@
         vastaus-body (cheshire/decode (:body vastaus) true)]
     (is (= "puutteelliset-parametrit" (get-in vastaus-body [:virheet 0 :virhe :koodi])))))
 
+(deftest varmista-deprikoituva-post-versio-1-kysely-onnistuu
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        paivamaara "2023-05-30"
+        ulkoinenid "12345"
+        urakoitsija (first (q-map (format "SELECT ytunnus, nimi FROM organisaatio WHERE nimi = '%s';" "YIT Rakennus Oy")))
+        ;; 1. Tallenna ensin typa
+        typa (-> "test/resurssit/api/tyomaapaivakirja-kirjaus.json"
+               slurp
+               (.replace "__URAKOITSIJA__" (:nimi urakoitsija))
+               (.replace "__YTUNNUS__" (:ytunnus urakoitsija))
+               (.replace "__VIESTITUNNISTE__" (str (rand-int 9999999)))
+               (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
+               (.replace "__ULKOINENID__" ulkoinenid)
+               (.replace "__PAIVAMAARA__" paivamaara))
+
+        ;; Montako v2 apikyselyä on tietokannassa
+        v2-integraatio-id (:id (first (q-map (str "SELECT id FROM integraatio WHERE jarjestelma = 'api' AND nimi = 'kirjaa-tyomaapaivakirja-v2';"))))
+        v2-kyselymaara (:kpl (first (q-map (format "SELECT count(*) as kpl FROM integraatiotapahtuma WHERE integraatio = %s;" v2-integraatio-id))))
+        ;; POST tyyppinen kutsu käyttää versiota 2, vaikka query parametria ei anneta, jos ajankohta on tarpeeksi myöhäinen eli 1.1.2026
+        vastaus (with-redefs [pvm/nyt #(pvm/->pvm "01.01.2026")]
+                  (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa))
+        kasvanut-v2-kyselymaara (:kpl (first (q-map (format "SELECT count(*) as kpl FROM integraatiotapahtuma WHERE integraatio = %s;" v2-integraatio-id))))]
+    (is (= (:status vastaus) 200) "Kutsu onnistuu, vaikka menee uudempaan versioon.")
+    (is (= v2-kyselymaara (dec kasvanut-v2-kyselymaara)) "V2 kyselyiden määrä kasvaa yhdellä.")))
+
 (deftest virheellinen-put-versio-2
-  (let [urakka-id "jaska"
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         paivamaara "2023-05-30"
         ulkoinenid "12345"
         urakoitsija (first (q-map (format "SELECT ytunnus, nimi FROM organisaatio WHERE nimi = '%s';" "YIT Rakennus Oy")))
