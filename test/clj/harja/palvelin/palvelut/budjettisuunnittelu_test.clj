@@ -142,8 +142,8 @@
             :paallystepaikkaukset (is (= ryhmiteltyna {}))
             :mhu-yllapito (do
                             (is (= (into #{} (keys ryhmiteltyna))
-                                  #{[:rahavaraus-lupaukseen-1 "muut-rahavaraukset"]
-                                    [:muut-rahavaraukset "muut-rahavaraukset"]}))
+                                   #{[:rahavaraus-lupaukseen-1 "muut-rahavaraukset"]
+                                     [:muut-rahavaraukset "muut-rahavaraukset"]}))
                             (testaa-ajat tehtavat toimenpide-avain))
             :talvihoito (do
                           (is (= ryhmiteltyna {}))
@@ -171,13 +171,10 @@
                            (testaa-ajat tehtavat toimenpide-avain)))
             :tavoitehintaiset-rahavaraukset (do
                                               (is (= (into #{} (keys ryhmiteltyna))
-                                                    #{["Äkilliset hoitotyöt" nil]
-                                                      ["Vahinkojen korjaukset" nil]
-                                                      ["Muut tavoitehintaan vaikuttavat rahavaraukset" nil]
-                                                      ["Tilaajan rahavaraus kannustinjärjestelmään" nil]})))
+                                                     #{["Vahinkojen korjaukset" nil] ["Äkilliset hoitotyöt" nil] ["Tilaajan rahavaraus kannustinjärjestelmään" nil]})))
             :tavoitehinnan-ulkopuoliset-rahavaraukset (do
                                                         (is (= (into #{} (keys ryhmiteltyna))
-                                                              #{["Tavoitehinnan ulkopuoliset rahavaraukset" nil]})))))))
+                                                               #{["Tavoitehinnan ulkopuoliset rahavaraukset" nil]})))))))
     (testing "Johto ja hallintokorvaukset ovat oikein"
       (let [jh-korvaukset (:johto-ja-hallintokorvaukset budjetoidut-tyot)
             vakio-johto-ja-hallintokorvaukset (group-by :toimenkuva (:vakiot jh-korvaukset))
