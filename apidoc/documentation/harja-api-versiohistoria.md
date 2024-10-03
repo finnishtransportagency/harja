@@ -1,0 +1,245 @@
+<b>Nykyinen versio: 1.0.63</b>
+<b>Julkaistu: 22.08.2023</b>
+
+<b>Versiohistoria:</b>
+- Versionumero 1.0.63 Julkaistu 22.08.2023
+    - Lisätty tieturvallisuustarkastus rajapinta.
+- Versionumero 1.0.62 Julkaistu 14.08.2023
+    - Lisätty massamäärä paikkaus-rajapintaan.
+- Versionumero 1.0.61 Julkaistu 04.08.2023
+    - Korjattu dokumentaatio materiaaliraportin hakurajapinnasta vastaamaan toteutusta.
+- Versionumero 1.0.60 Julkaistu 27.06.2023
+    - Päivitty viimeisin versio työmaapaivakirja rajapinnoista. Toteutus testattavissa mutta voi muuttua palautteen perusteella.
+- Versionumero 1.0.59 Julkaistu 01.05.2023
+    - Lisätty vedos työmaapaivakirja rajapinnoista. Ei vielä toteutettu.
+- Versionumero 1.0.58 Julkaistu 12.04.2023
+    - Päivitetty yhteystietorajapinnan kuvaus vastaamaan todellisuutta. Sahkoposti-elementin nimi on email.
+- Versionumero 1.0.57 Julkaistu 27.10.2022
+    - Lisätty uusi rajapinta urakan materiaaliraporttien hakua varten: GET "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm
+- Versionumero 1.0.56 Julkaistu 14.4.2022
+    - Ilmoitus-skeemaa laajennettu ei-pakollisilla tiedoilla (alueurakka, kuittaukset). Näitä hyödynnetään ilmoitukset/ytunnus-rajapinnassa, joka palauttaa ilmoitukset ja kuittaukset, jotka annettuna aikavälinä ovat urakoitsijan urakoissa päivittyneet.
+    - Versio sisältää myös analytiikkaportaalin käyttämän rajapinnan.
+    - Poistettu varusterajapinta käytöstä.
+- Versionumero 1.0.55 Julkaistu 24.2.2022
+    - Toteuma-skeemaa laajennettu ei-pakollisilla tiedoilla (tiesijainti, muokkaustiedot)
+- Versionumero 1.0.54 Julkaistu 26.1.2022
+    - Toteuman skeemaan (koskee piste- ja reittitoteumia) lisätty tekstikenttä: lisatieto. Kentässä voi välittää toteumaan liittyvää taustatietoa.
+- Versionumero 1.0.53 Julkaistu 24.2.2021
+    - Yhteystietorajapinnan roolienumeraatioon uusia rooleja: Vastuunalainen työnjohtaja, Päätoiminen apulainen, Apulainen/Työnjohtaja/Vipa-tehtävät, Viherhoidosta vastaava henkilö.
+- Versionumero 1.0.52 Paikkausten työmenetelmä muutettu enumeraatioksi. 3.11.2020
+- Versionumero 1.0.51 Julkaistu 11.9.2020
+    - Työkoneseurannan viivageometria erotettu erilliseen skeematiedostoon koodigeneroinnin helpottamiseksi. Skeemamääritys ei muutu. Päivitetty versiohistoria raml-tiedoston tasolle.
+- Versionumero 1.0.50 Julkaistu 11.9.2020
+    - Paikkausrajapinnan enumeraatioon lisätty arvoja.
+- Versionumero 1.0.48 Julkaistu 9.6.2020
+    - Ilmoitusrajapinta palauttaa uusia arvoja. Ilmoituksen tila palautetaan aina. Ilmoituksesta palautetaan relevantit aikaleimat: ilmoitettu, valitetty-harjaan, vastaanotettu-harjaan ja mikäli kyseessä on päivitetty ilmoitus paivitetty-harjaaan. Aiheutti-toimenpiteita palautuu vain, jos ilmoitus aiheutti toimenpiteitä.
+- Versionumero 1.0.47 Julkaistu 1.4.2020
+    - Yhteystietorajapinnan roolienumeraatioon kolme uutta roolia: Viranomais- ja vahingonkorvausasiat, Työmaavalvoja ja Työmaavalvojan sijainen.
+- Versionumero 1.0.46 Julkaistu 22.11.2019
+    - Työkoneseurantarajapintaan alfanumeerinen tieto: tunnus. Tunnus yksilöi käytetyn työkoneen.
+- Versionumero 1.0.45 Julkaistu 4.6.2019
+    - Uusi urakkatyyppi: teiden-hoito. Palautetaan Harjasta kuitenkin edelleen tyyppinä hoito.
+- Versionumero 1.0.44 Julkaistu 26.2.2019
+    - Pistetoteuman kirjauksen ja työkoneseurannan kirjauksen sisällössä pitää antaa jotain sijaintikentälle.
+- Versionumero 1.0.43 Julkaistu 14.2.2019
+    - Paikkauskohteita voi poistaa uuden rajapinnan kautta.
+- Versionumero 1.0.42 Julkaistu 12.2.2019
+    - Piste- ja reittitoteumakirjausten mukana voi nyt ilmoittaa työkonetyypin.
+- Versionumero 1.0.41 Julkaistu 8.2.2019
+    - Työkoneseurannassa voi antaa sijaintitiedon viivageometriana pisteen sijasta.
+- Versionumero 1.0.40 Julkaistu 21.12.2018
+    - Organisaatio päivitetty esimerkeissä Väyläksi. Päivitys ei sisällä toiminnallista rajapintamuutosta. 
+- Versionumero 1.0.39 Julkaistu 11.12.2018
+    - Päällystysilmoituksen kirjaus rajapinta on muuttunut. Pääkohteelle ei ilmoiteta kaistaa eikä ajorataa, mutta nämä tiedot on annettava alikohteille sekä alustalle tehdyille toimenpiteille.
+- Versionumero 1.0.38 Julkaistu 22.11.2018
+    - Urakoiden haku palauttaa Liikenneviraston järjestelmille kaikki urkat.
+    - Mahdollisuus hakea urakat tyypeittäin.
+    - Mahdollisuus hakea ylläpitokohdeosien geometriat.
+- Versionumero 1.0.37 Julkaistu 27.07.2018
+    - Tielupa hyväksyy kaapeliasennustyypiksi "Muuntamo":n
+- Versionumero 1.0.36 Julkaistu 9.7.2018
+    - Tieluvan kirjaus ottaa alueurakat arrayna.
+- Versionumero 1.0.35 Julkaistu 27.4.2018
+    - Päällystysilmoituksen kirjauksessa voi nyt kirjata alustatoimenpiteillä tienumeron. Jos tienumeroa ei anna, käytetään pääkohteen tienumeroa.
+- Versionumero: 1.0.34 Julkaistu: 29.3.2018: 
+    - Kuulamyllyarvojen etuliitteet oikaistu.  
+        - N10 -> AN10
+        - N14 -> AN14
+        - N19 -> AN19 
+        - N30 -> AN30 
+        - N2 -> AN2 
+- Versionumero: 1.0.33 Julkaistu: 20.3.2018: 
+    - Päällystyskohteilta poistettu hypyt. Jatkossa hypyt voi antaa yksinkertaisesti jättämällä alikohteiden väliin tyhjää. 
+- Versionumero: 1.0.32 Julkaistu: 28.2.2018:
+    - Ylläpitokohteiden ja päällystysilmoituksen päivitys ottaa nyt vastaan uuden, vapaaehtoisen hyppy-kentän alikohteelle. Jos sen arvo on true, merkitään alikohde hypyksi. Urakan kohteiden haku palauttaa tiedon, onko kyseessä hyppy-alikohde.
+- Versionumero: 1.0.31 Julkaistu: 1.2.2018:
+    - Lisätty uudet rajapinnat paikkauksille sekä niiden hinnoitteluille.
+- Versionumero: 1.0.30 Julkaistu: 27.11.2017:
+    - Lisätty uusi rajapinta tielupien kirjaamiselle Harjaan.
+- Versionumero: 1.0.29 Julkaistu: 3.11.2017:
+    - Tilaajan laadunvalvontakonsulteille lisätty oma tehtävä API:n työkoneseurantaan: tilaajan laadunvalvonta. Nämä havainnot näytetään vain tilaajan käyttäjille. 
+- Versionumero: 1.0.28 Julkaistu: 21.9.2017:
+    - Ilmoituskuittausten kautta voidaan ilmoittaa lopetuksen yhteydessä aiheuttiko ilmoitus toimenpiteitä vai ei.
+- Versionumero: 1.0.27 Julkaistu: 11.9.2017:
+    - Mahdollisuus merkitä näytetäänkö tarkastuksia urakoitsijoille vai ei.
+- Versionumero: 1.0.26 Julkaistu: 26.5.2017:
+    - Ylläpitokohteiden päivityksessä ja päällystysilmoituksen kirjauksessa voi antaa karttapäivämäärän, jonka mukaan osoite muunnetaan uusimmalle verkolle. Samoin ylläpitokohteiden mukana välitetään tieto, minkä päivän verkolla ylläpitokohteet ovat Harjassa.
+- Versionumero: 1.0.25 Julkaistu: 15.5.2017:
+    - Mahdollisuus raportoida urakan työtunnit vuosikolmanneksittain.
+- Versionumero: 1.0.24 Julkaistu: 5.5.2017:
+    - Siltatarkastuksille on mahdollista tallentaa tarkastuskohtaisesti liitteitä.
+- Versionumero: 1.0.23 Julkaistu: 19.4.2017:
+    - Ylläpidon urakoiden aikataulun kirjauksesta poistettu kenttä tiemerkinta-takaraja. Vain tilaaja voi muuttaa kyseistä arvoa, joten tätä ei ole tarkoitus muokata urakoitsijan rajapinnasta.
+- Versionumero: 1.0.22 Julkaistu: 18.4.2017:
+    - Päällystyksen aikataulun kirjaus ei enää huomioi kellonaikaa päällystyksen aloitus- ja lopetuskentälle. Aika on syytä antaa jatkossa pelkästään päivämääränä.
+- Versionumero: 1.0.21 Julkaistu: 13.4.2017:
+    - Viheralueiden ja -kuvioiden tietolajitunnisteet korvattu uusilla.
+- Versionumero: 1.0.20 Julkaistu: 4.4.2017:
+    - Ylläpitokohteelle on jatkossa mahdollista raportoida tieto, sisältääkö se poikkeamaraportin.
+- Versionumero: 1.0.19 Julkaistu: 22.3.2017:
+    - Urakan ylläpitokohteen päivityksessä alikohteen kokonaismassa-kenttä on nyt nimeltään massamaara.
+- Versionumero: 1.0.18 Julkaistu: 20.3.2017:
+    - Päällystysilmoituksen kirjauksesta poistettu kenttä edellinen-paallyste.
+- Versionumero: 1.0.17 Julkaistu: 16.3.2017:
+    - Tiemerkinnän yks. hint. toteuman kirjauksessa käytetty muutospvm on nyt nimeltään paivamaara.
+- Versionumero: 1.0.16 Julkaistu: 9.3.2017:
+    - Lisätty ylläpitokohteen päivitykseen uudet alikohteen kentät: paallystetyyppi, raekoko, tyomenetelma & kokonaismassamaara.
+- Versionumero: 1.0.15 Julkaistu: 7.3.2017:
+    - Uudet rajapinnat tiemerkinnän toteumien kirjaamiselle ja poistamiselle
+- Versionumero: 1.0.14 Julkaistu: 7.3.2017:
+    - Uusi rajapinta ylläpitokohteiden tarkastusten kirjaamiselle ja poistamiselle
+- Versionumero: 1.0.13 Julkaistu: 23.2.2017:
+    - Päivystäjätietojen haun rajapinnat palauttavat ainoastaan voimassa olevat ja tulevat päivystykset, mikäli kutsuja ei rajaa hakua aikavälillä.
+- Versionumero: 1.0.12 Julkaistu: 9.2.2017:
+    - Tietolajien haulla voidaan hakea kaikki tietolajin kuvaukset kerralla. Muutospäivämäärää ei enää voi antaa parametrinä.
+- Versionumero: 1.0.11 Julkaistu: 7.2.2017:
+    - Ylläpitokohteen päivityksessä ei voi enää päivittää tienumeroa kohteelle tai alikohteelle
+- Versionumero: 1.0.10 Julkaistu: 30.1.2017:
+    - Lisää rajapinta ylläpitokohteen määrämuutosten hallintaan
+- Versionumero: 1.0.9 Julkaistu: 24.1.2017:
+    - Salli tarkastuksille suppeammat tiedot tarkastajasta.
+- Versionumero: 1.0.8 Julkaistu: 13.1.2017:
+    - Päällystysilmoituksen kirjauksesta poistettu mahdollisuus kirjata taloudellinen osa (tyot-avaimen sisältö). Päällystysilmoituksella ei ole enää taloudellista osaa, vaan nämä tiedot käsitellään jatkossa omalla tietomallilla, jolle tulee myöhemmin oma API.
+- Versionumero: 1.0.7 Julkaistu: 2.1.2017:
+    - Lisätty toteumien ja tarkastusten poisto
+- Versionumero: 1.0.6 Julkaistu: 29.12.2016:
+    - Työkoneiden reaaliaikaseurannan rajapintaan lisätty jyrät uutena työkonetyyppinä.
+    - Lisätty uusi rajapinta ylläpitokohteen tietojen päivittämiselle
+- Versionumero: 1.0.5 Julkaistu: 21.12.2016:
+    - Urakan yhteystietorajapintaan lisätty tieto urakan vastuu- ja varahenkilöistä 
+- Versionumero: 1.0.4 Julkaistu: 16.11.2016:
+    - Poistettu päällystysilmoitukselta omat aikataulutiedot. Jatkossa päällystysilmoituksen aloituspvm, kohteen valmistumispvm ja päällystyksen valmistumispvm ovat sama asia kuin ilmoitukseen kuuluvan ylläpitokohteen vastaavat tiedot.
+    - Lisätty päällystysilmoituksen kirjaukseen uusi kenttä "valmis-kasiteltavaksi" (true/false/null). Jos tässä kentässä on arvona true, asetetaan päällystysilmoitus valmiiksi tilaajan käsiteltäväksi (ellei jo ole käsiteltävänä tai käsitelty).
+- Versionumero: 1.0.3 Julkaistu: 2.11.2016:
+    - Päällystys-/tiemerkintäurakan aikataulun kirjaus jaettu kahteen eri urakkatyypin mukaiseen endpointtiin (ks. API-dokumentaatio).
+- Versionumero: 1.0.2 Julkaistu: 11.10.2016:
+    - Päällystys-/tiemerkintäurakan aikataulun kirjaukseen lisätty uusi kenttä: tiemerkinta-takaraja. Aiemmin tämä laskettin automaattisesti kahden viikon päähän siitä hetkestä kun tiemerkinnän saa aloittaa, nyt syötetään käsin.
+- Versionumero: 1.0.1 Julkaistu: 5.10.2016:
+    - Turvallisuuspoikkeaman kirjauksessa kentistä "aiheutuneet_vammat" ja "vahingoittuneet_ruumiinosat" tallennetaan vain ensimmäinen arvo. TURI vastaanottaa näistä vain yhden arvon, joten myös Harjaan kirjataan jatkossa vain yksi arvo (EU-standardin mukaisesti). Itse rajapinta pysyy samana kuin ennenkin, muutos on pelkästään sisäinen.
+    - Estetty turvallisuuspoikkeaman tapahtumapäivämäärän kirjaaminen tulevaisuuteen API:n kautta.
+- Versionumero: 1.0.0 Julkaistu: 1.10.2016:
+    - Ensimmäinen virallinen versio
+- Versionumero: 0.3.1. Julkaistu: 28.9.2016:
+    - Lisätty ping-palvelu, jolla voidaan tarkistaa yhteys
+- Versionumero: 0.3.0. Julkaistu: 14.9.2016:
+    - Päivietty aikataulun skeemaan uudet termit: alku -> aloitettu, loppu -> valmis.
+- Versionumero: 0.2.9. Julkaistu: 9.9.2016:
+    - Lisätty uusi palvelu ylläpidon päällystys-/tiemerkintäurakoiden aikataulutietojen päivittämiselle. Päällystyksen ja kohteen valmistumisen aikataulutiedot voidaan kirjata vain siihen urakkaan, johon ylläpitokohde kuuluu. Tiemerkinnän aikataulu voidaan päivittää siihen urakkaan, joka on merkitty kohteelle suorittajaksi. Kirjattaessa aikataulutiedot päällystysilmoitukselle kyseisen ilmoituksen tulee olla lisätty Harjaan, muuten tietoja ei päivitetä.
+    - Lisätty päällystysilmoituksen kirjaukseen aikataulutietojen vastaanotto.
+    - Lisätty laskenta päällystysilmoituksen muutoshinnalle.
+- Versionumero: 0.2.8. Julkaistu: 7.9.2016:
+    - Urakan ylläpitokohteiden haku palauttaa jatkossa myös aikataulutiedot.
+- Versionumero: 0.2.7. Julkaistu: 1.9.2016:
+    - Haettaessa tietolajin kuvaus Harjasta ei enää palauteta sellaisia ominaisuuksia, joilla ei ole järjestysnumeroa.
+- Versionumero: 0.2.6. Julkaistu: 11.8.2016:
+    - Työkoneiden reaaliaikaseurantaan on lisätty uudet tehtävät ylläpidon ajoneuvoja varten: asfaltointi (pääasfaltointilaite), tiemerkintä, kuumennus (kuumennus-/remix-laitteet), sekoitus tai stabilointi (sekoitus- ja stabilointijyrsimet), turvalaite (TMA-laitteet)
+- Versionumero: 0.2.5. Julkaistu 8.8.2016:
+    - Sopimusnumero on muutettu vaihtoehtoiseksi toteumille. Jos sopimusnumeroa ei ole annettu, tehdään kirjaus automaattisesti urakan pääsopimukselle. 
+- Versionumero: 0.2.4. Julkaistu 27.7.2016:
+    - Varusterajapinnat päivitetty. Jatkossa varusteiden ja laitteiden teknisten arvojen parsinta tehdään Harjan puolella. Samalla mahdollistettu usean varustetoteuman sekä yksittäisen varustetoteuman sisällä usean toimenpiteen kirjaaminen kerralla.
+- Versionumero: 0.2.3. Julkaistu 15.7.2016:
+    - Yhtenäistetty työkoneiden tehtävien enum-arvot kannan omien enumien kanssa, mistä johtuen tehtävien nimiin tehty pieniä muutoksia.
+    - Ylläpito-urakoissa seuraavat kirjattavat työkone-tyypit näytetään Tilannekuvassa Ylläpito-osiossa: paaasfalttilevitin, remix-laite, sekoitus-ja-stabilointijyrsin, tma-laite
+- Versionumero: 0.2.2. Julkaistu 13.7.2016:
+    - Lisätty rajapinnat suljettujen tieosien kirjaamiselle ja poistolle. 
+- Versionumero: 0.2.1. Julkaistu 6.7.2016:
+    - Turvallisuuspoikkeama yhtenäistetty TURI:n kanssa, mistä johtuen tehty seuraavat muutokset:
+    - Poistettu kenttä: paattynyt
+    - Poistettu kenttä: tyotehtava
+    - Poistettu kenttä: laatija (jatkossa tallennetaan suoraan API-käyttäjän id:nä)
+    - Uusi pakollinen kenttä: otsikko (string, max. 1024 merkkiä)
+    - Uusi vapaaehtoinen kenttä: paikan_kuvaus (string, max. 2048 merkkiä)
+    - Uusi vapaaehtoinen kenttä: vaarallisten_aineiden_kuljetus (boolean)
+    - Uusi vapaaehtoinen kenttä: vaarallisten_aineiden_vuoto (boolean, true vain jos sisälsi kuljetuksen)
+    - Myös korjaaviin toimenpiteisiin on tehty muutoksia:
+    - Uusi vapaaehtoinen kenttä: otsikko (string, max 2048 merkkiä)
+    - Uusi vapaaehtoinen kenttä: toteuttaja (string, max 1024 merkkiä)
+- Versionumero: 0.2.0. Julkaistu 4.7.2016:
+    - Teiden ylläpidon rajapintojen työstäminen aloitettu. Ensimmäinen toteutettava on rajapinta ylläpitourakan kohteiden haku.
+- Versionumero: 0.1.8. Julkaistu 1.7.2016:
+    - Urakkahaku palauttaa kokonaishintaiset ja yksikköhintaiset tehtävät omassa elementissään. Tehtävät ovat jatkossa vakiojoukko, jonka Harjan pääkäyttäjä määrittää ja näin ollen eivät enää ole riippuvaisia urakkakohtaisista suunnitelmatiedoista. Samalla päivitetty lista työkoneiden reaaliaikaseurannan tehtävistä.
+- Versionumero: 0.1.7. Julkaistu 16.5.2016:
+    - Siltatarkastuksen kirjaamisessa mahdollisuus antaa tarkastuskohteelle arvo "eiPade", joka tarkoittaa, ettei kyseistä ominaisuutta voida arvioida tässä sillassa. Arvo voi olla myös tyhjä string, joka tulkitaan arvoksi eiPade.
+- Versionumero: 0.1.6. Julkaistu 20.5.2016:
+    - Päivystyksille lisätty id kenttä. Yksittäinen päivystys voidaan nyt poistaa käyttäen samaa id:tä. Samoin päivitys onnistuu tätä kautta.
+    - Varusteiden lisäykseen, päivitykseen ja hakuihin lisätty pakollisena kenttänä tilannepäivämäärä, jolla kerrotaan lähdejärjestelmän käyttävän tieverkon julkaisupäivämäärä, jotta sijainti voidaan kohdistaa oikealle verkolle. Haut palauttavat myös osoitteet tälle verkolle muunnettuna.
+- Versionumero: 0.1.5. Julkaistu 13.5.2016:
+    - Tarkastuksessa on optionaalinen "laadunalitus" kenttä, jolla voidaan sanoa onko kyseessä
+      laadun alitus vai ei. Jos kenttää ei ole, toimitaan vanhan päättelyn mukaan, jossa
+      havainnot tekstin mukaan päätellään tieto.
+- Versionumero: 0.1.4. Julkaistu 4.5.2016:
+    - Mahdollisuus poistaa urakan haluttujen päivystäjien päivystykset.
+- Versionumero: 0.1.3. Julkaistu 18.4.2016
+    - Tuki gzipatuille payloadeille.
+- Versionumero: 0.1.2. Julkaistu 29.3.2016
+    - Turvallisuuspoikkeaman muotoa on korjattu.
+- Versionumero: 0.1.1. Julkaistu 24.3.2016
+    - Turvallisuuspoikkeaman ammatin kirjaaminen tietystä enum-joukosta. Jos annetaan vaihtoehto muu_tyontekija, voidaan antaa tarkempi kuvaus ammatista. Muussa tapauksessa selitettä ei tallenneta.
+    - Turvallisuuspoikkeaman aiheutuneiden vammojen kirjaaminen tietystä enum-joukosta entisen vapaatekstin sijaan
+    - Turvallisuuspoikkeaman uusi kirjattava tieto: aiheutuneet seuraukset (vapaateksti)
+    - Turvallisuuspoikkeaman uusi kirjattava tieto: vahingoittuneet ruumiinosat (enum-joukko)
+    - Turvallisuuspoikkeaman uusi kirjattava tieto: jatkuuko sairauspoissaolo (true tai false)
+- Versionumero: 0.1.0. Julkaistu 17.3.2016
+    - Uusi turvallisuuspoikkeamatyyppi: muu
+- Versionumero: 0.0.9. Julkaistu 11.2.2016
+    - Varustetoteumilta poistettu tarkastuspäivämäärä
+    - Turvallisuuspoikkeamalle vaihdettu uudet tyyppi-arvot, yksi tai useampi: tyotapaturma, vaaratilanne, turvallisuushavainto
+    - Turvallisuuspoikkeama vastaanottaa vahinkoluokittelun, yksi tai useampi: henkilovahinko, omaisuusvahinko, ymparistovahinko
+    - Turvallisuuspoikkeama vastaanottaa vakavuusastee: vakava tai lieva
+- Versionumero: 0.0.8. Julkaistu: 9.2.2016
+    - Pistetoteumia on mahdollista kirjata useampi kerralla sisällyttämällä kirjattavat toteumat JSONissa "pistetoteumat" avaimen alle
+    - Reittitoteumia on mahdollista kirjata useampi kerralla sisällyttämällä kirjattavat toteumat JSONissa "reittitoteumat" avaimen alle
+    - Muutokset ovat taaksepäinyhteensopivia, eli toteumia on edelleen mahdollista kirjata myös yksi samalla tavalla kuin aiemmin.
+- Versionumero: 0.0.7. Julkaistu: 27.1.2016
+    - Siltatunnus lisätty siltatarkastuksiin
+- Versionumero: 0.0.6. Julkaistu: 11.12.2015 . Muutokset:
+    - Soratie-, talvihoito- ja tiestötarkastus rajapinnat on refaktoroitu vastaamaan uutta tietomallia
+    - Vanha havainto rajapinta on muutettu laatupoikkeama rajapinnaksi
+- Versionumero: 0.0.5. Julkaistu: 30.11.2015 . Muutokset:
+    - Ilmoitusten haut siirretty urakoiden alle. Kaksi erillistä operaatiota ilmoitusten reaaliaikaiselle haulle ja massahaulle viimeisen id:n jälkeen.
+    - Päivystäjätietojen haku toteutettu kolmena eri GET-palveluna: haku urakka id:llä, sijainnilla tai puhelinnumerolla
+    - Toteumalle merkitty pakolliseksi alkamis- ja päättymisaika
+    - Reittipisteelle merkitty pakolliseksi antaa aika
+    - Totemien kirjaamisesta muutettu materiaalien ja tehtävien yksiköt enumin sijasta tekstiksi. Käytettävät arvot yksiköille & materiaaleille otetaan jatkossa urakan tietojen hausta.
+    - Lisätty urakoiden haun vastaukseen kirjausyksiköt tehtäville & kaikki materiaalit
+    - Lisätty uusi toteumatyyppi vahingonkorvaus reitti, piste & varustetoteumille
+    - Tyokoneseurannasta poistettu sopimus id.
+    - Varusterajapinta päivitetty vastaamaan tierekisterin rajapintaa
+    - Urakoiden hakuun lisätty alueurakkanumero
+    - Tarkennettu urakan haun vastausta. Kertoo nyt urakan sopimusten yksikkö- ja kokonaishintaiset tehtävät listassa, joita voidaan käyttää kirjaaman toteumia.
+    - Kirjattu tarkennuksia API:n operaatioiden kuvauksiin.
+    - Suunta lisätty työkone seurantaan. Suunta annetaan astelukuna.
+    - Tietolajien haku varusteille päivitetty. Tietolajit haetaan yksi kerrallaan Tierekisteristä.
+    - Poikkeamat poistetu rajapinnasta
+    - Muutoksia varusterajapintaan
+    - Haetaan vain yksi tietolaji kerrallaan
+- Versionumero: 0.0.4. Julkaistu: 14.7.2015. Muutokset:
+    - Toteumien materiaalien ja tehtävien määrää muutettu vastaamaan nykyistä tietomallia
+- Versionumero: 0.0.3. Julkaistu: 8.7.2015. Muutokset:
+    - Tiestö-, soratie- ja talvihoitotarkastusten payloadit yksinkertaistettu
+- Versionumero: 0.0.2. Julkaistu: 10.6.2015. Muutokset:
+    - Poistettu päivystäjätietojen haku
+    - Lisätty tielupien haku
+    - Lisätty tietyö ilmoituksen kirjaus
+- Versionumero: 0.0.1. Julkaistu: 9.6.2015. Muutokset:
+    - Ensimmäinen versio julkaistu

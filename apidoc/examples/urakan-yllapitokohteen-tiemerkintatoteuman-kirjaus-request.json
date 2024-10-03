@@ -1,0 +1,28 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
+  },
+  "tiemerkintatoteumat": [
+    {
+      "tiemerkintatoteuma": {
+        "tunniste": {
+          "id": 123
+        },
+        "hinta": 12345678,
+        "paivamaara": "2017-07-06T15:01:00+02:00",
+        "selite": "Selite",
+        "hintatyyppi": "toteuma"
+      }
+    }
+  ]
+}

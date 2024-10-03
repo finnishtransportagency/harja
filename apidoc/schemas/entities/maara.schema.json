@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "yksikko": {
+      "id": "urn:harja/yksikko",
+      "required": true,
+      "type": "string"
+    },
+    "maara": {
+      "id": "urn:harja/maara",
+      "type": "number",
+      "minimum": 0,
+      "required": true
+    }
+  }
+}

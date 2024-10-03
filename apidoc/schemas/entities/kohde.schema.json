@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "additionalProperties": false,
+  "properties": {
+    "sopimusId": {
+      "id": "urn:harja/kohde/sopimusId",
+      "type": "integer",
+      "required": true
+    },
+    "tehtavaId": {
+      "id": "urn:harja/kohde/tehtavaId",
+      "type": "integer"
+    }
+  }
+}

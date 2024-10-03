@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tehtavaryhmat": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Tehtäväryhmän id Harjassa."
+          },
+          "nimi": {
+            "type": "string",
+            "description": "Tehtäväryhmän nimi."
+          },
+          "toimenpidekoodi": {
+            "type": "integer",
+            "description": "Sen toimenpiteen toimenpidekoodi Harjassa, johon tehtäväryhmä kuuluu."
+          },
+          "voimassaolo": {
+            "type": "object",
+            "properties": {
+              "alkuvuosi": {
+                "type": "integer",
+                "description": "Jos tehtäväryhmän voimassaolossa on kaikkia urakoita koskevia rajoituksia, ne ilmaistaan voimassaolojaksona (alkuvuosi-loppuvuosi). Jos urakan alkuvuosi osuu voimassaolojakson ajalle, tehtäväryhmä on käytössä kyseisessä urakassa."
+              },
+              "loppuvuosi": {
+                "type": "integer",
+                "description": "Jos alkuvuosi tai loppuvuosi puuttuu, tehtäväryhmän voimassaolon alkua tai loppua ei ole rajoitettu."
+              }
+            }
+          },
+          "luotu": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "muokattu": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "poistettu": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "nimi",
+          "toimenpidekoodi",
+          "poistettu"
+        ]
+      }
+    }
+  },
+  "required": [
+    "tehtavaryhmat"
+  ]
+}
