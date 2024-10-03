@@ -728,13 +728,20 @@ BEGIN
         val_aika_yht_array     := '{}';
 
         FOR rahavaraus IN
-            SELECT 
+            SELECT DISTINCT
               rv.id, 
-              COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) AS nimi
+              COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) AS nimi,
+              tp.nimi AS tp_nimi,
+              rv.jarjestys
             FROM rahavaraus rv 
+            JOIN rahavaraus_tehtava rt ON rv.id = rt.rahavaraus_id 
+            JOIN tehtava te ON rt.tehtava_id = te.id 
+            JOIN toimenpide tp ON te.emo = tp.id
             -- Näytetään vaan rahavaraukset mitkä urakalle asetettu (hallinta)
             JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id  
-            WHERE rvu.urakka_id = ur
+            WHERE rvu.urakka_id = ur 
+            -- Näytä vaan instanssiin liittyvät rahavaraukset 
+            AND tp.id = t.tpk3_id
             -- Sorttaa järjestysnumerolla, nämä tulee tässä järjestyksessä käyttöliittymään asti
             ORDER BY rv.jarjestys
         LOOP
