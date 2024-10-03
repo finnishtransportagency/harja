@@ -112,7 +112,7 @@
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
     [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
     [harja.palvelin.palvelut.yllapitokohteet.mpu-kustannukset :as mpu-kustannukset]
-    [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
+    [harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelu]
     [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
 
     ;; karttakuvien renderöinti
@@ -531,7 +531,7 @@
                           [:http-palvelin :db])
 
       :tyomaapaivakirja (component/using
-                          (tyomaapaivakirja/->Tyomaapaivakirja (:kehitysmoodi asetukset))
+                          (tyomaapaivakirja-palvelu/->Tyomaapaivakirja (:kehitysmoodi asetukset))
                           [:http-palvelin :db :fim :api-sahkoposti])
 
       :valikatselmukset (component/using
