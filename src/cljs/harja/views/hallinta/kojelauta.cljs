@@ -1,5 +1,6 @@
 (ns harja.views.hallinta.kojelauta
   (:require [harja.pvm :as pvm]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
             [harja.ui.valinnat :as valinnat]
@@ -60,6 +61,24 @@
      (r/wrap (:urakat valinnat) #(e! (tiedot/->Valitse :urakat %)))]]])
 
 
+(defn kustannussuunitelman-tila-sarake
+  [rivi]
+  (let [{:keys [vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
+    [yleiset/wrap-if true
+     [yleiset/tooltip {} :% "Klikkaa siirtyäksesi urakan kustannussuunnitelmaan"]
+     [:div.klikattava {:on-click #(do
+                                    (prn "Jarno on click! urakassa " (:id rivi) " ja elyssä " (:ely_id rivi))
+                                    (siirtymat/kustannusten-seurantaan-valitussa-urakassa (:ely_id rivi) (:id rivi)))}
+      (cond
+        (= "aloittamatta" suunnitelman_tila)
+        (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Aloittamatta")})
+
+        (= "aloitettu" suunnitelman_tila)
+        (yleiset/tila-indikaattori "kesken" {:fmt-fn #(str "Aloitettuja: " vahvistamattomia
+                                                        ", vahvistettuja: " vahvistettuja)})
+
+        (= "vahvistettu" suunnitelman_tila)
+        (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Valmis")}))]]))
 
 (defn listaus [e! {:keys [valinnat urakat urakoiden-tilat] :as app}]
   (let [valitut-urakat (:urakat valinnat)
@@ -74,24 +93,13 @@
       [{:otsikko "Urakka"
         :tyyppi :string
         :nimi :nimi
-        :leveys 10
+        :leveys 5
         :muokattava? (constantly false)}
        {:otsikko "Kustannus\u00ADsuunnitelma"
         :muokattava? (constantly false)
-        :nimi :ks_tila :leveys 5
+        :nimi :ks_tila :leveys 15
         :tyyppi :komponentti
-        :komponentti (fn [rivi]
-                       (prn "Jarno  ks tila RIVI " rivi)
-                       (let [ks-tila (:ks_tila rivi)]
-                         (cond
-                           (= "aloittamatta" (:suunnitelman_tila ks-tila))
-                           [:div "Aloittamatta"]
-
-                           (= "aloitettu" (:suunnitelman_tila ks-tila))
-                           [:div "Aloitettu"]
-
-                           (= "vahvistettu" (:suunnitelman_tila ks-tila))
-                           [:div "Vahvistettu"])))}]
+        :komponentti (fn [rivi] [kustannussuunitelman-tila-sarake rivi])}]
       urakat]]))
 
 
