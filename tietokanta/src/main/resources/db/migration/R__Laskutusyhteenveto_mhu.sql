@@ -794,7 +794,7 @@ BEGIN
         -----------------------------------------------------------
 
         -- Nollaa jokaisen instanssin arvot 
-        muu_kulu_tavoitehintainen_hoitokausi := 0;
+        /*muu_kulu_tavoitehintainen_hoitokausi := 0;
         muu_kulu_tavoitehintainen_val_aika := 0;
         muu_kulu_ei_tavoitehintainen_hoitokausi := 0;
         muu_kulu_ei_tavoitehintainen_val_aika := 0;
@@ -834,16 +834,18 @@ BEGIN
                 END IF;
             END IF;
         END LOOP;
-
+        
         -- Lisää muut kulut rahavarausten alle
         rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehintaan vaikuttavat kulut');
+        -- ..
+        rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehinnan ulkopuoliset kulut');
+        */
+        
         hoitokausi_yht_array := array_append(hoitokausi_yht_array, COALESCE(muu_kulu_tavoitehintainen_hoitokausi, 0.0));
         val_aika_yht_array := array_append(val_aika_yht_array, COALESCE(muu_kulu_tavoitehintainen_val_aika, 0.0));
 
-        rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehinnan ulkopuoliset kulut');
         hoitokausi_yht_array := array_append(hoitokausi_yht_array, COALESCE(muu_kulu_ei_tavoitehintainen_hoitokausi, 0.0));
         val_aika_yht_array := array_append(val_aika_yht_array, COALESCE(muu_kulu_ei_tavoitehintainen_val_aika, 0.0));
-
 
         -- Laske rahavaraukset yhteen 
         -- Tällä voi siis korvata äkilliset, vahingot, kannustin muuttujat, sekä tilaajan rahavaraus (poistetut termit)
@@ -856,7 +858,6 @@ BEGIN
         FOR i IN 1..array_length(val_aika_yht_array, 1) LOOP
             kaikki_rahavaraukset_val_yht := kaikki_rahavaraukset_val_yht + val_aika_yht_array[i];
         END LOOP;
-
 
         -----------------------------------------------------------
         -------------------  Hankinnat    -------------------------
