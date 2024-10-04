@@ -378,7 +378,11 @@
         kk-droppari-disabled (or laskun-nro-virhe?
                                laskun-nro-lukittu?)
         ;; Validoidaan koko lomake
-        lomake-validi? (tiedot/validoi-lomake lomake)]
+        lomake-validi? (tiedot/validoi-lomake lomake)
+        summa-yht (reduce + (map :summa kohdistukset))
+        lopullinen-summa (if (neg? summa-yht)
+                           (str "-" (fmt/euro (* -1 summa-yht)))
+                           (fmt/euro summa-yht))]
     [:div
      [:div.row
       #_[debug/debug app]]
@@ -508,7 +512,7 @@
      [:div.row
       [:div.col-xs-12.col-md-4 {:style {:padding-left "20px"}}
        [:h5 "Määrä € *"]
-       [:h2 (fmt/euro (reduce + (map :summa kohdistukset)))]]
+       [:h2 lopullinen-summa]]
       [:div.col-xs-12.col-md-6
        [liitteet e! kulu-lukittu? lomake]]]
 

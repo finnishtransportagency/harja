@@ -79,6 +79,12 @@ describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
 
         valitseKulunPvm();
 
+        // Varmista, että negatiivisen kulun kirjaaminen onnistuu
+        cy.get('#kohdistuksen-summa-0').type('{selectall}-999').then(() => {
+            cy.focused().blur({force: true})
+        });
+
+        // Varmista, että positiivisen kulun kirjaaminen onnistuu
         cy.get('#kohdistuksen-summa-0').type('{selectall}999').then(() => {
             cy.focused().blur({force: true})
         });
