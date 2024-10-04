@@ -83,7 +83,7 @@
         rahavaraus-atom (r/atom muokkaus-rahavaraukset)]
     [:div
      [grid/muokkaus-grid
-      {:id "tavoitehintaiset-rahavaraukset-grid"
+      {:id "tavoitehinnan-ulkopuoliset-rahavaraukset-grid"
        :otsikko "Tavoitehinnan ulkopuoliset rahavaraukset"
        :otsikko-tyyli {:font-size "1.2rem"}
        :voi-muokata? (if vahvistettu? false true)
@@ -125,7 +125,7 @@
         hoitokauden-rahavaraukset (filter #(= (:hoitokauden-numero %) (:hoitokauden-numero suodattimet)) tavoitehintaiset-rahavaraukset-data)
         hoitokauden-tavoitehinnan-ulkopuoliset-rahavaraukset (filter #(= (:hoitokauden-numero %) (:hoitokauden-numero suodattimet)) tavoitehinnan-ulkopuoliset-rahavaraukset)]
     [:<>
-     [:h2 {:id (str (get t/hallinnollisten-idt :tavoitehintaiset-rahavaraukset) "-osio")} "Rahavaraukset"]
+     [:h2 {:id "tavoitehintaiset-rahavaraukset-osio"} "Rahavaraukset"]
      [:div [:span "Tilaajan tekemät rahavaraukset, jotka vaikuttavat tavoitehintaan."]]
 
      [tavoitehintaiset-rahavaraukset-yhteenveto indeksit tavoitehintaiset-rahavaraukset-yhteensa tavoitehintaiset-rahavaraukset-yhteensa-indeksikorjattu
