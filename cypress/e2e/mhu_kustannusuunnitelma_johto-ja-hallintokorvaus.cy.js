@@ -15,9 +15,8 @@ function alustaIvalonUrakka() {
 
 // FIXME: Tämäkin osio on muuttunut erilaiseksi 2022 ja myöhemmin alkaneille urakoille.
 //        Katso tavoite- ja kattohintaosion kommentti.
-import {avaaKustannussuunnittelu} from "../support/kustannussuunnitelmaFns";
 
-describe.skip('Johto- ja hallintokorvaus osio', function () {
+describe('Johto- ja hallintokorvaus osio', function () {
 
     before(function () {
         alustaIvalonUrakka();
@@ -39,85 +38,53 @@ describe.skip('Johto- ja hallintokorvaus osio', function () {
             // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
             cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
-                .should('not.be.checked')
+                .should('be.checked').uncheck();
 
-            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+            /*cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
                 .testaaOtsikot(['Toimenkuva', 'Tunnit/kk, h', 'Tuntipalkka, €', 'Yhteensä/kk', 'kk/v'])
                 .testaaRivienArvot([1], [0, 0], ['Sopimusvastaava'])
                 .testaaRivienArvot([1], [0, 1], [''])
                 .testaaRivienArvot([1], [0, 2], [''])
                 .testaaRivienArvot([1], [0, 3], [''])
                 .testaaRivienArvot([1], [0, 4], ['12'])
+             */
         });
 
         it('Muokkaa Sopimusvastaava-toimenkuvan tunteja ja palkkoja jokaiselle kuukaudelle erikseen (Ilman kopiointia)', function () {
-            // Avaa "Sopimusvastaava" alitaulukko
-            ks.toggleLaajennaRivi('johto-ja-hallintokorvaus-laskulla-taulukko', 'Sopimusvastaava');
+            // Avaa 'Vastuunalainen työnjohtaja' alitaulukko
+            ks.toggleLaajennaRivi('toimenkuvat-taulukko', 'Vastuunalainen työnjohtaja', true);
 
             // Aktivoi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
-            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
-                .taulukonOsaPolussa([1, 0, 0, 1, 0])
-                .find('input')
+            cy.get('#toimenkuvat-taulukko table.grid tbody tr').eq(2).find('td').find('input')
                 .should('not.be.checked')
                 .check();
 
-            // Aseta tunnit/kk Sopimusvastavaalle
-            ks.muokkaaLaajennaRivinArvoa(
-                'johto-ja-hallintokorvaus-laskulla-taulukko',
-                0, 0, 1, '10')
-            ks.muokkaaLaajennaRivinArvoa(
-                'johto-ja-hallintokorvaus-laskulla-taulukko',
-                0, 11, 1, '10', true)
+
+            // Aseta tunnit/kk 'Vastuunalainen työnjohtaja'
+            cy.get('#toimenkuvat-taulukko table.grid tbody tr').eq(2).find('td')
+                // Avatusta taulukkorivista löytyy toinen taulukko, jossa on kuukausittaiset arvo
+                .find('.grid')
+                // Ja koska "Suunnittele maksuerät kuukausittain" on valittu, niin lisätään arvo ensimmäiseen
+                .find('tbody tr').eq(0).find('td').eq(1).find('input')
+                .clear().type('10').blur();
+
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-johto-ja-hallintokorvaukset')
-            cy.wait('@tallenna-budjettitavoite')
-            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
 
-            // Disabloi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen" (seuraavia testejä varten)
-            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
-                .taulukonOsaPolussa([1, 0, 0, 1, 0])
-                .find('input')
+            // Disabloi "Suunnittle maksuerät kuukausittain" (seuraavia testejä varten)
+            cy.get('#toimenkuvat-taulukko table.grid tbody tr').eq(2).find('td').find('input')
+                // Nyt kun kaikki input laatikot on auki, niin otetaan niistä vain ensimmäinen, eli checkbox
+                .eq(0)
                 .should('be.checked')
                 .uncheck();
 
-
             // Sulje "Sopimusvastaava" alitaulukko (seuraavia testejä varten)
-            ks.toggleLaajennaRivi('johto-ja-hallintokorvaus-laskulla-taulukko', 'Sopimusvastaava');
+            ks.toggleLaajennaRivi('toimenkuvat-taulukko', 'Vastuunalainen työnjohtaja', true);
+        });
 
-            // Aseta tuntipalkka Sopimusvastaavalle
-            //  NOTE: Rivin arvon muokkaaminen ei toimi, mikäli Sopimusvastaava-alitaulukko on auki! (Suljettu yllä)
-            ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko',
-                0, 2, '10', true)
-
-
-            // Varmista, että tallennuskyselyt menevät läpi
-            cy.wait('@tallenna-budjettitavoite')
-            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
-
-
-            // -- Arvojen tarkastus --
-
-            // Tarkasta yhteensä/kk -arvo muokatulta riviltä
-            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
-                .testaaRivienArvot([1], [0, 3], ['vaihtelua/kk'])
-
-            // FIXME: johto-ja-hallintokorvaus-yhteenveto-taulukko arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
-            //        Vanhojen arvojen muokkaukset päivittyvät yhteenvetotaulukkoon normaalisti.
-            // Tarkasta arvot taulukkoon liittyvästä yhteenvetotaulukosta (Tuntimäärät ja -palkat taulukon alapuolella)
-            // cy.get('#johto-ja-hallintokorvaus-yhteenveto-taulukko')
-            //     .testaaRivienArvot([2], [],
-            //         ['Yhteensä', '',
-            //             ks.formatoiArvoDesimaalinumeroksi(20)]);
-
-            // FIXME: Johto- ja hallintokorvaus osion yhteenvedon arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
-            // Tarkasta Johto- ja hallintokorvau osion yhteenveto
-            //ks.tarkastaHintalaskurinArvo('johto-ja-hallintokorvaus-hintalaskuri', 1, 20);
-            //ks.tarkastaIndeksilaskurinArvo(indeksit, 'johto-ja-hallintokorvaus-indeksilaskuri', 1, 20);
-        })
-
-        it('Muokkaa Sopimusvastaava-toimenkuvan tunteja ja palkkoja jokaiselle kuukaudelle erikseen (Kopioinnin kanssa)', function () {
+        xit('Muokkaa Sopimusvastaava-toimenkuvan tunteja ja palkkoja jokaiselle kuukaudelle erikseen (Kopioinnin kanssa)', function () {
             // Avaa "Sopimusvastaava" alitaulukko
             ks.toggleLaajennaRivi('johto-ja-hallintokorvaus-laskulla-taulukko', 'Sopimusvastaava');
 
@@ -183,7 +150,7 @@ describe.skip('Johto- ja hallintokorvaus osio', function () {
             //ks.tarkastaIndeksilaskurinArvo(indeksit, 'johto-ja-hallintokorvaus-indeksilaskuri', 1, ?);
         })
 
-        it('Muokkaa Sopimusvastaava-toimenkuvan tunteja ja palkkoja tuleville hoitokausille', function () {
+        xit('Muokkaa Sopimusvastaava-toimenkuvan tunteja ja palkkoja tuleville hoitokausille', function () {
             // HUOM: Tässä testissä oletetaan, että tuntimäärät ja palkat alitaulukko on suljettu (Sitä ei varmisteta..)
 
             // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
@@ -276,7 +243,7 @@ describe.skip('Johto- ja hallintokorvaus osio', function () {
                 .should('not.be.checked')
         });
 
-        describe('Testaa "Hankintavastaava (ennen urakkaa)"-toimenkuvaa', function () {
+        describe.skip('Testaa "Hankintavastaava (ennen urakkaa)"-toimenkuvaa', function () {
             it('Muokkaa "Hankintavastaava (ennen urakkaa)"-toimenkuvan tunteja ja palkkoja', function () {
                 // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
                 cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
@@ -359,7 +326,7 @@ describe.skip('Johto- ja hallintokorvaus osio', function () {
 
         })
 
-        describe('Testaa uuden custom toimenkuvan lisäämistä tyhjälle riville', function () {
+        describe.skip('Testaa uuden custom toimenkuvan lisäämistä tyhjälle riville', function () {
             it('Lisää "Testitoimenkuva" tuntipalkkoineen', function () {
                 // Aseta custom nimi
                 ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko',
@@ -448,7 +415,7 @@ describe.skip('Johto- ja hallintokorvaus osio', function () {
     });
 
 
-    describe('Testaa "Johto ja hallinto: Muut kulut" taulukkoa', function () {
+    describe.skip('Testaa "Johto ja hallinto: Muut kulut" taulukkoa', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
             cy.intercept('POST', '_/tallenna-kustannusarvioitu-tyo').as('tallenna-kustannusarvioitu-tyo');

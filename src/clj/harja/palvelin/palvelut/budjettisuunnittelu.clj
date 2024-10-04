@@ -1023,10 +1023,10 @@
                              ::bs/muokkaaja (:id user)}
                             {::bs/id (:id r)})))
                       (doseq [kk (range 1 13)
-                              :let [kuukausisumma (round2 2 (/ summa 12))
-                                    viimeinen-kuukausisumma (round2 2 (- summa (* 11 kuukausisumma)))
-                                    kuukausi-indeksisumma (round2 2 (/ indeksisumma 12))
-                                    viimeinen-indeksisumma (round2 2 (- indeksisumma (* 11 kuukausi-indeksisumma)))
+                              :let [kuukausisumma (when-not (nil? summa) (round2 2 (/ summa 12)))
+                                    viimeinen-kuukausisumma (when-not (nil? summa) (round2 2 (- summa (* 11 kuukausisumma))))
+                                    kuukausi-indeksisumma (when-not (nil? summa) (round2 2 (/ indeksisumma 12)))
+                                    viimeinen-indeksisumma (when-not (nil? summa) (round2 2 (- indeksisumma (* 11 kuukausi-indeksisumma))))
                                     db-vuosi (if (>= kk 10 ) vuosi (inc vuosi))]]
                         (insert! db ::bs/kustannusarvioitu-tyo
                           {::bs/summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma) ;; Mahdollinen suurin summa hoitokauden viimeiselle kuukaudelle
