@@ -108,7 +108,8 @@
      [:div.col-xs-12.col-md-6
       [:div.label-ja-alasveto {:style {:width "320px"}}
        [:span.alasvedon-otsikko "Tehtäväryhmä*"]
-       [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
+       [yleiset/livi-pudotusvalikko {:data-cy "hankintakulu-tehtavaryhma-dropdown"
+                                     :vayla-tyyli? true
                                      :muokattu? true
                                      :pakollinen? true
                                      :valinta (:tehtavaryhma kohdistus)
@@ -324,7 +325,8 @@
          {:otsikko "Määrä € *"
           :otsikon-tag "span"
           :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
-          :kentta-params {:disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
+          :kentta-params {:data-cy (str "kohdistuksen-summa-"nro)
+                          :disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
                           :tyyppi :euro
                           :tyylit {:width "110px" :height "34px"}
                           :vaadi-negatiivinen? urakoitsija-maksaa?

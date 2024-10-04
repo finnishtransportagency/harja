@@ -66,20 +66,20 @@ describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
         avaaKulunKirjaus();
     });
 
-    it('Tehdään Normaali suunniteltu tai määrämitattava hankintakulu', () => {
-        cy.contains('Normaali suunniteltu tai määrämitattava hankintakulu').click();
+    it('Tehdään hankintakulu', () => {
 
-        cy.get('[data-cy="kulu-tehtavaryhma-dropdown"]').within(() => {
-            cy.get('button').click({force: true});
-            cy.contains('Talvihoito (A)').click();
-        });
+        // Klikkaa tehtäväryhmä alasvetovalikko auki
+        cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"]').click();
+
+        // Valitse Talvihoito (A)
+        cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"] span').contains('Talvihoito (A)').click();
 
         valitseKulunPvm();
 
-        cy.get('input.maara-input').type('{selectall}-999').then(() => {
+        cy.get('[data-cy="kohdistuksen-summa-0"]').type('{selectall}-999').then(() => {
             cy.focused().blur({force: true})
         });
-        cy.get('input.maara-input').should('have.value', '-999,00');
+        cy.get('[data-cy="kohdistuksen-summa-0"]').should('have.value', '-999,00');
         tallennaJaTarkistaKulu('Talvihoito laaja TPI');
 
 
