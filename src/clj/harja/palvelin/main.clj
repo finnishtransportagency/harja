@@ -77,6 +77,7 @@
     [harja.palvelin.palvelut.hallinta.lupaukset-palvelu :as lupaukset-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
+    [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -87,6 +88,7 @@
     [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
+    [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-palvelu :as talvihoitoreitit]
     [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
     [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.yha-velho :as yha-velho]
@@ -143,6 +145,7 @@
     [harja.palvelin.integraatiot.api.raportit :as api-raportit]
     [harja.palvelin.integraatiot.api.analytiikka :as analytiikka]
     [harja.palvelin.integraatiot.api.tyomaapaivakirja :as api-tyomaapaivakirja]
+    [harja.palvelin.integraatiot.api.talvihoitoreitit-api :as api-talvihoitoreitit]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
     [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
 
@@ -508,7 +511,11 @@
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
-                      [:http-palvelin :db  :karttakuvat])
+                      [:http-palvelin :db :karttakuvat])
+
+      :talvihoitoreitit (component/using
+                      (talvihoitoreitit/->Talvihoitoreitit)
+                      [:http-palvelin :db])
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
@@ -722,6 +729,9 @@
       :api-tyomaapaivakirja (component/using
                               (api-tyomaapaivakirja/->Tyomaapaivakirja)
                               [:http-palvelin :db :integraatioloki])
+      :api-talvihoitoreitit (component/using
+                              (api-talvihoitoreitit/->TalvihoitoreittiAPI)
+                              [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)
@@ -826,7 +836,12 @@
       :urakkahenkilot-hallinta
       (component/using
         (urakkahenkilot-hallinta/->UrakkaHenkilotHallinta)
-        [:http-palvelin :db :excel-vienti]))))
+        [:http-palvelin :db :excel-vienti])
+
+      :tieosoitteet-hallinta
+      (component/using
+        (tieosoitteet-hallinta/->TieosoitteetHallinta)
+        [:http-palvelin :db]))))
 
 (defonce harja-jarjestelma nil)
 

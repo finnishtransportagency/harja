@@ -383,6 +383,9 @@
                          :pot2-massa-lomake nil
                          :pot2-lomake nil})
 
+(def talvihoitoreitit-default {:haku-kaynnissa? false?
+                               :talvihoitoreitit nil})
+
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laatupoikkeamat laatupoikkeamat-default
                      :laskutus    laskutus-default
@@ -391,7 +394,8 @@
                      :suunnittelu suunnittelu-default-arvot
                      :toteumat    toteumat-default-arvot
                      :paikkaukset paikkaus-default-arvot
-                     :kustannusten-seuranta kustannusten-seuranta-default-arvot}))
+                     :kustannusten-seuranta kustannusten-seuranta-default-arvot
+                     :talvihoitoreitit talvihoitoreitit-default}))
 
 (defonce laatupoikkeamat (cursor tila [:laatupoikkeamat]))
 (defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
@@ -408,6 +412,7 @@
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
 (defonce lupaukset (cursor tila [:lupaukset]))
+(defonce talvihoitoreitit (cursor tila [:talvihoitoreitit]))
 
 (defonce yleiset (cursor tila [:yleiset]))
 

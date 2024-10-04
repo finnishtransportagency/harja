@@ -5,6 +5,10 @@
 (defqueries "harja/kyselyt/tieverkko.sql"
             {:positional? true})
 
+(declare hae-tr-osoite-valille* hae-tr-osoite* hae-trpisteiden-valinen-tieto tierekisteriosoite-viivaksi
+  onko-osoitteen-etaisyydet-validit? hae-osien-pituudet onko-tie-olemassa? hae-tieosan-tiedot onko-tr-yhtenainen?
+  hae-ajoratojen-pituudet hae-tieosoitteet)
+
 (defn hae-tr-osoite-valille-ehka
   "Hakee TR osoitteen pisteille. Jos teille ei löydy yhteistä pistettä, palauttaa nil."
   [db x1 y1 x2 y2 threshold]
@@ -260,3 +264,64 @@
                                                :losa (:losa tierekisteriosoite)})
         pituus (laske-tien-osien-pituudet osien-pituudet tierekisteriosoite)]
     pituus))
+
+(defn tieosoitteen-validointi
+  "Validoi tr-osoitteen lähinnä tien ja osan pituuden suhteen. Tie pitää löytyä. Ja osan pituus pitää täsmätä.
+  Tierekisteriosoitteessa saa kuitenkin olla katkoja, koska tierekisterit muuttuvat mm. kun jokin liittymä poistetaan
+  tieltä. Näin ollen tierekisteristä voi osasat 8 hypätä suoraan osaan 10. Näissä tilanteissa ei luoda virhettä,
+  vaan luodaan info."
+  [db tienumero alkuosa alkuetaisyys loppuosa loppuetaisyys]
+  (let [osat-annettu? (and (pos-int? tienumero) (pos-int? alkuosa) (pos-int? loppuosa) (int? alkuetaisyys) (int? loppuetaisyys))
+        osat (when osat-annettu? (range alkuosa (inc loppuosa)))
+        osien-lukumaara (count osat)
+        tieosoitteen-virheet []
+        tieosoitteen-virheet (if osat-annettu?
+                               tieosoitteen-virheet
+                               (conj tieosoitteen-virheet "Tieosoite puutteellinen."))
+        ;; Palauttaa nil, jos ei ole kaikkea annettu
+        tie-olemassa? (when (and osat-annettu? (empty? tieosoitteen-virheet))
+                        (onko-tie-olemassa? db {:tie tienumero}))
+
+        tieosoitteen-virheet (if (and (true? osat-annettu?) (false? tie-olemassa?))
+                               (conj tieosoitteen-virheet (format "Tietä %s ei ole." tienumero))
+                               tieosoitteen-virheet)
+
+        ;; Hae alkuosan tiedot ja päättele koodilla, että onko alkuosasta annettu liian iso alkuetäisyys
+        alkuosan-tiedot (when (and (true? osat-annettu?) (true? tie-olemassa?))
+                          (first (hae-tieosan-tiedot db {:tie tienumero :osa alkuosa})))
+        loppuosan-tiedot (when (and (true? osat-annettu?) (true? tie-olemassa?))
+                           (if (= loppuosa alkuosa)
+                             alkuosan-tiedot
+                             (first (hae-tieosan-tiedot db {:tie tienumero :osa loppuosa}))))
+        tieosoitteen-virheet (if (and
+                                   (not (nil? alkuosan-tiedot))
+                                   (> alkuetaisyys (:tr-loppuetaisyys alkuosan-tiedot)))
+                               ;; Alkuosa on tieosaon ulkopuolella
+                               (conj tieosoitteen-virheet (format "Alkuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s."
+                                                            alkuosa (:tr-loppuetaisyys alkuosan-tiedot)))
+                               tieosoitteen-virheet)
+        tieosoitteen-virheet (if (nil? alkuosan-tiedot)
+                               (conj tieosoitteen-virheet (format "Tiellä %s ei ole tieosaa %s." tienumero alkuosa))
+                               tieosoitteen-virheet)
+        tieosoitteen-virheet (if (and
+                                   (not (nil? loppuosan-tiedot))
+                                   (> loppuetaisyys (:tr-loppuetaisyys loppuosan-tiedot)))
+                               ;; Loppuosa on tieosaon ulkopuolella
+                               (conj tieosoitteen-virheet (format "Loppuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s."
+                                                            loppuosa (:tr-loppuetaisyys loppuosan-tiedot)))
+                               tieosoitteen-virheet)
+        tieosoitteen-virheet (if (nil? loppuosan-tiedot)
+                               (conj tieosoitteen-virheet (format "Tiellä %s ei ole tieosaa %s." tienumero loppuosa))
+                               tieosoitteen-virheet)
+        onko-tr-yhtenainen? (when (and tie-olemassa? osat-annettu?)
+                              (= osien-lukumaara
+                                (onko-tr-yhtenainen? db
+                                  {:tie tienumero
+                                   :osat osat})))
+        validointi-info []
+        validointi-info (if-not onko-tr-yhtenainen?
+                          (conj validointi-info "Tieosoite ei ole yhtenäinen.")
+                          validointi-info)
+        vastaus {:validaatiovirheet (when-not (empty? tieosoitteen-virheet) tieosoitteen-virheet)
+                 :validaatioinfot (when-not (empty? validointi-info) validointi-info)}]
+    vastaus))

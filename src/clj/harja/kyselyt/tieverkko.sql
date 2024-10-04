@@ -199,3 +199,15 @@ select exists(
     SELECT "tr-numero"
       FROM tr_osoitteet tr
      WHERE tr."tr-numero" = :tie);
+
+-- name: hae-tieosoitteet
+-- Ei haeta tässä vaiheessa vielä kaistoja tai ajoratoja
+SELECT * FROM (
+SELECT DISTINCT ON (CONCAT("tr-numero", "tr-osa", "tr-alkuetaisyys")) CONCAT("tr-numero", "tr-osa", "tr-alkuetaisyys") AS tunniste,
+                                                                      "tr-numero"                                      AS tie,
+                                                                      "tr-osa"                                         AS osa,
+                                                                      "tr-alkuetaisyys"                                AS alkuetaisyys,
+                                                                      "tr-loppuetaisyys"                               AS loppuetaisyys,
+                                                                      tietyyppi
+  FROM tr_osoitteet) as tiet
+ORDER BY tie, osa, alkuetaisyys;

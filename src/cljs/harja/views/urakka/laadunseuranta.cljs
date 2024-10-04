@@ -11,6 +11,8 @@
             [harja.views.urakka.laadunseuranta.sanktiot-ja-bonukset-nakyma :as sanktiot-ja-bonukset-nakyma]
             [harja.views.urakka.laadunseuranta.mobiilityokalu :as mobiilityokalu]
             [harja.views.kanavat.urakka.laadunseuranta.hairiotilanteet :as hairiotilanteet]
+            [harja.views.urakka.laadunseuranta.talvihoitoreitit-nakyma :as talvihoitoreitit]
+            [harja.domain.roolit :as roolit]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
@@ -47,7 +49,10 @@
                     (oikeudet/urakat-laadunseuranta-sanktiot id)))
     :siltatarkastukset (and (or (= :hoito tyyppi) (= :teiden-hoito tyyppi))
                             (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
-    :mobiilityokalu (not (urakka/vesivaylaurakka? urakka))))
+    :mobiilityokalu (not (urakka/vesivaylaurakka? urakka))
+    :talvihoitoreititys (and
+                          (= :teiden-hoito tyyppi)
+                          (oikeudet/urakat-laadunseuranta-talvihoitoreititys id))))
 
 (defn laadunseuranta [_ur]
   (komp/luo
@@ -82,4 +87,8 @@
        "Mobiilityökalu" :mobiilityokalu
        ^{:key "mobiilityokalu"}
        (when (valilehti-mahdollinen? :mobiilityokalu ur)
-         [mobiilityokalu/mobiilityokalu])])))
+         [mobiilityokalu/mobiilityokalu])
+
+       "Talvihoitoreititys" :talvihoitoreititys
+       (when (valilehti-mahdollinen? :talvihoitoreititys ur)
+         [talvihoitoreitit/talvihoitoreitit-nakyma])])))

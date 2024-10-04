@@ -165,3 +165,11 @@
 
 (def +tyomaapaivakirja-kirjaus-response+ "api/schemas/tyomaapaivakirja-kirjaus-response.schema.json")
 (def tyomaapaivakirja-kirjaus-response (tee-validaattori +tyomaapaivakirja-kirjaus-response+))
+
+;; Talvihoitoreitit
+(def +talvihoitoreitti-kirjaus-request+ "api/schemas/talvihoitoreitti-kirjaus-request.schema.json")
+(def talvihoitoreitti-kirjaus-request (tee-validaattori +talvihoitoreitti-kirjaus-request+))
+(def +talvihoitoreitti-paivitys-request+ "api/schemas/talvihoitoreitti-paivitys-request.schema.json")
+(def talvihoitoreitti-paivitys-request (tee-validaattori +talvihoitoreitti-paivitys-request+))
+(def +talvihoitoreitti-poisto-request+ "api/schemas/talvihoitoreitti-poisto-request.schema.json")
+(def talvihoitoreitti-poisto-request (tee-validaattori +talvihoitoreitti-poisto-request+))

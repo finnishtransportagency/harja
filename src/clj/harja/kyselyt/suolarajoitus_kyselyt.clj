@@ -7,6 +7,16 @@
 (defqueries "harja/kyselyt/suolarajoitus_kyselyt.sql"
   {:positional? true})
 
+(declare onko-tierekisteriosoite-paallekainen hae-leikkaavat-pohjavesialueet-tierekisterille
+  hae-suolarajoitukset-hoitokaudelle hae-suolarajoitusalue paivita-rajoitusalue! tallenna-rajoitusalue<!
+  hae-suolarajoitus paivita-suolarajoitus! tallenna-suolarajoitus<! poista-suolarajoitus<!
+  hae-suolarajoitukset-rajoitusalueelle poista-suolarajoitusalue<! hae-talvisuolan-kokonaiskayttoraja
+  hae-talvisuolan-sanktiot hae-rajoitusalueiden-suolasanktio hae-talvisuolan-kayttoraja-alueurakka
+  paivita-talvisuolan-kayttoraja! tallenna-talvisuolan-kayttoraja! paivita-talvisuolan-kayttoraja-alueurakka!
+  tallenna-talvisuolan-kayttoraja-alueurakka<! paivita-rajoitusalueen-suolasanktio! tallenna-rajoitusalueen-suolasanktio!
+  hae-rajoitusalueen-suolatoteumasummat hae-rajoitusalueen-paivan-toteumat hae-pohjavesialueidenurakat
+  hae-urakan-siirrettavat-pohjavesialueet onko-urakalla-suolatoteumia)
+
 (defn hae-suolatoteumat-rajoitusalueittain [db {:keys [hoitokauden-alkuvuosi alkupvm loppupvm urakka-id] :as tiedot}]
   (let [;; Hae formiaatti ja talvisuolan materiaalityyppien id:t, jotta niiden summatiedot on helpompi laskea toteumista
         alkupvm (c/to-sql-time alkupvm)

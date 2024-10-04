@@ -89,6 +89,13 @@ id = :id;
 INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja)
     VALUES (:urakka, :kayttaja);
 
+-- name: lisaa-jarjestelmatunnukselle-kirjoitusoikeus!
+-- Tämä on vain hallintapaneelin debug käyttöjä varten. Älä käytä mihinkään muuhun
+UPDATE kayttaja
+   SET api_oikeudet =
+           array_append(ARRAY_REMOVE(api_oikeudet, 'kirjoitus'::apioikeus), 'kirjoitus'::apioikeus)
+ WHERE id = :kayttaja_id;
+
 -- name: luo-jarjestelmatunnus<!
 INSERT
    INTO kayttaja (kayttajanimi, kuvaus, organisaatio, luotu, jarjestelma, poistettu, api_oikeudet)

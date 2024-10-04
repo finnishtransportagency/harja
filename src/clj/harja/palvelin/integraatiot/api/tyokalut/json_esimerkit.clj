@@ -85,6 +85,11 @@
 (def +tyomaapaivakirja-kirjaus-request+ "api/examples/tyomaapaivakirja-kirjaus-request.json")
 (def +tyomaapaivakirja-paivitys-request+ "api/examples/tyomaapaivakirja-paivitys-request.json")
 
+;; Talvihoito
+(def +talvihoitoreitti-kirjaus-request+ "api/examples/talvihoitoreitti-kirjaus-request.json")
+(def +talvihoitoreitti-paivitys-request+ "api/examples/talvihoitoreitti-paivitys-request.json")
+(def +talvihoitoreitti-poisto-request+ "api/examples/talvihoitoreitti-poisto-request.json")
+
 ;; Analytiikka
 (def +analytiikka-reittitoteumat-response+ "api/examples/analytiikka-reittitoteumat-response.json")
 (def +analytiikka-paallystyskohteiden-haku-vastaus+ "api/examples/analytiikka-paallystyskohteiden-haku-response.json")

@@ -180,7 +180,7 @@
                                          "/toteumat/reitti")
                               {:body (.stringify js/JSON (clj->js (koostettu-data app)))
                                :content-type :json
-                               :accect :json
+                               :accept :json
                                ;:headers {"OAM_REMOTE_USER" "ivalo-api"}
                                }))]
             (if (k/virhe? vastaus)

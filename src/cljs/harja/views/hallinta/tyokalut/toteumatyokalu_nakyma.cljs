@@ -1,4 +1,4 @@
-(ns harja.views.hallinta.toteumatyokalu-nakyma
+(ns harja.views.hallinta.tyokalut.toteumatyokalu-nakyma
   "Työkalu toteumien lisäämiseksi testiurakoille."
   (:require [tuck.core :refer [tuck send-value! send-async!]]
             [harja.domain.oikeudet :as oikeudet]

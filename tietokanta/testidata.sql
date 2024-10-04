@@ -115,6 +115,8 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 -- Turvallisuuspoikkeamat
 \i testidata/turvallisuuspoikkeamat.sql
 
+--== Laadunseuranta ==--
+\i testidata/laadunseuranta/talvihoitoreitit_testidata.sql
 -- Laatupoikkeamat
 
 \i testidata/laatupoikkeamat.sql

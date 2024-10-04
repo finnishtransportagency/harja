@@ -843,6 +843,13 @@
             {:otsikko "Aikataulu" :tyyppi :string :nimi :aikataulu}]
    :data (:infopaneelin-tiedot kohde)})
 
+(defmethod infopaneeli-skeema :talvihoitoreitit [talvihoitoreitti]
+  {:tyyppi :talvihoitoreitit
+   :jarjesta-fn (constantly false)
+   :otsikko (str "Talvihoitoreitti: " (:nimi (:infopaneelin-tiedot talvihoitoreitti)))
+   :tiedot [{:otsikko "Pituus (km)"  :nimi :pituus}]
+   :data (:infopaneelin-tiedot talvihoitoreitti)})
+
 (defmethod infopaneeli-skeema :paikkaukset-paikkausten-paallystysilmoitukset [kohde]
   (println (pr-str kohde))
   {:tyyppi :paikkaukset-paikkausten-paallystysilmoitukset

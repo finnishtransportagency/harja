@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tunniste": {
+      "type": "string",
+      "required": true,
+      "description": "Lähettävän järjestelmän sisäinen tunniste. Käytetään reitin päivityksessä ja poistossa."
+    },
+    "reittinimi": {
+      "type": "string",
+      "required": true,
+      "description": "Reitin nimi."
+    },
+    "sijainnit": {
+      "type": "array",
+      "description": "Reitti voi koostua useista tieosoitteista. Katko tien vaihtuessa reitti useampaan osaan tai jos samalla tiellä on katkoja.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tie": {
+            "type": "integer",
+            "required": true,
+            "minimum": 0,
+            "description": "Tienumero"
+          },
+          "aosa": {
+            "type": "integer",
+            "required": true,
+            "minimum": 0,
+            "description": "Tien alkuosa."
+          },
+          "aet": {
+            "type": "integer",
+            "required": true,
+            "minimum": 0,
+            "description": "Alkuetäisyys osalla."
+          },
+          "losa": {
+            "type": "integer",
+            "required": true,
+            "minimum": 0,
+            "description": "Loppuosa."
+          },
+          "let": {
+            "type": "integer",
+            "required": true,
+            "minimum": 0,
+            "description": "Loppuetäisyys osalla."
+          },
+          "pituus": {
+            "type": "number",
+            "required": true,
+            "description": "Reitin pituus metreinä.",
+            "minimum": 0
+          },
+          "hoitoluokka": {
+            "enum": ["IsE", "Is", "I", "Ib", "Ic", "II", "III", "L", "K1", "K2", "K"],
+            "required": true,
+            "description": "Reitin hoitoluokka. Hoitoluokkavaihtoehdot: IsE, Is, I, Ib, Ic, II, III, L, K1, K2, K"
+          },
+          "kalustot": {
+            "type": "array",
+            "description": "Yhdellä tieosuudella voi olla useita ei kalustoja.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kalustotyyppi": {
+                  "type": "string",
+                  "required": true,
+                  "description": "Kalustotyyppi, jota käytetään tällä reitillä. Esim. TR tai KA."
+                },
+                "kalusto-lkm": {
+                  "type": "integer",
+                  "required": true,
+                  "description": "Kaluston lukumäärä, jota kalustotyypistä käytetään. Esim. 4",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

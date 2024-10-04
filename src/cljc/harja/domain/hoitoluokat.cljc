@@ -1,6 +1,7 @@
 (ns harja.domain.hoitoluokat
   "Määrittelee talvihoitoluokat ja soratien hoitoluokat"
-  (:require [harja.pvm :as pvm]))
+  (:require [clojure.string :as str]
+            [harja.pvm :as pvm]))
 
 (def ei-talvihoitoluokkaa-nimi "Ei kohdistu hoitoluokkiin")
 
@@ -52,7 +53,11 @@ talvihoitoluokan-nimi-str
 
 (def ^{:doc "Mäppäys talvihoitoluokan nimestä sen numeroon."}
   talvihoitoluokan-numero
-  (into {} (map (juxt :nimi :numero)) talvihoitoluokat))
+  (into {} (map (juxt :nimi :numero))
+    ;; Laitetaan hoitoluokat lowercaseksi, niin vertailu onnistuu helpommin.
+    (map (fn [luokka]
+           (assoc luokka :nimi (str/lower-case (:nimi luokka))))
+      talvihoitoluokat)))
 
 (def ^{:doc "Mahdolliset soratieluokat. Nimi kertoo käyttöliittymässä käytetyn nimen.
 Numero on tierekisterin koodi luokalle."}
