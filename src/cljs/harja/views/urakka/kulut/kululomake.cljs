@@ -325,7 +325,7 @@
          {:otsikko "Määrä € *"
           :otsikon-tag "span"
           :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
-          :kentta-params {:data-cy (str "kohdistuksen-summa-"nro)
+          :kentta-params {:elementin-id (str "kohdistuksen-summa-"nro)
                           :disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
                           :tyyppi :euro
                           :tyylit {:width "110px" :height "34px"}
@@ -488,7 +488,8 @@
         {:kentta-params {:tyyppi :string
                          :vayla-tyyli? true
                          :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))
-                         :disabled? kulu-lukittu?}
+                         :disabled? kulu-lukittu?
+                         :elementin-id "koontilaskun-numero-input"}
          :otsikko "Koontilaskun numero"
          :luokka #{}
          :arvo-atom (r/wrap

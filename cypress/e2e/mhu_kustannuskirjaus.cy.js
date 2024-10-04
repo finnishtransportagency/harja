@@ -30,10 +30,13 @@ let valitseKulunPvm = () => {
     cy.get('[data-cy="koontilaskun-kk-dropdown"]').within(() => {
         cy.get('button').click({force: true});
         cy.contains('Syyskuu - 2. hoitovuosi').click();
-    })
+    });
+
+    // Dropdown jää auki, ellei focusta siirretä muualle
+    cy.get('#kohdistuksen-summa-0').click().blur();
 
     cy.get('.kalenteri-kontti').within(() => {
-        cy.get('input').click();
+        cy.get('input').focus().click();
         cy.get('td').contains('29').click();
     })
 }
@@ -76,10 +79,10 @@ describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
 
         valitseKulunPvm();
 
-        cy.get('[data-cy="kohdistuksen-summa-0"]').type('{selectall}-999').then(() => {
+        cy.get('#kohdistuksen-summa-0').type('{selectall}999').then(() => {
             cy.focused().blur({force: true})
         });
-        cy.get('[data-cy="kohdistuksen-summa-0"]').should('have.value', '-999,00');
+        cy.get('#kohdistuksen-summa-0').should('have.value', '999,00');
         tallennaJaTarkistaKulu('Talvihoito laaja TPI');
 
 
