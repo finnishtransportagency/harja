@@ -435,7 +435,7 @@
        (map-indexed
         (fn [rivi-nro rivi]
           ;; Lisää väliotsikot mikäli nämä puuttuvat 
-          (let [lisatty-otsikko (when (and (:otsikko rivi) lisaa-excel-valiotsikot)
+          (let [lisatty-otsikko (when (:otsikko rivi)
                                   (taulukon-valiotsikko (:otsikko rivi) workbook))
                 rivi-nro (+ nolla 1 rivi-nro)
                 rivi-nro (if (= rivi-nro lisatty-otsikko) (inc rivi-nro) rivi-nro)

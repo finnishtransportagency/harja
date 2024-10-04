@@ -999,8 +999,9 @@
                                                                             :vuosi vuosi
                                                                             :sopimus_id sopimus-id})
                   ;; Jokaisella kustannusarvoitu_tyo -rivillä pitää olla toimenpideinstanssi.
-                  ;; Tällä hetkelä ei tiedetä, että saako rahavaraukset oman toimenpideinstanssin, vai otetaanko joku vain.
-                  ;; Joten tässä vähän keskeneräinen toteutus, jossa toimenpideinstansseista otetaan vain ensimmäinen.
+                  ;; Rahavaraukset eivät kuulu millekään tällä hetkellä tiedetylle toimenpideinstanssille.
+                  ;; Mutta yksinkertaisuuden vuoksi toimenpideinstanssin pakollisuutta ei lähdetty muuttamaan, vaan laitetaan
+                  ;; Rahavaraukselle vain jokin toimenpideinstanssi. Sen olemassaolo filtteröidään muualla pois.
                   ensimmainen-toimenpideinstanssi-id (:id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id})))
 
                   ;; Päivitetään tai insertoidaan rahavaraus sen mukaan, löytyikö sitä tietokanansta
