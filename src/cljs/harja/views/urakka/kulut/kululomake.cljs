@@ -449,7 +449,7 @@
          ; Jos tätä kutsutaan parillinen määrä, alasveto jää auki
          (mapv (fn [kk]
                  [:div.koontilaskun-kuukaudet-komp {:on-click #(e! (tiedot/->KoontilaskunKuukausi kk))}
-                  [:div  kk]
+                  [:div (tiedot/koontilaskun-kk-formatter kk)]
                   [:div (when (tiedot/paatos-tehty-rivin-vuodelle? app kk) [ikonit/locked-svg])]])
            koontilaskun-kuukaudet)]
 
