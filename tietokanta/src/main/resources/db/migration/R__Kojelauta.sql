@@ -32,7 +32,7 @@ BEGIN
 
     suunnitelman_tila := CASE
         WHEN vahvistettuja = kaikkien_osioiden_lkm_per_hoitokausi THEN 'vahvistettu'
-        WHEN vahvistamattomia > 0 THEN 'aloitettu'
+        WHEN (vahvistamattomia > 0 OR vahvistettuja > 0) THEN 'aloitettu'
         ELSE 'aloittamatta'
 END;
 
