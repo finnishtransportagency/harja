@@ -382,7 +382,7 @@
         summa-yht (reduce + (map :summa kohdistukset))
         lopullinen-summa (if (neg? summa-yht)
                            (str "-" (fmt/euro (* -1 summa-yht)))
-                           (fmt/euro summa-yht))]
+                           (fmt/euro (or summa-yht 0)))]
     [:div
      [:div.row
       #_[debug/debug app]]
