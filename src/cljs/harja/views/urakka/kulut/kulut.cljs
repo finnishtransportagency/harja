@@ -182,8 +182,8 @@
                                                                   (first (:valittu-hoitokausi app))
                                                                   aikaisin-mahdollinen-nyt))
            kuukaudet (pvm/aikavalin-kuukausivalit
-                      [hk-alkupvm
-                       hk-loppupvm])
+                       [hk-alkupvm
+                        hk-loppupvm])
            kuukaudet (conj kuukaudet nil)
            urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
            urakan-loppuvuosi (pvm/vuosi urakan-loppupvm)
@@ -192,14 +192,15 @@
                                 (:hoitokauden-alkuvuosi app))
            hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
            haun-alkupvm-atom (r/atom (get-in app [:parametrit :haun-alkupvm]))
-           haun-loppupvm-atom (r/atom (get-in app [:parametrit :haun-loppupvm]))]
+           haun-loppupvm-atom (r/atom (get-in app [:parametrit :haun-loppupvm]))
+           haku-menossa (get-in app [:parametrit :haku-menossa])]
        [:div
         (if syottomoodi
           [:div.kulujen-kirjaus
-             [kululomake/kululomake e! app]]
+           [kululomake/kululomake e! app]]
           [:div#vayla.kulujen-listaus.margin-top-16
            [:div.flex-row
-           #_ [debug/debug app]
+            #_[debug/debug app]
             [:h1 "Kulujen kohdistus"]
             ^{:key "raporttixls"}
             [:form {:style {:margin-left "auto"}
@@ -225,7 +226,7 @@
                                               :loppupvm (or (second haun-kuukausi) haun-loppupvm)})}]
              [napit/tallenna "Tallenna PDF" (constantly true)
               {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-toissijainen" :type "submit"
-               :esta-prevent-default? true}] ]
+               :esta-prevent-default? true}]]
 
             [napit/yleinen-ensisijainen
              "Uusi kulu"
@@ -236,6 +237,7 @@
             [:div.filtteri.label-ja-alasveto
              [:span.alasvedon-otsikko "Hoitovuosi"]
              [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
+                                           :disabled (boolean haku-menossa)
                                            :vayla-tyyli? true
                                            :data-cy "hoitokausi-valinta"
                                            :valitse-fn #(do
@@ -247,6 +249,7 @@
               hoitovuodet]]
             [valinnat/kuukausi {:nil-valinta "Koko hoitokausi"
                                 :vayla-tyyli? true
+                                :disabled (boolean haku-menossa)
                                 :valitse-fn #(do
                                                (e! (tiedot/->AsetaHakukuukausi %))
                                                (e! (tiedot/->HaeUrakanKulut
@@ -256,31 +259,32 @@
 
              kuukaudet haun-kuukausi]
             [:span {:class "label-ja-aikavali"}
-             [:div.label-ja-alasveto.aikavali
-              [:span.alasvedon-otsikko (str "Aikaväli")]
-              [:div.aikavali-valinnat
-               [kentat/tee-kentta {:tyyppi :pvm
-                                   :vayla-tyyli? true
-                                   :on-datepicker-select #(do
-                                                            (e! (tiedot/->AsetaHakuAlkuPvm %))
-                                                            (when (and % @haun-loppupvm-atom)
-                                                              (e! (tiedot/->HaeUrakanKulut
-                                                                    {:id (-> @tila/yleiset :urakka :id)
-                                                                     :alkupvm %
-                                                                     :loppupvm @haun-loppupvm-atom}))))}
-                haun-alkupvm-atom]
-               [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
-               [kentat/tee-kentta {:tyyppi :pvm
-                                   :vayla-tyyli? true
-                                   :on-datepicker-select (fn [loppupvm]
-                                                           (do
-                                                             (e! (tiedot/->AsetaHakuLoppuPvm loppupvm))
-                                                             (when (and (not (nil? loppupvm)) (not (nil? @haun-alkupvm-atom)))
-                                                               (e! (tiedot/->HaeUrakanKulut
-                                                                     {:id (-> @tila/yleiset :urakka :id)
-                                                                      :alkupvm @haun-alkupvm-atom
-                                                                      :loppupvm loppupvm})))))}
-                haun-loppupvm-atom]]]]]
+             (when-not (boolean haku-menossa)
+               [:div.label-ja-alasveto.aikavali
+                [:span.alasvedon-otsikko (str "Aikaväli")]
+                [:div.aikavali-valinnat
+                 [kentat/tee-kentta {:tyyppi :pvm
+                                     :vayla-tyyli? true
+                                     :on-datepicker-select #(do
+                                                              (e! (tiedot/->AsetaHakuAlkuPvm %))
+                                                              (when (and % @haun-loppupvm-atom)
+                                                                (e! (tiedot/->HaeUrakanKulut
+                                                                      {:id (-> @tila/yleiset :urakka :id)
+                                                                       :alkupvm %
+                                                                       :loppupvm @haun-loppupvm-atom}))))}
+                  haun-alkupvm-atom]
+                 [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
+                 [kentat/tee-kentta {:tyyppi :pvm
+                                     :vayla-tyyli? true
+                                     :on-datepicker-select (fn [loppupvm]
+                                                             (do
+                                                               (e! (tiedot/->AsetaHakuLoppuPvm loppupvm))
+                                                               (when (and (not (nil? loppupvm)) (not (nil? @haun-alkupvm-atom)))
+                                                                 (e! (tiedot/->HaeUrakanKulut
+                                                                       {:id (-> @tila/yleiset :urakka :id)
+                                                                        :alkupvm @haun-alkupvm-atom
+                                                                        :loppupvm loppupvm})))))}
+                  haun-loppupvm-atom]]])]]
            (when kulut
              [:div
               (if (get-in app [:parametrit :haku-menossa])
