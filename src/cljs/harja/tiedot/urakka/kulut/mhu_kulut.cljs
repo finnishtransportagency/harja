@@ -577,9 +577,9 @@
   KuluHaettuLomakkeelle
   (process-event [{kulu :kulu} app]
     (-> app
+      (assoc-in [:parametrit :haku-menossa] false)
       (update-in [:parametrit :haetaan] dec)
-      (assoc :syottomoodi true
-        :lomake (kulu->lomake app kulu))))
+      (assoc :syottomoodi true :lomake (kulu->lomake app kulu))))
 
   AvaaKulu
   (process-event [{kulu :kulu} app]
@@ -589,7 +589,8 @@
          :id kulu}
         {:onnistui ->KuluHaettuLomakkeelle
          :epaonnistui ->KutsuEpaonnistui})
-      (update-in [:parametrit :haetaan] inc)))
+      (update-in [:parametrit :haetaan] inc)
+      (assoc-in [:parametrit :haku-menossa] true)))
 
   OnkoLaskunNumeroKaytossa
   (process-event [{laskun-numero :laskun-numero} app]

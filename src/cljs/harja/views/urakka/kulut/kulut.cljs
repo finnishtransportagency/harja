@@ -287,7 +287,7 @@
                   haun-loppupvm-atom]]])]]
            (when kulut
              [:div
-              (if (get-in app [:parametrit :haku-menossa])
+              (if (boolean haku-menossa)
                 [yleiset/ajax-loader "Ladataan..."]
                 [kulutaulukko {:e! e! :haetaan? (> haetaan 0)
                                :tiedot kulut :tehtavaryhmat tehtavaryhmat
