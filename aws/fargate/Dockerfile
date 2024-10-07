@@ -8,6 +8,11 @@ FROM eclipse-temurin:17.0.12_7-jre-noble
 LABEL description="Harja app"
 LABEL version="1.0"
 
+# Poista ubuntu-käyttäjä
+# Workaround virheeseen: "groupadd: GID '1000' already exists"
+#  -> https://bugs.launchpad.net/cloud-images/+bug/2005129
+RUN touch /var/mail/ubuntu && chown ubuntu /var/mail/ubuntu && userdel -r ubuntu
+
 # https://github.com/aws/amazon-ecs-agent/issues/3594
 # Lisää /tmp volumena, jotta voidaan käyttää sitä kiertotienä ECS Agent ongelmaan.
 # Korjaa ohjeen mukaan 0755 luvat
