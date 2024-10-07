@@ -45,11 +45,15 @@
                                   (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiOnnistui vastaus))
                                   (viesti/nayta-toast! "Tiemerkintää informoitu onnistuneesti!" :onnistui viesti/viestin-nayttoaika-keskipitka))
                   :kun-virhe (fn [vastaus]
-                               (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiEpaonnistui vastaus)))}]]
+                               (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiEpaonnistui vastaus)))
+                  :siirra-fokus (str "grid-row-" (:id lomake))}]]
                [:div.col-xs-6 {:style {:text-align "end"}}
                 [napit/peruuta
                  "Kumoa"
-                 #(e! (t-paikkauskohteet/->SuljeTiemerkintaModal))]]]}
+                 #(e! (t-paikkauskohteet/->SuljeTiemerkintaModal))
+                 {:esta-tab-eteenpain? true :siirra-fokus "btn-tallenna-valmiiksi"}]]]
+      :esta-rastista-tabilla-pois-siirtyminen? true
+      :siirra-fokus-rastista "btn-tallenna-valmiiksi"}
 
      [:div
       [lomake/lomake {:ei-borderia? true
@@ -106,7 +110,8 @@
            :koko [90 7]
            :pakollinen? true
            ::lomake/col-luokka "col-xs-12"
-           :rivi-luokka "lomakeryhman-rivi-tausta"})
+           :rivi-luokka "lomakeryhman-rivi-tausta"
+           :elementin-id "text-area-viesti-tiemerkintaan"})
         {:teksti "Lähetä sähköpostiini kopio viestistä"
          :nimi :kopio-itselle?
          ::lomake/col-luokka "col-xs-12"
@@ -257,7 +262,8 @@
     :virheteksti (validointi/nayta-virhe-teksti [:nimi] lomake)
     :validoi [[:ei-tyhja "Anna nimi"]]
     ::lomake/col-luokka "col-sm-6"
-    :pituus-max 100}
+    :pituus-max 100
+    :esta-tab-taaksepain? true}
    {:otsikko "Numero"
     :tyyppi :positiivinen-numero
     :kokonaisluku? true
@@ -349,7 +355,9 @@
                 {:nappi [napit/yleinen-toissijainen "Lisää toteuma"
                          #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma) lomake))
                          {:paksu? true
-                          :ikoni (ikonit/livicon-plus)}]})
+                          :ikoni (ikonit/livicon-plus)
+                          :siirra-fokus "pvm-input-tyo-alkoi"
+                          :elementin-id "btn-lisaa-toteuma"}]})
               ;; POT raportointia varten tarvitaan erilainen nappi. Jotta se voidaan näyttää, paikkauskohteen täytyy olla
               ;; pot-raportoitava, sekä tietenkin kaikki normaali toteumanappia varten tehdyt ehdot pitää täyttyä
               (when (and pot-raportoitava?
@@ -688,7 +696,11 @@
      [:div.col-xs-12 {:style {:padding-top "24px"}}
       [napit/muokkaa "Muokkaa kohdetta" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake
                                                                                :tyyppi :paikkauskohteen-muokkaus)))
-       {:luokka "napiton-nappi" :paksu? true}]])
+       {:luokka "napiton-nappi"
+        :paksu? true
+        :siirra-fokus "form-paikkauskohde-nimi"
+        :elementin-id "btn-paikkauskohteen-muokkaus"
+        :esta-tab-taaksepain? true}]])
 
    [:hr]
 
@@ -719,7 +731,12 @@
    [:div.col-xs-12.margin-top-16
     [:span.flex-ja-baseline.margin-top-4
      [:div.lomake-arvo.margin-right-64 (paikkaus/tyomenetelma-id->nimi (:tyomenetelma lomake) tyomenetelmat)]
-     [napit/muokkaa "Muokkaa" #(e! (harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake/->AvaaPMRLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}]]
+     [napit/muokkaa "Muokkaa" #(e! (harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake/->AvaaPMRLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus)))
+      {:luokka "napiton-nappi"
+       :paksu? true
+       :siirra-fokus "form-paikkauskohde-nimi"
+       :elementin-id "btn-paikkauskohteen-muokkaus"
+       :esta-tab-taaksepain? true}]]
     [:div.lomake-arvo.margin-top-4 (or (:lisatiedot lomake) "")]
     [:div.lomake-arvo.margin-top-4 (tr-domain/tr-osoite-moderni-fmt (:tie lomake)
                                                                     (:aosa lomake) (:aet lomake)
@@ -733,9 +750,11 @@
        #_[napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-katselu)))
           {:luokka "napiton-nappi" :paksu? true}] ;; Tällä hetkellä otettiin pois käytöstä. Katsellaan miten vaikuttaa käytettävyyteen
        [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus)))
-        {:luokka "napiton-nappi" :paksu? true}])]]])
+        {:luokka "napiton-nappi"
+         :paksu? true
+         :siirra-fokus "btn-paikkauskohteen-muokkaus"}])]]])
 
-(defn- footer-oikeat-napit [e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu?]
+(defn- footer-oikeat-napit [e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu? urakoitsijan-lukutila?]
   [:div {:style {:text-align "end"}}
    ;; Lomake on auki
    (when muokkaustila?
@@ -747,32 +766,69 @@
                         :hyvaksy "Poistu tallentamatta"
                         :peruuta-txt "Palaa lomakkeelle"
                         :toiminto-fn (fn []
-                                       (e! (t-paikkauskohteet/->SuljeLomake)))})
+                                       (e! (t-paikkauskohteet/->SuljeLomake)))
+                        :hyvaksymispainikkeen-id "btn-poistu-tallentamatta"
+                        :siirra-fokus-hyvaksymisesta (if (:id lomake) (str "grid-row-" (:id lomake)) "btn-lisaa-kohde")
+                        :siirra-fokus-peruutuksesta "peruuta-painike"
+                        :esta-rastista-tabilla-pois-siirtyminen? true
+                        :esta-tab-eteenpain-peruutusnapista? true
+                        :siirra-fokus-rastista "peruuta-painike"})
                      (e! (t-paikkauskohteet/->SuljeLomake)))
-      {:paksu? true}])
+      {:paksu? true
+       :siirra-fokus (cond
+                       (and (not muokattu?) (not (:id lomake)))
+                       "btn-lisaa-kohde"
+
+                       (and (not muokattu?) (:id lomake))
+                       (str "grid-row-" (:id lomake))
+
+                       :else
+                       "btn-poistu-tallentamatta")
+       :esta-tab-eteenpain? true
+       :elementin-id "peruuta-painike"}])
 
    ;; Lukutila, tilaajan näkymä
    (when (and voi-tilata? (not muokkaustila?))
      [napit/yleinen-toissijainen
       "Sulje"
       #(e! (t-paikkauskohteet/->SuljeLomake))
-      {:paksu? true}])
+      {:paksu? true
+       :siirra-fokus (str "grid-row-" (:id lomake))
+       :esta-tab-eteenpain? true}])
 
    ;; Lukutila, urakoitsijan näkymä
    (when (and (not muokkaustila?) (not voi-tilata?) voi-perua?)
      [napit/yleinen-toissijainen
       "Sulje"
       #(e! (t-paikkauskohteet/->SuljeLomake))
-      {:paksu? true}])
+      {:paksu? true
+       :siirra-fokus (str "grid-row-" (:id lomake))
+       :elementin-id "btn-sulje-paikkauskohde-lomake"
+       :esta-tab-eteenpain? true}])
    ;; Lukutila - ei voi tilata, eikä voi perua
    (when (and (not muokkaustila?) (not voi-tilata?) (not voi-perua?))
      [napit/yleinen-toissijainen
       "Sulje"
       #(e! (t-paikkauskohteet/->SuljeLomake))
-      {:paksu? true}])])
+      {:paksu? true :elementin-id "btn-sulje-paikkauskohde-lomake"
+       :siirra-fokus (str "grid-row-" (:id lomake))
+       :esta-tab-eteenpain? true
+       :esta-tab-taaksepain? (when urakoitsijan-lukutila? true)}])])
 
 (defn- footer-vasemmat-napit [e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]
-  (let [voi-tallentaa? (::tila/validi? lomake)]
+  (let [voi-tallentaa? (::tila/validi? lomake)
+        kumoa-hylkays-nappi "btn-kumoa-hylkays"
+        varmista-hylkayksen-peruminen-nappi "btn-varmista-hylkayksen-peruminen"
+        tee-tilaus-nappi "btn-tee-tilaus"
+        varmista-tilaaminen-nappi "btn-varmista-tilaaminen"
+        peru-tilaus-nappi "btn-peru-tilaus"
+        varmista-tilauksen-peruminen-nappi "btn-varmista-tilauksen-peruminen"
+        hylkaa-ehdotus-nappi "btn-hylkaa-ehdotus"
+        varmista-hylkaaminen-nappi "btn-varmista-hylkaaminen"
+        poista-kohde-nappi "btn-poista-kohde"
+        modaali-poista-kohde-nappi "btn-modaali-poista-kohde"
+        varmista-valmiiksi-merkitseminen-nappi "btn-varmista-valmiiksi-merkitseminen"
+        tallenna-paikkauskohteen-muutokset-nappi "btn-tallenna-paikkauskohteen-muutokset"]
     [:div
 
      ;; Raportointitila - muokkaus auki
@@ -784,7 +840,9 @@
           [napit/tallenna
            "Tallenna"
            #(e! (t-paikkauskohteet/->TallennaPaikkauskohdeRaportointitilassa (lomake/ilman-lomaketietoja lomake)))
-           {:disabled (not voi-tallentaa?) :paksu? true}]
+           {:disabled (not voi-tallentaa?)
+            :paksu? true
+            :siirra-fokus (str "grid-row-" (:id lomake))}]
 
           ;; Raportointitilassa paikkauskohteen tallennus ja valmiiksi merkitseminen, kun tila on "tilattu" ja tiemerkintää ei ole tuhoutunut.
           ;; Tallennuksen yhteydessä avataan modal jossa varmistetaan, että käyttäjä on merkitsemässä tilauksen valmiiksi
@@ -793,7 +851,7 @@
           [napit/tallenna
            "Tallenna"
            (t-paikkauskohteet/nayta-modal
-             (str "Merkitääntkö kohde \"" (:nimi lomake) "\" valmiiksi?")
+             (str "Merkitäänkö kohde \"" (:nimi lomake) "\" valmiiksi?")
              "Tilaaja saa sähköpostiin ilmoituksen kohteen valmistumisesta."
              [napit/palvelinkutsu-nappi
               "Merkitse valmiiksi"
@@ -811,9 +869,16 @@
               {:paksu? true
                :ikoni (ikonit/check)
                :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiOnnistui vastaus)))
-               :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiEpaonnistui vastaus)))}]
-             [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
-           {:disabled (not voi-tallentaa?)}]
+               :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiEpaonnistui vastaus)))
+               :id varmista-valmiiksi-merkitseminen-nappi
+               :siirra-fokus (str "grid-row-" (:id lomake))
+               :esta-tab-taaksepain? true}]
+             [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true
+                                                                 :siirra-fokus tallenna-paikkauskohteen-muutokset-nappi
+                                                                 :esta-tab-eteenpain? true}])
+           {:disabled (not voi-tallentaa?)
+            :siirra-fokus varmista-valmiiksi-merkitseminen-nappi
+            :elementin-id tallenna-paikkauskohteen-muutokset-nappi}]
 
           ;; Raportointitilassa, Kohteen valmiiksi saattaminen, kun tiemerkintää ON tuhoutunut, avaan erillinen modal, jossa
           ;; kirjoitetaan tiemerkintään viesti.
@@ -822,7 +887,11 @@
           [napit/tallenna
            "Tallenna"
            #(e! (t-paikkauskohteet/->AvaaTiemerkintaModal (assoc lomake :kopio-itselle? true)))
-           {:disabled (not voi-tallentaa?) :paksu? true}]
+           {:disabled (not voi-tallentaa?)
+            :paksu? true
+            :siirra-fokus "text-area-viesti-tiemerkintaan"
+            :lisaa-viive-fokuksen-siirtoon? true
+            :elementin-id "btn-tallenna-valmiiksi"}]
 
           ;; Raportointitilassa valmiin kohteen tallentaminen, kun tajutaan jälkikäteen, että tiemerkintää ON tuhoutunut, avaan erillinen modal, jossa
           ;; kirjoitetaan tiemerkintään viesti, mutta valmistuminen on siis tapahtunut jo aiemmin
@@ -832,14 +901,18 @@
           [napit/tallenna
            "Tallenna"
            #(e! (t-paikkauskohteet/->AvaaTiemerkintaModal (assoc lomake :kopio-itselle? true)))
-           {:disabled (not voi-tallentaa?) :paksu? true}]
+           {:disabled (not voi-tallentaa?)
+            :paksu? true
+            :siirra-fokus "text-area-viesti-tiemerkintaan"
+            :lisaa-viive-fokuksen-siirtoon? true
+            :elementin-id "btn-tallenna-valmiiksi"}]
 
           ;; Raportointitilassa valmiin kohteen tallentaminen uusilla tiedoilla
           (= "valmis" (:paikkauskohteen-tila lomake))
           [napit/tallenna
            "Tallenna"
            #(e! (t-paikkauskohteet/->TallennaPaikkauskohdeRaportointitilassa (lomake/ilman-lomaketietoja lomake)))
-           {:disabled (not voi-tallentaa?) :paksu? true}])])
+           {:disabled (not voi-tallentaa?) :paksu? true :siirra-fokus (str "grid-row-" (:id lomake))}])])
 
      ;; Muokkaustila - Paikkauskohteen tallennus
      (when (and muokkaustila? (not raportointitila?))
@@ -849,7 +922,9 @@
                 "Tallenna muutokset"
                 "Tallenna")
               #(e! (t-paikkauskohteet/->TallennaPaikkauskohde (lomake/ilman-lomaketietoja lomake)))
-              {:disabled (not voi-tallentaa?) :paksu? true}]
+              {:disabled (not voi-tallentaa?)
+               :paksu? true
+               :siirra-fokus (if (:id lomake) (str "grid-row-" (:id lomake)) "btn-lisaa-kohde")}]
 
         ;; Paikkauskohde on pakko olla tietokannassa, ennenkuin sen voi poistaa
         ;; Ja sen täytyy olla ehdotettu tai hylatty tilassa. Tilattua tai valmista ei voida poistaa
@@ -861,10 +936,18 @@
            (t-paikkauskohteet/nayta-modal
              (str "Poistetaanko kohde \"" (:nimi lomake) "\"?")
              "Toimintoa ei voi perua."
-             [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde
-                                                               (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
-             [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota! {:paksu? true}])
-           {:ikoni (ikonit/livicon-trash) :paksu? true}])])
+             [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde (lomake/ilman-lomaketietoja lomake)))
+              {:paksu? true
+               :elementin-id modaali-poista-kohde-nappi
+               :esta-tab-taaksepain? true}]
+             [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota!
+              {:paksu? true
+               :esta-tab-eteenpain? true
+               :siirra-fokus poista-kohde-nappi}])
+           {:ikoni (ikonit/livicon-trash)
+            :paksu? true
+            :siirra-fokus modaali-poista-kohde-nappi
+            :elementin-id poista-kohde-nappi}])])
 
      ;; Lukutila, tilaajan näkymä
      (when (and voi-tilata? (not muokkaustila?) (not raportointitila?))
@@ -891,24 +974,38 @@
             {:paksu? true
              :ikoni (ikonit/check)
              :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeOnnistui vastaus)))
-             :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeEpaonnistui vastaus)))}]
-           [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
+             :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeEpaonnistui vastaus)))
+             :id varmista-tilaaminen-nappi
+             :siirra-fokus (str "grid-row-" (:id lomake))
+             :esta-tab-taaksepain? true}]
+           [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true
+                                                               :siirra-fokus tee-tilaus-nappi
+                                                               :esta-tab-eteenpain? true}])
          {:paksu? true
-          :disabled (nil? (:ulkoinen-id lomake))}]
+          :disabled (nil? (:ulkoinen-id lomake))
+          :siirra-fokus varmista-tilaaminen-nappi
+          :elementin-id tee-tilaus-nappi}]
         [napit/yleinen-toissijainen
          "Hylkää"
          (t-paikkauskohteet/nayta-modal
-           (str "Hylätäänkö kohde " (:nimi lomake) "?")
+           (str "Hylätäänkö kohde \"" (:nimi lomake) "\"?")
            "Urakoitsija saa sähköpostiin ilmoituksen kohteen hylkäyksestä."
            [napit/palvelinkutsu-nappi
             "Hylkää kohde"
             #(t-paikkauskohteet/tallenna-tilamuutos! (assoc (lomake/ilman-lomaketietoja lomake) :paikkauskohteen-tila "hylatty"))
             {:paksu? true
              :ikoni (ikonit/check)
-             :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysOnnistui vastaus)))
-             :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysEpaonnistui vastaus)))}]
-           [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
-         {:paksu? true}]])
+             :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->HylkaaPaikkauskohdeOnnistui vastaus)))
+             :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->HylkaaPaikkauskohdeEpaonnistui vastaus)))
+             :id varmista-hylkaaminen-nappi
+             :siirra-fokus (str "grid-row-" (:id lomake))
+             :esta-tab-taaksepain? true}]
+           [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true
+                                                               :siirra-fokus hylkaa-ehdotus-nappi
+                                                               :esta-tab-eteenpain? true}])
+         {:paksu? true
+          :siirra-fokus varmista-hylkaaminen-nappi
+          :elementin-id hylkaa-ehdotus-nappi}]])
 
      ;; Lukutila, tilaja voi perua tilauksen tai hylätä peruutuksen
      (when (and (not muokkaustila?) (not voi-tilata?) voi-perua?)
@@ -916,7 +1013,7 @@
          [napit/nappi
           "Peru tilaus"
           (t-paikkauskohteet/nayta-modal
-            (str "Perutaanko kohteen \"" (:nimi lomake) "\" tilaus ?")
+            (str "Perutaanko kohteen \"" (:nimi lomake) "\" tilaus?")
             "Urakoitsija saa sähköpostiin ilmoituksen kohteen perumisesta."
             [napit/palvelinkutsu-nappi
              "Peru tilaus"
@@ -924,25 +1021,40 @@
              {:paksu? true
               :ikoni (ikonit/check)
               :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenTilausOnnistui vastaus)))
-              :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenTilausEpaonnistui vastaus)))}]
-            [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
+              :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenTilausEpaonnistui vastaus)))
+              :id varmista-tilauksen-peruminen-nappi
+              :siirra-fokus (str "grid-row-" (:id lomake))
+              :esta-tab-taaksepain? true}]
+            [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true
+                                                                :siirra-fokus peru-tilaus-nappi
+                                                                :esta-tab-eteenpain? true}])
           {:luokka "napiton-nappi punainen"
-           :ikoni (ikonit/livicon-back-circle)}]
+           :ikoni (ikonit/livicon-back-circle)
+           :siirra-fokus varmista-tilauksen-peruminen-nappi
+           :elementin-id peru-tilaus-nappi}]
          [napit/nappi
           "Kumoa hylkäys"
           (t-paikkauskohteet/nayta-modal
-            (str "Perutaanko kohteen " (:nimi lomake) " hylkäys ?")
-            "Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan. Urakoitsija saa sähköpostiin ilmoituksen kohteen tilan muutoksesta"
+            (str "Perutaanko kohteen \"" (:nimi lomake) "\" hylkäys?")
+            "Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan. Urakoitsija saa sähköpostiin ilmoituksen kohteen tilan muutoksesta."
             [napit/palvelinkutsu-nappi
              "Peru hylkäys"
              #(t-paikkauskohteet/tallenna-tilamuutos! (assoc (lomake/ilman-lomaketietoja lomake) :paikkauskohteen-tila "ehdotettu"))
              {:paksu? true
               :ikoni (ikonit/check)
               :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysOnnistui vastaus)))
-              :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysEpaonnistui vastaus)))}]
-            [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
+              :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysEpaonnistui vastaus)))
+              :id varmista-hylkayksen-peruminen-nappi
+              :siirra-fokus (str "grid-row-" (:id lomake))
+              :esta-tab-taaksepain? true}]
+            [napit/yleinen-toissijainen "Kumoa" modal/piilota!
+             {:paksu? true
+              :siirra-fokus kumoa-hylkays-nappi
+              :esta-tab-eteenpain? true}])
           {:luokka "napiton-nappi punainen"
-           :ikoni (ikonit/livicon-back-circle)}]))]))
+           :ikoni (ikonit/livicon-back-circle)
+           :siirra-fokus varmista-hylkayksen-peruminen-nappi
+           :elementin-id kumoa-hylkays-nappi}]))]))
 
 (defn paikkauskohde-lomake [e! {:keys [lomake toteumalomake pmr-lomake] :as app}]
   (let [muokkaustila? (or
@@ -970,6 +1082,7 @@
                                                   (-> @tila/tila :yleiset :urakka :id)
                                                   @istunto/kayttaja)
         urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? kayttajaroolit)
+        urakoitsijan-lukutila? (and urakoitsija? (= "hylatty" (:paikkauskohteen-tila lomake)))
         nayta-muokkaus? (or tilaaja? ;; Tilaaja voi muokata missä tahansa tilassa olevaa paikkauskohdetta
                             ;; Tarkista kirjoitusoikeudet
                             voi-kirjoittaa?
@@ -1067,7 +1180,7 @@
                       [:div.col-xs-8 {:style {:padding-left "0"}}
                        [footer-vasemmat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]
                       [:div.col-xs-4
-                       [footer-oikeat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu?]]]])}
+                       [footer-oikeat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu? urakoitsijan-lukutila?]]]])}
       (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake tyomenetelmat)
       lomake]]))
 

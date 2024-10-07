@@ -63,6 +63,8 @@
                     {:testi #{tila/ei-nil tila/ei-tyhja} 
                      :arvo [:alkuaika] 
                      :virheviesti ::tila/ei-tyhja})
+      :elementin-id "pvm-input-tyo-alkoi"
+      :esta-tab-taaksepain? true
       ::lomake/col-luokka "col-sm-3"}
      {:otsikko "Työ päättyi"
       :tyyppi (if (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma toteumalomake) tyomenetelmat))
@@ -466,7 +468,7 @@
        [napit/tallenna
         "Tallenna muutokset"
         #(e! (t-toteumalomake/->TallennaToteuma (lomake/ilman-lomaketietoja toteumalomake)))
-        {:disabled (not voi-tallentaa?) :paksu? true}])
+        {:disabled (not voi-tallentaa?) :paksu? true :siirra-fokus "btn-lisaa-toteuma"}])
      ;; Toteuman on pakko olla tietokannassa, ennenkuin sen voi poistaa
      ;; Ja paikkauskohde ei saa olla "valmis" tilassa
      (when (and (:id toteumalomake) (not (= "valmis" (:paikkauskohde-tila toteumalomake))) (or muokkaustila? tuotu-excelista?))
@@ -533,6 +535,6 @@
                        [napit/yleinen-toissijainen
                         (if muokkaustila? "Peruuta" "Sulje")
                         #(e! (t-toteumalomake/->SuljeToteumaLomake))
-                        {:paksu? true}]]))}
+                        {:paksu? true :esta-tab-eteenpain? true :siirra-fokus "btn-lisaa-toteuma"}]]))}
       (toteuma-skeema toteumalomake tyomenetelmat)
       toteumalomake]]))

@@ -15,7 +15,9 @@
   :peruuta-txt = peruuta-painikkeen teksti
   :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä
   :napit = Vektori, joka määrittelee footeriin asetettavat napit. Vaihtoehtoja ovat :peruuta, :hyvaksy, :takaisin, :poista."
-  [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka content-tyyli body-tyyli]}]
+  [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka content-tyyli body-tyyli
+           hyvaksymispainikkeen-id siirra-fokus-hyvaksymisesta siirra-fokus-peruutuksesta esta-tab-eteenpain-peruutusnapista?
+           esta-rastista-tabilla-pois-siirtyminen? siirra-fokus-rastista]}]
   (let [napit (or napit [:hyvaksy :peruuta])]
     (modal/nayta! {:otsikko otsikko
                    :footer [:span
@@ -26,13 +28,17 @@
                                     :hyvaksy [napit/hyvaksy hyvaksy #(do
                                                                        (modal/piilota!)
                                                                        (toiminto-fn))
-                                              {:luokka "pull-left"}]
+                                              {:luokka "pull-left"
+                                               :elementin-id hyvaksymispainikkeen-id
+                                               :siirra-fokus siirra-fokus-hyvaksymisesta}]
                                     :poista [napit/poista hyvaksy #(do
                                                                      (modal/piilota!)
                                                                      (toiminto-fn))
                                              {:luokka "pull-left"}]
                                     :peruuta [napit/peruuta (or peruuta-txt "Peruuta") #(modal/piilota!)
-                                              {:luokka "pull-right"}]
+                                              {:luokka "pull-right"
+                                               :siirra-fokus siirra-fokus-peruutuksesta
+                                               :esta-tab-eteenpain? esta-tab-eteenpain-peruutusnapista?}]
                                     :takaisin [napit/takaisin "Peruuta" #(modal/piilota!)
                                                {:luokka "pull-right"}]
                                     :tallenna [napit/yleinen-ensisijainen
@@ -47,7 +53,9 @@
                                            {:luokka "pull-left"}]
                                     nil)
                                   {:key (str "varmistus-nappi-" tyyppi)})))]
-                   :modal-luokka modal-luokka :content-tyyli content-tyyli :body-tyyli body-tyyli}
+                   :modal-luokka modal-luokka :content-tyyli content-tyyli :body-tyyli body-tyyli
+                   :esta-rastista-tabilla-pois-siirtyminen? esta-rastista-tabilla-pois-siirtyminen?
+                   :siirra-fokus-rastista siirra-fokus-rastista}
                   sisalto)))
 
 (def modal-muut-vastaanottajat

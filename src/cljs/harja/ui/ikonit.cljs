@@ -1039,8 +1039,16 @@
 (defn sulje-ruksi
   ([sulje!]
    [sulje-ruksi sulje! {}])
-  ([sulje! {:keys [style]}]
+  ([sulje! {:keys [style esta-poistuminen? siirra-fokus-rastista]}]
    [:button.close {:on-click sulje!
+                   :on-key-down #(do
+                                   (when (harja.ui.dom/enter-nappain? %)
+                                     sulje!
+                                     (when siirra-fokus-rastista
+                                       (reagent.core/after-render (fn [] (some-> js/document (.getElementById (str siirra-fokus-rastista)) .focus)))))
+                                   (when (and (harja.ui.dom/tab+shift-nappaimet? %) esta-poistuminen?)
+                                     (.preventDefault %)
+                                     (.stopPropagation %)))
                    :style (merge
                             {:color "black"
                              :margin "15px"

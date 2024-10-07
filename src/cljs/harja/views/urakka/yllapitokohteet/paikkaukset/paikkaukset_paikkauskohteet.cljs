@@ -135,10 +135,11 @@
                                    [:span {:style {:padding-right "24px"}}
                                     (:urakoitsija rivi)]
                                    [napit/yleinen-toissijainen ""
-                                    #(yllapito-yhteyshenkilot/nayta-paikkauskohteen-yhteyshenkilot-modal! (:urakka-id rivi))
+                                    #(yllapito-yhteyshenkilot/nayta-paikkauskohteen-yhteyshenkilot-modal! (select-keys rivi [:urakka-id :id]))
                                     {:ikoni (ikonit/user)
-                                     :luokka "btn-xs"}]])})
-                ]
+                                     :luokka "btn-xs"
+                                     :siirra-fokus "btn-sulje"
+                                     :elementin-id (str "btn-" (:id rivi))}]])})]
         paikkauskohteet (:paikkauskohteet app)
         yht-suunniteltu-hinta (reduce (fn [summa kohde]
                                         (+ summa (:suunniteltu-hinta kohde)))
@@ -194,7 +195,9 @@
                                "/excel/harja_paikkauskohteet_pohja.xlsx"]
                               [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))
                                {:paksu? true
-                                :data-attributes {:data-cy "lisaa-paikkauskohde"}}]])])]
+                                :data-attributes {:data-cy "lisaa-paikkauskohde"}
+                                :siirra-fokus "form-paikkauskohde-nimi"
+                                :elementin-id "btn-lisaa-kohde"}]])])]
               :tyhja (if (empty? paikkauskohteet)
                        "Ei paikkauskohteita valituilla rajauksilla."
                        [yleiset/ajax-loader "Haku käynnissä, odota hetki"])
@@ -238,6 +241,14 @@
                                        ;; Muussa tapauksessa kohde avatan lukutilassa
                                        :else
                                        (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))))
+              :siirra-fokus (fn [kohde]
+                              (let [hylatty? (= "hylatty" (:paikkauskohteen-tila kohde))
+                                    kayttajaroolit (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                                    urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? kayttajaroolit)]
+                                (if (and hylatty? urakoitsija?)
+                                  (r/after-render (fn [] (some-> js/document (.getElementById "btn-sulje-paikkauskohde-lomake") .focus)))
+                                  (r/after-render (fn [] (some-> js/document (.getElementById "btn-paikkauskohteen-muokkaus") .focus))))))
+              :aseta-grid-rivi-id? true
               :otsikkorivi-klikattu (fn [opts]
                                       (e! (t-paikkauskohteet/->JarjestaPaikkauskohteet (:nimi opts))))}
              (when (> (count paikkauskohteet) 0)
@@ -350,9 +361,9 @@
    [filtterit e! app]
    [kartta/kartan-paikka]
    #_ [debug/debug app]
+   [paikkauskohteet-taulukko e! app]
    (when (:lomake app)
-     [paikkauskohdelomake/paikkauslomake e! app])
-   [paikkauskohteet-taulukko e! app]])
+     [paikkauskohdelomake/paikkauslomake e! app])])
 
 (defn wrap-paikkauskohteet [e! app]
   (komp/luo
@@ -385,4 +396,3 @@
   (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? true)
   (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
   [wrap-paikkauskohteet e! app-state])
-
