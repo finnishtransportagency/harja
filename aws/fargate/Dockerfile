@@ -1,6 +1,6 @@
 # -- Run-time vaihe --
 # Käytetään Eclipse Temurin 17 LTS (OpenJDK) imagea (https://endoflife.date/java)
-# Pohjalla Ubuntu Noble (Ubuntu 24.04 LTS)
+# Pohjalla Ubuntu Noble Numbat (Ubuntu 24.04 LTS)
 # Huom: Jos päivität major-version, muista päivittää myös .github/.java-version tiedosto
 FROM eclipse-temurin:17.0.12_7-jre-noble
 
