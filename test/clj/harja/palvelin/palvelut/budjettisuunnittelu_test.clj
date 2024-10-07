@@ -142,8 +142,8 @@
             :paallystepaikkaukset (is (= ryhmiteltyna {}))
             :mhu-yllapito (do
                             (is (= (into #{} (keys ryhmiteltyna))
-                                  #{[:rahavaraus-lupaukseen-1 "muut-rahavaraukset"]
-                                    [:muut-rahavaraukset "muut-rahavaraukset"]}))
+                                   #{[:rahavaraus-lupaukseen-1 "muut-rahavaraukset"]
+                                     [:muut-rahavaraukset "muut-rahavaraukset"]}))
                             (testaa-ajat tehtavat toimenpide-avain))
             :talvihoito (do
                           (is (= ryhmiteltyna {}))
@@ -168,7 +168,13 @@
                                   [:toimistokulut "laskutettava-tyo"]
                                   [:hoidonjohtopalkkio "laskutettava-tyo"]}))
                          (doseq [[_ tehtavat] ryhmiteltyna]
-                           (testaa-ajat tehtavat toimenpide-avain)))))))
+                           (testaa-ajat tehtavat toimenpide-avain)))
+            :tavoitehintaiset-rahavaraukset (do
+                                              (is (= (into #{} (keys ryhmiteltyna))
+                                                     #{["Vahinkojen korjaukset" nil] ["Äkilliset hoitotyöt" nil] ["Tilaajan rahavaraus kannustinjärjestelmään" nil]})))
+            :tavoitehinnan-ulkopuoliset-rahavaraukset (do
+                                                        (is (= (into #{} (keys ryhmiteltyna))
+                                                               #{["Tavoitehinnan ulkopuoliset rahavaraukset" nil]})))))))
     (testing "Johto ja hallintokorvaukset ovat oikein"
       (let [jh-korvaukset (:johto-ja-hallintokorvaukset budjetoidut-tyot)
             vakio-johto-ja-hallintokorvaukset (group-by :toimenkuva (:vakiot jh-korvaukset))
@@ -1272,6 +1278,12 @@
 
     (testing "kumoa-suunnitelman-osan-vahvistus-hoitovuodelle kutsun oikeustarkistus"
       (is (= (try+ (bs/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
+            :ei-oikeutta-virhe)))
+
+    (testing "tallenna-tavoitehintaiset-rahavaraukset"
+      (is (= (try+ (bs/tallenna-tavoitehintainen-rahavaraus (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
                (catch harja.domain.roolit.EiOikeutta eo#
                  :ei-oikeutta-virhe))
             :ei-oikeutta-virhe)))))
