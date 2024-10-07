@@ -99,7 +99,13 @@
      [debug/debug urakat]
      [grid/grid
       {:otsikko (str "Urakoiden tilat")
-       :tyhja (if (nil? urakat) [ajax-loader "Ladataan tietoja"] "Ei tietoja, tarkistathan valitut suodattimet.")}
+       :tyhja (if (nil? urakat) [ajax-loader "Ladataan tietoja"] "Ei tietoja, tarkistathan valitut suodattimet.")
+       :rivi-jalkeen-fn (fn [urakat]
+                          (let [ks-tilojen-yhteenveto (tiedot/ks-tilojen-yhteenveto urakat)]
+                            (when-not (empty? urakat)
+                              [{:teksti "Yhteensä" :luokka "lihavoitu"}
+                               {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
+                               {:teksti ks-tilojen-yhteenveto :luokka "lihavoitu"}])))}
       [{:otsikko "Urakka"
         :tyyppi :string
         :nimi :nimi
