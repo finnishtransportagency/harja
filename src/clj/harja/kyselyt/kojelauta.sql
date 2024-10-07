@@ -12,5 +12,6 @@ SELECT u.id,
          (SELECT EXTRACT (YEAR FROM u.alkupvm)) AND
          (SELECT EXTRACT (YEAR FROM u.loppupvm)) - 1) AND
       (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
-      (:ely_id::INTEGER IS NULL OR u.hallintayksikko = :ely_id);
+      (:ely_id::INTEGER IS NULL OR u.hallintayksikko = :ely_id)
+ ORDER BY u.nimi;;
 
