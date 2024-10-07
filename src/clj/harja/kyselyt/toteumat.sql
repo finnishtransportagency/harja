@@ -450,22 +450,22 @@ WITH osa_toteumat AS
             AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
             AND t.poistettu = FALSE
           GROUP BY tt.toimenpidekoodi)
-SELECT tk.id                    AS toimenpidekoodi_id,
-       o.otsikko                AS toimenpide,
-       tk.nimi                  AS tehtava,
-       sum(ot.maara)            AS maara,
-       sum(ot.materiaalimaara)  AS materiaalimaara,
-       sum(ut.maara)            AS suunniteltu_maara,
+SELECT tk.id                                     AS toimenpidekoodi_id,
+       o.otsikko                                 AS toimenpide,
+       tk.nimi                                   AS tehtava,
+       SUM(ot.maara)                             AS maara,
+       SUM(ot.materiaalimaara)                   AS materiaalimaara,
+       SUM(ut.maara)                             AS suunniteltu_maara,
        -- Ei voi olla sekä rahavaraus, että käsin lisättävä tehtävä. Rahavarauksille toteumat on euroja ja ne lisätään kuluista.
        CASE
-           WHEN (tk.kasin_lisattava_maara AND r.nimi is null) THEN true
-           ELSE false END AS kasin_lisattava_maara,
-       tk.suunnitteluyksikko    AS yk,
+           WHEN (tk.kasin_lisattava_maara AND r.nimi IS NULL) THEN TRUE
+           ELSE FALSE END                        AS kasin_lisattava_maara,
+       tk.suunnitteluyksikko                     AS yk,
        CASE
            WHEN o.otsikko = '9 LISÄTYÖT'
                THEN 'lisatyo'
-           ELSE 'kokonaishintainen' END AS tyyppi,
-       r.nimi                   AS rahavaraus
+           ELSE 'kokonaishintainen' END          AS tyyppi,
+       COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi) AS rahavaraus
 
 FROM tehtava tk
      -- Alataso on linkitetty toimenpidekoodiin
@@ -494,7 +494,7 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
                                'e32341fc-775a-490a-8eab-c98b8849f968',
                                '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                'c058933e-58d3-414d-99d1-352929aa8cf9'))
-GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi, r.nimi
+GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi, r.nimi, ru.urakkakohtainen_nimi
 ORDER BY o.otsikko asc, tk.nimi asc;
 
 -- name: listaa-tehtavan-toteumat

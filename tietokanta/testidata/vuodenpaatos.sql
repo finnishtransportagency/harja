@@ -44,16 +44,15 @@ $$
                 ON CONFLICT DO NOTHING;
 
                 -- Toteutuneet, alitetaan tavoitehinta
-                INSERT INTO kulu (tyyppi, kokonaissumma, erapaiva, urakka, luotu, luoja,
-                                  koontilaskun_kuukausi)
-                VALUES ('laskutettava', indeksikorjattu_summa * 0.9,
+                INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luotu, luoja, koontilaskun_kuukausi)
+                VALUES (indeksikorjattu_summa * 0.9,
                         (vuosi_::TEXT || '-' || kuukausi_::TEXT || '-' || '15')::DATE, urakka_id_, NOW(),
                         kayttaja_, kuukauden_nimi(kuukausi_) || '-1-hoitovuosi')
                 RETURNING id INTO kulun_id_;
 
-                INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, luotu,
-                                            luoja)
-                VALUES (0, kulun_id_, indeksikorjattu_summa * 0.9, tpi, tr, 'kokonaishintainen', NOW(), kayttaja_);
+                INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi,
+                                            tyyppi, luotu, luoja)
+                VALUES (0, kulun_id_, indeksikorjattu_summa * 0.9, tpi, tr, 'kokonaishintainen', 'hankintakulu', NOW(), kayttaja_);
             END LOOP;
 
         -- kustannusarvioidut
