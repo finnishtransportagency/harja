@@ -371,8 +371,7 @@
 (defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko raportin-tiedot
                                                 viimeinen-rivi-yhteenveto? lista-tyyli?
                                                 sheet-nimi samalle-sheetille?
-                                                rivi-ennen rivi-jalkeen hoitokausi-arvotaulukko?
-                                                lisaa-excel-valiotsikot] :as optiot}
+                                                rivi-ennen rivi-jalkeen] :as optiot}
                                       sarakkeet data] workbook]
   (try
     (let [viimeinen-rivi (last data)
