@@ -96,7 +96,7 @@
                  urakat
                  (filter #((into #{} (map :id valitut-urakat)) (:id %)) urakat))]
     [:div
-     [debug/debug urakat]
+     ;; [debug/debug urakat]
      [grid/grid
       {:otsikko (str "Urakoiden tilat")
        :tyhja (if (nil? urakat) [ajax-loader "Ladataan tietoja"] "Ei tietoja, tarkistathan valitut suodattimet.")
@@ -130,7 +130,7 @@
       [:div.kojelauta-hallinta
        [:h1 "Etusivu"]
        [suodattimet e! app]
-       [debug/debug app]
+       ;; [debug/debug app]
        [listaus e! app]])))
 
 (defn kojelauta []
