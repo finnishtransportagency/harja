@@ -85,7 +85,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.18.5" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.18.6" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
