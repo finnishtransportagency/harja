@@ -4,14 +4,11 @@
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
-            [harja.ui.valinnat :as valinnat]
             [reagent.core :as r]
             [tuck.core :refer [tuck]]
-            [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :refer [ajax-loader]]
-            [harja.tiedot.hallintayksikot :as hy]
             [harja.tiedot.hallinta.kojelauta :as tiedot])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
@@ -30,7 +27,7 @@
      :format-fn #(or (hal/elynumero-ja-nimi %) "Kaikki")
      :vayla-tyyli? true}
     (into [nil] (map #(select-keys % [:id :nimi :elynumero])
-                  @hy/vaylamuodon-hallintayksikot))]
+                  @hal/vaylamuodon-hallintayksikot))]
    [yleiset/pudotusvalikko
     "Hoitokauden alkuvuosi"
     {:valitse-fn  #(do
@@ -65,9 +62,7 @@
   (let [{:keys [vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Klikkaa siirtyäksesi urakan kustannussuunnitelmaan"]
-     [:div.klikattava {:on-click #(do
-                                    (prn "Jarno on click! urakassa " (:id rivi) " ja elyssä " (:ely_id rivi))
-                                    (siirtymat/kustannusten-seurantaan-valitussa-urakassa (:ely_id rivi) (:id rivi)))}
+     [:div.klikattava {:on-click #(siirtymat/kustannusten-seurantaan-valitussa-urakassa (:ely_id rivi) (:id rivi))}
       (cond
         (= "aloittamatta" suunnitelman_tila)
         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Aloittamatta")})

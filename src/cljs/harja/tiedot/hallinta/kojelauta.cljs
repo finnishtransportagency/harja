@@ -74,6 +74,5 @@
 
   HaeUrakatEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (js/console.error "Virhe urakoiden haussa!" vastaus)
     (viesti/nayta-toast! "Virhe urakoiden haussa" :varoitus)
     (assoc app :urakat [])))

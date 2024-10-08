@@ -12,23 +12,14 @@ DECLARE
 BEGIN
     -- jos kaikki ao. osioit on vahvistettu, on ko. hoitokauden osalta kustannussuunnitelma vahvistettu
     kaikkien_osioiden_lkm_per_hoitokausi := 5;
-    SELECT count(*) as lkm FROM suunnittelu_kustannussuunnitelman_tila
-                                 WHERE hoitovuosi = _hoitovuosi AND urakka = _urakka AND vahvistettu IS TRUE
-                                 INTO vahvistettuja;
-    SELECT count(*) as lkm FROM suunnittelu_kustannussuunnitelman_tila
-     WHERE hoitovuosi = _hoitovuosi AND urakka = _urakka AND vahvistettu IS FALSE
-      INTO vahvistamattomia;
+    SELECT COALESCE(count(*), 0) INTO vahvistettuja
+                                 FROM suunnittelu_kustannussuunnitelman_tila
+                                WHERE hoitovuosi = _hoitovuosi AND urakka = _urakka AND vahvistettu IS TRUE;
+    SELECT COALESCE(count(*), 0) INTO vahvistamattomia
+                                 FROM suunnittelu_kustannussuunnitelman_tila
+                                WHERE hoitovuosi = _hoitovuosi AND urakka = _urakka AND vahvistettu IS FALSE;
 
-
-
-
-
-
-    RAISE NOTICE 'vahvistettuja: %', vahvistettuja;
-    RAISE NOTICE 'vahvistamattomia: %', vahvistamattomia;
     aloittamattomia := kaikkien_osioiden_lkm_per_hoitokausi - vahvistamattomia - vahvistettuja;
-    RAISE NOTICE 'aloittamattomia: %', aloittamattomia;
-
 
     suunnitelman_tila := CASE
         WHEN vahvistettuja = kaikkien_osioiden_lkm_per_hoitokausi THEN 'vahvistettu'
@@ -48,8 +39,8 @@ CREATE OR REPLACE FUNCTION monesko_hoitokausi(alkupvm DATE, loppupvm DATE, hoito
     RETURNS INTEGER AS $$
     DECLARE jarjestysluku INTEGER;
     BEGIN
-    SELECT array_position(array(SELECT * FROM GENERATE_SERIES(EXTRACT(YEAR FROM alkupvm)::INTEGER,
-                                                               (EXTRACT(YEAR FROM loppupvm)::INTEGER - 1))), hoitokauden_alkuvuosi) into jarjestysluku;
+    SELECT ARRAY_POSITION(ARRAY(SELECT * FROM GENERATE_SERIES(EXTRACT(YEAR FROM alkupvm)::INTEGER,
+                                                               (EXTRACT(YEAR FROM loppupvm)::INTEGER - 1))), hoitokauden_alkuvuosi) INTO jarjestysluku;
     RETURN jarjestysluku;
 END;
 

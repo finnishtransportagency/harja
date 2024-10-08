@@ -1,7 +1,6 @@
 (ns harja.palvelin.palvelut.hallinta.kojelauta
   (:require [com.stuartsierra.component :as component]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.kojelauta :as q]))
@@ -13,7 +12,7 @@
                  (fn [ks-tilat]
                    (update ks-tilat :ks_tila konv/jsonb->clojuremap))
                  (q/hae-urakat-kojelautaan db {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                                               :urakat_annettu (boolean (not (empty? urakka-idt)))
+                                               :urakat_annettu (boolean (seq urakka-idt))
                                                :urakka_idt urakka-idt
                                                :ely_id ely-id}))]
     urakat))
