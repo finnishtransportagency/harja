@@ -12,9 +12,12 @@
             [harja.tiedot.hallinta.kojelauta :as tiedot])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
+(def hoitokausia-taaksepain 4)
+(def hoitokausia-eteenpain 6)
+
 (defn- mahdolliset-hoitokauden-alkuvuodet [pvm-nyt]
-  (range (- (pvm/vuosi pvm-nyt) 2)
-    (+ 6 (pvm/vuosi pvm-nyt))))
+  (range (- (pvm/vuosi pvm-nyt) hoitokausia-taaksepain)
+    (+ hoitokausia-eteenpain (pvm/vuosi pvm-nyt))))
 
 (defn suodattimet [e! {:keys [valinnat urakkahaku] :as app}]
   [:<>

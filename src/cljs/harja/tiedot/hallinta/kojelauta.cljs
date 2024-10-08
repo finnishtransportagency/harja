@@ -22,8 +22,7 @@
                            urakat))]
             (vec (sort-by :nimi itemit)))))))
 
-(def tila (atom {:urakkavuodet (range 2016 2025)
-                 :urakat []
+(def tila (atom {:urakat []
                  :valinnat {:urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
 (defn ks-tilojen-yhteenveto
