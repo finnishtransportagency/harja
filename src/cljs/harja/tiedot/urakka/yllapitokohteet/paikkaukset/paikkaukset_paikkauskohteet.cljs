@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet
   (:require [reagent.core :refer [atom]]
+            [reagent.core :as r]
             [clojure.data :refer [diff]]
             [clojure.string :as str]
             [tuck.core :as tuck]
@@ -363,6 +364,7 @@
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (:nimi vastaus) " valmiiksi merkitsemisessä tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
+      (js/setTimeout (fn [] (r/after-render (fn [] (some-> js/document (.getElementById (str "btn-sulje")) .focus)))) 200)
       (dissoc app :lomake :tiemerkintalomake)))
 
   AvaaLomake
@@ -648,6 +650,7 @@
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (:nimi paikkauskohde) " tilaamisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
+      (js/setTimeout (fn [] (r/after-render (fn [] (some-> js/document (.getElementById (str "btn-sulje")) .focus)))) 200)
       (dissoc app :lomake)))
 
   HylkaaPaikkauskohdeOnnistui
@@ -663,6 +666,7 @@
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (:nimi paikkauskohde) " hylkäämisessä tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
+      (js/setTimeout (fn [] (r/after-render (fn [] (some-> js/document (.getElementById (str "btn-sulje")) .focus)))) 200)
       (dissoc app :lomake)))
 
   PoistaPaikkauskohde
@@ -688,6 +692,7 @@
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (:nimi paikkauskohde) " poistamisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
+      (js/setTimeout (fn [] (r/after-render (fn [] (some-> js/document (.getElementById (str "btn-sulje")) .focus)))) 200)
       (dissoc app :lomake)))
 
   PeruPaikkauskohteenTilausOnnistui
@@ -703,6 +708,7 @@
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (:nimi paikkauskohde) " tilauksen perumisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
+      (js/setTimeout (fn [] (r/after-render (fn [] (some-> js/document (.getElementById (str "btn-sulje")) .focus)))) 200)
       (dissoc app :lomake)))
 
   PeruPaikkauskohteenHylkaysOnnistui
@@ -718,6 +724,7 @@
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (:nimi paikkauskohde) " hylkäyksen perumisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
+      (js/setTimeout (fn [] (r/after-render (fn [] (some-> js/document (.getElementById (str "btn-sulje")) .focus)))) 200)
       (dissoc app :lomake)))
 
   LaskePituusOnnistui
