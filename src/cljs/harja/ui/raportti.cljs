@@ -289,13 +289,13 @@
   [:h1 teksti])
 
 (defmethod muodosta-html :otsikko-heading [[_ teksti tyyli]]
-  [:h2 {:style (merge {:font-size "1.25rem"} tyyli)} teksti])
+  [:h2 {:style (merge {:font-size "16px"} tyyli)} teksti])
+
+(defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
+  [:h1 {:style {:font-size "12px"}} teksti])
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
-
-(defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
-  [:h4 {:style {:font-size "1rem"}} teksti])
 
 (defmethod muodosta-html :jakaja [ei-valitysta]
   (if ei-valitysta
@@ -366,6 +366,9 @@
 
        (= (:piilota-otsikko? raportin-tunnistetiedot) true)
        [:span]
+
+       (= (:otsikon-koko raportin-tunnistetiedot) :keskikoko)
+       [:h1 {:style {:font-size "20px"}} (:nimi raportin-tunnistetiedot)]
 
        :else
        [:h3 (:nimi raportin-tunnistetiedot)]))

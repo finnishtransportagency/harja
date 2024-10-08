@@ -204,11 +204,15 @@ SELECT paivita_pohjavesialueet();
 
 \i testidata/analytiikka-paallystyskohteet.sql
 
+-- Populoidaan rahavaraukset
+SELECT populoi_rahavaraus_idt();
+
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 select paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('0001-01-01'::DATE,'2100-12-31'::DATE);
 SELECT paivita_raportti_toteutuneet_materiaalit();
 SELECT paivita_raportti_pohjavesialueiden_suolatoteumat();
 SELECT paivita_raportti_toteuma_maarat();
+
 
 -- Siirrä kaikki toteumat analytiikka_toteumat tauluun
 -- Siirrertään uudet toteumat

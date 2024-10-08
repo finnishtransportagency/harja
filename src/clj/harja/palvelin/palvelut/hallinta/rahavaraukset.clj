@@ -71,6 +71,7 @@
   (log/info "paivita-urakan-rahavaraus :: tiedot:" tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja urakka)
   (let [;validoidaan urakka ja rahavaraus
+        urakkakohtainen-nimi (if (empty? urakkakohtainen-nimi) nil urakkakohtainen-nimi)
         urakka-valid? (and
                         (s/valid? ::urakka-id urakka)
                         (onko-urakka-olemassa? db urakka))
@@ -101,13 +102,13 @@
         (and urakan-rahavaraus valittu?)
         (q/paivita-urakan-rahavaraus<! db {:urakkaid urakka
                                            :rahavarausid id
-                                           :urakkakohtainen-nimi urakkakohtainen-nimi
+                                           :urakkakohtainen-nimi (or urakkakohtainen-nimi nil)
                                            :kayttajaid (:id kayttaja)})
         ;; Jos rahavaraussta ei ole kannassa, mutta käyttäjä on valinnut sen, niin lisätään.
         (and (not urakan-rahavaraus) valittu?)
         (q/lisaa-urakan-rahavaraus<! db {:urakkaid urakka
                                          :rahavarausid id
-                                         :urakkakohtainen-nimi urakkakohtainen-nimi
+                                         :urakkakohtainen-nimi (or urakkakohtainen-nimi nil)
                                          :kayttaja (:id kayttaja)})
         ;; Muussa tapauksessa se poistetaan
         :else

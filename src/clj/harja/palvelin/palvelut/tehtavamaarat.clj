@@ -8,6 +8,7 @@
             [harja.tyokalut.big :as big]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.domain.roolit :as roolit]))
 
 (defn hae-validit-tehtavat
@@ -216,6 +217,7 @@
     (jdbc/with-db-transaction [c db]
       (doseq [tm tehtavamaarat]
         (let [{:keys [hoitokauden-alkuvuosi tehtava-id maara]} tm
+              maara (bigdec (fmt/pilkku->piste maara))
               nykyiset-arvot (hae-suunnitellut-tehtavamaarat c user {:urakka-id urakka-id
                                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
               tehtavamaara-avain (fn [rivi]

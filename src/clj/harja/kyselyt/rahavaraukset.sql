@@ -1,17 +1,34 @@
+-- name: hae-urakan-rahavaraukset-ja-tehtavaryhmat
+-- Palautetaan ensisijaisesti urakkakohtainen nimi, mutta jos sitä ei ole, niin defaultataan normaaliin nimeen.
+SELECT rv.id,
+       COALESCE(NULLIF(rvu.urakkakohtainen_nimi, ''), rv.nimi)                          AS nimi,
+       TO_JSON(ARRAY_AGG(DISTINCT (ROW (tr.id, tr.nimi, tp.id, tpi.id, tr.jarjestys)))) AS tehtavaryhmat
+  FROM rahavaraus rv
+           JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :id
+           JOIN rahavaraus_tehtava rvt ON rvt.rahavaraus_id = rv.id
+           JOIN tehtava t ON t.id = rvt.tehtava_id
+           JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
+           JOIN toimenpide tp ON t.emo = tp.id
+           JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :id
+ GROUP BY rv.id, rvu.urakkakohtainen_nimi, rv.nimi, rv.jarjestys
+ ORDER BY rv.jarjestys ASC;
+
 -- name: hae-urakoiden-rahavaraukset
-SELECT u.id   AS "urakka-id",
-       u.nimi AS "urakka-nimi",
+SELECT u.id                     AS "urakka-id",
+       u.nimi                   AS "urakka-nimi",
        rvu.urakkakohtainen_nimi AS "urakkakohtainen-nimi",
-       rv.id  AS "id",
+       rv.id                    AS "id",
        rv.nimi
   FROM urakka u
            LEFT JOIN rahavaraus_urakka rvu ON rvu.urakka_id = u.id
            LEFT JOIN rahavaraus rv ON rv.id = rvu.rahavaraus_id
- WHERE u.tyyppi = 'teiden-hoito';
+ WHERE u.tyyppi = 'teiden-hoito'
+ ORDER BY rv.jarjestys ASC;
 
 -- name: hae-rahavaraukset
-SELECT id, nimi
-  FROM rahavaraus;
+SELECT r.id, r.nimi
+  FROM rahavaraus r
+ ORDER BY r.jarjestys ASC;
 
 -- name: hae-rahavaraukset-tehtavineen
 -- Haetaan kaikki rahavaraukset ja niihin liittyvät tehtävät
@@ -21,7 +38,7 @@ SELECT rv.id,
           FROM rahavaraus_tehtava rvt
                    JOIN tehtava t ON t.id = rvt.tehtava_id AND rvt.rahavaraus_id = rv.id) AS tehtavat
   FROM rahavaraus rv
- ORDER BY rv.id ASC;
+ ORDER BY rv.jarjestys ASC;
 
 -- name: hae-rahavaraukselle-mahdolliset-tehtavat
 SELECT t.id, t.nimi, tro.otsikko
@@ -68,7 +85,6 @@ DELETE
   FROM rahavaraus_tehtava
  WHERE rahavaraus_id = :rahavaraus-id
    AND tehtava_id = :tehtava-id;
-
 
 -- name: onko-rahavaraus-olemassa?
 -- single?: true
@@ -117,10 +133,57 @@ DELETE
  WHERE id = :id :: BIGINT;
 
 -- name: listaa-rahavaraukset-analytiikalle
-SELECT r.id as id,
-       r.nimi as nimi,
-       array_agg(rt.tehtava_id) as tehtavat,
-       r.luotu, r.muokattu
+SELECT r.id                     AS id,
+       r.nimi                   AS nimi,
+       ARRAY_AGG(rt.tehtava_id) AS tehtavat,
+       r.luotu,
+       r.muokattu
   FROM rahavaraus r
-       JOIN rahavaraus_tehtava rt on r.id = rt.rahavaraus_id
- GROUP BY r.id, r.nimi;
+           JOIN rahavaraus_tehtava rt ON r.id = rt.rahavaraus_id
+ GROUP BY r.id, r.nimi, r.jarjestys
+ ORDER BY r.jarjestys ASC;
+
+-- name: hae-rahavarauksen-tehtavaryhmat
+SELECT DISTINCT ON (tr.id) tr.id,
+       tr.nimi AS tehtavaryhma,
+       tp.id   AS toimenpide,
+       tpi.id  AS "toimenpideinstanssi"
+  FROM rahavaraus_tehtava rt
+           JOIN tehtava t ON t.id = rt.tehtava_id
+           JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
+           JOIN toimenpide tp ON t.emo = tp.id
+           JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :urakkaid
+ WHERE rt.rahavaraus_id = :rahavarausid :: BIGINT;
+
+-- name: hae-urakan-suunnitellut-rahavarausten-kustannukset
+-- Haetaan rahavaraukset ja tarkistetaan onko kustannusarvioitu_tyo taulussa niille suunniteltu kustannuksia.
+-- Haussa ei ole vuosikohtaisuutta parametrisoitu, mutta tulokset summaroidaan vuosikohtaisesti.
+  WITH urakan_alkuvuodet AS (SELECT GENERATE_SERIES(:alkuvuosi::INT, :loppuvuosi::INT - 1) AS year)
+SELECT rv.id,
+       COALESCE(NULLIF(rvu.urakkakohtainen_nimi, ''), rv.nimi) AS nimi,
+       SUM(kt.summa)                                           AS summa,
+       SUM(kt.summa_indeksikorjattu)                           AS "summa-indeksikorjattu",
+       kt.indeksikorjaus_vahvistettu                           AS "indeksikorjaus-vahvistettu",
+       CASE
+           WHEN kt.vuosi = y.year AND kt.kuukausi >= 10 THEN kt.vuosi
+           WHEN kt.vuosi - 1 = y.year AND kt.kuukausi <= 9 THEN kt.vuosi - 1
+           ELSE y.year
+           END                                                 AS hoitokauden_alkuvuosi,
+       rv.jarjestys                                            AS jarjestys
+  FROM urakan_alkuvuodet y
+           CROSS JOIN rahavaraus rv
+           JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :urakka_id
+           JOIN sopimus s ON s.urakka = rvu.urakka_id
+           LEFT JOIN kustannusarvioitu_tyo kt ON kt.rahavaraus_id = rv.id AND kt.sopimus = s.id
+      AND ((kt.vuosi = y.year AND kt.kuukausi >= 10) OR
+           (kt.vuosi = y.year + 1 AND kt.kuukausi <= 9))
+ GROUP BY rv.id, rvu.urakkakohtainen_nimi, rv.nimi, rv.jarjestys, kt.indeksikorjaus_vahvistettu, hoitokauden_alkuvuosi
+ ORDER BY hoitokauden_alkuvuosi, rv.jarjestys, nimi;
+
+-- name: hae-rahavarauksen-toimenpideinstanssi
+-- Kustannusarvoitu_tyo vaatii jonkun toimenpideinstanssin. Se ei ole vielä tiedossa. Niin haetaan urakkakohtaisesti vain ensimmäinen
+SELECT id
+  FROM toimenpideinstanssi
+ WHERE urakka = :urakka_id
+ ORDER BY id ASC
+ LIMIT 1;
