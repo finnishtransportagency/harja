@@ -945,6 +945,7 @@ BEGIN
         WHERE lk.tyyppi = 'muukulu'
           AND lk.poistettu IS NOT TRUE
           AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+          AND l.urakka = ur 
     LOOP
         IF rivi.erapaiva <= aikavali_loppupvm THEN
             --
