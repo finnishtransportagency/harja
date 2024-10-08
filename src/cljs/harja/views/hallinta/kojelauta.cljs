@@ -21,7 +21,7 @@
    [yleiset/pudotusvalikko
     "ELY"
     {:valitse-fn #(do
-                    (e! (tiedot/->Valitse :ely %))
+                    (e! (tiedot/->AsetaSuodatin :ely %))
                     (e! (tiedot/->HaeUrakat)))
      :valinta (:ely valinnat)
      :format-fn #(or (hal/elynumero-ja-nimi %) "Kaikki")
@@ -31,7 +31,7 @@
    [yleiset/pudotusvalikko
     "Hoitokauden alkuvuosi"
     {:valitse-fn  #(do
-                     (e! (tiedot/->Valitse :urakkavuosi %))
+                     (e! (tiedot/->AsetaSuodatin :urakkavuosi %))
                      (e! (tiedot/->HaeUrakat)))
      :valinta (:urakkavuosi valinnat)
      :vayla-tyyli? true}
@@ -54,7 +54,7 @@
                              0 "Kaikki valittu"
                              1 (:nimi (first %))
                              (str (count %) " urakkaa valittu"))}
-     (r/wrap (:urakat valinnat) #(e! (tiedot/->Valitse :urakat %)))]]])
+     (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]])
 
 
 (defn kustannussuunitelman-tila-sarake
@@ -74,7 +74,7 @@
         (= "vahvistettu" suunnitelman_tila)
         (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Valmis")}))]]))
 
-(defn listaus [e! {:keys [valinnat urakat urakoiden-tilat] :as app}]
+(defn listaus [e! {:keys [valinnat urakat haku-kaynnissa?] :as app}]
   (let [valitut-urakat (:urakat valinnat)
         valittu-ely (get-in valinnat [:ely :id])
         valittu-hk-alkuvuosi (:urakkavuosi valinnat)
@@ -94,7 +94,9 @@
      ;; [debug/debug urakat]
      [grid/grid
       {:otsikko (str "Urakoiden tilat")
-       :tyhja (if (nil? urakat) [ajax-loader "Ladataan tietoja"] "Ei tietoja, tarkistathan valitut suodattimet.")
+       :tyhja (if haku-kaynnissa?
+                [ajax-loader "Ladataan tietoja"]
+                "Ei tietoja, tarkistathan valitut suodattimet.")
        :rivi-jalkeen-fn (fn [urakat]
                           (let [ks-tilojen-yhteenveto (tiedot/ks-tilojen-yhteenveto urakat)]
                             (when-not (empty? urakat)

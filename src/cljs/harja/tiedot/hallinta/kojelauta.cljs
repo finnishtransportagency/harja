@@ -46,13 +46,13 @@
                                    (str "valmiina: " (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm))))]))]
     ks-tilojen-yhteenveto))
 
-(defrecord Valitse [avain valinta])
+(defrecord AsetaSuodatin [avain valinta])
 (defrecord HaeUrakat [])
 (defrecord HaeUrakatOnnistui [vastaus])
 (defrecord HaeUrakatEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
-  Valitse
+  AsetaSuodatin
   (process-event [{:keys [avain valinta]} app]
     (assoc-in app [:valinnat avain] valinta))
 
@@ -64,15 +64,18 @@
        :ely-id (get-in app [:valinnat :ely :id])}
       {:onnistui ->HaeUrakatOnnistui
        :epaonnistui ->HaeUrakatEpaonnistui})
-    app)
+    (assoc app :haku-kaynnissa? true))
 
   HaeUrakatOnnistui
   (process-event [{:keys [vastaus]} app]
     (assoc app
+      :haku-kaynnissa? false
       :urakat vastaus
       :urakkahaku (tee-urakkahaku vastaus)))
 
   HaeUrakatEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Virhe urakoiden haussa" :varoitus)
-    (assoc app :urakat [])))
+    (assoc app
+      :urakat []
+      :haku-kaynnissa? false)))
