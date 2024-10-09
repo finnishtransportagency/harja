@@ -809,6 +809,7 @@ BEGIN
             WHERE lk.tyyppi = 'muukulu'
                 AND lk.poistettu IS NOT TRUE
                 AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+                AND l.urakka = ur
                 AND tpi.id = t.tpi
         LOOP
             IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
