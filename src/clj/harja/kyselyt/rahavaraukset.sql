@@ -173,7 +173,7 @@ SELECT rv.id,
   FROM urakan_alkuvuodet y
            CROSS JOIN rahavaraus rv
            JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :urakka_id
-           JOIN sopimus s ON s.urakka = rvu.urakka_id
+           JOIN sopimus s ON s.urakka = rvu.urakka_id AND s.paasopimus IS NULL
            LEFT JOIN kustannusarvioitu_tyo kt ON kt.rahavaraus_id = rv.id AND kt.sopimus = s.id
       AND ((kt.vuosi = y.year AND kt.kuukausi >= 10) OR
            (kt.vuosi = y.year + 1 AND kt.kuukausi <= 9))

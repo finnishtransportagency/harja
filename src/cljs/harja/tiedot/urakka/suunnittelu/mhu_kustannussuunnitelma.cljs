@@ -3291,7 +3291,7 @@
   (process-event [{:keys [id summa indeksisumma vuosi loppuvuodet?]} app]
     (let [urakka (-> @tiedot/tila :yleiset :urakka :id)
           muokattava-rahavaraus (first (filter
-                                         #(= id (:id %))
+                                         #(and (= id (:id %)) (= vuosi (:vuosi %)))
                                          (get-in app [:domain :tavoitehintaiset-rahavaraukset])))]
       ;; Ei yritetä tallentaa, jos mitään ei ole annettu
       ;; Paitsi, jos poistetaan jo olemassa oleva summa
