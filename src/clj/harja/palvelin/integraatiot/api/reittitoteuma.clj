@@ -192,8 +192,11 @@ maksimi-linnuntien-etaisyys 200)
     ;; Talvisuolauksen osalta pisteille tehdään työlästä laskentaa kun päätellään rajoitusalueelle kohdistumista.
     (log/debug "Aloitetaan reitin tallennus")
     (async/thread
-      (luo-reitti db reitti toteuma-id)
-      (async/put! reittipisteet-tallennettu-chan true))))
+      (try
+        (luo-reitti db reitti toteuma-id)
+        (async/put! reittipisteet-tallennettu-chan true)
+        (catch Throwable t
+          (log/warn t "Reittitoteuman tallennus epäonnistui"))))))
 
 (defn- materiaalicachen-paivitys-ajettava?
   "Kertoo ajetaanko materiaalicachejen päivitys käsin. Kuluvan päivän toteumille menevät eräajoissa, muille kyllä."
