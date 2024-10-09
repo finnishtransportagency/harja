@@ -419,6 +419,7 @@ BEGIN
             WHERE lk.rahavaraus_id IS NULL 
               AND lk.poistettu IS NOT TRUE
               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+              AND lk.tyyppi != 'muukulu'
 
         LOOP
 
