@@ -163,7 +163,8 @@
     :mpu-kustannukset
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
-    :lupaukset-hallinta})
+    :lupaukset-hallinta
+    :kojelauta-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -242,7 +243,8 @@
     :mpu-kustannukset
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
-    :lupaukset-hallinta})
+    :lupaukset-hallinta
+    :kojelauta-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

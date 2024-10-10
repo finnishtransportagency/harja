@@ -19,6 +19,7 @@
             [harja.views.hallinta.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
             [harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
+            [harja.views.hallinta.kojelauta :as kojelauta]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
             [harja.views.hallinta.urakkatiedot.tehtava-nakyma :as tehtava-nakyma]
@@ -119,6 +120,12 @@
    ^{:key "seuranta"}
    [bs/tabs {:style :tabs :classes "tabs-taso2"
              :active (nav/valittu-valilehti-atom :hallinta-seuranta)}
+
+    "Urakoiden tilanne"
+    :kojelauta
+    (when (oikeudet/hallinta)
+      ^{:key "kojelauta"}
+      [kojelauta/kojelauta])
 
     "Integraatiotilanne"
     :integraatiotilanne
