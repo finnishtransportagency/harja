@@ -1198,16 +1198,18 @@ BEGIN
             hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
 
         END IF;
+
         -- Kustannusten kokonaissummat
         kaikki_laskutettu := 0.0;
         kaikki_laskutetaan := 0.0;
+
         kaikki_laskutettu := sakot_laskutettu + bonukset_laskutettu +
                               hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu + 
                               hj_palkkio_laskutettu + hj_erillishankinnat_laskutettu + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu + 
                               kaikki_rahavaraukset_hoitokausi_yht;
 
-        kaikki_laskutetaan := sakot_laskutetaan + bonukset_laskutetaan + kaikki_rahavaraukset_val_yht +
+        kaikki_laskutetaan := sakot_laskutetaan + bonukset_laskutetaan +
                               hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan + 
                               hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan + 
