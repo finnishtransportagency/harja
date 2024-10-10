@@ -1013,7 +1013,7 @@
                                       kuukausisumma (when-not (nil? summa) (round2 2 (/ summa kuukausimaara))) ;; Tallenna nil kantaan, jos nil arvo on syötetty
                                       viimeinen-kuukausisumma (when-not (nil? summa) (round2 2 (- summa (* (dec kuukausimaara) kuukausisumma))))
                                       kuukausi-indeksisumma (when (and summa indeksisumma)
-                                                              (nil? summa) (round2 2 (/ indeksisumma kuukausimaara)))
+                                                              (round2 2 (/ indeksisumma kuukausimaara)))
                                       viimeinen-indeksisumma (when (and summa indeksisumma)
                                                                (round2 2 (- indeksisumma (* (dec kuukausimaara) kuukausi-indeksisumma))))]]
                           (update! db ::bs/kustannusarvioitu-tyo

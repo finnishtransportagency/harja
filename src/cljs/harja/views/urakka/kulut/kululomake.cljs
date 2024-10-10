@@ -92,19 +92,13 @@
 
 (defn- hankintakulu-kohdistus [e! lomake kohdistus tehtavaryhmat nro]
   (let [;; Hankintakululla ei saa olla kaikkia mahdollisia tehtäväryhmiä. Siivotaan väärät pois tässä
-        tehtavaryhmat (filter
-                        (fn [t]
-                          (let [sisaltaako?
-                                (not (or
-                                       (str/includes? (str/lower-case (:tehtavaryhma t)) "rahavaraus")
-                                       (str/includes? (str/lower-case (:tehtavaryhma t)) "vahinkojen")
-                                       (str/includes? (str/lower-case (:tehtavaryhma t)) "äkilliset")
-                                       (str/includes? (str/lower-case (:tehtavaryhma t)) "hoidonjohtopalkkio")
-                                       (str/includes? (str/lower-case (:tehtavaryhma t)) "erillishankinnat")
-                                       (str/includes? (str/lower-case (:tehtavaryhma t)) "hallintokorvaus")
-                                       (str/includes? (str/lower-case (:tehtavaryhma t)) "t4") ; Digitalisaatiot ja innovaatiot kuuluu rahavarauksille
-                                       ))]
-                            sisaltaako?))
+        kielletyt-tehtavaryhmat #{"rahavaraus" "vahinkojen" "äkilliset" "hoidonjohtopalkkio"
+                                  "erillishankinnat" "hallintokorvaus" "t4"}
+        tehtavaryhmat (remove (fn [tr]
+                                (some
+                                  (fn [kielletty-tr]
+                                    (str/includes? (str/lower-case (:tehtavaryhma tr)) kielletty-tr))
+                                  kielletyt-tehtavaryhmat))
                         tehtavaryhmat)]
     [:div.row
      [:div.col-xs-12.col-md-6
