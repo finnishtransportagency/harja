@@ -26,7 +26,7 @@
 
 (defn tallenna-tavoitehintainen-rahavaraus! [vuosi loppuvuodet? indeksit rivi rivi-id]
   (let [indeksikerroin-vuodelle (:indeksikerroin (first (filter #(= (:vuosi %) vuosi) indeksit)))]
-    (e! (t/->TallennaTavoitehintainenRahavaraus rivi-id (:summa rivi) (* indeksikerroin-vuodelle (:summa rivi)) vuosi loppuvuodet?))))
+    (e! (t/->TallennaTavoitehintainenRahavaraus rivi-id (:summa rivi) (when indeksikerroin-vuodelle (* indeksikerroin-vuodelle (:summa rivi))) vuosi loppuvuodet?))))
 
 ;; Tehdään tavanomainen taulukko rahavarausten näyttämiselle
 (defn tavoitehintaiset-rahavaraukset-taulukko [rivit vuosi loppuvuodet? vahvistettu? indeksit]

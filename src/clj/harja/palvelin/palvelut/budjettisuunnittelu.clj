@@ -1012,8 +1012,10 @@
                                       kuukausimaara (count kt-rahavaraus-kuukaudet)
                                       kuukausisumma (when-not (nil? summa) (round2 2 (/ summa kuukausimaara))) ;; Tallenna nil kantaan, jos nil arvo on syötetty
                                       viimeinen-kuukausisumma (when-not (nil? summa) (round2 2 (- summa (* (dec kuukausimaara) kuukausisumma))))
-                                      kuukausi-indeksisumma (when-not (nil? summa) (round2 2 (/ indeksisumma kuukausimaara)))
-                                      viimeinen-indeksisumma (when-not (nil? summa) (round2 2 (- indeksisumma (* (dec kuukausimaara) kuukausi-indeksisumma))))]]
+                                      kuukausi-indeksisumma (when (and summa indeksisumma)
+                                                              (round2 2 (/ indeksisumma kuukausimaara)))
+                                      viimeinen-indeksisumma (when (and summa indeksisumma)
+                                                               (round2 2 (- indeksisumma (* (dec kuukausimaara) kuukausi-indeksisumma))))]]
                           (update! db ::bs/kustannusarvioitu-tyo
                             ;; Jos muokattavia kuukausia on 9 tai enemmän, niin laitetaan viimeinen mahdollisesti suurempi
                             ;; summa syyskuulle, eli hoitokauden viimeiselle kuukaudelle
@@ -1025,8 +1027,8 @@
                       (doseq [kk (range 1 13)
                               :let [kuukausisumma (when-not (nil? summa) (round2 2 (/ summa 12)))
                                     viimeinen-kuukausisumma (when-not (nil? summa) (round2 2 (- summa (* 11 kuukausisumma))))
-                                    kuukausi-indeksisumma (when-not (nil? summa) (round2 2 (/ indeksisumma 12)))
-                                    viimeinen-indeksisumma (when-not (nil? summa) (round2 2 (- indeksisumma (* 11 kuukausi-indeksisumma))))
+                                    kuukausi-indeksisumma (when (and summa indeksisumma) (round2 2 (/ indeksisumma 12)))
+                                    viimeinen-indeksisumma (when (and summa indeksisumma) (round2 2 (- indeksisumma (* 11 kuukausi-indeksisumma))))
                                     db-vuosi (if (>= kk 10 ) vuosi (inc vuosi))]]
                         (insert! db ::bs/kustannusarvioitu-tyo
                           {::bs/summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma) ;; Mahdollinen suurin summa hoitokauden viimeiselle kuukaudelle
