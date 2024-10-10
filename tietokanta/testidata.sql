@@ -196,6 +196,9 @@ SELECT paivita_pohjavesialueet();
 -- Välikatselmusten tiedot
 \i testidata/kulut/valikatselmus.sql
 
+-- Kulujen muita tarpeita
+\i testidata/kulut/kulutarpeita.sql
+
 -- Tilaajan-konsultti organisaatio
 \i testidata/tilaajan-konsultit.sql
 
