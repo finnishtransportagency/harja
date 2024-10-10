@@ -9,8 +9,7 @@
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.hallinta.kojelauta :as tiedot])
-  (:require-macros [harja.tyokalut.ui :refer [for*]]))
+            [harja.tiedot.hallinta.kojelauta :as tiedot]))
 
 (def hoitokausia-taaksepain 4)
 (def hoitokausia-eteenpain 6)

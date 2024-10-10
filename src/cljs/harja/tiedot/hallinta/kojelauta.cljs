@@ -23,7 +23,9 @@
             (vec (sort-by :nimi itemit)))))))
 
 (def tila (atom {:urakat []
-                 :valinnat {:urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
+                 :valinnat {:ely nil
+                            :urakat nil
+                            :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
 (defn ks-tilojen-yhteenveto
   "Palauttaa käyttöliittymän koosteriville kustannussuunnitelman tilojen yhteenvedon"
