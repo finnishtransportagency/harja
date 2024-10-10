@@ -9,7 +9,7 @@ SELECT nimi, vuosi, kuukausi, arvo
   SELECT nimi, vuosi, kuukausi, arvo
     FROM indeksi
    WHERE nimi = :nimi
-ORDER BY nimi, vuosi, kuukausi
+ORDER BY nimi, vuosi, kuukausi;
 
 --name: hae-urakan-kuukauden-indeksiarvo
 SELECT arvo, nimi
@@ -20,7 +20,7 @@ SELECT arvo, nimi
 -- name: luo-indeksi<!
 -- Tekee uuden indeksin
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo)
-     VALUES (:nimi, :vuosi, :kuukausi, :arvo)
+     VALUES (:nimi, :vuosi, :kuukausi, :arvo);
 
 -- name: paivita-indeksi!
 -- Päivittää indeksin tiedot
