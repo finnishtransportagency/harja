@@ -579,7 +579,8 @@
 (defn vayla-checkbox
   [{:keys [input-id lukutila? disabled? arvo data piilota-checkbox?
            teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
-  (let [input-id (or input-id
+  (let [arvo (or arvo false)
+        input-id (or input-id
                      (gensym "checkbox-input-id-"))
         label-id (or label-id
                      (gensym "checkbox-label-id-"))]
