@@ -3295,7 +3295,7 @@
                                          (get-in app [:domain :tavoitehintaiset-rahavaraukset])))]
       ;; Ei yritetä tallentaa, jos mitään ei ole annettu
       ;; Paitsi, jos poistetaan jo olemassa oleva summa
-      (if (or (and summa)
+      (if (or summa
             (and (nil? summa) (not (nil? (:summa muokattava-rahavaraus)))))
         (tallenna-ja-odota-vastaus app
           {:palvelu :tallenna-tavoitehintainen-rahavaraus
