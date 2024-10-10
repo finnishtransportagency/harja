@@ -196,7 +196,7 @@ maksimi-linnuntien-etaisyys 200)
         (luo-reitti db reitti toteuma-id)
         (async/put! reittipisteet-tallennettu-chan true)
         (catch Throwable t
-          (log/warn t "Reittitoteuman tallennus epäonnistui"))))))
+          (log/error t "Reittitoteuman reittipisteiden tallennus epäonnistui"))))))
 
 (defn- materiaalicachen-paivitys-ajettava?
   "Kertoo ajetaanko materiaalicachejen päivitys käsin. Kuluvan päivän toteumille menevät eräajoissa, muille kyllä."
