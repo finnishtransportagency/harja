@@ -74,7 +74,8 @@
 
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
                                      kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli? monivalinta? salli-kirjoitus?
-                                     tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?]} data]
+                                     tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?
+                                     hakuikoni? input-id]} data]
   (when monivalinta?
     (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
@@ -114,6 +115,7 @@
                            vayla-tyyli? (str "input-default komponentin-input ")
                            disabled? (str "disabled"))
                   :value @teksti
+                  :id input-id
                   :placeholder placeholder
                   :disabled disabled?
                   :size pituus
@@ -177,7 +179,9 @@
                           (reset! tulokset (<! (hae lahde "")))
                           (reset! valittu-idx nil))
              :disabled disabled?}
-            [:span.livicon-chevron-down]])
+            (if hakuikoni?
+              [:span.livicon-search]
+              [:span.livicon-chevron-down])])
 
          (let [nykyiset-tulokset (if (and sort-fn (vector? @tulokset))
                                    (sort-by sort-fn @tulokset)
@@ -575,7 +579,8 @@
 (defn vayla-checkbox
   [{:keys [input-id lukutila? disabled? arvo data piilota-checkbox?
            teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
-  (let [input-id (or input-id
+  (let [arvo (or arvo false)
+        input-id (or input-id
                      (gensym "checkbox-input-id-"))
         label-id (or label-id
                      (gensym "checkbox-label-id-"))]
