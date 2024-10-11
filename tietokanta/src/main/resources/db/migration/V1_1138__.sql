@@ -146,7 +146,6 @@ BEGIN
                                             VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,
                                                     m.maara * ra.osuus, NULL,
                                                     ra.rajoitusalue);
-                                            RAISE NOTICE 'Lisättiin tietokantaan suolatoteuma_reittipiste toteuma_id  : %', NEW.toteuma ;
                                         END LOOP;
                                 ELSE
                                     -- Jos rajoitusalueita tai pohjavesialueita ei löydy, niin lisätään tauluun rivi ilman niitä
@@ -155,7 +154,6 @@ BEGIN
                                     VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,
                                             m.maara, NULL,
                                             null);
-                                    RAISE NOTICE 'Lisättiin tietokantaan suolatoteuma_reittipiste ilman rajoitusalueita toteuma_id  : %', NEW.toteuma ;
                                 END IF;
                                 -- MUUTTUNUT KOHTA - päättyy
                             END IF;
