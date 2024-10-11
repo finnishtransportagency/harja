@@ -43,7 +43,7 @@
         ks-tilojen-yhteenveto (when-not (empty? urakat)
                                 (clj-str/join ", "
                                   [(str "Aloittamatta: " (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm))))
-                                   (str "aloitettu: " (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm))))
+                                   (str "kesken: " (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm))))
                                    (str "valmiina: " (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm))))]))]
     ks-tilojen-yhteenveto))
 

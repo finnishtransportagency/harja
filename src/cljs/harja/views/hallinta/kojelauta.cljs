@@ -53,7 +53,7 @@
       :hakuikoni? true
       :placeholder "Käytä suurennuslasia tai anna urakan nimi"
       :monivalinta-teksti #(case (count %)
-                             0 "Kaikki valittu"
+                             0 ""
                              1 (:nimi (first %))
                              (str (count %) " urakkaa valittu"))}
      (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]])
@@ -63,14 +63,14 @@
   [rivi]
   (let [{:keys [vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
     [yleiset/wrap-if true
-     [yleiset/tooltip {} :% "Klikkaa siirtyäksesi urakan kustannussuunnitelmaan"]
-     [:div.klikattava {:on-click #(siirtymat/kustannusten-seurantaan-valitussa-urakassa (:ely_id rivi) (:id rivi))}
+     [yleiset/tooltip {} :% "Siirry kustannussuunnitelmaan"]
+     [:a.klikattava {:on-click #(siirtymat/kustannusten-seurantaan-valitussa-urakassa (:ely_id rivi) (:id rivi))}
       (cond
         (= "aloittamatta" suunnitelman_tila)
         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Aloittamatta")})
 
         (= "aloitettu" suunnitelman_tila)
-        (yleiset/tila-indikaattori "kesken" {:fmt-fn #(str "Aloitettuja: " vahvistamattomia
+        (yleiset/tila-indikaattori "kesken" {:fmt-fn #(str "Kesken: " vahvistamattomia
                                                         ", vahvistettuja: " vahvistettuja)})
 
         (= "vahvistettu" suunnitelman_tila)
@@ -95,7 +95,7 @@
     [:div
      ;; [debug/debug urakat]
      [grid/grid
-      {:otsikko (str "Urakoiden tilat")
+      {:otsikko (str "")
        :tyhja (if haku-kaynnissa?
                 [ajax-loader "Ladataan tietoja"]
                 "Ei tietoja, tarkistathan valitut suodattimet.")
@@ -127,7 +127,7 @@
     (komp/sisaan #(e! (tiedot/->HaeUrakat)))
     (fn [e! app]
       [:div.kojelauta-hallinta
-       [:h1 "Etusivu"]
+       [:h1 "Urakoiden tilanne"]
        [suodattimet e! app]
        ;; [debug/debug app]
        [listaus e! app]])))
