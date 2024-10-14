@@ -19,7 +19,7 @@ BEGIN
     SELECT COALESCE(count(*), 0) INTO vahvistamattomia
                                  FROM suunnittelu_kustannussuunnitelman_tila
                                 WHERE hoitovuosi = _hoitovuosi AND urakka = _urakka AND vahvistettu IS FALSE
-                                  AND osio != 'tilaajan-rahavaraukset';;
+                                  AND osio != 'tilaajan-rahavaraukset';
 
     aloittamattomia := kaikkien_osioiden_lkm_per_hoitokausi - vahvistamattomia - vahvistettuja;
 
