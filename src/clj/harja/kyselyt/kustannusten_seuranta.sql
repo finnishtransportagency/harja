@@ -187,8 +187,8 @@ WHERE s.urakka = :urakka
   AND tpi.toimenpide = tk.id
 GROUP BY tehtava_nimi, indeksikorjaus_vahvistettu
 UNION ALL
--- Budjetoidut palkat haetaan johto_ja_hallintakorvaus taulusta
--- Palkat kuuluvat johto-ja-hallintakorvaus pääryhmään
+-- Budjetoidut palkat haetaan johto_ja_hallintokorvaus taulusta
+-- Palkat kuuluvat johto-ja-hallintokorvaus pääryhmään
 SELECT SUM((hjh.tunnit * hjh.tuntipalkka * hjh."osa-kuukaudesta")) AS budjetoitu_summa,
        SUM((hjh.tunnit *
             hjh.tuntipalkka_indeksikorjattu *
@@ -201,7 +201,7 @@ SELECT SUM((hjh.tunnit * hjh.tuntipalkka * hjh."osa-kuukaudesta")) AS budjetoitu
        MIN(concat(hjh.vuosi, '-', hjh.kuukausi, '-01'))            AS ajankohta,
        'hjh'                                                       AS toteutunut,
        160                                                         AS jarjestys,
-       'johto-ja-hallintakorvaus'                                  AS paaryhma,
+       'johto-ja-hallintokorvaus'                                  AS paaryhma,
        hjh.indeksikorjaus_vahvistettu                              AS indeksikorjaus_vahvistettu
 FROM johto_ja_hallintokorvaus hjh
          LEFT JOIN johto_ja_hallintokorvaus_toimenkuva jjht on hjh."toimenkuva-id" = jjht.id
@@ -222,7 +222,7 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        MIN(concat(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
        'hjh'                                          AS toteutunut,
        160                                            AS jarjestys,
-       'johto-ja-hallintakorvaus'                     AS paaryhma,
+       'johto-ja-hallintokorvaus'                     AS paaryhma,
        kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
 from toimenpide tk,
      kustannusarvioitu_tyo kt
@@ -288,7 +288,7 @@ WHERE l.urakka = :urakka
   AND lk.toimenpideinstanssi = tpi.id
   AND lk.poistettu IS NOT TRUE
   AND tpi.toimenpide = tk.id
-  -- Näillä toimenpidekoodi.koodi rajauksilla rajataan johto- ja hallintakorvaus, hoidonjohdonpalkkio ja erilliskorvaus ulos
+  -- Näillä toimenpidekoodi.koodi rajauksilla rajataan johto- ja hallintokorvaus, hoidonjohdonpalkkio ja erilliskorvaus ulos
   AND (tk.koodi = '23104' OR tk.koodi = '23116'
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
        tk.koodi = '14301')
@@ -324,14 +324,14 @@ SELECT 0                          AS budjetoitu_summa,
            WHEN tr.yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3' THEN 'Tavoitepalkkio'
            WHEN tr.yksiloiva_tunniste = '19907c24-dd26-460f-9cb4-2ed974b891aa' THEN 'Urakoitsija maksaa tavoitehinnan ylityksestä'
            WHEN tr.yksiloiva_tunniste = 'be34116b-2264-43e0-8ac8-3762b27a9557' THEN 'Urakoitsija maksaa kattohinnan ylityksestä'
-           else 'Johto- ja Hallintakorvaus'
+           else 'Johto- ja Hallintokorvaus'
            END                   AS toimenpide,
        MIN(l.erapaiva)::TEXT     AS ajankohta,
        'toteutunut'              AS toteutunut,
        MIN(tr.jarjestys) AS jarjestys,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
-           WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintakorvaus'
+           WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintokorvaus'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            WHEN lk.tehtavaryhma IS NULL AND lk.tyyppi::TEXT = 'lisatyo' THEN 'lisatyo'
            WHEN (lk.tyyppi::TEXT = 'muukulu' AND lk.tavoitehintainen IS TRUE) THEN 'muukulu-tavoitehintainen'
@@ -374,15 +374,15 @@ SELECT 0                                            AS budjetoitu_summa,
        coalesce(tr.nimi, tk_tehtava.nimi)           AS tehtava_nimi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'Erillishankinnat'
-           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'Johto- ja Hallintakorvaus'
+           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'Johto- ja Hallintokorvaus'
            END                                      AS toimenpide,
        MIN(concat(t.vuosi, '-', t.kuukausi, '-01')) AS ajankohta,
        'toteutunut'                                      AS toteutunut,
        MIN(tk_tehtava.jarjestys)                    AS jarjestys,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
-           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'johto-ja-hallintakorvaus'
-           WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintakorvaus'
+           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'johto-ja-hallintokorvaus'
+           WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintokorvaus'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            WHEN tk_tehtava.yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' then 'hoidonjohdonpalkkio' --'c9712637-fbec-4fbd-ac13-620b5619c744' THEN 'hoidonjohdonpalkkio'
            END                                      AS paaryhma,

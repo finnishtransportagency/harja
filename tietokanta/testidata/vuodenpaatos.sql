@@ -97,7 +97,7 @@ $$
 
             END LOOP;
 
-        -- Johto- ja hallintakorvaus, tuntipalkat.
+        -- Johto- ja hallintokorvaus, tuntipalkat.
         FOR kuukausi_ IN 1..12
             LOOP
                 vuosi_ := (CASE WHEN (kuukausi_ <= 9) THEN 2020 ELSE 2019 END);
