@@ -110,6 +110,8 @@
         VALUES (%s, 'hoidonjohtopalkkio', 2, true, %s);" urakka-id kayttaja))
         _ (i (format "INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja)
         VALUES (%s, 'tavoite-ja-kattohinta', 2, true, %s);" urakka-id kayttaja))
+        _ (i (format "INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja)
+        VALUES (%s, 'tavoitehintaiset-rahavaraukset', 2, true, %s);" urakka-id kayttaja))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:hoitokauden-alkuvuosi 2024
                                                           :urakka-idt [urakka-id]
@@ -124,7 +126,7 @@
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
 
 
-(deftest oulun-mhu-kojelautaan-yksi-osio-vahvistettu
+(deftest iin-mhu-kojelautaan-yksi-osio-vahvistettu
   (let [iin-mhu-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         kayttaja (:id +kayttaja-jvh+)
         _ (i (format "INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja)
@@ -145,7 +147,7 @@
                                        vastaus))]
     (is (str/includes? vastaus "Iin MHU") "Iin MHU")
     (is (= 1 (get-in vahvistettu-2024-rivi [:ks_tila :vahvistettuja])) "yksi vahvistettu")
-    (is (= 4 (get-in vahvistettu-2024-rivi [:ks_tila :aloittamattomia])) "4 aloittamatta")
+    (is (= 5 (get-in vahvistettu-2024-rivi [:ks_tila :aloittamattomia])) "5 aloittamatta")
     (is (= 0 (get-in vahvistettu-2024-rivi [:ks_tila :vahvistamattomia])) "yksi vahvistamatta")
     (is (= "aloitettu" (get-in vahvistettu-2024-rivi [:ks_tila :suunnitelman_tila])) "tila")
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
