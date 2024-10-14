@@ -107,8 +107,6 @@ BEGIN
                 FOREACH m IN ARRAY rp.materiaalit
                     LOOP
                         IF suolamateriaalikoodit @> ARRAY [m.materiaalikoodi] THEN
-                            -- Muutos edelliseen versioon: suolatoteuma_reittipiste tauluun laitetaan kahden reittipisteen välinen toteuma,
-                            -- josta lasketaan osuudet jotka osuvat pohjavesi- tai rajoitusalueille.
                             IF edellinen_rp IS DISTINCT FROM NULL THEN
 
                                 -- MUUTTUNUT KOHTA - haetaan pvo ja ra alueet valmiiksi, jotta niiden sisällön iffittely onnistuu
