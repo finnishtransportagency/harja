@@ -122,9 +122,9 @@
              :active (nav/valittu-valilehti-atom :hallinta-seuranta)}
 
     "Urakoiden tilanne"
-    :kojelauta
+    :urakoiden-tilanne
     (when (oikeudet/hallinta)
-      ^{:key "kojelauta"}
+      ^{:key "urakoiden-tilanne"}
       [kojelauta/kojelauta])
 
     "Integraatiotilanne"

@@ -49,7 +49,7 @@
                  [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "0.8.2"]
+                 [org.clojure/core.cache "1.1.234"]
                  [org.clojure/core.memoize "1.1.266"]
 
                  ;; Pattern match kirjasto
@@ -92,7 +92,7 @@
                  [cljs-ajax "0.8.4"]
 
                  ;; React-wrapper frontille
-                 [reagent "0.9.1"]
+                 [reagent "0.10.0"]
 
 
                  ;; Local-storage apuri frontille
