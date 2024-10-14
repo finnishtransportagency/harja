@@ -119,7 +119,7 @@
         rivi (first (filter #(= 2024 (:hoitokauden_alkuvuosi %))
                       vastaus))]
     (is (str/includes? vastaus "Raahen MHU") "Raahen MHU")
-    (is (= 5 (get-in rivi [:ks_tila :vahvistettuja])) "5 vahvistettua")
+    (is (= 6 (get-in rivi [:ks_tila :vahvistettuja])) "6 vahvistettua")
     (is (= 0 (get-in rivi [:ks_tila :aloittamattomia])) "0 aloittamatta")
     (is (= 0 (get-in rivi [:ks_tila :vahvistamattomia])) "0 vahvistamatta")
     (is (= "vahvistettu" (get-in rivi [:ks_tila :suunnitelman_tila])) "tila")
