@@ -39,7 +39,7 @@ jobs:
   # Nasty hack for: https://github.com/actions/runner/issues/2372
   get-env-vars:
     name: Get Common Environment variables
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       TARGET_ENVIRONMENT: ${{ env.TARGET_ENVIRONMENT }}
       BRANCH_NAME: ${{ env.BRANCH_NAME }}
@@ -47,7 +47,7 @@ jobs:
       - run: echo "null"
 
   get-latest-successful-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [ get-env-vars ]
     permissions:
       contents: read
@@ -200,7 +200,7 @@ jobs:
   #   eikä sitä voi estää tai hallita mitenkään GitHub Actionsin puolella.
   #   Asia täytyy korjata GitHub API:n kautta itse tekemällä erillinen deployment oikealla commit SHA:lla.
   replace-latest-deployment:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [ get-env-vars, get-latest-successful-build, deploy-to-production ]
 
     permissions:
