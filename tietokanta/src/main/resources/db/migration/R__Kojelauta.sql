@@ -11,13 +11,15 @@ DECLARE
 
 BEGIN
     -- jos kaikki ao. osioit on vahvistettu, on ko. hoitokauden osalta kustannussuunnitelma vahvistettu
-    kaikkien_osioiden_lkm_per_hoitokausi := 5;
+    kaikkien_osioiden_lkm_per_hoitokausi := 6;
     SELECT COALESCE(count(*), 0) INTO vahvistettuja
                                  FROM suunnittelu_kustannussuunnitelman_tila
-                                WHERE hoitovuosi = _hoitovuosi AND urakka = _urakka AND vahvistettu IS TRUE;
+                                WHERE hoitovuosi = _hoitovuosi AND urakka = _urakka AND vahvistettu IS TRUE
+                                  AND osio != 'tilaajan-rahavaraukset';
     SELECT COALESCE(count(*), 0) INTO vahvistamattomia
                                  FROM suunnittelu_kustannussuunnitelman_tila
-                                WHERE hoitovuosi = _hoitovuosi AND urakka = _urakka AND vahvistettu IS FALSE;
+                                WHERE hoitovuosi = _hoitovuosi AND urakka = _urakka AND vahvistettu IS FALSE
+                                  AND osio != 'tilaajan-rahavaraukset';
 
     aloittamattomia := kaikkien_osioiden_lkm_per_hoitokausi - vahvistamattomia - vahvistettuja;
 
