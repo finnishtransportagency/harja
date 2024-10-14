@@ -31,6 +31,13 @@ function taytaArvoja() {
     cy.get('#suunnitellut-hankinnat-taulukko')
         .taulukonOsaPolussa([1, 0, 0, 0])
         .click();
+
+    // Testit olettavat, että "kopioi tuleville vuosille" on hankinnoissa päällä
+    // Disabloidaan "Kopioi hankinnat tuleville hoitovuosille". Checkboxin tulisi olla defaulttina aktiivinen.
+    cy.get('input[id="kopioi-hankinnat-tuleville-hoitovuosille"]')
+        .should('not.be.checked')
+        .check();
+
     ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 0, 1, '1000')
     ks.klikkaaTaytaAlas();
 }

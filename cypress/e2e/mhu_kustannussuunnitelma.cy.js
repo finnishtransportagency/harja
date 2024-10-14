@@ -86,8 +86,7 @@ describe('Suunnitellut hankinnat osio', function () {
         it('Muokkaa ensimmäisen vuoden arvoja ilman alaskopiointia', function () {
             // Disabloidaan "Kopioi hankinnat tuleville hoitovuosille". Checkboxin tulisi olla defaulttina aktiivinen.
             cy.get('input[id="kopioi-hankinnat-tuleville-hoitovuosille"]')
-                .should('be.checked')
-                .uncheck();
+                .should('not.be.checked');
 
             // Avaa 1. hoitovuosi rivi
             cy.get('#suunnitellut-hankinnat-taulukko')
@@ -460,7 +459,7 @@ describe('Erillishankinnat osio', function () {
             // Ota ota se pois
             cy.get('div[data-cy="erillishankinnat-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
-                .should('be.checked').uncheck();
+                .should('not.be.checked');
 
             cy.get('#erillishankinnat-taulukko')
                 .testaaOtsikot(['', 'Määrä €/kk', 'Yhteensä', 'Indeksikorjattu'])
@@ -933,15 +932,15 @@ describe('Tarkasta tallennetut arvot', function () {
         it('Testaa arvot tavoite- ja kattohinta osiossa', function () {
             // Suunnitellut hankinnat + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio
             ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri',
-                [471, 1062, 900, 900, 900]);
+                [471, 822, 900, 900, 900]);
             ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri',
-                [471, 1062, 900, 900, 900]);
+                [471, 822, 900, 900, 900]);
 
             // (Suunnitellut hankinnat + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1
             ks.tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri',
-                [471 * 1.1, 1062 * 1.1, 900 * 1.1, 900 * 1.1, 900 * 1.1]);
+                [471 * 1.1, 822 * 1.1, 900 * 1.1, 900 * 1.1, 900 * 1.1]);
             ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'kattohinnan-indeksilaskuri',
-                [471 * 1.1, 1062 * 1.1, 900 * 1.1, 900 * 1.1, 900 * 1.1]);
+                [471 * 1.1, 822 * 1.1, 900 * 1.1, 900 * 1.1, 900 * 1.1]);
         });
     });
 });

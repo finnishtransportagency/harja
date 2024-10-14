@@ -38,7 +38,7 @@ describe('Johto- ja hallintokorvaus osio', function () {
             // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
             cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
-                .should('be.checked').uncheck();
+                .should('not.be.checked');
 
             /*cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
                 .testaaOtsikot(['Toimenkuva', 'Tunnit/kk, h', 'Tuntipalkka, €', 'Yhteensä/kk', 'kk/v'])
@@ -240,7 +240,7 @@ describe('Johto- ja hallintokorvaus osio', function () {
             // Varmista, että "Kopioi hankinnat tuleville hoitovuosille" on disabled
             cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
-                .should('not.be.checked')
+                .should('be.checked').uncheck();
         });
 
         describe.skip('Testaa "Hankintavastaava (ennen urakkaa)"-toimenkuvaa', function () {
@@ -500,8 +500,7 @@ describe('Johto- ja hallintokorvaus osio', function () {
             cy.get('#toimistokulut-taulukko')
                 .taulukonOsaPolussa([1, 0, 0, 1, 0], true)
                 .find('input')
-                .should('not.be.checked')
-                .check();
+                .should('be.checked');
 
             // Täytä ensimmäisen kuukauden arvo
             ks.muokkaaLaajennaRivinArvoa(
@@ -567,8 +566,7 @@ describe('Johto- ja hallintokorvaus osio', function () {
             // osiot muuttuvat samalla
             cy.get('div[data-cy="johto-ja-hallinto-muut-kulut-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
-                .should('not.be.checked')
-                .check();
+                .should('be.checked');
 
             // Täytä arvo "Toimistokulut, pientarvikevarasto" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
             ks.muokkaaRivinArvoa('toimistokulut-taulukko', 0, 1, '10')
@@ -618,7 +616,7 @@ describe('Johto- ja hallintokorvaus osio', function () {
             cy.get('div[data-cy="johto-ja-hallinto-muut-kulut-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('be.checked')
-                .uncheck()
+                .uncheck();
         });
     })
 });
