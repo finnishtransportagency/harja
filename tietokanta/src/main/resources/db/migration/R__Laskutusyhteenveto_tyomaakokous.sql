@@ -294,20 +294,20 @@ BEGIN
     hoitokauden_tavoitehinta := 0;
     urakan_alkuvuosi := (SELECT EXTRACT(YEAR FROM urakan_tiedot.alkupvm) :: INTEGER);
 
-    -- Laske valitut hoitokausien tavoitehinnat yhteen
+    -- Laske valittujen hoitokausien tavoitehinnat yhteen
     FOR hoitokauden_vuosi IN hk_alkuvuosi..hk_loppuvuosi
     LOOP
         hoitokauden_nro := hoitokauden_vuosi - hk_alkuvuosi + 1;
 
         IF hoitokauden_nro >= (hk_alkuvuosi - urakan_alkuvuosi + 1) 
-          AND hoitokauden_nro <= (hk_loppuvuosi - urakan_alkuvuosi + 1) THEN
-            RAISE NOTICE 'Loopataan hoitokauden_vuosi: %, hoitokauden_nro: %', hoitokauden_vuosi, hoitokauden_nro;
-
-            hoitokauden_tavoitehinta := hoitokauden_tavoitehinta + COALESCE(
-                (SELECT SUM(COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0))
-                FROM urakka_tavoite ut
-                WHERE ut.hoitokausi = hoitokauden_nro
-                AND ut.urakka = ur), 0
+        AND hoitokauden_nro <= (hk_loppuvuosi - urakan_alkuvuosi + 1) THEN
+            RAISE NOTICE 'Lasketaan tavoitehinta hoitokauden_vuosi: %, hoitokauden_nro: %', hoitokauden_vuosi, hoitokauden_nro;
+            hoitokauden_tavoitehinta := hoitokauden_tavoitehinta + 
+            COALESCE(
+              ( SELECT SUM(COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0))
+                  FROM urakka_tavoite ut
+                 WHERE ut.hoitokausi = hoitokauden_nro
+                   AND ut.urakka = ur), 0
             );
         END IF;
     END LOOP;
@@ -317,10 +317,11 @@ BEGIN
 
     hk_tavhintsiirto_ed_vuodelta := 0.0;
     hk_tavhintsiirto_ed_vuodelta := hk_tavhintsiirto_ed_vuodelta +
-        (SELECT COALESCE(ut.tavoitehinta_siirretty_indeksikorjattu, ut.tavoitehinta_siirretty, 0) as siirretty
-         FROM urakka_tavoite ut
-         WHERE ut.hoitokausi = hoitokauden_nro
-           AND ut.urakka = ur);
+        ( SELECT COALESCE(ut.tavoitehinta_siirretty_indeksikorjattu, ut.tavoitehinta_siirretty, 0) AS siirretty
+           FROM urakka_tavoite ut
+          WHERE ut.hoitokausi = hoitokauden_nro
+            AND ut.urakka = ur);
+            
     RAISE NOTICE '*** hk_tavhintsiirto_ed_vuodelta: % ', hk_tavhintsiirto_ed_vuodelta;
 
     -- Kaikki kustannukset haetaan toimenpideinstanssien perusteella.
