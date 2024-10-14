@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.suunnittelu.mhu-tehtavat
   (:require [tuck.core :refer [process-event] :as tuck]
+            [clojure.string :as str]
             [harja.tiedot.urakka.urakka :as tiedot]
             [harja.tiedot.urakka :as urakka]
             [harja.ui.viesti :as viesti]
@@ -346,16 +347,20 @@ sopimusmaarat))
 
 (defn tallenna-sopimuksen-tehtavamaara
   [app {:keys [tehtava maara vuosi samat?]}]
-  (tallenna
-    app
-    {:polku :tallenna-sopimuksen-tehtavamaara
-     :parametrit {:onnistui ->SopimuksenTehtavaTallennusOnnistui
-                  :epaonnistui ->SopimuksenTehtavaTallennusEpaonnistui}}
-    {:urakka-id (-> @tiedot/yleiset :urakka :id)
-     :tehtava-id tehtava
-     :hoitovuosi vuosi
-     :samat-maarat-vuosittain? samat?
-     :maara maara}))
+  (let [;; Korjataan varalta pilkulla annetut luvut pisteeksi, ennen tallennusta
+        maara (if (string? maara)
+                (js/parseFloat (str/replace maara "," "."))
+                maara)]
+   (tallenna
+     app
+     {:polku :tallenna-sopimuksen-tehtavamaara
+      :parametrit {:onnistui ->SopimuksenTehtavaTallennusOnnistui
+                   :epaonnistui ->SopimuksenTehtavaTallennusEpaonnistui}}
+     {:urakka-id (-> @tiedot/yleiset :urakka :id)
+      :tehtava-id tehtava
+      :hoitovuosi vuosi
+      :samat-maarat-vuosittain? samat?
+      :maara maara})))
 
 (defn tallenna-tehtavamaarat
   [app {:keys [hoitokausi tehtavamaarat]}]

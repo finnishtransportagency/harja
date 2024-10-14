@@ -96,10 +96,7 @@
                                      :tehtavaryhmat-ja-toimenpiteet
                                      +kayttaja-jvh+
                                      {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
-    ;; Lista ei ole ihan identtinen, koska tehtäväryhmälle: Muut, MHU ylläpito (F) on lisätty tehtäviä
-    ;; jotka kuuluu sekä liikenneympäristön hoitoon, että MHU Ylläpitoon, joten distinct tehtäväryhmävertailusta
-    ;; jää väkisinkin tällaiset duplikaatit pois. Niinpä lisätään käsin distinct vertailuun +1
-    (is (= (count tehtavaryhmat-toimenpiteet) (+ tr-tp-lkm 1)) "Palauttaa tehtäväryhmä ja toimenpidelistan")))
+    (is (= (count tehtavaryhmat-toimenpiteet) tr-tp-lkm) "Palauttaa tehtäväryhmä ja toimenpidelistan")))
 
 (deftest tehtavaryhmat-ja-toimenpiteet-vaaralla-datalla-testi
   (is (thrown? IllegalArgumentException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -232,11 +229,10 @@
    {:nimi "2.8 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 2}
    {:nimi "3 SORATEIDEN HOITO", :sopimus-tallennettu nil, :tehtavien-lkm 7}
    {:nimi "4 PÄÄLLYSTEIDEN PAIKKAUS", :sopimus-tallennettu nil, :tehtavien-lkm 4}
-   {:nimi "5 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" :sopimus-tallennettu nil :tehtavien-lkm 6}
    {:nimi "6.1 YLLÄPITO / Rumpujen uusiminen", :sopimus-tallennettu nil, :tehtavien-lkm 8}
    {:nimi "6.2 YLLÄPITO / Avo-ojien kunnossapito", :sopimus-tallennettu nil, :tehtavien-lkm 8}
    {:nimi "7 KORVAUSINVESTOINTI", :sopimus-tallennettu nil, :tehtavien-lkm 1}
-   {:nimi "8 MUUTA", :sopimus-tallennettu nil, :tehtavien-lkm 6}])
+   {:nimi "8 MUUTA", :sopimus-tallennettu nil, :tehtavien-lkm 4}])
 
 (deftest tehtavahierarkian-haku-maarineen-testi
   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -254,7 +250,7 @@
                                           (mapv #(assoc % :tehtavien-lkm (count (:tehtavat %))))
                                           (mapv #(dissoc % :tehtavat)))]
     (is (= nimet-ja-sopimus-tallennettu odotetut-tehtavamaarien-nimet-ja-tehtavien-lukumaarat) "Oikea olennainen sisältö tehtävämäärissä")
-    (is (= (count tehtavat-ja-maarat) 14) "14 tehtävämääräryhmää")
+    (is (= (count tehtavat-ja-maarat) 13) "13 tehtävämääräryhmää")
     (is (true? (every? #(= 2020 (:hoitokauden-alkuvuosi %)) (filter #(not (nil? (:hoitokauden-alkuvuosi %))) tehtavat-ja-maarat))) "Palauttaa tehtavahiearkian määrineen vuodelle"))
   (let [tehtavat-ja-maarat-urakan-ulkopuolelta (kutsu-palvelua
                                                  (:http-palvelin jarjestelma)

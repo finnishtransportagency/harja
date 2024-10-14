@@ -27,6 +27,7 @@
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.osion-vahvistus :as osion-vahvistus]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.hankintakustannukset-osio :as hankintakustannukset-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.erillishankinnat-osio :as erillishankinnat-osio]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.tavoitehintaiset-rahavaraukset-osio :as tavoitehintaiset-rahavaraukset-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.johto-ja-hallintokorvaus-osio :as johto-ja-hallintokorvaus-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.hoidonjohtopalkkio-osio :as hoidonjohtopalkkio-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.tavoite-ja-kattohinta-osio :as tavoite-ja-kattohinta-osio]
@@ -131,6 +132,9 @@
             erillishankinnat-summa (get-in app
                                      [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat
                                       hoitokausi-idx])
+            tavoitehintaiset-rahavaraukset-summa (get-in app
+                                                   [:yhteenvedot :tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset
+                                                    hoitokausi-idx])
             ;; Johto- ja hallintkorvaukset = Palkat + Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten järj. jne. + Hoito- ja korjaustöiden pientarvikevarasto
             ;; Eli, "johto-ja-hallintokorvaus" + "toimistokulut" (eli nykyisin Johto ja hallinto: muut kulut)
             ;; https://knowledge.solita.fi/display/HAR/Kustannussuunnitelma-tab#Kustannussuunnitelmatab-Johto-jahallintokorvaus
@@ -148,6 +152,7 @@
             tavoitehinta-summa (+
                                  hankintakustannukset-summa
                                  erillishankinnat-summa
+                                 tavoitehintaiset-rahavaraukset-summa
                                  johto-ja-hallintokorvaukset-summa
                                  hoidonjohtopalkkio-summa)
             kattohinta-summa (or
@@ -160,11 +165,12 @@
 
 
             haettavat-osioiden-tilat #{:erillishankinnat :hankintakustannukset :hoidonjohtopalkkio
-                                       :johto-ja-hallintokorvaus :tavoite-ja-kattohinta :tilaajan-rahavaraukset}
+                                       :johto-ja-hallintokorvaus :tavoite-ja-kattohinta :tilaajan-rahavaraukset :tavoitehintaiset-rahavaraukset}
             suunnitelman-tilat (get-in app [:domain :osioiden-tilat])
 
             {hankintakustannukset-vahvistettu? :hankintakustannukset
              erillishankinnat-vahvistettu? :erillishankinnat
+             tavoitehintaiset-rahavaraukset-vahvistettu? :tavoitehintaiset-rahavaraukset
              johto-ja-hallintokorvaus-vahvistettu? :johto-ja-hallintokorvaus
              hoidonjohtopalkkio-vahvistettu? :hoidonjohtopalkkio
              tavoite-ja-kattohinta-vahvistettu? :tavoite-ja-kattohinta
@@ -180,7 +186,7 @@
             tavoitehinta-indeksikorjattu (:tavoitehinta-indeksikorjattu hoitokauden-budjettitavoite)
             kattohinta-indeksikorjattu (:kattohinta-indeksikorjattu hoitokauden-budjettitavoite)
 
-            {:keys [summa-hankinnat summa-erillishankinnat summa-hoidonjohtopalkkio summa-tilaajan-rahavaraukset
+            {:keys [summa-hankinnat summa-erillishankinnat summa-tavoitehintaiset-rahavaraukset summa-hoidonjohtopalkkio summa-tilaajan-rahavaraukset
                     summa-johto-ja-hallintokorvaus summa-tavoite-ja-kattohinta]}
             (poista-nilit
               {:summa-hankinnat [{:otsikko "Yhteensä"
@@ -192,6 +198,11 @@
                                         (when indeksit-saatavilla?
                                           {:otsikko "Indeksikorjattu"
                                            :summa (* erillishankinnat-summa indeksikerroin)})]
+               :summa-tavoitehintaiset-rahavaraukset [{:otsikko "Yhteensä"
+                                                       :summa tavoitehintaiset-rahavaraukset-summa}
+                                                      (when indeksit-saatavilla?
+                                                        {:otsikko "Indeksikorjattu"
+                                                         :summa (* tavoitehintaiset-rahavaraukset-summa indeksikerroin)})]
                :summa-hoidonjohtopalkkio [{:otsikko "Yhteensä"
                                            :summa hoidonjohtopalkkio-summa}
                                           (when indeksit-saatavilla?
@@ -229,9 +240,12 @@
          {:urakka (:urakka @tila/yleiset)
           :soluja (count summa-tavoite-ja-kattohinta)
           :indeksit-saatavilla? indeksit-saatavilla?}
-         {::t/hankintakustannukset {:nimi "Hankintakustannukset"
+         {::t/hankintakustannukset {:nimi "Suunnitellut hankinnat"
                                     :summat summa-hankinnat
                                     :suunnitelma-vahvistettu? hankintakustannukset-vahvistettu?}
+          ::t/tavoitehintaiset-rahavaraukset {:nimi "Rahavaraukset"
+                                              :summat summa-tavoitehintaiset-rahavaraukset
+                                              :suunnitelma-vahvistettu? tavoitehintaiset-rahavaraukset-vahvistettu?}
           ::t/erillishankinnat {:nimi "Erillishankinnat"
                                 :summat summa-erillishankinnat
                                 :suunnitelma-vahvistettu? erillishankinnat-vahvistettu?}
@@ -243,11 +257,7 @@
                                   :suunnitelma-vahvistettu? hoidonjohtopalkkio-vahvistettu?}
           ::t/tavoite-ja-kattohinta {:nimi "Tavoite- ja kattohinta"
                                      :suunnitelma-vahvistettu? tavoite-ja-kattohinta-vahvistettu?
-                                     :summat summa-tavoite-ja-kattohinta}
-          ::t/tilaajan-rahavaraukset {:nimi "Tavoitehinnan ulkopuoliset rahavaraukset"
-                                      :summat summa-tilaajan-rahavaraukset
-                                      ;; Tilaajan rahavarauksia ei tarvitse vahvistaa, koska sille ei lasketa indeksikorjauksia.
-                                      :nayta-osion-status? false}}])
+                                     :summat summa-tavoite-ja-kattohinta}}])
       [yleiset/ajax-loader "Haetaan tietoja"])))
 
 (defn- osionavigointi
@@ -267,11 +277,6 @@
         [napit/kotiin "Tää on puhdas hack" (vieritys/vierita-ylos)]]]
       (recur (first jaljella)
         (rest jaljella)))))
-
-
-;; -- Osion vahvistus --
-
-
 
 ;; --  Kustannussuunnitelma view ---
 
@@ -346,7 +351,6 @@
                                    ;; Hankintakustannukset osio
                                    [[hankintakustannukset-osio/suunnitellut-hankinnat-grid true nil]
                                     [hankintakustannukset-osio/hankinnat-laskutukseen-perustuen-grid true nil]
-                                    [hankintakustannukset-osio/rahavarausten-grid false nil]
 
                                     ;; Erillishankinnat osio
                                     [erillishankinnat-osio/erillishankinnat-grid true #{:erillishankinnat-disablerivit}]
@@ -487,6 +491,24 @@
                    :hoitovuosi-nro hoitovuosi-nro
                    :indeksit-saatavilla? indeksit-saatavilla?}]
 
+                 ::t/tavoitehintaiset-rahavaraukset
+                 [tavoitehintaiset-rahavaraukset-osio/osio
+                  (ks-yhteiset/osio-vahvistettu? osioiden-tilat :tavoitehintaiset-rahavaraukset hoitovuosi-nro)
+                  (get-in app [:domain :tavoitehintaiset-rahavaraukset])
+                  (get-in app [:yhteenvedot :tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset])
+                  (get-in app [:yhteenvedot :tavoitehintaiset-rahavaraukset :indeksikorjatut-summat :tavoitehintaiset-rahavaraukset])
+                  (get-in app [:domain :tavoitehinnan-ulkopuoliset-rahavaraukset])
+                  (get-in app [:domain :indeksit])
+                  (get-in app [:domain :kuluva-hoitokausi])
+                  (dissoc suodattimet :hankinnat)
+                  (:kantahaku-valmis? app)
+                  (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
+                  (-> @tila/yleiset :urakka :loppupvm pvm/vuosi)]
+                 [osion-vahvistus/vahvista-osio-komponentti :tavoitehintaiset-rahavaraukset
+                  {:osioiden-tilat osioiden-tilat
+                   :hoitovuosi-nro hoitovuosi-nro
+                   :indeksit-saatavilla? indeksit-saatavilla?}]
+
                  ::t/johto-ja-hallintokorvaukset                 
                  [johto-ja-hallintokorvaus-osio/osio
                   app
@@ -539,14 +561,6 @@
                    :hoitovuosi-nro hoitovuosi-nro
                    :indeksit-saatavilla? indeksit-saatavilla?
                    :osiossa-virheita? (some? (get-in app [:kattohinta :virheet 0 (keyword (str "kattohinta-vuosi-" hoitovuosi-nro))]))}]
-
-                 ::t/tilaajan-rahavaraukset
-                 [tilaajan-rahavaraukset-osio/osio
-                  ;; HOX, gridin nimi on edelleen "tilaajan-varaukset" vaikka osio on "tilaajan rahavaraukset"!
-                  (get-in app [:gridit :tilaajan-varaukset :grid])
-                  (dissoc suodattimet :hankinnat)
-                  (:kantahaku-valmis? app)]
-                 ;; Tälle osiolle ei tehdä vahvistusta, koska tilaajan rahavarauksille ei lasketa indeksikorjauksia.
                  ))
 
              ;; Näytä vahvistusdialogi, jos vaaditaan muutosten vahvistus.

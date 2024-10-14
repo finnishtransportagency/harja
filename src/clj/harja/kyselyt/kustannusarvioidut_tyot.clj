@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/kustannusarvioidut_tyot.sql"
   {:positional? false})
+
+(declare merkitse-maksuerat-likaisiksi!)

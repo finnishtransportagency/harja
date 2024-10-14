@@ -1,6 +1,5 @@
 (ns harja.tiedot.urakka.kulut.mhu-kulut
   (:require
-    [clojure.string :as string]
     [tuck.core :as tuck]
     [harja.ui.viesti :as viesti]
     [harja.tyokalut.tuck :as tuck-apurit]
@@ -12,15 +11,30 @@
     [harja.pvm :as pvm])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
+(defrecord LisaaKohdistus [lomake])
+(defrecord PoistaKohdistus [indeksi])
+(defrecord KohdistusTyyppi [tyyppi nro])
+(defrecord ValitseTehtavaryhmaKohdistukselle [tehtavaryhma nro])
+(defrecord TavoitehintaanKuuluminen [tavoitehinta nro])
+(defrecord ValitseRahavarausKohdistukselle [rahavaraus nro])
+(defrecord ValitseToimenpideKohdistukselle [toimenpide nro])
+(defrecord LisatyonLisatieto [lisatieto nro])
+(defrecord KohdistuksenSumma [summa nro])
+(defrecord KoontilaskunKuukausi [arvo])
+(defrecord ValitseErapaiva [erapaiva])
+(defrecord KoontilaskunNumero [koontilaskunnumero])
+(defrecord ValitseHoitokausi [vuosi])
+
 (defrecord KulujenSyotto [auki?])
 (defrecord TallennaKulu [])
-(defrecord PaivitaLomake [polut-ja-arvot optiot])
 (defrecord AvaaKulu [kulu])
 (defrecord NakymastaPoistuttiin [])
 (defrecord PoistaKulu [id])
 (defrecord PoistoOnnistui [tulos])
 (defrecord AsetaHakukuukausi [kuukausi])
 (defrecord AsetaHakuPaivamaara [alkupvm loppupvm])
+(defrecord AsetaHakuAlkuPvm [pvm ])
+(defrecord AsetaHakuLoppuPvm [pvm])
 
 (defrecord KuluHaettuLomakkeelle [kulu])
 
@@ -47,15 +61,35 @@
 (defrecord HaeUrakanValikatselmuksetOnnistui [vastaus])
 (defrecord HaeUrakanValikatselmuksetEpaonnistui [vastaus])
 
+;; Haetaan urakan rahavaraukset
+(defrecord HaeUrakanRahavaraukset [])
+(defrecord HaeUrakanRahavarauksetOnnistui [vastaus])
+(defrecord HaeUrakanRahavarauksetEpaonnistui [vastaus])
+
+(defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
+
+(def vuoden-paatoksen-kulun-tyypit
+  {:tavoitepalkkio "Tavoitepalkkio"
+   :tavoitehinnan-ylitys "Urakoitsija maksaa tavoitehinnan ylityksestä"
+   :kattohinnan-ylitys "Urakoitsija maksaa tavoite- ja kattohinnan ylityksestä"})
+
+(def vuoden-paatoksen-tehtavaryhmien-nimet
+  {:tavoitepalkkio "Hoitovuoden päättäminen / Tavoitepalkkio"
+   :tavoitehinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
+   :kattohinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"})
+
+(defn avain->tehtavaryhma [tehtavaryhmat avain]
+  (first (filter #(= (:tehtavaryhma %) (get vuoden-paatoksen-tehtavaryhmien-nimet avain)) tehtavaryhmat)))
+
 (defn parsi-summa [summa]
   (cond
     (not (string? summa)) summa
     (re-matches #"-?\d+(?:\.?,?\d+)?" (str summa))
     (-> summa
         str
-        (string/replace "," ".")
+        (str/replace "," ".")
         js/parseFloat)
-    (not (or (string/blank? summa)
+    (not (or (str/blank? summa)
              (nil? summa))) summa
     :else 0))
 
@@ -92,7 +126,7 @@
               lomake
               (partition 2 polut-ja-arvot)))))
 
-(defn- vuoden-paatoksen-kulu? [{:keys [tehtavaryhmat] :as app} kulu]
+(defn- vuoden-paatoksen-kulu? [{:keys [tehtavaryhmat]} kulu]
   (let [vuoden-paatoksen-tehtavaryhmat-set
         (into #{}
           (map :id (filter #(str/includes? (:tehtavaryhma %) "Hoitovuoden päättäminen") tehtavaryhmat)))]
@@ -104,34 +138,115 @@
       boolean)))
 
 (defn kulu->lomake [app kulu]
-  (let [{suorittaja :suorittaja} kulu]
-    (-> kulu
-        (dissoc :suorittaja)
-        (assoc :aliurakoitsija suorittaja)
-        (assoc :vuoden-paatos-valittu? (vuoden-paatoksen-kulu? app kulu))
-        (update :kohdistukset (fn [kohdistukset]
-                                (mapv #(assoc %
-                                         :lisatyo?
-                                         (if (= "lisatyo" (:maksueratyyppi %))
-                                           true
-                                           false))
-                                      kohdistukset)))
-        (with-meta (tila/kulun-validointi-meta kulu)))))
+  (let [{suorittaja :suorittaja} kulu
+        kl
+        (-> kulu
+          (dissoc :suorittaja)
+          (assoc :aliurakoitsija suorittaja)
+          (assoc :vuoden-paatos-valittu? (vuoden-paatoksen-kulu? app kulu))
+          (update :kohdistukset (fn [kohdistukset]
+                                  (mapv (fn [kohdistus]
+                                          (let [toimenpide (some #(when (= (:toimenpideinstanssi kohdistus) (:toimenpideinstanssi %))
+                                                                    %) (:toimenpiteet app))
+                                                tehtavaryhma (some #(when (= (:tehtavaryhma kohdistus) (:id %))
+                                                                      %) (:tehtavaryhmat app))
+
+                                                ;; Hoitovuoden päätöksen tyyppi pitää päätellä kohdistukselle
+                                                ;; Ja tässä vaiheessa se tehdään päättelemällä tehtäväryhmästä, että onko se hoitovuoden päätös.
+                                                ;; Jos joskus energiaa jää, niin tämä pitää ehdottomasti muuttaa niin, että kohdistuksella on oikeasti tyyppi, joka on hoitovuoden päätös, ja sille voi valita
+                                                ;; ne tehtäväryhmät, jotka ovat sille tyypille mahdollisia.
+                                                hoitovuoden-paatostyyppi (when tehtavaryhma
+                                                                           (first (keep #(when (= (val %) (:tehtavaryhma tehtavaryhma))
+                                                                                           (key %)) vuoden-paatoksen-tehtavaryhmien-nimet)))
+                                                kohdistustyyppi (keyword (:tyyppi kohdistus))]
+                                            (-> kohdistus
+                                              (assoc :lisatyo? (if (= "lisatyo" (:maksueratyyppi kohdistus)) true false))
+                                              (assoc :tyyppi kohdistustyyppi)
+                                              (assoc :toimenpide toimenpide)
+                                              (assoc :tehtavaryhma tehtavaryhma)
+                                              (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi))))
+                                    kohdistukset))))
+        kl (with-meta kl (tila/kulun-validointi-meta kl))]
+    kl))
+
+(defn palauta-hk-valitusta-kk [s]
+  ;; "joulukuu/2-hoitovuosi" -> 2
+  (when-let [[_ hoitovuosi-str] (re-find #"/(\d+)-hoitovuosi" s)]
+    (js/parseInt hoitovuosi-str)))
+
+(defn hoitovuosi-vuodeksi [alkuvuosi hoitovuosi]
+  (+ alkuvuosi (dec hoitovuosi)))
+
+(defn paatos-tehty-rivin-vuodelle? [app s]
+  ;; Onko päätös tehty vuodelle eg. "joulukuu/2-hoitovuosi" 
+  (let [hoitovuosi (palauta-hk-valitusta-kk s)
+        alkuvuosi (pvm/vuosi (:alkupvm @navigaatio/valittu-urakka))
+        rivin-vuosi (hoitovuosi-vuodeksi alkuvuosi hoitovuosi)] 
+    (some #(and (= rivin-vuosi (:vuosi %)) (:paatos-tehty? %))
+      (:vuosittaiset-valikatselmukset app))))
+
+(defn palauta-urakan-mahdolliset-koontilaskun-kuukaudet [app urakka-tila]
+  (let [{:keys [alkupvm loppupvm]} urakka-tila
+        alkuvuosi (pvm/vuosi alkupvm)
+        loppuvuosi (pvm/vuosi loppupvm)
+        hoitokauden-nro-vuodesta (fn [vuosi urakan-alkuvuosi urakan-loppuvuosi]
+                                   (when (and (<= urakan-alkuvuosi vuosi) (>= urakan-loppuvuosi vuosi))
+                                     (inc (- vuosi urakan-alkuvuosi))))
+        hoitokaudet-ilman-valikatselmusta (keep #(hoitokauden-nro-vuodesta (:vuosi %) alkuvuosi loppuvuosi)
+                                            (:vuosittaiset-valikatselmukset app))
+        koontilaskun-kuukaudet (for [hv hoitokaudet-ilman-valikatselmusta
+                                     kk kuukaudet]
+                                 (str (name kk) "/" hv "-hoitovuosi"))]
+    koontilaskun-kuukaudet))
 
 (defn alusta-lomake [app]
   (let [urakan-alkupvm (:alkupvm @navigaatio/valittu-urakka)
+        urakan-loppupvm (:loppupvm @navigaatio/valittu-urakka)
+        hk-loppu-pvm (pvm/hoitokauden-loppupvm (pvm/vuosi urakan-loppupvm))
         kuluva-hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/nyt))
-        kuluva-kuukausi (pvm/kuukauden-nimi (pvm/kuukausi (pvm/nyt)))
+        ;; Kuluva kuukausi ei voi olla pienempi, kuin urakan alkupvm:n kuukausi
+        pienin-nyt-hetki (if (pvm/sama-tai-jalkeen? (pvm/nyt) urakan-alkupvm)
+                           (pvm/nyt)
+                           urakan-alkupvm)
+        erapaiva (cond
+                   ;; Nyt menee yli urakan loppupvm
+                   (pvm/jalkeen? (pvm/nyt) hk-loppu-pvm)
+                   hk-loppu-pvm
+
+                   (and
+                     (= (pvm/iso8601 (get-in app [:lomake :erapaiva])) (pvm/iso8601 (pvm/nyt)))
+                     (pvm/sama-tai-jalkeen? (pvm/nyt) urakan-alkupvm))
+                   (get-in app [:lomake :erapaiva])
+                   
+                   ;; Jos eräpäpivä on ennen urakan alkua, niin siirretään eräpäivä urakan ensimmäiselle päivälle
+                   :else
+                   urakan-alkupvm)
+        
+        kuluva-kuukausi (pvm/kuukauden-nimi (pvm/kuukausi pienin-nyt-hetki))
         nyky-hoitokausi-lukittu? (some #(and
-                                     (= (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)) (:vuosi %))
-                                     (:paatos-tehty? %))
-                              (:vuosittaiset-valikatselmukset app))
+                                          (= (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)) (:vuosi %))
+                                          (:paatos-tehty? %))
+                                   (:vuosittaiset-valikatselmukset app))
         perus-koontilaskun-kuukausi (when (and
                                             (not nyky-hoitokausi-lukittu?)
                                             kuluva-hoitovuoden-nro
                                             (not= "kk ei välillä 1-12" kuluva-kuukausi))
-                                      (str kuluva-kuukausi "/" kuluva-hoitovuoden-nro "-hoitovuosi"))]
-    (assoc tila/kulut-lomake-default :koontilaskun-kuukausi perus-koontilaskun-kuukausi)))
+                                      (str kuluva-kuukausi "/" kuluva-hoitovuoden-nro "-hoitovuosi"))
+        
+        koontilaskun-kuukaudet (palauta-urakan-mahdolliset-koontilaskun-kuukaudet app (-> @tila/tila :yleiset :urakka))
+
+        ;; Jos nykyinen kk ei ole voimassa urakassa, aseta defaultti urakan viimeiseksi kuukaudeksi
+        nykyinen-hk-voimassa? (some #(= % perus-koontilaskun-kuukausi) koontilaskun-kuukaudet)
+        perus-koontilaskun-kuukausi (if nykyinen-hk-voimassa?
+                                      perus-koontilaskun-kuukausi
+                                      (last koontilaskun-kuukaudet))
+
+        lomake tila/kulut-lomake-default
+        lomake (-> lomake
+                 (assoc :erapaiva erapaiva)
+                 (assoc :koontilaskun-kuukausi perus-koontilaskun-kuukausi)
+                 (with-meta (tila/kulun-validointi-meta lomake)))]
+    lomake))
 
 (defn- resetoi-kulunakyma []
   tila/kulut-default)
@@ -166,7 +281,149 @@
       konflikti-laskun-numerossa?
       talleta-tilapainen-erapaiva)))
 
+(defn drop-nth
+  "Droppaa collektionista indexillä n olevan alkio."
+  [coll n]
+  (keep-indexed #(when (not= %1 n) %2) coll))
+
 (extend-protocol tuck/Event
+
+  LisaaKohdistus
+  (process-event [{lomake :lomake} app]
+    (let [kohdistukset (into [] (:kohdistukset lomake))
+          default tila/kulut-kohdistus-default
+          default (assoc default :rivi (count kohdistukset))
+          kohdistukset (into [] (conj (get-in app [:lomake :kohdistukset]) default))
+          kohdistukset (into [] (sort-by :rivi < kohdistukset))
+          app (assoc-in app [:lomake :kohdistukset] kohdistukset)]
+      app))
+
+  PoistaKohdistus
+  (process-event [{indeksi :indeksi} app]
+    (let [kohdistukset (into [] (get-in app [:lomake :kohdistukset]))
+          poistettava (nth kohdistukset indeksi)
+          muokatut-kohdistukset (into [] (sort-by :rivi < (drop-nth kohdistukset indeksi)))
+          ;; Määritellään jäljelle jääneiden kohdistusten :rivi avaimen numerot uusiksi
+          muokatut-kohdistukset (into [] (map-indexed (fn [i kohdistus]
+                                                        (assoc kohdistus :rivi i))
+                                           muokatut-kohdistukset))
+          app (-> app
+                (assoc-in [:lomake :kohdistukset] muokatut-kohdistukset)
+                (update-in [:lomake :poistetut-kohdistukset] conj poistettava))
+          lomake (:lomake app)
+          lomake (-> lomake
+                   (with-meta (tila/kulun-validointi-meta lomake)))
+          app (assoc app :lomake lomake)]
+      app))
+
+  KohdistusTyyppi
+  (process-event [{tyyppi :tyyppi nro :nro} app]
+    (let [;; Vaihdetaan kohdistuksen tyyppi ja nollataan kaikki mahdolliset aiemmat valinnat
+          lisatyo? (cond
+                     (= :lisatyo tyyppi) true
+                     :else false)
+          app (-> app
+                (assoc-in [:lomake :kohdistukset nro :tyyppi] tyyppi)
+                (assoc-in [:lomake :kohdistukset nro :lisatyo?] lisatyo?)
+                (assoc-in [:lomake :kohdistukset nro :lisatyon-lisatieto] nil)
+                (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] nil)
+                (assoc-in [:lomake :kohdistukset nro :rahavaraus] nil)
+                (assoc-in [:lomake :kohdistukset nro :toimenpide] nil)
+                (assoc-in [:lomake :kohdistukset nro :tavoitehintainen] :false)
+                (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] nil))
+          lomake (:lomake app)
+          lomake (-> lomake
+                   (with-meta (tila/kulun-validointi-meta lomake)))
+          app (assoc app :lomake lomake)]
+      app))
+
+  ValitseTehtavaryhmaKohdistukselle
+  (process-event [{nro :nro tehtavaryhma :tehtavaryhma} app]
+    (let [;; Toimenpideinstanssi on saatavilla tehtäväryhmän tiedoista, joten asetetaan se samalla
+          app (-> app
+                (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi tehtavaryhma))
+                (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] tehtavaryhma))]
+      app))
+
+  TavoitehintaanKuuluminen
+  (process-event [{tavoitehinta :tavoitehinta nro :nro} app]
+    (let [app (-> app
+                (assoc-in [:lomake :kohdistukset nro :tavoitehintainen] tavoitehinta)
+                (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] nil)
+                (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] nil)
+                (assoc-in [:lomake :kohdistukset nro :toimenpide] nil))
+          lomake (:lomake app)
+          lomake (-> lomake
+                   (with-meta (tila/kulun-validointi-meta lomake)))
+          app (assoc app :lomake lomake)]
+      app))
+
+  ValitseRahavarausKohdistukselle
+  (process-event [{rahavaraus :rahavaraus nro :nro} app]
+    (-> app
+      ;; Poista mahdollinen tehtäväryhmä
+      (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] nil)
+      ;; Aseta rahavaraus
+      (assoc-in [:lomake :kohdistukset nro :rahavaraus] rahavaraus)))
+
+  ValitseToimenpideKohdistukselle
+  (process-event [{toimenpide :toimenpide nro :nro} app]
+    (let [;; Toimenpideinstanssi on pakko antaa ja se on saatavilla toimenpiteen tiedoista, joten asetetaan se samalla
+          app (-> app
+                (assoc-in [:lomake :kohdistukset nro :toimenpide] toimenpide)
+                (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi toimenpide)))]
+      app))
+
+  LisatyonLisatieto
+  (process-event [{lisatieto :lisatieto nro :nro} app]
+    (assoc-in app [:lomake :kohdistukset nro :lisatyon-lisatieto] lisatieto))
+
+  KohdistuksenSumma
+  (process-event [{summa :summa nro :nro} app]
+    (assoc-in app [:lomake :kohdistukset nro :summa] summa))
+
+  KoontilaskunKuukausi
+  (process-event [{arvo :arvo} app]
+    (println "Valittu kk: " arvo)
+    (let [paatos-tehty? (paatos-tehty-rivin-vuodelle? app arvo)
+          erapaiva (kulut/koontilaskun-kuukausi->pvm
+                     arvo
+                     (-> @tila/yleiset :urakka :alkupvm)
+                     (-> @tila/yleiset :urakka :loppupvm))]
+      (-> app
+        (assoc-in [:lomake :koontilaskun-kuukausi] arvo)
+        (assoc-in [:lomake :paatos-tehty?] paatos-tehty?)
+        ;; Eräpäivän pitää olla aina saman koontilaskun kuukauden sisällä.
+        (assoc-in [:lomake :erapaiva] erapaiva))))
+
+  ValitseErapaiva
+  (process-event [{erapaiva :erapaiva} app]
+    (assoc-in app [:lomake :erapaiva] erapaiva))
+
+  KoontilaskunNumero
+  (process-event [{koontilaskunnumero :koontilaskunnumero} app]
+    (let [app (assoc-in app [:lomake :laskun-numero] koontilaskunnumero)]
+      app))
+
+  ValitseHoitokausi
+  (process-event [{vuosi :vuosi} app]
+    (let [alkupvm (pvm/hoitokauden-alkupvm vuosi)
+          loppupvm (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))]
+
+      ;; Haetaan koko hoitovuoden kulut
+      (tuck/action!
+        (fn [e!]
+          (e! (->HaeUrakanKulut {:id (-> @tila/tila :yleiset :urakka :id)
+                                 :alkupvm alkupvm
+                                 :loppupvm loppupvm}))))
+
+      (-> app
+        (assoc :valittu-hoitokausi [alkupvm loppupvm])
+        (assoc :hoitokauden-alkuvuosi vuosi)
+        (assoc-in [:parametrit :haku-menossa] true)
+        (assoc-in [:parametrit :haun-kuukausi] nil)
+        (assoc-in [:parametrit :haun-alkupvm] nil)
+        (assoc-in [:parametrit :haun-loppupvm] nil))))
 
   NakymastaPoistuttiin
   (process-event [_ _app]
@@ -233,6 +490,7 @@
   (process-event [{tulos :tulos} app]
     (-> app
       (assoc :kulut tulos)
+      (assoc-in [:parametrit :haku-menossa] false)
       (update-in [:parametrit :haetaan] dec)))
 
   ToimenpidehakuOnnistui
@@ -273,7 +531,9 @@
   KutsuEpaonnistui
   (process-event [{{:keys [ei-async-laskuria viesti]} :parametrit} app]
     (when viesti (viesti/nayta! viesti :danger))
-    (update-in app [:parametrit :haetaan] (if ei-async-laskuria identity dec)))
+    (-> app
+      (assoc-in [:parametrit :haku-menossa] false)
+      (update-in [:parametrit :haetaan] (if ei-async-laskuria identity dec))))
 
   HaeUrakanToimenpiteet
   (process-event [{:keys [hakuparametrit]} app]
@@ -300,6 +560,7 @@
          :paasta-virhe-lapi? true}))
     (-> app
       (assoc-in [:parametrit :viimeisin-haku] viimeisin-haku)
+      (assoc-in [:parametrit :haku-menossa] true)
       (update-in [:parametrit :haetaan] inc)))
 
   HaeUrakanToimenpiteetJaTehtavaryhmat
@@ -316,19 +577,20 @@
   KuluHaettuLomakkeelle
   (process-event [{kulu :kulu} app]
     (-> app
+      (assoc-in [:parametrit :haku-menossa] false)
       (update-in [:parametrit :haetaan] dec)
-      (assoc :syottomoodi true
-        :lomake (kulu->lomake app kulu))))
+      (assoc :syottomoodi true :lomake (kulu->lomake app kulu))))
 
   AvaaKulu
   (process-event [{kulu :kulu} app]
     (-> app
-      (tuck-apurit/post! :kulu
+      (tuck-apurit/post! :hae-kulu
         {:urakka-id (-> @tila/yleiset :urakka :id)
          :id kulu}
         {:onnistui ->KuluHaettuLomakkeelle
          :epaonnistui ->KutsuEpaonnistui})
-      (update-in [:parametrit :haetaan] inc)))
+      (update-in [:parametrit :haetaan] inc)
+      (assoc-in [:parametrit :haku-menossa] true)))
 
   OnkoLaskunNumeroKaytossa
   (process-event [{laskun-numero :laskun-numero} app]
@@ -341,18 +603,6 @@
        :epaonnistui-parametrit [{:ei-async-laskuria true}]
        :paasta-virhe-lapi? true})
     app)
-
-  PaivitaLomake
-  (process-event [{polut-ja-arvot :polut-ja-arvot optiot :optiot} app]
-    (let [app (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot)
-          lomake (:lomake app)
-          {validoi-fn :validoi} (meta lomake)
-          validoitu-lomake (validoi-fn lomake)
-          {validi? :validi?} (meta validoitu-lomake)
-          app (-> app
-                (assoc-in [:lomake :validi?] validi?)
-                (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake)))))]
-      app))
 
   TallennaKulu
   (process-event
@@ -368,8 +618,15 @@
           {validoi-fn :validoi} (meta lomake)
           validoitu-lomake (validoi-fn lomake)
           {validi? :validi?} (meta validoitu-lomake)
-          tyyppi (or "laskutettava" "kiinteasti-hinnoiteltu")]
-      (when (true? validi?)
+          tyyppi (or "laskutettava" "kiinteasti-hinnoiteltu")
+
+          ;; Muuta tehtäväryhmä mäpit id:ksi
+          kohdistukset (mapv
+                         (fn [kohdistus]
+                           (let [tehtavaryhmaid (get-in kohdistus [:tehtavaryhma :id])]
+                             (assoc kohdistus :tehtavaryhma tehtavaryhmaid)))
+                         kohdistukset)]
+      (if (true? validi?)
         (tuck-apurit/post! :tallenna-kulu
           {:urakka-id urakka
            :kulu-kohdistuksineen
@@ -385,7 +642,8 @@
             :koontilaskun-kuukausi koontilaskun-kuukausi}}
           {:onnistui ->TallennusOnnistui
            :epaonnistui ->KutsuEpaonnistui
-           :epaonnistui-parametrit [{:viesti "Kulun tallentaminen epäonnistui"}]}))
+           :epaonnistui-parametrit [{:viesti "Kulun tallentaminen epäonnistui"}]})
+        (js/console.error "Lomaketta ei tallennettu, koska lomake ei ole validi." (pr-str validi?)))
       (cond-> app
         true (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))
         (true? validi?) (update-in [:parametrit :haetaan] inc))))
@@ -411,8 +669,7 @@
     (update-in app [:parametrit :haetaan] inc))
 
   AsetaHakukuukausi
-  (process-event
-    [{:keys [kuukausi]} app]
+  (process-event [{:keys [kuukausi]} app]
     (-> app
       (assoc-in [:parametrit :haun-alkupvm] nil)
       (assoc-in [:parametrit :haun-loppupvm] nil)
@@ -425,6 +682,20 @@
       (assoc-in [:parametrit :haun-kuukausi] nil)
       (assoc-in [:parametrit :haun-alkupvm] (or alkupvm (-> @tila/yleiset :urakka :alkupvm)))
       (assoc-in [:parametrit :haun-loppupvm] (or loppupvm (-> @tila/yleiset :urakka :loppupvm)))))
+
+  AsetaHakuAlkuPvm
+  (process-event
+    [{:keys [pvm]} app]
+    (-> app
+      (assoc-in [:parametrit :haun-kuukausi] nil)
+      (assoc-in [:parametrit :haun-alkupvm] pvm)))
+
+  AsetaHakuLoppuPvm
+  (process-event
+    [{:keys [pvm]} app]
+    (-> app
+      (assoc-in [:parametrit :haun-kuukausi] nil)
+      (assoc-in [:parametrit :haun-loppupvm] pvm)))
 
   HaeUrakanValikatselmukset
   (process-event [_ app]
@@ -441,6 +712,22 @@
   HaeUrakanValikatselmuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app :vuosittaiset-valikatselmukset nil))
+
+  HaeUrakanRahavaraukset
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-urakan-rahavaraukset
+      {:urakka-id (-> @tila/yleiset :urakka :id)}
+      {:onnistui ->HaeUrakanRahavarauksetOnnistui
+       :epaonnistui ->HaeUrakanRahavarauksetEpaonnistui})
+    app)
+
+  HaeUrakanRahavarauksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :rahavaraukset vastaus))
+
+  HaeUrakanRahavarauksetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :rahavaraukset nil))
 
   KulujenSyotto
   (process-event
@@ -479,3 +766,26 @@
                                         (= "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" (:tehtavaryhma rivi))) rivi))
                           tehtavaryhmat))]
     tehtavaryhmat))
+
+(defn koontilaskun-kk-formatter
+  [a]
+  (if (nil? a)
+    "Ei valittu"
+    (let [[kk hv] (str/split a #"/")]
+      (str (pvm/kuukauden-nimi (pvm/kuukauden-numero kk) true) " - "
+        (get kulut/hoitovuodet-strs (keyword hv))))))
+
+(defn validoi-lomake [lomake]
+  (let [lomake (with-meta lomake (tila/kulun-validointi-meta lomake))
+        {validoi-fn :validoi} (meta lomake)
+        validoitu-lomake (validoi-fn lomake)
+        {validi? :validi?} (meta validoitu-lomake)]
+    validi?))
+
+(defn kuluva-hoitovuosi [paivamaara]
+  (let [vuosi (pvm/vuosi paivamaara)
+        kuukausi (pvm/kuukausi paivamaara)
+        kuluva-hoitokausivuosi (if (< kuukausi 10)
+                                 (dec vuosi)
+                                 vuosi)]
+    kuluva-hoitokausivuosi))

@@ -122,7 +122,6 @@
 
     [:taulukko {:piilota-border? true
                 :sheet-nimi sheet-nimi
-                :hoitokausi-arvotaulukko? false
                 :viimeinen-rivi-yhteenveto? false}
      (rivi
       {:otsikko "Käytetyt suodattimet" :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 12 :tyyppi :varillinen-teksti}

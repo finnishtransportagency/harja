@@ -3,10 +3,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]))

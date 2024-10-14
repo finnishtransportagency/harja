@@ -49,13 +49,17 @@
                    :summa 493827160.5
                    :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
                    :tehtavaryhma (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
-                   :tehtava nil}
+                   :tehtava nil
+                   :tyyppi :hankintakulu
+                   :tavoitehintainen :true}
                   {:kohdistus-id nil
                    :rivi 2
                    :summa 493827160.5
                    :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
                    :tehtavaryhma (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
-                   :tehtava nil}]
+                   :tehtava nil
+                   :tyyppi :hankintakulu
+                   :tavoitehintainen :true}]
    :koontilaskun-kuukausi "elokuu/5-hoitovuosi"})
 
 (deftest hae-toteutuneet-kustannukset-onnistuu-test

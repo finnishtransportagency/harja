@@ -49,8 +49,8 @@
                  [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "0.8.2"]
-                 [org.clojure/core.memoize "1.0.257"]
+                 [org.clojure/core.cache "1.1.234"]
+                 [org.clojure/core.memoize "1.1.266"]
 
                  ;; Pattern match kirjasto
                  [org.clojure/core.match "1.1.0"]
@@ -85,14 +85,14 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.18.5" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.18.6" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
                  [cljs-ajax "0.8.4"]
 
                  ;; React-wrapper frontille
-                 [reagent "0.9.1"]
+                 [reagent "0.10.0"]
 
 
                  ;; Local-storage apuri frontille
@@ -111,7 +111,7 @@
                  [org.apache.poi/poi "5.2.5"]
                  [org.apache.poi/poi-scratchpad "5.2.5"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "0.2.7"]
+                 [org.clojure/data.json "2.5.0"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
