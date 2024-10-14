@@ -55,7 +55,7 @@ jobs:
   check-status-and-notify:
     needs: tests
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Send deploy failure message to Slack
         id: slack
