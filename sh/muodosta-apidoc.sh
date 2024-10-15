@@ -6,8 +6,9 @@ case $ke in
       kansio_nykyinen=$(basename "$PWD")
       kansio_vaadittu="harja"
       if [ "$kansio_nykyinen" == "$kansio_vaadittu" ]; then
-          echo "Muodostetaan uusin Harja API:n dokumentaatio.";
-          mkdir -p apidoc
+          echo "Muodostetaan uusin Harja API:n dokumentaatio. Raml2html herjaa tiedostoviittauksista.";
+          rm -r -f apidoc
+          mkdir apidoc
           rm -f resources/api/api.html
           raml2html resources/api/api.raml > resources/api/api.html
           cp -r resources/api/ apidoc
