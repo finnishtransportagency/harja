@@ -17,7 +17,7 @@ on:
 
 jobs:
   start-fargate-tasks:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token

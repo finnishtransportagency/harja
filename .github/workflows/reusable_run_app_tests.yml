@@ -75,7 +75,7 @@ jobs:
   deps-tree:
     if: ${{ inputs.deps-tree == 'true' }}
     name: "Print Clojure deps tree"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
@@ -97,7 +97,7 @@ jobs:
   lint-clj:
     if: ${{ inputs.lint-clj == 'true' }}
     name: "Lint Clojure"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       # Contents read lupaa tarvitaan checkout actionissa
@@ -124,7 +124,7 @@ jobs:
   build-harja:
     if: ${{ inputs.build-harja != 'false' }}
     name: "Prod build"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       # Contents read lupaa tarvitaan checkout actionissa
@@ -201,7 +201,7 @@ jobs:
   scan-docker-image:
     if: ${{ inputs.scan-docker-image == 'true' }}
     name: "Scan Docker image"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs: build-harja
     permissions:
       contents: read
@@ -275,7 +275,7 @@ jobs:
   backend-tests:
     if: ${{ inputs.backend-tests == 'true' }}
     name: "Backend-testit"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       TZ: "EET"
     permissions:
@@ -322,7 +322,7 @@ jobs:
   basic-tests:
     if: ${{ inputs.basic-tests == 'true' }}
     name: "Frontti- ja hitaat testit"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       TZ: "EET"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -382,7 +382,7 @@ jobs:
   integration-tests:
     if: ${{ inputs.integration-tests == 'true' }}
     name: "integraatiotestit"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       TZ: "EET"
@@ -442,7 +442,7 @@ jobs:
     if: ${{ inputs.e2e-tests == 'true' }}
     name: "e2e-testit (Cypress)"
     needs: build-harja
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       # Asetetaan Suomen aikavyöhyke testejä varten
       TZ: "EET"
