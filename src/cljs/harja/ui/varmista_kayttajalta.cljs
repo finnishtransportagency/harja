@@ -61,7 +61,7 @@
 (def modal-muut-vastaanottajat
   {:otsikko "Lisää muita vastaanottajien sähköpostiosoitteita pilkulla eroteltuna"
    :nimi :muut-vastaanottajat :tyyppi :email :palstoja 3
-   :validoi [[:email]]})
+   :validoi [[:email]] :elementin-id "input-muut-vastaanottajat"})
 
 (def modal-saateviesti {:otsikko "Vapaaehtoinen saateviesti, joka liitetään sähköpostiin"
                         :koko [90 8]

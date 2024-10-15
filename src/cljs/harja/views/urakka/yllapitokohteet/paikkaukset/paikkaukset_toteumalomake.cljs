@@ -458,7 +458,7 @@
                  materiaali
                  maara))))
 
-(defn- footer-vasemmat-napit [e! toteumalomake muokkaustila?]
+(defn- footer-vasemmat-napit [e! toteumalomake muokkaustila? toteumanakyma?]
   ;; Poista tallennus käytöstä kun paikkauskohde on valmis
   (let [voi-tallentaa? (and (::tila/validi? toteumalomake) (not (= "valmis" (:paikkauskohde-tila toteumalomake))))
         tuotu-excelista? (= (:lahde toteumalomake) "excel")]
@@ -468,7 +468,7 @@
        [napit/tallenna
         "Tallenna muutokset"
         #(e! (t-toteumalomake/->TallennaToteuma (lomake/ilman-lomaketietoja toteumalomake)))
-        {:disabled (not voi-tallentaa?) :paksu? true :siirra-fokus "btn-lisaa-toteuma"}])
+        {:disabled (not voi-tallentaa?) :paksu? true :siirra-fokus (if toteumanakyma? (str "grid-row-" (:id toteumalomake)) "btn-lisaa-toteuma")}])
      ;; Toteuman on pakko olla tietokannassa, ennenkuin sen voi poistaa
      ;; Ja paikkauskohde ei saa olla "valmis" tilassa
      (when (and (:id toteumalomake) (not (= "valmis" (:paikkauskohde-tila toteumalomake))) (or muokkaustila? tuotu-excelista?))
@@ -477,10 +477,19 @@
         (t-paikkauskohteet/nayta-modal
           (str "Poistetaanko toteuma ?")
           "Toimintoa ei voi perua."
-          [napit/yleinen-toissijainen "Poista toteuma" #(e! (t-toteumalomake/->PoistaToteuma
-                                                              (lomake/ilman-lomaketietoja toteumalomake))) {:paksu? true}]
-          [napit/yleinen-toissijainen "Säilytä toteuma" modal/piilota! {:paksu? true}])
-        {:ikoni (ikonit/livicon-trash) :paksu? true}])]))
+          [napit/yleinen-toissijainen "Poista toteuma" #(e! (t-toteumalomake/->PoistaToteuma (lomake/ilman-lomaketietoja toteumalomake)))
+           {:paksu? true
+            :elementin-id "btn-poista-toteuma-modaali"
+            :esta-tab-taaksepain? true
+            :siirra-fokus (str "icon-paikkauskohde-" (:paikkauskohde-id toteumalomake))}]
+          [napit/yleinen-toissijainen "Säilytä toteuma" modal/piilota!
+           {:paksu? true
+            :esta-tab-eteenpain? true
+            :siirra-fokus "btn-poista-toteuma"}])
+        {:ikoni (ikonit/livicon-trash)
+         :paksu? true
+         :siirra-fokus "btn-poista-toteuma-modaali"
+         :elementin-id "btn-poista-toteuma"}])]))
 
 (defn- toteumalomake-header [toteumalomake tyomenetelmat]
   [:div.ei-borderia.lukutila
@@ -509,7 +518,8 @@
         muokkaustila? (and (not= "harja-api" (:lahde toteumalomake))
                            (or
                              (= :toteuman-muokkaus (:tyyppi toteumalomake))
-                             (= :uusi-toteuma (:tyyppi toteumalomake))))]
+                             (= :uusi-toteuma (:tyyppi toteumalomake))))
+        toteumanakyma? (:toteumanakyma? app)]
 
     ;; Wrapataan lomake vain diviin. Koska tämä aukaistaan eri kokoisiin oikealta avattaviin diveihin eri näkymistä
     [:div {:style {:padding "16px"}}
@@ -530,11 +540,23 @@
                       [:div.flex-row
                        ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
                        ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
-                       [footer-vasemmat-napit e! toteumalomake muokkaustila?]
+                       [footer-vasemmat-napit e! toteumalomake muokkaustila? toteumanakyma?]
                        [lahde-info toteumalomake]
                        [napit/yleinen-toissijainen
                         (if muokkaustila? "Peruuta" "Sulje")
                         #(e! (t-toteumalomake/->SuljeToteumaLomake))
-                        {:paksu? true :esta-tab-eteenpain? true :siirra-fokus "btn-lisaa-toteuma"}]]))}
+                        {:paksu? true
+                         :esta-tab-eteenpain? true
+                         :esta-tab-taaksepain? (when (not (.getElementById js/document "pvm-input-tyo-alkoi")) true)
+                         :siirra-fokus (cond
+                                         (and toteumanakyma? (:id toteumalomake))
+                                         (str "grid-row-" (:id toteumalomake))
+
+                                         (and toteumanakyma? (not (:id toteumalomake)))
+                                         (str "btn-lisaa-toteuma-" (:paikkauskohde-id toteumalomake))
+
+                                         :else
+                                         "btn-lisaa-toteuma")
+                         :elementin-id "btn-sulje-toteumalomake"}]]))}
       (toteuma-skeema toteumalomake tyomenetelmat)
       toteumalomake]]))

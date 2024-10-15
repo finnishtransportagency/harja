@@ -29,6 +29,7 @@
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as yhteinen-view]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]
             [harja.ui.debug :as debug]
+            [harja.ui.dom :as dom]
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
@@ -85,16 +86,20 @@
         rivien-lkm (count paikkaukset)
         ;pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
         ;massamenekki (massamenekin-keskiarvo paikkaukset)
-        lomakedata (:lomakedata app)]
+        lomakedata (:lomakedata app)
+        paikkauskohde-id (::paikkaus/id (:modalin-paikkauskohde app))]
     [modal/modal
      {:otsikko (str "Lähetä sähköposti")
       :luokka "ilmoita-virheesta-modal"
       :nakyvissa? true
       :sulje-fn #(e! (tiedot/->SuljeVirheModal))
+      :esta-rastista-tabilla-pois-siirtyminen? true
+      :siirra-fokus-rastista (str "btn-ilmoita-virhe-" paikkauskohde-id)
       :footer [:div
                [napit/peruuta
                 "Peruuta"
-                #(e! (tiedot/->SuljeVirheModal))]
+                #(e! (tiedot/->SuljeVirheModal))
+                {:siirra-fokus (str "btn-ilmoita-virhe-" paikkauskohde-id)}]
 
                [napit/palvelinkutsu-nappi
                 "Ilmoita"
@@ -110,6 +115,8 @@
                 {:disabled (not (lomake/voi-tallentaa? lomakedata))
                  :luokka "nappi-myonteinen"
                  :ikoni (ikonit/check)
+                 :esta-tab-eteenpain? true
+                 :siirra-fokus (str "btn-ilmoita-virhe-" paikkauskohde-id)
                  :kun-onnistuu (fn [vastaus]
                                  (e! (tiedot/->VirheIlmoitusOnnistui vastaus))
                                  (viesti/nayta! "Virheilmoitus lähetetty onnistuneesti!" :success viesti/viestin-nayttoaika-keskipitka))
@@ -153,8 +160,9 @@
      {:otsikko "Virheitä urapaikkausten tuonnissa excelillä"
       :nakyvissa? urem-excel-virheet
       :sulje-fn #(e! (tiedot/->SuljeUremLatausVirhe))
+      :esta-rastista-tabilla-pois-siirtyminen? true
       :footer [:div
-               [napit/sulje #(e! (tiedot/->SuljeUremLatausVirhe))]]}
+               [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeUremLatausVirhe)) {:esta-tab-eteenpain? true}]]}
      [:div
       (when validointivirheet
         [:<>
@@ -388,10 +396,14 @@
                              :tyhja (if ladataan-tietoja?
                                       [yleiset/ajax-loader "Haku käynnissä"]
                                       "Ei paikkauksia")
-                             :rivi-klikattu (r/partial avaa-toteuma-sivupalkkiin e! tyomenetelmat kohde)}
+                             :rivi-klikattu (r/partial avaa-toteuma-sivupalkkiin e! tyomenetelmat kohde)
+                             :siirra-fokus #(js/setTimeout (fn [] (if (.getElementById js/document "pvm-input-tyo-alkoi")
+                                                                    (r/after-render (fn [] (some-> js/document (.getElementById "pvm-input-tyo-alkoi") .focus)))
+                                                                    (r/after-render (fn [] (some-> js/document (.getElementById "btn-sulje-toteumalomake") .focus))))) 200)
+                             :aseta-grid-rivi-id? true}
                             (skeema-menetelmalle (::paikkaus/tyomenetelma (first paikkaukset)) tyomenetelmat (::paikkaus/yksikko kohde))
                             paikkaukset]))])))
-             paikkauskohteet)
+         paikkauskohteet)
        (if ladataan-tietoja?
          [otsikkokomponentti e! {:ladataan-tietoja? ladataan-tietoja?} {}]
          [:div "Ei näytettäviä paikkauskohteita"]))]))
@@ -445,12 +457,17 @@
            ;; Luodaan ankkurilinkki
            [:div {:id (str "ankkuri-" (::paikkaus/id paikkauskohde))}]
            [:div.flex-row.venyta.otsikkokomponentti {:class (str "" (when (> toteumien-maara 0) " klikattava"))
-                                                     :on-click #(when (> (count paikkaukset) 0) (avaa!))}
+                                                     :on-click #(when (> (count paikkaukset) 0) (avaa!))
+                                                     :on-key-down #(when (and (dom/enter-nappain? %) (> (count paikkaukset) 0))
+                                                                     (.preventDefault %)
+                                                                     (.stopPropagation %)
+                                                                     (avaa!)
+                                                                     (r/after-render (fn [] (some-> js/document (.getElementById (str "icon-paikkauskohde-" (::paikkaus/id paikkauskohde))) .focus))))}
             [:div.basis48.nogrow
              (when (> toteumien-maara 0)
                (if auki?
-                 [ikonit/navigation-ympyrassa :down]
-                 [ikonit/navigation-ympyrassa :right]))]
+                 [ikonit/navigation-ympyrassa :down (str "icon-paikkauskohde-" (::paikkaus/id paikkauskohde))]
+                 [ikonit/navigation-ympyrassa :right (str "icon-paikkauskohde-" (::paikkaus/id paikkauskohde))]))]
             [:div.basis256.nogrow.shrink3
              [:h3.ei-marginia (str (::paikkaus/nimi paikkauskohde))]
              [:div.body-text.harmaa (str "Päivitetty: "
@@ -513,14 +530,19 @@
                     ::paikkaus/paikkauskohde paikkauskohde})
                 {:disabled (not tilattu?)
                  :ikoni (ikonit/livicon-plus)
-                 :luokka "nappi-reunaton"}])
+                 :luokka "nappi-reunaton"
+                 :siirra-fokus "pvm-input-tyo-alkoi"
+                 :elementin-id (str "btn-lisaa-toteuma-" (::paikkaus/id paikkauskohde))}])
              ;; Näytetään virheen ilmoitus vain tilaajalle
              (when tilaaja?
                [napit/yleinen-reunaton
                 "Ilmoita virhe"
                 #(e! (tiedot/->AvaaVirheModal paikkauskohde))
                 {:ikoni (ikonit/harja-icon-action-send-email)
-                 :disabled urakoitsija-kayttajana?}])
+                 :disabled urakoitsija-kayttajana?
+                 :lisaa-viive-fokuksen-siirtoon? true
+                 :siirra-fokus "input-muut-vastaanottajat"
+                 :elementin-id (str "btn-ilmoita-virhe-" (::paikkaus/id paikkauskohde))}])
              (when ilmoitettu-virhe
                [:span.pieni-teksti
                 [:div "Ilmoitettu virhe:"]
@@ -584,7 +606,7 @@
    (when (:toteumalomake app)
      [sivupalkki/oikea
       {:leveys "600px" :jarjestys 1}
-      [v-toteumalomake/toteumalomake e! app]])])
+      [v-toteumalomake/toteumalomake e! (assoc app :toteumanakyma? true)]])])
 
 (defn- lataa-urem-excel []
   [yleiset/tiedoston-lataus-linkki

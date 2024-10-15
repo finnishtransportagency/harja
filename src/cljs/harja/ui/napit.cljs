@@ -66,6 +66,7 @@
             data-cy (:data-cy asetukset)
             siirra-fokus (:siirra-fokus asetukset)
             esta-tab-taaksepain? (:esta-tab-taaksepain? asetukset)
+            esta-tab-eteenpain? (:esta-tab-eteenpain? asetukset)
             suorita-kysely (fn [event]
                               (.preventDefault event)
                               (.stopPropagation event)
@@ -96,10 +97,10 @@
                                (suorita-kysely %)
                                (when siirra-fokus
                                  (r/after-render (fn [] (some-> js/document (.getElementById (str siirra-fokus)) .focus)))))
-                             (when (dom/tab+shift-nappaimet? %)
-                               (when esta-tab-taaksepain?
-                                 (.preventDefault %)
-                                 (.stopPropagation %))))
+                             (when (or (and (dom/tab-nappain-ilman-shiftia? %) esta-tab-eteenpain?)
+                                     (and (dom/tab+shift-nappaimet? %) esta-tab-taaksepain?))
+                               (.preventDefault %)
+                               (.stopPropagation %)))
              :title    (:title asetukset)}
             (when data-cy
               {:data-cy data-cy}))
@@ -165,7 +166,7 @@
                                     (r/dom-node %)))))
        (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex type
                                     ikoni-oikealle? esta-prevent-default? siirra-fokus elementin-id esta-tab-eteenpain?
-                                    esta-tab-taaksepain? lisaa-viive-fokuksen-siirtoon? ] :as optiot}]
+                                    esta-tab-taaksepain? lisaa-viive-fokuksen-siirtoon?] :as optiot}]
          [:button
           (merge
             {:class     (str (when disabled "disabled ")

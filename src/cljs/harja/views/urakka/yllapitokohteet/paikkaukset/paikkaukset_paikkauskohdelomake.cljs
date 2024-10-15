@@ -7,6 +7,7 @@
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.ui.debug :as debug]
+            [harja.ui.dom :as dom]
             [harja.ui.lomake :as lomake]
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
@@ -467,7 +468,9 @@
                                            (do
                                              (.preventDefault e)
                                              (siirtymat/avaa-toteuma-listaus! {:urakka-id (:id @nav/valittu-urakka)
-                                                                               :paikkauskohde-id (:id lomake)})))}
+                                                                               :paikkauskohde-id (:id lomake)})))
+                               :on-key-down #(when (dom/enter-nappain? %)
+                                 (js/setTimeout (fn [] (reagent.core/after-render (fn [] (some-> js/document (.getElementById (str "icon-paikkauskohde-" (:id lomake))) .focus)))) 200))}
                               (str (:toteumien-maara lomake))]
                              [:div "0"]))
             ::lomake/col-luokka "col-xs-12"

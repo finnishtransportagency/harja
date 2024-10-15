@@ -1002,19 +1002,19 @@
 
 (defn navigation-up []
   [:img.navigation-up {:src "images/harja-icons/navigation/up.svg" :alt "up"}])
-(defn navigation-right []
-  [:img.navigation-right {:src "images/harja-icons/navigation/right.svg" :alt "right"}])
-(defn navigation-down []
-  [:img.navigation-down {:src "images/harja-icons/navigation/down.svg" :alt "down"}])
+(defn navigation-right [id]
+  [:img.navigation-right {:src "images/harja-icons/navigation/right.svg" :alt "right" :tabIndex "0" :id id}])
+(defn navigation-down [id]
+  [:img.navigation-down {:src "images/harja-icons/navigation/down.svg" :alt "down" :tabIndex "0" :id id}])
 (defn navigation-left []
   [:img.navigation-left {:src "images/harja-icons/navigation/left.svg" :alt "left"}])
 
-(defn navigation-ympyrassa [suunta]
+(defn navigation-ympyrassa [suunta id]
   [:div.navigation-ympyrassa
    (case suunta
      :up (navigation-up)
-     :right (navigation-right)
-     :down (navigation-down)
+     :right (navigation-right id)
+     :down (navigation-down id)
      :left (navigation-left)
 
      nil)])

@@ -506,12 +506,13 @@
 (defmethod nayta-arvo :big [{:keys [desimaalien-maara]} data]
   [:span (some-> @data (big/fmt desimaalien-maara))])
 
-(defmethod tee-kentta :email [{:keys [on-focus on-blur lomake? disabled?] :as kentta} data]
+(defmethod tee-kentta :email [{:keys [on-focus on-blur lomake? disabled? elementin-id] :as kentta} data]
   [:input {:class (cond-> nil
                           lomake? (str "form-control ")
                           disabled? (str "disabled"))
            :type "email"
            :value @data
+           :id elementin-id
            :disabled disabled?
            :on-focus on-focus
            :on-blur on-blur
