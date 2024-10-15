@@ -7,7 +7,7 @@ inputs:
     # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille, joten boolean esitetään tässä stringinä.
     default: 'true'
   install-leiningen:
-    description: 'Asennettavan leiningenin versio (esim. "2.9.8", "stable" tai "latest") (Jätä tyhjäksi, jos ei asenneta)'
+    description: 'Asennettavan leiningenin versio (esim. "2.9.8", "stable" tai "latest"). Aseta "false", jos ei asenneta.'
     default: 'stable'
   install-clojure-deps:
     description: 'Asenna clojure dependencyt?'
@@ -30,13 +30,13 @@ runs:
     - name: Cache Leiningen
       id: cache-leiningen
       uses: actions/cache@v4
-      if: ${{ inputs.install-leiningen != '' }}
+      if: ${{ inputs.install-leiningen != 'false' }}
       with:
         path: /usr/local/bin/lein
         key: ${{ runner.os }}-lein-${{ inputs.install-leiningen }}
 
     - name: Prepare leiningen
-      if: ${{ inputs.install-leiningen != '' && steps.cache-leiningen.outputs.cache-hit != 'true' }}
+      if: ${{ inputs.install-leiningen != 'false' && steps.cache-leiningen.outputs.cache-hit != 'true' }}
       env:
         LEIN_VERSION: ${{ inputs.install-leiningen }}
       run: |
