@@ -793,7 +793,7 @@ BEGIN
         -----------------------------------------------------------
 
         -- Nollaa jokaisen instanssin arvot 
-        /*muu_kulu_tavoitehintainen_hoitokausi := 0;
+        muu_kulu_tavoitehintainen_hoitokausi := 0;
         muu_kulu_tavoitehintainen_val_aika := 0;
         muu_kulu_ei_tavoitehintainen_hoitokausi := 0;
         muu_kulu_ei_tavoitehintainen_val_aika := 0;
@@ -839,7 +839,7 @@ BEGIN
         rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehintaan vaikuttavat kulut');
         -- ..
         rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehinnan ulkopuoliset kulut');
-        */
+        
         
         hoitokausi_yht_array := array_append(hoitokausi_yht_array, COALESCE(muu_kulu_tavoitehintainen_hoitokausi, 0.0));
         val_aika_yht_array := array_append(val_aika_yht_array, COALESCE(muu_kulu_tavoitehintainen_val_aika, 0.0));
