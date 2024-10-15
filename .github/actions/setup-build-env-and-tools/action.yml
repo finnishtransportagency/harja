@@ -3,16 +3,17 @@ description: 'Asentaa clojure-kehitys ympäristön ja buildaamiseen liittyviä t
 
 inputs:
   install-java:
-    description: 'Asenna java?'
-    # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
+    description: 'Asenna java? Javan versio määritellään .github/.java-version tiedostossa.'
+    # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille, joten boolean esitetään tässä stringinä.
     default: 'true'
+  install-leiningen:
+    description: 'Asennettavan leiningenin versio (esim. "2.9.8", "stable" tai "latest") (Jätä tyhjäksi, jos ei asenneta)'
+    default: 'stable'
   install-clojure-deps:
     description: 'Asenna clojure dependencyt?'
-    # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
     default: 'true'
   install-node-deps:
     description: 'Asennetaanko nodejs dependencyt? (less.js ym.)'
-    # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
     default: 'false'
 
 runs:
@@ -25,6 +26,27 @@ runs:
         distribution: 'temurin'
         java-version-file: './.github/.java-version'
         check-latest: true
+
+    - name: Cache Leiningen
+      id: cache-leiningen
+      uses: actions/cache@v4
+      if: ${{ inputs.install-leiningen != '' }}
+      with:
+        path: /usr/local/bin/lein
+        key: ${{ runner.os }}-lein-${{ inputs.install-leiningen }}
+
+    - name: Prepare leiningen
+      if: ${{ inputs.install-leiningen != '' && steps.cache-leiningen.outputs.cache-hit != 'true' }}
+      env:
+        LEIN_VERSION: ${{ inputs.install-leiningen }}
+      run: |
+        cd /tmp
+        wget -O /tmp/lein https://raw.githubusercontent.com/technomancy/leiningen/${LEIN_VERSION}/bin/lein
+        chmod +x /tmp/lein
+        mv -f /tmp/lein /usr/local/bin/lein
+        cd -
+        lein version
+      shell: bash
 
     - name: Cache Clojure Dependencies
       id: cache-clojure-deps
