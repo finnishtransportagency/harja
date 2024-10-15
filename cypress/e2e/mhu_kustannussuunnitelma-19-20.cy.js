@@ -32,8 +32,7 @@ function taytaArvoja() {
         .taulukonOsaPolussa([1, 0, 0, 0])
         .click();
 
-    // Testit olettavat, että "kopioi tuleville vuosille" on hankinnoissa päällä
-    // Disabloidaan "Kopioi hankinnat tuleville hoitovuosille". Checkboxin tulisi olla defaulttina aktiivinen.
+    // Testit olettavat, että "kopioi tuleville vuosille" on pois päältä
     cy.get('input[id="kopioi-hankinnat-tuleville-hoitovuosille"]')
         .should('not.be.checked')
         .check();

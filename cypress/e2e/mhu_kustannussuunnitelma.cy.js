@@ -84,7 +84,7 @@ describe('Suunnitellut hankinnat osio', function () {
         });
 
         it('Muokkaa ensimmäisen vuoden arvoja ilman alaskopiointia', function () {
-            // Disabloidaan "Kopioi hankinnat tuleville hoitovuosille". Checkboxin tulisi olla defaulttina aktiivinen.
+            // "Kopioi hankinnat tuleville hoitovuosille" vheckboxin tulisi olla pois päältä.
             cy.get('input[id="kopioi-hankinnat-tuleville-hoitovuosille"]')
                 .should('not.be.checked');
 
@@ -455,8 +455,7 @@ describe('Erillishankinnat osio', function () {
                 .find('.pudotusvalikko-filter')
                 .contains('1.')
 
-            // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" on aktiivinen.
-            // Ota ota se pois
+            // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" on pois päältä
             cy.get('div[data-cy="erillishankinnat-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('not.be.checked');

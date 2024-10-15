@@ -618,5 +618,5 @@ describe('Johto- ja hallintokorvaus osio', function () {
                 .should('be.checked')
                 .uncheck();
         });
-    })
+    });
 });
