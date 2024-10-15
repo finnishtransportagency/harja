@@ -27,6 +27,11 @@ updates:
       junit-report-action:
         patterns:
           - "mikepenz/action-junit-report*"
+    ignore:
+      # Älä päivitä näihin versioihin
+      - dependency-name: "aquasecurity/trivy-action*"
+        versions:
+          - "0.27.0"
 
     schedule:
       interval: "weekly"
