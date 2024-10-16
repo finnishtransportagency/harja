@@ -60,7 +60,7 @@
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
                  [org.postgresql/postgresql "42.7.4"]
                  [net.postgis/postgis-jdbc "2.5.1"]
-                 [org.locationtech.jts/jts-core "1.19.0"]
+                 [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
                  [com.mchange/c3p0 "0.10.1"]
                  ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
