@@ -16,7 +16,7 @@
 
                  ;;;;;;; Yleiset ;;;;;;;
 
-                 [prismatic/schema "1.1.10"]
+                 [prismatic/schema "1.4.1"]
                  [org.clojure/core.async "0.3.465"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
@@ -49,7 +49,7 @@
                  [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "0.8.2"]
+                 [org.clojure/core.cache "1.1.234"]
                  [org.clojure/core.memoize "1.1.266"]
 
                  ;; Pattern match kirjasto
@@ -60,12 +60,12 @@
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
                  [org.postgresql/postgresql "42.7.4"]
                  [net.postgis/postgis-jdbc "2.5.1"]
-                 [org.locationtech.jts/jts-core "1.19.0"]
+                 [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
                  [com.mchange/c3p0 "0.10.1"]
                  ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
                  [webjure/jeesql "0.4.7"]
-                 [io.github.tatut/specql "20230316" :exclusions [org.clojure/java.jdbc]]
+                 [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
                  [org.geotools/gt-shapefile "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
@@ -92,7 +92,7 @@
                  [cljs-ajax "0.8.4"]
 
                  ;; React-wrapper frontille
-                 [reagent "0.9.1"]
+                 [reagent "0.10.0"]
 
 
                  ;; Local-storage apuri frontille
@@ -111,7 +111,7 @@
                  [org.apache.poi/poi "5.2.5"]
                  [org.apache.poi/poi-scratchpad "5.2.5"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "0.2.7"]
+                 [org.clojure/data.json "2.5.0"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
@@ -126,7 +126,7 @@
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
-                 [org.apache.xmlgraphics/fop "2.9"]
+                 [org.apache.xmlgraphics/fop "2.10"]
 
                  ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
                  [java-http-clj "0.4.3"]

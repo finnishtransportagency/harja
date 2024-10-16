@@ -479,6 +479,7 @@ jobs:
         uses: ./.github/actions/setup-build-env-and-tools
         with:
           install-java: true
+          install-leiningen: false
           install-clojure-deps: false
           install-node-deps: false
 
