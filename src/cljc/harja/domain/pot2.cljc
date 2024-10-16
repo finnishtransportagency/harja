@@ -1,11 +1,14 @@
 (ns harja.domain.pot2
   "Ylläpidon päällystysurakoissa käytettävän POT2-lomakkeen skeemat."
-  (:require [specql.impl.registry]
+  (:require [schema.core :as schema]
+            [specql.impl.registry]
             [specql.data-types]
             [harja.domain.muokkaustiedot :as m]
             [harja.fmt :as fmt]
             [harja.validointi :as v]
             [clojure.set :as set]
+            [clojure.spec.alpha :as s]
+            [harja.domain.tierekisteri :as tr]
             [clojure.string :as str]
             #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]))
   #?(:cljs
