@@ -8,18 +8,31 @@ DECLARE
     vahvistettuja INTEGER;
     suunnitelman_tila TEXT;
     kaikkien_osioiden_lkm_per_hoitokausi INTEGER;
+    jokin_osio_aloitettu BOOLEAN;
 
 BEGIN
-    -- jos kaikki ao. osioit on vahvistettu, on ko. hoitokauden osalta kustannussuunnitelma vahvistettu
+    -- jos kaikki osiot on vahvistettu, on ko. hoitokauden osalta kustannussuunnitelma vahvistettu
     kaikkien_osioiden_lkm_per_hoitokausi := 6;
     SELECT COALESCE(count(*), 0) INTO vahvistettuja
                                  FROM suunnittelu_kustannussuunnitelman_tila
                                 WHERE hoitovuosi = _hoitovuosi AND urakka = _urakka AND vahvistettu IS TRUE
-                                  AND osio != 'tilaajan-rahavaraukset';
+                                  AND osio NOT IN ('tilaajan-rahavaraukset');
     SELECT COALESCE(count(*), 0) INTO vahvistamattomia
                                  FROM suunnittelu_kustannussuunnitelman_tila
                                 WHERE hoitovuosi = _hoitovuosi AND urakka = _urakka AND vahvistettu IS FALSE
-                                  AND osio != 'tilaajan-rahavaraukset';
+                                  AND osio NOT IN ('tilaajan-rahavaraukset', 'tavoite-ja-kattohinta');
+
+
+    SELECT exists(SELECT id from suunnittelu_kustannussuunnitelman_tila WHERE urakka = _urakka and hoitovuosi = _hoitovuosi)
+      INTO jokin_osio_aloitettu;
+
+    -- Harja ei erikseen kirjaa jos tavoite- ja kattohinta on "aloitettu", koska minkä tahansa osion aloittaminen
+    -- aloittaa myös tavoite- ja kattohinnan. Tässä lisätään se tarvittaessa aloitetuksi yksinkertaisella tarkistuksella.
+    -- Poikkeus: jos kaikki osiot on vahvistettu, ei lisätä tavoite- ja kattohintaosiota keskeneräiseksi
+    IF (jokin_osio_aloitettu IS TRUE AND vahvistettuja != kaikkien_osioiden_lkm_per_hoitokausi)
+    THEN vahvistamattomia := vahvistamattomia + 1;
+    END IF;
+
 
     aloittamattomia := kaikkien_osioiden_lkm_per_hoitokausi - vahvistamattomia - vahvistettuja;
 
