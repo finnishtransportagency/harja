@@ -84,7 +84,7 @@ describe('Suunnitellut hankinnat osio', function () {
         });
 
         it('Muokkaa ensimmäisen vuoden arvoja ilman alaskopiointia', function () {
-            // "Kopioi hankinnat tuleville hoitovuosille" vheckboxin tulisi olla pois päältä.
+            // "Kopioi hankinnat tuleville hoitovuosille" checkboxin tulisi olla pois päältä.
             cy.get('input[id="kopioi-hankinnat-tuleville-hoitovuosille"]')
                 .should('not.be.checked');
 
