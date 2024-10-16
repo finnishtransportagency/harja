@@ -147,7 +147,27 @@
                                        vastaus))]
     (is (str/includes? vastaus "Iin MHU") "Iin MHU")
     (is (= 1 (get-in vahvistettu-2024-rivi [:ks_tila :vahvistettuja])) "yksi vahvistettu")
-    (is (= 5 (get-in vahvistettu-2024-rivi [:ks_tila :aloittamattomia])) "5 aloittamatta")
-    (is (= 0 (get-in vahvistettu-2024-rivi [:ks_tila :vahvistamattomia])) "yksi vahvistamatta")
+    (is (= 4 (get-in vahvistettu-2024-rivi [:ks_tila :aloittamattomia])) "4 aloittamatta")
+    (is (= 1 (get-in vahvistettu-2024-rivi [:ks_tila :vahvistamattomia])) "1 kesken") ;; tavoitehinta on kesken, jos jotain on kirjattu
+    (is (= "aloitettu" (get-in vahvistettu-2024-rivi [:ks_tila :suunnitelman_tila])) "tila")
+    (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
+
+
+
+(deftest iin-mhu-kojelautaan-yksikin-osio-aloitettu-niin-myos-tavoite-ja-kattohinta-aloitettu
+  (let [iin-mhu-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        kayttaja (:id +kayttaja-jvh+)
+        _ (i (format "INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja)
+        VALUES (%s, 'hankintakustannukset', 5, false, %s);" iin-mhu-urakka-id kayttaja))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:hoitokauden-alkuvuosi 2025
+                                                          :urakka-idt [iin-mhu-urakka-id]
+                                                          :ely-id nil})
+        vahvistettu-2024-rivi (first (filter #(= 2025 (:hoitokauden_alkuvuosi %))
+                                       vastaus))]
+    (is (str/includes? vastaus "Iin MHU") "Iin MHU")
+    (is (= 0 (get-in vahvistettu-2024-rivi [:ks_tila :vahvistettuja])) "0 vahvistettu")
+    (is (= 4 (get-in vahvistettu-2024-rivi [:ks_tila :aloittamattomia])) "4 aloittamatta")
+    (is (= 2 (get-in vahvistettu-2024-rivi [:ks_tila :vahvistamattomia])) "kaksi vahvistamatta")
     (is (= "aloitettu" (get-in vahvistettu-2024-rivi [:ks_tila :suunnitelman_tila])) "tila")
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
