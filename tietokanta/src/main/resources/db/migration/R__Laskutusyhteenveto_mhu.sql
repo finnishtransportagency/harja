@@ -1104,7 +1104,7 @@ BEGIN
                     END IF;
                 END LOOP;
 
-            -- Laskentaan Johto- ja hallintakorvaus tehtäväryhmän rivit bonuksiksi, jos ne on lisätty kustannusarvioitu_työ tauluun
+            -- Laskentaan Johto- ja hallintokorvaus tehtäväryhmän rivit bonuksiksi, jos ne on lisätty kustannusarvioitu_työ tauluun
             -- ja jos niillä on yksilöivä_tunniste 'a6614475-1950-4a61-82c6-fda0fd19bb54'
             SELECT SUM(kt.summa) AS summa
             FROM kustannusarvioitu_tyo kt,

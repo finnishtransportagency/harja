@@ -300,7 +300,7 @@
   (let [hankintakustannusten-toimenpiteet (toimenpidetason-rivitys e! app (:hankintakustannukset rivit-paaryhmittain))
         hoidonjohdonpalkkiot (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:hoidonjohdonpalkkio rivit-paaryhmittain)))
         erillishankinnat (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:erillishankinnat rivit-paaryhmittain)))
-        johto-ja-hallintokorvaukset (taulukoi-paaryhman-tehtavat :johto-ja-hallintakorvaus (:tehtavat (:johto-ja-hallintakorvaus rivit-paaryhmittain)))
+        johto-ja-hallintokorvaukset (taulukoi-paaryhman-tehtavat :johto-ja-hallintokorvaus (:tehtavat (:johto-ja-hallintokorvaus rivit-paaryhmittain)))
         rahavaraukset-toimenpiteet (toimenpidetason-rivitys e! app (:rahavaraukset rivit-paaryhmittain))
         bonukset (:bonukset rivit-paaryhmittain)
         ulkopuoliset-rahavaraukset (:ulkopuoliset-rahavaraukset rivit-paaryhmittain)
@@ -326,7 +326,7 @@
         yht-negatiivinen? (big/gt (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
                             (big/->big (or (:yht-budjetoitu-summa-indeksikorjattu (get app :kustannukset-yhteensa)) 0)))
         kaikki-vahvistettu? (onko-kaikki-vahvistettu? #{:hankintakustannukset :hoidonjohdonpalkkio
-                                                        :erillishankinnat :johto-ja-hallintakorvaus
+                                                        :erillishankinnat :johto-ja-hallintokorvaus
                                                         :rahavaraukset} rivit-paaryhmittain)]
     [:div.row.sivuelementti
      [:div.col-xs-12
@@ -354,7 +354,7 @@
         [:tbody
          (paaryhman-rivitys e! app "Suunnitellut hankinnat" :hankintakustannukset hankintakustannusten-toimenpiteet rivit-paaryhmittain true)
          (paaryhman-rivitys e! app "Rahavaraukset" :rahavaraukset rahavaraukset-toimenpiteet rivit-paaryhmittain true)
-         (paaryhman-rivitys e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintakorvaus johto-ja-hallintokorvaukset rivit-paaryhmittain true)
+         (paaryhman-rivitys e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintokorvaus johto-ja-hallintokorvaukset rivit-paaryhmittain true)
          (paaryhman-rivitys e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio hoidonjohdonpalkkiot rivit-paaryhmittain true)
          (paaryhman-rivitys e! app "Erillishankinnat" :erillishankinnat erillishankinnat rivit-paaryhmittain true)
          (paaryhman-rivitys e! app "Muut kulut" :muukulu-tavoitehintainen muukulut-tavoitehintainen rivit-paaryhmittain false)
