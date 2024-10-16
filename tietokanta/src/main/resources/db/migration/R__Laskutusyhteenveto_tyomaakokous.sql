@@ -297,7 +297,7 @@ BEGIN
     -- Laske valittujen hoitokausien tavoitehinnat yhteen
     FOR hoitokauden_vuosi IN hk_alkuvuosi..hk_loppuvuosi
     LOOP
-        hoitokauden_nro := hoitokauden_vuosi - hk_alkuvuosi + 1;
+        hoitokauden_nro := hoitokauden_vuosi - urakan_alkuvuosi + 1;
 
         IF hoitokauden_nro >= (hk_alkuvuosi - urakan_alkuvuosi + 1) 
         AND hoitokauden_nro <= (hk_loppuvuosi - urakan_alkuvuosi + 1) THEN
