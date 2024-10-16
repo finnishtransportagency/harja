@@ -1,29 +1,19 @@
 (ns harja-laadunseuranta.core
   (:require [taoensso.timbre :as log]
-            [compojure.core :refer [GET]]
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
-            [ring.util.response :refer [redirect]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [harja-laadunseuranta.tietokanta :as tietokanta]
             [harja-laadunseuranta.kyselyt :as q]
             [harja-laadunseuranta.tarkastusreittimuunnin.tarkastusreittimuunnin :as reittimuunnin]
             [harja-laadunseuranta.schemas :as schemas]
-            [harja-laadunseuranta.utils :as utils]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [schema.core :as s]
-            [clojure.core.match :refer [match]]
             [clojure.java.jdbc :as jdbc]
-            [compojure.route :as route]
             [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
             [clojure.walk :as walk]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.konversio :as konv]
-            [harja.pvm :as pvm]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
             [harja.domain.roolit :as roolit])
-  (:import (org.postgis PGgeometry))
   (:gen-class))
 
 
