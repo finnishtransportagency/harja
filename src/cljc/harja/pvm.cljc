@@ -387,6 +387,12 @@
   [pvm]
   (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss'Z'") pvm))
 
+(defn jsondate->pvm
+  "Parsii ajan string muotoisesta json date formaatista (2022-08-10T12:00:00Z)
+  ja palauttaa sen local DateTime instanssina."
+  [teksti]
+  (parsi (luo-format "yyyy-MM-dd'T'HH:mm:ss'Z'") teksti))
+
 (defn aika-iso8601-ilman-millisekunteja
   [pvm]
   (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss") pvm))
