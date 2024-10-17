@@ -18,13 +18,9 @@
             [harja.visualisointi :as vis]
             [harja.domain.raportointi :as raportti-domain]
             [harja.loki :refer [log]]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.modal :as modal]
-            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.ui.aikajana :as aikajana]
             [harja.ui.ikonit :as ikonit]
-            [clojure.string :as str]
             [harja.ui.kentat :as kentat]))
 
 (defmulti muodosta-html
@@ -103,7 +99,9 @@
 
 (defmethod muodosta-html :saa-ikoni [[_ {:keys [olomuoto havaintoaika maara]}]]
   ;; Generoidaan sää ikoni olomuotoon ja havaintoaikaan nähden
-  [ikonit/generoi-saa-ikoni (int olomuoto) (int maara) havaintoaika])
+  (if olomuoto
+    [ikonit/generoi-saa-ikoni (int olomuoto) (int maara) havaintoaika]
+    [:span raportti-domain/placeholder-ei-tietoja]))
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään

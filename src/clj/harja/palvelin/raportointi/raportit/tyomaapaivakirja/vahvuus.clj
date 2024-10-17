@@ -1,9 +1,9 @@
 (ns harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahvuus
   "Työmaapäiväkirja -näkymän urakan henkilöstö gridit"
   (:require
-    [harja.pvm :as pvm]
-    [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
+   [harja.pvm :as pvm]
+   [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
 (defn- vahvuus-rivi [aikavali nimi]
   (rivi
@@ -25,14 +25,15 @@
                             :sarakkeen-luokka "nakyma-valkoinen-solu"
                             :leveys 1
                             :tyyppi :varillinen-teksti})
+        fn-formatoi-paivystajat (fn [data]
+                                  (into []
+                                    (mapv #(vahvuus-rivi (if (:lopetus %) ;; Aloitus on aina, mutta lopetus on vapaaehtoinen kenttä
+                                                           (pvm/kellonaikavali (:aloitus %) (:lopetus %))
+                                                           (pvm/aika (:aloitus %))) (:nimi %)) data)))
         ;; Vasemman taulukon rivit (Päivystäjät)
-        rivit-v (into []
-                  (mapv #(vahvuus-rivi (pvm/kellonaikavali (:aloitus %) (:lopetus %)) (:nimi %)) paivystajat))
-
+        rivit-v (fn-formatoi-paivystajat paivystajat)
         ;; Työnjohtajat
-        rivit-o (into []
-                  (mapv #(vahvuus-rivi (pvm/kellonaikavali (:aloitus %) (:lopetus %)) (:nimi %)) tyonjohtajat))
-
+        rivit-o (fn-formatoi-paivystajat tyonjohtajat)
         taulukko-1 {:otsikko-vasen "Päivystäjät" :optiot-vasen taulukon-optiot :otsikot-vasen taulukon-otsikot :rivit-vasen rivit-v}
         taulukko-2 {:otsikko-oikea "Työnjohtajat" :optiot-oikea taulukon-optiot :otsikot-oikea taulukon-otsikot :rivit-oikea rivit-o}]
     [taulukko-1 taulukko-2]))
