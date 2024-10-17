@@ -95,7 +95,7 @@
 
 (defn nayta-paikkauskohteen-yhteyshenkilot-modal!
   "Paikkauskohteella on erilaiset yhteyshenkilöt kuin ylläpitokohteella. Joten siksi oma fn"
-  [urakka-id]
+  [{:keys [urakka-id id]}]
   (go (do
         (reset! yhteyshenkilot nil)
         (let [vastaus (<! (k/post! :hae-paikkauskohteen-yhteyshenkilot urakka-id))]
@@ -108,5 +108,10 @@
   (modal/nayta!
     {:leveys "80%"
      :otsikko (str "Paikkauskohteen yhteyshenkilöt")
-     :footer [napit/sulje #(modal/piilota!)]}
+     :esta-rastista-tabilla-pois-siirtyminen? true
+     :siirra-fokus-rastista (str "btn-" id)
+     :footer [napit/yleinen-toissijainen "Sulje" #(modal/piilota!)
+              {:esta-tab-eteenpain? true
+               :elementin-id "btn-sulje"
+               :siirra-fokus (str "btn-" id)}]}
     [paikkauskohteen-yhteyshenkilot-view yhteyshenkilot]))

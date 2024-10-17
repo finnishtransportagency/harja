@@ -16,7 +16,9 @@
     :virhe? (validointi/nayta-virhe? [:nimi] lomake)
     :validoi [[:ei-tyhja "Anna nimi"]]
     ::lomake/col-luokka "col-sm-6"
-    :pituus-max 100}
+    :elementin-id "form-paikkauskohde-nimi"
+    :pituus-max 100
+    :esta-tab-taaksepain? true}
    {:otsikko "Numero"
     :tyyppi :positiivinen-numero
     :kokonaisluku? true
@@ -132,8 +134,9 @@
                       [napit/tallenna
                        "Tallenna muutokset"
                        #(e! (t-pmrlomake/->TallennaPMRLomake (lomake/ilman-lomaketietoja lomake)))
-                       {:disabled (not (::tila/validi? lomake))}]]
+                       {:disabled (not (::tila/validi? lomake)) :siirra-fokus (str "grid-row-" (:id lomake))}]]
                      [:div.col-xs-4 {:style {:text-align "end"}}
-                      [napit/yleinen-toissijainen "Sulje" #(e! (t-pmrlomake/->SuljePMRLomake))]]]])}
+                      [napit/yleinen-toissijainen "Peruuta" #(e! (t-pmrlomake/->SuljePMRLomake))
+                       {:siirra-fokus "btn-paikkauskohteen-muokkaus" :esta-tab-eteenpain? true}]]]])}
      (pmr-skeema lomake tyomenetelmat)
      lomake]))

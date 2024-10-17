@@ -95,8 +95,15 @@
           (when (or
                   (= :varoitus luokka)
                   (= :neutraali-ikoni-keskella luokka))
-            [:span {:style {:padding-left "16px"}}
-             [ikonit/sulje]])]])
+            [:span {:style {:padding-left "10px"}}
+             [:button {:style {:color "black"
+                               :opacity 1
+                               :cursor "pointer"
+                               :background "transparent"
+                               :border 0}
+                       :type "button"
+                       :id "btn-sulje"}
+              [ikonit/sulje]]])]])
       ^{:key "ei-viestia"}
       [:div.ei-viestia-nyt])))
 
