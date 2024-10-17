@@ -1104,7 +1104,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
       (vec (concat [[alkupvm (vuoden-viim-pvm ensimmainen-vuosi)]]
                    (mapv (fn [vuosi]
-                           [(vuoden-eka-pvm vuosi) (vuoden-viim-pvm vuosi)])
+                           [(vuoden-eka-pvm vuosi) (paivan-lopussa (vuoden-viim-pvm vuosi))])
                          (range (inc ensimmainen-vuosi) viimeinen-vuosi))
                    [[(vuoden-eka-pvm viimeinen-vuosi) loppupvm]])))))
 
