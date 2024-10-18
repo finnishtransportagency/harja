@@ -484,8 +484,7 @@
     ((tuck/current-send-function) (->HaeUrakanValikatselmukset))
     (-> app
       (assoc :syottomoodi false)
-      (assoc :lomake (alusta-lomake app))
-      (assoc-in [:parametrit :haku-menossa] false)))
+      (assoc :lomake (alusta-lomake app))))
 
   KuluhakuOnnistui
   (process-event [{tulos :tulos} app]
@@ -645,7 +644,7 @@
            :epaonnistui ->KutsuEpaonnistui
            :epaonnistui-parametrit [{:viesti "Kulun tallentaminen epäonnistui"}]})
         (js/console.error "Lomaketta ei tallennettu, koska lomake ei ole validi." (pr-str validi?)))
-      
+
       (cond-> app
         true
         (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))
