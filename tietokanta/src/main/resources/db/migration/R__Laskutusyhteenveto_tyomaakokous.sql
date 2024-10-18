@@ -975,6 +975,7 @@ BEGIN
         FROM kulu l
         JOIN kulu_kohdistus lk ON lk.kulu = l.id
         -- Etsi pelkästään muukulu tyyppiset  kirjaukset, toimenpideinstansseilla ei ole näissä väliä 
+        -- Tavoitehintaiset kuuluu tehtäväryhmälle, ei tavoitehintaiset kuuluu toimenpiteelle, mutta työmaakokouksessa ei tarvitse niputtaa
         WHERE lk.tyyppi = 'muukulu'
           AND lk.poistettu IS NOT TRUE
           AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm

@@ -683,186 +683,9 @@ BEGIN
     LOOP
         RAISE NOTICE '*************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % *****************************************', t.nimi, t.tpi;
 
-        -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut lisätyöt
-        lisatyot_laskutettu := 0.0;
-        lisatyot_laskutetaan := 0.0;
-
-        FOR lisatyot_rivi IN 
-            SELECT 
-                summa AS lisatyot_summa, 
-                l.erapaiva AS erapaiva
-            FROM kulu l
-            JOIN kulu_kohdistus lk ON lk.kulu = l.id
-            JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
-            -- -- TODO: Placeholder. Tällaista maksuerätyyppiä ei ole. Kiinteähintaiset lähetetään kokonaishintaisessa maksueraässä.
-            WHERE lk.maksueratyyppi = 'lisatyo' 
-              AND lk.poistettu IS NOT TRUE
-              AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-        LOOP
-            SELECT lisatyot_rivi.lisatyot_summa AS summa, 0::NUMERIC AS korotus INTO lisatyo;
-
-            RAISE NOTICE 'lisatyot_rivi: %', lisatyo;
-            IF lisatyot_rivi.erapaiva <= aikavali_loppupvm THEN
-                -- Hoitokauden alusta
-                lisatyot_laskutettu := lisatyot_laskutettu + COALESCE(lisatyo.summa, 0.0);
-
-                IF lisatyot_rivi.erapaiva >= aikavali_alkupvm AND
-                    lisatyot_rivi.erapaiva <= aikavali_loppupvm THEN
-                    -- Laskutetaan nyt
-                    lisatyot_laskutetaan := lisatyot_laskutetaan + COALESCE(lisatyo.summa, 0.0);
-                END IF;
-            END IF;
-            RAISE NOTICE 'lisatyo: %', lisatyo;
-
-        -- lisatyot_rivi
-        END LOOP;
-        
-        -----------------------------------------------------------
-        ------------------- Rahavaraukset -------------------------
-        -----------------------------------------------------------
-
-        -- Tämä on toimenpideinstanssi loopin sisällä
-        -- Eli etsitään kaikki rahavaraukset jokaiselle eri taulukolle 
-        rahavaraus_nimet       := '{}';
-        hoitokausi_yht_array   := '{}';
-        val_aika_yht_array     := '{}';
-
-        FOR rahavaraus IN
-            SELECT DISTINCT
-              rv.id, 
-              COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) AS nimi,
-              tp.nimi AS tp_nimi,
-              rv.jarjestys
-            FROM rahavaraus rv 
-            JOIN rahavaraus_tehtava rt ON rv.id = rt.rahavaraus_id 
-            JOIN tehtava te ON rt.tehtava_id = te.id 
-            JOIN toimenpide tp ON te.emo = tp.id
-            -- Näytetään vaan rahavaraukset mitkä urakalle asetettu (hallinta)
-            JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id  
-            WHERE rvu.urakka_id = ur 
-            -- Näytä vaan instanssiin liittyvät rahavaraukset 
-            AND tp.id = t.tpk3_id
-            -- Sorttaa järjestysnumerolla, nämä tulee tässä järjestyksessä käyttöliittymään asti
-            ORDER BY rv.jarjestys
-        LOOP
-            -- Resetoi hoitokausi / laskutetaan 
-            rv_val_aika_yht := 0;
-            rv_hoitokausi_yht := 0;
-
-            FOR rv_rivi IN
-                SELECT
-                    summa AS kht_summa, 
-                    l.erapaiva AS erapaiva, 
-                    lk.maksueratyyppi
-                FROM kulu l
-                JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                JOIN toimenpideinstanssi tpi 
-                    ON lk.toimenpideinstanssi = tpi.id 
-                WHERE lk.rahavaraus_id = rahavaraus.id
-                    AND tpi.id = t.tpi
-                    AND lk.poistettu IS NOT TRUE
-                    AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-            LOOP
-              IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
-                  -- Rahavaraus X Hoitokausi yhteensä 
-                  rv_hoitokausi_yht := rv_hoitokausi_yht + COALESCE(rv_rivi.kht_summa, 0.0);
-                  RAISE NOTICE 'Rahavaraus % Hoitokausi yhteensä : %', rahavaraus.nimi, rv_hoitokausi_yht;
-
-                  IF rv_rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
-                      -- Rahavaraus X valittu kk yhteensä 
-                      rv_val_aika_yht := rv_val_aika_yht + COALESCE(rv_rivi.kht_summa, 0.0);
-                      RAISE NOTICE 'Rahavaraus % valittu kk yhteensä: %', rahavaraus.nimi, rv_val_aika_yht;
-                  END IF;
-              END IF;
-            -- FOR rv_rivi IN
-            END LOOP;
-
-          -- Lisää arrayhyn kaikki rahavarausten tulokset, jotka parsitaan gridiin 
-          rahavaraus_nimet := array_append(rahavaraus_nimet, rahavaraus.nimi);
-          hoitokausi_yht_array := array_append(hoitokausi_yht_array, rv_hoitokausi_yht);
-          val_aika_yht_array := array_append(val_aika_yht_array, rv_val_aika_yht);
-
-        -- FOR rahavaraus IN
-        END LOOP;
-
-        kaikki_rahavaraukset_val_yht           := 0.0;
-        kaikki_rahavaraukset_hoitokausi_yht    := 0.0;
-
-        -----------------------------------------------------------
-        -------------------  Muut kulut   -------------------------
-        -----------------------------------------------------------
-
-        -- Nollaa jokaisen instanssin arvot 
-        muu_kulu_tavoitehintainen_hoitokausi := 0;
-        muu_kulu_tavoitehintainen_val_aika := 0;
-        muu_kulu_ei_tavoitehintainen_hoitokausi := 0;
-        muu_kulu_ei_tavoitehintainen_val_aika := 0;
-
-        FOR rv_rivi IN
-            SELECT
-                lk.summa, 
-                lk.tavoitehintainen, 
-                l.erapaiva
-            FROM kulu l
-            JOIN kulu_kohdistus lk ON lk.kulu = l.id
-            JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id 
-            WHERE lk.tyyppi = 'muukulu'
-                AND lk.poistettu IS NOT TRUE
-                AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-                AND l.urakka = ur
-                AND tpi.id = t.tpi
-        LOOP
-            IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
-                -- Hoitokausi yhteensä
-                IF rv_rivi.tavoitehintainen THEN
-                    -- Tavoitehintainen
-                    muu_kulu_tavoitehintainen_hoitokausi := muu_kulu_tavoitehintainen_hoitokausi + COALESCE(rv_rivi.summa, 0.0);
-                ELSE
-                    -- Ei tavoitehintainen
-                    muu_kulu_ei_tavoitehintainen_hoitokausi := muu_kulu_ei_tavoitehintainen_hoitokausi + COALESCE(rv_rivi.summa, 0.0);
-                END IF;
-
-                IF rv_rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
-                    -- Valittu kk yhteensä
-                    IF rv_rivi.tavoitehintainen THEN
-                        -- Tavoitehintainen
-                        muu_kulu_tavoitehintainen_val_aika := muu_kulu_tavoitehintainen_val_aika + COALESCE(rv_rivi.summa, 0.0);
-                    ELSE
-                        -- Ei tavoitehintainen
-                        muu_kulu_ei_tavoitehintainen_val_aika := muu_kulu_ei_tavoitehintainen_val_aika + COALESCE(rv_rivi.summa, 0.0);
-                    END IF;
-                END IF;
-            END IF;
-        END LOOP;
-        
-        -- Lisää muut kulut rahavarausten alle
-        rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehintaan vaikuttavat kulut');
-        -- ..
-        rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehinnan ulkopuoliset kulut');
-        
-        
-        hoitokausi_yht_array := array_append(hoitokausi_yht_array, COALESCE(muu_kulu_tavoitehintainen_hoitokausi, 0.0));
-        val_aika_yht_array := array_append(val_aika_yht_array, COALESCE(muu_kulu_tavoitehintainen_val_aika, 0.0));
-
-        hoitokausi_yht_array := array_append(hoitokausi_yht_array, COALESCE(muu_kulu_ei_tavoitehintainen_hoitokausi, 0.0));
-        val_aika_yht_array := array_append(val_aika_yht_array, COALESCE(muu_kulu_ei_tavoitehintainen_val_aika, 0.0));
-
-        -- Laske rahavaraukset yhteen 
-        -- Tällä voi siis korvata äkilliset, vahingot, kannustin muuttujat, sekä tilaajan rahavaraus (poistetut termit)
-        -- Rahavaraukset hoitokausi
-        FOR i IN 1..array_length(hoitokausi_yht_array, 1) LOOP
-            kaikki_rahavaraukset_hoitokausi_yht := kaikki_rahavaraukset_hoitokausi_yht + hoitokausi_yht_array[i];
-        END LOOP;
-
-        -- Rahavaraukset valittu kk
-        FOR i IN 1..array_length(val_aika_yht_array, 1) LOOP
-            kaikki_rahavaraukset_val_yht := kaikki_rahavaraukset_val_yht + val_aika_yht_array[i];
-        END LOOP;
-
         -----------------------------------------------------------
         -------------------  Hankinnat    -------------------------
         -----------------------------------------------------------
-
 
         -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta 
         -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
@@ -885,6 +708,7 @@ BEGIN
                       ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
                 LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
                 WHERE lk.maksueratyyppi NOT IN ('akillinen-hoitotyo', 'muu', 'lisatyo')
+                  AND lk.tyyppi != 'muukulu'
                   AND lk.poistettu IS NOT TRUE
                   AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                   -- Poistetaan rahavaraus kannustinjärjestelmään (T3) hankinnoista, ja lisätään se omalle rivilleen
@@ -915,9 +739,8 @@ BEGIN
         RAISE NOTICE 'hankinnat_laskutettu: %', hankinnat_laskutettu;
         RAISE NOTICE 'hankinnat_laskutetaan: %', hankinnat_laskutetaan;
 
-
         ------------------------------------------------------
-        ------------------- Sanktiot -------------------------
+        -------------- Sanktiot, bonukset --------------------
         ------------------------------------------------------
         -- Hoitokaudella ennen aikaväliä ja aikavaälillä laskutetut sanktiot
         -- Sanktioihin lasketaan indeksikorotukset matkaan hoitokautta edeltävän kuukauden indeksiarvolla - paitsi hoidonjohdon sanktioissa arvonvähennyksiin ei huomioida indeksiä
@@ -1197,13 +1020,187 @@ BEGIN
             hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu;
             hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
 
-        END IF;
+        END IF; -- <- Bonukset, sanktiot
+
+        -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut lisätyöt
+        lisatyot_laskutettu := 0.0;
+        lisatyot_laskutetaan := 0.0;
+
+        -----------------------------------------------------------
+        ----------------------- Lisätyöt --------------------------
+        -----------------------------------------------------------
+
+        FOR lisatyot_rivi IN 
+            SELECT 
+                summa AS lisatyot_summa, 
+                l.erapaiva AS erapaiva
+            FROM kulu l
+            JOIN kulu_kohdistus lk ON lk.kulu = l.id
+            JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
+            -- -- TODO: Placeholder. Tällaista maksuerätyyppiä ei ole. Kiinteähintaiset lähetetään kokonaishintaisessa maksueraässä.
+            WHERE lk.maksueratyyppi = 'lisatyo' 
+              AND lk.tyyppi != 'muukulu'
+              AND lk.poistettu IS NOT TRUE
+              AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+        LOOP
+            SELECT lisatyot_rivi.lisatyot_summa AS summa, 0::NUMERIC AS korotus INTO lisatyo;
+
+            RAISE NOTICE 'lisatyot_rivi: %', lisatyo;
+            IF lisatyot_rivi.erapaiva <= aikavali_loppupvm THEN
+                -- Hoitokauden alusta
+                lisatyot_laskutettu := lisatyot_laskutettu + COALESCE(lisatyo.summa, 0.0);
+
+                IF lisatyot_rivi.erapaiva >= aikavali_alkupvm AND
+                    lisatyot_rivi.erapaiva <= aikavali_loppupvm THEN
+                    -- Laskutetaan nyt
+                    lisatyot_laskutetaan := lisatyot_laskutetaan + COALESCE(lisatyo.summa, 0.0);
+                END IF;
+            END IF;
+            RAISE NOTICE 'lisatyo: %', lisatyo;
+
+        -- lisatyot_rivi
+        END LOOP;
+        
+        -----------------------------------------------------------
+        ------------------- Rahavaraukset -------------------------
+        -----------------------------------------------------------
+
+        -- Tämä on toimenpideinstanssi loopin sisällä
+        -- Eli etsitään kaikki rahavaraukset jokaiselle eri taulukolle 
+        rahavaraus_nimet       := '{}';
+        hoitokausi_yht_array   := '{}';
+        val_aika_yht_array     := '{}';
+
+        FOR rahavaraus IN
+            SELECT DISTINCT
+              rv.id, 
+              COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) AS nimi,
+              tp.nimi AS tp_nimi,
+              rv.jarjestys
+            FROM rahavaraus rv 
+            JOIN rahavaraus_tehtava rt ON rv.id = rt.rahavaraus_id 
+            JOIN tehtava te ON rt.tehtava_id = te.id 
+            JOIN toimenpide tp ON te.emo = tp.id
+            -- Näytetään vaan rahavaraukset mitkä urakalle asetettu (hallinta)
+            JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id  
+            WHERE rvu.urakka_id = ur 
+            -- Näytä vaan instanssiin liittyvät rahavaraukset 
+            AND tp.id = t.tpk3_id
+            -- Sorttaa järjestysnumerolla, nämä tulee tässä järjestyksessä käyttöliittymään asti
+            ORDER BY rv.jarjestys
+        LOOP
+            -- Resetoi hoitokausi / laskutetaan 
+            rv_val_aika_yht := 0;
+            rv_hoitokausi_yht := 0;
+
+            FOR rv_rivi IN
+                SELECT
+                    summa AS kht_summa, 
+                    l.erapaiva AS erapaiva, 
+                    lk.maksueratyyppi
+                FROM kulu l
+                JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                JOIN toimenpideinstanssi tpi 
+                    ON lk.toimenpideinstanssi = tpi.id 
+                WHERE lk.rahavaraus_id = rahavaraus.id
+                    AND tpi.id = t.tpi
+                    AND lk.poistettu IS NOT TRUE
+                    AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+            LOOP
+              IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
+                  -- Rahavaraus X Hoitokausi yhteensä 
+                  rv_hoitokausi_yht := rv_hoitokausi_yht + COALESCE(rv_rivi.kht_summa, 0.0);
+                  RAISE NOTICE 'Rahavaraus % Hoitokausi yhteensä : %', rahavaraus.nimi, rv_hoitokausi_yht;
+
+                  IF rv_rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
+                      -- Rahavaraus X valittu kk yhteensä 
+                      rv_val_aika_yht := rv_val_aika_yht + COALESCE(rv_rivi.kht_summa, 0.0);
+                      RAISE NOTICE 'Rahavaraus % valittu kk yhteensä: %', rahavaraus.nimi, rv_val_aika_yht;
+                  END IF;
+              END IF;
+            -- FOR rv_rivi IN
+            END LOOP;
+
+          -- Lisää arrayhyn kaikki rahavarausten tulokset, jotka parsitaan gridiin 
+          rahavaraus_nimet := array_append(rahavaraus_nimet, rahavaraus.nimi);
+          hoitokausi_yht_array := array_append(hoitokausi_yht_array, rv_hoitokausi_yht);
+          val_aika_yht_array := array_append(val_aika_yht_array, rv_val_aika_yht);
+
+        -- FOR rahavaraus IN
+        END LOOP;
+
+        kaikki_rahavaraukset_val_yht           := 0.0;
+        kaikki_rahavaraukset_hoitokausi_yht    := 0.0;
+
+        -----------------------------------------------------------
+        -------------------  Muut kulut   -------------------------
+        -----------------------------------------------------------
+
+        -- Nollaa jokaisen instanssin arvot 
+        muu_kulu_tavoitehintainen_hoitokausi := 0;
+        muu_kulu_tavoitehintainen_val_aika := 0;
+        muu_kulu_ei_tavoitehintainen_hoitokausi := 0;
+        muu_kulu_ei_tavoitehintainen_val_aika := 0;
+
+        FOR rv_rivi IN
+            SELECT
+                lk.summa, 
+                lk.tavoitehintainen, 
+                l.erapaiva
+            FROM kulu l
+            JOIN kulu_kohdistus lk ON lk.kulu = l.id
+            JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id 
+            WHERE lk.tyyppi = 'muukulu'
+                AND lk.poistettu IS NOT TRUE
+                AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+                AND l.urakka = ur
+                AND tpi.id = t.tpi
+        LOOP
+            IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
+                -- Hoitokausi yhteensä
+                IF rv_rivi.tavoitehintainen THEN
+                    muu_kulu_tavoitehintainen_hoitokausi := muu_kulu_tavoitehintainen_hoitokausi + COALESCE(rv_rivi.summa, 0.0);
+                ELSE
+                    muu_kulu_ei_tavoitehintainen_hoitokausi := muu_kulu_ei_tavoitehintainen_hoitokausi + COALESCE(rv_rivi.summa, 0.0);
+                END IF;
+
+                -- Valittu kk yhteensä
+                IF rv_rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
+                    IF rv_rivi.tavoitehintainen THEN
+                        muu_kulu_tavoitehintainen_val_aika := muu_kulu_tavoitehintainen_val_aika + COALESCE(rv_rivi.summa, 0.0);
+                    ELSE
+                        muu_kulu_ei_tavoitehintainen_val_aika := muu_kulu_ei_tavoitehintainen_val_aika + COALESCE(rv_rivi.summa, 0.0);
+                    END IF;
+                END IF;
+            END IF;
+        END LOOP;
+        
+        -- Lisää muut kulut rahavarausten alle
+        -- Nämä niputetaan samaan arrayhyn jotka puretaan käyttöliittymään
+        rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehintaan vaikuttavat kulut');
+        rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehinnan ulkopuoliset kulut');
+        
+        hoitokausi_yht_array := array_append(hoitokausi_yht_array, muu_kulu_tavoitehintainen_hoitokausi);
+        val_aika_yht_array := array_append(val_aika_yht_array, muu_kulu_tavoitehintainen_val_aika);
+
+        hoitokausi_yht_array := array_append(hoitokausi_yht_array, muu_kulu_ei_tavoitehintainen_hoitokausi);
+        val_aika_yht_array := array_append(val_aika_yht_array, muu_kulu_ei_tavoitehintainen_val_aika);
+
+        -- Laske rahavaraukset yhteen, hk
+        FOR i IN 1..array_length(hoitokausi_yht_array, 1) LOOP
+            kaikki_rahavaraukset_hoitokausi_yht := kaikki_rahavaraukset_hoitokausi_yht + hoitokausi_yht_array[i];
+        END LOOP;
+
+        -- Rahavaraukset valittu kk
+        FOR i IN 1..array_length(val_aika_yht_array, 1) LOOP
+            kaikki_rahavaraukset_val_yht := kaikki_rahavaraukset_val_yht + val_aika_yht_array[i];
+        END LOOP;
 
         -- Kustannusten kokonaissummat
         kaikki_laskutettu := 0.0;
         kaikki_laskutetaan := 0.0;
 
-        kaikki_laskutettu := sakot_laskutettu + bonukset_laskutettu +
+        kaikki_laskutettu :=  sakot_laskutettu + bonukset_laskutettu +
                               hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu + 
                               hj_palkkio_laskutettu + hj_erillishankinnat_laskutettu + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu + 
