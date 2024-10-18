@@ -1928,6 +1928,14 @@
     "Reittipisteet löytyvät"
     1000))
 
+(defn odota-suolatoteuma-reittipisteet [toteuma-id]
+  (odota-ehdon-tayttymista
+    (fn []
+      (let [reittipisteet (first (q-map (format "SELECT aika,pohjavesialue,materiaalikoodi,maara,rajoitusalue_id FROM suolatoteuma_reittipiste where toteuma = %s" toteuma-id)))]
+        (not (nil? reittipisteet))))
+    "Suolatoteuma_reittipisteet löytyvät"
+    1000))
+
 (defn edellinen-materiaalin-kayton-paivitys [sopimus]
   (ffirst (q (format "SELECT muokattu FROM sopimuksen_kaytetty_materiaali WHERE sopimus=%s order by muokattu desc limit 1" sopimus))))
 

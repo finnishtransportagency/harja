@@ -29,7 +29,7 @@
                             :valittu-urakka nil
                             :valittu-hallintayksikko nil
                             :paivamaara (pvm/iso8601 (pvm/nyt))
-                            :lahetysaika (pvm/jsondate (pvm/nyt))
+                            :lahetysaika (pvm/aika->str-iso8601-UTC (pvm/nyt))
                             :ulkoinen-id 123
                             :suorittaja-nimi "Urakoitsija Oy"
                             :paivystaja "Pekka Päivystäjä"
@@ -51,7 +51,7 @@
         anna-aseman-tiedot (fn [indeksi]
                              {:saatieto {:havaintoaika lahetysaika-str,
                                          :aseman-tunniste (str (rand-int 999999)),
-                                         :aseman-tietojen-paivityshetki (pvm/jsondate (pvm/pvm-plus-tuntia aika indeksi)),
+                                         :aseman-tietojen-paivityshetki (pvm/aika->str-iso8601-UTC (pvm/pvm-plus-tuntia aika indeksi)),
                                          :ilman-lampotila 20.0,
                                          :tien-lampotila 5.0,
                                          :keskituuli 16,
@@ -63,8 +63,8 @@
 (defn- generoi-muut-toimenpiteet [montako lahetysaika-str]
   (let [aika (df/parse (df/formatter "yyyy-MM-dd'T'HH:mm:ss'Z'") lahetysaika-str)
         anna-toimenpide (fn [indeksi]
-                          {:tieston-muu-toimenpide {:aloitus (pvm/jsondate (pvm/pvm-plus-tuntia aika indeksi)),
-                                                    :lopetus (pvm/jsondate (pvm/pvm-plus-tuntia aika (inc indeksi))),
+                          {:tieston-muu-toimenpide {:aloitus (pvm/aika->str-iso8601-UTC (pvm/pvm-plus-tuntia aika indeksi)),
+                                                    :lopetus (pvm/aika->str-iso8601-UTC (pvm/pvm-plus-tuntia aika (inc indeksi))),
                                                     :tehtavat [{:tehtava {:kuvaus "Esimerkki kuvaus"}}]}})]
     (vec (for [i (range 1 (inc montako))]
            (anna-toimenpide i)))))

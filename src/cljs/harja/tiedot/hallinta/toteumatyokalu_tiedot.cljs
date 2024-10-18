@@ -14,17 +14,20 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defn- lisaa-sekunti-str-timestamppiin [timestamp-str sekunnit]
+  (pvm/aika->str-iso8601-UTC
+    (pvm/ajan-muokkaus
+      (pvm/iso8601-timestamp-str->pvm timestamp-str) true sekunnit :sekuntti)))
+
 (def +mahdolliset-urakat+
-  [
-   {:id 34 :nimi "Ivalon MHU testiurakka (uusi) (aseta sopimusid 19)"}
-   {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 42)"}
-   ])
+  [{:id 34 :nimi "Ivalon MHU testiurakka (uusi) (aseta sopimusid 19)"}
+   {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 42)"}])
 
 (def alkutila {:toteumatiedot {:tierekisteriosoite nil
                                :valittu-jarjestelma "Autoyksikkö Kolehmainen"
                                :valittu-urakka nil
                                :valittu-hallintayksikko nil
-                               :lahetysaika (pvm/jsondate (pvm/nyt))
+                               :lahetysaika (pvm/aika->str-iso8601-UTC (pvm/nyt))
                                :ulkoinen-id 123
                                :suorittaja-nimi "Urakoitsija Oy"
                                :sopimusid 19
@@ -43,9 +46,9 @@
    {:id 10 :nimi "Kesäsuola sorateiden kevätkunnostus" :yksikko "t"}
    {:id 11 :nimi "Kesäsuola sorateiden pölynsidonta" :yksikko "t"}])
 
-(defn muodosta-reittipiste [x y app pisteiden-maara]
-  {:reittipiste
-   {:aika (get-in app [:toteumatiedot :lahetysaika])
+(defn muodosta-reittipiste [x y app pisteiden-maara index]
+ {:reittipiste
+   {:aika (lisaa-sekunti-str-timestamppiin (get-in app [:toteumatiedot :lahetysaika]) index)
     :koordinaatit {:x x
                    :y y}
     :tehtavat []
@@ -66,14 +69,17 @@
                                           :ytunnus "1234567-8"}
                              :sopimusId (get-in app [:toteumatiedot :sopimusid])
                              :alkanut (get-in app [:toteumatiedot :lahetysaika])
-                             :paattynyt (get-in app [:toteumatiedot :lahetysaika])
+                             :paattynyt (lisaa-sekunti-str-timestamppiin (get-in app [:toteumatiedot :lahetysaika]) (count (:koordinaatit app))) 
                              :toteumatyyppi "kokonaishintainen"
                              :lisatieto "Normisuolaus"
                              ;; Tähän väliin tehtävät, jos ovat pakollisia
                              :materiaalit [{:materiaali (:nimi (get-in app [:toteumatiedot :valittu-materiaali])),
                                             :maara {:yksikko (get-in app [:toteumatiedot :yksikko])
                                                     :maara (js/parseFloat (get-in app [:toteumatiedot :materiaalimaara]))}}]}
-                   :reitti (mapv #(muodosta-reittipiste (first %) (second %) app (count (:koordinaatit app))) (:koordinaatit app))}})
+                   :reitti (map-indexed
+                             (fn [index rivi]
+                               (muodosta-reittipiste (first rivi) (second rivi) app (count (:koordinaatit app)) index))
+                             (:koordinaatit app))}})
 
 (def karttataso-tierekisteri (atom []))
 (defonce tierekisteri-kartalla-nakyvissa? (atom true))
@@ -180,7 +186,7 @@
                                          "/toteumat/reitti")
                               {:body (.stringify js/JSON (clj->js (koostettu-data app)))
                                :content-type :json
-                               :accect :json
+                               :accept :json
                                ;:headers {"OAM_REMOTE_USER" "ivalo-api"}
                                }))]
             (if (k/virhe? vastaus)
@@ -220,8 +226,9 @@
                                         (concat (map :points (:lines coordinates)))) vastaus))
           _ (js/console.log "HaeTROsoitteelleKoordinaatitOnnistui :: vastaus" (pr-str vastaus))
           _ (js/console.log "HaeTROsoitteelleKoordinaatitOnnistui :: koordinaatit" (pr-str koordinaatit))
-          _ (js/console.log "koordinaateista reitti: " (pr-str (mapv
-                                                                 #(muodosta-reittipiste (first %) (second %) app (count koordinaatit))
+          _ (js/console.log "koordinaateista reitti: " (pr-str (map-indexed
+                                                                 (fn [index rivi]
+                                                                   (muodosta-reittipiste (first rivi) (second rivi) app (count koordinaatit) index))
                                                                  koordinaatit)))
           _ (reset! karttataso-tierekisteri koordinaatit)]
       (-> app
@@ -233,15 +240,16 @@
     (do
       (reset! karttataso-tierekisteri [])
       (viesti/nayta-toast! "Koordinaattien haku epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
-      (js/console.log "HaeTROsoitteelleKoordinaatitOnnistui :: vastaus" (pr-str vastaus))
+      (js/console.error "HaeTROsoitteelleKoordinaatitEpaonnistui :: vastaus" (pr-str vastaus))
       (-> app
         (assoc :koordinaatit nil)
         (assoc :trhaku-kaynnissa? false))))
 
   HaeHallintayksikonUrakatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "HaeTROsoitteelleKoordinaatitOnnistui" :onnistui)
-    (assoc app :mahdolliset-urakat vastaus))
+    (let [vastaus (filter #(= :teiden-hoito (:tyyppi %)) vastaus)]
+      (viesti/nayta-toast! "HaeTROsoitteelleKoordinaatitOnnistui" :onnistui)
+      (assoc app :mahdolliset-urakat vastaus)))
 
   HaeHallintayksikonUrakatEpaonnistui
   (process-event [{vastaus :vastaus} app]
