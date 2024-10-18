@@ -45,7 +45,7 @@ BEGIN
     -- Lisään ylläpitokohteelle pkluokka sen perusteella, mitä pkluokkaa on eniten
     CASE
         -- Jos kaikkien pituus on sama (joskus erityisesti 0.0), ei aseteta PK1:tä ettei tiedot vääristy
-        WHEN yko_pk1_pituus = yko_pk2_pituus = yko_pk3_pituus THEN ypkluokka := NULL;
+        WHEN yko_pk1_pituus = yko_pk2_pituus AND yko_pk2_pituus = yko_pk3_pituus THEN ypkluokka := NULL;
         WHEN yko_pk1_pituus >= yko_pk2_pituus AND yko_pk1_pituus >= yko_pk3_pituus THEN ypkluokka := 'PK1';
         WHEN yko_pk2_pituus >= yko_pk1_pituus AND yko_pk2_pituus >= yko_pk3_pituus THEN ypkluokka := 'PK2';
         WHEN yko_pk3_pituus >= yko_pk1_pituus AND yko_pk3_pituus >= yko_pk2_pituus THEN ypkluokka := 'PK3';
