@@ -1,12 +1,17 @@
 # -- Run-time vaihe --
 # Käytetään Eclipse Temurin 17 LTS (OpenJDK) imagea (https://endoflife.date/java)
-# Pohjalla Ubuntu Jammy (Ubuntu 22.04 LTS)
+# Pohjalla Ubuntu Noble Numbat (Ubuntu 24.04 LTS)
 # Huom: Jos päivität major-version, muista päivittää myös .github/.java-version tiedosto
-FROM eclipse-temurin:17.0.12_7-jre-jammy
+FROM eclipse-temurin:17.0.12_7-jre-noble
 
 # Lisää labeleita AWS ECR:ää varten
 LABEL description="Harja app"
 LABEL version="1.0"
+
+# Poista ubuntu-käyttäjä
+# Workaround virheeseen: "groupadd: GID '1000' already exists"
+#  -> https://bugs.launchpad.net/cloud-images/+bug/2005129
+RUN touch /var/mail/ubuntu && chown ubuntu /var/mail/ubuntu && userdel -r ubuntu
 
 # https://github.com/aws/amazon-ecs-agent/issues/3594
 # Lisää /tmp volumena, jotta voidaan käyttää sitä kiertotienä ECS Agent ongelmaan.
@@ -28,7 +33,6 @@ RUN apt-get update && apt-get install -y \
     jq \
     nano \
     unzip \
-    vim \
     telnet \
     && rm -rf /var/lib/apt/lists/*
 

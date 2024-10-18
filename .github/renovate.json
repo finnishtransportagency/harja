@@ -9,7 +9,7 @@
     "replacements:all",
     "workarounds:all"
   ],
-  "prConcurrentLimit": 5,
+  "prConcurrentLimit": 2,
   "timezone": "Europe/Helsinki",
   "schedule": [
     "before 8am on Tuesday"
@@ -40,7 +40,7 @@
       ]
     },
     {
-      "description": "Erottele patch ja minor päivitykset Clojure ja ClojureScript kirjastoille",
+      "description": "Erottele patch ja minor päivitykset (jokainen minor stream erikseen) Clojure ja ClojureScript kirjastoille",
       "matchDatasources": [
         "clojure"
       ],
@@ -48,17 +48,42 @@
         "org.clojure:clojure",
         "org.clojure:clojurescript"
       ],
-      "separateMinorPatch": true
+      "separateMinorPatch": true,
+      "separateMultipleMinor": true
     },
     {
-      "description": "Ryhmittele org.geotools:gt-* päivitykset",
+      "description": "Erottele minor päivitykset (jokainen minor stream erikseen) org.clojure:core.async kirjastolle",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.clojure:core.async"
+      ],
+      "separateMajorMinor": true,
+      "separateMultipleMinor": true
+    },
+    {
+      "description": "Ryhmittele org.geotools:gt-* päivitykset. Erottele major päivitykset omiin PR:iin",
       "matchDatasources": [
         "clojure"
       ],
       "matchPackageNames": [
         "org.geotools:gt-*"
       ],
-      "groupName": "org.geotools"
+      "groupName": "org.geotools",
+      "separateMajorMinor": true,
+      "separateMultipleMajor": true
+    },
+    {
+      "description": "Erottele postgist-jdbc major päivitykset omiin PR:iin",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "net.postgis:postgis-jdbc"
+      ],
+      "separateMajorMinor": true,
+      "separateMultipleMajor": true
     },
     {
       "description": "Ryhmittele org.apache.poi:* päivitykset",
@@ -89,6 +114,17 @@
         "com.cognitect:transit-*"
       ],
       "groupName": "com.cognitect:transit"
+    },
+    {
+      "description": "Erottele Reagent päivitykset, jokainen minor stream erikseen",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "reagent:reagent"
+      ],
+      "separateMajorMinor": true,
+      "separateMultipleMinor": true
     }
   ]
 }

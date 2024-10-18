@@ -1,21 +1,20 @@
 (ns harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset
   "Hoidon ja MHU-urakan laskutusyhteenvetojen yhteiset funktiot ja apurit"
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
-            [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.maksuerat :as maksuerat-q]
-
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
-            [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
-            [harja.tyokalut.functor :refer [fmap]]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
-            [clj-time.local :as l]
-            [harja.fmt :as fmt]
-            [harja.pvm :as pvm]
             [clojure.string :as str]
+            [harja.fmt :as fmt]
             [harja.domain.toimenpidekoodi :as toimenpidekoodit]))
+
+
+(def summa-fmt fmt/euro-opt)
+
+
+(defn raha-arvo-olemassa? [arvo]
+  (not (or (= arvo 0.0M) (nil? arvo))))
+
 
 (defn kustannuslajin-kaikki-kentat [kentan-kantanimi]
   [(keyword (str kentan-kantanimi "_laskutettu"))
@@ -24,6 +23,7 @@
    (keyword (str kentan-kantanimi "_laskutetaan"))
    (keyword (str kentan-kantanimi "_laskutetaan_ind_korotus"))
    (keyword (str kentan-kantanimi "_laskutetaan_ind_korotettuna"))])
+
 
 (defn urakoiden-lahtotiedot
   [laskutusyhteenvedot]
@@ -45,6 +45,7 @@
     (concat [(assoc-in ensimmainen [1 :sheet-nimi] "Laskutusyhteenveto")]
             muut)))
 
+
 (defn tyypin-maksuerat
   [tyyppi maksuerat]
   (get maksuerat tyyppi))
@@ -60,6 +61,7 @@
                     (:urakka-nimi (second urakan-lahtotiedot)))))
               urakoiden-lahtotiedot)))
 
+
 (defn urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu
   [urakoiden-lahtotiedot]
   (into #{}
@@ -71,6 +73,7 @@
                                  (nil? (:suolasakot_laskutetaan tiedot))))
                     (:urakka-nimi (second urakan-lahtotiedot)))))
               urakoiden-lahtotiedot)))
+
 
 (defn urakoittain-kentat-joiden-laskennan-indeksipuute-sotki
   [laskutusyhteenvedot]
@@ -87,6 +90,7 @@
                                  laskutusyhteenveto)))})
                laskutusyhteenvedot)))
 
+
 (defn varoitus-indeksilaskennan-perusluku-puuttuu
   [urakat-joissa-indeksilaskennan-perusluku-puuttuu]
   (when-not (empty? urakat-joissa-indeksilaskennan-perusluku-puuttuu)
@@ -97,6 +101,7 @@
                      (for [u urakat-joissa-indeksilaskennan-perusluku-puuttuu]
                        u))))))
 
+
 (defn varoitus-lampotila-puuttuu
   [urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu]
   (when-not (empty? urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu)
@@ -104,6 +109,7 @@
          (str/join ", "
                    (for [u urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu]
                      u)))))
+
 
 (defn urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu
   [urakoiden-lahtotiedot]
@@ -117,6 +123,7 @@
                     (:urakka-nimi (second urakan-lahtotiedot)))))
               urakoiden-lahtotiedot)))
 
+
 (defn varoitus-indeksitietojen-puuttumisesta
   [varoitus-indeksilaskennan-perusluku-puuttuu
    urakat-joiden-laskennan-indeksipuute-sotki]
@@ -128,7 +135,9 @@
                      (for [u urakat-joiden-laskennan-indeksipuute-sotki]
                        u))))))
 
+
 (def varoitus-vain-jvh-voi-muokata-tietoja "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja ja lämpötiloja Harjaan.")
+
 
 (defn tee-laskutusyhteevetohaku [kysely-fn db hk-alkupvm hk-loppupvm alkupvm haun-loppupvm urakka-id]
   (kysely-fn db
@@ -138,6 +147,7 @@
              (konv/sql-date haun-loppupvm)
              urakka-id))
 
+
 (defn hae-alku-ja-loppupvm [alkupvm loppupvm]
   (if (or (pvm/kyseessa-kk-vali? alkupvm loppupvm)
           (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
@@ -145,6 +155,7 @@
     ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
     (pvm/paivamaaran-hoitokausi alkupvm)
     [alkupvm loppupvm]))
+
 
 (defn hae-laskutusyhteenvedon-tiedot
   [db user {:keys [urakka-id alkupvm loppupvm haun-loppupvm urakkatyyppi] :as tiedot} & [koko-vuosi? vuoden-kk? valittu-aikavali?]]
@@ -169,6 +180,7 @@
                 (sort-by (juxt (comp jarjesta-fn :tuotekoodi) :nimi)
                          (into [] (tee-laskutusyhteevetohaku kysely-fn db hk-alkupvm hk-loppupvm alkupvm haun-loppupvm urakka-id))))]
     tulos))
+
 
 (defn hae-tyomaa-laskutusyhteenvedon-tiedot
   [db _ {:keys [urakka-id alkupvm loppupvm haun-loppupvm]}]

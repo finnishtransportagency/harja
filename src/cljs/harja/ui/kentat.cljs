@@ -74,7 +74,8 @@
 
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
                                      kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli? monivalinta? salli-kirjoitus?
-                                     tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?]} data]
+                                     tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?
+                                     hakuikoni? input-id]} data]
   (when monivalinta?
     (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
@@ -114,6 +115,7 @@
                            vayla-tyyli? (str "input-default komponentin-input ")
                            disabled? (str "disabled"))
                   :value @teksti
+                  :id input-id
                   :placeholder placeholder
                   :disabled disabled?
                   :size pituus
@@ -177,7 +179,9 @@
                           (reset! tulokset (<! (hae lahde "")))
                           (reset! valittu-idx nil))
              :disabled disabled?}
-            [:span.livicon-chevron-down]])
+            (if hakuikoni?
+              [:span.livicon-search]
+              [:span.livicon-chevron-down])])
 
          (let [nykyiset-tulokset (if (and sort-fn (vector? @tulokset))
                                    (sort-by sort-fn @tulokset)
@@ -575,7 +579,8 @@
 (defn vayla-checkbox
   [{:keys [input-id lukutila? disabled? arvo data piilota-checkbox?
            teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
-  (let [input-id (or input-id
+  (let [arvo (or arvo false)
+        input-id (or input-id
                      (gensym "checkbox-input-id-"))
         label-id (or label-id
                      (gensym "checkbox-label-id-"))]
@@ -1428,20 +1433,29 @@
 (defn- tierekisterikentat-flex [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
                                 piste? vaadi-vali?]
   (let [osio (fn [alaotsikko? komponentti otsikko]
-               [:div
-                (when-not alaotsikko?
-                  [:label.control-label
-                   [:span
-                    [:span.kentan-label otsikko]
-                    (when pakollinen? [:span.required-tahti])]])
-                komponentti
-                (when alaotsikko?
-                  [:span
-                   [:span.kentan-label otsikko]
-                   (when pakollinen? [:span.required-tahti])])])]
-    (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
-         piste? vaadi-vali?]
-      ;; Jos alaotsikot valittuna, ryhmitä valitse sijainti oikein 
+               (let [kentta-pakollinen? (cond
+                                          (and pakollinen? (or vaadi-vali? (#{"Tie" "Aosa" "Aet"} otsikko)))
+                                          true
+
+                                          (and pakollinen?
+                                            ;; defaulttina vaaditaan väli, siksi false-tarkistus. On eksplisiittisesti asetettava
+                                            ;; vaadi-vali? falseksi, jotta väliä ei vaadita
+                                            (false? vaadi-vali?) (#{"Losa" "Let"} otsikko))
+                                          false
+
+                                          :else false)]
+                 [:div {:class (when pakollinen? "required")}
+                  (when-not alaotsikko?
+                    [:label.control-label {:class (when-not kentta-pakollinen? "cancel-required-tahti")}
+                     [:span.kentan-label otsikko]])
+                  komponentti
+                  (when alaotsikko?
+                    [:span
+                     [:span.ala-control-label.kentan-label {:class (when-not kentta-pakollinen? "cancel-required-tahti")}
+                      otsikko]])]))]
+    (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys
+         karttavalinta virhe piste? vaadi-vali?]
+
       (let [flex (if alaotsikot?
                    "flex-start"
                    "flex-end")
@@ -1560,7 +1574,7 @@
       (nayta-kartalla @sijainti)
       (go-loop []
                (when-let [arvo (<! tr-osoite-ch)]
-                 (log "VKM/TR: " (pr-str arvo))
+                 ;; (log "VKM/TR: " (pr-str arvo))
                  (reset! @sijainti-atom
                          (if-not (= arvo :virhe)
                            (do (nappaa-virhe (nayta-kartalla (piste-tai-eka arvo)))
@@ -1598,7 +1612,8 @@
                       (tasot/poista-geometria! :tr-valittu-osoite)
                       (kartta/zoomaa-geometrioihin))))
 
-      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot? vayla-tyyli? disabled? alaotsikot? piilota-nappi?]} data]
+      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot? vayla-tyyli?
+                   pakollinen? disabled? alaotsikot? piilota-nappi?]} data]
         (let [avaimet (or avaimet tr-osoite-raaka-avaimet)
               _ (assert (= 5 (count avaimet))
                         (str "TR-osoitekenttä tarvii 5 avainta (tie,aosa,aet,losa,let), saatiin: "

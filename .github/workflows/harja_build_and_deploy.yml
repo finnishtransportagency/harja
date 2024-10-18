@@ -58,6 +58,8 @@ jobs:
       artifact-prefix: ${{ matrix.configs.artifactPrefix }}
       # Ei tehdä turhaan lint-testausta develop-branchille. Löydökset käsitellään PR:ien yhteydessä.
       lint-clj: 'false'
+      # Ei tehdä turhaan ylimääristä skannausta testipatterin osana. Skannaus on osa deployment prosessia alla.
+      scan-docker-image: 'false'
       build-harja: 'light'
 
   # Tarkistaa testijobin yleisen statuksen ja lähettää notifikaation, mikäli jotain meni pieleen
