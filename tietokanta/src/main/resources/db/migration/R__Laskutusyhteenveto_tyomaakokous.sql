@@ -1014,26 +1014,41 @@ BEGIN
 
     -- Ei tavoitehintaiset yhteensä-  arvot lasketaan bonusten ja sanktioiden jälkeen alempana
     
-    ---------------------------------------------
-    --------------- Tavoitehinta  ---------------
-    ---------------------------------------------
+    ---------------------------------------------------------------------------------
+    --------------- Tavoitehintaan vaikuttavat kustannukset yhteensä  ---------------
+    ---------------------------------------------------------------------------------
 
     -- Laskeskellaan tavoitehintaan kuuluvat yhteen
     -- 2022-10-01 jälkeen alihankitabonus ei ole enää MHU ylläpitoon kuuluvana, vaan omana rivinään, niin iffitellään se tarvittaessa mukaan
     -- Tavoitehinta hoitokausi 
     tavhin_hoitokausi_yht := 0.0;
     tavhin_hoitokausi_yht := tavhin_hoitokausi_yht +
-            talvihoito_hoitokausi_yht + lyh_hoitokausi_yht + sora_hoitokausi_yht +
-            paallyste_hoitokausi_yht + yllapito_hoitokausi_yht + korvausinv_hoitokausi_yht +
-            johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht + kaikki_rahavaraukset_hoitokausi_yht;
+            talvihoito_hoitokausi_yht + 
+            lyh_hoitokausi_yht + 
+            sora_hoitokausi_yht +
+            paallyste_hoitokausi_yht + 
+            yllapito_hoitokausi_yht + 
+            korvausinv_hoitokausi_yht +
+            johtojahallinto_hoitokausi_yht + 
+            erillishankinnat_hoitokausi_yht + 
+            hjpalkkio_hoitokausi_yht + 
+            kaikki_rahavaraukset_hoitokausi_yht + 
+            muut_kulut_hoitokausi_yht;
     
     -- Tavoitehinta valittu kk 
     tavhin_val_aika_yht := 0.0;
-    tavhin_val_aika_yht := tavhin_val_aika_yht +
-            talvihoito_val_aika_yht + lyh_val_aika_yht + sora_val_aika_yht +
-            paallyste_val_aika_yht + yllapito_val_aika_yht + korvausinv_val_aika_yht +
+    tavhin_val_aika_yht := tavhin_val_aika_yht + 
+            talvihoito_val_aika_yht + 
+            lyh_val_aika_yht + 
+            sora_val_aika_yht +
+            paallyste_val_aika_yht + 
+            yllapito_val_aika_yht + 
+            korvausinv_val_aika_yht +
             johtojahallinto_val_aika_yht +
-            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht + kaikki_rahavaraukset_val_yht;
+            erillishankinnat_val_aika_yht + 
+            hjpalkkio_val_aika_yht + 
+            kaikki_rahavaraukset_val_yht + 
+            muut_kulut_val_aika_yht;
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
@@ -1235,7 +1250,7 @@ BEGIN
                                           paatos_tavoiteh_ylitys_val_aika_yht +
                                           paatos_kattoh_ylitys_val_aika_yht;
 
-    -- Muut kustannukset yhteensä
+    -- Tavoitehinnan ulkopuoliset kustannukset yhteensä
     muut_kustannukset_hoitokausi_yht := 0.0;
     muut_kustannukset_val_aika_yht := 0.0;
 
@@ -1243,19 +1258,15 @@ BEGIN
             muut_kustannukset_hoitokausi_yht + lisatyot_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht +
             paatos_tavoitepalkkio_hoitokausi_yht + paatos_tavoiteh_ylitys_hoitokausi_yht +
             paatos_kattoh_ylitys_hoitokausi_yht + 
-            -- Ei tavoitehintaiset
-            muut_kulut_ei_tavoite_hoitokausi + 
-            -- Tavoitehintaiset
-            muut_kulut_hoitokausi_yht;
+            -- Ei tavoitehintaiset muut kulut
+            muut_kulut_ei_tavoite_hoitokausi;
             
     muut_kustannukset_val_aika_yht :=
             muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht +
             paatos_tavoitepalkkio_val_aika_yht + paatos_tavoiteh_ylitys_val_aika_yht +
             paatos_kattoh_ylitys_val_aika_yht + 
-            -- Ei tavoitehintaiset
-            muut_kulut_ei_tavoite_val_aika + 
-            -- Tavoitehintaiset
-            muut_kulut_val_aika_yht;
+            -- Ei tavoitehintaiset muut kulut
+            muut_kulut_ei_tavoite_val_aika;
 
     -- Kaikki yhteensä
     yhteensa_kaikki_hoitokausi_yht := 0.0;
