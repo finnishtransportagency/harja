@@ -6,13 +6,13 @@
    [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
-(defn- saatiedot-rivi [aika aika-tarkka ilma tie s-olom k-tuuli s-sum-str maara]
+(defn- saatiedot-rivi [aika aika-tarkka ilma tie s-olom k-tuuli sade-maara]
   (rivi
     [:varillinen-teksti {:arvo aika}]
     [:varillinen-teksti {:arvo ilma}]
     [:varillinen-teksti {:arvo tie}]
-    [:saa-ikoni {:olomuoto s-olom :havaintoaika aika-tarkka :maara maara}]
-    [:varillinen-teksti {:arvo s-sum-str}]
+    [:saa-ikoni {:olomuoto s-olom :havaintoaika aika-tarkka :maara sade-maara}]
+    [:varillinen-teksti {:arvo (or (some-> sade-maara (str " mm")) r/placeholder-ei-tietoja)}]
     [:varillinen-teksti {:arvo k-tuuli}]))
 
 (defn saatiedot-taulukkojen-parametrit [vasen-aseman-tiedot oikea-aseman-tiedot]
@@ -31,8 +31,6 @@
                                     (or (some-> (:tien_lampotila %) (str " C°")) r/placeholder-ei-tietoja)
                                     (or (some-> (:sateen_olomuoto %) int) nil)
                                     (or (some-> (:keskituuli %) (str " m/s")) r/placeholder-ei-tietoja)
-                                    (or (some-> (:sadesumma %) (str " mm")) r/placeholder-ei-tietoja)
-                                    ;; Määrä passataan vielä ikoni generointi moottorille erikseen
                                     (or (some-> (:sadesumma %) int) nil))
                                  data)))
         taulukon-optiot {:tyhja "Ei Tietoja."
