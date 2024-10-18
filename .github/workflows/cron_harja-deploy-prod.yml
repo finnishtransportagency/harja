@@ -220,3 +220,23 @@ jobs:
           script: |
             const script = require('./.github/scripts/replace-workflow-deployment.js')
             const result = await script({github, context, core})
+
+      - name: Send success notification to Slack
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
+        if: success()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: Tuotanto-deployment onnistui!\n       SHA: ${{ env.LATEST_BUILD_SHA_LINK }}"
+                  }
+                }
+              ]
+            }

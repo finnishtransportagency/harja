@@ -123,20 +123,23 @@ jobs:
           docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      # Sammutetaan Harjan Fargate taskit migraatioiden ajoa varten, jotta ne eivät häiritse migraation onnistumista
+      # !! Vain DEV-ympäristö !!
+      # FIXME: Prod jätetty vielä uudelleenkäynnistämisen piiriin, kunnes non-restart deploy onnistuu varmasti STG-ympäristössä.
+      # Sammutetaan Harjan Fargate taskit, jotta ne eivät häiritse DB-cleania ja testidatan ajamista dev-tietokantaan.
       - name: Shutdown Harja Fargate tasks
         uses: ./.github/actions/shutdown-fargate-tasks
         timeout-minutes: 15
-        #if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
-        if: ${{ contains(fromJson('["dev", "stg", "prod"]'), inputs.environment)  }}
+        # FIXME: Palauta "vain dev"-rajoitus käyttöön toiminnan varmistamisen jälkeen
+        #if: ${{ contains(fromJson('["dev"]'), inputs.environment) }}
+        if: ${{ contains(fromJson('["dev", "prod"]'), inputs.environment) }}
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           service: ${{ vars.ECS_SERVICE_NAME }}
 
+      # Ajetaan tietokantamigraatiot RDS:ään ennen uuden image:n deployausta
       - name: Run migrations to RDS
         uses: ./.github/actions/run-migrations-to-rds
-        #if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
-        if: ${{ contains(fromJson('["dev", "stg", "prod"]'), inputs.environment)  }}
+        if: ${{ contains(fromJson('["dev", "stg", "prod"]'), inputs.environment) }}
         with:
           # Migraatiot halutaan ajaa samalle commit SHA:lle, kuin mistä build artifact on peräisin,
           # jotta migraatiot ja deployattava image ovat yhteensopivia.
@@ -144,7 +147,7 @@ jobs:
           commit-sha: ${{ inputs.commit-sha }}
 
       # Migraatioiden ajon jälkeen hoidetaan imagen ECS task deployment loppuun alla.
-      # Uusi image on jo julkaistu ECR:ään odottamaan aiemmassa vaiheessa.
+      # Uusi image on jo julkaistu ECR:ään odottamaan käyttöönottoa aiemmassa vaiheessa, jotta sitä ei tarvitse odottaa tässä.
       - name: Download task definition
         env:
           ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
@@ -165,16 +168,25 @@ jobs:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ vars.ECS_SERVICE_NAME }}
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
-          wait-for-service-stability: false
+          # Odotetaan service stabilityä vain stg ja prod deploymenteissä
+          # Dev-deploymentissä stabilityä odotellaan start-fargate-tasks actionissa.
+          # FIXME: Prod jätetty vielä vanhan uudelleenkäynnistämisen piiriin, kunnes non-restart deploy onnistuu varmasti STG-ympäristössä.
+          #        Palauta myös "prod" stability odotus käyttöön, kun toiminta on varmistettu stg:llä
+          #wait-for-service-stability: ${{ contains(fromJson('["stg", "prod"]'), inputs.environment) }}
+          wait-for-service-stability: ${{ contains(fromJson('["stg"]'), inputs.environment) }}
 
-      # Pakotetaan lopuksi Harjan Fargate taskit käynnistymään, mikäli ne on aiemmin laitettu alas.
+      # !! Vain DEV-ympäristö !!
+      # FIXME: Prod jätetty vielä uudelleenkäynnistämisen piiriin, kunnes non-restart deploy onnistuu varmasti STG-ympäristössä.
+      # Käynnistetään aiemmin sammutetut dev-ympäristön Fargate taskit uudelleen.
       - name: Start Harja Fargate tasks
         uses: ./.github/actions/start-fargate-tasks
         timeout-minutes: 10
         # Pakota uudelleenkäynnistyminen vaikka migraatio tai ECS deploy edellä olisi epäonnistunut
         # Fargate taskit sammutetaan ennen migraatioiden ajoa, mutta ne täytyy aina käynnistää uudelleen,
         # jotta palvelu pysyy toiminnassa.
-        if: always()
+        # FIXME: Palauta "vain dev"-rajoitus käyttöön, kun prod deployment kytketään uudelleenkäynnistämisen piiristä pois.
+        #if: ${{ contains(fromJson('["dev"]'), inputs.environment)  }}
+        if: ${{ contains(fromJson('["dev", "prod"]'), inputs.environment) }}
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           service: ${{ vars.ECS_SERVICE_NAME }}
