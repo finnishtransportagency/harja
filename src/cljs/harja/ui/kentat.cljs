@@ -228,7 +228,8 @@
   (or placeholder
     (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe? regex focus on-focus on-blur lomake? toiminta-f disabled? vihje elementin-id muokattu?]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe? regex focus on-focus on-blur
+                                       lomake? toiminta-f disabled? vihje elementin-id muokattu? esta-tab-taaksepain?]
                                 :as kentta} data]
   [:input {:class (cond-> nil
                     (and lomake?
@@ -241,6 +242,9 @@
                            (reset! data v)
                            (when toiminta-f
                              (toiminta-f v))))
+           :on-key-down #(when (and (dom/tab+shift-nappaimet? %) esta-tab-taaksepain?)
+                           (.preventDefault %)
+                           (.stopPropagation %))
            :disabled disabled?
            :on-focus on-focus
            :on-blur on-blur
@@ -258,7 +262,7 @@
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
 ;; pituus-max oletusarvo on 256, koska se on toteuman lisätiedon tietokantasarakkeissa
 (defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus on-blur lomake?
-                                     disabled? pituus-max toiminta-f]} data]
+                                     disabled? pituus-max toiminta-f elementin-id]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
                       1
@@ -303,7 +307,8 @@
                      :class (cond-> nil
                                     lomake? (str "form-control ")
                                     disabled? (str "disabled"))
-                     :placeholder placeholder}]
+                     :placeholder placeholder
+                     :id elementin-id}]
          ;; näytetään laskuri kun merkkejä on jäljellä alle 25%
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
@@ -501,12 +506,13 @@
 (defmethod nayta-arvo :big [{:keys [desimaalien-maara]} data]
   [:span (some-> @data (big/fmt desimaalien-maara))])
 
-(defmethod tee-kentta :email [{:keys [on-focus on-blur lomake? disabled?] :as kentta} data]
+(defmethod tee-kentta :email [{:keys [on-focus on-blur lomake? disabled? elementin-id] :as kentta} data]
   [:input {:class (cond-> nil
                           lomake? (str "form-control ")
                           disabled? (str "disabled"))
            :type "email"
            :value @data
+           :id elementin-id
            :disabled disabled?
            :on-focus on-focus
            :on-blur on-blur
@@ -1105,7 +1111,7 @@
                             ""))))
        :reagent-render
        (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select
-                    kentan-tyylit virhe? ikoni-sisaan? muokattu?]} data]
+                    kentan-tyylit virhe? ikoni-sisaan? muokattu? elementin-id esta-tab-taaksepain?]} data]
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
                _ (when (and (not= nykyinen-pvm vanha-data-arvo)
@@ -1119,7 +1125,7 @@
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
                                 (pvm-tyhjana rivi))
-               elementin-id (str (gensym "pvm-input"))
+               elementin-id (if elementin-id elementin-id (str (gensym "pvm-input")))
                input-komponentti [:input {:class (yleiset/luokat (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
                                                                  (cond
                                                                    kentan-tyylit (apply str kentan-tyylit)
@@ -1134,6 +1140,9 @@
                                          (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
                                            (teksti-paivamaaraksi! validoi data nykyinen-teksti)
                                            (reset! auki false))
+                                         (when (and (dom/tab+shift-nappaimet? %) esta-tab-taaksepain?)
+                                           (.preventDefault %)
+                                           (.stopPropagation %))
                                          (when (dom/enter-nappain? %)
                                            (teksti-paivamaaraksi! validoi data nykyinen-teksti)
                                            (reset! auki (not @auki))))

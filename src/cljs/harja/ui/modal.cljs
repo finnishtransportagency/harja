@@ -39,7 +39,8 @@
 
 (defn- modal-container* [optiot sisalto]
   (let [{:keys [otsikko otsikon-alle-komp otsikko-tyyli footer nakyvissa? luokka
-                leveys sulje-fn sulje-ruksista-fn content-tyyli body-tyyli modal-luokka]} optiot
+                leveys sulje-fn sulje-ruksista-fn content-tyyli body-tyyli modal-luokka
+                esta-rastista-tabilla-pois-siirtyminen? siirra-fokus-rastista]} optiot
         sulje!  #(do
                   ;; estää file-open dialogin poistamisen
                   #_(.preventDefault %)
@@ -60,7 +61,9 @@
                              :style content-tyyli}
          (when otsikko
            [:div.modal-header
-            [ikonit/sulje-ruksi sulje-ruksista! {:style {:margin 0}}]
+            [ikonit/sulje-ruksi sulje-ruksista! {:style {:margin 0}
+                                                 :esta-poistuminen? esta-rastista-tabilla-pois-siirtyminen?
+                                                 :siirra-fokus-rastista siirra-fokus-rastista}]
             [:h2.modal-title {:class (when (= otsikko-tyyli :virhe)
                                        "modal-otsikko-virhe")}
              otsikko]
@@ -79,7 +82,8 @@
     [modal-container* optiot-ja-sisalto (:sisalto optiot-ja-sisalto)]))
 
 (defn nayta! [{:keys [sulje otsikko otsikon-alle-komp sulje-ruksista-fn sulje-fn otsikko-tyyli
-                      footer luokka leveys content-tyyli body-tyyli modal-luokka]} sisalto]
+                      footer luokka leveys content-tyyli body-tyyli modal-luokka
+                      esta-rastista-tabilla-pois-siirtyminen? siirra-fokus-rastista]} sisalto]
   (reset! modal-sisalto {:otsikko otsikko
                          :otsikon-alle-komp otsikon-alle-komp
                          :otsikko-tyyli otsikko-tyyli
@@ -93,7 +97,9 @@
                          :leveys leveys
                          :content-tyyli content-tyyli
                          :body-tyyli body-tyyli
-                         :modal-luokka modal-luokka}))
+                         :modal-luokka modal-luokka
+                         :esta-rastista-tabilla-pois-siirtyminen? esta-rastista-tabilla-pois-siirtyminen?
+                         :siirra-fokus-rastista siirra-fokus-rastista}))
 
 (defn aloita-urln-kuuntelu []
   (t/kuuntele! :url-muuttui
