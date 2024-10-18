@@ -15,7 +15,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defn- lisaa-sekunti-str-timestamppiin [timestamp-str sekunnit]
-  (pvm/aika->str-iso8601-Z-aikaleimalle
+  (pvm/aika->str-iso8601-UTC
     (pvm/ajan-muokkaus
       (pvm/iso8601-timestamp-str->pvm timestamp-str) true sekunnit :sekuntti)))
 
@@ -27,7 +27,7 @@
                                :valittu-jarjestelma "Autoyksikkö Kolehmainen"
                                :valittu-urakka nil
                                :valittu-hallintayksikko nil
-                               :lahetysaika (pvm/aika->str-iso8601-Z-aikaleimalle (pvm/nyt))
+                               :lahetysaika (pvm/aika->str-iso8601-UTC (pvm/nyt))
                                :ulkoinen-id 123
                                :suorittaja-nimi "Urakoitsija Oy"
                                :sopimusid 19

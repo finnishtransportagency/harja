@@ -382,7 +382,7 @@
 (def iso8601-aikavyohykkeella-format
   (luo-format "yyyy-MM-dd'T'HH:mm:ssX"))
 
-(defn aika->str-iso8601-Z-aikaleimalle
+(defn aika->str-iso8601-UTC
   "Luodaan (t/now) tyyppisestä ajasta formaatti yyyy-MM-dd'T'HH:mm:ss'Z' -> 2022-08-10T12:00:00Z"
   [pvm]
   (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss'Z'") pvm))
