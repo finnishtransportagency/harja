@@ -14,6 +14,11 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defn- lisaa-sekunti-str-timestamppiin [timestamp-str sekunnit]
+  (pvm/aika->str-iso8601-Z-aikaleimalle
+    (pvm/ajan-muokkaus
+      (pvm/iso8601-timestamp-str->pvm timestamp-str) true sekunnit :sekuntti)))
+
 (def +mahdolliset-urakat+
   [{:id 34 :nimi "Ivalon MHU testiurakka (uusi) (aseta sopimusid 19)"}
    {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 42)"}])
@@ -22,7 +27,7 @@
                                :valittu-jarjestelma "Autoyksikkö Kolehmainen"
                                :valittu-urakka nil
                                :valittu-hallintayksikko nil
-                               :lahetysaika (pvm/jsondate (pvm/nyt))
+                               :lahetysaika (pvm/aika->str-iso8601-Z-aikaleimalle (pvm/nyt))
                                :ulkoinen-id 123
                                :suorittaja-nimi "Urakoitsija Oy"
                                :sopimusid 19
@@ -42,11 +47,8 @@
    {:id 11 :nimi "Kesäsuola sorateiden pölynsidonta" :yksikko "t"}])
 
 (defn muodosta-reittipiste [x y app pisteiden-maara index]
-  ;(console.log "muodosta-reittpiste:: " (get-in app [:toteumatiedot :lahetysaika]) "pcm" (pvm/->pvm (get-in app [:toteumatiedot :lahetysaika])))
-  (console.log "muodosta-reittpiste:: " (get-in app [:toteumatiedot :lahetysaika]) "jsondate->pvm" (pvm/jsondate->pvm (get-in app [:toteumatiedot :lahetysaika])) "type: " (type (pvm/jsondate->pvm (get-in app [:toteumatiedot :lahetysaika]))))
-  (console.log "muodosta-reittpiste:: " (get-in app [:toteumatiedot :lahetysaika]) "jsondate" (pvm/jsondate (pvm/jsondate->pvm (get-in app [:toteumatiedot :lahetysaika]))) "type: " (type (pvm/jsondate (pvm/jsondate->pvm (get-in app [:toteumatiedot :lahetysaika])))))
-  {:reittipiste
-   {:aika (pvm/jsondate (pvm/ajan-muokkaus (pvm/jsondate->pvm (get-in app [:toteumatiedot :lahetysaika])) true index :sekuntti))
+ {:reittipiste
+   {:aika (lisaa-sekunti-str-timestamppiin (get-in app [:toteumatiedot :lahetysaika]) index)
     :koordinaatit {:x x
                    :y y}
     :tehtavat []
@@ -67,7 +69,7 @@
                                           :ytunnus "1234567-8"}
                              :sopimusId (get-in app [:toteumatiedot :sopimusid])
                              :alkanut (get-in app [:toteumatiedot :lahetysaika])
-                             :paattynyt (pvm/jsondate (pvm/ajan-muokkaus (pvm/jsondate->pvm (get-in app [:toteumatiedot :lahetysaika])) true (count (:koordinaatit app)) :sekuntti))
+                             :paattynyt (lisaa-sekunti-str-timestamppiin (get-in app [:toteumatiedot :lahetysaika]) (count (:koordinaatit app))) 
                              :toteumatyyppi "kokonaishintainen"
                              :lisatieto "Normisuolaus"
                              ;; Tähän väliin tehtävät, jos ovat pakollisia
