@@ -126,7 +126,6 @@ hakutiheys-historiakuva 1200000)
                  tk/ryhmavaihto false
                  tk/muut-valaistusurakoiden-toimenpiteet false}
      :alueet oletusalueet
-     :varustetoteumat {tk/varustetoteumat false}
      :tieluvat {tk/tieluvat false}}))
 
 (defn alueita-valittu?

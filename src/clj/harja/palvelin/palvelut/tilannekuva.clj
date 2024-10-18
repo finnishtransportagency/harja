@@ -489,20 +489,10 @@
                                               :xmin (:xmin alue) :ymin (:ymin alue)
                                               :xmax (:xmax alue) :ymax (:ymax alue)})})))
 
-(defn- hae-varustetoteumat
-  [db user {:keys [alue alku loppu varustetoteumat] :as tiedot} urakat]
-  (when (and (tk/valittu? varustetoteumat tk/varustetoteumat)
-             (not (empty? urakat)))
-    (into []
-          (toteumat/varustetoteuma-xf)
-          (q/hae-varustetoteumat db {:urakat urakat
-                                     :alku alku
-                                     :loppu loppu}))))
-
 (def tilannekuvan-osiot
   #{:toteumat :tyokoneet :turvallisuuspoikkeamat
     :laatupoikkeamat :paikkaus :paallystys :ilmoitukset :tietyomaat
-    :tietyoilmoitukset :varustetoteumat :tieluvat})
+    :tietyoilmoitukset :tieluvat})
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
 
@@ -549,11 +539,6 @@
   (when (asetukset/ominaisuus-kaytossa? :tieluvat)
     (tulosta-tulos! "tielupaa"
                     (hae-tieluvat db user tiedot))))
-
-(defmethod hae-osio :varustetoteumat [db user tiedot urakat _]
-  (tulosta-tulos!
-    "varustetoteumaa"
-    (hae-varustetoteumat db user tiedot urakat)))
 
 (defn yrita-hakea-osio [db user tiedot urakat osio]
   (try
