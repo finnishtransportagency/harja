@@ -345,16 +345,18 @@
         ;; Jos kulun eräpäivä osuu vuodelle, josta on välikatselmus pidetty, kulu lukitaan
         erapaivan-hoitovuosi (when erapaiva
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
-        kulu-lukittu? (when erapaivan-hoitovuosi
-                        (some #(and
-                                 (= erapaivan-hoitovuosi (:vuosi %))
-                                 (:paatos-tehty? %))
-                          (:vuosittaiset-valikatselmukset app)))
+        haku-menossa (boolean (get-in app [:parametrit :haku-menossa]))
+        kulu-lukittu? (or haku-menossa
+                        (when erapaivan-hoitovuosi
+                          (some #(and
+                                   (= erapaivan-hoitovuosi (:vuosi %))
+                                   (:paatos-tehty? %))
+                            (:vuosittaiset-valikatselmukset app))))
         ;; Vuoden päätöksen kulut voivatkin olla urakoitsijan maksettavia!
         urakoitsija-maksaa? (and (:vuoden-paatos-valittu? lomake)
                               (=
-                                (:id (tiedot/avain->tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys))
-                                (:tehtavaryhma (first (:kohdistukset lomake)))))
+                               (:id (tiedot/avain->tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys))
+                               (:tehtavaryhma (first (:kohdistukset lomake)))))
 
         koontilaskun-kuukaudet (tiedot/palauta-urakan-mahdolliset-koontilaskun-kuukaudet app (-> @tila/tila :yleiset :urakka))
 
@@ -408,8 +410,9 @@
            :style {:font-size "14px"
                    :margin-left "auto"
                    :float "right"}}])]]
+     
      ;; Onko kulu lukittu
-     (when kulu-lukittu? [:div.palstat [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
+     (when (and kulu-lukittu? (not haku-menossa)) [:div.palstat [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
 
      #_[debug/debug lomake]
      (map-indexed
@@ -512,20 +515,26 @@
       [:div.col-xs-12.col-md-6
        [liitteet e! kulu-lukittu? lomake]]]
 
-     [:div.row {:style {:padding-top "16px"}}
+     [:div.row.kulu-valistys-top
       [:div.col-xs-12.col-md-6
        [:div.kulu-napit
-        [:span {:style {:padding-right "16px"}}
+        
+        [:span.kulu-valistys-oikea
          [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaKulu))
           {:vayla-tyyli? true
            :luokka "suuri"
-           :tyylit {:padding-right "16px"}
            :disabled (or (not lomake-validi?) kulu-lukittu?)}]]
+        
         [:span
          [napit/peruuta "Peruuta" #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
           {:ikoni [ikonit/remove]
            :luokka "suuri"
-           :vayla-tyyli? true}]]]]]
+           :vayla-tyyli? true}]]
+        
+        (when haku-menossa
+          [:span.kulu-ladataan
+           [yleiset/ajax-loader-pieni "Ladataan..."]])]]]
+     
      [:div.row
       [:div.col-xs-12.col-md-6
        (when urakoitsija-maksaa? [:div.caption.margin-top-4 "Kulu kirjataan miinusmerkkisenä"])]]]))

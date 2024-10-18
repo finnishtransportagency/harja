@@ -193,7 +193,7 @@
            hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
            haun-alkupvm-atom (r/atom (get-in app [:parametrit :haun-alkupvm]))
            haun-loppupvm-atom (r/atom (get-in app [:parametrit :haun-loppupvm]))
-           haku-menossa (get-in app [:parametrit :haku-menossa])]
+           haku-menossa (boolean (get-in app [:parametrit :haku-menossa]))]
        [:div
         (if syottomoodi
           [:div.kulujen-kirjaus
@@ -237,7 +237,7 @@
             [:div.filtteri.label-ja-alasveto
              [:span.alasvedon-otsikko "Hoitovuosi"]
              [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
-                                           :disabled (boolean haku-menossa)
+                                           :disabled haku-menossa
                                            :vayla-tyyli? true
                                            :data-cy "hoitokausi-valinta"
                                            :valitse-fn #(do
@@ -249,7 +249,7 @@
               hoitovuodet]]
             [valinnat/kuukausi {:nil-valinta "Koko hoitokausi"
                                 :vayla-tyyli? true
-                                :disabled (boolean haku-menossa)
+                                :disabled haku-menossa
                                 :valitse-fn #(do
                                                (e! (tiedot/->AsetaHakukuukausi %))
                                                (e! (tiedot/->HaeUrakanKulut
@@ -259,7 +259,7 @@
 
              kuukaudet haun-kuukausi]
             [:span {:class "label-ja-aikavali"}
-             (when-not (boolean haku-menossa)
+             (when-not haku-menossa
                [:div.label-ja-alasveto.aikavali
                 [:span.alasvedon-otsikko (str "Aikaväli")]
                 [:div.aikavali-valinnat
@@ -287,7 +287,7 @@
                   haun-loppupvm-atom]]])]]
            (when kulut
              [:div
-              (if (boolean haku-menossa)
+              (if haku-menossa
                 [yleiset/ajax-loader "Ladataan..."]
                 [kulutaulukko {:e! e! :haetaan? (> haetaan 0)
                                :tiedot kulut :tehtavaryhmat tehtavaryhmat
