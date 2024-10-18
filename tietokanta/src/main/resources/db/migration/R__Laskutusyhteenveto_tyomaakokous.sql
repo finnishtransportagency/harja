@@ -225,13 +225,16 @@ DECLARE
     yhteensa_kaikki_val_aika_yht          NUMERIC;
 
     -- Asetuksia
+    urakan_alkuvuosi                      NUMERIC;
     hk_alkuvuosi                          NUMERIC;
+    hk_loppuvuosi                         NUMERIC;
     hk_alkukuukausi                       NUMERIC;
     perusluku                             NUMERIC; -- urakan indeksilaskennan perusluku (urakkasopimusta edeltävän vuoden syys-,loka, marraskuun keskiarvo)
     indeksi_vuosi                         INTEGER;
     indeksinimi                           VARCHAR; -- MAKU 2015
     sopimus_id                            INTEGER;
     hoitokauden_nro                       NUMERIC;
+    hoitokauden_vuosi                     NUMERIC; -- Käytetään kun loopataan valitut hoitovuodet aikavälistä
     hoitokauden_tavoitehinta              NUMERIC;
     hk_tavhintsiirto_ed_vuodelta          NUMERIC;
     budjettia_jaljella                    NUMERIC;
@@ -270,26 +273,55 @@ BEGIN
     perusluku := indeksilaskennan_perusluku(ur);
     hk_alkuvuosi := (SELECT EXTRACT(YEAR FROM hk_alkupvm) :: INTEGER);
     hk_alkukuukausi := (SELECT EXTRACT(MONTH FROM hk_alkupvm) :: INTEGER);
+    hk_loppuvuosi := (SELECT EXTRACT(YEAR FROM hk_loppupvm) :: INTEGER);
+
+    -- Jos 10.1 tai alle valittuna, tarkoittaa että ei haluta laskea mukaan seuraavaa hoitokautta 
+    IF EXTRACT(MONTH FROM hk_loppupvm) <= 9 
+    OR (EXTRACT(MONTH FROM hk_loppupvm) = 10 AND EXTRACT(DAY FROM hk_loppupvm) = 1) THEN
+        hk_loppuvuosi := hk_loppuvuosi - 1; 
+    END IF;
+
     indeksi_vuosi := hk_alkuvuosi; -- Joissakin indeksilaskennoissa voidaan käyttää hoitokauden edeltävää syyskuuta tai elokuuta indeksissä. TArkista tapauskohtaisesti
     indeksinimi := (SELECT indeksi FROM urakka u WHERE u.id = ur);
     sopimus_id := (SELECT id FROM sopimus WHERE urakka = ur AND paasopimus IS NULL);
-    -- Haetaan urakan hoitokauden tavoitehinta
-    select u.* from urakka u where u.id = ur into urakan_tiedot;
+    SELECT u.* FROM urakka u WHERE u.id = ur INTO urakan_tiedot;
     RAISE NOTICE '*** Urakan tiedot: % ', urakan_tiedot;
-    hoitokauden_nro := ((SELECT EXTRACT(YEAR from hk_alkupvm)) - (SELECT EXTRACT(YEAR from urakan_tiedot.alkupvm)) + 1);
-    RAISE NOTICE '*** hoitokauden_nro: % ', hoitokauden_nro;
-    -- Haetaan aina defaulttina indeksikorjattu luku, jos sitä ei ole, niin sitä ei tietenkään voi käyttää
-    hoitokauden_tavoitehinta := (SELECT COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0) as tavoitehinta
-                                 from urakka_tavoite ut
-                                 where ut.hoitokausi = hoitokauden_nro
-                                   and ut.urakka = ur);
-    RAISE NOTICE '*** hoitokauden_tavoitehinta: % ', hoitokauden_tavoitehinta;
+
+    -------------------------
+    -- Valitun aikavälin hoitokausien tavoitehinnat
+    -- Esim. urakan alkuvuosi 2019 ja aikavälinä 2019-2024 (5 hoitokautta), summaa kaikkien hoitokausien tavoitehinnat yhteen
+    -------------------------
+    hoitokauden_tavoitehinta := 0;
+    urakan_alkuvuosi := (SELECT EXTRACT(YEAR FROM urakan_tiedot.alkupvm) :: INTEGER);
+
+    -- Laske valittujen hoitokausien tavoitehinnat yhteen
+    FOR hoitokauden_vuosi IN hk_alkuvuosi..hk_loppuvuosi
+    LOOP
+        hoitokauden_nro := hoitokauden_vuosi - urakan_alkuvuosi + 1;
+
+        IF hoitokauden_nro >= (hk_alkuvuosi - urakan_alkuvuosi + 1) 
+        AND hoitokauden_nro <= (hk_loppuvuosi - urakan_alkuvuosi + 1) THEN
+            RAISE NOTICE 'Lasketaan tavoitehinta hoitokauden_vuosi: %, hoitokauden_nro: %', hoitokauden_vuosi, hoitokauden_nro;
+            hoitokauden_tavoitehinta := hoitokauden_tavoitehinta + 
+            COALESCE(
+              ( SELECT SUM(COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0))
+                  FROM urakka_tavoite ut
+                 WHERE ut.hoitokausi = hoitokauden_nro
+                   AND ut.urakka = ur), 0
+            );
+        END IF;
+    END LOOP;
+
+    RAISE NOTICE '***TOTAL hoitokauden_tavoitehinta: %', hoitokauden_tavoitehinta;
+    -------------------------
+
     hk_tavhintsiirto_ed_vuodelta := 0.0;
     hk_tavhintsiirto_ed_vuodelta := hk_tavhintsiirto_ed_vuodelta +
-        (SELECT COALESCE(ut.tavoitehinta_siirretty_indeksikorjattu, ut.tavoitehinta_siirretty, 0) as siirretty
-         from urakka_tavoite ut
-         where ut.hoitokausi = hoitokauden_nro
-           and ut.urakka = ur);
+        ( SELECT COALESCE(ut.tavoitehinta_siirretty_indeksikorjattu, ut.tavoitehinta_siirretty, 0) AS siirretty
+           FROM urakka_tavoite ut
+          WHERE ut.hoitokausi = hoitokauden_nro
+            AND ut.urakka = ur);
+            
     RAISE NOTICE '*** hk_tavhintsiirto_ed_vuodelta: % ', hk_tavhintsiirto_ed_vuodelta;
 
     -- Kaikki kustannukset haetaan toimenpideinstanssien perusteella.
@@ -305,52 +337,52 @@ BEGIN
     -- '23151' 'Hoidon johto'
 
     -- Talvihoidon toimenpideinstanssin id
-    select tpi.id
-    from toimenpideinstanssi tpi
+    SELECT tpi.id
+    FROM toimenpideinstanssi tpi
              JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23104' AND tpk.taso = 3
     WHERE tpi.urakka = ur
-    into talvihoito_tpi_id;
+    INTO talvihoito_tpi_id;
 
     -- Liikenneymp. hoidon toimenpideinstanssin id
-    select tpi.id
-    from toimenpideinstanssi tpi
+    SELECT tpi.id
+    FROM toimenpideinstanssi tpi
              JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23116' AND tpk.taso = 3
     WHERE tpi.urakka = ur
-    into lyh_tpi_id;
+    INTO lyh_tpi_id;
 
     -- Sorateiden hoidon toimenpideinstanssin id
-    select tpi.id
-    from toimenpideinstanssi tpi
+    SELECT tpi.id
+    FROM toimenpideinstanssi tpi
              JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23124' AND tpk.taso = 3
     WHERE tpi.urakka = ur
-    into sora_tpi_id;
+    INTO sora_tpi_id;
 
     -- Päällystepaikkaukset toimenpideinstanssin id
-    select tpi.id
-    from toimenpideinstanssi tpi
+    SELECT tpi.id
+    FROM toimenpideinstanssi tpi
              JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '20107' AND tpk.taso = 3
     WHERE tpi.urakka = ur
-    into paallyste_tpi_id;
+    INTO paallyste_tpi_id;
 
     -- MHU ylläpidon toimenpideinstanssin id
-    select tpi.id
-    from toimenpideinstanssi tpi
+    SELECT tpi.id
+    FROM toimenpideinstanssi tpi
              JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '20191' AND tpk.taso = 3
     WHERE tpi.urakka = ur
-    into yllapito_tpi_id;
+    INTO yllapito_tpi_id;
 
     -- Korvausinvestointien toimenpideinstanssin id
-    select tpi.id
-    from toimenpideinstanssi tpi
+    SELECT tpi.id
+    FROM toimenpideinstanssi tpi
              JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '14301' AND tpk.taso = 3
     WHERE tpi.urakka = ur
-    into korvausinv_tpi_id;
+    INTO korvausinv_tpi_id;
 
-    select tpi.id
-    from toimenpideinstanssi tpi
+    SELECT tpi.id
+    FROM toimenpideinstanssi tpi
              JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23151' AND tpk.taso = 3
     WHERE tpi.urakka = ur
-    into hoidonjohto_tpi_id;
+    INTO hoidonjohto_tpi_id;
 
     -- Alustetaan hankinta-arvoja
     talvihoito_hoitokausi_yht := 0.0;
@@ -1034,7 +1066,7 @@ BEGIN
     FOR bonukset_rivi IN SELECT ek.laskutuskuukausi                                 as laskutuskuukausi,
                                 ek.rahasumma                                        as summa,
                                 (SELECT korotettuna
-                                 from erilliskustannuksen_indeksilaskenta(ek.laskutuskuukausi, ek.indeksin_nimi, ek.rahasumma,
+                                 FROM erilliskustannuksen_indeksilaskenta(ek.laskutuskuukausi, ek.indeksin_nimi, ek.rahasumma,
                                                                           ek.urakka, ek.tyyppi,
                                                                           CASE
                                                                               WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi
@@ -1129,9 +1161,9 @@ BEGIN
                          AND lk.poistettu IS NOT TRUE
                          AND l.urakka = ur
                          AND lk.tehtavaryhma in
-                             (select tr.id
-                              from tehtavaryhma tr
-                              where tr.nimi ilike 'Hoitovuoden päättäminen%') -- Harmillisesti joutuu käyttämään nimeä, koska tyyppejä ei ole
+                             (SELECT tr.id
+                              FROM tehtavaryhma tr
+                              WHERE tr.nimi ilike 'Hoitovuoden päättäminen%') -- Harmillisesti joutuu käyttämään nimeä, koska tyyppejä ei ole
                          AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
 
         LOOP

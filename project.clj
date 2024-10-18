@@ -16,11 +16,11 @@
 
                  ;;;;;;; Yleiset ;;;;;;;
 
-                 [prismatic/schema "1.1.10"]
+                 [prismatic/schema "1.4.1"]
                  [org.clojure/core.async "0.3.465"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
-                 [com.cognitect/transit-clj "0.8.319"]
+                 [com.cognitect/transit-clj "1.0.333"]
                  ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
                  [meta-merge "1.0.0"]
 
@@ -60,7 +60,7 @@
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
                  [org.postgresql/postgresql "42.7.4"]
                  [net.postgis/postgis-jdbc "2.5.1"]
-                 [org.locationtech.jts/jts-core "1.19.0"]
+                 [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
                  [com.mchange/c3p0 "0.10.1"]
                  ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
@@ -126,7 +126,7 @@
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
-                 [org.apache.xmlgraphics/fop "2.9"]
+                 [org.apache.xmlgraphics/fop "2.10"]
 
                  ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
                  [java-http-clj "0.4.3"]

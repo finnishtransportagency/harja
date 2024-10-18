@@ -3,7 +3,7 @@
 
 ;; Raportin pääryhmät jäsennettynä samaan järjestykseen, kuin ui suunnitelmissa on tarkoitettu
 (def raportin-paaryhmat
-  ["hankintakustannukset", "johto-ja-hallintakorvaus", "hoidonjohdonpalkkio", "erillishankinnat", "rahavaraukset",
+  ["hankintakustannukset", "johto-ja-hallintokorvaus", "hoidonjohdonpalkkio", "erillishankinnat", "rahavaraukset",
    "bonukset", "siirto", "tavoitehinnanoikaisu", "tavoitepalkkio", "tavoitehinnan-ylitys", "kattohinnan-ylitys",
    "sanktiot", "ulkopuoliset-rahavaraukset", "lisatyo", "muukulu-tavoitehintainen", "muukulu-eitavoitehintainen"])
 
@@ -190,7 +190,7 @@
   [data]
   (let [paaryhmat (group-by :paaryhma data)
         hankintakustannukset (get (select-keys paaryhmat ["hankintakustannukset"]) "hankintakustannukset") ;; hankinta
-        jjhallinta-kustannukset (get (select-keys paaryhmat ["johto-ja-hallintakorvaus"]) "johto-ja-hallintakorvaus") ;; johto-ja-hallintakorvaus
+        jjhallinta-kustannukset (get (select-keys paaryhmat ["johto-ja-hallintokorvaus"]) "johto-ja-hallintokorvaus") ;; johto-ja-hallintokorvaus
         hoidonjohdonpalkkiot (get (select-keys paaryhmat ["hoidonjohdonpalkkio"]) "hoidonjohdonpalkkio") ;; hoidonjohdonpalkkio
         erillishankinnat (get (select-keys paaryhmat ["erillishankinnat"]) "erillishankinnat") ;; erillishankinnat
         rahavaraukset (get (select-keys paaryhmat ["rahavaraukset"]) "rahavaraukset") ;; rahavaraukset

@@ -418,7 +418,7 @@ UNION ALL
 
 ;; Kustannusten seuranta koostuu budjetoiduista kustannuksista ja niihin liitetyistä toteutuneista (laskutetuista) kustannuksista.
 ;; Seuranta jaetaan monella eri kriteerillä osiin, jotta seuranta helpottuu
-;; (mm. Hankintakustannukset, Johto- ja Hallintakorvaus, Hoidonjohdonpalkkio, Erillishankinnat)
+;; (mm. Hankintakustannukset, Johto- ja Hallintokorvaus, Hoidonjohdonpalkkio, Erillishankinnat)
 
 ;; Testataan/vertaillaan ensimmäisenä erillishankintojen budjetoituja summia
 (deftest budjetoidut-erillishankinnat-test
@@ -473,7 +473,7 @@ UNION ALL
 (deftest budjetoidut-johtoja-hallintokorvaukset-test
   (let [vastaus (hae-kustannukset oulumhu-parametrit)
         johto_ja_h_korvaukset (filter
-                                #(when (= "johto-ja-hallintakorvaus" (:paaryhma %))
+                                #(when (= "johto-ja-hallintokorvaus" (:paaryhma %))
                                    true)
                                 vastaus)
         jjh-summa (double (apply + (map #(:budjetoitu_summa %) johto_ja_h_korvaukset)))
@@ -485,7 +485,7 @@ UNION ALL
 (deftest toteutuneet-johto-ja-hallintokorvaukset-test
   (let [vastaus (hae-kustannukset oulumhu-parametrit)
         johto_ja_h_korvaukset (filter
-                                #(when (= "johto-ja-hallintakorvaus" (:paaryhma %))
+                                #(when (= "johto-ja-hallintokorvaus" (:paaryhma %))
                                    true)
                                 vastaus)
         jjh-summa (apply + (map #(:toteutunut_summa %) johto_ja_h_korvaukset))
