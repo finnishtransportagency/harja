@@ -501,7 +501,11 @@
                        (pvm/vuosi (second (get hoitovuodet (dec %)))))
 
                   :else ;; valittu-hk on pvm
-                  (str (pvm/vuosi (first %)) "\u2014" (pvm/vuosi (second %))))]
+                  (let [alkuvuosi (pvm/vuosi (first %))
+                        loppuvuosi (pvm/vuosi (second %))]
+                    ;; jos alku- ja loppuvuosi ovat samat, ei toisteta samaa vuosilukua
+                    (str alkuvuosi (when-not (= alkuvuosi loppuvuosi)
+                                     (str "\u2014" loppuvuosi)))))]
     (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi) " (" (hk-fmt valittu-hk) ")")))
 
 #?(:cljs
