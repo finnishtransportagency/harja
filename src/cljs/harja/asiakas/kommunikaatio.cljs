@@ -1,7 +1,7 @@
 (ns harja.asiakas.kommunikaatio
   "Palvelinkommunikaation utilityt, transit lähettäminen."
   (:require [reagent.core :as r]
-            [ajax.core :refer [POST ajax-request transit-request-format transit-response-format] :as ajax]
+            [ajax.core :refer [POST ajax-request transit-request-format transit-response-format]]
             [cljs.core.async :refer [<! >! put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
@@ -10,7 +10,6 @@
             [harja.transit :as transit]
             [harja.domain.roolit :as roolit]
             [clojure.string :as str]
-            [cljs-time.core :as time]
             [goog.string :as gstr]
             [harja.tyokalut.local-storage :as local-storage])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
@@ -293,6 +292,9 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (defn pikkukuva-url [liite-id]
   (str (polku) "lataa-pikkukuva?id=" liite-id))
 
+(defn siltatarkastusliite-url [liite-id]
+  (str (polku) "lataa-siltatarkastusliite?id=" liite-id))
+
 (defn- yhdista-parametrit [parametrit]
   (str/join "&"
             (map (fn [[nimi arvo]]
@@ -306,6 +308,9 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (defn excel-url [tyyppi & parametrit]
   (str (polku) "excel?_=" (name tyyppi) "&"
        (yhdista-parametrit parametrit)))
+
+(defn logout-url []
+  (str +polku+ "sso/logout?auth=1"))
 
 (defn wmts-polku-mml []
   (str +polku+ "wmts/"))

@@ -50,8 +50,8 @@
                    (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
                    ":"
                    (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
-  :kayttaja ""
-  :salasana ""
+  :kayttaja (harja.tyokalut.env/env "HARJA_ITMF_BROKER_KAYTTAJA" "admin")
+  :salasana (harja.tyokalut.env/env "HARJA_ITMF_BROKER_SALASANA" "admin")
   :tyyppi :activemq
   :julkaise-tila? true}
 
@@ -173,12 +173,9 @@
 
  :yha-velho {}
 
- ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
- :labyrintti {:url "http://localhost:28080/sendsms"
-              :kayttajatunnus "solita-2"
-              :salasana #=(slurp "../.harja/labyrintti-salasana")
-              :sms-url ""
-              :apiavain ""}
+ ;; LinkSMS eli Labyrintti
+ :labyrintti {:sms-url "https://api.testivaylapilvi.fi/harja/sms/send"
+              :apiavain ""} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
 
  ;; ClamAV-palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}
@@ -196,14 +193,12 @@
  ;;                                                   tuotantoharjaan.
  ;; :tierekisterin-varusteet
  ;; :vesivayla
- ;; :fileyard
  ;; :varuste-api
  ;; :varusteet-ulkoiset
  ;; :tietyoilmoitusten-lahetys
  ;; :reittitarkistukset
  ;; :toteumatyokalu - sallittu vain gc ja local ympäristöissä, muualla estetty
- :pois-kytketyt-ominaisuudet #{:fileyard
-                               ; :tietyoilmoitusten-lahetys
+ :pois-kytketyt-ominaisuudet #{; :tietyoilmoitusten-lahetys
                                :itmf
                                :sonja-uudelleen-kaynnistys
                                :itmf-uudelleen-kaynnistys
@@ -230,8 +225,7 @@
  ;; Ota s3 liitetallennus käyttöön poistamalla kommenttimerkki alta,
  ;; lisäämällä oikean s3-urlin ja varmistamalla, että järjestelmä pyörii sallitussa IP:ssä
  ;:alusta :aws
- :liitteet {:fileyard-url "http://localhost:3333/"
-            :s3-url nil ;"https://4ydqtenzhk.execute-api.eu-west-1.amazonaws.com/dev/generatepresignedurl"
+ :liitteet {:s3-url nil ;"https://4ydqtenzhk.execute-api.eu-west-1.amazonaws.com/dev/generatepresignedurl"
             }
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
@@ -244,8 +238,5 @@
 
  :palautevayla {:url "https://fipadev.service-now.com"
                 :apiavain ""
-                ;; TODO: Käyttäjätunnus ja salasana ovat käytössä vanhassa Harja-ympäristössä. Poista kun ei tarvita. #yliheitto
-                :kayttajatunnus "integration.harja"
-                :salasana #=(eval (harja.tyokalut.env/env "HARJA_PALAUTEVAYLA_SALASANA" ""))
                 :paivitysaika [12 45 00]}}
 

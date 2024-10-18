@@ -21,6 +21,7 @@
             "tehtavat": [
               {
                 "id": 4,
+                "tehtavaryhmaid": 5,
                 "maara": {
                   "yksikko": "t",
                   "maara": 4
@@ -30,6 +31,7 @@
             ],
             "materiaalit": [
               {
+                "id": 5,
                 "materiaali": "suola",
                 "maara": {
                   "yksikko": "t",

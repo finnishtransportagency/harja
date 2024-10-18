@@ -106,8 +106,8 @@ $$
                     (SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 1300, kayttaja_id, urakka_id);
 
 
-        INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, tarjous_tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja)
-            VALUES (urakka_id, 1, 250000, 250000, 240000, NULL, 1.1 * 250000, NOW(), kayttaja_id);
+        INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, tarjous_tavoitehinta, tavoitehinta_siirretty, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
+            VALUES (urakka_id, 1, 250000, 250000, 240000, NULL, 1.1 * 250000, 1.1 * 250000, NOW(), kayttaja_id);
 
 
         -- MHU Hoidonjohto - SANKTIOT: vastuuhenkilön vaihtosanktio (tämän lopullinen summa indeksilaskennan kautta), arvonvähennykset
@@ -211,12 +211,13 @@ $$
                 'Asiakkaat tyytyväisiä!', '2019-10-13', kayttaja_id);
 
         -- Kulut - tavoitepalkkio
-        INSERT INTO kulu (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
-        VALUES ('2019-10-13', 1000, urakka_id, 'laskutettava', '2019-10-13'::TIMESTAMP, kayttaja_id, 'lokakuu/1-hoitovuosi');
-        INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja)
-        VALUES ((select id from kulu where kokonaissumma = 1000 AND urakka=urakka_id), 0, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'),
-                (select id from tehtavaryhma where nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio'), 'kokonaishintainen'::MAKSUERATYYPPI, 1000,
-                null, null, '2019-10-13'::TIMESTAMP, kayttaja_id);
+        INSERT INTO kulu (erapaiva, kokonaissumma, urakka, luotu, luoja, koontilaskun_kuukausi)
+        VALUES ('2019-10-13', 1000, urakka_id, '2019-10-13'::TIMESTAMP, kayttaja_id, 'lokakuu/1-hoitovuosi');
+        INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja)
+        VALUES ((select id from kulu where kokonaissumma = 1000 AND urakka=urakka_id), 0,
+                (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'),
+                (select id from tehtavaryhma where nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio'), 'kokonaishintainen'::MAKSUERATYYPPI, 'paatos', 1000,
+                '2019-10-13'::TIMESTAMP, kayttaja_id);
 
         -- Bonukset - 03/2020
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, indeksin_nimi,
@@ -229,12 +230,14 @@ $$
             VALUES ('lupausbonus', sopimus_id, urakka_id, tpi, '2020-03-15', '2020-03-15', 500, 'MAKU 2015',
                     'Hyvin luvattu!', '2020-03-13', kayttaja_id);
         -- Kulut - tavoitepalkkio
-        INSERT INTO kulu (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
-        VALUES ('2020-3-13', 500, urakka_id, 'laskutettava', '2020-3-13'::TIMESTAMP, kayttaja_id, 'maaliskuu/1-hoitovuosi');
-        INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja)
-        VALUES ((select id from kulu where kokonaissumma = 500 AND urakka=urakka_id), 0, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'),
-                (select id from tehtavaryhma where nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio'), 'kokonaishintainen'::MAKSUERATYYPPI, 500,
-                null, null, '2020-3-13'::TIMESTAMP, kayttaja_id);
+        INSERT INTO kulu (erapaiva, kokonaissumma, urakka, luotu, luoja, koontilaskun_kuukausi)
+        VALUES ('2020-3-13', 500, urakka_id, '2020-3-13'::TIMESTAMP, kayttaja_id, 'maaliskuu/1-hoitovuosi');
+        INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja)
+        VALUES ((select id from kulu where kokonaissumma = 500 AND urakka = urakka_id), 0,
+                (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'),
+                (select id from tehtavaryhma where nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio'),
+                'kokonaishintainen'::MAKSUERATYYPPI, 'paatos', 500,
+                '2020-3-13'::TIMESTAMP, kayttaja_id);
 
         -- Hoidonjohdon palkkiot - 10/2019
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,

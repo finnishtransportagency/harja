@@ -8,6 +8,7 @@
             [harja.tyokalut.big :as big]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.domain.roolit :as roolit]))
 
 (defn hae-validit-tehtavat
@@ -29,7 +30,16 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (not urakka-id)
     (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
-  (into [] (tehtavamaarat-kyselyt/tehtavaryhmat-ja-toimenpiteet-urakalle db {:urakka urakka-id})))
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        ;; Varmista, että urakka on olemassa
+        _ (when (nil? urakan-tiedot)
+            (throw (IllegalArgumentException. (format "Urakkaa %s ei ole olemassa." urakka-id))))
+        alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+        tehtavaryhmat-ja-toimenpiteet (into []
+                                        (tehtavamaarat-kyselyt/tehtavaryhmat-ja-toimenpiteet-urakalle db
+                                          {:urakka urakka-id
+                                           :urakka-voimassaolo-alkuvuosi alkuvuosi}))]
+    tehtavaryhmat-ja-toimenpiteet))
 
 (defn- paivita-tarvittaessa [idt polku arvo]
   (if (nil? (get idt arvo))
@@ -80,9 +90,13 @@
                                                :suunnitellut-maarat suunnitellut-maarat
                                                :muuttuneet-tarjouksesta muuttuneet-tarjouksesta
                                                :taso 4
-                                               :samat-maarat-vuosittain? samat-maarat-vuosittain?}
-                                               (if aluetieto
-                                                {:sopimuksen-aluetieto-maara sopimuksen-aluetieto-maara}
+                                               :samat-maarat-vuosittain? samat-maarat-vuosittain?
+                                               :rahavaraus? (:onko-rahavaraus? rivi)}
+                                              (if aluetieto
+                                                ;; Pahoittelut tästä monimutkaisuudesta. Mutta: Aluetiedoilla ei pitäisi olla kuin yksi sopimus/tarjous määrä. Jostain syystä niillä voi olla
+                                                ;; kaikille hoitokauden vuosille tietokannassa jokin arvo ja ne arvot tulevat vielä väärässä järjestyksessä. Ojennetaan ne siis oikeaan järjestykseen
+                                                ;; Koska frontti käyttää sitä ensimmäistä.
+                                                {:sopimuksen-aluetieto-maara (into (sorted-map) sopimuksen-aluetieto-maara)}
                                                 {:samat-maarat-vuosittain? samat-maarat-vuosittain?
                                                  :sopimuksen-tehtavamaarat sopimuksen-tehtavamaarat})))
                 taso)) 
@@ -203,6 +217,7 @@
     (jdbc/with-db-transaction [c db]
       (doseq [tm tehtavamaarat]
         (let [{:keys [hoitokauden-alkuvuosi tehtava-id maara]} tm
+              maara (bigdec (fmt/pilkku->piste maara))
               nykyiset-arvot (hae-suunnitellut-tehtavamaarat c user {:urakka-id urakka-id
                                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
               tehtavamaara-avain (fn [rivi]

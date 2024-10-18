@@ -506,30 +506,30 @@
             ^{:key idx}
             [:th {:colSpan (or sarakkeita 1)
                   :class (y/luokat luokka
-                                   (y/tasaus-luokka tasaa))}
+                           (y/tasaus-luokka tasaa))}
              [:div teksti]])
           rivi-ennen)])
-     [:tr
-      (map-indexed
-        (fn [i {:keys [otsikko otsikko-komp leveys nimi otsikkorivi-luokka tasaa sarake-sort] :as s-opts}]
-          ^{:key (str i nimi)}
-          [:th {:class (y/luokat otsikkorivi-luokka
-                                 (y/tasaus-luokka tasaa)
-                                 (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))
-                :width (or leveys "5%")
-                :on-click (when otsikkorivi-klikattu #(otsikkorivi-klikattu s-opts))}
-           (if otsikko-komp
-             [otsikko-komp]
-             (if-not sarake-sort
-               [:div otsikko]
-               [:div.ilmoitukset-sort
-               [:span.klikattava {:on-click (:fn sarake-sort)}
-                otsikko " " (sort-ikoni (:suunta sarake-sort)) " "]]
-               ))]) skeema)
-      (when (or nayta-toimintosarake?
+     (when-not (:piilota-otsikot? opts)
+       [:tr
+        (map-indexed
+          (fn [i {:keys [otsikko otsikko-komp leveys nimi otsikkorivi-luokka tasaa sarake-sort] :as s-opts}]
+            ^{:key (str i nimi)}
+            [:th {:class (y/luokat otsikkorivi-luokka
+                           (y/tasaus-luokka tasaa)
+                           (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))
+                  :width (or leveys "5%")
+                  :on-click (when otsikkorivi-klikattu #(otsikkorivi-klikattu s-opts))}
+             (if otsikko-komp
+               [otsikko-komp]
+               (if-not sarake-sort
+                 [:div otsikko]
+                 [:div.ilmoitukset-sort
+                  [:span.klikattava {:on-click (:fn sarake-sort)}
+                   otsikko " " (sort-ikoni (:suunta sarake-sort)) " "]]))]) skeema)
+        (when (or nayta-toimintosarake?
                 (and (not piilota-toiminnot?)
-                     tallenna))
-        [:th.toiminnot {:width "40px"} " "])]]))
+                  tallenna))
+          [:th.toiminnot {:width "40px"} " "])])]))
 
 (defn- aseta-leijuvan-otsikkorivin-sarakkeet! [leijuva-otsikkorivi oikea-taulu leveys-atomi scroll
                                                ensimmainen-sarake-sticky?]
@@ -800,6 +800,7 @@
   :hae                                  funktio, jolla voidaan näyttää arvo kentässä. Ottaa argumenttina koko rivin.
   :otsikko                              ihmiselle näytettävä otsikko
   :otsikko-komp                         jos haluaa viedä sarakkeen yläriviin (theadin th) toiminnallisuutta, kuten checkboxin
+  :muokattava?                          funktio, jonka avulla päätellään, voiko solun tietoja muokata. Anna esim. (constantly false)
 
   :solun-luokka                         funktio, joka palauttaa solun luokan\n
   :tyyppi                               kentän tietotyyppi,  #{:string :puhelin :email :pvm}
@@ -882,7 +883,8 @@
   :rivi-jalkeen-fn                       viimeisen rivin jälkeinen näytettävä rivi. Funktio,
                                         joka saa muokkaustiedot parametrina ja palauttaa
                                         sekvenssin mäppejä kuten :rivi-ennen
-  :piilota-border?                      piilottaa taulukon sarakkeiden borderit
+  :piilota-border?                      Piilottaa taulukon sarakkeiden borderit
+  :piilota-otsikot?                     Piilottaa koko otsikkorivin  
 
   :id                                   mahdollinen DOM noden id, gridin pääelementille
   :tyhja                                Jos rivejä ei ole, mitä näytetään taulukon paikalla?
@@ -906,7 +908,8 @@
            ei-footer-muokkauspaneelia? ennen-muokkausta voi-muokata-rivia?
            nollaa-muokkaustiedot-tallennuksen-jalkeen? tallennus-ei-mahdollinen-tooltip
            aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
-           taulukko-validointi taulukko-varoitus taulukko-huomautus piilota-border?] :as opts} skeema tiedot]
+           taulukko-validointi taulukko-varoitus taulukko-huomautus 
+           piilota-border?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         taulukon-ref (atom nil)
@@ -1336,21 +1339,25 @@
                                          :avattavat-rivit-auki avattavat-rivit-auki
                                          :esta-tiivis-grid? esta-tiivis-grid?
                                          :piilota-border? piilota-border?}))
-                (when-let [rivi-jalkeen (and (:rivi-jalkeen-fn opts)
-                                             ((:rivi-jalkeen-fn opts)
-                                               (if muokataan
-                                                 (vals @muokatut)
-                                                 alkup-tiedot)))]
-                  [:tr {:class (:luokka (meta rivi-jalkeen))}
-                   (for* [{:keys [teksti sarakkeita luokka tasaa]} rivi-jalkeen]
-                     [:td {:colSpan (or sarakkeita 1) :class luokka}
-                      (case tasaa
-                        :oikea [:span.pull-right teksti]
-                        teksti)])])]])
+                ;; Lisätty tuki lisätä useammpi rivi vectorin sisään.
+                ;; Toimii myös vanhalla tavalla, mallia useamman rivin yhteenvetoon voi katsoa "MPU kustannukset yhteenveto"
+                (when-let [rivit-jalkeen (and 
+                                           (:rivi-jalkeen-fn opts)
+                                           ((:rivi-jalkeen-fn opts)
+                                            (if muokataan
+                                              (vals @muokatut)
+                                              alkup-tiedot)))]
+                  (for* [rivi-jalkeen (if (vector? (first rivit-jalkeen)) rivit-jalkeen [rivit-jalkeen])]
+                    [:tr {:class (:luokka (meta rivi-jalkeen))}
+                     (for* [{:keys [teksti sarakkeita luokka tasaa]} rivi-jalkeen]
+                       [:td {:colSpan (or sarakkeita 1) :class luokka}
+                        (case tasaa
+                          :oikea [:span.pull-right teksti]
+                          teksti)])]))]])
 
             (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
               [:div.alert-warning (or max-rivimaaran-ylitys-viesti
-                                      "Liikaa hakutuloksia, rajaa hakua")])
+                                    "Liikaa hakutuloksia, rajaa hakua")])
             (when (and muokataan muokkaa-footer)
               [muokkaa-footer ohjaus])]
            ;; Taulukon allekin muokkaustoiminnot jos rivejä

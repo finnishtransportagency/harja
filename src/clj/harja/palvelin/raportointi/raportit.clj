@@ -112,8 +112,6 @@
     :suorita #'harja.palvelin.raportointi.raportit.tehtavamaarat/suorita
     :urakkatyyppi #{:teiden-hoito}}
 
-   ;; testidatasta huomoita: myös lapissa ivalon mhu-testiurakka
-   ;; urakkatyypit: teiden-hoito = mh eli mhu, hoito = vanhan tyyliset
    {:nimi :vemtr
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
                  {:tyyppi "checkbox" :konteksti nil, :pakollinen false :nimi "Vain MHUt ja HJU:t"}]
@@ -148,6 +146,7 @@
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :tiestotarkastusraportti
+    :rajoita-pdf-rivimaara  30000
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
                    {:tyyppi "tienumero", :konteksti nil, :pakollinen false, :nimi "Tienumero"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
@@ -212,24 +211,19 @@
     :urakkatyyppi #{:hoito}}
 
    {:nimi         :tyomaakokous
-    :parametrit   [{:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Materiaaliraportti"}
-                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Sanktioiden yhteenveto"}
+    :parametrit   [{:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Sanktioiden yhteenveto"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Muutos- ja lisätyöt"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laskutusyhteenveto"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laatupoikkeamat"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Soratietarkastukset"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laaduntarkastusraportti"}
-                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Erilliskustannukset"}
-                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Yksikköhintaiset työt tehtävittäin"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Tiestötarkastukset"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Kelitarkastusraportti"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Ympäristöraportti"}
                    {:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Ilmoitukset"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Toimenpiteiden ajoittuminen"}
-                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Yksikköhintaiset työt päivittäin"}
-                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Turvallisuusraportti"}
-                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Yksikköhintaiset työt kuukausittain"}]
+                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Turvallisuusraportti"}]
     :konteksti    #{"urakka"}
     :kuvaus       "Työmaakokousraportti"
     :suorita      #'harja.palvelin.raportointi.raportit.tyomaakokous/suorita
@@ -383,6 +377,8 @@
 
    {:nimi         :kanavien-liikennetapahtumat
     :konteksti    #{}
+    ;; Älä nosta PDF rajaa tälle raportille, aiheutuu liiallista muisti allocaatiota
+    :rajoita-pdf-rivimaara  1200
     :kuvaus       "Liikennetapahtumat"
     :suorita      #'harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat/suorita
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}

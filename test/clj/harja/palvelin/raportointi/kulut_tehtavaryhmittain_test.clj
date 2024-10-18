@@ -7,8 +7,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [clj-time.coerce :as c]
-            [clj-time.core :as t]
-            [clojure.string :as cstr]))
+            [clj-time.core :as t]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -35,7 +34,7 @@
                       jarjestelma-fixture))
 
 (def odotettu-raportti
-  [:raportti {:nimi "Kulut tehtäväryhmittäin"}
+  [:raportti {:nimi "Kulut tehtäväryhmittäin", :rajoita-pdf-rivimaara nil}
    [:taulukko {:viimeinen-rivi-yhteenveto? true, :otsikko "Kulut tehtäväryhmittäin ajalla 01.12.2019 - 30.08.2020"}
     [{:leveys 1, :otsikko "Tehtäväryhmä"} {:leveys 1, :fmt :raha, :otsikko "Hoitokauden alusta 01.10.2019-30.09.2020"} {:leveys 1, :fmt :raha, :otsikko "Jaksolla 01.12.2019-30.08.2020"}]
     [(list "Talvihoito (A)" 6601.94M 3300.40M)
@@ -48,7 +47,7 @@
      (list "Nurmetukset ja muut vihertyöt (N)" 222.22M 0)
      (list "Kuivatusjärjestelmät (K)" 2222.22M 0)
      (list "Kaiteet, aidat ja kivetykset (U)" 0 0)
-     (list "Päällysteiden paikkaus (Y)" 0 0)
+     (list "Päällysteiden paikkaus, muut työt (Y8)" 0 0)
      (list "Kuumapäällyste (Y1)" 11001.94M 5500.40M)
      (list "KT-Valu (Y3)" 0 0)
      (list "Kylmäpäällyste (Y2)" 0 0)
@@ -78,7 +77,7 @@
      (list "Muut, liikenneympäristön hoito (F)" 0 0)
      (list "ELY-rahoitteiset, liikenneympäristön hoito (E)" 0 0)
      (list "ELY-rahoitteiset, ylläpito (E)" 0 0)
-     (list "Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)" 0 0)
+     (list "Tilaajan rahavaraus (T3)" 0 0)
      (list "Hoidonjohtopalkkio (G)" 110.20M 60.20M)
      (list "Johto- ja hallintokorvaus (J)" 10.20M 10.20M)
      (list "Erillishankinnat (W)" 344.20M 294.20M)
@@ -142,3 +141,22 @@
                 (-> vastaus-ulkopuolella
                     (nth 2)
                     (nth 3))) "Raportille ei tule väärää tavaraa")))
+
+(deftest kulut-tehtavaryhmittain-varmista-tehtavaryhman-voimassaolo-testi
+  (let [;; Muokataan Siltapäällysteet (H) -tehtäväryhmän voimassaoloaikaa aiemmaksi kuin käytetyn urakan alkuvuosi, eli l-> 2018
+        _ (u (str "UPDATE tehtavaryhma SET voimassaolo_loppuvuosi = '2018' WHERE nimi = 'Siltapäällysteet (H)';"))
+        taulukko (nth odotettu-raportti 2)
+        raportin-tehtavaryhmat (nth taulukko 3)
+        ;; Poista siltapäällysteet odotetusta raportista, koska sitä ei anneta, kun se ei ole voimassa
+        tehtavaryhmat-ilman-siltapaallysteita (vec (remove #(= "Siltapäällysteet (H)" (first %)) raportin-tehtavaryhmat))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi       :kulut-tehtavaryhmittain
+                   :konteksti  "urakka"
+                   :urakka-id  @oulun-maanteiden-hoitourakan-2019-2024-id
+                   :parametrit {:alkupvm  (c/to-date (t/local-date 2019 12 1))
+                                :loppupvm (c/to-date (t/local-date 2020 8 30))}})
+        vastaus-tehtavaryhmat (nth (nth vastaus 2) 3)]
+    (is (vector? vastaus) "Raportille palautuu tavaraa")
+    (is (= vastaus-tehtavaryhmat tehtavaryhmat-ilman-siltapaallysteita))))

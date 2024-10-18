@@ -260,6 +260,7 @@ t.yllapitokohde IS NOT NULL AND
 SELECT
   t.jarjestelma,
   t.tyokonetyyppi,
+  t.tyokonetunnus,
   t.urakkaid,
   t.tehtavat,
   o.nimi AS organisaationimi,
@@ -277,7 +278,7 @@ WHERE sijainti IS NOT NULL AND
         (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
       (t.lahetysaika BETWEEN :alku AND :loppu) AND
       ST_Distance84(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi
-GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.urakkaid, o.nimi, u.nimi;
+GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.tyokonetunnus, t.urakkaid, o.nimi, u.nimi;
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT
@@ -328,14 +329,9 @@ SELECT ypk.id,
    AND ypk.poistettu IS NOT TRUE
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
+   -- Näytetään nykytilanteessa vuoden kaikki päällystyskohteet tilasta ja aikarajauksesta riippumatta.
    AND ((:nykytilanne AND
-        date_part('year', now())=ANY(ypk.vuodet) AND
-        ((ypka.kohde_valmis IS NULL AND
-          ypka.tiemerkinta_loppu IS NULL) OR
-         (ypka.kohde_valmis IS NULL AND
-          ypka.tiemerkinta_loppu IS NOT NULL AND
-          (now() - ypka.tiemerkinta_loppu) < INTERVAL '7 days') OR
-         (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
+        date_part('year', now())=ANY(ypk.vuodet))
         OR
         (:historiakuva AND (ypka.kohde_alku < :loppu
                             AND ((ypka.kohde_valmis IS NULL AND
@@ -384,14 +380,9 @@ SELECT ypko.id,
  WHERE ST_Distance84(ypko.sijainti, ST_MakePoint(:x, :y)) < :toleranssi
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
+   -- Näytetään nykytilanteessa vuoden kaikki päällystyskohteet tilasta ja aikarajauksesta riippumatta.
    AND ((:nykytilanne AND
-         date_part('year', now())=ANY(ypk.vuodet) AND
-         ((ypka.kohde_valmis IS NULL AND
-           ypka.tiemerkinta_loppu IS NULL) OR
-         (ypka.kohde_valmis IS NULL AND
-          ypka.tiemerkinta_loppu IS NOT NULL AND
-          (now() - ypka.tiemerkinta_loppu) < INTERVAL '7 days') OR
-         (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
+         date_part('year', now())=ANY(ypk.vuodet))
         OR
         (:historiakuva AND (ypka.kohde_alku < :loppu
                             AND ((ypka.kohde_valmis IS NULL AND

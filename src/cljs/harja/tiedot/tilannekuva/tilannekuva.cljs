@@ -124,7 +124,7 @@ hakutiheys-historiakuva 1200000)
             tk/muu false}
      :valaistus {tk/huoltokierros false
                  tk/ryhmavaihto false
-                 tk/muut-valaistus-toimenpiteet false}
+                 tk/muut-valaistusurakoiden-toimenpiteet false}
      :alueet oletusalueet
      :varustetoteumat {tk/varustetoteumat false}
      :tieluvat {tk/tieluvat false}}))

@@ -9,10 +9,11 @@
 
 (defn tehtavat-vetolaatikko
   "Anna parametrina valittu tehtävä sekä kaikki mahdolliset tehtävät, joista voidaan valita."
-  [e! rahavaraus-id rahavarauksen-tehtavat kaikki-tehtavat]
-  (let [;; Poistetaan kaikista tehtävistä ne, jotka on jo valittuna rahavaraukselle
+  [e! rahavaraus-id rahavarauksen-tehtavat kaikki-tehtavat kaikki-rahavaraukset-tehtavineen]
+  (let [rahavarausten-tehtavat (mapcat :tehtavat kaikki-rahavaraukset-tehtavineen)
+        ;; Poistetaan kaikista tehtävistä ne, jotka on jo valittuna rahavarauksille
         kaikki-muut-tehtavat (remove (fn [tehtava]
-                                       (some #(= (:id %) (:id tehtava)) rahavarauksen-tehtavat))
+                                       (some #(= (:id %) (:id tehtava)) rahavarausten-tehtavat))
                                kaikki-tehtavat)
         ;; Tehtäviä on tyyliin 150.
         ;; Ryhmitellään ne tehtäväryhmän otsikoiden perusteella kuten suunnittelu/tehtävät ja määrät sivulla
@@ -67,19 +68,25 @@
                     ;; Haetaan kaikki tehtävät, joita voidaan liittää rahavarauksiin alasvetovalikon avulla
                     (e! (tiedot/->HaeTehtavat))))
     (fn [e! {:keys [rahavaraukset-tehtavineen tehtavat] :as app}]
-      [:div.rahavaraukset-hallinta
-       [:h1 "Rahavarauksen tehtävät"]
-       [:div.urakan-rahavaraukset
-        [grid/grid
-         {:otsikko "Rahavaraukset"
-          :tunniste :id
-          :piilota-toiminnot? true
-          :vetolaatikot (into {}
-                          (map (juxt :id (fn [rivi] [tehtavat-vetolaatikko e! (:id rivi) (:tehtavat rivi) tehtavat]))
-                            rahavaraukset-tehtavineen))}
-         [{:tyyppi :vetolaatikon-tila :leveys 1}
-          {:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys 12}]
-         rahavaraukset-tehtavineen]]])))
+      (let [;; Annetaan vetolaatikolle kaikki tehtävät, jotka eivät ole vielä rahavarauksilla
+            kaytossa-olevat-tehtavat (mapcat :tehtavat rahavaraukset-tehtavineen)
+            ;; Filtteröi tehtavistä pois ne, jotka ovat jo käytössä
+            ei-kaytossa-tehtavat (remove (fn [tehtava]
+                                            (some #(= (:id %) (:id tehtava)) kaytossa-olevat-tehtavat))
+                                          tehtavat)]
+        [:div.rahavaraukset-hallinta
+         [:h1 "Rahavarauksen tehtävät"]
+         [:div.urakan-rahavaraukset
+          [grid/grid
+           {:otsikko "Rahavaraukset"
+            :tunniste :id
+            :piilota-toiminnot? true
+            :vetolaatikot (into {}
+                            (map (juxt :id (fn [rivi] [tehtavat-vetolaatikko e! (:id rivi) (:tehtavat rivi) ei-kaytossa-tehtavat rahavaraukset-tehtavineen]))
+                              rahavaraukset-tehtavineen))}
+           [{:tyyppi :vetolaatikon-tila :leveys 1}
+            {:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys 12}]
+           rahavaraukset-tehtavineen]]]))))
 
 (defn rahavarausten-tehtavat []
   [tuck tiedot/tila rahavarausten-tehtavat*])

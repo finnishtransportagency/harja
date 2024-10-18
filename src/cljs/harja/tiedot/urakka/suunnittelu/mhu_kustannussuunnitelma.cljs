@@ -33,6 +33,12 @@
       (bs/vuosikohtaiset-toimenkuvat? (pvm/vuosi alkupvm))
       false)))
 
+(defn post-2024? []
+  (let [alkupvm (-> @tiedot/yleiset :urakka :alkupvm)]
+    (if (>= (pvm/vuosi alkupvm) 2024)
+      true
+      false)))
+
 ;; Tuck e!
 (def ^{:dynamic true
        :doc "Käytännössä modaalin nappeja varten. Eli, jos tuckin process-event:issä käsitellään
@@ -187,7 +193,7 @@
           args))
       app)
     (do
-      (println "ei kirjoitusoikeutta, ei lähetetä")
+      (js/console.log "ei kirjoitusoikeutta, ei lähetetä")
       app)))
 
 
@@ -331,7 +337,27 @@
    {:toimenkuva "hankintavastaava" :kk-v 12
     :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6 :versio 2}
    {:toimenkuva "harjoittelija" :kk-v 12
-    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 7 :versio 2}])
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 7 :versio 2}
+   ;; 2024 eteenpäin alkavien versio datasta
+   {:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :kk-v 1
+    :maksukausi nil :hoitokaudet #{0} :jarjestys 1 :versio 3}
+   {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 2 :versio 3}
+   {:toimenkuva "2. työnjohtaja" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 3 :versio 3}
+   {:toimenkuva "3. työnjohtaja" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 4 :versio 3}
+   {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 5 :versio 3}
+   ;; Hankintavastaava poistetaan 2024 urakoilta. Se on ollut käytössä virallisesti vain 19-20 urakoissa, mutta
+   ;; sinne on merkattu paljon suunniteltuja kustannuksia, joten se on jätetty mukaan.
+   ;; Poistetaan se kuitenkin nyt -24 ja myöhemmin alkavilta urakoilta
+   #_ {:toimenkuva "hankintavastaava" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6 :versio 3}
+   {:toimenkuva "harjoittelija" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 7 :versio 3}
+
+   ])
 
 (defn pohjadatan-versio
   []
@@ -343,12 +369,18 @@
                                  (not (post-2022?))
                                  (= 1 (:versio %))
 
+                                 ;; Järjestys täytyy olla näin, koska post2022 palauttaa kanssa true
+                                 (post-2024?)
+                                 (= 3 (:versio %))
+
                                  (post-2022?)
                                  (= 2 (:versio %))
 
+
                                  :else
-                                 true))]
-    (into [] vuosifiltteri johto-ja-hallintokorvaukset-pohjadata)))
+                                 true))
+        data (into [] vuosifiltteri johto-ja-hallintokorvaukset-pohjadata)]
+    data))
 
 (defn aakkosta [sana]
   (get {"kesakausi" "kesäkausi"
@@ -392,7 +424,7 @@
     (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
     (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :toimistokulut])
     (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
-    (summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :rahavaraukset]))
+    (get-in yhteenvedot [:tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset])
     (summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :suunnitellut-hankinnat]))
     (summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :laskutukseen-perustuvat-hankinnat]))))
 
@@ -799,226 +831,6 @@
           {}
           (range 1 6))))))
 
-(def rahavarausten-rajapinta {:rahavaraukset-otsikot any?
-                              :rahavaraukset-yhteensa any?
-                              :rahavaraukset any?
-                              :rahavaraukset-kuukausitasolla? any?
-                              :kuukausitasolla? any?
-
-                              :aseta-rahavaraukset! any?})
-
-(defn rahavarausten-dr []
-  (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
-    ;; Rajapinta
-    rahavarausten-rajapinta
-    ;; Haku-kuvaus
-    {:rahavaraukset-otsikot {:polut [[:gridit :rahavaraukset :otsikot]]
-                             :haku identity}
-     :rahavaraukset-yhteensa {:polut [[:gridit :rahavaraukset :yhteensa :data]
-                                      [:gridit :rahavaraukset :yhteensa :nimi]]
-                              :haku (fn [data nimi]
-                                      (assoc data :nimi nimi))}
-     :rahavaraukset {:polut [[:domain :rahavaraukset]
-                             [:suodattimet :hankinnat :toimenpide]
-                             [:suodattimet :hoitokauden-numero]]
-                     :haku (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
-                             (let [arvot (into {}
-                                           (mapv (fn [[tyyppi data]]
-                                                   [{:tyyppi tyyppi
-                                                     :toimenpide valittu-toimenpide}
-                                                    (mapv #(select-keys % #{:maara :aika :yhteensa :indeksikorjattu})
-                                                      (get data (dec hoitokauden-numero)))])
-                                             (get rahavaraukset valittu-toimenpide)))]
-                               (with-meta arvot
-                                 {:valittu-toimenpide valittu-toimenpide
-                                  :hoitokauden-numero hoitokauden-numero})))}
-     :rahavaraukset-yhteenveto {:polut [[:gridit :rahavaraukset :seurannat]
-                                        [:suodattimet :hankinnat :toimenpide]
-                                        [:suodattimet :hoitokauden-numero]]
-                                :luonti (fn [seurannat valittu-toimenpide hoitokauden-numero]
-                                          (vec
-                                            (map (fn [[tyyppi _]]
-                                                   ;; Luonnissa, luotavan nimi on tärkeä, sillä sitä vasten tarkistetaan olemassa olo
-                                                   {(keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide "-" hoitokauden-numero))
-                                                    [[:gridit :rahavaraukset :seurannat tyyppi]]})
-                                              seurannat)))
-                                :haku identity}
-     :rahavaraukset-kuukausitasolla? {:polut [[:domain :rahavaraukset]
-                                              [:suodattimet :hankinnat :toimenpide]]
-                                      :luonti-init (fn [tila rahavaraukset valittu-toimenpide]
-                                                     (reduce (fn [tila tyyppi]
-                                                               (assoc-in tila [:gridit :rahavaraukset :kuukausitasolla? tyyppi] false))
-                                                       tila
-                                                       (distinct (keys (get rahavaraukset valittu-toimenpide)))))
-                                      :luonti (fn [rahavaraukset valittu-toimenpide]
-                                                (mapv (fn [tyyppi]
-                                                        {(keyword (str "rahavaraukset-kuukausitasolla-" tyyppi "?"))
-                                                         [[:gridit :rahavaraukset :kuukausitasolla? tyyppi]]})
-                                                  (distinct (keys (get rahavaraukset valittu-toimenpide)))))
-                                      :haku identity}
-     ;; Tämä kuuntelija kuuntelee domainin rahavarauksia ja gridiin tallennettuja rahavarausten arvoja
-     ;;  ja koostaa erikoisesti niistä gridin riveillä näytettävät arvot
-     :rahavaraukset-data {:polut [[:domain :rahavaraukset]
-                                  [:suodattimet :hankinnat :toimenpide]
-                                  [:suodattimet :hoitokauden-numero]]
-                          :luonti (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
-                                    (let [toimenpiteen-rahavaraukset (get rahavaraukset valittu-toimenpide)]
-                                      (mapv (fn [[tyyppi data]]
-                                              {(keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide "-" hoitokauden-numero))
-                                               [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
-                                                [:gridit :rahavaraukset :varaukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]]})
-                                        toimenpiteen-rahavaraukset)))
-                          :haku (fn [rahavaraukset johdetut-arvot]
-                                  (let [arvot (if (nil? johdetut-arvot)
-                                                (mapv #(assoc (select-keys % #{:aika :maara :indeksikorjattu})
-                                                         :yhteensa (:maara %))
-                                                  rahavaraukset)
-                                                (mapv (fn [ja a]
-                                                        (-> a
-                                                          (update :maara #(or (get ja :maara) %))
-                                                          (assoc :yhteensa (:maara a))
-                                                          (select-keys #{:aika :maara :yhteensa :indeksikorjattu})))
-                                                  johdetut-arvot
-                                                  rahavaraukset))]
-                                    arvot))}}
-    ;{:talvihoito {"vahinkojen-korjaukset" [[{:maara 3} {:maara 2} ...] [{:maara 3} {:maara 2} ...]]
-    ;              "akillinen-hoitotyo" [{:maara 1}]}
-
-    ;; Asetus-kuvaus
-    {:aseta-rahavaraukset! (fn [tila arvo {:keys [osa osan-paikka tyyppi]} paivitetaan-domain?]
-                             (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
-                                   valittu-toimenpide (get-in tila [:suodattimet :hankinnat :toimenpide])
-                                   kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
-                                   paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
-                                                                       (range hoitokauden-numero 6)
-                                                                       [hoitokauden-numero])
-
-                                   arvo (if (re-matches #"\d*,\d+" arvo)
-                                          (clj-str/replace arvo #"," ".")
-                                          arvo)
-                                   paattyy-desimaalierottajaan? (re-matches #"\d*(,|\.)$" arvo)
-                                   paivita-gridit
-                                   (fn [tila]
-                                     (reduce (fn [tila hoitokauden-numero]
-                                               (update-in tila
-                                                 [:gridit :rahavaraukset :varaukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
-                                                 (fn [hoitokauden-varaukset]
-                                                   (let [hoitokauden-varaukset (if (nil? hoitokauden-varaukset)
-                                                                                 (vec (repeat 12 {}))
-                                                                                 hoitokauden-varaukset)]
-                                                     (if osan-paikka
-                                                       (assoc-in hoitokauden-varaukset [(first osan-paikka) osa] arvo)
-                                                       (mapv (fn [varaus]
-                                                               (assoc varaus osa arvo))
-                                                         hoitokauden-varaukset))))))
-                                       tila
-                                       paivitettavat-hoitokauden-numerot))
-                                   paivita-domain
-                                   (fn [tila]
-                                     (let [arvo (if (empty? arvo)
-                                                  nil
-                                                  (js/Number arvo))]
-                                       (reduce (fn [tila hoitokauden-numero]
-                                                 (update-in tila
-                                                   [:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
-                                                   (fn [hoitokauden-varaukset]
-                                                     (if osan-paikka
-                                                       (assoc-in hoitokauden-varaukset [(first osan-paikka) osa] arvo)
-                                                       (mapv (fn [varaus]
-                                                               (assoc varaus osa arvo))
-                                                         hoitokauden-varaukset)))))
-                                         tila
-                                         paivitettavat-hoitokauden-numerot)))]
-                               ;; Halutaan pitää data atomissa olevat arvot numeroina kun taasen käyttöliittymässä sen täytyy olla string (desimaalierottajan takia)
-                               (if hoitokauden-numero
-                                 (if (and paivitetaan-domain?
-                                       (not paattyy-desimaalierottajaan?))
-                                   (-> tila paivita-domain paivita-gridit)
-                                   (paivita-gridit tila))
-                                 tila)))
-     :aseta-rahavaraukset-yhteenveto! (fn [tila arvo {:keys [osa tyyppi]}]
-                                        (let [arvo (cond
-                                                     ;; Voi olla nil on-focus eventin jälkeen, kun "vaihtelua/kk" teksti otetaan pois
-                                                     (nil? arvo) nil
-                                                     (re-matches #"\d*,\d+" arvo) (clj-str/replace arvo #"," ".")
-                                                     :else arvo)]
-                                          ;; Halutaan pitää data atomissa olevat arvot numeroina kun taasen käyttöliittymässä sen täytyy olla string (desimaalierottajan takia)
-                                          (update-in tila [:gridit :rahavaraukset :seurannat tyyppi]
-                                            (fn [yhteenveto]
-                                              (assoc yhteenveto osa arvo)))))}
-
-    ;; Seurannat-kuvaus
-    {:otsikon-asettaminen {:polut [[:suodattimet :hankinnat :toimenpide]]
-                           :aseta (fn [tila valittu-toimenpide]
-                                    (if valittu-toimenpide
-                                      (assoc-in tila [:gridit :rahavaraukset :otsikot :nimi] (toimenpide-formatointi valittu-toimenpide))
-                                      tila))}
-     ;; Hoitaa myös kuukausitasolla? filtterin asettamisen
-     :rahavaraukset-yhteenveto-asettaminen
-     {:polut [[:domain :rahavaraukset]
-              [:suodattimet :hankinnat :toimenpide]
-              [:suodattimet :hoitokauden-numero]]
-      :luonti (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
-                (when (contains? toimenpiteen-rahavaraukset-gridissa valittu-toimenpide)
-                  (let [toimenpiteen-rahavaraukset (get rahavaraukset valittu-toimenpide)]
-                    (when (not (nil? (ffirst toimenpiteen-rahavaraukset)))
-                      (vec
-                        (mapcat (fn [[tyyppi data]]
-                                  ;; Luonnissa, luotavan nimi on tärkeä, sillä sitä vasten tarkistetaan olemassa olo
-                                  [{(keyword (str "rahavaraukset-yhteenveto-" valittu-toimenpide "-" tyyppi "-" (dec hoitokauden-numero)))
-                                    ^{:args [tyyppi]} [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
-                                                       [:suodattimet :hankinnat :toimenpide]]}])
-                          toimenpiteen-rahavaraukset))))))
-      :siivoa-tila (fn [tila _ _ tyyppi]
-                     (update-in tila
-                       [:gridit :rahavaraukset :seurannat]
-                       (fn [tyyppien-data]
-                         (dissoc tyyppien-data tyyppi))))
-      :aseta (fn [tila maarat valittu-toimenpide tyyppi]
-               (when (contains? toimenpiteen-rahavaraukset-gridissa valittu-toimenpide)
-                 (let [yhteensa (summaa-mapin-arvot maarat :maara)
-                       yhteensa-indeksikorjattu (summaa-mapin-arvot maarat :indeksikorjattu)
-                       hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
-                       kuukausitasolla? (not (every? #(= (:maara (first maarat)) (:maara %))
-                                               maarat))
-                       kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
-                       paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
-                                                           (range hoitokauden-numero 6)
-                                                           [hoitokauden-numero])
-                       tila (assoc-in tila
-                              [:gridit :rahavaraukset :seurannat tyyppi]
-                              {:nimi (some-> tyyppi mhu/rahavarauksen-tyyppi->rivin-otsikko clj-str/capitalize)
-                               :yhteensa yhteensa
-                               :indeksikorjattu yhteensa-indeksikorjattu
-                               :maara (if kuukausitasolla?
-                                        vaihtelua-teksti
-                                        (:maara (first maarat)))})]
-                   (reduce (fn [tila hoitokauden-numero]
-                             (-> tila
-                               (assoc-in
-                                 [:yhteenvedot :hankintakustannukset :summat :rahavaraukset valittu-toimenpide tyyppi
-                                  (dec hoitokauden-numero)]
-                                 yhteensa)
-                               (assoc-in
-                                 [:yhteenvedot :hankintakustannukset :summat-indeksikorjattu :rahavaraukset valittu-toimenpide tyyppi
-                                  (dec hoitokauden-numero)]
-                                 yhteensa-indeksikorjattu)))
-                     tila
-                     paivitettavat-hoitokauden-numerot))))}
-     :rahavaraukset-yhteensa-seuranta {:polut [[:gridit :rahavaraukset :seurannat]]
-                                       :init (fn [tila]
-                                               (assoc-in tila [:gridit :rahavaraukset :yhteensa :data] nil))
-                                       :aseta (fn [tila data]
-                                                (let [[rahavaraukset-yhteensa indeksikorjatut-arvot]
-                                                      (reduce (fn [[summa indeksikorjattu-summa] [_ {:keys [yhteensa indeksikorjattu]}]]
-                                                                [(+ summa yhteensa) (+ indeksikorjattu-summa indeksikorjattu)])
-                                                        [0 0]
-                                                        data)]
-                                                  (assoc-in tila [:gridit :rahavaraukset :yhteensa :data]
-                                                    {:yhteensa rahavaraukset-yhteensa
-                                                     :indeksikorjattu indeksikorjatut-arvot})))}}))
-
-
 (defn maarataulukon-rajapinta [polun-osa aseta-yhteenveto-avain aseta-avain]
   {:otsikot any?
    :yhteenveto any?
@@ -1255,13 +1067,7 @@
                                                           ;; Jos osa-kuukaudesta ei ole vielä määritelty, laita siihen oletusarvoksi 1,
                                                           ;; jotta muualla ei käytetä kertolaskuissa vahingossa nil-arvoa.
                                                           (not (:osa-kuukaudesta kuukauden-jh-korvaus))
-                                                          (assoc :osa-kuukaudesta 1))
-                                                        #_#__ (println "###\n"
-                                                                "--- hoitovuosi:" hoitokauden-numero "\n"
-                                                                "--- toimenkuva:" toimenkuva "\n"
-                                                                "--- input-kentän tyyppi: " osa "\n"
-                                                                "--- data-koskee-ennen-urakkaa?:\n    " data-koskee-ennen-urakkaa? "\n"
-                                                                "--- arvo: " arvo ", arvo muunnettu:" (osa kuukauden-jh-korvaus))]
+                                                          (assoc :osa-kuukaudesta 1))]
                                                     kuukauden-jh-korvaus)
                                                   ;; Jos kuukausi ei sisälly valittuun maksukauteen, niin sitä ei päivitetä.
                                                   kuukauden-jh-korvaus))
@@ -1762,13 +1568,10 @@
 (defn- hae-osion-tilat
   "Palauttaa osion vahvistusten tilat jokaiselle hoitovuodelle"
   [app osio-kw hoitovuosilta]
-  (println "hae-osion-tila" hoitovuosilta osio-kw)
   (let [osion-tilat (get-in app [:domain :osioiden-tilat osio-kw])
         tarkastettavat (if (number? hoitovuosilta)
                          (get osion-tilat hoitovuosilta)
                          (mapv #(get osion-tilat %) hoitovuosilta))]
-    (println "hae-osion-tila tarkastettavat:" tarkastettavat)
-
     (if (vector? tarkastettavat)
       (every? some? tarkastettavat)
       (some? tarkastettavat))))
@@ -1884,6 +1687,16 @@
 ;; Kattohinnan gridin käsittelijät
 (defrecord PaivitaKattohintaGrid [])
 
+;; Tallenna Tavoitehintainen rahavaraus kantaan
+(defrecord TallennaTavoitehintainenRahavaraus [id summa indeksisumma vuosi loppuvuodet?])
+(defrecord TallennaTavoitehintainenRahavarausOnnistui [vastaus])
+(defrecord TallennaTavoitehintainenRahavarausEpaonnistui [vastaus])
+
+;; Tallenna Tavoitehinnan ulkopuolinen rahavaraus kantaan
+(defrecord TallennaTavoitehinnanUlkopuolinenRahavaraus [id summa vuosi loppuvuodet?])
+(defrecord TallennaTavoitehinnanUlkopuolinenRahavarausOnnistui [vastaus])
+(defrecord TallennaTavoitehinnanUlkopuolinenRahavarausEpaonnistui [vastaus])
+
 ;; TODO: Muutoksia ei implementoitu vielä loppuun
 (defrecord TallennaSeliteMuutokselle [])
 (defrecord TallennaSeliteMuutokselleOnnistui [])
@@ -1911,6 +1724,7 @@
   [app]
   (let [kattohinnan-kerroin 1.1
         yhteenvedot (tavoitehinnan-summaus (:yhteenvedot app))
+        _ (js/console.log "tallenna-tavoite-ja-kattohinnat :: yhteenvedot" (pr-str yhteenvedot))
         {urakka-id :id
          alkupvm :alkupvm} (:urakka @tiedot/yleiset)
         manuaaliset-kattohinnat? (some #(= (pvm/vuosi alkupvm) %) t-yhteiset/manuaalisen-kattohinnan-syoton-vuodet)
@@ -2006,8 +1820,6 @@
     (pohjadatan-taydennys-fn pohjadata (vec (sort-by (juxt :vuosi :kuukausi) asia-kannasta))
       (constantly true)
       (fn [{:keys [vuosi kuukausi summa summa-indeksikorjattu] :as data}]
-        #_(println "### maara-kk-taulukon-data vuosi:" vuosi " kuukausi: " kuukausi " summa: " summa " indeksikorjattu: " summa-indeksikorjattu)
-
         (-> data
           (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
                  :maara summa
@@ -2403,6 +2215,18 @@
             paivitetyt-vuosisummat-toimenkuvalla
             (assoc toimenkuvan-yhteenveto maksukausi paivitetyt-vuosisummat-toimenkuvalla)))))))
 
+(defn- tavoitehintaiset-rahavaraukset-hoitokausittain
+  "Odottaa saavansa listan mäppejä, jossa on anettun 'avaimen' kohdalla luku sekä :hoitokauden-numero avain, jossa on hoitokauden numero.
+  Haetaan ensin kaikki hoitokauden numerot (niitä voi olla esim 5, tai voi olla vaikka 7) ja lasketaan niille annetun avaimen summat yhteen.
+  Muodostetaan array, jossa on hoitovuoden määrän verran avaimesta saatuja summia."
+  [avain data]
+  (let [hoitokauden-numerot [1 2 3 4 5] #_ (into #{} (map :hoitokauden-numero data))
+        tulos (reduce (fn [lopputulos hoitovuosi]
+                        (let [hoitovuoden-summa (apply + (map avain (filter #(= (:hoitokauden-numero %) hoitovuosi) data)))]
+                          (conj lopputulos hoitovuoden-summa)))
+                [] hoitokauden-numerot)]
+    tulos))
+
 (extend-protocol tuck/Event
   TaulukoidenVakioarvot
   (process-event [_ app]
@@ -2432,7 +2256,10 @@
            :yhteenveto {:nimi "Määrämitattavat"}
            :yhteensa {:nimi "Yhteensä"}
            :kuukausitasolla? false})
-        (assoc-in [:gridit :rahavaraukset]
+        #_ (assoc-in [:gridit :rahavaraukset]
+          {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+           :yhteensa {:nimi "Yhteensä"}})
+        (assoc-in [:gridit :tavoitehintaiset-rahavaraukset]
           {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
            :yhteensa {:nimi "Yhteensä"}})
         (assoc-in [:gridit :erillishankinnat]
@@ -2505,7 +2332,8 @@
                                (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))]
       (-> app
         (assoc-in [:suodattimet :hoitokauden-numero] default-hoitokausi)
-        (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] false))))
+        (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] false)
+        (assoc-in [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?] false))))
 
   HaeIndeksitOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -2530,7 +2358,7 @@
           {:onnistui ->HaeHankintakustannuksetOnnistui
            :epaonnistui ->HaeHankintakustannuksetEpaonnistui
            :paasta-virhe-lapi? true}))
-      app))
+      (assoc app :kantahaku-valmis? false)))
 
   ;; TODO: Tässä käsitellään myös paljon muutakin kuin "hankintakustannuksia"
   ;;       Eventin nimi pitäisi muotoilla paremmin...
@@ -2540,7 +2368,7 @@
           pohjadata (urakan-ajat)]
       (when pohjadata
         (let [;; Kiinteähintaiset hankinnat
-              hankinnat (:kiinteahintaiset-tyot vastaus)
+              kiinteahintaiset-hankinnat (:kiinteahintaiset-tyot vastaus)
               ;; Kustannusarvioidut hankinnat
               hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
                                                           (nil? (:haettu-asia %)))
@@ -2550,15 +2378,16 @@
                                                                                                (remove #(= 0 (:summa %)))
                                                                                                (map :toimenpide-avain))
                                                                                      hankinnat-laskutukseen-perustuen)))
-              hankinnat-hoitokausittain (hankinnat-hoitokausille hankinnat pohjadata)
+              hankinnat-hoitokausittain (hankinnat-hoitokausille kiinteahintaiset-hankinnat pohjadata)
               maaramitattavat-hoitokausittain (maaramitattavat-hoitokausille
                                                 hankinnat-laskutukseen-perustuen
                                                 pohjadata)
-              rahavaraukset-hoitokausittain (rahavaraukset-hoitokausille (:kustannusarvioidut-tyot vastaus) pohjadata)
 
               ;; -- Määrätaulukoiden datan alustaminen --
               hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
                                           (:kustannusarvioidut-tyot vastaus))
+
+              tavoitehintaiset-rahavaraukset (filter #(= (:toimenpide-avain %) :tavoitehintaiset-rahavaraukset) (:kustannusarvioidut-tyot vastaus))
               erillishankinnat-hoitokausittain (hoidonjohto-jarjestys-fn
                                                  (maarataulukon-kk-data-alustus-fn
                                                    pohjadata hoidon-johto-kustannukset :erillishankinnat))
@@ -2569,10 +2398,8 @@
                                                    (maarataulukon-kk-data-alustus-fn
                                                      pohjadata hoidon-johto-kustannukset :hoidonjohtopalkkio))
               ;; Tilaajan varauksia ei tarvitse erikseen hakea tietokannasta myöhemmin, koska sille ei lasketa indeksikorjauksia.
-              tilaajan-varaukset-hoitokausittain (hoidonjohto-jarjestys-fn
-                                                   (maarataulukon-kk-data-alustus-fn
-                                                     pohjadata hoidon-johto-kustannukset :tilaajan-varaukset))
-
+              tavoitehinnan-ulkopuoliset-rahavaraukset (filter #(= (:toimenpide-avain %) :tavoitehinnan-ulkopuoliset-rahavaraukset)
+                                   (:kustannusarvioidut-tyot vastaus))
 
               ;; -- Johto- ja hallintokorvausten datan alustaminen --
               omat-jh-korvaukset (vec (reverse (sort-by #(get-in % [1 0 :toimenkuva])
@@ -2590,6 +2417,7 @@
                                ^{:key toimenkuva}
                                [:li (str toimenkuva)]))]]))
               jh-korvaukset (jh-korvaukset-vastauksesta vastaus pohjadata)
+
               ;; -- App-tila --
               app (reduce (fn [app jarjestysnumero]
                             (let [nimi (jh-omienrivien-nimi jarjestysnumero)
@@ -2607,12 +2435,14 @@
             ;; Koosta domain tilat
             (assoc-in [:domain :suunnitellut-hankinnat] hankinnat-hoitokausittain)
             (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] maaramitattavat-hoitokausittain)
-            (assoc-in [:domain :rahavaraukset] rahavaraukset-hoitokausittain)
             (assoc-in [:domain :erillishankinnat] erillishankinnat-hoitokausittain)
+            ;; Poiketen muista tiedoista. Tavoitehintaiset rahavaraukset parsitaan valmiiksi bäkkärissä
+            (assoc-in [:domain :tavoitehintaiset-rahavaraukset] tavoitehintaiset-rahavaraukset)
             (assoc-in [:domain :johto-ja-hallintokorvaukset] jh-korvaukset)
             (assoc-in [:domain :toimistokulut] toimistokulut-hoitokausittain)
             (assoc-in [:domain :hoidonjohtopalkkio] hoidonjohtopalkkio-hoitokausittain)
-            (assoc-in [:domain :tilaajan-varaukset] tilaajan-varaukset-hoitokausittain)
+            ;; Poiketen muista tiedoista. Tavoitehinnan ulkopuoliset rahavaraukset parsitaan valmiiksi bäkkärissä
+            (assoc-in [:domain :tavoitehinnan-ulkopuoliset-rahavaraukset] tavoitehinnan-ulkopuoliset-rahavaraukset)
 
             ;; Koosta yhteenvedot
             (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat]
@@ -2647,11 +2477,10 @@
                 {}
                 maaramitattavat-hoitokausittain))
 
-            (assoc-in [:yhteenvedot :hankintakustannukset :summat :rahavaraukset]
-              (summaa-rahavaraukset rahavaraukset-hoitokausittain :maara))
-
-            (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :rahavaraukset]
-              (summaa-rahavaraukset rahavaraukset-hoitokausittain :indeksikorjattu))
+            (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset]
+              (tavoitehintaiset-rahavaraukset-hoitokausittain :summa tavoitehintaiset-rahavaraukset))
+            (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :indeksikorjatut-summat :tavoitehintaiset-rahavaraukset]
+              (tavoitehintaiset-rahavaraukset-hoitokausittain :summa-indeksikorjattu tavoitehintaiset-rahavaraukset))
 
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat]
               (mapv #(summaa-mapin-arvot % :maara) erillishankinnat-hoitokausittain))
@@ -2667,9 +2496,6 @@
               (mapv #(summaa-mapin-arvot % :maara) hoidonjohtopalkkio-hoitokausittain))
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :hoidonjohtopalkkio]
               (mapv #(summaa-mapin-arvot % :indeksikorjattu) hoidonjohtopalkkio-hoitokausittain))
-
-            (assoc-in [:yhteenvedot :tilaajan-varaukset :summat :tilaajan-varaukset]
-              (mapv #(summaa-mapin-arvot % :maara) tilaajan-varaukset-hoitokausittain))
 
             ;; Suodattimet
             (assoc-in [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
@@ -2930,19 +2756,19 @@
                                               [hoitokauden-numero])
           rahavaraukset (case tallennettava-asia
                           ;; Toimenpiteen rahavaraukset (Hankintakustannukset osiosta)
-                          :kolmansien-osapuolten-aiheuttamat-vahingot
+                         #_#_ :kolmansien-osapuolten-aiheuttamat-vahingot
                           (get-in app [:domain :rahavaraukset valittu-toimenpide :kolmansien-osapuolten-aiheuttamat-vahingot])
 
-                          :akilliset-hoitotyot
+                          #_#_ :akilliset-hoitotyot
                           (get-in app [:domain :rahavaraukset valittu-toimenpide :akilliset-hoitotyot])
 
-                          :tunneleiden-hoidot
+                          #_#_ :tunneleiden-hoidot
                           (get-in app [:domain :rahavaraukset valittu-toimenpide :tunneleiden-hoidot])
 
-                          :rahavaraus-lupaukseen-1
+                          #_#_ :rahavaraus-lupaukseen-1
                           (get-in app [:domain :rahavaraukset valittu-toimenpide :rahavaraus-lupaukseen-1])
 
-                          :muut-rahavaraukset
+                          #_#_ :muut-rahavaraukset
                           (get-in app [:domain :rahavaraukset valittu-toimenpide :muut-rahavaraukset])
 
 
@@ -3030,10 +2856,10 @@
           maaramitattavat-hoitokausittain (maaramitattavat-hoitokausille
                                              hankinnat-laskutukseen-perustuen
                                              pohjadata)
-          rahavaraukset-hoitokausittain (rahavaraukset-hoitokausille (:kustannusarvioidut-tyot vastaus) pohjadata)]
+          #_#_rahavaraukset-hoitokausittain (rahavaraukset-hoitokausille (:kustannusarvioidut-tyot vastaus) pohjadata)]
       (-> app
         (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] maaramitattavat-hoitokausittain)
-        (assoc-in [:domain :rahavaraukset] rahavaraukset-hoitokausittain)
+        ;(assoc-in [:domain :rahavaraukset] rahavaraukset-hoitokausittain)
 
         (assoc-in [:yhteenvedot :hankintakustannukset :summat :laskutukseen-perustuvat-hankinnat]
           (reduce (fn [summat [toimenpide summat-hoitokausittain]]
@@ -3049,13 +2875,7 @@
                                                      (reduce #(+ %1 (:indeksikorjattu %2)) 0 summat-kuukausittain))
                                                summat-hoitokausittain)))
             {}
-            maaramitattavat-hoitokausittain))
-
-        (assoc-in [:yhteenvedot :hankintakustannukset :summat :rahavaraukset]
-          (summaa-rahavaraukset rahavaraukset-hoitokausittain :maara))
-
-        (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :rahavaraukset]
-          (summaa-rahavaraukset rahavaraukset-hoitokausittain :indeksikorjattu)))))
+            maaramitattavat-hoitokausittain)))))
 
   TallennaKustannusarvoituEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -3163,9 +2983,6 @@
   ;;       Toistaiseksi ei ole siis tarpeen tarkkailla mistä osiosta data on relevanttiin tauluun tallennettu.
   TallennaJohtoJaHallintokorvaukset
   (process-event [{:keys [tunnisteet]} app]
-    #_(println "### [TallennaJohtoJaHallintokorvaukset] tunnisteet:"  (with-out-str (cljs.pprint/pprint tunnisteet)))
-    #_(println "### [TallennaJohtoJaHallintokorvaukset] Oikeasti valittu oman rivin maksukausi:" (get-in app [:gridit :johto-ja-hallintokorvaukset :yhteenveto "oma-2" :maksukausi]))
-
     (let [osio-kw :johto-ja-hallintokorvaus
           {urakka-id :id} (:urakka @tiedot/yleiset)
           post-kutsu :tallenna-johto-ja-hallintokorvaukset
@@ -3226,11 +3043,7 @@
           tiedot {:palvelu post-kutsu
                   :payload lahetettava-data
                   :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
-                  :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui}
-          #_ (println "### [TallennaJohtoJaHallintokorvaukset] tiedot count: " (count (get-in tiedot [:payload :jhk-tiedot])))
-          #_ (println "### [TallennaJohtoJaHallintokorvaukset] tiedot: "  (with-out-str
-                                                                           (cljs.pprint/pprint
-                                                                             (get-in tiedot [:payload :jhk-tiedot]))))]
+                  :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui}]
       (when-not onko-osiolla-tila?
         (tallenna-ja-odota-vastaus app
           {:palvelu :tallenna-suunnitelman-osalle-tila
@@ -3260,8 +3073,6 @@
 
   PoistaOmaJHDdata
   (process-event [{:keys [sarake nimi maksukausi piilota-modal! paivita-ui! modal-fn!]} app]
-    #_(println "### [PoistaOmaJHDdata] sarake: " sarake " nimi: " nimi " maksukausi: " maksukausi)
-
     (let [poistettava-kustannus? (fn [{:keys [tunnit kuukausi]}]
                                    (and tunnit
                                      (not= 0 tunnit)
@@ -3348,7 +3159,7 @@
   ;; ----
 
   TallennaJaPaivitaTavoiteSekaKattohinta
-  (process-event [_ {:keys [yhteenvedot] :as app}]
+  (process-event [_ app]
     (tallenna-tavoite-ja-kattohinnat app))
 
   TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
@@ -3468,6 +3279,67 @@
   (process-event [_ app]
     (assoc-in app [:kattohinta :grid :kattohinta :koskettu?] true))
 
+  TallennaTavoitehintainenRahavaraus
+  (process-event [{:keys [id summa indeksisumma vuosi loppuvuodet?]} app]
+    (let [urakka (-> @tiedot/tila :yleiset :urakka :id)
+          muokattava-rahavaraus (first (filter
+                                         #(and (= id (:id %)) (= vuosi (:vuosi %)))
+                                         (get-in app [:domain :tavoitehintaiset-rahavaraukset])))]
+      ;; Ei yritetä tallentaa, jos mitään ei ole annettu
+      ;; Paitsi, jos poistetaan jo olemassa oleva summa
+      (if (or summa
+            (and (nil? summa) (not (nil? (:summa muokattava-rahavaraus)))))
+        (tallenna-ja-odota-vastaus app
+          {:palvelu :tallenna-tavoitehintainen-rahavaraus
+           :payload {:urakka-id urakka
+                     :rahavaraus-id id
+                     :vuosi vuosi
+                     :loppuvuodet? loppuvuodet?
+                     :summa summa
+                     :indeksisumma indeksisumma}
+           :onnistui ->TallennaTavoitehintainenRahavarausOnnistui
+           :epaonnistui ->TallennaTavoitehintainenRahavarausEpaonnistui})
+        app)))
+
+  TallennaTavoitehintainenRahavarausOnnistui
+  (process-event [{:keys [vastaus]} app]
+    ;; Vastauksessa tulee mukana kaikki uudistuneet rahavaraukset
+    (-> app
+      (assoc-in [:domain :tavoitehintaiset-rahavaraukset] vastaus)
+      (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset]
+        (tavoitehintaiset-rahavaraukset-hoitokausittain :summa vastaus))
+      (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :indeksikorjatut-summat :tavoitehintaiset-rahavaraukset]
+        (tavoitehintaiset-rahavaraukset-hoitokausittain :summa-indeksikorjattu vastaus))))
+
+  TallennaTavoitehintainenRahavarausEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Rahavarauksen tallennus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
+    app)
+
+  TallennaTavoitehinnanUlkopuolinenRahavaraus
+  (process-event [{:keys [id summa vuosi loppuvuodet?]} app]
+    (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
+      ;; Ei yritetä tallentaa, jos mitään ei ole annettu
+      (if summa
+        (tallenna-ja-odota-vastaus app
+          {:palvelu :tallenna-tavoitehinnan-ulkopuolinen-rahavaraus
+           :payload {:urakka-id urakka
+                     :vuosi vuosi
+                     :loppuvuodet? loppuvuodet?
+                     :summa summa}
+           :onnistui ->TallennaTavoitehinnanUlkopuolinenRahavarausOnnistui
+           :epaonnistui ->TallennaTavoitehinnanUlkopuolinenRahavarausEpaonnistui})
+        app)))
+
+  TallennaTavoitehinnanUlkopuolinenRahavarausOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc-in app [:domain :tavoitehinnan-ulkopuoliset-rahavaraukset] vastaus))
+
+  TallennaTavoitehinnanUlkopuolinenRahavarausEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Rahavarauksen tallennus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
+    app)
+
   TallennaSeliteMuutokselle
   (process-event [_ app]
     ;;TODO:
@@ -3511,8 +3383,6 @@
           tarvitaan-vahvistus? (pitaako-osion-muutokset-vahvistaa? app (or (tyyppi->osio asia)
                                                                          asia) hoitovuosi)
           e! (tuck/current-send-function)]
-      (println "tarvitaanko? " (tyyppi->osio asia) asia (or (tyyppi->osio asia)
-                                                          asia) hoitovuosi tarvitaan-vahvistus?)
       (cond
         vahvistus-modaali-auki? ; jos on mahdollista, et modaalin avaaminen triggeröi uuden blur-eventin esim kun vaihdetaan inputtia tabilla toiseen inputtiin ja tällöin uusi blurri ylikirjoittaa edellisen. skipataan siis kaikki, jos tää ikkuna on auki.
         app

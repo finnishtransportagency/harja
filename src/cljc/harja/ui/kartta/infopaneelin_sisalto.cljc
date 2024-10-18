@@ -91,11 +91,13 @@
                    (string/join ", " (:tehtavat tyokone))))
    :tiedot [{:otsikko "Ensimmäinen havainto" :tyyppi :pvm-aika :nimi :ensimmainen-havainto}
             {:otsikko "Viimeisin havainto" :tyyppi :pvm-aika :nimi :viimeisin-havainto}
-            {:otsikko "Tyyppi" :tyyppi :string :nimi :tyokonetyyppi}
+
             {:otsikko "Organisaatio" :tyyppi :string :hae (hakufunktio :organisaationimi #(or (:organisaationimi %) "Ei organisaatiotietoja"))}
             {:otsikko "Urakka" :tyyppi :string :hae (hakufunktio :urakkanimi #(or (:urakkanimi %) "Ei urakkatietoja"))}
             {:otsikko "Tehtävät" :tyyppi :string
-             :hae (hakufunktio :tehtavat #(string/join ", " (:tehtavat %)))}]
+             :hae (hakufunktio :tehtavat #(string/join ", " (:tehtavat %)))}
+            {:otsikko "Työkonetyyppi" :tyyppi :string :nimi :tyokonetyyppi}
+            (when (:tyokonetunnus tyokone) {:otsikko "Työkoneen lisätieto" :nimi :tyokonetunnus})]
    :data tyokone})
 
 (defn- ilmoituksen-tiedot [ilmoitus]

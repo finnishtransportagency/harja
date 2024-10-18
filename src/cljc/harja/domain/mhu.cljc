@@ -163,6 +163,7 @@
 (def suuunnitelman-osiot
   #{:johto-ja-hallintokorvaus
     :erillishankinnat
+    :tavoitehintaiset-rahavaraukset
     :hoidonjohtopalkkio
     :hankintakustannukset
 
@@ -178,7 +179,8 @@
    :hoidonjohtopalkkio #{:kustannusarvioitu-tyo}
    :hankintakustannukset #{:kiinteahintainen-tyo :kustannusarvioitu-tyo}
    :tavoite-ja-kattohinta #{:urakka-tavoite}
-   :tilaajan-rahavaraukset #{:kustannusarvioitu-tyo}})
+   :tilaajan-rahavaraukset #{:kustannusarvioitu-tyo}
+   :tavoitehintaiset-rahavaraukset #{:kustannusarvioitu-tyo}})
 
 (def osioiden-riippuvuudet
   "Kuvaa osioiden väliset riippuuvet vahvistuksen suhteen.
@@ -189,10 +191,11 @@
    :erillishankinnat {:kumoa-osiot #{:tavoite-ja-kattohinta}}
    :hoidonjohtopalkkio {:kumoa-osiot #{:tavoite-ja-kattohinta}}
    :hankintakustannukset {:kumoa-osiot #{:tavoite-ja-kattohinta}}
+   :tavoitehintaiset-rahavaraukset {:kumoa-osiot #{:tavoite-ja-kattohinta}}
 
    :tavoite-ja-kattohinta {:vahvistus-vaadittu-osiot
                            #{:johto-ja-hallintokorvaus :erillishankinnat :hoidonjohtopalkkio
-                             :hankintakustannukset}}
+                             :hankintakustannukset :tavoitehintaiset-rahavaraukset}}
 
    ;; Ei riippuvuuksia tavoite- ja kattohintaan tai muihin osioihin
    :tilaajan-rahavaraukset {}})

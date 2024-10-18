@@ -107,7 +107,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
         })
             /*.then((eiMuokattavatSarakkeet) => {
             cy.log("tienumeroIndex: " + eiMuokattavatSarakkeet)
-            cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody tr').then(($rivi) => {
+            cy.get('[data-cy=yllapitokohdeosat-Tieosoitteet] tbody tr').then(($rivi) => {
                 eiMuokattavatSarakkeet.forEach((i) => {
                     expect($rivi.children().get(i)).to.have.class('ei-muokattava');
                 });
@@ -130,7 +130,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
         // Lisätään jokunen rivi
         cy.get('[data-cy=lisaa-osa-nappi]').click({force: true}).click({force: true}).click({force: true})
         // Katsotaan, että niissä on oikeanlaisia virheitä
-        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody .virheet')
+        cy.get('[data-cy=yllapitokohdeosat-Tieosoitteet] tbody .virheet')
             .should('have.length', 12)
             .each(($virheet, index, $virheetLista) => {
                 switch (index) {
@@ -150,7 +150,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
             })
         // Katsotaan, että vain ensimmäisellä rivillä on alkuosa ja alkuetäisyys, kun taas viimeisellä rivillä on
         // loppuosa ja loppuetaisyys
-        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
+        cy.get('[data-cy=yllapitokohdeosat-Tieosoitteet]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
             expect($rivit.first().find('td').eq($otsikot.get('Aosa')).find('input')).to.have.value('1');
@@ -173,7 +173,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
     it('Rivien validointi', function () {
         cy.viewport(1100, 2000)
         // Täytetään väärässä muodoss olevaa dataa
-        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
+        cy.get('[data-cy=yllapitokohdeosat-Tieosoitteet]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
             let valitseInput = function (rivi, otsikko) {
@@ -194,8 +194,8 @@ describe('Aloita päällystysilmoitus vanha', function () {
             cy.wrap(valitseInput(3, 'Aosa')).type(3)
             cy.wrap(valitseInput(3, 'Aet')).type(50)
             // varmistelua
-            cy.contains('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] .virhe', 'Kohteenosa on päällekkäin toisen osan kanssa')
-            cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikotJalkeen) => {
+            cy.contains('[data-cy=yllapitokohdeosat-Tieosoitteet] .virhe', 'Kohteenosa on päällekkäin toisen osan kanssa')
+            cy.get('[data-cy=yllapitokohdeosat-Tieosoitteet]').gridOtsikot().then(($gridOtsikotJalkeen) => {
                 let $rivitJalkeen = $gridOtsikotJalkeen.grid.find('tbody tr');
                 let $otsikotJalkeen = $gridOtsikotJalkeen.otsikot;
                 let virheValinta = function (rivi, otsikko) {
@@ -227,7 +227,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
             cy.get('[data-cy=pot-tallenna]').should('be.disabled')
         })
 
-        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
+        cy.get('[data-cy=yllapitokohdeosat-Tieosoitteet]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
             expect($rivit.first().find('td').eq($otsikot.get('Aosa')).find('input')).to.have.value('2');
@@ -273,7 +273,7 @@ describe('Aloita päällystysilmoitus uusi', function () {
     it('Oikeat aloitustiedot', function () {
         cy.viewport(1100, 2000)
         // Tierekisteritaulukon tienumeroa, ajorataa ja kaistaa ei pitäisi pystyä muutamaan
-        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
+        cy.get('[data-cy=yllapitokohdeosat-Tieosoitteet]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
             let valitseInput = function (rivi, otsikko) {

@@ -59,7 +59,7 @@
                            (:vastausosoite integraatio/ulkoinen-sahkoposti-asetukset))
                          [:integraatioloki :db])
     :labyrintti (component/using
-                  (labyrintti/->Labyrintti "foo" "testi" "testi" "" "" (atom #{}))
+                  (labyrintti/->Labyrintti "foo" "testiapiavain" (atom #{}))
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (tloik-testi-tyokalut/luo-tloik-komponentti)
@@ -313,6 +313,13 @@
   (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         ;; 1. Tee ilmoitus tietokantaan - simuloi tilannetta, jossa T-LOIKilta on tullut jonon kautta ilmoituksia
+        ;; Hoitourakat eivät ala päivystämään uudella sijainnilla 1.10 hoitokauden vaihtuessa heti. Vaan
+        ;; vasta 12h päästä, joten muokataan alkupäivä alkamaan aiemmin, jos tämä testi ajetaan 1.10.
+        uusi-alkupvm (str (pvm/vuosi (pvm/nyt)) "-09-30")
+        _ (when (and
+                  (= 10 (pvm/kuukausi (pvm/nyt)))
+                  (= 1 (pvm/paiva (pvm/nyt))))
+            (u (format "UPDATE urakka SET alkupvm = '%s' WHERE id = %s" uusi-alkupvm urakka-id)))
         _ (tloik-testi-tyokalut/tuo-ilmoitus)
         ilmoitus-id 123456789
         ;; 2. Simuloidaan tilanne, jossa urakoitsija vastaa sähköpostilla, että toimenpidepyyntö on tullut perille
@@ -375,12 +382,12 @@
                                                          {:status 200
                                                           :header "jotain"
                                                           :body (onnistunut-sahkopostikuittaus viesti-id)})]
-      (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+      (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
             ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                    kayttaja-yit portti))
             viesti-id (str (UUID/randomUUID))
             ilmoitus-id (rand-int 99999999)
-            sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
+            sijainti aineisto-toimenpidepyynnot/sijainti-rovaniemen-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
         (async/<!! (async/timeout 2000))
         ;; 1. T-LOIK lähettää toimenpidepyynnön
@@ -456,6 +463,13 @@
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         vaarallinen-sisalto "<![CDATA[<IMG SRC=http://www.example.com/siteLogo.gif onmouseover=javascript:alert(‘XSS’);>]]>"
         ;; 1. Tee ilmoitus tietokantaan - simuloi tilannetta, jossa T-LOIKilta on tullut jonon kautta ilmoituksia
+        ;; Hoitourakat eivät ala päivystämään uudella sijainnilla 1.10 hoitokauden vaihtuessa heti. Vaan
+        ;; vasta 12h päästä, joten muokataan alkupäivä alkamaan aiemmin, jos tämä testi ajetaan 1.10.
+        uusi-alkupvm (str (pvm/vuosi (pvm/nyt)) "-09-30")
+        _ (when (and
+                  (= 10 (pvm/kuukausi (pvm/nyt)))
+                  (= 1 (pvm/paiva (pvm/nyt))))
+            (u (format "UPDATE urakka SET alkupvm = '%s' WHERE id = %s" uusi-alkupvm urakka-id)))
         _ (tloik-testi-tyokalut/tuo-ilmoitus)
         ilmoitus-id 123456789
         ;; 2. Simuloidaan tilanne, jossa urakoitsija vastaa sähköpostilla, että toimenpidepyyntö on tullut perille
@@ -467,7 +481,7 @@
         _ (odota-ehdon-tayttymista #(realized? vastaus) "Urakoitsija vastaa, että toimenpidepyyntö on tullut perille." ehdon-timeout)
         ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
         ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
-    (is (= "kuittaamaton" (:tila ilmoitus)))
+    (is (= "ei-valitetty" (:tila ilmoitus)))
     (is (= 0 (count ilmoitustoimenpiteet)) "Ilmoitustoimenpide ei ole valitys vaiheessa menossa.")))
 
 (deftest vastaanota-haro-sahkoposti-xml-api-rajapintaan

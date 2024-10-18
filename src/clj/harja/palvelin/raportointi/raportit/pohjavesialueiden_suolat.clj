@@ -19,7 +19,7 @@
 (defqueries "harja/palvelin/raportointi/raportit/pohjavesialueiden_suolat.sql")
 
 (defn loppusumma [tulos]
-  (vec (concat tulos [{:tie "Yhteensä" :yhteensa (reduce + (map :yhteensa tulos))}])))
+  (vec (concat tulos [{:tie [:arvo {:arvo "Yhteensä"}] :yhteensa (reduce + (map :yhteensa tulos))}])))
 
 (defn rivi-xf [rivi]
   [(:tie rivi)

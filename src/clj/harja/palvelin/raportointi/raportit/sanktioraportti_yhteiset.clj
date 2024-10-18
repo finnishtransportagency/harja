@@ -171,15 +171,14 @@
        (when-not yllapito?
          (luo-rivi-kaikki-yht "Sanktiot yht. (indeksikorjattu) " rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))])))
 
-(defn koosta-taulukko [otsikko {:keys [raportin-otsikot osamateriaalit sheet-nimi lisaa-excel-valiotsikot]}]
+(defn koosta-taulukko [otsikko {:keys [raportin-otsikot osamateriaalit sheet-nimi]}]
 
   [:taulukko {:otsikko otsikko
               :sheet-nimi sheet-nimi
               :sivuttain-rullattava? true
               :esta-tiivis-grid? true
               :ensimmainen-sarake-sticky? false
-              :samalle-sheetille? true
-              :lisaa-excel-valiotsikot lisaa-excel-valiotsikot}
+              :samalle-sheetille? true}
 
    ;; Muodostaa taulukon urakka otsikot
    (into [] (concat
@@ -251,11 +250,19 @@
 
 (defn- raporttirivit-muut-tuotteet [rivit alueet toimenpide-haku-fn {:keys [yhteensa-sarake?] :as optiot}]
   (let [toimenpiteet (toimenpide-haku-fn)
-        loput-toimenpidekoodit (filterv #(and
-                                           (not= "23100" (:koodi %)) ;Talvihoito
-                                           (not= "23110" (:koodi %)) ;"Liikenneympäristön hoito"
-                                           (not= "23120" (:koodi %))) ;"Soratien hoito" 23120
-                                 toimenpiteet)]
+        tyhja-toimenpiderivi-pred (fn [rivi]
+                                     (not (every? #(or (string? %) (vector? %) (zero? %)) rivi)))
+        tee-toimenpiteiden-sakkorivit (fn [sakkoryhma]
+                                        (filter
+                                          tyhja-toimenpiderivi-pred
+                                          (mapv #(luo-rivi-sakkojen-summa
+                                                   (str "        • " (:nimi %))
+                                                   rivit
+                                                   alueet
+                                                   {:sailytettavat-toimenpidekoodit #{(:koodi %)}
+                                                    :sakkoryhma sakkoryhma
+                                                    :talvihoito? false
+                                                    :yhteensa-sarake? yhteensa-sarake?}) toimenpiteet)))]
     (into []
       (concat
         [{:otsikko "Tehtäväkohtaiset sanktiot / MUUT TEHTÄVÄKOKONAISUUDET"}
@@ -266,52 +273,15 @@
            {:sakkoryhma :A
             :talvihoito? false
             :yhteensa-sarake? yhteensa-sarake?})]
-        ;; A-ryhmän eri toimenpiteiden rivit
-        ;"Liikenneympäristön hoito"
-        [(luo-rivi-sakkojen-summa (str "        • Liikenneympäristön hoito") rivit alueet
-           {:sanktiotyyppi_koodi #{15} ;"Liikenneympäristön hoito"
-            :sailytettavat-toimenpidekoodit #{"23110"} ;"Liikenneympäristön hoito"
-            :sakkoryhma :A
-            :talvihoito? false
-            :yhteensa-sarake? yhteensa-sarake?})]
-        ;"Soratien hoito"
-        [(luo-rivi-sakkojen-summa (str "        • Soratien hoito") rivit alueet
-           {:sanktiotyyppi_koodi 16 ;"Soratien hoito"
-            :sailytettavat-toimenpidekoodit #{"23120"} ;"Soratien hoito"
-            :sakkoryhma :A
-            :talvihoito? false
-            :yhteensa-sarake? yhteensa-sarake?})]
-        ;; Yhdistä loput toimenpiteet "Muut" rivin alle
-        [(luo-rivi-sakkojen-summa (str "        • Muut") rivit alueet
-           {:sanktiotyyppi_koodi 17 ;" 17 Muut hoitourakan tehtäväkokonaisuudet"
-            :sailytettavat-toimenpidekoodit (into #{} (mapv #(str (:koodi %)) loput-toimenpidekoodit))
-            :sakkoryhma :A
-            :talvihoito? false
-            :yhteensa-sarake? yhteensa-sarake?})]
+        ;; A-ryhmän eri toimenpiteiden rivi
+        (tee-toimenpiteiden-sakkorivit :A)
+
         [(luo-rivi-sakkojen-summa "B-ryhmä (vakava laiminlyönti)" rivit alueet
            {:sakkoryhma :B
             :talvihoito? false
             :yhteensa-sarake? yhteensa-sarake?})]
-        [(luo-rivi-sakkojen-summa (str "        • Liikenneympäristön hoito") rivit alueet
-           {:sanktiotyyppi_koodi 15 ;"Liikenneympäristön hoito"
-            :sailytettavat-toimenpidekoodit #{"23110"} ;"Liikenneympäristön hoito"
-            :sakkoryhma :B
-            :talvihoito? false
-            :yhteensa-sarake? yhteensa-sarake?})]
-        ;"Soratien hoito"
-        [(luo-rivi-sakkojen-summa (str "        • Soratien hoito") rivit alueet
-           {:sanktiotyyppi_koodi 16 ;"Soratien hoito"
-            :sailytettavat-toimenpidekoodit #{"23120"} ;"Soratien hoito"
-            :sakkoryhma :B
-            :talvihoito? false
-            :yhteensa-sarake? yhteensa-sarake?})]
-        ;; Yhdistä loput toimenpiteet "Muut" rivin alle
-        [(luo-rivi-sakkojen-summa (str "        • Muut") rivit alueet
-           {:sanktiotyyppi_koodi 17 ;" 17 Muut hoitourakan tehtäväkokonaisuudet"
-            :sailytettavat-toimenpidekoodit (into #{} (mapv #(str (:koodi %)) loput-toimenpidekoodit))
-            :sakkoryhma :B
-            :talvihoito? false
-            :yhteensa-sarake? yhteensa-sarake?})]
+        ;; B-ryhmän eri toimenpiteiden rivi
+        (tee-toimenpiteiden-sakkorivit :B)
 
         [(luo-rivi-sakkojen-summa "Muut tehtäväkokonaisuudet yhteensä" rivit alueet
            {:talvihoito? false
@@ -538,7 +508,6 @@
                    "Sakot ja bonukset"
                    (-> taulukon-tiedot
                      (assoc :sheet-nimi "Sakot ja bonukset")
-                     (assoc :lisaa-excel-valiotsikot :true)
                      (assoc :osamateriaalit paallystysurakan-rivit)))]
                 [:raportti {:nimi raportin-nimi :orientaatio :landscape}
                  [:otsikko otsikko]
@@ -548,7 +517,6 @@
                    "Sanktiot"
                    (-> taulukon-tiedot
                      (assoc :sheet-nimi "Sanktiot")
-                     (assoc :lisaa-excel-valiotsikot :true)
                      (assoc :osamateriaalit sanktioiden-rivit)))
 
                  ;; Bonustaulukko
@@ -556,7 +524,6 @@
                    "Bonukset"
                    (-> taulukon-tiedot
                      (assoc :sheet-nimi "Bonukset")
-                     (assoc :lisaa-excel-valiotsikot :true)
                      (assoc :osamateriaalit bonusten-rivit)))
 
                  ;; Arvonvähennystaulukko
@@ -564,7 +531,6 @@
                    "Arvonvähennykset"
                    (-> taulukon-tiedot
                      (assoc :sheet-nimi "Arvonvähennykset")
-                     (assoc :lisaa-excel-valiotsikot :true)
                      (assoc :osamateriaalit arvonvahennys-rivit)))])]
     (if info-teksti
       (conj runko [:teksti info-teksti])

@@ -51,6 +51,28 @@
                                                      paallekkyydet}
                                                     (not alikohde?))))
 
+(defn paallystekerros-rc-prosentti [rivi massat]
+  (let [rem-toimenpide? (#{pot2-domain/+rem-toimenpide+ pot2-domain/+remo-toimenpide+} (:toimenpide rivi))
+        karhinta-toimenpide? (= pot2-domain/+kulutuskerros-toimenpide-karhinta+ (:toimenpide rivi))
+        massa (first (filter #(= (:materiaali rivi) (::pot2-domain/massa-id %)) massat))
+        asfalttirouheen-osuus (->> massa
+                                ::pot2-domain/runkoaineet
+                                (filter #(= pot2-domain/+runkoainetyyppi-asfalttirouhe+ (:runkoaine/tyyppi %)))
+                                first
+                                :runkoaine/massaprosentti)]
+    (cond
+      ;; rem-toimenpiteissä rc%, eli asfalttirouheen osuus on se massa, mitä EI tuoda uutena vaan mnurskataan olemassa olevasta asfaltista.
+      ;; Oletus on, että vanhan asfaltin ja uuden sekoitus on aina 100kg/m2.
+      rem-toimenpide?
+      (- 100 (:massamenekki rivi))
+
+      ;; Karhinnassa on RC% aina 100
+       karhinta-toimenpide?
+      100
+
+      :else
+      asfalttirouheen-osuus)))
+
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat kulutuskerros-muokattu?] :as app}
@@ -154,6 +176,8 @@
        :virheet virheet-atom
        :varoitukset varoitukset-atom
        :piilota-toiminnot? true
+       :jarjesta-avaimen-mukaan identity
+       :virheet-ylos? false
        ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
        ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
        :rivi-varoitus (:rivi validointi)
@@ -287,6 +311,10 @@
                  (:kokonaismassamaara rivi)
                  (:pinta_ala rivi)))
         :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
+       {:otsikko "RC%" :nimi :rc-prosentti :tyyppi :positiivinen-numero :kokonaisluku? true :tasaa :oikea
+        :hae (fn [rivi]
+               (paallystekerros-rc-prosentti rivi massat))
+        :muokattava? (constantly false) :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
        {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata? ohjauskahva]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]

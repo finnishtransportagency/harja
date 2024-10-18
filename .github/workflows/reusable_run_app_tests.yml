@@ -35,6 +35,11 @@ on:
         default: 'true'
         type: string
         required: false
+      deps-tree:
+        description: 'Enabloi deps-tree job'
+        default: 'true'
+        type: string
+        required: false
       lint-clj:
         description: 'Enabloi lint-clj job'
         default: 'true'
@@ -66,6 +71,28 @@ env:
   GH_DOCKER_REGISTRY: ghcr.io
 
 jobs:
+  # Tulosta Clojure deps tree, jotta voidaan nähdä riippuuvuuksien hierarkia PR:ssä
+  deps-tree:
+    if: ${{ inputs.deps-tree == 'true' }}
+    name: "Print Clojure deps tree"
+    runs-on: ubuntu-latest
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-build-env-and-tools
+
+      # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
+      - name: Lein deps :tree
+        continue-on-error: true
+        run: lein with-profile +pedantic-warn deps :tree
+        #run: lein with-profile +pedantic-abort deps :tree
+
   # Linter job
   lint-clj:
     if: ${{ inputs.lint-clj == 'true' }}
@@ -210,7 +237,7 @@ jobs:
 
       - name: Build and tag Harja app test image
         id: build-test-image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         env:
           IMAGE_TAG: ${{ github.sha }}
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
@@ -452,6 +479,7 @@ jobs:
         uses: ./.github/actions/setup-build-env-and-tools
         with:
           install-java: true
+          install-leiningen: false
           install-clojure-deps: false
           install-node-deps: false
 

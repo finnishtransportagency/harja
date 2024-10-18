@@ -41,6 +41,25 @@
 (def yhteenveto-tumma-vari "#fafafa")
 (def varoitus-punainen-vari "#dd0000")
 
+(defn- lisaa-non-breaking-spacet [val]
+  (if (string? val)
+    ;; Korvaa normaalit spacet non-breaking spaceilla
+    (str/replace val #" " "\u00A0")
+    val))
+
+(defn- formatoija-fmt-mukaan [fmt]
+  (case fmt
+    ;; Jos halutaan tukea erityyppisiä sarakkeita,
+    ;; pitää tänne lisätä formatter.
+    :kokonaisluku #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/kokonaisluku-opt) %)
+    :numero #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/desimaaliluku-opt) % 1 true)
+    :numero-3desim #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/pyorista-ehka-kolmeen) %)
+    :prosentti-0desim #(raportti-domain/yrita fmt/prosentti-opt % 0)
+    :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
+    :raha #(raportti-domain/yrita fmt/euro-opt %)
+    :pvm #(raportti-domain/yrita fmt/pvm-opt %)
+    str))
+
 (defmulti muodosta-pdf
           "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
           Dispatch tyypin mukaan (vektorin 1. elementti)."
@@ -49,7 +68,7 @@
               (first elementti)
               :vain-arvo)))
 
-(def ^:const +max-rivimaara+ 1000)
+(def ^:const +max-rivimaara-default+ 1000)
 
 (defn cdata
   "Käsittele arvo puhtaana tekstinä."
@@ -141,7 +160,8 @@
     [:fo:inline
      [:fo:inline (str etuliite
                    (cond
-                     desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara  ryhmitelty?)
+                     desimaalien-maara (-> (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+                                         (lisaa-non-breaking-spacet))
                      :else arvo))]
      [:fo:inline (str "\n" "(" etuliite (fmt/prosentti-opt prosentti) ")")]]))
 
@@ -181,19 +201,6 @@
                     :number-columns-spanned (count sarakkeet)}
     [:fo:block {:space-after "0.5em"}]
     [:fo:block (cdata otsikko)]]])
-
-(defn- formatoija-fmt-mukaan [fmt]
-  (case fmt
-    ;; Jos halutaan tukea erityyppisiä sarakkeita,
-    ;; pitää tänne lisätä formatter.
-    :kokonaisluku #(raportti-domain/yrita fmt/kokonaisluku-opt %)
-    :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
-    :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
-    :prosentti-0desim #(raportti-domain/yrita fmt/prosentti-opt % 0)
-    :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
-    :raha #(raportti-domain/yrita fmt/euro-opt %)
-    :pvm #(raportti-domain/yrita fmt/pvm-opt %)
-    str))
 
 (defn- korosta-kolumni-arvosta
   "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
@@ -284,7 +291,7 @@
                          {:font-weight "bold"})]
           [:fo:table-row
            (for [i (range (count sarakkeet))
-                 :let [arvo-datassa (nth rivi i)
+                 :let [arvo-datassa (nth rivi i nil)
                        ;; ui.yleiset/totuus-ikonin tuki toistaiseksi tämä
                        arvo-datassa (if (= [:span.livicon-check] arvo-datassa)
                                       "X"
@@ -326,16 +333,16 @@
                            (cdata (str naytettava-arvo))
                            naytettava-arvo)]])])))))
 
-(defn- taulukko-alaosa [rivien-maara sarakkeet viimeinen-rivi-yhteenveto?]
-  (when (> rivien-maara +max-rivimaara+)
+(defn- taulukko-alaosa [rivien-maara sarakkeet viimeinen-rivi-yhteenveto? rivi-raja]
+  (when (> rivien-maara rivi-raja)
     [:fo:table-row
      [:fo:table-cell {:padding "1mm"
                       :number-columns-spanned (count sarakkeet)}
       [:fo:block {:space-after "0.5em"}]
-      [:fo:block (str "Taulukossa näytetään vain ensimmäiset " +max-rivimaara+ " rivia. "
-                      "Tarkenna hakuehtoa. "
-                      (when viimeinen-rivi-yhteenveto?
-                        "Yhteenveto on laskettu kaikista riveistä"))]]]))
+      [:fo:block (str "Taulukossa näytetään vain ensimmäiset " rivi-raja " riviä. "
+                   "Tarkenna hakuehtoa tai käytä Excel-vientiä."
+                   (when viimeinen-rivi-yhteenveto?
+                     "Yhteenveto on laskettu kaikista riveistä"))]]]))
 
 (defn taulukko-header [{:keys [oikealle-tasattavat-kentat] :as optiot} sarakkeet]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
@@ -365,11 +372,12 @@
            [:fo:block (cdata otsikko)]])
         sarakkeet)]]))
 
-(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? tyhja] :as optiot}]
+(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? tyhja rajoita-pdf-rivimaara] :as optiot}]
   (let [rivien-maara (count data)
         viimeinen-rivi (last data)
-        data (if (> (count data) +max-rivimaara+)
-               (vec (concat (take +max-rivimaara+ data)
+        rivi-raja (or rajoita-pdf-rivimaara +max-rivimaara-default+)
+        data (if (> (count data) rivi-raja)
+               (vec (concat (take rivi-raja data)
                             (when viimeinen-rivi-yhteenveto?
                               [viimeinen-rivi])))
                data)]
@@ -382,115 +390,27 @@
          [:fo:block {:space-after "0.5em"}]
          [:fo:block (or tyhja "Ei tietoja")]]])
      (taulukko-rivit sarakkeet data viimeinen-rivi optiot)
-     (taulukko-alaosa rivien-maara sarakkeet viimeinen-rivi-yhteenveto?)]))
+     (taulukko-alaosa rivien-maara sarakkeet viimeinen-rivi-yhteenveto? rivi-raja)]))
 
-(defn arvotaulukko-valittu-aika [kyseessa-kk-vali? otsikko hoitokauden-otsikko valittu-pvm-otsikko hoitokauden-arvo laskutetaan-arvo]
+(defn- skaalattu-fontin-koko [sarakkeet]
+  (let [sarakkeet-lkm (count sarakkeet)]
+    (str (float (- 1 (min 0.5 (* sarakkeet-lkm 0.025)))) "em")))
 
-  [:fo:table {:font-size "9pt" :margin-bottom "12px"}
-   [:fo:table-column {:column-width "56%"}]
-
-   [:fo:table-column {:column-width "20%"}]
-   [:fo:table-column {:column-width "20%"}]
-
-   [:fo:table-body
-    [:fo:table-row
-     ;; Selitys
-     [:fo:table-cell [:fo:block {:font-weight "bold"} otsikko]]
-     ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
-     [:fo:table-cell [:fo:block {:font-weight "bold"} hoitokauden-otsikko]]
-     (when kyseessa-kk-vali?
-       [:fo:table-cell [:fo:block {:font-weight "bold"} valittu-pvm-otsikko]])]
-
-    ;; Arvot rahana
-    [:fo:table-row
-     [:fo:table-cell [:fo:block ""]]
-     [:fo:table-cell [:fo:block hoitokauden-arvo]]
-     (when kyseessa-kk-vali?
-       [:fo:table-cell [:fo:block laskutetaan-arvo]])]]])
-
-(defn arvotaulukko-ei-valittua-aikaa [otsikko hoitokauden-arvo]
-  [:fo:table {:font-size "9pt"}
-   [:fo:table-column {:column-width "56%"}]
-   [:fo:table-column {:column-width "20%"}]
-
-   [:fo:table-body
-    [:fo:table-row
-     [:fo:table-cell [:fo:block {:font-weight "bold"} otsikko]]
-     [:fo:table-cell [:fo:block hoitokauden-arvo]]]]])
-
-(defn hoitokausi-kuukausi-arvotaulukko [sarakkeet tiedot]
-  ;; Käytetään hoitokauden & valitun kuukauden raha-arvojen näyttöön 
-  ;; Sarakkeet pitää sisältää hoitokauden & valitun kuukauden otsikot, esim: (Hoitokauden alusta, Laskutetaan 09/20)
-  ;; Tiedoissa on raha-arvot desimaaleina (BigDecimal) ja niiden selitykset (str), esim: (Muut kustannukset yhteensä, 700.369M 0.0M)
-  ;; Mikäli selityksen jälkeen on 2 desimaalia, funktio generoi <Hoitokausi> & <valittu kk> -otsikot joiden alla näkyy arvot
-  ;; Mikäli selityksen jälkeen on vain 1 desimaali, ei erillisiä otsikkoja tehdä, vaan näytetään pelkästään <selitys: > <arvo>
-
-  ;; Esimerkki 1: 
-  ;; OTSIKOT:  ()
-  ;; ARVOT:  (Hankinnat ja hoidonjohto yhteensä 123.123M)
-  ;; Näytetään seuraavasti: "Hankinnat ja hoidonjohto yhteensä: 123.123 €"
-
-  ;; Esimerkki 2: 
-  ;; OTSIKOT: (Hoitokauden alusta Laskutetaan 09/20)
-  ;; ARVOT: (Toteutuneet kustannukset 123.123M 0.0M)
-  ;; Näytetään seuraavasti: "Toteutuneet kustannukset:  Hoitokauden alusta   Laskutetaan 09/20
-  ;;                                                       123.123 €              0.0 €       "
-
-  (let [laskutus-otsikot (raportti-domain/hoitokausi-kuukausi-laskutus-otsikot sarakkeet) ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
-        hoitokauden-otsikko (first laskutus-otsikot)
-        valittu-pvm-otsikko (second laskutus-otsikot)
-
-        ;; Hakee taulukon arvot, selitys on string jonka perässä laskutus arvot raha desimaaleina
-        arvot (raportti-domain/hoitokausi-kuukausi-arvot tiedot decimal?)
-        koko (dec (count arvot))]
-
-    ;; Haetaan selitysten arvot
-    ;; Jos arvo sisältää 2 desimaali-muuttujaa, tälle tulee hoitokausi/laskutetaan otsikot
-    (for [[n elem] (map-indexed #(vector %1 %2) arvot)]
-
-      ;; Alkaa aina otsikolla joka on string
-      (when (string? elem)
-        (if (>= koko (+ n 2))
-          (let [hoitokauden-arvo (nth arvot (inc n))
-                laskutetaan-arvo (nth arvot (+ n 2))]
-
-            (if (decimal? laskutetaan-arvo)
-
-              ;; Jos otsikolla on 2 desimaali-muuttujaa, tehdään 2 otsikkoa lisää ja annetaan niiden alle arvot
-              (arvotaulukko-valittu-aika
-               true
-               (str elem ":")
-               (str hoitokauden-otsikko)
-               (str valittu-pvm-otsikko)
-               (str (fmt/euro hoitokauden-arvo))
-               (str (fmt/euro laskutetaan-arvo)))
-
-              ;; Seuraava muuttuja on string, eli otsikko ja arvo
-              (arvotaulukko-ei-valittua-aikaa
-               (str elem ":")
-               (str (fmt/euro hoitokauden-arvo)))))
-
-          ;; Muuttujia ei ole kun 2, eli otsikko ja arvo
-          (let [hoitokauden-arvo (nth arvot (inc n))]
-            (arvotaulukko-ei-valittua-aikaa
-             (str elem ":")
-             (str (fmt/euro hoitokauden-arvo)))))))))
-
-(defn taulukko [otsikko hoitokausi-arvotaulukko? sarakkeet data optiot]
+(defn taulukko [otsikko sarakkeet data {{:keys [skaalaa-teksti?]} :pdf-optiot :as optiot}]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
-    (if hoitokausi-arvotaulukko?
-      (hoitokausi-kuukausi-arvotaulukko sarakkeet data)
+    [:fo:block {:space-before "1em" :font-size otsikon-fonttikoko :font-weight "bold"} otsikko
+     ;; Taulukon fonttikoko skaalataan parent block-elementin font-size arvon mukaan
+     ;; Mitä enemmän sarakkeita, sitä pienempi fonttikoko. Lähtöarvona on parent block-elementin font-size.
+     [:fo:table (when skaalaa-teksti?
+                  {:font-size (skaalattu-fontin-koko sarakkeet)})
+      (for [{:keys [leveys]} sarakkeet]
+        [:fo:table-column {:column-width leveys}])
+      (taulukko-header optiot sarakkeet)
+      (taulukko-body sarakkeet data optiot)]
+     [:fo:block {:space-after "1em"}]]))
 
-      [:fo:block {:space-before "1em" :font-size otsikon-fonttikoko :font-weight "bold"} otsikko
-       [:fo:table
-        (for [{:keys [leveys]} sarakkeet]
-          [:fo:table-column {:column-width leveys}])
-        (taulukko-header optiot sarakkeet)
-        (taulukko-body sarakkeet data optiot)]
-       [:fo:block {:space-after "1em"}]])))
-
-(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko hoitokausi-arvotaulukko?] :as optiot} sarakkeet data]]
-  (taulukko otsikko hoitokausi-arvotaulukko? sarakkeet data optiot))
+(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko] :as optiot} sarakkeet data]]
+  (taulukko otsikko sarakkeet data optiot))
 
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
@@ -627,12 +547,22 @@
                    (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
                      [:fo:block {:padding "1mm 0" :border "solid 0.2mm black" :margin-bottom "2mm"}
                       (muodosta-pdf [:yhteenveto tiedot])])]
+
             (keep identity
-              (mapcat #(when %
-                         (if (seq? %)
-                           (map muodosta-pdf %)
-                           [(muodosta-pdf %)]))
+              (mapcat (fn [elem]
+                        (when elem
+                          (if (seq? elem)
+                            ;; Passaa taulukolle pdf rajoitus 
+                            (map #(if (= (first %) :taulukko)
+                                    (muodosta-pdf (update % 1 assoc :rajoita-pdf-rivimaara (:rajoita-pdf-rivimaara raportin-tunnistetiedot)))
+                                    (muodosta-pdf %))
+                              elem)
+                            ;; Passaa taulukolle pdf rajoitus 
+                            (if (= (first elem) :taulukko)
+                              [(muodosta-pdf (update elem 1 assoc :rajoita-pdf-rivimaara (:rajoita-pdf-rivimaara raportin-tunnistetiedot)))]
+                              [(muodosta-pdf elem)]))))
                 sisalto))
+
             #_[[:fo:block {:id "raportti-loppu"}]])))
       {:tiedostonimi (str tiedoston-nimi ".pdf")})))
 

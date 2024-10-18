@@ -1,5 +1,5 @@
 (ns harja.views.tierekisteri
-  "Tierekisterin tarkastelunäkymä. Lähinnä debug käyttöön."
+  "Geometrioiden tarkastelunäkymä. Lähinnä debug-käyttöön."
   (:require [reagent.core :refer [atom] :as r]
             [harja.tyokalut.vkm :as vkm]
             [harja.tiedot.navigaatio :as nav]

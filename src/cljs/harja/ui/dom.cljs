@@ -78,6 +78,16 @@
         ie-versio (maarita-ie-versio-user-agentista ua)]
     (and (integer? ie-versio) (<= 10 ie-versio))))
 
+(defn enter-nappain? [event] (= "Enter" (-> event .-key)))
+(defn tab+shift-nappaimet? [event] (and (= "Tab" (-> event .-key)) (-> event .-shiftKey)))
+(defn tab-nappain-ilman-shiftia? [event] (and (= "Tab" (-> event .-key)) (not (-> event .-shiftKey))))
+(defn esc-nappain? [event] (= "Escape" (-> event .-key)))
+(defn nuoli-oikealle? [event] (= "ArrowRight" (-> event .-key)))
+(defn nuoli-vasemmalle? [event] (= "ArrowLeft" (-> event .-key)))
+(defn nuoli-ylos? [event] (= "ArrowUp" (-> event .-key)))
+(defn nuoli-alas? [event] (= "ArrowDown" (-> event .-key)))
+(defn valilyonti? [event] (= " " (-> event .-key)))
+
 (defonce korkeus (r/atom (-> js/window .-innerHeight)))
 (defonce leveys (r/atom (-> js/window .-innerWidth)))
 

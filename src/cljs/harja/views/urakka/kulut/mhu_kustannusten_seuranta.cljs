@@ -9,6 +9,7 @@
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
+            [harja.ui.dom :as dom]
             [harja.ui.debug :as debug]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+ ajax-loader-pieni]]
@@ -172,7 +173,7 @@
                  muodostetut-tehtavat))))
     toimenpiteet))
 
-(defn- paaryhman-rivitys [e! app paaryhma paaryhma-avain toimenpiteet rivit-paaryhmittain]
+(defn- paaryhman-rivitys [e! app otsikko paaryhma-avain toimenpiteet rivit-paaryhmittain nayta-suunnitellut?]
   (let [row-index (r/atom 0)
         neg? (negatiivinen? paaryhma-avain rivit-paaryhmittain)
         budjetoitu (fmt->big ((keyword (str (name paaryhma-avain) "-budjetoitu")) rivit-paaryhmittain))
@@ -184,23 +185,31 @@
                     (big/->big (or ((keyword (str (name paaryhma-avain) "-toteutunut")) rivit-paaryhmittain) 0))
                     (big/->big (or ((keyword (str (name paaryhma-avain) "-budjetoitu-indeksikorjattu")) rivit-paaryhmittain) 0))
                     neg?)
-        vahvistettu (get rivit-paaryhmittain (keyword (str (name paaryhma-avain) "-indeksikorjaus-vahvistettu")))]
+        vahvistettu (get rivit-paaryhmittain (keyword (str (name paaryhma-avain) "-indeksikorjaus-vahvistettu")))
+        avaa-tai-sulje-haitari (fn [event]
+                    (when (dom/enter-nappain? event)
+                      (e! (kustannusten-seuranta-tiedot/->AvaaRivi paaryhma-avain))))]
     (doall (concat
-             [^{:key (str paaryhma "-" (hash toimenpiteet))}
+             [^{:key (str otsikko "-" (hash toimenpiteet))}
               [:tr.bottom-border.selectable {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi paaryhma-avain))
-                                             :key paaryhma}
+                                             :key (str "paaryhma-" otsikko "-" (hash toimenpiteet))}
                [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
                 (if (and (> (count toimenpiteet) 0)
                       (contains? (:avatut-rivit app) paaryhma-avain))
-                  [:img {:alt "Expander" :src "images/expander-down.svg"}]
+                  [:img {:alt "Expander"
+                         :src "images/expander-down.svg"
+                         :tabIndex "0"
+                         :on-key-down #(avaa-tai-sulje-haitari %)}]
                   (when (> (count toimenpiteet) 0)
-                    [:img {:alt "Expander" :src "images/expander.svg"}]))]
+                    [:img {:alt "Expander"
+                           :src "images/expander.svg"
+                           :tabIndex "0"
+                           :on-key-down #(avaa-tai-sulje-haitari %)}]))]
                [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
                [:td {:style {:width (:tehtava leveydet)
-                             :font-weight "700"}} paaryhma]
-               [:td.numero {:style {:width (:suunniteltu leveydet)}} budjetoitu]
-               [:td.numero {:class (when (or (false? vahvistettu))
-                                     "vahvistamatta")
+                             :font-weight "700"}} otsikko]
+               [:td.numero {:style {:width (:suunniteltu leveydet)}} (when nayta-suunnitellut? budjetoitu)]
+               [:td.numero {:class (when (or (false? vahvistettu)) "vahvistamatta")
                             :style {:width (:indeksikorjattu leveydet)}
                             ;; Alustavaa hahmotelmaa, miten voitaisiin saada siirtymä kustannusten suunnitteluun
                             ;; Voidaan tehdä loppuun, kun kustannusten suunnittelu on ensin refaktoroitu kokonaan
@@ -209,12 +218,12 @@
                                 (do
                                   (.preventDefault e)
                                   (siirtymat/kustannusten-seurantaan paaryhma)))}
-                indeksikorjattu]
+                (when nayta-suunnitellut? indeksikorjattu)]
                [:td.numero {:style {:width (:toteuma leveydet)}} toteutunut]
                [:td {:class (if neg? "negatiivinen-numero" "numero")
-                     :style {:width (:erotus leveydet)}} (str (when neg? "+ ") erotus)]
+                     :style {:width (:erotus leveydet)}} (when nayta-suunnitellut? (str (when neg? "+ ") erotus))]
                [:td {:class (if neg? "negatiivinen-numero" "numero")
-                     :style {:width (:prosentti leveydet)}} prosentti]]]
+                     :style {:width (:prosentti leveydet)}} (when nayta-suunnitellut? prosentti)]]]
 
              (when (contains? (:avatut-rivit app) paaryhma-avain)
                (mapcat (fn [rivi]
@@ -291,8 +300,7 @@
   (let [hankintakustannusten-toimenpiteet (toimenpidetason-rivitys e! app (:hankintakustannukset rivit-paaryhmittain))
         hoidonjohdonpalkkiot (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:hoidonjohdonpalkkio rivit-paaryhmittain)))
         erillishankinnat (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:erillishankinnat rivit-paaryhmittain)))
-        jjhk-toimenpiteet (toimenpidetason-rivitys e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
-        lisatyot (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:lisatyot rivit-paaryhmittain))
+        johto-ja-hallintokorvaukset (taulukoi-paaryhman-tehtavat :johto-ja-hallintokorvaus (:tehtavat (:johto-ja-hallintokorvaus rivit-paaryhmittain)))
         rahavaraukset-toimenpiteet (toimenpidetason-rivitys e! app (:rahavaraukset rivit-paaryhmittain))
         bonukset (:bonukset rivit-paaryhmittain)
         ulkopuoliset-rahavaraukset (:ulkopuoliset-rahavaraukset rivit-paaryhmittain)
@@ -304,6 +312,9 @@
         tavoitepalkkio (get rivit-paaryhmittain :tavoitepalkkio)
         tavoitehinnan-ylitys (get rivit-paaryhmittain :tavoitehinnan-ylitys)
         kattohinnan-ylitys (get rivit-paaryhmittain :kattohinnan-ylitys)
+        muukulut-tavoitehintainen (taulukoi-paaryhman-tehtavat :muukulu-tavoitehintainen (:tehtavat (:muukulu-tavoitehintainen rivit-paaryhmittain)))
+        muukulut-eitavoitehintainen (taulukoi-paaryhman-tehtavat :muukulu-eitavoitehintainen (:tehtavat (:muukulu-eitavoitehintainen rivit-paaryhmittain)))
+        lisatyo (taulukoi-paaryhman-tehtavat :lisatyo (:tehtavat (:lisatyo rivit-paaryhmittain)))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuosi-nro-menossa (urakka-tiedot/kuluva-hoitokausi-nro (pvm/nyt) (-> @tila/yleiset :urakka :loppupvm))
@@ -315,7 +326,7 @@
         yht-negatiivinen? (big/gt (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
                             (big/->big (or (:yht-budjetoitu-summa-indeksikorjattu (get app :kustannukset-yhteensa)) 0)))
         kaikki-vahvistettu? (onko-kaikki-vahvistettu? #{:hankintakustannukset :hoidonjohdonpalkkio
-                                                        :erillishankinnat :johto-ja-hallintakorvaus
+                                                        :erillishankinnat :johto-ja-hallintokorvaus
                                                         :rahavaraukset} rivit-paaryhmittain)]
     [:div.row.sivuelementti
      [:div.col-xs-12
@@ -341,14 +352,15 @@
            [yleiset/tooltip {} (ikonit/harja-icon-status-info) "Erotus lasketaan indeksikorjatusta ja toteumasta."]]
           [:th {:style {:width (:prosentti leveydet) :text-align "right"}} "%"]]]
         [:tbody
-         (paaryhman-rivitys e! app "Suunnitellut hankinnat" :hankintakustannukset hankintakustannusten-toimenpiteet rivit-paaryhmittain)
-         (paaryhman-rivitys e! app "Rahavaraukset" :rahavaraukset rahavaraukset-toimenpiteet rivit-paaryhmittain)
-         (paaryhman-rivitys e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintakorvaus jjhk-toimenpiteet rivit-paaryhmittain)
-         (paaryhman-rivitys e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio hoidonjohdonpalkkiot rivit-paaryhmittain)
-         (paaryhman-rivitys e! app "Erillishankinnat" :erillishankinnat erillishankinnat rivit-paaryhmittain)
+         (paaryhman-rivitys e! app "Suunnitellut hankinnat" :hankintakustannukset hankintakustannusten-toimenpiteet rivit-paaryhmittain true)
+         (paaryhman-rivitys e! app "Rahavaraukset" :rahavaraukset rahavaraukset-toimenpiteet rivit-paaryhmittain true)
+         (paaryhman-rivitys e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintokorvaus johto-ja-hallintokorvaukset rivit-paaryhmittain true)
+         (paaryhman-rivitys e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio hoidonjohdonpalkkiot rivit-paaryhmittain true)
+         (paaryhman-rivitys e! app "Erillishankinnat" :erillishankinnat erillishankinnat rivit-paaryhmittain true)
+         (paaryhman-rivitys e! app "Muut kulut" :muukulu-tavoitehintainen muukulut-tavoitehintainen rivit-paaryhmittain false)
          ;; Näytetään tavoitehinnanoikaisut vain, jos niitä on oikeasti lisätty ja käytetty
          (when (> (count (get-in rivit-paaryhmittain [:tavoitehinnanoikaisu :tehtavat])) 0)
-           (paaryhman-rivitys e! app "Tavoitehinnan oikaisut" :tavoitehinnanoikaisu tavoitehinnanoikaisut rivit-paaryhmittain))
+           (paaryhman-rivitys e! app "Tavoitehinnan oikaisut" :tavoitehinnanoikaisu tavoitehinnanoikaisut rivit-paaryhmittain true))
          ;; Siirto rivi
          (when siirtoa-viime-vuodelta?
            [:tr.bottom-border.tummennettu
@@ -402,32 +414,14 @@
            (piirra-taulukko-rivi nil
              {:otsikko "Sanktiot"
               :toteutunut-summa (str (fmt->big (:sanktiot-toteutunut sanktiot)))}))
+         (paaryhman-rivitys e! app "Muut kulut" :muukulu-eitavoitehintainen muukulut-eitavoitehintainen rivit-paaryhmittain false)
          (when (> (count (get-in rivit-paaryhmittain [:tavoitepalkkio :tehtavat])) 0)
            (vuoden-paattamiskulu-rivi tavoitepalkkio))
          (when (> (count (get-in rivit-paaryhmittain [:tavoitehinnan-ylitys :tehtavat])) 0)
            (vuoden-paattamiskulu-rivi tavoitehinnan-ylitys))
          (when (> (count (get-in rivit-paaryhmittain [:kattohinnan-ylitys :tehtavat])) 0)
            (vuoden-paattamiskulu-rivi kattohinnan-ylitys))
-         [:tr.bottom-border.selectable {:key "Lisätyöt"
-                                        :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :lisatyot))}
-          [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
-           (if (and (contains? (:avatut-rivit app) :lisatyot)
-                 (> (count lisatyot) 0))
-             [:img {:alt "Expander" :src "images/expander-down.svg"}]
-             (when (> (count lisatyot) 0)
-               [:img {:alt "Expander" :src "images/expander.svg"}]))]
-          [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
-          [:td {:style {:width (:tehtava leveydet) :font-weight "700"}} "Lisätyöt"]
-          [:td.numero {:style {:width (:suunniteltu leveydet)}}]
-          [:td.numero {:style {:width (:indeksikorjattu leveydet)}}]
-          [:td.numero {:style {:width (:toteuma leveydet)}} (fmt->big (:lisatyot-summa rivit-paaryhmittain))]
-          [:td {:style {:width (:erotus leveydet)}}]
-          [:td {:style {:width (:prosentti leveydet)}}]]
-         (when (contains? (:avatut-rivit app) :lisatyot)
-           (doall
-             (for [l lisatyot]
-               ^{:key (hash l)}
-               l)))]]]]]))
+         (paaryhman-rivitys e! app "Lisätyöt" :lisatyo lisatyo rivit-paaryhmittain false)]]]]]))
 
 
 (defn kustannukset
@@ -495,7 +489,7 @@
                                         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
            hoitokauden-kuukaudet]]
          
-         [:div.filtteri {:style {:padding-top "21px"}}
+         [:div.filtteri {:style {:padding-top "25px"}}
           ^{:key "raporttixls"}
           [:form {:style {:margin-left "auto"}
                   :target "_blank" :method "POST"
@@ -507,15 +501,16 @@
                                                   :alkupvm haun-alkupvm
                                                   :loppupvm haun-loppupvm})}]
            [:button {:type "submit"
-                     :class "nappi-toissijainen"}
+                     :class "nappi-toissijainen nappi-korkeus-36"}
             [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
          
-         [:div.filtteri {:style {:padding-top "21px"}}
+         [:div.filtteri {:style {:padding-top "25px"}}
           (if valikatselmus-tekematta?
             [napit/yleinen-ensisijainen
              "Tee välikatselmus"
-             #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]
-            [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}])]]]
+             #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))
+             {:luokka "nappi-korkeus-36"}]
+            [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma nappi-korkeus-36" :ikoni (ikonit/harja-icon-action-show)}])]]]
 
        (if (:haku-kaynnissa? app)
          [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]

@@ -96,17 +96,19 @@
 (defrecord Tyokoneenseuranta []
   component/Lifecycle
   (start [{http :http-palvelin
-           db   :db :as this}]
+           db   :db
+           integraatioloki :integraatioloki
+           :as this}]
     (julkaise-reitti http :tallenna-tyokoneenseurantakirjaus
                      (POST +tyokone-seurantakirjaus-url+ request
-                       (kasittele-kutsu db nil
+                       (kasittele-kutsu db integraatioloki
                                         :tallenna-tyokoneenseurantakirjaus
                                         request json-skeemat/tyokoneenseuranta-kirjaus json-skeemat/kirjausvastaus
                                         tallenna-seurantakirjaus
                          :kirjoitus)))
     (julkaise-reitti http :tallenna-tyokoneen-reitti
                      (POST +tyokone-reitti-url+ request
-                       (kasittele-kutsu db nil
+                       (kasittele-kutsu db integraatioloki
                                         :tallenna-tyokoneen-reitti
                                         request json-skeemat/tyokoneenseuranta-kirjaus-viivageometrialla json-skeemat/kirjausvastaus
                                         tallenna-seurantakirjaus-viivageometriana

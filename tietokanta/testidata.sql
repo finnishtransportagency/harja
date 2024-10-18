@@ -67,6 +67,8 @@ SELECT paivita_pohjavesialueet();
 
 \i testidata/rajoitusalueet.sql
 
+\i testidata/hoitoluokat.sql
+
 -- Materiaalin käytöt
 \i testidata/materiaalin_kaytto.sql
 
@@ -95,6 +97,9 @@ SELECT paivita_pohjavesialueet();
 
 -- Reikäpaikkaukset 
 \i testidata/yllapito/reikapaikkaukset.sql
+
+-- MPU kustannukset 
+\i testidata/yllapito/mpu_kustannukset.sql
 
 -- Ylläpidon toteumat
 \i testidata/yllapito/yllapito_toteumat.sql
@@ -191,6 +196,9 @@ SELECT paivita_pohjavesialueet();
 -- Välikatselmusten tiedot
 \i testidata/kulut/valikatselmus.sql
 
+-- Kulujen muita tarpeita
+\i testidata/kulut/kulutarpeita.sql
+
 -- Tilaajan-konsultti organisaatio
 \i testidata/tilaajan-konsultit.sql
 
@@ -199,11 +207,15 @@ SELECT paivita_pohjavesialueet();
 
 \i testidata/analytiikka-paallystyskohteet.sql
 
+-- Populoidaan rahavaraukset
+SELECT populoi_rahavaraus_idt();
+
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 select paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('0001-01-01'::DATE,'2100-12-31'::DATE);
 SELECT paivita_raportti_toteutuneet_materiaalit();
 SELECT paivita_raportti_pohjavesialueiden_suolatoteumat();
 SELECT paivita_raportti_toteuma_maarat();
+
 
 -- Siirrä kaikki toteumat analytiikka_toteumat tauluun
 -- Siirrertään uudet toteumat
@@ -217,8 +229,8 @@ INSERT INTO analytiikka_toteumat (
            t.suorittajan_nimi                                                         as toteuma_suorittaja_nimi,
            t.tyyppi::toteumatyyppi                                                    as toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
            t.lisatieto                                                                as toteuma_lisatieto,
-           json_agg(row_to_json(row (tt.id, tt.maara, tkoodi.yksikko, tt.lisatieto))) AS toteumatehtavat,
-           json_agg(row_to_json(row (mk.nimi, tm.maara, mk.yksikko)))                 AS toteumamateriaalit,
+           to_json(array_agg(DISTINCT (tkoodi.id, tt.maara, tkoodi.yksikko, tt.lisatieto, tkoodi.tehtavaryhma))) AS toteumatehtavat,
+           to_json(array_agg(DISTINCT (mk.id, mk.nimi, tm.maara, mk.yksikko)))          AS toteumamateriaalit,
            t.tr_numero                                                                as toteuma_tiesijainti_numero,
            t.tr_alkuosa                                                               as toteuma_tiesijainti_aosa,
            t.tr_alkuetaisyys                                                          as toteuma_tiesijainti_aet,

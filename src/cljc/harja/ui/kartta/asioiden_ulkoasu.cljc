@@ -235,6 +235,10 @@
    #{"LIIKENNEMERKKIEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
    #{"L- JA P-ALUEIDEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
    #{"SILTOJEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   ;; tilannekuva/valaistus
+   #{"RYHMÄVAIHTO"} [(viiva-mustalla-rajalla puhtaat/musta-raja) "turkoosi"]
+   #{"HUOLTOKIERROS"} [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   #{"MUUT VALAISTUSURAKOIDEN TOIMENPITEET"} [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
    ;; tilannekuva/yllapito
    #{"ASFALTOINTI"} [(viiva-mustalla-rajalla puhtaat/musta-raja) "musta"]
    #{"TIEMERKINTÄ"} [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
@@ -419,6 +423,7 @@
 (defn kyselyn-ikoni [tila]
   (sijainti-ikoni
     (case tila
+      :ei-valitetty (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
       :kuittaamaton (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
       :vastaanotettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
       :aloitettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
@@ -428,6 +433,7 @@
 (defn toimenpidepyynnon-ikoni [tila]
   (sijainti-ikoni
     (case tila
+      :ei-valitetty (:ilmoitus-auki tiepuolen-ikonien-varit)
       :kuittaamaton (:ilmoitus-auki tiepuolen-ikonien-varit)
       :vastaanotettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
       :aloitettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
@@ -438,6 +444,7 @@
 (defn tiedotuksen-ikoni [tila]
   (sijainti-ikoni
     (case tila
+      :ei-valitetty (:ilmoitus-auki tiepuolen-ikonien-varit)
       :kuittaamaton (:ilmoitus-auki tiepuolen-ikonien-varit)
       :vastaanotettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
       :aloitettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)

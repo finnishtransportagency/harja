@@ -237,7 +237,7 @@
                  :tilattu->ehdotettu [:p "Tarkemmat tiedot peruuttamiseen johtaneista syistä saat urakanvalvojalta"]
                  nil)
                [:p (str "Paikkauskohde sijaitsee " tie " - " aet "/" aosa " " let "/" losa)]
-               [:p (str "Voit tarkastella paikkauskohdetta tarkemmin https://extranet.vayla.fi/harja/#urakat/paikkaukset?&hy=" ely-id "&u=" urakka-id)]
+               [:p (str "Voit tarkastella paikkauskohdetta tarkemmin https://harja.vaylapilvi.fi/#urakat/paikkaukset-yllapito?&hy=" ely-id "&u=" urakka-id)]
                [:p "Tämä on automaattinen viesti HARJA -järjestelmästä, älä vastaa tähän viestiin."]])))
 
 (defn tarkista-tilamuutoksen-vaikutukset
@@ -683,7 +683,8 @@
                                     massatyyppi ::paikkaus/massatyyppi
                                     raekoko ::paikkaus/raekoko
                                     kuulamylly ::paikkaus/kuulamylly
-                                    pinta-ala ::paikkaus/pinta-ala}]
+                                    pinta-ala ::paikkaus/pinta-ala
+                                    {reunat ::paikkaus/reunat} ::paikkaus/tienkohdat}]
   (cond-> []
     (not (s/valid? ::paikkaus/alkuaika alkuaika)) (conj "Alkuaika puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/loppuaika loppuaika)) (conj "Loppuaika puuttuu tai on virheellinen")
@@ -696,6 +697,7 @@
     (not (s/valid? ::paikkaus/raekoko raekoko)) (conj "Raekoko puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/urapaikkaus-kuulamylly kuulamylly)) (conj "Kuulamylly puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/pinta-ala pinta-ala)) (conj "Pinta-alaa ei voitu laskea!")
+    (not (s/valid? ::paikkaus/reunat reunat)) (conj "Reunat on virheellinen. Jätä arvo antamatta tai anna arvo 1 tai 2.")
     (and
       (s/valid? ::paikkaus/alkuaika alkuaika)
       (s/valid? ::paikkaus/alkuaika alkuaika)

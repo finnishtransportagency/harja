@@ -10,7 +10,7 @@
   #?(:cljs
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
-(declare on-oikeus? on-muu-oikeus?)
+(declare on-oikeus? on-muu-oikeus? urakat-kulut-laskunkirjoitus)
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
 #?(:clj
@@ -180,6 +180,15 @@
       (voi-kirjoittaa? oikeus urakka-id @istunto/kayttaja)))
   ([oikeus urakka-id kayttaja]
    (on-oikeus? :kirjoitus oikeus urakka-id kayttaja)))
+
+#?(:clj
+   (defn vaadi-lukuoikeus-jostain-urakasta [oikeus kayttaja urakka-idt]
+     (merkitse-oikeustarkistus-tehdyksi!)
+     (when-not (some true? (map #(boolean (voi-lukea? oikeus % kayttaja)) urakka-idt))
+       (throw+ (roolit/->EiOikeutta
+                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei lukuoikeutta "
+                   (:kuvaus oikeus)
+                   (str " yhdesäkään urakassa " urakka-idt)))))))
 
 #?(:clj
    (defn vaadi-lukuoikeus

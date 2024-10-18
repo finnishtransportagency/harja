@@ -26,7 +26,7 @@
 
 (defn viestin-linkki [hallintayksikko id]
   (format
-    "https://extranet.vayla.fi/harja/#urakat/valitavoitteet/lupaukset?&hy=%s&u=%s"
+    "https://harja.vaylapilvi.fi/#urakat/valitavoitteet/lupaukset?&hy=%s&u=%s"
     hallintayksikko
     id))
 

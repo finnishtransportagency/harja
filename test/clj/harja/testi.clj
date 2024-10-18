@@ -3,7 +3,9 @@
   (:require
     [clojure.test :refer :all]
     [clojure.core.async :as async :refer [alts! >! <! go timeout chan <!!]]
+    [specql.core :refer [fetch columns]]
     [taoensso.timbre :as log]
+    [harja.domain.reittipiste :as reittipiste]
     [harja.palvelin.asetukset :as a]
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.http-palvelin :as http]
@@ -145,7 +147,7 @@
   {:datasource (tietokanta/luo-yhteyspool temppitietokanta)})
 
 (defn luo-liitteidenhallinta []
-  (liitteet/->Liitteet nil nil nil))
+  (liitteet/->Liitteet nil nil))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -456,8 +458,7 @@
 (defn- post-kutsu? [f]
   (= 2 (arg-count f)))
 
-(defn- heita-jos-ei-ole-validi [spec palvelun-nimi payload]
-  (when-not (s/valid? spec payload)
+(defn- heita-jos-ei-ole-validi [spec palvelun-nimi payload] (when-not (s/valid? spec payload)
     (throw (Exception. (str "Palvelun " palvelun-nimi " ei ole validi.
     Riippuen testista, tämä voi olla sekä odotettu tila että virhe!
     Payload: " payload "
@@ -903,6 +904,9 @@
 
 (defn hae-tehtavaryhman-id [nimi]
   (ffirst (q (str "SELECT id from tehtavaryhma where nimi = '" nimi "';"))))
+
+(defn hae-rahavaraus-nimella [nimi]
+  (ffirst (q-map (format "SELECT id, nimi from rahavaraus where nimi = '%s';" nimi))))
 
 (defn hae-yit-rakennus-id []
   (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'"))))
@@ -1588,7 +1592,7 @@
                                               [:db])
 
                            :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet nil nil nil)
+                                                  (liitteet/->Liitteet nil nil)
                                                   [:db])
 
                            ~@omat))))
@@ -1777,6 +1781,18 @@
   (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite
                  FROM integraatioviesti ORDER BY integraatiotapahtuma ASC, id asc ;")))
 
+(defn odota-integraatiotapahtumaa
+  "Odottaa kunnes löytyy uusi integraatiotapahtuma. Ottaa vastaan timeoutin millisekunneissa ja
+  integeraatiotapahtumien lukumäärän ja palauttaa integraatiotapahtumat, kun niitä on enemmän kuin annettu määrä."
+  [max-aika-ms integraatiotapahtumia-ennen]
+  (let [max-ts (+ max-aika-ms (System/currentTimeMillis))]
+    (loop [integraatiotapahtumat (hae-ulos-lahtevat-integraatiotapahtumat)]
+      (if (> (System/currentTimeMillis) max-ts)
+        (assert false (str "Uutta integraatiotapahtumaa ei tullut " max-aika-ms "ms kuluessa"))
+        (if (> (count integraatiotapahtumat) integraatiotapahtumia-ennen)
+          integraatiotapahtumat
+          (recur (hae-ulos-lahtevat-integraatiotapahtumat)))))))
+
 (defn nykyhetki-iso8061-formaatissa-menneisyyteen
   "Anna määrä parametriin, että montako päivää siirretään menneisyyteen."
   [maara]
@@ -1838,9 +1854,11 @@
   (let [urakan-tiedot (first (q-map (format "SELECT alkupvm FROM urakka WHERE id = %s" urakka-id)))
         laskutuspvm (pvm/iso-8601->pvm erapaiva)
         koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakan-tiedot))
-
-        _ (u (format "INSERT INTO kulu (tyyppi, kokonaissumma, erapaiva, urakka, koontilaskun_kuukausi, luotu)
-                      VALUES ('laskutettava'::LASKUTYYPPI, %s, '%s'::DATE, %s, '%s', NOW());"
+        kohdistustyyppi (if (= maksueratyyppi "lisatyo")
+                          "lisatyo"
+                          "hankintakulu")
+        _ (u (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, koontilaskun_kuukausi, luotu)
+                      VALUES (%s, '%s'::DATE, %s, '%s', NOW());"
                summa erapaiva urakka-id koontilaskun-kuukausi))
 
         ;; HAetaan viimeisin id
@@ -1850,9 +1868,9 @@
                                      summa urakka-id))))
 
         _ (u (format "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi,
-                                                  suoritus_alku, suoritus_loppu, luotu)
-                      VALUES (0, %s, %s, %s, %s, '%s', '%s'::TIMESTAMP, '%s'::TIMESTAMP, now());"
-               kulu-id summa tpi-id tryhma-id maksueratyyppi laskutuspvm laskutuspvm))]))
+                                                  tyyppi, luotu)
+                      VALUES (0, %s, %s, %s, %s, '%s', '%s', now());"
+               kulu-id summa tpi-id tryhma-id maksueratyyppi kohdistustyyppi))]))
 
 (defn lisaa-sanktio-urakalle
   "Anna sakkoryhma 'C'
@@ -1899,3 +1917,25 @@
                           s1)))
         ero (/ matka (float (count s1)))]
     (< ero threshold)))
+
+(defn odota-reittipisteet [toteuma-id]
+  (odota-ehdon-tayttymista
+    (fn []
+      (let [{reittipisteet ::reittipiste/reittipisteet} (first (fetch ds ::reittipiste/toteuman-reittipisteet
+                                                                 (columns ::reittipiste/toteuman-reittipisteet)
+                                                                 {::reittipiste/toteuma-id toteuma-id}))]
+        (not (nil? reittipisteet))))
+    "Reittipisteet löytyvät"
+    1000))
+
+(defn edellinen-materiaalin-kayton-paivitys [sopimus]
+  (ffirst (q (format "SELECT muokattu FROM sopimuksen_kaytetty_materiaali WHERE sopimus=%s order by muokattu desc limit 1" sopimus))))
+
+(defn odota-materiaalin-kaytto-paivittynyt [sopimus aika-ennen]
+  (odota-ehdon-tayttymista
+    (fn []
+      (if (nil? aika-ennen)
+        (not (empty? (q (format "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = %s" sopimus))))
+        (not (empty? (q (format "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = %s and muokattu > '%s'" sopimus aika-ennen))))))
+    "Materiaalin käyttö päivittynyt"
+    5000))

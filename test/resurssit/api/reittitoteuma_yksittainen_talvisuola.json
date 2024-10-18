@@ -67,8 +67,35 @@
         },
         "reitti": [
             {
+              "reittipiste": {
+                "aika": "2016-01-30T12:00:00Z",
+                "koordinaatit": {
+                  "x": 429457.970,
+                  "y": 7199520.271
+                },
+                "tehtavat": [
+                  {
+                    "tehtava": {
+                      "id": 1370
+                    }
+                  },
+                  {
+                    "tehtava": {
+                      "id": 1363
+                    }
+                  },
+                  {
+                    "tehtava": {
+                      "id": 987654
+                    }
+                  }
+                ],
+                "materiaalit": []
+              }
+            },
+            {
                 "reittipiste": {
-                    "aika": "2016-01-30T12:00:00Z",
+                    "aika": "2016-01-30T12:01:00Z",
                     "koordinaatit": {
                         "x": 429451.2124,
                         "y": 7199520.6102

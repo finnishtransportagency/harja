@@ -493,7 +493,11 @@
    "SILTOJEN PUHDISTUS" "Siltojen puhdistus"
 
    "L- JA P-ALUEIDEN PUHDISTUS" "L- ja P-alueiden puhdistus"
-   "MUU" "Muu"})
+   "MUU" "Muu"
+
+   "RYHMAVAIHTO" "Ryhmävaihto"
+   "HUOLTOKIERROS" "Huoltokierros"
+   "MUUT VALAISTUSURAKOIDEN TOIMENPITEET" "Muut toimenpiteet"})
 
 (defn tehtavan-nimi [tehtavat]
   (str/join ", " (into []

@@ -95,17 +95,18 @@
         tehtavaryhmat-toimenpiteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :tehtavaryhmat-ja-toimenpiteet
                                      +kayttaja-jvh+
-                                     {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})
-        tehtavaryhmat-ja-toimenpiteet-vaara-urakka-id (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                        :tehtavaryhmat-ja-toimenpiteet
-                                                        +kayttaja-jvh+
-                                                        {:urakka-id 36565345})]
-    (is (= (count tehtavaryhmat-toimenpiteet) tr-tp-lkm) "Palauttaa tehtäväryhmä ja toimenpidelistan")
-    (is (empty? tehtavaryhmat-ja-toimenpiteet-vaara-urakka-id) "Tyhjä lista jos ei löydy urakkaa")
-    (is (thrown? IllegalArgumentException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                            :tehtavaryhmat-ja-toimenpiteet
-                                            +kayttaja-jvh+
-                                            {})) "Virhe jos ei parametria")))
+                                     {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
+    (is (= (count tehtavaryhmat-toimenpiteet) tr-tp-lkm) "Palauttaa tehtäväryhmä ja toimenpidelistan")))
+
+(deftest tehtavaryhmat-ja-toimenpiteet-vaaralla-datalla-testi
+  (is (thrown? IllegalArgumentException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :tehtavaryhmat-ja-toimenpiteet
+                                          +kayttaja-jvh+
+                                          {})) "Virhe jos ei parametria")
+  (is (thrown? IllegalArgumentException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :tehtavaryhmat-ja-toimenpiteet
+                                          +kayttaja-jvh+
+                                          {:urakka-id 36565345})) "Virhe jos urakkaa ei löydy"))
 
 
 ; käyttää ennakkoon tallennettua testidataa

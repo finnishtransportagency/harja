@@ -53,6 +53,8 @@
 (defrecord ValitseKEOnnistui [vastaus])
 (defrecord ValitseKEEpaonnistui [vastaus])
 
+(defrecord NaytaSeuraavatVaihtoehdot [vaihtoehto])
+
 ;; Päänäkymä ja listaus
 (defrecord AvaaLupausryhma [kirjain])
 (defrecord ValitseUrakka [urakka])
@@ -67,6 +69,9 @@
 
 ;; Testaus
 (defrecord AsetaNykyhetki [nykyhetki])
+
+;; Monivalintojen naytettavat valinnat alustus
+(def naytettavat-valinnat-alustus [1])
 
 (defn valitse-urakka [app urakka]
   (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)
@@ -171,11 +176,11 @@
           lupaus-id (:lupaus-id lupaus)
           uusi-lupaus (lupaus-domain/etsi-lupaus vastaus lupaus-id)]
       (-> app
-          (merge vastaus)
-          (update :vastaus-lomake dissoc :lahetetty-vastaus)
-          (dissoc :lupausta-lahetataan)
-          (update :vastaus-lomake merge uusi-lupaus))))
-
+        (merge vastaus)
+        (update :vastaus-lomake dissoc :lahetetty-vastaus)
+        (dissoc :lupausta-lahetataan) 
+        (update :vastaus-lomake merge uusi-lupaus))))
+  
   HaeUrakanLupaustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Lupaustietojen hakeminen epäonnistui!" :varoitus)
@@ -283,12 +288,18 @@
   AvaaLupausvastaus
   (process-event [{vastaus :vastaus kuukausi :kuukausi vuosi :kohdevuosi} app]
     ;; Avataan sivupaneeli, lisätään vastauksen tiedot :vastaus-lomake avaimeen
+    (let [vaihtoehdot (:vaihtoehdot vastaus)
+          lupaus-kuukausi (lupaus-domain/etsi-lupaus-kuukausi (:lupaus-kuukaudet vastaus) kuukausi)
+          kuukauden-vastaus (:vastaus lupaus-kuukausi) 
+          valittu-arvo (:lupaus-vaihtoehto-id kuukauden-vastaus)
+          nykyinen-askel (when valittu-arvo (lupaus-domain/etsi-nykyinen-valinta-askel valittu-arvo vaihtoehdot))]
     (-> app
         (assoc :vastaus-lomake vastaus)
         (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
         (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
-        (valitse-vastauskuukausi kuukausi vuosi)))
-
+        (assoc-in [:vastaus-lomake :naytettavat-valinnat] (conj naytettavat-valinnat-alustus nykyinen-askel))
+        (valitse-vastauskuukausi kuukausi vuosi))))
+  
   SuljeLupausvastaus
   (process-event [_ app]
     ;; Suljetaan sivupaneeli
@@ -329,12 +340,18 @@
                      :paatos (if (or (= kohdekuukausi (:paatos-kk lupaus)) (= 0 (:paatos-kk lupaus)))
                                true false)
                      :vastaus nil
-                     :lupaus-vaihtoehto-id (:id vaihtoehto)})]
+                     :lupaus-vaihtoehto-id (:id vaihtoehto)})
+          ei-valintaa-valittu? (nil? (:id vaihtoehto))
+          aseta-naytettavat-monivalinnat (fn [app]
+                                            (if ei-valintaa-valittu?
+                                              (assoc-in app [:vastaus-lomake :naytettavat-valinnat] naytettavat-valinnat-alustus)
+                                              app))]
       (tuck-apurit/post! :vastaa-lupaukseen
                          vastaus
                          {:onnistui ->ValitseVaihtoehtoOnnistui
                           :epaonnistui ->ValitseVaihtoehtoEpaonnistui})
       (-> app 
+        (aseta-naytettavat-monivalinnat)
         (assoc-in [:vastaus-lomake :lahetetty-vastaus] vastaus)
         (assoc :lupausta-lahetataan {:kohdekuukausi kohdekuukausi :lupaus-id (:lupaus-id lupaus)}))))
 
@@ -350,7 +367,16 @@
     (-> app
       (update :vastaus-lomake dissoc :lahetetty-vastaus)
       (dissoc :lupausta-lahetataan)))
+  
+  NaytaSeuraavatVaihtoehdot
+  (process-event [{vaihtoehto :vaihtoehto} app]
+    (let [sailytettavat-valinnat [(:vaihtoehto-askel vaihtoehto) (:vaihtoehto-seuraava-ryhma-id vaihtoehto)]]
+      (-> app
+        (assoc-in [:vastaus-lomake :lahetetty-vastaus] {:lupaus-vaihtoehto-id (:id vaihtoehto)
+                                                        :vaihtoehto-askel (:vaihtoehto-askel vaihtoehto)})
+        (assoc-in [:vastaus-lomake :naytettavat-valinnat] sailytettavat-valinnat))))
 
+  
   ValitseKE
   (process-event [{vastaus :vastaus lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
     (let [vastaus-map (merge (when (:kuukauden-vastaus-id vastaus)
@@ -383,7 +409,7 @@
     (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
     (-> app
       (update :vastaus-lomake dissoc :lahetetty-vastaus)
-      (dissoc :lupausta-lahetataan)))
+      (dissoc :lupausta-lahetataan))) 
 
   Kuukausipisteitamuokattu
   (process-event [{pisteet :pisteet kuukausi :kuukausi} app]

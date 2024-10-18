@@ -9,10 +9,12 @@
             [harja.transit :as t]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.grid :as grid]
+            [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni totuus-ikoni] :as yleiset]
             [harja.ui.debug :refer [debug]]
             [harja.ui.valinnat :as valinnat]
+            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
             [harja.ui.varmista-kayttajalta :refer [varmista-kayttajalta]]
@@ -212,7 +214,7 @@
            liikennetapahtumien-haku-kaynnissa?
            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
        
-       [:div.ajax-loader-liikennetapahtumat
+       [:div.ajax-loader-valistys
         [ajax-loader-pieni (str "Haetaan tietoja...")]]
 
        ;; Tiedot ovat ladanneet 
@@ -329,44 +331,53 @@
                 jarjestetyt-kohteenosat (sort-by
                                           #((into {} (map-indexed (fn [i e] [e i]) jarjestys)) (::osa/tyyppi %))
                                           (::lt/toiminnot valittu-liikennetapahtuma))]
-            (map-indexed
-              (fn [i osa]
-                ^{:key (str "palvelumuoto-" i)}
-                (lomake/ryhma
-                  {:otsikko (osa/fmt-kohteenosa osa)
-                   :rivi? true}
-                  {:otsikko "Toimenpide"
-                   :nimi (str "toimenpide-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
-                   :pakollinen? true
-                   :tyyppi :radio-group
-                   :vaihtoehdot (lt/toimenpide-vaihtoehdot osa)
-                   :vaihtoehto-nayta lt/toimenpide->str
-                   :hae (constantly (::toiminto/toimenpide osa))
-                   :aseta (fn [rivi arvo]
-                            (let [paivitetyt-tiedot (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/toimenpide arvo))]
-                              (lt/paivita-suunnat-ja-toimenpide! paivitetyt-tiedot)
-                              paivitetyt-tiedot))}
-                  (when (tiedot/nayta-palvelumuoto? osa)
-                    {:otsikko "Palvelumuoto"
-                     :nimi (str "palvelumuoto-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
-                     :pakollinen? true
-                     :tyyppi :valinta
-                     :valinnat lt/palvelumuoto-vaihtoehdot
-                     :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")
-                     :hae (constantly (::toiminto/palvelumuoto osa))
-                     :aseta (fn [rivi arvo]
-                              (let [paivitetyt-tiedot (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/palvelumuoto arvo))]
-                                (lt/paivita-suunnat-ja-toimenpide! paivitetyt-tiedot)
-                                paivitetyt-tiedot))})
-                  (when (tiedot/nayta-itsepalvelut? osa)
-                    {:otsikko "Itsepalveluiden lukumäärä"
-                     :nimi (str "lkm-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
-                     :pakollinen? true
-                     :tyyppi :positiivinen-numero
-                     :hae (constantly (::toiminto/lkm osa))
-                     :aseta (fn [rivi arvo]
-                              (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/lkm arvo)))})))
-              jarjestetyt-kohteenosat))
+            (flatten
+              (map-indexed
+                (fn [i osa]
+                  ^{:key (str "palvelumuoto-" i)}
+                  [(lomake/ryhma
+                     {:otsikko (osa/fmt-kohteenosa osa)
+                      :rivi? true}
+                     {:otsikko "Toimenpide"
+                      :nimi (str "toimenpide-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
+                      :pakollinen? true
+                      :tyyppi :radio-group
+                      :vaihtoehdot (lt/toimenpide-vaihtoehdot osa)
+                      :vaihtoehto-nayta lt/toimenpide->str
+                      :hae (constantly (::toiminto/toimenpide osa))
+                      :aseta (fn [rivi arvo]
+                               (let [paivitetyt-tiedot (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/toimenpide arvo))]
+                                 (lt/paivita-suunnat-ja-toimenpide! paivitetyt-tiedot)
+                                 paivitetyt-tiedot))}
+                     (when (tiedot/nayta-palvelumuoto? osa)
+                       {:otsikko "Palvelumuoto"
+                        :nimi (str "palvelumuoto-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
+                        :pakollinen? true
+                        :tyyppi :valinta
+                        :valinnat lt/palvelumuoto-vaihtoehdot
+                        :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")
+                        :hae (constantly (::toiminto/palvelumuoto osa))
+                        :aseta (fn [rivi arvo]
+                                 (let [paivitetyt-tiedot (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/palvelumuoto arvo))]
+                                   (lt/paivita-suunnat-ja-toimenpide! paivitetyt-tiedot)
+                                   paivitetyt-tiedot))})
+                     (when (tiedot/nayta-itsepalvelut? osa)
+                       {:otsikko "Itsepalveluiden lukumäärä"
+                        :nimi (str "lkm-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
+                        :pakollinen? true
+                        :tyyppi :positiivinen-numero
+                        :hae (constantly (::toiminto/lkm osa))
+                        :aseta (fn [rivi arvo]
+                                 (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/lkm arvo)))}))
+                   (when (not= (::toiminto/toimenpide osa) (::osa/oletustoimenpide osa))
+                     {:teksti "Aseta oletustoimenpiteeksi"
+                      :piilota-label? true
+                      :rivi-luokka "margin-bottom-32"
+                      :nimi (str "oletustoimenpide-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
+                      :tyyppi :checkbox
+                      :aseta (fn [rivi arvo]
+                               (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/korvaa-oletustoimenpide? arvo)))})])
+                jarjestetyt-kohteenosat)))
           [(when (::lt/kohde valittu-liikennetapahtuma)
              (apply lomake/rivi
                (concat
@@ -420,6 +431,7 @@
         {lataa-aloitustiedot :lataa-aloitustiedot} app
         suunta-vaihtoehdot (keys @lt/suunnat-atom)
         suunta->str (fn [suunta] (@lt/suunnat-atom suunta))]
+    
     [:div.liikennetapahtumien-suodattimet
      ;; Näytä suodattimet kun aloitustiedot ladattu 
      (when-not lataa-aloitustiedot
@@ -429,6 +441,8 @@
         [valinnat/valintaryhmat-3
          [:div.liikenne-valinnat
           [:span.label-ja-kentta
+
+           ;; Urakka alasveto
            [:span.kentan-otsikko "Urakat"]
            [:div.kentta
             [yleiset/livi-pudotusvalikko
@@ -449,12 +463,20 @@
                                                    (e! (tiedot/->UrakkaValittu urakka valittu?)))}]]
                       (:nimi urakka)])
                kayttajan-urakat)]]]
+
+          ;; Aikaväli
           [valinnat/aikavali (atomi :aikavali)]
+
+          ;; Alus suodatin
           [kentat/tee-otsikollinen-kentta
            {:otsikko "Aluksen nimi"
             :kentta-params {:tyyppi :string}
-            :arvo-atom (atomi ::lt-alus/nimi)}]]
+            :arvo-atom (atomi ::lt-alus/nimi)}]
+          
+          ;; Urakkavuosi
+          [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
 
+         ;; Kohde alasveto
          [:div.liikenne-valinnat
           [valinnat/kanava-kohde
            (atomi ::lt/kohde)
@@ -463,6 +485,8 @@
               (if-not (empty? nimi)
                 nimi
                 "Kaikki"))]
+
+          ;; Aluslaji monivalinnat
           [kentat/tee-otsikollinen-kentta
            {:otsikko "Aluslaji"
             :kentta-params {:tyyppi :checkbox-group
@@ -471,6 +495,7 @@
                             :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
             :arvo-atom (atomi ::lt-alus/aluslajit)}]]
 
+         ;; Suunta alasveto 
          [:div.liikenne-valinnat
           [kentat/tee-otsikollinen-kentta
            {:otsikko "Suunta"
@@ -479,17 +504,22 @@
                             :valinnat (into [nil] suunta-vaihtoehdot)
                             :valinta-nayta #(or (suunta->str %) "Kaikki")}
             :arvo-atom (atomi ::lt-alus/suunta)}]
+
           [kentat/tee-otsikollinen-kentta
            {:otsikko "Uittoniput"
             :kentta-params {:tyyppi :checkbox
                             :teksti "Näytä vain uittoniput"}
             :arvo-atom (atomi :niput?)}]
+
+          ;; Tomienpide monivalinnat
           [kentat/tee-otsikollinen-kentta
            {:otsikko "Toimenpidetyyppi"
             :kentta-params {:tyyppi :checkbox-group
                             :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
                             :vaihtoehto-nayta lt/sulku-toimenpide->str}
             :arvo-atom (atomi ::toiminto/toimenpiteet)}]]]
+        
+        ;; 'footer'
         [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
          [napit/uusi
           "Kirjaa liikennetapahtuma"
@@ -576,7 +606,7 @@
    
    (if rivimaara-ylittynyt
      [:div.kayttajia-ei-loydy.fontti-14
-      [yleiset/keltainen-vihjelaatikko [:div "Tulokset rajattu 10 000 tapahtumaan. Tarkenna hakua."] :info]
+      [yleiset/keltainen-vihjelaatikko [:div "Tulokset rajattu " (fmt/formatoi-numero-tuhansittain lt/+rajoita-tapahtumien-maara+) " tapahtumaan. Tarkenna hakua."] :info]
       [:h3 "Liikennetapahtumat"]]
      [:h3 "Liikennetapahtumat"])
    
@@ -613,7 +643,7 @@
          liikennetapahtumien-haku-kaynnissa?
          liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
      
-     [:div.ajax-loader-liikennetapahtumat
+     [:div.ajax-loader-valistys
       [ajax-loader-pieni "Päivitetään listaa.."]]
      
      [grid/grid
@@ -650,7 +680,7 @@
           [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet])))))
 
 (defn liikennetapahtumat [e! app]
-  [liikenne* e! app {:aikavali @u/valittu-aikavali}])
+  [liikenne* e! app {:valinnat {:aikavali (pvm/vuoden-aikavali @u/valittu-urakan-vuosi)}}])
 
 (defc liikenne []
   [tuck tiedot/tila liikennetapahtumat])
