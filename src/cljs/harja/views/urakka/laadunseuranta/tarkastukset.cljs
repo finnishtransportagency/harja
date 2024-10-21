@@ -45,11 +45,7 @@
 (def +tarkastustyyppi-yllapidolle+ [:katselmus :pistokoe :vastaanotto :takuu])
 
 (defn hoito-tarkastustyypit []
-  ;; Ei näytetä tieturvallisuusverkkoa vielä tuotannossa
-  ;; Kun halutaan näyttää, tämän funktiokutsun voi muuttaa vaan -> +tarkastustyyppi-hoidolle+
-  (if-not (k/kehitysymparistossa?)
-    (vec (remove #(= :tieturvallisuus %) +tarkastustyyppi-hoidolle+))
-    +tarkastustyyppi-hoidolle+))
+  +tarkastustyyppi-hoidolle+)
 
 (defn tarkastustyypit-hoidon-tekijalle [tekija]
   (case tekija
@@ -540,9 +536,7 @@
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn []
       [:span.tarkastukset
-       (when (and @nav/kartta-nakyvissa?
-               ;; Piilotettu toistaiseksi tuotannosta, kunnes tieturvallisuustarkastukset otetaan käyttöön.
-               (k/kehitysymparistossa?))
+       (when @nav/kartta-nakyvissa?
          [ui-valinnat/segmentoitu-ohjaus
           [{:nimi :tarkastukset
             :teksti "Tarkastukset"
