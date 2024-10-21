@@ -1,9 +1,8 @@
 (ns harja.views.urakka.laadunseuranta.tarkastukset
-  (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<! >! chan]]
+  (:require [reagent.core :as r]
+            [cljs.core.async :refer [<!]]
 
             [harja.pvm :as pvm]
-            [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tiedot]
@@ -33,13 +32,10 @@
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.domain.laadunseuranta.tarkastus :as domain-tarkastukset]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.ui.viesti :as viesti])
-  (:require-macros [reagent.ratom :refer [reaction]]
-                   [harja.atom :refer [reaction<!]]
-                   [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def +tarkastustyyppi-hoidolle+ [:tieturvallisuus :tiesto :talvihoito :soratie :laatu])
 (def +tarkastustyyppi-yllapidolle+ [:katselmus :pistokoe :vastaanotto :takuu])
