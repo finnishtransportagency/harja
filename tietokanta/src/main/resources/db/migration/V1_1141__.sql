@@ -32,17 +32,17 @@ BEGIN
 
     RAISE NOTICE 'Haetaan pk geometryt:';
     -- Muuttuneet osat: Lisättiin st_buffer geometrialle, jotta siitä saadaan "makkara" eikä viiva
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 50)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
       INTO pk1geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK1'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 50)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
       INTO pk2geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK2'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 50)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
       INTO pk3geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK3'
@@ -94,17 +94,17 @@ BEGIN
     RAISE NOTICE 'tienumerot: %', tienumerot;
 
     RAISE NOTICE 'Haetaan pk geometryt:';
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 50)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
       INTO pk1geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK1'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 50)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
       INTO pk2geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK2'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 50)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
       INTO pk3geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK3'
