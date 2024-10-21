@@ -2231,3 +2231,17 @@
     (is (= (take 8 kohteen-kustannukset-jalkeen) [15 27 1M 0M 2M 3M toteutunut-hinta user-id]) "kustannukset tallennuksen jälkeen")
     (is (= (nth kohteen-kustannukset-jalkeen 9) 4M) "määrämuutokset tallennuksen jälkeen")
     (is (= (nth kohteen-kustannukset-jalkeen 10) 5M) "maku päällysteet tallennuksen jälkeen")))
+
+
+(deftest pkluokkien-pituuden-nolla-pkluokka-null
+  (let [ypk-id (hae-yllapitokohteen-id-nimella "Leppäjärven ramppi")
+        _ (q (format "SELECT * FROM paivita_yllapitokohteen_korjausluokat(%s);" ypk-id))
+        pituudet (first (q-map (format "SELECT  y.id, y.nimi, y.pkluokka, osa.pk1_pituus , osa.pk2_pituus, osa.pk3_pituus from yllapitokohde y                                                                             join urakka u on y.urakka = u.id\n
+        join yllapitokohdeosa osa ON y.id = osa.yllapitokohde WHERE y.id = %s ;" ypk-id)))]
+    ;; Päivietään ylläpitokohteen pk-luokka geometrialaskennan perusteella
+    ;; Tiedetään että tällä kohteella kaikki pk1, pk2 ja pk3 pituudet ovat 0,
+    ;; halutaan varmistaa että pk-luokaksi päätellään NULL, eikä PK1 kuten aiemmin virheellisesti tapahtui
+    (is (= (:pk1_pituus pituudet) 0M) "Pk1 pituus 0")
+    (is (= (:pk2_pituus pituudet) 0M) "Pk2 pituus 0")
+    (is (= (:pk3_pituus pituudet) 0M) "Pk3 pituus 0")
+    (is (nil? (:pkluokka pituudet)) "Pk-luokaksi päätellään nil")))
