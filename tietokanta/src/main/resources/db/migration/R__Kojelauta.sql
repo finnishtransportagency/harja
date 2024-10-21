@@ -60,3 +60,48 @@ CREATE OR REPLACE FUNCTION monesko_hoitokausi(alkupvm DATE, loppupvm DATE, hoito
 END;
 
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION korjaa_kustannussuunnitelmien_puuttuvat_tilat(hoitokauden_alkuvuosi INTEGER)
+    RETURNS INTEGER AS $$
+DECLARE
+    paivitetyt_hankintakustannukset INTEGER;
+    hankintakustannus_rivi RECORD;
+    hoitourakka_idt INTEGER[];
+    urakkaid INTEGER;
+    vahvistamatta BOOLEAN;
+    vahvistettu BOOLEAN;
+
+
+BEGIN
+    -- valitaan annetun hoitokauden osalta käynnissä olleet urakat
+    SELECT ARRAY (SELECT id FROM urakka u WHERE u.tyyppi = 'teiden-hoito' AND
+                                                make_date(hoitokauden_alkuvuosi, 10, 1) BETWEEN u.alkupvm and u.loppupvm)
+      into hoitourakka_idt;
+
+    RAISE NOTICE 'hoitourakka-idt: %', hoitourakka_idt;
+    FOREACH urakkaid IN ARRAY hoitourakka_idt LOOP
+            SELECT EXISTS (SELECT * from kiinteahintainen_tyo WHERE toimenpideinstanssi in (select id from toimenpideinstanssi WHERE urakka = urakkaid)
+                -- osuttava hoitokaudelle
+                and ((vuosi = hoitokauden_alkuvuosi AND kuukausi BETWEEN 10 AND 12) OR
+                     (vuosi = hoitokauden_alkuvuosi + 1 AND kuukausi BETWEEN 1 AND 9))
+                    and indeksikorjaus_vahvistettu IS NULL) INTO vahvistamatta;
+
+            SELECT EXISTS (SELECT * from kiinteahintainen_tyo WHERE toimenpideinstanssi in (select id from toimenpideinstanssi WHERE urakka = urakkaid)
+                -- osuttava hoitokaudelle
+                AND ((vuosi = hoitokauden_alkuvuosi AND kuukausi BETWEEN 10 AND 12) OR
+                     (vuosi = hoitokauden_alkuvuosi + 1 AND kuukausi BETWEEN 1 AND 9))
+                    and indeksikorjaus_vahvistettu IS NOT NULL) INTO vahvistettu;
+            RAISE NOTICE 'URAKKAID % hankintakustannus vahvistamatta: % ja vahvistettu %', urakkaid, vahvistamatta, vahvistettu;
+
+
+END LOOP;
+
+
+    paivitetyt_hankintakustannukset := 555;
+
+    RETURN paivitetyt_hankintakustannukset;
+END;
+
+$$ LANGUAGE plpgsql;
+
