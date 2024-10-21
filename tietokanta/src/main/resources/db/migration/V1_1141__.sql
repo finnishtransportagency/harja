@@ -11,6 +11,7 @@ DECLARE
     pk1geom       geometry;
     pk2geom       geometry;
     pk3geom       geometry;
+    toleranssi    INTEGER;
 
 BEGIN
 
@@ -31,18 +32,19 @@ BEGIN
     RAISE NOTICE 'tienumerot: %', tienumerot;
 
     RAISE NOTICE 'Haetaan pk geometryt:';
+    toleranssi := 10;
     -- Muuttuneet osat: Lisättiin st_buffer geometrialle, jotta siitä saadaan "makkara" eikä viiva
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
       INTO pk1geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK1'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
       INTO pk2geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK2'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
       INTO pk3geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK3'
@@ -76,6 +78,7 @@ DECLARE
     pk1geom       geometry;
     pk2geom       geometry;
     pk3geom       geometry;
+    toleranssi    INTEGER;
 
 BEGIN
 
@@ -94,17 +97,18 @@ BEGIN
     RAISE NOTICE 'tienumerot: %', tienumerot;
 
     RAISE NOTICE 'Haetaan pk geometryt:';
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
+    toleranssi := 10;
+    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
       INTO pk1geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK1'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
       INTO pk2geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK2'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), 10)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
       INTO pk3geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK3'
