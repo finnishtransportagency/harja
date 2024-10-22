@@ -2,7 +2,7 @@
   "Rajapinta oikeustarkistuksiin"
   (:require
    #?(:clj [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])
-   [harja.domain.roolit :as roolit] 
+   [harja.domain.roolit :as roolit]
    #?(:clj [slingshot.slingshot :refer [throw+]])
    #?(:cljs [harja.tiedot.istunto :as istunto])
    [clojure.set :as s]
