@@ -5,7 +5,8 @@
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
             [harja.asiakas.tapahtumat :as t]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.tyokalut.json-puhdistaja :as puhdistaja]))
 
 (def sahkoposti-kehitystiimi "harjapalaute@solita.fi")
 (def sahkoposti-paakayttaja "harjapalaute@solita.fi")
@@ -38,7 +39,7 @@
           "Sijainti Harjassa: " (enc url) "\n"
           "Aika: " (pvm/pvm-aika-opt (pvm/nyt)) "\n"
           "User agent: " (enc user-agent) "\n"
-          "Käyttäjä: " (enc (pr-str kayttaja))))))
+          "Käyttäjä: " (enc (pr-str (puhdistaja/poista-henkilotiedot kayttaja)))))))
 
 (defn palaute-body-yleinen []
   "Kirjoita palautteesi yläpuolelle.")
