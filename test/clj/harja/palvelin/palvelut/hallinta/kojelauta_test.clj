@@ -173,7 +173,7 @@
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
 
 (defn kustannussuunnitelman-tila [urakka osio hoitovuosi]
-  (first (q-map (format "SELECT id, urakka, osio, hoitovuosi, vahvistettu FROM suunnittelu_kustannussuunnitelman_tila
+  (first (q-map (format "SELECT id, urakka, osio, hoitovuosi, vahvistaja, vahvistettu, luoja, muokkaaja FROM suunnittelu_kustannussuunnitelman_tila
   WHERE urakka = %s AND osio = '%s' AND hoitovuosi = %s;" urakka osio hoitovuosi))))
 
 (deftest hankintakustannus-nakyy-oikein-tilataulussa
@@ -209,8 +209,10 @@
     (is (empty? tilataulu-hankintakustannus-2025) "2025 tilatietoa ei ole")
     (is (true? (:vahvistettu tilataulu-hankintakustannus-2024)) "2024 vahvistettu on true")
     (is (number? (:vahvistaja tilataulu-hankintakustannus-2024)) "2024 vahvistetaja löytyy")
-    (is (= (:muokkaaja tilataulu-hankintakustannus-2021) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")
-    (is (= (:muokkaaja tilataulu-hankintakustannus-2024) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")))
+    (is (= (:luoja tilataulu-hankintakustannus-2021) integraatio-kayttajan-id) "Luoja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")
+    (is (nil? (:muokkaaja tilataulu-hankintakustannus-2021)) "Muokkaaja on insertin jälkeen nil.")
+    (is (= (:luoja tilataulu-hankintakustannus-2024) integraatio-kayttajan-id) "Luoja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")
+    (is (nil? (:muokkaaja tilataulu-hankintakustannus-2024)) "Muokkaaja on insertin jälkeen nil")))
 
 (deftest erillishankinta-nakyy-oikein-tilataulussa
   (let [iin-mhu-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -251,8 +253,8 @@
     (is (true? (:vahvistettu tilataulu-erillishankinnat-2024)) "2024 vahvistettu on true")
     (is (number? (:vahvistaja tilataulu-erillishankinnat-2024)) "2024 vahvistetaja löytyy")
     (is (false? (:vahvistettu tilataulu-erillishankinnat-2025)) "2025 tilatietoa ei ole")
-    (is (= (:muokkaaja tilataulu-erillishankinnat-2021) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")
-    (is (= (:muokkaaja tilataulu-erillishankinnat-2024) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")))
+    (is (= (:luoja tilataulu-erillishankinnat-2021) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")
+    (is (= (:luoja tilataulu-erillishankinnat-2024) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")))
 
 
 
