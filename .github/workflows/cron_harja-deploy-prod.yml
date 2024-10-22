@@ -235,7 +235,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":white_check_mark: Tuotanto-deployment onnistui!\n       SHA: ${{ env.LATEST_BUILD_SHA_LINK }}"
+                    "text": ":white_check_mark: Tuotanto-deployment onnistui!"
                   }
                 }
               ]
