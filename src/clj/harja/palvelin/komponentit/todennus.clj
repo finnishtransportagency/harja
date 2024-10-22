@@ -13,8 +13,7 @@
             [harja.kyselyt
              [kayttajat :as q]]
             [slingshot.slingshot :refer [throw+ try+]]
-            [taoensso.timbre :as log]
-            [harja.tyokalut.json-puhdistaja :as puhdistaja])
+            [taoensso.timbre :as log])
   (:import (org.apache.commons.codec.binary Base64)
            (org.apache.commons.codec.net BCodec)))
 
@@ -332,7 +331,7 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 (defrecord FeikkiHttpTodennus [kayttaja]
   component/Lifecycle
   (start [this]
-    (log/warn "Käytetään FEIKKI käyttäjätodennusta, käyttäjä = " (pr-str (puhdistaja/poista-henkilotiedot kayttaja)))
+    (log/warn "Käytetään FEIKKI käyttäjätodennusta, käyttäjä = " (pr-str kayttaja))
     this)
   (stop [this]
     this)
