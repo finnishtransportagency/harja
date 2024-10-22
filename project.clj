@@ -17,7 +17,7 @@
                  ;;;;;;; Yleiset ;;;;;;;
 
                  [prismatic/schema "1.4.1"]
-                 [org.clojure/core.async "0.3.465"]
+                 [org.clojure/core.async "0.4.500"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
                  [com.cognitect/transit-clj "1.0.333"]
@@ -33,7 +33,7 @@
                  [com.stuartsierra/component "1.1.0"]
 
                  ;; -- Lokitus
-                 [com.taoensso/timbre "5.2.1"]
+                 [com.taoensso/timbre "6.5.0"]
                  ;; Figwheel tarvitsee log4j-coren
                  [org.apache.logging.log4j/log4j-core "2.24.1"]
 
@@ -108,9 +108,9 @@
                  [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "5.2.5"]
-                 [org.apache.poi/poi-scratchpad "5.2.5"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "5.3.0"]
+                 [org.apache.poi/poi-scratchpad "5.3.0"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "5.3.0"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "2.5.0"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
@@ -157,9 +157,9 @@
                  ;; data.xml tarvitaan mm. XML-tiedostojen parsimiseen ja pretty-printtaukseen
                  [org.clojure/data.xml "0.0.8"]]
 
-  :managed-dependencies [[org.apache.poi/poi "5.2.5"]
-                         [org.apache.poi/poi-scratchpad "5.2.5"]
-                         [org.apache.poi/poi-ooxml "5.2.5"]
+  :managed-dependencies [[org.apache.poi/poi "5.3.0"]
+                         [org.apache.poi/poi-scratchpad "5.3.0"]
+                         [org.apache.poi/poi-ooxml "5.3.0"]
                          ;; Ratkaise: CVE-2024-26308 ja CVE-2024-25710
                          ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
                          ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)

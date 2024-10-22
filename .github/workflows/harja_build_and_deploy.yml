@@ -84,7 +84,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":warning: Develop-branchin testeissä tapahtui virhe!\n${{ env.JOB_RUN_URL }}"
+                    "text": ":alert-slow: Develop-branchin testeissä tapahtui virhe! Deploymenttia ei tehdä!\n${{ env.JOB_RUN_URL }}"
                   }
                 }
               ]
