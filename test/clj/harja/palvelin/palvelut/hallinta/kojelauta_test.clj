@@ -171,3 +171,44 @@
     (is (= 2 (get-in vahvistettu-2024-rivi [:ks_tila :vahvistamattomia])) "kaksi vahvistamatta")
     (is (= "aloitettu" (get-in vahvistettu-2024-rivi [:ks_tila :suunnitelman_tila])) "tila")
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
+
+(defn kustannussuunnitelman-tila [urakka osio hoitovuosi]
+  (first (q-map "SELECT id, urakka, osio, hoitovuosi, vahvistettu FROM suunnittelu_kustannussuunnitelman_tila WHERE osio = %s AND urakka = %s AND hoitovuosi = %s")))
+
+(deftest hankintakustannus-nakyy-oikein-tilataulussa
+  (let [iin-mhu-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        kayttaja-id (:id +kayttaja-jvh+)
+        iin-talvihoidon-toimenpideinstanssi (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 Talvihoito TP")
+        iin-sopimus-id (hae-sopimus-id-nimella "MHU Ii sopimus")
+        integraatio-kayttajan-id (hae-kayttajan-id-kayttajanimella "Integraatio")
+        ;; luodaan vahvistamaton hankintakustannus urakkaan hoitokaudelle 2021-2022
+        _ (i (format "INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus, luotu, luoja, summa_indeksikorjattu, versio)
+        VALUES (2021, 10, 22, %s, %s, '2024-10-22 12:22:55.341000', %s,  23.496, 0);" iin-talvihoidon-toimenpideinstanssi iin-sopimus-id kayttaja-id))
+        ;; luodaan vahvistettu hankintakustannus urakkaan hoitokaudelle 2024-2025
+        _ (i (format "INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus, luotu, luoja, summa_indeksikorjattu, indeksikorjaus_vahvistettu, vahvistaja, versio)
+        VALUES (2024, 10, 44, %s, %s, '2024-10-22 12:34:47.559000', %s, 57.112, '2024-10-22 12:34:50.641000', %s, 0);" iin-talvihoidon-toimenpideinstanssi iin-sopimus-id kayttaja-id kayttaja-id))
+
+        ei-tilatauluja-ennen-paivitysta (q (format "SELECT * FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s;" iin-mhu-urakka-id))
+        ;; Päivitetään kust. suunnitelman tilataulu niiltä hoitovuosilta jonne muutos tehtiin, jonka jälkeen assertoidaan että tieto on päivittynyt oikein
+        _ (q "SELECT * FROM korjaa_kustannussuunnitelmien_puuttuvat_tilat(2021);")
+        _ (q "SELECT * FROM korjaa_kustannussuunnitelmien_puuttuvat_tilat(2024);")
+        tilataulut-paivitystyksen-jalkeen (q (format "SELECT * FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s;" iin-mhu-urakka-id))
+        tilataulu-hankintakustannus-2021 (kustannussuunnitelman-tila iin-mhu-urakka-id "hankintakustannukset" 1)
+        tilataulu-hankintakustannus-2022 (kustannussuunnitelman-tila iin-mhu-urakka-id "hankintakustannukset" 2)
+        tilataulu-hankintakustannus-2023 (kustannussuunnitelman-tila iin-mhu-urakka-id "hankintakustannukset" 3)
+        tilataulu-hankintakustannus-2024 (kustannussuunnitelman-tila iin-mhu-urakka-id "hankintakustannukset" 4)
+        tilataulu-hankintakustannus-2025 (kustannussuunnitelman-tila iin-mhu-urakka-id "hankintakustannukset" 5)]
+
+
+    (is (empty? ei-tilatauluja-ennen-paivitysta) "Ennen päivitystä urakassa ei tietoa tilataulussa")
+    (is (not (empty? tilataulut-paivitystyksen-jalkeen)) "Päivityksen jälkeen urakassa on tietoa tilataulussa")
+    (is (false? (:vahvistettu tilataulu-hankintakustannus-2021)) "2021 tilatieto on false")
+    (is (false? (:vahvistettu tilataulu-hankintakustannus-2022)) "2022 tilatietoa ei ole")
+    (is (false? (:vahvistettu tilataulu-hankintakustannus-2023)) "2023 tilatietoa ei ole")
+    (is (true? (:vahvistettu tilataulu-hankintakustannus-2024)) "2024 vahvistettu on true")
+    (is (number? (:vahvistaja tilataulu-hankintakustannus-2024)) "2024 vahvistetaja löytyy")
+    (is (false? (:vahvistettu tilataulu-hankintakustannus-2025)) "2025 tilatietoa ei ole")
+    (is (= (:muokkaaja tilataulu-hankintakustannus-2021) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")
+    (is (= (:muokkaaja tilataulu-hankintakustannus-2024) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")))
+
+

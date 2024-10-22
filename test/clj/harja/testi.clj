@@ -994,6 +994,18 @@
                       WHERE  nimi = '%s'"
                      nimi))))
 
+(defn hae-sopimus-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   sopimus
+                      WHERE  nimi = '%s';"
+               nimi))))
+
+(defn hae-kayttajan-id-kayttajanimella [kayttajanimi]
+  (ffirst (q (format "SELECT id
+                      FROM   kayttaja
+                      WHERE  kayttajanimi = '%s';"
+               kayttajanimi))))
+
 (defn hae-kittila-mhu-talvihoito-tpi-id []
   (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Talvihoito TP"))
 
