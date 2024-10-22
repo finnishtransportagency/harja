@@ -173,7 +173,8 @@
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
 
 (defn kustannussuunnitelman-tila [urakka osio hoitovuosi]
-  (first (q-map "SELECT id, urakka, osio, hoitovuosi, vahvistettu FROM suunnittelu_kustannussuunnitelman_tila WHERE osio = %s AND urakka = %s AND hoitovuosi = %s")))
+  (first (q-map (format "SELECT id, urakka, osio, hoitovuosi, vahvistettu FROM suunnittelu_kustannussuunnitelman_tila
+  WHERE urakka = %s AND osio = '%s' AND hoitovuosi = %s;" urakka osio hoitovuosi))))
 
 (deftest hankintakustannus-nakyy-oikein-tilataulussa
   (let [iin-mhu-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -188,11 +189,11 @@
         _ (i (format "INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus, luotu, luoja, summa_indeksikorjattu, indeksikorjaus_vahvistettu, vahvistaja, versio)
         VALUES (2024, 10, 44, %s, %s, '2024-10-22 12:34:47.559000', %s, 57.112, '2024-10-22 12:34:50.641000', %s, 0);" iin-talvihoidon-toimenpideinstanssi iin-sopimus-id kayttaja-id kayttaja-id))
 
-        ei-tilatauluja-ennen-paivitysta (q (format "SELECT * FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s;" iin-mhu-urakka-id))
+        ei-tilatauluja-ennen-paivitysta (q (format "SELECT * FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s AND osio = '%s';" iin-mhu-urakka-id "hankintakustannukset"))
         ;; Päivitetään kust. suunnitelman tilataulu niiltä hoitovuosilta jonne muutos tehtiin, jonka jälkeen assertoidaan että tieto on päivittynyt oikein
         _ (q "SELECT * FROM korjaa_kustannussuunnitelmien_puuttuvat_tilat(2021);")
         _ (q "SELECT * FROM korjaa_kustannussuunnitelmien_puuttuvat_tilat(2024);")
-        tilataulut-paivitystyksen-jalkeen (q (format "SELECT * FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s;" iin-mhu-urakka-id))
+        tilataulut-paivitystyksen-jalkeen (q (format "SELECT * FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s AND osio = '%s';" iin-mhu-urakka-id "hankintakustannukset"))
         tilataulu-hankintakustannus-2021 (kustannussuunnitelman-tila iin-mhu-urakka-id "hankintakustannukset" 1)
         tilataulu-hankintakustannus-2022 (kustannussuunnitelman-tila iin-mhu-urakka-id "hankintakustannukset" 2)
         tilataulu-hankintakustannus-2023 (kustannussuunnitelman-tila iin-mhu-urakka-id "hankintakustannukset" 3)
@@ -203,12 +204,56 @@
     (is (empty? ei-tilatauluja-ennen-paivitysta) "Ennen päivitystä urakassa ei tietoa tilataulussa")
     (is (not (empty? tilataulut-paivitystyksen-jalkeen)) "Päivityksen jälkeen urakassa on tietoa tilataulussa")
     (is (false? (:vahvistettu tilataulu-hankintakustannus-2021)) "2021 tilatieto on false")
-    (is (false? (:vahvistettu tilataulu-hankintakustannus-2022)) "2022 tilatietoa ei ole")
-    (is (false? (:vahvistettu tilataulu-hankintakustannus-2023)) "2023 tilatietoa ei ole")
+    (is (empty? tilataulu-hankintakustannus-2022) "2022 tilatietoa ei ole")
+    (is (empty? tilataulu-hankintakustannus-2023) "2023 tilatietoa ei ole")
+    (is (empty? tilataulu-hankintakustannus-2025) "2025 tilatietoa ei ole")
     (is (true? (:vahvistettu tilataulu-hankintakustannus-2024)) "2024 vahvistettu on true")
     (is (number? (:vahvistaja tilataulu-hankintakustannus-2024)) "2024 vahvistetaja löytyy")
-    (is (false? (:vahvistettu tilataulu-hankintakustannus-2025)) "2025 tilatietoa ei ole")
     (is (= (:muokkaaja tilataulu-hankintakustannus-2021) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")
     (is (= (:muokkaaja tilataulu-hankintakustannus-2024) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")))
+
+(deftest erillishankinta-nakyy-oikein-tilataulussa
+  (let [iin-mhu-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        kayttaja-id (:id +kayttaja-jvh+)
+        iin-talvihoidon-toimenpideinstanssi (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 Talvihoito TP")
+        iin-hoidonjohto-toimenpideinstanssi (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
+        iin-sopimus-id (hae-sopimus-id-nimella "MHU Ii sopimus")
+        tehtavaryhma-id (hae-tehtavaryhman-id "Erillishankinnat (W)")
+        integraatio-kayttajan-id (hae-kayttajan-id-kayttajanimella "Integraatio")
+        ;; luodaan vahvistamaton erillishankinta urakkaan hoitokaudelle 2021-2022
+        _ (i (format "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu, luoja,
+        summa_indeksikorjattu, indeksikorjaus_vahvistettu, vahvistaja, versio, osio)
+        VALUES (2021, 10, 11, 'laskutettava-tyo', null, %s, %s, %s, '2024-10-22 13:10:31.712000', %s, 11.748, null, null, 0, 'erillishankinnat');" tehtavaryhma-id iin-hoidonjohto-toimenpideinstanssi iin-sopimus-id kayttaja-id))
+        ;; luodaan vahvistettu erillishankinta urakkaan hoitokaudelle 2024-2025
+        _ (i (format "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu,
+        luoja, muokattu, muokkaaja, summa_indeksikorjattu, indeksikorjaus_vahvistettu, vahvistaja, versio, osio, rahavaraus_id)
+        VALUES (2024, 10, 44, 'laskutettava-tyo', null, %s, %s, %s, '2024-10-22 13:10:15.421000', %s, '2024-10-22 13:31:17.776000',
+        %s, 57.112, '2024-10-22 13:31:20.924000', %s, 0, 'erillishankinnat', null);"  tehtavaryhma-id iin-hoidonjohto-toimenpideinstanssi iin-sopimus-id kayttaja-id kayttaja-id kayttaja-id))
+
+        ei-tilatauluja-ennen-paivitysta (q (format "SELECT * FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s AND osio = '%s';" iin-mhu-urakka-id "erillishankinnat"))
+        ;; Päivitetään kust. suunnitelman tilataulu niiltä hoitovuosilta jonne muutos tehtiin, jonka jälkeen assertoidaan että tieto on päivittynyt oikein
+        _ (q "SELECT * FROM korjaa_kustannussuunnitelmien_puuttuvat_tilat(2021);")
+        _ (q "SELECT * FROM korjaa_kustannussuunnitelmien_puuttuvat_tilat(2024);")
+        tilataulut-paivitystyksen-jalkeen (q (format "SELECT * FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s AND osio = '%s';" iin-mhu-urakka-id "erillishankinnat"))
+        tilataulu-erillishankinnat-2021 (kustannussuunnitelman-tila iin-mhu-urakka-id "erillishankinnat" 1)
+        tilataulu-erillishankinnat-2022 (kustannussuunnitelman-tila iin-mhu-urakka-id "erillishankinnat" 2)
+        tilataulu-erillishankinnat-2023 (kustannussuunnitelman-tila iin-mhu-urakka-id "erillishankinnat" 3)
+        tilataulu-erillishankinnat-2024 (kustannussuunnitelman-tila iin-mhu-urakka-id "erillishankinnat" 4)
+        tilataulu-erillishankinnat-2025 (kustannussuunnitelman-tila iin-mhu-urakka-id "erillishankinnat" 5)]
+
+
+    (is (empty? ei-tilatauluja-ennen-paivitysta) "Ennen päivitystä urakassa ei tietoa tilataulussa")
+    (is (not (empty? tilataulut-paivitystyksen-jalkeen)) "Päivityksen jälkeen urakassa on tietoa tilataulussa")
+    (is (false? (:vahvistettu tilataulu-erillishankinnat-2021)) "2021 tilatieto on false")
+    (is (empty? tilataulu-erillishankinnat-2022) "2022 tilatietoa ei ole")
+    (is (empty? tilataulu-erillishankinnat-2023) "2023 tilatietoa ei ole")
+    (is (empty? tilataulu-erillishankinnat-2025) "2025 tilatietoa ei ole")
+    (is (true? (:vahvistettu tilataulu-erillishankinnat-2024)) "2024 vahvistettu on true")
+    (is (number? (:vahvistaja tilataulu-erillishankinnat-2024)) "2024 vahvistetaja löytyy")
+    (is (false? (:vahvistettu tilataulu-erillishankinnat-2025)) "2025 tilatietoa ei ole")
+    (is (= (:muokkaaja tilataulu-erillishankinnat-2021) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")
+    (is (= (:muokkaaja tilataulu-erillishankinnat-2024) integraatio-kayttajan-id) "Muokkaaja on Integraatio-käyttäjä silloin kun korjausskriptillä on päivitetty tilaa.")))
+
+
 
 
