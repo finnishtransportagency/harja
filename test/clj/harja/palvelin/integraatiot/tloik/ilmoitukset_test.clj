@@ -22,7 +22,7 @@
              [format :as df]]
             [clojure.core.async :as async]
             [clj-time.core :as t])
-  (:import (org.postgis PGgeometry)
+  (:import (net.postgis PGgeometry)
            (java.util UUID)))
 
 (def kayttaja "yit-rakennus")

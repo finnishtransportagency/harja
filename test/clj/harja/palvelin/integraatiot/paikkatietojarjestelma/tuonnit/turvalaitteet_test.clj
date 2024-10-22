@@ -4,7 +4,7 @@
             clj-time.core
             [harja.kyselyt.vesivaylat.turvalaitteet :as q-vatu-turvalaite]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaite-tuonti])
-  (:import (org.postgis PGgeometry)))
+  (:import (net.postgis PGgeometry)))
 
 (t/use-fixtures :each (ht/laajenna-integraatiojarjestelmafixturea "jvh"))
 

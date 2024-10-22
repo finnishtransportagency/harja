@@ -8,7 +8,7 @@
             [harja.testi :refer :all]
             [org.httpkit.fake :refer [with-fake-http]]
             [clojure.test :refer :all])
-  (:import (org.postgis PGgeometry)))
+  (:import (net.postgis PGgeometry)))
 
 (def kayttaja "jvh")
 

@@ -14,7 +14,7 @@
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [taoensso.timbre :as log]
     [harja.geo :as geo])
-  (:import (org.postgis PGgeometry)))
+  (:import (net.postgis PGgeometry)))
 
 ;; Ajaetaan jeesql:ssä haun yhteydessä
 (defn muunna-hakija [hakija]

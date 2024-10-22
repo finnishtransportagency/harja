@@ -2,7 +2,7 @@
   "Yleisiä geometria-apureita"
   #?(:clj
      (:import (org.postgresql.geometric PGpoint PGpolygon)
-              (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString
+              (net.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString
                 GeometryCollection Geometry MultiPoint)))
   (:require
    [harja.math :as math]

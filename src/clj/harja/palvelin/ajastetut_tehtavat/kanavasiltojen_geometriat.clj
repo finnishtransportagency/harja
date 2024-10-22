@@ -14,7 +14,7 @@
             [clojure.data.json :as json]
             [clojure.set :as set]
             [clojure.string :as str])
-  (:import (org.postgis Point)))
+  (:import (net.postgis Point)))
 
 ;; Kanavasillat täydentävät kanavasulkuja. Molemmat ovat kanavakokonaisuuden kohteen osia.
 ;; Yhteen kohteeseen voi kuulua esimerkiksi kaksi osaa: silta ja sulku tai useampia siltoja ja sulkuja.

@@ -23,7 +23,7 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.domain.roolit :as roolit])
-  (:import (org.postgis PGgeometry))
+  (:import (net.postgis PGgeometry))
   (:gen-class))
 
 

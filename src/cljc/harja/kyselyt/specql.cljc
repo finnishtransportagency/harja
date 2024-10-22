@@ -11,7 +11,7 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
   #?(:clj
-     (:import (org.postgis PGgeometry)
+     (:import (net.postgis PGgeometry)
               (java.util UUID))))
 
 (s/def ::d/geometry any?)

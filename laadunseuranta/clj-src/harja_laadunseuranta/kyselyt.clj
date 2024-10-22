@@ -4,7 +4,7 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [harja.geo :as geo])
-  (:import (org.postgis PGgeometry)))
+  (:import (net.postgis PGgeometry)))
 
 (defqueries "harja_laadunseuranta/kyselyt/kyselyt.sql")
 
