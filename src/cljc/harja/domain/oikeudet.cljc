@@ -2,12 +2,12 @@
   "Rajapinta oikeustarkistuksiin"
   (:require
    #?(:clj [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])
-   [harja.domain.roolit :as roolit]
-   [harja.tyokalut.json-puhdistaja :as puhdistaja]
+   [harja.domain.roolit :as roolit] 
    #?(:clj [slingshot.slingshot :refer [throw+]])
    #?(:cljs [harja.tiedot.istunto :as istunto])
    [clojure.set :as s]
-   [taoensso.timbre :as log])
+   [taoensso.timbre :as log]
+   [clojure.walk :as walk])
   #?(:cljs
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
@@ -97,6 +97,15 @@
       ;; Ei oikeutta
       nil)))
 
+;; Määritellään henkilötietoja sisältävät avaimet
+(def poistettavat-avaimet #{:etunimi, :sukunimi, :sahkoposti, :puhelin})
+
+;; Poistaa henkilötiedot ennen lokitusta.
+(defn- poista-henkilotiedot [kayttaja]
+  (walk/postwalk
+    #(if (map? %) (apply dissoc % poistettavat-avaimet) %)
+    kayttaja))
+
 (defn- on-oikeus?
   "Tarkistaa :luku, :kirjoitus tai muun tyyppisen oikeuden"
   [tyyppi oikeus urakka-id {:keys [organisaation-urakat roolit organisaatio
@@ -117,7 +126,7 @@
         "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Käyttäjältä puuttuu jokin avaimista "
         (pr-str [:organisaation-urakat :roolit :organisaatio :urakkaroolit :organisaatioroolit])
         " "
-        (pr-str (puhdistaja/poista-henkilotiedot kayttaja))))
+        (pr-str (poista-henkilotiedot kayttaja))))
     (let [oikeus-pred (partial (case tyyppi
                                  :luku on-lukuoikeus?
                                  :kirjoitus on-kirjoitusoikeus?
@@ -187,7 +196,7 @@
      (merkitse-oikeustarkistus-tehdyksi!)
      (when-not (some true? (map #(boolean (voi-lukea? oikeus % kayttaja)) urakka-idt))
        (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (pr-str (puhdistaja/poista-henkilotiedot kayttaja)) "' ei lukuoikeutta "
+                 (str "Käyttäjällä '" (pr-str (poista-henkilotiedot kayttaja)) "' ei lukuoikeutta "
                    (:kuvaus oikeus)
                    (str " yhdesäkään urakassa " urakka-idt)))))))
 
@@ -199,7 +208,7 @@
       (merkitse-oikeustarkistus-tehdyksi!)
       (when-not (voi-lukea? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (pr-str (puhdistaja/poista-henkilotiedot kayttaja)) "' ei lukuoikeutta "
+                 (str "Käyttäjällä '" (pr-str (poista-henkilotiedot kayttaja)) "' ei lukuoikeutta "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
@@ -212,7 +221,7 @@
       (merkitse-oikeustarkistus-tehdyksi!)
       (when-not (voi-kirjoittaa? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (pr-str (puhdistaja/poista-henkilotiedot kayttaja)) "' ei kirjoitusoikeutta "
+                 (str "Käyttäjällä '" (pr-str (poista-henkilotiedot kayttaja)) "' ei kirjoitusoikeutta "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
@@ -224,7 +233,7 @@
       (merkitse-oikeustarkistus-tehdyksi!)
       (when-not  (on-muu-oikeus? tyyppi oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (pr-str (puhdistaja/poista-henkilotiedot kayttaja)) "' ei oikeutta '" tyyppi "' "
+                 (str "Käyttäjällä '" (pr-str (poista-henkilotiedot kayttaja)) "' ei oikeutta '" tyyppi "' "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
@@ -244,7 +253,7 @@
      [kayttaja urakka-id]
      (when-not (voi-kirjata-ls-tyokalulla? kayttaja urakka-id)
        (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (pr-str (puhdistaja/poista-henkilotiedot kayttaja)) "' ei oikeutta tehdä tarkastustyökalulla kirjauksia "
+                 (str "Käyttäjällä '" (pr-str (poista-henkilotiedot kayttaja)) "' ei oikeutta tehdä tarkastustyökalulla kirjauksia "
                       (when urakka-id
                         (str " urakassa " urakka-id))))))))
 
