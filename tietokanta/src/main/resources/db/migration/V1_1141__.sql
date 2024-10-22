@@ -8,15 +8,12 @@ $$
 DECLARE
     yllapitokohde RECORD;
     tienumerot    INTEGER[];
-    pk1geom       geometry;
-    pk2geom       geometry;
-    pk3geom       geometry;
-    toleranssi    INTEGER;
+    pk1geom       GEOMETRY;
+    pk2geom       GEOMETRY;
+    pk3geom       GEOMETRY;
+    radius        INTEGER := 10;
 
 BEGIN
-
-    RAISE NOTICE 'Haetaan yllapitokohteiden tienumerot vuodelle %', _vuosi;
-
     tienumerot := (WITH tiet AS (SELECT y.tr_numero AS tie
                                    FROM yllapitokohde y
                                   WHERE y.vuodet @> ARRAY[_vuosi] ::INT[]
@@ -28,38 +25,29 @@ BEGIN
                  SELECT ARRAY_AGG(DISTINCT tie)
       FROM tiet);
 
-
-    RAISE NOTICE 'tienumerot: %', tienumerot;
-
-    RAISE NOTICE 'Haetaan pk geometryt:';
-    toleranssi := 10;
-    -- Muuttuneet osat: Lisättiin st_buffer geometrialle, jotta siitä saadaan "makkara" eikä viiva
-    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), radius)
       INTO pk1geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK1'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), radius)
       INTO pk2geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK2'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), radius)
       INTO pk3geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK3'
        AND p.tie = ANY (tienumerot);
-
-    RAISE NOTICE 'Geometriat haettu';
 
     FOR yllapitokohde IN (SELECT y.id
                             FROM yllapitokohde y
                            WHERE y.vuodet @> ARRAY[_vuosi] ::INT[]
                            ORDER BY y.id ASC)
         LOOP
-            RAISE NOTICE 'Yllapitokohde :: id: %', yllapitokohde.id;
-            PERFORM laske_yllapitokohdeosien_pk_pituudet(yllapitokohde.id, pk1geom::geometry,
-                                                         pk2geom::geometry, pk3geom::geometry);
+            PERFORM laske_yllapitokohdeosien_pk_pituudet(yllapitokohde.id, pk1geom::GEOMETRY,
+                                                         pk2geom::GEOMETRY, pk3geom::GEOMETRY);
 
         END LOOP;
 END;
@@ -75,15 +63,12 @@ $$
 DECLARE
     yllapitokohde RECORD;
     tienumerot    INTEGER[];
-    pk1geom       geometry;
-    pk2geom       geometry;
-    pk3geom       geometry;
-    toleranssi    INTEGER;
+    pk1geom       GEOMETRY;
+    pk2geom       GEOMETRY;
+    pk3geom       GEOMETRY;
+    radius        INTEGER := 10;
 
 BEGIN
-
-    RAISE NOTICE 'Haetaan yllapitokohteen:  % tienumerot.', yllapitokohde_id;
-
     tienumerot := (WITH tiet AS (SELECT y.tr_numero AS tie
                                    FROM yllapitokohde y
                                   WHERE y.id = yllapitokohde_id
@@ -94,30 +79,24 @@ BEGIN
                  SELECT ARRAY_AGG(DISTINCT tie)
                    FROM tiet);
 
-    RAISE NOTICE 'tienumerot: %', tienumerot;
-
-    RAISE NOTICE 'Haetaan pk geometryt:';
-    toleranssi := 10;
-    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), radius)
       INTO pk1geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK1'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), radius)
       INTO pk2geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK2'
        AND p.tie = ANY (tienumerot);
-    SELECT ST_BUFFER(ST_UNION(p.geometria), toleranssi)
+    SELECT ST_BUFFER(ST_UNION(p.geometria), radius)
       INTO pk3geom
       FROM paallysteen_korjausluokka p
      WHERE p.korjausluokka = 'PK3'
        AND p.tie = ANY (tienumerot);
 
-    RAISE NOTICE 'Geometriat haettu';
-
-    PERFORM laske_yllapitokohdeosien_pk_pituudet(yllapitokohde_id, pk1geom::geometry,
-                                                 pk2geom::geometry, pk3geom::geometry);
+    PERFORM laske_yllapitokohdeosien_pk_pituudet(yllapitokohde_id, pk1geom::GEOMETRY,
+                                                 pk2geom::GEOMETRY, pk3geom::GEOMETRY);
 
 END;
 $$ LANGUAGE plpgsql;
