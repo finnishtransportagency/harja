@@ -61,7 +61,7 @@
                        org.postgresql.geometric.PGpoint
                        (t/write-handler (constantly "pp") geo/pg->clj)
 
-                       net.postgis.PGgeometry
+                       net.postgis.jdbc.PGgeometry
                        (t/write-handler "pg" geo/pg->clj)
 
                        harja.domain.roolit.EiOikeutta

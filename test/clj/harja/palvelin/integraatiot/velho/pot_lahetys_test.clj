@@ -7,7 +7,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test])
-  (:import (net.postgis PGgeometry)))
+  (:import (net.postgis.jdbc PGgeometry)))
 
 (def kayttaja "jvh")
 

@@ -3,7 +3,7 @@
             [taoensso.timbre :as log]
             [harja.geo :as geo])
   (:import (org.postgresql.util PSQLException)
-           (net.postgis Point LineString)))
+           (net.postgis.jdbc.geometry Point LineString)))
 
 (defn hae-tierekisteriosoite [db {alku-x :x alku-y :y} {loppu-x :x loppu-y :y}]
   (let [threshold 250]
