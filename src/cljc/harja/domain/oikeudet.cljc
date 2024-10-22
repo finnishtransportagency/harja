@@ -98,7 +98,7 @@
       nil)))
 
 ;; Määritellään henkilötietoja sisältävät avaimet
-(def poistettavat-avaimet #{:etunimi, :sukunimi, :sahkoposti, :puhelin})
+(def poistettavat-avaimet #{:etunimi :sukunimi :sahkoposti :puhelin})
 
 ;; Poistaa henkilötiedot ennen lokitusta.
 (defn- poista-henkilotiedot [kayttaja]
