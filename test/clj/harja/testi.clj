@@ -902,6 +902,9 @@
 (defn hae-toimenpidekoodin-id [nimi koodi]
   (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "' AND emo = (select id from toimenpide WHERE koodi = '" koodi "');"))))
 
+(defn hae-tehtavan-id-nimella [nimi]
+  (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "';"))))
+
 (defn hae-tehtavaryhman-id [nimi]
   (ffirst (q (str "SELECT id from tehtavaryhma where nimi = '" nimi "';"))))
 
@@ -993,6 +996,18 @@
                       FROM   toimenpideinstanssi
                       WHERE  nimi = '%s'"
                      nimi))))
+
+(defn hae-sopimus-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   sopimus
+                      WHERE  nimi = '%s';"
+               nimi))))
+
+(defn hae-kayttajan-id-kayttajanimella [kayttajanimi]
+  (ffirst (q (format "SELECT id
+                      FROM   kayttaja
+                      WHERE  kayttajanimi = '%s';"
+               kayttajanimi))))
 
 (defn hae-kittila-mhu-talvihoito-tpi-id []
   (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Talvihoito TP"))

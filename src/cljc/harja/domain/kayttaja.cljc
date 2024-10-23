@@ -5,6 +5,7 @@
             [harja.domain.sopimus :as sopimus]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.organisaatio :as o]
+            [clojure.walk :as walk]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
             ])
@@ -39,3 +40,19 @@
 
 (defn kayttaja->str [k]
   (str (::etunimi k) " " (::sukunimi k)))
+
+;; Määritellään henkilötietoja sisältävät avaimet
+;; Funktiota käytätetään kayttaja-mapin kanssa, jossa avaimilla ei ole nimiavaruuksia.
+;; kayttaja {:kayttajanimi kayttajanimi
+;;           :etunimi etunimi
+;;           :sukunimi sukunimi
+;;           :sahkoposti sahkoposti
+;;           :puhelin puhelin
+;;           :organisaatio (:id organisaatio)}
+(def poistettavat-avaimet #{:etunimi, :sukunimi, :sahkoposti, :puhelin})
+
+;; Poistaa henkilötiedot ennen lokitusta.
+(defn kayttaja-ilman-henkilotietoja [kayttaja]
+  (walk/postwalk
+    #(if (map? %) (apply dissoc % poistettavat-avaimet) %)
+    kayttaja))
