@@ -2,6 +2,7 @@
   "Rajapinta oikeustarkistuksiin"
   (:require
    #?(:clj [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])
+   [harja.domain.kayttaja :as kayttaja]
    [harja.domain.roolit :as roolit]
    #?(:clj [slingshot.slingshot :refer [throw+]])
    #?(:cljs [harja.tiedot.istunto :as istunto])
@@ -116,7 +117,7 @@
         "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Käyttäjältä puuttuu jokin avaimista "
         (pr-str [:organisaation-urakat :roolit :organisaatio :urakkaroolit :organisaatioroolit])
         " "
-        (pr-str kayttaja)))
+        (pr-str (kayttaja/kayttaja-ilman-henkilotietoja kayttaja))))
     (let [oikeus-pred (partial (case tyyppi
                                  :luku on-lukuoikeus?
                                  :kirjoitus on-kirjoitusoikeus?
@@ -186,7 +187,7 @@
      (merkitse-oikeustarkistus-tehdyksi!)
      (when-not (some true? (map #(boolean (voi-lukea? oikeus % kayttaja)) urakka-idt))
        (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei lukuoikeutta "
+                 (str "Käyttäjällä '" (pr-str (kayttaja/kayttaja-ilman-henkilotietoja kayttaja)) "' ei lukuoikeutta "
                    (:kuvaus oikeus)
                    (str " yhdesäkään urakassa " urakka-idt)))))))
 
@@ -198,7 +199,7 @@
       (merkitse-oikeustarkistus-tehdyksi!)
       (when-not (voi-lukea? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei lukuoikeutta "
+                 (str "Käyttäjällä '" (pr-str (kayttaja/kayttaja-ilman-henkilotietoja kayttaja)) "' ei lukuoikeutta "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
@@ -211,7 +212,7 @@
       (merkitse-oikeustarkistus-tehdyksi!)
       (when-not (voi-kirjoittaa? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei kirjoitusoikeutta "
+                 (str "Käyttäjällä '" (pr-str (kayttaja/kayttaja-ilman-henkilotietoja kayttaja)) "' ei kirjoitusoikeutta "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
@@ -223,7 +224,7 @@
       (merkitse-oikeustarkistus-tehdyksi!)
       (when-not  (on-muu-oikeus? tyyppi oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei oikeutta '" tyyppi "' "
+                 (str "Käyttäjällä '" (pr-str (kayttaja/kayttaja-ilman-henkilotietoja kayttaja)) "' ei oikeutta '" tyyppi "' "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
@@ -243,7 +244,7 @@
      [kayttaja urakka-id]
      (when-not (voi-kirjata-ls-tyokalulla? kayttaja urakka-id)
        (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei oikeutta tehdä tarkastustyökalulla kirjauksia "
+                 (str "Käyttäjällä '" (pr-str (kayttaja/kayttaja-ilman-henkilotietoja kayttaja)) "' ei oikeutta tehdä tarkastustyökalulla kirjauksia "
                       (when urakka-id
                         (str " urakassa " urakka-id))))))))
 
