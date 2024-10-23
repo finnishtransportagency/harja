@@ -58,7 +58,7 @@ BEGIN
             INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja, luotu, vahvistaja, vahvistus_pvm)
 
             VALUES (urakkaid, 'hankintakustannukset', hoitokauden_jarjestysluku,
-                    hankintakustannus_rivi.vahvistaja IS NOT NULL, integraatiokayttaja, hankintakustannus_rivi.luotu,
+                    hankintakustannus_rivi.vahvistaja IS NOT NULL, integraatiokayttaja, NOW(),
             hankintakustannus_rivi.vahvistaja, hankintakustannus_rivi.indeksikorjaus_vahvistettu)
             ON CONFLICT (urakka, osio, hoitovuosi) DO UPDATE SET
                 vahvistaja = hankintakustannus_rivi.vahvistaja,
@@ -87,7 +87,7 @@ BEGIN
 
                     INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja, luotu, vahvistaja, vahvistus_pvm)
                     VALUES (urakkaid, kust_arv_osio::suunnittelu_osio, hoitokauden_jarjestysluku,
-                            kustannusarvoitutyo_rivi.vahvistaja IS NOT NULL, integraatiokayttaja, kustannusarvoitutyo_rivi.luotu,
+                            kustannusarvoitutyo_rivi.vahvistaja IS NOT NULL, integraatiokayttaja, NOW(),
                             kustannusarvoitutyo_rivi.vahvistaja, kustannusarvoitutyo_rivi.indeksikorjaus_vahvistettu)
                         ON CONFLICT (urakka, osio, hoitovuosi) DO NOTHING;
                     IF NOT FOUND THEN RAISE WARNING 'suunnittelu_kustannussuunnitelman_tila insert osioon % odottamattomasti epäonnistui.', kust_arv_osio;
@@ -112,7 +112,7 @@ BEGIN
 
             INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja, luotu, vahvistaja, vahvistus_pvm)
             VALUES (urakkaid, 'johto-ja-hallintokorvaus', hoitokauden_jarjestysluku,
-                    johto_ja_hallintokorvaus_rivi.vahvistaja IS NOT NULL, integraatiokayttaja, johto_ja_hallintokorvaus_rivi.luotu,
+                    johto_ja_hallintokorvaus_rivi.vahvistaja IS NOT NULL, integraatiokayttaja, NOW(),
                     johto_ja_hallintokorvaus_rivi.vahvistaja, johto_ja_hallintokorvaus_rivi.indeksikorjaus_vahvistettu)
                 ON CONFLICT (urakka, osio, hoitovuosi) DO NOTHING;
             IF NOT FOUND THEN RAISE WARNING 'suunnittelu_kustannussuunnitelman_tila insert osioon johto-ja-hallintokorvaus odottamattomasti epäonnistui.';
@@ -132,7 +132,7 @@ BEGIN
 
             INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja, luotu, vahvistaja, vahvistus_pvm)
             VALUES (urakkaid, 'tavoite-ja-kattohinta', hoitokauden_jarjestysluku,
-                    tavoite_ja_kattohinta_rivi.vahvistaja IS NOT NULL, integraatiokayttaja, tavoite_ja_kattohinta_rivi.luotu,
+                    tavoite_ja_kattohinta_rivi.vahvistaja IS NOT NULL, integraatiokayttaja, NOW(),
                     tavoite_ja_kattohinta_rivi.vahvistaja, tavoite_ja_kattohinta_rivi.indeksikorjaus_vahvistettu)
                 ON CONFLICT (urakka, osio, hoitovuosi) DO NOTHING;
             IF NOT FOUND THEN RAISE WARNING 'suunnittelu_kustannussuunnitelman_tila insert osioon tavoite-ja-kattohinta odottamattomasti epäonnistui.';
