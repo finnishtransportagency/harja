@@ -10,10 +10,10 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as ku]
             [harja.pvm :as pvm]
-            [harja.loki :refer [log tarkkaile!]]
+            [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko vihje ajax-loader-pieni] :as yleiset]
             [harja.tiedot.raportit :as raportit]
-            [cljs.core.async :refer [<! >! chan timeout]]
+            [cljs.core.async :refer [<! timeout]]
             [harja.views.kartta :as kartta]
             [harja.domain.laadunseuranta.laatupoikkeama :as laatupoikkeamat]
             [harja.views.urakka.valinnat :as valinnat]
@@ -36,8 +36,6 @@
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
-
-
 
 (def valittu-raporttityyppi-nimi (reaction (nav/valittu-valilehti :raportit)))
 
