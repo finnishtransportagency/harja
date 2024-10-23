@@ -27,11 +27,11 @@ BEGIN
     -- erillishankinnat: kustannusarvioitu_tyo (osio: erillishankinnat) --> suunnittelu_kustannussuunnitelman_tila (osio: erillishankinnat)
     -- tavoitehintaiset-rahavaraukset: kustannusarvioitu_tyo (osio: tavoitehintaiset-rahavaraukset) --> suunnittelu_kustannussuunnitelman_tila (osio: tavoitehintaiset-rahavaraukset)
     -- tilaajan-rahavaraukset: tämä on deprikoitunut, jätetään huomiotta
-    -- johto_ja_hallintokorvaus: kustannusarvioitu_tyo (osio: johto_ja_hallintokorvaus) --> suunnittelu_kustannussuunnitelman_tila (osio: johto_ja_hallintokorvaus)
+    -- johto_ja_hallintokorvaus: johto_ja_hallintokorvaus --> suunnittelu_kustannussuunnitelman_tila (osio: johto_ja_hallintokorvaus)
     -- hoidonjohtopalkkio: kustannusarvioitu_tyo (osio: hoidonjohtopalkkio) --> suunnittelu_kustannussuunnitelman_tila (osio: hoidonjohtopalkkio)
-    -- tavoite_ja_kattohinta: kustannusarvioitu_tyo (osio: tavoite_ja_kattohinta) --> suunnittelu_kustannussuunnitelman_tila (osio: tavoite_ja_kattohinta)
+    -- tavoite_ja_kattohinta: urakka_tavoite (vain vahvistetut siirretään) --> suunnittelu_kustannussuunnitelman_tila (osio: tavoite_ja_kattohinta)
     -- huom: tavoite- ja kattohinnalla ei ole tilariviä muuta kuin vahvistettu-tilassa. Eli jos jokin osio on vielä vahvistamatta, myös tavoite- ja kattohinnan
-    -- tulkitaan olevan vahvistamatta urakan_kustannussuunnitelman_tila -funktion logiikan mukaisesti.
+    -- tulkitaan olevan vahvistamatta urakan_kustannussuunnitelman_tila -funktion logiikan mukaisesti, vaikkei niistä luodakaan riviä tilatauluun.
 
     RAISE NOTICE 'hoitourakka-idt: %', hoitourakka_idt;
     FOREACH urakkaid IN ARRAY hoitourakka_idt LOOP
