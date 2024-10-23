@@ -42,6 +42,13 @@
   (str (::etunimi k) " " (::sukunimi k)))
 
 ;; Määritellään henkilötietoja sisältävät avaimet
+;; Funktiota käytätetään kayttaja-mapin kanssa, jossa avaimilla ei ole nimiavaruuksia.
+;; kayttaja {:kayttajanimi kayttajanimi
+;;           :etunimi etunimi
+;;           :sukunimi sukunimi
+;;           :sahkoposti sahkoposti
+;;           :puhelin puhelin
+;;           :organisaatio (:id organisaatio)}
 (def poistettavat-avaimet #{:etunimi, :sukunimi, :sahkoposti, :puhelin})
 
 ;; Poistaa henkilötiedot ennen lokitusta.
