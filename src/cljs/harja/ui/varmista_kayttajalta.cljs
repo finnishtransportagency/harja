@@ -15,8 +15,11 @@
   :peruuta-txt = peruuta-painikkeen teksti
   :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä
   :napit = Vektori, joka määrittelee footeriin asetettavat napit. Vaihtoehtoja ovat :peruuta, :hyvaksy, :takaisin, :poista."
-  [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka content-tyyli body-tyyli]}]
-  (let [napit (or napit [:hyvaksy :peruuta])]
+  [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka content-tyyli body-tyyli
+           siirra-fokus-edelliseen-elementtiin modaalin-fokus-elementti]}]
+  (let [napit (or napit [:hyvaksy :peruuta])
+        edellinen-elementti (atom nil)]
+    (reset! edellinen-elementti (.-activeElement js/document))
     (modal/nayta! {:otsikko otsikko
                    :footer [:span
                             (doall
@@ -31,7 +34,12 @@
                                                                      (modal/piilota!)
                                                                      (toiminto-fn))
                                              {:luokka "pull-left"}]
-                                    :peruuta [napit/peruuta (or peruuta-txt "Peruuta") #(modal/piilota!)
+                                    :peruuta [napit/peruuta (or peruuta-txt "Peruuta")
+                                              #(do
+                                                 (modal/piilota!)
+                                                 (when
+                                                   (and @edellinen-elementti siirra-fokus-edelliseen-elementtiin)
+                                                   (.focus @edellinen-elementti)))
                                               {:luokka "pull-right"}]
                                     :takaisin [napit/takaisin "Peruuta" #(modal/piilota!)
                                                {:luokka "pull-right"}]
@@ -47,6 +55,12 @@
                                            {:luokka "pull-left"}]
                                     nil)
                                   {:key (str "varmistus-nappi-" tyyppi)})))]
+                   :sulje-ruksista-fn #(do
+                                         (modal/piilota!)
+                                         (when
+                                           (and @edellinen-elementti siirra-fokus-edelliseen-elementtiin)
+                                           (.focus @edellinen-elementti)))
+                   :modaalin-fokus-elementti modaalin-fokus-elementti
                    :modal-luokka modal-luokka :content-tyyli content-tyyli :body-tyyli body-tyyli}
                   sisalto)))
 

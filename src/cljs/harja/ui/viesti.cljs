@@ -71,7 +71,8 @@
                 nil)
         keskella-luokka (case luokka
                           :neutraali-ikoni-keskella "toast-keskella"
-                          nil)]
+                          nil)
+        sulje! #(swap! toast-viesti-sisalto assoc :nakyvissa? false)]
     (if nakyvissa?
       (do (when (not= kesto viestin-nayttoaika-aareton)
             (go (<! (timeout kesto))
@@ -87,15 +88,17 @@
 
         ^{:key "viesti"}
         [:div {:class (str "toast-viesti-container " (or keskella-luokka ""))}
-         [:div {:on-click #(swap! toast-viesti-sisalto assoc :nakyvissa? false)
-                :class (when luokka (+toast-viesti-luokat+ luokka))}
+         [:div {:on-click sulje!
+                :on-key-down #(when (dom/enter-nappain? %) (sulje!))
+                :class (when luokka (+toast-viesti-luokat+ luokka))
+                :tabIndex "0"}
           (when ikoni [:span ikoni])
           [:span {:style {:padding-left "10px"}} (str " " viesti)]
           ;; Sulje nappi :varoitus sekä :ikoni-keskella tyypeille
           (when (or
                   (= :varoitus luokka)
                   (= :neutraali-ikoni-keskella luokka))
-            [:span {:style {:padding-left "16px"}}
+            [:span {:style {:padding-left "16px"} :tabIndex "0"}
              [ikonit/sulje]])]])
       ^{:key "ei-viestia"}
       [:div.ei-viestia-nyt])))

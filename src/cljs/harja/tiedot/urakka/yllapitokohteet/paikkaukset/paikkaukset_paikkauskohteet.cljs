@@ -774,10 +774,14 @@
       true
       :else false)))
 
+(def edellinen-elementti (atom nil))
+
 (defn nayta-modal [otsikko viesti ok-nappi peruuta-nappi]
-  (fn [] (modal/nayta!
+  (fn []  (reset! edellinen-elementti (.-activeElement js/document))
+          (modal/nayta!
            {:modal-luokka "harja-modal-keskitetty"
-            :luokka "modal-dialog-keskitetty"}
+            :luokka "modal-dialog-keskitetty"
+            :modaalin-fokus-elementti :last}
            [:div
             {:style
              {:display :flex

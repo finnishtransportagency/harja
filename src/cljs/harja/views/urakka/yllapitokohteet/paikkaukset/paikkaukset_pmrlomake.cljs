@@ -1,6 +1,7 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake
-  (:require [harja.loki :refer [log]]
+  (:require [reagent.core :as r]
             [harja.domain.paikkaus :as paikkaus]
+            [harja.ui.dom :as dom]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.validointi :as validointi]
@@ -118,22 +119,42 @@
             (lisatiedot-kentta))))
 
 (defn pmr-lomake [_e! _lomake _tyomenetelmat]
-  (fn [e! lomake tyomenetelmat]
-    [lomake/lomake
-     {:ei-borderia? true
-      :tarkkaile-ulkopuolisia-muutoksia? true
-      :otsikko "Muokkaa paikkauskohdetta"
-      :muokkaa! #(e! (t-pmrlomake/->PaivitaPMRLomake (lomake/ilman-lomaketietoja %)))
-      :footer-fn (fn [lomake]
-                   [:div.row
-                    [:hr]
-                    [:div.row
-                     [:div.col-xs-8 {:style {:padding-left "0"}}
-                      [napit/tallenna
-                       "Tallenna muutokset"
-                       #(e! (t-pmrlomake/->TallennaPMRLomake (lomake/ilman-lomaketietoja lomake)))
-                       {:disabled (not (::tila/validi? lomake))}]]
-                     [:div.col-xs-4 {:style {:text-align "end"}}
-                      [napit/yleinen-toissijainen "Sulje" #(e! (t-pmrlomake/->SuljePMRLomake))]]]])}
-     (pmr-skeema lomake tyomenetelmat)
-     lomake]))
+  (let [lomake-ref (r/atom nil)
+        edellinen-elementti (r/atom nil)]
+    (r/create-class
+      {:component-did-mount (fn []
+                              (let [lomake-nakyma @lomake-ref]
+                                (reset! edellinen-elementti (.-activeElement js/document))
+                                (when lomake-nakyma
+                                  (dom/siirra-fokus-nakymaan lomake-nakyma :first))))
+       :reagent-render
+       (fn [e! lomake tyomenetelmat]
+         [:div
+          [:div {:tabIndex "0"
+                 :aria-hidden true
+                 :on-focus #(when @lomake-ref
+                              (.focus @lomake-ref))}]
+          [:div {:tab-index "0"
+                 :ref #(reset! lomake-ref %)}
+           [lomake/lomake
+            {:ei-borderia? true
+             :tarkkaile-ulkopuolisia-muutoksia? true
+             :otsikko "Muokkaa paikkauskohdetta"
+             :muokkaa! #(e! (t-pmrlomake/->PaivitaPMRLomake (lomake/ilman-lomaketietoja %)))
+             :footer-fn (fn [lomake]
+                          [:div.row
+                           [:hr]
+                           [:div.row
+                            [:div.col-xs-8 {:style {:padding-left "0"}}
+                             [napit/tallenna
+                              "Tallenna muutokset"
+                              #(e! (t-pmrlomake/->TallennaPMRLomake (lomake/ilman-lomaketietoja lomake)))
+                              {:disabled (not (::tila/validi? lomake))}]]
+                            [:div.col-xs-4 {:style {:text-align "end"}}
+                             [napit/yleinen-toissijainen "Sulje" #(do (e! (t-pmrlomake/->SuljePMRLomake)) (when @edellinen-elementti (.focus @edellinen-elementti)))]]]])}
+            (pmr-skeema lomake tyomenetelmat)
+            lomake]]
+          [:div {:tabIndex "0"
+                 :aria-hidden true
+                 :on-focus #(when @lomake-ref
+                              (.focus @lomake-ref))}]])})))
