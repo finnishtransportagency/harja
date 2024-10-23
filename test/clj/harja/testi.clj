@@ -902,6 +902,9 @@
 (defn hae-toimenpidekoodin-id [nimi koodi]
   (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "' AND emo = (select id from toimenpide WHERE koodi = '" koodi "');"))))
 
+(defn hae-tehtavan-id-nimella [nimi]
+  (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "';"))))
+
 (defn hae-tehtavaryhman-id [nimi]
   (ffirst (q (str "SELECT id from tehtavaryhma where nimi = '" nimi "';"))))
 
