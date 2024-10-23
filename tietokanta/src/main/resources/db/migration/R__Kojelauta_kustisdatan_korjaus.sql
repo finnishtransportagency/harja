@@ -36,7 +36,7 @@ BEGIN
         SELECT * FROM monesko_hoitokausi((SELECT alkupvm FROM urakka where id = urakkaid),
                                          (SELECT loppupvm FROM urakka where id = urakkaid),
                       hoitokauden_alkuvuosi) into hoitokauden_jarjestysluku;
-        RAISE NOTICE 'Korjataan kustannussuunnitelman tilatieto urakalle  %, nimi %:', urakkaid, (SELECT nimi FROM urakka where id = urakkaid);
+        RAISE NOTICE 'Korjataan kustannussuunnitelman tilatieto urakalle %, nimi %:', urakkaid, (SELECT nimi FROM urakka where id = urakkaid);
         RAISE NOTICE 'Hoitokauden alkuvuosi: % ja hoitokauden järjestysluku: %', hoitokauden_alkuvuosi, hoitokauden_jarjestysluku;
 
         -- Haetaan urakan kiinteähintaista työtä eli hankintakustannuksia
