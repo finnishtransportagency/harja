@@ -19,9 +19,8 @@ BEGIN
                                                 make_date(hoitokauden_alkuvuosi, 10, 1) BETWEEN u.alkupvm and u.loppupvm)
       into hoitourakka_idt;
 
-
-    -- Kustannusssuunitelman tilatiedot löytyvät taulusta suunnittelu_kustannussuunnitelman_tila ja ne rakentuvat seuraavan logiikan mukaisesti. Ne otettiin käyttöön vasta 2021 lopulla,
-    -- joten kaikki se tieto, joka on viimeksi muokattu tuota ajankohtaa ennen, ei ole vielä suunnittelu_kustannussuunnitelman_tila -taulussa
+    -- Kustannusssuunitelman tilatiedot löytyvät taulusta suunnittelu_kustannussuunnitelman_tila ja ne rakentuvat ao. logiikan mukaisesti.
+    -- Tilataulu otettiin käyttöön vasta 2021 lopulla, joten kaikki se tieto, jota on viimeksi muokattu tuota ajankohtaa ennen, ei ole vielä tilataulussa.
 
     -- hankintakustannukset: kiinteahintainen_tyo --> suunnittelu_kustannussuunnitelman_tila (osio: hankintakustannukset)
     -- erillishankinnat: kustannusarvioitu_tyo (osio: erillishankinnat) --> suunnittelu_kustannussuunnitelman_tila (osio: erillishankinnat)
@@ -33,13 +32,12 @@ BEGIN
     -- huom: tavoite- ja kattohinnalla ei ole tilariviä muuta kuin vahvistettu-tilassa. Eli jos jokin osio on vielä vahvistamatta, myös tavoite- ja kattohinnan
     -- tulkitaan olevan vahvistamatta urakan_kustannussuunnitelman_tila -funktion logiikan mukaisesti, vaikkei niistä luodakaan riviä tilatauluun.
 
-    RAISE NOTICE 'hoitourakka-idt: %', hoitourakka_idt;
     FOREACH urakkaid IN ARRAY hoitourakka_idt LOOP
-
         SELECT * FROM monesko_hoitokausi((SELECT alkupvm FROM urakka where id = urakkaid),
                                          (SELECT loppupvm FROM urakka where id = urakkaid),
                       hoitokauden_alkuvuosi) into hoitokauden_jarjestysluku;
-        RAISE NOTICE 'Hoitokauden alkuvuosi: % ja järjestysluku: %', hoitokauden_alkuvuosi, hoitokauden_jarjestysluku;
+        RAISE NOTICE 'Korjataan kustannussuunnitelman tilatieto urakalle  %, nimi %:', urakkaid, (SELECT nimi FROM urakka where id = urakkaid);
+        RAISE NOTICE 'Hoitokauden alkuvuosi: % ja hoitokauden järjestysluku: %', urakkaid, hoitokauden_alkuvuosi, hoitokauden_jarjestysluku;
 
         -- Haetaan urakan kiinteähintaista työtä eli hankintakustannuksia
         SELECT *
@@ -48,10 +46,6 @@ BEGIN
          AND ((vuosi = hoitokauden_alkuvuosi AND kuukausi BETWEEN 10 AND 12) OR
               (vuosi = hoitokauden_alkuvuosi + 1 AND kuukausi BETWEEN 1 AND 9)) LIMIT 10 INTO hankintakustannus_rivi;
 
-        RAISE NOTICE 'Jarnon hankintakustannuksen count %', (SELECT count(hankintakustannus_rivi));
-        RAISE NOTICE 'Jarnon hankintakustannus_rivi.id: %', hankintakustannus_rivi.id;
-        RAISE NOTICE 'Jarnon hankintakustannuksen vahvistaja %', (hankintakustannus_rivi.vahvistaja);
-
         -- Jos on olemassa hankintakustannusten rivi, mutta ei vielä vastaavaa tietoa tilataulussa, lisätään tilatauluun rivi
         -- olemassaolo on testattava jonkin RECORD-tyypin aina läsnä olevan kentän olemassaoloa tarkastelemalla. Tyhjäkin RECORD
         -- "on olemassa", vaikka sen sisältö olisi täynnä NULL:ia (,,,,,,,,,,,)
@@ -59,7 +53,7 @@ BEGIN
            ((SELECT count(*)
              FROM suunnittelu_kustannussuunnitelman_tila
             WHERE urakka = urakkaid AND osio = 'hankintakustannukset' AND hoitovuosi = hoitokauden_jarjestysluku) = 0) THEN
-            RAISE NOTICE 'hankintakustannus on kirjattu mutta sen riviä ei ollut suunnittelu_kustannussuunnitelman_tila -taulussa, insertoidaan...';
+            RAISE NOTICE 'Hankintakustannus on kirjattu mutta sen riviä ei ollut suunnittelu_kustannussuunnitelman_tila -taulussa, insertoidaan urakkaan: %...', urakkaid;
 
             INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja, luotu, vahvistaja, vahvistus_pvm)
 
@@ -77,8 +71,6 @@ BEGIN
         -- Käsitellään tässä samassa koodissa loopin avulla loput osiot, koska ne kaikki löytyvät taulusta kustannusarvioitu_tyo:
 
         FOREACH kust_arv_osio IN ARRAY kustannusarvioidut_osiot LOOP
-                RAISE NOTICE 'JARNO KUST ARV OSIO: %', kust_arv_osio;
-
                 SELECT id, osio, indeksikorjaus_vahvistettu, vahvistaja, luotu, luoja, muokkaaja, muokattu
                   FROM kustannusarvioitu_tyo
                  WHERE toimenpideinstanssi in (select id from toimenpideinstanssi WHERE urakka = urakkaid)
@@ -91,7 +83,7 @@ BEGIN
                    ((SELECT count(*)
                      FROM suunnittelu_kustannussuunnitelman_tila
                     WHERE urakka = urakkaid AND osio = kust_arv_osio::suunnittelu_osio AND hoitovuosi = hoitokauden_jarjestysluku) = 0) THEN
-                    RAISE NOTICE 'kustannusarvoitutyo_rivi on olemassa osioon %, muttei ollut suunnittelu_kustannussuunnitelman_tila -taulussa, insertoidaan...', kust_arv_osio;
+                    RAISE NOTICE 'kustannusarvoitutyo_rivi on olemassa osioon %, muttei ollut suunnittelu_kustannussuunnitelman_tila -taulussa, insertoidaan urakkaan: %...' , kust_arv_osio, urakkaid;
 
                     INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja, luotu, vahvistaja, vahvistus_pvm)
                     VALUES (urakkaid, kust_arv_osio::suunnittelu_osio, hoitokauden_jarjestysluku,
@@ -116,7 +108,7 @@ BEGIN
            ((SELECT count(*)
                FROM suunnittelu_kustannussuunnitelman_tila
               WHERE urakka = urakkaid AND osio = 'johto-ja-hallintokorvaus' AND hoitovuosi = hoitokauden_jarjestysluku) = 0) THEN
-            RAISE NOTICE 'johto_ja_hallintokorvaus_rivi on olemassa, muttei ollut suunnittelu_kustannussuunnitelman_tila -taulussa, insertoidaan...';
+            RAISE NOTICE 'johto_ja_hallintokorvaus_rivi on olemassa, muttei ollut suunnittelu_kustannussuunnitelman_tila -taulussa, insertoidaan urakkaan: %...', urakkaid;
 
             INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja, luotu, vahvistaja, vahvistus_pvm)
             VALUES (urakkaid, 'johto-ja-hallintokorvaus', hoitokauden_jarjestysluku,
@@ -132,13 +124,11 @@ BEGIN
                  WHERE urakka = urakkaid AND hoitokausi = hoitokauden_jarjestysluku
         AND vahvistaja IS NOT NULL INTO tavoite_ja_kattohinta_rivi;
 
-        RAISE NOTICE 'tavoite_ja_kattohinta_rivi %..', tavoite_ja_kattohinta_rivi;
-
         IF tavoite_ja_kattohinta_rivi.id IS NOT NULL AND
            ((SELECT count(*)
                FROM suunnittelu_kustannussuunnitelman_tila
               WHERE urakka = urakkaid AND osio = 'tavoite-ja-kattohinta' AND hoitovuosi = hoitokauden_jarjestysluku) = 0) THEN
-            RAISE NOTICE 'tavoite_ja_kattohinta_rivi on olemassa, muttei ollut suunnittelu_kustannussuunnitelman_tila -taulussa, insertoidaan...';
+            RAISE NOTICE 'tavoite_ja_kattohinta_rivi on olemassa, muttei ollut suunnittelu_kustannussuunnitelman_tila -taulussa, insertoidaan urakkaan: %...', urakkaid;
 
             INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja, luotu, vahvistaja, vahvistus_pvm)
             VALUES (urakkaid, 'tavoite-ja-kattohinta', hoitokauden_jarjestysluku,
@@ -148,12 +138,6 @@ BEGIN
             IF NOT FOUND THEN RAISE WARNING 'suunnittelu_kustannussuunnitelman_tila insert osioon tavoite-ja-kattohinta odottamattomasti epäonnistui.';
             END IF;
         END IF;
-
-
-    RAISE NOTICE 'URAKKAID %, nimi %:, seuraavat kustannussuunnitelman tiedot löytyivät', urakkaid, (SELECT nimi FROM urakka where id = urakkaid);
-    RAISE NOTICE 'hankintakustannus_rivi %', hankintakustannus_rivi;
-    RAISE NOTICE 'johto_ja_hallintokorvaus_rivi %', johto_ja_hallintokorvaus_rivi;
-
 END LOOP;
 
 
