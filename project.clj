@@ -17,7 +17,7 @@
                  ;;;;;;; Yleiset ;;;;;;;
 
                  [prismatic/schema "1.4.1"]
-                 [org.clojure/core.async "0.4.500"]
+                 [org.clojure/core.async "0.5.527"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
                  [com.cognitect/transit-clj "1.0.333"]
@@ -68,10 +68,10 @@
                  [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "29.6" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "29.6" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "29.6" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "29.6" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -108,9 +108,9 @@
                  [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "5.2.5"]
-                 [org.apache.poi/poi-scratchpad "5.2.5"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "5.3.0"]
+                 [org.apache.poi/poi-scratchpad "5.3.0"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "5.3.0"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "2.5.0"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
@@ -157,9 +157,9 @@
                  ;; data.xml tarvitaan mm. XML-tiedostojen parsimiseen ja pretty-printtaukseen
                  [org.clojure/data.xml "0.0.8"]]
 
-  :managed-dependencies [[org.apache.poi/poi "5.2.5"]
-                         [org.apache.poi/poi-scratchpad "5.2.5"]
-                         [org.apache.poi/poi-ooxml "5.2.5"]
+  :managed-dependencies [[org.apache.poi/poi "5.3.0"]
+                         [org.apache.poi/poi-scratchpad "5.3.0"]
+                         [org.apache.poi/poi-ooxml "5.3.0"]
                          ;; Ratkaise: CVE-2024-26308 ja CVE-2024-25710
                          ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
                          ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
