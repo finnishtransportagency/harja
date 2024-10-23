@@ -11,7 +11,7 @@
             [harja.tiedot.kanavat.urakka.kanavaurakka :as ku]
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.yleiset :refer [livi-pudotusvalikko vihje] :as yleiset]
+            [harja.ui.yleiset :refer [livi-pudotusvalikko vihje ajax-loader-pieni] :as yleiset]
             [harja.tiedot.raportit :as raportit]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.views.kartta :as kartta]
@@ -37,7 +37,10 @@
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+
+
 (def valittu-raporttityyppi-nimi (reaction (nav/valittu-valilehti :raportit)))
+
 (defn- valitse-raporttityyppi! [nimi]
   (nav/aseta-valittu-valilehti! :raportit nimi))
 
@@ -732,7 +735,7 @@
     (str "Valitse hallintayksikkö ja urakka nähdäksesi raportit")
     (str "Ei raportteja saatavilla urakkatyypissä " urakkatyyppi)))
 
-(defn raporttivalinnat []
+(defn raporttivalinnat [ensimmainen-urakka-viimeksi]
   (komp/luo
     ;; Ei tällä hetkellä raporteissa sallita urakoitsijavalintaa
     (komp/sisaan #(nav/valitse-urakoitsija! nil))
@@ -740,46 +743,79 @@
       (let [v-ur @nav/valittu-urakka
             v-ur-tyyppi @nav/urakkatyyppi
             v-hal @nav/valittu-hallintayksikko
+            ensimmainen-urakka-yksikossa (->> @nav/suodatettu-urakkalista (sort-by :nimi) (keep :nimi) first)
+            nykyinen-hallintayks-avain (->> v-hal :id str keyword)
             urakan-nimen-pituus 36
             konteksti (cond
                         v-ur "urakka"
                         v-hal "hallintayksikko"
                         :default "koko maa")
             raportissa? (some? @raportit/suoritettu-raportti)
-            raporttilista @mahdolliset-raporttityypit]
-        [:div.raporttivalinnat
+            raporttilista @mahdolliset-raporttityypit
+            ladataanko-urakoita? (some (fn [[k v]]
+                                         ;; raporttilista ei ole tyhjänä,
+                                         ;; hallintayksikkö valittuna,
+                                         ;; urakoita ei ole -> urakoita ladataan
+                                         (or
+                                           (and
+                                             (seq raporttilista)
+                                             (seq v-hal)
+                                             (nil? ensimmainen-urakka-yksikossa))
+                                           ;; raporttilista ei ole tyhjänä,
+                                           ;; listassa toisen yksikön urakka -> urakoita ladataan
+                                           (and
+                                             (seq raporttilista)
+                                             (not= k nykyinen-hallintayks-avain)
+                                             (= v ensimmainen-urakka-yksikossa))))
+                                   @ensimmainen-urakka-viimeksi)]
+        [:div.raporttivalinnat 
          (when-not raportissa?
            [:span
             [:h3 "Raportin tiedot"]
-            [yleiset/tietoja {:class "border-bottom"}
+
+            [yleiset/tietoja {:class "border-bottom raporttivalinnat-valistys"}
              "Hallintayksikkö" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
-             "Urakka" (when v-hal
-                        [yleiset/livi-pudotusvalikko
-                         {:valitse-fn     nav/valitse-urakka!
-                          :valinta        v-ur
-                          :class          "raportti-alasveto"
-                          :nayta-ryhmat   [:kaynnissa :paattyneet]
-                          :ryhmittely     (let [nyt (pvm/nyt)]
-                                            #(if (pvm/jalkeen? nyt (:loppupvm %))
-                                              :paattyneet
-                                              (when (pvm/jalkeen? nyt (:alkupvm %))
-                                                :kaynnissa)))
-                          :ryhman-otsikko #(case %
-                                            :kaynnissa "Käynnissä olevat urakat"
-                                            :paattyneet "Päättyneet urakat")
-                          :format-fn      (fnil (comp
-                                                  (partial fmt/lyhennetty-urakan-nimi urakan-nimen-pituus)
-                                                  :nimi)
-                                                {:nimi (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
-                                                         "Kaikki urakat"
-                                                         "Valitse urakka")})}
-                         (concat (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
-                                   [nil]
-                                   [])
-                                 (map
-                                   #(assoc % :nimi
-                                             (fmt/lyhennetty-urakan-nimi urakan-nimen-pituus (:nimi %)))
-                                   (sort-by :nimi @nav/suodatettu-urakkalista)))])
+             "Urakka" (cond
+                        ;; Latausindikaattori jos urakkahaku on käynnissä
+                        (and v-hal ladataanko-urakoita?)
+                        [ajax-loader-pieni (str "Haetaan tietoja...")]
+
+                        ;; Urakoita ei ladata, hy valittuna
+                        (and v-hal (not ladataanko-urakoita?))
+                        (do
+                          ;; Lisää :hy <urakka> atomiin,  tunnistetaan tällä ladataanko urakoita
+                          (swap! ensimmainen-urakka-viimeksi assoc nykyinen-hallintayks-avain ensimmainen-urakka-yksikossa)
+                          ;; Näytä alasveto
+                          [yleiset/livi-pudotusvalikko
+                           {:valitse-fn     nav/valitse-urakka!
+                            :valinta        v-ur
+                            :class          "raportti-alasveto"
+                            :nayta-ryhmat   [:kaynnissa :paattyneet]
+                            :ryhmittely     (let [nyt (pvm/nyt)]
+                                              #(if (pvm/jalkeen? nyt (:loppupvm %))
+                                                 :paattyneet
+                                                 (when (pvm/jalkeen? nyt (:alkupvm %))
+                                                   :kaynnissa)))
+                            :ryhman-otsikko #(case %
+                                               :kaynnissa "Käynnissä olevat urakat"
+                                               :paattyneet "Päättyneet urakat")
+                            :format-fn      (fnil (comp
+                                                    (partial fmt/lyhennetty-urakan-nimi urakan-nimen-pituus)
+                                                    :nimi)
+                                              {:nimi (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                                                       "Kaikki urakat"
+                                                       "Valitse urakka")})}
+                           (concat (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                                     [nil]
+                                     [])
+                             (map
+                               #(assoc % :nimi
+                                  (fmt/lyhennetty-urakan-nimi urakan-nimen-pituus (:nimi %)))
+                               (sort-by :nimi @nav/suodatettu-urakkalista)))])
+
+                        ;; Hallintayksikköä ei valittuna 
+                        :else nil)
+
              "Raportti" (cond
                           (nil? @raporttityypit)
                           [:span "Raportteja haetaan..."]
@@ -804,8 +840,8 @@
                                                 :valitse-fn #(valitse-raporttityyppi! (:nimi %))
                                                 :class "raportti-alasveto"
                                                 :li-luokka-fn #(if (= "Työmaakokousraportti" (:kuvaus %))
-                                                                "tyomaakokous"
-                                                                "")}
+                                                                 "tyomaakokous"
+                                                                 "")}
                            raporttilista])]])
 
          (when @valittu-raporttityyppi
@@ -839,9 +875,10 @@
          " sekunnin kuluttua."]]))))
 
 (defn raporttivalinnat-ja-raportti []
-  (let [r @raportit/suoritettu-raportti]
+  (let [r @raportit/suoritettu-raportti
+        ensimmainen-urakka-viimeksi (atom nil)]
     [:span
-     [raporttivalinnat]
+     [raporttivalinnat ensimmainen-urakka-viimeksi]
      (cond
        (= :ladataan r)
        [yleiset/ajax-loader "Raporttia suoritetaan..."]
