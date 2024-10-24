@@ -145,7 +145,7 @@
                  [yleisradio/new-reliquary "1.1.0"]
 
                  ;; -- Front-end tilan hallinta
-                 [webjure/tuck "0.4.4"]
+                 [webjure/tuck "20181204"]
                  [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck]]
 
                  ;; Arbitrary precision math frontilla
