@@ -27,7 +27,7 @@
             [harja.palvelin.integraatiot.integraatiopisteet.http :as integraatiopiste-http]
             [harja.pvm :as pvm]
             [slingshot.slingshot :refer [try+ throw+]])
-  (:import (org.postgis PGgeometry)
+  (:import (net.postgis.jdbc PGgeometry)
            (java.util UUID)))
 
 (def ehdon-timeout 20000)

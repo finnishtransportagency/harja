@@ -14,7 +14,7 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
   #?(:clj
-     (:import (org.postgis PGgeometry))))
+     (:import (net.postgis.jdbc PGgeometry))))
 
 (define-tables
   ["tr_osoite_laajennettu" ::tr-osoite-laajennettu]

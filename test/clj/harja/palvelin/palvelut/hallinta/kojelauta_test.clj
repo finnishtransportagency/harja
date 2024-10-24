@@ -152,8 +152,6 @@
     (is (= "aloitettu" (get-in vahvistettu-2024-rivi [:ks_tila :suunnitelman_tila])) "tila")
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
 
-
-
 (deftest iin-mhu-kojelautaan-yksikin-osio-aloitettu-niin-myos-tavoite-ja-kattohinta-aloitettu
   (let [iin-mhu-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         kayttaja (:id +kayttaja-jvh+)
