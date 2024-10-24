@@ -38,7 +38,7 @@
                  [org.apache.logging.log4j/log4j-core "2.24.1"]
 
                  ;; -- Metriikkadata
-                 [org.clojure/java.jmx "0.3.4"]
+                 [org.clojure/java.jmx "1.1.0"]
 
                  ;; -- JSON encode/decode
                  [cheshire "5.13.0"]
