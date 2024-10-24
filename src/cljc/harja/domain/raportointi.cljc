@@ -36,6 +36,10 @@
                  :font {:color :black}})
    :disabled {:font {:color :grey_80_percent}}})
 
+(def placeholder-ei-tietoja
+  ;; Tekee viivan: —
+  "\u2014")
+
 (defn solun-oletustyyli-excel [lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?]
   (merge-with merge
     (cond

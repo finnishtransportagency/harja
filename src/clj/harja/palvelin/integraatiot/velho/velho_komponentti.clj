@@ -74,18 +74,24 @@
     (varusteet/tuo-velho-nimikkeisto this)))
 
 ;; Käyttö replissä
+;; Lokaalia kantaa käytettäessä halutaan hakea nimikkeistöt ennen muuta testausta
 (comment
   (def j harja.palvelin.main/harja-jarjestelma)
   (def asetukset (get-in j [:velho-integraatio :asetukset]))
   (varusteet/tuo-velho-nimikkeisto {:integraatioloki (:integraatioloki j)
                                     :db (:db j)
                                     :asetukset asetukset}))
+;; Lokaalia kantaa käytettäessä halutaan hakea urakat ennen muuta testausta 
+(comment
+  (def j harja.palvelin.main/harja-jarjestelma)
+  (def asetukset (get-in j [:velho-integraatio :asetukset]))
+  (oid-haku/hae-mh-urakoiden-oidit-ja-lyhytnimet (:integraatioloki j) (:db j) asetukset))
 
 (comment
   (def j harja.palvelin.main/harja-jarjestelma)
   (varusteet/hae-urakan-varustetoteumat
     (get-in j [:velho-integraatio]) 
-    {:urakka-id 32 ;; Pellon MHU testiurakka (3. hoitovuosi)
+    {:urakka-id 35 ;; Oulun MHU 2019-2024 lokaalissa kannassa
      :kohdeluokat #{"aidat"}
      :varustetyypit []
      :kuntoluokat []

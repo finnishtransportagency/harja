@@ -1,142 +1,60 @@
--- Suolatoteumareittipiste taulusta puuttuu sellaiset rivit, joiden piste päättyy juuri rajoitusalueen/pohjavesialueen reunalle.
--- Eli jos piste on juuri ja juuri reunalla, niin se on tunnistettu olevan rajoitusalueella, mutta määräksi tulee tosi vähäinen arvo.
--- Ja se loppu, mikä ei kohdistunut rajoitus/pohjavesialueelle menetettiin kokonaan.
--- Tämän seurauksena toteuma_reittipiste taulun määrä yhteenveto ei täsmännyt suolatoteuma_reittipiste -taulun määräyhteenvetoon.
--- Sieltä aina vähän puuttui, koska siitä yhdestä pätkästä otettiin vain osa mukaan.
--- Tässä on korjaukset siihen
-CREATE TYPE suolausalueen_osuus AS
-(
-    tyyppi VARCHAR, -- rajoitusalue, pohjavesialue, muu
-    rajoitusalue_id INTEGER,
-    pohjavesialue_tunnus  VARCHAR,
-    osuus        FLOAT
-);
+-- Korjataan bugi, jos kaikki pk1 pk2 ja pk3 pituus ovat 0, pitää palautua NULL, eikä PK1
 
-CREATE OR REPLACE FUNCTION pistevalin_suolausalueet(piste1 POINT, piste2 POINT, urakka_id_ INTEGER)
-    RETURNS SETOF suolausalueen_osuus AS
+CREATE OR REPLACE FUNCTION laske_yllapitokohdeosien_pk_pituudet(yllapitokohde_id INTEGER, pk1geom geometry,
+                                                                pk2geom geometry, pk3geom geometry)
+    RETURNS VOID AS
 $$
 DECLARE
-    ra            rajoitusalue;
-    pa            pohjavesialue;
-    tieosoitevali tr_osoite;
-    osuus         FLOAT;
-    jaljella_osuutta FLOAT;
+    yosa           RECORD;
+    yko_pk1_pituus NUMERIC;
+    yko_pk2_pituus NUMERIC;
+    yko_pk3_pituus NUMERIC;
+    ypkluokka      TEXT;
+
 BEGIN
-    -- Varmistetaan että haetaan piste tielä, jota suolataan. Tällä varmistetaan, ettei saada rajoitusaluetta tien geometriaa,
-    -- jota ei suolata. Tällä varmistetaan, ettei virheellisesti jätetä suolattua rajoitusaluetta merkitsemättä
-    -- vaikka gps-pisteet osuisivat pyörätielle.
-    SELECT lahin_piste_suolattavalla_tiella(piste1) INTO piste1;
-    SELECT lahin_piste_suolattavalla_tiella(piste2) INTO piste2;
-    jaljella_osuutta := 1;
 
-    IF (piste1 IS NULL OR piste2 IS NULL) THEN
-        RETURN;
-    END IF;
+    RAISE NOTICE 'Haetaan yllapitokohdeosat:';
+    yko_pk1_pituus := 0.0;
+    yko_pk2_pituus := 0.0;
+    yko_pk3_pituus := 0.0;
 
-    SELECT * FROM yrita_tierekisteriosoite_pisteille2(piste1::geometry, piste2::geometry, 1) INTO tieosoitevali;
+    FOR yosa IN (SELECT y.id,
+                        COALESCE(st_length(y.sijainti), 0)                         AS pituus,
+                        COALESCE(st_length(st_intersection(y.sijainti, pk1geom)), 0) AS pk1_pituus,
+                        COALESCE(st_length(st_intersection(y.sijainti, pk2geom)), 0) AS pk2_pituus,
+                        COALESCE(st_length(st_intersection(y.sijainti, pk3geom)), 0) AS pk3_pituus
+                   FROM yllapitokohdeosa y
+                  WHERE y.yllapitokohde = yllapitokohde_id)
+        LOOP
+            RAISE NOTICE 'Ylläpitokode: % :: osa :: id: % pituus: % pk1_pituus: % pk2_pituus: % pk3_pituus %',
+                yllapitokohde_id, yosa.id, yosa.pituus, yosa.pk1_pituus, yosa.pk2_pituus, yosa.pk3_pituus;
 
-    IF tieosoitevali IS DISTINCT FROM NULL THEN
-        -- Ensin rajoitusalueet
-        FOR ra IN
-            SELECT *
-              FROM rajoitusalue
-             WHERE (rajoitusalue.tierekisteriosoite).tie = tieosoitevali.tie
-               AND st_dwithin(tieosoitevali.geometria, rajoitusalue.sijainti, 1)
-               AND rajoitusalue.urakka_id = urakka_id_
-               AND rajoitusalue.poistettu = FALSE
-            LOOP
-                SELECT st_length(st_intersection(st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria)) /
-                       st_length(tieosoitevali.geometria)
-                  INTO osuus;
-                RAISE NOTICE 'Rajoitusalue: %, osuus: %', ra.id, osuus;
-                jaljella_osuutta := jaljella_osuutta - osuus;
-                RETURN NEXT ('rajoitusalue', ra.id, NULL, osuus)::suolausalueen_osuus;
-            END LOOP;
+            UPDATE yllapitokohdeosa
+               SET pk1_pituus = yosa.pk1_pituus,
+                   pk2_pituus = yosa.pk2_pituus,
+                   pk3_pituus = yosa.pk3_pituus
+             WHERE id = yosa.id;
 
-        -- Sitten pohjavesialueet
-        FOR pa IN
-            SELECT *
-              FROM pohjavesialue
-             WHERE pohjavesialue.tr_numero = tieosoitevali.tie
-               AND st_dwithin(tieosoitevali.geometria, pohjavesialue.alue, 1)
-            LOOP
-                -- Halutaan tietää, kuinka iso osuus tieosoitevälistä osuu pohjavesialueelle.
-                SELECT st_length(st_intersection(st_buffer(pa.alue, 1, 'endcap=flat'), tieosoitevali.geometria)) /
-                       st_length(tieosoitevali.geometria)
+            -- Lasketaan yhteen
+            yko_pk1_pituus := yko_pk1_pituus + yosa.pk1_pituus;
+            yko_pk2_pituus := yko_pk2_pituus + yosa.pk2_pituus;
+            yko_pk3_pituus := yko_pk3_pituus + yosa.pk3_pituus;
 
-                  INTO osuus;
-                RAISE NOTICE 'Pohjavesialue: %, osuus: %', pa.tunnus, osuus;
-                jaljella_osuutta := jaljella_osuutta - osuus;
-                RETURN NEXT ('pohjavesialue', NULL, pa.tunnus, osuus)::suolausalueen_osuus;
-            END LOOP;
+        END LOOP;
 
-        -- Ja lopuksi se osa, joka ei kuulu mihinkään
-        RAISE NOTICE 'Ja jäljelle jäävät muut aluee: %', jaljella_osuutta;
-        RETURN NEXT ('muu', NULL, NULL, jaljella_osuutta)::suolausalueen_osuus;
-    END IF;
-    RETURN;
-END;
-$$ LANGUAGE plpgsql;
+    -- Lisään ylläpitokohteelle pkluokka sen perusteella, mitä pkluokkaa on eniten
+    CASE
+        -- Jos kaikkien pituus on sama (joskus erityisesti 0.0), ei aseteta PK1:tä ettei tiedot vääristy
+        WHEN yko_pk1_pituus = yko_pk2_pituus AND yko_pk2_pituus = yko_pk3_pituus THEN ypkluokka := NULL;
+        WHEN yko_pk1_pituus >= yko_pk2_pituus AND yko_pk1_pituus >= yko_pk3_pituus THEN ypkluokka := 'PK1';
+        WHEN yko_pk2_pituus >= yko_pk1_pituus AND yko_pk2_pituus >= yko_pk3_pituus THEN ypkluokka := 'PK2';
+        WHEN yko_pk3_pituus >= yko_pk1_pituus AND yko_pk3_pituus >= yko_pk2_pituus THEN ypkluokka := 'PK3';
+        ELSE ypkluokka := NULL;
+        END CASE;
 
-CREATE OR REPLACE FUNCTION toteuman_reittipisteet_trigger_fn() RETURNS TRIGGER AS
-$$
-DECLARE
-    m                               reittipiste_materiaali;
-    rp                              reittipistedata;
-    suolamateriaalikoodit           INTEGER[];
-    edellinen_rp                    reittipistedata;
-    suolausalue                     suolausalueen_osuus;
-    urakkaid                        INTEGER;
-BEGIN
-    -- Haetaan materiaalikoodit talteen
-    SELECT ARRAY_AGG(id)
-      FROM materiaalikoodi
-     WHERE materiaalityyppi IN ('talvisuola', 'erityisalue', 'formiaatti')
-      INTO suolamateriaalikoodit;
-
-    -- Haetaan urakkaid vain kerran
-    urakkaid := (SELECT urakka FROM toteuma WHERE id = new.toteuma);
-
-    IF (TG_OP = 'UPDATE' OR TG_OP = 'DELETE') THEN
-        DELETE FROM suolatoteuma_reittipiste WHERE toteuma = OLD.toteuma;
-    END IF;
-
-    IF (TG_OP != 'DELETE') THEN
-        FOREACH rp IN ARRAY NEW.reittipisteet
-            LOOP
-                FOREACH m IN ARRAY rp.materiaalit
-                    LOOP
-                        IF suolamateriaalikoodit @> ARRAY [m.materiaalikoodi] THEN
-                            IF edellinen_rp IS DISTINCT FROM NULL THEN
-                                FOR suolausalue IN SELECT tyyppi, rajoitusalue_id, pohjavesialue_tunnus, osuus FROM pistevalin_suolausalueet(edellinen_rp.sijainti, rp.sijainti, urakkaid)
-                                    LOOP
-                                       -- Lisätään ensimmäisenä rajoitusalueeseen liittyvät määrät
-                                        IF suolausalue.rajoitusalue_id IS DISTINCT FROM NULL AND
-                                           suolausalue.tyyppi = 'rajoitusalue' THEN
-                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue, rajoitusalue_id)
-                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus, NULL, suolausalue.rajoitusalue_id);
-                                        END IF;
-
-                                       -- Toisenä pohjavesialueeseen liittyvät määrät
-                                        IF suolausalue.pohjavesialue_tunnus IS DISTINCT FROM NULL AND
-                                           suolausalue.tyyppi = 'pohjavesialue' THEN
-                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue, rajoitusalue_id)
-                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus, suolausalue.pohjavesialue_tunnus,NULL);
-                                        END IF;
-
-                                       -- Ja loput, jotka ei kuulu rajoitusalueille eikä pohjavesialueille
-                                        IF suolausalue.tyyppi = 'muu' THEN
-                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue,rajoitusalue_id)
-                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus, NULL, NULL);
-                                        END IF;
-                                    END LOOP;
-                            END IF;
-                        END IF;
-                    END LOOP;
-                edellinen_rp := rp;
-            END LOOP;
-    END IF;
-
-    RETURN NULL;
+    RAISE NOTICE 'Yhteenlasketut luokkapituudet osapk1: %, osapk2: %, osapk3: %',
+        yko_pk1_pituus, yko_pk2_pituus, yko_pk3_pituus;
+    RAISE NOTICE 'Saatiin yllapikohteelle pkluokka: %', ypkluokka;
+    UPDATE yllapitokohde SET pkluokka = ypkluokka WHERE id = yllapitokohde_id;
 END;
 $$ LANGUAGE plpgsql;
