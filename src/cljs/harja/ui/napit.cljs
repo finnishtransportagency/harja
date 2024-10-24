@@ -63,7 +63,25 @@
             kun-valmis (:kun-valmis asetukset)
             kun-virhe (:kun-virhe asetukset)
             kun-onnistuu (:kun-onnistuu asetukset)
-            data-cy (:data-cy asetukset)]
+            data-cy (:data-cy asetukset)
+            siirra-fokus (:siirra-fokus asetukset)
+            esta-tab-taaksepain? (:esta-tab-taaksepain? asetukset)
+            esta-tab-eteenpain? (:esta-tab-eteenpain? asetukset)
+            suorita-kysely (fn [event]
+                              (.preventDefault event)
+                              (.stopPropagation event)
+                              (reset! kysely-kaynnissa? true)
+                              (reset! nayta-virheviesti? false)
+                              (go (let [tulos (<! (kysely))]
+                                    (reset! kysely-kaynnissa? false)
+                                    (when kun-valmis (kun-valmis tulos))
+                                    (if (not (k/virhe? tulos))
+                                      (when kun-onnistuu
+                                        (kun-onnistuu tulos))
+                                      (do
+                                        (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
+                                        (reset! nayta-virheviesti? true)
+                                        (when kun-virhe (kun-virhe tulos)))))))]
 
         [:span
          [:button
@@ -73,21 +91,16 @@
              :class    (if (or @kysely-kaynnissa? (:disabled asetukset))
                          (str luokka " disabled")
                          luokka)
-             :on-click #(do
-                          (.preventDefault %)
-                          (.stopPropagation %)
-                          (reset! kysely-kaynnissa? true)
-                          (reset! nayta-virheviesti? false)
-                          (go (let [tulos (<! (kysely))]
-                                (reset! kysely-kaynnissa? false)
-                                (when kun-valmis (kun-valmis tulos))
-                                (if (not (k/virhe? tulos))
-                                  (when kun-onnistuu
-                                    (kun-onnistuu tulos))
-                                  (do
-                                    (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
-                                    (reset! nayta-virheviesti? true)
-                                    (when kun-virhe (kun-virhe tulos)))))))
+             :on-click #(suorita-kysely %)
+             :on-key-down #(do
+                             (when (dom/enter-nappain? %)
+                               (suorita-kysely %)
+                               (when siirra-fokus
+                                 (r/after-render (fn [] (some-> js/document (.getElementById (str siirra-fokus)) .focus)))))
+                             (when (or (and (dom/tab-nappain-ilman-shiftia? %) esta-tab-eteenpain?)
+                                     (and (dom/tab+shift-nappaimet? %) esta-tab-taaksepain?))
+                               (.preventDefault %)
+                               (.stopPropagation %)))
              :title    (:title asetukset)}
             (when data-cy
               {:data-cy data-cy}))
@@ -152,7 +165,8 @@
                                   (dom/elementin-etaisyys-dokumentin-ylareunaan
                                     (r/dom-node %)))))
        (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex type
-                                    ikoni-oikealle? esta-prevent-default?] :as optiot}]
+                                    ikoni-oikealle? esta-prevent-default? siirra-fokus elementin-id esta-tab-eteenpain?
+                                    esta-tab-taaksepain? lisaa-viive-fokuksen-siirtoon?] :as optiot}]
          [:button
           (merge
             {:class     (str (when disabled "disabled ")
@@ -165,14 +179,29 @@
              :title     title
              :type      (or type
                           "button")
+             :id        (or elementin-id nil)
              :on-click  #(do
                            (when-not esta-prevent-default?
                              (.preventDefault %)
                              (.stopPropagation %))
-                           (apply toiminto toiminto-args))}
+                           (apply toiminto toiminto-args))
+             :on-key-down #(do
+                             (when (dom/enter-nappain? %)
+                               (when-not esta-prevent-default?
+                                 (.preventDefault %)
+                                 (.stopPropagation %))
+                               (apply toiminto toiminto-args)
+                               (when siirra-fokus
+                                 (if (not lisaa-viive-fokuksen-siirtoon?)
+                                   (r/after-render (fn [] (some-> js/document (.getElementById (str siirra-fokus)) .focus)))
+                                   (js/setTimeout (fn [] (r/after-render (fn [] (some-> js/document (.getElementById (str siirra-fokus)) .focus)))) 200))))
+                             (when (or (and (dom/tab-nappain-ilman-shiftia? %) esta-tab-eteenpain?)
+                                     (and (dom/tab+shift-nappaimet? %) esta-tab-taaksepain?))
+                               (.preventDefault %)
+                               (.stopPropagation %)))}
             (when (and data-attributes (every? #(and (keyword? %)
-                                                     (re-find #"^data-" (name %)))
-                                               (keys data-attributes)))
+                                                  (re-find #"^data-" (name %)))
+                                         (keys data-attributes)))
               data-attributes))
           (when tallennus-kaynnissa?
             [y/ajax-loader])
@@ -180,7 +209,7 @@
             " ")
 
           (if (and ikoni
-                   (not tallennus-kaynnissa?))
+                (not tallennus-kaynnissa?))
             (if ikoni-oikealle?
               [ikonit/teksti-ja-ikoni teksti ikoni]
               [ikonit/ikoni-ja-teksti ikoni teksti])
@@ -193,12 +222,12 @@
    [nappi teksti toiminto (merge
                             optiot
                             (into {}
-                                  (filter second
-                                          {:luokka
-                                           (str
-                                             (when valittu? "valittu ")
-                                             " " luokka)
-                                           :ikoni  ikoni})))]))
+                              (filter second
+                                {:luokka
+                                 (str
+                                   (when valittu? "valittu ")
+                                   " " luokka)
+                                 :ikoni ikoni})))]))
 
 (defn kotiin
   ([toiminto] (kotiin "Kotiin" toiminto {}))

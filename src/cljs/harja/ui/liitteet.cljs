@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.loki :refer [log]]
             [harja.ui.ikonit :as ikonit]
@@ -426,10 +427,13 @@
                            (when grid? "nappi-grid ")
                            (when disabled? "disabled ")
                            (when nappi-luokka (str nappi-luokka " ")))
-               :on-click #(.stopPropagation %)}
+               :tabIndex "0"
+               :on-click #(.stopPropagation %)
+               :on-key-down #(when (dom/enter-nappain? %) (reagent.core/after-render (fn [] (some-> js/document (.getElementById "input-upload") .click))))}
        [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
        [:input.upload
         {:type "file"
+         :id "input-upload"
          :style {:display "none"}
          :on-input #(do
                       (k/laheta-tiedosto! url (.-target %) params-map tiedosto-ladattu lataus-epaonnistui)

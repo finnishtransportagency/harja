@@ -1002,19 +1002,19 @@
 
 (defn navigation-up []
   [:img.navigation-up {:src "images/harja-icons/navigation/up.svg" :alt "up"}])
-(defn navigation-right []
-  [:img.navigation-right {:src "images/harja-icons/navigation/right.svg" :alt "right"}])
-(defn navigation-down []
-  [:img.navigation-down {:src "images/harja-icons/navigation/down.svg" :alt "down"}])
+(defn navigation-right [id]
+  [:img.navigation-right {:src "images/harja-icons/navigation/right.svg" :alt "right" :tabIndex "0" :id id}])
+(defn navigation-down [id]
+  [:img.navigation-down {:src "images/harja-icons/navigation/down.svg" :alt "down" :tabIndex "0" :id id}])
 (defn navigation-left []
   [:img.navigation-left {:src "images/harja-icons/navigation/left.svg" :alt "left"}])
 
-(defn navigation-ympyrassa [suunta]
+(defn navigation-ympyrassa [suunta id]
   [:div.navigation-ympyrassa
    (case suunta
      :up (navigation-up)
-     :right (navigation-right)
-     :down (navigation-down)
+     :right (navigation-right id)
+     :down (navigation-down id)
      :left (navigation-left)
 
      nil)])
@@ -1039,8 +1039,16 @@
 (defn sulje-ruksi
   ([sulje!]
    [sulje-ruksi sulje! {}])
-  ([sulje! {:keys [style]}]
+  ([sulje! {:keys [style esta-poistuminen? siirra-fokus-rastista]}]
    [:button.close {:on-click sulje!
+                   :on-key-down #(do
+                                   (when (harja.ui.dom/enter-nappain? %)
+                                     sulje!
+                                     (when siirra-fokus-rastista
+                                       (reagent.core/after-render (fn [] (some-> js/document (.getElementById (str siirra-fokus-rastista)) .focus)))))
+                                   (when (and (harja.ui.dom/tab+shift-nappaimet? %) esta-poistuminen?)
+                                     (.preventDefault %)
+                                     (.stopPropagation %)))
                    :style (merge
                             {:color "black"
                              :margin "15px"
