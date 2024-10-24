@@ -38,7 +38,7 @@
                  [org.apache.logging.log4j/log4j-core "2.24.1"]
 
                  ;; -- Metriikkadata
-                 [org.clojure/java.jmx "0.3.4"]
+                 [org.clojure/java.jmx "1.1.0"]
 
                  ;; -- JSON encode/decode
                  [cheshire "5.13.0"]
@@ -145,7 +145,7 @@
                  [yleisradio/new-reliquary "1.1.0"]
 
                  ;; -- Front-end tilan hallinta
-                 [webjure/tuck "0.4.4"]
+                 [webjure/tuck "20181204"]
                  [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck]]
 
                  ;; Arbitrary precision math frontilla
