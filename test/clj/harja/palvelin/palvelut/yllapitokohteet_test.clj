@@ -2245,3 +2245,26 @@
     (is (= (:pk2_pituus pituudet) 0M) "Pk2 pituus 0")
     (is (= (:pk3_pituus pituudet) 0M) "Pk3 pituus 0")
     (is (nil? (:pkluokka pituudet)) "Pk-luokaksi päätellään nil")))
+
+(deftest pkluokka-lasketaan-oikein
+  (let [db (luo-testitietokanta)
+        ypk-id (hae-yllapitokohteen-id-nimella "Vt13 Hartikkala - Pelkola")
+        korjausluokat-ennen (first (q-map (format "SELECT  y.urakka, y.id, y.vuodet, y.nimi, y.pkluokka, osa.pk1_pituus , osa.pk2_pituus, osa.pk3_pituus, y.tr_numero,
+        osa.tr_numero, osa.tr_alkuosa, osa.tr_alkuetaisyys, osa.tr_loppuosa, osa.tr_loppuetaisyys
+        from yllapitokohde y join urakka u on y.urakka = u.id join yllapitokohdeosa osa ON y.id = osa.yllapitokohde WHERE y.id = %s;" ypk-id)))
+        _ (yllapitokohteet-q/paivita-yllapitokohteen-paallysteen-korjausluokka db {:id ypk-id})
+        korjausluokat-jalkeen (first (q-map (format "SELECT  y.urakka, y.id, y.vuodet, y.nimi, y.pkluokka, osa.pk1_pituus , osa.pk2_pituus, osa.pk3_pituus, y.tr_numero,
+        osa.tr_numero, osa.tr_alkuosa, osa.tr_alkuetaisyys, osa.tr_loppuosa, osa.tr_loppuetaisyys
+        from yllapitokohde y join urakka u on y.urakka = u.id join yllapitokohdeosa osa ON y.id = osa.yllapitokohde WHERE y.id = %s;" ypk-id)))]
+    ;; Päivietään ylläpitokohteen pk-luokka geometrialaskennan perusteella
+    ;; Tiedetään että tällä kohteella kaikki pk1, pk2 ja pk3 pituudet-ennen-paivitysta ovat 0,
+    ;; halutaan varmistaa että pk-luokaksi päätellään NULL, eikä PK1 kuten aiemmin virheellisesti tapahtui
+    (is (nil? (:pk1_pituus korjausluokat-ennen)) "Pk1 pituus alussa nil")
+    (is (nil? (:pk2_pituus korjausluokat-ennen)) "Pk2 pituus alussa nil")
+    (is (nil? (:pk3_pituus korjausluokat-ennen)) "Pk3 pituus alussa nil")
+    (is (nil? (:pkluokka korjausluokat-ennen)) "Pk-luokaksi päätellään nil")
+
+    (is (=marginaalissa? (:pk1_pituus korjausluokat-jalkeen) 443.999999995781M) "Pk1 pituus noin 444M")
+    (is (= (:pk2_pituus korjausluokat-jalkeen) 0M) "Pk2 pituus 0")
+    (is (= (:pk3_pituus korjausluokat-jalkeen) 0M) "Pk3 pituus 0")
+    (is (= (:pkluokka korjausluokat-jalkeen) "PK1") "Pk-luokaksi päätellään PK1")))
