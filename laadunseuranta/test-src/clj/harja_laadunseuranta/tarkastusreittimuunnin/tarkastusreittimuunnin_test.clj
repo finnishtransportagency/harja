@@ -15,7 +15,8 @@
             [clojure.set :as set]
             [clojure.java.jdbc :as jdbc]
             [harja.domain.tierekisteri :as tr-domain])
-  (:import (org.postgis PGgeometry MultiLineString Point)))
+  (:import (net.postgis.jdbc PGgeometry)
+           (net.postgis.jdbc.geometry MultiLineString Point)))
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture tietokantakomponentti-fixture))
 
