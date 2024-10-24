@@ -68,11 +68,6 @@
                     (map #(assoc % :tyyppi-kartalla :toteuma))))
    db q/hae-toteumat parametrit))
 
-(defn- hae-varustetoteumat [db parametrit]
-  (kursori/hae-kanavaan
-   (async/chan 32 (toteumat/varustetoteuma-xf))
-   db q/hae-varustetoteumat parametrit))
-
 (defn- hae-tarkastukset [db parametrit]
   (kursori/hae-kanavaan (async/chan 32 (comp (map konv/alaviiva->rakenne)
                                              (map #(assoc % :tyyppi-kartalla :tarkastus))
@@ -131,8 +126,7 @@
    :tarkastukset #'hae-tarkastukset
    :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat
    :laatupoikkeamat #'hae-laatupoikkeamat
-   :tietyoilmoitukset #'hae-tietyoilmoitukset
-   :varustetoteumat #'hae-varustetoteumat})
+   :tietyoilmoitukset #'hae-tietyoilmoitukset})
 
 (def +haun-max-kesto+ 20000)
 
