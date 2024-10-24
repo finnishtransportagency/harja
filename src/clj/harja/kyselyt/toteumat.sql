@@ -456,7 +456,7 @@ SELECT tk.id                                     AS toimenpidekoodi_id,
        SUM(ot.maara)                             AS maara,
        SUM(ot.materiaalimaara)                   AS materiaalimaara,
        SUM(ut.maara)                             AS suunniteltu_maara,
-       -- Ei voi olla sekä rahavaraus, että käsin lisättävä tehtävä. Rahavarauksille toteumat on euroja ja ne lisätään kuluista.
+       -- Ei voi olla samassa urakassa sekä rahavaraus, että käsin lisättävä tehtävä. Rahavarauksille toteumat on euroja ja ne lisätään kuluista.
        CASE
            WHEN (tk.kasin_lisattava_maara AND r.nimi IS NULL) THEN TRUE
            ELSE FALSE END                        AS kasin_lisattava_maara,
@@ -472,9 +472,10 @@ FROM tehtava tk
      JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
      JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
      LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-                       AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
+                    AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
      LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
-     LEFT JOIN rahavaraus_tehtava rt on rt.tehtava_id = tk.id
+     LEFT JOIN rahavaraus_tehtava rt on rt.tehtava_id = tk.id AND rt.rahavaraus_id IN
+                                                                  (SELECT rahavaraus_id FROM rahavaraus_urakka WHERE urakka = :urakka)
      LEFT JOIN rahavaraus_urakka ru
                ON rt.rahavaraus_id = ru.rahavaraus_id
                    AND ru.urakka_id = :urakka
@@ -488,12 +489,12 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
   -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
   -- mutta otetaan mukaan Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen ja lisätyöt
   AND ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR
-      tk.yksiloiva_tunniste IN ('49b7388b-419c-47fa-9b1b-3797f1fab21d',
-                               '63a2585b-5597-43ea-945c-1b25b16a06e2',
-                               'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
-                               'e32341fc-775a-490a-8eab-c98b8849f968',
-                               '0c466f20-620d-407d-87b0-3cbb41e8342e',
-                               'c058933e-58d3-414d-99d1-352929aa8cf9'))
+       tk.yksiloiva_tunniste IN ('49b7388b-419c-47fa-9b1b-3797f1fab21d',
+                                 '63a2585b-5597-43ea-945c-1b25b16a06e2',
+                                 'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
+                                 'e32341fc-775a-490a-8eab-c98b8849f968',
+                                 '0c466f20-620d-407d-87b0-3cbb41e8342e',
+                                 'c058933e-58d3-414d-99d1-352929aa8cf9'))
 GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi, r.nimi, ru.urakkakohtainen_nimi
 ORDER BY o.otsikko asc, tk.nimi asc;
 
