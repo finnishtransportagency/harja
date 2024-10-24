@@ -69,12 +69,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send deploy failure message to Slack
-        id: slack
         uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
-        # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success
-        # TODO: Tämä virheviesti lähtee myös jos koko deployment workflow tai testit canceloidaan.
-        #       Pitäisikö erillisessä stepissä tarkastaa needs.test.result == 'cancelled' ja kertoa, että deployment peruttiin?
-        if: ${{ job.status != 'success' || needs.tests.result != 'success' }}
+        # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success ja sitä ei ole manuaalisesti canceloitu
+        if: ${{ (job.status != 'success' || needs.tests.result != 'success') && needs.tests.result != 'cancelled' }}
         with:
           # Slack Block Kit -tyyppinen rikastettu viesti
           payload: |
@@ -84,7 +81,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":warning: Develop-branchin testeissä tapahtui virhe!\n${{ env.JOB_RUN_URL }}"
+                    "text": ":alert-slow: Develop-branchin testeissä tapahtui virhe! Deploymenttia ei tehdä!\n${{ env.JOB_RUN_URL }}"
                   }
                 }
               ]
@@ -93,6 +90,29 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
           JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Send cancel message to Slack
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
+        if: ${{ needs.tests.result == 'cancelled' }}
+        with:
+          # Slack Block Kit -tyyppinen rikastettu viesti
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: Deployment peruttu manuaalisesti.\n${{ env.JOB_RUN_URL }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
 
   build-harja:
     runs-on: ubuntu-latest
