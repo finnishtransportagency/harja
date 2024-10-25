@@ -95,9 +95,7 @@
 
   [huoltokierros "huoltokierros" "Huoltokierros"]
   [ryhmavaihto "ryhmavaihto" "Ryhmävaihto"]
-  [muut-valaistusurakoiden-toimenpiteet "muut valaistusurakoiden toimenpiteet" "Muut toimenpiteet"]
-
-  [varustetoteumat "varustetoteumat" "Varustetoteumat"])
+  [muut-valaistusurakoiden-toimenpiteet "muut valaistusurakoiden toimenpiteet" "Muut toimenpiteet"])
 
 (def tehtavien-jarjestys
   {:ilmoitukset {:tyypit [tpp tur urk]}
