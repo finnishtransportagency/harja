@@ -1,10 +1,9 @@
 (ns harja.views.urakka.suunnittelu.kustannussuunnitelma.tavoitehintaiset-rahavaraukset-osio
-  (:require [clojure.string :as clj-str]
-            [reagent.core :as r]
+  (:require [reagent.core :as r]
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.ui.grid :as grid]
             [harja.fmt :as fmt]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]))
 
 (defn- tavoitehintaiset-rahavaraukset-yhteenveto
@@ -29,7 +28,7 @@
     (e! (t/->TallennaTavoitehintainenRahavaraus rivi-id (:summa rivi) (when indeksikerroin-vuodelle (* indeksikerroin-vuodelle (:summa rivi))) vuosi loppuvuodet?))))
 
 ;; Tehdään tavanomainen taulukko rahavarausten näyttämiselle
-(defn tavoitehintaiset-rahavaraukset-taulukko [rivit vuosi loppuvuodet? vahvistettu? indeksit]
+(defn tavoitehintaiset-rahavaraukset-taulukko [rivit vuosi loppuvuodet? vahvistettu? indeksit tallennus-kaynnissa?]
   (let [;; Tehdään datasta atomi, jotta muokkausgridi voi muokata sitä - Muokataan datasta muokkausgridille valmis setti
         muokkaus-rahavaraukset (into {} (mapv (fn [rahavaraus]
                                                 {(:id rahavaraus) {:jarjestys (:jarjestys rahavaraus)
@@ -41,12 +40,17 @@
         ;; Laske yhteenvetoriville valmiiksi summat
         yhteensa-summat (reduce + 0 (map :summa rivit))
         yhteensa-indeksisummat (reduce + 0 (map :summa-indeksikorjattu rivit))]
+
     [:div
+     (when tallennus-kaynnissa?
+       [:div.ajax-loader-valistys-kustannukset
+        [ajax-loader-pieni (str "Tallennetaan tietoja...")]])
+     
      [grid/muokkaus-grid
       {:id "tavoitehintaiset-rahavaraukset-grid"
        :otsikko "Tavoitehintaan vaikuttavat rahavaraukset"
        :otsikko-tyyli {:font-size "1.2rem"}
-       :voi-muokata? (if vahvistettu? false true)
+       :voi-muokata? (if (or tallennus-kaynnissa? vahvistettu?) false true)
        :voi-poistaa? (constantly false)
        :voi-lisata? false
        :voi-kumota? false
@@ -56,10 +60,10 @@
        :disabloi-autocomplete? true
        :on-rivi-blur (r/partial tallenna-tavoitehintainen-rahavaraus! vuosi loppuvuodet? indeksit)
        :rivi-jalkeen ^{:luokka "table-default-sum"}
-                     [{:teksti "Yhteensä" :luokka "lihavoitu"}
-                      {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
-                      {:teksti (str (fmt/euro-opt false yhteensa-indeksisummat))
-                       :tasaa :oikea :luokka "lihavoitu"}]}
+       [{:teksti "Yhteensä" :luokka "lihavoitu"}
+        {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
+        {:teksti (str (fmt/euro-opt false yhteensa-indeksisummat))
+         :tasaa :oikea :luokka "lihavoitu"}]}
 
       [{:otsikko "Rahavaraus" :nimi :nimi :leveys "70%" :muokattava? (constantly false)
         :tyyppi :positiivinen-numero :tasaa :vasen}
@@ -115,7 +119,8 @@
    suodattimet
    kantahaku-valmis?
    urakan-alkuvuosi
-   urakan-loppuvuosi]
+   urakan-loppuvuosi
+   tallennus-kaynnissa?]
 
   (let [;; Suodattimet saadaan monissa tapauksissa app-statesta liian myöhään
         valittu-vuosi (if (:hoitokauden-numero suodattimet)
@@ -141,7 +146,8 @@
          valittu-vuosi
          (:kopioidaan-tuleville-vuosille? suodattimet)
          vahvistettu?
-         indeksit]
+         indeksit
+         tallennus-kaynnissa?]
         [tavoitehinnan-ulkopuoliset-rahavaraukset-taulukko
          hoitokauden-tavoitehinnan-ulkopuoliset-rahavaraukset
          valittu-vuosi

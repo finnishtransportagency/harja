@@ -8,7 +8,6 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
             [harja.ui.modal :as modal]
-            [harja.ui.debug :refer [debug]]
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.siltatarkastukset :as st]
@@ -524,7 +523,6 @@
                                    :disabled?                    @k/yhteys-katkennut?}])}]
                     (muut-tarkastukset-sarakkeet muut-tarkastukset)))
             taulukon-rivit]
-           [debug @taulukon-rivit]
 
            [napit/tallenna
             "Tallenna tarkastus"

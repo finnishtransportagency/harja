@@ -2256,9 +2256,9 @@
            :yhteenveto {:nimi "Määrämitattavat"}
            :yhteensa {:nimi "Yhteensä"}
            :kuukausitasolla? false})
-        #_ (assoc-in [:gridit :rahavaraukset]
-          {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-           :yhteensa {:nimi "Yhteensä"}})
+        #_(assoc-in [:gridit :rahavaraukset]
+            {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+             :yhteensa {:nimi "Yhteensä"}})
         (assoc-in [:gridit :tavoitehintaiset-rahavaraukset]
           {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
            :yhteensa {:nimi "Yhteensä"}})
@@ -2275,7 +2275,7 @@
                          (pohjadatan-versio))})
         (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto]
           {:otsikot
-{:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"} })
+           {:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}})
         (assoc-in [:gridit :suunnitellut-hankinnat]
           {:otsikot {:nimi "Kiinteät" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
            :yhteensa {:nimi "Yhteensä"}})
@@ -2327,7 +2327,7 @@
           ;; Samposta voi tulla virheellisesti urakoita, joiden alkupvm määritelty 1.1.202X, vaikka oikeasti
           ;; alkavat 1.10.202X. Tämä käsittely estää UI:n kaatumisen moisessa tapauksessa, muuten toimii normaalisti
           default-hoitokausi (if (= (pvm/vuosi (pvm/nyt))
-                                   (pvm/vuosi urakan-alkupvm))
+                                    (pvm/vuosi urakan-alkupvm))
                                1
                                (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))]
       (-> app
@@ -2399,7 +2399,7 @@
                                                      pohjadata hoidon-johto-kustannukset :hoidonjohtopalkkio))
               ;; Tilaajan varauksia ei tarvitse erikseen hakea tietokannasta myöhemmin, koska sille ei lasketa indeksikorjauksia.
               tavoitehinnan-ulkopuoliset-rahavaraukset (filter #(= (:toimenpide-avain %) :tavoitehinnan-ulkopuoliset-rahavaraukset)
-                                   (:kustannusarvioidut-tyot vastaus))
+                                                         (:kustannusarvioidut-tyot vastaus))
 
               ;; -- Johto- ja hallintokorvausten datan alustaminen --
               omat-jh-korvaukset (vec (reverse (sort-by #(get-in % [1 0 :toimenkuva])
@@ -2544,13 +2544,13 @@
       (-> app
         (assoc :budjettitavoite vastaus)
         (assoc-in [:kattohinta :grid :kattohinta] (merge {:rivi :kattohinta}
-                                          (into {} (map (fn [{:keys [kattohinta hoitokausi]}]
-                                                          {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                           (or kattohinta 0)}) vastaus))))
+                                                    (into {} (map (fn [{:keys [kattohinta hoitokausi]}]
+                                                                    {(keyword (str "kattohinta-vuosi-" hoitokausi))
+                                                                     (or kattohinta 0)}) vastaus))))
         (assoc-in [:kattohinta :grid :indeksikorjaukset] (merge {:rivi :indeksikorjaukset}
-                                          (into {} (map (fn [{:keys [kattohinta-indeksikorjattu hoitokausi]}]
-                                                          {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                           kattohinta-indeksikorjattu}) vastaus))))
+                                                           (into {} (map (fn [{:keys [kattohinta-indeksikorjattu hoitokausi]}]
+                                                                           {(keyword (str "kattohinta-vuosi-" hoitokausi))
+                                                                            kattohinta-indeksikorjattu}) vastaus))))
         (assoc-in [:kattohinta :grid :indeksikorjaukset :yhteensa]
           (apply + (vals
                      (select-keys (get-in app [:kattohinta :grid :indeksikorjaukset]) kattohinta-grid-avaimet))))
@@ -2561,11 +2561,11 @@
           ;; Vahvistamattomilta vuosilta piilotetaan oikaistu-rivi.
           (if-let [vahvistetut (set (map first (filter #(second %) (get-in app [:domain :osioiden-tilat :tavoite-ja-kattohinta]))))]
             (assoc-in app [:kattohinta :grid :oikaistut] (merge {:rivi :oikaistut}
-                                                  (into {} (map (fn [{:keys [kattohinta-oikaistu hoitokausi]}]
-                                                                  {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                                   kattohinta-oikaistu})
+                                                           (into {} (map (fn [{:keys [kattohinta-oikaistu hoitokausi]}]
+                                                                           {(keyword (str "kattohinta-vuosi-" hoitokausi))
+                                                                            kattohinta-oikaistu})
                                                              ;; Filtteröidään vahvistamattomat hoitokaudet pois
-                                                             (filter #(vahvistetut (:hoitokausi %)) vastaus)))))
+                                                                      (filter #(vahvistetut (:hoitokausi %)) vastaus)))))
             (update-in app [:kattohinta :grid] dissoc :oikaistut))))
       app))
 
@@ -2756,20 +2756,20 @@
                                               [hoitokauden-numero])
           rahavaraukset (case tallennettava-asia
                           ;; Toimenpiteen rahavaraukset (Hankintakustannukset osiosta)
-                         #_#_ :kolmansien-osapuolten-aiheuttamat-vahingot
-                          (get-in app [:domain :rahavaraukset valittu-toimenpide :kolmansien-osapuolten-aiheuttamat-vahingot])
+                          #_#_:kolmansien-osapuolten-aiheuttamat-vahingot
+                            (get-in app [:domain :rahavaraukset valittu-toimenpide :kolmansien-osapuolten-aiheuttamat-vahingot])
 
-                          #_#_ :akilliset-hoitotyot
-                          (get-in app [:domain :rahavaraukset valittu-toimenpide :akilliset-hoitotyot])
+                          #_#_:akilliset-hoitotyot
+                            (get-in app [:domain :rahavaraukset valittu-toimenpide :akilliset-hoitotyot])
 
-                          #_#_ :tunneleiden-hoidot
-                          (get-in app [:domain :rahavaraukset valittu-toimenpide :tunneleiden-hoidot])
+                          #_#_:tunneleiden-hoidot
+                            (get-in app [:domain :rahavaraukset valittu-toimenpide :tunneleiden-hoidot])
 
-                          #_#_ :rahavaraus-lupaukseen-1
-                          (get-in app [:domain :rahavaraukset valittu-toimenpide :rahavaraus-lupaukseen-1])
+                          #_#_:rahavaraus-lupaukseen-1
+                            (get-in app [:domain :rahavaraukset valittu-toimenpide :rahavaraus-lupaukseen-1])
 
-                          #_#_ :muut-rahavaraukset
-                          (get-in app [:domain :rahavaraukset valittu-toimenpide :muut-rahavaraukset])
+                          #_#_:muut-rahavaraukset
+                            (get-in app [:domain :rahavaraukset valittu-toimenpide :muut-rahavaraukset])
 
 
                           ;; Laskutettavat tyot
@@ -2802,22 +2802,22 @@
                              {:osio osio-kw}
                              (case tallennettava-asia
                                (:kolmansien-osapuolten-aiheuttamat-vahingot
-                                 :akilliset-hoitotyot
-                                 :tunneleiden-hoidot
-                                 :rahavaraus-lupaukseen-1
-                                 :muut-rahavaraukset) {:urakka-id urakka-id
-                                                       :toimenpide-avain valittu-toimenpide
-                                                       :tallennettava-asia tallennettava-asia
-                                                       :summa summa
-                                                       :ajat ajat}
+                                :akilliset-hoitotyot
+                                :tunneleiden-hoidot
+                                :rahavaraus-lupaukseen-1
+                                :muut-rahavaraukset) {:urakka-id urakka-id
+                                                      :toimenpide-avain valittu-toimenpide
+                                                      :tallennettava-asia tallennettava-asia
+                                                      :summa summa
+                                                      :ajat ajat}
                                (:erillishankinnat
-                                 :toimistokulut
-                                 :hoidonjohtopalkkio
-                                 :tilaajan-varaukset) {:urakka-id urakka-id
-                                                       :toimenpide-avain :mhu-johto
-                                                       :tallennettava-asia tallennettava-asia
-                                                       :summa summa
-                                                       :ajat ajat}))
+                                :toimistokulut
+                                :hoidonjohtopalkkio
+                                :tilaajan-varaukset) {:urakka-id urakka-id
+                                                      :toimenpide-avain :mhu-johto
+                                                      :tallennettava-asia tallennettava-asia
+                                                      :summa summa
+                                                      :ajat ajat}))
           onko-osiolla-tila? (hae-osion-tilat app
                                (mhu/tallennettava-asia->suunnitelman-osio tallennettava-asia)
                                paivitettavat-hoitokauden-numerot)
@@ -2854,8 +2854,8 @@
                                                       (nil? (:haettu-asia %)))
                                              (:kustannusarvioidut-tyot vastaus))
           maaramitattavat-hoitokausittain (maaramitattavat-hoitokausille
-                                             hankinnat-laskutukseen-perustuen
-                                             pohjadata)
+                                            hankinnat-laskutukseen-perustuen
+                                            pohjadata)
           #_#_rahavaraukset-hoitokausittain (rahavaraukset-hoitokausille (:kustannusarvioidut-tyot vastaus) pohjadata)]
       (-> app
         (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] maaramitattavat-hoitokausittain)
@@ -3288,23 +3288,28 @@
       ;; Ei yritetä tallentaa, jos mitään ei ole annettu
       ;; Paitsi, jos poistetaan jo olemassa oleva summa
       (if (or summa
-            (and (nil? summa) (not (nil? (:summa muokattava-rahavaraus)))))
-        (tallenna-ja-odota-vastaus app
-          {:palvelu :tallenna-tavoitehintainen-rahavaraus
-           :payload {:urakka-id urakka
-                     :rahavaraus-id id
-                     :vuosi vuosi
-                     :loppuvuodet? loppuvuodet?
-                     :summa summa
-                     :indeksisumma indeksisumma}
-           :onnistui ->TallennaTavoitehintainenRahavarausOnnistui
-           :epaonnistui ->TallennaTavoitehintainenRahavarausEpaonnistui})
+            (and
+              (nil? summa)
+              (not (nil? (:summa muokattava-rahavaraus)))))
+        (->
+          (tallenna-ja-odota-vastaus app
+            {:palvelu :tallenna-tavoitehintainen-rahavaraus
+             :payload {:urakka-id urakka
+                       :rahavaraus-id id
+                       :vuosi vuosi
+                       :loppuvuodet? loppuvuodet?
+                       :summa summa
+                       :indeksisumma indeksisumma}
+             :onnistui ->TallennaTavoitehintainenRahavarausOnnistui
+             :epaonnistui ->TallennaTavoitehintainenRahavarausEpaonnistui})
+          (assoc :tallennus-kaynnissa-rahavaraukset? true))
         app)))
 
   TallennaTavoitehintainenRahavarausOnnistui
   (process-event [{:keys [vastaus]} app]
     ;; Vastauksessa tulee mukana kaikki uudistuneet rahavaraukset
     (-> app
+      (assoc :tallennus-kaynnissa-rahavaraukset? false)
       (assoc-in [:domain :tavoitehintaiset-rahavaraukset] vastaus)
       (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset]
         (tavoitehintaiset-rahavaraukset-hoitokausittain :summa vastaus))
@@ -3313,8 +3318,9 @@
 
   TallennaTavoitehintainenRahavarausEpaonnistui
   (process-event [_ app]
-    (viesti/nayta! "Rahavarauksen tallennus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
-    app)
+    (viesti/nayta! "Rahavarausten tallennus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
+    (-> app
+      (assoc :tallennus-kaynnissa-rahavaraukset? false)))
 
   TallennaTavoitehinnanUlkopuolinenRahavaraus
   (process-event [{:keys [id summa vuosi loppuvuodet?]} app]
