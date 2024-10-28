@@ -124,14 +124,11 @@ jobs:
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       # !! Vain DEV-ympäristö !!
-      # FIXME: Prod jätetty vielä uudelleenkäynnistämisen piiriin, kunnes non-restart deploy onnistuu varmasti STG-ympäristössä.
       # Sammutetaan Harjan Fargate taskit, jotta ne eivät häiritse DB-cleania ja testidatan ajamista dev-tietokantaan.
       - name: Shutdown Harja Fargate tasks
         uses: ./.github/actions/shutdown-fargate-tasks
         timeout-minutes: 15
-        # FIXME: Palauta "vain dev"-rajoitus käyttöön toiminnan varmistamisen jälkeen
-        #if: ${{ contains(fromJson('["dev"]'), inputs.environment) }}
-        if: ${{ contains(fromJson('["dev", "prod"]'), inputs.environment) }}
+        if: ${{ contains(fromJson('["dev"]'), inputs.environment) }}
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           service: ${{ vars.ECS_SERVICE_NAME }}
@@ -170,13 +167,9 @@ jobs:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           # Odotetaan service stabilityä vain stg ja prod deploymenteissä
           # Dev-deploymentissä stabilityä odotellaan start-fargate-tasks actionissa.
-          # FIXME: Prod jätetty vielä vanhan uudelleenkäynnistämisen piiriin, kunnes non-restart deploy onnistuu varmasti STG-ympäristössä.
-          #        Palauta myös "prod" stability odotus käyttöön, kun toiminta on varmistettu stg:llä
-          #wait-for-service-stability: ${{ contains(fromJson('["stg", "prod"]'), inputs.environment) }}
-          wait-for-service-stability: ${{ contains(fromJson('["stg"]'), inputs.environment) }}
+          wait-for-service-stability: ${{ contains(fromJson('["stg", "prod"]'), inputs.environment) }}
 
       # !! Vain DEV-ympäristö !!
-      # FIXME: Prod jätetty vielä uudelleenkäynnistämisen piiriin, kunnes non-restart deploy onnistuu varmasti STG-ympäristössä.
       # Käynnistetään aiemmin sammutetut dev-ympäristön Fargate taskit uudelleen.
       - name: Start Harja Fargate tasks
         uses: ./.github/actions/start-fargate-tasks
@@ -184,9 +177,7 @@ jobs:
         # Pakota uudelleenkäynnistyminen vaikka migraatio tai ECS deploy edellä olisi epäonnistunut
         # Fargate taskit sammutetaan ennen migraatioiden ajoa, mutta ne täytyy aina käynnistää uudelleen,
         # jotta palvelu pysyy toiminnassa.
-        # FIXME: Palauta "vain dev"-rajoitus käyttöön, kun prod deployment kytketään uudelleenkäynnistämisen piiristä pois.
-        #if: ${{ contains(fromJson('["dev"]'), inputs.environment)  }}
-        if: ${{ contains(fromJson('["dev", "prod"]'), inputs.environment) }}
+        if: ${{ contains(fromJson('["dev"]'), inputs.environment)  }}
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           service: ${{ vars.ECS_SERVICE_NAME }}
