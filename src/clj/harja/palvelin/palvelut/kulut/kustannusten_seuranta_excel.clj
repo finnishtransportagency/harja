@@ -262,7 +262,7 @@
                      (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first rahavarausten-toimenpiteet))
                                                                true
                                                                false)) rahavarausten-toimenpiteet)
-                     (luo-excel-rivit kustannusdata "johto-ja-hallintakorvaus" "Johto- ja Hallintokorvaukset")
+                     (luo-excel-rivit kustannusdata "johto-ja-hallintokorvaus" "Johto- ja Hallintokorvaukset")
                      (luo-excel-rivit kustannusdata "hoidonjohdonpalkkio" "Hoidonjohdonpalkkio")
                      (luo-excel-rivit kustannusdata "erillishankinnat" "Erillishankinnat")
                      (luo-excel-rivit kustannusdata "muukulu-tavoitehintainen" "Muut kulut")

@@ -38,7 +38,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
             // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
             cy.get('div[data-cy="rahavaraukset-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
-                .should('be.checked').uncheck();
+                .should('not.be.checked');
 
             // Varmistetaan, että taulukon otsikkorivillä on kaikki kunnossa
             cy.get('#tavoitehintaiset-rahavaraukset-grid').find('th').contains('Rahavaraus');

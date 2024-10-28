@@ -151,27 +151,17 @@
 
 ;; |---- Indeksikorjaukset END ----
 
-
 (defn hae-urakan-tavoite
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-budjettitavoite db {:urakka urakka-id}))
 
-
-(defn- redusoi-tilat
-  [tilat tila]
-  (let [{:keys [hoitovuosi osio vahvistettu]} tila
-        osio (keyword osio)]
-    (assoc-in tilat [osio hoitovuosi] vahvistettu)))
-
 (defn hae-urakan-suunnitelman-tilat
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (let [tilat (q/hae-suunnitelman-tilat db {:urakka urakka-id})
-        tilat (reduce redusoi-tilat {} tilat)]
+        tilat (reduce q/redusoi-suunnitelutilat {} tilat)]
     tilat))
-
-
 
 (defn vahvista-suunnitelman-osa-hoitovuodelle
   "Merkataan vahvistus ja lasketaan indeksikorjatut luvut. Vahvistus tehdään osissa, joten lasketaan indeksikorjatut luvutkin osissa?"
@@ -992,6 +982,10 @@
         urakan-loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
         urakan-vuodet (if loppuvuodet? (range urakan-alkuvuosi urakan-loppuvuosi) (list vuosi))
         sopimus-id (urakat-q/urakan-paasopimus-id db {:urakka urakka-id})
+
+        ;; Päivitä rahavarausten tila suunnittelu_kustannusuunnitelma_tila tauluun, jotta tiedetään, että osiota on aloitettu työstämään
+        _ (q/paivita-kustannusuunnitelman-tila db (:id user) urakka-id (:alkupvm urakan-tiedot) urakan-vuodet :tavoitehintaiset-rahavaraukset)
+
         ;; Päivitetään tai insertoidaan jokaiselle tulevalle tai pelkästään annetulle vuodelle tiedot
         _ (doseq [vuosi urakan-vuodet]
             (let [;; Päivitetään rahavarauksen summa ja indeksikorjattu summa kustannusarvioitu_työ tauluun

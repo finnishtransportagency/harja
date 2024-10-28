@@ -191,10 +191,11 @@
    :erillishankinnat {:kumoa-osiot #{:tavoite-ja-kattohinta}}
    :hoidonjohtopalkkio {:kumoa-osiot #{:tavoite-ja-kattohinta}}
    :hankintakustannukset {:kumoa-osiot #{:tavoite-ja-kattohinta}}
+   :tavoitehintaiset-rahavaraukset {:kumoa-osiot #{:tavoite-ja-kattohinta}}
 
    :tavoite-ja-kattohinta {:vahvistus-vaadittu-osiot
                            #{:johto-ja-hallintokorvaus :erillishankinnat :hoidonjohtopalkkio
-                             :hankintakustannukset}}
+                             :hankintakustannukset :tavoitehintaiset-rahavaraukset}}
 
    ;; Ei riippuvuuksia tavoite- ja kattohintaan tai muihin osioihin
    :tilaajan-rahavaraukset {}})

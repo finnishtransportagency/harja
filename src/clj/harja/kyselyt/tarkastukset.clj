@@ -9,7 +9,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [specql.core :refer [upsert! delete!]]
             [harja.kyselyt.specql-db :refer [define-tables]])
-  (:import (org.postgis PGgeometry)))
+  (:import (net.postgis.jdbc PGgeometry)))
 
 (defqueries "harja/kyselyt/tarkastukset.sql"
             {:positional? true})

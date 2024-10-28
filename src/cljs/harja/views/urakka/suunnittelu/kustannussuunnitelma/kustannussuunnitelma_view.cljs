@@ -459,7 +459,7 @@
 
                  ;; Osiot
                  ::t/hankintakustannukset
-                 [debug/debug (get-in app [:domain :osioiden-tilat])]
+                 #_ [debug/debug (get-in app [:domain :osioiden-tilat])]
                  [hankintakustannukset-osio/osio
                   (ks-yhteiset/osio-vahvistettu? osioiden-tilat :hankintakustannukset hoitovuosi-nro)
                   (get-in app [:domain :kirjoitusoikeus?])

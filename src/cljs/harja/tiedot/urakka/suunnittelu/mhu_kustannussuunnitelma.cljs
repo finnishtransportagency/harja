@@ -2332,7 +2332,8 @@
                                (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))]
       (-> app
         (assoc-in [:suodattimet :hoitokauden-numero] default-hoitokausi)
-        (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] true))))
+        (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] false)
+        (assoc-in [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?] false))))
 
   HaeIndeksitOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -2357,7 +2358,7 @@
           {:onnistui ->HaeHankintakustannuksetOnnistui
            :epaonnistui ->HaeHankintakustannuksetEpaonnistui
            :paasta-virhe-lapi? true}))
-      app))
+      (assoc app :kantahaku-valmis? false)))
 
   ;; TODO: Tässä käsitellään myös paljon muutakin kuin "hankintakustannuksia"
   ;;       Eventin nimi pitäisi muotoilla paremmin...
@@ -2381,8 +2382,6 @@
               maaramitattavat-hoitokausittain (maaramitattavat-hoitokausille
                                                 hankinnat-laskutukseen-perustuen
                                                 pohjadata)
-              ;; Hankintakustannusten alaisia rahavarauksia ei enää ole
-              #_#_rahavaraukset-hoitokausittain (rahavaraukset-hoitokausille (:kustannusarvioidut-tyot vastaus) pohjadata)
 
               ;; -- Määrätaulukoiden datan alustaminen --
               hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
@@ -2876,13 +2875,7 @@
                                                      (reduce #(+ %1 (:indeksikorjattu %2)) 0 summat-kuukausittain))
                                                summat-hoitokausittain)))
             {}
-            maaramitattavat-hoitokausittain))
-
-        #_ (assoc-in [:yhteenvedot :hankintakustannukset :summat :rahavaraukset]
-          (summaa-rahavaraukset rahavaraukset-hoitokausittain :maara))
-
-        #_ (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :rahavaraukset]
-          (summaa-rahavaraukset rahavaraukset-hoitokausittain :indeksikorjattu)))))
+            maaramitattavat-hoitokausittain)))))
 
   TallennaKustannusarvoituEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -3167,7 +3160,6 @@
 
   TallennaJaPaivitaTavoiteSekaKattohinta
   (process-event [_ app]
-    (js/console.log "TallennaJaPaivitaTavoiteSekaKattohinta :: yhteenvedot" (pr-str (:yhteenvedot app)))
     (tallenna-tavoite-ja-kattohinnat app))
 
   TallennaJaPaivitaTavoiteSekaKattohintaOnnistui

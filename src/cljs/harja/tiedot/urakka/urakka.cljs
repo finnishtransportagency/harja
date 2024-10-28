@@ -18,13 +18,13 @@
 
 (defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
                                                                          :maksetaan                      :molemmat
-                                                                         :kopioidaan-tuleville-vuosille? true
+                                                                         :kopioidaan-tuleville-vuosille? false
                                                                          :laskutukseen-perustuen-valinta #{}}}
                                        :suodattimet          {:hankinnat                      {:toimenpide                     :talvihoito
                                                                                                :maksetaan                      :molemmat
-                                                                                               :kopioidaan-tuleville-vuosille? true
+                                                                                               :kopioidaan-tuleville-vuosille? false
                                                                                                :laskutukseen-perustuen-valinta #{}}
-                                                              :kopioidaan-tuleville-vuosille? true}})
+                                                              :kopioidaan-tuleville-vuosille? false}})
 
 (def suolarajoitukset-default {:rajoitusalue-lomake-auki? false
                                :lomake [:kopioidaan-tuleville-vuosille? true]
