@@ -616,7 +616,7 @@
     (is (= (:status vastaus) 200) "Kutsu onnistuu, vaikka menee uudempaan versioon.")
     (is (= v2-kyselymaara (dec kasvanut-v2-kyselymaara)) "V2 kyselyiden määrä kasvaa yhdellä.")))
 
-(deftest virheellinen-put-versio-2
+(deftest virheellinen-put-versio-1
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         paivamaara "2023-05-30"
         ulkoinenid "12345"
@@ -632,7 +632,7 @@
                (.replace "__PAIVAMAARA__" paivamaara))
 
         _ (anna-kirjoitusoikeus kayttaja-yit)
-        ;; POST tyyppinen kutsu ei pitäisi onnistua
+        ;; PUT tyyppinen kutsu ei pitäisi onnistua versioon 1
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=1"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)
         _ (println "vastaus-body" vastaus-body)]

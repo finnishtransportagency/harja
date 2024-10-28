@@ -1112,7 +1112,7 @@ documentation:
     /tyomaapaivakirja:
       post:
         is: [secured]
-        description: Deprikoituu 31.12.2025. Uuden työmaapäiväkirjan luominen.
+        description: Deprikoituu 31.12.2025. Käytä uudempaa rajapintaa, jossa asetetaan query parametri: api_version=2. Uuden työmaapäiväkirjan luominen.
         body:
           application/json:
             example: !include examples/tyomaapaivakirja-kirjaus-request.json
