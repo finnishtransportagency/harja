@@ -278,10 +278,7 @@
          [[otsikko polku] suodatinryhmat]
          [checkbox-suodatinryhma otsikko tiedot/suodattimet polku
           (merge yleiset-asetukset
-                 {:auki-atomi? (paneelin-tila-atomi! (str polku) false)})])]
-      [:div.tk-yksittaiset-suodattimet.fontti-taso3
-       [yksittainen-suodatincheckbox "Varustetoteumat"
-        tiedot/suodattimet [:varustetoteumat tk/varustetoteumat]]]]]))
+                 {:auki-atomi? (paneelin-tila-atomi! (str polku) false)})])]]]))
 
 (defn nykytilanne-valinnat []
   [:span.tilannekuva-nykytilanne-valinnat
@@ -356,14 +353,6 @@
                   {:yllapitokohde-id (:yllapitokohde-id yllapitokohdeosa)
                    :urakkatyyppi :paallystys}))
     :teksti "Näytä yhteyshenkilöt"}
-
-   :varustetoteuma
-   {:toiminto (comp siirtymat/nayta-varustetoteuma! :id)
-    :teksti "Toteumanäkymään"
-    :tooltip "Siirry urakan varustetoteumiin"
-
-    ;; Näytä vain, jos käyttäjällä oikeus urakan varustetoteumiin
-    :when (comp oikeudet/urakat-toteumat-varusteet :urakka-id)}
 
    :ilmoitus
    {:toiminto #(jaettu/nayta-kuittausten-tiedot (:kuittaukset %))
