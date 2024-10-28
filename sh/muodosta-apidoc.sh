@@ -6,15 +6,15 @@ case $ke in
       kansio_nykyinen=$(basename "$PWD")
       kansio_vaadittu="harja"
       if [ "$kansio_nykyinen" == "$kansio_vaadittu" ]; then
-          echo "Muodostetaan uusin Harja API:n dokumentaatio. Raml2html herjaa tiedostoviittauksista.";
-          rm -r -f apidoc
-          mkdir apidoc
+          echo "Muodostetaan Harja API:n dokumentaatio. Raml2html herjaa tiedostoviittauksista.";
+          rm -r -f ../apidoc
+          mkdir ../apidoc
           rm -f resources/api/api.html
           raml2html resources/api/api.raml > resources/api/api.html
-          cp -r resources/api/ apidoc
-          cd apidoc
+          cp -r resources/api/ ../apidoc
+          cd ../apidoc
           zip -r api.zip schemas examples documentation api.html api.raml
-          echo "Uusi Harjan API-dokumentaatio muodostettu kansioon harja/apidoc.";
+          echo "Uusi Harjan API-dokumentaatio muodostettu kansioon ../apidoc.";
       else
           echo "Aja tämä skripti harja-kansiosta komennolla sh ./sh/muodosta-apidoc.sh. Nykyinen kansio: $kansio_nykyinen"
       fi
