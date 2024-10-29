@@ -527,8 +527,11 @@
 (defn turvallisuuspoikkeamalistaus
   []
   (let [urakka @nav/valittu-urakka]
-    [:div.sanktiot
-     [urakka-valinnat/urakan-hoitokausi urakka]
+    [:div.turvallisuuspoikkeamat
+
+     [:span.turvallisuuspoikkeama-hoitokausi
+      [urakka-valinnat/urakan-hoitokausi urakka]]
+
      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id urakka))]
        (yleiset/wrap-if
          (not oikeus?)
@@ -540,21 +543,22 @@
                        @tiedot/turvallisuuspoikkeaman-luonti-kesken?
                        (not oikeus?))}]))
 
-     [grid/grid
-      {:otsikko "Turvallisuuspoikkeamat"
-       :tyhja (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan turvallisuuspoikkeamia"])
-       :rivi-klikattu #(valitse-turvallisuuspoikkeama (:id urakka) (:id %))}
-      [{:otsikko "Ta\u00ADpah\u00ADtu\u00ADnut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 15 :tyyppi :pvm}
-       {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys 15
-        :hae turpodomain/kuvaile-tyontekijan-ammatti}
-       {:otsikko "Ku\u00ADvaus" :nimi :kuvaus :tyyppi :string :leveys 45}
-       {:otsikko "Tila" :nimi :tila :tyyppi :string :leveys 8 :fmt turpodomain/kuvaa-turpon-tila
-        :validoi [[:ei-tyhja "Valitse tila"]]}
-       {:otsikko "Pois\u00ADsa" :nimi :poissa :tyyppi :string :leveys 5
-        :hae (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
-       {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys 5
-        :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
-      (sort-by :tapahtunut pvm/jalkeen? @tiedot/haetut-turvallisuuspoikkeamat)]]))
+     [:div.turvallisuuspoikkeama-taulukko
+      [grid/grid
+       {:otsikko "Turvallisuuspoikkeamat"
+        :tyhja (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan turvallisuuspoikkeamia"])
+        :rivi-klikattu #(valitse-turvallisuuspoikkeama (:id urakka) (:id %))}
+       [{:otsikko "Ta\u00ADpah\u00ADtu\u00ADnut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 15 :tyyppi :pvm}
+        {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys 15
+         :hae turpodomain/kuvaile-tyontekijan-ammatti}
+        {:otsikko "Ku\u00ADvaus" :nimi :kuvaus :tyyppi :string :leveys 45}
+        {:otsikko "Tila" :nimi :tila :tyyppi :string :leveys 8 :fmt turpodomain/kuvaa-turpon-tila
+         :validoi [[:ei-tyhja "Valitse tila"]]}
+        {:otsikko "Pois\u00ADsa" :nimi :poissa :tyyppi :string :leveys 5
+         :hae (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
+        {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys 5
+         :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
+       (sort-by :tapahtunut pvm/jalkeen? @tiedot/haetut-turvallisuuspoikkeamat)]]]))
 
 (defn turvallisuuspoikkeamat [urakka]
   (komp/luo

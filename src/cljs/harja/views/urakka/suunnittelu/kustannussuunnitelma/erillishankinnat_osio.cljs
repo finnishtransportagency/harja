@@ -1,9 +1,7 @@
 (ns harja.views.urakka.suunnittelu.kustannussuunnitelma.erillishankinnat-osio
-  (:require [reagent.core :as r]
-            [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
+  (:require [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.ui.taulukko.grid :as grid]
             [harja.ui.yleiset :as yleiset]
-            [harja.loki :refer [log]]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.grid-apurit :as grid-apurit]))
 

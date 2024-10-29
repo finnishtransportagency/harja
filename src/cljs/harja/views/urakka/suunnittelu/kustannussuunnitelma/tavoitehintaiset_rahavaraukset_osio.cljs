@@ -45,7 +45,7 @@
      (when tallennus-kaynnissa?
        [:div.ajax-loader-valistys-kustannukset
         [ajax-loader-pieni (str "Tallennetaan tietoja...")]])
-     
+
      [grid/muokkaus-grid
       {:id "tavoitehintaiset-rahavaraukset-grid"
        :otsikko "Tavoitehintaan vaikuttavat rahavaraukset"
