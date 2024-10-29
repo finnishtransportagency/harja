@@ -17,7 +17,7 @@
                  ;;;;;;; Yleiset ;;;;;;;
 
                  [prismatic/schema "1.4.1"]
-                 [org.clojure/core.async "0.6.532"]
+                 [org.clojure/core.async "0.7.559"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
                  [com.cognitect/transit-clj "1.0.333"]
@@ -59,7 +59,7 @@
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
                  [org.postgresql/postgresql "42.7.4"]
-                 [net.postgis/postgis-jdbc "2023.1.0"]
+                 [net.postgis/postgis-jdbc "2024.1.0"]
                  [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
                  [com.mchange/c3p0 "0.10.1"]
