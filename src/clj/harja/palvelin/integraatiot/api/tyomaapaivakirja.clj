@@ -10,6 +10,7 @@
             [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.json :as tyokalut-json]
+            [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-virhevastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
@@ -434,7 +435,7 @@
       http :kirjaa-tyomaapaivakirja
       (POST "/api/urakat/:id/tyomaapaivakirja" request
         ;; Jos query parametrina lisätään versio 2 tai jos nykyhetki on myöhemmin, kuin 31.12.2025 niin käytetään versiota 2
-        (let [versionumero (konv/konvertoi->int (get-in request [:params "api_version"]))]
+        (let [versionumero (apurit/requestin-versionumero request)]
           (if (or
                 (and versionumero (= 2 versionumero))
                 (pvm/sama-tai-jalkeen? (pvm/nyt) (pvm/->pvm "01.01.2026")))
@@ -448,7 +449,7 @@
               (fn [parametrit data kayttaja db]
                 (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
               :kirjoitus)
-            ;; Versio 1 - Deprikoituu 31.12.2025
+            ;; Versio 1 - Deprekoituu 31.12.2025
             (kasittele-kutsu db
               integraatioloki
               :kirjaa-tyomaapaivakirja
@@ -466,7 +467,7 @@
       ;; Käytä queryparametri api_version=2 -> "/api/urakat/:id/tyomaapaivakirja?api_version=2"
       (PUT "/api/urakat/:id/tyomaapaivakirja" request
         ;; Odottaa saavansa versionumeron query parametrina
-        (let [versionumero (konv/konvertoi->int (get-in request [:params "api_version"]))]
+        (let [versionumero (apurit/requestin-versionumero request)]
           (if (or
                 (and versionumero (= 2 versionumero))
                 (pvm/sama-tai-jalkeen? (pvm/nyt) (pvm/->pvm "01.01.2026")))
@@ -486,7 +487,7 @@
           Anna versionumero seuraavasti '/api/urakat/<urakkaid>/tyomaapaivakirja?api_version=2'"}] (get-in request [:headers "origin"])))))
       true)
 
-    ;; ;; Deprikoituu 31.12.2025
+    ;; ;; Deprekoituu 31.12.2025
     (julkaise-reitti
       http :paivita-tyomaapaivakirja
       (PUT "/api/urakat/:id/tyomaapaivakirja/:tid" request
@@ -510,6 +511,8 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
       :kirjaa-tyomaapaivakirja
+      :kirjaa-tyomaapaivakirja-v2
       :paivita-tyomaapaivakirja
+      :paivita-tyomaapaivakirja-v2
       :hae-tyomaapaivakirjan-versiotiedot)
     this))

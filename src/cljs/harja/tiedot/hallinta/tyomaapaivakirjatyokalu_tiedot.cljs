@@ -257,7 +257,7 @@
 
   HaeHallintayksikonUrakatEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.error "HaeHallintayksikonUrakatEpaonnistui :: vastaus" (pr-str vastaus))
+    (js/console.log "HaeHallintayksikonUrakatEpaonnistui :: vastaus" (pr-str vastaus))
     (viesti/nayta-toast! "HaeHallintayksikonUrakatEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
     (-> app
       (assoc :koordinaatit nil)
@@ -272,7 +272,7 @@
 
   HaeKayttajanOikeuksiaEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.error "HaeKayttajanOikeuksiaEpaonnistui :: vastaus" (pr-str vastaus))
+    (js/console.log "HaeKayttajanOikeuksiaEpaonnistui :: vastaus" (pr-str vastaus))
     (viesti/nayta-toast! "HaeKayttajanOikeuksiaEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
     app)
 

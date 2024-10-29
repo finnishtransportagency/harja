@@ -1112,7 +1112,7 @@ documentation:
     /tyomaapaivakirja:
       post:
         is: [secured]
-        description: Deprikoituu 31.12.2025. Käytä uudempaa rajapintaa, jossa asetetaan query parametri: api_version=2. Uuden työmaapäiväkirjan luominen.
+        description: Deprekoituu 31.12.2025. Käytä uudempaa rajapintaa, jossa asetetaan query parametri: api_version=2. Uuden työmaapäiväkirjan luominen.
         body:
           application/json:
             example: !include examples/tyomaapaivakirja-kirjaus-request.json
@@ -1137,7 +1137,7 @@ documentation:
       /{tyomaapaivakirjaid}:
         put:
           is: [secured]
-          description: Työmaapäiväkirjan päivittäminen. Deprikoituu 31.12.2024. Siirry käyttämään uudempaa versiota, jossa versionumero annetaan query parametrilla ja päivitettävä työmaapäiväkirja päätellään päivästä, eikä url parametrista.
+          description: Työmaapäiväkirjan päivittäminen. Deprekoituu 31.12.2024. Siirry käyttämään uudempaa versiota, jossa versionumero annetaan query parametrilla ja päivitettävä työmaapäiväkirja päätellään päivästä, eikä url parametrista.
           body:
             application/json:
               example: !include examples/tyomaapaivakirja-paivitys-request.json
@@ -1165,7 +1165,7 @@ documentation:
         queryParameters:
           api_version:
             displayName: api_version
-              description: Apin versio. Tällä hetkellä käytössä versio 1 ja 2. Versio 1 deprikoituu 31.12.2025. Versionumero on tällä hetkellä vapaaehtoinen, mutta erittäin suositeltava. Jos sitä ei anneta query parametrina, niin käytetään versiota 1.
+              description: Apin versio. Tällä hetkellä käytössä versio 1 ja 2. Versio 1 deprekoituu 31.12.2025. Versionumero on tällä hetkellä vapaaehtoinen, mutta erittäin suositeltava. Jos sitä ei anneta query parametrina, niin käytetään versiota 1.
               type: string
               required: false
         body:
@@ -1195,7 +1195,7 @@ documentation:
           queryParameters:
             api_version:
               displayName: api_version
-                description: Apin versio. Tällä hetkellä käytössä versio 1 ja 2. Versio 1 deprikoituu 31.12.2025. Versionumero on tällä hetkellä vapaaehtoinen, mutta erittäin suositeltava. Jos sitä ei anneta query parametrina, niin käytetään versiota 1.
+                description: Apin versio. Tällä hetkellä käytössä versio 1 ja 2. Versio 1 deprekoituu 31.12.2025. Versionumero on tällä hetkellä vapaaehtoinen, mutta erittäin suositeltava. Jos sitä ei anneta query parametrina, niin käytetään versiota 1.
                 type: string
                 required: false
           body:
