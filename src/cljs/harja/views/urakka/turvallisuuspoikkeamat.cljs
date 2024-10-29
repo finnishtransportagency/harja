@@ -1,12 +1,11 @@
 (ns harja.views.urakka.turvallisuuspoikkeamat
   (:require [reagent.core :refer [atom] :as r]
-            [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as tiedot]
             [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.pvm :as pvm]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
@@ -19,17 +18,12 @@
             [harja.domain.kommentti :as kommentti]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.domain.urakan-tyotunnit :as ut]
-            [harja.domain.urakka :as u-domain]
-            [harja.ui.viesti :as viesti]
-            [harja.geo :as geo]
-            [harja.asiakas.kommunikaatio :as k])
-  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
-                   [harja.makrot :refer [defc fnc]]
-                   [reagent.ratom :refer [reaction run!]]
+            [harja.domain.urakka :as u-domain])
+  (:require-macros [harja.atom :refer [reaction-writable]]
+                   [harja.makrot :refer [fnc]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama-atom]
