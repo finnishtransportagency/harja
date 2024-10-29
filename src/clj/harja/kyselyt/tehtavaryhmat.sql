@@ -58,11 +58,7 @@ UPDATE tehtavaryhma
 SELECT tk.id                                     AS id,
        tk.nimi                                   AS tehtava,
        tk.suunnitteluyksikko                     AS yksikko,
-       COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi) AS rahavaraus,
-       -- Ei voi olla sekä rahavaraus, että käsin lisättävä tehtävä. Rahavarauksille toteumat on euroja ja ne lisätään kuluista.
-       CASE
-           WHEN (tk.kasin_lisattava_maara AND r.nimi IS NULL) THEN TRUE
-           ELSE FALSE END                        AS kasin_lisattava_maara
+       tk.kasin_lisattava_maara                  AS kasin_lisattava_maara
   FROM tehtava tk
            JOIN urakka u ON :urakka = u.id
            JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
@@ -71,11 +67,6 @@ SELECT tk.id                                     AS id,
 
            JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id
                                          AND (:otsikko::TEXT IS NULL OR o.otsikko = :otsikko)
-           LEFT JOIN rahavaraus_tehtava rt on rt.tehtava_id = tk.id
-           LEFT JOIN rahavaraus_urakka ru
-                     ON rt.rahavaraus_id = ru.rahavaraus_id
-                         AND ru.urakka_id = :urakka
-           LEFT JOIN rahavaraus r ON ru.rahavaraus_id = r.id
  WHERE (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= DATE_PART('year', u.alkupvm)::INTEGER)
    AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= DATE_PART('year', u.alkupvm)::INTEGER)
    AND tk.poistettu IS NOT TRUE
