@@ -200,8 +200,11 @@ WHERE u.id = :urakka
   AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
   AND (t.voimassaolo_alkuvuosi IS NULL OR t.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (t.voimassaolo_loppuvuosi IS NULL OR t.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
-  -- Suunnitteluyksikkö ei voi olla null normaali tehtävällä, mutta rahavarauksella se voi olla.
-  AND (t.suunnitteluyksikko IS not null OR (select count(*) from rahavaraustehtava where tehtava_id = t.id) > 0)
+  -- Suunnitteluyksikkö ei voi null tai euroa
+  AND t.suunnitteluyksikko IS not null
+  AND t.suunnitteluyksikko != 'euroa'
+-- Eikä tehtävä kuulu mihinkään rahavaraukseen
+  AND (select count(*) from rahavaraustehtava where tehtava_id = t.id) = 0
 ORDER BY t.jarjestys, t."mhu-tehtava?" desc;
 
 

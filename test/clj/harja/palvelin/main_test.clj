@@ -29,13 +29,7 @@
                              (assoc-in [:http-palvelin :dev-resources-path] "dev-resources")
                              (assoc :tietokanta testi/testitietokanta)
                              (assoc :tietokanta-replica testi/testitietokanta)
-                             (assoc :itmf {:url (str "tcp://"
-                                                      (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
-                                                      ":"
-                                                      (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61616))
-                                            :kayttaja ""
-                                            :salasana ""
-                                            :tyyppi :activemq})
+                             (assoc :itmf integraatio/itmf-asetukset)
                              (assoc :tloik {:ilmoitusviestijono tloik-tyokalut/+tloik-ilmoitusviestijono+
                                             :ilmoituskuittausjono tloik-tyokalut/+tloik-ilmoituskuittausjono+
                                             :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
@@ -168,7 +162,9 @@
     :reikapaikkaukset
     :mpu-kustannukset
     :rahavaraukset-hallinta
-    :urakkahenkilot-hallinta})
+    :urakkahenkilot-hallinta
+    :lupaukset-hallinta
+    :kojelauta-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -246,7 +242,9 @@
     :reikapaikkaukset
     :mpu-kustannukset
     :rahavaraukset-hallinta
-    :urakkahenkilot-hallinta})
+    :urakkahenkilot-hallinta
+    :lupaukset-hallinta
+    :kojelauta-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

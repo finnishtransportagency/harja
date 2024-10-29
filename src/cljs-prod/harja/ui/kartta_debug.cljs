@@ -1,12 +1,9 @@
 (ns harja.ui.kartta-debug)
 
 (defn kartta-layers
-  [& args]
-  )
+  [& args])
 
 (defn aseta-kartta-debug-sijainti
-  [& args]
-  )
+  [& args])
 
-(defn nayta-kartan-debug []
-  )
+(defn nayta-kartan-debug [])

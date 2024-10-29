@@ -9,19 +9,19 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.kartta :as kartta]
             [harja.fmt :as fmt]
-            [harja.ui.kentat :as kentat]
             [harja.ui.kartta.infopaneelin-sisalto :as info]
-            [clojure.string :as clj-str]
             [clojure.set :as set])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (declare aseta-kartta-debug-sijainti pakota-paivitys)
+
 
 (defonce tila (atom {:nayta-kartan-debug? false
                      :nayta-kaikki-layerit? false
                      :nayta-kartan-ylaosassa? true
                      :nayta-infopaneelin-tiedot? true
                      :kartan-paikka []}))
+
 (defonce layers (reaction (into {} (map (fn [[kerros kerroksen-tila-atom]]
                                           [kerros @kerroksen-tila-atom])
                                         tasot/tasojen-nakyvyys-atomit))))
@@ -145,23 +145,21 @@
 (defn- nayta-infopaneelin-tiedot []
   (when (and (:nayta-infopaneelin-tiedot? @tila)
              @kartta/infopaneeli-nakyvissa?)
-    (let [linkki-funkitot-vektori? (vector? @kartta/infopaneelin-linkkifunktiot)
-          metan-asettaminen-linkkifunktioille #(into {} (map (fn [[avain arvo]]
+    (let [metan-asettaminen-linkkifunktioille #(into {} (map (fn [[avain arvo]]
                                                                [avain (if (vector? arvo)
                                                                         (mapv (fn [mappi] (with-meta mappi {:ylin-taso? true})) arvo)
                                                                         (with-meta arvo {:ylin-taso? true}))])
-                                                             @kartta/infopaneelin-linkkifunktiot))
-          ;; harja.views.kartta viittauksesta tulee warningia käännösvaiheessa,
-          ;; mutta ilmeisesti ajon aikana toimii
-          metan-asettaminen-asioille-raaka #(update @harja.views.kartta/asiat-pisteessa :asiat (fn [asiat]
-                                                                                                 (mapv (fn [asia]
-                                                                                                         (with-meta asia {:ylin-taso? true}))
-                                                                                                       asiat)))
-          metan-asettaminen-asioille-kasitelty #(->> @harja.views.kartta/asiat-pisteessa
-                                                     :asiat
-                                                     info/skeemamuodossa
-                                                     (mapv (fn [asia]
-                                                             (with-meta asia {:ylin-taso? true}))))]
+                                                          @kartta/infopaneelin-linkkifunktiot))
+
+          metan-asettaminen-asioille-raaka #(update @kartta/asiat-pisteessa :asiat (fn [asiat]
+                                                                              (mapv (fn [asia]
+                                                                                      (with-meta asia {:ylin-taso? true}))
+                                                                                asiat)))
+          metan-asettaminen-asioille-kasitelty #(->> @kartta/asiat-pisteessa
+                                                  :asiat
+                                                  info/skeemamuodossa
+                                                  (mapv (fn [asia]
+                                                          (with-meta asia {:ylin-taso? true}))))]
       [:div {:style {:display "flex"
                      :flex-flow "column wrap"
                      :pointer-events "none"}}

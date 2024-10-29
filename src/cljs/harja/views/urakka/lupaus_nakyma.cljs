@@ -376,9 +376,10 @@
             [:div.row {:style (merge {}
                                      (when (not (empty? (:lupausryhmat app)))
                                        {:border-top "1px solid #D6D6D6"}))}
-             (for [ryhma (:lupausryhmat app)]
-               ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
-               [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))])]))
+             (let [lupausryhmat (sort-by :jarjestys (:lupausryhmat app))]
+                 (for [ryhma lupausryhmat]
+                   ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
+                   [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))]))]))
          [testausvalinnat e! app]]))))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]

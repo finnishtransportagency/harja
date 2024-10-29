@@ -146,6 +146,7 @@
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :tiestotarkastusraportti
+    :rajoita-pdf-rivimaara  30000
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
                    {:tyyppi "tienumero", :konteksti nil, :pakollinen false, :nimi "Tienumero"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
@@ -376,6 +377,8 @@
 
    {:nimi         :kanavien-liikennetapahtumat
     :konteksti    #{}
+    ;; Älä nosta PDF rajaa tälle raportille, aiheutuu liiallista muisti allocaatiota
+    :rajoita-pdf-rivimaara  1200
     :kuvaus       "Liikennetapahtumat"
     :suorita      #'harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat/suorita
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}

@@ -121,59 +121,73 @@
   [itmf ilmoitusasetukset lokittaja db kuittausjono urakka
    ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja kehitysmoodi?
    vastaanotettu]
-  (jdbc/with-db-transaction [db db]
-    (let [ilmoitus (assoc ilmoitus :urakkanimi (:nimi urakka)
-                                   :vastaanotettu vastaanotettu)
-          urakka-id (:id urakka)
-          ilmoitus-id (:ilmoitus-id ilmoitus)
-          paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka-id)
-          kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka
-                                             paivystajat nil)
-          ilmoittaja-urakan-urakoitsijan-organisaatiossa? (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa?
-                                                            db urakka-id ilmoitus)
-          uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-idlla? db ilmoitus-id)
-          ilmoitus-on-lahetetty-urakalle? (ilmoitukset-q/ilmoitus-on-lahetetty-urakalle? db ilmoitus-id urakka-id)
-          ilmoituksen-tyyppi-kannassa (:ilmoitustyyppi (first (ilmoitukset-q/hae-ilmoitus-ilmoitus-idlla db {:ilmoitusid ilmoitus-id})))
-          ;; Jos ilmoitus muuttuu päivityksellä toimenpidepyynnöksi, lähetetään viestit uudelleen, että SMS:t saadaan lähtemään (HARJA-631)
-          ilmoitus-muuttui-toimenpidepyynnoksi? (and ilmoituksen-tyyppi-kannassa
-                                                  (not= "toimenpidepyynto" ilmoituksen-tyyppi-kannassa)
-                                                  (= "toimenpidepyynto" (:ilmoitustyyppi ilmoitus)))
-          ;; Jos kyseessä on harvinainen tilanne, että ilmoitus on lähetetty väärälle urakalle ensin, niin korjataan
-          ;; ilmoitustauluun urakka-id oikeaksi tällä toisella kerralla
-          _ (when (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?))
-              (ilmoitukset-q/paivita-ilmoituksen-urakka db ilmoitus-id urakka-id))
+  (let [ilmoitus (assoc ilmoitus
+                   :urakkanimi (:nimi urakka)
+                   :vastaanotettu vastaanotettu)
+        urakka-id (:id urakka)
+        ilmoitus-id (:ilmoitus-id ilmoitus)
+        paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka-id)
+        kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka paivystajat nil)
+        ilmoittaja-urakan-urakoitsijan-organisaatiossa? (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa?
+                                                          db urakka-id ilmoitus)
+        uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-idlla? db ilmoitus-id)
+        ilmoitus-on-lahetetty-urakalle? (ilmoitukset-q/ilmoitus-on-lahetetty-urakalle? db ilmoitus-id urakka-id)
+        ilmoituksen-tyyppi-kannassa (:ilmoitustyyppi (first (ilmoitukset-q/hae-ilmoitus-ilmoitus-idlla db {:ilmoitusid ilmoitus-id})))
+        ;; Jos ilmoitus muuttuu päivityksellä toimenpidepyynnöksi, lähetetään viestit uudelleen, että SMS:t saadaan lähtemään (HARJA-631)
+        ilmoitus-muuttui-toimenpidepyynnoksi? (and ilmoituksen-tyyppi-kannassa
+                                                (not= "toimenpidepyynto" ilmoituksen-tyyppi-kannassa)
+                                                (= "toimenpidepyynto" (:ilmoitustyyppi ilmoitus)))
+        {:keys [lisatietoja ilmoitus]}
+        (jdbc/with-db-transaction [db db]
+          (let [;; Jos kyseessä on harvinainen tilanne, että ilmoitus on lähetetty väärälle urakalle ensin, niin korjataan
+                ;; ilmoitustauluun urakka-id oikeaksi tällä toisella kerralla
+                _ (when (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?))
+                    (ilmoitukset-q/paivita-ilmoituksen-urakka db ilmoitus-id urakka-id))
+                ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
+                ;; Kuluneen ajan laskennassa verrataan ajankohtaa, jolloin T-LOIK on lähettänyt ilmoituksen siihen milloin se on Harjassa vastaanotettu.
+                kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:valitetty (:valitetty ilmoitus) :vastaanotettu vastaanotettu
+                                                                    :viesti-id (:viesti-id ilmoitus) :tapahtuma-id tapahtuma-id
+                                                                    :kehitysmoodi? kehitysmoodi? :uudelleen-lahetys? uudelleen-lahetys?})
+                ilmoituksen-alkuperainen-kesto (when uudelleen-lahetys?
+                                                 (->> ilmoitus-kanta-id (ilmoitukset-q/ilmoituksen-alkuperainen-kesto db) first :kesto))
+                lisatietoja (if uudelleen-lahetys?
+                              (str "Ilmoituksen päivityksen saapuminen kesti " (ilmoituksen-kesto kulunut-aika)
+                                " - alkuperäisellä kestänyt: "
+                                (if (< ilmoituksen-alkuperainen-kesto 1)
+                                  "alle 1s"
+                                  (ilmoituksen-kesto (Math/floor ilmoituksen-alkuperainen-kesto))))
+                              (str "Illmoituksella kesti " (ilmoituksen-kesto kulunut-aika) " saapua HARJA:an"))
+                ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
+                tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
 
-          ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
-          ;; Kuluneen ajan laskennassa verrataan ajankohtaa, jolloin T-LOIK on lähettänyt ilmoituksen siihen milloin se on Harjassa vastaanotettu.
-          kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:valitetty (:valitetty ilmoitus) :vastaanotettu vastaanotettu
-                                                              :viesti-id (:viesti-id ilmoitus) :tapahtuma-id tapahtuma-id
-                                                              :kehitysmoodi? kehitysmoodi? :uudelleen-lahetys? uudelleen-lahetys?})
-          ilmoituksen-alkuperainen-kesto (when uudelleen-lahetys?
-                                           (->> ilmoitus-kanta-id (ilmoitukset-q/ilmoituksen-alkuperainen-kesto db) first :kesto))
-          lisatietoja (if uudelleen-lahetys?
-                        (str "Ilmoituksen päivityksen saapuminen kesti " (ilmoituksen-kesto kulunut-aika)
-                             " - alkuperäisellä kestänyt: "
-                             (if (< ilmoituksen-alkuperainen-kesto 1)
-                               "alle 1s"
-                               (ilmoituksen-kesto (Math/floor ilmoituksen-alkuperainen-kesto))))
-                        (str "Illmoituksella kesti " (ilmoituksen-kesto kulunut-aika) " saapua HARJA:an"))
-          ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
-          tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
-      ;; Ilmoita kaikki ilmoitustapahtumat, ja vielä erikseen urakkakohtaisesti
-      (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta ilmoitus-id)
-      (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta urakka-id ilmoitus-id)
-      (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
-        (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
-        ;; Tee tähän joku logiikka, että lähetetään uusiksi, mikäli päivystäjä on eri, kuin edellisellä kerralla
-        ;; Voisko olla niin, että päivystäjille lähetetään, jos päivystäjä on eri kuin edellisellä kerralla
-        ;; HARJA-631: Jos päivitetty ilmoitus on tyyppiä TPP, lähetetään aina viestit uudelleen
-        (if (or (not uudelleen-lahetys?) (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?))
-              ilmoitus-muuttui-toimenpidepyynnoksi?)
-          (laheta-ilmoitus-paivystajille db
-            (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
-            paivystajat urakka-id ilmoitusasetukset)
-          (log/warn "Päivitetty ilmoitus saapui. Ei lähetetä päivystäjille, koska samat päivystäjät ovat jo saaneet viestin.")))
-      (laheta-kuittaus itmf lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true lisatietoja))))
+            ;; Ilmoita kaikki ilmoitustapahtumat, ja vielä erikseen urakkakohtaisesti
+            (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta ilmoitus-id)
+            (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta urakka-id ilmoitus-id)
+            (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
+              (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
+              ;; Tee tähän joku logiikka, että lähetetään uusiksi, mikäli päivystäjä on eri, kuin edellisellä kerralla
+              ;; Voisko olla niin, että päivystäjille lähetetään, jos päivystäjä on eri kuin edellisellä kerralla
+              ;; HARJA-631: Jos päivitetty ilmoitus on tyyppiä TPP, lähetetään aina viestit uudelleen
+              (if (or (not uudelleen-lahetys?) (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?))
+                    ilmoitus-muuttui-toimenpidepyynnoksi?)
+                (laheta-ilmoitus-paivystajille db
+                  (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
+                  paivystajat urakka-id ilmoitusasetukset)
+                (log/warn "Päivitetty ilmoitus saapui. Ei lähetetä päivystäjille, koska samat päivystäjät ovat jo saaneet viestin.")))
+            {:lisatietoja lisatietoja
+             :ilmoitus ilmoitus}))]
+    ;; Tallennus-transaktion jälkeen lähetetään Ack-viesti T-Loikiin. Se onnistuu lähes aina. Vaikka se epäonnistuisi,
+    ;; tallennetaan ilmoitus Harjaan, ja päivystäjille on lähetetty viestit. Tällöin T-Loik lähettää aikanaan ilmoituksen
+    ;; uudelleen, mikä Harjassa havaitaan päivitykseksi ja samasta ilmoituksesta ei enää lähde turhaan duplikaattina viestintää.
+    ;; Ilmoituksen tila päivitetään normaaliin "kuittaamaton" aloitustilaan, jos ja kun T-Loikiin menevä Ack-viesti onnistuu
+    ;; Muutoin ilmoitus jää harvinaiseen välitilaan "ei-valitetty", mikä tarkoittaa ettei T-Loikille ole lähetetty "valitetty" kuittausta (eli Ack) onnistuneesti
+    (try
+      (let [valitysviestin-id (laheta-kuittaus itmf lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true lisatietoja)]
+        (when valitysviestin-id
+          (ilmoitukset-q/paivita-ilmoitus-valitetty! db {:id (:id ilmoitus)})))
+      (catch Exception e
+        (log/error (format "Ilmoituksen välityskuittausta (Ack) ei saatu välitettyä T-Loikiin. Tarkastele kokonaistilannetta,
+      ja ole tarvittaessa yhteydessä T-Loikiin, heidän järjestelmässä voi olla ongelmatilanne päällä. Virhe: %s" (pr-str e)))))))
 
 (defn kasittele-tuntematon-urakka [itmf lokittaja kuittausjono viesti-id ilmoitus-id
                                    korrelaatio-id tapahtuma-id]
@@ -185,13 +199,14 @@
     (laheta-kuittaus itmf lokittaja kuittausjono kuittaus
                      korrelaatio-id tapahtuma-id false virhe)))
 
-(defn vastaanota-ilmoitus [itmf lokittaja ilmoitusasetukset db kuittausjono jms-lahettaja kehitysmoodi? viesti]
+(defn vastaanota-ilmoitus [itmf lokittaja ilmoitusasetukset db
+                           ilmoitusviestijono kuittausjono jms-lahettaja kehitysmoodi? viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
   (let [vastaanotettu (pvm/nyt)
         jms-viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
         korrelaatio-id (.getJMSCorrelationID viesti)
-        tapahtuma-id (lokittaja :saapunut-jms-viesti jms-viesti-id viestin-sisalto kuittausjono)]
+        tapahtuma-id (lokittaja :saapunut-jms-viesti jms-viesti-id viestin-sisalto ilmoitusviestijono)]
 
     (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" viestin-sisalto)
       (let [{:keys [viesti-id ilmoitus-id] :as ilmoitus} (ilmoitus-sanoma/lue-viesti viestin-sisalto)]

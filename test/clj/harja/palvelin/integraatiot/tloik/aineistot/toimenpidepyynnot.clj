@@ -19,6 +19,13 @@
     <y>7220843.320000000298023223876953125</y>
    </sijainti>")
 
+(def sijainti-rovaniemen-alueella
+  "<sijainti>
+    <tienumero>4</tienumero>
+    <x>445197</x>
+    <y>7376376</y>
+   </sijainti>")
+
 (def ilmoittaja-ilman-puhelinta-xml
   "<ilmoittaja>
     <tyyppi>tienkayttaja</tyyppi>

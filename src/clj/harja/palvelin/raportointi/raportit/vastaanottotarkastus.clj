@@ -84,8 +84,7 @@
                               :luokka "paallystys-tausta-tumma"
                               :tummenna-teksti? true
                               :tasaa :keskita}
-                             {:sarakkeita 1}]
-                :lisaa-excel-valiotsikot true}
+                             {:sarakkeita 1}]}
      (into []
        (concat
          [{:otsikko "Urakka" :leveys 10}
@@ -281,8 +280,7 @@
         valtukunnallinen-rivi (apurit/pkluokka-rivi valtakunnallisesti-yhteensa true true)]
     [:taulukko {:otsikko "Eurot / PK-luokka"
                 :tyhja (when (empty? rivit) "Ei kohteita.")
-                :sheet-nimi "Eurot / PK-luokka"
-                :lisaa-excel-valiotsikot true}
+                :sheet-nimi "Eurot / PK-luokka"}
      ;; Otsikot
      (concat
        [{:otsikko "Urakka" :leveys 10}
@@ -335,7 +333,6 @@
 
     [:taulukko {:tyhja (when (empty? urakkarivit) "Ei kohteita.")
                 :sheet-nimi "Yötyö / PK-luokka"
-                :lisaa-excel-valiotsikot true
                 :rivi-ennen [{:sarakkeita 1 :leveys 8}
                              {:teksti "PK1 yötyö"
                               :sarakkeita 2
@@ -412,8 +409,7 @@
                      (mapcat formatoi-elyt-fn elyjaottelu-rivit)))]
     [:taulukko {:otsikko nimi
                 :tyhja (when (empty? muut-kustannukset) "Ei muita kustannuksia.")
-                :sheet-nimi nimi
-                :lisaa-excel-valiotsikot true}
+                :sheet-nimi nimi}
      [{:otsikko "Pvm" :leveys 2 :fmt :pvm}
       {:otsikko "Urakka" :leveys 4}
       {:otsikko "Selitys" :leveys 4}

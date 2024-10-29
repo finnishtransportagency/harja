@@ -19,11 +19,13 @@
             [harja.views.hallinta.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
             [harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
+            [harja.views.hallinta.kojelauta :as kojelauta]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
             [harja.views.hallinta.urakkatiedot.tehtava-nakyma :as tehtava-nakyma]
             [harja.views.hallinta.tarjoushinnat :as tarjoushinnat]
             [harja.views.hallinta.rahavaraukset :as rahavaraukset]
+            [harja.views.hallinta.urakkatiedot.lupaukset-nakyma :as lupaukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
             [harja.tiedot.istunto :as istunto]))
@@ -87,8 +89,14 @@
     :mhu-tarjoushinnat
     (when (oikeudet/hallinta-tarjoushinnat)
       ^{:key "mhu-tarjoushinnat"}
-      [tarjoushinnat/tarjoushinnat])
-
+      [tarjoushinnat/tarjoushinnat]) 
+    
+    "Lupaukset"
+    :lupaukset
+    (when (oikeudet/hallinta-lupaukset)
+      ^{:key "lupaukset"}
+      [lupaukset/lupaukset])
+    
     "Rahavaraukset"
     :rahavaraukset
     (when (oikeudet/hallinta-rahavaraukset)
@@ -112,6 +120,12 @@
    ^{:key "seuranta"}
    [bs/tabs {:style :tabs :classes "tabs-taso2"
              :active (nav/valittu-valilehti-atom :hallinta-seuranta)}
+
+    "Urakoiden tilanne"
+    :urakoiden-tilanne
+    (when (oikeudet/hallinta)
+      ^{:key "urakoiden-tilanne"}
+      [kojelauta/kojelauta])
 
     "Integraatiotilanne"
     :integraatiotilanne

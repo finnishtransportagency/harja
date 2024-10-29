@@ -170,9 +170,7 @@
       (when (and (< n 3)
                  (not kasitelty?))
         (recur (inc n)
-               (= 0
-                  (- (-> (jms-tk/itmf-jolokia-jono "virhetestijono" :enqueue-count nil) :body (cheshire/decode) (get "value"))
-                     (-> (jms-tk/itmf-jolokia-jono "virhetestijono" :dequeue-count nil) :body (cheshire/decode) (get "value")))))))
+               (= 0 (-> (jms-tk/itmf-jolokia-jono "virhetestijono" :message-count nil) :body (cheshire/decode) (get "value"))))))
     (is (= "VIRHE" (-> jarjestelma :itmf :tila deref :istunnot (get "testijarjestelma") :jonot (get "virhetestijono") :virheet first :viesti)))
     (jms-tk/itmf-jolokia-jono "virhetestijono" nil :purge))
 
@@ -256,6 +254,8 @@
                           "VIRHE"))))))
 
 (deftest itmf-kuormitus-testi
+  ;; HUOM: Jonot on konfiguroitu Testikomponentin start-metodissa
+  ;;       jono-1 kuuntelija on konfiguroitu heittämään aina exceptionin
   (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :kuormitus)
   (let [_ (alts!! [*itmf-yhteys* (timeout 10000)])
         _ (jms-tk/itmf-jolokia-jono "testilahetys-jono" nil :purge)
@@ -296,8 +296,7 @@
     (doseq [viesti-thread (<!! testijonon-lahetys)
             :let [viesti (<!! viesti-thread)]]
       (is (string? (re-find #"ID:.*" viesti))))
-    (is (= (count testikomponentin-lahettamat-viestit) (- (itmf-broker-tila "testilahetys-jono" :enqueue-count)
-                                                          (itmf-broker-tila "testilahetys-jono" :dequeue-count))))
+    (is (= (count testikomponentin-lahettamat-viestit) (itmf-broker-tila "testilahetys-jono" :message-count)))
     ;; Vain testijono-2 viestit pitäisi olla käsitelty, koska ykkönen nakkaa exceptionia
     (is (= kasitellyt-viestit testijono-2-vastaanottamat-viestit))
     ;; Tarkistetaan, että testijono-1:n vastaanottaja on kummiski vielä pystyssä

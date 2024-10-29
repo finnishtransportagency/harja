@@ -25,7 +25,7 @@
 
   (let [nayta-tilaajan-varaukset-grid? (and kantahaku-valmis? tilaajan-varaukset-grid)]
     [:<>
-     [:h2 {:id (str (get t/hallinnollisten-idt :tilaajan-varaukset) "-osio")} "Tavoitehinnan ulkopuoliset rahavaraukset"]
+     [:h3 {:id (str (get t/hallinnollisten-idt :tilaajan-varaukset) "-osio")} "Tavoitehinnan ulkopuoliset rahavaraukset"]
      [:div [:span "Tilaajan tekemät rahavaraukset, jotka eivät vaikuta tavoitehintaan."]]
 
      [:div {:data-cy "tilaajan-varaukset-taulukko-suodattimet"}

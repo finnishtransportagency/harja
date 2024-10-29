@@ -1,22 +1,38 @@
 (ns harja.palvelin.raportointi.raportit.tyomaapaivakirja.saatiedot
   "Työmaapäiväkirja -näkymän säätietojen gridit"
   (:require
-    [harja.pvm :as pvm]
-    [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
+   [harja.pvm :as pvm]
+   [harja.domain.raportointi :as r]
+   [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
-(defn- saatiedot-rivi [aika aika-tarkka ilma tie s-olom k-tuuli s-sum-str maara]
+(defn- saatiedot-rivi [aika aika-tarkka ilma tie s-olom k-tuuli sade-maara]
   (rivi
     [:varillinen-teksti {:arvo aika}]
     [:varillinen-teksti {:arvo ilma}]
     [:varillinen-teksti {:arvo tie}]
-    [:saa-ikoni {:olomuoto s-olom :havaintoaika aika-tarkka :maara maara}]
-    [:varillinen-teksti {:arvo s-sum-str}]
+    [:saa-ikoni {:olomuoto s-olom :havaintoaika aika-tarkka :maara sade-maara}]
+    [:varillinen-teksti {:arvo (or (some-> sade-maara (str " mm")) r/placeholder-ei-tietoja)}]
     [:varillinen-teksti {:arvo k-tuuli}]))
 
 (defn saatiedot-taulukkojen-parametrit [vasen-aseman-tiedot oikea-aseman-tiedot]
   (let [vasen-rivit (second vasen-aseman-tiedot)
         oikea-rivit (second oikea-aseman-tiedot)
+        fn-formatoi-gridit (fn [data]
+                             (into []
+                               (mapv
+                                 #(saatiedot-rivi
+                                    ;; Nämä ovat vaadittuja kenttiä, ja näissä on rajapintavalidointi
+                                    ;; Jos kuitenkin puuttuu tietoja, näytetään se virheenä
+                                    (or (some-> (:havaintoaika %) pvm/aika) "[VIRHE]")
+                                    (or (some-> (:havaintoaika %) pvm/pvm-aika-klo) "[VIRHE]")
+                                    (or (some-> (:ilman_lampotila %) (str " C°")) "[VIRHE]")
+                                    ;; Loput eivät ole vaadittuja kenttiä
+                                    (or (some-> (:tien_lampotila %) (str " C°")) r/placeholder-ei-tietoja)
+                                    (or (some-> (:sateen_olomuoto %) int) nil)
+                                    (or (some-> (:keskituuli %) (str " m/s")) r/placeholder-ei-tietoja)
+                                    (or (some-> (:sadesumma %) int) nil))
+                                 data)))
         taulukon-optiot {:tyhja "Ei Tietoja."
                          :piilota-border? false
                          :viimeinen-rivi-yhteenveto? false}
@@ -27,30 +43,8 @@
                            {:otsikko "S-olom" :leveys 0.75 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti}
                            {:otsikko "S-Sum" :leveys 0.75 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti}
                            {:otsikko "K-tuuli" :leveys 0.75 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti})
-        rivit-vasen (into []
-                      (mapv
-                        #(saatiedot-rivi
-                           (pvm/aika (:havaintoaika %))
-                           (pvm/pvm-aika-klo (:havaintoaika %))
-                           (str (:ilman_lampotila %) " C°")
-                           (str (:tien_lampotila %) " C°")
-                           (int (:sateen_olomuoto %))
-                           (str (:keskituuli %) " m/s")
-                           (str (:sadesumma %) " mm")
-                           (int (:sadesumma %)))
-                        vasen-rivit))
-        rivit-oikea (into []
-                      (mapv
-                        #(saatiedot-rivi
-                           (pvm/aika (:havaintoaika %))
-                           (pvm/pvm-aika-klo (:havaintoaika %))
-                           (str (:ilman_lampotila %) " C°")
-                           (str (:tien_lampotila %) " C°")
-                           (int (:sateen_olomuoto %))
-                           (str (:keskituuli %) " m/s")
-                           (str (:sadesumma %) " mm")
-                           (int (:sadesumma %)))
-                        oikea-rivit))
+        rivit-vasen (fn-formatoi-gridit vasen-rivit)
+        rivit-oikea (fn-formatoi-gridit oikea-rivit)
         taulukko-vasen {:otsikko-vasen (:aseman_tunniste (first (second vasen-aseman-tiedot)))
                         :optiot-vasen taulukon-optiot
                         :otsikot-vasen taulukon-otsikot

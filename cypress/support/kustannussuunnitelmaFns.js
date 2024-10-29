@@ -62,10 +62,19 @@ export function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndexTaiPolku
     cy.wait(1000)
 }
 
-export function toggleLaajennaRivi(taulukonId, contains) {
-    cy.get('#' + taulukonId)
-        .contains('[data-cy*=laajenna]', contains)
-        .click();
+// gridMuokattu = true parametri viittaa Harjan normaalisti käytössäolevaan muokkausgridiin eikä kustiksessa olevaan gridiin.
+export function toggleLaajennaRivi(taulukonId, contains, gridMuokattu) {
+    if(gridMuokattu) {
+        cy.get('#' + taulukonId)
+            .contains('.muokataan', contains)
+            .find('.vetolaatikon-tila')
+            .click();
+    } else {
+        cy.get('#' + taulukonId)
+            .contains('[data-cy*=laajenna]', contains)
+            .click();
+    }
+
 }
 
 /**
@@ -388,6 +397,7 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
 
     cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
+    cy.contains('Näytä päättyneet').click();
 
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
     cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();

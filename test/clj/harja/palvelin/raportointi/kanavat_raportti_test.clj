@@ -66,7 +66,8 @@
            [:raportti
             {:orientaatio :landscape
              :nimi "Saimaan kanava, Häiriötilanteet ajalta 01.10.2023 - 30.09.2024", 
-             :piilota-otsikko? true}
+             :piilota-otsikko? true, 
+             :rajoita-pdf-rivimaara nil}
             [:taulukko {:otsikko "Häiriötilanteet", :tyhja nil, :sheet-nimi "Häiriötilanteet"}
              [{:otsikko "Havainto", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "vaalen-tumma-tausta", :leveys 0.75, :tyyppi :varillinen-teksti}
               {:otsikko "Kohde", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}
@@ -113,20 +114,21 @@
     (is (= raportin-nimi "Saimaan kanava, Kokonaishintaiset toimenpiteet ajalta 01.10.2023 - 30.09.2024"))
     ;; Raportilla pitäisi näkyä passatut tiedot 
     (is (= vastaus
-           [:raportti 
+           [:raportti
             {:orientaatio :landscape
-             :nimi "Saimaan kanava, Kokonaishintaiset toimenpiteet ajalta 01.10.2023 - 30.09.2024", 
-             :piilota-otsikko? true} 
-            [:taulukko {:otsikko "Kokonaishintaiset toimenpiteet", :tyhja nil, :sheet-nimi "Kokonaishintaiset toimenpiteet"} 
-             [{:otsikko "Pvm", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "vaalen-tumma-tausta", :leveys 0.5, :tyyppi :varillinen-teksti} 
+             :nimi "Saimaan kanava, Kokonaishintaiset toimenpiteet ajalta 01.10.2023 - 30.09.2024",
+             :piilota-otsikko? true,
+             :rajoita-pdf-rivimaara nil}
+            [:taulukko {:otsikko "Kokonaishintaiset toimenpiteet", :tyhja nil, :sheet-nimi "Kokonaishintaiset toimenpiteet"}
+             [{:otsikko "Pvm", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "vaalen-tumma-tausta", :leveys 0.5, :tyyppi :varillinen-teksti}
               {:otsikko "Kohde", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}
-              {:otsikko "Huoltokohde", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti} 
+              {:otsikko "Huoltokohde", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}
               {:otsikko "Tehtävä", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.45, :tyyppi :varillinen-teksti}
-              {:otsikko "Muu toimenpide", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti} 
+              {:otsikko "Muu toimenpide", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
               {:otsikko "Lisätieto", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}
-              {:otsikko "Suorittaja", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.5, :tyyppi :varillinen-teksti} 
-              {:otsikko "Kuittaaja", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}] 
-             [(list "19.2.2024 6:38" "Kansola" "Testi kohde" "Testi tehtävä" "Tehtiin juttuja" "Lisätietoja antaa päällikkö" "Samu Salminen" "Panu Harjalainen") 
+              {:otsikko "Suorittaja", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.5, :tyyppi :varillinen-teksti}
+              {:otsikko "Kuittaaja", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}]
+             [(list "19.2.2024 6:38" "Kansola" "Testi kohde" "Testi tehtävä" "Tehtiin juttuja" "Lisätietoja antaa päällikkö" "Samu Salminen" "Panu Harjalainen")
               (list "19.2.2024 6:38" "Kansola" "Testi kohde" "Testi tehtävä" "Tehtiin juttuja" "Lisätietoja antaa päällikkö" "Tea Salminen" "Markus Harjalainen")
               (list "19.2.2024 6:38" "Kansola" "Testi kohde" "Testi tehtävä" "Tehtiin juttuja" "Lisätietoja antaa päällikkö" "Santtu Salminen" "Paula Harjalainen")]]]))))
 

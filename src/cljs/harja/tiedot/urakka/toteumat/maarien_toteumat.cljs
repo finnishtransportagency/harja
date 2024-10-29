@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.toteumat.maarien-toteumat
   "UI controlleri määrien toteutumille"
-  (:require [reagent.core :as r]
+  (:require [harja.domain.tierekisteri :as tr-domain]
+            [reagent.core :as r]
             [tuck.core :refer [process-event] :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.toteuma :as t]
@@ -66,6 +67,8 @@
                    ::t/toteuma-tehtava-id nil
                    ::t/lisatieto nil
                    ::t/maara nil})
+
+
 
 (defn validoinnit
   ([avain lomake indeksi]
@@ -292,7 +295,8 @@
                             :loppupvm loppupvm
                             :toteumat toteumat}
                            {:onnistui ->TallennaToteumaOnnistui
-                            :epaonnistui ->TallennaToteumaEpaonnistui})
+                            :epaonnistui ->TallennaToteumaEpaonnistui
+                            :paasta-virhe-lapi? true})
         (viesti/nayta! "Puuttuvia tai virheellisiä kenttiä, tarkista kentät!" :danger))
       (-> app
           (dissoc :avattu-tehtava)
@@ -317,14 +321,10 @@
     (let [osoite (get-in lomake [indeksi :tierekisteriosoite])
           ; Kun sijaintia muokataan, pitää vanha sijainti poistaa kartalta
           _ (reset! maarien-toteumat-kartalla/karttataso-toteumat nil)]
-      (if (and
-            (not (empty? osoite))
-            (not (nil? (get osoite :alkuetaisyys))))
-        (-> app
-            ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
-            ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
-            (assoc-in [:sijainti indeksi] osoite))
-        app)))
+      (-> app
+        ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
+        ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
+        (assoc-in [:sijainti indeksi] osoite))))
   
   PaivitaLomake
   (process-event [{{useampi? ::t/useampi-toteuma
@@ -358,6 +358,13 @@
                 app)
           app (if toimenpide
                 (assoc-in app [:lomake ::t/toimenpide] toimenpide)
+                app)
+          ;; Jos valitaan tehtävä, jolle pakotetaan sijainti, asetetaan ei-sijaintia falseksi
+          asetetun-tehtavan-nimi (get-in app [:lomake ::t/toteumat indeksi ::t/tehtava :tehtava])
+          pakota-sijainti? (boolean (tr-domain/tehtavat-joille-sijainti-pakollinen asetetun-tehtavan-nimi))
+          app (assoc-in app [:lomake ::t/toteumat indeksi ::t/pakota-sijainti?] pakota-sijainti?)
+          app (if pakota-sijainti?
+                (-> app (assoc-in [:lomake ::t/toteumat indeksi ::t/ei-sijaintia] false))
                 app)
           ;; Jos yksittäisen toteuman sijainti muutetaan ei sijainnittomaksi
           app (if (= polku [::t/toteumat indeksi ::t/ei-sijaintia])
@@ -623,7 +630,7 @@
 
   TallennaToteumaEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta! "Toteuman tallennus epäonnistui!" :danger)
+    (viesti/nayta! (str "Toteuman tallennus epäonnistui! " (get-in vastaus [:response :virhe])) :danger)
     app))
 
 (defn hae-toteutuneet-maarat [urakka-id toimenpide hoitokauden-alkuvuosi]

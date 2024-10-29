@@ -67,7 +67,8 @@
 
       (is (= vastaus
             [:raportti {:orientaatio :landscape
-                        :nimi "Pudasjärven alueurakka 2007-2012, Suolatoteumat (kaikki pohjavesialueet) ajalta 01.10.2007 - 30.09.2008"}
+                        :nimi "Pudasjärven alueurakka 2007-2012, Suolatoteumat (kaikki pohjavesialueet) ajalta 01.10.2007 - 30.09.2008"
+                        :rajoita-pdf-rivimaara nil}
              nil
              [:taulukko {:otsikko "11615174-", :viimeinen-rivi-yhteenveto? true, :tyhja nil}
               [{:leveys 3 :fmt :kokonaisluku :otsikko "Tie"}

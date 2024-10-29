@@ -1231,7 +1231,7 @@ $$
     DECLARE
         urakka_id             INT       := (SELECT id
                                             FROM urakka
-                                            WHERE nimi = 'Oulun MHU 2019-2024');
+                                            WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)');
         viimeisin_ilmoitus_id INTEGER   := (SELECT ilmoitusid
                                             FROM ilmoitus
                                             ORDER BY ilmoitusid DESC

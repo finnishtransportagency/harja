@@ -9,6 +9,7 @@
             [harja.transit :as t]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.grid :as grid]
+            [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni totuus-ikoni] :as yleiset]
             [harja.ui.debug :refer [debug]]
@@ -605,7 +606,7 @@
    
    (if rivimaara-ylittynyt
      [:div.kayttajia-ei-loydy.fontti-14
-      [yleiset/keltainen-vihjelaatikko [:div "Tulokset rajattu 10 000 tapahtumaan. Tarkenna hakua."] :info]
+      [yleiset/keltainen-vihjelaatikko [:div "Tulokset rajattu " (fmt/formatoi-numero-tuhansittain lt/+rajoita-tapahtumien-maara+) " tapahtumaan. Tarkenna hakua."] :info]
       [:h3 "Liikennetapahtumat"]]
      [:h3 "Liikennetapahtumat"])
    

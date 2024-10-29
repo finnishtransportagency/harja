@@ -6,15 +6,13 @@
             [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn tuo-urakka [db geometria paallystyssopimusnro]
-  (if (and paallystyssopimusnro (not (empty? (str/trim paallystyssopimusnro))))
+(defn tuo-urakka [db geometria urakkakoodi]
+  (if (and urakkakoodi (not (empty? (str/trim urakkakoodi))))
     (if geometria
-      (let [paallystyssopimusnro (when (and paallystyssopimusnro (not (empty? (str/trim paallystyssopimusnro))))
-                                   (str (int (Double/parseDouble paallystyssopimusnro))))
-            geometria (.toString geometria)]
-        (u/luo-paallystyspalvelusopimus<! db geometria paallystyssopimusnro))
-      (log/warn (format "Palvelusopimusta (paallystyssopimusnro: %s ei voida tuoda geometriaa, sillä se on tyhjä"
-                  paallystyssopimusnro)))
+      (let [geometria (.toString geometria)]
+        (u/luo-paallystyspalvelusopimus<! db geometria urakkakoodi))
+      (log/warn (format "Palvelusopimusta (urakkakoodi: %s ei voida tuoda geometriaa, sillä se on tyhjä"
+                  urakkakoodi)))
     (log/warn "Geometriaa ei voida tuoda ilman päällystyssopimusnumeroa")))
 
 ;; Urakoilla on Velhossa teema, joka kuvastaa urakkaa. Tässä setissä kuvattu teemat, jotka kiinnostavat meitä tässä kontekstissa.

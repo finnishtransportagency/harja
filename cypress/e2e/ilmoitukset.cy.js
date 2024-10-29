@@ -29,14 +29,13 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
 
             let tableIndex = function () {
                 for (let i = 0; i < $rivit.length; i++) {
-                    if ($rivit.eq(i).find('td').text().trim() === 'Oulun MHU 2019-2024') {
+                    if ($rivit.eq(i).find('td').text().trim() === 'Rovaniemen MHU..1. hoitovuosi)') {
                         return i
                     }
                 }
                 return -1
             }
-            cy.wrap(valitseTeksti(tableIndex(), 'Urakka', false)).should('equal', 'Oulun MHU 2019-2024');
-            cy.wrap($rivit.eq(tableIndex()).find('td').eq($otsikot.get('Urakka')).find('.tooltip')).should('not.exist')
+            cy.wrap(valitseTeksti(tableIndex(), 'Urakka', false)).should('equal', 'Rovaniemen MHU..1. hoitovuosi)');
         })
     })
 
