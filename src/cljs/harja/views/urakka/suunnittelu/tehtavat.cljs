@@ -29,7 +29,7 @@
             loppuvuosi (pvm/vuosi loppupvm)
             hoitokaudet (into [] (range vuosi loppuvuosi))]
         [:<>
-         [:div.flex-row.sticky-ylos.valkoinen-tausta
+         [:div.flex-row.sticky-ylos.valkoinen-tausta.tehtavamaara-valinnat
           {:style {:justify-content "flex-start"
                    :align-items "flex-end"}}
           [:div
