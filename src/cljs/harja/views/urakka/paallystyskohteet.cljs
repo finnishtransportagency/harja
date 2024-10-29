@@ -225,7 +225,7 @@
          [:div.paallystyskohteet
           [kartta/kartan-paikka]
 
-          [:span.paallystyskohteet-valinnat
+          [:span.paallystys-valinnat
            [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
            [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
            [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]]
