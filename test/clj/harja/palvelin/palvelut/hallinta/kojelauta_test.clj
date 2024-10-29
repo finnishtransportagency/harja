@@ -82,6 +82,7 @@
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:hoitokauden-alkuvuosi 2024
                                                           :urakka-idt [iin-mhu-urakka-id]
                                                           :ely-id nil})]
+    (is (= (:indeksikerroin (first vastaus)) 1.298) "Indeksikerroin palautuu oikein")
     (is (str/includes? vastaus "Iin MHU") "Iin MHU")
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
 
@@ -94,6 +95,7 @@
         rivi (first (filter #(= 2022 (:hoitokauden_alkuvuosi %))
                                        vastaus))]
     (is (str/includes? vastaus "Oulun MHU") "Oulun MHU")
+    (is (= (:indeksikerroin rivi) 1.352) "Indeksikerroin palautuu oikein")
     (is (= "aloittamatta" (get-in rivi [:ks_tila :suunnitelman_tila])) "tila")
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
 
@@ -119,6 +121,7 @@
         rivi (first (filter #(= 2024 (:hoitokauden_alkuvuosi %))
                       vastaus))]
     (is (str/includes? vastaus "Raahen MHU") "Raahen MHU")
+    (is (= (:indeksikerroin rivi) 1.118) "Indeksikerroin palautuu oikein")
     (is (= 6 (get-in rivi [:ks_tila :vahvistettuja])) "6 vahvistettua")
     (is (= 0 (get-in rivi [:ks_tila :aloittamattomia])) "0 aloittamatta")
     (is (= 0 (get-in rivi [:ks_tila :vahvistamattomia])) "0 vahvistamatta")
