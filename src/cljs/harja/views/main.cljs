@@ -63,12 +63,14 @@
           (concat [nil] @istunto/testikayttajat)]]))))
 
 (defn harja-info [s]
-  [:div {:id "info"
-         :role "presentation"
-         :class (str "info-nakyma" (when (= s :info) " aktiivinen"))}
+  [:a.klikattava
+   {:id "info"
+    :role "presentation"
+    :class (str "info-nakyma" (when (= s :info) " aktiivinen"))}
 
-   [ikonit/livicon-info-circle]
-   [linkki " INFO" #(nav/vaihda-sivu! :info)]])
+   [:span
+    [ikonit/livicon-info-circle]
+    [linkki "INFO" #(nav/vaihda-sivu! :info)]]])
 
 (defn- mobiiliselain? []
   (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))

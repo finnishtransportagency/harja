@@ -14,10 +14,17 @@
 /* Info-näkymän avaus painike (oikea ylä) */
 .info-nakyma {
     cursor: pointer;
-    color: @sininen5;
     padding-top: 10px;
     padding-bottom: 10px;
     line-height: 1.0625rem;
+
+    span {
+      margin-right: @valistys-8;
+    }
+
+    .livicon-info-circle {
+      color: @sininen4;
+    }
 
     &.aktiivinen {
         font-weight: 900;
