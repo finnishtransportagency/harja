@@ -5,7 +5,7 @@
             [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni] :as yleiset]
             [harja.pvm :as pvm]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
@@ -222,6 +222,7 @@
         turvallisuupoikkeama-liite-latautumassa? (atom false)
         kommentti-liite-latautumassa? (atom false)
         vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)]
+    
     (fnc [urakka]
       (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @turvallisuuspoikkeama))
                                       ((:vahinkoluokittelu @turvallisuuspoikkeama) :henkilovahinko))
@@ -515,8 +516,10 @@
 
 (defn valitse-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
   (go
-    (reset! tiedot/valittu-turvallisuuspoikkeama
-            (<! (tiedot/hae-turvallisuuspoikkeama urakka-id turvallisuuspoikkeama-id)))))
+    (do
+      (reset! tiedot/valittu-turvallisuuspoikkeama
+        (<! (tiedot/hae-turvallisuuspoikkeama urakka-id turvallisuuspoikkeama-id)))
+      (reset! tiedot/haku-kesken? false))))
 
 (defn turvallisuuspoikkeamalistaus
   []
@@ -573,6 +576,17 @@
     (fn [urakka]
       [:span
        [kartta/kartan-paikka]
-       (if @tiedot/valittu-turvallisuuspoikkeama
+       (cond
+         ;; Klikattiin poikkeamaa, haku kesken
+         @tiedot/haku-kesken?
+         [:dix.ajax-loader-valistys
+          [ajax-loader-pieni "Haetaan turvallisuuspoikkeamaa"]]
+
+         ;; Klikattiin poikkeamaa, poikkeama haettu
+         (and
+           @tiedot/valittu-turvallisuuspoikkeama
+           (not @tiedot/haku-kesken?))
          [turvallisuuspoikkeaman-tiedot urakka]
-         [turvallisuuspoikkeamalistaus])])))
+
+         ;; Valittua poikkeamaa ei ole, näytä listaus
+         :else [turvallisuuspoikkeamalistaus])])))
