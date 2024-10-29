@@ -353,7 +353,7 @@
          [ajax-loader-pieni (str "Tallennetaan tietoja...")]])
       
       [napit/yleinen-ensisijainen "Tallenna" (comp (vieritys/vierita ::top) #(e! (t/->TallennaSopimus true)))
-       {:disabled (or aluetietoja-puuttuu? maaratietoja-puuttuu?)}]]
+       {:disabled (or tallennetaan? aluetietoja-puuttuu? maaratietoja-puuttuu?)}]]
      
      (when (or aluetietoja-puuttuu? maaratietoja-puuttuu?)
        [yleiset/info-laatikko :neutraali
