@@ -66,11 +66,10 @@
   [:a.klikattava
    {:id "info"
     :role "presentation"
-    :class (str "info-nakyma" (when (= s :info) " aktiivinen"))}
+    :class (str "info-nakyma" (when (= s :info) " aktiivinen"))
+    :on-click #(nav/vaihda-sivu! :info)}
 
-   [:span
-    [ikonit/livicon-info-circle]
-    [linkki "INFO" #(nav/vaihda-sivu! :info)]]])
+   [ikonit/ikoni-ja-teksti (ikonit/livicon-info-circle) "INFO"]])
 
 (defn- mobiiliselain? []
   (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
