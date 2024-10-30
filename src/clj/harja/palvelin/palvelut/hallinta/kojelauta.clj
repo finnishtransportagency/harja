@@ -19,18 +19,26 @@
                                         (budjettisuunnittelu/hae-urakan-indeksikertoimet db kayttaja {:urakka-id id}))))]
     (assoc rivi :indeksikerroin urakan-vuoden-indeksikerroin)))
 
-(defn hae-urakat-kojelautaan [db kayttaja {:keys [hoitokauden-alkuvuosi urakka-idt ely-id] :as hakuehdot}]
+(defn hae-urakat-kojelautaan [db kayttaja {:keys [urakkatyyppi hoitokauden-alkuvuosi urakka-idt ely-id] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
-  (let [urakat (into []
-                 (mapv
-                   (comp
-                     (fn [ks-tilat]
-                       (update ks-tilat :ks_tila konv/jsonb->clojuremap))
-                     #(liita-indeksikertoimet db kayttaja %))
-                   (q/hae-urakat-kojelautaan db {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                                                 :urakat_annettu (boolean (seq urakka-idt))
-                                                 :urakka_idt urakka-idt
-                                                 :ely_id ely-id})))]
+  (let [urakat (cond
+                 (= urakkatyyppi :hoito)                    ;; tässä kohti hoito = MHU, vanhoja alueurakoita ei tueta
+                 (into []
+                   (mapv
+                     (comp
+                       (fn [ks-tilat]
+                         (update ks-tilat :ks_tila konv/jsonb->clojuremap))
+                       #(liita-indeksikertoimet db kayttaja %))
+                     (q/hae-hoidon-urakat-kojelautaan db {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                                                          :urakat_annettu (boolean (seq urakka-idt))
+                                                          :urakka_idt urakka-idt
+                                                          :ely_id ely-id})))
+
+                 (= urakkatyyppi :paallystys)
+                 (q/hae-paallystysurakat-kojelautaan db {:vuosi hoitokauden-alkuvuosi
+                                                         :urakat_annettu (boolean (seq urakka-idt))
+                                                         :urakka_idt urakka-idt
+                                                         :ely_id ely-id}))]
     urakat))
 
 (defrecord KojelautaHallinta []
