@@ -3,7 +3,7 @@
   (:require
    [taoensso.timbre :as log]
    [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
-   [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja-palvelut]
+   [harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelut]
    [harja.kyselyt.konversio :as konversio]
    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.saatiedot :as saatiedot]
    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahvuus :as vahvuus]
