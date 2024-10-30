@@ -1,4 +1,4 @@
-(ns harja.tiedot.tyomaapaivakirja-tiedot
+(ns harja.tiedot.urakka.tyomaapaivakirja.tyomaapaivakirja-tiedot
   "Työmaapäiväkirja kutsut"
   (:require [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
@@ -160,7 +160,7 @@
 (defn- hae-paivakirjat [app]
   (let [aikavali (get-in app [:valinnat :aikavali])
         hakumuoto (get-in app [:valinnat :hakumuoto])]
-    (tuck-apurit/post! app :tyomaapaivakirja-hae
+    (tuck-apurit/post! app :hae-tyomaapaivakirjat
       {:urakka-id (:id @nav/valittu-urakka)
        :alkuaika (first aikavali)
        :loppuaika (second aikavali)
