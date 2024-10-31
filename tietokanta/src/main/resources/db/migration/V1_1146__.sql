@@ -79,14 +79,16 @@ END ;
 $$ language plpgsql;
 
 
+----------------------------------------------------
 -- Korjaa indeksit Kustannusarvioiduille töille
+----------------------------------------------------
 WITH korjatut_indeksit AS (
     SELECT 
-        u.id,
+        kt.id                                                       AS id,
         kt.vuosi,
         kt.kuukausi,
         kt.summa                                                    AS summa,
-        COALESCE(CAST(kt.summa_indeksikorjattu AS TEXT), 'tyhja')   AS summa_indeksikorjattu,
+        kt.summa_indeksikorjattu                                    AS summa_indeksikorjattu,
         indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id)        AS korjattu_arvo
     FROM kustannusarvioitu_tyo kt
         JOIN toimenpideinstanssi tpi 
@@ -105,7 +107,7 @@ WITH korjatut_indeksit AS (
     AND up.poistettu IS NOT TRUE 
     -- Alkanut 2017 jälkeen
     AND u.alkupvm >= '2017-09-30'
-    -- Vain käynnissä olevat
+    -- Vain käynnissä olevat  (Tuloksena tulee  vain 23 -> urakoita)
     AND u.loppupvm >= '2024-10-01'
     -- Päivitetään vain rivit joille indeksikorjaus saatavilla 
     AND indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id) IS NOT NULL 
@@ -124,3 +126,37 @@ WITH korjatut_indeksit AS (
          muokattu              = NOW()
     FROM korjatut_indeksit
    WHERE korjatut_indeksit.id = kustannusarvioitu_tyo.id;
+
+
+----------------------------------------------------
+-- Korjaa johto ja hallinto indeksit 
+----------------------------------------------------
+WITH korjatut_indeksit AS (
+    SELECT 
+        jk.id                                                       AS id,
+        jk.tuntipalkka                                              AS summa,
+        jk.tuntipalkka_indeksikorjattu                              AS vanha_arvo,
+        indeksikorjaa(jk.tuntipalkka, jk.vuosi, jk.kuukausi, u.id)  AS korjattu_arvo,
+    FROM johto_ja_hallintokorvaus jk
+        JOIN urakka u 
+          ON jk."urakka-id" = u.id
+    -- Indeksikorjausta ei ole olemassa
+    WHERE tuntipalkka_indeksikorjattu IS NULL 
+    -- Summa täytyy olla olemassa 
+    AND jk.tuntipalkka IS NOT NULL 
+    AND jk.tuntipalkka != 0
+    -- Alkanut 2017 jälkeen
+    AND u.alkupvm >= '2017-09-30'
+    -- Vain käynnissä olevat (Tuloksena tulee  vain 23 -> urakoita)
+    AND u.loppupvm >= '2024-10-01'
+    -- Päivitetään vain rivit joille indeksikorjaus saatavilla 
+    AND indeksikorjaa(jk.tuntipalkka, jk.vuosi, jk.kuukausi, u.id) IS NOT NULL 
+  -- Syötä korjatut indeksit johto ja hallintokorjauksiin
+) UPDATE johto_ja_hallintokorvaus
+    SET  tuntipalkka_indeksikorjattu = korjatut_indeksit.korjattu_arvo,
+         muokkaaja                   = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+         muokattu                    = NOW()
+    FROM korjatut_indeksit
+   WHERE korjatut_indeksit.id = johto_ja_hallintokorvaus.id;
+
+
