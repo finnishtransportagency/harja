@@ -12,7 +12,7 @@
                  ;; Clojure ja ClojureScript
                  [org.clojure/clojure "1.10.3"]
                  [org.clojure/clojurescript "1.10.520"]
-                 [org.clojure/spec.alpha "0.2.176"]
+                 [org.clojure/spec.alpha "0.5.238"]
 
                  ;;;;;;; Yleiset ;;;;;;;
 
