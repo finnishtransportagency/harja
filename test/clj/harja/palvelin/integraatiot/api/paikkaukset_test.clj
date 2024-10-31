@@ -1,5 +1,7 @@
 (ns harja.palvelin.integraatiot.api.paikkaukset-test
-  (:require [clojure.test :refer :all]
+  (:require [cheshire.core :as cheshire]
+            [harja.tyokalut.spec-apurit :as spec-apurit]
+            [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [clojure.string :as str]
@@ -45,7 +47,7 @@
         paikkaustunniste 3453455
         kohdetunniste 1231234
         json (->
-               (slurp "test/resurssit/api/paikkauksen-kirjaus.json")
+               (slurp "test/resurssit/api/paikkaukset/paikkauksen-kirjaus.json")
                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
         _ (anna-kirjoitusoikeus kayttaja)
@@ -122,12 +124,12 @@
         toteumatunniste 234531
         kohdetunniste 466645
         json (->
-               (slurp "test/resurssit/api/paikkaustoteuman-kirjaus.json")
+               (slurp "test/resurssit/api/paikkaukset/paikkaustoteuman-kirjaus.json")
                (.replace "<TOTEUMATUNNISTE>" (str toteumatunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
         _ (anna-kirjoitusoikeus kayttaja)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus/kustannus"] kayttaja portti json)
-        poisto-json (slurp "test/resurssit/api/paikkaustietojen-poisto.json")
+        poisto-json (slurp "test/resurssit/api/paikkaukset/paikkaustietojen-poisto.json")
         poistettu-ennen (:poistettu (first (q-map "SELECT * FROM paikkauskohde WHERE lisatiedot = 'Oulun testipaikkauskohde';")))
         poisto-vastaus (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti poisto-json)
         poistettu-jalkeen (:poistettu (first (q-map "SELECT * FROM paikkauskohde WHERE lisatiedot = 'Oulun testipaikkauskohde';")))
@@ -177,7 +179,7 @@
         ;; Lähetettävän paikkaustoteuman tieosoitteen pituus on 12 605 m
         oletettu-pituus 12605
         json (->
-               (slurp "test/resurssit/api/paikkausten-kirjaus-tieosoite-toisin-pain.json")
+               (slurp "test/resurssit/api/paikkaukset/paikkausten-kirjaus-tieosoite-toisin-pain.json")
                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
                (.replace "<AOSA>" (str 5))
@@ -208,7 +210,7 @@
         ;; Lähetettävän paikkaustoteuman tieosoitteen pituus on 500 m
         oletettu-pituus 500
         json (->
-               (slurp "test/resurssit/api/paikkausten-kirjaus-tieosoite-toisin-pain.json")
+               (slurp "test/resurssit/api/paikkaukset/paikkausten-kirjaus-tieosoite-toisin-pain.json")
                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
                (.replace "<AOSA>" (str 3))
@@ -246,13 +248,13 @@
         paikkaustunniste2 201
         kohdetunniste 1231234
         json1 (->
-                (slurp "test/resurssit/api/paikkausten-kirjaus-tieosoite-toisin-pain.json")
+                (slurp "test/resurssit/api/paikkaukset/paikkausten-kirjaus-tieosoite-toisin-pain.json")
                 (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
                 (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
                 (.replace "<AOSA>" (str 3))
                 (.replace "<LOSA>" (str 4)))
         json2 (->
-                (slurp "test/resurssit/api/paikkausten-kirjaus-tieosoite-toisin-pain.json")
+                (slurp "test/resurssit/api/paikkaukset/paikkausten-kirjaus-tieosoite-toisin-pain.json")
                 (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste2))
                 (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
                 (.replace "<AOSA>" (str 3))
@@ -324,3 +326,145 @@
 ;                                                            ::muokkaustiedot/poistettu? false}))))) "Paikkauskustannusten poisto epäonnistui (3).")
 ;
 
+(deftest varmista-reikapaikkaus-apin-tyomenetelmat
+  (let [db (luo-testitietokanta)
+        ;; API docissa on luvattu, että näitä työmenetelmiä voi käyttää
+        mahdolliset-tyomenetelmat ["REPA",
+                                   "KTVA",
+                                   "SIPU",
+                                   "SIPA",
+                                   "HJYR/TJYR",
+                                   "Käsin tehtävät paikkaukset pikapaikkausmassalla",
+                                   "AB-paikkaus käsin",
+                                   "PAB-paikkaus käsin",
+                                   "Muu päällysteiden paikkaustyö"]
+        ;; Nimetään työmenetelmät uudelleen, jotta ne löytyy tietokannasta
+        mahdolliset-tyomenetelmat (mapv #(if (= % "HJYR/TJYR")
+                                           "Jyrsintäkorjaukset (HJYR/TJYR)"
+                                           %)
+                                        mahdolliset-tyomenetelmat)
+        kaikki-tasmaa? (every? #(paikkaus-q/hae-tyomenetelman-id db %) mahdolliset-tyomenetelmat)]
+    (is (= true kaikki-tasmaa?))))
+
+(deftest kirjaa-reikapaikkaus-onnistuu
+  (let [db (luo-testitietokanta)
+        urakka (hae-oulun-alueurakan-2014-2019-id)
+        ulkoinen-id 123456
+
+        json (-> (slurp "test/resurssit/api/paikkaukset/reikapaikkauksen-kirjaus.json")
+               (.replace "<ulkoinenid>" (str ulkoinen-id)))
+        _ (anna-kirjoitusoikeus kayttaja)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
+
+        ;; Tarkistetaan, että kannassa on kaikki oikein
+        db-paikkaus (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " ulkoinen-id ";"))
+        db-tieosoite (dissoc (trosoite-obj->map db-paikkaus)
+                       :ajorata)]
+    (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
+    (is (.contains (:body vastaus) "Paikkaukset kirjattu onnistuneesti"))
+
+    (is (= 45777.77M (:kustannus db-paikkaus)) "Kustannus täsmää")
+    (is (= 3000 (:maara db-paikkaus)) "Määrä täsmää")
+    (is (= "reikapaikkaus" (:paikkaus-tyyppi db-paikkaus)) "Tyyppi täsmää")
+    (is (= "t" (:reikapaikkaus-yksikko db-paikkaus)) "Yksikkö täsmää")
+    (is (= "harja-api" (:lahde db-paikkaus)) "Lähde täsmää")
+    (is (= db-tieosoite {:tie "20", :aosa "1", :aet "1", :losa "5", :let "16"}) "Tieosoite täsmää")))
+
+(deftest kirjaa-reikapaikkaus-pistegeometrialla-onnistuu
+  (let [db (luo-testitietokanta)
+        urakka (hae-oulun-alueurakan-2014-2019-id)
+        ulkoinen-id 123456
+
+        json (-> (slurp "test/resurssit/api/paikkaukset/reikapaikkauksen-kirjaus-pisteella.json")
+               (.replace "<ulkoinenid>" (str ulkoinen-id)))
+        _ (anna-kirjoitusoikeus kayttaja)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
+
+        ;; Tarkistetaan, että kannassa on kaikki oikein
+        db-paikkaus (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " ulkoinen-id ";"))
+        _ (println "db-paikkaus:" db-paikkaus)
+        db-tieosoite (dissoc (trosoite-obj->map db-paikkaus)
+                       :ajorata)]
+    (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
+    (is (.contains (:body vastaus) "Paikkaukset kirjattu onnistuneesti"))
+
+    (is (= 45777.77M (:kustannus db-paikkaus)) "Kustannus täsmää")
+    (is (= 3000 (:maara db-paikkaus)) "Määrä täsmää")
+    (is (= "reikapaikkaus" (:paikkaus-tyyppi db-paikkaus)) "Tyyppi täsmää")
+    (is (= "t" (:reikapaikkaus-yksikko db-paikkaus)) "Yksikkö täsmää")
+    (is (= "harja-api" (:lahde db-paikkaus)) "Lähde täsmää")
+    (is (= db-tieosoite {:tie "86", :aosa "20", :aet "300", :losa "20", :let "300"}) "Tieosoite täsmää")))
+
+
+(deftest kirjaa-reikapaikkaus-viivageometrialla-onnistuu
+  (let [db (luo-testitietokanta)
+        urakka (hae-oulun-alueurakan-2014-2019-id)
+        ulkoinen-id 123456
+
+        json (-> (slurp "test/resurssit/api/paikkaukset/reikapaikkauksen-kirjaus-viivageometrialla.json")
+               (.replace "<ulkoinenid>" (str ulkoinen-id)))
+        _ (anna-kirjoitusoikeus kayttaja)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
+
+        ;; Tarkistetaan, että kannassa on kaikki oikein
+        db-paikkaus (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " ulkoinen-id ";"))
+        _ (println "db-paikkaus:" db-paikkaus)
+        db-tieosoite (dissoc (trosoite-obj->map db-paikkaus)
+                       :ajorata)]
+    (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
+    (is (.contains (:body vastaus) "Paikkaukset kirjattu onnistuneesti"))
+
+    (is (= 45777.77M (:kustannus db-paikkaus)) "Kustannus täsmää")
+    (is (= 3000 (:maara db-paikkaus)) "Määrä täsmää")
+    (is (= "reikapaikkaus" (:paikkaus-tyyppi db-paikkaus)) "Tyyppi täsmää")
+    (is (= "t" (:reikapaikkaus-yksikko db-paikkaus)) "Yksikkö täsmää")
+    (is (= "harja-api" (:lahde db-paikkaus)) "Lähde täsmää")
+    (is (= db-tieosoite {:tie "4", :aosa "105", :aet "210", :losa "105", :let "6"}) "Tieosoite täsmää")))
+
+(deftest kirjaa-reikapaikkaus-epaonnistuu
+  (let [db (luo-testitietokanta)
+        urakka (hae-oulun-alueurakan-2014-2019-id)
+        _ (anna-kirjoitusoikeus kayttaja)
+        ulkoinen-id 123456
+
+        json (-> (slurp "test/resurssit/api/paikkaukset/reikapaikkauksen-kirjaus.json")
+               (.replace "<ulkoinenid>" (str ulkoinen-id)))
+
+        ;; Käännetään json mäpiksi
+        reikapaikkaukset (-> json (json/read-str) (clojure.walk/keywordize-keys))
+
+        ;; Funktio helpottamaan yksittäisen avaimen poistoa
+        poista-yksittainen-avain-ja-anna-json (fn [avain reikapaikkaukset]
+                                                (let [muokatut (mapv (fn [r] (assoc-in r [:reikapaikkaus avain] nil)) (:reikapaikkaukset reikapaikkaukset))
+                                                      reikapaikkaukset (assoc reikapaikkaukset :reikapaikkaukset muokatut)]
+                                                  ;; Ja käännetään takaisin jsoniksi
+                                                  (cheshire/encode (spec-apurit/poista-nil-avaimet reikapaikkaukset))))
+        ;; Poistetaan ensin pakollinen määrä -kenttä
+        json-maara (poista-yksittainen-avain-ja-anna-json :maara reikapaikkaukset)
+        maara-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json-maara)
+        _ (is (.contains (:body maara-vastaus) "/reikapaikkaukset[0]/reikapaikkaus/maara: Pakollinen arvo puuttuu"))
+
+        ;; Poistetaan ensin pakollinen pvm -kenttä
+        json-pvm (poista-yksittainen-avain-ja-anna-json :pvm reikapaikkaukset)
+        pvm-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json-pvm)
+        _ (is (.contains (:body pvm-vastaus) "/reikapaikkaukset[0]/reikapaikkaus/pvm: Pakollinen arvo puuttuu"))
+
+        ;; Poistetaan ensin pakollinen sijainti -kenttä
+        json-sijainti (poista-yksittainen-avain-ja-anna-json :sijainti reikapaikkaukset)
+        sijainti-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json-sijainti)
+        _ (is (.contains (:body sijainti-vastaus) "/reikapaikkaukset[0]/reikapaikkaus/sijainti: Pakollinen arvo puuttuu"))
+
+        ;; Poistetaan ensin pakollinen tyomenetelma -kenttä
+        json (poista-yksittainen-avain-ja-anna-json :tyomenetelma reikapaikkaukset)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
+        _ (is (.contains (:body vastaus) "/reikapaikkaukset[0]/reikapaikkaus/tyomenetelma: Pakollinen arvo puuttuu"))
+
+        ;; Poistetaan ensin pakollinen yksikko -kenttä
+        json (poista-yksittainen-avain-ja-anna-json :yksikko reikapaikkaukset)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
+        _ (is (.contains (:body vastaus) "/reikapaikkaukset[0]/reikapaikkaus/yksikko: Pakollinen arvo puuttuu"))
+
+        ;; Poistetaan ensin pakollinen yksikko -kenttä
+        json (poista-yksittainen-avain-ja-anna-json :kustannus reikapaikkaukset)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
+        _ (is (.contains (:body vastaus) "/reikapaikkaukset[0]/reikapaikkaus/kustannus: Pakollinen arvo puuttuu"))]))
