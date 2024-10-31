@@ -1,26 +1,26 @@
 (ns harja.palvelin.integraatiot.api.paikkaukset
   "Paikkausten ja niiden kustannusten hallinta API:n kautta"
   (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST GET DELETE]]
-            [clojure.string :refer [join]]
+            [compojure.core :refer [POST DELETE]]
             [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.sanomat.paikkaussanoma :as paikkaussanoma]
             [harja.palvelin.integraatiot.api.sanomat.paikkaustoteumasanoma :as paikkaustoteumasanoma]
             [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
             [harja.kyselyt.paikkaus :as paikkaus-q]
+            [harja.kyselyt.tieverkko :as tieverkko-q]
             [harja.domain.tierekisteri.validointi :as tr-validointi]
             [harja.domain.paikkaus :as paikkaus]
+            [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaus-palvelu]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.kyselyt.paikkaus :as q-paikkaus]
             [specql.op :as op]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.validointi :refer [onko-koordinaatit-suomen-alueella?]])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn- poista-paikkaustoteumat
@@ -107,6 +107,132 @@
     (tallenna-paikkaus db urakka-id kayttaja-id data))
   (tee-kirjausvastauksen-body {:ilmoitukset "Paikkaukset kirjattu onnistuneesti"}))
 
+(defn kirjaa-reikapaikkaus [db {id :id} data kayttaja]
+  (log/debug (format "Kirjataan reikäpaikkauksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
+               (count (:reikapaikkaukset data)) id kayttaja))
+
+  (let [urakka-id (Integer/parseInt id)
+        _ (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+        reikapaikkaukset (:reikapaikkaukset data)
+
+        ;; Valitoidaan tierekisteriosoite - mikäli se on annettu
+        validointivirheet []
+        validointivirheet
+        (into [] (remove nil?
+                   (reduce (fn [virheet rp]
+                             (let [tro (get-in rp [:reikapaikkaus :sijainti :tieosoite])
+                                   _ (println "tro: " tro)
+                                   virhe (tr-validointi/validoi-tieosoite
+                                           #{} (:numero tro) (:aosa tro) (:losa tro) (:aet tro) (:let tro))]
+                               (when-not (empty? virhe)
+                                 (conj virheet virhe))))
+                     validointivirheet
+                     reikapaikkaukset)))
+
+        ;; Validoidaan pistegeometria, mikäli se on annettu
+        ;;TODO: Tee validointi loppuun
+        validointivirheet
+        (into [] (remove nil?
+                   (reduce (fn [virheet rp]
+                             (let [piste (get-in rp [:reikapaikkaus :sijainti :pistegeometria])
+                                   suomessa? (onko-koordinaatit-suomen-alueella? (:x piste) (:y piste))
+                                   tieosoite (first (tieverkko-q/hae-tr-osoite db {:x (:x piste)
+                                                                                   :y (:y piste)
+                                                                                   :treshold 250}))
+                                   virheet (cond-> virheet
+                                             (not suomessa?)
+                                             (conj "Pisteei ole suomen alueella. Virheellinen piste (" (:x piste) "," (:y piste) ")")
+
+                                             (and suomessa? (nil? tieosoite))
+                                             (conj "Piste ei ole tieverkolla: " piste))]
+                               virheet))
+                     validointivirheet
+                     reikapaikkaukset)))
+
+        ;; Validoidaan viivageometria, mikäli se on annettu
+        validointivirheet
+        (into [] (remove nil?
+                   (reduce (fn [virheet rp]
+                             (let [geometriat (get-in rp [:reikapaikkaus :sijainti :viivageometria :coordinates])
+                                   gvirheet (reduce (fn [virheet geometria]
+                                                      (let [suomessa? (onko-koordinaatit-suomen-alueella? (first geometria) (second geometria))
+                                                            tieosoite (first (tieverkko-q/hae-tr-osoite db {:x (first geometria)
+                                                                                                            :y (second geometria)
+                                                                                                            :treshold 250}))
+                                                            virheet (cond-> virheet
+                                                                      (not suomessa?)
+                                                                      (conj "Viivageometrian koordinaattipiste, ei ole suomen alueella. Virheellinen piste (" (first geometria) "," (second geometria) ")")
+
+                                                                      (and suomessa? (nil? tieosoite))
+                                                                      (conj "Piste ei ole tieverkolla: (" (first geometria) "," (second geometria) ")"))]
+                                                        virheet))
+                                              virheet geometriat)]
+                               (when-not (empty? gvirheet)
+                                 (conj virheet gvirheet))))
+                     validointivirheet
+                     reikapaikkaukset)))
+
+        ;; Työmenetelmät tietokannasta
+        tyomenetelmat (paikkaus-q/hae-paikkauskohteiden-tyomenetelmat db)
+
+        ;; Täydennä reikapaikkaus tarvittavilla tiedoilla
+        reikapaikkaukset (map :reikapaikkaus reikapaikkaukset)
+
+        reikapaikkaukset (map
+                           (fn [r]
+                             (let [;; Käytä ensisijaisesti tieosoitetta, mikäli se on annettu
+                                  tieosoite (when (get-in r [:sijainti :tieosoite])
+                                               {:tie (get-in r [:sijainti :tieosoite :numero])
+                                                :aosa (get-in r [:sijainti :tieosoite :aosa])
+                                                :losa (get-in r [:sijainti :tieosoite :losa])
+                                                :aet (get-in r [:sijainti :tieosoite :aet])
+                                                :let (get-in r [:sijainti :tieosoite :let])})
+                                   tieosoite (if (and (not tieosoite) (get-in r [:sijainti :pistegeometria]))
+                                               (let [piste (get-in r [:sijainti :pistegeometria])
+                                                     t (first (tieverkko-q/hae-tr-osoite db {:x (:x piste)
+                                                                                             :y (:y piste)
+                                                                                             :treshold 250}))]
+                                                 t)
+                                               tieosoite)
+                                   tieosoite (if (and (not tieosoite) (get-in r [:sijainti :viivageometria]))
+                                               (let [ensimmainen (first (get-in r [:sijainti :viivageometria :coordinates]))
+                                                     viimeinen (last (get-in r [:sijainti :viivageometria :coordinates]))
+                                                     e (first (tieverkko-q/hae-tr-osoite db {:x (first ensimmainen)
+                                                                                             :y (second ensimmainen)
+                                                                                             :treshold 250}))
+                                                     v (first (tieverkko-q/hae-tr-osoite db {:x (first ensimmainen)
+                                                                                             :y (second ensimmainen)
+                                                                                             :treshold 250}))
+                                                     ;; Otetaan loppuosa viimeisestä pisteestä
+                                                     t (assoc e :losa (get v :losa) :let (get v :let))]
+                                                 t)
+                                               tieosoite)
+
+                                   tyomenetelma-id (paikkaus/tyomenetelma-id (:tyomenetelma r) tyomenetelmat)
+
+                                   r
+                                   (-> r
+
+                                     (assoc :tie (:tie tieosoite))
+                                     (assoc :aosa (:aosa tieosoite))
+                                     (assoc :aet (:aet tieosoite))
+                                     (assoc :losa (:losa tieosoite))
+                                     (assoc :let (:let tieosoite))
+                                     (assoc :urakka-id urakka-id)
+                                     (assoc :tyomenetelma-id tyomenetelma-id)
+                                     (dissoc :sijainti)
+                                     (assoc :tunniste (get-in (first reikapaikkaukset) [:tunniste :id])))]
+                               r))
+                           reikapaikkaukset)]
+
+    (when-not (empty? validointivirheet)
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+invalidi-json+
+                          :viesti (str "Reikäpaikkaus aineistosta löytyi virhe: " validointivirheet)}]}))
+    ;; Tallennetaan
+    (reikapaikkaus-palvelu/tallenna-reikapaikkaukset db kayttaja urakka-id reikapaikkaukset)
+    (tee-kirjausvastauksen-body {:ilmoitukset "Paikkaukset kirjattu onnistuneesti"})))
+
 (defn kirjaa-paikkaustoteuma [db {id :id} data kayttaja]
   (log/debug (format "Kirjataan paikkauskustannuksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
                      (count (:paikkauskustannukset data)) id kayttaja))
@@ -133,6 +259,19 @@
                          json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (kirjaa-paikkaus db parametrit data kayttaja))
+          :kirjoitus))
+      true)
+    (julkaise-reitti
+      http :kirjaa-paikkaus
+      (POST "/api/urakat/:id/reikapaikkaus" request
+        (kasittele-kutsu db
+          integraatioloki
+          :kirjaa-reikapaikkaus
+          request
+          json-skeemat/reikapaikkausten-kirjaus-request
+          json-skeemat/kirjausvastaus
+          (fn [parametrit data kayttaja db]
+            (kirjaa-reikapaikkaus db parametrit data kayttaja))
           :kirjoitus))
       true)
     (julkaise-reitti
@@ -164,7 +303,9 @@
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :kirjaa-paikkaus
-                     :kirjaa-paikkaustoteuma
-                     :poista-paikkaustiedot)
+    (poista-palvelut http
+      :kirjaa-paikkaus
+      :kirjaa-reikapaikkaus
+      :kirjaa-paikkaustoteuma
+      :poista-paikkaustiedot)
     this))

@@ -148,6 +148,9 @@
 (def +paikkausten-kirjaus-request+ "api/schemas/paikkausten-kirjaus-request.schema.json")
 (def paikkausten-kirjaus-request (tee-validaattori +paikkausten-kirjaus-request+))
 
+(def +reikapaikkausten-kirjaus-request+ "api/schemas/reikapaikkausten-kirjaus-request.schema.json")
+(def reikapaikkausten-kirjaus-request (tee-validaattori +reikapaikkausten-kirjaus-request+))
+
 (def +paikkauskustannusten-kirjaus-request+ "api/schemas/paikkauskustannusten-kirjaus-request.schema.json")
 (def paikkauskustannusten-kirjaus-request (tee-validaattori +paikkauskustannusten-kirjaus-request+))
 
