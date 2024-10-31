@@ -136,7 +136,7 @@ WITH korjatut_indeksit AS (
         jk.id                                                       AS id,
         jk.tuntipalkka                                              AS summa,
         jk.tuntipalkka_indeksikorjattu                              AS vanha_arvo,
-        indeksikorjaa(jk.tuntipalkka, jk.vuosi, jk.kuukausi, u.id)  AS korjattu_arvo,
+        indeksikorjaa(jk.tuntipalkka, jk.vuosi, jk.kuukausi, u.id)  AS korjattu_arvo
     FROM johto_ja_hallintokorvaus jk
         JOIN urakka u 
           ON jk."urakka-id" = u.id
@@ -191,3 +191,55 @@ WITH korjatut_indeksit AS (
          muokattu              = NOW()
     FROM korjatut_indeksit
    WHERE korjatut_indeksit.id = kiinteahintainen_tyo.id;
+
+
+----------------------------------------------------
+-- Korjaa tavoitehintojen indeksiluvut
+----------------------------------------------------
+WITH korjatut_indeksit AS (
+    SELECT * FROM (
+        SELECT 
+            hoitokausi,
+            ut.id                                     AS id,
+            ut.tavoitehinta_indeksikorjattu           AS tavoitehinta_indeksikorjattu_vanha,
+            indeksikorjaa(
+                ut.tavoitehinta,
+                EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
+                10,
+                u.id
+            )                                         AS tavoitehinta_indeksikorjattu_uusi,
+            ut.tavoitehinta_siirretty_indeksikorjattu AS tavoitehinta_siirretty_indeksikorjattu_vanha,
+            indeksikorjaa(
+                ut.tavoitehinta_siirretty,
+                EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
+                10,
+                u.id
+            )                                         AS tavoitehinta_siirretty_indeksikorjattu_uusi,
+            ut.kattohinta_indeksikorjattu             AS kattohinta_indeksikorjattu_vanha,
+            indeksikorjaa(
+                ut.kattohinta,
+                EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
+                10,
+                u.id
+            )                                         AS kattohinta_indeksikorjattu_uusi
+        FROM urakka_tavoite ut
+            JOIN urakka u 
+              ON ut.urakka = u.id
+        WHERE u.tyyppi = 'teiden-hoito'
+    ) indeksikorjaus
+    WHERE (
+        tavoitehinta_indeksikorjattu_vanha IS DISTINCT FROM tavoitehinta_indeksikorjattu_uusi
+        OR tavoitehinta_siirretty_indeksikorjattu_vanha IS DISTINCT FROM tavoitehinta_siirretty_indeksikorjattu_uusi
+        OR kattohinta_indeksikorjattu_vanha IS DISTINCT FROM kattohinta_indeksikorjattu_uusi
+    )
+    AND tavoitehinta_indeksikorjattu_uusi IS NOT NULL 
+    AND kattohinta_indeksikorjattu_uusi IS NOT NULL 
+) 
+UPDATE urakka_tavoite
+   SET tavoitehinta_indeksikorjattu           = korjatut_indeksit.tavoitehinta_indeksikorjattu_uusi,
+       tavoitehinta_siirretty_indeksikorjattu = korjatut_indeksit.tavoitehinta_siirretty_indeksikorjattu_uusi,
+       kattohinta_indeksikorjattu             = korjatut_indeksit.kattohinta_indeksikorjattu_uusi,
+       muokkaaja                              = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+       muokattu                               = NOW()
+  FROM korjatut_indeksit
+ WHERE korjatut_indeksit.id = urakka_tavoite.id;

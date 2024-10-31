@@ -243,7 +243,7 @@ with muuttuneet as (
              where u.tyyppi = 'teiden-hoito'
                and u.indeksi = :nimi
                and (jk.vuosi, jk.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
-               and :kuukausi in (9, 10, 11)
+               and :kuukausi in (8, 9, 10, 11) -- MAKU indeksin kuukausi 
                and indeksikorjaus_vahvistettu is null
          ) indeksikorjaus
     where vanha is distinct from uusi
@@ -289,7 +289,7 @@ with muuttuneet as (
              where u.tyyppi = 'teiden-hoito'
                and u.indeksi = :nimi
                and EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1 between :vuosi and :vuosi + 1
-               and :kuukausi in (9, 10, 11)
+               and :kuukausi in (8, 9, 10, 11)  -- MAKU indeksin kuukausi 
                and indeksikorjaus_vahvistettu is null
          ) indeksikorjaus
     where tavoitehinta_indeksikorjattu_vanha is distinct from tavoitehinta_indeksikorjattu_uusi
