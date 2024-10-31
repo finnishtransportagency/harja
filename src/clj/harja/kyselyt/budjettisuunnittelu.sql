@@ -185,9 +185,7 @@ with muuttuneet as (
              where u.tyyppi = 'teiden-hoito'
                and u.indeksi = :nimi
                and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9) -- seuraavan hoitovuoden rivit
-               -- syys/loka/marraskuun indeksi vaikuttaa indeksilaskennan peruslukuun, ja sitä kautta indeksikorjauksiin
-               -- indeksikerroin on edellisen hoitovuoden syyskuun arvo jaettuna perusluvulla
-               and :kuukausi in (9, 10, 11)
+               and :kuukausi in (8, 9, 10, 11) -- MAKU indeksin kuukausi 
                and indeksikorjaus_vahvistettu is null
          ) indeksikorjaus
     where vanha is distinct from uusi
@@ -214,7 +212,7 @@ with muuttuneet as (
              where u.tyyppi = 'teiden-hoito'
                and u.indeksi = :nimi
                and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
-               and :kuukausi in (9, 10, 11)
+               and :kuukausi in (8, 9, 10, 11) -- MAKU indeksin kuukausi 
                and indeksikorjaus_vahvistettu is null
                -- Tilaajan rahavarauksille ei lasketa indeksikorjauksia
                and not (

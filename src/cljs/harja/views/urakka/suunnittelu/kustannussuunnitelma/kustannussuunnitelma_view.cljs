@@ -416,14 +416,19 @@
         (set! e! e*!)
         (r/with-let [indeksit-saatavilla?-fn (fn [app]
                                                (let [alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
+
                                                      hoitovuodet (into {}
                                                                    (map-indexed #(-> [(inc %1) %2])
-                                                                     (range alkuvuosi (+ alkuvuosi 5))))]
-                                                 (some? (first (filter #(= (:vuosi %)
-                                                                          (-> app
-                                                                            (get-in [:suodattimet :hoitokauden-numero])
-                                                                            hoitovuodet))
-                                                                 (get-in app [:domain :indeksit]))))))]
+                                                                     (range alkuvuosi (+ alkuvuosi 5))))
+
+                                                     indeksit-saatavilla (filter #(= (:vuosi %)
+                                                                                     (-> app
+                                                                                       (get-in [:suodattimet :hoitokauden-numero])
+                                                                                       hoitovuodet))
+                                                                           (get-in app [:domain :indeksit]))
+
+                                                     saatavilla? (some? (first indeksit-saatavilla))]
+                                                 saatavilla?))]
 
           (if gridit-vanhentuneet?
             [yleiset/ajax-loader]
