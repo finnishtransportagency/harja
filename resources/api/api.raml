@@ -48,6 +48,8 @@ schemas:
  - paikkausten-kirjaus-request: !include schemas/paikkausten-kirjaus-request.schema.json
  - paikkauskustannusten-kirjaus-request: !include schemas/paikkauskustannusten-kirjaus-request.schema.json
  - paikkausten-poisto-request: !include schemas/paikkausten-poisto-request.schema.json
+ - reikapaikkausten-kirjaus-request: !include schemas/reikapaikkausten-kirjaus-request.schema.json
+ - reikapaikkausten-paivitys-request: !include schemas/reikapaikkausten-paivitys-request.schema.json
  - raportti-materiaaliraportti-response: !include schemas/raportti.schema.json
  - tyomaapaivakirja-kirjaus-request: !include schemas/tyomaapaivakirja-kirjaus-request.schema.json
  - tyomaapaivakirja-paivitys-request: !include schemas/tyomaapaivakirja-paivitys-request.schema.json
@@ -1109,6 +1111,56 @@ documentation:
                application/json:
                  example: !include examples/virhe-response.json
                  schema: virhe-response
+    /reikapaikkaus:
+          description: Reikäpaikkausten kirjaus.
+          post:
+            is: [secured]
+            description: Uuden reikäpaikkauksen kirjaaminen.
+            body:
+              application/json:
+                example: !include examples/reikapaikkausten-kirjaus-request.json
+                schema: reikapaikkausten-kirjaus-request
+            responses:
+              200:
+               body:
+                 application/json:
+                   example: !include examples/onnistunut-kirjaus-response.json
+                   schema: kirjaus-response
+              400:
+               body:
+                 application/json:
+                   example: !include examples/virhe-response.json
+                   schema: virhe-response
+              500:
+               body:
+                 application/json:
+                   example: !include examples/virhe-response.json
+                   schema: virhe-response
+    /reikapaikkaus:
+              description: Reikäpaikkausten päivitys.
+              put:
+                is: [secured]
+                description: Jo lähetetyn reikäpaikkauksen päivitys.
+                body:
+                  application/json:
+                    example: !include examples/reikapaikkausten-paivitys-request.json
+                    schema: reikapaikkausten-paivitys-request
+                responses:
+                  200:
+                   body:
+                     application/json:
+                       example: !include examples/onnistunut-kirjaus-response.json
+                       schema: kirjaus-response
+                  400:
+                   body:
+                     application/json:
+                       example: !include examples/virhe-response.json
+                       schema: virhe-response
+                  500:
+                   body:
+                     application/json:
+                       example: !include examples/virhe-response.json
+                       schema: virhe-response
     /tyomaapaivakirja:
       post:
         is: [secured]

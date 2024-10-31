@@ -38,7 +38,7 @@
                        [:http-palvelin :db :integraatioloki :yha-paikkauskomponentti])))
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture
-                                      jarjestelma-fixture))
+                      jarjestelma-fixture))
 
 (deftest kirjaa-paikkaus
   (let [db (luo-testitietokanta)
@@ -100,20 +100,20 @@
     (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
     (is (.contains (:body vastaus) "Paikkaukset kirjattu onnistuneesti"))
     (is (= odotettu-paikkaus (dissoc paikkaus
-                                     ::paikkaus/id
-                                     ::paikkaus/sijainti
-                                     ::paikkaus/loppuaika
-                                     ::paikkaus/alkuaika
-                                     ::paikkaus/paikkauskohde-id)))
+                               ::paikkaus/id
+                               ::paikkaus/sijainti
+                               ::paikkaus/loppuaika
+                               ::paikkaus/alkuaika
+                               ::paikkaus/paikkauskohde-id)))
     (is (= odotettu-materiaali (-> (select-keys materiaali [::paikkaus/materiaalit])
-                                   (update ::paikkaus/materiaalit (fn [materiaalit]
-                                                                    [(dissoc (first materiaalit) ::paikkaus/materiaali-id)])))))
+                                 (update ::paikkaus/materiaalit (fn [materiaalit]
+                                                                  [(dissoc (first materiaalit) ::paikkaus/materiaali-id)])))))
     (is (= odotettu-tienkohta (-> (select-keys tienkohta [::paikkaus/tienkohdat])
-                                  (update ::paikkaus/tienkohdat (fn [tienkohta]
-                                                                  [(dissoc (first tienkohta) ::paikkaus/tienkohta-id)])))))
+                                (update ::paikkaus/tienkohdat (fn [tienkohta]
+                                                                [(dissoc (first tienkohta) ::paikkaus/tienkohta-id)])))))
     (is (= odotettu-paikkauskohde (-> (select-keys paikkauskohde [::paikkaus/paikkauskohde])
-                                      (update ::paikkaus/paikkauskohde (fn [paikkauskohde]
-                                                                         (dissoc paikkauskohde ::paikkaus/id ::muokkaustiedot/luotu))))))
+                                    (update ::paikkaus/paikkauskohde (fn [paikkauskohde]
+                                                                       (dissoc paikkauskohde ::paikkaus/id ::muokkaustiedot/luotu))))))
     (is (= odotettu-kohde (dissoc
                             (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
                             ::paikkaus/id ::muokkaustiedot/luotu)))))
@@ -342,7 +342,7 @@
         mahdolliset-tyomenetelmat (mapv #(if (= % "HJYR/TJYR")
                                            "Jyrsintäkorjaukset (HJYR/TJYR)"
                                            %)
-                                        mahdolliset-tyomenetelmat)
+                                    mahdolliset-tyomenetelmat)
         kaikki-tasmaa? (every? #(paikkaus-q/hae-tyomenetelman-id db %) mahdolliset-tyomenetelmat)]
     (is (= true kaikki-tasmaa?))))
 
@@ -468,3 +468,86 @@
         json (poista-yksittainen-avain-ja-anna-json :kustannus reikapaikkaukset)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
         _ (is (.contains (:body vastaus) "/reikapaikkaukset[0]/reikapaikkaus/kustannus: Pakollinen arvo puuttuu"))]))
+
+(deftest kirjaa-uusi-reikapaikkaus-PUT-epaonnistuu
+  (let [db (luo-testitietokanta)
+        urakka (hae-oulun-alueurakan-2014-2019-id)
+        ulkoinen-id 445566
+
+        json (-> (slurp "test/resurssit/api/paikkaukset/reikapaikkauksen-kirjaus.json")
+               (.replace "<ulkoinenid>" (str ulkoinen-id)))
+        _ (anna-kirjoitusoikeus kayttaja)
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
+        _ (println "vastaus:" vastaus)
+        ]
+    (is (= 400 (:status vastaus)) "HTTP PUT ei voi käyttää uuden luomiseen")
+    (is (.contains (:body vastaus) "Reikäpaikkausta ei löydy kannasta, mutta tehtiin HTTP PUT päivityspyyntö. Lisää reikäpaikkaus ensin HTTP POST kutsulla."))))
+
+(deftest kirjaa-paivitettava-reikapaikkaus-POST-epaonnistuu
+  (let [db (luo-testitietokanta)
+        urakka (hae-oulun-alueurakan-2014-2019-id)
+        ulkoinen-id 123456
+
+        json (-> (slurp "test/resurssit/api/paikkaukset/reikapaikkauksen-kirjaus.json")
+               (.replace "<ulkoinenid>" (str ulkoinen-id)))
+        _ (anna-kirjoitusoikeus kayttaja)
+        ;; Kirjataan POST illa uusi
+        uusi-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
+        _ (is (= 200 (:status uusi-vastaus)) "Reikäpaikkausten lisäys onnistui")
+
+        ;; Koitetaan päivittää POST:illa - Tämä ei saa onnistua
+        paivitys-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
+        _ (is (= 400 (:status paivitys-vastaus)) "Reikäpaikkausten lisäys onnistui")
+        _ (is (.contains (:body paivitys-vastaus) "Reikäpaikkaus löytyy jo kannasta, käytä HTTP PUT kutsua päivittämiseen."))]))
+
+(deftest kirjaa-paivitettava-reikapaikkaus-PUT-onnistuu
+  (let [db (luo-testitietokanta)
+        urakka (hae-oulun-alueurakan-2014-2019-id)
+        _ (anna-kirjoitusoikeus kayttaja)
+        ulkoinen-id (rand-int 10000)
+
+        json (-> (slurp "test/resurssit/api/paikkaukset/reikapaikkauksen-kirjaus.json")
+               (.replace "<ulkoinenid>" (str ulkoinen-id)))
+
+        ;; Käännetään json mäpiksi, jotta muokkaaminen helpottuu
+        payload (-> json (json/read-str) (clojure.walk/keywordize-keys))
+        reikapaikkaukset (mapv (fn [r]
+                                 (-> r
+                                   (assoc-in [:reikapaikkaus :kustannus] 888)
+                                   (assoc-in [:reikapaikkaus :maara] 5000)
+                                   (assoc-in [:reikapaikkaus :yksikko] "kg")))
+                           (:reikapaikkaukset payload))
+        payload (assoc payload :reikapaikkaukset reikapaikkaukset)
+        json (cheshire/encode (spec-apurit/poista-nil-avaimet payload))
+
+        ;; Lisätään uusi
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
+        _ (println "vastaus:" vastaus)
+        _ (is (= 200 (:status vastaus)) "Lisäys onnistuu")
+        db-reikapaikkaus (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " ulkoinen-id ";"))
+
+        ;; Päivitetään
+        paivitetyt-reikapaikkaukset (mapv (fn [r]
+                                            (-> r
+                                              (assoc-in [:reikapaikkaus :kustannus] 5)
+                                              (assoc-in [:reikapaikkaus :maara] 1)
+                                              (assoc-in [:reikapaikkaus :yksikko] "t")))
+                                      (:reikapaikkaukset payload))
+        paivitetty-payload (assoc payload :reikapaikkaukset paivitetyt-reikapaikkaukset)
+        paivitetty-json (cheshire/encode (spec-apurit/poista-nil-avaimet paivitetty-payload))
+        ;; Päivitetään
+        paivitetty-vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti paivitetty-json)
+        _ (is (= 200 (:status paivitetty-vastaus)) "Päivitys onnistuu")
+        db-paivitetty-reikapaikkaus (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " ulkoinen-id ";"))]
+
+    ;; Varmistetaan, että päivitetyt luvut täsmää
+    (is (= 5M (:kustannus db-paivitetty-reikapaikkaus)) "Kustannus päivittyi")
+    (is (= 888M (:kustannus db-reikapaikkaus)) "Liäsys onnistui")
+
+    (is (= 1 (:maara db-paivitetty-reikapaikkaus)) "Kustannus päivittyi")
+    (is (= 5000 (:maara db-reikapaikkaus)) "Liäsys onnistui")
+
+    (is (= "t" (:reikapaikkaus-yksikko db-paivitetty-reikapaikkaus)) "Kustannus päivittyi")
+    (is (= "kg" (:reikapaikkaus-yksikko db-reikapaikkaus)) "Liäsys onnistui")
+
+    ))
