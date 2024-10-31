@@ -160,3 +160,34 @@ WITH korjatut_indeksit AS (
    WHERE korjatut_indeksit.id = johto_ja_hallintokorvaus.id;
 
 
+----------------------------------------------------
+-- Korjaa Kiinteähintaiset työt 
+----------------------------------------------------
+WITH korjatut_indeksit AS (
+    SELECT  
+        kt.id                                                AS id,
+        indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id) AS korjattu_arvo,
+        kt.summa_indeksikorjattu                             AS vanha_arvo, 
+        kt.summa
+    FROM kiinteahintainen_tyo kt
+        JOIN toimenpideinstanssi tpi 
+          ON kt.toimenpideinstanssi = tpi.id
+        JOIN urakka u 
+          ON tpi.urakka = u.id
+    WHERE summa_indeksikorjattu IS NULL 
+    -- Summa täytyy olla olemassa 
+    AND kt.summa IS NOT NULL 
+    AND kt.summa != 0
+    -- Alkanut 2017 jälkeen
+    AND u.alkupvm >= '2017-09-30'
+    -- Vain käynnissä olevat
+    AND u.loppupvm >= '2024-10-01'
+    -- Päivitetään vain rivit joille indeksikorjaus saatavilla 
+    AND indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id) IS NOT NULL  
+  -- Syötä korjaukset kantaan 
+) UPDATE kiinteahintainen_tyo
+     SET summa_indeksikorjattu = korjatut_indeksit.korjattu_arvo,
+         muokkaaja             = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+         muokattu              = NOW()
+    FROM korjatut_indeksit
+   WHERE korjatut_indeksit.id = kiinteahintainen_tyo.id;
