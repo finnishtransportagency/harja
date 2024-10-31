@@ -77,3 +77,50 @@ BEGIN
     RETURN round(korjattava_arvo * indeksikerroin, 6);
 END ;
 $$ language plpgsql;
+
+
+-- Korjaa indeksit Kustannusarvioiduille töille
+WITH korjatut_indeksit AS (
+    SELECT 
+        u.id,
+        kt.vuosi,
+        kt.kuukausi,
+        kt.summa                                                    AS summa,
+        COALESCE(CAST(kt.summa_indeksikorjattu AS TEXT), 'tyhja')   AS summa_indeksikorjattu,
+        indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id)        AS korjattu_arvo
+    FROM kustannusarvioitu_tyo kt
+        JOIN toimenpideinstanssi tpi 
+          ON kt.toimenpideinstanssi = tpi.id
+        JOIN urakka u 
+          ON tpi.urakka = u.id
+        LEFT JOIN tehtavaryhma tr 
+          ON kt.tehtavaryhma = tr.id
+        LEFT JOIN urakka_paatos up 
+          ON up."urakka-id" = u.id 
+    -- Etsitään rivit joilla ei ole indeksikorjausta, mutta on summa 
+    WHERE kt.summa_indeksikorjattu IS NULL
+    -- Summa täytyy olla olemassa 
+    AND kt.summa IS NOT NULL 
+    AND kt.summa != 0
+    AND up.poistettu IS NOT TRUE 
+    -- Alkanut 2017 jälkeen
+    AND u.alkupvm >= '2017-09-30'
+    -- Vain käynnissä olevat
+    AND u.loppupvm >= '2024-10-01'
+    -- Päivitetään vain rivit joille indeksikorjaus saatavilla 
+    AND indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id) IS NOT NULL 
+    -- Tilaajan rahavarauksille ei lasketa indeksikorjauksia
+    AND NOT (
+        tr.yksiloiva_tunniste IS NOT NULL 
+        -- Johto- ja hallintokorvaus (J)
+        AND tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'
+        -- MHU ja HJU Hoidon johto
+        AND tpi.toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23151')
+    )
+  -- Syötä indeksikorjattu arvo sisään
+) UPDATE kustannusarvioitu_tyo
+     SET summa_indeksikorjattu = korjatut_indeksit.korjattu_arvo,
+         muokkaaja             = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+         muokattu              = NOW()
+    FROM korjatut_indeksit
+   WHERE korjatut_indeksit.id = kustannusarvioitu_tyo.id;
