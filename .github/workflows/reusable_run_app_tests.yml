@@ -5,67 +5,66 @@
 # Security hardening for GitHub Actions
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
-name: '[Reusable] Run app tests'
+name: "[Reusable] Run app tests"
 
 on:
   workflow_call:
     inputs:
       test-db-service:
         # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
-        description: 'Testeissä käytettävän testitietokannan docker compose servicen nimi'
+        description: "Testeissä käytettävän testitietokannan docker compose servicen nimi"
         type: string
         required: true
       e2e-browsers:
-        description: 'E2E-testeissä testattavat selaimet (JSON)'
+        description: "E2E-testeissä testattavat selaimet (JSON)"
         default: "['chrome']"
         type: string
         required: false
       artifact-prefix:
-        description: 'Optional prefix tämän jobin uploadaamien/downloadaamien artifactien nimeen. Tarpeellinen, jos tätä jobia kutsutaan esim. matrix-strategialla.'
-        default: ''
+        description: "Optional prefix tämän jobin uploadaamien/downloadaamien artifactien nimeen. Tarpeellinen, jos tätä jobia kutsutaan esim. matrix-strategialla."
+        default: ""
         type: string
         required: false
       build-harja:
         description: 'Buildataanko harja kevyesti ("light") vai täysi build ("full") tai ei ollenkaan "false"'
-        default: 'full'
+        default: "full"
         type: string
         required: false
       scan-docker-image:
-        description: 'Enabloi scan-docker-image job'
-        default: 'true'
+        description: "Enabloi scan-docker-image job"
+        default: "true"
         type: string
         required: false
       deps-tree:
-        description: 'Enabloi deps-tree job'
-        default: 'true'
+        description: "Enabloi deps-tree job"
+        default: "true"
         type: string
         required: false
       lint-clj:
-        description: 'Enabloi lint-clj job'
-        default: 'true'
+        description: "Enabloi lint-clj job"
+        default: "true"
         type: string
         required: false
       backend-tests:
-        description: 'Enabloi back-tests job'
-        default: 'true'
+        description: "Enabloi back-tests job"
+        default: "true"
         type: string
         required: false
       basic-tests:
-        description: 'Enabloi basic-tests job'
-        default: 'true'
+        description: "Enabloi basic-tests job"
+        default: "true"
         type: string
         required: false
       integration-tests:
-        description: 'Enabloi integration-tests job'
-        default: 'true'
+        description: "Enabloi integration-tests job"
+        default: "true"
         type: string
         required: false
       e2e-tests:
-        description: 'Enabloi e2e-tests job'
-        default: 'true'
+        description: "Enabloi e2e-tests job"
+        default: "true"
         type: string
         required: false
-
 
 env:
   GH_DOCKER_REGISTRY: ghcr.io
@@ -149,14 +148,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           service-name: ${{ env.TEST_DB_SERVICE }}
 
-       # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
+        # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
 
       # Kevyestä buildistä on jätetty laadunseurannan ja dokumentaation build pois
       - name: Build Harja Uberjar (Kevyt)
         if: ${{ inputs.build-harja == 'light' }}
         uses: ./.github/actions/build-harja-app
         with:
-          build-laadunseuranta: 'false'
+          build-laadunseuranta: "false"
 
       - name: Build Harja Uberjar (Täysi build)
         if: ${{ inputs.build-harja == 'full' }}
@@ -240,7 +239,7 @@ jobs:
         uses: docker/build-push-action@v6
         env:
           IMAGE_TAG: ${{ github.sha }}
-          DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
+          DOCKERFILE_PATH: "aws/fargate/Dockerfile"
           BUILD_PLATFORMS: linux/amd64
         with:
           context: .
@@ -255,8 +254,8 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: ./.github/actions/scan-docker-image
         env:
-          DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
-          TRIVY_IGNORES_PATH: 'aws/fargate/.trivyignore'
+          DOCKERFILE_PATH: "aws/fargate/Dockerfile"
+          TRIVY_IGNORES_PATH: "aws/fargate/.trivyignore"
         with:
           # Hae viittaus buildattuun imageen build-test-image stepin outputeista
           image-ref: ${{ steps.build-test-image.outputs.imageid }}
@@ -266,7 +265,7 @@ jobs:
           # TODO: Laitetaan HIGH fail päälle, kunhan kaikki HIGH-tason hälytykset on käsitelty pois ja normaali baseline muodostettu
           #       Tällä hetkellä fail aiheuttaa PR:issä turhia hälytyksiä
           #       Critical-tason hälytykset on käsitelty ja uusien critical-havaintojen seuranta voidaan aloittaa.
-          fail-job-on-severities: 'CRITICAL'
+          fail-job-on-severities: "CRITICAL"
           #fail-job-on-severities: 'CRITICAL,HIGH'
           ignore-unfixed: true
           # Disabloi upload-sarif, koska sarif uploadataan develop-branchin testien yhteydessä
@@ -311,9 +310,9 @@ jobs:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
         with:
-          report_paths: 'test2junit/xml/*.xml'
+          report_paths: "test2junit/xml/*.xml"
           require_passed_tests: true
-          check_name: 'Test Report: ${{ env.NAME_PREFIX }}Backend'
+          check_name: "Test Report: ${{ env.NAME_PREFIX }}Backend"
           # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
           # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
           # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
@@ -361,9 +360,9 @@ jobs:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
         with:
-          report_paths: 'test2junit/xml/*.xml'
+          report_paths: "test2junit/xml/*.xml"
           require_passed_tests: true
-          check_name: 'Test Report: ${{ env.NAME_PREFIX }}Slow'
+          check_name: "Test Report: ${{ env.NAME_PREFIX }}Slow"
           # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
           # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
           # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
@@ -430,9 +429,9 @@ jobs:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
         with:
-          report_paths: 'test2junit/xml/*.xml'
+          report_paths: "test2junit/xml/*.xml"
           require_passed_tests: true
-          check_name: 'Test Report: ${{ env.NAME_PREFIX }}Integration'
+          check_name: "Test Report: ${{ env.NAME_PREFIX }}Integration"
           # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
           # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
           # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
@@ -483,7 +482,6 @@ jobs:
           install-clojure-deps: false
           install-node-deps: false
 
-
       - name: Get the build artifact name
         id: artifact-name
         env:
@@ -516,12 +514,12 @@ jobs:
           mkdir -p ../.harja
           echo aaaa > ../.harja/anti-csrf-token
           touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,labyrintti-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti-salasana,digiroad-api-key}
-          touch ../.harja/harjalle_ajorata_kaista_puoli_20241031.csv
-          
+          touch ../.harja/kaista-aineisto.csv
+
           echo "Käynnistetään Harja..."
           java -cp :harja-0.0.1-SNAPSHOT-standalone.jar harja.palvelin.main > harja.out 2>&1 &
           javapid=$!
-          
+
           for i in $(seq 4); do
             curl localhost:3000 > /dev/null 2>&1 && break
             if kill -0 $javapid; then
@@ -572,9 +570,9 @@ jobs:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
         with:
-          report_paths: 'cypress/test-results/*.xml'
+          report_paths: "cypress/test-results/*.xml"
           require_passed_tests: true
-          check_name: 'Test Report: Cypress (${{ env.NAME_PREFIX }}${{ matrix.browser }})'
+          check_name: "Test Report: Cypress (${{ env.NAME_PREFIX }}${{ matrix.browser }})"
           # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
           # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
           # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
