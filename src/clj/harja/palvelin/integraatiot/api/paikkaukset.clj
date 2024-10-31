@@ -121,9 +121,9 @@
         (into [] (remove nil?
                    (reduce (fn [virheet rp]
                              (let [tro (get-in rp [:reikapaikkaus :sijainti :tieosoite])
-                                   _ (println "tro: " tro)
-                                   virhe (tr-validointi/validoi-tieosoite
-                                           #{} (:numero tro) (:aosa tro) (:losa tro) (:aet tro) (:let tro))]
+                                   virhe (when-not (nil? tro)
+                                           (tr-validointi/validoi-tieosoite
+                                             #{} (:numero tro) (:aosa tro) (:losa tro) (:aet tro) (:let tro)))]
                                (when-not (empty? virhe)
                                  (conj virheet virhe))))
                      validointivirheet
@@ -135,10 +135,14 @@
         (into [] (remove nil?
                    (reduce (fn [virheet rp]
                              (let [piste (get-in rp [:reikapaikkaus :sijainti :pistegeometria])
-                                   suomessa? (onko-koordinaatit-suomen-alueella? (:x piste) (:y piste))
-                                   tieosoite (first (tieverkko-q/hae-tr-osoite db {:x (:x piste)
-                                                                                   :y (:y piste)
-                                                                                   :treshold 250}))
+                                   suomessa? (if piste
+                                               (onko-koordinaatit-suomen-alueella? (:x piste) (:y piste))
+                                               true)
+                                   tieosoite (if piste
+                                               (first (tieverkko-q/hae-tr-osoite db {:x (:x piste)
+                                                                                               :y (:y piste)
+                                                                                               :treshold 250}))
+                                               {})
                                    virheet (cond-> virheet
                                              (not suomessa?)
                                              (conj "Pisteei ole suomen alueella. Virheellinen piste (" (:x piste) "," (:y piste) ")")
@@ -154,6 +158,12 @@
         (into [] (remove nil?
                    (reduce (fn [virheet rp]
                              (let [geometriat (get-in rp [:reikapaikkaus :sijainti :viivageometria :coordinates])
+                                   ;; Piirretään viiva (ainakin tässä vaiheessa) pelkästään ensimmäisen ja viimeisen pisteen välille
+                                   viivapisteet (if geometriat
+                                                  (let [ensimmainen (first geometriat)
+                                                        viimeinen (last geometriat)]
+                                                    (list ensimmainen viimeinen))
+                                                  [])
                                    gvirheet (reduce (fn [virheet geometria]
                                                       (let [suomessa? (onko-koordinaatit-suomen-alueella? (first geometria) (second geometria))
                                                             tieosoite (first (tieverkko-q/hae-tr-osoite db {:x (first geometria)
@@ -166,7 +176,7 @@
                                                                       (and suomessa? (nil? tieosoite))
                                                                       (conj "Piste ei ole tieverkolla: (" (first geometria) "," (second geometria) ")"))]
                                                         virheet))
-                                              virheet geometriat)]
+                                              virheet viivapisteet)]
                                (when-not (empty? gvirheet)
                                  (conj virheet gvirheet))))
                      validointivirheet
@@ -191,7 +201,10 @@
                                                (let [piste (get-in r [:sijainti :pistegeometria])
                                                      t (first (tieverkko-q/hae-tr-osoite db {:x (:x piste)
                                                                                              :y (:y piste)
-                                                                                             :treshold 250}))]
+                                                                                             :treshold 250}))
+                                                     ;; Tieosoitteessa ei ole let ja losa arvoja, koska se haettiin pisteellä.
+                                                     ;; Reikäpaikkaus olettaa, että ne on annettu, joten täytetään ne käsin
+                                                     t (assoc t :losa (:aosa t) :let (:aet t))]
                                                  t)
                                                tieosoite)
                                    tieosoite (if (and (not tieosoite) (get-in r [:sijainti :viivageometria]))
@@ -200,11 +213,12 @@
                                                      e (first (tieverkko-q/hae-tr-osoite db {:x (first ensimmainen)
                                                                                              :y (second ensimmainen)
                                                                                              :treshold 250}))
-                                                     v (first (tieverkko-q/hae-tr-osoite db {:x (first ensimmainen)
-                                                                                             :y (second ensimmainen)
+                                                     v (first (tieverkko-q/hae-tr-osoite db {:x (first viimeinen)
+                                                                                             :y (second viimeinen)
                                                                                              :treshold 250}))
-                                                     ;; Otetaan loppuosa viimeisestä pisteestä
-                                                     t (assoc e :losa (get v :losa) :let (get v :let))]
+                                                     ;; Otetaan loppuosa viimeisestä pisteestä - Mutta koska pisteellä ei ole let tai losa arvoja
+                                                     ;; Niin käytetään osa ja aet arvoja
+                                                     t (assoc e :losa (:aosa v) :let (:aet v))]
                                                  t)
                                                tieosoite)
 
