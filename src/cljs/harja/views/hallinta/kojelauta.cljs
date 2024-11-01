@@ -1,6 +1,7 @@
 (ns harja.views.hallinta.kojelauta
   (:require [harja.pvm :as pvm]
             [harja.tiedot.hallintayksikot :as hal]
+            [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.grid :as grid]
@@ -74,13 +75,47 @@
       (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]]])
 
 
+(defn valikatselmus-sarake
+  [rivi]
+  (let [{:keys [rahapaatokset lupauspaatokset hoitokauden_alkuvuosi]} rivi
+        kuluvan-hoitokauden-alkuvuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
+        ;; jos ollaan valitulla hoitokaudella tai menneisyydessä ja takaraja on ohi, näytetään punaisella puuttuvat päätökset
+        valikatselmuksen-takaraja-ohi? (or
+                                         (< hoitokauden_alkuvuosi kuluvan-hoitokauden-alkuvuosi)
+                                         (and
+                                           (= hoitokauden_alkuvuosi kuluvan-hoitokauden-alkuvuosi)
+                                           (> (pvm/nyt)
+                                             (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm hoitokauden_alkuvuosi))))]
+    [yleiset/wrap-if true
+     [yleiset/tooltip {} :% "Siirry kustannusten seurantaan"]
+     [:a.klikattava {:on-click #(siirtymat/kustannusten-seurantaan-valitussa-urakassa (:ely_id rivi) (:id rivi))}
+      [:div.rahapaatokset
+       (if (nil? rahapaatokset)
+         (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
+           {:fmt-fn (constantly "Ei katto- tai tavoitehintapäätöksiä")})
+         (for [rp rahapaatokset]
+           ^{:key (hash rp)}
+           [:span
+            (yleiset/tila-indikaattori "valmis"
+              {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi rp))})]))]
+      [:div.lupauspaatokset
+
+       (if (nil? lupauspaatokset)
+         (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
+           {:fmt-fn (constantly "Ei lupauspäätöksiä")})
+         (for [lp lupauspaatokset]
+           ^{:key (hash lp)}
+           [:span
+            (yleiset/tila-indikaattori "valmis"
+              {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi lp))})]))]]]))
+
 (defn kustannussuunitelman-tila-sarake
   [rivi]
   (let [indeksi-saatavilla? (boolean (:indeksikerroin rivi))
         {:keys [aloittamattomia vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannussuunnitelmaan"]
-     [:a.klikattava {:on-click #(siirtymat/kustannusten-seurantaan-valitussa-urakassa (:ely_id rivi) (:id rivi))}
+     [:a.klikattava {:on-click #(siirtymat/kustannussuunnitelmaan-valitussa-urakassa (:ely_id rivi) (:id rivi))}
       (cond
         (= "aloittamatta" suunnitelman_tila)
         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Aloittamatta")})
@@ -126,7 +161,12 @@
      :muokattava? (constantly false)
      :nimi :ks_tila :leveys 15
      :tyyppi :komponentti
-     :komponentti (fn [rivi] [kustannussuunitelman-tila-sarake rivi])}]
+     :komponentti (fn [rivi] [kustannussuunitelman-tila-sarake rivi])}
+    {:otsikko "Väli\u00ADkatselmus"
+     :muokattava? (constantly false)
+     :nimi :ks_tila :leveys 15
+     :tyyppi :komponentti
+     :komponentti (fn [rivi] [valikatselmus-sarake rivi])}]
    urakat])
 
 (defn listaus
