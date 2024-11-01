@@ -23,7 +23,8 @@
             (vec (sort-by :nimi itemit)))))))
 
 (def tila (atom {:urakat []
-                 :valinnat {:ely nil
+                 :valinnat {:urakkatyyppi {:nimi "Hoito" :arvo :hoito}
+                            :ely nil
                             :urakat nil
                             :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
@@ -42,9 +43,9 @@
                                            urakat))
         ks-tilojen-yhteenveto (when-not (empty? urakat)
                                 (clj-str/join ", "
-                                  [(str "Aloittamatta: " (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm))))
-                                   (str "kesken: " (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm))))
-                                   (str "valmiina: " (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm))))]))]
+                                  [(str "Aloittamatta: " urakat-joissa-ks-aloittamatta " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm))) ")")
+                                   (str "kesken: " urakat-joissa-ks-aloitettu " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm)))")")
+                                   (str "valmiina: " urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm)))")")]))]
     ks-tilojen-yhteenveto))
 
 (defrecord AsetaSuodatin [avain valinta])
@@ -60,7 +61,8 @@
   HaeUrakat
   (process-event [_ app]
     (tuck-apurit/post! :hae-urakat-kojelautaan
-      {:hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
+      {:urakkatyyppi (or (get-in app [:valinnat :urakkatyyppi :arvo]) :hoito)
+       :hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
        :urakka-idt (map :id (get-in app [:valinnat :urakat]))
        :ely-id (get-in app [:valinnat :ely :id])}
       {:onnistui ->HaeUrakatOnnistui

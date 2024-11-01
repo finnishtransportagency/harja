@@ -9,6 +9,7 @@
 (def +sisainen-kasittelyvirhe+ ::sisainen-kasittelyvirhe)
 (def +duplikaatti-tyomaapaivakirja+ ::duplikaatti-tyomaapaivakirja)
 (def +vaara-versio-tyomaapaivakirja+ ::vaara-versio-tyomaapaivakirja)
+(def +tyomaapaivakirja-ei-loydy+ ::tyomaapaivakirjaa-ei-loydy)
 
 ;; Virhekoodit
 (def +invalidi-json-koodi+ "invalidi-json")
@@ -33,6 +34,7 @@
 (def +tuntematon-ely+ "tuntematon-ely")
 (def +puuttuva-geometria-alueurakassa+ "tuntematon-ely")
 (def +tieluvan-data-vaarin+ "tieluvan-data-vaarin")
+(def +tyomaapaivakirja-ei-loydy-virhe-koodi+ "tyomaapaivakirjaa-ei-loydy")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")

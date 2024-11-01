@@ -27,7 +27,8 @@
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2024
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:hoitokauden-alkuvuosi 2024
+                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                          :hoitokauden-alkuvuosi 2024
                                                           :urakka-idt nil
                                                           :ely-id nil})]
     (is (every? #(integer? (:id %)) vastaus))
@@ -57,7 +58,8 @@
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2005-ei-palauta-yhtaan
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:hoitokauden-alkuvuosi 2005
+                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                          :hoitokauden-alkuvuosi 2005
                                                           :urakka-idt nil
                                                           :ely-id nil})]
 
@@ -66,7 +68,8 @@
 (deftest kaikki-pop-elyn-mhut-kojelautaan-hk-alkuvuosi-2024
   (let [pop-ely-id @pohjois-pohjanmaan-hallintayksikon-id
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:hoitokauden-alkuvuosi 2024
+                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                          :hoitokauden-alkuvuosi 2024
                                                           :urakka-idt nil
                                                           :ely-id pop-ely-id})]
     (is (str/includes? vastaus "Iin MHU") "Iin MHU")
@@ -79,21 +82,25 @@
 (deftest vain-iin-mhu-kojelautaan-hk-alkuvuosi-2024
   (let [iin-mhu-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:hoitokauden-alkuvuosi 2024
+                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                          :hoitokauden-alkuvuosi 2024
                                                           :urakka-idt [iin-mhu-urakka-id]
                                                           :ely-id nil})]
+    (is (= (:indeksikerroin (first vastaus)) 1.298) "Indeksikerroin palautuu oikein")
     (is (str/includes? vastaus "Iin MHU") "Iin MHU")
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
 
 (deftest oulun-mhu-kojelautaan-aloittamatta
   (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:hoitokauden-alkuvuosi 2022
+                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                          :hoitokauden-alkuvuosi 2022
                                                           :urakka-idt [urakka-id]
                                                           :ely-id nil})
         rivi (first (filter #(= 2022 (:hoitokauden_alkuvuosi %))
                                        vastaus))]
     (is (str/includes? vastaus "Oulun MHU") "Oulun MHU")
+    (is (= (:indeksikerroin rivi) 1.352) "Indeksikerroin palautuu oikein")
     (is (= "aloittamatta" (get-in rivi [:ks_tila :suunnitelman_tila])) "tila")
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
 
@@ -113,12 +120,14 @@
         _ (i (format "INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja)
         VALUES (%s, 'tavoitehintaiset-rahavaraukset', 2, true, %s);" urakka-id kayttaja))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:hoitokauden-alkuvuosi 2024
+                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                          :hoitokauden-alkuvuosi 2024
                                                           :urakka-idt [urakka-id]
                                                           :ely-id nil})
         rivi (first (filter #(= 2024 (:hoitokauden_alkuvuosi %))
                       vastaus))]
     (is (str/includes? vastaus "Raahen MHU") "Raahen MHU")
+    (is (= (:indeksikerroin rivi) 1.118) "Indeksikerroin palautuu oikein")
     (is (= 6 (get-in rivi [:ks_tila :vahvistettuja])) "6 vahvistettua")
     (is (= 0 (get-in rivi [:ks_tila :aloittamattomia])) "0 aloittamatta")
     (is (= 0 (get-in rivi [:ks_tila :vahvistamattomia])) "0 vahvistamatta")
@@ -140,7 +149,8 @@
         _ (i (format "INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja)
         VALUES (%s, 'hankintakustannukset', 5, false, %s);" iin-mhu-urakka-id kayttaja))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:hoitokauden-alkuvuosi 2024
+                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                          :hoitokauden-alkuvuosi 2024
                                                           :urakka-idt [iin-mhu-urakka-id]
                                                           :ely-id nil})
         vahvistettu-2024-rivi (first (filter #(= 2024 (:hoitokauden_alkuvuosi %))
@@ -158,7 +168,8 @@
         _ (i (format "INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja)
         VALUES (%s, 'hankintakustannukset', 5, false, %s);" iin-mhu-urakka-id kayttaja))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:hoitokauden-alkuvuosi 2025
+                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                          :hoitokauden-alkuvuosi 2025
                                                           :urakka-idt [iin-mhu-urakka-id]
                                                           :ely-id nil})
         vahvistettu-2024-rivi (first (filter #(= 2025 (:hoitokauden_alkuvuosi %))
