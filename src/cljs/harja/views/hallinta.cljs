@@ -21,6 +21,7 @@
             [harja.views.hallinta.tyokalut.talvihoitoreitit-tyokalu-nakyma :as talvihoitoreitit-tyokalu-nakyma]
             [harja.views.hallinta.tyokalut.tieosoitteet-nakyma :as tieosoitteet-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
+            [harja.views.hallinta.kojelauta :as kojelauta]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
             [harja.views.hallinta.urakkatiedot.tehtava-nakyma :as tehtava-nakyma]
@@ -121,6 +122,12 @@
    ^{:key "seuranta"}
    [bs/tabs {:style :tabs :classes "tabs-taso2"
              :active (nav/valittu-valilehti-atom :hallinta-seuranta)}
+
+    "Urakoiden tilanne"
+    :urakoiden-tilanne
+    (when (oikeudet/hallinta)
+      ^{:key "urakoiden-tilanne"}
+      [kojelauta/kojelauta])
 
     "Integraatiotilanne"
     :integraatiotilanne

@@ -4,7 +4,7 @@
 (defqueries "harja/kyselyt/urakat.sql"
   {:positional? true})
 
-(declare hae-urakka hae-urakan-tyyppi)
+(declare hae-urakka hae-urakan-tyyppi hae-urakan-sampo-id)
 
 (defn onko-olemassa? [db id]
   (:exists (first (harja.kyselyt.urakat/onko-olemassa db id))))

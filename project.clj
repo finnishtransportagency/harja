@@ -12,15 +12,15 @@
                  ;; Clojure ja ClojureScript
                  [org.clojure/clojure "1.10.3"]
                  [org.clojure/clojurescript "1.10.520"]
-                 [org.clojure/spec.alpha "0.2.176"]
+                 [org.clojure/spec.alpha "0.5.238"]
 
                  ;;;;;;; Yleiset ;;;;;;;
 
-                 [prismatic/schema "1.1.10"]
-                 [org.clojure/core.async "0.3.465"]
+                 [prismatic/schema "1.4.1"]
+                 [org.clojure/core.async "0.7.559"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
-                 [com.cognitect/transit-clj "0.8.319"]
+                 [com.cognitect/transit-clj "1.0.333"]
                  ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
                  [meta-merge "1.0.0"]
 
@@ -33,12 +33,12 @@
                  [com.stuartsierra/component "1.1.0"]
 
                  ;; -- Lokitus
-                 [com.taoensso/timbre "5.2.1"]
+                 [com.taoensso/timbre "6.5.0"]
                  ;; Figwheel tarvitsee log4j-coren
                  [org.apache.logging.log4j/log4j-core "2.24.1"]
 
                  ;; -- Metriikkadata
-                 [org.clojure/java.jmx "0.3.4"]
+                 [org.clojure/java.jmx "1.1.0"]
 
                  ;; -- JSON encode/decode
                  [cheshire "5.13.0"]
@@ -49,8 +49,8 @@
                  [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "0.8.2"]
-                 [org.clojure/core.memoize "1.0.257"]
+                 [org.clojure/core.cache "1.1.234"]
+                 [org.clojure/core.memoize "1.1.266"]
 
                  ;; Pattern match kirjasto
                  [org.clojure/core.match "1.1.0"]
@@ -59,19 +59,19 @@
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
                  [org.postgresql/postgresql "42.7.4"]
-                 [net.postgis/postgis-jdbc "2.5.1"]
-                 [org.locationtech.jts/jts-core "1.19.0"]
+                 [net.postgis/postgis-jdbc "2024.1.0"]
+                 [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
                  [com.mchange/c3p0 "0.10.1"]
                  ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
                  [webjure/jeesql "0.4.7"]
-                 [io.github.tatut/specql "20230316" :exclusions [org.clojure/java.jdbc]]
+                 [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "31.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "31.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "31.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "31.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -85,14 +85,14 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.18.5" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.18.6" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
                  [cljs-ajax "0.8.4"]
 
                  ;; React-wrapper frontille
-                 [reagent "0.9.1"]
+                 [reagent "0.10.0"]
 
 
                  ;; Local-storage apuri frontille
@@ -108,10 +108,10 @@
                  [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "5.2.5"]
-                 [org.apache.poi/poi-scratchpad "5.2.5"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "0.2.7"]
+                 [org.apache.poi/poi "5.3.0"]
+                 [org.apache.poi/poi-scratchpad "5.3.0"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "5.3.0"] ;; .xlsx tiedoston lukua varten
+                 [org.clojure/data.json "2.5.0"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
@@ -126,7 +126,7 @@
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
-                 [org.apache.xmlgraphics/fop "2.9"]
+                 [org.apache.xmlgraphics/fop "2.10"]
 
                  ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
                  [java-http-clj "0.4.3"]
@@ -145,7 +145,7 @@
                  [yleisradio/new-reliquary "1.1.0"]
 
                  ;; -- Front-end tilan hallinta
-                 [webjure/tuck "0.4.4"]
+                 [webjure/tuck "20181204"]
                  [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck]]
 
                  ;; Arbitrary precision math frontilla
@@ -157,9 +157,9 @@
                  ;; data.xml tarvitaan mm. XML-tiedostojen parsimiseen ja pretty-printtaukseen
                  [org.clojure/data.xml "0.0.8"]]
 
-  :managed-dependencies [[org.apache.poi/poi "5.2.5"]
-                         [org.apache.poi/poi-scratchpad "5.2.5"]
-                         [org.apache.poi/poi-ooxml "5.2.5"]
+  :managed-dependencies [[org.apache.poi/poi "5.3.0"]
+                         [org.apache.poi/poi-scratchpad "5.3.0"]
+                         [org.apache.poi/poi-ooxml "5.3.0"]
                          ;; Ratkaise: CVE-2024-26308 ja CVE-2024-25710
                          ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
                          ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)

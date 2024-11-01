@@ -82,8 +82,11 @@
 
 (def +raportti-materiaaliraportti-response+ "api/examples/raportti-materiaaliraportti-response.json")
 
+;; Työmaapäiväkirja
 (def +tyomaapaivakirja-kirjaus-request+ "api/examples/tyomaapaivakirja-kirjaus-request.json")
 (def +tyomaapaivakirja-paivitys-request+ "api/examples/tyomaapaivakirja-paivitys-request.json")
+(def +tyomaapaivakirja-kirjaus-v2-request+ "api/examples/tyomaapaivakirja-kirjaus-request.json")
+(def +tyomaapaivakirja-paivitys-v2-request+ "api/examples/tyomaapaivakirja-paivitys-request.json")
 
 ;; Talvihoito
 (def +talvihoitoreitti-kirjaus-request+ "api/examples/talvihoitoreitti-kirjaus-request.json")

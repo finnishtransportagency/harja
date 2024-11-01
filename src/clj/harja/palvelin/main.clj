@@ -78,6 +78,7 @@
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
     [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
+    [harja.palvelin.palvelut.hallinta.kojelauta :as kojelauta-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -114,7 +115,7 @@
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
     [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
     [harja.palvelin.palvelut.yllapitokohteet.mpu-kustannukset :as mpu-kustannukset]
-    [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
+    [harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelu]
     [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
 
     ;; karttakuvien renderöinti
@@ -538,7 +539,7 @@
                           [:http-palvelin :db])
 
       :tyomaapaivakirja (component/using
-                          (tyomaapaivakirja/->Tyomaapaivakirja (:kehitysmoodi asetukset))
+                          (tyomaapaivakirja-palvelu/->Tyomaapaivakirja (:kehitysmoodi asetukset))
                           [:http-palvelin :db :fim :api-sahkoposti])
 
       :valikatselmukset (component/using
@@ -841,7 +842,12 @@
       :tieosoitteet-hallinta
       (component/using
         (tieosoitteet-hallinta/->TieosoitteetHallinta)
-        [:http-palvelin :db]))))
+        [:http-palvelin :db]))
+
+      :kojelauta-hallinta
+      (component/using
+        (kojelauta-hallinta/->KojelautaHallinta)
+        [:http-palvelin :db])))
 
 (defonce harja-jarjestelma nil)
 

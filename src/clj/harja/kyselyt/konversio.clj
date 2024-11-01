@@ -334,9 +334,9 @@
   (let [kentat (partition 2 kenttien-nimet-ja-tyypit)
         kentat-str (lue-pgobject pgobject)]
     (assert (= (count kentat) (count kentat-str))
-            (str "Odotettu kenttien määrä: " (count kentat)
-                 ", saatu kenttien määrä: " (count kentat-str)
-                 ", data: " pgobject))
+      (str "Odotettu kenttien määrä: " (count kentat)
+        ", saatu kenttien määrä: " (count kentat-str)
+        ", data: " pgobject))
 
     (loop [m {}
            [[nimi tyyppi] & kentat] kentat
@@ -344,15 +344,15 @@
       (if-not nimi
         m
         (recur
-         (assoc m nimi
-                (case tyyppi
-                  :long (when-not (str/blank? arvo) (Long/parseLong arvo))
-                  :double (Double/parseDouble arvo)
-                  :string arvo
-                  :date (when-not (str/blank? arvo) (lue-pgobject-date arvo))
-                  (assert false (str "Ei tuettu tyyppi: " tyyppi ", arvo: " arvo))))
-         kentat
-         arvot)))))
+          (assoc m nimi
+            (case tyyppi
+              :long (when-not (str/blank? arvo) (Long/parseLong arvo))
+              :double (when-not (str/blank? arvo) (Double/parseDouble arvo))
+              :string arvo
+              :date (when-not (str/blank? arvo) (lue-pgobject-date arvo))
+              (assert false (str "Ei tuettu tyyppi: " tyyppi ", arvo: " arvo))))
+          kentat
+          arvot)))))
 
 (defn lue-tr-osoite
   "Lukee yrita_tierekisteriosoite_pisteelle2 sprocin palauttaman arvon tekstimuodosta

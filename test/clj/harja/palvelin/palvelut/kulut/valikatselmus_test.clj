@@ -45,13 +45,13 @@
     :urakkaroolit {urakka-id #{"ELY_Urakanvalvoja"}}))
 
 (defn hae-kulu [urakka-id kulu-id]
-  (first (q-map (format "SELECT id, tyyppi, kokonaissumma, erapaiva, lisatieto, poistettu
+  (first (q-map (format "SELECT id, kokonaissumma, erapaiva, lisatieto, poistettu
                            FROM kulu
                            WHERE urakka = %s
                              AND id = %s " urakka-id kulu-id))))
 
 (defn hae-poistettu-kulu [urakka-id kulu-id]
-  (first (q-map (format "SELECT id, tyyppi, kokonaissumma, erapaiva, lisatieto, poistettu
+  (first (q-map (format "SELECT id, kokonaissumma, erapaiva, lisatieto, poistettu
                            FROM kulu
                           WHERE urakka = %s
                             AND id = %s " urakka-id kulu-id))))

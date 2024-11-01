@@ -34,8 +34,9 @@
   (let [;; Rahavaraukset kuuluu teiden-hoito tyyppisille urakoille
         mhurakat (q-map "SELECT id FROM urakka WHERE tyyppi = 'teiden-hoito';")
         tietokanta-urakoiden-maara (count mhurakat)
-        ;; Tällä hetkellä on määritelty, että kaikilla urakoilla on 3 rahavarausta
-        tietokantaan-lisatty-maara (* tietokanta-urakoiden-maara 3)
+        ;; Tällä hetkellä on määritelty, että kaikilla urakoilla on 3 rahavarausta ja muutamalla on pari enemmän.
+        ;; Tämä on kovakoodattu määrä ja jos se muuttuu, niin tämä testi failaa.
+        tietokantaan-lisatty-maara 38
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                 :hae-rahavaraukset +kayttaja-jvh+ {})]
     ;; Jos default rahavarauksia muutetaan, niin tämä tulee failaamaan.
@@ -47,7 +48,7 @@
         ;; Tiedämme, että tehtäviä pitäisi olla kolme
         akillisten-tehtava-maara 3
         ;; Rahavarauksen id
-        rahavaraus-id (:id (first (q-map "SELECT id FROM rahavaraus WHERE nimi = 'Äkilliset hoitotyöt';")))
+        rahavaraus-id (:id (first (q-map "SELECT id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%';")))
         tehtavat-tietokananssa (q-map (format "SELECT id FROM rahavaraus_tehtava WHERE rahavaraus_id = %s;" rahavaraus-id))
         rahavaraukset-tehtavineen (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :hae-rahavaraukset-tehtavineen +kayttaja-jvh+ {})
@@ -77,7 +78,7 @@
 
 (deftest lisaa-rahavaukselle-tehtava-jota-ei-ole
   (let [;; Rahavarauksen id
-        rahavaraus-id (:id (first (q-map "SELECT id FROM rahavaraus WHERE nimi = 'Äkilliset hoitotyöt';")))
+        rahavaraus-id (:id (first (q-map "SELECT id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%';")))
 
         ;; Lisätään yksi tehtävä - jota ei ole
         _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -89,7 +90,7 @@
 
 (deftest poista-rahavaraukset-tehtavata
   (let [;; Rahavarauksen id
-        rahavaraus-id (:id (first (q-map "SELECT id FROM rahavaraus WHERE nimi = 'Äkilliset hoitotyöt';")))
+        rahavaraus-id (:id (first (q-map "SELECT id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%';")))
 
         ;; Poistetaan yksi tehtävä, joka rahavarauksella on - joten haetaan rahavarauksen tehtävät
         rahavaraukset-tehtavineen (kutsu-palvelua (:http-palvelin jarjestelma)

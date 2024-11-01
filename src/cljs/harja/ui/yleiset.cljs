@@ -979,6 +979,7 @@ jatkon."
                         (= "ehdotettu" tila) "tila-ehdotettu"
                         (= "valmis" tila) "tila-valmis"
                         (= "hylatty" tila) "tila-hylatty"
+                        (= "kesken" tila) "tila-kesken"
                         :else "tila-ehdotettu")))}]
     [:span (merge {} (when luokka {:class luokka}))
      (if fmt-fn

@@ -1,12 +1,11 @@
 (ns harja.shp
   "Shape filejen käsittelyn apureita"
-  (:import (org.geotools.data Query)
+  (:import (org.geotools.api.data Query)
    (org.geotools.data.shapefile ShapefileDataStore)
            (org.geotools.map MapContent FeatureLayer)
            (org.geotools.filter SortByImpl)
-
-           (org.opengis.filter.expression PropertyName)
-           (org.opengis.filter.sort SortBy SortOrder))
+           (org.geotools.api.filter.expression PropertyName)
+           (org.geotools.api.filter.sort SortBy SortOrder))
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 

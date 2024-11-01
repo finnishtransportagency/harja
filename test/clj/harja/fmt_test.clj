@@ -101,6 +101,16 @@
     (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitokaudet "Hoitovuosi")
            "2. hoitovuosi (2021—2022)"))))
 
+(deftest hoitokauden-formatointi-korjausurakat
+  ;; Korjauspuolella (tiemerkintä, päällystys, valaistus, käytetään termiä urakkavuosi
+  ;; lisäksi siellä vuosi alkaa ja loppuu samana vuonna, joten halutaan näyttää esim.
+  ;; 2. Urakkavuosi (2023) eikä vuosilukua toisteta
+  (let [hoitokaudet [[(pvm/->pvm "1.1.2020") (pvm/->pvm "31.12.2020")]
+                     [(pvm/->pvm "1.1.2021") (pvm/->pvm "31.12.2021")]]
+        valittu-hk [(pvm/->pvm "1.1.2021") (pvm/->pvm "31.12.2021")]]
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitokaudet "Urakkavuosi")
+          "2. urakkavuosi (2021)"))))
+
 (deftest hoitokauden-formatointi-huono-input
   (let [hoitokaudet [[(pvm/->pvm "1.10.2020") (pvm/->pvm "30.9.2021")]
                      [(pvm/->pvm "1.10.2021") (pvm/->pvm "30.9.2022")]
