@@ -34,7 +34,7 @@ SELECT u.id,
 SELECT u.id,
        u.nimi,
        u.hallintayksikko as ely_id,
-       :vuosi as hoitokauden_alkuvuosi,
+       :vuosi as vuosi,
        (SELECT count(*) FROM yllapitokohde y
                         WHERE y.urakka = u.id AND
                               y.vuodet @> ARRAY[:vuosi]::INTEGER[] AND

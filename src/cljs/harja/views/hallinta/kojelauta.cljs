@@ -134,7 +134,7 @@
         (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Valmis")}))]]))
 
 (defn taulukko-paallystysurakat [e!  {:keys [urakat haku-kaynnissa?]}]
-  [:div "Tänne päällystysurakoiden taulukko samaan tyyliin kuin alla hoitourakoille..."])
+  [:div "Tänne tulee lähiaikoina päällystysurakoiden tietoa..."])
 
 (defn taulukko-hoitourakat [e! {:keys [urakat haku-kaynnissa?]}]
   [grid/grid
