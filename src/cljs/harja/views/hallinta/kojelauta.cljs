@@ -78,14 +78,14 @@
 (defn valikatselmus-sarake
   [rivi]
   (let [{:keys [rahapaatokset lupauspaatokset hoitokauden_alkuvuosi]} rivi
-        kuluvan-hoitokauden-alkuvuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
-        ;; jos ollaan valitulla hoitokaudella tai menneisyydessä ja takaraja on ohi, näytetään punaisella puuttuvat päätökset
+        edellisen-hoitokauden-alkuvuosi (- (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt)))) 1)
+        ;; 15.11. on takaraja, milloin edellisen hoitokauden välikatselmus pitää olla tehtynä (edellinen --> kuluva hk -1)
         valikatselmuksen-takaraja-ohi? (or
-                                         (< hoitokauden_alkuvuosi kuluvan-hoitokauden-alkuvuosi)
+                                         (< hoitokauden_alkuvuosi edellisen-hoitokauden-alkuvuosi)
                                          (and
-                                           (= hoitokauden_alkuvuosi kuluvan-hoitokauden-alkuvuosi)
+                                           (= hoitokauden_alkuvuosi edellisen-hoitokauden-alkuvuosi)
                                            (> (pvm/nyt)
-                                             (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm hoitokauden_alkuvuosi))))]
+                                             (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannusten seurantaan"]
      [:a.klikattava {:on-click #(siirtymat/kustannusten-seurantaan-valitussa-urakassa (:ely_id rivi) (:id rivi))}
