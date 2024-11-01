@@ -515,8 +515,8 @@
                       [:http-palvelin :db :karttakuvat])
 
       :talvihoitoreitit (component/using
-                      (talvihoitoreitit/->Talvihoitoreitit)
-                      [:http-palvelin :db])
+                          (talvihoitoreitit/->Talvihoitoreitit)
+                          [:http-palvelin :db])
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
@@ -842,12 +842,12 @@
       :tieosoitteet-hallinta
       (component/using
         (tieosoitteet-hallinta/->TieosoitteetHallinta)
-        [:http-palvelin :db]))
+        [:http-palvelin :db])
 
       :kojelauta-hallinta
       (component/using
         (kojelauta-hallinta/->KojelautaHallinta)
-        [:http-palvelin :db])))
+        [:http-palvelin :db]))))
 
 (defonce harja-jarjestelma nil)
 
