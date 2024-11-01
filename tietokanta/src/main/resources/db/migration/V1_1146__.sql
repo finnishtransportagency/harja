@@ -1,5 +1,4 @@
--- Ajakohtaisempi funktio indeksikorjauksille
--- Otettu huomioon 23 sopimusmuutokset 
+-- Ajakohtaisempi funktio indeksikorjauksille, otettu huomioon 23 sopimusmuutokset 
 CREATE OR REPLACE FUNCTION indeksikorjaa(korjattava_arvo NUMERIC, vuosi_ INTEGER, kuukausi_ INTEGER, urakka_id INTEGER)
     RETURNS NUMERIC AS
 $$
@@ -58,6 +57,7 @@ BEGIN
     END IF;
 
     -- Hae indeksi, jolla jaetaan perusluku ja lasketaan indeksikerroin
+    -- Jos indeksiä ei ole, funktio palauttaa null, mikä on OK
     arvo := (
         SELECT i.arvo
         FROM indeksi i
@@ -97,21 +97,32 @@ WITH korjatut_indeksit AS (
           ON tpi.urakka = u.id
         LEFT JOIN tehtavaryhma tr 
           ON kt.tehtavaryhma = tr.id
-        LEFT JOIN urakka_paatos up 
-          ON up."urakka-id" = u.id 
     -- Etsitään rivit joilla ei ole indeksikorjausta, mutta on summa 
     WHERE kt.summa_indeksikorjattu IS NULL
     -- Summa täytyy olla olemassa 
     AND kt.summa IS NOT NULL 
     AND kt.summa != 0
-    AND up.poistettu IS NOT TRUE 
+    -- Katsotaan vielä varmuuden vuoksi että päätöstä hoitokaudelle ei ole tehty 
+    AND NOT EXISTS (
+        SELECT 1
+          FROM urakka_paatos up
+         WHERE up."urakka-id" = u.id
+           AND up.poistettu IS NOT TRUE
+           -- Osuuko kustannuksen kk ja vuosi päätöksen hoitokaudelle 
+           AND (
+              (kt.vuosi = up."hoitokauden-alkuvuosi" AND kt.kuukausi BETWEEN 10 AND 12) OR
+              (kt.vuosi = up."hoitokauden-alkuvuosi" + 1 AND kt.kuukausi BETWEEN 1 AND 9)
+          )
+    )
     -- Alkanut 2017 jälkeen
     AND u.alkupvm >= '2017-09-30'
     -- Vain käynnissä olevat  (Tuloksena tulee  vain 23 -> urakoita)
     AND u.loppupvm >= '2024-10-01'
     -- Päivitetään vain rivit joille indeksikorjaus saatavilla 
     AND indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id) IS NOT NULL 
-    -- Tilaajan rahavarauksille ei lasketa indeksikorjauksia
+    -- Tavoitehinnan ulkopuoliset rahavaraukset 
+    -- Kutsutaan vanhalla termillä: "Tilaajan rahavaraukset", näille ei lasketa indeksikorjauksia
+    -- Tämä on eri kun "Tilaajan rahavaraus kannustinjärjestelmään" 
     AND NOT (
         tr.yksiloiva_tunniste IS NOT NULL 
         -- Johto- ja hallintokorvaus (J)
@@ -145,6 +156,18 @@ WITH korjatut_indeksit AS (
     -- Summa täytyy olla olemassa 
     AND jk.tuntipalkka IS NOT NULL 
     AND jk.tuntipalkka != 0
+    -- Katsotaan vielä varmuuden vuoksi että päätöstä hoitokaudelle ei ole tehty 
+    AND NOT EXISTS (
+        SELECT 1
+          FROM urakka_paatos up
+         WHERE up."urakka-id" = u.id
+           AND up.poistettu IS NOT TRUE
+           -- Osuuko kustannuksen kk ja vuosi päätöksen hoitokaudelle 
+           AND (
+              (jk.vuosi = up."hoitokauden-alkuvuosi" AND jk.kuukausi BETWEEN 10 AND 12) OR
+              (jk.vuosi = up."hoitokauden-alkuvuosi" + 1 AND jk.kuukausi BETWEEN 1 AND 9)
+          )
+    )
     -- Alkanut 2017 jälkeen
     AND u.alkupvm >= '2017-09-30'
     -- Vain käynnissä olevat (Tuloksena tulee  vain 23 -> urakoita)
@@ -178,6 +201,18 @@ WITH korjatut_indeksit AS (
     -- Summa täytyy olla olemassa 
     AND kt.summa IS NOT NULL 
     AND kt.summa != 0
+    -- Katsotaan vielä varmuuden vuoksi että päätöstä hoitokaudelle ei ole tehty 
+    AND NOT EXISTS (
+        SELECT 1
+          FROM urakka_paatos up
+         WHERE up."urakka-id" = u.id
+           AND up.poistettu IS NOT TRUE
+           -- Osuuko kustannuksen kk ja vuosi päätöksen hoitokaudelle 
+           AND (
+              (kt.vuosi = up."hoitokauden-alkuvuosi" AND kt.kuukausi BETWEEN 10 AND 12) OR
+              (kt.vuosi = up."hoitokauden-alkuvuosi" + 1 AND kt.kuukausi BETWEEN 1 AND 9)
+          )
+    )
     -- Alkanut 2017 jälkeen
     AND u.alkupvm >= '2017-09-30'
     -- Vain käynnissä olevat
@@ -226,6 +261,17 @@ WITH korjatut_indeksit AS (
             JOIN urakka u 
               ON ut.urakka = u.id
         WHERE u.tyyppi = 'teiden-hoito'
+        -- Katsotaan vielä varmuuden vuoksi että päätöstä hoitokaudelle ei ole tehty 
+        AND NOT EXISTS (
+            SELECT 1
+              FROM urakka_paatos up
+            WHERE up."urakka-id" = u.id
+              AND up.poistettu IS NOT TRUE
+              AND (
+                  ((EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1) = up."hoitokauden-alkuvuosi" AND 10 BETWEEN 10 AND 12) OR
+                  ((EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1) = up."hoitokauden-alkuvuosi" + 1 AND 10 BETWEEN 1 AND 9)
+              )
+        )
     ) indeksikorjaus
     WHERE (
         tavoitehinta_indeksikorjattu_vanha IS DISTINCT FROM tavoitehinta_indeksikorjattu_uusi
