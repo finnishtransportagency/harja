@@ -290,9 +290,10 @@
                  ::valikatselmus/kulu-id kulu_id
                  ::muokkaustiedot/poistettu? false
                  ::muokkaustiedot/luoja-id (:id kayttaja)
-                 ::muokkaustiedot/muokkaaja-id (:id kayttaja)
+                 ::muokkaustiedot/muokkaaja-id (when (::muokkaustiedot/luotu tiedot) (:id kayttaja))
                  ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
-                 ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))}))
+                 ::muokkaustiedot/muokattu (when (::muokkaustiedot/luotu tiedot)
+                                             (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt)))}))
 
 (defn hae-urakan-paatokset [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-valikatselmus
@@ -342,7 +343,7 @@
                  {:id (:erilliskustannus_id paatos) :urakka-id urakka-id})
                (not (nil? (:kulu_id paatos)))
                (kulut-palvelu/poista-kulu-tietokannasta db kayttaja {:urakka-id urakka-id :id (:kulu_id paatos)}))
-           vastaus (valikatselmus-q/poista-paatos db paatoksen-id)]
+           vastaus (valikatselmus-q/poista-paatos db paatoksen-id (:id kayttaja))]
        vastaus))
     (heita-virhe "Päätöksen id puuttuu!")))
 
