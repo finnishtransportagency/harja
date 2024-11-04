@@ -33,7 +33,7 @@
                  [com.stuartsierra/component "1.1.0"]
 
                  ;; -- Lokitus
-                 [com.taoensso/timbre "6.5.0"]
+                 [com.taoensso/timbre "6.6.1"]
                  ;; Figwheel tarvitsee log4j-coren
                  [org.apache.logging.log4j/log4j-core "2.24.1"]
 
