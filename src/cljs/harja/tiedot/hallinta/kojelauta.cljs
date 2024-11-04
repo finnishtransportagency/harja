@@ -4,6 +4,7 @@
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.ui.protokollat :as protokollat]
+            [harja.ui.yleiset :as yleiset]
             [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit])
@@ -36,12 +37,17 @@
                                                               (seq (:rahapaatokset rivi))) urakat))
         urakat-joissa-jokin-lupauspaatos-tehtyna (count (keep (fn [rivi]
                                                                 (seq (:lupauspaatokset rivi))) urakat))
-        urakat-joissa-ei-paatoksia (- kaikkien-urakoiden-lkm urakat-joissa-jokin-rahapaatos-tehtyna urakat-joissa-jokin-lupauspaatos-tehtyna)
+        urakat-joissa-ei-paatoksia (count (keep (fn [rivi]
+                                                  (when (and
+                                                          (nil? (:rahapaatokset rivi))
+                                                          (nil? (:lupauspaatokset rivi)))
+                                                    1)) urakat))
         valikatselmusten-yhteenveto (when-not (empty? urakat)
                                       [:span.valikatselmustiedot
-                                       [:div (str "Ei yhtään päätöstä: " urakat-joissa-ei-paatoksia " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ei-paatoksia kaikkien-urakoiden-lkm))) ")")]
-                                       [:div (str "Rahapäätös tehtynä: " urakat-joissa-jokin-rahapaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-rahapaatos-tehtyna kaikkien-urakoiden-lkm))) ")")]
-                                       [:div (str "Lupauspäätös tehtynä: " urakat-joissa-jokin-lupauspaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-lupauspaatos-tehtyna kaikkien-urakoiden-lkm))) ")")]])]
+                                       [yleiset/tietoja {:class "body-text"}
+                                        "Ei yhtään päätöstä:" (str urakat-joissa-ei-paatoksia " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ei-paatoksia kaikkien-urakoiden-lkm))) ")")
+                                        "Budjettipäätös:" (str urakat-joissa-jokin-rahapaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-rahapaatos-tehtyna kaikkien-urakoiden-lkm))) ")")
+                                        "Lupauspäätös:" (str urakat-joissa-jokin-lupauspaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-lupauspaatos-tehtyna kaikkien-urakoiden-lkm))) ")")]])]
     valikatselmusten-yhteenveto))
 
 (defn ks-tilojen-yhteenveto
@@ -59,9 +65,10 @@
                                            urakat))
         ks-tilojen-yhteenveto (when-not (empty? urakat)
                                 [:span.kustannussuunnitelmien-tiedot
-                                 [:div (str "Aloittamatta: " urakat-joissa-ks-aloittamatta " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm))) ")")]
-                                 [:div (str "Kesken: " urakat-joissa-ks-aloitettu " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm))) ")")]
-                                 [:div (str "Valmiina: " urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm))) ")")]])]
+                                 [yleiset/tietoja {:class "body-text"}
+                                  "Aloittamatta:" (str urakat-joissa-ks-aloittamatta " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm))) ")")
+                                  "Kesken:" (str urakat-joissa-ks-aloitettu " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm))) ")")
+                                  "Valmiina:" (str urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm))) ")")]])]
     ks-tilojen-yhteenveto))
 
 (defrecord AsetaSuodatin [avain valinta])

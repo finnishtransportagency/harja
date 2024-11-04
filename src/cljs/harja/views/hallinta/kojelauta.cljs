@@ -136,9 +136,12 @@
 (defn taulukko-paallystysurakat [e!  {:keys [urakat haku-kaynnissa?]}]
   [:div "Tänne tulee lähiaikoina päällystysurakoiden tietoa..."])
 
+(def urakoiden-maara-per-sivu 20)
+
 (defn taulukko-hoitourakat [e! {:keys [urakat haku-kaynnissa?]}]
   [grid/grid
    {:otsikko (str "")
+    :sivuta urakoiden-maara-per-sivu
     :tyhja (if haku-kaynnissa?
              [ajax-loader "Ladataan tietoja"]
              "Ei tietoja, tarkistathan valitut suodattimet.")
@@ -157,7 +160,7 @@
      :muokattava? (constantly false)}
     {:otsikko "Hoito\u00ADvuosi"
      :muokattava? (constantly false)
-     :nimi :hoitokauden_alkuvuosi :leveys 3
+     :nimi :hoitokauden_alkuvuosi :leveys 5
      :tyyppi :string :fmt #(pvm/hoitokausi-str-alkuvuodesta %)}
     {:otsikko "Kustannus\u00ADsuunnitelma"
      :muokattava? (constantly false)
