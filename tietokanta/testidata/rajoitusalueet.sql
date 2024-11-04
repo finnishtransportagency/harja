@@ -1,3 +1,4 @@
+-- Oulu MHU:lle pari rajoitusaluetta
 DO
 $$
     DECLARE
@@ -69,6 +70,44 @@ $$
 --         luotu, luoja)
 --         VALUES (6, 2, 6.6, FALSE, 2022, _luotu, _kayttaja);
 
+    END
+$$;
+
+-- Rovaniemen MHU testiurakka (1. hoitovuosi) urakalle pari rajoitusaluetta
+DO
+$$
+    DECLARE
+        _kayttaja INTEGER;
+        _urakka   INTEGER;
+        _luotu    TIMESTAMP;
+    BEGIN
+        _kayttaja := (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh');
+        _urakka := (SELECT id FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)');
+        _luotu := '2024-11-11 15:00:18.947853';
+
+        -- Pohjavesialue: Rovaniemi
+          WITH ra1 AS (
+              INSERT INTO rajoitusalue (tierekisteriosoite, sijainti, pituus, ajoratojen_pituus, urakka_id, luotu, luoja)
+                  VALUES (ROW (79, 1, 0, 1, 5188, NULL)::TR_OSOITE,
+                          st_union((SELECT * FROM tierekisteriosoitteelle_viiva_ajr(79, 1, 0, 1, 5188, 1) AS sijainti),
+                                   (SELECT * FROM tierekisteriosoitteelle_viiva_ajr(79, 1, 0, 1, 5188, 2) AS sijainti)),
+                          NULL, NULL, _urakka, _luotu, _kayttaja) RETURNING id)
+        INSERT
+          INTO rajoitusalue_rajoitus (rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu, luoja)
+        SELECT id, 6.6, FALSE, 2024, _luotu, _kayttaja
+          FROM ra1
+         UNION ALL
+        SELECT id, 6.6, FALSE, 2025, _luotu, _kayttaja
+          FROM ra1
+         UNION ALL
+        SELECT id, 6.6, FALSE, 2026, _luotu, _kayttaja
+          FROM ra1
+         UNION ALL
+        SELECT id, 7.0, FALSE, 2027, _luotu, _kayttaja
+          FROM ra1
+         UNION ALL
+        SELECT id, 7.0, FALSE, 2028, _luotu, _kayttaja
+          FROM ra1;
     END
 $$;
 
