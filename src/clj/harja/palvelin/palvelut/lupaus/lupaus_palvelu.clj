@@ -74,8 +74,7 @@
   (let [;; Jotta voidaan päätellä hoitokauden numero, joudutaan hakemaan urakan tietoja
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         valitun-hoitokauden-alkuvuosi (pvm/vuosi hk-alkupvm)
-        kuluva-hoitokausi-nro (inc (- 5
-                                      (- (pvm/vuosi (:loppupvm urakan-tiedot)) valitun-hoitokauden-alkuvuosi)))
+        kuluva-hoitokausi-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) valitun-hoitokauden-alkuvuosi)
         budjetit (budjetti-q/hae-budjettitavoite db {:urakka urakka-id})
         valitun-hoitokauden-budjetti (first (filterv (fn [b]
                                                        (= (:hoitokausi b) kuluva-hoitokausi-nro))
