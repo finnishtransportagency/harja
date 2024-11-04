@@ -28,6 +28,22 @@
                             :urakat nil
                             :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
+(defn valikatselmus-tilojen-yhteenveto
+  "Palauttaa käyttöliittymän koosteriville välikatselmuksen tilojen yhteenvedon"
+  [urakat]
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        urakat-joissa-jokin-rahapaatos-tehtyna (count (keep (fn [rivi]
+                                                              (seq (:rahapaatokset rivi))) urakat))
+        urakat-joissa-jokin-lupauspaatos-tehtyna (count (keep (fn [rivi]
+                                                                (seq (:lupauspaatokset rivi))) urakat))
+        urakat-joissa-ei-paatoksia (- kaikkien-urakoiden-lkm urakat-joissa-jokin-rahapaatos-tehtyna urakat-joissa-jokin-lupauspaatos-tehtyna)
+        valikatselmusten-yhteenveto (when-not (empty? urakat)
+                                      [:span.valikatselmustiedot
+                                       [:div (str "Ei yhtään päätöstä: " urakat-joissa-ei-paatoksia " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ei-paatoksia kaikkien-urakoiden-lkm))) ")")]
+                                       [:div (str "Rahapäätös tehtynä: " urakat-joissa-jokin-rahapaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-rahapaatos-tehtyna kaikkien-urakoiden-lkm))) ")")]
+                                       [:div (str "Lupauspäätös tehtynä: " urakat-joissa-jokin-lupauspaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-lupauspaatos-tehtyna kaikkien-urakoiden-lkm))) ")")]])]
+    valikatselmusten-yhteenveto))
+
 (defn ks-tilojen-yhteenveto
   "Palauttaa käyttöliittymän koosteriville kustannussuunnitelman tilojen yhteenvedon"
   [urakat]
@@ -42,10 +58,10 @@
                                                  (when (= "vahvistettu" (get-in rivi [:ks_tila :suunnitelman_tila])) true))
                                            urakat))
         ks-tilojen-yhteenveto (when-not (empty? urakat)
-                                (clj-str/join ", "
-                                  [(str "Aloittamatta: " urakat-joissa-ks-aloittamatta " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm))) ")")
-                                   (str "kesken: " urakat-joissa-ks-aloitettu " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm)))")")
-                                   (str "valmiina: " urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm)))")")]))]
+                                [:span.kustannussuunnitelmien-tiedot
+                                 [:div (str "Aloittamatta: " urakat-joissa-ks-aloittamatta " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm))) ")")]
+                                 [:div (str "Kesken: " urakat-joissa-ks-aloitettu " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm))) ")")]
+                                 [:div (str "Valmiina: " urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm))) ")")]])]
     ks-tilojen-yhteenveto))
 
 (defrecord AsetaSuodatin [avain valinta])
