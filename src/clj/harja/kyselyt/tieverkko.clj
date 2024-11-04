@@ -268,7 +268,7 @@
 (defn tieosoitteen-validointi
   "Validoi tr-osoitteen lähinnä tien ja osan pituuden suhteen. Tie pitää löytyä. Ja osan pituus pitää täsmätä.
   Tierekisteriosoitteessa saa kuitenkin olla katkoja, koska tierekisterit muuttuvat mm. kun jokin liittymä poistetaan
-  tieltä. Näin ollen tierekisteristä voi osasat 8 hypätä suoraan osaan 10. Näissä tilanteissa ei luoda virhettä,
+  tieltä. Näin ollen tierekisteristä voi osasta 8 hypätä suoraan osaan 10. Näissä tilanteissa ei luoda virhettä,
   vaan luodaan info."
   [db tienumero alkuosa alkuetaisyys loppuosa loppuetaisyys]
   (let [osat-annettu? (and (pos-int? tienumero) (pos-int? alkuosa) (pos-int? loppuosa) (int? alkuetaisyys) (int? loppuetaisyys))
@@ -277,13 +277,12 @@
         tieosoitteen-virheet []
         tieosoitteen-virheet (if osat-annettu?
                                tieosoitteen-virheet
-                               (conj tieosoitteen-virheet "Tieosoite puutteellinen."))
+                               (conj tieosoitteen-virheet "Tieosoite puutteellinen. "))
         ;; Palauttaa nil, jos ei ole kaikkea annettu
         tie-olemassa? (when (and osat-annettu? (empty? tieosoitteen-virheet))
                         (onko-tie-olemassa? db {:tie tienumero}))
-
         tieosoitteen-virheet (if (and (true? osat-annettu?) (false? tie-olemassa?))
-                               (conj tieosoitteen-virheet (format "Tietä %s ei ole." tienumero))
+                               (conj tieosoitteen-virheet (format "Tietä %s ei ole. " tienumero))
                                tieosoitteen-virheet)
 
         ;; Hae alkuosan tiedot ja päättele koodilla, että onko alkuosasta annettu liian iso alkuetäisyys
@@ -322,7 +321,7 @@
                                    :osat osat})))
         validointi-info []
         validointi-info (if-not onko-tr-yhtenainen?
-                          (conj validointi-info "Tieosoite ei ole yhtenäinen.")
+                          (conj validointi-info "Tieosoite ei ole yhtenäinen. ")
                           validointi-info)
         vastaus {:validaatiovirheet (when-not (empty? tieosoitteen-virheet) tieosoitteen-virheet)
                  :validaatioinfot (when-not (empty? validointi-info) validointi-info)}]
