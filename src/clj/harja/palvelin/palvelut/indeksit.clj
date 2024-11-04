@@ -45,9 +45,17 @@
 
 (defn indeksi-muuttunut [db {:keys [nimi vuosi kuukausi] :as indeksi}]
   (log/debug "Indeksi muuttunut" indeksi)
-  ;; Syys/loka/marraskuun indeksi vaikuttaa indeksilaskennan peruslukuun, ja sitä kautta indeksikorjauksiin.
-  ;; Indeksikerroin on edellisen hoitovuoden syyskuun arvo jaettuna perusluvulla.
-  (when (#{9 10 11} kuukausi)
+  ;; 
+  ;; Perusluku = Alkuvuodesta edellisen vuoden [syys, loka, marras] indeksien keskiarvo
+  ;;
+  ;; Indeksikertoimen laskenta: 
+  ;;   >= 2023 urakat: [Kuluvan hk:n elokuun indeksi] / [perusluku]  
+  ;;   < 2023 urakat: [Kuluvan hk:n syyskuun indeksi] / [perusluku]  
+  ;; 
+  ;; Jos kk on joko 8, 9, 10, 11 halutaan laskea uusiksi:
+  ;; Elokuun indeksiä tarvitaan >=23 urakoihin
+  ;; [syys, loka,  marras] indekseistä lasketaan taas perusluku
+  (when (#{8 9 10 11} kuukausi)
     (log/debug "Lasketaan indeksikorjaukset uusiksi")
     (log/debug
       "Kiinteähintaiset työt:"
