@@ -4,9 +4,22 @@ SELECT u.id,
        u.hallintayksikko as ely_id,
        :hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
        urakan_kustannussuunnitelman_tila(u.id::INTEGER,
-                                         monesko_hoitokausi(u.alkupvm, u.loppupvm, :hoitokauden_alkuvuosi::INTEGER)) as ks_tila
+                                         monesko_hoitokausi(u.alkupvm, u.loppupvm,
+                                                            :hoitokauden_alkuvuosi::INTEGER))       AS ks_tila,
+       (SELECT ARRAY_AGG(DISTINCT (tyyppi::TEXT))
+          FROM urakka_paatos up
+         WHERE up."urakka-id" = u.id
+           AND up."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+           AND up.poistettu IS FALSE
+           AND up.tyyppi IN ('tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus')) AS rahapaatokset,
+       (SELECT ARRAY_AGG(DISTINCT (tyyppi::TEXT))
+          FROM urakka_paatos up
+         WHERE up."urakka-id" = u.id
+           AND up."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+           AND up.poistettu IS FALSE
+           AND up.tyyppi IN ('lupausbonus', 'lupaussanktio'))                                       AS lupauspaatokset
   FROM urakka u
-           join organisaatio o ON u.hallintayksikko = o.id
+           JOIN organisaatio o ON u.hallintayksikko = o.id
  WHERE
      u.tyyppi = 'teiden-hoito' AND
      u.urakkanro IS NOT NULL AND -- testiurakat pois
@@ -21,7 +34,7 @@ SELECT u.id,
 SELECT u.id,
        u.nimi,
        u.hallintayksikko as ely_id,
-       :vuosi as hoitokauden_alkuvuosi,
+       :vuosi as vuosi,
        (SELECT count(*) FROM yllapitokohde y
                         WHERE y.urakka = u.id AND
                               y.vuodet @> ARRAY[:vuosi]::INTEGER[] AND

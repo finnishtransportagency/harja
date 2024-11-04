@@ -1,5 +1,6 @@
 (ns harja.domain.kulut.kustannusten-seuranta
-  "Kustannusten seurannan datan prosessoinnin apurit")
+  "Kustannusten seurannan datan prosessoinnin apurit"
+  (:require [harja.pvm :as pvm]))
 
 ;; Raportin pääryhmät jäsennettynä samaan järjestykseen, kuin ui suunnitelmissa on tarkoitettu
 (def raportin-paaryhmat
@@ -291,3 +292,17 @@
                                                                    (remove #(yhteenvedosta-jatettavat-paaryhmat %) raportin-paaryhmat)))}]
     {:taulukon-rivit taulukon-rivit
      :yhteensa yhteensa}))
+
+(defn valikatselmuksen-takarajapvm [vuosi]
+  ;; hox: kk on tässä 0-indeksinen, eli ko. pvm on 15.11.
+  (pvm/luo-pvm vuosi 10 15))
+
+(defn valikatselmuksen-paatostyypin-nimi [tyyppi]
+  (case tyyppi
+    "tavoitehinnan-ylitys" "Tavoitehinnan ylitys"
+    "kattohinnan-ylitys" "Kattohinnan ylitys"
+    "tavoitehinnan-alitus" "Tavoitehinnan alitus"
+    "lupausbonus" "Lupausbonus"
+    "lupaussanktio" "Lupaussanktio"
+
+    "tuntematon tyyppi"))

@@ -180,3 +180,42 @@
     (is (= 2 (get-in vahvistettu-2024-rivi [:ks_tila :vahvistamattomia])) "kaksi vahvistamatta")
     (is (= "aloitettu" (get-in vahvistettu-2024-rivi [:ks_tila :suunnitelman_tila])) "tila")
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
+
+
+(deftest valikatselmus-nousee-oikein-kojelautaan-iin-urakassa
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        kayttaja-id (:id +kayttaja-jvh+)
+        hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+        vastaus-ennen-paatoksia (first
+                                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                                            :hoitokauden-alkuvuosi 2024
+                                                                            :urakka-idt [urakka-id]
+                                                                            :ely-id nil}))
+        ;; lisätään kantaan seuraavat päätökset:
+        ;; 1. tavoitehinnan ylitys
+        _ (i (format "INSERT INTO urakka_paatos (\"hoitokauden-alkuvuosi\", \"urakka-id\", \"hinnan-erotus\", \"urakoitsijan-maksu\", \"tilaajan-maksu\", siirto, tyyppi, \"lupaus-luvatut-pisteet\", \"lupaus-toteutuneet-pisteet\", \"lupaus-tavoitehinta\", muokattu, \"muokkaaja-id\", \"luoja-id\", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id)
+        VALUES (2024, %s, null, 2743.7513400000025, 6402.086460000006, 0, 'tavoitehinnan-ylitys', null, null, null, null, null, %s, '2024-11-01 10:11:50.730000', false, null, null, 50);" urakka-id kayttaja-id))
+        ;; 2. kattohinnan-ylitys
+        _ (i (format "INSERT INTO urakka_paatos (\"hoitokauden-alkuvuosi\", \"urakka-id\", \"hinnan-erotus\", \"urakoitsijan-maksu\", \"tilaajan-maksu\", siirto, tyyppi, \"lupaus-luvatut-pisteet\", \"lupaus-toteutuneet-pisteet\", \"lupaus-tavoitehinta\", muokattu, \"muokkaaja-id\", \"luoja-id\", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id)
+        VALUES (2024, %s, null, 39395.784199999995, 0, 60000, 'kattohinnan-ylitys', null, null, null, null, null, %s, '2024-11-01 10:12:11.886000', false, null, null, 51);" urakka-id kayttaja-id))
+
+        ;; 3. lupausbonus
+        _ (i (format " INSERT INTO urakka_paatos (\"hoitokauden-alkuvuosi\", \"urakka-id\", \"hinnan-erotus\", \"urakoitsijan-maksu\", \"tilaajan-maksu\", siirto, tyyppi, \"lupaus-luvatut-pisteet\", \"lupaus-toteutuneet-pisteet\", \"lupaus-tavoitehinta\", muokattu, \"muokkaaja-id\", \"luoja-id\", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id)
+        VALUES (2024, %s, null, 0, 1988.9999999999998, 0, 'lupausbonus', 76, 93, 90000, null, null, %s, '2024-11-01 11:04:04.760000', false, 46, null, null);" urakka-id kayttaja-id))
+        vastaus (first
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                            :hoitokauden-alkuvuosi 2024
+                                                            :urakka-idt [urakka-id]
+                                                            :ely-id nil}))]
+    (is (= urakka-id (get-in vastaus-ennen-paatoksia [:id])) "Urakka")
+    (is (= hallintayksikko-id (get-in vastaus-ennen-paatoksia [:ely_id])) "POP ELY")
+    (is (nil? (get-in vastaus-ennen-paatoksia [:rahapaatokset])) "Rahapäätökset")
+    (is (nil? (get-in vastaus-ennen-paatoksia [:lupauspaatokset])) "Lupauspäätökset")
+
+    (is (= urakka-id (get-in vastaus [:id])) "Urakka")
+    (is (= hallintayksikko-id (get-in vastaus [:ely_id])) "POP ELY")
+    (is (= ["kattohinnan-ylitys"
+            "tavoitehinnan-ylitys"] (get-in vastaus [:rahapaatokset])) "Rahapäätökset")
+    (is (= ["lupausbonus"] (get-in vastaus [:lupauspaatokset])) "Lupauspäätökset")))

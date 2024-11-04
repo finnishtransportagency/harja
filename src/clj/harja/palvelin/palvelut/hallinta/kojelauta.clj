@@ -19,6 +19,9 @@
                                         (budjettisuunnittelu/hae-urakan-indeksikertoimet db kayttaja {:urakka-id id}))))]
     (assoc rivi :indeksikerroin urakan-vuoden-indeksikerroin)))
 
+(defn muunna-paatos [rivi avain]
+  (update rivi avain konv/pgarray->vector))
+
 (defn hae-urakat-kojelautaan [db kayttaja {:keys [urakkatyyppi hoitokauden-alkuvuosi urakka-idt ely-id] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
   (let [urakat (cond
@@ -28,7 +31,9 @@
                      (comp
                        (fn [ks-tilat]
                          (update ks-tilat :ks_tila konv/jsonb->clojuremap))
-                       #(liita-indeksikertoimet db kayttaja %))
+                       #(liita-indeksikertoimet db kayttaja %)
+                       #(muunna-paatos % :rahapaatokset)
+                       #(muunna-paatos % :lupauspaatokset))
                      (q/hae-hoidon-urakat-kojelautaan db {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
                                                           :urakat_annettu (boolean (seq urakka-idt))
                                                           :urakka_idt urakka-idt
