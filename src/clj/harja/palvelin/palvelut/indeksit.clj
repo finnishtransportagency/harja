@@ -46,7 +46,7 @@
 (defn indeksi-muuttunut [db {:keys [nimi vuosi kuukausi] :as indeksi}]
   (log/debug "Indeksi muuttunut" indeksi)
   ;; 
-  ;; Perusluku = viime vuoden [syys, loka, marras] indeksien keskiarvo
+  ;; Perusluku = Alkuvuodesta edellisen vuoden [syys, loka, marras] indeksien keskiarvo
   ;;
   ;; Indeksikertoimen laskenta: 
   ;;   >= 2023 urakat: [Kuluvan hk:n elokuun indeksi] / [perusluku]  

@@ -9,7 +9,7 @@ DECLARE
     indeksikerroin NUMERIC;
 
     /* Perusluku (2017>= hoitourakat):
-       Viime vuoden syys, loka, marras indeksien keskiarvo
+       Alkuvuodesta edellisen vuoden syys, loka, marras indeksien keskiarvo
        Muissa tapauksissa voi katsoa funktiosta 
     */
     perusluku NUMERIC := indeksilaskennan_perusluku(urakka_id);
@@ -114,8 +114,8 @@ WITH korjatut_indeksit AS (
               (kt.vuosi = up."hoitokauden-alkuvuosi" + 1 AND kt.kuukausi BETWEEN 1 AND 9)
           )
     )
-    -- Alkanut 2017 jälkeen
-    AND u.alkupvm >= '2017-09-30'
+    -- Alkanut 2019 jälkeen
+    AND u.alkupvm >= '2019-09-30'
     -- Vain käynnissä olevat  (Tuloksena tulee  vain 23 -> urakoita)
     AND u.loppupvm >= '2024-10-01'
     -- Päivitetään vain rivit joille indeksikorjaus saatavilla 
@@ -168,8 +168,8 @@ WITH korjatut_indeksit AS (
               (jk.vuosi = up."hoitokauden-alkuvuosi" + 1 AND jk.kuukausi BETWEEN 1 AND 9)
           )
     )
-    -- Alkanut 2017 jälkeen
-    AND u.alkupvm >= '2017-09-30'
+    -- Alkanut 2019 jälkeen
+    AND u.alkupvm >= '2019-09-30'
     -- Vain käynnissä olevat (Tuloksena tulee  vain 23 -> urakoita)
     AND u.loppupvm >= '2024-10-01'
     -- Päivitetään vain rivit joille indeksikorjaus saatavilla 
@@ -213,8 +213,8 @@ WITH korjatut_indeksit AS (
               (kt.vuosi = up."hoitokauden-alkuvuosi" + 1 AND kt.kuukausi BETWEEN 1 AND 9)
           )
     )
-    -- Alkanut 2017 jälkeen
-    AND u.alkupvm >= '2017-09-30'
+    -- Alkanut 2019 jälkeen
+    AND u.alkupvm >= '2019-09-30'
     -- Vain käynnissä olevat
     AND u.loppupvm >= '2024-10-01'
     -- Päivitetään vain rivit joille indeksikorjaus saatavilla 
