@@ -779,12 +779,20 @@
        (hoitokauden-loppupvm (inc vuosi))])))
 
 (defn paivamaara->mhu-hoitovuosi-nro
-  "Palauttaa MHU hoitovuoden järjestysnumeron annetulle päivämäärälle."
+  "Palauttaa MHU hoitovuoden järjestysnumeron annetulle päivämäärälle.
+  Esimerkiksi: Jos urakan alkupäivämäärä on 1.10.2021 ja pvm on 30.11.2023, palautetaan 3."
   [urakan-alkupvm pvm]
   (let [urakan-alkuvuosi (vuosi urakan-alkupvm)
         [kauden-alkupvm _] (paivamaaran-hoitokausi pvm)
         kauden-alkuvuosi (vuosi kauden-alkupvm)]
     (max (- (inc kauden-alkuvuosi) urakan-alkuvuosi) 1)))
+
+(defn hoitokausivuosi->mhu-hoitovuosi-nro
+  "Palauttaa MHU hoitovuoden järjestysnumeron annetulle hoitokausivuosi.
+  Esimerkiksi: Jos urakan alkupäivämäärä on 1.10.2021 ja hoitokausivuosi on 2022, palautetaan 3."
+  [urakan-alkupvm hoitokausivuosi]
+  (let [urakan-alkuvuosi (vuosi urakan-alkupvm)]
+    (max (- (inc hoitokausivuosi) urakan-alkuvuosi) 1)))
 
 (defn paivamaaran-hoitokausi-str
   [pvm]
