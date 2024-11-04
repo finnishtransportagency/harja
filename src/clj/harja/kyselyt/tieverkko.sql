@@ -28,9 +28,8 @@ FROM yrita_tierekisteriosoite_pisteille2(
 -- alkupisteen, loppupisteen ja viivan geometrian. Jos viivaa
 -- ei löydy, palauttaa NULL geometriana.
 SELECT *
-FROM
-      tieviivat_pisteille(ST_GeomFromText(:pisteet), :threshold :: INTEGER)
-    AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY);
+  FROM tieviivat_pisteille(ST_GeomFromText(:pisteet), :threshold :: INTEGER)
+       AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY);
 
 -- name: hae-tieviivat-pisteille-aika
 -- Hakee tieverkolle projisoidut viivat annetuille pisteille.
@@ -177,14 +176,12 @@ ORDER BY tie
 LIMIT 100;
 
 -- name: hae-tieosan-tiedot
-SELECT "tr-numero",
-       "tr-osa",
-       MIN("tr-alkuetaisyys") as "tr-alkuetaisyys",
-       MAX("tr-loppuetaisyys") as "tr-loppuetaisyys"
-  FROM tr_osoitteet tr
- WHERE tr."tr-numero" = :tie
-   AND tr."tr-osa" = :osa
- GROUP BY "tr-numero", "tr-osa";
+SELECT tie,
+       osa,
+       pituus
+  FROM tr_osien_pituudet trop
+ WHERE trop.tie = :tie
+   AND trop.osa = :osa;
 
 -- name: onko-tr-yhtenainen?
 -- single?: true

@@ -295,23 +295,25 @@
                              (first (hae-tieosan-tiedot db {:tie tienumero :osa loppuosa}))))
         tieosoitteen-virheet (if (and
                                    (not (nil? alkuosan-tiedot))
-                                   (> alkuetaisyys (:tr-loppuetaisyys alkuosan-tiedot)))
+                                   (> alkuetaisyys (:pituus alkuosan-tiedot)))
                                ;; Alkuosa on tieosaon ulkopuolella
-                               (conj tieosoitteen-virheet (format "Alkuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s."
-                                                            alkuosa (:tr-loppuetaisyys alkuosan-tiedot)))
+                               (conj tieosoitteen-virheet (format "Alkuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s. "
+                                                            alkuosa (:pituus alkuosan-tiedot)))
                                tieosoitteen-virheet)
         tieosoitteen-virheet (if (nil? alkuosan-tiedot)
-                               (conj tieosoitteen-virheet (format "Tiellä %s ei ole tieosaa %s." tienumero alkuosa))
+                               (conj tieosoitteen-virheet (format "Tiellä %s ei ole tieosaa %s. " tienumero (if-not alkuosa "alkuosa" "loppuosa")))
                                tieosoitteen-virheet)
         tieosoitteen-virheet (if (and
                                    (not (nil? loppuosan-tiedot))
-                                   (> loppuetaisyys (:tr-loppuetaisyys loppuosan-tiedot)))
+                                   (> loppuetaisyys (:pituus loppuosan-tiedot)))
                                ;; Loppuosa on tieosaon ulkopuolella
-                               (conj tieosoitteen-virheet (format "Loppuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s."
-                                                            loppuosa (:tr-loppuetaisyys loppuosan-tiedot)))
+                               (conj tieosoitteen-virheet (format "Loppuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s. "
+                                                            loppuosa (:pituus loppuosan-tiedot)))
                                tieosoitteen-virheet)
-        tieosoitteen-virheet (if (nil? loppuosan-tiedot)
-                               (conj tieosoitteen-virheet (format "Tiellä %s ei ole tieosaa %s." tienumero loppuosa))
+        tieosoitteen-virheet (if (and
+                                   (not (nil? alkuosan-tiedot))
+                                   (nil? loppuosan-tiedot))
+                               (conj tieosoitteen-virheet (format "Tiellä %s ei ole tieosaa %s. " tienumero (if-not loppuosa "loppuosa" "alkuosa")))
                                tieosoitteen-virheet)
         onko-tr-yhtenainen? (when (and tie-olemassa? osat-annettu?)
                               (= osien-lukumaara
