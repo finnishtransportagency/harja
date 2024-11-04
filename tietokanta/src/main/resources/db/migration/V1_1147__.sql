@@ -1,4 +1,7 @@
 -- Ajakohtaisempi funktio indeksikorjauksille, otettu huomioon 23 sopimusmuutokset 
+-- HOX!!
+--   Jos tähän funktioon tulee sopimusmuutoksia, 
+--   tee samat muutokset kustannussuunnitelmaan: defn hae-urakan-indeksikertoimet
 CREATE OR REPLACE FUNCTION indeksikorjaa(korjattava_arvo NUMERIC, vuosi_ INTEGER, kuukausi_ INTEGER, urakka_id INTEGER)
     RETURNS NUMERIC AS
 $$
