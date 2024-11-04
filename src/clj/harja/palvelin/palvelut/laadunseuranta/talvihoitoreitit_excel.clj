@@ -42,7 +42,7 @@
                idx))
            data)))
 
-(defn reitit-excelista [data otsikkotiedot]
+(defn reitit-excelista [data otsikkotiedot km-kaytossa?]
   (keep
     ;; Poistetaan rivi kokonaan, mikäli nimikenttä on nil. Eli oletetaan että rivillä ei ole
     ;; annettu muutenkaan mitään asiaan liittyvää tietoa vaan rivi liittyy otsikointiin tms.
@@ -55,7 +55,9 @@
          :losa (konversio/konvertoi->int (nth rivi 4))
          :let (konversio/konvertoi->int (nth rivi 5))
          :hoitoluokka (nth rivi 6)
-         :pituus (konversio/konvertoi->int (nth rivi 7))}))
+         :pituus (if km-kaytossa?
+                   (* 1000 (konversio/konvertoi->int (nth rivi 7)))
+                   (konversio/konvertoi->int (nth rivi 7)))}))
     (subvec data (inc otsikkotiedot))))
 
 (defn reitit-ja-kalusto-excelista [data otsikkotiedot]
@@ -85,10 +87,12 @@
 
         kalusto-alkuindeksi (reitin-nimi-ja-kalusto-alkuindeksi raaka-data-nimet-ja-kalusto)
         reitti-alkuindeksi (reitit-alkuindeksi raaka-data-reitit)
+        otsikot (into [] (nth raaka-data-reitit reitti-alkuindeksi))
+        km-kaytossa? (boolean (some #{"Pituus (km)*"} otsikot))
 
         ;; Haetaan data excelistä rivi-indeksin perusteella
         kalusto-rivit (reitit-ja-kalusto-excelista raaka-data-nimet-ja-kalusto kalusto-alkuindeksi)
-        reitti-rivit (reitit-excelista raaka-data-reitit reitti-alkuindeksi)
+        reitti-rivit (reitit-excelista raaka-data-reitit reitti-alkuindeksi km-kaytossa?)
 
         ;; Koska saman nimiselle reitille voi tulla useita tieosoitteita, niin groupataan reitit nimen perusteella
         reitti-rivit (group-by :nimi reitti-rivit)
