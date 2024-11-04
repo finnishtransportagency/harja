@@ -8,25 +8,26 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukot]
             [taoensso.timbre :as log]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clj-time.coerce :as c]))
 
 (defn- siivoa-tapahtuman-tiedot [db]
   (let [poistetut (first (tapahtumat-kyselyt/poista-viimeisimmat-tapahtumat db))]
     (log/info (format "tapahtuma-tiedot taulusta poistettiin %s riviä" (:maara poistetut)))))
 
-(defn- paivita-mahdolliset-suolatoteumat
-  "Päivitetään urakan suolatoteuma_reittipiste -taulun sisältö, jos rajoitusalueen tierekisteriosoitetta on muokattu.
-   Ei ole merkitystä, että minkä vuoden rajoitusalue on muuttunut, koska rajoitusalueen tierekisteri koskee kaikkia vuosia
-   Päivitetään siis urakan kaikki suolatoteuma_reittipisteet, mutta jaetaan se hoitokausiin, niin yksittäiset haut menevät nopeammin."
+(defn paivita-mahdolliset-suolatoteumat
+  "Päivitetään urakan suolatoteuma_reittipiste -taulun sisältö vain kuluneelta hoitovuodelta. Aiemmin tämä päivitti koko urakka-ajalta,
+  mutta nyt kun suolatoteuma_reittipiste -taulun päivittäminen on hidastunut tietojen tarkentumisen myötä, niin
+  potku ei enää riitä koko urakka-ajalta päivitellä."
   [db]
   (jdbc/with-db-transaction [db db]
     (let [urakat (suolarajoitus-kyselyt/hae-rajoitusaluetta-muokanneet-urakat db)]
       (doseq [{:keys [urakka_id] :as pr} urakat]
-        (let [urakan-hoitokaudet (urakka-kyselyt/hae-urakan-hoitokaudet db {:urakka_id urakka_id})]
-          (doseq [{:keys [alkupvm loppupvm] :as kausi} urakan-hoitokaudet]
-            (suolarajoitus-kyselyt/paivita-suolatoteumat-urakalle db {:urakka_id urakka_id
-                                                                      :alkupvm alkupvm
-                                                                      :loppupvm loppupvm}))))
+        (let [muokattu-nyt (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) false 1 :paiva))
+              menossa-oleva-hoitokausi (pvm/paivamaaran-hoitokausi muokattu-nyt)]
+          (suolarajoitus-kyselyt/paivita-suolatoteumat-urakalle db {:urakka_id urakka_id
+                                                                    :alkupvm (pvm/iso8601 (first menossa-oleva-hoitokausi))
+                                                                    :loppupvm (pvm/iso8601 (second menossa-oleva-hoitokausi))})))
       ;; Merkitse kaikki rajoitusalueet käsitellyiksi
       (suolarajoitus-kyselyt/nollaa-paivittyneet-rajoitusalueet! db))))
 
