@@ -192,8 +192,13 @@ maksimi-linnuntien-etaisyys 200)
     ;; Talvisuolauksen osalta pisteille tehdään työlästä laskentaa kun päätellään rajoitusalueelle kohdistumista.
     (log/debug "Aloitetaan reitin tallennus")
     (async/thread
-      (luo-reitti db reitti toteuma-id)
-      (async/put! reittipisteet-tallennettu-chan true))))
+      (try
+        (luo-reitti db reitti toteuma-id)
+        (async/put! reittipisteet-tallennettu-chan true)
+        (catch Throwable t
+          (log/error t "Reittitoteuman reittipisteiden tallennus epäonnistui")
+          ;; Lopetetaan reittipisteiden tallennuksen seuranta, mikäli tallennus epäonnistuu
+          (async/put! reittipisteet-tallennettu-chan false))))))
 
 (defn- materiaalicachen-paivitys-ajettava?
   "Kertoo ajetaanko materiaalicachejen päivitys käsin. Kuluvan päivän toteumille menevät eräajoissa, muille kyllä."
@@ -256,9 +261,15 @@ maksimi-linnuntien-etaisyys 200)
             (paivita-materiaalicachet! db urakka-id data)
             (let [ [v _] (async/alts!! [reittipisteet-tallennettu-chan (async/timeout reittipisteet-timeout)])]
               (log/debug (format "Reittipisteet tallennettu! %s/%s" (inc tallennettujen-maara) reittitoteumien-maara))
-              (if v
-                (recur (inc tallennettujen-maara))
-                (log/error "Reittipisteiden tallennuksessa kestänyt yli 10 minuuttia!")))))))
+              (cond
+                (true? v) (recur (inc tallennettujen-maara))
+                ;; Jos kanavasta palautuu false yksittäisen reittitoteuman tallennus on epäonnistunut
+                ;; Tallennuksen seuranta lopetetaan ja tulostaan tieto lokille
+                (false? v) (log/info
+                             (format "Reittitoteumien tallennuksen seuranta lopetettu. %s/%s reittitoteumaa tallennettu."
+                               tallennettujen-maara reittitoteumien-maara))
+                ;; Kanavasta palautuu nil, jos timeout on mennyt umpeen
+                :else (log/error "Reittipisteiden tallennuksessa kestänyt yli 10 minuuttia!")))))))
 
     (when (:reittitoteuma data)
       (let [jsonhash (konversio/string->md5 (pr-str (:reittitoteuma data)))]

@@ -36,6 +36,13 @@ runs:
         cd -
       shell: bash
 
+    # Kommentoidaan openssl:stä providers-rivi pois, jotta PhantomJS toimii Ubuntu 24.04:lla.
+    - name: Patch OpenSSL for PhantomJS for Ubuntu 24.04
+      if: ${{ inputs.phantom-js != '' }}
+      run: |
+        sudo sed -i 's/providers = provider_sect/# providers = provider_sect/' /etc/ssl/openssl.cnf
+      shell: bash
+
     - name: Cache clj-kondo
       id: cache-clj-kondo
       uses: actions/cache@v4

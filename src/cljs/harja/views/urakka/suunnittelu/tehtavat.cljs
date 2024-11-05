@@ -263,16 +263,16 @@
                "70%")}
             ;; ennen urakkaa -moodi
             (if sopimukset-syotetty?
-              {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+              {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :string :fmt #(fmt/trimmaa-normaali-luku %) :leveys "180px"
                :validoi [[:ei-tyhja "Anna määrä"]]
                :muokattava? (constantly false) :tasaa :oikea :veda-oikealle? true}
-              {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+              {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :fmt #(fmt/trimmaa-normaali-luku %) :leveys "180px"
                :validoi [[:ei-tyhja "Anna määrä"]]
                :muokattava? (or (partial rahavarausperustainen-muokattava?) (partial yksikkoperustainen-muokattava?))
                :tasaa :oikea :veda-oikealle? true})
             ;; urakan ajan suunnittelu -moodi         
             (when sopimukset-syotetty?
-              {:otsikko "Muuttunut määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :muokattava? (comp kun-yksikko kun-ei-rahavaraus) :leveys "180px" :tasaa :oikea :veda-oikealle? true})
+              {:otsikko "Muuttunut määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :fmt #(fmt/trimmaa-normaali-luku %) :muokattava? (comp kun-yksikko kun-ei-rahavaraus) :leveys "180px" :tasaa :oikea :veda-oikealle? true})
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
            aluetiedot-tila]])
        (when (and (> maara-tehtavia 0) nayta-suunniteltavat-tehtavat?)
@@ -308,19 +308,19 @@
                "70%")}
             ;; ennen urakkaa -moodi
             (when (not sopimukset-syotetty?)
-              {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+              {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimus-maara :tyyppi :numero :fmt #(fmt/trimmaa-normaali-luku %) :leveys "180px"
                :validoi [[:ei-tyhja]]
                :muokattava? (comp kun-yksikko kun-kaikki-samat kun-ei-rahavaraus) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo
                :veda-oikealle? true :tasaa :oikea})
             ;; urakan ajan suunnittelu -moodi
             (when sopimukset-syotetty? 
               {:otsikko "Koko urakka-ajan määrä tarjouksessa" :nimi :sopimuksen-tehtavamaarat-yhteensa
-               :tyyppi :numero :muokattava? (constantly false) :leveys "160px" :tasaa :oikea :veda-oikealle? true})
+               :tyyppi :string :fmt #(fmt/trimmaa-normaali-luku %) :muokattava? (constantly false) :leveys "160px" :tasaa :oikea :veda-oikealle? true})
             (when sopimukset-syotetty? 
-              {:otsikko "Koko urakka-ajan määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string 
+              {:otsikko "Koko urakka-ajan määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :fmt #(fmt/trimmaa-normaali-luku %)
                :muokattava? (constantly false) :leveys "160px" :tasaa :oikea :veda-oikealle? true})
             (when sopimukset-syotetty? 
-              {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :tasaa :oikea :muokattava? kun-yksikko :leveys "180px" :veda-oikealle? true})
+              {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :fmt #(fmt/trimmaa-normaali-luku %) :tasaa :oikea :muokattava? kun-yksikko :leveys "180px" :veda-oikealle? true})
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
            maarat-tila]])])))
 
@@ -394,10 +394,6 @@
            [:div "Urakan aluksi syötä tehtäville tarjouksen tehtävä- ja määräluettelosta määrät. Hoitoluokkatiedot syötetään sellaisenaan tarjouksesta. Suunnitellut määrät kerrotaan suunnittelua varten oletuksena hoitovuosien määrän mukaan. Jos haluat suunnitella vuosikohtaisesti niin aukaise rivi ja valitse “Haluan syöttää joka vuoden erikseen”."]
            [:div "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä ‘0’. Tarjouksien määriä käytetään apuna urakan määrien suunnitteluun ja seurantaan."]]
           :info])
-       [yleiset/keltainen-vihjelaatikko
-        [:<>
-         [:div "Määrät, joita ei voi syöttää, kuuluvat rahavaraukseen."]]
-        :info]
 
        (when (not sopimukset-syotetty?)
          [sopimuksen-tallennus-boksi e!])

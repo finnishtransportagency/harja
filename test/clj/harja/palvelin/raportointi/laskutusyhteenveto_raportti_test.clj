@@ -4,7 +4,6 @@
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
@@ -108,7 +107,6 @@
       (is (=marginaalissa? indeksitarkistukset-muutos-ja-lisatyot 63.22M))
       (is (=marginaalissa? indeksitarkistukset-akilliset 31.61M))
       (is (=marginaalissa? indeksitarkistukset-vahinkojen-korjaukset 17.24M))
-      ;(is (=marginaalissa? indeksitarkistukset-bonukset 5.906M))
       (is (=marginaalissa? indeksitarkistukset-erilliskustannukset 24.90M))
       (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 39.06M))
       (is (=marginaalissa? indeksitarkistukset-kaikki 996.13M))
@@ -186,7 +184,6 @@
           indeksitarkistukset-muutos-ja-lisatyot (arvo-raportin-nnesta-elementista vastaus 13)
           indeksitarkistukset-akilliset (arvo-raportin-nnesta-elementista vastaus 14)
           indeksitarkistukset-vahinkojen-korjaukset (arvo-raportin-nnesta-elementista vastaus 15)
-          ;indeksitarkistukset-bonukset (arvo-raportin-nnesta-elementista vastaus 16)
           indeksitarkistukset-erilliskustannukset (arvo-raportin-nnesta-elementista vastaus 16)
           indeksitarkistukset-muut-kuin-kokhint (arvo-raportin-nnesta-elementista vastaus 17)
           indeksitarkistukset-kaikki (arvo-raportin-nnesta-elementista vastaus 18)
@@ -215,7 +212,6 @@
       (is (=marginaalissa? indeksitarkistukset-muutos-ja-lisatyot 126.44M))
       (is (=marginaalissa? indeksitarkistukset-akilliset 63.22M))
       (is (=marginaalissa? indeksitarkistukset-vahinkojen-korjaukset 34.48M))
-      ;(is (=marginaalissa? indeksitarkistukset-bonukset 0.0M))
       (is (=marginaalissa? indeksitarkistukset-erilliskustannukset 49.81M))
       (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 78.12M))
       (is (=marginaalissa? indeksitarkistukset-kaikki 247.12M))

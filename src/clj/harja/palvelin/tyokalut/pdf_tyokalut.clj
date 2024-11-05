@@ -5,11 +5,36 @@
             [harja.palvelin.raportointi.pdf :as pdf-raportointi]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]))
 
+(defn arvotaulukko-valittu-aika [kyseessa-kk-vali? otsikko hoitokauden-otsikko valittu-pvm-otsikko hoitokauden-arvo laskutetaan-arvo]
+  [:fo:table {:font-size "9pt" :margin-bottom "12px"}
+   [:fo:table-column {:column-width "56%"}]
+   [:fo:table-column {:column-width "20%"}]
+   [:fo:table-column {:column-width "20%"}]
+
+   [:fo:table-body
+    [:fo:table-row
+     ;; Selitys
+     [:fo:table-cell [:fo:block {:font-weight "bold"} otsikko]]
+     ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
+     [:fo:table-cell [:fo:block {:font-weight "bold"} hoitokauden-otsikko]]
+     (when kyseessa-kk-vali?
+       [:fo:table-cell [:fo:block {:font-weight "bold"} valittu-pvm-otsikko]])]
+    ;; Arvot rahana
+    (when
+      (and
+        (some? hoitokauden-arvo)
+        (some? laskutetaan-arvo))
+      [:fo:table-row
+       [:fo:table-cell [:fo:block ""]]
+       [:fo:table-cell [:fo:block hoitokauden-arvo]]
+       (when kyseessa-kk-vali?
+         [:fo:table-cell [:fo:block laskutetaan-arvo]])])]])
+
 (defmethod pdf-raportointi/muodosta-pdf :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
   ;; Muodostaa työmaakokouksen laskutusyhteenvedolle "Laskutus yhteensä" -yhteenvedon 
   ;; Näihin tulee Hoitokauden & Valitun kuukauden otsikot joiden alle arvot annettujen parametrien perusteella
   [:fo:block {:margin-top "10px"}
-   (pdf-raportointi/arvotaulukko-valittu-aika
+   (arvotaulukko-valittu-aika
     kyseessa-kk-vali?
     (str "Laskutus yhteensä " hoitokausi)
     (str laskutettu-str)
@@ -69,7 +94,6 @@
         [:fo:block {:margin-right "5px"}
          (pdf-raportointi/taulukko
            otsikko-vasen
-           false
            otsikot-vasen
            rivit-vasen
            optiot-vasen)]]
@@ -78,7 +102,6 @@
         [:fo:block
          (pdf-raportointi/taulukko
            otsikko-oikea
-           false
            otsikot-oikea
            rivit-oikea
            optiot-oikea)]]]]]
@@ -86,7 +109,6 @@
     ;; Pelkästään vasemman taulukon data olemassa, eli tehdään vain 1 taulukko
     (pdf-raportointi/taulukko
       otsikko-vasen
-      false
       otsikot-vasen
       rivit-vasen
       optiot-vasen)))
@@ -140,7 +162,6 @@
 
      (pdf-raportointi/taulukko
        ""
-       false
        taulukon-otsikot
        kommentit-rivit
        taulukon-optiot))])

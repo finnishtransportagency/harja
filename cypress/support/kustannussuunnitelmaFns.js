@@ -62,10 +62,19 @@ export function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndexTaiPolku
     cy.wait(1000)
 }
 
-export function toggleLaajennaRivi(taulukonId, contains) {
-    cy.get('#' + taulukonId)
-        .contains('[data-cy*=laajenna]', contains)
-        .click();
+// gridMuokattu = true parametri viittaa Harjan normaalisti käytössäolevaan muokkausgridiin eikä kustiksessa olevaan gridiin.
+export function toggleLaajennaRivi(taulukonId, contains, gridMuokattu) {
+    if(gridMuokattu) {
+        cy.get('#' + taulukonId)
+            .contains('.muokataan', contains)
+            .find('.vetolaatikon-tila')
+            .click();
+    } else {
+        cy.get('#' + taulukonId)
+            .contains('[data-cy*=laajenna]', contains)
+            .click();
+    }
+
 }
 
 /**

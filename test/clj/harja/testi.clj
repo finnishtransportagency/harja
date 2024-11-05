@@ -902,8 +902,14 @@
 (defn hae-toimenpidekoodin-id [nimi koodi]
   (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "' AND emo = (select id from toimenpide WHERE koodi = '" koodi "');"))))
 
+(defn hae-tehtavan-id-nimella [nimi]
+  (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "';"))))
+
 (defn hae-tehtavaryhman-id [nimi]
   (ffirst (q (str "SELECT id from tehtavaryhma where nimi = '" nimi "';"))))
+
+(defn hae-rahavaraus-nimella [nimi]
+  (ffirst (q-map (format "SELECT id, nimi from rahavaraus where nimi = '%s';" nimi))))
 
 (defn hae-yit-rakennus-id []
   (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'"))))
@@ -990,6 +996,18 @@
                       FROM   toimenpideinstanssi
                       WHERE  nimi = '%s'"
                      nimi))))
+
+(defn hae-sopimus-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   sopimus
+                      WHERE  nimi = '%s';"
+               nimi))))
+
+(defn hae-kayttajan-id-kayttajanimella [kayttajanimi]
+  (ffirst (q (format "SELECT id
+                      FROM   kayttaja
+                      WHERE  kayttajanimi = '%s';"
+               kayttajanimi))))
 
 (defn hae-kittila-mhu-talvihoito-tpi-id []
   (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Talvihoito TP"))
@@ -1851,9 +1869,11 @@
   (let [urakan-tiedot (first (q-map (format "SELECT alkupvm FROM urakka WHERE id = %s" urakka-id)))
         laskutuspvm (pvm/iso-8601->pvm erapaiva)
         koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakan-tiedot))
-
-        _ (u (format "INSERT INTO kulu (tyyppi, kokonaissumma, erapaiva, urakka, koontilaskun_kuukausi, luotu)
-                      VALUES ('laskutettava'::LASKUTYYPPI, %s, '%s'::DATE, %s, '%s', NOW());"
+        kohdistustyyppi (if (= maksueratyyppi "lisatyo")
+                          "lisatyo"
+                          "hankintakulu")
+        _ (u (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, koontilaskun_kuukausi, luotu)
+                      VALUES (%s, '%s'::DATE, %s, '%s', NOW());"
                summa erapaiva urakka-id koontilaskun-kuukausi))
 
         ;; HAetaan viimeisin id
@@ -1863,9 +1883,9 @@
                                      summa urakka-id))))
 
         _ (u (format "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi,
-                                                  suoritus_alku, suoritus_loppu, luotu)
-                      VALUES (0, %s, %s, %s, %s, '%s', '%s'::TIMESTAMP, '%s'::TIMESTAMP, now());"
-               kulu-id summa tpi-id tryhma-id maksueratyyppi laskutuspvm laskutuspvm))]))
+                                                  tyyppi, luotu)
+                      VALUES (0, %s, %s, %s, %s, '%s', '%s', now());"
+               kulu-id summa tpi-id tryhma-id maksueratyyppi kohdistustyyppi))]))
 
 (defn lisaa-sanktio-urakalle
   "Anna sakkoryhma 'C'
@@ -1921,6 +1941,14 @@
                                                                  {::reittipiste/toteuma-id toteuma-id}))]
         (not (nil? reittipisteet))))
     "Reittipisteet löytyvät"
+    1000))
+
+(defn odota-suolatoteuma-reittipisteet [toteuma-id]
+  (odota-ehdon-tayttymista
+    (fn []
+      (let [reittipisteet (first (q-map (format "SELECT aika,pohjavesialue,materiaalikoodi,maara,rajoitusalue_id FROM suolatoteuma_reittipiste where toteuma = %s" toteuma-id)))]
+        (not (nil? reittipisteet))))
+    "Suolatoteuma_reittipisteet löytyvät"
     1000))
 
 (defn edellinen-materiaalin-kayton-paivitys [sopimus]

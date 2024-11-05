@@ -45,13 +45,13 @@
     :urakkaroolit {urakka-id #{"ELY_Urakanvalvoja"}}))
 
 (defn hae-kulu [urakka-id kulu-id]
-  (first (q-map (format "SELECT id, tyyppi, kokonaissumma, erapaiva, lisatieto, poistettu
+  (first (q-map (format "SELECT id, kokonaissumma, erapaiva, lisatieto, poistettu
                            FROM kulu
                            WHERE urakka = %s
                              AND id = %s " urakka-id kulu-id))))
 
 (defn hae-poistettu-kulu [urakka-id kulu-id]
-  (first (q-map (format "SELECT id, tyyppi, kokonaissumma, erapaiva, lisatieto, poistettu
+  (first (q-map (format "SELECT id, kokonaissumma, erapaiva, lisatieto, poistettu
                            FROM kulu
                           WHERE urakka = %s
                             AND id = %s " urakka-id kulu-id))))
@@ -399,6 +399,8 @@
                                    ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                    ::valikatselmus/tilaajan-maksu 7000.00
                                    ::valikatselmus/urakoitsijan-maksu 3000.00}))]
+    (is (nil?  (:harja.domain.muokkaustiedot/muokkaaja vastaus)))
+    (is (nil?  (:harja.domain.muokkaustiedot/muokattu vastaus)))
     (is (= 7000M (::valikatselmus/tilaajan-maksu vastaus)))
     (is (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
 
@@ -446,6 +448,8 @@
                                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                     ::valikatselmus/tilaajan-maksu 8000.00
                                     ::valikatselmus/urakoitsijan-maksu 2000.00}))]
+    (is (nil?  (:harja.domain.muokkaustiedot/muokkaaja muokattu)))
+    (is (nil?  (:harja.domain.muokkaustiedot/muokattu muokattu)))
     (is (= 8000M (::valikatselmus/tilaajan-maksu muokattu)))
     (is (= 2021 (::valikatselmus/hoitokauden-alkuvuosi muokattu)))))
 
@@ -518,7 +522,12 @@
                            (kayttaja urakka-id)
                            {::valikatselmus/paatoksen-id paatos-id})
                          (catch Exception e e))
-        kulu-poistettu (hae-poistettu-kulu urakka-id kulu-id)]
+        kulu-poistettu (hae-poistettu-kulu urakka-id kulu-id)
+        muokkaustiedot-poistetussa-paatoksessa (first (q-map "SELECT id, poistettu, muokattu, \"muokkaaja-id\" FROM urakka_paatos WHERE id = " paatos-id))]
+    (is (= 1 poisto-vastaus))
+    (is (true? (:poistettu muokkaustiedot-poistetussa-paatoksessa)))
+    (is (some? (:muokattu muokkaustiedot-poistetussa-paatoksessa)))
+    (is (integer? (:muokkaaja-id muokkaustiedot-poistetussa-paatoksessa)))
     (is (= odotettu-urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))
     ;; Tavoitehinnan ylityksessä urakoitsija joutuu maksumieheksi ja siksi summa muuttuu kuluissa negatiiviseksi
     (is (= (* -1 odotettu-urakoitsijan-maksu) (:kokonaissumma kulu-ensin)))

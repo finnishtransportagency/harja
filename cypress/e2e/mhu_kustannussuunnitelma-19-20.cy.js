@@ -31,6 +31,12 @@ function taytaArvoja() {
     cy.get('#suunnitellut-hankinnat-taulukko')
         .taulukonOsaPolussa([1, 0, 0, 0])
         .click();
+
+    // Testit olettavat, että "kopioi tuleville vuosille" on pois päältä
+    cy.get('input[id="kopioi-hankinnat-tuleville-hoitovuosille"]')
+        .should('not.be.checked')
+        .check();
+
     ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 0, 1, '1000')
     ks.klikkaaTaytaAlas();
 }
@@ -94,7 +100,7 @@ describe('Testaa Kittilän MHU kustannussuunnitelmanäkymää', () => {
         ks.valitseHoitokausi(hoitokausiNyt, valittavaHoitokausi);
 
         cy.get(kattohintaElem(3)).should('not.have', 'input');
-        ks.taytaKattohinta(4, "12300");
+        ks.taytaKattohinta(4, "14000");
         cy.get(kattohintaElem(4)).should('not.have.class', "sisaltaa-virheen")
             .then((elem => {
                 elem.blur();
@@ -118,10 +124,11 @@ describe('Testaa Kittilän MHU kustannussuunnitelmanäkymää', () => {
         tarkistaKattohinta(1, "0,00", true)
         tarkistaKattohinta(2, "0,00", true)
         tarkistaKattohinta(3, "12200,00", false)
-        tarkistaKattohinta(4, "12300,00", true)
+        tarkistaKattohinta(4, "14000,00", true)
         tarkistaKattohinta(5, "0,00", true)
 
         tarkistaIndeksikorjattuKH(3, 12200, indeksit)
+        tarkistaIndeksikorjattuKH(4, 14000, indeksit)
     })
 
 })
