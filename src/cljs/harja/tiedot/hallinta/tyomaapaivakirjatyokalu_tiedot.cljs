@@ -16,10 +16,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def +mahdolliset-urakat+
-  [
-   {:id 34 :nimi "Ivalon MHU testiurakka (uusi) (aseta sopimusid 19)"}
-   {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 42)"}
-   ])
+  [{:id 34 :nimi "Ivalon MHU testiurakka (uusi) (aseta sopimusid 19)"}
+   {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 42)"}])
 
 (defn- luo-aika-paivamaarasta [paivamaara aika]
   (str paivamaara aika))
@@ -29,7 +27,7 @@
                             :valittu-urakka nil
                             :valittu-hallintayksikko nil
                             :paivamaara (pvm/iso8601 (pvm/nyt))
-                            :lahetysaika (pvm/jsondate (pvm/nyt))
+                            :lahetysaika (pvm/aika->str-iso8601-UTC (pvm/nyt))
                             :ulkoinen-id 123
                             :suorittaja-nimi "Urakoitsija Oy"
                             :paivystaja "Pekka Päivystäjä"
@@ -51,7 +49,7 @@
         anna-aseman-tiedot (fn [indeksi]
                              {:saatieto {:havaintoaika lahetysaika-str,
                                          :aseman-tunniste (str (rand-int 999999)),
-                                         :aseman-tietojen-paivityshetki (pvm/jsondate (pvm/pvm-plus-tuntia aika indeksi)),
+                                         :aseman-tietojen-paivityshetki (pvm/aika->str-iso8601-UTC (pvm/pvm-plus-tuntia aika indeksi)),
                                          :ilman-lampotila 20.0,
                                          :tien-lampotila 5.0,
                                          :keskituuli 16,
@@ -63,8 +61,8 @@
 (defn- generoi-muut-toimenpiteet [montako lahetysaika-str]
   (let [aika (df/parse (df/formatter "yyyy-MM-dd'T'HH:mm:ss'Z'") lahetysaika-str)
         anna-toimenpide (fn [indeksi]
-                          {:tieston-muu-toimenpide {:aloitus (pvm/jsondate (pvm/pvm-plus-tuntia aika indeksi)),
-                                                    :lopetus (pvm/jsondate (pvm/pvm-plus-tuntia aika (inc indeksi))),
+                          {:tieston-muu-toimenpide {:aloitus (pvm/aika->str-iso8601-UTC (pvm/pvm-plus-tuntia aika indeksi)),
+                                                    :lopetus (pvm/aika->str-iso8601-UTC (pvm/pvm-plus-tuntia aika (inc indeksi))),
                                                     :tehtavat [{:tehtava {:kuvaus "Esimerkki kuvaus"}}]}})]
     (vec (for [i (range 1 (inc montako))]
            (anna-toimenpide i)))))
@@ -126,9 +124,9 @@
                       :tieston-toimenpiteet (generoi-tieston-toimenpiteet 3 (get-in app [:paivakirja :paivamaara])),
                       :onnettomuudet [{:onnettomuus {:kuvaus (get-in app [:paivakirja :onnettomuus1])}}],
                       :liikenteenohjaus-muutokset [{:liikenteenohjaus-muutos {:kuvaus (get-in app [:paivakirja :liikenneohjaus1])}}],
-                      :tunniste {:id "123456",
+                      :tunniste {:id (gensym),
                                  :versio versio,
-                                 :paivamaara (get-in app [:paivakirja :paivamaara]) #_(pvm/iso8601-timestamp-str->iso8601-str (get-in app [:paivakirja :lahetysaika]))},
+                                 :paivamaara (get-in app [:paivakirja :paivamaara])},
                       :poikkeukselliset-saahavainnot [{:poikkeuksellinen-saahavainto {:havaintoaika (get-in app [:paivakirja :lahetysaika]),
                                                                                       :paikka "Kauhava",
                                                                                       :kuvaus "Jäätävä sade"}}],
@@ -223,17 +221,12 @@
            (let [data (koostettu-data app @versio)]
             (if urakkaid
               (go
-                (let [_ (js/console.log "Ja post seuraavaksi :: @tyomaapaivakirja-id " (pr-str @tyomaapaivakirja-id) "versio:" (pr-str @versio))
-                      params {:body (.stringify js/JSON (clj->js data))
+                (let [params {:body (.stringify js/JSON (clj->js data))
                               :content-type :json
                               :accect :json}
                       ;; Työmaapäiväkirjan päivitys käyttää http/put
-                      vastaus (if @tyomaapaivakirja-id
-                                (<! (http/put (str "api/urakat/" urakkaid "/tyomaapaivakirja/" @tyomaapaivakirja-id)
-                                      params))
-                                (<! (http/post (str "api/urakat/" urakkaid "/tyomaapaivakirja")
-                                      params)))
-                      ]
+                      vastaus (<! (http/post (str "api/urakat/" urakkaid "/tyomaapaivakirja?api_version=2")
+                                    params))]
                   (if (k/virhe? vastaus)
                     (virhe!)
                     (tulos!))))
@@ -259,12 +252,13 @@
 
   HaeHallintayksikonUrakatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "HaeTROsoitteelleKoordinaatitOnnistui" :onnistui)
+    (viesti/nayta-toast! "HaeHallintayksikonUrakatOnnistui" :onnistui)
     (assoc app :mahdolliset-urakat vastaus))
 
   HaeHallintayksikonUrakatEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "HaeHallintayksikonUrakatEpaonnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeHallintayksikonUrakatEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
     (-> app
       (assoc :koordinaatit nil)
       (assoc :trhaku-kaynnissa? false)))
@@ -279,6 +273,7 @@
   HaeKayttajanOikeuksiaEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "HaeKayttajanOikeuksiaEpaonnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeKayttajanOikeuksiaEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
     app)
 
   LisaaOikeudetUrakkaan
@@ -310,7 +305,7 @@
 
   LisaaOikeudetUrakkaanEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
+    (js/console.error "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
     app)
   
   LisaaKirjoitusOikeusOnnistui

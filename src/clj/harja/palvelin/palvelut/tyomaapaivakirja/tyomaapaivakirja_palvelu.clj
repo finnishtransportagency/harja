@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.tyomaapaivakirja
+(ns harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [clj-time.coerce :as c]
@@ -8,7 +8,6 @@
             [harja.domain.roolit :as roolit]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [hiccup.core :refer [html]]
-            [harja.tyokalut.html :as html-tyokalut]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
             [harja.kyselyt.konversio :as konversio]
@@ -329,7 +328,7 @@
   (start [{:keys [http-palvelin db fim api-sahkoposti] :as this}]
 
     (julkaise-palvelu http-palvelin
-      :tyomaapaivakirja-hae
+      :hae-tyomaapaivakirjat
       (fn [user tiedot]
         (hae-tyomaapaivakirjat db user tiedot)))
 
@@ -356,7 +355,7 @@
 
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
-      :tyomaapaivakirja-hae
+      :hae-tyomaapaivakirjat
       :tyomaapaivakirja-tallenna-kommentti
       :tyomaapaivakirja-hae-kommentit
       :tyomaapaivakirja-poista-kommentti

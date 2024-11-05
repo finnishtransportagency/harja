@@ -217,7 +217,7 @@
     (jdbc/with-db-transaction [c db]
       (doseq [tm tehtavamaarat]
         (let [{:keys [hoitokauden-alkuvuosi tehtava-id maara]} tm
-              maara (bigdec (fmt/pilkku->piste maara))
+              maara (when maara (bigdec (fmt/pilkku->piste maara)))
               nykyiset-arvot (hae-suunnitellut-tehtavamaarat c user {:urakka-id urakka-id
                                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
               tehtavamaara-avain (fn [rivi]

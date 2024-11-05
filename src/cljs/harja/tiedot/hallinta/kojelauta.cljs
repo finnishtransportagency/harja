@@ -4,6 +4,7 @@
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.ui.protokollat :as protokollat]
+            [harja.ui.yleiset :as yleiset]
             [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit])
@@ -23,9 +24,31 @@
             (vec (sort-by :nimi itemit)))))))
 
 (def tila (atom {:urakat []
-                 :valinnat {:ely nil
+                 :valinnat {:urakkatyyppi {:nimi "Hoito" :arvo :hoito}
+                            :ely nil
                             :urakat nil
                             :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
+
+(defn valikatselmus-tilojen-yhteenveto
+  "Palauttaa käyttöliittymän koosteriville välikatselmuksen tilojen yhteenvedon"
+  [urakat]
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        urakat-joissa-jokin-rahapaatos-tehtyna (count (keep (fn [rivi]
+                                                              (seq (:rahapaatokset rivi))) urakat))
+        urakat-joissa-jokin-lupauspaatos-tehtyna (count (keep (fn [rivi]
+                                                                (seq (:lupauspaatokset rivi))) urakat))
+        urakat-joissa-ei-paatoksia (count (keep (fn [rivi]
+                                                  (when (and
+                                                          (nil? (:rahapaatokset rivi))
+                                                          (nil? (:lupauspaatokset rivi)))
+                                                    1)) urakat))
+        valikatselmusten-yhteenveto (when-not (empty? urakat)
+                                      [:span.valikatselmustiedot
+                                       [yleiset/tietoja {:class "body-text"}
+                                        "Ei yhtään päätöstä:" (str urakat-joissa-ei-paatoksia " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ei-paatoksia kaikkien-urakoiden-lkm))) ")")
+                                        "Budjettipäätös:" (str urakat-joissa-jokin-rahapaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-rahapaatos-tehtyna kaikkien-urakoiden-lkm))) ")")
+                                        "Lupauspäätös:" (str urakat-joissa-jokin-lupauspaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-lupauspaatos-tehtyna kaikkien-urakoiden-lkm))) ")")]])]
+    valikatselmusten-yhteenveto))
 
 (defn ks-tilojen-yhteenveto
   "Palauttaa käyttöliittymän koosteriville kustannussuunnitelman tilojen yhteenvedon"
@@ -41,10 +64,11 @@
                                                  (when (= "vahvistettu" (get-in rivi [:ks_tila :suunnitelman_tila])) true))
                                            urakat))
         ks-tilojen-yhteenveto (when-not (empty? urakat)
-                                (clj-str/join ", "
-                                  [(str "Aloittamatta: " (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm))))
-                                   (str "kesken: " (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm))))
-                                   (str "valmiina: " (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm))))]))]
+                                [:span.kustannussuunnitelmien-tiedot
+                                 [yleiset/tietoja {:class "body-text"}
+                                  "Aloittamatta:" (str urakat-joissa-ks-aloittamatta " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm))) ")")
+                                  "Kesken:" (str urakat-joissa-ks-aloitettu " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm))) ")")
+                                  "Valmiina:" (str urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm))) ")")]])]
     ks-tilojen-yhteenveto))
 
 (defrecord AsetaSuodatin [avain valinta])
@@ -60,7 +84,8 @@
   HaeUrakat
   (process-event [_ app]
     (tuck-apurit/post! :hae-urakat-kojelautaan
-      {:hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
+      {:urakkatyyppi (or (get-in app [:valinnat :urakkatyyppi :arvo]) :hoito)
+       :hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
        :urakka-idt (map :id (get-in app [:valinnat :urakat]))
        :ely-id (get-in app [:valinnat :ely :id])}
       {:onnistui ->HaeUrakatOnnistui

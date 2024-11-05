@@ -205,7 +205,7 @@
   []
   (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystyskohteet))
 
-(defn kustannusten-seurantaan-valitussa-urakassa [hallintayksikko-id urakka-id]
+(defn kustannussuunnitelmaan-valitussa-urakassa [hallintayksikko-id urakka-id]
   (go
     (let [app-state {}]
       (do
@@ -216,3 +216,16 @@
         (nav/aseta-valittu-valilehti! :suunnittelu :kustannussuunnitelma)
         (nav/salli-url-paivitys!)
         (swap! urakka-tila/suunnittelu-kustannussuunnitelma merge app-state)))))
+
+(defn kustannusten-seurantaan-valitussa-urakassa [hallintayksikko-id urakka-id]
+  (go
+    (let [app-state {}]
+      (do
+        (nav/esta-url-paivitys!)
+        (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
+        (nav/aseta-valittu-valilehti! :sivu :urakat)
+        (nav/aseta-valittu-valilehti! :urakat :laskutus)
+        (nav/aseta-valittu-valilehti! :laskutus :kustannusten-seuranta)
+        (nav/salli-url-paivitys!)
+        (swap! urakka-tila/kustannusten-seuranta merge app-state)))))
+
