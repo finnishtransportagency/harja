@@ -51,17 +51,19 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
             cy.get('#tavoitehintaiset-rahavaraukset-grid').find('td').contains('Tilaajan rahavaraus kannustinjärjestelmään');
         });
 
-        it('Muokkaa tavoitehintaiset rahavaraukset (Ilman kopiointia)', function () {
-
-            cy.get('#tavoitehintaiset-rahavaraukset-grid').gridOtsikot().then(($gridOtsikot) => {
-                let $rivit = $gridOtsikot.grid.find('tbody tr');
-                let valitseInput = function (rivi) {
-                    let rr = $rivit.eq(rivi).find('td').find('input');
-                    return rr;
-                }
-                cy.get(valitseInput(0)).type('10').blur().wait(500); // 'Äkilliset hoitotyöt'
-                cy.get(valitseInput(1)).type('11').blur().wait(500); // 'Vahinkojen korjaukset'
-                cy.get(valitseInput(2)).type('12').blur().wait(500); // 'Tilaajan rahavaraus kannustinjärjestelmään'
+        it('Muokkaa tavoitehintaiset rahavaraukset (Ilman kopiointia)', function () 
+        {
+          cy.get('#tavoitehintaiset-rahavaraukset-grid').gridOtsikot().then(() => 
+          {
+              let valitseInput = function (rivi) {
+                  return `#tavoitehintaiset-rahavaraukset-grid tbody tr:nth-child(${rivi + 1}) td input`;
+              };
+              
+              // Rahavarauksille lisätty loader ja napit disabloitu tallennuksen ajaksi, joten odota että napit tulevat näkyviin
+              // Defaulttina taitaa odotella 4s, mikä riittää
+              cy.get(valitseInput(0), { timeout: 4000 }).should('exist').and('not.be.disabled').type('10').blur().wait(500); // 'Äkilliset hoitotyöt'
+              cy.get(valitseInput(1)).should('exist').and('not.be.disabled').type('11').blur().wait(500); // 'Vahinkojen korjaukset'
+              cy.get(valitseInput(2)).should('exist').and('not.be.disabled').type('12').blur().wait(500); // 'Tilaajan rahavaraus kannustinjärjestelmään'
             });
 
             // Varmista, että tallennuskyselyt menevät läpi
