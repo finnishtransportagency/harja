@@ -49,7 +49,8 @@
     :aloitettu "Keskeneräinen"
     :valmis "Valmis käsiteltäväksi"
     :lukittu "Käsitelty"
-    :else "Aloittamatta"))
+    ;; Default
+    "Aloittamatta"))
 
 (defn maaramuutoksissa-ennustettuja-maaria? [tyot]
   (boolean (some #(and (:ennustettu-maara %)
