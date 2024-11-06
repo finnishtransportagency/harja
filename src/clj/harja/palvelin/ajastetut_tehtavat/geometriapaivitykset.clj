@@ -119,8 +119,9 @@
 
 (def tee-laajennetun-tieverkon-paivitystehtava
   (fn [this asetukset]
-    (clojure.core.async/thread
-      (tieverkon-tuonti/vie-laajennettu-tieverkko-kantaan (:db this) (:laajennetun-tieosoiteverkon-tiedot asetukset))))
+    (when (:paivita-kaista asetukset)
+      (clojure.core.async/thread
+        (tieverkon-tuonti/vie-laajennettu-tieverkko-kantaan (:db this) (:laajennetun-tieosoiteverkon-tiedot asetukset)))))
   #_(maarittele-paivitystehtava
     "laajennettu-tieverkko"
     :laajennetun-tieosoiteverkon-osoite
