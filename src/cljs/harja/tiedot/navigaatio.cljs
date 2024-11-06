@@ -25,7 +25,7 @@
    [harja.domain.oikeudet :as oikeudet]
    [harja.domain.urakka :as urakka-domain]
    [taoensso.timbre :as log])
-  
+
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]])
 
@@ -40,7 +40,7 @@
 
 (declare kasittele-url! paivita-url valitse-urakka!)
 
-(defonce murupolku-nakyvissa? (reaction (and 
+(defonce murupolku-nakyvissa? (reaction (and
                                           (not @raportit/raportit-nakymassa?)
                                           (not= @valittu-sivu :tilannekuva)
                                           (not= @valittu-sivu :info)
@@ -379,7 +379,7 @@
           urakkalista @hallintayksikon-urakkalista
           kayttajan-urakat (set (map key (:urakkaroolit @istunto/kayttaja)))
           nyt (pvm/nyt)]
-      
+
       (when urakkalista
         (->> urakkalista
           (filter #(or (= :kaikki v-ur-tyyppi)
@@ -402,104 +402,104 @@
                        (pvm/jalkeen? nyt (:loppupvm urakka))
                        [(- (:loppupvm urakka))]))))))))
 
-  (def urakat-kartalla "Sisältää suodatetuista urakoista aktiiviset"
-    (reaction (into []
-                (filter #(pvm/ennen? (pvm/nyt) (:loppupvm %)))
-                @suodatettu-urakkalista)))
+(def urakat-kartalla "Sisältää suodatetuista urakoista aktiiviset"
+  (reaction (into []
+              (filter #(pvm/ennen? (pvm/nyt) (:loppupvm %)))
+              @suodatettu-urakkalista)))
 
 
-  (def render-lupa-hy? (reaction
-                         (some? @hy/vaylamuodon-hallintayksikot)))
+(def render-lupa-hy? (reaction
+                       (some? @hy/vaylamuodon-hallintayksikot)))
 
-  (def render-lupa-u? (reaction
-                        (or (nil? @valittu-urakka-id)       ;; urakkaa ei annettu urlissa, ei estetä latausta
-                          (nil? @valittu-hallintayksikko)   ;; hy:tä ei saatu asetettua -> ei estetä latausta
-                          (some? @hallintayksikon-urakkalista))))
+(def render-lupa-u? (reaction
+                      (or (nil? @valittu-urakka-id)       ;; urakkaa ei annettu urlissa, ei estetä latausta
+                        (nil? @valittu-hallintayksikko)   ;; hy:tä ei saatu asetettua -> ei estetä latausta
+                        (some? @hallintayksikon-urakkalista))))
 
-  (def render-lupa-url-kasitelty? (atom false))
+(def render-lupa-url-kasitelty? (atom false))
 
 ;; sulava ensi-render: evätään render-lupa? ennen kuin konteksti on valmiina
-  (def render-lupa? (reaction
-                      (and @render-lupa-hy? @render-lupa-u?
-                        @render-lupa-url-kasitelty?)))
+(def render-lupa? (reaction
+                    (and @render-lupa-hy? @render-lupa-u?
+                      @render-lupa-url-kasitelty?)))
 
-  (defonce urlia-kasitellaan? (atom false))
+(defonce urlia-kasitellaan? (atom false))
 
-  (defn kasittele-url!
-    "Käsittelee urlin (route) muutokset."
-    [url]
-    (reset! urlia-kasitellaan? true)
-    (go
-      (let [uri (Uri/parse url)
-            polku (.getPath uri)
-            parametrit (.getQueryData uri)]
-        (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
-        (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
-        (reset! valittu-ilmoitus-id (some-> parametrit (.get "i") js/parseInt))
-        ;; Kun ollaan aloitusikkunassa, katsotaan mikä on käyttäjän perusurakkatyyppi, jotta voidaan näyttää oikean
-        ;; väylämuodon hallintayksiköt
-        (when (= polku "urakat/yleiset")
-          (let [vesivaylaurakka? (urakka-domain/vesivaylaurakkatyyppi? (:urakkatyyppi @istunto/kayttaja))
-                arvo (if vesivaylaurakka?
-                       {:arvo :vesivayla}
-                       {:arvo :hoito})]
-            (vaihda-vaylamuoto! arvo)))
-        (when @valittu-hallintayksikko-id
-          (reset! valittu-vaylamuoto (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))))
+(defn kasittele-url!
+  "Käsittelee urlin (route) muutokset."
+  [url]
+  (reset! urlia-kasitellaan? true)
+  (go
+    (let [uri (Uri/parse url)
+          polku (.getPath uri)
+          parametrit (.getQueryData uri)]
+      (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
+      (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
+      (reset! valittu-ilmoitus-id (some-> parametrit (.get "i") js/parseInt))
+      ;; Kun ollaan aloitusikkunassa, katsotaan mikä on käyttäjän perusurakkatyyppi, jotta voidaan näyttää oikean
+      ;; väylämuodon hallintayksiköt
+      (when (= polku "urakat/yleiset")
+        (let [vesivaylaurakka? (urakka-domain/vesivaylaurakkatyyppi? (:urakkatyyppi @istunto/kayttaja))
+              arvo (if vesivaylaurakka?
+                     {:arvo :vesivayla}
+                     {:arvo :hoito})]
+          (vaihda-vaylamuoto! arvo)))
+      (when @valittu-hallintayksikko-id
+        (reset! valittu-vaylamuoto (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))))
 
-        (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
-        (swap! reitit/url-navigaatio
-          reitit/tulkitse-polku polku)
-        ;; Käsitellään linkit yksittäisiin integraatiolokin viesteihin
-        (when (and (= polku "hallinta/integraatiotilanne/integraatioloki")
-                (.get parametrit "valittu-jarjestelma")
-                (.get parametrit "valittu-integraatio")
-                (.get parametrit "tapahtuma-id")
-                (.get parametrit "alkanut"))
-          (let [jarjestelmat (<! (integraatioloki/hae-jarjestelmien-integraatiot))
-                jarjestelma (.get parametrit "valittu-jarjestelma")
-                alkanut-pvm (pvm/iso-8601->pvm (.get parametrit "alkanut"))]
-            (reset! integraatioloki/valittu-jarjestelma (some #(when (= jarjestelma (:jarjestelma %))
-                                                                 %)
-                                                          jarjestelmat))
-            (reset! integraatioloki/valittu-integraatio (.get parametrit "valittu-integraatio"))
-            (reset! integraatioloki/tapahtuma-id #{(try (js/parseInt (.get parametrit "tapahtuma-id"))
-                                                     (catch :default e
-                                                       nil))})
-            (reset! integraatioloki/nayta-uusimmat-tilassa? false)
-            (reset! integraatioloki/valittu-aikavali [alkanut-pvm alkanut-pvm])
-            (reset! integraatioloki/tultiin-urlin-kautta true)
-            ;; Paivitetään url, jotta parametrit eivät enään näy urlissa
-            (paivita-url))))
-      (reset! render-lupa-url-kasitelty? true)
-      (log "Render-lupa annettu!")
-      (t/julkaise! {:aihe :url-muuttui :url url})
-      (reset! urlia-kasitellaan? false)))
+      (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
+      (swap! reitit/url-navigaatio
+        reitit/tulkitse-polku polku)
+      ;; Käsitellään linkit yksittäisiin integraatiolokin viesteihin
+      (when (and (= polku "hallinta/integraatiotilanne/integraatioloki")
+              (.get parametrit "valittu-jarjestelma")
+              (.get parametrit "valittu-integraatio")
+              (.get parametrit "tapahtuma-id")
+              (.get parametrit "alkanut"))
+        (let [jarjestelmat (<! (integraatioloki/hae-jarjestelmien-integraatiot))
+              jarjestelma (.get parametrit "valittu-jarjestelma")
+              alkanut-pvm (pvm/iso-8601->pvm (.get parametrit "alkanut"))]
+          (reset! integraatioloki/valittu-jarjestelma (some #(when (= jarjestelma (:jarjestelma %))
+                                                               %)
+                                                        jarjestelmat))
+          (reset! integraatioloki/valittu-integraatio (.get parametrit "valittu-integraatio"))
+          (reset! integraatioloki/tapahtuma-id #{(try (js/parseInt (.get parametrit "tapahtuma-id"))
+                                                   (catch :default e
+                                                     nil))})
+          (reset! integraatioloki/nayta-uusimmat-tilassa? false)
+          (reset! integraatioloki/valittu-aikavali [alkanut-pvm alkanut-pvm])
+          (reset! integraatioloki/tultiin-urlin-kautta true)
+          ;; Paivitetään url, jotta parametrit eivät enään näy urlissa
+          (paivita-url))))
+    (reset! render-lupa-url-kasitelty? true)
+    (log "Render-lupa annettu!")
+    (t/julkaise! {:aihe :url-muuttui :url url})
+    (reset! urlia-kasitellaan? false)))
 
-  (.setEnabled historia true)
+(.setEnabled historia true)
 
-  (defonce paivita-url-navigaatiotilan-muuttuessa
-    (add-watch reitit/url-navigaatio
-      ::url-muutos
-      (fn [_ _ vanha uusi]
-        (when (and (not @urlia-kasitellaan?) (not= vanha uusi))
-          (paivita-url)))))
+(defonce paivita-url-navigaatiotilan-muuttuessa
+  (add-watch reitit/url-navigaatio
+    ::url-muutos
+    (fn [_ _ vanha uusi]
+      (when (and (not @urlia-kasitellaan?) (not= vanha uusi))
+        (paivita-url)))))
 
-  (defn paivita-urakan-tiedot! [urakka-id funktio & args]
-    (swap! hallintayksikon-urakkalista
-      (fn [urakat]
-        (mapv (fn [urakka]
-                (if (= (:id urakka) urakka-id)
-                  (apply funktio urakka args)
-                  urakka))
-          urakat))))
+(defn paivita-urakan-tiedot! [urakka-id funktio & args]
+  (swap! hallintayksikon-urakkalista
+    (fn [urakat]
+      (mapv (fn [urakka]
+              (if (= (:id urakka) urakka-id)
+                (apply funktio urakka args)
+                urakka))
+        urakat))))
 
 ;; Tilannekuvassa halutaan näyttää selite urakkarajoille, jos alueita on valittu. Syklisen riippuvuuden takia
 ;; piti laittaa tänne.
-  (def tilannekuvassa-alueita-valittu? (atom false))
+(def tilannekuvassa-alueita-valittu? (atom false))
 
 
-  (defn yllapitourakka-valittu? []
-    (let [urakkatyyppi (:arvo @urakkatyyppi)]
-      (or (= urakkatyyppi :paallystys)
-        (= urakkatyyppi :tiemerkinta))))
+(defn yllapitourakka-valittu? []
+  (let [urakkatyyppi (:arvo @urakkatyyppi)]
+    (or (= urakkatyyppi :paallystys)
+      (= urakkatyyppi :tiemerkinta))))
