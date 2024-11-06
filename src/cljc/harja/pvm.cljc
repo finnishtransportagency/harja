@@ -789,7 +789,7 @@
 
 (defn hoitokausivuosi->mhu-hoitovuosi-nro
   "Palauttaa MHU hoitovuoden järjestysnumeron annetulle hoitokausivuosi.
-  Esimerkiksi: Jos urakan alkupäivämäärä on 1.10.2021 ja hoitokausivuosi on 2022, palautetaan 3."
+  Esimerkiksi: Jos urakan alkupäivämäärä on 1.10.2021 ja hoitokausivuosi on 2022, palautetaan 2."
   [urakan-alkupvm hoitokausivuosi]
   (let [urakan-alkuvuosi (vuosi urakan-alkupvm)]
     (max (- (inc hoitokausivuosi) urakan-alkuvuosi) 1)))
