@@ -392,6 +392,10 @@
           (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja))
           (sort-by (fn [urakka]
                      (cond
+                       ;; Tulevat urakat, sama järjestys kun käynnissä olevat
+                       (pvm/ennen? nyt (:alkupvm urakka))
+                       [(:alkupvm urakka) (:nimi urakka)]
+
                        ;; Käynnissä olevat urakat alkamispäiväjärjestyksessä
                        (and
                          (pvm/jalkeen? nyt (:alkupvm urakka))
