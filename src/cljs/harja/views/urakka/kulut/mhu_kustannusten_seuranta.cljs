@@ -316,8 +316,8 @@
         muukulut-eitavoitehintainen (taulukoi-paaryhman-tehtavat :muukulu-eitavoitehintainen (:tehtavat (:muukulu-eitavoitehintainen rivit-paaryhmittain)))
         lisatyo (taulukoi-paaryhman-tehtavat :lisatyo (:tehtavat (:lisatyo rivit-paaryhmittain)))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        hoitovuosi-nro-menossa (urakka-tiedot/kuluva-hoitokausi-nro (pvm/nyt) (-> @tila/yleiset :urakka :loppupvm))
+        valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero (-> @tila/yleiset :urakka :alkupvm) valittu-hoitokauden-alkuvuosi)
+        hoitovuosi-nro-menossa (urakka-tiedot/kuluva-hoitokausi-nro (-> @tila/yleiset :urakka :alkupvm) (pvm/nyt))
         hoitovuotta-jaljella (if (= valittu-hoitovuosi-nro hoitovuosi-nro-menossa)
                                (pvm/montako-paivaa-valissa
                                  (pvm/nyt)
