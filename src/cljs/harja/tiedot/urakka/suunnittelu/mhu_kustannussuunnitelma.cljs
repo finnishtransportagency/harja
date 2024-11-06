@@ -2256,9 +2256,6 @@
            :yhteenveto {:nimi "Määrämitattavat"}
            :yhteensa {:nimi "Yhteensä"}
            :kuukausitasolla? false})
-        #_(assoc-in [:gridit :rahavaraukset]
-            {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-             :yhteensa {:nimi "Yhteensä"}})
         (assoc-in [:gridit :tavoitehintaiset-rahavaraukset]
           {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
            :yhteensa {:nimi "Yhteensä"}})
