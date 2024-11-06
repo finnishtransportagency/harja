@@ -225,9 +225,10 @@
          [:div.paallystyskohteet
           [kartta/kartan-paikka]
 
-          [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
-          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-          [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]
+          [:span.paallystys-valinnat
+           [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
+           [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+           [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]]
 
           [validointivirheet-modal]
           [excel-toiminnot {:urakka-id (:id ur)
