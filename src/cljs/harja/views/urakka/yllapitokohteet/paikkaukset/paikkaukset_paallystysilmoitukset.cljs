@@ -41,12 +41,6 @@
 (defn- poista-tarkkailijat! []
   (remove-watch u/valittu-sopimusnumero :pkp-sopimusnro))
 
-(defn- tilan-formatointi 
-  [t]
-  (if (= "Kaikki" t)
-    "Kaikki"
-    (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila t)))
-
 (defn filtterit [e! app] 
   (let [vuodet (v-paikkauskohteet/urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
         valittu-vuosi (or (get-in app [:urakka-tila :valittu-urakan-vuosi]) @u/valittu-urakan-vuosi)
@@ -94,7 +88,13 @@
          (e! (t-paikkauskohteet/->FiltteriValitseTila tila valittu?)))
        [" Tila valittu" " Tilaa valittu"]
        {:vayla-tyyli? true
-        :fmt tilan-formatointi}]]
+        :fmt (fn [tila]
+               (cond
+                 (= tila "Kaikki") "Kaikki"
+                 (= tila :aloitettu) "Keskeneräinen"
+                 (= tila :valmis) "Valmis käsiteltäväksi"
+                 (= tila :lukittu) "Käsitelty"
+                 :else "Aloittamatta"))}]]
      [:div.basis128
       [napit/yleinen-ensisijainen "Hae" #(e! (t-ur-paallystys/->HaePaallystysilmoitukset)) {:luokka "nappi-korkeus-36"}]]
      #_ [:div.basis128.oikealle
