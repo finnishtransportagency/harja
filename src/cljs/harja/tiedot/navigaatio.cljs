@@ -2,16 +2,14 @@
   "Tämä nimiavaruus hallinnoi sovelluksen navigoinnin. Sisältää atomit, joilla eri sivuja ja polkua
   sovelluksessa ohjataan sekä kytkeytyy selaimen osoitepalkin #-polkuun ja historiaan. Tämä nimiavaruus
   ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa navigointitiedot."
-
   (:require
-    ;; Reititykset
    [goog.events :as events]
    [goog.Uri :as Uri]
    [goog.history.EventType :as EventType]
-   [reagent.core :refer [atom wrap]]
-   [cljs.core.async :refer [<! >! chan close!]]
+   [reagent.core :refer [atom]]
+   [cljs.core.async :refer [<!]]
 
-   [harja.loki :refer [log tarkkaile!]]
+   [harja.loki :refer [log]]
    [harja.asiakas.tapahtumat :as t]
    [harja.tiedot.urakoitsijat :as urk]
    [harja.tiedot.hallintayksikot :as hy]
@@ -20,16 +18,16 @@
    [harja.tiedot.raportit :as raportit]
    [harja.tiedot.navigaatio.reitit :as reitit]
    [harja.tiedot.hallinta.integraatioloki :as integraatioloki]
-   [harja.atom :refer-macros [reaction<! reaction-writable]]
+   [harja.atom :refer-macros [reaction<!]]
    [harja.pvm :as pvm]
    [clojure.string :as str]
    [harja.geo :as geo]
    [harja.domain.oikeudet :as oikeudet]
    [harja.domain.urakka :as urakka-domain]
    [taoensso.timbre :as log])
-
+  
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]])
+                   [reagent.ratom :refer [reaction]])
 
   (:import goog.History))
 
