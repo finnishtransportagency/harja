@@ -243,26 +243,40 @@ $$ LANGUAGE plpgsql;
 
 -- Testidatan indeksikorjaus-sproc on testidata_indeksikorjaa (testidata/apufunktiot.sql)
 -- Muista kopioida tähän funktioon tehdyt muutokset myös sinne.
-CREATE OR REPLACE FUNCTION indeksikorjaa(korjattava_arvo NUMERIC, vuosi_ INTEGER, kuukausi_ INTEGER,
-                                         urakka_id INTEGER)
+--     Jos tähän funktioon tulee sopimusmuutoksia, 
+--     tee samat muutokset kustannussuunnitelmaan: defn hae-urakan-indeksikertoimet
+-- 
+--     Vielä, jos verrattavia kuukausia tulee lisää, huomioi myös: defn indeksi-muuttunut -> (when (#{8 9 10 11} kuukausi)
+--     sekä myös päivitys sql kyselyt 
+CREATE OR REPLACE FUNCTION indeksikorjaa(korjattava_arvo NUMERIC, vuosi_ INTEGER, kuukausi_ INTEGER, urakka_id INTEGER)
     RETURNS NUMERIC AS
 $$
 DECLARE
-    -- Perusluku on urakalle sama riippumatta kuluvasta hoitokaudesta
-    perusluku      NUMERIC := indeksilaskennan_perusluku(urakka_id);
-    indeksin_nimi  TEXT;
-    urakan_alkuvuosi INTEGER;
     arvo NUMERIC;
-    vertailuvuosi INTEGER;
     vertailukk INTEGER;
+    indeksin_nimi TEXT;
+    vertailuvuosi INTEGER;
     indeksikerroin NUMERIC;
+    urakan_alkuvuosi INTEGER;
+
+    urakka_tyyppi TEXT := (
+        SELECT tyyppi
+         FROM urakka u
+        WHERE u.id = urakka_id
+    );
+
+    /* Perusluku (2017>= hoitourakat):
+       Alkuvuodesta edellisen vuoden syys, loka, marras indeksien keskiarvo
+       Muissa tapauksissa voi katsoa funktiosta */
+    perusluku      NUMERIC := indeksilaskennan_perusluku(urakka_id);
 BEGIN
+    -- Kaikilla 2019>= urakoilla indeksi yleensä 'MAKU 2015'
     SELECT indeksi, EXTRACT(YEAR FROM alkupvm)
       FROM urakka u
      WHERE u.id = urakka_id
       INTO indeksin_nimi, urakan_alkuvuosi;
 
-    -- Indeksikerroin on hoitokausikohtainen, katsotaan aina edellisen hoitokauden syyskuun indeksiä.
+    -- Hoitokauden vertailuvuosi
     IF kuukausi_ BETWEEN 1 AND 9
     THEN
         vertailuvuosi := vuosi_ - 1;
@@ -272,11 +286,17 @@ BEGIN
 
     -- Käytetään vertailukuukauden default-arvona syyskuuta.
     vertailukk := 9;
-    -- 2023 tai sen jälkeen alkaville urakoille vertailuukausi on elokuu
-    IF urakan_alkuvuosi >= 2023 THEN
+    
+    /* Indeksikertoimen laskenta (teiden-hoito): 
+      >= 2023 urakat: Kuluvan hk:n elokuun indeksi / perusluku  
+      < 2023 urakat: Kuluvan hk:n syyskuun indeksi / perusluku */
+    IF  urakka_tyyppi = 'teiden-hoito' 
+    AND urakan_alkuvuosi >= 2023 THEN
         vertailukk := 8;
     END IF;
 
+    -- Hae indeksi, jolla jaetaan perusluku ja lasketaan indeksikerroin
+    -- Jos indeksiä ei ole, funktio palauttaa null, mikä on OK
     arvo := (SELECT i.arvo
                FROM indeksi i
               WHERE i.vuosi = vertailuvuosi
@@ -284,6 +304,7 @@ BEGIN
                 AND nimi = indeksin_nimi);
 
     -- Indeksikerroin pyöristetään 3 desimaaliin CLJ-puolella (budjettisuunnittelu/hae-urakan-indeksikertoimet)
+    -- Tämä sääntö myös asiakirjoissa 
     indeksikerroin := round((arvo / perusluku), 3);
 
     --RAISE NOTICE 'vuosi: %, kuukausi: %, arvo: %, indeksikerroin: %, korjattava arvo: %', vuosi_, kuukausi_, arvo, indeksikerroin, korjattava_arvo;
