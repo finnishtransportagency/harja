@@ -237,8 +237,8 @@
         {:nimi     indeksi
          :indeksit [{:kannassa? false
                      :vuosi     2018
-                     9          101.1
-                     10         101.6
+                     9          101.13
+                     10         101.68
                      11         101.8}]})
       (is (= 101.5M (indeksilaskennan-perusluku urakka))
           "Indeksilaskennan perusluku on urakan alkupvm:ää edeltävän vuoden syys-, loka- ja marraskuun keskiarvo")
@@ -264,10 +264,10 @@
         {:nimi     indeksi
          :indeksit [{:kannassa? false
                      :vuosi     2019
-                     9          102.4M}
+                     9          102.49M}
                     {:kannassa? false
                      :vuosi     2020
-                     9          102.9M}]})
+                     9          102.97M}]})
       (let [indeksikorjattu-summa (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 2 :summa summa})]
         (is (= indeksikorjattu-summa ; CLJ-indeksikorjaus
                (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo)) ; SQL-indeksikorjaus
