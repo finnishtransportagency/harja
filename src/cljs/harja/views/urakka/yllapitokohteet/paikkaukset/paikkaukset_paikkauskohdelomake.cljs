@@ -942,8 +942,8 @@
             #(t-paikkauskohteet/tallenna-tilamuutos! (assoc (lomake/ilman-lomaketietoja lomake) :paikkauskohteen-tila "hylatty"))
             {:paksu? true
              :ikoni (ikonit/check)
-             :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysOnnistui vastaus)))
-             :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysEpaonnistui vastaus)))}]
+             :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->HylkaaPaikkauskohdeOnnistui vastaus)))
+             :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->HylkaaPaikkauskohdeEpaonnistui vastaus)))}]
            [napit/yleinen-toissijainen "Kumoa" #(do
                                                   (modal/piilota!)
                                                   (when @t-paikkauskohteet/edellinen-elementti
