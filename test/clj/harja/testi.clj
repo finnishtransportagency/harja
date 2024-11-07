@@ -1003,6 +1003,12 @@
                       WHERE  nimi = '%s';"
                nimi))))
 
+(defn hae-organisaatio-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   organisaatio
+                      WHERE  nimi = '%s';"
+               nimi))))
+
 (defn hae-kayttajan-id-kayttajanimella [kayttajanimi]
   (ffirst (q (format "SELECT id
                       FROM   kayttaja
