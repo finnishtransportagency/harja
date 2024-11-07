@@ -185,9 +185,7 @@
                           (and
                             (nil? haun-alkupvm)
                             (:valittu-hoitokausi app)
-                            (->>
-                              (:valittu-hoitokausi app)
-                              count (= 2)))
+                            (= 2 (count (:valittu-hoitokausi app))))
                           (first (:valittu-hoitokausi app))
                           ;; Fallback
                           :else haun-alkupvm)
@@ -198,9 +196,7 @@
                            (and
                              (nil? haun-loppupvm)
                              (:valittu-hoitokausi app)
-                             (->>
-                               (:valittu-hoitokausi app)
-                               count (= 2)))
+                             (= 2 (count (:valittu-hoitokausi app))))
                            (second (:valittu-hoitokausi app))
                            ;; Fallback
                            :else haun-loppupvm)
