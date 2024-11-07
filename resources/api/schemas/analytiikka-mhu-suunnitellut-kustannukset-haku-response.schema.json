@@ -179,10 +179,7 @@
                           "type": "integer",
                           "description": "Harjan tehtava-id."
                         }
-                      },
-                      "required": [
-                        "toimenpide"
-                      ]
+                      }
                     },
                     "versio": {
                       "type": "integer",
