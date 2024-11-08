@@ -2096,20 +2096,20 @@ types:
         required: false
     additionalProperties: false
   talvihoitoreitti-kirjaus-request:
-      type: object
-      properties:
-        talvihoitoreitti:
-          type: file_resources_api_schemas_entities_talvihoitoreitti-kirjaus.schema.json
-          additionalProperties: false
-      additionalProperties: false
-    talvihoitoreitti-paivitys-request:
-      type: object
-      properties:
-        talvihoitoreitti:
-          type: type: file_resources_api_schemas_entities_talvihoitoreitti-paivitys.schema.json
-          additionalProperties: false
-          required: false
-      additionalProperties: false
+    type: object
+    properties:
+      talvihoitoreitti:
+        type: !include schemas/talvihoitoreitti-kirjaus-request.schema.json
+        additionalProperties: false
+    additionalProperties: false
+  talvihoitoreitti-paivitys-request:
+    type: object
+    properties:
+      talvihoitoreitti:
+        type: !include schemas/talvihoitoreitti-paivitys-request.schema.json
+        additionalProperties: false
+        required: false
+    additionalProperties: false
   talvihoitoreitti-poisto-request:
     type: object
     properties:
@@ -5491,24 +5491,16 @@ types:
               required: false
         uriParameters:
           tyomaapaivakirjaid: {}
-      '/talvihoitoreitti:'
+    /talvihoitoreitti:
         post:
           is:
               - secured
-            description: 'Talvihoitoreitin lisäys.'
-            responses:
+          description: 'Talvihoitoreitin lisäys.'
+          responses:
               '200':
                 body:
                   application/json:
-                    example:
-                      ilmoitukset: Kaikki toteumat kirjattu onnistuneesti
-                      kohteet:
-                        - tunniste:
-                            id: 123
-                          tiedotukset:
-                            - tiedotus: ''
-                    type: kirjaus-response
-                    required: false
+                    type: !include examples/onnistunut-kirjaus-response.json
               '400':
                 body:
                   application/json:
@@ -5529,43 +5521,51 @@ types:
                             viesti: 'Syy virheelle.'
                     type: virhe-response
                     required: false
+          body:
+            application/json:
+              example:
+              type: !include examples/talvihoitoreitti-kirjaus-request.json
         put:
           is:
-              - secured
-            description: 'Talvihoitoreitin päivitys.'
-              responses:
-                '200':
-                  body:
-                    application/json:
-                      example:
-                        ilmoitukset: Kaikki toteumat kirjattu onnistuneesti
-                        kohteet:
-                          - tunniste:
-                              id: 123
-                            tiedotukset:
-                              - tiedotus: ''
-                      type: kirjaus-response
-                      required: false
-                '400':
-                  body:
-                    application/json:
-                      example:
-                        virheet:
-                          - virhe:
-                               koodi: invalidi-json
-                               viesti: 'Syy virheelle.'
-                      type: virhe-response
-                      required: false
-                '500':
-                  body:
-                    application/json:
-                      example:
-                        virheet:
-                          - virhe:
-                              koodi: Virheen koodi
-                              viesti: 'Syy virheelle.'
-                      type: virhe-response
-                      required: false
+            - secured
+          description: 'Talvihoitoreitin päivitys.'
+          responses:
+            '200':
+              body:
+                application/json:
+                  example:
+                    ilmoitukset: Kaikki toteumat kirjattu onnistuneesti
+                    kohteet:
+                      - tunniste:
+                          id: 123
+                        tiedotukset:
+                          - tiedotus: ''
+                  type: kirjaus-response
+                  required: false
+            '400':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                           koodi: invalidi-json
+                           viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+            '500':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                          koodi: Virheen koodi
+                          viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+          body:
+            application/json:
+              example:
+              type: !include examples/talvihoitoreitti-paivitys-request.json
     '/raportit/materiaali/{alkupvm}':
       uriParameters:
         alkupvm: {}
