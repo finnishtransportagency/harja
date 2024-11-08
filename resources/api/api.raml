@@ -5566,6 +5566,48 @@ types:
             application/json:
               example:
               type: !include examples/talvihoitoreitti-paivitys-request.json
+        delete:
+          is:
+            - secured
+          description: 'Talvihoitoreitin poisto.'
+          responses:
+            '200':
+              body:
+                application/json:
+                  example:
+                    ilmoitukset: Kaikki toteumat kirjattu onnistuneesti
+                    kohteet:
+                      - tunniste:
+                          id: 123
+                        tiedotukset:
+                          - tiedotus: ''
+                  type: kirjaus-response
+                  required: false
+            '400':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                           koodi: invalidi-json
+                           viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+            '500':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                          koodi: Virheen koodi
+                          viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+          body:
+            application/json:
+              example:
+              type: !include examples/talvihoitoreitti-poisto-request.json
+
     '/raportit/materiaali/{alkupvm}':
       uriParameters:
         alkupvm: {}
