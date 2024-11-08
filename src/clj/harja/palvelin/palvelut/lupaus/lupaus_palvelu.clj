@@ -225,11 +225,14 @@
   (assert (not (valikatselmus-tehty-urakalle? db urakka-id))
           "Luvattuja pisteitä ei voi enää muuttaa, jos urakalle on tehty välikatselmus.")
   (jdbc/with-db-transaction [db db]
-                            (let [params {:id id
+                            (let [;; lupaussitoutumisia pitää olla kannassa maksimissaan 1. Aiemmin oli vika, että frontti saattoi lähettää alkutilanteessa useita
+                                  ;; rivejä ilman id:tä, ja syntyi enemmän kuin yksi aktiivinen rivi. Nyt estetään se tarkistamalla kannasta onko ko. urakalle jo tieto
+                                  sitoutumistiedot-id (:id (first (lupaus-kyselyt/hae-sitoutumistiedot db {:urakka-id urakka-id})))
+                                  params {:id sitoutumistiedot-id
                                           :urakka-id urakka-id
                                           :pisteet pisteet
                                           :kayttaja (:id user)}]
-                              (if id
+                              (if sitoutumistiedot-id
                                 (lupaus-kyselyt/paivita-urakan-luvatut-pisteet<! db params)
                                 (lupaus-kyselyt/lisaa-urakan-luvatut-pisteet<! db params)))))
 
@@ -434,8 +437,7 @@
              "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
          kuukausipisteet (lupaus-kyselyt/hae-kuukausittaiset-pisteet db {:hk-alkuvuosi vuosi
                                                                          :urakka-id urakka-id})
-         sitoutumistiedot (first (lupaus-kyselyt/hae-sitoutumistiedot db {:hk-alkuvuosi vuosi
-                                                                          :urakka-id urakka-id}))
+         sitoutumistiedot (first (lupaus-kyselyt/hae-sitoutumistiedot db {:urakka-id urakka-id}))
          ;; Kuukausittaisten pisteiden muokkaamisessa vaikuttaa tämän hoitokauden välikatselmus
          valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
          ;; Koko urakkakauden sitoutumispisteisiin vaikuttaa onko urakalle tehty yhtään välitkaselmusta
