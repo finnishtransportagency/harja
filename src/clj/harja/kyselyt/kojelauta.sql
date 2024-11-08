@@ -22,8 +22,7 @@ SELECT u.id,
   FROM urakka u
            JOIN organisaatio o ON u.hallintayksikko = o.id
            LEFT JOIN lupaus_sitoutuminen sit ON
-      -- tuotantodatasta löytyi virheitä, osalla urakoista oli enemmän kuin yksi aktiivinen rivi.
-      -- Ennen kuin se saadaan korjattua, poimitaan vain yksi rivi ja sellainen jossa on pisteet läsnä jos ne on syötetty
+      -- varmistetaan tasan yksi rivi MAX-funktion avulla
       sit.id = (SELECT MAX(id) FROM lupaus_sitoutuminen ls WHERE ls."urakka-id" = u.id AND ls.pisteet IS NOT NULL AND ls.poistettu IS FALSE)
  WHERE
      u.tyyppi = 'teiden-hoito' AND
