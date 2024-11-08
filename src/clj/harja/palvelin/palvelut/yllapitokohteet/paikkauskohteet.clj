@@ -29,6 +29,7 @@
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
+            [harja.palvelin.palvelut.viestinta :as viestinta]
             [specql.core :as specql]
             [harja.kyselyt.konversio :as konversio]
             [clojure.java.jdbc :as jdbc]))
@@ -212,10 +213,14 @@
                        otsikko
                        viesti)
     (when (:kopio-itselle? tiedot)
-      (laheta-sahkoposti fim email urakka-sampo-id
-                         (:sahkoposti user)
-                         otsikko
-                         viesti))
+      (if (:sahkoposti user)
+        (viestinta/laheta-sahkoposti-itselle
+          {:email email
+           :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta vastaanottajille."
+           :sahkoposti (:sahkoposti user)
+           :viesti-otsikko otsikko
+           :viesti-body viesti})
+        (log/warn (format "Paikkauskohteet : Ei voitu lähettää sähköpostia itselle, koska sähköpostiosoite puuttuu viestistä jonka otsikko on %s" otsikko))))
     tiedot))
 
 (defn- muodosta-viesti 

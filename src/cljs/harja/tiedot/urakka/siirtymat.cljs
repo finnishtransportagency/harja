@@ -192,6 +192,20 @@
         (nav/aseta-valittu-valilehti! :urakat :valitavoitteet)
         (swap! urakka-tila/lupaukset merge app-state)))))
 
+(defn avaa-lupaukset-valitussa-urakassa
+  [hallintayksikko-id urakka-id hoitokauden-alkuvuosi]
+  (go
+    (let [app-state {:valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                                          (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi)))]}]
+      (do
+        (nav/esta-url-paivitys!)
+        (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
+        (nav/aseta-valittu-valilehti! :sivu :urakat)
+        (nav/aseta-valittu-valilehti! :urakat :valitavoitteet)
+        (nav/aseta-valittu-valilehti! :valitavoitteet :lupaukset)
+        (nav/salli-url-paivitys!)
+        (swap! urakka-tila/lupaukset merge app-state)))))
+
 (defn kustannusten-seurantaan [osio]
   (go
     (let [app-state {}]
@@ -205,7 +219,7 @@
   []
   (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystyskohteet))
 
-(defn kustannusten-seurantaan-valitussa-urakassa [hallintayksikko-id urakka-id]
+(defn kustannussuunnitelmaan-valitussa-urakassa [hallintayksikko-id urakka-id]
   (go
     (let [app-state {}]
       (do
@@ -216,3 +230,18 @@
         (nav/aseta-valittu-valilehti! :suunnittelu :kustannussuunnitelma)
         (nav/salli-url-paivitys!)
         (swap! urakka-tila/suunnittelu-kustannussuunnitelma merge app-state)))))
+
+(defn kustannusten-seurantaan-valitussa-urakassa [hallintayksikko-id urakka-id valittu-hoitokausi]
+  (go
+    (let [app-state {:valikatselmus-auki? true
+                     :hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+                     :valittu-hoitokausi valittu-hoitokausi}]
+      (do
+        (nav/esta-url-paivitys!)
+        (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
+        (nav/aseta-valittu-valilehti! :sivu :urakat)
+        (nav/aseta-valittu-valilehti! :urakat :laskutus)
+        (nav/aseta-valittu-valilehti! :laskutus :kustannusten-seuranta)
+        (nav/salli-url-paivitys!)
+        (swap! urakka-tila/kustannusten-seuranta merge app-state)))))
+

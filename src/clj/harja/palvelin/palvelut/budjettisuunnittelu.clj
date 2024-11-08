@@ -278,6 +278,9 @@
                                   urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
                                   vertailu-kk-mhu (fn [urakan-akuvuosi]
                                                     (cond
+                                                      ;; HOX!!
+                                                      ;; Jos tähän tulee sopimusmuutoksia, tee samat muutokset sql funktioon: indeksikorjaa
+                                                      ;; 
                                                       ;; 2023 ja jälkeen alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta
                                                       (>= urakan-akuvuosi 2023) 8
                                                       ;; Muihin aikoihin alkavilla urakoilla käytetään tarkastelukuukautena syyskuuta

@@ -112,6 +112,7 @@
           ::muokkaustiedot/poistettu? false}))
 
 (defn tee-paatos [db paatos]
+  (prn "Jarno tee päätös: " paatos)
   (upsert! db ::valikatselmus/urakka-paatos paatos))
 
 (defn poista-paatokset [db urakka-id hoitokauden-alkuvuosi kayttaja-id]
@@ -122,7 +123,9 @@
            {::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
             ::urakka/id urakka-id}))
 
-(defn poista-paatos [db paatos-id]
+(defn poista-paatos [db paatos-id kayttaja-id]
   (update! db ::valikatselmus/urakka-paatos
-           {::muokkaustiedot/poistettu? true}
+           {::muokkaustiedot/poistettu? true
+            ::muokkaustiedot/muokattu (pvm/nyt)
+            ::muokkaustiedot/muokkaaja-id kayttaja-id}
            {::valikatselmus/paatoksen-id paatos-id}))

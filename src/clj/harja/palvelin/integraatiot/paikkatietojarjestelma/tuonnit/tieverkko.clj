@@ -326,7 +326,7 @@
   "Tämän funktion voi poistaa sitten, kun oikea integraatio on saatu"
   [tiedosto-polku]
   (let [raakasisalto (slurp tiedosto-polku)
-        rivit (clj-str/split raakasisalto #"\r")
+        rivit (clj-str/split raakasisalto #"\n")
         muuta-rivi (fn [rivi f]
                      (map (fn [kentta]
                             (->> kentta
