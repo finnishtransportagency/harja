@@ -1,6 +1,6 @@
 -- name: hae-hoidon-urakat-kojelautaan
 SELECT u.id,
-       u.nimi,
+       COALESCE(u.lyhyt_nimi, u.nimi) AS nimi,
        u.hallintayksikko as ely_id,
        :hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
        urakan_kustannussuunnitelman_tila(u.id::INTEGER,

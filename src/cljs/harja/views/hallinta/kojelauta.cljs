@@ -21,7 +21,7 @@
   (range (- (pvm/vuosi pvm-nyt) hoitokausia-taaksepain)
     (+ hoitokausia-eteenpain (pvm/vuosi pvm-nyt))))
 
-(defn suodattimet [e! {:keys [valinnat urakkahaku] :as app}]
+(defn suodattimet [e! {:keys [valinnat urakkahaku haku-kaynnissa?] :as app}]
   [:div
    [yleiset/pudotusvalikko
     "Urakkatyyppi"
@@ -30,7 +30,8 @@
                     (e! (tiedot/->HaeUrakat)))
      :valinta (:urakkatyyppi valinnat)
      :format-fn :nimi
-     :vayla-tyyli? true}
+     :vayla-tyyli? true
+     :disabled haku-kaynnissa?}
     (filter (fn [ut]
               (#{:hoito :paallystys} (:arvo ut)))
       nav/+urakkatyypit+)]
@@ -42,7 +43,8 @@
                      (e! (tiedot/->HaeUrakat)))
       :valinta (:ely valinnat)
       :format-fn #(or (hal/elynumero-ja-nimi %) "Kaikki")
-      :vayla-tyyli? true}
+      :vayla-tyyli? true
+      :disabled haku-kaynnissa?}
      (into [nil] (map #(select-keys % [:id :nimi :elynumero])
                    @hal/vaylamuodon-hallintayksikot))]
     [yleiset/pudotusvalikko
@@ -53,7 +55,8 @@
                      (e! (tiedot/->AsetaSuodatin :urakkavuosi %))
                      (e! (tiedot/->HaeUrakat)))
       :valinta (:urakkavuosi valinnat)
-      :vayla-tyyli? true}
+      :vayla-tyyli? true
+      :disabled haku-kaynnissa?}
      (mahdolliset-hoitokauden-alkuvuodet (pvm/nyt))]
 
     [:div.label-ja-alasveto
@@ -72,7 +75,8 @@
        :monivalinta-teksti #(case (count %)
                               0 ""
                               1 (:nimi (first %))
-                              (str (count %) " urakkaa valittu"))}
+                              (str (count %) " urakkaa valittu"))
+       :disabled? haku-kaynnissa?}
       (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]]])
 
 (defn lupauspisteet-sarake
@@ -169,11 +173,11 @@
    [{:otsikko "Urakka"
      :tyyppi :string
      :nimi :nimi
-     :leveys 5
+     :leveys 8
      :muokattava? (constantly false)}
     {:otsikko "Hoito\u00ADvuosi"
      :muokattava? (constantly false)
-     :nimi :hoitokauden_alkuvuosi :leveys 5
+     :nimi :hoitokauden_alkuvuosi :leveys 7
      :tyyppi :string :fmt #(pvm/hoitokausi-str-alkuvuodesta %)}
     {:otsikko "Kustannus\u00ADsuunnitelma"
      :muokattava? (constantly false)
