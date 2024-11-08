@@ -244,4 +244,25 @@
     (is (= "Ib" (get-in (first vastaus-haku) [:hoitoluokat 1 :hoitoluokka])))
     (is (= 43.416 (get-in (first vastaus-haku) [:hoitoluokat 1 :pituus])))))
 
+(deftest tallenna-talvihoitoreitti-onnistuu-uusille-talvihoitoluokille
+  (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        ;; Siivotaan kanta varulta
+        _ (poista-talvihoitoreitit-urakalta urakka-id)
+        ;; Anna oikeudet käyttäjälle
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        ulkoinen-id (str 123456)
+        lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-talvihoitoluokat-11-12-13.json"
+                      slurp
+                      (.replace "__ULKOINENID__" (str ulkoinen-id))
+                      (.replace "__NIMI__" "testinimi"))
+        vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+                         lahetysdata)
+        dekoodattu-body (cheshire/decode (:body vastaus-lisays) true)]
 
+    ;; Status on oikein
+    (is (= 200 (:status vastaus-lisays)))
+    ;; Palautetaan kutsujalle ulkoinen id
+    (is (= ulkoinen-id (:id dekoodattu-body)))
+
+    (let [talvihoitoreitti-kannassa (q-map (format "SELECT nimi, luoja, luotu FROM talvihoitoreitti WHERE urakka_id = %s " urakka-id))]
+      (is (= 1 (count talvihoitoreitti-kannassa))))))

@@ -20,7 +20,7 @@
 
 (defn hoitoluokka-numerosta [nro]
   (case nro
-    1 "IsE"
+    1 "Ise"
     2 "Is"
     3 "I"
     4 "Ib"
