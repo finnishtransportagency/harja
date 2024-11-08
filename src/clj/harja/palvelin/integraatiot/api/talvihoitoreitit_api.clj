@@ -4,14 +4,15 @@
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [com.stuartsierra.component :as component]
-            [compojure.core :refer [PUT DELETE]]
+            [compojure.core :refer [POST PUT DELETE]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
              [kasittele-kutsu tee-kirjausvastauksen-body tee-viallinen-kutsu-virhevastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]))
+            [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-talvihoitoreitti [db data kayttaja_id urakka_id]
   (let [_ (log/debug "paivita-talvihoitoreitti :: data" data)
@@ -61,7 +62,7 @@
 
 (defn lisaa-talvihoitoreitti
   "Otetaan lisäys ja päivitys vastaan ja päätellään, että kumpi toimenpide tehdään."
-  [db data kayttaja parametrit request]
+  [db data kayttaja parametrit request uusi?]
   (validointi/tarkista-urakka-ja-kayttaja db (konv/konvertoi->int (:id parametrit)) kayttaja)
   (jdbc/with-db-transaction [db db]
     (let [urakka_id (konv/konvertoi->int (:id parametrit))
@@ -70,6 +71,19 @@
           ;; Varmista, että talvihoitoreittiä ei ole jo olemassa
           talvihoitoreitti (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka_id
                                                                                          :ulkoinen_id (:tunniste data)})
+          ;; Validoi talvihoitoreitin päivitys/lisäys http metodin perusteella
+          _ (cond
+              (and uusi? (seq talvihoitoreitti))
+              (throw+
+                {:type virheet/+vaara-http-metodi+
+                 :virheet [{:koodi virheet/+vaara-http-metodi+
+                            :viesti "Talvihoitoreitti löytyy jo Harjasta. Lähetä päivitys versio HTTP PUT-metodilla."}]})
+              (and (not uusi?) (not (seq talvihoitoreitti)))
+              (throw+
+                {:type virheet/+tyomaapaivakirja-ei-loydy+
+                 :virheet [{:koodi virheet/+tyomaapaivakirja-ei-loydy+
+                            :viesti "Talvihoitoreittiä ei löydy Harjasta. Lähetä uusi talvihoitoreitti versio HTTP POST-metodilla."}]}))
+
           ;; Validoi talvihoitoreitti
           virheet (validoi-talvihoitoreitti db data urakka_id)
           vastaus (if (empty? virheet)
@@ -102,12 +116,21 @@
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :lisaa-talvihoitoreitti
+      (POST "/api/urakat/:id/talvihoitoreitti" request
+        (kasittele-kutsu db integraatioloki :lisaa-talvihoitoreitti request
+          json-skeemat/talvihoitoreitti-kirjaus-request
+          json-skeemat/kirjausvastaus
+          (fn [parametrit data kayttaja db]
+            (lisaa-talvihoitoreitti db data kayttaja parametrit request true))
+          :kirjoitus)))
+    (julkaise-reitti
+      http :lisaa-talvihoitoreitti
       (PUT "/api/urakat/:id/talvihoitoreitti" request
         (kasittele-kutsu db integraatioloki :lisaa-talvihoitoreitti request
           json-skeemat/talvihoitoreitti-kirjaus-request
           json-skeemat/kirjausvastaus
           (fn [parametrit data kayttaja db]
-            (lisaa-talvihoitoreitti db data kayttaja parametrit request))
+            (lisaa-talvihoitoreitti db data kayttaja parametrit request false))
           :kirjoitus)))
 
     (julkaise-reitti

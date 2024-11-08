@@ -193,9 +193,9 @@ SELECT count(distinct ("tr-osa")) as kpl
 -- name: onko-tie-olemassa?
 -- single?: true
 select exists(
-    SELECT "tr-numero"
-      FROM tr_osoitteet tr
-     WHERE tr."tr-numero" = :tie);
+    SELECT tr.tie
+      FROM tr_osien_pituudet tr
+     WHERE tr.tie = :tie);
 
 -- name: hae-tieosoitteet
 -- Ei haeta tässä vaiheessa vielä kaistoja tai ajoratoja

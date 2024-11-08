@@ -48,7 +48,7 @@
                       slurp
                       (.replace "__ULKOINENID__" (str ulkoinen-id))
                       (.replace "__NIMI__" "testinimi"))
-        vastaus-lisays (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+        vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                          lahetysdata)
         dekoodattu-body (cheshire/decode (:body vastaus-lisays) true)]
     
@@ -72,8 +72,9 @@
                       slurp
                       (.replace "__ULKOINENID__" (str ulkoinen-id))
                       (.replace "__NIMI__" (str nimi)))
-        vastaus-lisays (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+        vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                          lahetysdata)]
+
     (is (= 200 (:status vastaus-lisays)))
     (let [talvihoitoreitti-kannassa (q-map (format "SELECT nimi, luoja, luotu FROM talvihoitoreitti WHERE urakka_id = %s " urakka-id))]
       (is (= 1 (count talvihoitoreitti-kannassa))))
@@ -86,11 +87,12 @@
                         (.replace "__NIMI__" (str uusinimi)))
           vastaus-paivitys (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                              lahetysdata)
+
           ;; Tarkistetaan kannasta, onko nimi muuttunut
           talvihoitoreitti-kannassa (q-map (format "SELECT nimi FROM talvihoitoreitti
           WHERE urakka_id = %s AND ulkoinen_id = '%s' " urakka-id ulkoinen-id))]
+      (is (= 200 (:status vastaus-paivitys)))
       (is (= uusinimi (:nimi (first talvihoitoreitti-kannassa)))))))
-
 
 (deftest poista-talvihoitoreitti-onnistuu
   (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
@@ -111,9 +113,9 @@
                        slurp
                        (.replace "__ULKOINENID__" (str ulkoinen-id2))
                        (.replace "__NIMI__" (str nimi2)))
-        vastaus-lisays1 (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+        vastaus-lisays1 (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                           lahetysdata1)
-        vastaus-lisays2 (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+        vastaus-lisays2 (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                           lahetysdata2)
         ;; HAetaan kannasta ja varmistetaan, että lisäys on onnistunut
         talvihoitoreitti-kannassa (q-map (format "SELECT id, nimi FROM talvihoitoreitti
@@ -140,7 +142,7 @@
                       slurp
                       (.replace "__ULKOINENID__" (str ulkoinen-id))
                       (.replace "__NIMI__" "testinimi"))
-        vastaus (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+        vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                          lahetysdata)
         dekoodattu-body (cheshire/decode (:body vastaus) true)
         virhe (first (:virheet dekoodattu-body))]
@@ -162,7 +164,7 @@
                       slurp
                       (.replace "__ULKOINENID__" (str ulkoinen-id))
                       (.replace "__NIMI__" "testinimi"))
-        vastaus (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+        vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                   lahetysdata)
         dekoodattu-body (cheshire/decode (:body vastaus) true)
         virhe (first (:virheet dekoodattu-body))]
@@ -184,14 +186,42 @@
                       slurp
                       (.replace "__ULKOINENID__" (str ulkoinen-id))
                       (.replace "__NIMI__" "testinimi"))
-        vastaus (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+        vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                   lahetysdata)
         dekoodattu-body (cheshire/decode (:body vastaus) true)
         virhe (first (:virheet dekoodattu-body))]
 
     (is (= 400 (:status vastaus)))
     (is (= "invalidi-json" (get-in virhe [:virhe :koodi])))
-    (is (.contains (str (get-in virhe [:virhe :viesti])) "Tiellä 1 ei ole tieosaa 40"))))
+    (is (.contains (str (get-in virhe [:virhe :viesti])) "Tiellä 1 ei ole tieosaa loppuosa."))))
+
+(deftest paivita-talvihoitoreitti-epaonnistuu-koska-post
+  (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        ;; Siivotaan kanta varulta
+        _ (poista-talvihoitoreitit-urakalta urakka-id)
+        ;; Anna oikeudet käyttäjälle
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        ulkoinen-id 123456
+        lisays-lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-ok.json"
+                      slurp
+                      (.replace "__ULKOINENID__" (str ulkoinen-id))
+                      (.replace "__NIMI__" "testinimi"))
+        lisays-vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+                  lisays-lahetysdata)
+        _ (is (= 200 (:status lisays-vastaus)))
+
+        paivitys-lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-ok.json"
+                             slurp
+                             (.replace "__ULKOINENID__" (str ulkoinen-id))
+                             (.replace "__NIMI__" "paivitysnimi"))
+        ;; Lähetetään päivitys postilla
+        paivitys-vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+                           paivitys-lahetysdata)
+        dekoodattu-paivitys-vastaus (cheshire/decode (:body paivitys-vastaus) true)
+        _ (is (= 500 (:status paivitys-vastaus)))
+        virhe (first (:virheet dekoodattu-paivitys-vastaus))]
+
+    (is (= "vaara-http-metodi" (get-in virhe [:virhe :koodi])))))
 
 
 ;; Käyttöliittymästä tehtävät haut eivät välttämättä kuulu tänne, mutta niitä on mahdoton tehdä ilman dataa
@@ -210,7 +240,7 @@
                       slurp
                       (.replace "__ULKOINENID__" (str ulkoinen-id))
                       (.replace "__NIMI__" reittinimi))
-        vastaus-lisays (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+        vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                          lahetysdata)
         ;; Tarkistetaan, että lisäys on onnistunut
         talvihoitoreitti-kannassa (first (q-map (format "SELECT nimi FROM talvihoitoreitti
@@ -239,7 +269,7 @@
     (is (= 3 (get-in (first vastaus-haku) [:kalustot 1 :kalustomaara])))
     ;; Hoitoluokat
     (is (= 2 (count (:hoitoluokat (first vastaus-haku)))))
-    (is (= "IsE" (get-in (first vastaus-haku) [:hoitoluokat 0 :hoitoluokka])))
+    (is (= "Ise" (get-in (first vastaus-haku) [:hoitoluokat 0 :hoitoluokka])))
     (is (= 17.672 (get-in (first vastaus-haku) [:hoitoluokat 0 :pituus]))) ;; Tämä on eri kuin annettu pituus. Pituus lasketaan geometriasta
     (is (= "Ib" (get-in (first vastaus-haku) [:hoitoluokat 1 :hoitoluokka])))
     (is (= 43.416 (get-in (first vastaus-haku) [:hoitoluokat 1 :pituus])))))

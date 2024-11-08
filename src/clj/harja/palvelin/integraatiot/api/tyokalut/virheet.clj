@@ -35,6 +35,8 @@
 (def +puuttuva-geometria-alueurakassa+ "tuntematon-ely")
 (def +tieluvan-data-vaarin+ "tieluvan-data-vaarin")
 (def +tyomaapaivakirja-ei-loydy-virhe-koodi+ "tyomaapaivakirjaa-ei-loydy")
+(def +talvihoitoreittia-ei-loydy-virhe-koodi+ "talvihoitoreittia-ei-loydy")
+(def +vaara-http-metodi+ "vaara-http-metodi")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")

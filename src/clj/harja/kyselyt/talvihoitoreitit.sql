@@ -84,7 +84,8 @@ DELETE
 -- Tarkista onko urakalla jo samalle tielle osuvia geometrioita
 SELECT trs.id, trs.tie, trs.alkuosa, trs.loppuosa, trs.alkuetaisyys, trs.loppuetaisyys
   FROM talvihoitoreitti_sijainti trs
-           JOIN talvihoitoreitti tr ON trs.talvihoitoreitti_id = tr.id
+            -- Ei verrata itseensä. Jos ulkoinen- täsmää, niin siihen ei verrata, jotta voidaan päivittää olemassa olevaa reittiä
+           JOIN talvihoitoreitti tr ON trs.talvihoitoreitti_id = tr.id AND tr.ulkoinen_id != :ulkoinen-id
            JOIN urakka u ON tr.urakka_id = u.id AND u.id = :urakka_id
  WHERE ST_Intersects(trs.reitti::geometry, (SELECT *
                                     FROM tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT,

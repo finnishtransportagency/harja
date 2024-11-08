@@ -89,7 +89,8 @@
                                 :aosa (:aosa r)
                                 :losa (:losa r)
                                 :aet (:aet r)
-                                :let (:let r)})]
+                                :let (:let r)
+                                :ulkoinen-id (:ulkoinen_id talvihoitoreitti)})]
               (if-not (empty? leikkaavat)
                 (conj leikkaavat-geometriat
                   {:leikkaavat (format "Reitin: %s, Tieosoite: %s leikkaa jo olemassa olevan talvihoitoreitin kanssa."
