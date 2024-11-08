@@ -57,9 +57,9 @@
             "minimum": 0
           },
           "hoitoluokka": {
-            "enum": ["IsE", "Is", "I", "Ib", "Ic", "II", "III", "L", "K1", "K2", "K"],
+            "enum": ["Ise", "Is", "I", "Ib", "Ic", "II", "III", "L", "K1", "K2", "K", "Talvihoito", "Hoito osin", "Ei talvihoitoa"],
             "required": true,
-            "description": "Reitin hoitoluokka. Hoitoluokkavaihtoehdot: IsE, Is, I, Ib, Ic, II, III, L, K1, K2, K"
+            "description": "Reitin hoitoluokka. Hoitoluokkavaihtoehdot, Maantie: Ise, Is, I, Ib, Ic, II, III. Kävelyn ja pyöräilyn väylät: L, K1, K2, K. Huoltoaukot ja pysäköintialueet: Talvihoito, Hoito osin, Ei talvihoitoa."
           },
           "kalustot": {
             "type": "array",

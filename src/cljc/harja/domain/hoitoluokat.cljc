@@ -53,11 +53,11 @@ talvihoitoluokan-nimi-str
 
 (def ^{:doc "Mäppäys talvihoitoluokan nimestä sen numeroon."}
   talvihoitoluokan-numero
-  (into {} (map (juxt :nimi :numero))
-    ;; Laitetaan hoitoluokat lowercaseksi, niin vertailu onnistuu helpommin.
-    (map (fn [luokka]
-           (assoc luokka :nimi (str/lower-case (:nimi luokka))))
-      talvihoitoluokat)))
+  (into {} (map (juxt :nimi :numero)) talvihoitoluokat))
+
+(def ^{:doc "Mäppäys talvihoitoluokan talvihoito-luokasta sen numeroon."}
+  talvihoitoluokan-talvihoito-numero
+  (into {} (map (juxt :talvihoito :numero)) talvihoitoluokat))
 
 (def ^{:doc "Mahdolliset soratieluokat. Nimi kertoo käyttöliittymässä käytetyn nimen.
 Numero on tierekisterin koodi luokalle."}

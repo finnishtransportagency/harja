@@ -21,11 +21,11 @@
 (defn validoi-hoitoluokka [hoitoluokka]
   (cond
     ;; Ei saa olla tyhjä
-    (str/blank? hoitoluokka) "Hoitoluokka puuttuu"
+    (str/blank? hoitoluokka) "Hoitoluokka puuttuu. "
 
-    ;; Täytyy löytyä lowercasena kovakoodaituista hoitoluokista
-    (nil? (hoitoluokat-domain/talvihoitoluokan-numero (str/lower-case hoitoluokka)))
-    (str "Hoitoluokka " hoitoluokka " on Harjalle tuntematon hoitoluokka.")
+    ;; Täytyy löytyä :hoitoluokka avaimesta kovakoodaituista hoitoluokista
+    (nil? (hoitoluokat-domain/talvihoitoluokan-talvihoito-numero hoitoluokka))
+    (str "Hoitoluokka '" hoitoluokka "' on Harjalle tuntematon hoitoluokka. ")
 
     ;; Kaikki ok
     :else nil))
