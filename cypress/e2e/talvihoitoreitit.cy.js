@@ -55,7 +55,7 @@ describe('Talvihoitoreitit näkymä aukeaa', function ()
         cy.get('[data-cy="avaa-reitti-Reitti 1"]').click();
         // Varmista, että sen alta löytyy grid
         cy.get('table.grid').eq(0).find('tr').eq(0).find('th').eq(0).contains('Tie');
-        cy.get('table.grid').eq(0).find('tr').eq(0).find('th').eq(1).contains('Tieosoite');
+        cy.get('table.grid').eq(0).find('tr').eq(0).find('th').eq(1).contains('Osoiteväli');
         cy.get('table.grid').eq(0).find('tr').eq(0).find('th').eq(2).contains('Hoitoluokka');
         cy.get('table.grid').eq(0).find('tr').eq(0).find('th').eq(3).contains('Suunniteltu pituus (km)');
         cy.get('table.grid').eq(0).find('tr').eq(0).find('th').eq(4).contains('Laskettu pituus (km)');
