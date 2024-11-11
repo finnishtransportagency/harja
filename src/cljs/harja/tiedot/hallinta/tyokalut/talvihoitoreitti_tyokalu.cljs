@@ -30,9 +30,12 @@
     8 "L"
     9 "K1"
     10 "K2"
-    11 "K"))
+    11 "K"
+    12 "Talvihoito"
+    13 "Hoito osin"
+    14 "Ei talvihoitoa"))
 
-(def alkutila {:talvihoitoreitti {:lahetysaika (pvm/jsondate (pvm/nyt))
+(def alkutila {:talvihoitoreitti {:lahetysaika (pvm/aika->str-iso8601-UTC (pvm/nyt))
                                   :valittu-jarjestelma "Autoyksikkö Kolehmainen"
                                   :valittu-urakka nil
                                   :valittu-hallintayksikko nil
@@ -146,7 +149,7 @@
                              :content-type :json
                              :accept :json}
                      ;; Lähetä talvihoitoreitti rajapintaan
-                     vastaus (<! (http/put (str "api/urakat/" urakkaid "/talvihoitoreitti") params))
+                     vastaus (<! (http/post (str "api/urakat/" urakkaid "/talvihoitoreitti") params))
                      _ (println "Laheta :: vastaus" (pr-str vastaus))]
                  (if (or (k/virhe? vastaus) (= 400 (:status vastaus)))
                    (virhe!)

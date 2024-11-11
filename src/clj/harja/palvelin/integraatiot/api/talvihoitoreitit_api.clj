@@ -80,8 +80,8 @@
                             :viesti "Talvihoitoreitti löytyy jo Harjasta. Lähetä päivitys versio HTTP PUT-metodilla."}]})
               (and (not uusi?) (not (seq talvihoitoreitti)))
               (throw+
-                {:type virheet/+tyomaapaivakirja-ei-loydy+
-                 :virheet [{:koodi virheet/+tyomaapaivakirja-ei-loydy+
+                {:type virheet/+talvihoitoreittia-ei-loydy+
+                 :virheet [{:koodi virheet/+talvihoitoreittia-ei-loydy+
                             :viesti "Talvihoitoreittiä ei löydy Harjasta. Lähetä uusi talvihoitoreitti versio HTTP POST-metodilla."}]}))
 
           ;; Validoi talvihoitoreitti

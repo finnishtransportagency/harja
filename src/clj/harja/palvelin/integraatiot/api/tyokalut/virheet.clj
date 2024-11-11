@@ -10,6 +10,7 @@
 (def +duplikaatti-tyomaapaivakirja+ ::duplikaatti-tyomaapaivakirja)
 (def +vaara-versio-tyomaapaivakirja+ ::vaara-versio-tyomaapaivakirja)
 (def +tyomaapaivakirja-ei-loydy+ ::tyomaapaivakirjaa-ei-loydy)
+(def +talvihoitoreittia-ei-loydy+ ::talvihoitoreittia-ei-loydy)
 
 ;; Virhekoodit
 (def +invalidi-json-koodi+ "invalidi-json")
