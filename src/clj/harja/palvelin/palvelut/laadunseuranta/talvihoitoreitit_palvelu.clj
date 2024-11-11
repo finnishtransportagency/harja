@@ -121,7 +121,7 @@
                            (swap! lisatyt-atom conj (:reittinimi t))))))))
 
         vastaus (if (and (empty? @lisatyt-atom) (empty? @virheet-atom) (empty? @paivitetyt-atom))
-                  {:virheet ["Excelistä ei löydetty talvihoitoreittejä."]}
+                  {:virheet [{:virheet "Excelistä ei löydetty talvihoitoreittejä."}]}
                   {:onnistuneet @lisatyt-atom
                    :paivitetyt @paivitetyt-atom
                    :virheet (flatten @virheet-atom)})]
