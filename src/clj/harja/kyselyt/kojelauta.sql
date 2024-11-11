@@ -18,7 +18,11 @@ SELECT u.id,
            AND up."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
            AND up.poistettu IS FALSE
            AND up.tyyppi IN ('lupausbonus', 'lupaussanktio'))                                       AS lupauspaatokset,
-       sit.pisteet AS lupaus_tavoitepisteet
+       sit.pisteet AS lupaus_tavoitepisteet,
+       (SELECT count(*) FROM laatupoikkeama lp WHERE lp.urakka = u.id AND lp.paatos IS NULL AND lp.poistettu IS FALSE AND
+           EXTRACT (YEAR FROM lp.aika) = :hoitokauden_alkuvuosi) AS avoimet_laatupoikkeamat,
+       (SELECT count(*) FROM turvallisuuspoikkeama tp WHERE tp.urakka = u.id AND tp.kasitelty IS NULL AND
+           EXTRACT (YEAR FROM tp.tapahtunut) = :hoitokauden_alkuvuosi) AS avoimet_turvallisuuspoikkeamat
   FROM urakka u
            JOIN organisaatio o ON u.hallintayksikko = o.id
            LEFT JOIN lupaus_sitoutuminen sit ON

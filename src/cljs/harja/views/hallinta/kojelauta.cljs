@@ -79,6 +79,22 @@
        :disabled? haku-kaynnissa?}
       (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]]])
 
+(defn avoimet-poikkeamat-sarake
+  [rivi]
+  (let [{:keys [avoimet_laatupoikkeamat avoimet_turvallisuuspoikkeamat hoitokauden_alkuvuosi]} rivi]
+    [yleiset/wrap-if true
+     [yleiset/tooltip {} :% "Siirry laatupoikkeamiin"]
+     [:a.klikattava {:on-click #(prn "TODO: siirtymä laatupoikkeamiin")}
+      [:div.lupauspisteet
+       (if (> avoimet_laatupoikkeamat 0)
+         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly (str "Avoimia laatupoikkeamia: " avoimet_laatupoikkeamat))})
+         (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia laatupoikkeamia")}))
+       (if (> avoimet_turvallisuuspoikkeamat 0)
+         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly (str "Avoimia turvallisuuspoikkeamia: " avoimet_turvallisuuspoikkeamat))})
+         (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia turvallisuuspoikkeamia")}))
+
+       ]]]))
+
 (defn lupauspisteet-sarake
   [rivi]
   (let [{:keys [lupaus_tavoitepisteet hoitokauden_alkuvuosi]} rivi]
@@ -193,7 +209,12 @@
      :muokattava? (constantly false)
      :nimi :ks_tila :leveys 15
      :tyyppi :komponentti
-     :komponentti (fn [rivi] [lupauspisteet-sarake rivi])}]
+     :komponentti (fn [rivi] [lupauspisteet-sarake rivi])}
+    {:otsikko "Avoimet poikkeamat"
+     :muokattava? (constantly false)
+     :nimi :ks_tila :leveys 15
+     :tyyppi :komponentti
+     :komponentti (fn [rivi] [avoimet-poikkeamat-sarake rivi])}]
    urakat])
 
 (defn listaus
