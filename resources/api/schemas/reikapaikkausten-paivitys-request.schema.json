@@ -23,7 +23,7 @@
         "properties": {
           "reikapaikkaus": {
             "type": "object",
-            "additionalProperaties": false,
+            "additionalProperties": false,
             "required": true,
             "$ref": "file:resources/api/schemas/entities/reikapaikkaus.schema.json"
           }

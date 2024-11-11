@@ -477,9 +477,7 @@
         json (-> (slurp "test/resurssit/api/paikkaukset/reikapaikkauksen-kirjaus.json")
                (.replace "<ulkoinenid>" (str ulkoinen-id)))
         _ (anna-kirjoitusoikeus kayttaja)
-        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
-        _ (println "vastaus:" vastaus)
-        ]
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)]
     (is (= 400 (:status vastaus)) "HTTP PUT ei voi käyttää uuden luomiseen")
     (is (.contains (:body vastaus) "Reikäpaikkausta ei löydy kannasta, mutta tehtiin HTTP PUT päivityspyyntö. Lisää reikäpaikkaus ensin HTTP POST kutsulla."))))
 

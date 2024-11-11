@@ -5227,9 +5227,9 @@ types:
               type: paikkauskustannusten-kirjaus-request
               required: false
     /reikapaikkaus:
-      description: Reikäpaikkausten kirjaus.
       post:
-        is: [secured]
+        is:
+          - secured
         description: Uuden reikäpaikkauksen kirjaaminen.
         body:
           application/json:
@@ -5251,10 +5251,9 @@ types:
              application/json:
                example: !include examples/virhe-response.json
                schema: virhe-response
-    /reikapaikkaus:
-      description: Reikäpaikkausten päivitys.
       put:
-        is: [secured]
+        is:
+          - secured
         description: Jo lähetetyn reikäpaikkauksen päivitys.
         body:
           application/json:
