@@ -1142,7 +1142,11 @@
                                                                    lomake? "form-control"))
                          :placeholder (or placeholder "pp.kk.vvvv")
                          :value nykyinen-teksti
-                         :on-focus #(do (when on-focus (on-focus)) (reset! auki true) %)
+                         :on-focus #(when on-focus (on-focus))
+                         :on-click #(do (.stopPropagation %)
+                                      (.preventDefault %)
+                                      (reset! auki true)
+                                      %)
                          :on-change #(muuta! data (-> % .-target .-value))
                          ;; Suljetaan datepicker kun painetaan tab + shift tai esc. Enterillä datepickerin saa auki/kiinni.
                          :on-key-down #(do
@@ -1165,9 +1169,7 @@
            [:span.pvm-kentta
             {:on-click #(do (reset! auki true) nil)
              :style {:display "inline-block"}}
-            (if-not ikoni-sisaan?
-              input-komponentti
-              (tee-ikoni-komponentti input-komponentti @auki))
+            (tee-ikoni-komponentti input-komponentti @auki)
             (when @auki
               [pvm-valinta/pvm-valintakalenteri {:valitse #(when (validoi %)
                                                              (reset! auki false)
@@ -1292,26 +1294,27 @@
                                (pvm/->pvm nykyinen-pvm-teksti)
                                nykyinen-pvm
                                (pvm-tyhjana rivi))
-              elementin-id (str (gensym "pvm-aika-input"))]
+              elementin-id (str (gensym "pvm-aika-input"))
+              input-komponentti [:input.pvm {:class (when lomake? "form-control margin-bottom-4")
+                                             :placeholder "pp.kk.vvvv"
+                                             :on-click #(do (.stopPropagation %)
+                                                          (.preventDefault %)
+                                                          (reset! auki true)
+                                                          %)
+                                             :value nykyinen-pvm-teksti
+                                             :on-focus #(when on-focus (on-focus))
+                                             :on-change #(muuta-pvm! (-> % .-target .-value))
+                                             ;; Suljetaan datepicker kun painetaan tab + shift tai esc. Enterillä datepickerin saa auki/kiinni.
+                                             :on-key-down #(do
+                                                             (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
+                                                               (reset! auki false))
+                                                             (when (dom/enter-nappain? %)
+                                                               (reset! auki (not @auki))))
+                                             :on-blur #(do (when on-blur (on-blur %)) (koske-pvm!) (aseta! false) %)
+                                             :id elementin-id}]]
           [:span.pvm-aika-kentta
            [:div.inline-block
-            [:input.pvm {:class (when lomake? "form-control margin-bottom-4")
-                         :placeholder "pp.kk.vvvv"
-                         :on-click #(do (.stopPropagation %)
-                                        (.preventDefault %)
-                                        (reset! auki true)
-                                        %)
-                         :value nykyinen-pvm-teksti
-                         :on-focus #(do (when on-focus (on-focus)) (reset! auki true) %)
-                         :on-change #(muuta-pvm! (-> % .-target .-value))
-                         ;; Suljetaan datepicker kun painetaan tab + shift tai esc. Enterillä datepickerin saa auki/kiinni.
-                         :on-key-down #(do
-                                         (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
-                                           (reset! auki false))
-                                         (when (dom/enter-nappain? %)
-                                           (reset! auki (not @auki))))
-                         :on-blur #(do (when on-blur (on-blur %)) (koske-pvm!) (aseta! false) %)
-                         :id elementin-id}]
+            (tee-ikoni-komponentti input-komponentti @auki)
             (when @auki
               [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
                                                                (muuta-pvm! (pvm/pvm %))

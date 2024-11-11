@@ -133,7 +133,7 @@
                                 (when (dom/enter-nappain? %)
                                   (.preventDefault %)
                                   (nayta-edellinen-kk))
-                                (when (dom/tab+shift-nappaimet? %)
+                                (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
                                   (.preventDefault %)
                                   (sulje-kalenteri))
                                 nil)}
@@ -152,6 +152,9 @@
                                (when (dom/tab-nappain-ilman-shiftia? %)
                                  (.preventDefault %)
                                  (r/after-render (fn [] (some-> js/document (.getElementById (str "paiva_" fokus-paiva)) .focus))))
+                               (when (dom/esc-nappain? %)
+                                 (.preventDefault %)
+                                 (sulje-kalenteri))
                                nil)}
               (ikonit/livicon-chevron-right)]]
             [:tr {:class tyyli-otsikkorivi}
@@ -193,6 +196,9 @@
                                        (cond
                                          (and (dom/enter-nappain? %) valittava?)
                                          (do (valitse paiva) (sulje-kalenteri))
+
+                                         (dom/esc-nappain? %)
+                                         (sulje-kalenteri)
 
                                          (dom/tab+shift-nappaimet? %)
                                          (r/after-render (fn [] (some-> js/document (.getElementById "seuraava-kk") .focus)))
@@ -238,7 +244,7 @@
                                                            (some-> js/document (.getElementById (if pvm
                                                                                                   (str "paiva_" (t/day pvm))
                                                                                                   (str "paiva_1"))) .focus))))
-                                       (when (dom/tab-nappain-ilman-shiftia? %)
+                                       (when (or (dom/tab-nappain-ilman-shiftia? %) (dom/esc-nappain? %))
                                          (sulje-kalenteri))
                                        nil)}
                    "Tänään"]]]]])))))
