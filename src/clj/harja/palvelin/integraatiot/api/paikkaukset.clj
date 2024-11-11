@@ -115,7 +115,7 @@
                                                (let [tro (get-in rp [:reikapaikkaus :sijainti :tieosoite])
                                                      virhe (when-not (nil? tro)
                                                              (tr-validointi/validoi-tieosoite
-                                                               #{} (:numero tro) (:aosa tro) (:losa tro) (:aet tro) (:let tro)))]
+                                                               #{} (:tie tro) (:aosa tro) (:losa tro) (:aet tro) (:let tro)))]
                                                  (when-not (empty? virhe)
                                                    (conj virheet virhe))))
                                        []
@@ -180,7 +180,7 @@
                            (fn [r]
                              (let [;; Käytä ensisijaisesti tieosoitetta, mikäli se on annettu
                                    tieosoite (when (get-in r [:sijainti :tieosoite])
-                                               {:tie (get-in r [:sijainti :tieosoite :numero])
+                                               {:tie (get-in r [:sijainti :tieosoite :tie])
                                                 :aosa (get-in r [:sijainti :tieosoite :aosa])
                                                 :losa (get-in r [:sijainti :tieosoite :losa])
                                                 :aet (get-in r [:sijainti :tieosoite :aet])

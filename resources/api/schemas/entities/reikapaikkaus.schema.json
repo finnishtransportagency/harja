@@ -31,7 +31,7 @@
           "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/sijainti",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/paaluvali.schema.json"
+          "$ref": "file:resources/api/schemas/entities/tieosoitevali-tienkohdilla.schema.json"
         },
         "pistegeometria": {
           "id": "urn:harja/reitti/0/koordinaattisijainti",
