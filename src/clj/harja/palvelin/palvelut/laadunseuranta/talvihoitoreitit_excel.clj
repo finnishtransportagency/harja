@@ -52,6 +52,15 @@
                idx))
            data)))
 
+(defn- kasittele-reitin-pituus [pituus km-kaytossa?]
+  (let [pituus (if (= "java.lang.String" (type pituus))
+                 (Float/parseFloat pituus)
+                 pituus)]
+
+    (if km-kaytossa?
+      (* 1000 pituus)
+      pituus)))
+
 (defn reitit-excelista [data otsikkotiedot km-kaytossa?]
   (keep
     ;; Poistetaan rivi kokonaan, mikäli nimikenttä on nil. Eli oletetaan että rivillä ei ole
@@ -65,9 +74,7 @@
          :losa (konversio/konvertoi->int (nth rivi 4))
          :let (konversio/konvertoi->int (nth rivi 5))
          :hoitoluokka (nimea-hoitoluokka-mahdollisesti (nth rivi 6))
-         :pituus (if km-kaytossa?
-                   (* 1000 (konversio/konvertoi->int (nth rivi 7)))
-                   (konversio/konvertoi->int (nth rivi 7)))}))
+         :pituus (kasittele-reitin-pituus (nth rivi 7) km-kaytossa?) }))
     (subvec data (inc otsikkotiedot))))
 
 (defn reitit-ja-kalusto-excelista [data otsikkotiedot]

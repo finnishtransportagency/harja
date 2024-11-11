@@ -165,7 +165,7 @@
   (process-event [{:keys [vastaus]} app]
     (let [leikkaavat-virheet (keep #(:leikkaavat % ) (filter #(seq (:virheet %)) (:virheet vastaus)))
           muut-virheet (keep #(get % :virheet) (filter #(seq (get-in % [:virheet])) (:virheet vastaus)))
-          onnistuneet (:onnistuneet vastaus )
+          onnistuneet (:onnistuneet vastaus)
           paivitetyt (:paivitetyt vastaus)]
 
       ;; Excel-tiedoston käsittelyssä voi aiheuttaa virheitä joko itse reiteissä tai itse excelin lukemisessa.
