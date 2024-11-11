@@ -271,14 +271,14 @@
 
 (deftest laske-tierekisteriosoitteelle-pituus3-onnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
-        tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 4 :let 5756}
+        tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 4 :let 5752}
         ;; tie 20, osan 4 pituus on yht: 5752 josta loput 1667m on kahta ajorataa, se vaihtuu kahdeksi ajoradaksi kohdassa 4089
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                    :tierekisterin-tiedot
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 1752 (:pituus pituudet)))
-    (is (= 3423 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
+    (is (= 3415 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
 
 (deftest laske-tierekisteriosoitteelle-pituus4-onnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -391,7 +391,7 @@
           vastaus (tieverkko-kyselyt/tieosoitteen-validointi (:db t/jarjestelma)
                     (:tie suolarajoitus) (:aosa suolarajoitus) (:aet suolarajoitus) (:losa suolarajoitus) (:let suolarajoitus))]
       (is (= (nil? (:validaatiovirheet vastaus))))
-      (is (= "Tieosoite ei ole yhtenäinen." (first (:validaatioinfot vastaus))) "Tieosoite ei ole yhtenäinen."))))
+      (is (= "Tieosoite ei ole yhtenäinen. " (first (:validaatioinfot vastaus))) "Tieosoite ei ole yhtenäinen."))))
 
 
 (deftest laske-tierekisteriosoitteelle-pituus-vaarilla-tiedoilla-ei-onnistu-test
@@ -406,7 +406,7 @@
                    :tierekisterin-tiedot
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 400 (:status vastaus)))
-    (is (= (first (:vastaus vastaus)) "Loppuetäisyys on tieosan 4 ulkopuolella. Tieosa päättyy etäisyyteen 5756.") "Väärillä tiedoilla ei voi laskea pituutta.")))
+    (is (= (first (:vastaus vastaus)) "Loppuetäisyys on tieosan 4 ulkopuolella. Tieosa päättyy etäisyyteen 5752. ") "Väärillä tiedoilla ei voi laskea pituutta.")))
 
 (deftest validoi-nolla-let-arvo-onnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
