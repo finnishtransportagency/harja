@@ -219,3 +219,29 @@
     (is (= ["kattohinnan-ylitys"
             "tavoitehinnan-ylitys"] (get-in vastaus [:rahapaatokset])) "Rahapäätökset")
     (is (= ["lupausbonus"] (get-in vastaus [:lupauspaatokset])) "Lupauspäätökset")))
+
+(deftest lupauspiusteet-nousee-oikein-kojelautaan-iin-urakassa
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+        lapin-hallintayksikko-id (hae-organisaatio-id-nimella "Lappi")
+        vastaus (first
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                            :hoitokauden-alkuvuosi 2024
+                                                            :urakka-idt [urakka-id]
+                                                            :ely-id nil}))
+        urakka-jossa-ei-tavoitepisteita (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
+        vastaus-jossa-tei-avoitepisteita
+        (first
+          (kutsu-palvelua (:http-palvelin jarjestelma)
+            :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                    :hoitokauden-alkuvuosi 2024
+                                                    :urakka-idt [urakka-jossa-ei-tavoitepisteita]
+                                                    :ely-id nil}))]
+    (is (= urakka-id (get-in vastaus [:id])) "Urakka")
+    (is (= hallintayksikko-id (get-in vastaus [:ely_id])) "POP ELY")
+    (is (= 76 (get-in vastaus [:lupaus_tavoitepisteet])) "lupaus_tavoitepisteet")
+
+    (is (= urakka-jossa-ei-tavoitepisteita (get-in vastaus-jossa-tei-avoitepisteita [:id])) "Urakka")
+    (is (= lapin-hallintayksikko-id (get-in vastaus-jossa-tei-avoitepisteita [:ely_id])) "Lapin ELY")
+    (is (nil? (get-in vastaus-jossa-tei-avoitepisteita [:lupaus_tavoitepisteet])) "lupaus_tavoitepisteet")))

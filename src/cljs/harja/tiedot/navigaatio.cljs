@@ -2,34 +2,32 @@
   "Tämä nimiavaruus hallinnoi sovelluksen navigoinnin. Sisältää atomit, joilla eri sivuja ja polkua
   sovelluksessa ohjataan sekä kytkeytyy selaimen osoitepalkin #-polkuun ja historiaan. Tämä nimiavaruus
   ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa navigointitiedot."
-
   (:require
-    ;; Reititykset
-    [goog.events :as events]
-    [goog.Uri :as Uri]
-    [goog.history.EventType :as EventType]
-    [reagent.core :refer [atom wrap]]
-    [cljs.core.async :refer [<! >! chan close!]]
+   [goog.events :as events]
+   [goog.Uri :as Uri]
+   [goog.history.EventType :as EventType]
+   [reagent.core :refer [atom]]
+   [cljs.core.async :refer [<!]]
 
-    [harja.loki :refer [log tarkkaile!]]
-    [harja.asiakas.tapahtumat :as t]
-    [harja.tiedot.urakoitsijat :as urk]
-    [harja.tiedot.hallintayksikot :as hy]
-    [harja.tiedot.istunto :as istunto]
-    [harja.tiedot.urakat :as ur]
-    [harja.tiedot.raportit :as raportit]
-    [harja.tiedot.navigaatio.reitit :as reitit]
-    [harja.tiedot.hallinta.integraatioloki :as integraatioloki]
-    [harja.atom :refer-macros [reaction<! reaction-writable]]
-    [harja.pvm :as pvm]
-    [clojure.string :as str]
-    [harja.geo :as geo]
-    [harja.domain.oikeudet :as oikeudet]
-    [harja.domain.urakka :as urakka-domain]
-    [taoensso.timbre :as log])
+   [harja.loki :refer [log]]
+   [harja.asiakas.tapahtumat :as t]
+   [harja.tiedot.urakoitsijat :as urk]
+   [harja.tiedot.hallintayksikot :as hy]
+   [harja.tiedot.istunto :as istunto]
+   [harja.tiedot.urakat :as ur]
+   [harja.tiedot.raportit :as raportit]
+   [harja.tiedot.navigaatio.reitit :as reitit]
+   [harja.tiedot.hallinta.integraatioloki :as integraatioloki]
+   [harja.atom :refer-macros [reaction<!]]
+   [harja.pvm :as pvm]
+   [clojure.string :as str]
+   [harja.geo :as geo]
+   [harja.domain.oikeudet :as oikeudet]
+   [harja.domain.urakka :as urakka-domain]
+   [taoensso.timbre :as log])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]])
+                   [reagent.ratom :refer [reaction]])
 
   (:import goog.History))
 
@@ -42,27 +40,28 @@
 
 (declare kasittele-url! paivita-url valitse-urakka!)
 
-(defonce murupolku-nakyvissa? (reaction (and (not @raportit/raportit-nakymassa?)
-                                             (not= @valittu-sivu :tilannekuva)
-                                             (not= @valittu-sivu :info)
-                                             (not= @valittu-sivu :tienpidon-luvat)
-                                             (not= @valittu-sivu :about)
-                                             (not= @valittu-sivu :hallinta))))
+(defonce murupolku-nakyvissa? (reaction (and
+                                          (not @raportit/raportit-nakymassa?)
+                                          (not= @valittu-sivu :tilannekuva)
+                                          (not= @valittu-sivu :info)
+                                          (not= @valittu-sivu :tienpidon-luvat)
+                                          (not= @valittu-sivu :about)
+                                          (not= @valittu-sivu :hallinta))))
 
 (defonce kartan-extent (atom nil))
 
 (defonce kartalla-nakyva-alue
          ;; Näkyvä alue reaktoi siihen mihin zoomataan, mutta kun käyttäjä
          ;; muuttaa zoom-tasoa tai raahaa karttaa, se asetetaan näkyvään alueeseen.
-         (atom
-           (let [[minx miny maxx maxy] @kartan-extent]
-             {:xmin minx :ymin miny
-              :xmax maxx :ymax maxy})))
+  (atom
+    (let [[minx miny maxx maxy] @kartan-extent]
+      {:xmin minx :ymin miny
+       :xmax maxx :ymax maxy})))
 
 (def kartan-nakyvan-alueen-koko
   (reaction
     ((comp geo/extent-hypotenuusa (juxt :xmin :ymin :xmax :ymax))
-      @kartalla-nakyva-alue)))
+     @kartalla-nakyva-alue)))
 
 ;; Kartan koko voi olla
 ;; :hidden (ei näy mitään)
@@ -103,7 +102,7 @@
 
 (def +urakkatyypit-ja-kaikki+
   (into [{:nimi "Kaikki" :arvo :kaikki}]
-        +urakkatyypit+))
+    +urakkatyypit+))
 
 (defn urakkatyyppi-arvolle [tyyppi]
   (when tyyppi
@@ -113,7 +112,7 @@
       (if (= tyyppi :teiden-hoito)
         {:nimi "Hoito" :arvo :teiden-hoito}
         (first (filter #(= tyyppi (:arvo %))
-                       +urakkatyypit+))))))
+                 +urakkatyypit+))))))
 
 (defn nayta-urakkatyyppi [tyyppi]
   (when tyyppi
@@ -122,7 +121,7 @@
                    tyyppi)]
       (:nimi (first
                (filter #(= tyyppi (:arvo %))
-                       +urakkatyypit+))))))
+                 +urakkatyypit+))))))
 
 (defn urakkatyyppi-urakalle [ur]
   (when ur
@@ -138,28 +137,28 @@
 (defonce valittu-hallintayksikko-id (atom nil))
 ;; Atomi, joka sisältää valitun hallintayksikön
 (defonce valittu-hallintayksikko
-         (reaction (let [id @valittu-hallintayksikko-id
-                         yksikot @hy/vaylamuodon-hallintayksikot]
-                     (when (and id yksikot)
-                       (some #(and (= id (:id %)) %) yksikot)))))
+  (reaction (let [id @valittu-hallintayksikko-id
+                  yksikot @hy/vaylamuodon-hallintayksikot]
+              (when (and id yksikot)
+                (some #(and (= id (:id %)) %) yksikot)))))
 
 ;; Jos urakka valitaan id:n perusteella (url parametrilla), asetetaan se tänne
 (defonce valittu-urakka-id (atom nil))
 
 ;; Atomi, joka sisältää valitun hallintayksikön urakat
 (defonce hallintayksikon-urakkalista
-         (reaction<! [yks @valittu-hallintayksikko]
-                     (when yks
-                       (ur/hae-hallintayksikon-urakat yks))))
+  (reaction<! [yks @valittu-hallintayksikko]
+    (when yks
+      (ur/hae-hallintayksikon-urakat yks))))
 
 ;; Atomi, joka sisältää valitun urakan (tai nil)
 ;; Älä resetoi tätä suoraan, vaan urakan vaihtuessa resetoi valittu-urakka-id
 (defonce valittu-urakka
-         (reaction
-           (let [id @valittu-urakka-id
-                 urakat @hallintayksikon-urakkalista]
-             (when (and id urakat)
-               (some #(when (= id (:id %)) %) urakat)))))
+  (reaction
+    (let [id @valittu-urakka-id
+          urakat @hallintayksikon-urakkalista]
+      (when (and id urakat)
+        (some #(when (= id (:id %)) %) urakat)))))
 
 
 ;; Käyttäjän asettama urakkatyyppi. Todellinen UI:lla näkyvästi valittu urakkatyyppi
@@ -170,36 +169,36 @@
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
 ;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
 (defonce urakkatyyppi
-         (reaction<! [kayttajan-oletus-tyyppi (:urakkatyyppi @istunto/kayttaja)
+  (reaction<! [kayttajan-oletus-tyyppi (:urakkatyyppi @istunto/kayttaja)
 
-                      ;; Jos urakka on valittuna, asetetaan tyypiksi sen tyyppi
-                      urakan-urakkatyyppi (urakkatyyppi-urakalle @valittu-urakka)
-                      ;; Jos urakkatyyppi valitaan murupolusta, asetetaan se tyypiksi
-                      valittu-urakkatyyppi @valittu-urakkatyyppi
-                      ;; Lopuksi tarkastetaan, onko käyttäjällä oletustyyppiä
-                      oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))
-                      valittu-hy-id @valittu-hallintayksikko-id]
+               ;; Jos urakka on valittuna, asetetaan tyypiksi sen tyyppi
+               urakan-urakkatyyppi (urakkatyyppi-urakalle @valittu-urakka)
+               ;; Jos urakkatyyppi valitaan murupolusta, asetetaan se tyypiksi
+               valittu-urakkatyyppi @valittu-urakkatyyppi
+               ;; Lopuksi tarkastetaan, onko käyttäjällä oletustyyppiä
+               oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))
+               valittu-hy-id @valittu-hallintayksikko-id]
 
-                     (go
-                       (or urakan-urakkatyyppi
-                           valittu-urakkatyyppi
-                           ;; Jos hallintayksikkö on valittuna, asetetaan urakkatyypiksi hallintayksikölle
-                           ;; sopiva urakkatyyppi. Jos hallintayksikön väylämuoto on :tie, tarkastetaan,
-                           ;; onko käyttäjällä oletustyyppiä. Jos ei ole, palautetaan oletuksena :hoito
-                           ;; Koska hallintayksiköistä ei ole välttämättä vielä haettu, täytyy tässä
-                           ;; ottaa huomioon asynkronisuus.
-                           (when valittu-hy-id
-                             (urakkatyyppi-arvolle
-                               (case (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id))
-                                 :tie
-                                 (if-not (= :vesivayla kayttajan-oletus-tyyppi)
-                                   kayttajan-oletus-tyyppi
-                                   :hoito)
+    (go
+      (or urakan-urakkatyyppi
+        valittu-urakkatyyppi
+        ;; Jos hallintayksikkö on valittuna, asetetaan urakkatyypiksi hallintayksikölle
+        ;; sopiva urakkatyyppi. Jos hallintayksikön väylämuoto on :tie, tarkastetaan,
+        ;; onko käyttäjällä oletustyyppiä. Jos ei ole, palautetaan oletuksena :hoito
+        ;; Koska hallintayksiköistä ei ole välttämättä vielä haettu, täytyy tässä
+        ;; ottaa huomioon asynkronisuus.
+        (when valittu-hy-id
+          (urakkatyyppi-arvolle
+            (case (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id))
+              :tie
+              (if-not (= :vesivayla kayttajan-oletus-tyyppi)
+                kayttajan-oletus-tyyppi
+                :hoito)
 
-                                 :vesi
-                                 :vesivayla
-                                 nil)))
-                           oletus-urakkatyyppi))))
+              :vesi
+              :vesivayla
+              nil)))
+        oletus-urakkatyyppi))))
 
 ;; Jos ilmoitus valitaan id:n perusteella (url parametrilla), asetetaan se tänne
 (defonce valittu-ilmoitus-id (atom nil))
@@ -215,20 +214,20 @@
     (vaihda-vaylamuoto! ut)
     (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
     (swap! valittu-urakoitsija
-           #(let [nykyisen-urakkatyypin-urakoitsijat
-                  (case (:arvo ut)
-                    :kaikki @urk/urakoitsijat-kaikki
-                    :hoito @urk/urakoitsijat-hoito
-                    :teiden-hoito @urk/urakoitsijat-hoito
-                    :paallystys @urk/urakoitsijat-paallystys
-                    :tiemerkinta @urk/urakoitsijat-tiemerkinta
-                    :valaistus @urk/urakoitsijat-valaistus
-                    :siltakorjaus @urk/urakoitsijat-siltakorjaus
-                    :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet
-                    :vesivayla @urk/urakoitsijat-vesivaylat)]
-              (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
-                %
-                nil)))))
+      #(let [nykyisen-urakkatyypin-urakoitsijat
+             (case (:arvo ut)
+               :kaikki @urk/urakoitsijat-kaikki
+               :hoito @urk/urakoitsijat-hoito
+               :teiden-hoito @urk/urakoitsijat-hoito
+               :paallystys @urk/urakoitsijat-paallystys
+               :tiemerkinta @urk/urakoitsijat-tiemerkinta
+               :valaistus @urk/urakoitsijat-valaistus
+               :siltakorjaus @urk/urakoitsijat-siltakorjaus
+               :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet
+               :vesivayla @urk/urakoitsijat-vesivaylat)]
+         (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
+           %
+           nil)))))
 
 (def tarvitsen-isoa-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin.
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin :L kokoisena vaikka se ei olisikaan muuten näkyvissä."
@@ -256,21 +255,21 @@
                         (not= (valittu-valilehti :hallinta) :vesivayla-hallinta)
                         (not= (valittu-valilehti :hallinta) :vesivaylasopimuksien-liikenne-ketjutus)
                         (not= (valittu-valilehti :vesivayla-hallinta) :kanavaurakoiden-kohteiden-luonti))
-                      :hidden
+                  :hidden
 
-                      (= sivu :about) :hidden
+                  (= sivu :about) :hidden
 
-                      (= sivu :tilannekuva) :XL
+                  (= sivu :tilannekuva) :XL
 
-                      (and (= sivu :urakat)
-                           (not v-ur)) :XL
-                      :default valittu-koko)))))
+                  (and (= sivu :urakat)
+                    (not v-ur)) :XL
+                  :else valittu-koko)))))
 
 (def kartta-nakyvissa?
   "Kartta ei piilotettu"
   (reaction (let [koko @kartan-koko]
               (and (not= :S koko)
-                   (not= :hidden koko)))))
+                (not= :hidden koko)))))
 
 
 (def kartan-kontrollit-nakyvissa?
@@ -292,7 +291,7 @@
   ;; funktiota kutsutaan, sillä valitse-urakka! triggeröi kasittele-url! funktion
   ;; joka resetoisi valittu-hallintayksikko-id:n nilliksi.
   (go (<! (vaihda-urakkatyyppi! (urakkatyyppi-urakalle ur)))
-      (valitse-urakka! ur)))
+    (valitse-urakka! ur)))
 
 (defn aseta-hallintayksikko-ja-urakka-id! [hy-id ur-id]
   (log/info "ASETA HY: " hy-id ", UR: " ur-id)
@@ -326,18 +325,18 @@
   (log "VALITTIIN ILMOITUS: " (pr-str id)))
 
 (defonce urakka-klikkaus-kuuntelija
-         (t/kuuntele! :urakka-klikattu
-                      (fn [urakka]
-                        (valitse-urakka! urakka))))
+  (t/kuuntele! :urakka-klikattu
+    (fn [urakka]
+      (valitse-urakka! urakka))))
 
 ;; Quick and dirty history configuration.
 (defonce historia (let [h (History. false)]
                     (events/listen h EventType/NAVIGATE
-                                   #(kasittele-url! (.-token %)))
+                      #(kasittele-url! (.-token %)))
                     h))
 
 (defn nykyinen-url []
-   (str (reitit/muodosta-polku @reitit/url-navigaatio)
+  (str (reitit/muodosta-polku @reitit/url-navigaatio)
     "?"
     (when-let [hy @valittu-hallintayksikko-id] (str "&hy=" hy))
     (when-let [u @valittu-urakka-id] (str "&u=" u))
@@ -345,7 +344,7 @@
 
 (defonce ^{:doc "Tämä lippu voi estää URL tokenin päivittämisen, käytetään siirtymissä, joissa
  halutaan tehdä useita muutoksia ilman että välissä pävitetään URLia keskeneräisenä."}
-         esta-url-paivitys? (cljs.core/atom false))
+  esta-url-paivitys? (cljs.core/atom false))
 
 
 ;; asettaa oikean sisällön urliin ohjelman tilan perusteella
@@ -378,43 +377,55 @@
     (let [v-ur-tyyppi (:arvo @urakkatyyppi)
           v-urk @valittu-urakoitsija
           urakkalista @hallintayksikon-urakkalista
-          kayttajan-urakat (set (map key (:urakkaroolit @istunto/kayttaja)))]
+          kayttajan-urakat (set (map key (:urakkaroolit @istunto/kayttaja)))
+          nyt (pvm/nyt)]
+
       (when urakkalista
-        (into []
-              (comp (filter #(or (= :kaikki v-ur-tyyppi)
-                                 (= v-ur-tyyppi (:tyyppi %))
-                                 (and (= v-ur-tyyppi :hoito)
-                                      (= (:tyyppi %) :teiden-hoito))
-                                 (and (= v-ur-tyyppi :teiden-hoito)
-                                      (= (:tyyppi %) :hoito))
-                                 (and (= v-ur-tyyppi :vesivayla)
-                                      (urakka-domain/vesivaylaurakka? %))))
-                    (filter #(or
-                               (kayttajan-urakat (:id %))
-                               (or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
-                    (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
-              urakkalista)))))
+        (->> urakkalista
+          (filter #(or (= :kaikki v-ur-tyyppi)
+                     (= v-ur-tyyppi (:tyyppi %))
+                     (and (= v-ur-tyyppi :hoito) (= (:tyyppi %) :teiden-hoito))
+                     (and (= v-ur-tyyppi :teiden-hoito) (= (:tyyppi %) :hoito))
+                     (and (= v-ur-tyyppi :vesivayla) (urakka-domain/vesivaylaurakka? %))))
+          (filter #(or (kayttajan-urakat (:id %))
+                     (or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
+          (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja))
+          (sort-by (fn [urakka]
+                     (cond
+                       ;; Tulevat urakat, sama järjestys kun käynnissä olevat
+                       (pvm/ennen? nyt (:alkupvm urakka))
+                       [(:alkupvm urakka) (:nimi urakka)]
+
+                       ;; Käynnissä olevat urakat alkamispäiväjärjestyksessä
+                       (and
+                         (pvm/jalkeen? nyt (:alkupvm urakka))
+                         (pvm/ennen? nyt (:loppupvm urakka)))
+                       [(:alkupvm urakka) (:nimi urakka)]
+
+                       ;; Päättyneissä: päättymisjärjestyksessä (viimeksi päättynyt ylhäällä)
+                       (pvm/jalkeen? nyt (:loppupvm urakka))
+                       [(- (:loppupvm urakka))]))))))))
 
 (def urakat-kartalla "Sisältää suodatetuista urakoista aktiiviset"
   (reaction (into []
-                  (filter #(pvm/ennen? (pvm/nyt) (:loppupvm %)))
-                  @suodatettu-urakkalista)))
+              (filter #(pvm/ennen? (pvm/nyt) (:loppupvm %)))
+              @suodatettu-urakkalista)))
 
 
 (def render-lupa-hy? (reaction
                        (some? @hy/vaylamuodon-hallintayksikot)))
 
 (def render-lupa-u? (reaction
-                      (or (nil? @valittu-urakka-id)         ;; urakkaa ei annettu urlissa, ei estetä latausta
-                          (nil? @valittu-hallintayksikko)   ;; hy:tä ei saatu asetettua -> ei estetä latausta
-                          (some? @hallintayksikon-urakkalista))))
+                      (or (nil? @valittu-urakka-id)       ;; urakkaa ei annettu urlissa, ei estetä latausta
+                        (nil? @valittu-hallintayksikko)   ;; hy:tä ei saatu asetettua -> ei estetä latausta
+                        (some? @hallintayksikon-urakkalista))))
 
 (def render-lupa-url-kasitelty? (atom false))
 
 ;; sulava ensi-render: evätään render-lupa? ennen kuin konteksti on valmiina
 (def render-lupa? (reaction
                     (and @render-lupa-hy? @render-lupa-u?
-                         @render-lupa-url-kasitelty?)))
+                      @render-lupa-url-kasitelty?)))
 
 (defonce urlia-kasitellaan? (atom false))
 
@@ -442,23 +453,23 @@
 
       (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
       (swap! reitit/url-navigaatio
-             reitit/tulkitse-polku polku)
+        reitit/tulkitse-polku polku)
       ;; Käsitellään linkit yksittäisiin integraatiolokin viesteihin
       (when (and (= polku "hallinta/integraatiotilanne/integraatioloki")
-                 (.get parametrit "valittu-jarjestelma")
-                 (.get parametrit "valittu-integraatio")
-                 (.get parametrit "tapahtuma-id")
-                 (.get parametrit "alkanut"))
+              (.get parametrit "valittu-jarjestelma")
+              (.get parametrit "valittu-integraatio")
+              (.get parametrit "tapahtuma-id")
+              (.get parametrit "alkanut"))
         (let [jarjestelmat (<! (integraatioloki/hae-jarjestelmien-integraatiot))
               jarjestelma (.get parametrit "valittu-jarjestelma")
               alkanut-pvm (pvm/iso-8601->pvm (.get parametrit "alkanut"))]
           (reset! integraatioloki/valittu-jarjestelma (some #(when (= jarjestelma (:jarjestelma %))
                                                                %)
-                                                            jarjestelmat))
+                                                        jarjestelmat))
           (reset! integraatioloki/valittu-integraatio (.get parametrit "valittu-integraatio"))
           (reset! integraatioloki/tapahtuma-id #{(try (js/parseInt (.get parametrit "tapahtuma-id"))
-                                                      (catch :default e
-                                                        nil))})
+                                                   (catch :default e
+                                                     nil))})
           (reset! integraatioloki/nayta-uusimmat-tilassa? false)
           (reset! integraatioloki/valittu-aikavali [alkanut-pvm alkanut-pvm])
           (reset! integraatioloki/tultiin-urlin-kautta true)
@@ -472,20 +483,20 @@
 (.setEnabled historia true)
 
 (defonce paivita-url-navigaatiotilan-muuttuessa
-         (add-watch reitit/url-navigaatio
-                    ::url-muutos
-                    (fn [_ _ vanha uusi]
-                      (when (and (not @urlia-kasitellaan?) (not= vanha uusi))
-                        (paivita-url)))))
+  (add-watch reitit/url-navigaatio
+    ::url-muutos
+    (fn [_ _ vanha uusi]
+      (when (and (not @urlia-kasitellaan?) (not= vanha uusi))
+        (paivita-url)))))
 
 (defn paivita-urakan-tiedot! [urakka-id funktio & args]
   (swap! hallintayksikon-urakkalista
-         (fn [urakat]
-           (mapv (fn [urakka]
-                   (if (= (:id urakka) urakka-id)
-                     (apply funktio urakka args)
-                     urakka))
-                 urakat))))
+    (fn [urakat]
+      (mapv (fn [urakka]
+              (if (= (:id urakka) urakka-id)
+                (apply funktio urakka args)
+                urakka))
+        urakat))))
 
 ;; Tilannekuvassa halutaan näyttää selite urakkarajoille, jos alueita on valittu. Syklisen riippuvuuden takia
 ;; piti laittaa tänne.
@@ -495,4 +506,4 @@
 (defn yllapitourakka-valittu? []
   (let [urakkatyyppi (:arvo @urakkatyyppi)]
     (or (= urakkatyyppi :paallystys)
-        (= urakkatyyppi :tiemerkinta))))
+      (= urakkatyyppi :tiemerkinta))))

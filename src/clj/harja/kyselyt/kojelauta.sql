@@ -1,6 +1,6 @@
 -- name: hae-hoidon-urakat-kojelautaan
 SELECT u.id,
-       u.nimi,
+       COALESCE(u.lyhyt_nimi, u.nimi) AS nimi,
        u.hallintayksikko as ely_id,
        :hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
        urakan_kustannussuunnitelman_tila(u.id::INTEGER,
@@ -17,9 +17,13 @@ SELECT u.id,
          WHERE up."urakka-id" = u.id
            AND up."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
            AND up.poistettu IS FALSE
-           AND up.tyyppi IN ('lupausbonus', 'lupaussanktio'))                                       AS lupauspaatokset
+           AND up.tyyppi IN ('lupausbonus', 'lupaussanktio'))                                       AS lupauspaatokset,
+       sit.pisteet AS lupaus_tavoitepisteet
   FROM urakka u
            JOIN organisaatio o ON u.hallintayksikko = o.id
+           LEFT JOIN lupaus_sitoutuminen sit ON
+      -- varmistetaan tasan yksi rivi MAX-funktion avulla
+      sit.id = (SELECT MAX(id) FROM lupaus_sitoutuminen ls WHERE ls."urakka-id" = u.id AND ls.pisteet IS NOT NULL AND ls.poistettu IS FALSE)
  WHERE
      u.tyyppi = 'teiden-hoito' AND
      u.urakkanro IS NOT NULL AND -- testiurakat pois

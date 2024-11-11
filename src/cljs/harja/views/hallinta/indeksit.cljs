@@ -29,7 +29,7 @@
         varatut-vuodet (into #{} (map :vuosi rivit))
         ;; Ylläpidossa käytettävien Platssin indeksien tarkkuus on 2 ja arvot ovat euroa per tonni
         platts? (str/includes? indeksinimi "Platts")
-        tarkkuus (if platts? 2 1)
+        tarkkuus 2
         formatter #(fmt/desimaaliluku-opt % tarkkuus)
         vihje (when platts? "Plattsin indeksit syötettävä muodossa euroa / tonni.")]
     [y/himmennys {:himmenna?            tallennus-kaynnissa?

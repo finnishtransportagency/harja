@@ -3,6 +3,7 @@
             [harja.tiedot.hallintayksikot :as hal]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
@@ -20,7 +21,7 @@
   (range (- (pvm/vuosi pvm-nyt) hoitokausia-taaksepain)
     (+ hoitokausia-eteenpain (pvm/vuosi pvm-nyt))))
 
-(defn suodattimet [e! {:keys [valinnat urakkahaku] :as app}]
+(defn suodattimet [e! {:keys [valinnat urakkahaku haku-kaynnissa?] :as app}]
   [:div
    [yleiset/pudotusvalikko
     "Urakkatyyppi"
@@ -29,7 +30,8 @@
                     (e! (tiedot/->HaeUrakat)))
      :valinta (:urakkatyyppi valinnat)
      :format-fn :nimi
-     :vayla-tyyli? true}
+     :vayla-tyyli? true
+     :disabled haku-kaynnissa?}
     (filter (fn [ut]
               (#{:hoito :paallystys} (:arvo ut)))
       nav/+urakkatyypit+)]
@@ -41,7 +43,8 @@
                      (e! (tiedot/->HaeUrakat)))
       :valinta (:ely valinnat)
       :format-fn #(or (hal/elynumero-ja-nimi %) "Kaikki")
-      :vayla-tyyli? true}
+      :vayla-tyyli? true
+      :disabled haku-kaynnissa?}
      (into [nil] (map #(select-keys % [:id :nimi :elynumero])
                    @hal/vaylamuodon-hallintayksikot))]
     [yleiset/pudotusvalikko
@@ -52,7 +55,8 @@
                      (e! (tiedot/->AsetaSuodatin :urakkavuosi %))
                      (e! (tiedot/->HaeUrakat)))
       :valinta (:urakkavuosi valinnat)
-      :vayla-tyyli? true}
+      :vayla-tyyli? true
+      :disabled haku-kaynnissa?}
      (mahdolliset-hoitokauden-alkuvuodet (pvm/nyt))]
 
     [:div.label-ja-alasveto
@@ -71,9 +75,20 @@
        :monivalinta-teksti #(case (count %)
                               0 ""
                               1 (:nimi (first %))
-                              (str (count %) " urakkaa valittu"))}
+                              (str (count %) " urakkaa valittu"))
+       :disabled? haku-kaynnissa?}
       (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]]])
 
+(defn lupauspisteet-sarake
+  [rivi]
+  (let [{:keys [lupaus_tavoitepisteet hoitokauden_alkuvuosi]} rivi]
+    [yleiset/wrap-if true
+     [yleiset/tooltip {} :% "Siirry lupausnäkymään"]
+     [:a.klikattava {:on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
+      [:div.lupauspisteet
+       (if (nil? lupaus_tavoitepisteet)
+         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Ei tavoitepistemäärää")})
+         (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ok")}))]]]))
 
 (defn valikatselmus-sarake
   [rivi]
@@ -88,7 +103,7 @@
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannusten seurantaan"]
-     [:a.klikattava {:on-click #(siirtymat/kustannusten-seurantaan-valitussa-urakassa (:ely_id rivi) (:id rivi))}
+     [:a.klikattava {:on-click #(siirtymat/kustannusten-seurantaan-valitussa-urakassa (:ely_id rivi) (:id rivi) @u/valittu-hoitokausi)}
       [:div.rahapaatokset
        (if (nil? rahapaatokset)
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
@@ -133,10 +148,10 @@
         (= "vahvistettu" suunnitelman_tila)
         (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Valmis")}))]]))
 
+(def urakoiden-maara-per-sivu 20)
+
 (defn taulukko-paallystysurakat [e!  {:keys [urakat haku-kaynnissa?]}]
   [:div "Tänne tulee lähiaikoina päällystysurakoiden tietoa..."])
-
-(def urakoiden-maara-per-sivu 20)
 
 (defn taulukko-hoitourakat [e! {:keys [urakat haku-kaynnissa?]}]
   [grid/grid
@@ -147,20 +162,22 @@
              "Ei tietoja, tarkistathan valitut suodattimet.")
     :rivi-jalkeen-fn (fn [urakat]
                        (let [ks-tilojen-yhteenveto (tiedot/ks-tilojen-yhteenveto urakat)
-                             valikatselmus-tilojen-yhteenveto (tiedot/valikatselmus-tilojen-yhteenveto urakat)]
+                             valikatselmus-tilojen-yhteenveto (tiedot/valikatselmus-tilojen-yhteenveto urakat)
+                             lupaustietojen-yhteenveto (tiedot/lupaustietojen-yhteenveto urakat)]
                          (when-not (empty? urakat)
                            [{:teksti "Yhteensä" :luokka "lihavoitu"}
                             {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
                             {:teksti ks-tilojen-yhteenveto :luokka "lihavoitu"}
-                            {:teksti valikatselmus-tilojen-yhteenveto :luokka "lihavoitu"}])))}
+                            {:teksti valikatselmus-tilojen-yhteenveto :luokka "lihavoitu"}
+                            {:teksti lupaustietojen-yhteenveto :luokka "lihavoitu"}])))}
    [{:otsikko "Urakka"
      :tyyppi :string
      :nimi :nimi
-     :leveys 5
+     :leveys 8
      :muokattava? (constantly false)}
     {:otsikko "Hoito\u00ADvuosi"
      :muokattava? (constantly false)
-     :nimi :hoitokauden_alkuvuosi :leveys 5
+     :nimi :hoitokauden_alkuvuosi :leveys 7
      :tyyppi :string :fmt #(pvm/hoitokausi-str-alkuvuodesta %)}
     {:otsikko "Kustannus\u00ADsuunnitelma"
      :muokattava? (constantly false)
@@ -171,7 +188,12 @@
      :muokattava? (constantly false)
      :nimi :ks_tila :leveys 15
      :tyyppi :komponentti
-     :komponentti (fn [rivi] [valikatselmus-sarake rivi])}]
+     :komponentti (fn [rivi] [valikatselmus-sarake rivi])}
+    {:otsikko "Lupausten tavoite\u00ADpiste\u00ADmäärä"
+     :muokattava? (constantly false)
+     :nimi :ks_tila :leveys 15
+     :tyyppi :komponentti
+     :komponentti (fn [rivi] [lupauspisteet-sarake rivi])}]
    urakat])
 
 (defn listaus
