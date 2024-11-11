@@ -14,6 +14,7 @@
                     :kustannukset-yhteensa nil
                     :muokataan false
                     :haku-kaynnissa? false
+                    :tallennus-kaynnissa? false
                     :kustannusten-selitteet ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"]})
 
 (def nakymassa? (atom false))
@@ -135,8 +136,9 @@
   (process-event [{vastaus :vastaus} app]
     (let [kustannukset-yhteensa (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))]
       (assoc app
+        :tallennus-kaynnissa? false
         :urakka-ajan-kustannukset-yhteensa kustannukset-yhteensa)))
-  
+
   HaeKustannuksetYhteensaEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tietojen haku epäonnistui (koko urakka): " (pr-str vastaus))
@@ -174,6 +176,7 @@
 
       (hae-sanktiot-ja-bonukset app)
       (assoc app
+        :tallennus-kaynnissa? false
         :muut-kustannukset muut-kustannukset
         :tyomenetelmittain tyomenetelmittain
         :kustannukset-yhteensa kustannukset-yhteensa)))
@@ -239,7 +242,11 @@
                      ;; Käyttäjä ei kirjoittanut mitään 
                      "")]
         (tallenna-mpu-kustannus app kustannus-tyyppi selite kustannus))
-      (assoc app :muokataan false :lomake-valinnat nil)))
+
+      (assoc app
+        :muokataan false
+        :lomake-valinnat nil
+        :tallennus-kaynnissa? true)))
 
   TallennaKustannusOnnistui
   (process-event [_ app]

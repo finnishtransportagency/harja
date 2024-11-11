@@ -178,6 +178,29 @@
            haun-kuukausi (if (pvm/ennen? (first haun-kuukausi) urakan-alkupvm)
                            (pvm/kuukauden-aikavali urakan-alkupvm)
                            haun-kuukausi)
+
+           haun-alkupvm (cond
+                          ;; Alkupvm on nil, mutta hoitokausi valittuna
+                          ;; -> Aseta alkupäiväksi hoitokauden alku
+                          (and
+                            (nil? haun-alkupvm)
+                            (:valittu-hoitokausi app)
+                            (= 2 (count (:valittu-hoitokausi app))))
+                          (first (:valittu-hoitokausi app))
+                          ;; Fallback
+                          :else haun-alkupvm)
+
+           haun-loppupvm (cond
+                           ;; Loppupvm on nil, mutta hoitokausi valittuna
+                           ;; -> Aseta alkupäiväksi hoitokauden loppu
+                           (and
+                             (nil? haun-loppupvm)
+                             (:valittu-hoitokausi app)
+                             (= 2 (count (:valittu-hoitokausi app))))
+                           (second (:valittu-hoitokausi app))
+                           ;; Fallback
+                           :else haun-loppupvm)
+
            [hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi (if (:valittu-hoitokausi app)
                                                                   (first (:valittu-hoitokausi app))
                                                                   aikaisin-mahdollinen-nyt))

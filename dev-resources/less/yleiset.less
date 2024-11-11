@@ -10,7 +10,24 @@
 }
 
 .ajax-loader-valistys {
+  display: inline-block;
   padding: @valistys-16;
+
+  /* Jos käytetään isompaa ajax-loaderia, teksti menee aina rumasti, tämä korjaa */
+  .ajax-loader {
+    display: flex;
+    gap: @valistys-6;
+  }
+  .viesti {
+    align-content: center;
+  }
+}
+
+.ajax-loader-valistys-kustannukset {
+  margin-top: 0;
+  padding-top: 0;
+  display: flex;
+  justify-content: right;
 }
 
 div.tietorivi {

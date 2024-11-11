@@ -49,6 +49,7 @@
     :aloitettu "Keskeneräinen"
     :valmis "Valmis käsiteltäväksi"
     :lukittu "Käsitelty"
+    ;; Default
     "Aloittamatta"))
 
 (defn maaramuutoksissa-ennustettuja-maaria? [tyot]

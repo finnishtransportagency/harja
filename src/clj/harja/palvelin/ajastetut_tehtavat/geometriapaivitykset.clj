@@ -26,10 +26,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavasulut :as kanavasulut]
             [harja.kyselyt.geometriaaineistot :as geometria-aineistot]
             [harja.domain.geometriaaineistot :as ga]
-            [clojure.core.async :as async])
-  (:use [slingshot.slingshot :only [try+ throw+]])
-  (:import (java.net URI)
-           (java.sql Timestamp)))
+            [clojure.core.async :as async]))
 
 (def virhekasittely
   {:error-handler #(log/error "Käsittelemätön poikkeus ajastetussa tehtävässä:" %)})
@@ -119,8 +116,9 @@
 
 (def tee-laajennetun-tieverkon-paivitystehtava
   (fn [this asetukset]
-    (clojure.core.async/thread
-      (tieverkon-tuonti/vie-laajennettu-tieverkko-kantaan (:db this) (:laajennetun-tieosoiteverkon-tiedot asetukset))))
+    (when (:paivita-kaista asetukset)
+      (async/thread
+        (tieverkon-tuonti/vie-laajennettu-tieverkko-kantaan (:db this) (:laajennetun-tieosoiteverkon-tiedot asetukset)))))
   #_(maarittele-paivitystehtava
     "laajennettu-tieverkko"
     :laajennetun-tieosoiteverkon-osoite

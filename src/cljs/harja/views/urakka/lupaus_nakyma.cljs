@@ -191,8 +191,8 @@
 
 (defn- yhteenveto [e! {:keys [kuukausipisteet muokkaa-luvattuja-pisteita? lupaus-sitoutuminen yhteenveto] :as app} urakka]
   (let [hoitokauden-jarj-nro (when (:valittu-hoitokausi app) (urakka-tiedot/hoitokauden-jarjestysnumero
-                                                               (pvm/vuosi (first (:valittu-hoitokausi app)))
-                                                               (-> @tila/yleiset :urakka :loppupvm)))
+                                                               (-> @tila/yleiset :urakka :alkupvm)
+                                                               (pvm/vuosi (first (:valittu-hoitokausi app)))))
         vanha-urakka? (lupaus-domain/urakka-19-20? urakka)]
     [:div.lupausten-yhteenveto
      [:div.otsikko-ja-kuukausi
@@ -258,8 +258,8 @@
                   :else 0M)
           ennusteen-tila-teksti (if bonusta? "bonusta" "sanktioita")
           hoitokauden-jarj-nro (when (:valittu-hoitokausi app) (urakka-tiedot/hoitokauden-jarjestysnumero
-                                                                 (pvm/vuosi (first (:valittu-hoitokausi app)))
-                                                                 (-> @tila/yleiset :urakka :loppupvm)))
+                                                                 (-> @tila/yleiset :urakka :alkupvm)
+                                                                 (pvm/vuosi (first (:valittu-hoitokausi app)))))
           tavoitehinta (get-in app [:yhteenveto :tavoitehinta])]
       [:div.lupausten-ennuste {:class (cond bonusta? " bonusta"
                                             tavoite-taytetty? " bonusta"
