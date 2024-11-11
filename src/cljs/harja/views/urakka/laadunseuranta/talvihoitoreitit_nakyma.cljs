@@ -47,14 +47,14 @@
                                                          :on-click #(when (> reittien-maara 0) (e! (tiedot/->AvaaTalvihoitoreitti (:id rivi))))
                                                          :data-cy (str "avaa-reitti-" (:nimi rivi))}
                 ;; Nuoli
-                [:div.basis48.nogrow
+                [:div.basis32.nogrow.slim
                  (when (> reittien-maara 0)
                    (if auki?
                      [ikonit/navigation-ympyrassa :down]
                      [ikonit/navigation-ympyrassa :right]))]
 
                 ;; Nimi
-                [:div.basis256.nogrow.shrink3.rajaus
+                [:div.basis192.nogrow.shrink3.rajaus.slim
                  [:div {:style {:display "flex"}}
                   [:span.talvihoitoreitti-nimi {:style {:background-color (:varikoodi rivi)}}]
                   [:div.body-text.semibold.musta {:style {:font-size "1rem"}} (str (:nimi rivi))]]
@@ -62,23 +62,44 @@
 
                 [:div.basis384.grow2.shrink3.rajaus
                  [:div.body-text.semibold.musta {:style {:font-size "1rem"}} "Hoitoluokkien osuudet reitillä (km)"]
-                 [:div {:style {:display "flex"}}
-                  (doall (for [h (:hoitoluokat rivi)]
-                           ^{:key (hash (str "hoitoluokka-" h))}
-                           [:div
-                            [:div.body-text.musta.semibold {:style {:padding-right "30px"}} (:hoitoluokka h)]
-                            [:div.small-text.musta {:style {:padding-right "30px"}} (fmt/desimaaliluku-opt (:pituus h) 2)]]))]]
+                 (when (get-in rivi [:hoitoluokat :kavely_ja_pyoraily])
+                   [:div {:style { :background-color "#F5F5F5" :padding "16px"}}
+                    [:div.body-text.semibold.musta {:style {:font-size "0.85rem"}} "KÄVELYN JA PYÖRÄILYN VÄYLÄT"]
+                    [:div {:style {:display "flex" :flex-direction "row"}}
+                     (doall (for [h (get-in rivi [:hoitoluokat :kavely_ja_pyoraily])]
+                              ^{:key (hash (str "hoitoluokka-" (gensym)))}
+                              [:div {:style {:flex-direction "row"}}
+                               [:div.body-text.musta.semibold {:style {:padding-right "30px"}} (:hoitoluokka h)]
+                               [:div.small-text.musta {:style {:padding-right "30px"}} (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])
+                 (when (get-in rivi [:hoitoluokat :maantiet])
+                   [:div {:style {:display "flex" :flex-direction "column" :background-color "#F5F5F5" :padding "16px"}}
+                    [:div.body-text.semibold.musta {:style {:font-size "0.85rem"}} "MAANTIET"]
+                    [:div {:style {:display "flex" :flex-direction "row"}}
+                     (doall (for [h (get-in rivi [:hoitoluokat :maantiet])]
+                              ^{:key (hash (str "hoitoluokka-" (gensym)))}
+                              [:div {:style {:flex-direction "row"}}
+                               [:div.body-text.musta.semibold {:style {:padding-right "30px"}} (:hoitoluokka h)]
+                               [:div.small-text.musta {:style {:padding-right "30px"}} (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])
+                 (when (get-in rivi [:hoitoluokat :huoltoaukot])
+                   [:div {:style {:display "flex" :flex-direction "column" :background-color "#F5F5F5" :padding "16px"}}
+                    [:div.body-text.semibold.musta {:style {:font-size "0.85rem"}} "HUOLTOAUKOT JA PYSÄKÖINTIALUEET"]
+                    [:div {:style {:display "flex" :flex-direction "row"}}
+                     (doall (for [h (get-in rivi [:hoitoluokat :huoltoaukot])]
+                              ^{:key (hash (str "hoitoluokka-" (gensym)))}
+                              [:div {:style {:flex-direction "row"}}
+                               [:div.body-text.musta.semibold {:style {:padding-right "30px"}} (:hoitoluokka h)]
+                               [:div.small-text.musta {:style {:padding-right "30px"}} (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])]
 
-                [:div.basis384.grow2.shrink3.rajaus
+                [:div.basis192.grow2.shrink3.rajaus
                  [:div.body-text.semibold.musta {:style {:font-size "1rem"}} "Kalusto (kpl)"]
-                 [:div {:style {:display "flex"}}
+                 [:div {:style {:display "flex" :flex-direction "row" :background-color "#F5F5F5" :padding "16px"}}
                   (doall (for [kalusto (:kalustot rivi)]
                            ^{:key (hash kalusto)}
                            [:div
                             [:div.body-text.musta.semibold {:style {:padding-right "30px"}} (:kalustotyyppi kalusto)]
                             [:div.small-text.musta {:style {:padding-right "30px"}} (:kalustomaara kalusto)]]))]]
 
-                [:div.basis256.grow2.shrink2
+                [:div.basis192.grow2.shrink2
                  [:div.body-text.strong.musta ""]
                  ;; Näytä valittu rivi kartalla tai piilota se
                  [:<>
@@ -114,7 +135,7 @@
                        :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea :leveys 2 :luokka "nakyma-valkoinen-solu"}]
                      (:reitit rivi)]]))])))])]))
 
-(defn *talvihoitoreitit [e! app]
+(defn talvihoitoreitit* [e! app]
   (komp/luo
     (komp/sisaan-ulos
       #(do
@@ -136,4 +157,4 @@
 
 (defn talvihoitoreitit-nakyma
   []
-  [tuck/tuck tila/talvihoitoreitit *talvihoitoreitit])
+  [tuck/tuck tila/talvihoitoreitit talvihoitoreitit*])

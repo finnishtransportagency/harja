@@ -13,6 +13,20 @@
             [dk.ative.docjure.spreadsheet :as xls]
             [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-excel :as t-excel]))
 
+(defn- hoitoluokkaryhma
+  "Hoitoluokat kuuluvat UI:lla kolmeen ryhmään: Kävelyn ja pyöräilyn väylät, Maantiet ja Huoltoaukot ja pysäköintialueet.
+   Ryhmitellään hoitoluokat näiden ryhmien mukaan."
+  [hoitoluokka]
+  (case hoitoluokka
+    "Talvihoito" :huoltoaukot
+    "Hoito osin" :huoltoaukot
+    "Ei talvihoitoa" :huoltoaukot
+    "L" :kavely_ja_pyoraily
+    "K1" :kavely_ja_pyoraily
+    "K2" :kavely_ja_pyoraily
+    :maantiet))
+
+
 (defn hae-urakan-talvihoitoreitit [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
   (let [urakan-talvihoitoreitit (talvihoitoreitit-q/hae-urakan-talvihoitoreitit db {:urakka_id urakka-id})
@@ -40,7 +54,7 @@
                                                        (dissoc :reitti))) reitit)
 
                                        ;; Jaotellaan reitti hoitoluokittan UI:ta varten
-                                       hoitoluokkat (vec (vals (group-by :hoitoluokka (map (fn [r]
+                                       hoitoluokat (vec (vals (group-by :hoitoluokka (map (fn [r]
                                                                                              (dissoc r :sijainti :tie :alkuosa
                                                                                                :alkuetaisyys :loppuosa :loppuetaisyys
                                                                                                :id :formatoitu-tr)) reitit))))
@@ -57,14 +71,17 @@
                                                            :kalustomaara kalustomaara}))
                                                   (keys ryhmitellyt-kalustot))
                                        ;; Lasketaan jokaiselle hoitoluokalle pituus
-                                       hoitoluokkat (mapv (fn [hoitoluokka-vec]
-                                                            {:hoitoluokka (:hoitoluokka (first hoitoluokka-vec))
+                                       hoitoluokat (mapv (fn [hoitoluokka-vec]
+                                                            {:ryhma (hoitoluokkaryhma (:hoitoluokka (first hoitoluokka-vec)))
+                                                             :hoitoluokka (:hoitoluokka (first hoitoluokka-vec))
                                                              :pituus (reduce + (map :laskettu_pituus hoitoluokka-vec))})
-                                                      hoitoluokkat)
+                                                     hoitoluokat)
+                                       ;; Ryhmitellään lopuksi hoitoluokat ryhmän mukaan
+                                       hoitoluokat (group-by :ryhma hoitoluokat)
                                        rivi (-> rivi
                                               (assoc :reitit reitit)
                                               (assoc :laskettu_pituus (reduce + (map :laskettu_pituus reitit)))
-                                              (assoc :hoitoluokat hoitoluokkat)
+                                              (assoc :hoitoluokat hoitoluokat)
                                               (assoc :kalustot kalustot)
                                               (dissoc :muokkaaja :muokattu :luotu :luoja))]
                                    rivi))
