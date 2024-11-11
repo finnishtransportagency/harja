@@ -5,6 +5,16 @@
             [slingshot.slingshot :refer [throw+]]
             [harja.kyselyt.konversio :as konversio]))
 
+(defn- nimea-hoitoluokka-mahdollisesti
+  "Excelistä saadaan hoitoluokka, joka on kirjallisessa muodossa helposti luettavissa, kun käsitellään
+  Huoltoaukkoja ja pysäköintialueita. Tällaista helposti luettavaa muotoa ei ole Harjan hoitoluokka-taulukossa.
+  Nimetään siis nämä muutama hoitoluokka Harjan ymmärtämään muotoon."
+  [excel-hoitoluokka]
+  (case excel-hoitoluokka
+    "Huoltoaukot ja pysäköintialueet - Talvihoito" "Talvihoito"
+    "Huoltoaukot ja pysäköintialueet - Talvihoito osin" "Hoito osin"
+    "Huoltoaukot ja pysäköintialueet - Ei talvihoitoa" "Ei talvihoitoa"
+    excel-hoitoluokka))
 
 (defn- lue-excel-raaka-data [sivu]
   (->> sivu
@@ -54,7 +64,7 @@
          :aet (konversio/konvertoi->int (nth rivi 3))
          :losa (konversio/konvertoi->int (nth rivi 4))
          :let (konversio/konvertoi->int (nth rivi 5))
-         :hoitoluokka (nth rivi 6)
+         :hoitoluokka (nimea-hoitoluokka-mahdollisesti (nth rivi 6))
          :pituus (if km-kaytossa?
                    (* 1000 (konversio/konvertoi->int (nth rivi 7)))
                    (konversio/konvertoi->int (nth rivi 7)))}))
