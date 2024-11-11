@@ -250,7 +250,8 @@
         ;; Haetaan talvihoitoreitti käyttöliittymälle
         vastaus-haku (kutsu-palvelua (:http-palvelin jarjestelma) :hae-urakan-talvihoitoreitit +kayttaja-jvh+ {:urakka-id urakka-id})
         reittien-laskettu-pituus (reduce + (map :laskettu_pituus (mapcat :reitit vastaus-haku)))
-        hoitoluokkien-laskettu-pituus (reduce + (map :pituus (mapcat :hoitoluokat vastaus-haku)))
+        ;; Hoitoluokat on ryhmitelty kolmeen alaryhmään, niin haetaan ne sieltä väkivaltaisesti
+        hoitoluokkien-laskettu-pituus (reduce + (map :pituus (flatten (vals (mapcat :hoitoluokat vastaus-haku)))))
         reittien-annettu-pituus (reduce + (map :pituus (mapcat :reitit vastaus-haku)))]
 
     (is (= 30.5 reittien-annettu-pituus))
@@ -268,11 +269,11 @@
     ;; Traktorit
     (is (= 3 (get-in (first vastaus-haku) [:kalustot 1 :kalustomaara])))
     ;; Hoitoluokat
-    (is (= 2 (count (:hoitoluokat (first vastaus-haku)))))
-    (is (= "Ise" (get-in (first vastaus-haku) [:hoitoluokat 0 :hoitoluokka])))
-    (is (= 17.672 (get-in (first vastaus-haku) [:hoitoluokat 0 :pituus]))) ;; Tämä on eri kuin annettu pituus. Pituus lasketaan geometriasta
-    (is (= "Ib" (get-in (first vastaus-haku) [:hoitoluokat 1 :hoitoluokka])))
-    (is (= 43.416 (get-in (first vastaus-haku) [:hoitoluokat 1 :pituus])))))
+    (is (= 2 (count (:maantiet (:hoitoluokat (first vastaus-haku))))))
+    (is (= "Ise" (get-in (first vastaus-haku) [:hoitoluokat :maantiet 0 :hoitoluokka])))
+    (is (= 17.672 (get-in (first vastaus-haku) [:hoitoluokat :maantiet 0 :pituus]))) ;; Tämä on eri kuin annettu pituus. Pituus lasketaan geometriasta
+    (is (= "Ib" (get-in (first vastaus-haku) [:hoitoluokat :maantiet 1 :hoitoluokka])))
+    (is (= 43.416 (get-in (first vastaus-haku) [:hoitoluokat :maantiet 1 :pituus])))))
 
 (deftest tallenna-talvihoitoreitti-onnistuu-uusille-talvihoitoluokille
   (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")

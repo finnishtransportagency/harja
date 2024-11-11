@@ -373,8 +373,8 @@
     ;; Virhe
     (is (= 400 (:status vastaus)))
     ;; Virheitä on 2
-    (is (= 3 (count (:vastaus vastaus))))
-    (is (= "Tieosoite puutteellinen." (first (:vastaus vastaus))))))
+    (is (= 2 (count (:vastaus vastaus))))
+    (is (= "Tieosoite puutteellinen. " (first (:vastaus vastaus))))))
 
 (deftest tieosoitteen-validointi-test
   (testing "Tieosoite on yksinkertainen ja on olemassa"
