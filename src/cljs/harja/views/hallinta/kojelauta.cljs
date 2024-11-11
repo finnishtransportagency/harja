@@ -150,8 +150,39 @@
 
 (def urakoiden-maara-per-sivu 20)
 
+(defn paallystyskohteiden-sarake [rivi]
+  [:div (str "Yllapitokohteiden yhteensä: " (:yllapitokohteiden_lkm rivi) "Valmiit: " (:valmis_hyvaksytty rivi))])
 (defn taulukko-paallystysurakat [e!  {:keys [urakat haku-kaynnissa?]}]
-  [:div "Tänne tulee lähiaikoina päällystysurakoiden tietoa..."])
+  [grid/grid
+   {:otsikko (str "")
+    :tyhja (if haku-kaynnissa?
+             [ajax-loader "Ladataan tietoja"]
+             "Ei tietoja, tarkistathan valitut suodattimet.")
+    :rivi-jalkeen-fn (fn [urakat]
+                       (let [yhteenveto (tiedot/paallystystietojen-yhteenveto urakat)]
+                         (when-not (empty? urakat)
+                           [{:teksti "Yhteensä" :luokka "lihavoitu"}
+                            {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
+                            {:teksti yhteenveto :luokka "lihavoitu"}])))}
+   [{:otsikko "Urakka"
+     :tyyppi :string
+     :nimi :nimi
+     :leveys 5
+     :muokattava? (constantly false)}
+    {:otsikko "Vuosi"
+     :muokattava? (constantly false)
+     :nimi :hoitokauden_alkuvuosi :leveys 3
+     :tyyppi :string :fmt #(pvm/hoitokausi-str-alkuvuodesta %)}
+    {:otsikko "Päällystyskohteet"
+     :muokattava? (constantly false)
+     :nimi :ks_tila :leveys 15
+     :tyyppi :komponentti
+     :komponentti (fn [rivi] [paallystyskohteiden-sarake rivi])}
+    {:otsikko "Valmiit"
+     :muokattava? (constantly false)
+     :nimi :valmis_hyvaksytty :leveys 15
+     :tyyppi :kokonaisluku}]
+   urakat])
 
 (defn taulukko-hoitourakat [e! {:keys [urakat haku-kaynnissa?]}]
   [grid/grid

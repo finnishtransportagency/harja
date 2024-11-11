@@ -38,30 +38,41 @@ SELECT u.id,
 SELECT u.id,
        u.nimi,
        u.hallintayksikko as ely_id,
-       :vuosi as vuosi,
+       :vuosi as hoitokauden_alkuvuosi, -- Käytetään samaa termiä kuin hoidossa vaikka kyseessä on vuosi
        (SELECT count(*) FROM yllapitokohde y
                         WHERE y.urakka = u.id AND
                               y.vuodet @> ARRAY[:vuosi]::INTEGER[] AND
                           -- y.yhaid IS NOT NULL --> kohde on YHA:sta Harjaan haettu päällystyskohde
                             (y.yhaid IS NOT NULL OR
                                 -- y.yhaid IS NULL AND paikkauskohde.pot? = TRUE --> kohde on Harjassa luotu paikkauskohde, jolle on merkitty että tehdään päällystysilmoitus (POT)
-                             (y.yhaid IS NULL AND EXISTS (SELECT id FROM paikkauskohde where "pot?" = true and "yllapitokohde-id" = y.id)))) as yllapitokohteiden_lkm
+                             (y.yhaid IS NULL AND EXISTS (SELECT id FROM paikkauskohde where "pot?" = true and "yllapitokohde-id" = y.id)))) as yllapitokohteiden_lkm,
+                                COUNT(*) FILTER (WHERE pot2.tila IN ('valmis', 'lukittu')) AS valmis_hyvaksytty,
+                                COUNT(*) FILTER (WHERE y.lahetetty IS NOT NULL
+                                    AND    pot2.tila IN ('valmis',
+                                                         'lukittu')
+                                    AND    y.lahetys_onnistunut IS TRUE) AS lahetetty_onnistuneesti,
+       COUNT(*) FILTER (WHERE y.lahetetty IS NOT NULL
+           AND    pot2.tila IN ('valmis',
+                                'lukittu')
+           AND    y.lahetys_onnistunut = FALSE) AS epaonnistuneet_lahetetyt
   FROM urakka u
            join organisaatio o ON u.hallintayksikko = o.id
+           join yllapitokohde y ON y.urakka = u.id
+           left join paallystysilmoitus pot2 ON y.id = pot2.paallystyskohde
 
  WHERE
      u.tyyppi = 'paallystys' AND
      u.urakkanro IS NOT NULL AND -- testiurakat pois
      -- oltava vähintään yksi ylläpitokohde jolle tehdään pot-lomake
-     (SELECT count(*) FROM yllapitokohde y
-       WHERE y.urakka = u.id AND
+     y.urakka = u.id AND
            y.vuodet @> ARRAY[:vuosi]::INTEGER[] AND
            (y.yhaid IS NOT NULL OR
-            (y.yhaid IS NULL AND EXISTS (SELECT id FROM paikkauskohde where "pot?" = true and "yllapitokohde-id" = y.id)))) > 0 AND
+            (y.yhaid IS NULL AND EXISTS (SELECT id FROM paikkauskohde where "pot?" = true and "yllapitokohde-id" = y.id))) AND
      (:vuosi BETWEEN
          EXTRACT (YEAR FROM u.alkupvm) AND
          EXTRACT (YEAR FROM u.loppupvm)) AND
      (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
      (:ely_id::INTEGER IS NULL OR u.hallintayksikko = :ely_id)
+ GROUP BY u.id, u.nimi, u.hallintayksikko, hoitokauden_alkuvuosi
  ORDER BY u.nimi;
 

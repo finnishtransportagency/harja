@@ -29,6 +29,12 @@
                             :urakat nil
                             :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
+(defn paallystystietojen-yhteenveto [urakat]
+  (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
+        valmiit-koheet (reduce + 0 (map :valmis_hyvaksytty urakat))]
+    [yleiset/tietoja {:class "body-text"}
+     "Kohteita yhteensä" (str kohteiden-lukumaara)
+     "Valmiit:" (str valmiit-koheet)]))
 (defn lupaustietojen-yhteenveto
   [urakat]
   (let [kaikkien-urakoiden-lkm (count urakat)
