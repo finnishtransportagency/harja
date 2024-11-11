@@ -52,7 +52,8 @@
     :mobiilityokalu (not (urakka/vesivaylaurakka? urakka))
     :talvihoitoreititys (and
                           (= :teiden-hoito tyyppi)
-                          (oikeudet/urakat-laadunseuranta-talvihoitoreititys id))))
+                          (oikeudet/urakat-laadunseuranta-talvihoitoreititys id)
+                          (roolit/jvh? @istunto/kayttaja))))
 
 (defn laadunseuranta [_ur]
   (komp/luo
