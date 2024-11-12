@@ -33,7 +33,7 @@
 
 (defn yhteenveto-laatikko [e! app data sivu]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
+        valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero (-> @tila/yleiset :urakka :alkupvm) valittu-hoitokauden-alkuvuosi)
         {:keys [tavoitehinta] indeksikorjattu-tavoitehinta? :indeksikorjattu?} (t/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app 0)
         {:keys [kattohinta] indeksikorjattu-kattohinta? :indeksikorjattu?} (or (t/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
         oikaistu-kattohinta (or (t/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro app) 0)

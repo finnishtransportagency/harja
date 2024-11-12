@@ -1003,6 +1003,12 @@
                       WHERE  nimi = '%s';"
                nimi))))
 
+(defn hae-organisaatio-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   organisaatio
+                      WHERE  nimi = '%s';"
+               nimi))))
+
 (defn hae-kayttajan-id-kayttajanimella [kayttajanimi]
   (ffirst (q (format "SELECT id
                       FROM   kayttaja
@@ -1941,6 +1947,14 @@
                                                                  {::reittipiste/toteuma-id toteuma-id}))]
         (not (nil? reittipisteet))))
     "Reittipisteet löytyvät"
+    1000))
+
+(defn odota-suolatoteuma-reittipisteet [toteuma-id]
+  (odota-ehdon-tayttymista
+    (fn []
+      (let [reittipisteet (first (q-map (format "SELECT aika,pohjavesialue,materiaalikoodi,maara,rajoitusalue_id FROM suolatoteuma_reittipiste where toteuma = %s" toteuma-id)))]
+        (not (nil? reittipisteet))))
+    "Suolatoteuma_reittipisteet löytyvät"
     1000))
 
 (defn edellinen-materiaalin-kayton-paivitys [sopimus]

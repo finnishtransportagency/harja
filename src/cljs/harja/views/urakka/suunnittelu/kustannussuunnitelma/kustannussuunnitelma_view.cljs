@@ -416,14 +416,19 @@
         (set! e! e*!)
         (r/with-let [indeksit-saatavilla?-fn (fn [app]
                                                (let [alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
+
                                                      hoitovuodet (into {}
                                                                    (map-indexed #(-> [(inc %1) %2])
-                                                                     (range alkuvuosi (+ alkuvuosi 5))))]
-                                                 (some? (first (filter #(= (:vuosi %)
-                                                                          (-> app
-                                                                            (get-in [:suodattimet :hoitokauden-numero])
-                                                                            hoitovuodet))
-                                                                 (get-in app [:domain :indeksit]))))))]
+                                                                     (range alkuvuosi (+ alkuvuosi 5))))
+
+                                                     indeksit-saatavilla (filter #(= (:vuosi %)
+                                                                                     (-> app
+                                                                                       (get-in [:suodattimet :hoitokauden-numero])
+                                                                                       hoitovuodet))
+                                                                           (get-in app [:domain :indeksit]))
+
+                                                     saatavilla? (some? (first indeksit-saatavilla))]
+                                                 saatavilla?))]
 
           (if gridit-vanhentuneet?
             [yleiset/ajax-loader]
@@ -459,7 +464,7 @@
 
                  ;; Osiot
                  ::t/hankintakustannukset
-                 #_ [debug/debug (get-in app [:domain :osioiden-tilat])]
+                 #_[debug/debug (get-in app [:domain :osioiden-tilat])]
                  [hankintakustannukset-osio/osio
                   (ks-yhteiset/osio-vahvistettu? osioiden-tilat :hankintakustannukset hoitovuosi-nro)
                   (get-in app [:domain :kirjoitusoikeus?])
@@ -503,13 +508,15 @@
                   (dissoc suodattimet :hankinnat)
                   (:kantahaku-valmis? app)
                   (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
-                  (-> @tila/yleiset :urakka :loppupvm pvm/vuosi)]
+                  (-> @tila/yleiset :urakka :loppupvm pvm/vuosi)
+                  (:tallennus-kaynnissa-rahavaraukset? app)]
+                 
                  [osion-vahvistus/vahvista-osio-komponentti :tavoitehintaiset-rahavaraukset
                   {:osioiden-tilat osioiden-tilat
                    :hoitovuosi-nro hoitovuosi-nro
                    :indeksit-saatavilla? indeksit-saatavilla?}]
 
-                 ::t/johto-ja-hallintokorvaukset                 
+                 ::t/johto-ja-hallintokorvaukset
                  [johto-ja-hallintokorvaus-osio/osio
                   app
                   (ks-yhteiset/osio-vahvistettu? osioiden-tilat :johto-ja-hallintokorvaus hoitovuosi-nro)
@@ -556,12 +563,11 @@
                   (:kantahaku-valmis? app)]
                  [osion-vahvistus/vahvista-osio-komponentti :tavoite-ja-kattohinta
                   {:vahvistus-vaadittu-osiot (:vahvistus-vaadittu-osiot
-                                               (mhu-domain/osioiden-riippuvuudet :tavoite-ja-kattohinta))
+                                              (mhu-domain/osioiden-riippuvuudet :tavoite-ja-kattohinta))
                    :osioiden-tilat osioiden-tilat
                    :hoitovuosi-nro hoitovuosi-nro
                    :indeksit-saatavilla? indeksit-saatavilla?
-                   :osiossa-virheita? (some? (get-in app [:kattohinta :virheet 0 (keyword (str "kattohinta-vuosi-" hoitovuosi-nro))]))}]
-                 ))
+                   :osiossa-virheita? (some? (get-in app [:kattohinta :virheet 0 (keyword (str "kattohinta-vuosi-" hoitovuosi-nro))]))}]))
 
              ;; Näytä vahvistusdialogi, jos vaaditaan muutosten vahvistus.
              (let [{:keys [vaaditaan-muutosten-vahvistus? muutos-vahvistettu-fn]} muutosten-vahvistus]

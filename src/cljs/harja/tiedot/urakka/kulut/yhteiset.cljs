@@ -74,7 +74,7 @@
 
 (defn valikatselmus-tekematta? [app]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
+        valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero (-> @tila/yleiset :urakka :alkupvm) valittu-hoitokauden-alkuvuosi)
         {:keys [tavoitehinta]} (hoitokauden-tavoitehinta valittu-hoitovuosi-nro app 0)
         oikaistu-kattohinta (or (hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro app) 0)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)

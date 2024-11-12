@@ -156,18 +156,18 @@
                           ;; skipataan töiden haku
                           ;; TODO: Näitä on varmasti noin miljoona muutakin, joten tee tästä funkkari/setti, johon näitä voi määritellä
                           (when-not (or (= :paikkaukset-yllapito (nav/valittu-valilehti :urakat))
-                                        (= :lupaukset (nav/valittu-valilehti :valitavoitteet))
-                                        (= :kustannusten-seuranta (nav/valittu-valilehti :laskutus))
-                                        (= :suola (nav/valittu-valilehti :suunnittelu))
-                                        (= :tehtavat (nav/valittu-valilehti :suunnittelu))
-                                        (= :pohjavesialueiden-suola (nav/valittu-valilehti :toteumat)))
+                                      (= :lupaukset (nav/valittu-valilehti :valitavoitteet))
+                                      (= :kustannusten-seuranta (nav/valittu-valilehti :laskutus))
+                                      (= :suola (nav/valittu-valilehti :suunnittelu))
+                                      (= :tehtavat (nav/valittu-valilehti :suunnittelu))
+                                      (= :pohjavesialueiden-suola (nav/valittu-valilehti :toteumat)))
                             (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
                               (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
                             (when (or (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
-                                      (oikeudet/urakat-toteumat-yksikkohintaisettyot (:id ur)))
+                                    (oikeudet/urakat-toteumat-yksikkohintaisettyot (:id ur)))
                               (go (reset! u/urakan-yks-hint-tyot
-                                          (s/prosessoi-tyorivit ur
-                                                                (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))))]
+                                    (s/prosessoi-tyorivit ur
+                                      (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))))]
 
     ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
     @u/valittu-toimenpideinstanssi
@@ -255,7 +255,7 @@
        (when (valilehti-mahdollinen? :paikkaukset-mpu ur)
          ^{:key "paikkaukset-mpu"}
          [reikapaikkaukset/reikapaikkaukset ur])
-       
+
        "Kustannukset"
        :mpu-kustannukset
        (when (valilehti-mahdollinen? :mpu-kustannukset ur)
@@ -303,4 +303,5 @@
          ^{:key "paikkaukset"}
          [paikkaukset/paikkaukset ur])]
 
-      [ajax-loader "Ladataan urakan tietoja..."])))
+      [:div.ajax-loader-valistys
+       [ajax-loader "Ladataan urakan tietoja..."]])))

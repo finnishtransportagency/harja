@@ -41,12 +41,12 @@ describe('Päänäkymien avaamiset', function () {
 
     it("Tienpidon luvat välilehti toimii", function () {
         cy.contains('ul#sivut a span', 'Tienpidon luvat').click({force: true})
-        cy.contains('button', "Hae lupia").should('exist')
+        cy.contains('button', "Hae lupia", { timeout: 10000 }).should('be.visible');
         cy.contains('Hupsista').should('not.exist')
     })
 
     it("Info -sivu toimii", function () {
-        cy.contains('ul div#info a span', 'INFO').click({force: true})
+        cy.contains('ul li a span', 'INFO').click({ force: true });
         cy.contains('Hupsista').should('not.exist')
         cy.contains('Harja uutiset').should('exist')
     })

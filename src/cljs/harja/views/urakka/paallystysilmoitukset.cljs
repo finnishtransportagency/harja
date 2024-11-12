@@ -241,7 +241,8 @@
          [yleiset/vihje "Tilaajan täytyy hyväksyä ilmoitus ennen kuin se voidaan lähettää YHA:an"])])))
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
-  [:div
+  [:div.paallystys-valinnat
+   
    [valinnat/vuosi {:vayla-tyyli? true}
     (t/year (:alkupvm urakka))
     (t/year (:loppupvm urakka))
@@ -249,6 +250,17 @@
     #(do
        (urakka/valitse-urakan-vuosi! %)
        (e! (paallystys/->HaePaallystysilmoitukset)))]
+   
+   [yleiset/pudotusvalikko
+    "Järjestä kohteet"
+    {:valinta pot-jarjestys
+     :valitse-fn #(e! (paallystys/->JarjestaYllapitokohteet %))
+     :vayla-tyyli? true
+     :format-fn {:tila "Tilan mukaan"
+                 :kohdenumero "Kohdenumeron mukaan"
+                 :muokkausaika "Muokkausajan mukaan"}}
+    [:tila :kohdenumero :muokkausaika]]
+   
    [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero (fn [valittu-arvo]
                                                                          ;; Tämänkin voi ottaa pois, jos koko ylläpidon saa
                                                                          ;; joskus refaktoroitua
@@ -259,16 +271,7 @@
                                                      ;; joskus refaktoroitua
                                                      (reset! yllapito-tiedot/tienumero valittu-arvo)
                                                      (e! (paallystys/->SuodataYllapitokohteet)))
-    {:otsikon-luokka "alasvedon-otsikko-vayla"}]
-   [yleiset/pudotusvalikko
-    "Järjestä kohteet"
-    {:valinta pot-jarjestys
-     :valitse-fn #(e! (paallystys/->JarjestaYllapitokohteet %))
-     :vayla-tyyli? true
-     :format-fn {:tila "Tilan mukaan"
-                 :kohdenumero "Kohdenumeron mukaan"
-                 :muokkausaika "Muokkausajan mukaan"}}
-    [:tila :kohdenumero :muokkausaika]]])
+    {:otsikon-luokka "alasvedon-otsikko-vayla"}]])
 
 (defn paallystysilmoitukset
   [e! app]

@@ -451,7 +451,7 @@
                     (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?] not)))]
     (fn [suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid {:keys [toimenpide maksetaan kopioidaan-tuleville-vuosille?]}]
       (let [toimenpide (toimenpide-tekstiksi toimenpide)]
-        [:div
+        [:div.kustannussuunnitelma-hankinnat
          [:div.kustannussuunnitelma-filter
           [:div
            [:span "Toimenpide"]

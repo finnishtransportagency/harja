@@ -382,8 +382,8 @@
 (def iso8601-aikavyohykkeella-format
   (luo-format "yyyy-MM-dd'T'HH:mm:ssX"))
 
-(defn jsondate
-  "Luodaan (t/now) tyyppisestä ajasta json date formaatti -> 2022-08-10T12:00:00Z"
+(defn aika->str-iso8601-UTC
+  "Luodaan (t/now) tyyppisestä ajasta formaatti yyyy-MM-dd'T'HH:mm:ss'Z' -> 2022-08-10T12:00:00Z"
   [pvm]
   (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss'Z'") pvm))
 
@@ -490,6 +490,13 @@
    (defn iso8601-timestamp-str->iso8601-str
      [teksti]
      (formatoi iso8601-format (df/parse (df/formatter "yyyy-MM-dd'T'HH:mm:ss'Z'") teksti))))
+
+#?(:cljs
+   (defn iso8601-timestamp-str->pvm
+     "Parsii ajan string muotoisesta date formaatista yyyy-MM-dd'T'HH:mm:ss'Z' (2022-08-10T12:00:00Z)
+     ja palauttaa sen local DateTime instanssina."
+     [teksti]
+     (parsi (luo-format "yyyy-MM-dd'T'HH:mm:ss'Z'") teksti)))
 
 #?(:cljs
    (defn js-date->pvm
@@ -772,12 +779,20 @@
        (hoitokauden-loppupvm (inc vuosi))])))
 
 (defn paivamaara->mhu-hoitovuosi-nro
-  "Palauttaa MHU hoitovuoden järjestysnumeron annetulle päivämäärälle."
+  "Palauttaa MHU hoitovuoden järjestysnumeron annetulle päivämäärälle.
+  Esimerkiksi: Jos urakan alkupäivämäärä on 1.10.2021 ja pvm on 30.11.2023, palautetaan 3."
   [urakan-alkupvm pvm]
   (let [urakan-alkuvuosi (vuosi urakan-alkupvm)
         [kauden-alkupvm _] (paivamaaran-hoitokausi pvm)
         kauden-alkuvuosi (vuosi kauden-alkupvm)]
     (max (- (inc kauden-alkuvuosi) urakan-alkuvuosi) 1)))
+
+(defn hoitokausivuosi->mhu-hoitovuosi-nro
+  "Palauttaa MHU hoitovuoden järjestysnumeron annetulle hoitokausivuosi.
+  Esimerkiksi: Jos urakan alkupäivämäärä on 1.10.2021 ja hoitokausivuosi on 2022, palautetaan 2."
+  [urakan-alkupvm hoitokausivuosi]
+  (let [urakan-alkuvuosi (vuosi urakan-alkupvm)]
+    (max (- (inc hoitokausivuosi) urakan-alkuvuosi) 1)))
 
 (defn paivamaaran-hoitokausi-str
   [pvm]

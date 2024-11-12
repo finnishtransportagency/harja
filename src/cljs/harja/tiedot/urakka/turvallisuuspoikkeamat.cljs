@@ -16,6 +16,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
+(def haku-kesken? (atom false))
 
 (def kayttajahakulomake-data (atom nil))
 (def kayttajahakutulokset-data (atom []))
@@ -31,6 +32,7 @@
                                         :loppu loppu}))
 
 (defn hae-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
+  (reset! haku-kesken? true)
   (k/post! :hae-turvallisuuspoikkeama {:urakka-id urakka-id
                                        :turvallisuuspoikkeama-id turvallisuuspoikkeama-id}))
 
