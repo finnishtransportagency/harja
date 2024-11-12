@@ -382,7 +382,6 @@
 
         ;; Tarkistetaan, että kannassa on kaikki oikein
         db-paikkaus (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " ulkoinen-id ";"))
-        _ (println "db-paikkaus:" db-paikkaus)
         db-tieosoite (dissoc (trosoite-obj->map db-paikkaus)
                        :ajorata)]
     (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
@@ -408,7 +407,6 @@
 
         ;; Tarkistetaan, että kannassa on kaikki oikein
         db-paikkaus (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " ulkoinen-id ";"))
-        _ (println "db-paikkaus:" db-paikkaus)
         db-tieosoite (dissoc (trosoite-obj->map db-paikkaus)
                        :ajorata)]
     (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
@@ -520,7 +518,6 @@
 
         ;; Lisätään uusi
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
-        _ (println "vastaus:" vastaus)
         _ (is (= 200 (:status vastaus)) "Lisäys onnistuu")
         db-reikapaikkaus (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " ulkoinen-id ";"))
 
@@ -549,3 +546,26 @@
     (is (= "kg" (:reikapaikkaus-yksikko db-reikapaikkaus)) "Liäsys onnistui")
 
     ))
+
+
+(deftest poista-reikapaikkaus-onnistuu
+  (let [db (luo-testitietokanta)
+        urakka (hae-oulun-alueurakan-2014-2019-id)
+        _ (anna-kirjoitusoikeus kayttaja)
+        ulkoinen-id (rand-int 10000)
+
+        lisays-json (-> (slurp "test/resurssit/api/paikkaukset/reikapaikkauksen-kirjaus.json")
+               (.replace "<ulkoinenid>" (str ulkoinen-id)))
+        vastaus-lisays (api-tyokalut/post-kutsu["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti lisays-json)
+        _ (is (= 200 (:status vastaus-lisays)) "Lisäys onnistuu")
+
+        ;; Poistetaan
+        poisto-json (-> (slurp "test/resurssit/api/paikkaukset/reikapaikkausten-poisto.json")
+                      (.replace "__POISTETTAVAT_REIKAPAIKKAUKSET__" (str ulkoinen-id)))
+        vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti poisto-json)
+        _ (is (= 200 (:status vastaus-poisto)) "Poisto onnistuu")
+
+        db-reikapaikkaus (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " ulkoinen-id ";"))]
+
+    ;; Varmistetaan, että on poistettu
+    (is (true? (:poistettu db-reikapaikkaus)) "Poistettu")))

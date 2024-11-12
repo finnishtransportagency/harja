@@ -239,7 +239,7 @@
         validointivirheet (validoi-reikapaikkausten-sanoman-tierekisteri db reikapaikkaukset)
 
         paikkaukset-olemassa? (every? true? (map
-                                        #(boolean (seq (reikapaikkaus-q/hae-reikapaikkaus db {:ulkoinen-id (get-in % [:reikapaikkaus :tunniste :id])
+                                        #(boolean (seq (reikapaikkaus-q/hae-reikapaikkaus-vaikka-poistettu db {:ulkoinen-id (get-in % [:reikapaikkaus :tunniste :id])
                                                                                               :urakka-id urakka-id})))
                                         reikapaikkaukset))
 
@@ -263,6 +263,28 @@
     ;; Tallennetaan
     (reikapaikkaus-palvelu/tallenna-reikapaikkaukset db kayttaja urakka-id reikapaikkaukset)
     (tee-kirjausvastauksen-body {:ilmoitukset "Paikkaukset kirjattu onnistuneesti"})))
+
+(defn poista-reikapaikkaukset [db {id :id} data kayttaja]
+  (log/debug (format "Poistetaan reikäpaikkauksia urakasta: %s käyttäjän: %s toimesta"
+               id kayttaja))
+  (let [urakka-id (Integer/parseInt id)
+        kayttaja-id (:id kayttaja)
+        _ (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+        reikapaikkaukset (:poistettavat-reikapaikkaukset data)
+        _ (doseq [tunniste reikapaikkaukset]
+            (let [;; Tarkistetaan, että reikäpaikkaus on olemassa
+                  reikapaikkaus (first (reikapaikkaus-q/hae-reikapaikkaus-vaikka-poistettu db {:ulkoinen-id tunniste
+                                                                                               :urakka-id urakka-id}))
+                  ;; Jos reikäpaikkaus on olemassa, niin poistetaan se
+                  _ (if reikapaikkaus
+                      (reikapaikkaus-q/poista-reikapaikkaustoteuma! db {:kayttaja-id kayttaja-id
+                                                                        :ulkoinen-id tunniste
+                                                                        :urakka-id urakka-id})
+                      ;; Muuten keskeytetään prosessi ja heitetään virhe
+                      (throw+ {:type virheet/+viallinen-kutsu+
+                               :virheet [{:koodi virheet/+tuntematon-reikapaikkaus+
+                                          :viesti (str "Tunnisteella: " tunniste " ei löydy reikäpaikkausta. Poistot keskeytettiin.")}]}))]))]
+    (tee-kirjausvastauksen-body {:ilmoitukset "Reikäpaikkaukset poistettu onnistuneesti"})))
 
 (defn kirjaa-paikkaustoteuma [db {id :id} data kayttaja]
   (log/debug (format "Kirjataan paikkauskustannuksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
@@ -319,6 +341,19 @@
           :kirjoitus))
       true)
     (julkaise-reitti
+      http :poista-reikapaikkaus
+      (DELETE "/api/urakat/:id/reikapaikkaus" request
+        (kasittele-kutsu db
+          integraatioloki
+          :poista-reikapaikkaus
+          request
+          json-skeemat/reikapaikkausten-poisto-request
+          json-skeemat/kirjausvastaus
+          (fn [parametrit data kayttaja db]
+            (poista-reikapaikkaukset db parametrit data kayttaja))
+          :kirjoitus))
+      true)
+    (julkaise-reitti
       http :kirjaa-paikkaustoteuma
       (POST "/api/urakat/:id/paikkaus/kustannus" request
         (kasittele-kutsu db
@@ -351,6 +386,7 @@
       :kirjaa-paikkaus
       :kirjaa-reikapaikkaus
       :paivita-reikapaikkaus
+      :poista-reikapaikkaus
       :kirjaa-paikkaustoteuma
       :poista-paikkaustiedot)
     this))
