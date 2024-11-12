@@ -17,12 +17,11 @@
 (defn- talvihoitoreitti-rivi [{:keys [talvihoitoreittien-tilat] :as app} e!
                               laskettu_pituus nimi kalustot
                               id varikoodi hoitoluokat ulkoinen_id reitit urakka_id]
-
+  
   (let [valitut-kohteet @tiedot/valitut-kohteet-atom
         reittien-maara (count reitit)
         auki? (contains? talvihoitoreittien-tilat id)
         reitteja-olemassa? (> reittien-maara 0)]
-
     [:<>
      [:div.flex-row.venyta.otsikkokomponentti {:class (str "" (when reitteja-olemassa? " klikattava"))
                                                :on-click #(when reitteja-olemassa? (e! (tiedot/->AvaaTalvihoitoreitti id)))
@@ -36,52 +35,56 @@
 
       ;; Nimi
       [:div.basis192.nogrow.shrink3.rajaus.slim
-       [:div {:style {:display "flex"}}
+       [:div.talvihoitoreitti-ryhma
         [:span.talvihoitoreitti-nimi {:style {:background-color varikoodi}}]
-        [:div.body-text.semibold.musta {:style {:font-size "1rem"}} (str nimi)]]
+        [:div.body-text.semibold.musta.talvihoitoreitti-riviotsikko (str nimi)]]
        [:div.body-text.musta.semibold (fmt/desimaaliluku-opt laskettu_pituus 2) " km"]]
 
+      ;; Osuudet
       [:div.basis384.grow2.shrink3.rajaus
-       [:div.body-text.semibold.musta {:style {:font-size "1rem"}} "Hoitoluokkien osuudet reitillä (km)"]
+       [:div.body-text.semibold.musta.talvihoitoreitti-riviotsikko "Hoitoluokkien osuudet reitillä (km)"]
+
        (when (get hoitoluokat :kavely_ja_pyoraily)
-         [:div {:style {:background-color "#F5F5F5" :padding "16px"}}
-          [:div.body-text.semibold.musta {:style {:font-size "0.85rem"}} "KÄVELYN JA PYÖRÄILYN VÄYLÄT"]
-          [:div {:style {:display "flex" :flex-direction "row"}}
+         [:div.talvihoitoreitti-rivi-tausta
+          [:div.body-text.semibold.musta.talvihoitoluokka-otsikko "KÄVELYN JA PYÖRÄILYN VÄYLÄT"]
+          [:div.ryhma-rivitys
            (doall (for [h (get hoitoluokat :kavely_ja_pyoraily)]
                     ^{:key (hash (str "hoitoluokka-" (gensym)))}
-                    [:div {:style {:flex-direction "row"}}
-                     [:div.body-text.musta.semibold {:style {:padding-right "30px"}} (:hoitoluokka h)]
-                     [:div.small-text.musta {:style {:padding-right "30px"}} (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])
+                    [:div.rivitys-yksittainen
+                     [:div.body-text.musta.semibold.talvihoitoreitti-valistys (:hoitoluokka h)]
+                     [:div.small-text.musta.talvihoitoreitti-valistys (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])
 
        (when (get hoitoluokat :maantiet)
-         [:div {:style {:display "flex" :flex-direction "column" :background-color "#F5F5F5" :padding "16px"}}
-          [:div.body-text.semibold.musta {:style {:font-size "0.85rem"}} "MAANTIET"]
-          [:div {:style {:display "flex" :flex-direction "row"}}
+         [:div.talvihoitoreitti-rivi-tausta.ryhma-pilari
+          [:div.body-text.semibold.musta.talvihoitoluokka-otsikko "MAANTIET"]
+          [:div.ryhma-rivitys
            (doall (for [h (get hoitoluokat :maantiet)]
                     ^{:key (hash (str "hoitoluokka-" (gensym)))}
-                    [:div {:style {:flex-direction "row"}}
-                     [:div.body-text.musta.semibold {:style {:padding-right "30px"}} (:hoitoluokka h)]
-                     [:div.small-text.musta {:style {:padding-right "30px"}} (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])
+                    [:div.rivitys-yksittainen
+                     [:div.body-text.musta.semibold.talvihoitoreitti-valistys (:hoitoluokka h)]
+                     [:div.small-text.musta.talvihoitoreitti-valistys (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])
 
        (when (get hoitoluokat :huoltoaukot)
-         [:div {:style {:display "flex" :flex-direction "column" :background-color "#F5F5F5" :padding "16px"}}
-          [:div.body-text.semibold.musta {:style {:font-size "0.85rem"}} "HUOLTOAUKOT JA PYSÄKÖINTIALUEET"]
-          [:div {:style {:display "flex" :flex-direction "row"}}
+         [:div.talvihoitoreitti-rivi-tausta.ryhma-pilari
+          [:div.body-text.semibold.musta.talvihoitoluokka-otsikko "HUOLTOAUKOT JA PYSÄKÖINTIALUEET"]
+          [:div.ryhma-rivitys
            (doall (for [h (get hoitoluokat :huoltoaukot)]
                     ^{:key (hash (str "hoitoluokka-" (gensym)))}
-                    [:div {:style {:flex-direction "row"}}
-                     [:div.body-text.musta.semibold {:style {:padding-right "30px"}} (:hoitoluokka h)]
-                     [:div.small-text.musta {:style {:padding-right "30px"}} (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])]
+                    [:div.rivitys-yksittainen
+                     [:div.body-text.musta.semibold.talvihoitoreitti-valistys (:hoitoluokka h)]
+                     [:div.small-text.musta.talvihoitoreitti-valistys (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])]
 
+      ;; Kalusto
       [:div.basis192.grow2.shrink3.rajaus
-       [:div.body-text.semibold.musta {:style {:font-size "1rem"}} "Kalusto (kpl)"]
-       [:div {:style {:display "flex" :flex-direction "row" :background-color "#F5F5F5" :padding "16px"}}
+       [:div.body-text.semibold.musta.talvihoitoreitti-riviotsikko "Kalusto (kpl)"]
+       [:div.talvihoitoreitti-rivi-tausta.ryhma-rivitys
         (doall (for [kalusto kalustot]
                  ^{:key (hash kalusto)}
                  [:div
-                  [:div.body-text.musta.semibold {:style {:padding-right "30px"}} (:kalustotyyppi kalusto)]
-                  [:div.small-text.musta {:style {:padding-right "30px"}} (:kalustomaara kalusto)]]))]]
-
+                  [:div.body-text.musta.semibold.talvihoitoreitti-valistys (:kalustotyyppi kalusto)]
+                  [:div.small-text.musta.talvihoitoreitti-valistys (:kalustomaara kalusto)]]))]]
+      
+      ;; Kartta toggle 
       [:div.basis192.grow2.shrink2
        [:div.body-text.strong.musta ""]
        ;; Näytä valittu rivi kartalla tai piilota se
@@ -94,10 +97,11 @@
      (when (and
              (get talvihoitoreittien-tilat id)
              reitteja-olemassa?)
-       [:div {:style {:max-width "900px"}}
-        [:h2 {:style {:margin-bottom "-10px"}} "Reitti"]
-
-        ;; Sisältö
+       
+       ;; Sisältö
+       [:div.talvihoitoreitti-sisalto
+        [:h2 "Reitti"]
+        
         [grid/grid
          {:salli-valiotsikoiden-piilotus? true
           :valiotsikoiden-alkutila :kaikki-kiinni
@@ -124,17 +128,17 @@
          reitit]])]))
 
 (defn talvihoitoreitit-sivu [e! {:keys [talvihoitoreitit] :as app}]
-  [:div
+  [:<>
    [kartta/kartan-paikka]
 
    (if (:haku-kaynnissa? app)
-     [ajax-loader "Ladataan talvihoitoreittejä..."]
+     [:div.ajax-loader-valistys
+      [ajax-loader "Ladataan talvihoitoreittejä..."]]
 
-     [:div
+     [:div.talvihoitoreititys
       [:div.flex-row
        [:h2 "Talvihoitoreititys"]
        [:div
-        
         [liitteet/lataa-tiedosto
          {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
          {:nappi-teksti "Tuo kohteet excelistä"
@@ -160,6 +164,7 @@
                       :mahdollista-rivin-valinta? false}
 
            [{:tyyppi :komponentti
+             :solun-luokka #(str "talvihoitoreitti-rivi")
              :tunniste :id
              :komponentti (fn [{:keys [laskettu_pituus nimi kalustot
                                        id varikoodi hoitoluokat ulkoinen_id reitit urakka_id]}]

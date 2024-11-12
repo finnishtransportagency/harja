@@ -1,10 +1,64 @@
-.talvihoitoreitti-nimi {
-  margin-top: auto;
-  margin-bottom: auto;
-  margin-right: @valistys-4;
-  width: @valistys-12;
-  height: @valistys-12;
-}
-.talvihoitoreitti-kartan-naytto {
-  max-width: 200px;
+.talvihoitoreititys 
+{
+  padding-top: @valistys-16;
+
+  .talvihoitoreitti-rivi 
+  {
+    padding: 0px;
+    background-color: @gray250;
+
+    .talvihoitoreitti-kartan-naytto {
+      max-width: 200px;
+    }
+
+    .talvihoitoreitti-ryhma {
+      display: flex;
+    }
+
+    .talvihoitoreitti-riviotsikko {
+      font-size: 1rem;
+    }
+
+    .talvihoitoreitti-rivi-tausta {
+      padding: @valistys-16;
+      background-color: @gray240;
+    }
+
+    .talvihoitoluokka-otsikko {
+      font-size: 0.85rem;
+    }
+
+    .ryhma-pilari {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ryhma-rivitys {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .rivitys-yksittainen {
+      flex-direction: row;
+    }
+
+    .talvihoitoreitti-valistys {
+      padding-right: 30px;
+    }
+
+    .talvihoitoreitti-nimi {
+      margin-top: auto;
+      margin-bottom: auto;
+      margin-right: @valistys-4;
+      width: @valistys-12;
+      height: @valistys-12;
+    }
+
+    /* Väkäsen alla */
+    .talvihoitoreitti-sisalto 
+    {
+      max-width: 900px;
+      padding: @valistys-16 @valistys-16 @valistys-24 @valistys-16;
+    }
+  }
 }
