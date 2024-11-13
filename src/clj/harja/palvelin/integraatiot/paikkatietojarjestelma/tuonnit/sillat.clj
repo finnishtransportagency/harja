@@ -192,20 +192,32 @@
 
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile
-    (let [siltatietueet-shapefilesta (shapefile/tuo shapefile)
+    (let [batch-koko 15  ;; Montako siltaa prosessoidaan yhdessä transaktiossa
+          siltatietueet-shapefilesta (shapefile/tuo shapefile)
           tallennettavat-siltatietueet (-> siltatietueet-shapefilesta
                                          suodata-sillat
                                          jarjesta-voimassaolevat-sillat-yksittaisille-riveille
                                          parsi-tieosoitteet)]
+      
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
-      (try (jdbc/with-db-transaction [db db]
-             (doseq [silta tallennettavat-siltatietueet]
-               (vie-silta-entry db silta)))
-           (log/debug "siltojen tuonti kantaan valmis.")
-           (catch PSQLException e
-             (log/error "Siltojen tuonnissa kantaan tapahtui virhe: " e)
-             (throw e))
-           (catch Exception e
-             (log/error "Siltojen tuonnissa tapahtui virhe: " e)
-             (throw e))))
+      (log/debug (str "Siltojen määrä: " (count tallennettavat-siltatietueet)))
+
+      (dorun
+        (for [batch (partition-all batch-koko tallennettavat-siltatietueet)]
+          (try
+            (jdbc/with-db-transaction [db db]
+              (doseq [silta batch]
+                (vie-silta-entry db silta)))
+
+            ;; Garbage collection, vaikka for pitäisi olla lazy, vapauta vielä muistia jokaisessa batchissa
+            (System/gc)
+
+            (catch PSQLException e
+              (log/error "Siltojen tuonnissa kantaan tapahtui virhe: " e)
+              (throw e))
+            (catch Exception e
+              (log/error "Siltojen tuonnissa tapahtui virhe: " e)
+              (throw e)))))
+
+      (log/debug "Siltojen tuonti kantaan valmis."))
     (log/debug "Siltojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
