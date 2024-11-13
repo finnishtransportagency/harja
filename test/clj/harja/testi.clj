@@ -905,8 +905,14 @@
 (defn hae-tehtavan-id-nimella [nimi]
   (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "';"))))
 
+(defn hae-tehtavan-id-tunnisteella [tunniste]
+  (ffirst (q (str "SELECT id from tehtava where yksiloiva_tunniste = '" tunniste "';"))))
+
 (defn hae-tehtavaryhman-id [nimi]
   (ffirst (q (str "SELECT id from tehtavaryhma where nimi = '" nimi "';"))))
+
+(defn hae-tehtavaryhman-id-tunnisteella [tunniste]
+  (ffirst (q (str "SELECT id from tehtavaryhma where yksiloiva_tunniste = '" tunniste "';"))))
 
 (defn hae-rahavaraus-nimella [nimi]
   (ffirst (q-map (format "SELECT id, nimi from rahavaraus where nimi = '%s';" nimi))))

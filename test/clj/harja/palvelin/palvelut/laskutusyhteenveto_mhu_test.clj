@@ -356,24 +356,25 @@
 
         ;; Hoidonjohtopalkkio menee kustannusarvioitu_tyo tauluun tehtävälle Hoidonjohtopalkkio.
         ;; HAetaan sen tehtävän id:
-        hoidonjohtopalkkio-tehtava-id (:id (first (q-map (format "SELECT id FROM tehtava where yksiloiva_tunniste = '%s';" "53647ad8-0632-4dd3-8302-8dfae09908c8"))))
+        hoidonjohtopalkkio-tehtava-id (hae-tehtavan-id-tunnisteella "53647ad8-0632-4dd3-8302-8dfae09908c8")
         ;; Haetaan hoidonjohtopalkkio tehtävän kustannusarvioidut työt annetulla ajan jaksolla
-        hoidonjohtopalkkio-kustannusarvioidut-tyot (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM kustannusarvioitu_tyo
-        WHERE tehtava = %s AND tehtavaryhma IS NULL AND sopimus = %s AND tyyppi = 'laskutettava-tyo'
-        AND ((vuosi = %s AND kuukausi in (10,11,12)) OR vuosi = %s AND kuukausi in (1,2,3,4,5,6,7,8,9));"
+        hoidonjohtopalkkio-kustannusarvioidut-tyot
+        (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM kustannusarvioitu_tyo
+                                        WHERE tehtava = %s AND tehtavaryhma IS NULL AND sopimus = %s AND tyyppi = 'laskutettava-tyo'
+                                          AND ((vuosi = %s AND kuukausi in (10,11,12)) OR vuosi = %s AND kuukausi in (1,2,3,4,5,6,7,8,9));"
                                                                            hoidonjohtopalkkio-tehtava-id sopimus-id alkuvuosi loppuvuosi))))
 
         ;; Haetaan hoidonjohtopalkkiot toteutuneet_kustannukset taulusta samalle ajanjaksolle
-        hoidonjohtopalkkio-toteutuneet_kustannukset (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM toteutuneet_kustannukset
-        WHERE tehtava = %s AND tehtavaryhma IS NULL AND urakka_id = %s AND tyyppi = 'laskutettava-tyo'
-        AND ((vuosi = %s AND kuukausi in (10,11,12)) OR vuosi = %s AND kuukausi in (1,2,3,4,5,6,7,8,9));"
+        hoidonjohtopalkkio-toteutuneet_kustannukset
+        (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM toteutuneet_kustannukset
+                                        WHERE tehtava = %s AND tehtavaryhma IS NULL AND urakka_id = %s AND tyyppi = 'laskutettava-tyo'
+                                          AND ((vuosi = %s AND kuukausi in (10,11,12)) OR vuosi = %s AND kuukausi in (1,2,3,4,5,6,7,8,9));"
                                                                             hoidonjohtopalkkio-tehtava-id urakka-id alkuvuosi loppuvuosi))))
         _ (is (= hoidonjohtopalkkio-kustannusarvioidut-tyot hoidonjohtopalkkio-toteutuneet_kustannukset))
 
         ;; Hoidonjohtopalkkioita voi olla myös kuluissa, joten tarkistetaan niiden määrä
         ;; Hoidonjohtopalkkiot määritellään tehtäväryhmälle: Hoidonjohtopalkkio (G) - 0ef0b97e-1390-4d6c-bbc4-b30536be8a68
-        hoidonjohtopalkkio-tehtavaryhma-id (:id (first (q-map (str "SELECT id FROM tehtavaryhma
-        WHERE yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68';"))))
+        hoidonjohtopalkkio-tehtavaryhma-id (hae-tehtavaryhman-id-tunnisteella "0ef0b97e-1390-4d6c-bbc4-b30536be8a68")
 
         ;; Haetaan hoidonjohtopalkkiot kuluista
         hoidonjohtopalkkio-kulut (:summa (first (q-map (format
@@ -387,16 +388,8 @@
                                                          urakka-id alkuaika loppuaika hoidonjohtopalkkio-tehtavaryhma-id))))
 
         ;; Vanha tapa laskea hoidonjohtopalkkiot on kustannusarvioitu_tyo taulussa
-        ;; Haetaan ensin toimenpideinstanssi-id -- tpk2.koodi/tuotekoodi 23150 on MHU Hoidonjohto
-        toimenpideinstanssi-id (:id (first (q-map (format "SELECT
-                 tpi.id AS id
-                 FROM toimenpideinstanssi tpi
-                 JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-                 JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-                 maksuera m
-                 WHERE tpi.urakka = %s AND m.toimenpideinstanssi = tpi.id
-                   AND tpk2.koodi = '23150'
-                 ORDER BY m.numero ASC" urakka-id))))
+        ;; Haetaan ensin toimenpideinstanssi-id -- tpk2.koodi/tuotekoodi 23151 on MHU Hoidonjohto
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23151")
 
         toimenpidekoodi-id-hu-tyonjohto (:id (first (q-map (format "SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744';"))))
         toimenpidekoodi-id-hj-palkkio (:id (first (q-map (format "SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8';"))))
