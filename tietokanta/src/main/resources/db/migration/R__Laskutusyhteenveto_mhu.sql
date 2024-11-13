@@ -142,9 +142,10 @@ CREATE TYPE HJERILLISHANKINNAT_RIVI AS
     hj_erillishankinnat_laskutettu  NUMERIC,
     hj_erillishankinnat_laskutetaan NUMERIC
 );
+DROP FUNCTION IF EXISTS hj_erillishankinnat(DATE, DATE, DATE, TEXT, INTEGER, INTEGER, INTEGER);
 CREATE OR REPLACE FUNCTION hj_erillishankinnat(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                               toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
-                                               sopimus_id INTEGER) RETURNS SETOF HJERILLISHANKINNAT_RIVI AS
+                                               toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id_ INTEGER)
+    RETURNS SETOF HJERILLISHANKINNAT_RIVI AS
 $$
 DECLARE
 
@@ -156,8 +157,8 @@ DECLARE
     tehtavaryhma_id                 INTEGER;
 
 BEGIN
-    -- Haetaan hoidon johdon erillishankinnat
-    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
+    -- Haetaan hoidon johdon erillishankinnat: 'Erillishankinnat (W)'
+    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c');
     RAISE NOTICE 'hj_erillishankinnat: toimenpidekoodi % -- tehtavaryhma_i: % ' , toimenpide_koodi, tehtavaryhma_id;
 
     hj_erillishankinnat_laskutettu := 0.0;
@@ -170,22 +171,22 @@ BEGIN
         -- Ennen tarkasteltavaa aikaväliä laskutetut hoidonjohdon erillishankinnat - (päätellään tpi:stä ja toimenpidekoodista )
         -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja kulu_kohdistus
         -- Laskutettu
-        FOR laskutettu_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa -- Ota indeksikorjattu summa, jos se on
-                                   FROM kustannusarvioitu_tyo kat
-                                   WHERE kat.toimenpideinstanssi = t_instanssi
-                                     AND kat.tehtavaryhma = tehtavaryhma_id
-                                     AND kat.sopimus = sopimus_id
-                                     AND (SELECT (date_trunc('MONTH',
-                                                             format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
-                               UNION ALL
-                               SELECT coalesce(lk.summa, 0) AS summa
-                                   FROM kulu l
-                                            JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                   WHERE lk.toimenpideinstanssi = t_instanssi
-                                     AND lk.poistettu IS NOT TRUE
-                                     AND l.urakka = urakka_id
-                                     AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-                                     AND lk.tehtavaryhma = tehtavaryhma_id
+        FOR laskutettu_rivi IN SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa -- Ota indeksikorjattu summa, jos se on
+                                 FROM toteutuneet_kustannukset tk
+                                WHERE tk.toimenpideinstanssi = t_instanssi
+                                  AND tk.tehtavaryhma = tehtavaryhma_id
+                                  AND tk.urakka_id = urakka_id_
+                                  AND (SELECT (DATE_TRUNC('MONTH',
+                                                          FORMAT('%s-%s-%s', tk.vuosi, tk.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
+                                UNION ALL
+                               SELECT COALESCE(lk.summa, 0) AS summa
+                                 FROM kulu l
+                                          JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                                WHERE lk.toimenpideinstanssi = t_instanssi
+                                  AND lk.poistettu IS NOT TRUE
+                                  AND l.urakka = urakka_id_
+                                  AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+                                  AND lk.tehtavaryhma = tehtavaryhma_id
 
             LOOP
                 RAISE NOTICE 'Erillishankinnat laskutettu :: summa: %', laskutettu_rivi.summa;
@@ -195,22 +196,22 @@ BEGIN
         -- Tarkasteltavalla aikavälillä laskutettavat erillishankinnat
         -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja kulu_kohdistus
         -- Laskutetaan
-        FOR laskutetaan_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa
-                                    FROM kustannusarvioitu_tyo kat
-                                    WHERE kat.toimenpideinstanssi = t_instanssi
-                                      AND kat.sopimus = sopimus_id
-                                      AND kat.tehtavaryhma = tehtavaryhma_id
-                                      AND (SELECT (date_trunc('MONTH',
-                                                              format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
-                                UNION ALL
-                                SELECT coalesce(lk.summa, 0) AS summa
-                                    FROM kulu l
-                                             JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                    WHERE lk.toimenpideinstanssi = t_instanssi
-                                      AND lk.poistettu IS NOT TRUE
-                                      AND l.urakka = urakka_id
-                                      AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
-                                      AND lk.tehtavaryhma = tehtavaryhma_id
+        FOR laskutetaan_rivi IN SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+                                  FROM toteutuneet_kustannukset tk
+                                 WHERE tk.toimenpideinstanssi = t_instanssi
+                                   AND tk.urakka_id = urakka_id_
+                                   AND tk.tehtavaryhma = tehtavaryhma_id
+                                   AND (SELECT (DATE_TRUNC('MONTH',
+                                                           FORMAT('%s-%s-%s', tk.vuosi, tk.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+                                 UNION ALL
+                                SELECT COALESCE(lk.summa, 0) AS summa
+                                  FROM kulu l
+                                           JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                                 WHERE lk.toimenpideinstanssi = t_instanssi
+                                   AND lk.poistettu IS NOT TRUE
+                                   AND l.urakka = urakka_id_
+                                   AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+                                   AND lk.tehtavaryhma = tehtavaryhma_id
             LOOP
                 RAISE NOTICE 'Erillishankinnat laskutetaan :: summa: %', laskutetaan_rivi.summa;
                 hj_erillishankinnat_laskutetaan :=
@@ -1006,7 +1007,7 @@ BEGIN
             -- HOIDONJOHTO --  erillishankinnat
             hj_erillishankinnat_rivi :=
                     (SELECT hj_erillishankinnat(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi,
-                                                t.tpi, ur, sopimus_id));
+                                                t.tpi, ur));
 
             hj_erillishankinnat_laskutettu := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutettu;
             hj_erillishankinnat_laskutetaan := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutetaan;

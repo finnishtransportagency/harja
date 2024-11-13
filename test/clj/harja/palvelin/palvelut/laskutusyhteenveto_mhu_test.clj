@@ -425,6 +425,77 @@
                 (+ hoidonjohtopalkkio-toteutuneet_kustannukset hoidonjohtopalkkio-kulut)
                 hoindonjohtopalkkio-laskutusyhteenvedossa))]))
 
+(deftest toteutuneet-erilliskustannukset
+  ;; Erilliskustannukset suunnitellaan kustannusarvioitu_tyo tauluun. Ja ne on
+  ;; päätelty toteutuvaksi aina kuukauden vaihteessa.
+  ;; Uudistuneessa versiossa ne siirretään kuukauden vaihteessa toteutuneet_kustannukset tauluun.
+  ;; Varmistetaan testillä, että luvut ovat samat.
+  (let [alkuaika "2019-10-01"
+        alkuvuosi 2019
+        loppuaika "2020-10-01"
+        loppuvuosi 2020
+        urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        ;; HAetaan urakan sopimusid
+        sopimus-id (:id (first (q-map (format "SELECT id FROM sopimus WHERE urakka = %s" urakka-id))))
+
+        ;; Erilliskustannukset menee kustannusarvioitu_tyo tauluun tehtäväryhmälle Erilliskustannus (W) / '37d3752c-9951-47ad-a463-c1704cf22f4c'
+        ;; Haetaan sen tehtäväryhmän id:
+        erilliskustannus-tehtavaryhma-id (hae-tehtavaryhman-id-tunnisteella "37d3752c-9951-47ad-a463-c1704cf22f4c") ;(:id (first (q-map (format "SELECT id FROM tehtavaryhma where yksiloiva_tunniste = '%s';" "37d3752c-9951-47ad-a463-c1704cf22f4c"))))
+        ;; Haetaan hoidonjohtopalkkio tehtävän kustannusarvioidut työt annetulla ajan jaksolla
+        erilliskustannus-kustannusarvioidut-tyot
+        (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM kustannusarvioitu_tyo
+                                        WHERE tehtavaryhma = %s AND sopimus = %s AND tyyppi = 'laskutettava-tyo'
+                                          AND ((vuosi = %s AND kuukausi in (10,11,12)) OR vuosi = %s AND kuukausi in (1,2,3,4,5,6,7,8,9));"
+                                erilliskustannus-tehtavaryhma-id sopimus-id alkuvuosi loppuvuosi))))
+
+        ;; Haetaan hoidonjohtopalkkiot toteutuneet_kustannukset taulusta samalle ajanjaksolle
+        erilliskustannus-toteutuneet_kustannukset
+        (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM toteutuneet_kustannukset
+                                        WHERE tehtavaryhma = %s AND urakka_id = %s AND tyyppi = 'laskutettava-tyo'
+                                          AND ((vuosi = %s AND kuukausi in (10,11,12)) OR vuosi = %s AND kuukausi in (1,2,3,4,5,6,7,8,9));"
+                                erilliskustannus-tehtavaryhma-id urakka-id alkuvuosi loppuvuosi))))
+
+        _ (is (= erilliskustannus-kustannusarvioidut-tyot erilliskustannus-toteutuneet_kustannukset))
+
+        ;; Erilliskustannus voi olla myös kuluissa, joten tarkistetaan niiden määrä
+        ;; Haetaan Erilliskustannukset kuluista
+        erilliskustannus-kulut (:summa (first (q-map (format
+                                                       "SELECT coalesce(kk.summa, 0) AS summa
+                                                          FROM kulu k
+                                                               JOIN kulu_kohdistus kk ON kk.kulu = k.id
+                                                         WHERE kk.poistettu IS NOT TRUE
+                                                           AND k.urakka = %s
+                                                           AND k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE
+                                                           AND kk.tehtavaryhma = %s;"
+                                                       urakka-id alkuaika loppuaika erilliskustannus-tehtavaryhma-id))))
+
+        ;; Vanha tapa laskea erilliskustannukset on kustannusarvioitu_tyo taulussa
+        ;; Haetaan ensin toimenpideinstanssi-id -- tpk2.koodi/tuotekoodi 23151 on MHU Hoidonjohto
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23151")
+        vanhat-summat (:summa (first (q-map (str
+                                              "SELECT SUM(coalesce(kat.summa_indeksikorjattu, kat.summa, 0)) AS summa
+                                                 FROM kustannusarvioitu_tyo kat
+                                                WHERE kat.toimenpideinstanssi = " toimenpideinstanssi-id "
+              AND kat.tehtavaryhma = " erilliskustannus-tehtavaryhma-id "
+              AND kat.sopimus = " sopimus-id "
+              AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN '" alkuaika "'::DATE AND '" loppuaika "'::DATE"))))
+        _ (is (= erilliskustannus-kustannusarvioidut-tyot vanhat-summat))
+
+        ;; Haetaan laskutusyhteenveto ja varmistetaan, että siellä on samat luvut Erilliskustannuksille
+        laskutusyhteenveto (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
+                             (:db jarjestelma)
+                             +kayttaja-jvh+
+                             {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                              :urakkatyyppi "teiden-hoito"
+                              :alkupvm (pvm/->pvm "1.10.2019")
+                              :loppupvm (pvm/->pvm "30.9.2020")})
+        ;; Erilliskustannukset ovat vaan MHY ylläpidon alla, mutta lasketaan se kaikkien alta, koska se on muualla nolla
+        ;; Ja jos ei ole, niin silloin on virhetilanne ja se löytyy samalla testillä.
+        erilliskustannus-laskutusyhteenvedossa (apply + (map :hj_erillishankinnat_laskutettu laskutusyhteenveto))
+        _ (is (= (+ erilliskustannus-kustannusarvioidut-tyot erilliskustannus-kulut)
+                (+ erilliskustannus-toteutuneet_kustannukset erilliskustannus-kulut)
+                erilliskustannus-laskutusyhteenvedossa))]))
+
 (deftest laskutusyhteenvedon-sementointi
   (testing "laskutusyhteenvedon-sementoiti"
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
