@@ -28,6 +28,7 @@
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
             [harja.views.kanavat.urakka.liikenne :as liikenne]
+            [harja.views.urakka.valikatselmus.valikatselmus-nakyma :as valikatselmus-nakyma]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
@@ -137,6 +138,10 @@
                         (oikeudet/urakat-paikkaukset id)
                         (= tyyppi :paallystys)
                         (= :mpu sopimustyyppi))
+
+    :valikatselmus (and
+                     (oikeudet/urakat-kulut id) ;; TODO: Tarkista oikeudet. Ennen oli kulujen alla. Tarvitaanko nyt oma osio?
+                     (= tyyppi :teiden-hoito))
     false))
 
 (defn urakka
@@ -156,11 +161,12 @@
                           ;; skipataan töiden haku
                           ;; TODO: Näitä on varmasti noin miljoona muutakin, joten tee tästä funkkari/setti, johon näitä voi määritellä
                           (when-not (or (= :paikkaukset-yllapito (nav/valittu-valilehti :urakat))
-                                      (= :lupaukset (nav/valittu-valilehti :valitavoitteet))
-                                      (= :kustannusten-seuranta (nav/valittu-valilehti :laskutus))
-                                      (= :suola (nav/valittu-valilehti :suunnittelu))
-                                      (= :tehtavat (nav/valittu-valilehti :suunnittelu))
-                                      (= :pohjavesialueiden-suola (nav/valittu-valilehti :toteumat)))
+                                        (= :lupaukset (nav/valittu-valilehti :valitavoitteet))
+                                        (= :kustannusten-seuranta (nav/valittu-valilehti :laskutus))
+                                        (= :suola (nav/valittu-valilehti :suunnittelu))
+                                        (= :tehtavat (nav/valittu-valilehti :suunnittelu))
+                                        (= :pohjavesialueiden-suola (nav/valittu-valilehti :toteumat))
+                                       (= :valikatselmus valittu-valilehti))
                             (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
                               (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
                             (when (or (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
@@ -301,7 +307,13 @@
        :paikkaukset-hoito
        (when (valilehti-mahdollinen? :paikkaukset-hoito ur)
          ^{:key "paikkaukset"}
-         [paikkaukset/paikkaukset ur])]
+         [paikkaukset/paikkaukset ur])
+
+       "Välikatselmus"
+       :valikatselmus
+       (when (valilehti-mahdollinen? :valikatselmus ur)
+         ^{:key "valikatselmus"}
+         [valikatselmus-nakyma/valikatselmus ur])]
 
       [:div.ajax-loader-valistys
        [ajax-loader "Ladataan urakan tietoja..."]])))
