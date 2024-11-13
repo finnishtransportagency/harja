@@ -341,6 +341,90 @@
         _ (is (= -12M (:sakot_laskutetaan haetut-tiedot-oulu-mhu-korvausinvestointi)))]))
 
 
+(deftest toteutuneet-hoidonjohto-palkkiot
+  ;; Hoidonjohdon palkkiot suunnitellaan kustannusarvioitu_tyo tauluun. Ja ne on
+  ;; päätelty toteutuvaksi aina kuukauden vaihteessa.
+  ;; Uudistuneessa versiossa ne siirretään kuukauden vaihteessa toteutuneet_kustannukset tauluun.
+  ;; Varmistetaan testillä, että luvut ovat samat.
+  (let [alkuaika "2019-10-01"
+        alkuvuosi 2019
+        loppuaika "2020-10-01"
+        loppuvuosi 2020
+        urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        ;; HAetaan urakan sopimusid
+        sopimus-id (:id (first (q-map (format "SELECT id FROM sopimus WHERE urakka = %s" urakka-id))))
+
+        ;; Hoidonjohtopalkkio menee kustannusarvioitu_tyo tauluun tehtävälle Hoidonjohtopalkkio.
+        ;; HAetaan sen tehtävän id:
+        hoidonjohtopalkkio-tehtava-id (:id (first (q-map (format "SELECT id FROM tehtava where yksiloiva_tunniste = '%s';" "53647ad8-0632-4dd3-8302-8dfae09908c8"))))
+        ;; Haetaan hoidonjohtopalkkio tehtävän kustannusarvioidut työt annetulla ajan jaksolla
+        hoidonjohtopalkkio-kustannusarvioidut-tyot (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM kustannusarvioitu_tyo
+        WHERE tehtava = %s AND tehtavaryhma IS NULL AND sopimus = %s AND tyyppi = 'laskutettava-tyo'
+        AND ((vuosi = %s AND kuukausi in (10,11,12)) OR vuosi = %s AND kuukausi in (1,2,3,4,5,6,7,8,9));"
+                                                                           hoidonjohtopalkkio-tehtava-id sopimus-id alkuvuosi loppuvuosi))))
+
+        ;; Haetaan hoidonjohtopalkkiot toteutuneet_kustannukset taulusta samalle ajanjaksolle
+        hoidonjohtopalkkio-toteutuneet_kustannukset (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM toteutuneet_kustannukset
+        WHERE tehtava = %s AND tehtavaryhma IS NULL AND urakka_id = %s AND tyyppi = 'laskutettava-tyo'
+        AND ((vuosi = %s AND kuukausi in (10,11,12)) OR vuosi = %s AND kuukausi in (1,2,3,4,5,6,7,8,9));"
+                                                                            hoidonjohtopalkkio-tehtava-id urakka-id alkuvuosi loppuvuosi))))
+        _ (is (= hoidonjohtopalkkio-kustannusarvioidut-tyot hoidonjohtopalkkio-toteutuneet_kustannukset))
+
+        ;; Hoidonjohtopalkkioita voi olla myös kuluissa, joten tarkistetaan niiden määrä
+        ;; Hoidonjohtopalkkiot määritellään tehtäväryhmälle: Hoidonjohtopalkkio (G) - 0ef0b97e-1390-4d6c-bbc4-b30536be8a68
+        hoidonjohtopalkkio-tehtavaryhma-id (:id (first (q-map (str "SELECT id FROM tehtavaryhma
+        WHERE yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68';"))))
+
+        ;; Haetaan hoidonjohtopalkkiot kuluista
+        hoidonjohtopalkkio-kulut (:summa (first (q-map (format
+                                                         "SELECT coalesce(kk.summa, 0) AS summa
+                                                            FROM kulu k
+                                                                 JOIN kulu_kohdistus kk ON kk.kulu = k.id
+                                                           WHERE kk.poistettu IS NOT TRUE
+                                                             AND k.urakka = %s
+                                                             AND k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE
+                                                             AND kk.tehtavaryhma = %s;"
+                                                         urakka-id alkuaika loppuaika hoidonjohtopalkkio-tehtavaryhma-id))))
+
+        ;; Vanha tapa laskea hoidonjohtopalkkiot on kustannusarvioitu_tyo taulussa
+        ;; Haetaan ensin toimenpideinstanssi-id -- tpk2.koodi/tuotekoodi 23150 on MHU Hoidonjohto
+        toimenpideinstanssi-id (:id (first (q-map (format "SELECT
+                 tpi.id AS id
+                 FROM toimenpideinstanssi tpi
+                 JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                 JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
+                 maksuera m
+                 WHERE tpi.urakka = %s AND m.toimenpideinstanssi = tpi.id
+                   AND tpk2.koodi = '23150'
+                 ORDER BY m.numero ASC" urakka-id))))
+
+        toimenpidekoodi-id-hu-tyonjohto (:id (first (q-map (format "SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744';"))))
+        toimenpidekoodi-id-hj-palkkio (:id (first (q-map (format "SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8';"))))
+
+        vanhat-summat (:summa (first (q-map (str
+                                              "SELECT SUM(coalesce(kat.summa_indeksikorjattu, kat.summa, 0)) AS summa
+                                                 FROM kustannusarvioitu_tyo kat
+                                                WHERE kat.toimenpideinstanssi = " toimenpideinstanssi-id "
+              AND (kat.tehtavaryhma = " hoidonjohtopalkkio-tehtavaryhma-id " OR kat.tehtava IN (" toimenpidekoodi-id-hu-tyonjohto ", " toimenpidekoodi-id-hj-palkkio "))
+              AND kat.sopimus = " sopimus-id "
+              AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN '" alkuaika "'::DATE AND '" loppuaika "'::DATE"))))
+        _ (is (= hoidonjohtopalkkio-kustannusarvioidut-tyot vanhat-summat))
+
+        ;; Haetaan laskutusyhteenveto ja varmistetaan, että siellä on samat luvut hoidonjohtopalkkioille
+        laskutusyhteenveto (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
+                             (:db jarjestelma)
+                             +kayttaja-jvh+
+                             {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                              :urakkatyyppi "teiden-hoito"
+                              :alkupvm (pvm/->pvm "1.10.2019")
+                              :loppupvm (pvm/->pvm "30.9.2020")})
+        ;; Hoidonjohtopalkkio on vaan MHY ylläpidon alla, mutta lasketaan se kaikkien alta, koska se on muualla nolla
+        ;; Ja jos ei ole, niin silloin on virhetilanne ja se löytyy samalla testillä.
+        hoindonjohtopalkkio-laskutusyhteenvedossa (apply + (map :hj_palkkio_laskutetaan laskutusyhteenveto))
+        _ (is (= (+ hoidonjohtopalkkio-kustannusarvioidut-tyot hoidonjohtopalkkio-kulut)
+                (+ hoidonjohtopalkkio-toteutuneet_kustannukset hoidonjohtopalkkio-kulut)
+                hoindonjohtopalkkio-laskutusyhteenvedossa))]))
+
 (deftest laskutusyhteenvedon-sementointi
   (testing "laskutusyhteenvedon-sementoiti"
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
