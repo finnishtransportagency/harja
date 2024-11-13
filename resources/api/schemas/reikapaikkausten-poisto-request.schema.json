@@ -11,23 +11,13 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "paikkaukset": {
-      "id": "urn:harja/paikkaukset",
+    "poistettavat-reikapaikkaukset": {
+      "id": "urn:harja/poistettavat-reikapaikkaukset",
       "type": "array",
       "maxItems": 200,
-      "required": true,
+      "required": false,
       "items": {
-        "id": "urn:harja/paikkaukset/0",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "paikkaus": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": true,
-            "$ref": "file:resources/api/schemas/entities/paikkaus.schema.json"
-          }
-        }
+        "type": "integer"
       }
     }
   }

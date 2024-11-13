@@ -11,7 +11,12 @@
   (let [virheet (as-> #{} virheet
                                 (if (and tie alkuosa alkuetaisyys loppuosa loppuetaisyys)
                                   virheet
-                                  (conj virheet "Osa tierekisteriosoitteesta puuttuu. ")))
+                                  (conj virheet (str "Osa tieosoitteesta puuttuu: "
+                                                  (when (nil? tie) "tienumero, ")
+                                                  (when (nil? alkuosa) "alkuosa, ")
+                                                  (when (nil? alkuetaisyys) "alkuetaisyys, ")
+                                                  (when (nil? loppuosa) "loppuosa, ")
+                                                  (when (nil? loppuetaisyys) "loppuetaisyys, ")))))
         virheet (if-not (empty? virheet)
                   (conj validointivirheet virheet)
                   validointivirheet)]

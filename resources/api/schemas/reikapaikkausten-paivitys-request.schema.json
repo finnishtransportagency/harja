@@ -11,21 +11,21 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "paikkaukset": {
-      "id": "urn:harja/paikkaukset",
+    "reikapaikkaukset": {
+      "id": "urn:harja/reikapaikkaukset",
       "type": "array",
       "maxItems": 200,
       "required": true,
       "items": {
-        "id": "urn:harja/paikkaukset/0",
+        "id": "urn:harja/reikapaikkaukset/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "paikkaus": {
+          "reikapaikkaus": {
             "type": "object",
             "additionalProperties": false,
             "required": true,
-            "$ref": "file:resources/api/schemas/entities/paikkaus.schema.json"
+            "$ref": "file:resources/api/schemas/entities/reikapaikkaus.schema.json"
           }
         }
       }
