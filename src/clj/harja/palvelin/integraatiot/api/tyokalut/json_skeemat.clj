@@ -148,6 +148,16 @@
 (def +paikkausten-kirjaus-request+ "api/schemas/paikkausten-kirjaus-request.schema.json")
 (def paikkausten-kirjaus-request (tee-validaattori +paikkausten-kirjaus-request+))
 
+(def +reikapaikkausten-kirjaus-request+ "api/schemas/reikapaikkausten-kirjaus-request.schema.json")
+(def reikapaikkausten-kirjaus-request (tee-validaattori +reikapaikkausten-kirjaus-request+))
+
+(def +reikapaikkausten-paivitys-request+ "api/schemas/reikapaikkausten-paivitys-request.schema.json")
+(def reikapaikkausten-paivitys-request (tee-validaattori +reikapaikkausten-paivitys-request+))
+
+(def +reikapaikkausten-poisto-request+ "api/schemas/reikapaikkausten-poisto-request.schema.json")
+(def reikapaikkausten-poisto-request (tee-validaattori +reikapaikkausten-poisto-request+))
+
+
 (def +paikkauskustannusten-kirjaus-request+ "api/schemas/paikkauskustannusten-kirjaus-request.schema.json")
 (def paikkauskustannusten-kirjaus-request (tee-validaattori +paikkauskustannusten-kirjaus-request+))
 
