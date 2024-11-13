@@ -64,3 +64,19 @@ SELECT id, "hoitokauden-alkuvuosi", "urakka-id", "hinnan-erotus", "urakoitsijan-
        muokattu, "muokkaaja-id", "luoja-id", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id
 FROM urakka_paatos
 WHERE id = :id;
+
+-- name: hae-bonukset
+SELECT e.rahasumma, e.tyyppi
+  FROM erilliskustannus e
+ WHERE e.urakka = :urakka-id
+   AND e.poistettu IS NOT TRUE
+   AND e.laskutuskuukausi BETWEEN :alkupvm::DATE AND :loppupvm::DATE;
+
+-- name: hae-sanktiot
+SELECT s.maara,
+       s.sakkoryhma,
+       (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, :urakka-id::INT, s.sakkoryhma)) AS indeksikorjaus
+  FROM sanktio s
+           JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka-id AND tpi.id = s.toimenpideinstanssi
+ WHERE s.poistettu IS NOT TRUE
+   AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE;
