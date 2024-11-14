@@ -1,0 +1,41 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2024-10-29T12:00:00Z"
+  },
+  "reikapaikkaukset": [
+    {
+      "reikapaikkaus": {
+        "tunniste": {
+          "id": <ulkoinenid>
+        },
+        "pvm": "2024-10-28",
+        "sijainti": {
+          "viivageometria": {
+            "type": "LineString",
+            "coordinates": [
+              [395036.61503922625, 6687219.801695712],
+              [395003.5779999786, 6687146.434000028],
+              [394980.9809999787, 6687093.710000027],
+              [394968.3239999788, 6687062.110000027],
+              [394957.29285167484, 6687032.835223292]
+            ]
+          }
+        },
+        "tyomenetelma": "REPA",
+        "maara": 3000,
+        "yksikko": "t",
+        "kustannus": 45777.77
+      }
+    }
+  ]
+}
