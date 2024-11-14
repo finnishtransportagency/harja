@@ -201,6 +201,7 @@ minimi-etaisyys 40)
                (async/to-chan asiat)
                asiat)]
       (go-loop-timeout
-       {:timeout piirron-aikakatkaisu-ms}
-       [{alue :alue :as asia} ch]
-       (piirra g asia alue ruudukko)))))
+        {:timeout piirron-aikakatkaisu-ms}
+        [{alue :alue :as asia} ch]
+        (when (and asia alue)
+          (piirra g asia alue ruudukko))))))
