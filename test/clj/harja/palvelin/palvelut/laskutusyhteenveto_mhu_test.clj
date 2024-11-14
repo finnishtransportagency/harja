@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.laskutusyhteenveto-mhu-test
   (:require [clojure.test :refer :all]
+            [harja.kyselyt.urakat :as urakat-q]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen :as laskutusyhteenveto]
@@ -11,7 +12,10 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.sanktiot :as sanktiot]
             [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-kyselyt]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.pvm :as pvm]
+            [harja.domain.kulut :as domain-kulut]
+            [harja.palvelin.palvelut.kulut.kulut :as kulu-palvelu]
             [harja.testi :as testi]))
 
 
@@ -21,7 +25,10 @@
                     (component/start
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)))))
+                        :http-palvelin (testi-http-palvelin)
+                        :kulut (component/using
+                                 (kulu-palvelu/->Kulut)
+                                 [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -357,7 +364,7 @@
         ;; Hoidonjohtopalkkio menee kustannusarvioitu_tyo tauluun tehtävälle Hoidonjohtopalkkio.
         ;; HAetaan sen tehtävän id:
         hoidonjohtopalkkio-tehtava-id (hae-tehtavan-id-tunnisteella "53647ad8-0632-4dd3-8302-8dfae09908c8")
-        ;; Haetaan hoidonjohtopalkkio tehtävän kustannusarvioidut työt annetulla ajan jaksolla
+        ;; Haetaan hoidonjohtopalkkio tehtävän kustannusarvioidut työt annetulla ajanjaksolla
         hoidonjohtopalkkio-kustannusarvioidut-tyot
         (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM kustannusarvioitu_tyo
                                         WHERE tehtava = %s AND tehtavaryhma IS NULL AND sopimus = %s AND tyyppi = 'laskutettava-tyo'
@@ -434,7 +441,7 @@
         ;; Erilliskustannukset menee kustannusarvioitu_tyo tauluun tehtäväryhmälle Erilliskustannus (W) / '37d3752c-9951-47ad-a463-c1704cf22f4c'
         ;; Haetaan sen tehtäväryhmän id:
         erilliskustannus-tehtavaryhma-id (hae-tehtavaryhman-id-tunnisteella "37d3752c-9951-47ad-a463-c1704cf22f4c") ;(:id (first (q-map (format "SELECT id FROM tehtavaryhma where yksiloiva_tunniste = '%s';" "37d3752c-9951-47ad-a463-c1704cf22f4c"))))
-        ;; Haetaan hoidonjohtopalkkio tehtävän kustannusarvioidut työt annetulla ajan jaksolla
+        ;; Haetaan hoidonjohtopalkkio tehtävän kustannusarvioidut työt annetulla ajanjaksolla
         erilliskustannus-kustannusarvioidut-tyot
         (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM kustannusarvioitu_tyo
                                         WHERE tehtavaryhma = %s AND sopimus = %s AND tyyppi = 'laskutettava-tyo'
@@ -488,6 +495,95 @@
         _ (is (= (+ erilliskustannus-kustannusarvioidut-tyot erilliskustannus-kulut)
                 (+ erilliskustannus-toteutuneet_kustannukset erilliskustannus-kulut)
                 erilliskustannus-laskutusyhteenvedossa))]))
+
+(defn jh-korvaus-kulu [urakka-id erapaiva summa toimenpideinstanssi-id tehtavaryhma-id urakan-alkupvm]
+  {:id              nil
+   :urakka          urakka-id
+   :viite           "12345"
+   :erapaiva        erapaiva
+   :kokonaissumma   summa
+   :tyyppi          "laskutettava"
+   :kohdistukset    [{:kohdistus-id        nil
+                      :rivi                1
+                      :summa               summa
+                      :toimenpideinstanssi toimenpideinstanssi-id
+                      :tehtavaryhma        tehtavaryhma-id
+                      :tehtava             nil
+                      :tavoitehintainen :true
+                      :tyyppi "hankintakulu"}]
+   :koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)})
+
+(deftest toteutuneet-johto-ja-hallintokorvaukset
+  ;; JH-korvaukset suunnitellaan johto_ja_hallintokorvaus tauluun. Ja ne on
+  ;; päätelty toteutuvaksi aina kuukauden vaihteessa.
+  ;; Uudistuneessa versiossa ne siirretään kuukauden vaihteessa toteutuneet_kustannukset tauluun.
+  ;; Varmistetaan testillä, että luvut ovat samat.
+  (let [alkuaika-iso "2022-10-01"
+        alkuaika (pvm/->pvm "1.10.2022")
+        alkuvuosi 2022
+        loppuaika "2023-10-01"
+        loppuvuosi 2023
+        urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        urakan-tiedot (first (urakat-q/hae-urakka (:db jarjestelma) {:id urakka-id}))
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23151")
+        jh-tehtavaryhma-id (hae-tehtavaryhman-id-tunnisteella "a6614475-1950-4a61-82c6-fda0fd19bb54")
+        jh-kulu-summa 345M
+
+        ;; JH-korvaukset suunnitellaan johto_ja_hallintokorvaus -tauluun
+        ;; Haetaan JH-korvaukset johto_ja_hallintokorvaus annetulla ajanjaksolla
+        jh-korvaus-suunniteltu
+        (:summa (first (q-map (format "SELECT coalesce(
+                                              SUM(CASE
+                                                WHEN jhk.tuntipalkka_indeksikorjattu IS NOT NULL
+                                                  THEN coalesce((jhk.tunnit * jhk.tuntipalkka_indeksikorjattu * jhk.\"osa-kuukaudesta\"), 0)
+                                                ELSE coalesce((jhk.tunnit * jhk.tuntipalkka * jhk.\"osa-kuukaudesta\"), 0)
+                                               END),0) as summa
+                                         FROM johto_ja_hallintokorvaus jhk
+                                        WHERE jhk.\"urakka-id\" = %s
+                                          AND ((jhk.vuosi = %s AND jhk.kuukausi in (10,11,12)) OR jhk.vuosi = %s AND jhk.kuukausi in (1,2,3,4,5,6,7,8,9));"
+                                urakka-id alkuvuosi loppuvuosi))))
+
+        ;; Haetaan hoidonjohtopalkkiot toteutuneet_kustannukset taulusta samalle ajanjaksolle
+        jh-korvaus-toteutuneet_kustannukset
+        (:summa (first (q-map (format "SELECT coalesce(SUM(summa_indeksikorjattu), 0) as summa FROM toteutuneet_kustannukset
+                                        WHERE tehtavaryhma = %s AND urakka_id = %s AND tyyppi = 'laskutettava-tyo'
+                                          AND ((vuosi = %s AND kuukausi in (10,11,12)) OR vuosi = %s AND kuukausi in (1,2,3,4,5,6,7,8,9));"
+                                jh-tehtavaryhma-id urakka-id alkuvuosi loppuvuosi))))
+        _ (is (= jh-korvaus-suunniteltu jh-korvaus-toteutuneet_kustannukset))
+
+        ;; JH-korvaukset voi olla myös kuluissa, joten tarkistetaan niiden määrä
+        ;; Lisätään uusi kulu, jotta sellainen voidaan hakea
+        jh-kulu (jh-korvaus-kulu urakka-id alkuaika jh-kulu-summa toimenpideinstanssi-id jh-tehtavaryhma-id (:alkupvm urakan-tiedot))
+        kulu_vastaus (kutsu-http-palvelua :tallenna-kulu +kayttaja-jvh+
+                       {:urakka-id urakka-id
+                        :kulu-kohdistuksineen jh-kulu})
+
+        ;; Haetaan JH-korvaukset kuluista
+        jh-korvaus-kulut (:summa (first (q-map (format
+                                                 "SELECT coalesce(SUM(kk.summa), 0) AS summa
+                                                    FROM kulu k
+                                                         JOIN kulu_kohdistus kk ON kk.kulu = k.id
+                                                   WHERE kk.poistettu IS NOT TRUE
+                                                     AND k.urakka = %s
+                                                     AND k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE
+                                                     AND kk.tehtavaryhma = %s;"
+                                                 urakka-id alkuaika-iso loppuaika jh-tehtavaryhma-id))))
+        _ (is (= jh-korvaus-kulut jh-kulu-summa))
+
+        ;; Haetaan laskutusyhteenveto ja varmistetaan, että siellä on samat luvut jh-korvauksille
+        laskutusyhteenveto (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
+                             (:db jarjestelma)
+                             +kayttaja-jvh+
+                             {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                              :urakkatyyppi "teiden-hoito"
+                              :alkupvm alkuaika
+                              :loppupvm (pvm/->pvm "30.9.2023")})
+        ;; JH-korvaukset ovat vaan MHY ylläpidon alla, mutta lasketaan se kaikkien alta, koska se on muualla nolla
+        ;; Ja jos ei ole, niin silloin on virhetilanne ja se löytyy samalla testillä.
+        jh-korvaus-laskutusyhteenvedossa (apply + (map :johto_ja_hallinto_laskutettu laskutusyhteenveto))
+        _ (is (= (+ jh-korvaus-suunniteltu jh-korvaus-kulut)
+                (+ jh-korvaus-toteutuneet_kustannukset jh-korvaus-kulut)
+                jh-korvaus-laskutusyhteenvedossa))]))
 
 (deftest laskutusyhteenvedon-sementointi
   (testing "laskutusyhteenvedon-sementoiti"
