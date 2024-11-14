@@ -32,7 +32,6 @@
                        (fn [ks-tilat]
                          (update ks-tilat :ks_tila konv/jsonb->clojuremap))
                        #(liita-indeksikertoimet db kayttaja %)
-                       #(muunna-paatos % :rahapaatokset)
                        #(muunna-paatos % :lupauspaatokset))
                      (q/hae-hoidon-urakat-kojelautaan db {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
                                                           :urakat_annettu (boolean (seq urakka-idt))

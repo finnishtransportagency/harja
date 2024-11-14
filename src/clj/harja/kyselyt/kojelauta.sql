@@ -2,27 +2,37 @@
 SELECT u.id,
        COALESCE(u.lyhyt_nimi, u.nimi) AS nimi,
        u.hallintayksikko as ely_id,
+       EXTRACT (YEAR FROM u.alkupvm) AS urakan_alkuvuosi,
        :hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
        urakan_kustannussuunnitelman_tila(u.id::INTEGER,
                                          monesko_hoitokausi(u.alkupvm, u.loppupvm,
                                                             :hoitokauden_alkuvuosi::INTEGER))       AS ks_tila,
-       (SELECT ARRAY_AGG(DISTINCT (tyyppi::TEXT))
+       (SELECT tyyppi::TEXT
           FROM urakka_paatos up
          WHERE up."urakka-id" = u.id
            AND up."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
            AND up.poistettu IS FALSE
-           AND up.tyyppi IN ('tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus')) AS rahapaatokset,
-       (SELECT ARRAY_AGG(DISTINCT (tyyppi::TEXT))
+           AND up.tyyppi IN ('tavoitehinnan-ylitys', 'tavoitehinnan-alitus') LIMIT 1) AS tavoitehintapaatos,
+       (SELECT tyyppi::TEXT
           FROM urakka_paatos up
          WHERE up."urakka-id" = u.id
            AND up."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
            AND up.poistettu IS FALSE
-           AND up.tyyppi IN ('lupausbonus', 'lupaussanktio'))                                       AS lupauspaatokset,
+           AND up.tyyppi IN ('kattohinnan-ylitys') LIMIT 1) AS kattohintapaatos,
+       (SELECT ARRAY_AGG(DISTINCT (tyyppi::TEXT))
+         FROM urakka_paatos up
+         WHERE up."urakka-id" = u.id
+           AND up."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+           AND up.poistettu IS FALSE
+           AND up.tyyppi IN ('lupausbonus', 'lupaussanktio')) AS lupauspaatokset,
        sit.pisteet AS lupaus_tavoitepisteet,
        (SELECT count(*) FROM laatupoikkeama lp WHERE lp.urakka = u.id AND lp.paatos IS NULL AND lp.poistettu IS FALSE AND
-           EXTRACT (YEAR FROM lp.aika) = :hoitokauden_alkuvuosi) AS avoimet_laatupoikkeamat,
-       (SELECT count(*) FROM turvallisuuspoikkeama tp WHERE tp.urakka = u.id AND tp.kasitelty IS NULL AND
-           EXTRACT (YEAR FROM tp.tapahtunut) = :hoitokauden_alkuvuosi) AS avoimet_turvallisuuspoikkeamat
+           lp.aika BETWEEN make_date(:hoitokauden_alkuvuosi::INTEGER, 10, 1) AND
+               make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30)) AS avoimet_laatupoikkeamat,
+       (SELECT count(*) FROM turvallisuuspoikkeama tp WHERE tp.urakka = u.id AND
+           tp.tila IN ('avoin', 'taydennetty') AND
+           tp.tapahtunut BETWEEN make_date(:hoitokauden_alkuvuosi::INTEGER, 10, 1) AND
+               make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30)) AS avoimet_turvallisuuspoikkeamat
   FROM urakka u
            JOIN organisaatio o ON u.hallintayksikko = o.id
            LEFT JOIN lupaus_sitoutuminen sit ON
@@ -36,7 +46,7 @@ SELECT u.id,
          EXTRACT (YEAR FROM u.loppupvm) - 1) AND
      (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
      (:ely_id::INTEGER IS NULL OR u.hallintayksikko = :ely_id)
- ORDER BY u.nimi;
+ ORDER BY COALESCE(u.lyhyt_nimi, u.nimi);
 
 -- name: hae-paallystysurakat-kojelautaan
 SELECT u.id,

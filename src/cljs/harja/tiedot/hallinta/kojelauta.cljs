@@ -47,20 +47,24 @@
   "Palauttaa käyttöliittymän koosteriville välikatselmuksen tilojen yhteenvedon"
   [urakat]
   (let [kaikkien-urakoiden-lkm (count urakat)
-        urakat-joissa-jokin-rahapaatos-tehtyna (count (keep (fn [rivi]
-                                                              (seq (:rahapaatokset rivi))) urakat))
+        urakat-joissa-tavoitehintapaatos (count (filter (fn [rivi]
+                                                          (some? (:tavoitehintapaatos rivi))) urakat))
+        urakat-joissa-kattohintapaatos (count (filter (fn [rivi]
+                                                        (some? (:kattohintapaatos rivi))) urakat))
         urakat-joissa-jokin-lupauspaatos-tehtyna (count (keep (fn [rivi]
                                                                 (seq (:lupauspaatokset rivi))) urakat))
         urakat-joissa-ei-paatoksia (count (filter (fn [rivi]
                                                     (and
-                                                      (nil? (:rahapaatokset rivi))
+                                                      (nil? (:tavoitehintapaatos rivi))
+                                                      (nil? (:kattohintapaatos rivi))
                                                       (nil? (:lupauspaatokset rivi)))) urakat))
         valikatselmusten-yhteenveto (when-not (empty? urakat)
                                       [:span.valikatselmustiedot
                                        [yleiset/tietoja {:class "body-text"}
                                         "Ei yhtään päätöstä:" (str urakat-joissa-ei-paatoksia " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ei-paatoksia kaikkien-urakoiden-lkm))) ")")
-                                        "Budjettipäätös:" (str urakat-joissa-jokin-rahapaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-rahapaatos-tehtyna kaikkien-urakoiden-lkm))) ")")
-                                        "Lupauspäätös:" (str urakat-joissa-jokin-lupauspaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-lupauspaatos-tehtyna kaikkien-urakoiden-lkm))) ")")]])]
+                                        "Tavoite\u00ADhinta\u00ADpäätös:" (str urakat-joissa-tavoitehintapaatos " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-tavoitehintapaatos kaikkien-urakoiden-lkm))) ")")
+                                        "Katto\u00ADhinta\u00ADpäätös:" (str urakat-joissa-kattohintapaatos " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-kattohintapaatos kaikkien-urakoiden-lkm))) ")")
+                                        "Lupaus\u00ADpäätös:" (str urakat-joissa-jokin-lupauspaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-lupauspaatos-tehtyna kaikkien-urakoiden-lkm))) ")")]])]
     valikatselmusten-yhteenveto))
 
 (defn ks-tilojen-yhteenveto
