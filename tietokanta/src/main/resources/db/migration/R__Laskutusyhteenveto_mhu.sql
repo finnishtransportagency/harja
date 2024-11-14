@@ -89,7 +89,7 @@ BEGIN
         RAISE NOTICE 'Hoitovuoden päättämiseen liittyvät kulut otetaan mukaan, koska toimenpideinstanssi on hoidon johto: %. Toimenpidekoodi on %.', t_instanssi, toimenpide_koodi;
 
         -- HOITOVUODEN PÄÄTTÄMINEN, TAVOITEPALKKIO
-        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio');
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3'); -- Hoitovuoden päättäminen / Tavoitepalkkio
         RAISE NOTICE '    Tavoitepalkkio. Tehtavaryhma_id: % ' , tehtavaryhma_id;
 
         kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
@@ -99,7 +99,7 @@ BEGIN
         hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan := kulut[2];
 
         -- HOITOVUODEN PÄÄTTÄMINEN, TAVOITEHINNAN YLITYS
-        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä');
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '19907c24-dd26-460f-9cb4-2ed974b891aa'); -- 'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä'
         RAISE NOTICE '    Tavoitehinnan ylitys. Tehtavaryhma_id: % ' , tehtavaryhma_id;
 
         kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
@@ -109,7 +109,7 @@ BEGIN
         hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan := kulut[2];
 
         -- HOITOVUODEN PÄÄTTÄMINEN, KATTOHINNAN YLITYS
-        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä');
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'be34116b-2264-43e0-8ac8-3762b27a9557'); -- 'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä'
         RAISE NOTICE '   Kattohinnan ylitys : Tehtavaryhma_id: % ' , tehtavaryhma_id;
 
         kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
@@ -157,7 +157,7 @@ DECLARE
 
 BEGIN
     -- Haetaan hoidon johdon erillishankinnat
-    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
+    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c'); -- 'Erillishankinnat'
     RAISE NOTICE 'hj_erillishankinnat: toimenpidekoodi % -- tehtavaryhma_i: % ' , toimenpide_koodi, tehtavaryhma_id;
 
     hj_erillishankinnat_laskutettu := 0.0;
@@ -262,7 +262,7 @@ BEGIN
     RAISE NOTICE 'HJ-Palkkio: toimenpidekoodi %' , toimenpide_koodi;
     -- Hoidon johdon palkkiot koostuvat tehtäväryhmästä 'Hoidonjohtopalkkio (G)'
     -- sekä toimenpidekoodista 'Hoitourakan työnjohto' JA 'Hoidonjohtopalkkio'
-    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
+    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68'); -- 'Hoidonjohtopalkkio'
     toimenpidekoodi_id_hu_tyonjohto := (SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744');
     toimenpidekoodi_id_hj_palkkio := (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8');
 
@@ -365,7 +365,7 @@ DECLARE
 BEGIN
     -- Haetaan hoidon johdon yhteenvetoja tauluista: johto_ja_hallintokorvaus, kulu_kohdistus sekä kustannusarvioitu_tyo.
     -- kustannusarvioitu_tyo haetaan pelkästään tehtävällä, koska tehtäväryhmät viittaavat aina Tavoitehinnan ulkopuolisiin rahavarauksiin
-    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
+    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'); -- 'Johto- ja hallintokorvaus'
     -- kustannusarvioitu_tyo taulusta haetaan toimenpidekoodin perusteella - Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
     toimistotarvike_koodi :=
             (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');
