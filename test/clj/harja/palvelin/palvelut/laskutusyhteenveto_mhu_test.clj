@@ -394,21 +394,21 @@
                                                              AND kk.tehtavaryhma = %s;"
                                                          urakka-id alkuaika loppuaika hoidonjohtopalkkio-tehtavaryhma-id))))
 
-        ;; Vanha tapa laskea hoidonjohtopalkkiot on kustannusarvioitu_tyo taulussa
+        ;; Suunnitellut hoidonjohtopalkkiot on kustannusarvioitu_tyo taulussa
         ;; Haetaan ensin toimenpideinstanssi-id -- tpk2.koodi/tuotekoodi 23151 on MHU Hoidonjohto
         toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23151")
 
         toimenpidekoodi-id-hu-tyonjohto (:id (first (q-map (format "SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744';"))))
         toimenpidekoodi-id-hj-palkkio (:id (first (q-map (format "SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8';"))))
 
-        vanhat-summat (:summa (first (q-map (str
+        suunnitellut-summat (:summa (first (q-map (str
                                               "SELECT SUM(coalesce(kat.summa_indeksikorjattu, kat.summa, 0)) AS summa
                                                  FROM kustannusarvioitu_tyo kat
                                                 WHERE kat.toimenpideinstanssi = " toimenpideinstanssi-id "
               AND (kat.tehtavaryhma = " hoidonjohtopalkkio-tehtavaryhma-id " OR kat.tehtava IN (" toimenpidekoodi-id-hu-tyonjohto ", " toimenpidekoodi-id-hj-palkkio "))
               AND kat.sopimus = " sopimus-id "
               AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN '" alkuaika "'::DATE AND '" loppuaika "'::DATE"))))
-        _ (is (= hoidonjohtopalkkio-kustannusarvioidut-tyot vanhat-summat))
+        _ (is (= hoidonjohtopalkkio-kustannusarvioidut-tyot suunnitellut-summat))
 
         ;; Haetaan laskutusyhteenveto ja varmistetaan, että siellä on samat luvut hoidonjohtopalkkioille
         laskutusyhteenveto (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -469,17 +469,17 @@
                                                            AND kk.tehtavaryhma = %s;"
                                                        urakka-id alkuaika loppuaika erilliskustannus-tehtavaryhma-id))))
 
-        ;; Vanha tapa laskea erilliskustannukset on kustannusarvioitu_tyo taulussa
+        ;; Suunnitellut erilliskustannukset on kustannusarvioitu_tyo taulussa
         ;; Haetaan ensin toimenpideinstanssi-id -- tpk2.koodi/tuotekoodi 23151 on MHU Hoidonjohto
         toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23151")
-        vanhat-summat (:summa (first (q-map (str
+        suunnitellut-summat (:summa (first (q-map (str
                                               "SELECT SUM(coalesce(kat.summa_indeksikorjattu, kat.summa, 0)) AS summa
                                                  FROM kustannusarvioitu_tyo kat
                                                 WHERE kat.toimenpideinstanssi = " toimenpideinstanssi-id "
               AND kat.tehtavaryhma = " erilliskustannus-tehtavaryhma-id "
               AND kat.sopimus = " sopimus-id "
               AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN '" alkuaika "'::DATE AND '" loppuaika "'::DATE"))))
-        _ (is (= erilliskustannus-kustannusarvioidut-tyot vanhat-summat))
+        _ (is (= erilliskustannus-kustannusarvioidut-tyot suunnitellut-summat))
 
         ;; Haetaan laskutusyhteenveto ja varmistetaan, että siellä on samat luvut Erilliskustannuksille
         laskutusyhteenveto (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
