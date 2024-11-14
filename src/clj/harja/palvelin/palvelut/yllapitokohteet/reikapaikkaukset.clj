@@ -74,8 +74,8 @@
                     :kustannus kustannus
                     :yksikko yksikko}
         ;; Onko paikkaus kannassa, tyhjä tulos palauttaa (), johon seq lyö nilliä, joten boolean -> seq -> tulos 
-        paikkaus-olemassa? (boolean (seq (q/hae-reikapaikkaus db {:ulkoinen-id tunniste
-                                                                  :urakka-id urakka-id})))]
+        paikkaus-olemassa? (boolean (seq (q/hae-reikapaikkaus-vaikka-poistettu db {:ulkoinen-id tunniste
+                                                                                   :urakka-id urakka-id})))]
     ;; Jos paikkausta ei ole olemassa -> lisätään se, muuten kutsutaan UPDATE 
     (if paikkaus-olemassa?
       (q/paivita-reikapaikkaus! db parametrit)
