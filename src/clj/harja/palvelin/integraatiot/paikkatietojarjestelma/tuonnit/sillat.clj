@@ -206,8 +206,9 @@
         (for [batch (partition-all batch-koko tallennettavat-siltatietueet)]
           (try
             (jdbc/with-db-transaction [db db]
-              (doseq [silta batch]
-                (vie-silta-entry db silta)))
+              (dorun
+                (doseq [silta batch]
+                  (vie-silta-entry db silta))))
 
             ;; Garbage collection, vaikka for pitäisi olla lazy, vapauta vielä muistia jokaisessa batchissa
             (System/gc)
