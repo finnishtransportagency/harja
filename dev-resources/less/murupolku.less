@@ -3,10 +3,14 @@
 @murupolun-elementtikorkeus: @input-korkeus;
 
 .murupolku {
-    background-color: @harmaa10;
-    padding: 0 0 5px 0;
+  > li {
+    margin-top: 0;
+  }
+    background-color: @harjan-taustavari;
+    border-bottom: solid 1px @white-darker;
+    padding: 0 0 @valistys-8 0;
     list-style: none;
-    margin-bottom: 0;
+    margin-bottom: @valistys-8;
     .disabled {
         .livicon-chevron-down {
             color: @harmaa7;
@@ -15,12 +19,14 @@
     .livicon-chevron-down {
         color: @sininen4;
     }
+    label {
+      font-weight: 600;
+      margin-top: 0;
+    }
 
     .murupolku-vasen {
         > li {
-            vertical-align: top;
             display: inline-block;
-            margin-top: 17px;
             margin-right: 5px
         }
     }
@@ -39,6 +45,14 @@
     .urakkalista {
       width: unset;
     }
+  .murupolkuvalitsin {
+    #alasveto-hallintayksikko {
+      width: 154px;
+      .murupolkuteksti {
+        width: 122px;
+      }
+    }
+  }
 }
 
 @media screen and (max-width: 767px) {
@@ -78,12 +92,12 @@
 .murupolku-radiovalinta {
     margin: 0 5px;
     > label {
-        padding: 5px;
+      padding: 5px;
     }
 }
 
 .murupolkuteksti {
-    background-color: @harjan-taustavari;
+    background-color: @white;
     border: 1px solid @harmaa7;
     display: inline-block;
     height: @murupolun-elementtikorkeus;
