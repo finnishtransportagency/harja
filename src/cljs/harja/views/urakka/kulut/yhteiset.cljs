@@ -212,7 +212,7 @@
                             [napit/poista ""
                              #(do
                                 (poista-oikaisu-fn rivi id))
-                             {:luokka "napiton-nappi"}]))
+                             {:luokka "napiton-nappi pelkka-ikoni"}]))
       :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
       :validoi-uusi-rivi? false
       :on-rivi-blur (fn [oikaisu i]
