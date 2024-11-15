@@ -10,6 +10,8 @@
             [harja.tyokalut.tuck :as tuck-apurit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+;; vuosi, jota ennen tavoite ja kattohinnan paatokset eivat olleet sidoksissa toisiinsa
+(def +kattohintapaatos-kynnysvuosi+ 2021)
 
 (defn tee-urakkahaku [urakat]
   (reify protokollat/Haku

@@ -111,9 +111,6 @@
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Ei tavoitepistemäärää")})
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ok")}))]]]))
 
-;; vuosi, jota ennen tavoite ja kattohinnan paatokset eivat olleet sidoksissa toisiinsa
-(def nayta-kattohintapaatos-kynnysvuosi? 2021)
-
 (defn valikatselmus-sarake
   [rivi]
   (let [{:keys [urakan_alkuvuosi tavoitehintapaatos kattohintapaatos lupauspaatokset hoitokauden_alkuvuosi]} rivi
@@ -139,7 +136,7 @@
       ;; ennen vuotta 2021 alkaneissa urakoissa kattohintapäätös ei ollut kytköksissä tavoitehintapäätökseen, niin näytetään tämä tieto vain silloin
       ;; 2021 ja jälkeen riittää kertoa onko tavoitehintapäätös tehty
       [:div.kattohintapaatos
-       (when (< urakan_alkuvuosi nayta-kattohintapaatos-kynnysvuosi?)
+       (when (< urakan_alkuvuosi tiedot/+kattohintapaatos-kynnysvuosi+)
          (if (nil? kattohintapaatos)
            (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
              {:fmt-fn (constantly "Ei kattohinta\u00ADpäätöstä")})
