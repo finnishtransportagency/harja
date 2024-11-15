@@ -26,11 +26,11 @@
      :footer-fn (fn [yhteydenotto]
                   [napit/tallenna
                    "Lähetä"
-                   #((varmista-kayttajalta/varmista-kayttajalta
+                   #(varmista-kayttajalta/varmista-kayttajalta
                       {:otsikko "Sähköposti kaikille Harja käyttäjille"
                        :sisalto [:div "Oletko varma, että haluat lähettää viestin kaikille vuoden sisällä kirjautuneille Harjan käyttäjille?"]
                        :hyvaksy "Lähetä"
-                       :toiminto-fn (fn [] (e! (tiedot/->Laheta yhteydenotto)))}))
+                       :toiminto-fn (fn [] (e! (tiedot/->Laheta yhteydenotto)))})
                     {
                       :disabled (or lahetys-kaynnissa?
                                   (not (lomake/voi-tallentaa? yhteydenotto)))}])
