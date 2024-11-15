@@ -40,7 +40,7 @@
 (defn tee-paasivu [random-avain devmode]
   (html
     "<!DOCTYPE html>\n"
-    [:html
+    [:html {:lang "fi"}
      [:head
       [:title "HARJA"]
       [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
@@ -83,7 +83,7 @@
                           livicons-36))]
     (html
       "<!DOCTYPE html>\n"
-      [:html
+      [:html {:lang "fi"}
        [:head
         [:title "HARJA Mobiili laadunseuranta"]
         [:meta {:charset "utf-8"}]
