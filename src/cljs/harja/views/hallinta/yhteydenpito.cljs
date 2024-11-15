@@ -32,6 +32,7 @@
                        :hyvaksy "Lähetä"
                        :toiminto-fn (fn [] (e! (tiedot/->Laheta yhteydenotto)))})
                     {
+                      :aria-label "Lähetä"
                       :disabled (or lahetys-kaynnissa?
                                   (not (lomake/voi-tallentaa? yhteydenotto)))}])
      :muokkaa! #(e! (tiedot/->Muokkaa %))}
