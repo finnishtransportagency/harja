@@ -24,13 +24,15 @@
    [lomake/lomake
     {:ei-borderia? true
      :footer-fn (fn [yhteydenotto]
+                  (let [otsikko (get yhteydenotto :otsikko) sisalto (get yhteydenotto :sisalto)
+                        isValidInput (and (not (string/blank? otsikko)) (not (string/blank? sisalto)))]
                   [napit/tallenna "Lähetä"
                    #(varmista-kayttajalta/varmista-kayttajalta
                       {:otsikko "Sähköposti kaikille Harja käyttäjille"
                        :sisalto [:div "Oletko varma, että haluat lähettää viestin kaikille vuoden sisällä kirjautuneille Harjan käyttäjille?"]
                        :hyvaksy "Lähetä"
                        :toiminto-fn (fn [] (e! (tiedot/->Laheta yhteydenotto)))
-                       :disabled (true? lahetys-kaynnissa?)})])
+                       :disabled (true? lahetys-kaynnissa?)})]))
      :muokkaa! #(e! (tiedot/->Muokkaa %))}
     [{:nimi :otsikko
       :otsikko "Otsikko"
