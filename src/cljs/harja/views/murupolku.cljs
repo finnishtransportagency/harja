@@ -21,7 +21,7 @@
 
 (defn koko-maa []
   [:li
-   [:a.murupolkuteksti {:href "#"
+   [:a.murupolkuteksti.alleviivaa {:href "#"
                         :style (when (nil? @nav/valittu-hallintayksikko)
                                  {:text-decoration "none"
                                   :color "#323232"})

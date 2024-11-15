@@ -158,6 +158,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn staattinen-linkki-uuteen-ikkunaan [otsikko linkki]
   [:a {:href linkki
        :target "_blank"
+       :class "alleviivaa"
        :rel "noopener noreferrer"} otsikko])
 
 (defn tiedoston-lataus-linkki
