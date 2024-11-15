@@ -1,6 +1,7 @@
 (ns harja.views.main
   "Harjan päänäkymä"
-  (:require [harja.ui.bootstrap :as bs]
+  (:require [clojure.string :as str]
+            [harja.ui.bootstrap :as bs]
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
@@ -76,11 +77,11 @@
    [ikonit/ikoni-ja-teksti (ikonit/livicon-info-circle) "INFO"]])
 
 (defn- mobiiliselain? []
-  (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+  (some #(re-matches % (str/lower-case js/window.navigator.userAgent))
         [#".*android.*" #".*ipad.*"]))
 
 (defn header [s]
-  [bs/navbar {:luokka (when (k/kehitysymparistossa?) "testiharja")}
+  [bs/navbar {:luokka (str/join " " ["harja-ylin-header" (when (k/kehitysymparistossa?) "testiharja")])}
    [:span
     [:img#harja-brand-icon {:alt "HARJA"
                             :src "images/harja_logo_soft.svg"
@@ -196,7 +197,7 @@
        (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten)
        [yhteys-palautunut-ilmoitus])
 
-     [:div.container
+     [:div#harja-header.container
       [header sivu]]
 
      [:div.container
