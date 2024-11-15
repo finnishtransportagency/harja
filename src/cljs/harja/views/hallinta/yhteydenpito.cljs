@@ -26,8 +26,8 @@
      :footer-fn (fn [yhteydenotto]
                 (let [otsikko (get yhteydenotto :otsikko)
                       sisalto (get yhteydenotto :sisalto)
-                      isValidOtsikko (not (string/blank? otsikko))
-                      isValidSisalto (not (string/blank? sisalto))]
+                      isValidOtsikko (not (clojure.string/blank? otsikko))
+                      isValidSisalto (not (clojure.string/blank? sisalto))]
                   [napit/tallenna
                    "Lähetä"
                    #(if (and isValidOtsikko isValidSisalto)
@@ -42,7 +42,7 @@
                           (e! (assoc-in yhteydenotto [:errors :otsikko] "Otsikko on pakollinen.")))
                         (when (not isValidSisalto)
                           (e! (assoc-in yhteydenotto [:errors :sisalto] "Sisältö on pakollinen.")))
-                        (notify-error "Otsikko ja sisältö ovat pakollisia!")))]))
+                        (e! (assoc-in yhteydenotto [:errors :otsikko] "Otsikko on pakollinen.")))
      :muokkaa! #(e! (tiedot/->Muokkaa %))}
   [{:nimi :otsikko
     :otsikko "Otsikko"
