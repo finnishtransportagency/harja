@@ -68,7 +68,7 @@
                  (if (get-in yhteydenotto [:errors :sisalto])
                    "kentta-virhe"
                    ""))}]
-  yhteydenotto]]
+  yhteydenotto]])
 
 (defn yhteydenpito* []
   (komp/luo
