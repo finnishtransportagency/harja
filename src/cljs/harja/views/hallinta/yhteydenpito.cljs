@@ -30,19 +30,13 @@
                       isValidSisalto (not (clojure.string/blank? sisalto))]
                   [napit/tallenna
                    "Lähetä"
-                   #(if (and isValidOtsikko isValidSisalto)
-                      (varmista-kayttajalta/varmista-kayttajalta
-                        {:otsikko "Sähköposti kaikille Harja käyttäjille"
-                         :sisalto [:div "Oletko varma, että haluat lähettää viestin kaikille vuoden sisällä kirjautuneille Harjan käyttäjille?"]
-                         :hyvaksy "Lähetä"
-                         :toiminto-fn (fn [] (e! (tiedot/->Laheta yhteydenotto)))
-                         :disabled (true? lahetys-kaynnissa?)})
+                   #(
                       (do
                         (when (not isValidOtsikko)
                           (e! (assoc-in yhteydenotto [:errors :otsikko] "Otsikko on pakollinen.")))
                         (when (not isValidSisalto)
                           (e! (assoc-in yhteydenotto [:errors :sisalto] "Sisältö on pakollinen.")))
-                        (e! (assoc-in yhteydenotto [:errors :otsikko] "Otsikko on pakollinen.")))
+                        (e! "Otsikko ja sisältö ovat pakollisia!")))]))
      :muokkaa! #(e! (tiedot/->Muokkaa %))}
   [{:nimi :otsikko
     :otsikko "Otsikko"
