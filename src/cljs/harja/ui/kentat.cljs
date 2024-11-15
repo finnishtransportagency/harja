@@ -652,7 +652,7 @@
   (assert data)
   (let [palstoja (or palstoja 1)
         vaihtoehto-nayta (or vaihtoehto-nayta
-                             #(clojure.string/capitalize (name %)))
+                             #(str/capitalize (name %)))
         data-nyt @data
         valitut (if valittu-fn
                   (partial valittu-fn @data)
@@ -802,7 +802,7 @@
                                             kaari-flex-row? vaihtoehto-opts space-valissa?]}
                                     data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
-                             #(clojure.string/capitalize (name %)))
+                             #(str/capitalize (name %)))
         valittu (or @data nil)]
     ;; Jos oletusarvo on annettu, se sisältyy vaihtoehtoihin, ja mitään ei ole valittu,
     ;; valitaan oletusarvo
@@ -817,9 +817,14 @@
                                  :let [vaihtoehdon-arvo (if vaihtoehto-arvo
                                                           (vaihtoehto-arvo vaihtoehto)
                                                           vaihtoehto)
-                                       opts (get vaihtoehto-opts vaihtoehto)]]
+                                       opts (get vaihtoehto-opts vaihtoehto)
+                                       elementin-id (str "radio-group-"
+                                                      (-> 
+                                                        (vaihtoehto-nayta vaihtoehto)
+                                                        (str/replace " " "_") ;; Korvaa välilyönnit alaviivalla, näitä ei sallita HTML idissä
+                                                        (str/replace #"\s" "")))]] ;; Poista vielä, jos on mitään muuta whitespacea
                              (if vayla-tyyli?
-                               ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
+                               ^{:key elementin-id}
                                [vayla-radio {:teksti (vaihtoehto-nayta vaihtoehto)
                                              :muutos-fn #(let [valittu? (-> % .-target .-checked)]
                                                            (do
@@ -831,11 +836,11 @@
                                              :valittu? (or (and (nil? valittu) (= vaihtoehto oletusarvo))
                                                            (= valittu vaihtoehdon-arvo))
                                              :ryhma group-id
-                                             :id (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))
+                                             :id (gensym elementin-id)
                                              :opts opts
                                              :kaari-flex-row? kaari-flex-row?
                                              :radio-luokka radio-luokka}]
-                               ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
+                               ^{:key elementin-id}
                                [:div {:class (y/luokat "radio" radio-luokka)}
                                 [:label
                                  [:input {:type "radio"
