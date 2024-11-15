@@ -44,21 +44,21 @@
                         )
                       }]))
      :muokkaa! #(e! (tiedot/->Muokkaa %))}
-  [{:nimi :otsikko
-    :otsikko "Otsikko"
-    :tyyppi :string
-    :palstoja 2
-    :pakollinen? true
-    :validoi [[:ei-tyhja]]}
-   {:nimi :sisalto
-    :otsikko "Sisältö"
-    :tyyppi :text
-    :koko [80 20]
-    :pituus-max 2048
-    :palstoja 2
-    :pakollinen? true
-    :validoi [[:ei-tyhja]]}]
-  yhteydenotto]])
+    [{:nimi :otsikko
+      :otsikko "Otsikko"
+      :tyyppi :string
+      :palstoja 2
+      :pakollinen? true
+      :validoi [[:ei-tyhja]]}
+    {:nimi :sisalto
+      :otsikko "Sisältö"
+      :tyyppi :text
+      :koko [80 20]
+      :pituus-max 2048
+      :palstoja 2
+      :pakollinen? true
+      :validoi [[:ei-tyhja]]}]
+    yhteydenotto]])
 
 (defn yhteydenpito* []
   (komp/luo
