@@ -24,14 +24,9 @@
    [lomake/lomake
     {:ei-borderia? true
      :footer-fn (fn [yhteydenotto]
-                (let [otsikko (get yhteydenotto :otsikko)
-                      sisalto (get yhteydenotto :sisalto)
-                      isValidOtsikko (not (clojure.string/blank? otsikko))
-                      isValidSisalto (not (clojure.string/blank? sisalto))]
                   [napit/tallenna
                    "Lähetä"
-                   #(if (and isValidOtsikko isValidSisalto)
-                      (varmista-kayttajalta/varmista-kayttajalta
+                   #((varmista-kayttajalta/varmista-kayttajalta
                         {:otsikko "Sähköposti kaikille Harja käyttäjille"
                          :sisalto [:div "Oletko varma, että haluat lähettää viestin kaikille vuoden sisällä kirjautuneille Harjan käyttäjille?"]
                          :hyvaksy "Lähetä"
@@ -42,7 +37,7 @@
                         :disabled (or lahetys-kaynnissa?
                                     (not (lomake/voi-tallentaa? yhteydenotto))
                         )
-                      }]))
+                      }])
      :muokkaa! #(e! (tiedot/->Muokkaa %))}
     [{:nimi :otsikko
       :otsikko "Otsikko"
@@ -50,7 +45,7 @@
       :palstoja 2
       :pakollinen? true
       :validoi [[:ei-tyhja]]}
-    {:nimi :sisalto
+     {:nimi :sisalto
       :otsikko "Sisältö"
       :tyyppi :text
       :koko [80 20]
