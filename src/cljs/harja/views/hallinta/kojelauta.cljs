@@ -12,7 +12,8 @@
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.hallinta.kojelauta :as tiedot]))
+            [harja.tiedot.hallinta.kojelauta :as tiedot])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (def hoitokausia-taaksepain 4)
 (def hoitokausia-eteenpain 6)
@@ -79,6 +80,27 @@
        :disabled? haku-kaynnissa?}
       (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]]])
 
+(defn avoimet-poikkeamat-sarake
+  [rivi]
+  (let [{:keys [avoimet_laatupoikkeamat avoimet_turvallisuuspoikkeamat]} rivi]
+    [:span.avoimet-poikkeamat
+     [yleiset/wrap-if true
+      [yleiset/tooltip {} :% "Siirry laatupoikkeamiin"]
+      [:a.klikattava {:on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                    :taso2 :laadunseuranta
+                                                                                                    :taso3 :laatupoikkeamat})}
+       (if (> avoimet_laatupoikkeamat 0)
+         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly (str "Avoimia laatupoikkeamia: " avoimet_laatupoikkeamat))})
+         (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia laatupoikkeamia")}))]]
+     [yleiset/wrap-if true
+      [yleiset/tooltip {} :% "Siirry turvallisuuspoikkeamiin"]
+      [:a.klikattava {:on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                    :taso2 :turvallisuuspoikkeamat
+                                                                                                    :taso3 nil})}
+       (if (> avoimet_turvallisuuspoikkeamat 0)
+         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly (str "Avoimia turvallisuuspoikkeamia: " avoimet_turvallisuuspoikkeamat))})
+         (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia turvallisuuspoikkeamia")}))]]]))
+
 (defn lupauspisteet-sarake
   [rivi]
   (let [{:keys [lupaus_tavoitepisteet hoitokauden_alkuvuosi]} rivi]
@@ -92,7 +114,7 @@
 
 (defn valikatselmus-sarake
   [rivi]
-  (let [{:keys [rahapaatokset lupauspaatokset hoitokauden_alkuvuosi]} rivi
+  (let [{:keys [urakan_alkuvuosi tavoitehintapaatos kattohintapaatos lupauspaatokset hoitokauden_alkuvuosi]} rivi
         edellisen-hoitokauden-alkuvuosi (- (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt)))) 1)
         ;; 15.11. on takaraja, milloin edellisen hoitokauden välikatselmus pitää olla tehtynä (edellinen --> kuluva hk -1)
         valikatselmuksen-takaraja-ohi? (or
@@ -103,23 +125,30 @@
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannusten seurantaan"]
-     [:a.klikattava {:on-click #(siirtymat/kustannusten-seurantaan-valitussa-urakassa (:ely_id rivi) (:id rivi) @u/valittu-hoitokausi)}
-      [:div.rahapaatokset
-       (if (nil? rahapaatokset)
+     [:a.klikattava {:on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                   :taso2 :laskutus
+                                                                                                   :taso3 :kustannusten-seuranta})}
+      [:div.tavoitehintapaatos
+       (if (nil? tavoitehintapaatos)
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
-           {:fmt-fn (constantly "Ei katto- tai tavoitehintapäätöksiä")})
-         (for [rp rahapaatokset]
-           ^{:key (hash rp)}
-           [:span
-            (yleiset/tila-indikaattori "valmis"
-              {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi rp))})]))]
-      [:div.lupauspaatokset
+           {:fmt-fn (constantly "Ei tavoitehinta\u00ADpäätöstä")})
+         (yleiset/tila-indikaattori "valmis"
+           {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi tavoitehintapaatos))}))]
+      ;; ennen vuotta 2021 alkaneissa urakoissa kattohintapäätös ei ollut kytköksissä tavoitehintapäätökseen, niin näytetään tämä tieto vain silloin
+      ;; 2021 ja jälkeen riittää kertoa onko tavoitehintapäätös tehty
+      [:div.kattohintapaatos
+       (when (< urakan_alkuvuosi tiedot/+kattohintapaatos-kynnysvuosi+)
+         (if (nil? kattohintapaatos)
+           (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
+             {:fmt-fn (constantly "Ei kattohinta\u00ADpäätöstä")})
+           (yleiset/tila-indikaattori "valmis"
+             {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi kattohintapaatos))})))]
 
+      [:div.lupauspaatokset
        (if (nil? lupauspaatokset)
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
-           {:fmt-fn (constantly "Ei lupauspäätöksiä")})
-         (for [lp lupauspaatokset]
-           ^{:key (hash lp)}
+           {:fmt-fn (constantly "Ei lupaus\u00ADpäätöksiä")})
+         (for* [lp lupauspaatokset]
            [:span
             (yleiset/tila-indikaattori "valmis"
               {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi lp))})]))]]]))
@@ -130,7 +159,9 @@
         {:keys [aloittamattomia vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannussuunnitelmaan"]
-     [:a.klikattava {:on-click #(siirtymat/kustannussuunnitelmaan-valitussa-urakassa (:ely_id rivi) (:id rivi))}
+     [:a.klikattava {:on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                   :taso2 :suunnittelu
+                                                                                                   :taso3 :kustannussuunnitelma})}
       (cond
         (= "aloittamatta" suunnitelman_tila)
         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Aloittamatta")})
@@ -178,7 +209,7 @@
     {:otsikko "Hoito\u00ADvuosi"
      :muokattava? (constantly false)
      :nimi :hoitokauden_alkuvuosi :leveys 7
-     :tyyppi :string :fmt #(pvm/hoitokausi-str-alkuvuodesta %)}
+     :tyyppi :string :fmt #(pvm/hoitokausi-str-alkuvuodesta-vuodet %)}
     {:otsikko "Kustannus\u00ADsuunnitelma"
      :muokattava? (constantly false)
      :nimi :ks_tila :leveys 15
@@ -193,7 +224,12 @@
      :muokattava? (constantly false)
      :nimi :ks_tila :leveys 15
      :tyyppi :komponentti
-     :komponentti (fn [rivi] [lupauspisteet-sarake rivi])}]
+     :komponentti (fn [rivi] [lupauspisteet-sarake rivi])}
+    {:otsikko "Avoimet poikkeamat"
+     :muokattava? (constantly false)
+     :nimi :ks_tila :leveys 15
+     :tyyppi :komponentti
+     :komponentti (fn [rivi] [avoimet-poikkeamat-sarake rivi])}]
    urakat])
 
 (defn listaus
