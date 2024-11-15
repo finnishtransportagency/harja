@@ -41,10 +41,13 @@
 
 (defn kayttajatiedot [kayttaja]
   (let [{:keys [etunimi sukunimi]} @kayttaja
-        kayttajainfo [:a {:href "#" :on-click #(do
-                                                 (.preventDefault %)
-                                                 (haku/nayta-kayttaja @kayttaja))}
-                      etunimi " " sukunimi]]
+        kayttajainfo [:a {:href "#"
+                          :id "kayttajatiedot-linkki"
+                          :class "klikattava"
+                          :on-click #(do
+                                       (.preventDefault %)
+                                       (haku/nayta-kayttaja @kayttaja))}
+                      [ikonit/ikoni-ja-teksti (ikonit/harja-icon-navigation-user) (str etunimi " " sukunimi)]]]
     (if-not (istunto/testikaytto-mahdollista?)
       kayttajainfo
 
