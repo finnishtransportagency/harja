@@ -41,12 +41,12 @@
 
 (defn kayttajatiedot [kayttaja]
   (let [{:keys [etunimi sukunimi]} @kayttaja
-        kayttajainfo [:a {:href "#"
-                          :id "kayttajatiedot-linkki"
-                          :class "klikattava"
-                          :on-click #(do
-                                       (.preventDefault %)
-                                       (haku/nayta-kayttaja @kayttaja))}
+        kayttajainfo [:a.klikattava
+                      {:href "#"
+                       :id "kayttajatiedot-linkki"
+                       :on-click #(do
+                                    (.preventDefault %)
+                                    (haku/nayta-kayttaja @kayttaja))}
                       [ikonit/ikoni-ja-teksti (ikonit/harja-icon-navigation-user) (str etunimi " " sukunimi)]]]
     (if-not (istunto/testikaytto-mahdollista?)
       kayttajainfo
@@ -68,6 +68,7 @@
 (defn harja-info [s]
   [:a.klikattava
    {:id "info"
+    :href "#"
     :role "presentation"
     :class (str "info-nakyma" (when (= s :info) " aktiivinen"))
     :on-click #(nav/vaihda-sivu! :info)}
