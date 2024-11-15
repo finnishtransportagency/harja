@@ -224,7 +224,7 @@
          :virheet {:virhe virhe}}))))
 
 (defn vanha-hae-alikohteet [db kohde-id paallystysilmoitus]
-  "DEPRIKOITUU: Vanha versio vanha-hae-alikohteet funktiosta. Korvaava: hae-alustarivit
+  "DEPREKOITUU: Vanha versio vanha-hae-alikohteet funktiosta. Korvaava: hae-alustarivit
    Tämä funktio käytössä vain hetkellisesti, kunnes uusi versio on testattu."
   (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
         osoitteet (if (= (:versio paallystysilmoitus) 2)
@@ -241,7 +241,7 @@
       alikohteet)))
 
 (defn vanha-hae-kohteen-tiedot [db kohde-id]
-  "DEPRIKOITUU: Vanha versio vanha-hae-kohteen-tiedot funktiosta. Korvaava: hae-kohteen-tiedot-pot2
+  "DEPREKOITUU: Vanha versio vanha-hae-kohteen-tiedot funktiosta. Korvaava: hae-kohteen-tiedot-pot2
    Tämä funktio käytössä vain hetkellisesti, kunnes uusi versio on testattu."
   (if-let [kohde (-> (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
                    first
@@ -371,7 +371,7 @@
 
 
 (defn vanha-laheta-kohteet-yhaan
-  "DEPRIKOITUU: Vanha versio laheta-kohteet-yhaan funktiosta. Tämä funktio käytössä vain hetkellisesti, kunnes uusi versio on testattu."
+  "DEPREKOITUU: Vanha versio laheta-kohteet-yhaan funktiosta. Tämä funktio käytössä vain hetkellisesti, kunnes uusi versio on testattu."
   [integraatioloki db {:keys [url api-key]} urakka-id kohde-idt]
   (log/debug (format "POT1: Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
   (try+
