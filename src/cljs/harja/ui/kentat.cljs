@@ -1692,7 +1692,7 @@
 
               (when (and (not piilota-nappi?) voi-valita-kartalta?)
                 (if-not @karttavalinta-kaynnissa?
-                  [napit/yleinen-ensisijainen
+                  [napit/yleinen-toissijainen
                    (tr-valintanapin-teksti osoite-alussa osoite)
                    #(do
                       (reset! osoite-ennen-karttavalintaa osoite)
