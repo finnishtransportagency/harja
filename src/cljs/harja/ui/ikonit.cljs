@@ -1041,6 +1041,7 @@
    [sulje-ruksi sulje! {}])
   ([sulje! {:keys [style]}]
    [:button.close {:on-click sulje!
+                   :alt "sulje"
                    :style (merge
                             {:color "black"
                              :margin "15px"
