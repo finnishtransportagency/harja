@@ -251,18 +251,27 @@
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
         kayttaja-id (:id +kayttaja-jvh+)
-        ;; lisää laatupoikkeama
-        _ (i (format "INSERT INTO public.laatupoikkeama (kohde, tekija, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys,
+        ;; lisää laatupoikkeama hoitokauden alkuun
+        _ (i (format "INSERT INTO laatupoikkeama (kohde, tekija, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys,
           ulkoinen_id, lahde, yllapitokohde, \"sisaltaa-poikkeamaraportin?\")
-          VALUES ('Minimi', 'tilaaja', %s, '2024-11-14 16:00:49.791984', '2024-11-14 16:00:31.000000', null, false, false, %s, 'Poikkeama',
+          VALUES ('Minimi', 'tilaaja', %s, '2024-11-14 16:00:49.791984', '2024-10-01 16:00:31.000000', null, false, false, %s, 'Poikkeama',
+           1, 2, 4, 5, 3, null, 'harja-ui', null, null);\n;" kayttaja-id urakka-id))
+        ;; lisää laatupoikkeama hoitokauden loppuun
+        _ (i (format "INSERT INTO laatupoikkeama (kohde, tekija, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys,
+          ulkoinen_id, lahde, yllapitokohde, \"sisaltaa-poikkeamaraportin?\")
+          VALUES ('Minimi2', 'tilaaja', %s, '2024-11-14 16:00:49.791984', '2025-09-30 16:00:31.000000', null, false, false, %s, 'Poikkeama',
            1, 2, 4, 5, 3, null, 'harja-ui', null, null);\n;" kayttaja-id urakka-id))
 
-        ;; lisää turvallisuuspoikkeama
-        _ (i (format "INSERT INTO public.turvallisuuspoikkeama (urakka, tapahtunut, kasitelty, kuvaus, sairauspoissaolopaivat, sairaalavuorokaudet, luotu, luoja,
+        ;; lisää turvallisuuspoikkeama hoitokauden alkuun
+        _ (i (format "INSERT INTO turvallisuuspoikkeama (urakka, tapahtunut, kasitelty, kuvaus, sairauspoissaolopaivat, sairaalavuorokaudet, luotu, luoja,
         tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, ulkoinen_id, vahinkoluokittelu, vakavuusaste, tyyppi, tyontekijanammatti_muu, tyontekijanammatti, lahde, laatija, tapahtuman_otsikko, paikan_kuvaus, vaarallisten_aineiden_kuljetus, vaarallisten_aineiden_vuoto, tila, turi_id, juurisyy1, juurisyy1_selite, juurisyy2, juurisyy2_selite, juurisyy3, juurisyy3_selite)
-        VALUES (%s, '2024-11-14 14:00:00.000000', null, 'abc', null, null, '2024-11-14 16:06:42.425530', %s,
+        VALUES (%s, '2024-10-01 14:00:00.000000', null, 'abc', null, null, '2024-11-14 16:06:42.425530', %s,
          1, 2, 4, 5, 3, null, '{henkilovahinko}', 'lieva', '{tyotapaturma}', null, 'asentaja','harja-ui', 3, 'Minimi', null, false, false, 'avoin', null, 'puutteelliset_henkilonsuojaimet', null, null, null, null, null);\n" urakka-id kayttaja-id))
-
+        ;; lisää turvallisuuspoikkeama hoitokauden loppuun
+        _ (i (format "INSERT INTO turvallisuuspoikkeama (urakka, tapahtunut, kasitelty, kuvaus, sairauspoissaolopaivat, sairaalavuorokaudet, luotu, luoja,
+        tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, ulkoinen_id, vahinkoluokittelu, vakavuusaste, tyyppi, tyontekijanammatti_muu, tyontekijanammatti, lahde, laatija, tapahtuman_otsikko, paikan_kuvaus, vaarallisten_aineiden_kuljetus, vaarallisten_aineiden_vuoto, tila, turi_id, juurisyy1, juurisyy1_selite, juurisyy2, juurisyy2_selite, juurisyy3, juurisyy3_selite)
+        VALUES (%s, '2025-09-30 14:00:00.000000', null, 'abc', null, null, '2024-1-14 16:06:42.425530', %s,
+         1, 2, 4, 5, 3, null, '{henkilovahinko}', 'lieva', '{tyotapaturma}', null, 'asentaja','harja-ui', 3, 'Minimi', null, false, false, 'avoin', null, 'puutteelliset_henkilonsuojaimet', null, null, null, null, null);\n" urakka-id kayttaja-id))
         vastaus (first
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                     :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
@@ -272,5 +281,5 @@
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")
     (is (= hallintayksikko-id (get-in vastaus [:ely_id])) "POP ELY")
     (is (= 76 (get-in vastaus [:lupaus_tavoitepisteet])) "lupaus_tavoitepisteet")
-    (is (= 1 (get-in vastaus [:avoimet_laatupoikkeamat])) "lupaus_tavoitepisteet")
-    (is (= 1 (get-in vastaus [:avoimet_turvallisuuspoikkeamat])) "lupaus_tavoitepisteet")))
+    (is (= 2 (get-in vastaus [:avoimet_laatupoikkeamat])) "lupaus_tavoitepisteet")
+    (is (= 2 (get-in vastaus [:avoimet_turvallisuuspoikkeamat])) "lupaus_tavoitepisteet")))

@@ -28,11 +28,11 @@ SELECT u.id,
        sit.pisteet AS lupaus_tavoitepisteet,
        (SELECT count(*) FROM laatupoikkeama lp WHERE lp.urakka = u.id AND lp.paatos IS NULL AND lp.poistettu IS FALSE AND
            lp.aika BETWEEN make_date(:hoitokauden_alkuvuosi::INTEGER, 10, 1) AND
-               make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30)) AS avoimet_laatupoikkeamat,
+               make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30) + interval '23 hours 59 minutes 59 seconds') AS avoimet_laatupoikkeamat,
        (SELECT count(*) FROM turvallisuuspoikkeama tp WHERE tp.urakka = u.id AND
            tp.tila IN ('avoin', 'taydennetty') AND
            tp.tapahtunut BETWEEN make_date(:hoitokauden_alkuvuosi::INTEGER, 10, 1) AND
-               make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30)) AS avoimet_turvallisuuspoikkeamat
+               make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30) + interval '23 hours 59 minutes 59 seconds') AS avoimet_turvallisuuspoikkeamat
   FROM urakka u
            JOIN organisaatio o ON u.hallintayksikko = o.id
            LEFT JOIN lupaus_sitoutuminen sit ON
