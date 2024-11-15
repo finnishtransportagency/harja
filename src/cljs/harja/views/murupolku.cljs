@@ -33,7 +33,6 @@
 (defn hallintayksikko [valinta-auki]
   (let [valittu @nav/valittu-hallintayksikko]
     [:li.dropdown.livi-alasveto {:class (when (= :hallintayksikko @valinta-auki) "open")}
-
      (let [vu @nav/valittu-urakka
            va @valinta-auki]
        (if (or (not (nil? vu)) (= va :hallintayksikko))
@@ -144,19 +143,19 @@
         (let [ur @nav/valittu-urakka
               ei-urakkaa? (nil? ur)
               urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
-          [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
-                           (if @nav/murupolku-nakyvissa?
-                             ""
-                             "hide"))}
-           (if ei-urakkaa?
-             [:ol.murupolku
-              [:div.col-sm-6.murupolku-vasen
-               [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]
-              [:div.col-sm-6.murupolku-oikea
-               [:div
-                [urakkatyyppi]
-                (when-not urakoitsija?
-                  [urakoitsija])]]]
-             [:ol.murupolku
-              [:div.col-sm-12.murupolku-vasen
-               [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]])])))))
+          [:nav {:aria-label "murupolku"
+                 :class (str "murupolku "
+                          (when (empty? @nav/tarvitsen-isoa-karttaa)
+                            (if @nav/murupolku-nakyvissa?
+                              ""
+                              "hide")))}
+           [:ol.col-sm-6.murupolku-vasen
+            [koko-maa]
+            [hallintayksikko valinta-auki]
+            [urakka valinta-auki]]
+           (when ei-urakkaa?
+             [:div.col-sm-6.murupolku-oikea
+              [:div
+               [urakkatyyppi]
+               (when-not urakoitsija?
+                 [urakoitsija])]])])))))
