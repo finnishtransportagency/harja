@@ -49,12 +49,7 @@
     :tyyppi :string
     :palstoja 2
     :pakollinen? true
-    :virhe-teksti (fn [yhteydenotto]
-                    (get-in yhteydenotto [:errors :otsikko]))
-    :luokka-fn (fn [yhteydenotto]
-                 (if (get-in yhteydenotto [:errors :otsikko])
-                   "kentta-virhe"
-                   ""))}
+    :validoi [[:ei-tyhja]]}
    {:nimi :sisalto
     :otsikko "Sisältö"
     :tyyppi :text
@@ -62,12 +57,7 @@
     :pituus-max 2048
     :palstoja 2
     :pakollinen? true
-    :virhe-teksti (fn [yhteydenotto]
-                    (get-in yhteydenotto [:errors :sisalto]))
-    :luokka-fn (fn [yhteydenotto]
-                 (if (get-in yhteydenotto [:errors :sisalto])
-                   "kentta-virhe"
-                   ""))}]
+    :validoi [[:ei-tyhja]]}]
   yhteydenotto]])
 
 (defn yhteydenpito* []
