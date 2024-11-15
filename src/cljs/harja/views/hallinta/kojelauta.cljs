@@ -12,7 +12,8 @@
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.hallinta.kojelauta :as tiedot]))
+            [harja.tiedot.hallinta.kojelauta :as tiedot])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (def hoitokausia-taaksepain 4)
 (def hoitokausia-eteenpain 6)
@@ -147,8 +148,7 @@
        (if (nil? lupauspaatokset)
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
            {:fmt-fn (constantly "Ei lupaus\u00ADpäätöksiä")})
-         (for [lp lupauspaatokset]
-           ^{:key (hash lp)}
+         (for* [lp lupauspaatokset]
            [:span
             (yleiset/tila-indikaattori "valmis"
               {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi lp))})]))]]]))
@@ -209,7 +209,7 @@
     {:otsikko "Hoito\u00ADvuosi"
      :muokattava? (constantly false)
      :nimi :hoitokauden_alkuvuosi :leveys 7
-     :tyyppi :string :fmt #(pvm/hoitokausi-str-alkuvuodesta %)}
+     :tyyppi :string :fmt #(pvm/hoitokausi-str-alkuvuodesta-vuodet %)}
     {:otsikko "Kustannus\u00ADsuunnitelma"
      :muokattava? (constantly false)
      :nimi :ks_tila :leveys 15
