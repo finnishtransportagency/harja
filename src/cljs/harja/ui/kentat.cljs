@@ -818,11 +818,7 @@
                                                           (vaihtoehto-arvo vaihtoehto)
                                                           vaihtoehto)
                                        opts (get vaihtoehto-opts vaihtoehto)
-                                       elementin-id (str "radio-group-"
-                                                      (-> 
-                                                        (vaihtoehto-nayta vaihtoehto)
-                                                        (str/replace " " "_") ;; Korvaa välilyönnit alaviivalla, näitä ei sallita HTML idissä
-                                                        (str/replace #"\s" "")))]] ;; Poista vielä, jos on mitään muuta whitespacea
+                                       elementin-id (str "radio-group-" (hash (vaihtoehto-nayta vaihtoehto)))]]
                              (if vayla-tyyli?
                                ^{:key elementin-id}
                                [vayla-radio {:teksti (vaihtoehto-nayta vaihtoehto)
@@ -834,7 +830,7 @@
                                                                (reset! data vaihtoehdon-arvo))))
                                              :disabloitu? disabloitu?
                                              :valittu? (or (and (nil? valittu) (= vaihtoehto oletusarvo))
-                                                           (= valittu vaihtoehdon-arvo))
+                                                         (= valittu vaihtoehdon-arvo))
                                              :ryhma group-id
                                              :id (gensym elementin-id)
                                              :opts opts
@@ -847,7 +843,7 @@
                                           ;; Samoin asetetaan checkbox valituksi luontivaiheessa,
                                           ;; jos parametri annettu
                                           :checked (or (and (nil? valittu) (= vaihtoehto oletusarvo))
-                                                       (= valittu vaihtoehto))
+                                                     (= valittu vaihtoehto))
                                           :on-change #(let [valittu? (-> % .-target .-checked)]
                                                         (when valittu?
                                                           (reset! data vaihtoehdon-arvo)))}]
