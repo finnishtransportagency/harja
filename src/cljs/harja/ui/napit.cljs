@@ -398,7 +398,6 @@
    [nappi teksti toiminto (merge
                             optiot
                             {:aria-label "Poista"
-                             :alt "Poista"
                              :tooltip (or (:tooltip optiot) "Poista rivi")
                              :luokka (str (cond
                                             (and
