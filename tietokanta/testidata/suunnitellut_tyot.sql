@@ -561,12 +561,12 @@ $$
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
         VALUES (2020, 2, 234, testidata_indeksikorjaa(234, 2020, 2, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI, null,
-                (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)'),
+                (select id from tehtavaryhma where yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c'), -- Erillishankinnat
                 (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'), sopimus_id);
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu,  tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
         VALUES (2020, 2, 432, testidata_indeksikorjaa(432, 2020, 2, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI, null,
-                (select id from tehtavaryhma where yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'),
+                (select id from tehtavaryhma where yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'), -- Johto- ja hallintokorvaus
                 (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'), sopimus_id);
     END
 $$;
@@ -1883,10 +1883,14 @@ INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tu
 
 -- Toimenpidekoodi-taulun apitunnus-kentän testaamista varten
 INSERT into tehtava (nimi, tehtavaryhma, hinnoittelu, yksikko, jarjestys, api_seuranta, api_tunnus, emo, luotu, luoja, "mhu-tehtava?", voimassaolo_alkuvuosi, voimassaolo_loppuvuosi) VALUES
-('Apitunnus-testitehtävä', (select id from tehtavaryhma where nimi = 'Talvihoito (A)'),	'{kokonaishintainen,yksikkohintainen}' :: hinnoittelutyyppi [], 'kpl',	999, TRUE, 987654,
+('Apitunnus-testitehtävä',
+ (select id from tehtavaryhma where yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac'), -- Talvihoito
+ '{kokonaishintainen,yksikkohintainen}' :: hinnoittelutyyppi [], 'kpl',	999, TRUE, 987654,
 (select id from toimenpide where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE, null, null);
 
 INSERT into tehtava (nimi, tehtavaryhma, hinnoittelu, yksikko, jarjestys, api_seuranta, api_tunnus, emo, luotu, luoja, "mhu-tehtava?", voimassaolo_alkuvuosi, voimassaolo_loppuvuosi) VALUES
-('Apitunnus-testitehtävä, tupla', (select id from tehtavaryhma where nimi = 'Talvihoito (A)'),	'{kokonaishintainen,yksikkohintainen}' :: hinnoittelutyyppi [], 'kpl',	998, TRUE, 1370,
+('Apitunnus-testitehtävä, tupla',
+ (select id from tehtavaryhma where yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac'), -- Talvihoito
+ '{kokonaishintainen,yksikkohintainen}' :: hinnoittelutyyppi [], 'kpl',	998, TRUE, 1370,
  (select id from toimenpide where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE, 1999, 2003);
 INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'), (SELECT id FROM toimenpide WHERE taso=3 AND nimi='Päällystyksen yksikköhintaiset työt'), 'Utajärven Päällystyksen yksikköhintaiset työt', (SELECT alkupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'),(SELECT loppupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
