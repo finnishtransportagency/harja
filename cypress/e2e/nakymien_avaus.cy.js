@@ -47,7 +47,7 @@ describe('Päänäkymien avaamiset', function () {
 
     it("Urakoiden tilanne välilehti toimii", function () {
         cy.contains('ul#sivut a span', 'Urakoiden tilanne').click({force: true})
-        cy.contains('label', "Urakkatyyppi", { timeout: 10000 }).should('be.visible');
+        cy.contains('h1', "Urakoiden tilanne", { timeout: 10000 }).should('be.visible');
         cy.contains('Hupsista').should('not.exist')
     })
 
