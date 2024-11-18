@@ -83,9 +83,9 @@
                                  [:span " ennen palautteen lähettämistä?"]]]])))
 
 (defn palaute-linkki []
-  [:a {:class "klikattava"
-       :id "palautelinkki"
-       :on-click #(modal/nayta! {:otsikko "Palautteen lähettäminen"
-                                 :luokka "palaute-dialog"}
-                                [palautelomake])}
+  [:a.klikattava {:href "#"
+                  :id "palautelinkki"
+                  :on-click #(modal/nayta! {:otsikko "Palautteen lähettäminen"
+                                            :luokka "palaute-dialog"}
+                               [palautelomake])}
    [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Palautetta!"]])
