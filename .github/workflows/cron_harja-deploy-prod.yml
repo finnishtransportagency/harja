@@ -128,7 +128,7 @@ jobs:
 
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy notification to Slack
-        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
         if: ${{ steps.deployment-check.outputs.status == 'deploy' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -149,7 +149,7 @@ jobs:
             }
 
       - name: Send deploy notification to Slack
-        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
         if: ${{ steps.deployment-check.outputs.status == 'skip' }}
         with:
           payload: |
@@ -222,7 +222,7 @@ jobs:
             const result = await script({github, context, core})
 
       - name: Send success notification to Slack
-        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
         if: success()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
