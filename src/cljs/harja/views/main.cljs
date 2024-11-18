@@ -19,6 +19,7 @@
 
             [harja.views.urakat :as urakat]
             [harja.views.info :as info]
+            [harja.views.urakkatilanne.kojelauta :as kojelauta]
             [harja.views.raportit :as raportit]
             [harja.views.tilannekuva.tilannekuva :as tilannekuva]
             [harja.views.ilmoitukset.tieliikenneilmoitukset :as ilmoitukset]
@@ -112,6 +113,10 @@
                (istunto/ominaisuus-kaytossa? :tienpidon-luvat))
       [:li {:role "presentation" :class (when (= s :tienpidon-luvat) "active")}
        [linkki "Tienpidon luvat" #(nav/vaihda-sivu! :tienpidon-luvat)]])
+
+    (when (oikeudet/urakkatilanne)
+      [:li {:role "presentation" :class (when (= s :urakoiden-tilanne) "active")}
+       [linkki "Urakoiden tilanne" #(nav/vaihda-sivu! :urakoiden-tilanne)]])
 
     (when (oikeudet/hallinta)
       [:li {:role "presentation" :class (when (= s :hallinta) "active")}
@@ -216,6 +221,7 @@
           :info [info/info]
           :ilmoitukset [ilmoitukset/ilmoitukset]
           :tienpidon-luvat [tieluvat/tieluvat]
+          :urakoiden-tilanne [kojelauta/kojelauta]
           :hallinta [hallinta/hallinta]
           :tilannekuva [tilannekuva/tilannekuva]
           :about [about/about]
