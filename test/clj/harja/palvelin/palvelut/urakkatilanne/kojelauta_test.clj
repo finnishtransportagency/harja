@@ -73,7 +73,16 @@
                            {:urakkatyyppi :hoito
                             :hoitokauden-alkuvuosi 2020
                             :urakka-idt #{@kemin-alueurakan-2019-2023-id}
-                            :ely-id nil})) "Ei oikeutta, poikkeus heitetään"))
+                            :ely-id nil})) "Ei oikeutta, poikkeus heitetään")
+
+;; myöskään urakoitsijan pääkäyttäjälle ei palauteta tietoa
+(is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                         :hae-urakat-kojelautaan
+                         kemin-alueurakan-2019-2023-paakayttaja
+                         {:urakkatyyppi :hoito
+                          :hoitokauden-alkuvuosi 2020
+                          :urakka-idt #{@kemin-alueurakan-2019-2023-id}
+                          :ely-id nil})) "Ei oikeutta, poikkeus heitetään"))
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2005-ei-palauta-yhtaan
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
