@@ -29,7 +29,7 @@ $$
 
         -- Kiinteähintaiset, talvihoito
         tpi := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kittilä MHU Talvihoito TP');
-        tr := (SELECT id FROM tehtavaryhma WHERE nimi = 'Talvihoito (A)');
+        tr := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac'); -- Talvihoito
 
         FOR kuukausi_ IN 1..12
             LOOP
@@ -57,7 +57,7 @@ $$
 
         -- kustannusarvioidut
         tpi := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kittilä MHU Hallinnolliset toimenpiteet TP');
-        tr := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
+        tr := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c'); -- Erillishankinnat
         FOR kuukausi_ IN 1..12
             LOOP
                 vuosi_ := (CASE WHEN (kuukausi_ <= 9) THEN 2020 ELSE 2019 END);

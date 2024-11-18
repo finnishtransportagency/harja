@@ -73,7 +73,7 @@
         kayttaja-id (:id +kayttaja-jvh+)
         iin-hoidonjohto-toimenpideinstanssi (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
         iin-sopimus-id (hae-sopimus-id-nimella "MHU Ii sopimus")
-        tehtavaryhma-id (hae-tehtavaryhman-id "Erillishankinnat (W)")
+        tehtavaryhma-id (hae-tehtavaryhman-id "W - Erillishankinnat")
         integraatio-kayttajan-id (hae-kayttajan-id-kayttajanimella "Integraatio")
         ;; luodaan vahvistamaton erillishankinta urakkaan hoitokaudelle 2021-2022
         _ (i (format "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu, luoja,
