@@ -1,4 +1,4 @@
-(ns harja.tiedot.hallinta.kojelauta
+(ns harja.tiedot.urakkatilanne.kojelauta
   (:require [clojure.string :as clj-str]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]

@@ -164,7 +164,7 @@
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
-    :kojelauta-hallinta})
+    :urakkatilanne})
 
 (def ei-statusta
   #{:metriikka
@@ -244,7 +244,7 @@
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
-    :kojelauta-hallinta})
+    :urakkatilanne})
 
 (def hidas-ok-status #{:itmf})
 
