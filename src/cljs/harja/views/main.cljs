@@ -221,8 +221,8 @@
           :info [info/info]
           :ilmoitukset [ilmoitukset/ilmoitukset]
           :tienpidon-luvat [tieluvat/tieluvat]
-          :urakoiden-tilanne [kojelauta/kojelauta]
-          :hallinta [hallinta/hallinta]
+          :urakoiden-tilanne (when (oikeudet/urakkatilanne) [kojelauta/kojelauta])
+          :hallinta (when (oikeudet/hallinta) [hallinta/hallinta])
           :tilannekuva [tilannekuva/tilannekuva]
           :about [about/about]
           :tr [tierekisteri/tierekisteri]
