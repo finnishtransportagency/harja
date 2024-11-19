@@ -1,6 +1,6 @@
-(ns harja.palvelin.palvelut.hallinta.kojelauta-kustiskorjaus-test
+(ns harja.palvelin.palvelut.urakkatilanne.kojelauta-kustiskorjaus-test
   (:require [clojure.test :refer :all]
-            [harja.palvelin.palvelut.hallinta.kojelauta :as kojelauta]
+            [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja
@@ -14,7 +14,7 @@
         (component/system-map
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
-          :kojelauta-hallinta (component/using
+          :urakkatilanne (component/using
                                 (kojelauta/->KojelautaHallinta)
                                 [:db :http-palvelin])))))
   (testit)

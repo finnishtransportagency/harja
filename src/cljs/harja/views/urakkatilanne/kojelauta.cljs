@@ -1,9 +1,9 @@
-(ns harja.views.hallinta.kojelauta
+(ns harja.views.urakkatilanne.kojelauta
   (:require [harja.pvm :as pvm]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
+            [harja.tiedot.palaute :as palaute-tiedot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
@@ -12,7 +12,7 @@
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.hallinta.kojelauta :as tiedot])
+            [harja.tiedot.urakkatilanne.kojelauta :as tiedot])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (def hoitokausia-taaksepain 4)
@@ -259,12 +259,22 @@
                                  :haku-kaynnissa? haku-kaynnissa?}])]))
 
 
+;; Näytetään uuden ominaisuuden vihjetekstiä jonkin aikaa, että käyttäjät oppivat mistä asiassa on kyse
+(def vihjeteksti-uudesta-ominaisuudesta
+  [:p "Tämä on uusi osio, jonka tarkoituksena on parantaa tiedon läpinäkyvyyttä Harjan sisällä.
+       Tässä vaiheessa osio näkyy vain pääkäyttäjille sekä ELY:jen pääkäyttäjille ja urakanvalvojille.
+       Myöhemmin laajennamme mahdollisesti tiedon näkyvyyttä myös urakoitsijoille heidän omien urakoidensa osalta. Jos löydät tiedoista virheitä tai sinulla
+       on muita toiveita tämän osion kehittämiseksi, voit "
+   [:a {:href (palaute-tiedot/mailto-kehitystiimi)} "laittaa meille viestiä osoitteeseen harjapalaute@solita.fi"]])
+
 (defn kojelauta* [e! app]
   (komp/luo
     (komp/sisaan #(e! (tiedot/->HaeUrakat)))
     (fn [e! app]
       [:div.kojelauta-hallinta
        [:h1 "Urakoiden tilanne"]
+       (when (< (pvm/nyt) (pvm/->pvm "7.12.2024"))
+         [yleiset/vihje vihjeteksti-uudesta-ominaisuudesta])
        [suodattimet e! app]
        ;; [debug/debug app]
        [listaus e! app]])))
