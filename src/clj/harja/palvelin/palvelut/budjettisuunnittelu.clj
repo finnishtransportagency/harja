@@ -298,7 +298,8 @@
                                                                              ;; Ei nouse yli kymmenen, jolloin with-precision 4 riittää.
                                                                              ;; Ratkaisu pyöristää indeksikerrointa. Tämä on sovittu käytäntö ELYissä ja perustuu myös siihen,
                                                                              ;; että tilastokeskus ilmaisee indeksikertoimen kolmella desimaalilla (prosentin kymmenyksen tarkkuudella).
-                                                                             :indeksikerroin (pyorista (with-precision 4 (/ arvo perusluku)) 3)})))
+                                                                             :indeksikerroin (when (and arvo perusluku)
+                                                                                               (pyorista (with-precision 4 (/ arvo perusluku)) 3))})))
                                                                (i-q/hae-indeksi db {:nimi indeksi}))
                                   urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
                               (if (= 5 urakan-indeksien-maara)
