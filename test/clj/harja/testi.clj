@@ -1332,6 +1332,14 @@
 
 (use-fixtures :once urakkatieto-fixture)
 
+(defn ely-paakayttaja []
+  {:sahkoposti "elypk@example.org", :kayttajanimi "ely-pk-urakanvalvoja",
+   :roolit #{"ELY_Paakayttaja"}, :id 4178,
+   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
+   :organisaatioroolit {}
+   :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
+   :urakkaroolit {}})
+
 (defn oulun-2005-urakan-tilaajan-urakanvalvoja []
   {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
    :roolit #{"ELY_Urakanvalvoja"}, :id 417,
@@ -1382,7 +1390,7 @@
    :roolit #{"Laadunvalvoja"}, :id 18, :etunimi "Keppi",
    :organisaatio {:id @kemin-aluerakennus-id, :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
    :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
-   :organisaatioroolit {} #_{@kemin-aluerakennus-id #{"laadunvalvoja"}}
+   :organisaatioroolit {}
    :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Laadunvalvoja"}}})
 
 (defn kemin-alueurakan-2019-2023-urakan-tilaajan-urakanvalvoja []

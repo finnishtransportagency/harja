@@ -65,7 +65,7 @@
           AND kt.sopimus = s.id
           AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
-          AND kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');"))
+          AND kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'W - Erillishankinnat');"))
 
 (defn erilliskustannusten-toteumat-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (let [haku-str (str "SELECT
@@ -81,7 +81,7 @@
           AND lk.kulu = l.id
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
-          AND tr.nimi = 'Erillishankinnat (W)'
+          AND tr.nimi = 'W - Erillishankinnat'
           AND (tk.koodi = '23151')
         UNION ALL
         SELECT
@@ -89,7 +89,7 @@
         0 AS budjetoitu_summa
         FROM toteutuneet_kustannukset t
               LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = t.tehtava
-              JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma AND tr.nimi = 'Erillishankinnat (W)',
+              JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma AND tr.nimi = 'W - Erillishankinnat',
              toimenpideinstanssi tpi,
              toimenpide tk
         WHERE t.urakka_id = " urakka "
@@ -112,7 +112,7 @@
         SELECT kt.summa as summa
         FROM kustannusarvioitu_tyo kt
         WHERE kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
-          AND (kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)')
+          AND (kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'G - Hoidonjohtopalkkio')
                OR kt.tehtava IN (SELECT id FROM tehtava WHERE (yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' OR yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'))
                )
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE);"))
@@ -131,7 +131,7 @@
           AND lk.kulu = l.id
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
-          AND tr.nimi = 'Hoidonjohtopalkkio (G)'
+          AND tr.nimi = 'G - Hoidonjohtopalkkio'
           AND (tk.koodi = '23151')
         UNION ALL
         SELECT
@@ -146,7 +146,7 @@
           AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
           AND t.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
-          AND (tr.nimi = 'Hoidonjohtopalkkio (G)' OR tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' OR tk_tehtava.yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8')
+          AND (tr.nimi = 'G - Hoidonjohtopalkkio' OR tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' OR tk_tehtava.yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8')
           AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');")]
     haku-str))
 
@@ -189,7 +189,7 @@
           AND lk.kulu = l.id
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
-          AND (tr.nimi = 'Johto- ja hallintokorvaus (J)')
+          AND (tr.nimi = 'J - Johto- ja hallintokorvaus')
           AND (tk.koodi = '23151')
         UNION ALL
         SELECT
@@ -204,7 +204,7 @@
           AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
           AND t.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
-          AND (tr.nimi = 'Johto- ja hallintokorvaus (J)' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tr.nimi = 'J - Johto- ja hallintokorvaus' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
           AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');"))
 
 (defn- hankintakustannukset-budjetoitu-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]

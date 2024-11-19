@@ -520,7 +520,7 @@ SELECT 0,
        kulu.id,
        1000,
        (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Raahen MHU 2023-2028 Päällystepaikkaukset TP'),
-       (SELECT id FROM tehtavaryhma WHERE nimi = 'Kuumapäällyste (Y1)'),
+       (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'b1cca2a5-6445-4f49-878d-a95f144cc190'), -- Kuumapäällyste
        'kokonaishintainen'::maksueratyyppi,
        'hankintakulu',
        '2023-11-01T14:00:00.000',
