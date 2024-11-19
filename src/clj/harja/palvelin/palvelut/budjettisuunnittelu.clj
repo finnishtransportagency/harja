@@ -286,21 +286,21 @@
                                                       ;; Muihin aikoihin alkavilla urakoilla käytetään tarkastelukuukautena syyskuuta
                                                       :else 9))
                                   perusluku (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id})))
-                                  indeksiluvut-urakan-aikana (sequence
-                                                               (comp (filter (fn [{:keys [kuukausi vuosi]}]
-                                                                               (and (= (vertailu-kk-mhu urakan-alkuvuosi) kuukausi)
-                                                                                    (>= vuosi urakan-alkuvuosi))))
-                                                                     (remove (fn [{:keys [vuosi]}]
-                                                                               (>= vuosi urakan-loppuvuosi)))
-                                                                     (map (fn [{:keys [arvo vuosi]}]
-                                                                            {:vuosi vuosi
-                                                                             ;; Halutaan numero kolmen desimaalin tarkkuudella. Pelataan sen varaan, että indeksikerroin
-                                                                             ;; Ei nouse yli kymmenen, jolloin with-precision 4 riittää.
-                                                                             ;; Ratkaisu pyöristää indeksikerrointa. Tämä on sovittu käytäntö ELYissä ja perustuu myös siihen,
-                                                                             ;; että tilastokeskus ilmaisee indeksikertoimen kolmella desimaalilla (prosentin kymmenyksen tarkkuudella).
-                                                                             :indeksikerroin (when (and arvo perusluku)
-                                                                                               (pyorista (with-precision 4 (/ arvo perusluku)) 3))})))
-                                                               (i-q/hae-indeksi db {:nimi indeksi}))
+                                  indeksiluvut-urakan-aikana (when perusluku
+                                                               (sequence
+                                                                 (comp (filter (fn [{:keys [kuukausi vuosi]}]
+                                                                                 (and (= (vertailu-kk-mhu urakan-alkuvuosi) kuukausi)
+                                                                                   (>= vuosi urakan-alkuvuosi))))
+                                                                   (remove (fn [{:keys [vuosi]}]
+                                                                             (>= vuosi urakan-loppuvuosi)))
+                                                                   (map (fn [{:keys [arvo vuosi]}]
+                                                                          {:vuosi vuosi
+                                                                           ;; Halutaan numero kolmen desimaalin tarkkuudella. Pelataan sen varaan, että indeksikerroin
+                                                                           ;; Ei nouse yli kymmenen, jolloin with-precision 4 riittää.
+                                                                           ;; Ratkaisu pyöristää indeksikerrointa. Tämä on sovittu käytäntö ELYissä ja perustuu myös siihen,
+                                                                           ;; että tilastokeskus ilmaisee indeksikertoimen kolmella desimaalilla (prosentin kymmenyksen tarkkuudella).
+                                                                           :indeksikerroin (pyorista (with-precision 4 (/ arvo perusluku)) 3)})))
+                                                                 (i-q/hae-indeksi db {:nimi indeksi})))
                                   urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
                               (if (= 5 urakan-indeksien-maara)
                                 (vec indeksiluvut-urakan-aikana)
