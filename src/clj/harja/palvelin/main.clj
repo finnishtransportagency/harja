@@ -897,6 +897,11 @@
 
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
+    ;; Aseta clojure.async thread-poolin koko (default 8)
+    ;; Asetetaan koko tässä, jotta hallitsemme thread-poolin kokoa itse Harjan tarpeiden mukaan.
+    ;; TODO: Optimoi koko thread-poolille Harjan tarpeisiin. Optimaalinen koko vaatii lisätutkimusta, mittaamista ja testaamista tuotannossa.
+    (System/setProperty "clojure.core.async.pool-size" "8")
+
     (let [asetukset (lue-asetukset asetusfile)]
 
       ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
