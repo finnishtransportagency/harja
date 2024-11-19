@@ -44,12 +44,14 @@ SELECT u.id,
        COUNT(*) FILTER (WHERE y.lahetetty IS NOT NULL AND pot2.tila IN ('valmis', 'lukittu')
            AND y.lahetys_onnistunut IS TRUE) AS lahetetty_onnistuneesti,
        COUNT(*) FILTER (WHERE y.lahetetty IS NOT NULL AND pot2.tila IN ('valmis', 'lukittu')
-           AND y.lahetys_onnistunut IS FALSE) AS epaonnistuneet_lahetetyt
+           AND y.lahetys_onnistunut IS FALSE) AS epaonnistuneet_lahetetyt,
+       COUNT(*) FILTER (WHERE y.lahetetty IS NOT NULL AND pot2.tila IN ('valmis', 'lukittu')
+           AND y.lahetetty IS NULL) AS valmiit_ei_lahetetty,
+       COUNT(*) FILTER (WHERE y.id IS NOT NULL AND NOT exists (select id from paallystysilmoitus WHERE paallystyskohde = y.id)) AS aloittamatta
   FROM urakka u
            join organisaatio o ON u.hallintayksikko = o.id
            join yllapitokohde y ON y.urakka = u.id
            left join paallystysilmoitus pot2 ON y.id = pot2.paallystyskohde AND pot2.poistettu IS NOT TRUE
-
  WHERE
      u.tyyppi = 'paallystys' AND
      u.urakkanro IS NOT NULL AND -- testiurakat pois

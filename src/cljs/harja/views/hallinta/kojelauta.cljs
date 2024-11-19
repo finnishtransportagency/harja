@@ -150,8 +150,6 @@
 
 (def urakoiden-maara-per-sivu 20)
 
-(defn paallystyskohteiden-sarake [rivi]
-  [:div (str "Yllapitokohteiden yhteensä: " (:yllapitokohteiden_lkm rivi) "Valmiit: " (:valmis_hyvaksytty rivi))])
 (defn taulukko-paallystysurakat [e!  {:keys [urakat haku-kaynnissa?]}]
   [grid/grid
    {:otsikko (str "")
@@ -167,20 +165,35 @@
    [{:otsikko "Urakka"
      :tyyppi :string
      :nimi :nimi
-     :leveys 5
+     :leveys 10
      :muokattava? (constantly false)}
     {:otsikko "Vuosi"
      :muokattava? (constantly false)
      :nimi :hoitokauden_alkuvuosi :leveys 3
-     :tyyppi :string :fmt #(pvm/hoitokausi-str-alkuvuodesta %)}
-    {:otsikko "Päällystyskohteet"
+     :tyyppi :kokonaisluku}
+    {:otsikko "Päällystyskohteiden lkm."
      :muokattava? (constantly false)
-     :nimi :ks_tila :leveys 15
-     :tyyppi :komponentti
-     :komponentti (fn [rivi] [paallystyskohteiden-sarake rivi])}
-    {:otsikko "Valmiit"
+     :nimi :yllapitokohteiden_lkm :leveys 10
+     :tyyppi :kokonaisluku}
+    {:otsikko "Valmis/hyväksytty"
      :muokattava? (constantly false)
-     :nimi :valmis_hyvaksytty :leveys 15
+     :nimi :valmis_hyvaksytty :leveys 10
+     :tyyppi :kokonaisluku}
+    {:otsikko "Lähetetty onnistuneesti YHA:an"
+     :muokattava? (constantly false)
+     :nimi :lahetetty_onnistuneesti :leveys 10
+     :tyyppi :kokonaisluku}
+    {:otsikko "Epäonnistuneet YHA-lähetykset"
+     :muokattava? (constantly false)
+     :nimi :epaonnistuneet_lahetetyt :leveys 10
+     :tyyppi :kokonaisluku}
+    {:otsikko "Valmiit, ei vielä lähetetty"
+     :muokattava? (constantly false)
+     :nimi :valmiit_ei_lahetetty :leveys 10
+     :tyyppi :kokonaisluku}
+    {:otsikko "Aloittamatta"
+     :muokattava? (constantly false)
+     :nimi :aloittamatta :leveys 10
      :tyyppi :kokonaisluku}]
    urakat])
 
