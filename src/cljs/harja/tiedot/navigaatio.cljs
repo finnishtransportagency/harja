@@ -45,6 +45,7 @@
                                           (not= @valittu-sivu :tilannekuva)
                                           (not= @valittu-sivu :info)
                                           (not= @valittu-sivu :tienpidon-luvat)
+                                          (not= @valittu-sivu :urakoiden-tilanne)
                                           (not= @valittu-sivu :about)
                                           (not= @valittu-sivu :hallinta))))
 

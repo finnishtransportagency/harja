@@ -1,7 +1,7 @@
-(ns harja.palvelin.palvelut.hallinta.kojelauta-test
+(ns harja.palvelin.palvelut.urakkatilanne.kojelauta-test
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
-            [harja.palvelin.palvelut.hallinta.kojelauta :as kojelauta]
+            [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja
@@ -15,7 +15,7 @@
         (component/system-map
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
-          :kojelauta-hallinta (component/using
+          :urakkatilanne (component/using
                                 (kojelauta/->KojelautaHallinta)
                                 [:db :http-palvelin])))))
   (testit)
@@ -39,22 +39,50 @@
     (is (= 10 (count vastaus)) "Urakoiden lukumäärä")))
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2024-vajaa-kayttooikeus-throwaa
-  ;; Kojelauta tässä vaiheessa vain pääkäyttäjälle, urakanvalvojalle ei näytetä
-  (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                           :hae-urakat-kojelautaan
-                           +kayttaja-tero+
-                           {:hoitokauden-alkuvuosi 2024
-                            :urakka-idt nil
-                            :ely-id nil})) "Ei oikeutta poikkeus heitetään")
+  ;; Urakanvalvojan pitää nähdä
+  (let [vastaus-urakanvalvojalle (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-urakat-kojelautaan
+                                   +kayttaja-tero+
+                                   {:urakkatyyppi :hoito
+                                    :hoitokauden-alkuvuosi 2024
+                                    :urakka-idt nil
+                                    :ely-id nil})
+        vastaus-ely-paakayttajalle (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :hae-urakat-kojelautaan
+                                     (ely-paakayttaja)
+                                     {:urakkatyyppi :hoito
+                                      :hoitokauden-alkuvuosi 2024
+                                      :urakka-idt nil
+                                      :ely-id nil})]
+    (is (= 10 (count vastaus-urakanvalvojalle)) "Urakanvalvoja näkee")
+    (is (= 10 (count vastaus-ely-paakayttajalle)) "ELY:n Pääkäyttäjä näkee"))
 
-  ;; Kojelauta tässä vaiheessa vain pääkäyttäjälle, urakoitsijalle ei näytetä
+  ;; Urakoitsijalle ei tässä vaiheessa näytetä (myöh. suunnitelma avata oman urakan osalta)
   (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                            :hae-urakat-kojelautaan
                            +kayttaja-urakan-vastuuhenkilo+
-                           {:hoitokauden-alkuvuosi 2015
+                           {:urakkatyyppi :hoito
+                            :hoitokauden-alkuvuosi 2015
                             :urakka-idt nil
-                            :ely-id nil})) "Ei oikeutta poikkeus heitetään")
-  )
+                            :ely-id nil})) "Ei oikeutta, poikkeus heitetään")
+
+  ;; Urakoitsijan Laadunvalvojakaan ei ainakaan vielä saa nähdä asioita
+  (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :hae-urakat-kojelautaan
+                           kemin-alueurakan-2019-2023-laadunvalvoja
+                           {:urakkatyyppi :hoito
+                            :hoitokauden-alkuvuosi 2020
+                            :urakka-idt #{@kemin-alueurakan-2019-2023-id}
+                            :ely-id nil})) "Ei oikeutta, poikkeus heitetään")
+
+;; myöskään urakoitsijan pääkäyttäjälle ei palauteta tietoa
+(is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                         :hae-urakat-kojelautaan
+                         kemin-alueurakan-2019-2023-paakayttaja
+                         {:urakkatyyppi :hoito
+                          :hoitokauden-alkuvuosi 2020
+                          :urakka-idt #{@kemin-alueurakan-2019-2023-id}
+                          :ely-id nil})) "Ei oikeutta, poikkeus heitetään"))
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2005-ei-palauta-yhtaan
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
