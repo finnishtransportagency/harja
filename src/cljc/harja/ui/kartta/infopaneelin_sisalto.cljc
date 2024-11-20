@@ -844,10 +844,11 @@
    :data (:infopaneelin-tiedot kohde)})
 
 (defmethod infopaneeli-skeema :talvihoitoreitit [talvihoitoreitti]
+  (println "infopaneeli-skeema :talvihoitoreitit :: talvihoitoreitti" (pr-str talvihoitoreitti))
   {:tyyppi :talvihoitoreitit
-   :jarjesta-fn (constantly false)
+   :jarjesta-fn :nimi
    :otsikko (str "Talvihoitoreitti: " (:nimi (:infopaneelin-tiedot talvihoitoreitti)))
-   :tiedot [{:otsikko "Pituus (km)"  :nimi :pituus}]
+   :tiedot [{:otsikko "Pituus (km)" :nimi :pituus}]
    :data (:infopaneelin-tiedot talvihoitoreitti)})
 
 (defmethod infopaneeli-skeema :paikkaukset-paikkausten-paallystysilmoitukset [kohde]
@@ -887,7 +888,9 @@
   "Validoi rivin skeeman annetulle infopaneeli skeemalle. Palauttaa skeeman, jos se on validi.
   Jos skeema ei ole validi tiedolle, logittaa virheen ja palauttaa nil."
   [infopaneeli-skeema {:keys [nimi hae otsikko] :as rivin-skeema}]
-  (let [data (:data infopaneeli-skeema)
+  (let [_ (println "validoi-rivin-skeema :: rivin-skeema" (pr-str rivin-skeema))
+        _ (println "validoi-rivin-skeema :: infopaneeli-skeema" (pr-str infopaneeli-skeema))
+        data (:data infopaneeli-skeema)
         get-fn (or nimi (:haku-fn hae))]
     (cond
       ;; Ei ole otsikkoa
@@ -929,6 +932,8 @@
   ([{:keys [otsikko tiedot data jarjesta-fn] :as infopaneeli-skeema} vaadi-kaikki-skeemat?]
    (let [validoidut-skeemat (map (partial validoi-rivin-skeema infopaneeli-skeema)
                                  tiedot)
+         _ (println "validoi-infopaneelin-skeema :: validoidut-skeemat" (pr-str validoidut-skeemat))
+
          validit-skeemat (vec (keep identity validoidut-skeemat))
          epaonnistuneet-skeemat-lkm (count (filter nil? validoidut-skeemat))]
      (cond

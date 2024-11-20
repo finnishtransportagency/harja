@@ -27,7 +27,8 @@ SELECT tr.id,
        tr.luoja
   FROM talvihoitoreitti tr
  WHERE tr.urakka_id = :urakka_id
- GROUP BY tr.id;
+ GROUP BY tr.id
+ ORDER BY tr.id;
 
 
 -- name: hae-sijainti-talvihoitoreitille

@@ -29,7 +29,9 @@
           map-reitit (into [] (flatten (mapv (fn [reitti]
                                                (mapv (fn [r]
                                                        (when (:sijainti r)
-                                                         {:alue (merge {:tyyppi-kartalla :talvihoitoreitit
+                                                         {:infopaneelin-tiedot {:nimi (:nimi reitti)
+                                                                                :pituus (:laskettu_pituus reitti)}
+                                                          :alue (merge {:tyyppi-kartalla :talvihoitoreitit
                                                                         :stroke {:width 5
                                                                                  :color (:varikoodi reitti)}}
                                                                   (:sijainti r))

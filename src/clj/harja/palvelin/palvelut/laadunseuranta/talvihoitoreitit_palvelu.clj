@@ -28,65 +28,68 @@
 
 
 (defn hae-urakan-talvihoitoreitit [db user {:keys [urakka-id]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
-  (let [urakan-talvihoitoreitit (talvihoitoreitit-q/hae-urakan-talvihoitoreitit db {:urakka_id urakka-id})
-        _ (log/debug "hae-urakan-talvihoitoreitit :: urakan-talvihoitoreitit" urakan-talvihoitoreitit)
-        talvihoitoreitit (mapv (fn [rivi]
-                                 (let [;; Hae reitit erikseen
-                                       reitit (talvihoitoreitit-q/hae-sijainti-talvihoitoreitille db {:talvihoitoreitti_id (:id rivi)})
-                                       ;; Kalustot mäpätään eri taulusta array_aggregateksi. Se pitää purkaa psql vector objectista clojuren ymmärtämään muotoon
-                                       reitit (mapv (fn [rivi]
-                                                      (-> rivi
-                                                        (update :kalustot
-                                                          (fn [rivi]
-                                                            (mapv
-                                                              #(konv/pgobject->map % :kalustotyyppi :string :kalustomaara :long)
-                                                              (konv/pgarray->vector rivi))))))
-                                                reitit)
+  (log/debug "hae-urakan-talvihoitoreitit ::user" user)
+  ;; Estä muut, kuin järjestelmävastaavat näkemästä talvihoitoreittejä
+  (when (contains? (:roolit user) "Jarjestelmavastaava")
+    ;;(oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
+    (let [urakan-talvihoitoreitit (talvihoitoreitit-q/hae-urakan-talvihoitoreitit db {:urakka_id urakka-id})
+          _ (log/debug "hae-urakan-talvihoitoreitit :: urakan-talvihoitoreitit" urakan-talvihoitoreitit)
+          talvihoitoreitit (mapv (fn [rivi]
+                                   (let [;; Hae reitit erikseen
+                                         reitit (talvihoitoreitit-q/hae-sijainti-talvihoitoreitille db {:talvihoitoreitti_id (:id rivi)})
+                                         ;; Kalustot mäpätään eri taulusta array_aggregateksi. Se pitää purkaa psql vector objectista clojuren ymmärtämään muotoon
+                                         reitit (mapv (fn [rivi]
+                                                        (-> rivi
+                                                          (update :kalustot
+                                                            (fn [rivi]
+                                                              (mapv
+                                                                #(konv/pgobject->map % :kalustotyyppi :string :kalustomaara :long)
+                                                                (konv/pgarray->vector rivi))))))
+                                                  reitit)
 
-                                       ;; Formatoi käyttöliittymälle valmiiksi
-                                       reitit (map (fn [r]
-                                                     (-> r
-                                                       (assoc :sijainti (:reitti r))
-                                                       (assoc :formatoitu-tr (tr/tr-osoite-moderni-fmt
-                                                                               (:tie r) (:alkuosa r) (:alkuetaisyys r)
-                                                                               (:loppuosa r) (:loppuetaisyys r)))
-                                                       (dissoc :reitti))) reitit)
+                                         ;; Formatoi käyttöliittymälle valmiiksi
+                                         reitit (map (fn [r]
+                                                       (-> r
+                                                         (assoc :sijainti (:reitti r))
+                                                         (assoc :formatoitu-tr (tr/tr-osoite-moderni-fmt
+                                                                                 (:tie r) (:alkuosa r) (:alkuetaisyys r)
+                                                                                 (:loppuosa r) (:loppuetaisyys r)))
+                                                         (dissoc :reitti))) reitit)
 
-                                       ;; Jaotellaan reitti hoitoluokittan UI:ta varten
-                                       hoitoluokat (vec (vals (group-by :hoitoluokka (map (fn [r]
-                                                                                             (dissoc r :sijainti :tie :alkuosa
-                                                                                               :alkuetaisyys :loppuosa :loppuetaisyys
-                                                                                               :id :formatoitu-tr)) reitit))))
+                                         ;; Jaotellaan reitti hoitoluokittan UI:ta varten
+                                         hoitoluokat (vec (vals (group-by :hoitoluokka (map (fn [r]
+                                                                                              (dissoc r :sijainti :tie :alkuosa
+                                                                                                :alkuetaisyys :loppuosa :loppuetaisyys
+                                                                                                :id :formatoitu-tr)) reitit))))
 
-                                       ;; Hae kaikki kalustot
-                                       reitin-kalustot (conj (flatten (map (fn [r] (:kalustot r)) reitit)))
-                                       ;; Ryhmitellään reitin kalustot kalustotyypin mukaan
-                                       ryhmitellyt-kalustot (group-by :kalustotyyppi reitin-kalustot)
+                                         ;; Hae kaikki kalustot
+                                         reitin-kalustot (conj (flatten (map (fn [r] (:kalustot r)) reitit)))
+                                         ;; Ryhmitellään reitin kalustot kalustotyypin mukaan
+                                         ryhmitellyt-kalustot (group-by :kalustotyyppi reitin-kalustot)
 
-                                       kalustot (mapv (fn [avain]
-                                                        (let [kalustotyyppi avain
-                                                              kalustomaara (apply + (map #(:kalustomaara %) (get ryhmitellyt-kalustot avain)))]
-                                                          {:kalustotyyppi kalustotyyppi
-                                                           :kalustomaara kalustomaara}))
-                                                  (keys ryhmitellyt-kalustot))
-                                       ;; Lasketaan jokaiselle hoitoluokalle pituus
-                                       hoitoluokat (mapv (fn [hoitoluokka-vec]
-                                                            {:ryhma (hoitoluokkaryhma (:hoitoluokka (first hoitoluokka-vec)))
-                                                             :hoitoluokka (:hoitoluokka (first hoitoluokka-vec))
-                                                             :pituus (reduce + (map :laskettu_pituus hoitoluokka-vec))})
-                                                     hoitoluokat)
-                                       ;; Ryhmitellään lopuksi hoitoluokat ryhmän mukaan
-                                       hoitoluokat (group-by :ryhma hoitoluokat)
-                                       rivi (-> rivi
-                                              (assoc :reitit reitit)
-                                              (assoc :laskettu_pituus (reduce + (map :laskettu_pituus reitit)))
-                                              (assoc :hoitoluokat hoitoluokat)
-                                              (assoc :kalustot kalustot)
-                                              (dissoc :muokkaaja :muokattu :luotu :luoja))]
-                                   rivi))
-                           urakan-talvihoitoreitit)]
-    talvihoitoreitit))
+                                         kalustot (mapv (fn [avain]
+                                                          (let [kalustotyyppi avain
+                                                                kalustomaara (apply + (map #(:kalustomaara %) (get ryhmitellyt-kalustot avain)))]
+                                                            {:kalustotyyppi kalustotyyppi
+                                                             :kalustomaara kalustomaara}))
+                                                    (keys ryhmitellyt-kalustot))
+                                         ;; Lasketaan jokaiselle hoitoluokalle pituus
+                                         hoitoluokat (mapv (fn [hoitoluokka-vec]
+                                                             {:ryhma (hoitoluokkaryhma (:hoitoluokka (first hoitoluokka-vec)))
+                                                              :hoitoluokka (:hoitoluokka (first hoitoluokka-vec))
+                                                              :pituus (reduce + (map :laskettu_pituus hoitoluokka-vec))})
+                                                       hoitoluokat)
+                                         ;; Ryhmitellään lopuksi hoitoluokat ryhmän mukaan
+                                         hoitoluokat (group-by :ryhma hoitoluokat)
+                                         rivi (-> rivi
+                                                (assoc :reitit reitit)
+                                                (assoc :laskettu_pituus (reduce + (map :laskettu_pituus reitit)))
+                                                (assoc :hoitoluokat hoitoluokat)
+                                                (assoc :kalustot kalustot)
+                                                (dissoc :muokkaaja :muokattu :luotu :luoja))]
+                                     rivi))
+                             urakan-talvihoitoreitit)]
+      talvihoitoreitit)))
 
 (defn- kasittele-excel [db urakka-id kayttaja req]
   (let [;; Excelistä löytyneille talvihoitoreitteille koostetaan atomeihin statuksia. Päivittyneet omaansa, uudet lisäykset omaansa
