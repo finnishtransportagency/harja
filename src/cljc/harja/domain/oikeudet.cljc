@@ -12,7 +12,15 @@
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
 (declare on-oikeus? on-muu-oikeus?
-  raportit-tyomaapaivakirja raportit-kommentit urakat-kulut-laskunkirjoitus)
+  raportit-tyomaapaivakirja
+  raportit-kommentit
+  urakat-kulut-laskunkirjoitus
+  urakat-suunnittelu-suola
+  urakat-toteumat-suola
+  ;; Hallintaoikeudet
+  hallinta-pohjavesialueidensiirto
+  hallinta-toteumatyokalu
+  urakat-laadunseuranta-talvihoitoreititys)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
