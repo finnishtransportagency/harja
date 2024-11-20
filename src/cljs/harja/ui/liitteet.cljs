@@ -310,7 +310,6 @@
            [:span.liitekomponentti
             [:button {:tabIndex "0"
                       :id "tiedoston-lataus-label"
-                      :for "tiedoston-lataus-input"
                       :class (str "file-upload nappi-toissijainen "
                                (when grid? "nappi-grid ")
                                (when disabled? "disabled "))
