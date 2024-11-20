@@ -38,7 +38,7 @@
                       :rivi                1
                       :summa               666
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                       :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"}
@@ -46,7 +46,7 @@
                       :rivi                2
                       :summa               666
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                       :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"}]
@@ -66,7 +66,7 @@
   {:rivi                3
    :summa               987
    :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-   :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+   :tehtavaryhma        (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
    :tehtava             nil
    :tavoitehintainen :true
    :tyyppi "hankintakulu"})
@@ -83,7 +83,7 @@
                        :rivi                1
                        :summa               666
                        :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                       :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                       :tehtavaryhma        (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                        :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"}
@@ -91,7 +91,7 @@
                       :rivi                2
                       :summa               3333.33
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "T1 - Äkilliset hoitotyöt, Liikenneympäristön hoito")
                       :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"}]
@@ -108,7 +108,7 @@
                       :rivi                1
                       :summa               666.66
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "T1 - Äkilliset hoitotyöt, Liikenneympäristön hoito")
                       :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"
@@ -127,7 +127,7 @@
                       :rivi                1
                       :summa               666.66
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Vahinkojen korjaukset, Liikenneympäristön hoito (T2)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "T2 - Vahinkojen korjaukset, Liikenneympäristön hoito")
                       :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"
@@ -545,7 +545,7 @@
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         ;; Päivitetään testiä varten ykden tehtäväryhmän voimassaolo niin, että se ei ole voimassa
         ;; Käytetään tehtäväryhmää: Talvihoito (A)
-        tehtavaryhmaid (:id (first (q-map "SELECT id FROM tehtavaryhma WHERE nimi = 'Talvihoito (A)'")))
+        tehtavaryhmaid (:id (first (q-map "SELECT id FROM tehtavaryhma WHERE nimi = 'A - Talvihoito'")))
         talvihoito-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23104")
         _ (u (format "UPDATE tehtavaryhma SET voimassaolo_alkuvuosi = '2000', voimassaolo_loppuvuosi = '2001' WHERE id = %s;" tehtavaryhmaid))
         virhe  (try+ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)

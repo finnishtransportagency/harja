@@ -104,10 +104,14 @@ UPDATE paikkaus SET
   poistettu               = FALSE -- Jos tuodaan jo poistettu rivi, merkataan se ei-poistetuksi 
 WHERE "urakka-id" = :urakka-id AND "ulkoinen-id" = :ulkoinen-id;
 
-
--- name: hae-reikapaikkaus
-SELECT * FROM paikkaus WHERE "paikkaus-tyyppi" = 'reikapaikkaus' AND "urakka-id" = :urakka-id AND "ulkoinen-id" = :ulkoinen-id;
-
+-- name: hae-reikapaikkaus-vaikka-poistettu
+-- Tätä käytetään myös API:n kautta. On tärkeää löytää myös poistetut reikäpaikkaukset, jotta niitä voidaan muokata.
+-- Jos tämä ei palauta poistettuja, niin API:n kautta samalla tunnisteella lähetettävä päivityspyyntö ei onnistu.
+SELECT *
+  FROM paikkaus
+ WHERE "paikkaus-tyyppi" = 'reikapaikkaus'
+   AND "urakka-id" = :urakka-id
+   AND "ulkoinen-id" = :ulkoinen-id;
 
 -- name: hae-kaikki-tyomenetelmat
 SELECT * FROM paikkauskohde_tyomenetelma;

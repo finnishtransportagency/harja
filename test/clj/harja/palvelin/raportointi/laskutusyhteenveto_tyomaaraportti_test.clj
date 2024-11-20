@@ -177,7 +177,7 @@
         erapaiva (pvm/->pvm "15.10.2019") ;#inst "2019-19-15T21:00:00.000-00:00"
         koontilaskun-kuukausi "lokakuu/1-hoitovuosi"
         toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23104")
-        tehtavaryhma-id (hae-tehtavaryhman-id "Talvihoito (A)")
+        tehtavaryhma-id (hae-tehtavaryhman-id "A - Talvihoito")
         talvihoitosumma 1234M
 
         talvihoitokulu (luo-kulu urakka-id "laskutettava" erapaiva "hankintakulu" koontilaskun-kuukausi talvihoitosumma toimenpideinstanssi-id tehtavaryhma-id nil)
@@ -205,7 +205,7 @@
         erapaiva (pvm/->pvm "15.10.2019") ;#inst "2019-19-15T21:00:00.000-00:00"
         koontilaskun-kuukausi "lokakuu/1-hoitovuosi"
         toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23116")
-        tehtavaryhma-id (hae-tehtavaryhman-id "Liikennemerkit ja liikenteenohjauslaitteet (L)")
+        tehtavaryhma-id (hae-tehtavaryhman-id "L - Liikennemerkit ja liikenteenohjauslaitteet")
         lyhsumma 1234M
 
         lyhkulu (luo-kulu urakka-id "laskutettava" erapaiva "hankintakulu" koontilaskun-kuukausi lyhsumma toimenpideinstanssi-id tehtavaryhma-id nil)
@@ -239,7 +239,7 @@
 
         ;; Sora
         sora-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23124")
-        sora-tehtavaryhma-id (hae-tehtavaryhman-id "Sorateiden hoito (C)")
+        sora-tehtavaryhma-id (hae-tehtavaryhman-id "C - Sorateiden hoito")
         sorakulu (luo-kulu urakka-id "laskutettava" erapaiva "hankintakulu" koontilaskun-kuukausi summa sora-toimenpideinstanssi-id sora-tehtavaryhma-id nil)
         _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
             {:urakka-id urakka-id
@@ -247,7 +247,7 @@
 
         ;; Päällyste
         paal-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "20107")
-        paal-tehtavaryhma-id (hae-tehtavaryhman-id "Kuumapäällyste (Y1)")
+        paal-tehtavaryhma-id (hae-tehtavaryhman-id "Y1 - Kuumapäällyste")
         paalkulu (luo-kulu urakka-id "laskutettava" erapaiva "hankintakulu" koontilaskun-kuukausi summa paal-toimenpideinstanssi-id paal-tehtavaryhma-id nil)
         _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
             {:urakka-id urakka-id
@@ -255,7 +255,7 @@
 
         ;; Ylläpito
         yl-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "20191")
-        yl-tehtavaryhma-id (hae-tehtavaryhman-id "Muut, MHU ylläpito (F)")
+        yl-tehtavaryhma-id (hae-tehtavaryhman-id "F - Muut, MHU ylläpito")
         ylkulu (luo-kulu urakka-id "laskutettava" erapaiva "hankintakulu" koontilaskun-kuukausi summa yl-toimenpideinstanssi-id yl-tehtavaryhma-id nil)
         _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
             {:urakka-id urakka-id
@@ -263,7 +263,7 @@
 
         ;; Korvausinvestointi
         korvaus-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "14301")
-        korvaus-tehtavaryhma-id (hae-tehtavaryhman-id "RKR-korjaus (Q)")
+        korvaus-tehtavaryhma-id (hae-tehtavaryhman-id "Q - RKR-korjaus")
         korvauskulu (luo-kulu urakka-id "laskutettava" erapaiva "hankintakulu" koontilaskun-kuukausi summa korvaus-toimenpideinstanssi-id korvaus-tehtavaryhma-id nil)
         _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
             {:urakka-id urakka-id

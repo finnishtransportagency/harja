@@ -75,10 +75,10 @@
     [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
     [harja.palvelin.palvelut.hallinta.lupaukset-palvelu :as lupaukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
-    [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
-    [harja.palvelin.palvelut.hallinta.kojelauta :as kojelauta-hallinta]
+    [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -834,17 +834,17 @@
         (rahavaraukset-hallinta/->RahavarauksetHallinta)
         [:http-palvelin :db])
 
-      :urakkahenkilot-hallinta
-      (component/using
-        (urakkahenkilot-hallinta/->UrakkaHenkilotHallinta)
-        [:http-palvelin :db :excel-vienti])
-
       :tieosoitteet-hallinta
       (component/using
         (tieosoitteet-hallinta/->TieosoitteetHallinta)
         [:http-palvelin :db])
 
-      :kojelauta-hallinta
+      :urakkahenkilot-hallinta
+      (component/using
+        (urakkahenkilot-hallinta/->UrakkaHenkilotHallinta)
+        [:http-palvelin :db :excel-vienti])
+
+      :urakkatilanne
       (component/using
         (kojelauta-hallinta/->KojelautaHallinta)
         [:http-palvelin :db]))))

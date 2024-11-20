@@ -5250,6 +5250,79 @@ types:
                             maara: 13.2
               type: paikkauskustannusten-kirjaus-request
               required: false
+    /reikapaikkaus:
+      post:
+        is:
+          - secured
+        description: Uuden reikäpaikkauksen kirjaaminen.
+        body:
+          application/json:
+            example: !include examples/reikapaikkausten-kirjaus-request.json
+            schema: reikapaikkausten-kirjaus-request
+        responses:
+          200:
+           body:
+             application/json:
+               example: !include examples/onnistunut-kirjaus-response.json
+               schema: kirjaus-response
+          400:
+           body:
+             application/json:
+               example: !include examples/virhe-response.json
+               schema: virhe-response
+          500:
+           body:
+             application/json:
+               example: !include examples/virhe-response.json
+               schema: virhe-response
+      put:
+        is:
+          - secured
+        description: Jo lähetetyn reikäpaikkauksen päivitys.
+        body:
+          application/json:
+            example: !include examples/reikapaikkausten-paivitys-request.json
+            schema: reikapaikkausten-paivitys-request
+        responses:
+          200:
+           body:
+             application/json:
+               example: !include examples/onnistunut-kirjaus-response.json
+               schema: kirjaus-response
+          400:
+           body:
+             application/json:
+               example: !include examples/virhe-response.json
+               schema: virhe-response
+          500:
+           body:
+             application/json:
+               example: !include examples/virhe-response.json
+               schema: virhe-response
+      delete:
+          is:
+            - secured
+          description: Reikäpaikkausten poisto
+          body:
+            application/json:
+              example: !include examples/reikapaikkausten-poisto-request.json
+              schema: reikapaikkausten-poisto-request
+          responses:
+            200:
+             body:
+               application/json:
+                 example: !include examples/onnistunut-kirjaus-response.json
+                 schema: kirjaus-response
+            400:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
+            500:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
     /tyomaapaivakirja:
       post:
         is:

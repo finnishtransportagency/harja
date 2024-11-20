@@ -55,7 +55,9 @@
   [img-with-exif {:class "kuva-modalissa"
                   :src (if siltatarkastusliite?
                          (k/siltatarkastusliite-url (:id liite))
-                         (k/liite-url (:id liite)))}])
+                         (k/liite-url (:id liite)))
+                  :on-error (fn [e]
+                              (set! (.-src (.-target e)) "images/odottamaton_virhe_kuva.jpg"))}])
 
 (defn tarkista-liitteen-virustarkistus [liite-id urakka]
   (k/post! :onko-liite-virustarkastettu {:liite-id liite-id

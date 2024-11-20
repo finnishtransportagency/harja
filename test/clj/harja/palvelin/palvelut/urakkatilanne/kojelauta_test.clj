@@ -1,7 +1,7 @@
-(ns harja.palvelin.palvelut.hallinta.kojelauta-test
+(ns harja.palvelin.palvelut.urakkatilanne.kojelauta-test
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
-            [harja.palvelin.palvelut.hallinta.kojelauta :as kojelauta]
+            [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja
@@ -15,7 +15,7 @@
         (component/system-map
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
-          :kojelauta-hallinta (component/using
+          :urakkatilanne (component/using
                                 (kojelauta/->KojelautaHallinta)
                                 [:db :http-palvelin])))))
   (testit)
@@ -39,22 +39,50 @@
     (is (= 10 (count vastaus)) "Urakoiden lukumäärä")))
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2024-vajaa-kayttooikeus-throwaa
-  ;; Kojelauta tässä vaiheessa vain pääkäyttäjälle, urakanvalvojalle ei näytetä
-  (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                           :hae-urakat-kojelautaan
-                           +kayttaja-tero+
-                           {:hoitokauden-alkuvuosi 2024
-                            :urakka-idt nil
-                            :ely-id nil})) "Ei oikeutta poikkeus heitetään")
+  ;; Urakanvalvojan pitää nähdä
+  (let [vastaus-urakanvalvojalle (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-urakat-kojelautaan
+                                   +kayttaja-tero+
+                                   {:urakkatyyppi :hoito
+                                    :hoitokauden-alkuvuosi 2024
+                                    :urakka-idt nil
+                                    :ely-id nil})
+        vastaus-ely-paakayttajalle (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :hae-urakat-kojelautaan
+                                     (ely-paakayttaja)
+                                     {:urakkatyyppi :hoito
+                                      :hoitokauden-alkuvuosi 2024
+                                      :urakka-idt nil
+                                      :ely-id nil})]
+    (is (= 10 (count vastaus-urakanvalvojalle)) "Urakanvalvoja näkee")
+    (is (= 10 (count vastaus-ely-paakayttajalle)) "ELY:n Pääkäyttäjä näkee"))
 
-  ;; Kojelauta tässä vaiheessa vain pääkäyttäjälle, urakoitsijalle ei näytetä
+  ;; Urakoitsijalle ei tässä vaiheessa näytetä (myöh. suunnitelma avata oman urakan osalta)
   (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                            :hae-urakat-kojelautaan
                            +kayttaja-urakan-vastuuhenkilo+
-                           {:hoitokauden-alkuvuosi 2015
+                           {:urakkatyyppi :hoito
+                            :hoitokauden-alkuvuosi 2015
                             :urakka-idt nil
-                            :ely-id nil})) "Ei oikeutta poikkeus heitetään")
-  )
+                            :ely-id nil})) "Ei oikeutta, poikkeus heitetään")
+
+  ;; Urakoitsijan Laadunvalvojakaan ei ainakaan vielä saa nähdä asioita
+  (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :hae-urakat-kojelautaan
+                           kemin-alueurakan-2019-2023-laadunvalvoja
+                           {:urakkatyyppi :hoito
+                            :hoitokauden-alkuvuosi 2020
+                            :urakka-idt #{@kemin-alueurakan-2019-2023-id}
+                            :ely-id nil})) "Ei oikeutta, poikkeus heitetään")
+
+;; myöskään urakoitsijan pääkäyttäjälle ei palauteta tietoa
+(is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                         :hae-urakat-kojelautaan
+                         kemin-alueurakan-2019-2023-paakayttaja
+                         {:urakkatyyppi :hoito
+                          :hoitokauden-alkuvuosi 2020
+                          :urakka-idt #{@kemin-alueurakan-2019-2023-id}
+                          :ely-id nil})) "Ei oikeutta, poikkeus heitetään"))
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2005-ei-palauta-yhtaan
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -211,13 +239,14 @@
                                                             :ely-id nil}))]
     (is (= urakka-id (get-in vastaus-ennen-paatoksia [:id])) "Urakka")
     (is (= hallintayksikko-id (get-in vastaus-ennen-paatoksia [:ely_id])) "POP ELY")
-    (is (nil? (get-in vastaus-ennen-paatoksia [:rahapaatokset])) "Rahapäätökset")
+    (is (nil? (get-in vastaus-ennen-paatoksia [:tavoitehintapaatos])) "Tavoitehinta")
+    (is (nil? (get-in vastaus-ennen-paatoksia [:kattohintapaatos])) "Kattohinta")
     (is (nil? (get-in vastaus-ennen-paatoksia [:lupauspaatokset])) "Lupauspäätökset")
 
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")
     (is (= hallintayksikko-id (get-in vastaus [:ely_id])) "POP ELY")
-    (is (= ["kattohinnan-ylitys"
-            "tavoitehinnan-ylitys"] (get-in vastaus [:rahapaatokset])) "Rahapäätökset")
+    (is (= "kattohinnan-ylitys" (get-in vastaus [:kattohintapaatos])) "Rahapäätökset")
+    (is (= "tavoitehinnan-ylitys" (get-in vastaus [:tavoitehintapaatos])) "Rahapäätökset")
     (is (= ["lupausbonus"] (get-in vastaus [:lupauspaatokset])) "Lupauspäätökset")))
 
 (deftest lupauspiusteet-nousee-oikein-kojelautaan-iin-urakassa
@@ -245,3 +274,40 @@
     (is (= urakka-jossa-ei-tavoitepisteita (get-in vastaus-jossa-tei-avoitepisteita [:id])) "Urakka")
     (is (= lapin-hallintayksikko-id (get-in vastaus-jossa-tei-avoitepisteita [:ely_id])) "Lapin ELY")
     (is (nil? (get-in vastaus-jossa-tei-avoitepisteita [:lupaus_tavoitepisteet])) "lupaus_tavoitepisteet")))
+
+(deftest poikkeamat-nousee-oikein-kojelautaan-iin-urakassa
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+        kayttaja-id (:id +kayttaja-jvh+)
+        ;; lisää laatupoikkeama hoitokauden alkuun
+        _ (i (format "INSERT INTO laatupoikkeama (kohde, tekija, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys,
+          ulkoinen_id, lahde, yllapitokohde, \"sisaltaa-poikkeamaraportin?\")
+          VALUES ('Minimi', 'tilaaja', %s, '2024-11-14 16:00:49.791984', '2024-10-01 16:00:31.000000', null, false, false, %s, 'Poikkeama',
+           1, 2, 4, 5, 3, null, 'harja-ui', null, null);\n;" kayttaja-id urakka-id))
+        ;; lisää laatupoikkeama hoitokauden loppuun
+        _ (i (format "INSERT INTO laatupoikkeama (kohde, tekija, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys,
+          ulkoinen_id, lahde, yllapitokohde, \"sisaltaa-poikkeamaraportin?\")
+          VALUES ('Minimi2', 'tilaaja', %s, '2024-11-14 16:00:49.791984', '2025-09-30 16:00:31.000000', null, false, false, %s, 'Poikkeama',
+           1, 2, 4, 5, 3, null, 'harja-ui', null, null);\n;" kayttaja-id urakka-id))
+
+        ;; lisää turvallisuuspoikkeama hoitokauden alkuun
+        _ (i (format "INSERT INTO turvallisuuspoikkeama (urakka, tapahtunut, kasitelty, kuvaus, sairauspoissaolopaivat, sairaalavuorokaudet, luotu, luoja,
+        tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, ulkoinen_id, vahinkoluokittelu, vakavuusaste, tyyppi, tyontekijanammatti_muu, tyontekijanammatti, lahde, laatija, tapahtuman_otsikko, paikan_kuvaus, vaarallisten_aineiden_kuljetus, vaarallisten_aineiden_vuoto, tila, turi_id, juurisyy1, juurisyy1_selite, juurisyy2, juurisyy2_selite, juurisyy3, juurisyy3_selite)
+        VALUES (%s, '2024-10-01 14:00:00.000000', null, 'abc', null, null, '2024-11-14 16:06:42.425530', %s,
+         1, 2, 4, 5, 3, null, '{henkilovahinko}', 'lieva', '{tyotapaturma}', null, 'asentaja','harja-ui', 3, 'Minimi', null, false, false, 'avoin', null, 'puutteelliset_henkilonsuojaimet', null, null, null, null, null);\n" urakka-id kayttaja-id))
+        ;; lisää turvallisuuspoikkeama hoitokauden loppuun
+        _ (i (format "INSERT INTO turvallisuuspoikkeama (urakka, tapahtunut, kasitelty, kuvaus, sairauspoissaolopaivat, sairaalavuorokaudet, luotu, luoja,
+        tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, ulkoinen_id, vahinkoluokittelu, vakavuusaste, tyyppi, tyontekijanammatti_muu, tyontekijanammatti, lahde, laatija, tapahtuman_otsikko, paikan_kuvaus, vaarallisten_aineiden_kuljetus, vaarallisten_aineiden_vuoto, tila, turi_id, juurisyy1, juurisyy1_selite, juurisyy2, juurisyy2_selite, juurisyy3, juurisyy3_selite)
+        VALUES (%s, '2025-09-30 14:00:00.000000', null, 'abc', null, null, '2024-1-14 16:06:42.425530', %s,
+         1, 2, 4, 5, 3, null, '{henkilovahinko}', 'lieva', '{tyotapaturma}', null, 'asentaja','harja-ui', 3, 'Minimi', null, false, false, 'avoin', null, 'puutteelliset_henkilonsuojaimet', null, null, null, null, null);\n" urakka-id kayttaja-id))
+        vastaus (first
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                            :hoitokauden-alkuvuosi 2024
+                                                            :urakka-idt [urakka-id]
+                                                            :ely-id nil}))]
+    (is (= urakka-id (get-in vastaus [:id])) "Urakka")
+    (is (= hallintayksikko-id (get-in vastaus [:ely_id])) "POP ELY")
+    (is (= 76 (get-in vastaus [:lupaus_tavoitepisteet])) "lupaus_tavoitepisteet")
+    (is (= 2 (get-in vastaus [:avoimet_laatupoikkeamat])) "lupaus_tavoitepisteet")
+    (is (= 2 (get-in vastaus [:avoimet_turvallisuuspoikkeamat])) "lupaus_tavoitepisteet")))

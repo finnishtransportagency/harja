@@ -50,12 +50,22 @@
 
 (defn lataa-siltatarkastusliite [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))
-        {:keys [tyyppi koko urakat data]} (liitteet/lataa-liite liitteet id {:siltatarkastusliite? true})]
-    (oikeudet/vaadi-lukuoikeus-jostain-urakasta oikeudet/urakat-liitteet (:kayttaja req) urakat)
-    {:status 200
-      :headers {"Content-Type" tyyppi
-                "Content-Length" koko}
-      :body (ByteArrayInputStream. data)}))
+        {:keys [tyyppi koko urakat data]} (try
+                                            (liitteet/lataa-liite liitteet id {:siltatarkastusliite? true})
+                                            (catch Exception e
+                                              (log/error (str "Siltatarkastusliitteen latausvirhe, liite id: " id " virhe: " e))))]
+    (if urakat
+      ;; Lataus onnistui
+      (do
+        (oikeudet/vaadi-lukuoikeus-jostain-urakasta oikeudet/urakat-liitteet (:kayttaja req) urakat)
+        {:status 200
+         :headers {"Content-Type" tyyppi
+                   "Content-Length" koko}
+         :body (ByteArrayInputStream. data)})
+      ;; Latauksessa virhe
+      (do
+        (oikeudet/ei-oikeustarkistusta!)
+        {:status 200}))))
 
 (defn lataa-pikkukuva [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))

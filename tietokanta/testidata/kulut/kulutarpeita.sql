@@ -3,4 +3,5 @@
 insert into tehtava (nimi, emo, luotu, muokattu, luoja, poistettu, yksikko, jarjestys, hinnoittelu, api_seuranta, suoritettavatehtava, piilota, api_tunnus, tehtavaryhma, "mhu-tehtava?", yksiloiva_tunniste, suunnitteluyksikko, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", materiaaliluokka_id, materiaalikoodi_id, aluetieto, nopeusrajoitus)
 values  ( 'Digitalisaation edistäminen ja innovaatioiden kehittäminen', 612, '2024-10-10 08:46:02.742654', null,
           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), false, 'euroa', 1475, '{yksikkohintainen}', null, null, null, null,
-         (SELECT id FROM tehtavaryhma WHERE nimi = 'Digitalisaatio ja innovaatiot (T4)'), true, null, 'euroa', null, null, false, false, null, null, false, 108);
+         (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '9dd75da4-0fde-4db1-81dd-c5f5c6fd4d6f'), -- Digitalisaatio ja innovaatiot
+         true, null, 'euroa', null, null, false, false, null, null, false, 108);

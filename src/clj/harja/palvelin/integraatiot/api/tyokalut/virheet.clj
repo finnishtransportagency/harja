@@ -21,6 +21,7 @@
 (def +virheellinen-liite-koodi+ "virheellinen-liite")
 (def +tuntematon-urakka-koodi+ "tuntematon-urakka")
 (def +tuntematon-sopimus-koodi+ "tuntematon-sopimus")
+(def +tuntematon-reikapaikkaus+ "tuntematon-reikapaikkaus")
 (def +urakkaa-ei-loydy+ "urakkaa-ei-loydy")
 (def +paivystajia-ei-loydy+ "paivystajia-ei-loydy")
 (def +tuntematon-kayttaja-koodi+ "tuntematon-kayttaja")

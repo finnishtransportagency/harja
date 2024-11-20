@@ -164,7 +164,7 @@
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
-    :kojelauta-hallinta
+    :urakkatilanne
     :api-talvihoitoreitit
     :talvihoitoreitit
     :tieosoitteet-hallinta})
@@ -249,8 +249,7 @@
     :api-talvihoitoreitit
     :talvihoitoreitit
     :lupaukset-hallinta
-    :tieosoitteet-hallinta
-    :kojelauta-hallinta})
+    :urakkatilanne})
 
 (def hidas-ok-status #{:itmf})
 

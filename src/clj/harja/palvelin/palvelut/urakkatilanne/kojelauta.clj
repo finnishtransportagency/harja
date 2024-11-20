@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.hallinta.kojelauta
+(ns harja.palvelin.palvelut.urakkatilanne.kojelauta
   (:require [com.stuartsierra.component :as component]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
@@ -23,7 +23,7 @@
   (update rivi avain konv/pgarray->vector))
 
 (defn hae-urakat-kojelautaan [db kayttaja {:keys [urakkatyyppi hoitokauden-alkuvuosi urakka-idt ely-id] :as hakuehdot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakkatilanne kayttaja)
   (let [urakat (cond
                  (= urakkatyyppi :hoito)                    ;; tässä kohti hoito = MHU, vanhoja alueurakoita ei tueta
                  (into []
@@ -32,7 +32,6 @@
                        (fn [ks-tilat]
                          (update ks-tilat :ks_tila konv/jsonb->clojuremap))
                        #(liita-indeksikertoimet db kayttaja %)
-                       #(muunna-paatos % :rahapaatokset)
                        #(muunna-paatos % :lupauspaatokset))
                      (q/hae-hoidon-urakat-kojelautaan db {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
                                                           :urakat_annettu (boolean (seq urakka-idt))
