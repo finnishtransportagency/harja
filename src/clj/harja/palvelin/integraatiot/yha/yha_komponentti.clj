@@ -158,6 +158,11 @@
                                             (apply max (konv/pgarray->vector vuodet))))]
     (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
 
+(defn- lisaa-massaan-arvot [massa] 
+  (when-not (nil? (:massatyyppi massa))
+    (-> massa
+      (assoc :yhteenlaskettu-kuulamyllyarvo (pot2-domain/laske-painotettu-keskiarvo (:runkoaineet massa) :massaprosentti :kuulamyllyarvo))
+      (assoc :yhteenlaskettu-litteysluku (pot2-domain/laske-painotettu-keskiarvo (:runkoaineet massa) :massaprosentti :litteysluku)))))
 
 (defn muodosta-alustatoimenpide [alustatoimenpide]
   (-> alustatoimenpide
@@ -165,10 +170,7 @@
                                                       :lisaaine :lisaaineet
                                                       :sideaine :sideaineet})
                        (first)))
-    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa))
-                                  (-> massa
-                                    (assoc :yhteenlaskettu-kuulamyllyarvo (pot2-domain/laske-painotettu-keskiarvo (:runkoaineet massa) :massaprosentti :kuulamyllyarvo))
-                                    (assoc :yhteenlaskettu-litteysluku (pot2-domain/laske-painotettu-keskiarvo (:runkoaineet massa) :massaprosentti :litteysluku))))))
+    (update :massat lisaa-massaan-arvot)
     (update :murske (fn [murske] (when-not (nil? (:tyyppi murske)) murske)))
     (set/rename-keys {:massat :massa})))
 
@@ -189,7 +191,7 @@
                                                     :lisaaine :lisaaineet
                                                     :sideaine :sideaineet})
                        (first)))
-    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
+    (update :massat lisaa-massaan-arvot)
     (set/rename-keys {:massat :massa})))
 
 (defn hae-kulutuskerrosrivit [db paallystysilmoitus]

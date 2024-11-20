@@ -168,6 +168,8 @@
                             <massatyyppi>12</massatyyppi>
                             <max-raekoko>16</max-raekoko>
                             <kuulamyllyluokka>3</kuulamyllyluokka>
+                            <yhteenlaskettu-kuulamyllyarvo>10.0</yhteenlaskettu-kuulamyllyarvo>
+                            <yhteenlaskettu-litteysluku>20.0</yhteenlaskettu-litteysluku>
                             <litteyslukuluokka>FI15</litteyslukuluokka>
                             <runkoaineet>
                                 <runkoaine>
@@ -220,6 +222,8 @@
                             <massatyyppi>12</massatyyppi>
                             <max-raekoko>16</max-raekoko>
                             <kuulamyllyluokka>3</kuulamyllyluokka>
+                            <yhteenlaskettu-kuulamyllyarvo>10.0</yhteenlaskettu-kuulamyllyarvo>
+                            <yhteenlaskettu-litteysluku>20.0</yhteenlaskettu-litteysluku>
                             <litteyslukuluokka>FI15</litteyslukuluokka>
                             <runkoaineet>
                                 <runkoaine>

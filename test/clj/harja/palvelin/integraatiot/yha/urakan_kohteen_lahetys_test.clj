@@ -389,8 +389,8 @@
          [:massatyyppi 12]
          [:max-raekoko 16]
          [:kuulamyllyluokka 3]
-         nil
-         nil
+         [:yhteenlaskettu-kuulamyllyarvo 10.0M]
+         [:yhteenlaskettu-litteysluku 20.0M]
          [:litteyslukuluokka "FI15"]
          [:runkoaineet
           [:runkoaine
@@ -432,8 +432,8 @@
          [:massatyyppi 12]
          [:max-raekoko 16]
          [:kuulamyllyluokka 3]
-         nil
-         nil
+         [:yhteenlaskettu-kuulamyllyarvo 10.0M]
+         [:yhteenlaskettu-litteysluku 20.0M]
          [:litteyslukuluokka "FI15"]
          [:runkoaineet
           [:runkoaine
