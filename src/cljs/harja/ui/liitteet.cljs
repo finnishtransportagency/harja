@@ -1,10 +1,12 @@
 (ns harja.ui.liitteet
   "Yleisiä UI-komponentteja liitteiden lataamisen hoitamiseksi."
-  (:require [reagent.core :refer [atom]]
+  (:require [harja.ui.napit :as napit]
+            [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
             [harja.loki :refer [log]]
+            [harja.ui.dom :as harja-dom]
             [harja.ui.ikonit :as ikonit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.img-with-exif :refer [img-with-exif]]
@@ -83,17 +85,14 @@
             (str "Liite voidaan näyttää, kun virustarkastus on tehty. Kokeile hetken päästä uudelleen."))))))
 
 (defn liitteen-poisto [liite poista-fn]
-  [:span
-   {:style {:padding-left "5px"}
-    :on-click #(do
-                 (.stopPropagation %)
-                 (varmista-kayttajalta/varmista-kayttajalta
-                   {:otsikko "Liitteen poistaminen"
-                    :sisalto (str "Haluatko varmasti poistaa liitteen " (:nimi liite) "?")
-                    :hyvaksy "Poista"
-                    :toiminto-fn (fn []
-                                   (poista-fn (:id liite)))}))}
-   (ikonit/livicon-trash)])
+  [napit/poista ""
+   #(varmista-kayttajalta/varmista-kayttajalta
+     {:otsikko "Liitteen poistaminen"
+      :sisalto (str "Haluatko varmasti poistaa liitteen " (:nimi liite) "?")
+      :hyvaksy "Poista"
+      :toiminto-fn (fn []
+                     (poista-fn (:id liite)))})
+   {:vayla-tyyli? true :teksti-nappi? false :luokka "napiton-nappi pelkka-ikoni"}])
 
 (defn- sievenna-liitteen-koko
   "Köykäinen lukujen sievennys. Liitteen maksimikoko on 32MB, joten suurempia lukuja ei tarvitse käsitellä."
@@ -126,7 +125,11 @@
       (if (naytettava-liite? tiedosto)
         [:div
          [:div
-          [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
+          [:img.pikkukuva.klikattava {:tabIndex 0
+                                      :alt (:nimi tiedosto)
+                                      :src (k/pikkukuva-url (:id tiedosto))
+                                      :on-key-down #(when (harja-dom/enter-nappain? %)
+                                                     (nayta-liite-modalissa tiedosto {}))
                                       :on-click #(nayta-liite-modalissa tiedosto {})}]
           [:span.liite-nimi (str nimi (when nayta-koko? (str " (" (sievenna-liitteen-koko koko) ") ")))]
           (when salli-poisto?
@@ -155,7 +158,10 @@
    [:span {:style (when rivita? {:display "block"})}
     (if (naytettava-liite? liite)
       [:span
-       [:a.klikattava {:title (let [tooltip (:nimi liite)]
+       [:a.klikattava {:role "status"
+                       :aria-live "polite"
+                       :tabindex "0"
+                       :title (let [tooltip (:nimi liite)]
                                 (if (nil? nayta-tooltip?)
                                   tooltip
                                   (when nayta-tooltip? tooltip)))
@@ -166,7 +172,11 @@
        (when salli-poisto?
          [liitteen-poisto liite poista-liite-fn])]
       [:span
-       [:a.klikattava {:title (:nimi liite)
+       [:a.klikattava {:role "status"
+                       :aria-live "polite"
+                       :tabindex "0"
+                       :tooltip (str "Liitetiedoston nimi:" (:nimi liite))
+                       :title (:nimi liite)
                        :href (k/liite-url (:id liite))
                        :target "_blank"}
         teksti]
@@ -298,45 +308,56 @@
            [:progress {:value edistyminen :max 100}]
            ;; Näytetään uuden liitteen lisäyspainike
            [:span.liitekomponentti
-            [:label {:class (str "file-upload nappi-toissijainen "
+            [:button {:tabIndex "0"
+                      :id "tiedoston-lataus-label"
+                      :class (str "file-upload nappi-toissijainen "
                                (when grid? "nappi-grid ")
                                (when disabled? "disabled "))
-                   :on-click #(.stopPropagation %)}
+                      :on-click #(.stopPropagation %)
+                      :on-key-down #(when (harja-dom/enter-nappain? %)
+                                      (.click (.querySelector js/document (str "[id=tiedoston-lataus-input]"))))}
              [ikonit/ikoni-ja-teksti
               (ikonit/livicon-upload)
               (if @tiedosto
                 (str "Vaihda liite")
                 (or nappi-teksti "Lisää liite"))]
              [:input.upload
-              {:type "file"
-               :style {:display "none"}
-               :on-change #(let [ch (k/laheta-liite! (.-target %) urakka-id)]
-                             (go
-                               (loop [ed (<! ch)]
-                                 (if (number? ed)
-                                   (do (reset! edistyminen ed)
-                                       (when latausta-ennen-fn (latausta-ennen-fn))
-                                       (when (:latauksen-seuranta-atom opts)
-                                         (reset! (:latauksen-seuranta-atom opts) ed))
-                                       (recur (<! ch)))
-                                   (if (and ed (not (k/virhe? ed)))
-                                     (do
-                                       (reset! edistyminen nil)
-                                       (when latausta-jalkeen-fn (latausta-jalkeen-fn))
-                                       (reset! virheviesti nil)
-                                       (when liite-ladattu
-                                         (if lisaa-usea-liite?
-                                           (swap! tiedostot conj ed)
-                                           (reset! tiedosto ed))
+              (let [on-change-fn (fn [target-event urakka-id]
+                                   (let [ch (k/laheta-liite! target-event urakka-id)]
+                                     (go
+                                       (loop [ed (<! ch)]
+                                         (if (number? ed)
+                                           (do (reset! edistyminen ed)
+                                             (when latausta-ennen-fn (latausta-ennen-fn))
+                                             (when (:latauksen-seuranta-atom opts)
+                                               (reset! (:latauksen-seuranta-atom opts) ed))
+                                             (recur (<! ch)))
+                                           (if (and ed (not (k/virhe? ed)))
+                                             (do
+                                               (reset! edistyminen nil)
+                                               (when latausta-jalkeen-fn (latausta-jalkeen-fn))
+                                               (reset! virheviesti nil)
+                                               (when liite-ladattu
+                                                 (if lisaa-usea-liite?
+                                                   (swap! tiedostot conj ed)
+                                                   (reset! tiedosto ed))
 
-                                         (liite-ladattu ed)))
-                                     (do
-                                       (log "Virhe: " (pr-str ed))
-                                       (reset! edistyminen nil)
-                                       (when latausta-jalkeen-fn (latausta-jalkeen-fn))
-                                       (reset! virheviesti (str "Liitteen lisääminen epäonnistui"
-                                                                (if (:viesti ed)
-                                                                  (str " (" (:viesti ed) ")"))))))))))}]]
+                                                 (liite-ladattu ed)))
+                                             (do
+                                               (log "Virhe: " (pr-str ed))
+                                               (reset! edistyminen nil)
+                                               (when latausta-jalkeen-fn (latausta-jalkeen-fn))
+                                               (reset! virheviesti (str "Liitteen lisääminen epäonnistui"
+                                                                     (if (:viesti ed)
+                                                                       (str " (" (:viesti ed) ")")))))))))))]
+
+                {:id "tiedoston-lataus-input"
+                 :type "file"
+                 :style {:display "none"}
+                 :on-key-down #(if (harja-dom/enter-nappain? %)
+                                 (on-change-fn (.-target %) urakka-id)
+                                 (js/console.log "Ei enteriä : %" (pr-str %)))
+                 :on-change #(on-change-fn (.-target %) urakka-id)})]]
             [:div.liite-virheviesti @virheviesti]])]))))
 
 (defn liitteet-ja-lisays
