@@ -164,7 +164,10 @@
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
-    :urakkatilanne})
+    :urakkatilanne
+    :api-talvihoitoreitit
+    :talvihoitoreitit
+    :tieosoitteet-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -243,8 +246,11 @@
     :mpu-kustannukset
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
+    :api-talvihoitoreitit
+    :talvihoitoreitit
     :lupaukset-hallinta
-    :urakkatilanne})
+    :urakkatilanne
+    :tieosoitteet-hallinta})
 
 (def hidas-ok-status #{:itmf})
 
