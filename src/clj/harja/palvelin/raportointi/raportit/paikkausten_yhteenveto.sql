@@ -23,9 +23,9 @@ SELECT tr.id,
 
 -- name: mhu-maarat-tehtavittain
 -- Paikkausten määrät saadaan muutamasta kovakoodatusta tehtävästä
-SELECT x.tehtava AS tehtava,
-       x.yksikko AS yksikko,
-       SUM(x.toteutunut_maara) AS toteutunut,
+SELECT x.tehtava                AS tehtava,
+       x.yksikko                AS yksikko,
+       SUM(x.toteutunut_maara)  AS toteutunut,
        SUM(x.suunniteltu_maara) AS suunniteltu
   FROM (WITH valitut_tehtavat AS (SELECT t.id
                                     FROM tehtavaryhma tr
@@ -74,3 +74,10 @@ SELECT x.tehtava AS tehtava,
        GROUP BY teh.id, teh.nimi, teh.jarjestys, ut.maara
        ORDER BY jarjestys) x
  GROUP BY x.tehtava, x.yksikko;
+
+
+-- name: mhu-paikkausten-suunnitellut-kustannukset
+SELECT COALESCE(SUM(kt.summa_indeksikorjattu), SUM(kt.summa), 0) AS summa
+  FROM kiinteahintainen_tyo kt
+           JOIN sopimus s ON kt.sopimus = s.id AND s.urakka = :urakkaid
+ WHERE (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE);
