@@ -55,7 +55,8 @@
                            :tyyppi liite-tyyppi
                            :koko liite-koko} (str liite-nimi)]]
    [:div.liitepoisto
-    [napit/poista "" #(e! (tiedot/->PoistaLiite liite-id)) {:vayla-tyyli? true :teksti-nappi? true}]]])
+    [napit/poista "" #(e! (tiedot/->PoistaLiite liite-id))
+     {:vayla-tyyli? true :teksti-nappi? false :luokka "napiton-nappi pelkka-ikoni"}]]])
 
 (defn- liitteet [e! kulu-lukittu? lomake]
   (let [liitteet (:liitteet lomake)]
