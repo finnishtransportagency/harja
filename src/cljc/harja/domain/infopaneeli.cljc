@@ -66,7 +66,7 @@
   (s/keys :req-un [::siltanimi ::siltatunnus ::tarkastusaika ::tarkasttaja]))
 
 (defmethod infopaneeli-skeema :tietyomaa [_]
-  (s/keys :req-un [::yllapitokohteen-nimi ::yllapitokohteen-numero ::aika
+  (s/keys :req-un [::nimi ::yllapitokohteen-numero ::aika
                    ::kaistat ::ajoradat ::nopeusrajoitus]))
 
 (defmethod infopaneeli-skeema :tietyoilmoitus [_]
