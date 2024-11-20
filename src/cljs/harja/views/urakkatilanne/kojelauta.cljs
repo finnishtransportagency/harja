@@ -86,7 +86,8 @@
     [:span.avoimet-poikkeamat
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry laatupoikkeamiin"]
-      [:a.klikattava {:on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+      [:a.klikattava {:href "#"
+                      :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                     :taso2 :laadunseuranta
                                                                                                     :taso3 :laatupoikkeamat})}
        (if (> avoimet_laatupoikkeamat 0)
@@ -94,7 +95,8 @@
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia laatupoikkeamia")}))]]
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry turvallisuuspoikkeamiin"]
-      [:a.klikattava {:on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+      [:a.klikattava {:href "#"
+                      :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                     :taso2 :turvallisuuspoikkeamat
                                                                                                     :taso3 nil})}
        (if (> avoimet_turvallisuuspoikkeamat 0)
@@ -106,7 +108,8 @@
   (let [{:keys [lupaus_tavoitepisteet hoitokauden_alkuvuosi]} rivi]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry lupausnäkymään"]
-     [:a.klikattava {:on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
+     [:a.klikattava {:href "#"
+                     :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
       [:div.lupauspisteet
        (if (nil? lupaus_tavoitepisteet)
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Ei tavoitepistemäärää")})
@@ -125,7 +128,8 @@
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannusten seurantaan"]
-     [:a.klikattava {:on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+     [:a.klikattava {:href "#"
+                     :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                    :taso2 :laskutus
                                                                                                    :taso3 :kustannusten-seuranta})}
       [:div.tavoitehintapaatos
@@ -159,7 +163,8 @@
         {:keys [aloittamattomia vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannussuunnitelmaan"]
-     [:a.klikattava {:on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+     [:a.klikattava {:href "#"
+                     :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                    :taso2 :suunnittelu
                                                                                                    :taso3 :kustannussuunnitelma})}
       (cond
@@ -194,13 +199,15 @@
     :rivi-jalkeen-fn (fn [urakat]
                        (let [ks-tilojen-yhteenveto (tiedot/ks-tilojen-yhteenveto urakat)
                              valikatselmus-tilojen-yhteenveto (tiedot/valikatselmus-tilojen-yhteenveto urakat)
-                             lupaustietojen-yhteenveto (tiedot/lupaustietojen-yhteenveto urakat)]
+                             lupaustietojen-yhteenveto (tiedot/lupaustietojen-yhteenveto urakat)
+                             poikkeusten-yhteenveto (tiedot/poikkeusten-yhteenveto urakat)]
                          (when-not (empty? urakat)
                            [{:teksti "Yhteensä" :luokka "lihavoitu"}
                             {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
                             {:teksti ks-tilojen-yhteenveto :luokka "lihavoitu"}
                             {:teksti valikatselmus-tilojen-yhteenveto :luokka "lihavoitu"}
-                            {:teksti lupaustietojen-yhteenveto :luokka "lihavoitu"}])))}
+                            {:teksti lupaustietojen-yhteenveto :luokka "lihavoitu"}
+                            {:teksti poikkeusten-yhteenveto :luokka "lihavoitu"}])))}
    [{:otsikko "Urakka"
      :tyyppi :string
      :nimi :nimi
