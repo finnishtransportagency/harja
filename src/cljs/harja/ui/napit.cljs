@@ -400,13 +400,15 @@
   ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str (cond
+                            {:aria-label "Poista"
+                             :tooltip (or (:tooltip optiot) "Poista rivi")
+                             :luokka (str (cond
                                             (and
                                               vayla-tyyli?
                                               teksti-nappi?) "button-negative-text"
                                             vayla-tyyli? "button-negative-default"
                                             :else "nappi-kielteinen") " " luokka)
-                             :ikoni  (ikonit/livicon-trash)})]))
+                             :ikoni (ikonit/livicon-trash)})]))
 
 (defn tarkasta
   ([teksti toiminto] (tarkasta teksti toiminto {}))
