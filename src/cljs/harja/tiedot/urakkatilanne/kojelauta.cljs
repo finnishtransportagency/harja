@@ -31,6 +31,27 @@
                             :urakat nil
                             :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
+(defn poikkeusten-yhteenveto
+  [urakat]
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        urakat-joissa-avoimia-laatupoikkeamia (count (filter (fn [rivi]
+                                                               (pos-int? (:avoimet_laatupoikkeamat rivi)))
+                                                       urakat))
+        urakat-joissa-avoimia-turvallisuuspoikkeamia (count (filter (fn [rivi]
+                                                               (pos-int? (:avoimet_turvallisuuspoikkeamat rivi)))
+                                                       urakat))
+        urakat-joissa-ei-poikkeamia (count (filter (fn [rivi]
+                                                    (and
+                                                      (zero? (:avoimet_laatupoikkeamat rivi))
+                                                      (zero? (:avoimet_turvallisuuspoikkeamat rivi)))) urakat))
+        poikkeamien-yhteenveto (when-not (empty? urakat)
+                                     [:span.valikatselmustiedot
+                                      [yleiset/tietoja {:class "body-text"}
+                                       "Avoimia laatupoikkeamia:" (str urakat-joissa-avoimia-laatupoikkeamia " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-avoimia-laatupoikkeamia kaikkien-urakoiden-lkm)) 0) ")")
+                                       "Avoimia turvallisuuspoikkeamia:" (str urakat-joissa-avoimia-turvallisuuspoikkeamia " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-avoimia-turvallisuuspoikkeamia kaikkien-urakoiden-lkm)) 0) ")")
+                                       "Ei avoimia poikkeamia: "  (str urakat-joissa-ei-poikkeamia " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ei-poikkeamia kaikkien-urakoiden-lkm)) 0) ")")]])]
+    poikkeamien-yhteenveto))
+
 (defn lupaustietojen-yhteenveto
   [urakat]
   (let [kaikkien-urakoiden-lkm (count urakat)
@@ -39,10 +60,10 @@
                                                 urakat))
         urakat-joista-tieto-puuttuu (- kaikkien-urakoiden-lkm urakat-joissa-pisteet-syotetty)
         lupauspisteiden-yhteenveto (when-not (empty? urakat)
-                                      [:span.valikatselmustiedot
-                                       [yleiset/tietoja {:class "body-text"}
-                                        "Lupaukset puuttuvat" (str urakat-joista-tieto-puuttuu " (" (fmt/prosentti-opt (* 100 (/ urakat-joista-tieto-puuttuu kaikkien-urakoiden-lkm))) ")")
-                                        "Lupaukset kirjattu:" (str urakat-joissa-pisteet-syotetty " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-pisteet-syotetty kaikkien-urakoiden-lkm))) ")")]])]
+                                      [:span.lupaustiedot
+                                       [yleiset/tietoja {:class "body-text kojelauta-tietoja"}
+                                        "Lupaukset puuttuvat" (str urakat-joista-tieto-puuttuu " (" (fmt/prosentti-opt (* 100 (/ urakat-joista-tieto-puuttuu kaikkien-urakoiden-lkm)) 0) ")")
+                                        "Lupaukset kirjattu:" (str urakat-joissa-pisteet-syotetty " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-pisteet-syotetty kaikkien-urakoiden-lkm)) 0) ")")]])]
     lupauspisteiden-yhteenveto))
 
 (defn valikatselmus-tilojen-yhteenveto
@@ -61,9 +82,9 @@
         valikatselmusten-yhteenveto (when-not (empty? urakat)
                                       [:span.valikatselmustiedot
                                        [yleiset/tietoja {:class "body-text"}
-                                        "Ei yhtään päätöstä:" (str urakat-joissa-ei-paatoksia " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ei-paatoksia kaikkien-urakoiden-lkm))) ")")
-                                        "Tavoite\u00ADhinta\u00ADpäätös:" (str urakat-joissa-tavoitehintapaatos " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-tavoitehintapaatos kaikkien-urakoiden-lkm))) ")")
-                                        "Lupaus\u00ADpäätös:" (str urakat-joissa-jokin-lupauspaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-lupauspaatos-tehtyna kaikkien-urakoiden-lkm))) ")")]])]
+                                        "Ei yhtään päätöstä:" (str urakat-joissa-ei-paatoksia " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ei-paatoksia kaikkien-urakoiden-lkm)) 0) ")")
+                                        "Tavoite\u00ADhinta\u00ADpäätös:" (str urakat-joissa-tavoitehintapaatos " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-tavoitehintapaatos kaikkien-urakoiden-lkm)) 0) ")")
+                                        "Lupaus\u00ADpäätös:" (str urakat-joissa-jokin-lupauspaatos-tehtyna " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-jokin-lupauspaatos-tehtyna kaikkien-urakoiden-lkm)) 0) ")")]])]
     valikatselmusten-yhteenveto))
 
 (defn ks-tilojen-yhteenveto
@@ -82,9 +103,9 @@
         ks-tilojen-yhteenveto (when-not (empty? urakat)
                                 [:span.kustannussuunnitelmien-tiedot
                                  [yleiset/tietoja {:class "body-text"}
-                                  "Aloittamatta:" (str urakat-joissa-ks-aloittamatta " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm))) ")")
-                                  "Kesken:" (str urakat-joissa-ks-aloitettu " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm))) ")")
-                                  "Valmiina:" (str urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm))) ")")]])]
+                                  "Aloittamatta:" (str urakat-joissa-ks-aloittamatta " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm)) 0) ")")
+                                  "Kesken:" (str urakat-joissa-ks-aloitettu " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm)) 0) ")")
+                                  "Valmiina:" (str urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (* 100 (/ urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm)) 0) ")")]])]
     ks-tilojen-yhteenveto))
 
 (defrecord AsetaSuodatin [avain valinta])

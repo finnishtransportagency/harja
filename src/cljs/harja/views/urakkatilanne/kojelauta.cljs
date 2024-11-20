@@ -194,13 +194,15 @@
     :rivi-jalkeen-fn (fn [urakat]
                        (let [ks-tilojen-yhteenveto (tiedot/ks-tilojen-yhteenveto urakat)
                              valikatselmus-tilojen-yhteenveto (tiedot/valikatselmus-tilojen-yhteenveto urakat)
-                             lupaustietojen-yhteenveto (tiedot/lupaustietojen-yhteenveto urakat)]
+                             lupaustietojen-yhteenveto (tiedot/lupaustietojen-yhteenveto urakat)
+                             poikkeusten-yhteenveto (tiedot/poikkeusten-yhteenveto urakat)]
                          (when-not (empty? urakat)
                            [{:teksti "Yhteensä" :luokka "lihavoitu"}
                             {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
                             {:teksti ks-tilojen-yhteenveto :luokka "lihavoitu"}
                             {:teksti valikatselmus-tilojen-yhteenveto :luokka "lihavoitu"}
-                            {:teksti lupaustietojen-yhteenveto :luokka "lihavoitu"}])))}
+                            {:teksti lupaustietojen-yhteenveto :luokka "lihavoitu"}
+                            {:teksti poikkeusten-yhteenveto :luokka "lihavoitu"}])))}
    [{:otsikko "Urakka"
      :tyyppi :string
      :nimi :nimi
