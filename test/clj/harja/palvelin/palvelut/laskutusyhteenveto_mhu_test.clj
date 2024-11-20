@@ -229,7 +229,7 @@
           WHERE k.kokonaissumma = 10.20
             AND k.erapaiva = '2020-04-21'::DATE
             AND kk.toimenpideinstanssi = %s
-            AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)')"
+            AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'J - Johto- ja hallintokorvaus')"
                                    hallinnolliset-toimenpiteet-tpi-id)))
 
           db_erillis (ffirst (q (str "SELECT SUM(kk.summa)
@@ -238,7 +238,7 @@
           WHERE k.kokonaissumma = 10.20
             AND k.erapaiva = '2020-04-22'::DATE
           AND kk.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
-          AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)')")))]
+          AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'W - Erillishankinnat')")))]
 
       (is (= (+ (:hj_palkkio_laskutetaan hoidonjohto) (:johto_ja_hallinto_laskutetaan hoidonjohto) (:hj_erillishankinnat_laskutetaan hoidonjohto))
              poikkeukset))
@@ -252,7 +252,7 @@
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
-          tehtavaryhma-id (ffirst (q (str "select id from tehtavaryhma where nimi = 'Hoidonjohtopalkkio (G)';")))
+          tehtavaryhma-id (hae-tehtavaryhman-id "G - Hoidonjohtopalkkio")
           urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           sopimuksen-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
           tehtava-id (ffirst (q (str "select id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8';")))

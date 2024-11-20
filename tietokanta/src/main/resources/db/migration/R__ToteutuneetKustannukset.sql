@@ -55,7 +55,7 @@ BEGIN
            j.indeksikorjaus_vahvistettu                                     AS indeksikorjaus_vahvistettu,
            'laskutettava-tyo'                                               AS tyyppi,
            NULL                                                             AS tehtava,
-           (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)'),
+           (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'), -- 'Johto- ja hallintokorvaus'
            (SELECT tpi.id AS id
               FROM toimenpideinstanssi tpi
                        JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
@@ -183,7 +183,7 @@ BEGIN
            j.indeksikorjaus_vahvistettu                                     AS indeksikorjaus_vahvistettu,
            'laskutettava-tyo'                                               AS tyyppi,
            NULL                                                             AS tehtava,
-           (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)'),
+           (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'), -- 'Johto- ja hallintokorvaus'
            (SELECT tpi.id AS id
               FROM toimenpideinstanssi tpi
                        JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
@@ -293,7 +293,7 @@ BEGIN
                     NULL,
                     (SELECT id
                        FROM tehtavaryhma
-                      WHERE nimi = 'Johto- ja hallintokorvaus (J)'),
+                      WHERE yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'), -- 'Johto- ja hallintokorvaus'
                     (SELECT tpi.id AS id
                        FROM toimenpideinstanssi tpi
                                 JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide

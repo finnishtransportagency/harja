@@ -219,29 +219,20 @@
   []
   (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystyskohteet))
 
-(defn kustannussuunnitelmaan-valitussa-urakassa [hallintayksikko-id urakka-id]
+(defn siirry-annettuun-valilehteen
+  "Yleiskäyttöinen siirtymäfunktio, jonne annetaan hallintayksikkö-id ja urakka-id, sekä kolmen välilehden avain minne siirtyä, sekä halutessaan app-state mikä välitetään annetulle atomille"
+  [hallintayksikko-id urakka-id {:keys [taso1 taso2 taso3 app-state app-state-atom]}]
+  (assert (integer? hallintayksikko-id) "oltava integer")
+  (assert (integer? urakka-id) "oltava integer")
+  (assert (keyword? taso1) "oltava keyword")
+  (assert (keyword? taso2) "oltava keyword")
   (go
-    (let [app-state {}]
-      (do
-        (nav/esta-url-paivitys!)
-        (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
-        (nav/aseta-valittu-valilehti! :sivu :urakat)
-        (nav/aseta-valittu-valilehti! :urakat :suunnittelu)
-        (nav/aseta-valittu-valilehti! :suunnittelu :kustannussuunnitelma)
-        (nav/salli-url-paivitys!)
-        (swap! urakka-tila/suunnittelu-kustannussuunnitelma merge app-state)))))
-
-(defn kustannusten-seurantaan-valitussa-urakassa [hallintayksikko-id urakka-id valittu-hoitokausi]
-  (go
-    (let [app-state {:valikatselmus-auki? true
-                     :hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-                     :valittu-hoitokausi valittu-hoitokausi}]
-      (do
-        (nav/esta-url-paivitys!)
-        (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
-        (nav/aseta-valittu-valilehti! :sivu :urakat)
-        (nav/aseta-valittu-valilehti! :urakat :laskutus)
-        (nav/aseta-valittu-valilehti! :laskutus :kustannusten-seuranta)
-        (nav/salli-url-paivitys!)
-        (swap! urakka-tila/kustannusten-seuranta merge app-state)))))
-
+    (do
+      (nav/esta-url-paivitys!)
+      (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
+      (nav/aseta-valittu-valilehti! :sivu taso1)
+      (nav/aseta-valittu-valilehti! taso1 taso2)
+      (nav/aseta-valittu-valilehti! taso2 taso3)
+      (nav/salli-url-paivitys!)
+      (when (and app-state app-state-atom)
+        (swap! app-state-atom merge app-state)))))

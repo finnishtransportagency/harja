@@ -1,4 +1,4 @@
-(ns harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma
+(ns harja.views.hallinta.tyokalut.tyomaapaivakirjatyokalu-nakyma
   "Työkalu työmaapäiväkirjojen lisäämiseksi testiurakoille."
   (:require [tuck.core :refer [tuck send-value! send-async!]]
             [harja.domain.oikeudet :as oikeudet]
