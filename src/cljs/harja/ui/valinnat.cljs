@@ -209,8 +209,7 @@
                             (remove-watch valittu-aikavali-atom :aikavali-komponentin-kuuntelija)))
        (fn [_ {:keys [nayta-otsikko? aikavalin-rajoitus luokka
                       aloitusaika-pakota-suunta paattymisaika-pakota-suunta
-                      lomake? otsikko for-teksti validointi vayla-tyyli?
-                      ikoni-sisaan?]}]
+                      lomake? otsikko for-teksti validointi vayla-tyyli?]}]
          (when-not (= aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom))
            (swap! asetukset-atom assoc :aikavalin-rajoitus aikavalin-rajoitus))
          [:span {:class (cond
@@ -226,14 +225,12 @@
            [tee-kentta {:tyyppi tyyppi
                         :pakota-suunta aloitusaika-pakota-suunta
                         :validointi validointi
-                        :ikoni-sisaan? ikoni-sisaan?
                         :vayla-tyyli? vayla-tyyli?}
             aikavalin-alku]
            [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
            [tee-kentta {:tyyppi tyyppi
                         :pakota-suunta paattymisaika-pakota-suunta
                         :validointi validointi
-                        :ikoni-sisaan? ikoni-sisaan?
                         :vayla-tyyli? vayla-tyyli?}
             aikavalin-loppu]]])))))
 
@@ -411,12 +408,12 @@
          alkuaikakentta {:nimi (or (:alkuaika kenttien-nimet) :alkuaika)
                          :otsikko "Alku"
                          ::lomake/col-luokka (when aikavalivalitsin-flex?
-                                               "lomakepalsta-flex-puolikas")
+                                               "lomakepalsta-flex-kokonainen paivays")
                          :tyyppi (if vain-pvm :pvm :pvm-aika)
                          :validoi [[:ei-tyhja "Anna alkuaika"]]}
          loppuaikakentta {:nimi (or (:loppuaika kenttien-nimet) :loppuaika)
                           ::lomake/col-luokka (when aikavalivalitsin-flex?
-                                                "lomakepalsta-flex-puolikas")
+                                                "lomakepalsta-flex-kokonainen paivays")
                           :otsikko "Loppu"
                           :tyyppi (if vain-pvm :pvm :pvm-aika)
                           :validoi [[:ei-tyhja "Anna loppuaika"]

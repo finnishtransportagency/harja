@@ -13,11 +13,34 @@
   .label-ja-alasveto {
     width: 200px;
   }
-  .pvm-aika-kentta {
-    display: inline-block;
-    width: unset;
-    input.pvm {
-      max-width: 80px;
+
+  .label-ja-aikavali {
+    width: 420px;
+    label {
+      margin: 16px 0 0 0;
+      line-height: 16px;
+    }
+    .pvm-aika-kentta {
+      display: inline-block;
+      width: unset;
+      .ikoni-input {
+        padding: 0.375rem 8px;
+        height: auto;
+        input {
+          padding: 0 2px;
+          height: auto;
+          max-width: 80px;
+          top: 0;
+        }
+        .glyphicon {
+          padding: 0 8px;
+        }
+      }
+      .aika-input {
+        padding: 0.375rem 8px;
+        height: auto;
+        top: 0;
+      }
     }
   }
 }

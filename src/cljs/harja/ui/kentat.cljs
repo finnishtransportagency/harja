@@ -1120,7 +1120,7 @@
                             ""))))
        :reagent-render
        (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select
-                    kentan-tyylit virhe? ikoni-sisaan? muokattu?]} data]
+                    kentan-tyylit virhe? muokattu?]} data]
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
                _ (when (and (not= nykyinen-pvm vanha-data-arvo)
@@ -1212,7 +1212,7 @@
               (re-matches +aika-regex+ aika-text))
       (aseta-fn! aika-text))))
 
-(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus on-blur lomake? pakota-suunta]}
+(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus on-blur lomake? pakota-suunta vayla-tyyli?]}
                                  data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
@@ -1295,12 +1295,10 @@
                                nykyinen-pvm
                                (pvm-tyhjana rivi))
               elementin-id (str (gensym "pvm-aika-input"))
-              input-komponentti [:input.pvm {:class (when lomake? "form-control margin-bottom-4")
+              input-komponentti [:input.pvm {:class (cond
+                                                      vayla-tyyli? (str "input-default ")
+                                                      lomake? "form-control margin-bottom-4")
                                              :placeholder "pp.kk.vvvv"
-                                             :on-click #(do (.stopPropagation %)
-                                                          (.preventDefault %)
-                                                          (reset! auki true)
-                                                          %)
                                              :value nykyinen-pvm-teksti
                                              :on-focus #(when on-focus (on-focus))
                                              :on-change #(muuta-pvm! (-> % .-target .-value))
@@ -1313,7 +1311,10 @@
                                              :on-blur #(do (when on-blur (on-blur %)) (koske-pvm!) (aseta! false) %)
                                              :id elementin-id}]]
           [:span.pvm-aika-kentta
-           [:div.inline-block
+           [:div.inline-block {:on-click #(do (.stopPropagation %)
+                                            (.preventDefault %)
+                                            (reset! auki true)
+                                            %)}
             (tee-ikoni-komponentti input-komponentti @auki)
             (when @auki
               [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
@@ -1327,7 +1328,8 @@
                                                                      (reset! auki false))
                                                  :input-id elementin-id}])]
            [:div.inline-block
-            [:input.aika-input {:class (str (when lomake? "form-control")
+            [:input.aika-input {:class (str (when lomake? "form-control margin-bottom-4")
+                                            (when vayla-tyyli? "input-default")
                                             (when (and (not (re-matches +validi-aika-regex+
                                                                         nykyinen-aika-teksti))
                                                        (pvm/->pvm nykyinen-pvm-teksti))

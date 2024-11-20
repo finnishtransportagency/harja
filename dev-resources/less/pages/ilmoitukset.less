@@ -112,6 +112,24 @@
       width: 96px;
     }
   }
+
+  .paivays {
+    label {
+      margin-top: 0.5rem;
+    }
+    margin-bottom: 3px;
+  }
+
+  .pvm-aika-kentta {
+    .inline-block {
+      .ikoni-input {
+        @media (max-width: extract(@taulukko-breakpointit, 1)) {
+          max-width: 120px;
+        }
+     }
+    }
+    width: 100%
+  }
 }
 
 .kuittauslista {

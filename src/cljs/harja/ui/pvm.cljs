@@ -21,10 +21,10 @@
         etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-viewportin-oikeaan-reunaan
                                    (.-parentNode (r/dom-node komponentti)))
         uusi-suunta (if (< etaisyys-alareunaan 250)
-                      (if (< etaisyys-oikeaan-reunaan 200)
+                      (if (< etaisyys-oikeaan-reunaan 100)
                         :ylos-vasen
                         :ylos-oikea)
-                      (if (< etaisyys-oikeaan-reunaan 200)
+                      (if (< etaisyys-oikeaan-reunaan 100)
                         :alas-vasen
                         :alas-oikea))]
     (reset! sijainti-atom uusi-suunta)))
