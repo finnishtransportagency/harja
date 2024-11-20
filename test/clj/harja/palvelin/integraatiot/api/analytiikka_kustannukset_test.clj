@@ -48,7 +48,7 @@
                    :rivi 1
                    :summa 493827160.5
                    :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
-                   :tehtavaryhma (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                   :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                    :tehtava nil
                    :tyyppi :hankintakulu
                    :tavoitehintainen :true}
@@ -56,7 +56,7 @@
                    :rivi 2
                    :summa 493827160.5
                    :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
-                   :tehtavaryhma (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                   :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                    :tehtava nil
                    :tyyppi :hankintakulu
                    :tavoitehintainen :true}]
