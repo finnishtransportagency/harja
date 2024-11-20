@@ -16,8 +16,10 @@
             [harja.views.vesivaylat.hallinta :as vu]
             [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
-            [harja.views.hallinta.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
-            [harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
+            [harja.views.hallinta.tyokalut.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
+            [harja.views.hallinta.tyokalut.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
+            [harja.views.hallinta.tyokalut.talvihoitoreitit-tyokalu-nakyma :as talvihoitoreitit-tyokalu-nakyma]
+            [harja.views.hallinta.tyokalut.tieosoitteet-nakyma :as tieosoitteet-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
@@ -194,6 +196,20 @@
             (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
       ^{:key "tyomaapaivakirjatyokalu"}
       [paivakirjatyokalu-nakyma/simuloi-tyomaapaivakirja])
+
+    "Talvihoitoreittityökalu"
+    :talvihoitoreittityokalu
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "talvihoitoreittityokalu"}
+      [talvihoitoreitit-tyokalu-nakyma/simuloi-talvihoitoreitti])
+
+    "Tieosoitteet"
+    :tieosoitteet
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "tieosoitteet"}
+      [tieosoitteet-nakyma/tieosoitteet])
 
     "Viestitestaus"
     :viestitestaus
