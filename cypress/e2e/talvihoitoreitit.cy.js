@@ -61,17 +61,17 @@ describe('Talvihoitoreitit näkymä aukeaa', function ()
         cy.get('table.grid').eq(0).find('tr').eq(0).find('th').eq(4).contains('Laskettu pituus (km)');
 
         // Varmistetaan, että Reitti 1:sen alta löytyy oikeat tiedot
-        cy.get('table.grid').eq(0).find('tr').eq(1).find('td').eq(0).contains('4');
-        cy.get('table.grid').eq(0).find('tr').eq(1).find('td').eq(1).contains('4 - 414/1 - 420/1000');
-        cy.get('table.grid').eq(0).find('tr').eq(1).find('td').eq(2).contains('Is');
-        cy.get('table.grid').eq(0).find('tr').eq(1).find('td').eq(3).contains('0,05');
-        cy.get('table.grid').eq(0).find('tr').eq(1).find('td').eq(4).contains('28,13');
-
         cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(0).contains('4');
-        cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(1).contains('4 - 404/1 - 408/1000');
-        cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(2).contains('Ib');
-        cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(3).contains('0,01');
-        cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(4).contains('21,41');
+        cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(1).contains('4 - 414/1 - 420/1000');
+        cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(2).contains('Is');
+        cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(3).contains('0,05');
+        cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(4).contains('28,13');
+
+        cy.get('table.grid').eq(0).find('tr').eq(3).find('td').eq(0).contains('4');
+        cy.get('table.grid').eq(0).find('tr').eq(3).find('td').eq(1).contains('4 - 404/1 - 408/1000');
+        cy.get('table.grid').eq(0).find('tr').eq(3).find('td').eq(2).contains('Ib');
+        cy.get('table.grid').eq(0).find('tr').eq(3).find('td').eq(3).contains('0,01');
+        cy.get('table.grid').eq(0).find('tr').eq(3).find('td').eq(4).contains('21,41');
     });
 
 });
