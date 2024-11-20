@@ -855,7 +855,7 @@ BEGIN
     -- HOIDONJOHTO --  erillishankinnat
     erillishankinnat_rivi :=
         (SELECT hj_erillishankinnat(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, '23150'::TEXT,
-                                    hoidonjohto_tpi_id::INTEGER, ur::INTEGER, sopimus_id::INTEGER));
+                                    hoidonjohto_tpi_id::INTEGER, ur::INTEGER));
 
     erillishankinnat_hoitokausi_yht := 0.0;
     erillishankinnat_val_aika_yht := 0.0;
