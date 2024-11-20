@@ -249,7 +249,8 @@
     :api-talvihoitoreitit
     :talvihoitoreitit
     :lupaukset-hallinta
-    :urakkatilanne})
+    :urakkatilanne
+    :tieosoitteet-hallinta})
 
 (def hidas-ok-status #{:itmf})
 
