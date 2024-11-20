@@ -152,11 +152,15 @@
       (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
         (if (and esta-poistaminen? (esta-poistaminen? rivi))
           [:span (ui-ikonit/livicon-trash-disabled (esta-poistaminen-tooltip rivi))]
-          [:span.klikattava {:on-click #(do (.preventDefault %)
-                                            (muokkaa! id assoc :poistettu true))}
-           (ui-ikonit/livicon-trash)]))
+          [napit/poista ""
+           #(do (.preventDefault %)
+              (muokkaa! id assoc :poistettu true))
+           {:teksti-nappi? false
+            :vayla-tyyli? true
+            :tooltip "Poista rivi"
+            :luokka "napiton-nappi pelkka-ikoni"}]))
       (when-not (empty? rivin-virheet)
-        [:span.rivilla-virheita
+        [:span.rivilla-virheita {:role "alert" :aria-label "Rivillä virheitä."}
          (ui-ikonit/livicon-warning-sign)])])])
 
 (defn- rivin-infolaatikko* [sisalto rivi data]
@@ -524,6 +528,7 @@
                (if-not sarake-sort
                  [:div otsikko]
                  [:div.ilmoitukset-sort
+                  ;;TODO: Muuta span.klikattava buttoniksi jossakin vaiheessa.
                   [:span.klikattava {:on-click (:fn sarake-sort)}
                    otsikko " " (sort-ikoni (:suunta sarake-sort)) " "]]))]) skeema)
         (when (or nayta-toimintosarake?

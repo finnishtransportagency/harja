@@ -1,0 +1,144 @@
+(ns harja.tiedot.urakkatilanne.kojelauta
+  (:require [harja.fmt :as fmt]
+            [harja.math :as math]
+            [harja.pvm :as pvm]
+            [harja.ui.viesti :as viesti]
+            [harja.ui.protokollat :as protokollat]
+            [harja.ui.yleiset :as yleiset]
+            [reagent.core :refer [atom] :as reagent]
+            [tuck.core :as tuck]
+            [harja.tyokalut.tuck :as tuck-apurit])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
+
+;; vuosi, jota ennen tavoite ja kattohinnan paatokset eivat olleet sidoksissa toisiinsa
+(def +kattohintapaatos-kynnysvuosi+ 2021)
+
+(defn tee-urakkahaku [urakat]
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [itemit (if (< (count teksti) 1)
+                         urakat
+                         (filter #(and
+                                    (:nimi %)
+                                    (not= (.indexOf (.toLowerCase (:nimi %))
+                                            (.toLowerCase teksti)) -1))
+                           urakat))]
+            (vec (sort-by :nimi itemit)))))))
+
+(def tila (atom {:urakat []
+                 :valinnat {:urakkatyyppi {:nimi "Hoito" :arvo :hoito}
+                            :ely nil
+                            :urakat nil
+                            :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
+
+(defn poikkeusten-yhteenveto
+  [urakat]
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        urakat-joissa-avoimia-laatupoikkeamia (count (filter (fn [rivi]
+                                                               (pos-int? (:avoimet_laatupoikkeamat rivi)))
+                                                       urakat))
+        urakat-joissa-avoimia-turvallisuuspoikkeamia (count (filter (fn [rivi]
+                                                               (pos-int? (:avoimet_turvallisuuspoikkeamat rivi)))
+                                                       urakat))
+        urakat-joissa-ei-poikkeamia (count (filter (fn [rivi]
+                                                    (and
+                                                      (zero? (:avoimet_laatupoikkeamat rivi))
+                                                      (zero? (:avoimet_turvallisuuspoikkeamat rivi)))) urakat))
+        poikkeamien-yhteenveto (when-not (empty? urakat)
+                                     [:span.valikatselmustiedot
+                                      [yleiset/tietoja {:class "body-text"}
+                                       "Avoimia laatupoikkeamia:" (str urakat-joissa-avoimia-laatupoikkeamia " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-avoimia-laatupoikkeamia kaikkien-urakoiden-lkm) 0) ")")
+                                       "Avoimia turvallisuuspoikkeamia:" (str urakat-joissa-avoimia-turvallisuuspoikkeamia " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-avoimia-turvallisuuspoikkeamia kaikkien-urakoiden-lkm) 0) ")")
+                                       "Ei avoimia poikkeamia: "  (str urakat-joissa-ei-poikkeamia " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-ei-poikkeamia kaikkien-urakoiden-lkm) 0) ")")]])]
+    poikkeamien-yhteenveto))
+
+(defn lupaustietojen-yhteenveto
+  [urakat]
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        urakat-joissa-pisteet-syotetty (count (filter (fn [rivi]
+                                                        (integer? (:lupaus_tavoitepisteet rivi)))
+                                                urakat))
+        urakat-joista-tieto-puuttuu (- kaikkien-urakoiden-lkm urakat-joissa-pisteet-syotetty)
+        lupauspisteiden-yhteenveto (when-not (empty? urakat)
+                                      [:span.lupaustiedot
+                                       [yleiset/tietoja {:class "body-text kojelauta-tietoja"}
+                                        "Lupaukset puuttuvat" (str urakat-joista-tieto-puuttuu " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joista-tieto-puuttuu kaikkien-urakoiden-lkm) 0) ")")
+                                        "Lupaukset kirjattu:" (str urakat-joissa-pisteet-syotetty " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-pisteet-syotetty kaikkien-urakoiden-lkm) 0) ")")]])]
+    lupauspisteiden-yhteenveto))
+
+(defn valikatselmus-tilojen-yhteenveto
+  "Palauttaa käyttöliittymän koosteriville välikatselmuksen tilojen yhteenvedon"
+  [urakat]
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        urakat-joissa-tavoitehintapaatos (count (filter (fn [rivi]
+                                                          (some? (:tavoitehintapaatos rivi))) urakat))
+        urakat-joissa-jokin-lupauspaatos-tehtyna (count (keep (fn [rivi]
+                                                                (seq (:lupauspaatokset rivi))) urakat))
+        urakat-joissa-ei-paatoksia (count (filter (fn [rivi]
+                                                    (and
+                                                      (nil? (:tavoitehintapaatos rivi))
+                                                      (nil? (:kattohintapaatos rivi))
+                                                      (nil? (:lupauspaatokset rivi)))) urakat))
+        valikatselmusten-yhteenveto (when-not (empty? urakat)
+                                      [:span.valikatselmustiedot
+                                       [yleiset/tietoja {:class "body-text"}
+                                        "Ei yhtään päätöstä:" (str urakat-joissa-ei-paatoksia " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-ei-paatoksia kaikkien-urakoiden-lkm) 0) ")")
+                                        "Tavoite\u00ADhinta\u00ADpäätös:" (str urakat-joissa-tavoitehintapaatos " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-tavoitehintapaatos kaikkien-urakoiden-lkm) 0) ")")
+                                        "Lupaus\u00ADpäätös:" (str urakat-joissa-jokin-lupauspaatos-tehtyna " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-jokin-lupauspaatos-tehtyna kaikkien-urakoiden-lkm) 0) ")")]])]
+    valikatselmusten-yhteenveto))
+
+(defn ks-tilojen-yhteenveto
+  "Palauttaa käyttöliittymän koosteriville kustannussuunnitelman tilojen yhteenvedon"
+  [urakat]
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        urakat-joissa-ks-aloittamatta (count (filter (fn [rivi]
+                                                       (= "aloittamatta" (get-in rivi [:ks_tila :suunnitelman_tila])))
+                                               urakat))
+        urakat-joissa-ks-aloitettu (count (filter (fn [rivi]
+                                                    (= "aloitettu" (get-in rivi [:ks_tila :suunnitelman_tila])))
+                                            urakat))
+        urakat-joissa-ks-valmiina (count (filter (fn [rivi]
+                                                   (= "vahvistettu" (get-in rivi [:ks_tila :suunnitelman_tila])))
+                                           urakat))
+        ks-tilojen-yhteenveto (when-not (empty? urakat)
+                                [:span.kustannussuunnitelmien-tiedot
+                                 [yleiset/tietoja {:class "body-text"}
+                                  "Aloittamatta:" (str urakat-joissa-ks-aloittamatta " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-ks-aloittamatta kaikkien-urakoiden-lkm) 0) ")")
+                                  "Kesken:" (str urakat-joissa-ks-aloitettu " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-ks-aloitettu kaikkien-urakoiden-lkm) 0) ")")
+                                  "Valmiina:" (str urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm) 0) ")")]])]
+    ks-tilojen-yhteenveto))
+
+(defrecord AsetaSuodatin [avain valinta])
+(defrecord HaeUrakat [])
+(defrecord HaeUrakatOnnistui [vastaus])
+(defrecord HaeUrakatEpaonnistui [vastaus])
+
+(extend-protocol tuck/Event
+  AsetaSuodatin
+  (process-event [{:keys [avain valinta]} app]
+    (assoc-in app [:valinnat avain] valinta))
+
+  HaeUrakat
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-urakat-kojelautaan
+      {:urakkatyyppi (or (get-in app [:valinnat :urakkatyyppi :arvo]) :hoito)
+       :hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
+       :urakka-idt (map :id (get-in app [:valinnat :urakat]))
+       :ely-id (get-in app [:valinnat :ely :id])}
+      {:onnistui ->HaeUrakatOnnistui
+       :epaonnistui ->HaeUrakatEpaonnistui})
+    (assoc app :haku-kaynnissa? true))
+
+  HaeUrakatOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc app
+      :haku-kaynnissa? false
+      :urakat vastaus
+      :urakkahaku (tee-urakkahaku vastaus)))
+
+  HaeUrakatEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Virhe urakoiden haussa" :varoitus)
+    (assoc app
+      :urakat []
+      :haku-kaynnissa? false)))
