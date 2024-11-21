@@ -353,15 +353,19 @@
           (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id) id)
               (when (and (not= false voi-muokata?)
                          (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
-                [:span.klikattava {:on-click
-                                   #(do (.preventDefault %)
-                                        (muokkaa! muokatut-atom
-                                                  virheet varoitukset huomautukset skeema
-                                                  id assoc
-                                                  :poistettu true))}
-                 (ikonit/livicon-trash)]))
+                [napit/poista
+                 ""
+                 #(do (.preventDefault %)
+                    (muokkaa! muokatut-atom
+                      virheet varoitukset huomautukset skeema
+                      id assoc
+                      :poistettu true))
+                 {:teksti-nappi? false
+                  :vayla-tyyli? true
+                  :tooltip "Poista rivi"
+                  :luokka "napiton-nappi pelkka-ikoni"}]))
           (when (and nayta-virheikoni? (seq rivin-virheet))
-            [:span.rivilla-virheita
+            [:span.rivilla-virheita {:role "alert" :aria-label "Rivillä virheitä."}
              (ikonit/livicon-warning-sign)])]))]))
 
 (defn- kasketty-jarjestys [{:keys [virheet-ylos-fn jarjesta-kun-kasketaan muokatut muokatut-atom]}]
