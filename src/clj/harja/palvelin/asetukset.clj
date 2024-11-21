@@ -21,6 +21,9 @@
   "Harja-palvelinasetuksien skeema"
   {(s/optional-key :alusta) s/Keyword
    (s/optional-key :sahke-headerit) {s/Str {s/Str s/Str}}
+
+   (s/optional-key :clojure-async-thread-poolin-koko) s/Int
+
    :http-palvelin {:portti s/Int
                    :url s/Str
                    (s/optional-key :threads) s/Int
