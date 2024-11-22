@@ -123,9 +123,7 @@
               :on-click #(avaa-tai-sulje-ryhma)
               :on-key-down #(when (dom/enter-nappain? %)
                               (avaa-tai-sulje-ryhma))}
-             [:span {:class (str
-                              "tk-chevron-ryhma-tila chevron-rotate "
-                              (when-not (auki?) "chevron-rotate-down"))
+             [:span {:class "tk-chevron-ryhma-tila chevron-rotate"
                      :tabIndex "0"}
               (if (auki?)
                 (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
@@ -158,22 +156,23 @@
     (let [auki? (or auki-atomi? (atom true))]
       (fn [otsikko {:keys [salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
         [:div {:class (str "tk-asetuskokoelma" (when luokka (str " " luokka)))}
-         (when salli-piilotus?
-           [:div {:class (str
-                           "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
-                           (when-not @auki? "chevron-rotate-down"))
-                  :tabIndex "0"
-                  :on-click #(swap! auki? not)
-                  :on-key-down #(when (dom/enter-nappain? %)
-                                  (swap! auki? not))}
-            (if @auki?
-              (ikonit/livicon-chevron-down)
-              (ikonit/livicon-chevron-right))])
-         [:div {:class (str "tk-otsikko "
-                            (when salli-piilotus?
-                              "tk-otsikko-sisenna")
-                            (when otsikon-luokka (str " " otsikon-luokka)))}
-          otsikko]
+         [:div {:class "klikattava"
+                :aria-expanded (if @auki? "true" "false")
+                :tabIndex "0"
+                :on-click #(swap! auki? not)
+                :on-key-down #(when (dom/enter-nappain? %)
+                                (swap! auki? not))}
+          (when salli-piilotus?
+            [:div {:class "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma"}
+             (if @auki?
+               (ikonit/livicon-chevron-down)
+               (ikonit/livicon-chevron-right))])
+          [:div
+           {:class (str "tk-otsikko "
+                     (when salli-piilotus?
+                       "tk-otsikko-sisenna")
+                     (when otsikon-luokka (str " " otsikon-luokka)))}
+           otsikko]]
          (when @auki?
            sisalto)]))))
 
