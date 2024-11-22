@@ -151,7 +151,6 @@
           {:tyyppi :haku
            :nayta :otsikko :fmt :otsikko
            :hae-kun-yli-n-merkkia 0
-           :vayla-tyyli? true
            :lomake? true
            :disabled? (empty? (:kohdeluokat valinnat))
            :lahde varustetyyppihaku
