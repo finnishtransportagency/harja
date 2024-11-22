@@ -258,32 +258,34 @@
       (fn [{:keys [paivamaara valitse luokat valittava?-fn disabled sumeutus-fn placeholder]}]
         (let [kiinni #(reset! % false)
               elementin-id (str (gensym "pvm-pakollinen-input"))]
-          [:div.kalenteri-kontti
-           [:input {:disabled disabled
-                    :type :text
-                    :class (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
-                    :value (cond
-                             (seq @suora-syotto-sisalto) @suora-syotto-sisalto
-                             (not (nil? paivamaara)) (pvm/pvm paivamaara)
-                             :else "")
-                    :placeholder placeholder
-                    :on-change #(reset! suora-syotto-sisalto (-> % .-target .-value))
-                    :on-click #(reset! auki? true)
-                    :on-focus    #(reset! auki? true)
-                    :on-key-down #(do
-                                    (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
-                                      (kiinni auki?))
-                                    (when (dom/enter-nappain? %)
-                                      (reset! auki? (not @auki?))))
-                    :on-blur     (fn []
-                                   (when (not paivamaara) (kiinni auki?)) ; jos ei ole päivämäärää määritelty, niin valintoja ei voi tehdä. droppari jää auki, kunnes koontilaskun kuukausi klikataan. tällä estetään se tilanne.
-                                   (when sumeutus-fn (sumeutus-fn))
-                                   (when (seq @suora-syotto-sisalto)
-                                     (let [pvm-sisalto (pvm/->pvm @suora-syotto-sisalto)]
-                                       (when (valittava?-fn pvm-sisalto)
-                                         (valitse (pvm/->pvm @suora-syotto-sisalto))))
-                                     (reset! suora-syotto-sisalto "")))
-                    :id elementin-id}]
+          [:div.kalenteri-kontti {:on-click  #(reset! auki? true)}
+           [:div.pvm-ikoni
+            [:input {:disabled disabled
+                     :type :text
+                     :class (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
+                     :value (cond
+                              (seq @suora-syotto-sisalto) @suora-syotto-sisalto
+                              (not (nil? paivamaara)) (pvm/pvm paivamaara)
+                              :else "")
+                     :placeholder placeholder
+                     :aria-label "päiväys"
+                     :on-change #(reset! suora-syotto-sisalto (-> % .-target .-value))
+                     :on-key-down #(do
+                                     (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
+                                       (kiinni auki?))
+                                     (when (dom/enter-nappain? %)
+                                       (reset! auki? (not @auki?))))
+                     :on-blur     (fn []
+                                    (when (not paivamaara) (kiinni auki?)) ; jos ei ole päivämäärää määritelty, niin valintoja ei voi tehdä. droppari jää auki, kunnes koontilaskun kuukausi klikataan. tällä estetään se tilanne.
+                                    (when sumeutus-fn (sumeutus-fn))
+                                    (when (seq @suora-syotto-sisalto)
+                                      (let [pvm-sisalto (pvm/->pvm @suora-syotto-sisalto)]
+                                        (when (valittava?-fn pvm-sisalto)
+                                          (valitse (pvm/->pvm @suora-syotto-sisalto))))
+                                      (reset! suora-syotto-sisalto "")))
+                     :id elementin-id}]
+            [:span.ikoni-osio
+             (ikonit/calendar)]]
            (when @auki?
              [pvm-valintakalenteri {:valitse       #(do
                                                       (kiinni auki?)

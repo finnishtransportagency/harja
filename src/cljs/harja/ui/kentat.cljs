@@ -1060,15 +1060,6 @@
 (def key-code-tab 9)
 (def key-code-enter 13)
 
-
-(defn- tee-ikoni-komponentti
-  [[tagi optiot] auki]
-  (let [{:keys [class]} optiot
-        input-optiot (dissoc optiot :class)]
-    [:span {:class (str "ikoni-input " (when auki "fokusoi ") class)}
-     [tagi input-optiot]
-     (ikonit/calendar)]))
-
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
 (defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi on-datepicker-select vayla-tyyli?]} data]
@@ -1140,36 +1131,38 @@
                                                                    kentan-tyylit (apply str kentan-tyylit)
                                                                    vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default ")
                                                                    lomake? "form-control"))
-                         :placeholder (or placeholder "pp.kk.vvvv")
-                         :value nykyinen-teksti
-                         :on-focus #(when on-focus (on-focus))
-                         :on-click #(do (.stopPropagation %)
-                                      (.preventDefault %)
-                                      (reset! auki true)
-                                      %)
-                         :on-change #(muuta! data (-> % .-target .-value))
-                         ;; Suljetaan datepicker kun painetaan tab + shift tai esc. Enterillä datepickerin saa auki/kiinni.
-                         :on-key-down #(do
-                                         (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
-                                           (teksti-paivamaaraksi! validoi data nykyinen-teksti)
-                                           (reset! auki false))
-                                         (when (dom/enter-nappain? %)
-                                           (teksti-paivamaaraksi! validoi data nykyinen-teksti)
-                                           (reset! auki (not @auki))))
-                         :on-blur #(let [arvo (.. % -target -value)
-                                         pvm (pvm/->pvm arvo)]
-                                     (when on-blur
-                                       (on-blur %))
-                                     (if (and pvm (not (validoi pvm)))
-                                       (do (muuta-data! nil)
-                                           (reset! teksti ""))
-                                       (teksti-paivamaaraksi! validoi data arvo)))
-                         :id elementin-id}]]
+                                  :placeholder (or placeholder "pp.kk.vvvv")
+                                  :value nykyinen-teksti
+                                  :on-focus #(when on-focus (on-focus))
+                                  :on-change #(muuta! data (-> % .-target .-value))
+                                  ;; Suljetaan datepicker kun painetaan tab + shift tai esc. Enterillä datepickerin saa auki/kiinni.
+                                  :on-key-down #(do
+                                                  (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
+                                                      (teksti-paivamaaraksi! validoi data nykyinen-teksti)
+                                                      (reset! auki false))
+                                                  (when (dom/enter-nappain? %)
+                                                    (teksti-paivamaaraksi! validoi data nykyinen-teksti)
+                                                    (reset! auki (not @auki))))
+                                  :on-blur #(let [arvo (.. % -target -value)
+                                                  pvm (pvm/->pvm arvo)]
+                                            (when on-blur
+                                              (on-blur %))
+                                            (if (and pvm (not (validoi pvm)))
+                                              (do (muuta-data! nil)
+                                                (reset! teksti ""))
+                                              (teksti-paivamaaraksi! validoi data arvo)))
+                                  :aria-label "päiväys"
+                                  :id elementin-id}]]
            (swap! vanha-data assoc :data nykyinen-pvm :muokattu-tassa? false)
            [:span.pvm-kentta
-            {:on-click #(do (reset! auki true) nil)
+            {:on-click #(do (.stopPropagation %)
+                          (.preventDefault %)
+                          (reset! auki true) nil)
              :style {:display "inline-block"}}
-            (tee-ikoni-komponentti input-komponentti @auki)
+            [:div.pvm-ikoni input-komponentti
+             [:span.ikoni-osio
+              (ikonit/calendar)]]
+
             (when @auki
               [pvm-valinta/pvm-valintakalenteri {:valitse #(when (validoi %)
                                                              (reset! auki false)
@@ -1309,13 +1302,17 @@
                                                              (when (dom/enter-nappain? %)
                                                                (reset! auki (not @auki))))
                                              :on-blur #(do (when on-blur (on-blur %)) (koske-pvm!) (aseta! false) %)
+                                             :aria-label "päiväys"
                                              :id elementin-id}]]
           [:span.pvm-aika-kentta
            [:div.inline-block {:on-click #(do (.stopPropagation %)
                                             (.preventDefault %)
                                             (reset! auki true)
                                             %)}
-            (tee-ikoni-komponentti input-komponentti @auki)
+            [:div.pvm-ikoni input-komponentti
+             [:span.ikoni-osio
+              (ikonit/calendar)]]
+
             (when @auki
               [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
                                                                (muuta-pvm! (pvm/pvm %))
@@ -1335,6 +1332,7 @@
                                                        (pvm/->pvm nykyinen-pvm-teksti))
                                               " puuttuva-arvo"))
                                 :placeholder "tt:mm"
+                                :aria-label "kellonaika"
                                 :size 5 :max-length 5
                                 :value nykyinen-aika-teksti
                                 :on-change #(muuta-aika! (-> % .-target .-value))
