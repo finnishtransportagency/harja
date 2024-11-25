@@ -3311,7 +3311,14 @@
       (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset]
         (tavoitehintaiset-rahavaraukset-hoitokausittain :summa vastaus))
       (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :indeksikorjatut-summat :tavoitehintaiset-rahavaraukset]
-        (tavoitehintaiset-rahavaraukset-hoitokausittain :summa-indeksikorjattu vastaus))))
+        (tavoitehintaiset-rahavaraukset-hoitokausittain :summa-indeksikorjattu vastaus))
+
+      ;; Tallenna lopuksi uusi tavoite- ja kattohinta
+      ;; NOTE: Rahavarauksien tapauksessa tavoite-ja kattohinnan tallennusta ei laiteta varsinaisen ravarausten tallennuksen
+      ;;       yhteyteen, kuten muiden osioiden kohdalla on tehty, koska muokkaus-gridistä tarvittava app tilamuutos tulee yhden askeleen jäljessä.
+      ;;       Tässä tapauksessa täytyy odottaa, että rahavarauksien tallennus onnistuu ja vasta sitten tallentaa tavoitehinta.
+      ;;       Muut osiot jotka käyttävät kustannussuunnitelman omaa gridi-ratkaisua toimivat ilmeisesti eri tavalla app-tilan suhteen.
+      (tallenna-tavoite-ja-kattohinnat)))
 
   TallennaTavoitehintainenRahavarausEpaonnistui
   (process-event [_ app]
