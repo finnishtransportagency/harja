@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.raportit.paikkausten-yhteenveto
+(ns harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu
   (:require [taoensso.timbre :as log]
             [jeesql.core :refer [defqueries]]
             [harja.pvm :as pvm]

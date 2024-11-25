@@ -53,7 +53,7 @@
   [harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat]
   [harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat]
   [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara]
-  [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto]
+  [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
@@ -430,9 +430,9 @@
    {:nimi         :paikkausten-yhteeveto
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
-    :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto/suorita
-    :kuvaus-tarkenne "Paikkausten yhteenveto"
-    :kuvaus       "Paikkaustenyhteenveto"
+    :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu/suorita
+    :kuvaus-tarkenne "Paikkausten yhteenveto MHU"
+    :kuvaus       "MHUPaikkaustenyhteenveto"
     :urakkatyyppi #{:teiden-hoito}}])
 
 (def raportit-nimen-mukaan
