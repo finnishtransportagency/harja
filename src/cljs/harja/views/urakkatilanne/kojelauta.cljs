@@ -67,7 +67,6 @@
        :input-id "urakkahaku"
        :nayta :nimi :fmt :nimi
        :hae-kun-yli-n-merkkia 0
-       :vayla-tyyli? true
        :lahde urakkahaku
        :monivalinta? true
        :tarkkaile-ulkopuolisia-muutoksia? true
