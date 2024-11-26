@@ -118,13 +118,11 @@
                                (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))]
          (when-not (empty? ryhman-elementtien-avaimet)
            [:div {:class (str "tk-checkbox-ryhma" (when luokka (str " " luokka)))}
-            [:div
-             {:class (str "tk-checkbox-ryhma-otsikko klikattava " (when (auki?) "alaraja"))
-              :on-click #(avaa-tai-sulje-ryhma)
-              :on-key-down #(when (dom/enter-nappain? %)
-                              (avaa-tai-sulje-ryhma))}
-             [:span {:class "tk-chevron-ryhma-tila chevron-rotate"
-                     :tabIndex "0"}
+            [:button
+             {:aria-label "Karttatasoyhmän kytkinpainike"
+              :class (str "tk-checkbox-ryhma-otsikko klikattava " (when (auki?) "alaraja"))
+              :on-click avaa-tai-sulje-ryhma}
+             [:span {:class "tk-chevron-ryhma-tila chevron-rotate"}
               (if (auki?)
                 (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
              [:div.tk-checkbox-ryhma-checkbox {:on-click #(.stopPropagation %)}
@@ -151,17 +149,15 @@
                          (conj ryhma-polku elementti)]))])]))))))
 
 (defn- asetuskokoelma
-  [otsikko {:keys [salli-piilotus? luokka auki-atomi? otsikon-luokka] :as optiot} sisalto]
+  [otsikko {:keys [ei-nappi? salli-piilotus? luokka auki-atomi? otsikon-luokka] :as optiot} sisalto]
   (when otsikko
     (let [auki? (or auki-atomi? (atom true))]
-      (fn [otsikko {:keys [salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
+      (fn [otsikko {:keys [ei-nappi? salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
         [:div {:class (str "tk-asetuskokoelma" (when luokka (str " " luokka)))}
-         [:div {:class "klikattava"
-                :aria-expanded (if @auki? "true" "false")
-                :tabIndex "0"
-                :on-click #(swap! auki? not)
-                :on-key-down #(when (dom/enter-nappain? %)
-                                (swap! auki? not))}
+         [(if ei-nappi? :div :button)
+          {:class (when-not ei-nappi? "klikattava")
+           :aria-expanded (when-not ei-nappi? (if @auki? "true" "false"))
+           :on-click #(when-not ei-nappi? (swap! auki? not))}
           (when salli-piilotus?
             [:div {:class "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma"}
              (if @auki?
@@ -250,7 +246,8 @@
     [asetuskokoelma
      (str "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
                                 " (max. yksi vuosi):"))
-     {:salli-piilotus? false
+     {:ei-nappi? true
+      :salli-piilotus? false
       :luokka "taustavari-taso0"}
      [:div
       (when (= :nykytilanne @tiedot/valittu-tila)
@@ -330,6 +327,7 @@
   [yleiset/haitari-paneelit
    {:auki @hallintapaneeli-auki
     :luokka "haitari-tilannekuva"
+    :aria-label "Kartan hallintapaneelin kytkinpainike"
     :toggle-osio! #(swap! hallintapaneeli-auki update % not)}
 
    "Hallintapaneeli" :hallintapaneeli [suodattimet]])
