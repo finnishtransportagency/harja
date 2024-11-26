@@ -36,7 +36,7 @@
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
   (hae-kohteet [this urakka-id kayttajatunnus])
-  (laheta-kohteet [this urakka-id kohde-idt])
+  (laheta-kohteet [this urakka-id kohde-idt user])
   (poista-kohde [this kohde-id]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
@@ -97,7 +97,7 @@
                "Virhe: " selite))
         virheet))
 
-(defn- kasittele-urakan-kohdelahetysvastaus [db sisalto otsikot kohteet]
+(defn- kasittele-urakan-kohdelahetysvastaus [db sisalto otsikot kohteet user]
   (log/debug format "YHA palautti urakan kohteiden kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
   (jdbc/with-db-transaction [db db]
     (let [vastaus (try (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)
@@ -141,7 +141,8 @@
             {:lahetetty (pvm/nyt)
              :onnistunut kohteen-lahetys-onnistunut?
              :lahetysvirhe virhe-viesti
-             :kohdeid kohde-id})))
+             :kohdeid kohde-id
+             :lahettaja (:id user)})))
       (when-not onnistunut?
         {:virhe virhe-viestit}))))
 
@@ -334,7 +335,7 @@
    lukko avataan, jotta mahdollisesti virheelliset tiedot voidaan korjata. Jos lähetys onnistuu, kohteiden
    päällystysilmoituksen lukitaan. Vuotta 2020 edeltäviä kohteita ei kaistamuutoksen jälkeen saa enää siirtää YHA:aan.
    Tämä on estetty funktiossa tarkista-lahetettavat-kohteet. Palauttaa true tai false sen mukaan onnistuiko kaikkien kohteiden lähetys."
-  [integraatioloki db {:keys [url api-key]} urakka-id kohde-idt]
+  [integraatioloki db {:keys [url api-key]} urakka-id kohde-idt user]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
   (try+
     (integraatiotapahtuma/suorita-integraatio
@@ -352,7 +353,7 @@
                                     :url url
                                     :otsikot otsikot}
                     {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
-                (kasittele-urakan-kohdelahetysvastaus db body headers [kohde]))))
+                (kasittele-urakan-kohdelahetysvastaus db body headers [kohde] user))))
         
           (let [virhe (format "Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)]
             (log/error virhe)
@@ -367,7 +368,8 @@
                                {:lahetetty (pvm/nyt)
                                 :onnistunut false
                                 :lahetysvirhe (pr-str (.getMessage e))
-                                :kohdeid kohde-id})))})
+                                :kohdeid kohde-id
+                                :lahettaja (:id user)})))})
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))
 
@@ -392,7 +394,7 @@
                                     :url url
                                     :otsikot otsikot}
                     {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
-                (kasittele-urakan-kohdelahetysvastaus db body headers [kohde]))))
+                (kasittele-urakan-kohdelahetysvastaus db body headers [kohde] nil))))
 
           (let [virhe (format "Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)]
             (log/error virhe)
@@ -407,7 +409,8 @@
                                {:lahetetty (pvm/nyt)
                                 :onnistunut false
                                 :lahetysvirhe (pr-str (.getMessage e))
-                                :kohdeid kohde-id})))})
+                                :kohdeid kohde-id
+                                :lahettaja nil})))})
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))
 
@@ -434,10 +437,10 @@
     (hae-urakat-yhasta (:integraatioloki this) (:db this) asetukset yha-nimi sampotunniste vuosi))
   (hae-kohteet [this urakka-id kayttajatunnus]
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) asetukset urakka-id kayttajatunnus))
-  (laheta-kohteet [this urakka-id kohde-idt]
+  (laheta-kohteet [this urakka-id kohde-idt user]
     (if (ominaisuus-kaytossa? :yha-pot2-lahetys) ;;TODO: Tästä tulee poistaa vanha-laheta-kohteet-yhaan, kun uusi versio on testattu
-      (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt)
-      (vanha-laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt)))
+       (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt user)
+       (vanha-laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt)))
   (poista-kohde [this yha-kohde-id]
     (poista-kohde-yhasta (:integraatioloki this) (:db this) asetukset yha-kohde-id)))
 
