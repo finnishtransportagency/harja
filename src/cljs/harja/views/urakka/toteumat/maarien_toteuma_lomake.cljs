@@ -15,8 +15,6 @@
             [harja.ui.modal :as modal]
             [harja.pvm :as pvm]))
 
-(def nayta-validoinnit? (atom false))
-
 (defn- laheta! [e! data]
   (e! (tiedot/->LahetaLomake data)))
 
@@ -72,7 +70,7 @@
 
 (defn- kentassa-virhe? [polku validius]
  (if validius
-    (and @nayta-validoinnit? (not (get-in validius [polku :validi?])))
+    (and @tiedot/nayta-validoinnit? (not (get-in validius [polku :validi?])))
     false))
 
 (defn- maaramitattavat-toteumat
@@ -212,7 +210,7 @@
   "Näytä lomakkeen validoinnit, kun käyttäjä painaa Tallenna- nappia."
   [e! lomakedata]
   (e! (tiedot/->PaivitaLomake lomakedata :tallenna 0))
-  (reset! nayta-validoinnit? true))
+  (reset! tiedot/nayta-validoinnit? true))
 
 (defn maarien-toteuman-syottolomake*
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
@@ -290,7 +288,7 @@
                                 toteumat))]
     [:div#vayla
      #_[debug/debug app]
-     [debug/debug lomake]
+     #_ [debug/debug lomake]
      #_ [debug/debug validius]
      [:div.flex-row {:style {:padding-left  "15px"
                              :padding-right "15px"}}
@@ -332,14 +330,14 @@
                          {:vayla-tyyli? true :teksti-nappi? true}])]])
        :footer-fn (fn [data]
                     [:div
-                     (when (and @nayta-validoinnit?
+                     (when (and @tiedot/nayta-validoinnit?
                              (or (not lomake-validi?)
                                (not sijainnit-valideja?))) [:div {:style {:padding-bottom "2rem"}}
                                                             [yleiset/info-laatikko :varoitus
                                                              (str "Tallennus epäonnistui. " (if-not lomake-validi?
                                                                                               "Pakollisia tietoja puuttuu."
                                                                                               "Sijainti virheellinen."))
-                                                             nil "450px" {:sulje-fn #(reset! nayta-validoinnit? false)
+                                                             nil "450px" {:sulje-fn #(reset! tiedot/nayta-validoinnit? false)
                                                                           :sulje-nappi-id (gensym)}]])
                      [:div.flex-row.alkuun
                       [napit/tallenna

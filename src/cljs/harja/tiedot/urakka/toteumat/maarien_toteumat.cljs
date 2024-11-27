@@ -14,6 +14,8 @@
             [namespacefy.core :as namespacefy]
             [clojure.string :as str]))
 
+(def nayta-validoinnit? (atom false))
+
 (declare hae-toteutuneet-maarat)
 (declare hae-tehtavat)
 (defrecord HaeToimenpiteenTehtavaYhteenveto [rivi])

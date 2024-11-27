@@ -45,6 +45,7 @@
        :on-click (fn [event]
                    (do
                      (.preventDefault event)
+                     (reset! maarien-toteumat/nayta-validoinnit? false)
                      (e! (maarien-toteumat/->MuokkaaToteumaa toteuma-id))))}
    (if db-aika
      (pvm/pvm db-aika)
@@ -65,6 +66,7 @@
          :on-click (fn [event]
                      (do
                        (.preventDefault event)
+                       (reset! maarien-toteumat/nayta-validoinnit? false)
                        (e! (maarien-toteumat/->ToteumanSyotto true tehtava toimenpide))))}
      (str "+ Lisää toteuma")]))
 
@@ -239,7 +241,7 @@
         filtterit (:hakufiltteri app)]
     [:div.maarien-toteumat
 
-     [debug/debug app]
+     #_ [debug/debug app]
      [:div
       [yleiset/info-laatikko :vahva-ilmoitus "Ohje: tehtävämäärien, materiaalien ja rahavarausten kirjaaminen"
        (gstring/unescapeEntities "&ensp;&#x2022;&ensp; Kirjaa tällä välilehdellä vain sellaisten tehtävien toteumat, jotka eivät ole materiaaleja (liikennemerkkien kappale- ja neliömäärät, rumpujen metrit jne.) \t
