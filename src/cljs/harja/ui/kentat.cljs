@@ -30,6 +30,7 @@
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [harja.ui.yleiset :as y]
             [harja.domain.tierekisteri :as trd]
+            [harja.domain.tierekisteri :as tr-domain]
             [harja.views.kartta.tasot :as karttatasot]
             [harja.tyokalut.big :as big])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
@@ -1717,7 +1718,7 @@
                                    (log "Saatiin tr-osoite! " (pr-str %))
                                    (go (>! tr-osoite-ch %)))}]))
 
-              (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
+              (when-let [sijainti (and (tr-domain/validi-osoite? @sijainti) hae-sijainti sijainti @sijainti)]
                 (when (vkm/virhe? sijainti)
                   [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))
               piste?

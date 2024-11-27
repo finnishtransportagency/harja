@@ -96,14 +96,15 @@
    [::t/tyyppi] (validoinnit ::t/tyyppi)])
 
 (defn toteuma-lomakkeen-validoinnit [{toteumat ::t/toteumat :as lomake}]
-  (apply tila/luo-validius-tarkistukset
-         (concat toteuma-lomakkeen-oletus-validoinnit
-                 (mapcat (fn [i]
-                           [[::t/toteumat i ::t/maara] (validoinnit ::t/maara lomake i)
-                            [::t/toteumat i ::t/tehtava] (validoinnit ::t/tehtava lomake i)
-                            [::t/toteumat i ::t/sijainti] (validoinnit ::t/sijainti lomake i)
-                            [::t/toteumat i ::t/lisatieto] (validoinnit ::t/lisatieto lomake)])
-                         (range (count toteumat))))))
+  (let [val (apply tila/luo-validius-tarkistukset
+              (concat toteuma-lomakkeen-oletus-validoinnit
+                (mapcat (fn [i]
+                          [[::t/toteumat i ::t/maara] (validoinnit ::t/maara lomake i)
+                           [::t/toteumat i ::t/tehtava] (validoinnit ::t/tehtava lomake i)
+                           [::t/toteumat i ::t/sijainti] (validoinnit ::t/sijainti lomake i)
+                           [::t/toteumat i ::t/lisatieto] (validoinnit ::t/lisatieto lomake)])
+                  (range (count toteumat)))))]
+    val))
 
 (defn- hae-tehtavat-tyypille
   ([toimenpide]
@@ -390,7 +391,7 @@
 
                 ;; Default
                 app)
-          ;Valitoidaan lomake
+          ;; Validoidaan lomake
           {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)
           app (-> app
@@ -588,8 +589,8 @@
                   ;; Aseta valittu toimenpide
                   (and
                     (not (nil? toimenpide))
-                    (not= {:otsikko "Kaikki" :id 0} toimenpide)) (assoc-in [:lomake ::t/toimenpide] toimenpide)
-                  (= {:otsikko "Kaikki" :id 0} toimenpide) (assoc-in [:lomake ::t/toimenpide] nil)
+                    (not= "Kaikki" (:otsikko toimenpide))) (assoc-in [:lomake ::t/toimenpide] toimenpide)
+                  (= "Kaikki" (:otsikko toimenpide)) (assoc-in [:lomake ::t/toimenpide] nil)
                   ;; Laita default arvot lomakkeelle
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-id] nil)
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-tehtava-id] nil)

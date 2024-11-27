@@ -61,6 +61,7 @@
                              t))
                          (get-in app [:toimenpiteet]))]
     [:a {:href "#"
+         :aria-label "Lisää uusi toteuma"
          :on-click (fn [event]
                      (do
                        (.preventDefault event)
