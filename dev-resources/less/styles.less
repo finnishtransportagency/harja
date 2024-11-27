@@ -401,10 +401,17 @@ tr.uusitehtavakoodi td {
     }
   }
   > .infolaatikon-ikoni {
-    font-size: 18px;
+    font-size: 22px;
     margin-bottom: auto;
     margin-top: auto;
-    padding-right: 8px;
+    padding-right: 12px;
+    padding-left: 8px;
+  }
+  > .infolaatikon-sulje-ikoni {
+    min-height: 40px;
+    margin-bottom: auto;
+    margin-top: auto;
+    font-size: 1.5rem;
   }
   padding-left: 16px;
   padding-right: 16px;
@@ -512,9 +519,16 @@ tr.uusitehtavakoodi td {
   margin-bottom: 20px;
 }
 .virheviesti-sailio {
-  background-color: @vaara;
+ /* background-color: @vaara;
   color: @white-default;
-  padding: 5px;
+  padding: 5px;*/
+  cursor: pointer;
+  min-height: 40px;
+
+  .livicon-delete {
+    transform: translateY(-50%);
+    height: fit-content;
+  }
 }
 .onnistunut-sailio {
   background-color: @vihrea4;
