@@ -120,19 +120,23 @@
 }
 
 .tk-checkbox-ryhma-otsikko {
+  border: none;
   height: 26px;
+  width: 100%;
+  text-align: left;
+  vertical-align: center;
   white-space: nowrap; // Pakota otsikko viemään mahdollisimman paljon leveystilaa, älä rivitä
-  //background-color: @harmaa15;
+  &:hover, &:focus {
+    background-color: @harmaa10;
+  }
 }
 
 .tk-chevron-ryhma-tila {
   cursor: pointer;
   display: inline-block;
-  margin-left: 5px;
-  margin-right: 5px;
-  vertical-align: top;
+  margin: @valistys-4 5px 0 0;
   position: relative;
-  top: 8px;
+
 }
 
 .chevron-tk-asetuskokoelma {
@@ -141,9 +145,6 @@
 
 .tk-checkbox-ryhma-checkbox {
   display: inline-block;
-  vertical-align: top;
-  position: relative;
-  top: 4px;
 }
 
 .tk-checkbox-ryhma-kiinni {
@@ -156,8 +157,17 @@
 
 // Luokka elementille, jossa on otsikko ja useita suodatinryhmiä
 .tk-asetuskokoelma {
-  padding: 5px 0 0 0;
+  padding: 0;
   position: relative;
+  > button {
+    background-color: transparent;
+    border: none;
+    text-align: left;
+    width: 100%;
+    &:hover, &:focus {
+      background-color: @harmaa10;
+    }
+  }
 }
 
 .tk-yksittaiset-suodattimet {
