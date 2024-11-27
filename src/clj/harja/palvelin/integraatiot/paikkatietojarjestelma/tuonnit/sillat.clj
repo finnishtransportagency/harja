@@ -210,9 +210,6 @@
                 (doseq [silta batch]
                   (vie-silta-entry db silta))))
 
-            ;; Garbage collection, vaikka for pitäisi olla lazy, vapauta vielä muistia jokaisessa batchissa
-            (System/gc)
-
             (catch PSQLException e
               (log/error "Siltojen tuonnissa kantaan tapahtui virhe: " e)
               (throw e))
