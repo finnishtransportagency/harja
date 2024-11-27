@@ -339,7 +339,8 @@
                                                              (str "Tallennus epäonnistui. " (if-not lomake-validi?
                                                                                               "Pakollisia tietoja puuttuu."
                                                                                               "Sijainti virheellinen."))
-                                                             nil "450px" {:sulje-nappi-id (gensym)}]])
+                                                             nil "450px" {:sulje-fn #(reset! nayta-validoinnit? false)
+                                                                          :sulje-nappi-id (gensym)}]])
                      [:div.flex-row.alkuun
                       [napit/tallenna
                        "Tallenna"
@@ -347,10 +348,7 @@
                           (nayta-lomake-validoinnit e! data)
                           (when (and lomake-validi? sijainnit-valideja?) (laheta-lomake! data)))
                        {:vayla-tyyli? true
-                        :luokka "suuri"
-                        #_#_:disabled (or
-                                        (not lomake-validi?)
-                                        (not sijainnit-valideja?))}]
+                        :luokka "suuri"}]
                       [napit/peruuta
                        "Peruuta"
                        #(tyhjenna-lomake! data)
