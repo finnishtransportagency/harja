@@ -1,16 +1,31 @@
-(ns harja.palvelin.palvelut.yllapitokohteet.mpu-kustannukset
+(ns harja.palvelin.palvelut.yllapitokohteet.kustannukset-palvelu
   "MPU Kustannukset näkymän palvelut"
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.domain.oikeudet :as oikeudet]
             [clojure.string :as str]
-            [harja.kyselyt.mpu-kustannukset :as q]))
+            [harja.kyselyt.kustannukset-kyselyt :as q]
+            [harja.pvm :as pvm]))
 
 
 (defn hae-paikkaus-kustannukset [db kayttaja {:keys [urakka-id aikavali vuosi] :as _tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
-  (let [parametrit {:alkuaika (when
+  (let [urakan-tiedot (first (urakka-kyselyt/hae-urakka db {:id urakka-id}))
+        alkupvm (:alkupvm urakan-tiedot)
+        loppupvm (:loppupvm urakan-tiedot)
+        ;; Haetaan urakan kokonaiskustannukset
+        kokonaisparametrit {:alkuaika alkupvm
+                            :loppuaika loppupvm
+                            :alkuvuosi (pvm/vuosi alkupvm)
+                            :loppuvuosi (pvm/vuosi loppupvm) ;; Päällystysurakat päättyy 31.12. joten ei tarvitse vähentää 1 vuotta
+                            :vuosi nil
+                            :urakka-id urakka-id}
+
+        kokonaiskustannus-vastaus (q/hae-paikkaus-kustannukset db kokonaisparametrit)
+        yht (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) kokonaiskustannus-vastaus))
+        parametrit {:alkuaika (when
                                 (and
                                   (some? aikavali)
                                   (first aikavali))
@@ -21,9 +36,12 @@
                                    (second aikavali))
                                  (konversio/sql-date (second aikavali)))
                     :vuosi vuosi
+                    :alkuvuosi nil
+                    :loppuvuosi nil
                     :urakka-id urakka-id}
         vastaus (q/hae-paikkaus-kustannukset db parametrit)]
-    vastaus))
+    {:kustannukset vastaus
+     :urakka-ajan-kustannukset-yhteensa yht}))
 
 
 (defn tallenna-mpu-kustannus
@@ -44,7 +62,7 @@
   (q/hae-mpu-selitteet db tiedot))
 
 
-(defrecord MPUKustannukset []
+(defrecord Kustannukset []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
     ;; Haut
