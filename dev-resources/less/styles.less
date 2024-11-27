@@ -47,10 +47,6 @@
   }
 }
 
-#sivut {
-  margin-top: 5px;
-  padding-top: 0;
-}
 
 div.valilehti {
   padding: 3px @valilehti-sivu-padding 10px @valilehti-sivu-padding;
@@ -108,6 +104,29 @@ div.valilehti {
   padding: 3px 6px;
 }
 
+// Sivuston headeriin liittyviä tyylejä ---
+
+.harja-ylin-header {
+  // Ylikirjoitetaan default bootstrap navbar-nav tyyli, jota käytetään Harjan headerissa
+  .navbar-nav > li > a {
+    color: @sininen4;
+
+    &:hover {
+      color: @sininen1;
+      text-decoration: underline;
+    }
+
+    &:visited {
+      color: @sininen4;
+    }
+  }
+}
+
+#sivut {
+  margin-top: 5px;
+  padding-top: 0;
+}
+
 #harja-brand-icon {
   position: relative;
   top: 9px;
@@ -129,6 +148,7 @@ div.valilehti {
 .selected {
   color: blue;
 }
+// ---
 
 .korostettu {
   background-color: wheat;

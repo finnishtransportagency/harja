@@ -73,7 +73,7 @@
     [komponentti data]))
 
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
-                                     kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli? monivalinta? salli-kirjoitus?
+                                     kun-muuttuu hae-kun-yli-n-merkkia monivalinta? salli-kirjoitus?
                                      tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?
                                      hakuikoni? input-id]} data]
   (when monivalinta?
@@ -110,10 +110,11 @@
 
         [:div.hakukentta.dropdown {:class (when (some? @tulokset) "open")}
 
-         [:input {:class (cond-> nil
-                           lomake? (str "form-control ")
-                           vayla-tyyli? (str "input-default komponentin-input ")
-                           disabled? (str "disabled"))
+         [:input {:class (y/luokat
+                           (if lomake?
+                             (str "form-control")
+                             (str "input-default komponentin-input"))
+                           (when disabled? "disabled"))
                   :value @teksti
                   :id input-id
                   :placeholder placeholder
@@ -652,7 +653,7 @@
   (assert data)
   (let [palstoja (or palstoja 1)
         vaihtoehto-nayta (or vaihtoehto-nayta
-                             #(clojure.string/capitalize (name %)))
+                             #(str/capitalize (name %)))
         data-nyt @data
         valitut (if valittu-fn
                   (partial valittu-fn @data)
@@ -802,7 +803,7 @@
                                             kaari-flex-row? vaihtoehto-opts space-valissa?]}
                                     data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
-                             #(clojure.string/capitalize (name %)))
+                             #(str/capitalize (name %)))
         valittu (or @data nil)]
     ;; Jos oletusarvo on annettu, se sisältyy vaihtoehtoihin, ja mitään ei ole valittu,
     ;; valitaan oletusarvo
@@ -817,9 +818,10 @@
                                  :let [vaihtoehdon-arvo (if vaihtoehto-arvo
                                                           (vaihtoehto-arvo vaihtoehto)
                                                           vaihtoehto)
-                                       opts (get vaihtoehto-opts vaihtoehto)]]
+                                       opts (get vaihtoehto-opts vaihtoehto)
+                                       elementin-id (str "radio-group-" (hash (vaihtoehto-nayta vaihtoehto)))]]
                              (if vayla-tyyli?
-                               ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
+                               ^{:key elementin-id}
                                [vayla-radio {:teksti (vaihtoehto-nayta vaihtoehto)
                                              :muutos-fn #(let [valittu? (-> % .-target .-checked)]
                                                            (do
@@ -829,20 +831,20 @@
                                                                (reset! data vaihtoehdon-arvo))))
                                              :disabloitu? disabloitu?
                                              :valittu? (or (and (nil? valittu) (= vaihtoehto oletusarvo))
-                                                           (= valittu vaihtoehdon-arvo))
+                                                         (= valittu vaihtoehdon-arvo))
                                              :ryhma group-id
-                                             :id (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))
+                                             :id (gensym elementin-id)
                                              :opts opts
                                              :kaari-flex-row? kaari-flex-row?
                                              :radio-luokka radio-luokka}]
-                               ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
+                               ^{:key elementin-id}
                                [:div {:class (y/luokat "radio" radio-luokka)}
                                 [:label
                                  [:input {:type "radio"
                                           ;; Samoin asetetaan checkbox valituksi luontivaiheessa,
                                           ;; jos parametri annettu
                                           :checked (or (and (nil? valittu) (= vaihtoehto oletusarvo))
-                                                       (= valittu vaihtoehto))
+                                                     (= valittu vaihtoehto))
                                           :on-change #(let [valittu? (-> % .-target .-checked)]
                                                         (when valittu?
                                                           (reset! data vaihtoehdon-arvo)))}]

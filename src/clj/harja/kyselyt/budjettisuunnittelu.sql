@@ -216,7 +216,7 @@ with muuttuneet as (
                and indeksikorjaus_vahvistettu is null
                -- Tilaajan rahavarauksille ei lasketa indeksikorjauksia
                and not (
-                     -- Johto- ja hallintokorvaus (J)
+                     -- J - Johto- ja hallintokorvaus
                      tr.yksiloiva_tunniste is not null and tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'
                      -- MHU ja HJU Hoidon johto
                      and tpi.toimenpide = (select id from toimenpide where koodi = '23151'))

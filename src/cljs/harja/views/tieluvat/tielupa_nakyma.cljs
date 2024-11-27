@@ -128,8 +128,7 @@
                                              :kentta-params {:tyyppi :haku
                                                              :nayta ::tielupa/hakija-nimi
                                                              :hae-kun-yli-n-merkkia 2
-                                                             :lahde tiedot/hakijahaku
-                                                             :vayla-tyyli? true}
+                                                             :lahde tiedot/hakijahaku}
                                              :luokka ""
                                              :arvo-atom hakija-atomi}]]]
           [:div.row
