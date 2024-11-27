@@ -149,15 +149,16 @@
                          (conj ryhma-polku elementti)]))])]))))))
 
 (defn- asetuskokoelma
-  [otsikko {:keys [ei-nappi? salli-piilotus? luokka auki-atomi? otsikon-luokka] :as optiot} sisalto]
+  "Tekee asetuskokoelman. Default-variaatiossa otsikkokin on nappi, jonka voi muuttaa optiolla."
+  [otsikko {:keys [otsikko-on-nappi? salli-piilotus? luokka auki-atomi? otsikon-luokka] :as optiot} sisalto]
   (when otsikko
     (let [auki? (or auki-atomi? (atom true))]
-      (fn [otsikko {:keys [ei-nappi? salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
+      (fn [otsikko {:keys [otsikko-on-nappi? salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
         [:div {:class (str "tk-asetuskokoelma" (when luokka (str " " luokka)))}
-         [(if ei-nappi? :div :button)
-          {:class (when-not ei-nappi? "klikattava")
-           :aria-expanded (when-not ei-nappi? (if @auki? "true" "false"))
-           :on-click #(when-not ei-nappi? (swap! auki? not))}
+         [(if (false? otsikko-on-nappi?) :div :button)
+          {:class (if-not (false? otsikko-on-nappi?) "klikattava")
+           :aria-expanded (if-not (false? otsikko-on-nappi?) (if @auki? "true" "false"))
+           :on-click #(if-not (false? otsikko-on-nappi?) (swap! auki? not))}
           (when salli-piilotus?
             [:div {:class "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma"}
              (if @auki?
@@ -246,7 +247,7 @@
     [asetuskokoelma
      (str "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
                                 " (max. yksi vuosi):"))
-     {:ei-nappi? true
+     {:otsikko-on-nappi? false
       :salli-piilotus? false
       :luokka "taustavari-taso0"}
      [:div
