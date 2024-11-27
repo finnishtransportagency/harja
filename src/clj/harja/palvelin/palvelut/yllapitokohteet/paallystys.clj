@@ -383,7 +383,7 @@
   "Kasaa POT2-ilmoituksen tarvitsemaan muotoon alustakerroksen rivit"
   [db paallystysilmoitus]
   (into []
-        (q/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})))
+        (q/hae-pot2-alustarivit-ilmoitukseen db {:pot2_id (:id paallystysilmoitus)})))
 
 (defn- pot2-paallystekerros-ja-alusta
   "Hakee pot2-spesifiset tiedot lomakkeelle, kuten päällystekerros ja alusta"
@@ -790,7 +790,7 @@
 (defn- tallenna-pot2-alustarivit
   [db paallystysilmoitus pot2-id]
   (let [alustarivit (:alusta paallystysilmoitus)
-        idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit db {:pot2_id pot2-id})))
+        idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit-ilmoitukseen db {:pot2_id pot2-id})))
         hyotykuorman-idt (into #{} (map :pot2a_id alustarivit))
         poistuneet-idt (set/difference idt-ennen-tallennusta hyotykuorman-idt)]
 

@@ -1,19 +1,15 @@
 (ns harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu
   (:require [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
-            [cheshire.core :as cheshire]
-            [harja.tyokalut.yleiset :as yleiset-tyokalut]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
-            [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
             [taoensso.timbre :as log]
             [clj-time.coerce :as c]
-            [harja.pvm :as pvm]
-            [harja.tyokalut.big :as big]))
+            [harja.pvm :as pvm]))
 
 (defn tierekisteri-muokattu? [uusi-rajoitusalue vanha-rajoitusalue]
   (if (and
@@ -25,7 +21,7 @@
     false
     true))
 
-(defn tr-osoitteen-validointi
+(defn tieosoitteen-validointi
   "Validoi tr-osoitteen lähinnä tien ja osan pituuden suhteen. Tie pitää löytyä. Ja osan pituus pitää täsmätä.
   Tierekisteriosoitteessa saa kuitenkin olla katkoja, koska tierekisterit muuttuvat mm. kun jokin liittymä poistetaan
   tieltä. Näin ollen tierekisteristä voi osasat 8 hypätä suoraan osaan 10. Näissä tilanteissa ei luoda virhettä,
@@ -91,7 +87,8 @@
 
 (defn tierekisterin-tiedot [db {:keys [urakka-id hoitokauden-alkuvuosi] :as suolarajoitus}]
   (log/debug "tierekisterin-tiedot :: suolarajoitus" suolarajoitus)
-  (let [validaatiot (tr-osoitteen-validointi db suolarajoitus)]
+  (let [validaatiot (tieverkko-kyselyt/tieosoitteen-validointi db
+                      (:tie suolarajoitus) (:aosa suolarajoitus) (:aet suolarajoitus) (:losa suolarajoitus) (:let suolarajoitus))]
     (if (:validaatiovirheet validaatiot)
       ; Jos virheitä, palauta virheet
       (do
@@ -127,7 +124,7 @@
             ajoratojen-pituudet (tieverkko-kyselyt/hae-ajoratojen-pituudet db {:tie (:tie suolarajoitus)
                                                                                :aosa (:aosa suolarajoitus)
                                                                                :losa (:losa suolarajoitus)})
-            yhdistetyt-ajoradat (mapv (fn [[osa data]]
+            yhdistetyt-ajoradat (mapv (fn [[osa _]]
                                         (let [ajoratatiedot {:osa osa ;; Osa talteen
                                                              :pituus (or (some #(when (and (= (:ajorata %) 0) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) 0) ;; Ensimmäisen ajoradan pituus talteen
                                                              :ajoratojen-pituus (some #(when (and (= (:ajorata %) 1) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) ;; Oletetaan, että kaikki loput ajoradat ovat saman mittaisia
@@ -246,7 +243,7 @@
                          _ (suolarajoitus-kyselyt/paivita-suolarajoitus! db rajoitus)]))
                  (doseq [vuosi urakan-hoitovuodet]
                    (let [rajoitus (assoc db-rajoitus :hoitokauden-alkuvuosi vuosi)
-                         r (suolarajoitus-kyselyt/tallenna-suolarajoitus<! db (dissoc rajoitus :id))])))
+                         _ (suolarajoitus-kyselyt/tallenna-suolarajoitus<! db (dissoc rajoitus :id))])))
              suolarajoitus (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
                                                                                :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi suolarajoitus)}))
 
@@ -269,8 +266,8 @@
                                                                                     {:poista-tulevat "true"})))
          ;; Jos suolarajoituksia ei jää rajoitusalue_rajoitus tauluun, niin poistetaan myös alkuperäinen rajoitusalue
          suolarajoitukset (suolarajoitus-kyselyt/hae-suolarajoitukset-rajoitusalueelle db {:rajoitusalue_id rajoitusalue_id})
-         poistetut-rajoitusalueet (when (empty? suolarajoitukset)
-                                    (suolarajoitus-kyselyt/poista-suolarajoitusalue<! db {:id rajoitusalue_id}))]
+         _ (when (empty? suolarajoitukset)
+             (suolarajoitus-kyselyt/poista-suolarajoitusalue<! db {:id rajoitusalue_id}))]
      (if (nil? poistetut-rajoitukset)
        (transit-vastaus 400 {:virhe "Suolarajoituksen poistaminen epäonnistui"})
        "OK"))))
@@ -313,7 +310,7 @@
     {:talvisuolan-sanktiot (or talvisuolan-sanktiot {})}))
 
 (defn hae-talvisuolan-kayttorajat
-  [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
+  [db user {:keys [urakka-id ] :as tiedot}]
 
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-kyselyt/hae-urakan-tyyppi db urakka-id))))
         vastaus (case urakkatyyppi
@@ -408,7 +405,7 @@
 
 
 (defn tallenna-talvisuolan-kayttoraja
-  [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as kayttoraja}]
+  [db user {:keys [urakka-id] :as kayttoraja}]
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-kyselyt/hae-urakan-tyyppi db urakka-id))))]
     (case urakkatyyppi
       :teiden-hoito
@@ -448,7 +445,7 @@
                                                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
      vastaus)))
 
-(defn hae-suolatoteumat-rajoitusalueittain [db user {:keys [hoitokauden-alkuvuosi alkupvm loppupvm urakka-id] :as tiedot}]
+(defn hae-suolatoteumat-rajoitusalueittain [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (log/debug "hae-suolatoteumat-rajoitusalueittain :: tiedot" (pr-str tiedot))
   (suolarajoitus-kyselyt/hae-suolatoteumat-rajoitusalueittain db tiedot))
@@ -487,7 +484,7 @@
                            :loppupvm loppupaiva})]
     paivan-toteumat))
 
-(defn hae-pohjavesialueidenurakat [db user tiedot]
+(defn hae-pohjavesialueidenurakat [db user]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-pohjavesialueidensiirto user)
   (log/debug "hae-pohjavesialueidenurakat :: urakat" hae-pohjavesialueidenurakat)
   (let [urakat (suolarajoitus-kyselyt/hae-pohjavesialueidenurakat db)]
@@ -496,12 +493,7 @@
 (defn hae-urakan-siirrettavat-pohjavesialueet [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user (:urakkaid tiedot))
   (log/debug "hae-urakan-siirrettavat-pohjavesialueet :: tiedot" tiedot)
-  (let [;; Haetaan urakan tiedot ja tarvittaessa luodaan pohjavesialue_talvisuola riveistä jokaiselle vuodelle oma instanssi
-        urakkatiedot (first (urakat-kyselyt/hae-urakka db {:id (:urakkaid tiedot)}))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakkatiedot))
-        urakan-loppuvuosi (pvm/vuosi (:loppupvm urakkatiedot))
-        urakan-vuodet (range urakan-alkuvuosi urakan-loppuvuosi)
-        alueet (suolarajoitus-kyselyt/hae-urakan-siirrettavat-pohjavesialueet db {:urakkaid (:urakkaid tiedot)})
+  (let [alueet (suolarajoitus-kyselyt/hae-urakan-siirrettavat-pohjavesialueet db {:urakkaid (:urakkaid tiedot)})
         ;; Lisää pituudet alueille
         alueet (map (fn [alue]
                       (let [tierekisterin-tiedot (tierekisterin-tiedot db alue)]
@@ -515,8 +507,6 @@
   (log/debug "siirra-urakan-pohjavesialueet :: tiedot" tiedot)
 
   (let [urakkaid (:urakkaid tiedot)
-        urakkatiedot (first (urakat-kyselyt/hae-urakka db {:id urakkaid}))
-        urakan-loppuvuosi (pvm/vuosi (:loppupvm urakkatiedot))
         urakan-pohjavesialueet (:pohjavesialueet tiedot)
         _ (doseq [pohjavesialue urakan-pohjavesialueet]
             (let [pohjavesialueen-vuosi (:hoitokauden-alkuvuosi pohjavesialue)

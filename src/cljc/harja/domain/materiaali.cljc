@@ -5,7 +5,6 @@
   [materiaali-nimi]
   (case materiaali-nimi
     "Talvisuola, rakeinen NaCl" 1
-    "Talvisuola NaCl, rakeinen" 1.1
     "Talvisuolaliuos CaCl2" 2
     "Talvisuolaliuos NaCl" 3
     "Hiekoitushiekan suola" 4
