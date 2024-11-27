@@ -40,6 +40,7 @@ checkbox-tila->luokka {:valittu "harja-checkbox-valittu"
                          (reset! tila-atom uusi-tila)
                          (when on-change
                            (on-change uusi-tila))
+                         (.preventDefault event)
                          (.stopPropagation event)))]
      [:div.harja-checkbox
       [:div.harja-checkbox-sisalto {:style {:width (or width "100%")}
