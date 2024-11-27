@@ -160,7 +160,7 @@
     :tehtavat-hallinta
     :tarjoushinnat-hallinta
     :reikapaikkaukset
-    :mpu-kustannukset
+    :kustannukset
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
@@ -243,7 +243,7 @@
     :tehtavat-hallinta
     :tarjoushinnat-hallinta
     :reikapaikkaukset
-    :mpu-kustannukset
+    :kustannukset
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
     :api-talvihoitoreitit

@@ -7,7 +7,7 @@
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
             [harja.views.urakka.toteutus :as toteutus]
-            [harja.views.urakka.yllapitokohteet.mpu-kustannukset :as mpu-kustannukset]
+            [harja.views.urakka.yllapitokohteet.kustannukset-nakyma :as kustannukset-nakyma]
             [harja.views.urakka.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
             [harja.views.urakka.tyomaapaivakirja.paivakirja :as paivakirja]
             [harja.views.urakka.laskutus :as laskutus]
@@ -133,10 +133,10 @@
                        (= tyyppi :paallystys)
                        (= :mpu sopimustyyppi))
     
-    :mpu-kustannukset (and
-                        (oikeudet/urakat-paikkaukset id)
-                        (= tyyppi :paallystys)
-                        (= :mpu sopimustyyppi))
+    :kustannukset (and
+                    (oikeudet/urakat-paikkaukset id)
+                    (= tyyppi :paallystys)
+                    (or (= :mpu sopimustyyppi) (= :kokonaisurakka sopimustyyppi)))
     false))
 
 (defn urakka
@@ -156,6 +156,7 @@
                           ;; skipataan töiden haku
                           ;; TODO: Näitä on varmasti noin miljoona muutakin, joten tee tästä funkkari/setti, johon näitä voi määritellä
                           (when-not (or (= :paikkaukset-yllapito (nav/valittu-valilehti :urakat))
+                                      (= :kustannukset (nav/valittu-valilehti :urakat))
                                       (= :lupaukset (nav/valittu-valilehti :valitavoitteet))
                                       (= :kustannusten-seuranta (nav/valittu-valilehti :laskutus))
                                       (= :suola (nav/valittu-valilehti :suunnittelu))
@@ -257,10 +258,10 @@
          [reikapaikkaukset/reikapaikkaukset ur])
 
        "Kustannukset"
-       :mpu-kustannukset
-       (when (valilehti-mahdollinen? :mpu-kustannukset ur)
-         ^{:key "mpu-kustannukset"}
-         [mpu-kustannukset/mpu-kustannukset])
+       :kustannukset
+       (when (valilehti-mahdollinen? :kustannukset ur)
+         ^{:key "kustannukset"}
+         [kustannukset-nakyma/kustannukset])
 
        "Laadunseuranta"
        :laadunseuranta

@@ -8,7 +8,7 @@ SELECT id,
 FROM (
     -- Muut paikkaukset
     SELECT   
-        pt.id                                   AS id,
+        concat('paikkauskohde-',pt.id)          AS id,
         NULL::mpu_kustannustyyppi_enum          AS kustannustyyppi,
         COALESCE(SUM(pk."toteutunut-hinta"), 0) AS kokonaiskustannus,
         pt.nimi                                 AS tyomenetelma,
@@ -27,12 +27,12 @@ FROM (
     UNION ALL
 
     -- Reikäpaikkaukset
-    SELECT   
-        pt.id                           AS id,
-        NULL::mpu_kustannustyyppi_enum  AS kustannustyyppi,
-        COALESCE(SUM(p.kustannus), 0)   AS kokonaiskustannus,
-        pt.nimi                         AS tyomenetelma,
-        ''                              AS selite
+    SELECT
+        concat('paikkauskohde-tyomenetelma-',pt.id) AS id,
+        NULL::mpu_kustannustyyppi_enum              AS kustannustyyppi,
+        COALESCE(SUM(p.kustannus), 0)               AS kokonaiskustannus,
+        pt.nimi                                     AS tyomenetelma,
+        ''                                          AS selite
     FROM     
         paikkauskohde_tyomenetelma pt
     LEFT JOIN 
@@ -45,17 +45,21 @@ FROM (
     UNION ALL
     
     -- MPU kustannukset 
-    SELECT id, 
+    SELECT concat('paikkauskohde-tyomenetelma-',id) AS id,
 		   kustannustyyppi,
-		   SUM(summa)       AS kokonaiskustannus,
-		   ''               AS tyomenetelma,
+		   SUM(summa)                               AS kokonaiskustannus,
+		   ''                                       AS tyomenetelma,
 	     selite
-	  FROM 
-        mpu_kustannukset 
+	  FROM
+          paikkauskustannukset
     WHERE 
         urakka = :urakka-id
-        AND poistettu IS FALSE 
-        AND (:vuosi::INTEGER IS NULL OR vuosi = :vuosi)
+        AND poistettu IS FALSE
+      -- Samalla kyselyllä haetaan yksittäisen vuoden kustannukset sekä useamman vuoden kustannukset
+        AND (:vuosi::INTEGER IS NULL OR (:vuosi::INTEGER IS NOT NULL AND vuosi = :vuosi))
+        AND (:alkuvuosi::INTEGER IS NULL AND :loppuvuosi::INTEGER IS NULL
+                 OR (:alkuvuosi::INTEGER IS NOT NULL
+        AND :alkuvuosi::INTEGER IS NOT NULL AND vuosi BETWEEN :alkuvuosi::INTEGER AND :loppuvuosi::INTEGER))
     GROUP BY 
         id, selite, kustannustyyppi
 ) AS kustannukset
@@ -64,7 +68,7 @@ ORDER BY tyomenetelma, id;
 
 
 -- name: tallenna-mpu-kustannus!
-INSERT INTO mpu_kustannukset (
+INSERT INTO paikkauskustannukset (
     urakka, 
     selite, 
     kustannustyyppi, 
@@ -84,4 +88,4 @@ INSERT INTO mpu_kustannukset (
 
 
 -- name: hae-mpu-selitteet
-SELECT DISTINCT(selite) FROM mpu_kustannukset WHERE urakka = :urakka-id;
+SELECT DISTINCT(selite) FROM paikkauskustannukset WHERE urakka = :urakka-id;

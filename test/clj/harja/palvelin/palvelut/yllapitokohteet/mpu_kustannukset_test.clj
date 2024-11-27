@@ -1,10 +1,10 @@
-(ns harja.palvelin.palvelut.yllapitokohteet.mpu-kustannukset-test
+(ns harja.palvelin.palvelut.yllapitokohteet.kustannukset-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.palvelut.yllapitokohteet.mpu-kustannukset :as mpu-kustannukset]
+            [harja.palvelin.palvelut.yllapitokohteet.kustannukset-palvelu :as kustannukset-palvelu]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
 
@@ -16,7 +16,7 @@
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :kustannukset (component/using
-                          (mpu-kustannukset/->MPUKustannukset)
+                          (kustannukset-palvelu/->Kustannukset)
                           [:http-palvelin :db])))))
 
   (testit)

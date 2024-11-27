@@ -1,6 +1,6 @@
-(ns harja.views.urakka.yllapitokohteet.mpu-apurit
+(ns harja.views.urakka.yllapitokohteet.kustannukset_apurit
   "MPU kustannusten apufunktiot"
-  (:require [harja.tiedot.urakka.mpu-kustannukset :as tiedot]
+  (:require [harja.tiedot.urakka.yllapitokohteet.kustannukset-tiedot :as tiedot]
             [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
             [harja.ui.protokollat :as protokollat]

@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.mpu-kustannukset
+(ns harja.tiedot.urakka.yllapitokohteet.kustannukset-tiedot
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [cljs-time.core :as t]
@@ -114,7 +114,8 @@
     ;; -> hae-paikkaus-kustannukset
     ;; -> hae-sanktiot-ja-bonukset
     ;; Kun tullaan näkymään -> Resetoi aina tila
-    (let [nollaa-arvot (assoc default-arvot :haku-kaynnissa? true)
+    (let [_ (js/console.log "HaeKustannustiedot")
+          nollaa-arvot (assoc default-arvot :haku-kaynnissa? true)
           aikavali (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi)
           vuosi @urakka/valittu-urakan-vuosi
           urakka @nav/valittu-urakka
@@ -129,7 +130,6 @@
                                 :epaonnistui ->HaeKustannuksetYhteensaEpaonnistui}]
       (hae-mpu-selitteet app)
       (hae-paikkaus-kustannukset app aikavali vuosi callback-valittu)
-      (hae-paikkaus-kustannukset app aikavali-koko-urakka nil callback-koko-urakka)
       nollaa-arvot))
 
   HaeKustannuksetYhteensaOnnistui
@@ -147,7 +147,7 @@
 
   HaeKustannustiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [kustannukset-yhteensa (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))
+    (let [kustannukset-yhteensa (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) (:kustannukset vastaus)))
 
           ;; Mäppää vastaus vectoreihin mikä kelpaa gridille
           muut-kustannukset (reduce (fn [rivit r]
@@ -159,7 +159,7 @@
                                          :selite (:selite r)}))
                               []
                               ;; Muut kustannukset eivät sisällä työmenetelmää
-                              (filter (fn [r] (empty? (:tyomenetelma r))) vastaus))
+                              (filter (fn [r] (empty? (:tyomenetelma r))) (:kustannukset vastaus)))
 
           tyomenetelmittain (reduce (fn [rivit r]
                                       ;; Työmenetelmittäiset kustannukset tulee omalle gridille
@@ -172,14 +172,15 @@
                                          :selite (:selite r)}))
                               []
                               ;; Vaadi että kaikilla työmenetelmittäisillä kustannuksilla on olemassa työmenetelmä 
-                              (filter (fn [r] (and (:tyomenetelma r) (seq (:tyomenetelma r)))) vastaus))]
+                              (filter (fn [r] (and (:tyomenetelma r) (seq (:tyomenetelma r)))) (:kustannukset vastaus)))]
 
       (hae-sanktiot-ja-bonukset app)
       (assoc app
         :tallennus-kaynnissa? false
         :muut-kustannukset muut-kustannukset
         :tyomenetelmittain tyomenetelmittain
-        :kustannukset-yhteensa kustannukset-yhteensa)))
+        :kustannukset-yhteensa kustannukset-yhteensa
+        :urakka-ajan-kustannukset-yhteensa (:urakka-ajan-kustannukset-yhteensa vastaus))))
 
   HaeKustannustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -262,7 +263,7 @@
 
   HaeMPUSelitteetOnnistui
   (process-event [{vastaus :vastaus} app]
-    ;; Palautetaan tilaan kaikki mpu_kustannukset taulun selitteet (käyttäjien lisäämät selitteet) vectorina
+    ;; Palautetaan tilaan kaikki paikkauskustannukset taulun selitteet (käyttäjien lisäämät selitteet) vectorina
     (let [fn-kokoa-selitteet (fn [suodata vastaus]
                                (let [vastauksen-selitteet (map :selite vastaus)
                                      ;; Suodata vakio selitteet tästä, tätä käytetään vain autofillissä

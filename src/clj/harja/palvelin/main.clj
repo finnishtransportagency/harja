@@ -114,7 +114,7 @@
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
     [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
-    [harja.palvelin.palvelut.yllapitokohteet.mpu-kustannukset :as mpu-kustannukset]
+    [harja.palvelin.palvelut.yllapitokohteet.kustannukset-palvelu :as kustannukset-palvelu]
     [harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelu]
     [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
 
@@ -540,8 +540,8 @@
                           (reikapaikkaukset/->Reikapaikkaukset)
                           [:http-palvelin :db :excel-vienti])
 
-      :mpu-kustannukset (component/using
-                          (mpu-kustannukset/->MPUKustannukset)
+      :kustannukset (component/using
+                          (kustannukset-palvelu/->Kustannukset)
                           [:http-palvelin :db])
 
       :tyomaapaivakirja (component/using
