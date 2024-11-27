@@ -119,7 +119,7 @@
          (when-not (empty? ryhman-elementtien-avaimet)
            [:div {:class (str "tk-checkbox-ryhma" (when luokka (str " " luokka)))}
             [:button
-             {:aria-label "Karttatasoyhmän kytkinpainike"
+             {:aria-label "Karttatasoryhmän kytkinpainike"
               :class (str "tk-checkbox-ryhma-otsikko klikattava " (when (auki?) "alaraja"))
               :on-click avaa-tai-sulje-ryhma}
              [:span {:class "tk-chevron-ryhma-tila chevron-rotate"}
