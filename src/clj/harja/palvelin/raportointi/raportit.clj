@@ -427,7 +427,7 @@
     :suorita      #'harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain/suorita
     :urakkatyyppi #{:teiden-hoito}}
 
-   {:nimi         :paikkausten-yhteeveto
+   {:nimi         :paikkausten-yhteenveto
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
     :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu/suorita
