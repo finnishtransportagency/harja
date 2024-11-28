@@ -202,19 +202,18 @@
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
       (log/debug (str "Siltojen määrä: " (count tallennettavat-siltatietueet)))
 
-      (doall
-        (for [batch (partition-all batch-koko tallennettavat-siltatietueet)]
-          (try
-            (jdbc/with-db-transaction [db db]
-              (doseq [silta batch]
-                (vie-silta-entry db silta)))
+      (doseq [batch (partition-all batch-koko tallennettavat-siltatietueet)]
+        (try
+          (jdbc/with-db-transaction [db db]
+            (doseq [silta batch]
+              (vie-silta-entry db silta)))
 
-            (catch PSQLException e
-              (log/error "Siltojen tuonnissa kantaan tapahtui virhe: " e)
-              (throw e))
+          (catch PSQLException e
+            (log/error "Siltojen tuonnissa kantaan tapahtui virhe: " e)
+            (throw e))
 
-            (catch Exception e
-              (log/error "Siltojen tuonnissa tapahtui virhe: " e)
-              (throw e))))))
+          (catch Exception e
+            (log/error "Siltojen tuonnissa tapahtui virhe: " e)
+            (throw e)))))
 
     (log/debug "Siltojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
