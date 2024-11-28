@@ -26,7 +26,7 @@
 (defn mapin-floatit-inteiksi [m]
   (into {} (map (fn [[k v]]
                   [k (float-intiksi v)])
-                m)))
+             m)))
 
 (defn- silta-kuuluu-kunnalle? [silta]
   (let [kunnossapitaja (str/lower-case (:nykyinenku silta))]
@@ -62,11 +62,11 @@
         urakkatieto-kasin-muokattu? (:urakkatieto_kasin_muokattu (first urakkatiedot))
 
         urakat-sijainnilla (->> (loop [threshold 0]
-                                 (let [urakat (q-urakka/hae-urakka-sijainnilla db {:x (.getX geometria) :y (.getY geometria)
-                                                                                   :urakkatyyppi "hoito" :threshold threshold})]
-                                   (if (and (empty? urakat) (< threshold 1000))
-                                     (recur (+ threshold 100))
-                                     urakat)))
+                                  (let [urakat (q-urakka/hae-urakka-sijainnilla db {:x (.getX geometria) :y (.getY geometria)
+                                                                                    :urakkatyyppi "hoito" :threshold threshold})]
+                                    (if (and (empty? urakat) (< threshold 1000))
+                                      (recur (+ threshold 100))
+                                      urakat)))
                              (sort-by :alkupvm)
                              reverse)
 
@@ -162,13 +162,13 @@
 (defn jarjesta-voimassaolevat-sillat-yksittaisille-riveille
   ([kaikki-siltarivit]
    (let [erottele (fn erottele [kaikki-siltarivit valitut-siltarivit]
-                (lazy-seq
-                  ((fn [[f :as kaikki-siltarivit] valitut-siltarivit]
-                     (when-let [sillat (seq kaikki-siltarivit)]
-                       (if (contains? valitut-siltarivit (:oid f))
-                         (recur (rest sillat) valitut-siltarivit)
-                         (cons f (erottele (rest sillat) (conj valitut-siltarivit (:oid f)))))))
-                    kaikki-siltarivit valitut-siltarivit)))]
+                    (lazy-seq
+                      ((fn [[f :as kaikki-siltarivit] valitut-siltarivit]
+                         (when-let [sillat (seq kaikki-siltarivit)]
+                           (if (contains? valitut-siltarivit (:oid f))
+                             (recur (rest sillat) valitut-siltarivit)
+                             (cons f (erottele (rest sillat) (conj valitut-siltarivit (:oid f)))))))
+                       kaikki-siltarivit valitut-siltarivit)))]
      (erottele kaikki-siltarivit #{}))))
 
 (defn parsi-tieosoitteet [sillat]
@@ -177,10 +177,10 @@
                       ;; Sillassa saattaa olla useampi tieosoite, esim. sekä ajoväylä että kävelyteitä.
                       ;; Parsitaan näistä ensimmäinen regexillä. Tämä ei ole täysin pomminvarma, joten virheitä saattaa tulla.
                       ;; Tämän ei kuitenkaan pitäisi haitata, sillä sillan tr-osoitetta ei käytetä mihinkään tärkeään.
-                      (when-let [tieosoitteet (:tieosoitte silta)]
-                        {:tr_numero (second (re-find #"tienumero:(.*?(?=,))" tieosoitteet))
-                         :tr_alkuosa (second (re-find #"tieosa:(.*?(?=,))" tieosoitteet))
-                         :tr_alkuetaisyys (second (re-find #"etaisyys:(.*?(?=,))" tieosoitteet))})))
+           (when-let [tieosoitteet (:tieosoitte silta)]
+             {:tr_numero (second (re-find #"tienumero:(.*?(?=,))" tieosoitteet))
+              :tr_alkuosa (second (re-find #"tieosa:(.*?(?=,))" tieosoitteet))
+              :tr_alkuetaisyys (second (re-find #"etaisyys:(.*?(?=,))" tieosoitteet))})))
     sillat))
 
 (defn- suodata-sillat [sillat]
@@ -198,24 +198,23 @@
                                          suodata-sillat
                                          jarjesta-voimassaolevat-sillat-yksittaisille-riveille
                                          parsi-tieosoitteet)]
-      
+
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
       (log/debug (str "Siltojen määrä: " (count tallennettavat-siltatietueet)))
 
-      (dorun
+      (doall
         (for [batch (partition-all batch-koko tallennettavat-siltatietueet)]
           (try
             (jdbc/with-db-transaction [db db]
-              (dorun
-                (doseq [silta batch]
-                  (vie-silta-entry db silta))))
+              (doseq [silta batch]
+                (vie-silta-entry db silta)))
 
             (catch PSQLException e
               (log/error "Siltojen tuonnissa kantaan tapahtui virhe: " e)
               (throw e))
+
             (catch Exception e
               (log/error "Siltojen tuonnissa tapahtui virhe: " e)
-              (throw e)))))
+              (throw e))))))
 
-      (log/debug "Siltojen tuonti kantaan valmis."))
     (log/debug "Siltojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
