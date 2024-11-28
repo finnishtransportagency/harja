@@ -177,6 +177,7 @@ Cypress.Commands.add("filtteriValitse", { prevSubject: 'element' }, ($valinnat, 
     // painaminen, jolloin lista vaihtoehtoja tulee näkyviin re-renderaa listan. Tämä taasen aiheuttaa sen,
     // että Cypress saattaa keretä napata tuolla seuraavalla 'contains' käskyllä elementin, jonka React
     // poistaa DOM:ista.
+    cy.wait(100); // Toimii varmemmin, kun ei ole niin kiire
     cy.wrap($valinnat).should('have.class', 'open');
     cy.wrap($valinnat).contains('ul li a', parametrit.valinta).should('exist').click({ force: true });
 });
