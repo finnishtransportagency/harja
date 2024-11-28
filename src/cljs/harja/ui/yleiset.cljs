@@ -580,7 +580,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
   :otsikko       mahdollinen otsikko koko haitarille"
 
-  [{:keys [toggle-osio! auki luokka leijuva? otsikko]} & otsikko-avain-ja-komponentti]
+  [{:keys [toggle-osio! auki luokka leijuva? otsikko aria-label]} & otsikko-avain-ja-komponentti]
   [:div.harja-haitari (when luokka {:class luokka})
    [:div.haitari
     (doall
@@ -594,12 +594,13 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
         ^{:key (str avain)}
         [:div.haitari-rivi
          [:button.haitari-heading.klikattava
-          {:aria-expanded (if auki? "true" "false")
-           :aria-controls sisallon-id
+          {:aria-controls sisallon-id
+           :aria-expanded (if auki? "true" "false")
+           :aria-label aria-label
            :on-click #(avaa-tai-sulje-haitari %)
            :on-key-down #(when (dom/enter-nappain? %)
                            (avaa-tai-sulje-haitari %))}
-          [:span.haitarin-tila {:tabIndex "0"}
+          [:span.haitarin-tila
            (if auki?
              (ikonit/livicon-chevron-down)
              (ikonit/livicon-chevron-right))]

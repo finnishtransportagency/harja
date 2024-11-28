@@ -221,7 +221,7 @@
          ;; Palautetaan vastaus
          onnistunut-kirjaus-vastaus)]
 
-      (let [onnistui? (nil? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id]))
+      (let [onnistui? (nil? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id] +kayttaja-jvh+))
             lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
         (is (true? onnistui?))
         (is (not (nil? (:lahetetty lahetystiedot))) "Lähetysaika on merkitty")
@@ -232,7 +232,7 @@
 (deftest tarkista-yllapitokohteen-lahetys-ilman-http
   (let [kohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkonkylä - Toppinen 2'"))
         urakka-id (hae-urakan-id-nimella "POT2 testipäällystysurakka")
-        onnistui? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
+        onnistui? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id] +kayttaja-jvh+)
         lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
     (is (false? onnistui?))
     (is (false? (:lahetys_onnistunut lahetystiedot)) "Lähetys on merkitty epäonnistuneeksi")))
