@@ -12,6 +12,7 @@ describe('Toteumat / Tehtävät sivu toimii', function ()
     it('Avataan Toteumat / Tehtävät listaus', function ()
     {
         cy.viewport(1100, 2000)
+        cy.intercept('POST', '_/maarien-toteutumien-toimenpiteiden-tehtavat').as('hae-tehtavat');
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
@@ -24,11 +25,16 @@ describe('Toteumat / Tehtävät sivu toimii', function ()
 
         // Siirry alatabille
         cy.get('[data-cy=tabs-taso2-Tehtavat]').click()
+
+        // Varmista, että tehtävähaku on valmistunut
+        cy.wait('@hae-tehtavat', {timeout: clickTimeout})
+
         cy.contains('Määrämitattavat').should('exist')
     });
 
     it('Avataan Toteumat / Tehtävät listaus', function ()
     {
+        cy.intercept('POST', '_/maarien-toteutumien-toimenpiteiden-tehtavat').as('hae-tehtavat');
         // Tarkistetaan, että ollaan oikealla sivulla
         cy.contains('Määrämitattavat').should('exist')
         cy.contains('Lisätyöt').should('exist')
@@ -36,6 +42,8 @@ describe('Toteumat / Tehtävät sivu toimii', function ()
 
         // Lisätään uusi toteuma - Avataan näkymä
         cy.contains('Lisää toteuma').click()
+        // Varmista, että tehtävähaku on valmistunut
+        cy.wait('@hae-tehtavat', {timeout: clickTimeout})
 
         // Valitaan Toimenpide
         cy.get('label[for=toimenpide] + div').valinnatValitse({valinta: '4 PÄÄLLYSTEIDEN PAIKKAUS'})
