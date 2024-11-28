@@ -25,6 +25,7 @@ describe('Päänäkymien avaamiset', function () {
         cy.contains('label.checkbox-label', "Valittu aikaväli").should('exist')
         cy.contains('label.checkbox-label', "Näytä urakka-alueet eriteltynä").should('exist')
         cy.contains('Hupsista').should('not.exist')
+
     })
 
     it("Tilannekuva välilehti toimii", function () {
@@ -79,7 +80,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
     })
 
     // Ohitetaan testi sen flakeyden takia. Kustannussuunnitelma avataan tässä testissä jotenkin siten, että sen tila ei ole alustunut ja testi kaatuu kokonaan
-    it.skip("Avaa Suunnittelun alatabit", function () {
+    it("Avaa Suunnittelun alatabit", function () {
         cy.viewport(1100, 2000)
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
@@ -95,8 +96,8 @@ describe('MH-Urakan näkymien avaamiset', function () {
         cy.contains('Urakan suolarajoitukset hoitovuosittain').should('exist')
         cy.get('[data-cy="tabs-taso2-Tehtavat ja maarat"]').click()
         cy.contains('Tehtävät ja määrät').should('exist')
-        cy.get('[data-cy=tabs-taso2-Kustannussuunnitelma]').click()
-        cy.contains('Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten.', {timeout: clickTimeout}).should('exist')
+        //cy.get('[data-cy=tabs-taso2-Kustannussuunnitelma]').click()
+        //cy.contains('Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten.', {timeout: clickTimeout}).should('exist')
     })
 
     it("Avaa Kulut ja sen alatabit", function () {
@@ -164,6 +165,8 @@ describe('MH-Urakan näkymien avaamiset', function () {
         // Siirry Laadunseuranta päätabille
         cy.get('[data-cy=tabs-taso1-Laadunseuranta]').click()
         // Käydään alatabit läpi
+        cy.get('[data-cy=tabs-taso2-Talvihoitoreititys]').click()
+        cy.contains('Talvihoitoreititys').should('exist')
         cy.get('[data-cy=tabs-taso2-Mobiilityokalu]').click()
         cy.contains('Esittely').should('exist')
         cy.get('[data-cy=tabs-taso2-Siltatarkastukset]').click()
