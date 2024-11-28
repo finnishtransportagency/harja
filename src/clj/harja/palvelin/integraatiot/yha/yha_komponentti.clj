@@ -1,26 +1,30 @@
 (ns harja.palvelin.integraatiot.yha.yha-komponentti
-  (:require [com.stuartsierra.component :as component]
-            [hiccup.core :refer [html]]
-            [taoensso.timbre :as log]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.set :as set]
+            [clojure.string :as clj-str]
+            [com.stuartsierra.component :as component]
             [harja.domain.paallystysilmoitus :as pot-domain]
+            [harja.domain.pot2 :as pot2-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
-            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
+            [harja.kyselyt.yha :as q-yha-tiedot]
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma] 
             [harja.palvelin.integraatiot.yha.sanomat
              [urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus]
              [urakan-kohdehakuvastaussanoma :as urakan-kohdehakuvastaus]
              [kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
+             [vanha-kohteen-lahetyssanoma :as vanha-kohteen-lahetyssanoma]
              [kohteen-lahetysvastaussanoma :as kohteen-lahetysvastaussanoma]
              [kohteen-poistovastaussanoma :as kohteen-poistovastaussanoma]]
-            [harja.kyselyt.yha :as q-yha-tiedot]
-            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
-            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
-            [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konv]
-            [clojure.string :as clj-str]
-            [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yha-yhteiset :as yha-yhteiset]
-            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
+            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
+            [harja.pvm :as pvm]
+            [harja.tyokalut.dev-tyokalut :as dev-tyokalut]
+            [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -32,7 +36,7 @@
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
   (hae-kohteet [this urakka-id kayttajatunnus])
-  (laheta-kohteet [this urakka-id kohde-idt])
+  (laheta-kohteet [this urakka-id kohde-idt user])
   (poista-kohde [this kohde-id]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
@@ -80,8 +84,8 @@
   (mapv (fn [{:keys [kohde-yha-id selite]}]
           (str (when kohde-yha-id
                  (let [{:keys [nimi tunnus kohdenumero]} (some #(when (= (:yhaid %) kohde-yha-id)
-                                                      %)
-                                                   virheellisen-kohteen-tiedot)]
+                                                                  %)
+                                                           virheellisen-kohteen-tiedot)]
                    (str "Kohde id: " kohde-yha-id
                         (when kohdenumero
                           (str ", kohdenumero: " kohdenumero))
@@ -93,7 +97,7 @@
                "Virhe: " selite))
         virheet))
 
-(defn- kasittele-urakan-kohdelahetysvastaus [db sisalto otsikot kohteet]
+(defn- kasittele-urakan-kohdelahetysvastaus [db sisalto otsikot kohteet user]
   (log/debug format "YHA palautti urakan kohteiden kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
   (jdbc/with-db-transaction [db db]
     (let [vastaus (try (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)
@@ -137,7 +141,8 @@
             {:lahetetty (pvm/nyt)
              :onnistunut kohteen-lahetys-onnistunut?
              :lahetysvirhe virhe-viesti
-             :kohdeid kohde-id})))
+             :kohdeid kohde-id
+             :lahettaja (:id user)})))
       (when-not onnistunut?
         {:virhe virhe-viestit}))))
 
@@ -154,26 +159,97 @@
                                             (apply max (konv/pgarray->vector vuodet))))]
     (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
 
-(defn hae-alikohteet [db kohde-id paallystysilmoitus]
+(defn- lisaa-massaan-arvot [massa] 
+  (when-not (nil? (:massatyyppi massa))
+    (-> massa
+      (assoc :yhteenlaskettu-kuulamyllyarvo (pot2-domain/laske-painotettu-keskiarvo (:runkoaineet massa) :massaprosentti :kuulamyllyarvo))
+      (assoc :yhteenlaskettu-litteysluku (pot2-domain/laske-painotettu-keskiarvo (:runkoaineet massa) :massaprosentti :litteysluku)))))
+
+(defn muodosta-alustatoimenpide [alustatoimenpide]
+  (-> alustatoimenpide
+    (update :massat #(-> (konv/sarakkeet-vektoriin % {:runkoaine :runkoaineet
+                                                      :lisaaine :lisaaineet
+                                                      :sideaine :sideaineet})
+                       (first)))
+    (update :massat lisaa-massaan-arvot)
+    (update :murske (fn [murske] (when-not (nil? (:tyyppi murske)) murske)))
+    (set/rename-keys {:massat :massa})))
+
+
+(defn hae-alustarivit [db paallystysilmoitus]
+  (as->
+    (q-paallystys/hae-pot2-alustarivit db
+      {:pot2_id (:id paallystysilmoitus)}) atp
+    (konv/sarakkeet-vektoriin (map konv/alaviiva->rakenne atp)
+      {:massa :massat})
+    (map muodosta-alustatoimenpide atp)))
+
+
+(defn muodosta-kulutuskerrostoimenpide [kulutuskerrostoimenpide]
+  (-> kulutuskerrostoimenpide
+    (update :massat #(->
+                       (konv/sarakkeet-vektoriin % {:runkoaine :runkoaineet
+                                                    :lisaaine :lisaaineet
+                                                    :sideaine :sideaineet})
+                       (first)))
+    (update :massat lisaa-massaan-arvot)
+    (set/rename-keys {:massat :massa})))
+
+(defn hae-kulutuskerrosrivit [db paallystysilmoitus]
+  (as->
+    (q-paallystys/hae-pot2-kulutuskerrokset db
+      {:pot2_id (:id paallystysilmoitus)}) kktp
+    (konv/sarakkeet-vektoriin (map konv/alaviiva->rakenne kktp)
+      {:massa :massat} :alikohde)
+    (map muodosta-kulutuskerrostoimenpide kktp)))
+
+(defn hae-kohteen-tiedot-pot2 [db kohde-id]
+  (if-let [kohde (-> (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
+                   first
+                     ;; YHA-skeemassa pääkohteella ei ole ajorataa taikka kaistaa
+                   (dissoc :tr-ajorata :tr-kaista))]
+    (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
+                                   db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
+          paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
+          paallystysilmoitus (if (yllapitokohde-domain/eritellyt-maaramuutokset-kaytossa? (:vuodet paallystysilmoitus))
+                               (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
+                               paallystysilmoitus)
+          alustatp  (hae-alustarivit db paallystysilmoitus)
+          kulutuskerrostp (hae-kulutuskerrosrivit db paallystysilmoitus)]
+      {:kohde kohde
+       :alustalle-tehdyt-toimet alustatp
+       :kulutuskerrokselle-tehdyt-toimet kulutuskerrostp
+       :paallystysilmoitus paallystysilmoitus})
+    (let [virhe (format "Tuntematon kohde (id: %s)." kohde-id)]
+      (log/error virhe)
+      (throw+
+        {:type +virhe-kohteen-lahetyksessa+
+         :virheet {:virhe virhe}}))))
+
+(defn vanha-hae-alikohteet [db kohde-id paallystysilmoitus]
+  "DEPREKOITUU: Vanha versio vanha-hae-alikohteet funktiosta. Korvaava: hae-alustarivit
+   Tämä funktio käytössä vain hetkellisesti, kunnes uusi versio on testattu."
   (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
         osoitteet (if (= (:versio paallystysilmoitus) 2)
                     (map
                       (fn [rivi]
                         (assoc rivi :kuulamylly (pot-domain/kuulamylly-koodi-nimella (:kuulamyllyluokka rivi))
-                                    :raekoko (:max-raekoko rivi)))
+                          :raekoko (:max-raekoko rivi)))
                       (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)}))
                     (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))]
     (mapv (fn [alikohde]
             (let [id (:id alikohde)
                   ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))]
               (apply merge ilmoitustiedot alikohde)))
-          alikohteet)))
+      alikohteet)))
 
-(defn hae-kohteen-tiedot [db kohde-id]
+(defn vanha-hae-kohteen-tiedot [db kohde-id]
+  "DEPREKOITUU: Vanha versio vanha-hae-kohteen-tiedot funktiosta. Korvaava: hae-kohteen-tiedot-pot2
+   Tämä funktio käytössä vain hetkellisesti, kunnes uusi versio on testattu."
   (if-let [kohde (-> (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
-                     first
+                   first
                      ;; Uudessa YHA-mallissa pääkohteella ei ole ajorataa taikka kaistaa
-                     (dissoc :tr-ajorata :tr-kaista))]
+                   (dissoc :tr-ajorata :tr-kaista))]
     (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
                                    db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
           paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
@@ -185,12 +261,12 @@
                                                  (into {} (filter
                                                             (fn [[_ arvo]] (some? arvo))
                                                             map-jossa-on-nil)))
-                                     alustatoimet (->> (q-paallystys/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})
-                                                       (map keep-some)
-                                                       (into []))]
+                                     alustatoimet (->> (q-paallystys/hae-pot2-alustarivit-ilmoitukseen db {:pot2_id (:id paallystysilmoitus)}) ;; Vanha haku funktio käytössä
+                                                    (map keep-some)
+                                                    (into []))]
                                  (assoc-in paallystysilmoitus [:ilmoitustiedot :alustatoimet] alustatoimet))
                                paallystysilmoitus)
-          alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
+          alikohteet (vanha-hae-alikohteet db kohde-id paallystysilmoitus)]
       {:kohde kohde
        :alikohteet alikohteet
        :paallystysilmoitus paallystysilmoitus})
@@ -259,7 +335,7 @@
    lukko avataan, jotta mahdollisesti virheelliset tiedot voidaan korjata. Jos lähetys onnistuu, kohteiden
    päällystysilmoituksen lukitaan. Vuotta 2020 edeltäviä kohteita ei kaistamuutoksen jälkeen saa enää siirtää YHA:aan.
    Tämä on estetty funktiossa tarkista-lahetettavat-kohteet. Palauttaa true tai false sen mukaan onnistuiko kaikkien kohteiden lähetys."
-  [integraatioloki db {:keys [url api-key]} urakka-id kohde-idt]
+  [integraatioloki db {:keys [url api-key]} urakka-id kohde-idt user]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
   (try+
     (integraatiotapahtuma/suorita-integraatio
@@ -267,16 +343,58 @@
       (fn [konteksti]
         (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
           (let [urakka (assoc urakka :harjaid urakka-id
-                                     :sampoid (yhaan-lahetettava-sampoid urakka))
-                kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
-                url (str url "toteumatiedot")
-                kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
-                otsikot (yha-yhteiset/yha-otsikot api-key false)
-                http-asetukset {:metodi :POST
-                                :url url
-                                :otsikot otsikot}
-                {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
-            (kasittele-urakan-kohdelahetysvastaus db body headers kohteet))
+                         :sampoid (yhaan-lahetettava-sampoid urakka))]
+            (doseq [kohde-id kohde-idt]
+              (let [kohde (hae-kohteen-tiedot-pot2 db kohde-id)
+                    url (str url "toteumatiedot")
+                    kutsudata (kohteen-lahetyssanoma/muodosta urakka [kohde])
+                    otsikot (yha-yhteiset/yha-otsikot api-key false)
+                    http-asetukset {:metodi :POST
+                                    :url url
+                                    :otsikot otsikot}
+                    {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
+                (kasittele-urakan-kohdelahetysvastaus db body headers [kohde] user))))
+        
+          (let [virhe (format "Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)]
+            (log/error virhe)
+            (throw+
+              {:type +virhe-kohteen-lahetyksessa+
+               :virheet {:virhe virhe}}))))
+      {:virhekasittelija (fn [konteksti e]
+                           (doseq [kohde-id kohde-idt]
+                             (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
+                             (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
+                               db
+                               {:lahetetty (pvm/nyt)
+                                :onnistunut false
+                                :lahetysvirhe (pr-str (.getMessage e))
+                                :kohdeid kohde-id
+                                :lahettaja (:id user)})))})
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+      false)))
+
+
+(defn vanha-laheta-kohteet-yhaan
+  "DEPREKOITUU: Vanha versio laheta-kohteet-yhaan funktiosta. Tämä funktio käytössä vain hetkellisesti, kunnes uusi versio on testattu."
+  [integraatioloki db {:keys [url api-key]} urakka-id kohde-idt]
+  (log/debug (format "POT1: Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
+  (try+
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "yha" "kohteiden-lahetys" nil
+      (fn [konteksti]
+        (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
+          (let [urakka (assoc urakka :harjaid urakka-id
+                         :sampoid (yhaan-lahetettava-sampoid urakka))]
+            (doseq [kohde-id kohde-idt]
+              (let [kohde (vanha-hae-kohteen-tiedot db kohde-id)
+                    url (str url "toteumatiedot")
+                    kutsudata (vanha-kohteen-lahetyssanoma/muodosta urakka [kohde])
+                    otsikot (yha-yhteiset/yha-otsikot api-key false)
+                    http-asetukset {:metodi :POST
+                                    :url url
+                                    :otsikot otsikot}
+                    {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
+                (kasittele-urakan-kohdelahetysvastaus db body headers [kohde] nil))))
 
           (let [virhe (format "Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)]
             (log/error virhe)
@@ -291,7 +409,8 @@
                                {:lahetetty (pvm/nyt)
                                 :onnistunut false
                                 :lahetysvirhe (pr-str (.getMessage e))
-                                :kohdeid kohde-id})))})
+                                :kohdeid kohde-id
+                                :lahettaja nil})))})
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))
 
@@ -318,7 +437,25 @@
     (hae-urakat-yhasta (:integraatioloki this) (:db this) asetukset yha-nimi sampotunniste vuosi))
   (hae-kohteet [this urakka-id kayttajatunnus]
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) asetukset urakka-id kayttajatunnus))
-  (laheta-kohteet [this urakka-id kohde-idt]
-    (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt))
+  (laheta-kohteet [this urakka-id kohde-idt user]
+    (if (ominaisuus-kaytossa? :yha-pot2-lahetys) ;;TODO: Tästä tulee poistaa vanha-laheta-kohteet-yhaan, kun uusi versio on testattu
+       (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt user)
+       (vanha-laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt)))
   (poista-kohde [this yha-kohde-id]
     (poista-kohde-yhasta (:integraatioloki this) (:db this) asetukset yha-kohde-id)))
+
+
+(comment
+  (defn kirjoita-urakan-pot2-kohteet-tiedostoon
+    "Funktiolla on generoitu testi xml-tiedostoja YHA:lle"
+    [urakka-id] (let [db (:db harja.palvelin.main/harja-jarjestelma)
+                      urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))
+                      urakka (assoc urakka :harjaid urakka-id
+                               :sampoid (yhaan-lahetettava-sampoid urakka))
+                      kohde-idt  (repl-tyokalut/q (str "SELECT id FROM yllapitokohde WHERE urakka =" urakka-id " and vuodet @> ARRAY [2023]"))
+                      _ (prn "kohde-idt" kohde-idt)
+                      kohteet (mapv #(hae-kohteen-tiedot-pot2 db %) kohde-idt)
+                      sanomat  (kohteen-lahetyssanoma/muodosta urakka kohteet)
+                      _ (dev-tyokalut/kirjoita-tiedostoon sanomat (str "urakka-" urakka-id "-2023-kaikki") true ".xml")
+                      _ (prn "kirjoitettu tiedostoon!")]))
+  (kirjoita-urakan-pot2-kohteet-tiedostoon 575))

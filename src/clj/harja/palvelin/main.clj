@@ -75,6 +75,7 @@
     [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
     [harja.palvelin.palvelut.hallinta.lupaukset-palvelu :as lupaukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
     [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta-hallinta]
@@ -88,6 +89,7 @@
     [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
+    [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-palvelu :as talvihoitoreitit]
     [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
     [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.yha-velho :as yha-velho]
@@ -144,6 +146,7 @@
     [harja.palvelin.integraatiot.api.raportit :as api-raportit]
     [harja.palvelin.integraatiot.api.analytiikka :as analytiikka]
     [harja.palvelin.integraatiot.api.tyomaapaivakirja :as api-tyomaapaivakirja]
+    [harja.palvelin.integraatiot.api.talvihoitoreitit-api :as api-talvihoitoreitit]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
     [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
 
@@ -201,6 +204,12 @@
 
 (def asetukset-tiedosto "asetukset.edn")
 
+(defn aseta-clojure-async-thread-poolin-koko! [koko]
+  (assert (or (nil? koko) (integer? koko)) "Thread-poolin koko pitää olla nil tai kokonaisluku.")
+
+  ;; Aseta clojure.async thread-poolin koko (default 8)
+  ;; Asetetaan koko tässä, jotta hallitsemme thread-poolin kokoa itse Harjan tarpeiden mukaan.
+  (System/setProperty "clojure.core.async.pool-size" (str (or koko 8))))
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
@@ -509,7 +518,11 @@
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
-                      [:http-palvelin :db  :karttakuvat])
+                      [:http-palvelin :db :karttakuvat])
+
+      :talvihoitoreitit (component/using
+                          (talvihoitoreitit/->Talvihoitoreitit)
+                          [:http-palvelin :db])
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
@@ -723,6 +736,9 @@
       :api-tyomaapaivakirja (component/using
                               (api-tyomaapaivakirja/->Tyomaapaivakirja)
                               [:http-palvelin :db :integraatioloki])
+      :api-talvihoitoreitit (component/using
+                              (api-talvihoitoreitit/->TalvihoitoreittiAPI)
+                              [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)
@@ -824,6 +840,11 @@
         (rahavaraukset-hallinta/->RahavarauksetHallinta)
         [:http-palvelin :db])
 
+      :tieosoitteet-hallinta
+      (component/using
+        (tieosoitteet-hallinta/->TieosoitteetHallinta)
+        [:http-palvelin :db])
+
       :urakkahenkilot-hallinta
       (component/using
         (urakkahenkilot-hallinta/->UrakkaHenkilotHallinta)
@@ -898,6 +919,8 @@
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
     (let [asetukset (lue-asetukset asetusfile)]
+      ;; TODO: Optimoi koko thread-poolille Harjan tarpeisiin. Optimaalinen koko vaatii lisätutkimusta, mittaamista ja testaamista tuotannossa.
+      (aseta-clojure-async-thread-poolin-koko! (:clojure-async-thread-poolin-koko asetukset))
 
       ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
       ;; ottaa kaikki tällaiset throwablet kiinni ja logittaa sen.

@@ -2,7 +2,7 @@
   "paallystysilmoitukset": [
     {
       "takuupaivamaara": "2023-07-31T21:00:00Z",
-      "paallystyskohde": 33,
+      "paallystyskohde": 35,
       "kulutuskerrokselleTehdytToimetPOT2": [
         {
           "leveys": 4.00,
@@ -22,7 +22,7 @@
           "rc-prosentti": 100,
           "poistettu": false,
           "pituus": 650,
-          "alikohde": 48
+          "alikohde": 51
         },
         {
           "leveys": 4.00,
@@ -72,7 +72,7 @@
           "rc-prosentti": 80.0,
           "poistettu": false,
           "pituus": 350,
-          "alikohde": 47
+          "alikohde": 50
         },
         {
           "leveys": 4.00,
@@ -83,12 +83,6 @@
             "massatyyppi": "SMA, Kivimastiksiasfaltti",
             "runkoaineet": [
               {
-                "litteysluku": 20.0,
-                "kuulamyllyarvo": 10.0,
-                "runkoainetyyppi": "Asfalttirouhe",
-                "massaprosentti": 10.0
-              },
-              {
                 "fillerityyppi": "Kalkkifilleri (KF)",
                 "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
                 "massaprosentti": 5.0
@@ -98,6 +92,12 @@
                 "kuulamyllyarvo": 10.0,
                 "runkoainetyyppi": "Kiviaines",
                 "massaprosentti": 85.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Asfalttirouhe",
+                "massaprosentti": 10.0
               }
             ],
             "lisaaineet": [
@@ -128,7 +128,7 @@
           "rc-prosentti": 10.0,
           "poistettu": false,
           "pituus": 300,
-          "alikohde": 46
+          "alikohde": 49
         }
       ],
       "alustalleTehdytToimetPOT2": [

@@ -59,10 +59,12 @@ jobs:
     steps:
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
         # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success
         if: ${{ job.status != 'success' || needs.tests.result != 'success' }}
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           # Slack Block Kit -tyyppinen rikastettu viesti
           payload: |
             {
@@ -77,7 +79,5 @@ jobs:
               ]
             }
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
           JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 

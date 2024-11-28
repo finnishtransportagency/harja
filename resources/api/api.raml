@@ -82,15 +82,24 @@ documentation:
     content: |-
       Harja -järjestelmän rajapinta on toteutettu REST-API:na, jossa tieto liikkuu JSON-formaatissa.
 
-      Tietoliikenne Harjan palvelimille kulkee Väylän keskitetyn gatewayn kautta (Oracle Enterprice Gateway). Siirtoprotokollana käytetään HTTPS. Käyttäjän tunnistaminen tehdään käyttäen HTTP Basic autentikaatiota tunnus-salasana -parina. Väylä hallinnoi järjestelmä-/urakoitsijakohtaisia tunnuksia.
+      Tietoliikenne Harjan palvelimille kulkee Väylänpilven keskitetyn integraatioväylän kautta. Siirtoprotokollana käytetään HTTPS.
+      Käyttäjän tunnistaminen tehdään käyttäen HTTP Basic autentikaatiota tunnus-salasana -parina. Väylä hallinnoi järjestelmä-/urakoitsijakohtaisia tunnuksia.
 
       Kutsut voi lähettää gzipillä pakattuina merkitsemällä content encodingin gzipiksi.
 
-      Huomioitavaa:
+      <b>Huomioitavaa:</b>
       <ul>
         <li>Kaikki ajat raportoidaan Suomen aikavyöhykkeessä GMT+2/3. Aikaleimat täytyy siis raportoida formaatissa: "2016-11-03T03:43:14+02:00"</li>
         <li>Kaikki toteumien tehtävien ja materiaalien määrät raportoidaan Harjan urakkahaun palauttamassa yksikössä. Harja ei tee muunnoksia raportoiduille yksiköille.</li>
       </ul>
+
+      <b>Rajapintakutsujen rajoitukset integraatioväylällä:</b>
+      <ul>
+        <li>Sanoman maksimikoko: 20 MB</li>
+        <li>Aikakatkaisu: 180 s</li>
+        <li>Harja käsittelee kutsun loppuun omien sääntöjensä mukaan, vaikka integraatioväylä palauttaisi kutsujalle aikakatkaisuun liittyvän virheen.</li>
+      </ul>
+
   - title: Sijaintitiedot
     content: |
       Kaikki koordinaattisijainnit ilmoitetaan Harjaan EUREF-FIN koordinaatistossa. Koordinaattipisteiden lisäksi vastaanotetaan suunta joka on aseteluku väliltä: 0-360.
@@ -2094,6 +2103,30 @@ types:
         items:
           type: string
         required: false
+    additionalProperties: false
+  talvihoitoreitti-kirjaus-request:
+    type: object
+    properties:
+      talvihoitoreitti:
+        type: !include schemas/talvihoitoreitti-kirjaus-request.schema.json
+        additionalProperties: false
+    additionalProperties: false
+  talvihoitoreitti-paivitys-request:
+    type: object
+    properties:
+      talvihoitoreitti:
+        type: !include schemas/talvihoitoreitti-paivitys-request.schema.json
+        additionalProperties: false
+        required: false
+    additionalProperties: false
+  talvihoitoreitti-poisto-request:
+    type: object
+    properties:
+      talvihoitoreittien-tunnisteet:
+        type: array
+        items:
+          type: string
+          required: false
     additionalProperties: false
 /urakat:
   description: Urakoiden tietojen hallinta.
@@ -5540,6 +5573,123 @@ types:
               required: false
         uriParameters:
           tyomaapaivakirjaid: {}
+    /talvihoitoreitti:
+        post:
+          is:
+              - secured
+          description: 'Talvihoitoreitin lisäys.'
+          responses:
+              '200':
+                body:
+                  application/json:
+                    type: !include examples/onnistunut-kirjaus-response.json
+              '400':
+                body:
+                  application/json:
+                    example:
+                      virheet:
+                        - virhe:
+                            koodi: invalidi-json
+                            viesti: 'Syy virheelle.'
+                    type: virhe-response
+                    required: false
+              '500':
+                body:
+                  application/json:
+                    example:
+                      virheet:
+                        - virhe:
+                            koodi: virheen koodi
+                            viesti: 'Syy virheelle.'
+                    type: virhe-response
+                    required: false
+          body:
+            application/json:
+              example:
+              type: !include examples/talvihoitoreitti-kirjaus-request.json
+        put:
+          is:
+            - secured
+          description: 'Talvihoitoreitin päivitys.'
+          responses:
+            '200':
+              body:
+                application/json:
+                  example:
+                    ilmoitukset: Kaikki toteumat kirjattu onnistuneesti
+                    kohteet:
+                      - tunniste:
+                          id: 123
+                        tiedotukset:
+                          - tiedotus: ''
+                  type: kirjaus-response
+                  required: false
+            '400':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                           koodi: invalidi-json
+                           viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+            '500':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                          koodi: Virheen koodi
+                          viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+          body:
+            application/json:
+              example:
+              type: !include examples/talvihoitoreitti-paivitys-request.json
+        delete:
+          is:
+            - secured
+          description: 'Talvihoitoreitin poisto.'
+          responses:
+            '200':
+              body:
+                application/json:
+                  example:
+                    ilmoitukset: Kaikki toteumat kirjattu onnistuneesti
+                    kohteet:
+                      - tunniste:
+                          id: 123
+                        tiedotukset:
+                          - tiedotus: ''
+                  type: kirjaus-response
+                  required: false
+            '400':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                           koodi: invalidi-json
+                           viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+            '500':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                          koodi: Virheen koodi
+                          viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+          body:
+            application/json:
+              example:
+              type: !include examples/talvihoitoreitti-poisto-request.json
+
     '/raportit/materiaali/{alkupvm}':
       uriParameters:
         alkupvm: {}
