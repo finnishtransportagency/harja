@@ -79,7 +79,7 @@
     " parametrit=" parametrit)
   (let [urakka (first (urakat-q/hae-urakka db urakka-id))
         hoitokauden-alkuvuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi alkupvm)))
-        raportin-nimi "Paikkausten yhteeveto"
+        raportin-nimi "Paikkausten yhteenveto"
 
         ;; Haetaan suunnitellut kustannukset paikkauksille kustiksesta
         suunnitellut-kustannukset (:summa (first (mhu-paikkausten-suunnitellut-kustannukset db {:urakkaid urakka-id
