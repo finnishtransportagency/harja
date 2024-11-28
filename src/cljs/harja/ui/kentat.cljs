@@ -863,7 +863,7 @@
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
-            pakollinen? tarkenne muokattu? valitse-oletus?]} data]
+            pakollinen? tarkenne muokattu? valitse-oletus? data-cy]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
@@ -913,22 +913,23 @@
                 :pakollinen? pakollinen?
                 :vayla-tyyli? vayla-tyyli?
                 :elementin-id elementin-id
-                :tarkenne tarkenne}]
-      (if-not (and linkki-fn nykyinen-arvo linkki-icon)
-        [livi-pudotusvalikko opts
-         valinnat]
-        [:div.valinta-ja-linkki-container
-         [:span {:style {:color "#004D99"}}
-          [napit/nappi ""
-           #(linkki-fn nykyinen-arvo)
-           {:ikoni linkki-icon
-            :ikoninappi? true
-            :luokka "valinnan-vierusnappi napiton-nappi"}]]
-         (if disabled?
-           [:div.disabled-valinta {:on-click #(linkki-fn nykyinen-arvo)}
-            (or (and valinta-nayta (valinta-nayta valinta))
-                nykyinen-arvo)]
-           [livi-pudotusvalikko opts valinnat])])))
+                :tarkenne tarkenne
+                :data-cy (or data-cy (str "valinta-" elementin-id))}]
+     (if-not (and linkki-fn nykyinen-arvo linkki-icon)
+       [livi-pudotusvalikko opts
+        valinnat]
+       [:div.valinta-ja-linkki-container
+        [:span {:style {:color "#004D99"}}
+         [napit/nappi ""
+          #(linkki-fn nykyinen-arvo)
+          {:ikoni linkki-icon
+           :ikoninappi? true
+           :luokka "valinnan-vierusnappi napiton-nappi"}]]
+        (if disabled?
+          [:div.disabled-valinta {:on-click #(linkki-fn nykyinen-arvo)}
+           (or (and valinta-nayta (valinta-nayta valinta))
+             nykyinen-arvo)]
+          [livi-pudotusvalikko opts valinnat])])))
   ([{:keys [jos-tyhja]} data data-muokkaus-fn]
    ;; HUOM!! Erona 2-arity tapaukseen, valinta-nayta funktiolle annetaan vain yksi argumentti kahden sijasta
    (let [jos-tyhja-default-fn (constantly (or jos-tyhja "Ei valintoja"))]

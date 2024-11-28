@@ -123,7 +123,7 @@
    teksti-nappi?              Tekstimuotoinen ei borderia tai taustaa -nappi"
   ([teksti toiminto] (nappi teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? data-attributes
-                            sticky? ikoninappi? title style ikoni-oikealle? aria-label] :as optiot}]
+                            sticky? ikoninappi? title style ikoni-oikealle? aria-label data-cy] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
@@ -162,6 +162,7 @@
              :tab-index tabindex
              :aria-label (or aria-label
                            "Painike")
+             :data-cy   (or data-cy "nappi")
              :disabled  disabled
              :style     style
              :title     title
@@ -371,10 +372,11 @@
 
 (defn tallenna
   ([teksti toiminto] (tallenna teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi? data-cy] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:aria-label (or (:aria-label optiot) "Tallenna")
+                             :data-cy (or data-cy "Tallenna-nappi")
                              :luokka (str (cond (and vayla-tyyli?
                                                      teksti-nappi?) "button-primary-text"
                                                 vayla-tyyli? "button-primary-default"
