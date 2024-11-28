@@ -132,7 +132,7 @@
               [palstat-tagi
                [palsta-tagi
                 [:div.row.form-group.required
-                 [:label.control-label [:span [:span.kentan-label "Tehtävä"]]]
+                 [:label.control-label {:for (str "tehtava-" indeksi)} [:span [:span.kentan-label "Tehtävä"]]]
                  [kentat/tee-kentta
                   {:otsikko               "Tehtävä"
                    :nimi                  [::t/toteumat indeksi ::t/tehtava]
@@ -145,12 +145,13 @@
                    :valinnat              tehtavat
                    :pakollinen?           true
                    :muokattu?             true
+                   :data-cy               (str "tehtava-valikko-" indeksi)
                    :jos-tyhja             "Tälle toimenpiteelle ei ole tehtäviä"
                    :elementin-id          (str "tehtava-valikko-" indeksi)}
                   (r/wrap tehtava
                           (r/partial paivita! ::t/tehtava indeksi))]]
                 [:div.row.form-group.required
-                 [:label.control-label [:span [:span.kentan-label "Toteutunut määrä"]]]
+                 [:label.control-label {:for (str "toteutunut-maara-" indeksi)} [:span [:span.kentan-label "Toteutunut määrä"]]]
                  [kentat/tee-kentta
                   {::ui-lomake/col-luokka ""
                    :vayla-tyyli?          true
@@ -158,6 +159,7 @@
                    :muokattu?             true
                    :tyyppi                :numero
                    :yksikko               yksikko
+                   :data-cy               (str "maara-input-" indeksi)
                    :pakollinen?           true}
                   (r/wrap maara
                           (r/partial paivita! ::t/maara indeksi))]]
@@ -346,7 +348,8 @@
                           (nayta-lomake-validoinnit e! data)
                           (when (and lomake-validi? sijainnit-valideja?) (laheta-lomake! data)))
                        {:vayla-tyyli? true
-                        :luokka "suuri"}]
+                        :luokka "suuri"
+                        :data-cy "Tallenna-toteuma-nappi"}]
                       [napit/peruuta
                        "Peruuta"
                        #(tyhjenna-lomake! data)
@@ -371,6 +374,7 @@
         :pakollinen? true
         :muokattu? true
         :jos-tyhja "Valitse toimenpide"
+        :data-cy "toimenpide-valikko"
         :elementin-id (str "toimenpiteet-")}
        {:tyyppi :radio-group
         :nimi ::t/tyyppi

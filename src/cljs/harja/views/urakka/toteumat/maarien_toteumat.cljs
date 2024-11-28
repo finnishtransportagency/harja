@@ -1,6 +1,7 @@
 (ns harja.views.urakka.toteumat.maarien-toteumat
   "Urakan 'Toteumat' välilehden Määrien toteumat osio"
   (:require [reagent.core :refer [atom] :as r]
+            [clojure.string :as str]
             [harja.ui.dom :as dom]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+]]
@@ -63,6 +64,7 @@
                          (get-in app [:toimenpiteet]))]
     [:a {:href "#"
          :aria-label "Lisää uusi toteuma"
+         :data-cy (str "lisaa-toteuma-" (str/replace tehtavan-nimi #" " ""))
          :on-click (fn [event]
                      (do
                        (.preventDefault event)
@@ -267,6 +269,7 @@
         "Lisää toteuma"
         (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (dissoc (:valittu-toimenpide app) :id))))
         {:vayla-tyyli? true
+         :data-cy "lisaa-toteuma-nappi"
          :luokka "suuri"}]]]
      [:div.flex-row
       [kentat/tee-kentta {:tyyppi :checkbox-group
