@@ -1152,12 +1152,14 @@ BEGIN
                 l.erapaiva
             FROM kulu l
             JOIN kulu_kohdistus lk ON lk.kulu = l.id
-            JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id 
+            JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id
+            LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
             WHERE lk.tyyppi = 'muukulu'
                 AND lk.poistettu IS NOT TRUE
                 AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                 AND l.urakka = ur
                 AND tpi.id = t.tpi
+                AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54' -- J - Johto- ja hallintokorvaus myös muuksi kuluksi kirjattuna huomioidaan laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä.
         LOOP
             IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
                 -- Hoitokausi yhteensä

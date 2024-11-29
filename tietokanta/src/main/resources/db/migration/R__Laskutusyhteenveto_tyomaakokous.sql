@@ -974,13 +974,16 @@ BEGIN
             lk.tavoitehintainen AS tavoitehintainen 
         FROM kulu l
         JOIN kulu_kohdistus lk ON lk.kulu = l.id
+        JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
         -- Etsi pelkästään muukulu tyyppiset  kirjaukset, toimenpideinstansseilla ei ole näissä väliä 
         -- Tavoitehintaiset kuuluu tehtäväryhmälle, ei tavoitehintaiset kuuluu toimenpiteelle, mutta työmaakokouksessa ei tarvitse niputtaa
         WHERE lk.tyyppi = 'muukulu'
           AND lk.poistettu IS NOT TRUE
           AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-          AND l.urakka = ur 
-    LOOP
+          AND l.urakka = ur
+          AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54' -- J - Johto- ja hallintokorvaus myös muuksi kuluksi kirjattuna huomioidaan laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä.
+
+        LOOP
         IF rivi.erapaiva <= aikavali_loppupvm THEN
             --
             -- ~ Hoitokausi ~
