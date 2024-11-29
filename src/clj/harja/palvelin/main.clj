@@ -235,12 +235,13 @@
                        (http-palvelin/luo-http-palvelin http-palvelin
                          kehitysmoodi)
                        [:todennus :metriikka :db])
-      :tuck-remoting (component/using
+      ;; FIXME: Tuck-remoting otettu toistaiseksi pois testikäytöstä kokonaan, koska se ei toimi kunnolla
+      #_#_:tuck-remoting (component/using
                        (tuck-remoting/luo-tuck-remoting (:sahke-headerit asetukset))
                        [:http-palvelin :db])
 
       ;; Tuck-remoting palvelu ilmoitusten välittämiseen WebSocketin yli
-      :ilmoitukset-ws-palvelu (component/using
+      #_#_:ilmoitukset-ws-palvelu (component/using
                                 (ilmoitukset-ws/luo-ilmoitukset-ws)
                                 [:tuck-remoting :db])
 
