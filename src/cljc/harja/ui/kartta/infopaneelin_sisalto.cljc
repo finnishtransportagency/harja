@@ -379,7 +379,7 @@
                 otsikko-vektori
                 )
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
-              {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
+              {:otsikko "Tieosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
               {:otsikko "Tarkastaja" :nimi :tarkastaja}
               {:otsikko "Organisaatio" :nimi :organisaatio}
               {:otsikko "Havainnot" :hae (hakufunktio
@@ -401,7 +401,7 @@
                                         #{:tekijanimi :tekija}
                                         #(str (:tekijanimi %) ", " (name (:tekija %))))}
               {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string}
-              {:otsikko "Tierekisteriosoite" :hae (hakufunktio
+              {:otsikko "Tieosoite" :hae (hakufunktio
                                                     #(or (sisaltaa? % [:yllapitokohde :tr])
                                                          (sisaltaa? % :tr))
                                                     #(if-let [yllapitokohde-tie (get-in % [:yllapitokohde :tr])]
@@ -455,7 +455,7 @@
                          {:otsikko "Klo (arvio)" :tyyppi :pvm-aika
                           ;; Arvioitu aika pisteessä saa puuttua, eli validointifunktio on (constantly true)
                           :hae (hakufunktio (constantly true) :aika-pisteessa)}
-                         {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
+                         {:otsikko "Tieosoite" :tyyppi :tierekisteriosoite
                           :nimi :tierekisteriosoite}
                          {:otsikko "Suorittaja" :hae (hakufunktio
                                                        #{[:suorittaja :nimi]}
@@ -866,7 +866,7 @@
             {:otsikko "Työ päättyi" :tyyppi :string :nimi :paattyi}
             {:otsikko "Valmistumispvm" :tyyppi :string :nimi :valmistui}
             {:otsikko "Takuuaika" :tyyppi :string :nimi :takuuaika}
-            {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
+            {:otsikko "Tieosoite" :tyyppi :tierekisteriosoite
                           :nimi :tierekisteriosoite}]
    :data (:infopaneelin-tiedot kohde)})
 

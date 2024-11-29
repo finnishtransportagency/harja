@@ -204,6 +204,12 @@
 
 (def asetukset-tiedosto "asetukset.edn")
 
+(defn aseta-clojure-async-thread-poolin-koko! [koko]
+  (assert (or (nil? koko) (integer? koko)) "Thread-poolin koko pitää olla nil tai kokonaisluku.")
+
+  ;; Aseta clojure.async thread-poolin koko (default 8)
+  ;; Asetetaan koko tässä, jotta hallitsemme thread-poolin kokoa itse Harjan tarpeiden mukaan.
+  (System/setProperty "clojure.core.async.pool-size" (str (or koko 8))))
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
@@ -229,12 +235,13 @@
                        (http-palvelin/luo-http-palvelin http-palvelin
                          kehitysmoodi)
                        [:todennus :metriikka :db])
-      :tuck-remoting (component/using
+      ;; FIXME: Tuck-remoting otettu toistaiseksi pois testikäytöstä kokonaan, koska se ei toimi kunnolla
+      #_#_:tuck-remoting (component/using
                        (tuck-remoting/luo-tuck-remoting (:sahke-headerit asetukset))
                        [:http-palvelin :db])
 
       ;; Tuck-remoting palvelu ilmoitusten välittämiseen WebSocketin yli
-      :ilmoitukset-ws-palvelu (component/using
+      #_#_:ilmoitukset-ws-palvelu (component/using
                                 (ilmoitukset-ws/luo-ilmoitukset-ws)
                                 [:tuck-remoting :db])
 
@@ -913,6 +920,8 @@
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
     (let [asetukset (lue-asetukset asetusfile)]
+      ;; TODO: Optimoi koko thread-poolille Harjan tarpeisiin. Optimaalinen koko vaatii lisätutkimusta, mittaamista ja testaamista tuotannossa.
+      (aseta-clojure-async-thread-poolin-koko! (:clojure-async-thread-poolin-koko asetukset))
 
       ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
       ;; ottaa kaikki tällaiset throwablet kiinni ja logittaa sen.

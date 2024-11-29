@@ -153,8 +153,7 @@
         (if (and esta-poistaminen? (esta-poistaminen? rivi))
           [:span (ui-ikonit/livicon-trash-disabled (esta-poistaminen-tooltip rivi))]
           [napit/poista ""
-           #(do (.preventDefault %)
-              (muokkaa! id assoc :poistettu true))
+           #(muokkaa! id assoc :poistettu true)
            {:teksti-nappi? false
             :vayla-tyyli? true
             :tooltip "Poista rivi"
