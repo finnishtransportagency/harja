@@ -160,6 +160,8 @@
                              (when ikoninappi? "nappi-ikoni ")
                              luokka)
              :tab-index tabindex
+             :aria-label (or aria-label
+                           teksti)
              :disabled  disabled
              :style     style
              :title     title
@@ -170,7 +172,6 @@
                              (.preventDefault %)
                              (.stopPropagation %))
                            (apply toiminto toiminto-args))}
-            (when (some? aria-label) {:aria-label aria-label})
             (when (and data-attributes (every? #(and (keyword? %)
                                                      (re-find #"^data-" (name %)))
                                                (keys data-attributes)))
