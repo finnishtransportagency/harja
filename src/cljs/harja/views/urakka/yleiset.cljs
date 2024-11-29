@@ -233,10 +233,10 @@
                   (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
          [:span
-          [:span.klikattava {:on-click #(swap! auki? not)}
-           " "
-           (ikonit/livicon-wrench)
-           " "]
+          [napit/muokkaa
+           nil
+           #(swap! auki? not)
+           {:luokka "napiton-nappi"}]
           (when @auki?
             [napit/yleinen-toissijainen "Poista indeksi käytöstä"
              (fn []
@@ -427,12 +427,10 @@
        [:span " (tieliikenneilmoituksien kesävasteaika)"]
        (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
-         [:span
-          [:span.klikattava {:on-click (fn []
-                                         (swap! auki? not))}
-           " "
-           (ikonit/livicon-wrench)
-           " "]])]
+         [napit/muokkaa
+          nil
+          #(swap! auki? not)
+          {:luokka "napiton-nappi"}])]
         (let [aikavali-alku (atom nil) ; on auki
               aikavali-loppu (atom nil)]
         [:<>
