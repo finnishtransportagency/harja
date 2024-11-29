@@ -161,7 +161,7 @@
                              luokka)
              :tab-index tabindex
              :aria-label (or aria-label
-                           "Painike")
+                           teksti)
              :disabled  disabled
              :style     style
              :title     title
