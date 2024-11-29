@@ -146,6 +146,147 @@
               ]
             }
           }
+        },
+        "sanktiot": {
+          "type": "array",
+          "properties": {
+            "sanktio": {
+              "type": "object",
+              "properties": {
+                "sanktio-id": {
+                  "type": "integer",
+                  "description": "Sanktiorivin id Harjassa."
+                },
+                "sanktion-ajankohta": {
+                  "type": "string",
+                  "format": "date",
+                  "description": "Ajankohta jolloin sanktioon liittyvä maksu kirjanpidon kannalta toteutuu."
+                },
+                "sanktion-maara": {
+                  "type": "number",
+                  "description": "Sanktion määrä euroissa."
+                },
+                "indeksi": {
+                  "type": "string",
+                  "description": "Sanktion määrän laskennassa käytetty indeksi, jos määrässä on indeksikorjaus mukana. Esim. MAKU 2015."
+                },
+                "bonustyyppi": {
+                  "type": "enum",
+                  "description": ""
+                },
+                "bonuksen-kasittelytapa": {
+                  "type": "enum",
+                  "description": ""
+                },
+                "poistettu": {
+                  "type": "boolean",
+                  "description": "True kun sanktio on merkitty poistetuksi Harjassa. Oletus: false."
+                }
+              },
+              "required": [
+                "sanktio-id",
+                "sanktion-ajankohta"
+              ]
+            }
+          }
+        },
+        "bonukset": {
+          "type": "array",
+          "properties": {
+            "bonus": {
+              "type": "object",
+              "properties": {
+                "bonus-id": {
+                  "type": "integer",
+                  "description": "Bonusrivin id Harjassa."
+                },
+                "bonuksen-ajankohta": {
+                  "type": "string",
+                  "format": "date",
+                  "description": "Bonuksen päiväys (laskut."
+                },
+                "bonuksen-maara": {
+                  "type": "number",
+                  "description": "Bonuksen määrä euroissa."
+                },
+                "indeksi": {
+                  "type": "string",
+                  "description": "Sanktion määrän laskennassa käytetty indeksi, jos määrässä on indeksikorjaus mukana. Esim. MAKU 2015."
+                },
+                "suorasanktio": {
+                  "type": "boolean",
+                  "description": "True kun sanktio on suorasanktio. Oletus: false."
+                },
+                "sanktiolaji": {
+                  "type": "object",
+                  "properties": {
+                    "koodi": {
+                      "type": "integer",
+                      "description": "Sanktiolajin koodi Harjassa."
+                    },
+                    "nimi": {
+                      "type": "string",
+                      "description": "Sanktiolajin nimi Harjassa."
+                    }
+                  }
+                },
+                "sanktio-liittyy-laatupoikkeamaan": {
+                  "type": "boolean",
+                  "description": "True kun sanktio on linkitetty raportoituun laatupoikkeamaan. Oletus: false."
+                },
+                "poistettu": {
+                  "type": "boolean",
+                  "description": "True kun bonus on merkitty poistetuksi Harjassa. Oletus: false."
+                }
+              },
+              "required": [
+                "bonus-id",
+                "bonuksen-ajankohta"
+              ]
+            }
+          }
+        },
+        "tavoitehinnan_oikaisut": {
+          "type": "array",
+          "properties": {
+            "tavoitehinnan-oikaisu": {
+              "type": "object",
+              "properties": {
+                "oikaisu-id": {
+                  "type": "integer",
+                  "description": "Tavoitehinnan oikaisurivin id Harjassa. Huom. Älä laske tavoitehinnan oikaisuja mukaan, kun lasket yhteen toteutuneita kustannuksia. Oikaisumääriä voi pitää jonkinlaisena erittelynä välikatselmuksessa mahdollisesti syntyville kulukirjauksille. Nämä kirjaukset kohdistuvat kolmeen tehtäväryhmään: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä."
+                },
+                "oikaisun-hoitokausi": {
+                  "type": "integer",
+                  "description": "Sen hoitokauden alkuvuosi, jota tavoitehinnan oikaisu koskee. Jos hoitokausi on 2023-24, tässä palautuu 2023."
+                },
+                "oikaisukategoria": {
+                  "type": "string",
+                  "description": "Tavoitehinnan oikaisun luokittelu. Arvot 28.1.2024 (muutoksiin on syytä varautua): Alleviivatun fontin vaikutus tavoitehintaan, Bonukset ja sanktiot, Hoitoluokkamuutokset, Liikennejärjestelyt, Materiaalit, Muut, Tehtävämuutokset, Tiestömuutokset, Tiestömuutos, Työmäärämuutokset, Yleiset Liikennejärjestelyt."
+                },
+                "oikaisun-selite": {
+                  "type": "string",
+                  "description": "Vapaamuotoinen selite tavoitehinnan oikaisulle."
+                },
+                "oikaisun-summa": {
+                  "type": "number",
+                  "description": "Tavoitehinnan oikaisun määrä. Älä laske oikaisuna palautuneita määriä toteutuneiden kustannusten yhteissummaan. Tavoitehinnan oikaisujen ja välikatselmuksessa tehtyjen päätösten pohjalta lasketaan mahdollinen hoitokauden päättämiseen liittyvä kulu. Kulu kirjataan kulukohdistuksena jollekin näistä kolmesta tehtäväryhmästä: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä. Tavoitehinnan oikaisun määrä voi olla negatiivinen (tavoitehinnasta vähennetän) tai positiivinen (tavoitehintaan lisätään). Yksikkö: euro. "
+                },
+                "poistettu": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "True kun oikaisu on merkitty Harjassa poistetuksi. Oletus: false."
+                }
+              },
+              "required": [
+                "oikaisu-id",
+                "oikaisun-hoitokausi",
+                "oikaisukategoria",
+                "oikaisun-selite",
+                "oikaisun-summa"
+              ]
+            }
+          }
         }
       }
     }
