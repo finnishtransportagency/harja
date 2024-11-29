@@ -156,7 +156,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
         sisalto]))))
 
 (defn staattinen-linkki-uuteen-ikkunaan [otsikko linkki]
-  [:a {:href linkki
+  [:a.klikattava.alleviivaa {:href linkki
        :target "_blank"
        :rel "noopener noreferrer"} otsikko])
 

@@ -54,7 +54,7 @@
       (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila tila)]
      (when (= :lukittu tila)
        [:div.inline-block
-        [yleiset/vihje "Ilmoitus lukittu. Urakanvalvoja voi tarvittaessa avata lukituksen."]])]
+        [yleiset/vihje "Ilmoitus lukittu. Urakanvalvoja voi ta<rvittaessa avata lukituksen."]])]
     (when (= :lukittu tila)
       [poista-lukitus e! urakka])]])
 

@@ -85,7 +85,7 @@
     [:span.avoimet-poikkeamat
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry laatupoikkeamiin"]
-      [:a.klikattava {:href "#"
+      [:a.klikattava.alleviivaa {:href "#"
                       :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                     :taso2 :laadunseuranta
                                                                                                     :taso3 :laatupoikkeamat})}
@@ -94,7 +94,7 @@
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia laatupoikkeamia")}))]]
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry turvallisuuspoikkeamiin"]
-      [:a.klikattava {:href "#"
+      [:a.klikattava.alleviivaa {:href "#"
                       :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                     :taso2 :turvallisuuspoikkeamat
                                                                                                     :taso3 nil})}
@@ -107,7 +107,7 @@
   (let [{:keys [lupaus_tavoitepisteet hoitokauden_alkuvuosi]} rivi]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry lupausnäkymään"]
-     [:a.klikattava {:href "#"
+     [:a.klikattava.alleviivaa {:href "#"
                      :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
       [:div.lupauspisteet
        (if (nil? lupaus_tavoitepisteet)
@@ -127,7 +127,7 @@
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannusten seurantaan"]
-     [:a.klikattava {:href "#"
+     [:a.klikattava.alleviivaa {:href "#"
                      :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                    :taso2 :laskutus
                                                                                                    :taso3 :kustannusten-seuranta})}
@@ -162,7 +162,7 @@
         {:keys [aloittamattomia vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannussuunnitelmaan"]
-     [:a.klikattava {:href "#"
+     [:a.klikattava.alleviivaa {:href "#"
                      :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                    :taso2 :suunnittelu
                                                                                                    :taso3 :kustannussuunnitelma})}
@@ -271,7 +271,7 @@
        Tässä vaiheessa osio näkyy vain pääkäyttäjille sekä ELY:jen pääkäyttäjille ja urakanvalvojille.
        Myöhemmin laajennamme mahdollisesti tiedon näkyvyyttä myös urakoitsijoille heidän omien urakoidensa osalta. Jos löydät tiedoista virheitä tai sinulla
        on muita toiveita tämän osion kehittämiseksi, voit "
-   [:a {:href (palaute-tiedot/mailto-kehitystiimi)} "laittaa meille viestiä osoitteeseen harjapalaute@solita.fi"]])
+   [:a.klikattava.alleviivaa {:href (palaute-tiedot/mailto-kehitystiimi)} "laittaa meille viestiä osoitteeseen harjapalaute@solita.fi"]])
 
 (defn kojelauta* [e! app]
   (komp/luo

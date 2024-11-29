@@ -68,7 +68,7 @@
           (concat [nil] @istunto/testikayttajat)]]))))
 
 (defn harja-info [s]
-  [:a.klikattava
+  [:a.klikattava.alleviivaa
    {:id "info"
     :href "#"
     :role "presentation"
