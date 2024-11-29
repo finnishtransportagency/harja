@@ -236,7 +236,8 @@
           [napit/muokkaa
            nil
            #(swap! auki? not)
-           {:luokka "napiton-nappi"}]
+           {:luokka "napiton-nappi"
+            :aria-label "Muokkaa indeksiä"}]
           (when @auki?
             [napit/yleinen-toissijainen "Poista indeksi käytöstä"
              (fn []
@@ -430,7 +431,8 @@
          [napit/muokkaa
           nil
           #(swap! auki? not)
-          {:luokka "napiton-nappi"}])]
+          {:luokka "napiton-nappi"
+           :aria-label "Muokkaa kesäaikaa"}])]
         (let [aikavali-alku (atom nil) ; on auki
               aikavali-loppu (atom nil)]
         [:<>
