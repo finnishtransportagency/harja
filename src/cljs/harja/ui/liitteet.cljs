@@ -452,7 +452,6 @@
                :on-click #(.stopPropagation %)}
                :tab-index 0 ;; Makes label focusable
                :role "button" ;; Semantically marks the label as a button
-               :on-click #(when-not disabled? (.stopPropagation %))
                :on-key-down #(when (= (.-key %) "Enter") (= (.-key %) " ") ;; Handle Enter or Space
                               (.stopPropagation %)
                               (.click (.-target %)))}
