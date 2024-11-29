@@ -160,8 +160,7 @@
                              (when ikoninappi? "nappi-ikoni ")
                              luokka)
              :tab-index tabindex
-             :aria-label (or aria-label
-                           "Painike")
+             :aria-label
              :disabled  disabled
              :style     style
              :title     title
