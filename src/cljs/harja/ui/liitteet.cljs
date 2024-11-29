@@ -449,7 +449,7 @@
                            (when grid? "nappi-grid ")
                            (when disabled? "disabled ")
                            (when nappi-luokka (str nappi-luokka " ")))
-               :on-click #(.stopPropagation %)}
+               :on-click #(.stopPropagation %)
                :tab-index 0 ;; Makes label focusable
                :role "button" ;; Semantically marks the label as a button
                :on-key-down #(when (= (.-key %) "Enter") (= (.-key %) " ") ;; Handle Enter or Space
