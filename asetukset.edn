@@ -4,6 +4,7 @@
                   {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
                   {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
 
+ :clojure-async-thread-poolin-koko 12
  :http-palvelin {:threads 16
                  :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
                  :salli-oletuskayttaja? #=(eval (harja.tyokalut.env/env "HARJA_SALLI_OLETUSKAYTTAJA" false))

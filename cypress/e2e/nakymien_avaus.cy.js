@@ -45,6 +45,12 @@ describe('Päänäkymien avaamiset', function () {
         cy.contains('Hupsista').should('not.exist')
     })
 
+    it("Urakoiden tilanne välilehti toimii", function () {
+        cy.contains('ul#sivut a span', 'Urakoiden tilanne').click({force: true})
+        cy.contains('h1', "Urakoiden tilanne", { timeout: 10000 }).should('be.visible');
+        cy.contains('Hupsista').should('not.exist')
+    })
+
     it("Info -sivu toimii", function () {
         cy.contains('ul li a span', 'INFO').click({ force: true });
         cy.contains('Hupsista').should('not.exist')

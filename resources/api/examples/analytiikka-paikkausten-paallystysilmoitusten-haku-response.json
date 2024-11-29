@@ -2,8 +2,7 @@
   "paallystysilmoitukset": [
     {
       "takuupaivamaara": "2023-11-01T22:00:00Z",
-      "paallystyskohde": 32,
-      "poistettu": false,
+      "paallystyskohde": 34,
       "kulutuskerrokselleTehdytToimetPOT2": [
         {
           "leveys": 4.00,
@@ -52,7 +51,7 @@
           "massamenekki": 115.0,
           "poistettu": false,
           "pituus": 100,
-          "alikohde": 45
+          "alikohde": 48
         }
       ],
       "alustalleTehdytToimetPOT2": [
@@ -72,6 +71,7 @@
           "pituus": 100
         }
       ],
+      "poistettu": false,
       "yhaLahetyksenTila": "Lähetetty onnistuneesti"
     }
   ]

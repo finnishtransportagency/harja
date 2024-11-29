@@ -16,7 +16,7 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (yha-apurit/tarkista-lahetettavat-kohteet db [kohde-id])
   (log/debug (format "Lähetetään kohde: %s YHAan ja Velhoon" kohde-id))
-  (let [yha-lahetys (try+ (yha/laheta-kohteet yha urakka-id [kohde-id])
+  (let [yha-lahetys (try+ (yha/laheta-kohteet yha urakka-id [kohde-id] user)
                           (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                             virheet))
         ;; Velho-lähetys toistaiseksi pois päältä. Testattu enimmäkseen toimivaksi testiympäristössä. On vielä selvityksessä, otetaanko Velho-lähetys käyttöön.
