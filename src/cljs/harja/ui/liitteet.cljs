@@ -445,21 +445,20 @@
   (fn [params-map {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
     [:span
      [:span.liitekomponentti
-      [:label {:class (str "file-upload nappi-reunaton ei-margin-topia "
-                           (when grid? "nappi-grid ")
-                           (when disabled? "disabled ")
-                           (when nappi-luokka (str nappi-luokka " ")))
-               :on-click #(.stopPropagation %)
-               :tab-index 0 ;; Makes label focusable
-               :role "button" ;; Semantically marks the label as a button
-               :on-key-down #(when (= (.-key %) "Enter") (= (.-key %) " ") ;; Handle Enter or Space
-                              (.stopPropagation %)
-                              (.click (.-target %)))}
+             [:button {:tabIndex "0"
+                      :id "tiedoston-lataus-label"
+                      :class (str "file-upload nappi-toissijainen "
+                               (when grid? "nappi-grid ")
+                               (when disabled? "disabled "))
+                      :on-click #(.stopPropagation %)
+                      :on-key-down #(when (harja-dom/enter-nappain? %)
+                                      (.click (.querySelector js/document (str "[id=liitteen-lataus-input]"))))}
        [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
        [:input.upload
-        {:type "file"
+        {:id "liitteen-lataus-input"
+         :type "file"
          :style {:display "none"}
-         :on-input #(do
+         :on-key-down #(do
                       (k/laheta-tiedosto! url (.-target %) params-map tiedosto-ladattu lataus-epaonnistui)
                       ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
                       ;; uudestaan.
