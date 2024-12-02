@@ -1159,7 +1159,8 @@ BEGIN
                 AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                 AND l.urakka = ur
                 AND tpi.id = t.tpi
-                AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54' -- J - Johto- ja hallintokorvaus myös muuksi kuluksi kirjattuna huomioidaan laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä.
+              -- J - Johto- ja hallintokorvaus huomioidaan myös muukulu-tyyppiseksi kirjattuna laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä, joten karsitaan pois tässä.
+              AND ((tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54') OR tr.yksiloiva_tunniste IS NULL)
         LOOP
             IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
                 -- Hoitokausi yhteensä
