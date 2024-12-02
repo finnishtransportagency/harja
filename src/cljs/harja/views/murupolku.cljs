@@ -48,7 +48,8 @@
           [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
 
       [:button.nappi-murupolkualasveto.dropdown-toggle
-       {:on-click #(swap! valinta-auki
+       {:aria-label "Avaa hallintayksikkövalikko"
+        :on-click #(swap! valinta-auki
                      (fn [v]
                        (if (= v :hallintayksikko)
                          nil

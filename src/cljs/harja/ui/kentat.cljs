@@ -73,7 +73,7 @@
     [komponentti data]))
 
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
-                                     kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli? monivalinta? salli-kirjoitus?
+                                     kun-muuttuu hae-kun-yli-n-merkkia monivalinta? salli-kirjoitus?
                                      tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?
                                      hakuikoni? input-id]} data]
   (when monivalinta?
@@ -110,10 +110,11 @@
 
         [:div.hakukentta.dropdown {:class (when (some? @tulokset) "open")}
 
-         [:input {:class (cond-> nil
-                           lomake? (str "form-control ")
-                           vayla-tyyli? (str "input-default komponentin-input ")
-                           disabled? (str "disabled"))
+         [:input {:class (y/luokat
+                           (if lomake?
+                             (str "form-control")
+                             (str "input-default komponentin-input"))
+                           (when disabled? "disabled"))
                   :value @teksti
                   :id input-id
                   :placeholder placeholder
@@ -1693,7 +1694,7 @@
 
               (when (and (not piilota-nappi?) voi-valita-kartalta?)
                 (if-not @karttavalinta-kaynnissa?
-                  [napit/yleinen-ensisijainen
+                  [napit/yleinen-toissijainen
                    (tr-valintanapin-teksti osoite-alussa osoite)
                    #(do
                       (reset! osoite-ennen-karttavalintaa osoite)
