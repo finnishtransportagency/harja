@@ -445,7 +445,8 @@
   (fn [params-map {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
     [:span
      [:span.liitekomponentti
-             [:button {:tabIndex "0"
+             [:button {:tabIndex 0
+                      :role "button" ;; Semanttisesti painike
                       :id "tiedoston-lataus-label"
                       :class (str "file-upload nappi-toissijainen "
                                (when grid? "nappi-grid ")
