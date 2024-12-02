@@ -51,6 +51,7 @@
   [harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat]
   [harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat]
   [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara]
+  [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-ppu]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
@@ -422,7 +423,15 @@
     :konteksti    #{"urakka"}
     :kuvaus       "Kulut tehtäväryhmittäin"
     :suorita      #'harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain/suorita
-    :urakkatyyppi #{:teiden-hoito}}])
+    :urakkatyyppi #{:teiden-hoito}}
+
+   {:nimi         :ppu-paikkausten-yhteenveto
+    :parametrit   [{:tyyppi "urakan-vuosi", :konteksti "urakka", :pakollinen false, :nimi :vuosi}]
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
+    :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-ppu/suorita
+    :kuvaus-tarkenne "Paikkausten yhteenveto PPU"
+    :kuvaus       "KokonaisurakanPaikkaustenyhteenveto"
+    :urakkatyyppi #{:paallystys}}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
