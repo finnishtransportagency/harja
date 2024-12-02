@@ -331,14 +331,15 @@
 
 (defn yleinen-toissijainen
   ([teksti toiminto] (yleinen-toissijainen teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+  ([teksti toiminto {:keys [disabled luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str (cond
                                             (and vayla-tyyli?
                                                  teksti-nappi?) "button-secondary-text"
                                             vayla-tyyli? "button-secondary-default"
-                                            :else "nappi-toissijainen") " " luokka)})]))
+                                            :else "nappi-toissijainen") " " luokka)
+                             :disabled disabled})]))
 
 (defn yleinen-reunaton
   ([teksti toiminto] (yleinen-reunaton teksti toiminto {}))
