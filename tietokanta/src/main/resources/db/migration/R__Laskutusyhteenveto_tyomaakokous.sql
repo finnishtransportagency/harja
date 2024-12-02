@@ -983,7 +983,7 @@ BEGIN
           AND l.urakka = ur
           -- J - Johto- ja hallintokorvaus huomioidaan myös muukulu-tyyppiseksi kirjattuna laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä, joten karsitaan pois tässä.
           AND ((tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54') OR tr.yksiloiva_tunniste IS NULL)
-        LOOP
+    LOOP
         IF rivi.erapaiva <= aikavali_loppupvm THEN
             --
             -- ~ Hoitokausi ~
