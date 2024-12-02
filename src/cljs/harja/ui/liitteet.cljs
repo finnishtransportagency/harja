@@ -293,7 +293,8 @@
                               :salli-poisto? salli-poistaa-lisatty-liite?
                               :poista-liite-fn poista-liite}]
                             [liitetiedosto liite {:salli-poisto? salli-poistaa-lisatty-liite?
-                                                  :poista-liite-fn poista-liite}]))]
+                                                  :poista-liite-fn poista-liite}]))
+            inputin-id "tiedoston-lataus-input"]
         [:span
          ;; Näytä vastikään ladattu liite / liitteet
          (when (and nayta-lisatyt-liitteet? @tiedosto)
@@ -308,14 +309,17 @@
            [:progress {:value edistyminen :max 100}]
            ;; Näytetään uuden liitteen lisäyspainike
            [:span.liitekomponentti
-            [:button {:tabIndex "0"
-                      :id "tiedoston-lataus-label"
+            [:button {:id "tiedoston-lataus-label"
                       :class (str "file-upload nappi-toissijainen "
                                (when grid? "nappi-grid ")
                                (when disabled? "disabled "))
-                      :on-click #(.stopPropagation %)
+                      :on-click #(do
+                                   (.stopPropagation %)
+                                   (-> (.getElementById js/document inputin-id) .click))
                       :on-key-down #(when (harja-dom/enter-nappain? %)
-                                      (.click (.querySelector js/document (str "[id=tiedoston-lataus-input]"))))}
+                                      (.stopPropagation %)
+                                      (.preventDefault %)
+                                      (-> (.getElementById js/document inputin-id) .click))}
              [ikonit/ikoni-ja-teksti
               (ikonit/livicon-upload)
               (if @tiedosto
@@ -351,12 +355,12 @@
                                                                      (if (:viesti ed)
                                                                        (str " (" (:viesti ed) ")")))))))))))]
 
-                {:id "tiedoston-lataus-input"
+                {:id inputin-id
                  :type "file"
                  :style {:display "none"}
-                 :on-key-down #(if (harja-dom/enter-nappain? %)
-                                 (on-change-fn (.-target %) urakka-id)
-                                 (js/console.log "Ei enteriä : %" (pr-str %)))
+                 :on-click #(.stopPropagation %)
+                 :on-key-down #(when (harja-dom/enter-nappain? %)
+                                 (on-change-fn (.-target %) urakka-id))
                  :on-change #(on-change-fn (.-target %) urakka-id)})]]
             [:div.liite-virheviesti @virheviesti]])]))))
 
