@@ -460,9 +460,12 @@
                                       (.stopPropagation %)
                                       (.preventDefault %)
                                       (-> (.getElementById js/document inputin-id) .click))}
-             [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lisää tiedosto")]
-             [:input.upload
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
+       [:input.upload
+        {:type "file"
+         :style {:display "none"}
+         :on-input #(do
                       (k/laheta-tiedosto! url (.-target %) params-map tiedosto-ladattu lataus-epaonnistui)
                       ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
                       ;; uudestaan.
-                      (set! (.-value (.-target %)) nil)]]]])
+                      (set! (.-value (.-target %)) nil))}]]]])
