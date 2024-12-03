@@ -449,22 +449,20 @@
   (fn [params-map {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
     [:span
      [:span.liitekomponentti
-             [:button {:tabIndex 0
-                      :role "button" ;; Semanttisesti painike
-                      :id "tiedoston-lataus-label"
+            [:button {:id "liitteen-lataus-label"
                       :class (str "file-upload nappi-toissijainen "
                                (when grid? "nappi-grid ")
                                (when disabled? "disabled "))
-                      :on-click #(.stopPropagation %)
+                      :on-click #(do
+                                   (.stopPropagation %)
+                                   (-> (.getElementById js/document inputin-id) .click))
                       :on-key-down #(when (harja-dom/enter-nappain? %)
-                                      (.click (.querySelector js/document (str "[id=liitteen-lataus-input]"))))}
-       [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
-       [:input.upload
-        {:id "liitteen-lataus-input"
-         :type "file"
-         :style {:display "none"}
-         :on-key-down #(do
+                                      (.stopPropagation %)
+                                      (.preventDefault %)
+                                      (-> (.getElementById js/document inputin-id) .click))}
+             [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lisää liite")]
+             [:input.upload
                       (k/laheta-tiedosto! url (.-target %) params-map tiedosto-ladattu lataus-epaonnistui)
                       ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
                       ;; uudestaan.
-                      (set! (.-value (.-target %)) nil))}]]]]))
+                      (set! (.-value (.-target %)) nil)]]]])
