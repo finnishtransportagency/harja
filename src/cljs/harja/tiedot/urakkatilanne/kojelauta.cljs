@@ -26,17 +26,23 @@
             (vec (sort-by :nimi itemit)))))))
 
 (def tila (atom {:urakat []
-                 :valinnat {:urakkatyyppi {:nimi "Hoito" :arvo :hoito}
+                 :valinnat {:urakkatyyppi {:nimi "Päällystys" :arvo :paallystys}
                             :ely nil
                             :urakat nil
                             :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
 (defn paallystystietojen-yhteenveto [urakat]
   (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
-        valmiit-koheet (reduce + 0 (map :valmis_hyvaksytty urakat))]
+        valmiit-kohteet (reduce + 0 (map :valmis_hyvaksytty urakat))
+        pot-lahetetty (reduce +  0 (map :lahetetty_onnistuneesti urakat))
+        epaonnistuneet-lahetetyt (reduce + 0 (map :lahetetty_onnistuneesti urakat))
+        valmiit-ei-lahetetty (reduce + 0 (map :valmiit_ei_lahetetty urakat))]
     [yleiset/tietoja {:class "body-text"}
      "Kohteita yhteensä" (str kohteiden-lukumaara)
-     "Valmiit:" (str valmiit-koheet)]))
+     "Valmiit:" (str valmiit-kohteet)
+     "Lähetetty:" (str pot-lahetetty)
+     "Lähetys epäonnistunut:" (str epaonnistuneet-lahetetyt)
+     "Ei lähetetty, mutta valmis:" (str valmiit-ei-lahetetty)]))
 
 (defn poikkeusten-yhteenveto
   [urakat]
