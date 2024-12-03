@@ -1,5 +1,6 @@
 (ns harja.ui.napit
-  (:require [harja.ui.ikonit :as ikonit]
+  (:require [clojure.string :as str]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.viesti :as viesti]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as y]
@@ -161,7 +162,7 @@
                              luokka)
              :tab-index tabindex
              :aria-label (or aria-label
-                           "Painike")
+                           teksti)
              :disabled  disabled
              :style     style
              :title     title
@@ -183,9 +184,11 @@
 
           (if (and ikoni
                    (not tallennus-kaynnissa?))
-            (if ikoni-oikealle?
-              [ikonit/teksti-ja-ikoni teksti ikoni]
-              [ikonit/ikoni-ja-teksti ikoni teksti])
+            (if (str/blank? teksti)
+              ikoni
+              (if ikoni-oikealle?
+                [ikonit/teksti-ja-ikoni teksti ikoni]
+                [ikonit/ikoni-ja-teksti ikoni teksti]))
             teksti)])))))
 
 (defn harmaa
@@ -328,14 +331,15 @@
 
 (defn yleinen-toissijainen
   ([teksti toiminto] (yleinen-toissijainen teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+  ([teksti toiminto {:keys [disabled luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str (cond
                                             (and vayla-tyyli?
                                                  teksti-nappi?) "button-secondary-text"
                                             vayla-tyyli? "button-secondary-default"
-                                            :else "nappi-toissijainen") " " luokka)})]))
+                                            :else "nappi-toissijainen") " " luokka)
+                             :disabled disabled})]))
 
 (defn yleinen-reunaton
   ([teksti toiminto] (yleinen-reunaton teksti toiminto {}))

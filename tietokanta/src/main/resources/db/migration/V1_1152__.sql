@@ -1,2 +1,3 @@
--- Päivitetään mpu_kustannukset taulun nimi, koska sinne tallennetaan myös muiden paikkausten kustannuksia
-ALTER TABLE mpu_kustannukset RENAME TO paikkauskustannukset;
+-- Oikea nimi on Talvisuola, rakeinen NaCl. Tuotannossa virheellistä versiota ei ole, mutta testiympäristössä on.
+DELETE FROM materiaalikoodi WHERE nimi = 'Talvisuola NaCl, rakeinen';
+
