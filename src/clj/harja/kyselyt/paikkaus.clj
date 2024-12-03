@@ -24,6 +24,9 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.tierekisteri :as tr-domain]))
 
+(declare hae-urakan-paikkauskohteet-ja-paikkaukset hae-paikkauskohteen-tyomenetelma
+  paivita-paikkauskohteen-ilmoitettu-virhe!)
+
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman.")
 

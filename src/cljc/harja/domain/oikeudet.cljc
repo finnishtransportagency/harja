@@ -21,7 +21,8 @@
   hallinta-pohjavesialueidensiirto
   hallinta-toteumatyokalu
   urakat-laadunseuranta-talvihoitoreititys
-  urakat-paikkaukset-toteumat)
+  urakat-paikkaukset-toteumat
+  urakat-paikkaukset-kustannukset)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
