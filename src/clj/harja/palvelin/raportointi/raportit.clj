@@ -426,20 +426,22 @@
     :urakkatyyppi #{:teiden-hoito}}
 
    {:nimi         :ppu-paikkausten-yhteenveto
-    :parametrit   [{:tyyppi "urakan-vuosi", :konteksti "urakka", :pakollinen false, :nimi :vuosi}]
+    :parametrit   [{:tyyppi "urakan-vuosi", :konteksti "urakka", :pakollinen true, :nimi :vuosi}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
     :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto/suorita-ppu
     :kuvaus-tarkenne "Paikkausten yhteenveto PPU"
     :kuvaus       "KokonaisurakanPaikkaustenyhteenveto"
-    :urakkatyyppi #{:paallystys}}
+    :urakkatyyppi #{:paallystys}
+    :sopimustyyppi #{:kokonaisurakka}}
 
    {:nimi         :mpu-paikkausten-yhteenveto
-    :parametrit   [{:tyyppi "urakan-vuosi", :konteksti "urakka", :pakollinen false, :nimi :vuosi}]
+    :parametrit   [{:tyyppi "urakan-vuosi", :konteksti "urakka", :pakollinen true, :nimi :vuosi}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
     :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto/suorita-mpu
     :kuvaus-tarkenne "Paikkausten yhteenveto MPU"
     :kuvaus       "MPUPaikkaustenyhteenveto"
-    :urakkatyyppi #{:paallystys}}])
+    :urakkatyyppi #{:paallystys}
+    :sopimustyyppi #{:mpu}}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
