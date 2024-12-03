@@ -468,4 +468,4 @@
                       (k/laheta-tiedosto! url (.-target %) params-map tiedosto-ladattu lataus-epaonnistui)
                       ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
                       ;; uudestaan.
-                      (set! (.-value (.-target %)) nil))}]]]])
+                      (set! (.-value (.-target %)) nil))}]]]]))
