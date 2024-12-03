@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-ppu
+(ns harja.palvelin.raportointi.raportit.paikkausten-yhteenveto
   (:require [taoensso.timbre :as log]
             [jeesql.core :refer [defqueries]]
             [harja.pvm :as pvm]
@@ -6,7 +6,8 @@
             [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]))
 
 (defqueries "harja/palvelin/raportointi/raportit/paikkausten_yhteenveto.sql")
-(declare hae-kustannukset-tyomenetelmittain hae-maarat-tyomenetelmittain)
+(declare hae-kustannukset-tyomenetelmittain hae-maarat-tyomenetelmittain hae-kasin-lisatyt-paikkauskustannukset
+  hae-reikapaikkauskustannukset-tyomenetelmittain)
 
 (defn tyomenetelma-rivi-xf
   "Parsitaan työmenetelmädatasta raportille sopiva rivi."
@@ -141,47 +142,8 @@
                       0))
               data)))
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
-  (log/debug "Paikkausten yhteenvetoraportti :: suorita urakka_id=" urakka-id " alkupvm=" alkupvm " loppupvm=" loppupvm
-    " parametrit=" parametrit)
-  (let [urakka (first (urakat-q/hae-urakka db urakka-id))
-        hoitokauden-alkuvuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi alkupvm)))
-        raportin-nimi "Paikkausten yhteenveto"
-        parametrit {:urakkaid urakka-id
-                    :alkupvm alkupvm
-                    :loppupvm loppupvm}
-        tyomenetelmakustannukset (into [] (hae-kustannukset-tyomenetelmittain db parametrit))
-        tilatut-kustannukset (apply + (map (fn [rivi]
-                                             (if (and rivi (:suunniteltu-hinta rivi))
-                                               (:suunniteltu-hinta rivi)
-                                               0))
-                                        tyomenetelmakustannukset))
-        toteutuneet-kustannukset (apply + (map (fn [rivi]
-                                                 (if (and rivi (:toteutunut-hinta rivi))
-                                                   (:toteutunut-hinta rivi)
-                                                   0))
-                                            tyomenetelmakustannukset))
-        yhteenvetorivi {:nimi "Yhteensä"
-                        :suunniteltu-hinta tilatut-kustannukset
-                        :toteutunut-hinta toteutuneet-kustannukset
-                        :yhteenveto true}
-        tyomenetelmakustannukset (conj tyomenetelmakustannukset yhteenvetorivi)
-
-        tyomenetelmamaarat (hae-maarat-tyomenetelmittain db parametrit)
-
-        reikapaikkauskustannukset (into [] (hae-reikapaikkauskustannukset-tyomenetelmittain db parametrit))
-        toteutuneet-reikapaikkauskustannukset (apply + (map (fn [rivi]
-                                                              (if (and rivi (:toteutunut-hinta rivi))
-                                                                (:toteutunut-hinta rivi)
-                                                                0))
-                                                         reikapaikkauskustannukset))
-        reikapaikkauskustannukset-yht {:nimi "Yhteensä"
-                                       :toteutunut-hinta toteutuneet-reikapaikkauskustannukset
-                                       :yhteenveto true}
-        reikapaikkauskustannukset (conj reikapaikkauskustannukset reikapaikkauskustannukset-yht)
-
-        ;; Muut kustannukset
-        sankiot-ja-bonukset (laadunseuranta-palvelu/hae-urakan-sanktiot-ja-bonukset db user
+(defn koosta-muut-kustannukset [db user urakka-id hoitokauden-alkuvuosi alkupvm loppupvm]
+  (let [sankiot-ja-bonukset (laadunseuranta-palvelu/hae-urakan-sanktiot-ja-bonukset db user
                               {:urakka-id urakka-id
                                :alku alkupvm
                                :loppu loppupvm
@@ -201,14 +163,59 @@
         yht-muut-kustannukset {:nimi "Yhteensä"
                                :toteutunut-hinta (apply + (map :toteutunut-hinta muut-kustannukset))
                                :yhteenveto true}
-        muut-kustannukset (conj muut-kustannukset yht-muut-kustannukset)
+        muut-kustannukset (conj muut-kustannukset yht-muut-kustannukset)]
+    muut-kustannukset))
 
-        muut-kuin-paikkaus-kustannukset 7M
-        pk1-kustannukset 8M
-        pk2-kustannukset 9M
-        pk3-kustannukset 10M
-        pk-puuttuu-kustannukset 11M
+(defn koosta-reikapaikkauskustannukset [db parametrit]
+  (let [reikapaikkauskustannukset (into [] (hae-reikapaikkauskustannukset-tyomenetelmittain db parametrit))
+        toteutuneet-reikapaikkauskustannukset (apply + (map (fn [rivi]
+                                                              (if (and rivi (:toteutunut-hinta rivi))
+                                                                (:toteutunut-hinta rivi)
+                                                                0))
+                                                         reikapaikkauskustannukset))
+        reikapaikkauskustannukset-yht {:nimi "Yhteensä"
+                                       :toteutunut-hinta toteutuneet-reikapaikkauskustannukset
+                                       :yhteenveto true}]
+    (conj reikapaikkauskustannukset reikapaikkauskustannukset-yht)))
 
+(defn yhteiset-tiedot [db user urakka-id vuosi mpu?]
+  (let [urakka (first (urakat-q/hae-urakka db urakka-id))
+        alkupvm (pvm/luo-pvm vuosi 1 1)
+        loppupvm (pvm/luo-pvm vuosi 12 31)
+        hoitokauden-alkuvuosi vuosi
+        raportin-nimi "Paikkausten yhteenveto"
+        parametrit {:urakkaid urakka-id
+                    :alkupvm alkupvm
+                    :loppupvm loppupvm}
+
+        tyomenetelmakustannukset (into [] (hae-kustannukset-tyomenetelmittain db parametrit))
+        tilatut-kustannukset (apply + (map (fn [rivi]
+                                             (if (and rivi (:suunniteltu-hinta rivi))
+                                               (:suunniteltu-hinta rivi)
+                                               0))
+                                        tyomenetelmakustannukset))
+        toteutuneet-kustannukset (apply + (map (fn [rivi]
+                                                 (if (and rivi (:toteutunut-hinta rivi))
+                                                   (:toteutunut-hinta rivi)
+                                                   0))
+                                            tyomenetelmakustannukset))
+        yhteenvetorivi {:nimi "Yhteensä"
+                        :suunniteltu-hinta tilatut-kustannukset
+                        :toteutunut-hinta toteutuneet-kustannukset
+                        :yhteenveto true}
+        tyomenetelmakustannukset (conj tyomenetelmakustannukset yhteenvetorivi)
+
+        tyomenetelmamaarat (hae-maarat-tyomenetelmittain db parametrit)
+        reikapaikkauskustannukset (when mpu? (koosta-reikapaikkauskustannukset db parametrit))
+        muut-kustannukset (koosta-muut-kustannukset db user urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+
+        muut-kuin-paikkaus-kustannukset (apply + (map :toteutunut-hinta muut-kustannukset))
+
+        ;; PK-luokkia ei ole olemassa paikkauskohteilla
+        ; pk1-kustannukset 8M
+        ; pk2-kustannukset 9M
+        ; pk3-kustannukset 10M
+        ; pk-puuttuu-kustannukset 11M
 
         raportti
         [:raportti {:nimi raportin-nimi
@@ -232,18 +239,18 @@
                                 :toteutuneet toteutuneet-kustannukset
                                 :muut muut-kuin-paikkaus-kustannukset})]]
 
-         ;; Toteutuneet paikkauskustannukset PK-luokittain
-         [:taulukko {:otsikko "Toteutuneet paikkauskustannukset PK-luokittain"
-                     :oikealle-tasattavat-kentat #{}
-                     :sheet-nimi "Toteutuneet paikkauskustannukset PK-luokittain"}
-          [{:leveys 1 :otsikko "PK1"}
-           {:leveys 1 :otsikko "PK2"}
-           {:leveys 1 :otsikko "PK3"}
-           {:leveys 1 :otsikko "PK-luokka puuttuu"}]
-          [(pk-rivi-xf {:pk1 pk1-kustannukset
-                        :pk2 pk2-kustannukset
-                        :pk3 pk3-kustannukset
-                        :pk-puuttuu pk-puuttuu-kustannukset})]]
+         ;; Toteutuneet paikkauskustannukset PK-luokittain - odottamaan pk-luokkien generointia
+         #_[:taulukko {:otsikko "Toteutuneet paikkauskustannukset PK-luokittain"
+                       :oikealle-tasattavat-kentat #{}
+                       :sheet-nimi "Toteutuneet paikkauskustannukset PK-luokittain"}
+            [{:leveys 1 :otsikko "PK1"}
+             {:leveys 1 :otsikko "PK2"}
+             {:leveys 1 :otsikko "PK3"}
+             {:leveys 1 :otsikko "PK-luokka puuttuu"}]
+            [(pk-rivi-xf {:pk1 pk1-kustannukset
+                          :pk2 pk2-kustannukset
+                          :pk3 pk3-kustannukset
+                          :pk-puuttuu pk-puuttuu-kustannukset})]]
 
          ;; Kustannukset tehtäväryhmittäin
          [:taulukko {:otsikko "Kustannukset työmenetelmittäin"
@@ -266,16 +273,17 @@
            {:leveys 2 :otsikko "Toteutunut määrä" :fmt :raha}]
           (map tyomenetelma-maara-rivi-xf tyomenetelmamaarat)]
 
-         ;; Reikäpaikkausten Kustannukset työmenetelmittäin
-         [:taulukko {:otsikko "Reikäpaikkausten kustannukset"
-                     :tyhja "Ei reikäpaikkauksia."
-                     :oikealle-tasattavat-kentat #{2 3}
-                     :sheet-nimi "Reikäpaikkausten kustannukset"}
-          [{:leveys 6 :otsikko "Työmenetelmä"}
-           {:leveys 1 :otsikko "Yksikkö"}
-           {:leveys 1 :otsikko "Toteutunut määrä"}
-           {:leveys 1 :otsikko "Toteutunut (EUR)" :fmt :raha}]
-          (map reikapaikkaus-rivi-xf reikapaikkauskustannukset)]
+         ;; Reikäpaikkausten Kustannukset työmenetelmittäin - Vain MPU raportilla
+         (when mpu?
+           [:taulukko {:otsikko "Reikäpaikkausten kustannukset"
+                       :tyhja "Ei reikäpaikkauksia."
+                       :oikealle-tasattavat-kentat #{2 3}
+                       :sheet-nimi "Reikäpaikkausten kustannukset"}
+            [{:leveys 6 :otsikko "Työmenetelmä"}
+             {:leveys 1 :otsikko "Yksikkö"}
+             {:leveys 1 :otsikko "Toteutunut määrä"}
+             {:leveys 1 :otsikko "Toteutunut (EUR)" :fmt :raha}]
+            (map reikapaikkaus-rivi-xf reikapaikkauskustannukset)])
 
          ;; Muut kustannukset - eli käsin lisätyt kustannukset
          [:taulukko {:otsikko "Muut kustannukset"
@@ -284,9 +292,16 @@
                      :sheet-nimi "Muut kustannukset"}
           [{:leveys 6 :otsikko ""}
            {:leveys 1 :otsikko "Toteutunut (EUR)" :fmt :raha}]
-          (map muut-kustannukset-rivi-xf muut-kustannukset)]
-
-         ]]
+          (map muut-kustannukset-rivi-xf muut-kustannukset)]]]
 
     ;; Palautetaan raportti
     raportti))
+
+(defn suorita-ppu [db user {:keys [urakka-id vuosi] :as parametrit}]
+  (log/debug "Paikkausten yhteenvetoraportti PPU :: suorita urakka_id=" urakka-id " vuosi=" vuosi " parametrit=" parametrit)
+  (yhteiset-tiedot db user urakka-id vuosi false))
+
+
+(defn suorita-mpu [db user {:keys [urakka-id vuosi] :as parametrit}]
+  (log/debug "Paikkausten yhteenvetoraportti MPU :: suorita urakka_id=" urakka-id " vuosi=" vuosi " parametrit=" parametrit)
+  (yhteiset-tiedot db user urakka-id vuosi true))
