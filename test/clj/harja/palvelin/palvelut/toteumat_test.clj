@@ -747,27 +747,27 @@
                                                 :tehtava nil})]
     (is (= odotettu vastaus) "hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat oikein")))
 
-(defn- luo-toteuma [urakka-id pvm]
+(defn- luo-partition-testitoteuma [urakka-id pvm]
   (i (format "INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, lisatieto, suorittajan_ytunnus, suorittajan_nimi, poistettu, muokkaaja, muokattu, luoja, ulkoinen_id, reitti, tyyppi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, lahde, envelope, tyokonetyyppi, tyokonetunniste, tyokoneen_lisatieto, json_hash)
   VALUES (%s, 42, NOW(), '%s', '%s', 'part-test', '4153724-6', 'Seppo Suorittaja', false, null, null, 2, null, null, 'kokonaishintainen', null, null, null, null, null, 'harja-ui', null, null, null, null, null);"
        urakka-id pvm pvm)))
 
 (deftest toteumien-insertit-partitioille
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")]
-    (luo-toteuma urakka-id "2025-1-1")
-    (luo-toteuma urakka-id "2025-3-1")
-    (luo-toteuma urakka-id "2025-6-30")
-    (luo-toteuma urakka-id "2025-7-1")
-    (luo-toteuma urakka-id "2025-8-1")
-    (luo-toteuma urakka-id "2025-12-31")
-    (luo-toteuma urakka-id "2026-1-1")
-    (luo-toteuma urakka-id "2026-3-1")
-    (luo-toteuma urakka-id "2026-4-1")
-    (luo-toteuma urakka-id "2026-6-30")
-    (luo-toteuma urakka-id "2026-7-1")
-    (luo-toteuma urakka-id "2026-8-1")
-    (luo-toteuma urakka-id "2026-9-1")
-    (luo-toteuma urakka-id "2026-12-31")
+    (luo-partition-testitoteuma urakka-id "2025-1-1")
+    (luo-partition-testitoteuma urakka-id "2025-3-1")
+    (luo-partition-testitoteuma urakka-id "2025-6-30")
+    (luo-partition-testitoteuma urakka-id "2025-7-1")
+    (luo-partition-testitoteuma urakka-id "2025-8-1")
+    (luo-partition-testitoteuma urakka-id "2025-12-31")
+    (luo-partition-testitoteuma urakka-id "2026-1-1")
+    (luo-partition-testitoteuma urakka-id "2026-3-1")
+    (luo-partition-testitoteuma urakka-id "2026-4-1")
+    (luo-partition-testitoteuma urakka-id "2026-6-30")
+    (luo-partition-testitoteuma urakka-id "2026-7-1")
+    (luo-partition-testitoteuma urakka-id "2026-8-1")
+    (luo-partition-testitoteuma urakka-id "2026-9-1")
+    (luo-partition-testitoteuma urakka-id "2026-12-31")
     (let [maara-partitio-2025-h1 (ffirst (q (format "SELECT count(*) FROM toteuma_250101_250701 WHERE lisatieto = 'part-test' AND urakka = %s;" urakka-id)))
           maara-partitio-2025-h2 (ffirst (q (format "SELECT count(*) FROM toteuma_250701_260101 WHERE lisatieto = 'part-test' AND urakka = %s;" urakka-id)))
           maara-partitio-2026-h1 (ffirst (q (format "SELECT count(*) FROM toteuma_260101_260701 WHERE lisatieto = 'part-test' AND urakka = %s;" urakka-id)))
