@@ -1,113 +1,83 @@
--- Päivitetään mpu_kustannukset taulun nimi, koska sinne tallennetaan myös muiden paikkausten kustannuksia
-ALTER TABLE mpu_kustannukset RENAME TO paikkauskustannukset;
+-- Huomattiin että partitioiden luontifunktio on luotava numeromigraatiossa, ja aina ennen kuin sitä kutsutaan
+-- Toteuma -taulu on partitioitu puolen vuoden partitioihin suorituskyvyn varmistamiseksi.
+-- Siirretään migraatiotiedoistoista tänne r -tiedostoon tämä funktio, jotta sitä ei tarvitse luoda aina uusiksi migraatiotiedoistoissa.
+-- Funktio luo uudet partitiotaulut toteuma-taululle annetun aikavälin mukaan.
+-- Funktio on tarkoitus ajaa aina kun toteuma-taululle on tarpeen tehdä uusi partitio. Seuraavaksi se on ajankohtaista syksyllä 2024
+-- Funktio luo uuden partitiotaulun, joka perii toteuma-taulun rakenteen ja lisää siihen tarvittavat indeksit ja triggerit.
 
--- Lisätään paikkauskohteille pkluokka
-ALTER TABLE paikkauskohde ADD COLUMN pkluokka text;
-
--- Lasketaan paikkauskohteelle pkluokka tieosoitteen perusteella
-CREATE OR REPLACE FUNCTION paivita_paikkauskohteen_korjausluokka(paikkauskohde_id INTEGER)
+CREATE OR REPLACE FUNCTION luo_toteumataulun_partitio(alkupvm DATE, loppupvm DATE)
     RETURNS VOID AS
 $$
 DECLARE
-    kohde      RECORD;
-    pk1geom    GEOMETRY;
-    pk2geom    GEOMETRY;
-    pk3geom    GEOMETRY;
-    radius     INTEGER := 10;
-    pk1_pituus NUMERIC;
-    pk2_pituus NUMERIC;
-    pk3_pituus NUMERIC;
-    pkluokka_t TEXT;
-
+    partitio TEXT;
 BEGIN
-    SELECT (tierekisteriosoite_laajennettu).tie as tie,
-           (tierekisteriosoite_laajennettu).aosa as aosa,
-           (tierekisteriosoite_laajennettu).losa as losa,
-           CASE WHEN (tierekisteriosoite_laajennettu).tie IS NOT NULL
-               AND (tierekisteriosoite_laajennettu).aosa IS NOT NULL
-               AND (tierekisteriosoite_laajennettu).losa IS NOT NULL
-               AND (tierekisteriosoite_laajennettu).aet IS NOT NULL
-               AND (tierekisteriosoite_laajennettu).let IS NOT NULL
-                    THEN
-                    (SELECT tierekisteriosoitteelle_viiva AS geometria
-                       FROM tierekisteriosoitteelle_viiva(
-                               CAST((tierekisteriosoite_laajennettu).tie AS INTEGER),
-                               CAST((tierekisteriosoite_laajennettu).aosa AS INTEGER),
-                               CAST((tierekisteriosoite_laajennettu).aet AS INTEGER),
-                               CAST((tierekisteriosoite_laajennettu).losa AS INTEGER),
-                               CAST((tierekisteriosoite_laajennettu).let AS INTEGER)))
-                ELSE
-                    NULL
-               END AS geometria
-      FROM paikkauskohde pk
-     WHERE pk.id = paikkauskohde_id INTO kohde;
+    partitio := 'toteuma_' || TO_CHAR(alkupvm, 'YYMMDD') || '_' || TO_CHAR(loppupvm, 'YYMMDD');
 
-    -- Tieosoite voi olla tyhjä
-    IF kohde.tie IS NULL OR kohde.aosa IS NULL OR kohde.losa IS NULL OR kohde.geometria IS NULL  THEN
-        RAISE NOTICE 'Tieosoite puuttuu paikkauskohteelta % - Ei lasketa PK luokkaa', paikkauskohde_id;
-        RAISE NOTICE 'kohde.tie %, kohde.aosa: %, kohde.losa: %, kohde.geometria: %', kohde.tie, kohde.aosa, kohde.losa, kohde.geometria;
-        RETURN;
-    END IF;
+    PERFORM validoi_hoitokauden_alkupvm(alkupvm);
 
-    SELECT ST_BUFFER(ST_UNION(p.geometria), radius, 'endcap=flat')
-      INTO pk1geom
-      FROM paallysteen_korjausluokka p
-     WHERE p.korjausluokka = 'PK1'
-       AND p.tie = kohde.tie
-       AND p.aosa = kohde.aosa
-       AND p.losa = kohde.losa;
+    -- CREATE PARTITION TABLE, INHERITING FROM TOTEUMA
+    EXECUTE 'CREATE TABLE IF NOT EXISTS ' || partitio ||
+            ' ( CHECK( alkanut >= ''' || alkupvm || ''' AND alkanut < ''' || loppupvm || ''')) INHERITS (toteuma)';
 
-    SELECT ST_BUFFER(ST_UNION(p.geometria), radius, 'endcap=flat')
-      INTO pk2geom
-      FROM paallysteen_korjausluokka p
-     WHERE p.korjausluokka = 'PK2'
-       AND p.tie = kohde.tie
-       AND p.aosa = kohde.aosa
-       AND p.losa = kohde.losa;
+    -- PRIMARY KEY SUBSTITUTE
+    EXECUTE 'CREATE UNIQUE INDEX ' || partitio || '_id_idx ON ' || partitio || '(id)';
+    EXECUTE
+        'ALTER TABLE ' || partitio || ' ADD CONSTRAINT ' || partitio || '_pkey PRIMARY KEY USING INDEX ' || partitio ||
+        '_id_idx';
 
-    SELECT ST_BUFFER(ST_UNION(p.geometria), radius, 'endcap=flat')
-      INTO pk3geom
-      FROM paallysteen_korjausluokka p
-     WHERE p.korjausluokka = 'PK3'
-       AND p.tie = kohde.tie
-       AND p.aosa = kohde.aosa
-       AND p.losa = kohde.losa;
+    -- OTHER INDEXES
+    EXECUTE 'ALTER TABLE ' || partitio || ' ADD CONSTRAINT ' || partitio ||
+            '_uniikki_ulkoinen_id_luoja_urakka UNIQUE (ulkoinen_id, luoja, urakka)';
+    EXECUTE 'CREATE INDEX ' || partitio || '_alkanut_idx ON ' || partitio || '(alkanut)';
+    EXECUTE 'CREATE INDEX ' || partitio || '_urakka_idx ON ' || partitio || '(urakka)';
+    EXECUTE 'CREATE INDEX ' || partitio || '_sopimus_idx ON ' || partitio || '(sopimus)';
+    EXECUTE 'CREATE INDEX ' || partitio || '_tyyppi_urakka_alkanut_idx ON ' || partitio || '(tyyppi, urakka, alkanut)';
+    EXECUTE 'CREATE INDEX ' || partitio || '_urakka_alkanut_poistettu_idx ON ' || partitio ||
+            '(urakka, alkanut, poistettu)';
+    EXECUTE 'CREATE INDEX ' || partitio || '_envelope_idx ON ' || partitio || ' USING GIST (envelope);';
+    -- Nyt lisätty indeksi toteuman json_hash kentälle
+    EXECUTE 'CREATE INDEX ' || partitio || '_json_hash_idx ON ' || partitio || '(json_hash)';
+    EXECUTE 'CREATE UNIQUE INDEX ' || partitio || '_ulkoinen_id_urakka_poistettu_uindex
+        ON ' || partitio || '(ulkoinen_id, urakka, poistettu)';
+
+    -- FOREIGN KEYS
+    EXECUTE 'ALTER TABLE ' || partitio || ' ADD CONSTRAINT ' || partitio ||
+            '_luoja_fkey FOREIGN KEY (luoja) REFERENCES kayttaja (id);';
+    EXECUTE 'ALTER TABLE ' || partitio || ' ADD CONSTRAINT ' || partitio ||
+            '_urakka_fkey FOREIGN KEY (urakka) REFERENCES urakka (id);';
+    EXECUTE 'ALTER TABLE ' || partitio || ' ADD CONSTRAINT ' || partitio ||
+            '_sopimus_fkey FOREIGN KEY (sopimus) REFERENCES sopimus (id);';
+
+    -- Toteuman envelopen luonti
+    EXECUTE 'CREATE TRIGGER tg_muodosta_toteuman_envelope
+        BEFORE INSERT OR UPDATE
+        ON ' || partitio || '
+        FOR EACH ROW
+    EXECUTE PROCEDURE muodosta_toteuman_envelope();';
 
 
-    pk1_pituus := (SELECT COALESCE(st_length(st_intersection(kohde.geometria, pk1geom)), 0));
-    pk2_pituus := (SELECT COALESCE(st_length(st_intersection(kohde.geometria, pk2geom)), 0));
-    pk3_pituus := (SELECT COALESCE(st_length(st_intersection(kohde.geometria, pk3geom)), 0));
+    -- On luotava triggerit lapsitauluihin, koska UPDATE triggerit eivät mene ajoon emotaulusta (updatea ei sinne tapahdu koska data ei ole siellä)
+    EXECUTE 'CREATE TRIGGER tg_poista_muistetut_laskutusyht_tot
+       AFTER INSERT OR UPDATE
+       ON ' || partitio || '
+       FOR EACH ROW
+       WHEN (NEW.tyyppi != ''kokonaishintainen''::toteumatyyppi)
+    EXECUTE PROCEDURE poista_muistetut_laskutusyht_tot();';
 
-    CASE
-        WHEN pk1_pituus > pk2_pituus AND pk1_pituus > pk3_pituus THEN pkluokka_t := 'PK1';
-        WHEN pk2_pituus > pk1_pituus AND pk2_pituus > pk3_pituus THEN pkluokka_t := 'PK2';
-        WHEN pk3_pituus > pk1_pituus AND pk3_pituus > pk2_pituus THEN pkluokka_t := 'PK3';
-        ELSE pkluokka_t := 'Ei tiedossa';
-        END CASE;
+    -- Toteuman luontitransaktion lopuksi päivitetään materiaalin käyttö
+    EXECUTE 'CREATE CONSTRAINT TRIGGER tg_vahenna_urakan_materiaalin_kayttoa_hoitoluokittain
+       AFTER UPDATE
+       ON ' || partitio || '
+       DEFERRABLE INITIALLY DEFERRED
+       FOR EACH ROW
+       WHEN (NEW.lahde = ''harja-api'')
+    EXECUTE PROCEDURE vahenna_urakan_materiaalin_kayttoa_hoitoluokittain();';
 
-    UPDATE paikkauskohde SET pkluokka = pkluokka_t WHERE id = paikkauskohde_id;
-
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION paivita_paikkauskohteiden_korjausluokat(alku DATE, loppu DATE)
-    RETURNS VOID AS
-$$
-DECLARE
-    kohdeid      integer;
-
-
-BEGIN
-
-    -- Loopataan löydetyt paikkauskohteet läpi
-    FOR kohdeid IN (SELECT pk.id
-                      FROM paikkauskohde pk
-                     WHERE pk.alkupvm BETWEEN alku::DATE AND loppu::DATE
-                       AND pk.poistettu = FALSE
-                     ORDER BY pk.id ASC)
-        LOOP
-            PERFORM paivita_paikkauskohteen_korjausluokka(kohdeid);
-        END LOOP;
-
-END;
+    -- Toteuman päivitys jos alkanut-kenttä muuttuu
+    EXECUTE 'CREATE TRIGGER update_toteuma_check_partition_tg
+       BEFORE UPDATE ON ' || partitio || '
+       FOR EACH ROW
+       WHEN (OLD.alkanut IS DISTINCT FROM NEW.alkanut)
+    EXECUTE PROCEDURE update_toteuma_check_partition();';
+END
 $$ LANGUAGE plpgsql;
