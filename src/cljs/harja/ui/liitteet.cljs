@@ -447,25 +447,27 @@
   nappi-luokka              Voidaan tällä hetkellä tehdä napiton-nappi"
   [params-map opts]
   (fn [params-map {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
-    [:span
-     [:span.liitekomponentti
-            [:button {:id "liitteen-lataus-label"
-                      :class (str "file-upload nappi-toissijainen "
-                               (when grid? "nappi-grid ")
-                               (when disabled? "disabled "))
-                      :on-click #(do
-                                   (.stopPropagation %)
-                                   (-> (.getElementById js/document inputin-id) .click))
-                      :on-key-down #(when (harja-dom/enter-nappain? %)
-                                      (.stopPropagation %)
-                                      (.preventDefault %)
-                                      (-> (.getElementById js/document inputin-id) .click))}
-       [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
-       [:input.upload
-        {:type "file"
-         :style {:display "none"}
-         :on-input #(do
-                      (k/laheta-tiedosto! url (.-target %) params-map tiedosto-ladattu lataus-epaonnistui)
-                      ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
-                      ;; uudestaan.
-                      (set! (.-value (.-target %)) nil))}]]]]))
+    (let [inputin-id "tiedoston-lataus-input"]
+      [:span
+       [:span.liitekomponentti
+        [:button {:id "liitteen-lataus-label"
+                  :class (str "file-upload nappi-toissijainen "
+                           (when grid? "nappi-grid ")
+                           (when disabled? "disabled "))
+                  :on-click #(do
+                               (.stopPropagation %)
+                               (-> (.getElementById js/document inputin-id) .click))
+                  :on-key-down #(when (harja-dom/enter-nappain? %)
+                                  (.stopPropagation %)
+                                  (.preventDefault %)
+                                  (-> (.getElementById js/document inputin-id) .click))}
+         [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
+         [:input.upload
+          {:id inputin-id
+           :type "file"
+           :style {:display "none"}
+           :on-input #(do
+                        (k/laheta-tiedosto! url (.-target %) params-map tiedosto-ladattu lataus-epaonnistui)
+                        ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
+                        ;; uudestaan.
+                        (set! (.-value (.-target %)) nil))}]]]])))
