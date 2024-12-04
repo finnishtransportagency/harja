@@ -11,7 +11,9 @@
   ;; Jätetään tämä jatkoa varten, ota raportointi käyttöön testauksessa.
   #_{:report-slow-queries postgres/report-slow-queries})
 
-(declare paivita-yllapitokohteen-paallysteen-korjausluokka)
+(declare paivita-yllapitokohteen-paallysteen-korjausluokka hae-yllapitokohteen-aikataulu
+  paivita-yllapitokohteen-paallystysaikataulu! luo-yllapitokohteelle-tyhja-aikataulu<!
+  paivita-yllapitokohde<! luo-yllapitokohde<!)
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 

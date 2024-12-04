@@ -26,7 +26,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :paikkauskohteet (component/using
-                                           (paikkauskohteet/->Paikkauskohteet false) ;; Asetetaan kehitysmoodi falseksi
+                                           (paikkauskohteet/->Paikkauskohteet)
                                            [:http-palvelin :db])))))
 
   (testit)

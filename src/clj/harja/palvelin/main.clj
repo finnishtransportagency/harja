@@ -458,7 +458,7 @@
                      (paikkaukset/->Paikkaukset)
                      [:http-palvelin :db :fim :api-sahkoposti :yha-paikkauskomponentti])
       :paikkauskohteet (component/using
-                         (paikkauskohteet/->Paikkauskohteet (:kehitysmoodi asetukset))
+                         (paikkauskohteet/->Paikkauskohteet)
                          [:http-palvelin :db :fim :api-sahkoposti :excel-vienti])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]

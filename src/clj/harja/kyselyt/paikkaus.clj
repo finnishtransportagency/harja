@@ -22,8 +22,9 @@
             [harja.domain.tierekisteri :as tr-domain]))
 
 (declare hae-urakan-paikkauskohteet-ja-paikkaukset hae-paikkauskohteen-tyomenetelma hae-paikkauskohde
+  hae-paikkauskohteet-ulkoisella-idlla paivita-paikkauskohteen-korjausluokka
   paivita-paikkauskohteen-ilmoitettu-virhe!
-  poista-paikkauskohde!)
+  tallenna-paikkauskohde<! paivita-paikkauskohde! poista-paikkauskohde!)
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman.")
