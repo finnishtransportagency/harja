@@ -591,3 +591,6 @@ FROM paikkaus p
          LEFT JOIN paikkauskohde_tyomenetelma tm ON p.tyomenetelma = tm.id
 WHERE p.luotu BETWEEN :alku AND :loppu
    OR p.muokattu BETWEEN :alku AND :loppu
+
+-- name: paivita-paikkauskohteen-korjausluokka
+SELECT paivita_paikkauskohteen_korjausluokka(:id);

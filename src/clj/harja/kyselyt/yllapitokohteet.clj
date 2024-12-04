@@ -11,6 +11,8 @@
   ;; Jätetään tämä jatkoa varten, ota raportointi käyttöön testauksessa.
   #_{:report-slow-queries postgres/report-slow-queries})
 
+(declare paivita-yllapitokohteen-paallysteen-korjausluokka)
+
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
 (defn liita-kohdeosat-kohteisiin

@@ -499,7 +499,11 @@
                                 haettu-paikkauskohde (first (paikkaus-q/hae-paikkauskohde db {:id (:id tallennettu-paikkauskohde)
                                                                                               :urakka-id (:urakka-id kohde)}))]
                             haettu-paikkauskohde))]
-                  p))]
+                  p))
+
+        ;; Päivitetään paikkauskohteen PK-luokan laskenta aina päivityksen tai luonnin yhteydessä
+        _ (paikkaus-q/paivita_paikkauskohteen_korjausluokka db {:id (:id kohde)})
+        ]
 
     (if (empty? validointivirheet)
       kohde
