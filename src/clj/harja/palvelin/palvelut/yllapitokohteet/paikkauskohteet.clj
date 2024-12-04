@@ -5,7 +5,6 @@
             [slingshot.slingshot :refer [throw+ try+]]
             [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
-            [clojure.set :as set]
             [dk.ative.docjure.spreadsheet :as xls]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [harja.id :refer [id-olemassa?]]
@@ -30,7 +29,6 @@
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.viestinta :as viestinta]
-            [specql.core :as specql]
             [harja.kyselyt.konversio :as konversio]
             [clojure.java.jdbc :as jdbc]))
 
@@ -108,6 +106,7 @@
         Numeron täytyy olla yksilöllinen.
         Samalla numerolla löytyy kohde: '" (:nimi (first kohteet-tietokannasta)) "' alkanut: " (pvm/pvm (:alkupvm (first kohteet-tietokannasta))))))))
 
+(s/def ::urakka-id (s/and number? pos?))
 (s/def ::nimi (s/and string? #(validi-nimi? %)))
 (s/def ::alkupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::loppupvm (s/and #(inst? %) #(validi-aika? %)))
@@ -120,39 +119,42 @@
 
 (defn paikkauskohde-validi? [db kohde vanha-kohde rooli]
   (let [validointivirheet (as-> #{} virheet
-                                (if (s/valid? ::nimi (:nimi kohde))
-                                  virheet
-                                  (conj virheet "Paikkauskohteen nimi puuttuu."))
-                                (if (s/valid? ::alkupvm (:alkupvm kohde))
-                                  virheet
-                                  (conj virheet "Paikkauskohteen alkupäivässä virhe."))
-                                (if (s/valid? ::loppupvm (:loppupvm kohde))
-                                  virheet
-                                  (conj virheet "Paikkauskohteen loppupäivässä virhe."))
-                                (if (s/valid? ::paikkauskohteen-tila (:paikkauskohteen-tila kohde))
-                                  virheet
-                                  (conj virheet "Paikkauskohteen tilassa virhe."))
-                                (if (s/valid? ::tyomenetelma (:tyomenetelma kohde))
-                                  virheet
-                                  (conj virheet "Paikkauskohteen työmenetelmässä virhe"))
-                                (if (s/valid? ::suunniteltu-hinta (:suunniteltu-hinta kohde))
-                                  virheet
-                                  (conj virheet "Paikkauskohteen suunnitellussa hinnassa virhe"))
-                                (if (s/valid? ::suunniteltu-maara (:suunniteltu-maara kohde))
-                                  virheet
-                                  (conj virheet "Paikkauskohteen suunnitellussa määrässä virhe"))
-                                (if (s/valid? ::yksikko (:yksikko kohde))
-                                  virheet
-                                  (conj virheet "Paikkauskohteen suunnitellun määrän yksikössä virhe"))
-                                (if (s/valid? ::ulkoinen-id (:ulkoinen-id kohde))
-                                  virheet
-                                  (conj virheet "Paikkauskohteen Nro puuttuu"))
-                                (if (and (s/valid? ::alkupvm (:alkupvm kohde))
-                                         (s/valid? ::loppupvm (:loppupvm kohde)))
-                                  (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
-                                  virheet)
-                                (tr-validointi/validoi-tieosoite virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
-                                (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli)
+                            (if (s/valid? ::urakka-id (:urakka-id kohde))
+                              virheet
+                              (conj virheet "Paikkauskohteen urakka-id puuttuu."))
+                            (if (s/valid? ::nimi (:nimi kohde))
+                              virheet
+                              (conj virheet "Paikkauskohteen nimi puuttuu."))
+                            (if (s/valid? ::alkupvm (:alkupvm kohde))
+                              virheet
+                              (conj virheet "Paikkauskohteen alkupäivässä virhe."))
+                            (if (s/valid? ::loppupvm (:loppupvm kohde))
+                              virheet
+                              (conj virheet "Paikkauskohteen loppupäivässä virhe."))
+                            (if (s/valid? ::paikkauskohteen-tila (:paikkauskohteen-tila kohde))
+                              virheet
+                              (conj virheet "Paikkauskohteen tilassa virhe."))
+                            (if (s/valid? ::tyomenetelma (:tyomenetelma kohde))
+                              virheet
+                              (conj virheet "Paikkauskohteen työmenetelmässä virhe"))
+                            (if (s/valid? ::suunniteltu-hinta (:suunniteltu-hinta kohde))
+                              virheet
+                              (conj virheet "Paikkauskohteen suunnitellussa hinnassa virhe"))
+                            (if (s/valid? ::suunniteltu-maara (:suunniteltu-maara kohde))
+                              virheet
+                              (conj virheet "Paikkauskohteen suunnitellussa määrässä virhe"))
+                            (if (s/valid? ::yksikko (:yksikko kohde))
+                              virheet
+                              (conj virheet "Paikkauskohteen suunnitellun määrän yksikössä virhe"))
+                            (if (s/valid? ::ulkoinen-id (:ulkoinen-id kohde))
+                              virheet
+                              (conj virheet "Paikkauskohteen Nro puuttuu"))
+                            (if (and (s/valid? ::alkupvm (:alkupvm kohde))
+                                  (s/valid? ::loppupvm (:loppupvm kohde)))
+                              (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
+                              virheet)
+                            (tr-validointi/validoi-tieosoite virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
+                            (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli)
                             (validoi-ulkoinen-id db virheet kohde vanha-kohde))]
     validointivirheet))
 
@@ -334,9 +336,6 @@
     ;; Siivotaan paikkauskohteesta mahdolliset tiemerkintään liittyvät tiedot pois
     (dissoc kohde :viesti :kopio-itselle? :tiemerkinta-urakka)))
 
-(defn tyomenetelma-str->id [db nimi]
-  (::paikkaus/tyomenetelma-id (first (paikkaus-q/hae-tyomenetelman-id db nimi))))
-
 (defn tarkista-pot-raportointi
   "Mikäli paikkauskohteelle on merkattu :pot? true, tehdään paikkauskohteesta pot ilmoitus.
   POT vaatii lisäyksen yllapitokohde -tauluun sekä ylläapitokohteen_aikataulu -tauluun."
@@ -424,7 +423,7 @@
     (yllapitokohteet-q/paivita-yllapitokohteen-paallysteen-korjausluokka db {:id yllapitokohde-id})
     uusi-kohde))
 
-(defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
+(defn tallenna-paikkauskohde! [db fim email user kohde]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (log/debug "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
         kayttajarooli (roolit/osapuoli user)
@@ -502,8 +501,10 @@
                   p))
 
         ;; Päivitetään paikkauskohteen PK-luokan laskenta aina päivityksen tai luonnin yhteydessä
-        _ (paikkaus-q/paivita_paikkauskohteen_korjausluokka db {:id (:id kohde)})
-        ]
+        kohde (when kohde
+                (let [pkluokka (:paivita_paikkauskohteen_korjausluokka
+                                 (first (paikkaus-q/paivita-paikkauskohteen-korjausluokka db {:id (:id kohde)})))]
+                  (assoc kohde :pkluokka pkluokka)))]
 
     (if (empty? validointivirheet)
       kohde
@@ -522,7 +523,7 @@
       ;; Palautetaan poistettu paikkauskohde
       (assoc poistettava :poistettu true))))
 
-(defn- kasittele-excel [db fim email urakka-id kayttaja req kehitysmoodi?]
+(defn- kasittele-excel [db fim email urakka-id kayttaja req]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
         paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)
         ;; Urakalla ei saa olla kahta saman nimistä paikkauskohdetta. Niinpä varmistetaan, ettei näin ole ja jos ei ole, niin tallennetaan paikkauskohde kantaan
@@ -537,7 +538,7 @@
                         (if (empty? kohde)
                           (try+
 
-                            (tallenna-paikkauskohde! db fim email kayttaja p kehitysmoodi?)
+                            (tallenna-paikkauskohde! db fim email kayttaja p)
 
                             (catch [:type "Validaatiovirhe"] e
                               ;; TODO: Tarkista, että validaatiovirheiden ja olemassa olevien virheiden formaatti on sama
@@ -571,7 +572,7 @@
        :headers {"Content-Type" "application/json; charset=UTF-8"}
        :body body})))
 
-(defn vastaanota-excel [db fim email req kehitysmoodi?]
+(defn vastaanota-excel [db fim email req]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
                                   (:kayttaja req)
                                   (Integer/parseInt (get (:params req) "urakka-id")))
@@ -580,7 +581,7 @@
     ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
     (if (and (not (nil? urakka-id))
              (not (nil? kayttaja)))
-      (kasittele-excel db fim email urakka-id kayttaja req kehitysmoodi?)
+      (kasittele-excel db fim email urakka-id kayttaja req)
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
@@ -823,14 +824,14 @@
                                                                 (assoc kohde :pot? false) (:id user)))
                          ;; Tallennetaan kohde uudestaan, koska se on saanut yllapitokohde-id:n
                          _ (when uusi-kohde
-                             (tallenna-paikkauskohde! db nil nil user uusi-kohde false))])))]
+                             (tallenna-paikkauskohde! db nil nil user uusi-kohde))])))]
     (if @oli-puuttuva-yllapitokohde
       ;; Jos puuttuvia tietoja oli, haetaan paikkauskohteet uudestaan
       (paikkaus-q/paikkauskohteet db user tiedot)
       ;; Normitilanteessa palautetaan jo löydetyt kohteet
       paikkauskohteet)))
 
-(defrecord Paikkauskohteet [kehitysmoodi?]
+(defrecord Paikkauskohteet []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
@@ -843,7 +844,7 @@
                           (hae-paikkauskohteet db user tiedot)))
       (julkaise-palvelu http :tallenna-paikkauskohde-urakalle
                         (fn [user kohde]
-                          (tallenna-paikkauskohde! db fim email user kohde kehitysmoodi?)))
+                          (tallenna-paikkauskohde! db fim email user kohde)))
       (julkaise-palvelu http :laske-paikkauskohteen-pituus
                         (fn [user kohde]
                           (q-tr/laske-tierekisteriosoitteen-pituus db kohde)))
@@ -854,7 +855,7 @@
                         (fn [user urakka-id]
                           (yhteyshenkilot/hae-urakan-yhteyshenkilot (:db this) user urakka-id true)))
       (julkaise-palvelu http :lue-paikkauskohteet-excelista
-                        (wrap-multipart-params (fn [req] (vastaanota-excel db fim email req kehitysmoodi?)))
+                        (wrap-multipart-params (fn [req] (vastaanota-excel db fim email req)))
                         {:ring-kasittelija? true})
       (julkaise-palvelu http :tallenna-kasinsyotetty-paikkaus
                         (fn [user paikkaus]

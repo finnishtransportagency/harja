@@ -8,7 +8,7 @@ ALTER TABLE paikkauskohde
 
 -- Lasketaan paikkauskohteelle pkluokka tieosoitteen perusteella
 CREATE OR REPLACE FUNCTION paivita_paikkauskohteen_korjausluokka(paikkauskohde_id INTEGER)
-    RETURNS VOID AS
+    RETURNS TEXT AS
 $$
 DECLARE
     kohde      RECORD;
@@ -50,7 +50,7 @@ BEGIN
     IF kohde.tie IS NULL OR kohde.aosa IS NULL OR kohde.losa IS NULL OR kohde.geometria IS NULL THEN
         RAISE NOTICE 'Tieosoite puuttuu paikkauskohteelta % - Ei lasketa PK luokkaa', paikkauskohde_id;
         RAISE NOTICE 'kohde.tie %, kohde.aosa: %, kohde.losa: %, kohde.geometria: %', kohde.tie, kohde.aosa, kohde.losa, kohde.geometria;
-        RETURN;
+        RETURN 'tieosoite puutteellinen';
     END IF;
 
     SELECT ST_BUFFER(ST_UNION(p.geometria), radius, 'endcap=flat')
@@ -90,7 +90,7 @@ BEGIN
         END CASE;
 
     UPDATE paikkauskohde SET pkluokka = pkluokka_t WHERE id = paikkauskohde_id;
-
+    RETURN pkluokka_t;
 END;
 $$ LANGUAGE plpgsql;
 
