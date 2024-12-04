@@ -11,7 +11,7 @@
 (defn tehtavaryhma-rivi-xf
   "Parsitaan tehtäväryhmädatasta raportille sopiva rivi."
   [rivi]
-  {:lihavoi? (if (:yhteenveto rivi) true nil)
+  {:lihavoi? (or (:yhteenveto rivi) nil)
    :korosta-hennosti? (:yhteenveto rivi)
    :rivi
    (into []

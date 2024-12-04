@@ -761,13 +761,13 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
            [:div {:style {:padding-left "8px" :font-weight 400}}
             toissijainen-viesti])]
         (when sulje-nappi-id
+          ;; circular dependency, joten ei voi käyttää harja.ui.ikonit/sulje
           [:button {:class "napiton-nappi pelkka-ikoni infolaatikon-sulje-ikoni"
                     :aria-label "Sulje"
                     :on-click #(do
                                  (reset! infolaatikko-nakyvissa? (merge @infolaatikko-nakyvissa? {sulje-nappi-id false}))
                                  (when sulje-fn
-                                   (sulje-fn))
-                                 (js/console.log "Suljetaan info-laatikko:" (pr-str @infolaatikko-nakyvissa?)))}
+                                   (sulje-fn)))}
            [ikonit/sulje]])]))))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")

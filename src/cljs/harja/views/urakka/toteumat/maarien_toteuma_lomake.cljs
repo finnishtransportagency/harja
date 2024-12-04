@@ -68,9 +68,12 @@
                                     ::t/poistettu
                                     indeksi))))))
 
-(defn- kentassa-virhe? [polku validius]
- (if validius
-    (and @tiedot/nayta-validoinnit? (not (get-in validius [polku :validi?])))
+(defn- kentassa-virhe?
+  "Tarkistetaan onko kentässä virhettä. Kaikille kentille ei ole välttämättä annettu vielä validointiarvoja.
+  Mikäli validointiarvoja ei ole annettu, kenttä on aina virheetön."
+  [polku validiarvot]
+ (if validiarvot
+    (and @tiedot/nayta-validoinnit? (not (get-in validiarvot [polku :validi?])))
     false))
 
 (defn- maaramitattavat-toteumat
