@@ -180,7 +180,7 @@
                                                                          :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
                                                                          :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
                                   [:button {:type "submit"
-                                            :class #{"nappi-reunaton"}}
+                                            :class #{"nappi-toissijainen"}}
                                    [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
 
                               [liitteet/lataa-tiedosto
