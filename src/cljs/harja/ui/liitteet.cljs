@@ -450,8 +450,7 @@
     (let [inputin-id "tiedoston-lataus-input"]
       [:span
        [:span.liitekomponentti
-        [:button {:id "liitteen-lataus-label"
-                  :class (str "file-upload nappi-toissijainen "
+        [:button {:class (str "file-upload nappi-toissijainen "
                            (when grid? "nappi-grid ")
                            (when disabled? "disabled "))
                   :on-click #(do
