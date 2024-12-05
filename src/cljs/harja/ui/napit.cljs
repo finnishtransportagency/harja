@@ -1,5 +1,6 @@
 (ns harja.ui.napit
-  (:require [harja.ui.ikonit :as ikonit]
+  (:require [clojure.string :as str]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.viesti :as viesti]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as y]
@@ -183,9 +184,11 @@
 
           (if (and ikoni
                    (not tallennus-kaynnissa?))
-            (if ikoni-oikealle?
-              [ikonit/teksti-ja-ikoni teksti ikoni]
-              [ikonit/ikoni-ja-teksti ikoni teksti])
+            (if (str/blank? teksti)
+              ikoni
+              (if ikoni-oikealle?
+                [ikonit/teksti-ja-ikoni teksti ikoni]
+                [ikonit/ikoni-ja-teksti ikoni teksti]))
             teksti)])))))
 
 (defn harmaa

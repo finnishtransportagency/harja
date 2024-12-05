@@ -120,7 +120,7 @@
       [:input {:type "hidden" :name "parametrit"
                :value (transit/clj->transit tiedot)}]
       [:button {:type "submit"
-                :class #{"nappi-reunaton"}}
+                :class #{"nappi-toissijainen"}}
        [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa kustannus-Excel"]]]]
     (when (>= (:vuosi tiedot) nayta-kustannusexcelin-tuonti-alkaen-vuodesta)
       [liitteet/lataa-tiedosto

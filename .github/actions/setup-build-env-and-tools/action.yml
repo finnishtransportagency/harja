@@ -81,13 +81,17 @@ runs:
       with:
         path: ~/.npm
         key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        # TODO: Testaa onko "restore-keys" enää tarpeen. Kommentoitu pois toistaiseksi.
+        #       Halutaan, että uusi cache tallennetaan mikäli package-lock.json muuttuu, ja nyt sellaista ei
+        #       ole tapahtunut vuoteen kun "restore-keys" asetus on ollut käytössä.
         # Mikäli package-lock.json muuttuu, käytetään kuitenkin vanhentunutta npm-cachea pohjana uudelle cachelle
-        restore-keys: ${{ runner.os }}-npm-
+        #restore-keys: ${{ runner.os }}-npm-
 
     - name: Install node dependencies from package-lock.json (dependencies & devDependencies)
       if: ${{ inputs.install-node-deps == 'true' }}
-      # NPM ci:tä pitää kutsua vaikka ~/.npm yleinen cache löytyykin. Komento npm ci asentaa package.jsonissa
+      # NPM ci:tä pitää kutsua vaikka ~/.npm yleinen cache löytyykin. Komento npm ci asentaa package-lock.jsonissa
       # määritellyt moduulit workspacen node_modules kansioon, mutta cachettaa ladatut paketit ~/.npm cacheen.
+      # Tämän vuoksi cache-hit tietoa ei tarkasteta ehtolauseessa.
       run: |
         npm ci
       shell: bash
