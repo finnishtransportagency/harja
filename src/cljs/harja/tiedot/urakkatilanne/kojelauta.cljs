@@ -26,6 +26,7 @@
             (vec (sort-by :nimi itemit)))))))
 
 (def tila (atom {:urakat []
+                 ;;debug MUUTA urakkatyyppi takaisin
                  :valinnat {:urakkatyyppi {:nimi "Päällystys" :arvo :paallystys}
                             :ely nil
                             :urakat nil
@@ -38,11 +39,54 @@
         epaonnistuneet-lahetetyt (reduce + 0 (map :lahetetty_onnistuneesti urakat))
         valmiit-ei-lahetetty (reduce + 0 (map :valmiit_ei_lahetetty urakat))]
     [yleiset/tietoja {:class "body-text"}
-     "Kohteita yhteensä" (str kohteiden-lukumaara)
-     "Valmiit:" (str valmiit-kohteet)
-     "Lähetetty:" (str pot-lahetetty)
-     "Lähetys epäonnistunut:" (str epaonnistuneet-lahetetyt)
-     "Ei lähetetty, mutta valmis:" (str valmiit-ei-lahetetty)]))
+     "Kohteita yhteensä: " (str kohteiden-lukumaara)]))
+
+(defn valmiit-yhteenveto
+  [urakat]
+  (println "LAURIDEBUG urakat: " urakat)
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        valmiit-lkm (reduce + 0 (map :valmis_hyvaksytty urakat))
+        valmiit-yhteenveto (when-not (empty? urakat) [:span.valmis_hyvaksytty
+                                                      [yleiset/tietoja {:class "body-text"}
+                                                       "Valmiit: " (str valmiit-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina valmiit-lkm kaikkien-urakoiden-lkm) 0) ")")]])]
+    valmiit-yhteenveto))
+
+(defn lahetetyt-yhteenveto
+  [urakat]
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        lahetetty-lkm (reduce + 0 (map :lahetetty_onnistuneesti urakat))
+        lahetetty-yhteenveto (when-not (empty? urakat) [:span.lahetetty_onnistuneesti
+                                                      [yleiset/tietoja {:class "body-text"}
+                                                       "Lähetetyt: " (str lahetetty-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina lahetetty-lkm kaikkien-urakoiden-lkm) 0) ")")]])]
+    lahetetty-yhteenveto))
+
+
+(defn epaonnistuneet-lahetetyt-yhteenveto
+  [urakat]
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        epaonnistuneet-lkm (reduce + 0 (map :epaonnistuneet_lahetetyt urakat))
+        epaonnistuneet-yhteenveto (when-not (empty? urakat) [:span.epaonnistuneet_lahetetyt
+                                                      [yleiset/tietoja {:class "body-text"}
+                                                       "Ei lähetetty " (str epaonnistuneet-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina epaonnistuneet-lkm kaikkien-urakoiden-lkm) 0) ")")]])]
+    epaonnistuneet-yhteenveto))
+
+(defn valmiit-ei-lahetetty-yhteenveto
+  [urakat]
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        valmiit-ei-hyvaksytty-lkm (reduce + 0 (map :valmiit_ei_lahetetty urakat))
+        valmiit-ei-hyvaksytty-yhteenveto (when-not (empty? urakat) [:span.valmiit_ei_lahetetty
+                                                      [yleiset/tietoja {:class "body-text"}
+                                                       "Epäonnistuneet: " (str valmiit-ei-hyvaksytty-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina valmiit-ei-hyvaksytty-lkm kaikkien-urakoiden-lkm) 0) ")")]])]
+    valmiit-ei-hyvaksytty-yhteenveto))
+
+(defn aloittamatta-yhteenveto
+  [urakat]
+  (let [kaikkien-urakoiden-lkm (count urakat)
+        aloittamatta-lkm (reduce + 0 (map :aloittamatta urakat))
+        aloittamatta-yheenveto (when-not (empty? urakat) [:span.aloittamatta
+                                                         [yleiset/tietoja {:class "body-text"}
+                                                          "Aloittamatta: " (str aloittamatta-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina aloittamatta-lkm kaikkien-urakoiden-lkm) 0) ")")]])]
+    aloittamatta-yheenveto))
 
 (defn poikkeusten-yhteenveto
   [urakat]

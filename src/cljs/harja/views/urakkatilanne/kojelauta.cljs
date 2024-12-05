@@ -192,44 +192,54 @@
              [ajax-loader "Ladataan tietoja"]
              "Ei tietoja, tarkistathan valitut suodattimet.")
     :rivi-jalkeen-fn (fn [urakat]
-                       (let [yhteenveto (tiedot/paallystystietojen-yhteenveto urakat)]
+                       (let [yhteenveto (tiedot/paallystystietojen-yhteenveto urakat)
+                             valmiit-kohteet (tiedot/valmiit-yhteenveto urakat)
+                             lahetetty (tiedot/lahetetyt-yhteenveto urakat)
+                             epaonnistuneet-lahetetty (tiedot/epaonnistuneet-lahetetyt-yhteenveto urakat)
+                             valmiit-ei-hyvaksytty (tiedot/valmiit-ei-lahetetty-yhteenveto urakat)
+                             aloittamatta (tiedot/aloittamatta-yhteenveto urakat)]
                          (when-not (empty? urakat)
-                           [{:teksti "Yhteensä" :luokka "lihavoitu"}
+                            [{:teksti "Yhteensä" :luokka "lihavoitu"}
                             {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
-                            {:teksti yhteenveto :luokka "lihavoitu"}])))}
+                            {:teksti yhteenveto :luokka "lihavoitu"}
+                            {:teksti valmiit-kohteet :luokka "lihavoitu"}
+                            {:teksti lahetetty :luokka "lihavoitu"}
+                            {:teksti epaonnistuneet-lahetetty :luokka "lihavoitu"}
+                            {:teksti valmiit-ei-hyvaksytty :luokka "lihavoitu"}
+                            {:teksti aloittamatta :luokka "lihavoitu"}])))}
    [{:otsikko "Urakka"
      :tyyppi :string
      :nimi :nimi
-     :leveys 10
+     :leveys 15
      :muokattava? (constantly false)}
     {:otsikko "Vuosi"
      :muokattava? (constantly false)
-     :nimi :hoitokauden_alkuvuosi :leveys 3
+     :nimi :hoitokauden_alkuvuosi :leveys 7
      :tyyppi :kokonaisluku}
     {:otsikko "Päällystyskohteiden lkm."
      :muokattava? (constantly false)
-     :nimi :yllapitokohteiden_lkm :leveys 10
+     :nimi :yllapitokohteiden_lkm :leveys 15
      :tyyppi :kokonaisluku}
     {:otsikko "Valmis/hyväksytty"
      :muokattava? (constantly false)
-     :nimi :valmis_hyvaksytty :leveys 10
+     :nimi :valmis_hyvaksytty :leveys 15
      :tyyppi :kokonaisluku}
     {:otsikko "Lähetetty onnistuneesti YHA:an"
      :muokattava? (constantly false)
-     :nimi :lahetetty_onnistuneesti :leveys 10
+     :nimi :lahetetty_onnistuneesti :leveys 15
      :tyyppi :kokonaisluku}
     {:otsikko "Epäonnistuneet YHA-lähetykset"
      :muokattava? (constantly false)
-     :nimi :epaonnistuneet_lahetetyt :leveys 10
+     :nimi :epaonnistuneet_lahetetyt :leveys 15
      :tyyppi :kokonaisluku}
     {:otsikko "Valmiit, ei vielä lähetetty"
      :muokattava? (constantly false)
-     :nimi :valmiit_ei_lahetetty :leveys 10
+     :nimi :valmiit_ei_lahetetty :leveys 15
      :tyyppi :kokonaisluku}
     {:otsikko "Aloittamatta"
      :muokattava? (constantly false)
-     :nimi :aloittamatta :leveys 10
-     :tyyppi :kokonaisluku}]
+     :nimi :aloittamatta :leveys 15
+     :tyyppi :string}]
    urakat])
 
 (defn taulukko-hoitourakat [e! {:keys [urakat haku-kaynnissa?]}]
