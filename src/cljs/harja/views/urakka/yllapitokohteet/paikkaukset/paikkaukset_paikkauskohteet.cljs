@@ -185,7 +185,7 @@
 
                               [liitteet/lataa-tiedosto
                                {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
-                               {:nappi-teksti "Tuo kohteet excelistä"
+                               {:nappi-teksti "Tuo kohteet Excelistä"
                                 :url "lue-paikkauskohteet-excelista"
                                 :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
                                 :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
