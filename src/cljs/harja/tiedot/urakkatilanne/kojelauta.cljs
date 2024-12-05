@@ -46,7 +46,7 @@
 (defn paallystystietojen-yhteenveto [urakat]
   (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))]
     [yleiset/tietoja {:class "body-text"}
-     "Kohteita yhteensä: " (str kohteiden-lukumaara)]))
+     "Kohteita: " (str kohteiden-lukumaara)]))
 
 (defn valmiit-yhteenveto
   [urakat]
