@@ -7,7 +7,7 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/paikkausten_yhteenveto.sql")
 (declare hae-kustannukset-tyomenetelmittain hae-maarat-tyomenetelmittain hae-kasin-lisatyt-paikkauskustannukset
-         hae-reikapaikkauskustannukset-tyomenetelmittain)
+         hae-reikapaikkauskustannukset-tyomenetelmittain hae-kustannukset-pkluokittain)
 
 (defn tyomenetelma-rivi-xf
   "Parsitaan työmenetelmädatasta raportille sopiva rivi."
@@ -178,6 +178,12 @@
                                        :yhteenveto true}]
     (conj reikapaikkauskustannukset reikapaikkauskustannukset-yht)))
 
+(defn parsi-pkluokan-kustannukset [kustannusrivit pkluokka]
+  (apply + (map #(if (= pkluokka (:pkluokka %))
+                  (:toteutunut-hinta %)
+                  0)
+             kustannusrivit)))
+
 (defn yhteiset-tiedot [db user urakka-id vuosi mpu?]
   (let [urakka (first (urakat-q/hae-urakka db urakka-id))
         alkupvm (pvm/luo-pvm vuosi 1 1)
@@ -222,11 +228,12 @@
                                                           (:toteutunut-hinta rivi)
                                                           0)) muut-kustannukset))
 
-        ;; PK-luokkia ei ole olemassa paikkauskohteilla
-        ; pk1-kustannukset 8M
-        ; pk2-kustannukset 9M
-        ; pk3-kustannukset 10M
-        ; pk-puuttuu-kustannukset 11M
+        ;; PK-luokat
+        pkluokkakustannukset (hae-kustannukset-pkluokittain db parametrit)
+        pk1-kustannukset (parsi-pkluokan-kustannukset pkluokkakustannukset "PK1")
+        pk2-kustannukset (parsi-pkluokan-kustannukset pkluokkakustannukset "PK2")
+        pk3-kustannukset (parsi-pkluokan-kustannukset pkluokkakustannukset "PK3")
+        pk-puuttuu-kustannukset (parsi-pkluokan-kustannukset pkluokkakustannukset "Ei tiedossa")
 
         raportti
         [:raportti {:nimi raportin-nimi
@@ -251,7 +258,7 @@
                                 :muut muut-kuin-paikkaus-kustannukset})]]
 
          ;; Toteutuneet paikkauskustannukset PK-luokittain - odottamaan pk-luokkien generointia
-         #_[:taulukko {:otsikko "Toteutuneet paikkauskustannukset PK-luokittain"
+         [:taulukko {:otsikko "Toteutuneet paikkauskustannukset PK-luokittain"
                        :oikealle-tasattavat-kentat #{}
                        :sheet-nimi "Toteutuneet paikkauskustannukset PK-luokittain"}
             [{:leveys 1 :otsikko "PK1"}

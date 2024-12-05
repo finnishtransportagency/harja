@@ -116,3 +116,13 @@ SELECT SUM(pk.summa) AS "toteutunut-hinta",
  WHERE vuosi = :vuosi
    AND pk.urakka = :urakkaid
  GROUP BY pk.kustannustyyppi;
+
+-- name: hae-kustannukset-pkluokittain
+SELECT pk.pkluokka,
+       COALESCE(SUM(pk."toteutunut-hinta"), 0)  AS "toteutunut-hinta"
+  FROM paikkauskohde pk
+ WHERE pk."urakka-id" = :urakkaid
+   AND pk.alkupvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+   AND pk."paikkauskohteen-tila" = 'valmis'
+   AND pk.poistettu = FALSE
+ GROUP BY pk.pkluokka;
