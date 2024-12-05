@@ -45,7 +45,7 @@ SELECT u.id,
          EXTRACT (YEAR FROM u.alkupvm) AND
          EXTRACT (YEAR FROM u.loppupvm) - 1) AND
      (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
-     (:ely_id::INTEGER IS NULL OR u.hallintayksikko = :ely_id)
+     (:elyt_annettu IS NOT TRUE OR u.hallintayksikko IN (:ely_idt))
  ORDER BY COALESCE(u.lyhyt_nimi, u.nimi);
 
 -- name: hae-paallystysurakat-kojelautaan
@@ -77,7 +77,7 @@ SELECT u.id,
          EXTRACT (YEAR FROM u.alkupvm) AND
          EXTRACT (YEAR FROM u.loppupvm)) AND
      (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
-     (:ely_id::INTEGER IS NULL OR u.hallintayksikko = :ely_id)
+     (:elyt_annettu IS NOT TRUE OR u.hallintayksikko IN (:ely_idt))
  GROUP BY u.id, u.nimi, u.hallintayksikko, hoitokauden_alkuvuosi
  ORDER BY u.nimi;
 

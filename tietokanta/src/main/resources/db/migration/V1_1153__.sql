@@ -1,3 +1,4 @@
+-- Huomattiin että partitioiden luontifunktio on luotava numeromigraatiossa, ja aina ennen kuin sitä kutsutaan
 -- Toteuma -taulu on partitioitu puolen vuoden partitioihin suorituskyvyn varmistamiseksi.
 -- Siirretään migraatiotiedoistoista tänne r -tiedostoon tämä funktio, jotta sitä ei tarvitse luoda aina uusiksi migraatiotiedoistoissa.
 -- Funktio luo uudet partitiotaulut toteuma-taululle annetun aikavälin mukaan.
@@ -36,7 +37,8 @@ BEGIN
     EXECUTE 'CREATE INDEX ' || partitio || '_envelope_idx ON ' || partitio || ' USING GIST (envelope);';
     -- Nyt lisätty indeksi toteuman json_hash kentälle
     EXECUTE 'CREATE INDEX ' || partitio || '_json_hash_idx ON ' || partitio || '(json_hash)';
-    -- Nyt lisätty päättyy
+    EXECUTE 'CREATE UNIQUE INDEX ' || partitio || '_ulkoinen_id_urakka_poistettu_uindex
+        ON ' || partitio || '(ulkoinen_id, urakka, poistettu)';
 
     -- FOREIGN KEYS
     EXECUTE 'ALTER TABLE ' || partitio || ' ADD CONSTRAINT ' || partitio ||
@@ -78,5 +80,4 @@ BEGIN
        WHEN (OLD.alkanut IS DISTINCT FROM NEW.alkanut)
     EXECUTE PROCEDURE update_toteuma_check_partition();';
 END
-$$
-    LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
