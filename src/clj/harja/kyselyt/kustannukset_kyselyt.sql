@@ -45,7 +45,7 @@ FROM (
     UNION ALL
     
     -- MPU kustannukset 
-    SELECT concat('paikkauskohde-tyomenetelma-',id) AS id,
+    SELECT concat('paikkauskohde-kustannus-',id) AS id,
 		   kustannustyyppi,
 		   SUM(summa)                               AS kokonaiskustannus,
 		   ''                                       AS tyomenetelma,

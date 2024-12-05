@@ -396,8 +396,7 @@
 (defn vastaanota-excel [urakka-id kayttaja tiedoston-nimi]
   (paikkauskohteet/vastaanota-excel (:db jarjestelma) nil nil {:params {"urakka-id" (str urakka-id)
                                                                         "file" {:tempfile (io/file tiedoston-nimi)}}
-                                                               :kayttaja kayttaja}
-                                    false)) ;; Kehitysmoodi falseksi
+                                                               :kayttaja kayttaja}))
 
 (deftest tallenna-validit-paikkauskohteet-excelista-kantaan
   (let [urakka-id @kemin-alueurakan-2019-2023-id
