@@ -101,7 +101,7 @@
                       :vuosi vuosi
                       :summa 142000} :tallenna-mpu-kustannus)
 
-        odotettu-tallennus {:id "paikkauskohde-tyomenetelma-7", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 142000M, :selite "Päällystettiin Kuusamon luontopolku"}
+        odotettu-tallennus {:id "paikkauskohde-kustannus-7", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 142000M, :selite "Päällystettiin Kuusamon luontopolku"}
 
         vastaus-tallennettu (tee-kutsu {:vuosi vuosi
                                         :urakka-id urakka-id} :hae-paikkaus-kustannukset)]
