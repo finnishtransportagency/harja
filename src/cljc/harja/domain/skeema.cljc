@@ -14,7 +14,7 @@
    :sopimus-id s/Int
    :alkanut pvm-tyyppi
    :paattynyt pvm-tyyppi
-   :tyyppi (map s/enum +tyotyypit+)
+   :tyyppi (apply s/enum +tyotyypit+)
    :suorittajan-nimi s/Str
    :lisatieto s/Str
    :tehtavat [{:toimenpidekoodi s/Int

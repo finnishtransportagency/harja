@@ -40,7 +40,7 @@
   (conj +tyomenetelmat+ {:nimi "Ei menetelmää" :lyhenne "Ei menetelmää" :koodi nil}))
 
 (def +tyomenetelma-tai-nil+ "Työmenetelmän valinta koodilla"
-  (map schema/enum (map :koodi +tyomenetelmat-ja-nil+)))
+  (apply schema/enum (map :koodi +tyomenetelmat-ja-nil+)))
 
 (defn tyomenetelman-koodi-nimella [nimi]
   (:koodi (first (filter #(= nimi (:nimi %)) +tyomenetelmat-ja-nil+))))
@@ -72,7 +72,7 @@
   (conj +alustamenetelmat+ {:nimi "Ei menetelmää" :lyhenne "Ei menetelmää" :koodi nil}))
 
 (def +alustamenetelma+ "Alustan käsittelymenetelmän valinta koodilla"
-  (map schema/enum (map :koodi +alustamenetelmat-ja-nil+)))
+  (apply schema/enum (map :koodi +alustamenetelmat-ja-nil+)))
 
 (defn alustamenetelma-koodi-nimella [nimi]
   (:koodi (first (filter #(= nimi (:nimi %)) +alustamenetelmat-ja-nil+))))
@@ -90,7 +90,7 @@
   (conj +kuulamyllyt+  {:nimi "Ei tietoa" :koodi 9} {:nimi "Ei kuulamyllyä" :koodi nil}))
 
 (def +kuulamylly-tai-nil+ "Kuulamylly annetulla koodilla"
-  (map schema/enum (map :koodi +kyylamyllyt-ja-nil+)))
+  (apply schema/enum (map :koodi +kyylamyllyt-ja-nil+)))
 
 (defn kuulamylly-koodi-nimella [nimi]
   (:koodi (first (filter #(= nimi (:nimi %)) +kyylamyllyt-ja-nil+))))
@@ -105,7 +105,7 @@
   (conj +verkkotyypit+ {:nimi "Ei verkkotyyppiä" :koodi nil}))
 
 (def +verkkotyyppi-tai-nil+ "Verkkotyypin valinta koodilla"
-  (map schema/enum (map :koodi +verkkotyypit-ja-nil+)))
+  (apply schema/enum (map :koodi +verkkotyypit-ja-nil+)))
 
 (defn verkkotyyppi-koodi-nimella [nimi]
   (:koodi (first (filter #(= nimi (:nimi %)) +verkkotyypit-ja-nil+))))
@@ -121,7 +121,7 @@
   (conj +tekniset-toimenpiteet+ {:nimi "Ei toimenpidettä" :koodi nil}))
 
 (def +tekninen-toimenpide-tai-nil+ "Teknisen toimenpiteen valinta koodilla"
-  (map schema/enum (map :koodi +tekniset-toimenpiteet-ja-nil+)))
+  (apply schema/enum (map :koodi +tekniset-toimenpiteet-ja-nil+)))
 
 (defn tekninentoimenpide-koodi-nimella [nimi]
   (:koodi (first (filter #(= nimi (:nimi %)) +tekniset-toimenpiteet-ja-nil+))))
@@ -191,7 +191,7 @@
 
 (def +sideainetyyppi-tai-nil+
   "Sideainetyypin valinta koodilla"
-  (map schema/enum (map :koodi +sideainetyypit-ja-nil+)))
+  (apply schema/enum (map :koodi +sideainetyypit-ja-nil+)))
 
 (defn sideainetyypin-koodi-nimella [nimi]
   (:koodi (first (filter #(= nimi (:nimi %)) +sideainetyypit-ja-nil+))))
@@ -209,7 +209,7 @@
 
 (def +verkon-tarkoitus-tai-nil+
   "Verkon tarkoituksen valinta koodilla"
-  (map schema/enum (map :koodi +verkon-tarkoitukset-ja-nil+)))
+  (apply schema/enum (map :koodi +verkon-tarkoitukset-ja-nil+)))
 
 (defn verkon-tarkoitus-koodi-nimella [koodi]
   (:koodi (first (filter #(= koodi (:nimi %)) +verkon-tarkoitukset-ja-nil+))))
@@ -226,7 +226,7 @@
 
 (def +verkon-sijainti-tai-nil+
   "Verkon sijainnin valinta koodilla"
-  (map schema/enum (map :koodi +verkon-sijainnit-ja-nil+)))
+  (apply schema/enum (map :koodi +verkon-sijainnit-ja-nil+)))
 
 (defn verkon-sijainti-koodi-nimella [koodi]
   (:koodi (first (filter #(= koodi (:nimi %)) +verkon-sijainnit-ja-nil+))))

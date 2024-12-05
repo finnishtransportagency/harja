@@ -24,7 +24,7 @@
   (conj +paallystetyypit+ {:nimi "Ei päällystetyyppiä" :lyhenne "Ei päällystetyyppiä" :koodi nil :api-arvo nil}))
 
 (def +paallystetyyppi-tai-nil+ "Päällystetyypin valinta koodilla"
-  (map s/enum (map :koodi +paallystetyypit-ja-nil+)))
+  (apply s/enum (map :koodi +paallystetyypit-ja-nil+)))
 
 (defn hae-paallyste-koodilla
   "Hakee päällysteen nimen koodilla"
