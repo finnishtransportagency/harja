@@ -186,8 +186,8 @@
 
 (defn yhteiset-tiedot [db user urakka-id vuosi mpu?]
   (let [urakka (first (urakat-q/hae-urakka db urakka-id))
-        alkupvm (pvm/luo-pvm vuosi 1 1)
-        loppupvm (pvm/luo-pvm vuosi 12 31)
+        alkupvm (pvm/->pvm (str "01.01." vuosi))
+        loppupvm (pvm/->pvm (str "31.12." vuosi))
         hoitokauden-alkuvuosi vuosi
         raportin-nimi "Paikkausten yhteenveto"
         parametrit {:urakkaid urakka-id

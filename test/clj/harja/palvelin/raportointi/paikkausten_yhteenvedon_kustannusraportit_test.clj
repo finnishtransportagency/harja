@@ -48,6 +48,10 @@
                    :urakka-id urakka-id
                    :parametrit parametrit})
         raportin-nimi (-> vastaus second :nimi)
+        teksti1 (->  (nth vastaus 2) second)
+        odotettu-teksti1 "Utajärven päällystysurakka 2021-2024"
+        teksti2 (->  (nth vastaus 3) second)
+        odotettu-teksti2 "01.01.2024 - 31.12.2024"
         yhteenvetotaulukko (nth vastaus 4)
         kustannukset-pkluokittain (nth vastaus 5)
         kustannukset-tyomenetelmittain (nth vastaus 6)
