@@ -35,7 +35,9 @@ SELECT x.nimi                     AS nimi,
                COALESCE(SUM(p.kustannus), 0) AS "toteutunut-hinta",
                NULL                          AS "suunniteltu-hinta"
           FROM paikkauskohde_tyomenetelma pt
-                   LEFT JOIN paikkaus p ON pt.id = p.tyomenetelma AND p."urakka-id" = :urakkaid
+                   LEFT JOIN paikkaus p ON pt.id = p.tyomenetelma
+                                               AND p."paikkaus-tyyppi" = 'reikapaikkaus'
+                                               AND p."urakka-id" = :urakkaid
               AND p.alkuaika BETWEEN :alkupvm::DATE AND :loppupvm::DATE
               AND p.poistettu = FALSE
          GROUP BY pt.id, pt.nimi) x
