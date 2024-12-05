@@ -454,3 +454,6 @@ SET "paikkauskohteen-tila" = 'valmis',
                        FROM paikkaus p
                        WHERE p."paikkauskohde-id" = pk.id)
 WHERE pk."paikkauskohteen-tila" IS NULL;
+
+-- Päivitetään paikkauskohdeluokat kaikille paikkauskohteille
+SELECT * FROM paivita_paikkauskohteiden_korjausluokat('1900-01-01'::DATE, '2100-01-01'::DATE);
