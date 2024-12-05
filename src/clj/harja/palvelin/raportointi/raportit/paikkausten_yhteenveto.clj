@@ -184,6 +184,18 @@
                   0)
              kustannusrivit)))
 
+(defn hae-toteutuneet-tyomentelmakustannukset [db parametrit]
+  (let [tyomenetelmakustannukset (hae-kustannukset-tyomenetelmittain db parametrit)]
+    ;; Poistetaan ne rivit, joilla ei ole summia
+    (into [] (sort-by :nimi (remove (fn [rivi]
+                                      (and (or (= 0M (:suunniteltu-hinta rivi)) (nil? (:suunniteltu-hinta rivi)))
+                                        (or (= 0M (:toteutunut-hinta rivi)) (nil? (:toteutunut-hinta rivi)))))
+                              tyomenetelmakustannukset)))))
+
+(defn hae-toteutuneet-maarat-tyomenetelmittain [db parametrit]
+  (let [tyomenetelmamaarat (hae-maarat-tyomenetelmittain db parametrit)]
+    (into [] (sort-by :nimi (remove #(nil? (:yksikko %)) tyomenetelmamaarat)))))
+
 (defn yhteiset-tiedot [db user urakka-id vuosi mpu?]
   (let [urakka (first (urakat-q/hae-urakka db urakka-id))
         alkupvm (pvm/->pvm (str "01.01." vuosi))
@@ -194,30 +206,24 @@
                     :alkupvm alkupvm
                     :loppupvm loppupvm}
 
-        tyomenetelmakustannukset (hae-kustannukset-tyomenetelmittain db parametrit)
-        ;; Poistetaan ne rivit, joilla ei ole summia
-        tyomenetelmakustannukset (into [] (sort-by :nimi (remove (fn [rivi]
-                                                                   (and (or (= 0M (:suunniteltu-hinta rivi)) (nil? (:suunniteltu-hinta rivi)))
-                                                                        (or (= 0M (:toteutunut-hinta rivi)) (nil? (:toteutunut-hinta rivi)))))
-                                                                 tyomenetelmakustannukset)))
+        tyomenetelmakustannukset (hae-toteutuneet-tyomentelmakustannukset db parametrit)
         tilatut-kustannukset (apply + (map (fn [rivi]
                                              (if (and rivi (:suunniteltu-hinta rivi))
                                                (:suunniteltu-hinta rivi)
                                                0))
-                                           tyomenetelmakustannukset))
+                                        tyomenetelmakustannukset))
         toteutuneet-kustannukset (apply + (map (fn [rivi]
                                                  (if (and rivi (:toteutunut-hinta rivi))
                                                    (:toteutunut-hinta rivi)
                                                    0))
-                                               tyomenetelmakustannukset))
+                                            tyomenetelmakustannukset))
         yhteenvetorivi {:nimi "Yhteensä"
                         :suunniteltu-hinta tilatut-kustannukset
                         :toteutunut-hinta toteutuneet-kustannukset
                         :yhteenveto true}
         tyomenetelmakustannukset (conj tyomenetelmakustannukset yhteenvetorivi)
 
-        tyomenetelmamaarat (hae-maarat-tyomenetelmittain db parametrit)
-        tyomenetelmamaarat (into [] (sort-by :nimi (remove #(nil? (:yksikko %)) tyomenetelmamaarat)))
+        tyomenetelmamaarat (hae-toteutuneet-maarat-tyomenetelmittain db parametrit)
 
         reikapaikkauskustannukset (when mpu? (koosta-reikapaikkauskustannukset db parametrit))
         reikapaikkauskustannukset (into [] (sort-by :nimi (remove #(nil? (:yksikko %)) reikapaikkauskustannukset)))
