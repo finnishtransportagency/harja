@@ -193,7 +193,69 @@
 (def urakoiden-maara-per-sivu 20)
 
 (defn taulukko-paallystysurakat [e!  {:keys [urakat haku-kaynnissa?]}]
-  [:div "Tänne tulee lähiaikoina päällystysurakoiden tietoa..."])
+  [grid/grid
+   {:otsikko (str "")
+    :tyhja (if haku-kaynnissa?
+             [ajax-loader "Ladataan tietoja"]
+             "Ei tietoja, tarkistathan valitut suodattimet.")
+    :luokat ["paallystysurakat"]
+    :rivi-jalkeen-fn (fn [urakat]
+                       (let [yhteenveto (tiedot/paallystystietojen-yhteenveto urakat)
+                             valmiit-kohteet (tiedot/valmiit-yhteenveto urakat)
+                             lahetetty (tiedot/lahetetyt-yhteenveto urakat)
+                             valmiit-ei-lahetetty (tiedot/valmiit-ei-lahetetty-yhteenveto urakat)
+                             epaonnistuneet-lahetetty (tiedot/epaonnistuneet-lahetetyt-yhteenveto urakat)
+                             aloittamatta (tiedot/aloittamatta-yhteenveto urakat)]
+                         (when-not (empty? urakat)
+                           [{:teksti "Yhteensä" :luokka "lihavoitu"}
+                            {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
+                            {:teksti yhteenveto :luokka "lihavoitu"}
+                            {:teksti valmiit-kohteet :luokka "lihavoitu"}
+                            {:teksti lahetetty :luokka "lihavoitu"}
+                            {:teksti valmiit-ei-lahetetty :luokka "lihavoitu"}
+                            {:teksti epaonnistuneet-lahetetty :luokka "lihavoitu"}
+                            {:teksti aloittamatta :luokka "lihavoitu"}])))}
+   [{:otsikko "Urakka"
+     :tyyppi :string
+     :nimi :nimi
+     :leveys 7
+     :muokattava? (constantly false)}
+    {:otsikko "Vuosi"
+     :muokattava? (constantly false)
+     :nimi :hoitokauden_alkuvuosi :leveys 3
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
+    {:otsikko "Kohteiden lkm."
+     :muokattava? (constantly false)
+     :nimi :yllapitokohteiden_lkm :leveys 4
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
+    {:otsikko "Valmis/hyväksytty"
+     :muokattava? (constantly false)
+     :nimi :valmis_hyvaksytty :leveys 6
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
+    {:otsikko "Lähetetty onnistuneesti YHA:an"
+     :muokattava? (constantly false)
+     :nimi :lahetetty_onnistuneesti :leveys 6
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
+    {:otsikko "Valmiit, ei vielä lähetetty"
+     :muokattava? (constantly false)
+     :nimi :valmiit_ei_lahetetty :leveys 6
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
+    {:otsikko "Epäonnistuneet YHA-lähetykset"
+     :muokattava? (constantly false)
+     :nimi :epaonnistuneet_lahetetyt :leveys 6
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
+    {:otsikko "Aloittamatta"
+     :muokattava? (constantly false)
+     :nimi :aloittamatta :leveys 6
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}]
+   urakat])
 
 (defn taulukko-hoitourakat [e! {:keys [urakat haku-kaynnissa?]}]
   [grid/grid

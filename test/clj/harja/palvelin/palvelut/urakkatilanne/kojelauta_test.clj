@@ -16,8 +16,8 @@
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :urakkatilanne (component/using
-                                (kojelauta/->KojelautaHallinta)
-                                [:db :http-palvelin])))))
+                           (kojelauta/->KojelautaHallinta)
+                           [:db :http-palvelin])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -78,11 +78,11 @@
   ;; myöskään urakoitsijan pääkäyttäjälle ei palauteta tietoa
   (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                            :hae-urakat-kojelautaan
-                         kemin-alueurakan-2019-2023-paakayttaja
-                         {:urakkatyyppi :hoito
-                          :hoitokauden-alkuvuosi 2020
-                          :urakka-idt #{@kemin-alueurakan-2019-2023-id}
-                          :ely-idt #{}})) "Ei oikeutta, poikkeus heitetään"))
+                           kemin-alueurakan-2019-2023-paakayttaja
+                           {:urakkatyyppi :hoito
+                            :hoitokauden-alkuvuosi 2020
+                            :urakka-idt #{@kemin-alueurakan-2019-2023-id}
+                            :ely-idt #{}})) "Ei oikeutta, poikkeus heitetään"))
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2005-ei-palauta-yhtaan
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -311,3 +311,49 @@
     (is (= 76 (get-in vastaus [:lupaus_tavoitepisteet])) "lupaus_tavoitepisteet")
     (is (= 2 (get-in vastaus [:avoimet_laatupoikkeamat])) "lupaus_tavoitepisteet")
     (is (= 2 (get-in vastaus [:avoimet_turvallisuuspoikkeamat])) "lupaus_tavoitepisteet")))
+
+(deftest paallystys-tietojen-yhteenveto
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        kohteen-nimi "Tärkeä kohde mt20 2022"
+        kohde-id (hae-yllapitokohteen-id-nimella kohteen-nimi)
+        vastaus-aloittamatta (first
+                               (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :paallystys
+                                                                         :hoitokauden-alkuvuosi 2022
+                                                                         :urakka-idt [urakka-id]
+                                                                         :elyt-id #{}}))
+
+        _ (i (format "INSERT INTO public.paallystysilmoitus (paallystyskohde, ilmoitustiedot, luotu, muokattu, luoja, muokkaaja, poistettu, takuupvm, paatos_tekninen_osa, kasittelyaika_tekninen_osa, tila, perustelu_tekninen_osa, asiatarkastus_pvm, asiatarkastus_tarkastaja, asiatarkastus_hyvaksytty, asiatarkastus_lisatiedot, versio, lisatiedot, virhe, virhe_aikaleima)
+        VALUES (%s, null, '2024-12-03 12:16:49.479553', '2024-12-03 12:17:24.558653', 3, 3, false, '2027-12-31', 'hyvaksytty', '2024-12-03 00:00:00.000000', 'lukittu', 'aasdasd', null, null, null, null, 2, null, null, null);\n" kohde-id))
+        vastaus-aloitettu (first
+                            (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :paallystys
+                                                                      :hoitokauden-alkuvuosi 2022
+                                                                      :urakka-idt [urakka-id]
+                                                                      :ely-idt #{}}))
+
+        _ (u (format "UPDATE paallystysilmoitus SET tila = 'valmis' WHERE paallystyskohde = %s;" kohde-id))
+        vastaus-valmis-ei-lahetetty (first
+                                      (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :paallystys
+                                                                                :hoitokauden-alkuvuosi 2022
+                                                                                :urakka-idt [urakka-id]
+                                                                                :ely-idt #{}}))
+
+        _ (u (format "UPDATE yllapitokohde SET lahetetty = NOW(), lahetysvirhe = 'paha virhe' WHERE id = %s;" kohde-id))
+        vastaus-lahetys-epaonnistuu (first
+                                      (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :paallystys
+                                                                                :hoitokauden-alkuvuosi 2022
+                                                                                :urakka-idt [urakka-id]
+                                                                                :ely-idt #{}}))]
+    (is (= urakka-id (get-in vastaus-aloitettu [:id])) "Urakka")
+    (is (= 1 (get-in vastaus-aloittamatta [:aloittamatta])) "Urakka")
+    (is (= 1 (get-in vastaus-aloitettu [:yllapitokohteiden_lkm])) "Urakka")
+    (is (= 1 (get-in vastaus-lahetys-epaonnistuu [:epaonnistuneet_lahetetyt])) "Urakka")
+    (is (= 1 (get-in vastaus-valmis-ei-lahetetty [:valmiit_ei_lahetetty])) "Urakka")
+    (is (= 1 (get-in vastaus-aloitettu [:valmis_hyvaksytty])) "Urakka")
+    (is (= 1 (get-in vastaus-valmis-ei-lahetetty [:valmis_hyvaksytty])) "Urakka")
+    (is (= 1 (get-in vastaus-lahetys-epaonnistuu [:valmis_hyvaksytty])) "Urakka")))
+
+

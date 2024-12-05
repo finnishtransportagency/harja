@@ -43,6 +43,57 @@
                             :urakat #{}
                             :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
+(defn paallystystietojen-yhteenveto [urakat]
+  (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))]
+    [yleiset/tietoja {:class "body-text"}
+     "Kohteita: " (str kohteiden-lukumaara)]))
+
+(defn valmiit-yhteenveto
+  [urakat]
+  (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
+        valmiit-lkm (reduce + 0 (map :valmis_hyvaksytty urakat))
+        valmiit-yhteenveto (when-not (empty? urakat) [:span.valmis_hyvaksytty
+                                                      [yleiset/tietoja {:class "body-text"}
+                                                       "Valmiit: " (str valmiit-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina valmiit-lkm kohteiden-lukumaara) 0) ")")]])]
+    valmiit-yhteenveto))
+
+(defn lahetetyt-yhteenveto
+  [urakat]
+  (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
+        lahetetty-lkm (reduce + 0 (map :lahetetty_onnistuneesti urakat))
+        lahetetty-yhteenveto (when-not (empty? urakat) [:span.lahetetty_onnistuneesti
+                                                        [yleiset/tietoja {:class "body-text"}
+                                                         "Lähetetyt: " (str lahetetty-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina lahetetty-lkm kohteiden-lukumaara) 0) ")")]])]
+    lahetetty-yhteenveto))
+
+
+(defn epaonnistuneet-lahetetyt-yhteenveto
+  [urakat]
+  (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
+        epaonnistuneet-lkm (reduce + 0 (map :epaonnistuneet_lahetetyt urakat))
+        epaonnistuneet-yhteenveto (when-not (empty? urakat) [:span.epaonnistuneet_lahetetyt
+                                                             [yleiset/tietoja {:class "body-text"}
+                                                              "Epäonnistuneet: " (str epaonnistuneet-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina epaonnistuneet-lkm kohteiden-lukumaara) 0) ")")]])]
+    epaonnistuneet-yhteenveto))
+
+(defn valmiit-ei-lahetetty-yhteenveto
+  [urakat]
+  (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
+        valmiit-ei-hyvaksytty-lkm (reduce + 0 (map :valmiit_ei_lahetetty urakat))
+        valmiit-ei-hyvaksytty-yhteenveto (when-not (empty? urakat) [:span.valmiit_ei_lahetetty
+                                                                    [yleiset/tietoja {:class "body-text"}
+                                                                     "Ei lähetetty " (str valmiit-ei-hyvaksytty-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina valmiit-ei-hyvaksytty-lkm kohteiden-lukumaara) 0) ")")]])]
+    valmiit-ei-hyvaksytty-yhteenveto))
+
+(defn aloittamatta-yhteenveto
+  [urakat]
+  (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
+        aloittamatta-lkm (reduce + 0 (map :aloittamatta urakat))
+        aloittamatta-yheenveto (when-not (empty? urakat) [:span.aloittamatta
+                                                          [yleiset/tietoja {:class "body-text"}
+                                                           "Aloittamatta: " (str aloittamatta-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina aloittamatta-lkm kohteiden-lukumaara) 0) ")")]])]
+    aloittamatta-yheenveto))
+
 (defn poikkeusten-yhteenveto
   [urakat]
   (let [kaikkien-urakoiden-lkm (count urakat)
@@ -50,18 +101,18 @@
                                                                (pos-int? (:avoimet_laatupoikkeamat rivi)))
                                                        urakat))
         urakat-joissa-avoimia-turvallisuuspoikkeamia (count (filter (fn [rivi]
-                                                               (pos-int? (:avoimet_turvallisuuspoikkeamat rivi)))
-                                                       urakat))
+                                                                      (pos-int? (:avoimet_turvallisuuspoikkeamat rivi)))
+                                                              urakat))
         urakat-joissa-ei-poikkeamia (count (filter (fn [rivi]
-                                                    (and
-                                                      (zero? (:avoimet_laatupoikkeamat rivi))
-                                                      (zero? (:avoimet_turvallisuuspoikkeamat rivi)))) urakat))
+                                                     (and
+                                                       (zero? (:avoimet_laatupoikkeamat rivi))
+                                                       (zero? (:avoimet_turvallisuuspoikkeamat rivi)))) urakat))
         poikkeamien-yhteenveto (when-not (empty? urakat)
-                                     [:span.valikatselmustiedot
-                                      [yleiset/tietoja {:class "body-text"}
-                                       "Avoimia laatupoikkeamia:" (str urakat-joissa-avoimia-laatupoikkeamia " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-avoimia-laatupoikkeamia kaikkien-urakoiden-lkm) 0) ")")
-                                       "Avoimia turvallisuuspoikkeamia:" (str urakat-joissa-avoimia-turvallisuuspoikkeamia " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-avoimia-turvallisuuspoikkeamia kaikkien-urakoiden-lkm) 0) ")")
-                                       "Ei avoimia poikkeamia: "  (str urakat-joissa-ei-poikkeamia " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-ei-poikkeamia kaikkien-urakoiden-lkm) 0) ")")]])]
+                                 [:span.valikatselmustiedot
+                                  [yleiset/tietoja {:class "body-text"}
+                                   "Avoimia laatupoikkeamia:" (str urakat-joissa-avoimia-laatupoikkeamia " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-avoimia-laatupoikkeamia kaikkien-urakoiden-lkm) 0) ")")
+                                   "Avoimia turvallisuuspoikkeamia:" (str urakat-joissa-avoimia-turvallisuuspoikkeamia " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-avoimia-turvallisuuspoikkeamia kaikkien-urakoiden-lkm) 0) ")")
+                                   "Ei avoimia poikkeamia: " (str urakat-joissa-ei-poikkeamia " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-ei-poikkeamia kaikkien-urakoiden-lkm) 0) ")")]])]
     poikkeamien-yhteenveto))
 
 (defn lupaustietojen-yhteenveto
@@ -72,10 +123,10 @@
                                                 urakat))
         urakat-joista-tieto-puuttuu (- kaikkien-urakoiden-lkm urakat-joissa-pisteet-syotetty)
         lupauspisteiden-yhteenveto (when-not (empty? urakat)
-                                      [:span.lupaustiedot
-                                       [yleiset/tietoja {:class "body-text kojelauta-tietoja"}
-                                        "Lupaukset puuttuvat" (str urakat-joista-tieto-puuttuu " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joista-tieto-puuttuu kaikkien-urakoiden-lkm) 0) ")")
-                                        "Lupaukset kirjattu:" (str urakat-joissa-pisteet-syotetty " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-pisteet-syotetty kaikkien-urakoiden-lkm) 0) ")")]])]
+                                     [:span.lupaustiedot
+                                      [yleiset/tietoja {:class "body-text kojelauta-tietoja"}
+                                       "Lupaukset puuttuvat" (str urakat-joista-tieto-puuttuu " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joista-tieto-puuttuu kaikkien-urakoiden-lkm) 0) ")")
+                                       "Lupaukset kirjattu:" (str urakat-joissa-pisteet-syotetty " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-pisteet-syotetty kaikkien-urakoiden-lkm) 0) ")")]])]
     lupauspisteiden-yhteenveto))
 
 (defn valikatselmus-tilojen-yhteenveto
