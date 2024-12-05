@@ -52,7 +52,6 @@
                               0 "Kaikki"
                               1 (hal/elynumero-ja-nimi %)
                               (str (count %) " hallintayksikköä valittu"))
-       :listaitem-id-etuliite "elyhaku"
        :disabled? haku-kaynnissa?}
       (r/wrap (:elyt valinnat) #(do
                                   (e! (tiedot/->AsetaSuodatin :elyt %))
@@ -84,7 +83,6 @@
                               0 ""
                               1 (:nimi (first %))
                               (str (count %) " urakkaa valittu"))
-       :listaitem-id-etuliite "urakkahaku"
        :disabled? haku-kaynnissa?}
       (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]]])
 

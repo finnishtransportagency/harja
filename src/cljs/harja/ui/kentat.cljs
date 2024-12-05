@@ -75,7 +75,7 @@
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
                                      kun-muuttuu hae-kun-yli-n-merkkia monivalinta? salli-kirjoitus?
                                      tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?
-                                     hakuikoni? input-id listaitem-id-etuliite]} data]
+                                     hakuikoni? input-id]} data]
   (when monivalinta?
     (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
@@ -97,7 +97,7 @@
         edellinen-data (atom @data)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
-      (fn [{:keys [lahde disabled? listaitem-id-etuliite]} data]
+      (fn [{:keys [lahde disabled?]} data]
 
         (when (and
                 tarkkaile-ulkopuolisia-muutoksia?
@@ -206,10 +206,10 @@
                 [:span.ei-hakutuloksia "Ei tuloksia"]
                 (doall (map-indexed (fn [i t]
                                       (let [checkbox-input-id (str
-                                                                (when listaitem-id-etuliite (str listaitem-id-etuliite "-"))
+                                                                (when input-id (str input-id "-"))
                                                                 (str "checkbox-id-" i))
                                             checkbox-label-id (str
-                                                                (when listaitem-id-etuliite (str listaitem-id-etuliite "-"))
+                                                                (when input-id (str input-id "-"))
                                                                 (str "label-id-" i))]
                                        ^{:key (hash t)}
                                        [:li {:class [(when (= i idx) "korostettu") "padding-left-8"
