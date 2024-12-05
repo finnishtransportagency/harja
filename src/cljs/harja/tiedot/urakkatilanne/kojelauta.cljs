@@ -13,6 +13,18 @@
 ;; vuosi, jota ennen tavoite ja kattohinnan paatokset eivat olleet sidoksissa toisiinsa
 (def +kattohintapaatos-kynnysvuosi+ 2021)
 
+(defn tee-elyhaku [elyt]
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [itemit (if (< (count teksti) 1)
+                         elyt
+                         (filter #(and
+                                    (str (:elynumero %) " " (:nimi %))
+                                    (not= (.indexOf (.toLowerCase (str (:elynumero %) " " (:nimi %)))
+                                            (.toLowerCase teksti)) -1))
+                           elyt))]
+            (vec (sort-by :elynumero itemit)))))))
+
 (defn tee-urakkahaku [urakat]
   (reify protokollat/Haku
     (hae [_ teksti]
@@ -27,8 +39,8 @@
 
 (def tila (atom {:urakat []
                  :valinnat {:urakkatyyppi {:nimi "Hoito" :arvo :hoito}
-                            :ely nil
-                            :urakat nil
+                            :ely-idt #{}
+                            :urakat #{}
                             :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
 (defn poikkeusten-yhteenveto
@@ -108,12 +120,18 @@
                                   "Valmiina:" (str urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm) 0) ")")]])]
     ks-tilojen-yhteenveto))
 
+(defrecord AlustaHallintayksikkoHaku [elyt])
 (defrecord AsetaSuodatin [avain valinta])
 (defrecord HaeUrakat [])
 (defrecord HaeUrakatOnnistui [vastaus])
 (defrecord HaeUrakatEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
+
+  AlustaHallintayksikkoHaku
+  (process-event [{:keys [elyt]} app]
+    (assoc app :elyhaku (tee-elyhaku elyt)))
+
   AsetaSuodatin
   (process-event [{:keys [avain valinta]} app]
     (assoc-in app [:valinnat avain] valinta))
@@ -123,8 +141,8 @@
     (tuck-apurit/post! :hae-urakat-kojelautaan
       {:urakkatyyppi (or (get-in app [:valinnat :urakkatyyppi :arvo]) :hoito)
        :hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
-       :urakka-idt (map :id (get-in app [:valinnat :urakat]))
-       :ely-id (get-in app [:valinnat :ely :id])}
+       :urakka-idt (into #{} (map :id (get-in app [:valinnat :urakat])))
+       :ely-idt (into #{} (map :id (get-in app [:valinnat :elyt])))}
       {:onnistui ->HaeUrakatOnnistui
        :epaonnistui ->HaeUrakatEpaonnistui})
     (assoc app :haku-kaynnissa? true))

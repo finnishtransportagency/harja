@@ -22,7 +22,7 @@
   (range (- (pvm/vuosi pvm-nyt) hoitokausia-taaksepain)
     (+ hoitokausia-eteenpain (pvm/vuosi pvm-nyt))))
 
-(defn suodattimet [e! {:keys [valinnat urakkahaku haku-kaynnissa?] :as app}]
+(defn suodattimet [e! {:keys [valinnat elyhaku urakkahaku haku-kaynnissa?] :as app}]
   [:div
    [yleiset/pudotusvalikko
     "Urakkatyyppi"
@@ -37,17 +37,26 @@
               (#{:hoito :paallystys} (:arvo ut)))
       nav/+urakkatyypit+)]
    [:div
-    [yleiset/pudotusvalikko
-     "ELY"
-     {:valitse-fn #(do
-                     (e! (tiedot/->AsetaSuodatin :ely %))
-                     (e! (tiedot/->HaeUrakat)))
-      :valinta (:ely valinnat)
-      :format-fn #(or (hal/elynumero-ja-nimi %) "Kaikki")
-      :vayla-tyyli? true
-      :disabled haku-kaynnissa?}
-     (into [nil] (map #(select-keys % [:id :nimi :elynumero])
-                   @hal/vaylamuodon-hallintayksikot))]
+    [:div.label-ja-alasveto
+     [:label.alasvedon-otsikko-vayla {:for "elyhaku"} "Hallintayksikkö"]
+     [kentat/tee-kentta
+      {:input-id "elyhaku" :tyyppi :haku
+       :nayta #(or (hal/elynumero-ja-nimi %) "Kaikki")
+       :lahde elyhaku
+       :hakuikoni? true
+       :hae-kun-yli-n-merkkia 0
+       :tarkkaile-ulkopuolisia-muutoksia? true
+       :placeholder "Valitse yksi tai useampi"
+       :monivalinta? true
+       :monivalinta-teksti #(case (count %)
+                              0 "Kaikki"
+                              1 (hal/elynumero-ja-nimi %)
+                              (str (count %) " hallintayksikköä valittu"))
+       :listaitem-id-etuliite "elyhaku"
+       :disabled? haku-kaynnissa?}
+      (r/wrap (:elyt valinnat) #(do
+                                  (e! (tiedot/->AsetaSuodatin :elyt %))
+                                  (e! (tiedot/->HaeUrakat))))]]
     [yleiset/pudotusvalikko
      (if (= :paallystys (get-in valinnat [:urakkatyyppi :arvo]))
        "Vuosi"
@@ -63,9 +72,8 @@
     [:div.label-ja-alasveto
      [:label.alasvedon-otsikko-vayla {:for "urakkahaku"} "Hae urakkaa"]
      [kentat/tee-kentta
-      {:tyyppi :haku
-       :input-id "urakkahaku"
-       :nayta :nimi :fmt :nimi
+      {:input-id "urakkahaku" :tyyppi :haku
+       :nayta :nimi
        :hae-kun-yli-n-merkkia 0
        :lahde urakkahaku
        :monivalinta? true
@@ -76,6 +84,7 @@
                               0 ""
                               1 (:nimi (first %))
                               (str (count %) " urakkaa valittu"))
+       :listaitem-id-etuliite "urakkahaku"
        :disabled? haku-kaynnissa?}
       (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]]])
 
@@ -275,7 +284,11 @@
 
 (defn kojelauta* [e! app]
   (komp/luo
-    (komp/sisaan #(e! (tiedot/->HaeUrakat)))
+    (komp/sisaan #(do
+                    (e! (tiedot/->AlustaHallintayksikkoHaku (into []
+                                                              (map (fn [ely] (select-keys ely [:id :nimi :elynumero]))
+                                                                @hal/vaylamuodon-hallintayksikot))))
+                    (e! (tiedot/->HaeUrakat))))
     (fn [e! app]
       [:div.kojelauta-hallinta
        [:h1 "Urakoiden tilanne"]

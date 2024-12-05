@@ -75,7 +75,7 @@
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
                                      kun-muuttuu hae-kun-yli-n-merkkia monivalinta? salli-kirjoitus?
                                      tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?
-                                     hakuikoni? input-id]} data]
+                                     hakuikoni? input-id listaitem-id-etuliite]} data]
   (when monivalinta?
     (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
@@ -97,7 +97,7 @@
         edellinen-data (atom @data)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
-      (fn [{:keys [lahde disabled?]} data]
+      (fn [{:keys [lahde disabled? listaitem-id-etuliite]} data]
 
         (when (and
                 tarkkaile-ulkopuolisia-muutoksia?
@@ -205,23 +205,34 @@
               (if (empty? nykyiset-tulokset)
                 [:span.ei-hakutuloksia "Ei tuloksia"]
                 (doall (map-indexed (fn [i t]
-                                      ^{:key (hash t)}
-                                      [:li {:class [(when (= i idx) "korostettu") "padding-left-8"
-                                                    "harja-alasvetolistaitemi display-flex items-center klikattava"]
-                                            :role "presentation"}
-                                       [tee-kentta
-                                        {:tyyppi :checkbox
-                                         :teksti ((or nayta str) t)
-                                         :piilota-checkbox? piilota-checkbox?
-                                         :valitse! #(do
-                                                      (.preventDefault %)
-                                                      (if monivalinta?
-                                                        (reset! teksti (monivalinta-teksti (monivalinta-valitse! t)))
-                                                        (do
-                                                          (reset! teksti ((or nayta str) (reset! data t)))
-                                                          (reset! tulokset nil)))
-                                                      (when kun-muuttuu (kun-muuttuu nil)))}
-                                        (or (= t @data) (some #{t} @data))]])
+                                      (let [checkbox-input-id (str
+                                                                (when listaitem-id-etuliite (str listaitem-id-etuliite "-"))
+                                                                (str "checkbox-id-" i))
+                                            checkbox-label-id (str
+                                                                (when listaitem-id-etuliite (str listaitem-id-etuliite "-"))
+                                                                (str "label-id-" i))]
+                                       ^{:key (hash t)}
+                                       [:li {:class [(when (= i idx) "korostettu") "padding-left-8"
+                                                     "harja-alasvetolistaitemi display-flex items-center klikattava"]
+                                             :role "presentation"
+                                             :on-click #(do
+                                                          (.stopPropagation %)
+                                                          (-> (.getElementById js/document checkbox-input-id) .click))}
+                                        [tee-kentta
+                                         {:input-id checkbox-input-id
+                                          :label-id checkbox-label-id
+                                          :tyyppi :checkbox
+                                          :teksti ((or nayta str) t)
+                                          :piilota-checkbox? piilota-checkbox?
+                                          :valitse! #(do
+                                                       (.preventDefault %)
+                                                       (if monivalinta?
+                                                         (reset! teksti (monivalinta-teksti (monivalinta-valitse! t)))
+                                                         (do
+                                                           (reset! teksti ((or nayta str) (reset! data t)))
+                                                           (reset! tulokset nil)))
+                                                       (when kun-muuttuu (kun-muuttuu nil)))}
+                                         (or (= t @data) (some #{t} @data))]]))
                          nykyiset-tulokset))))])]))))
 
 

@@ -30,7 +30,7 @@
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                           :hoitokauden-alkuvuosi 2024
                                                           :urakka-idt nil
-                                                          :ely-id nil})]
+                                                          :ely-idt #{}})]
     (is (every? #(integer? (:id %)) vastaus))
     (is (every? #(string? (:nimi %)) vastaus))
     (is (every? #(integer? (:hoitokauden_alkuvuosi %)) vastaus))
@@ -46,14 +46,14 @@
                                    {:urakkatyyppi :hoito
                                     :hoitokauden-alkuvuosi 2024
                                     :urakka-idt nil
-                                    :ely-id nil})
+                                    :ely-idt #{}})
         vastaus-ely-paakayttajalle (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :hae-urakat-kojelautaan
                                      (ely-paakayttaja)
                                      {:urakkatyyppi :hoito
                                       :hoitokauden-alkuvuosi 2024
                                       :urakka-idt nil
-                                      :ely-id nil})]
+                                      :ely-idt #{}})]
     (is (= 10 (count vastaus-urakanvalvojalle)) "Urakanvalvoja näkee")
     (is (= 10 (count vastaus-ely-paakayttajalle)) "ELY:n Pääkäyttäjä näkee"))
 
@@ -64,7 +64,7 @@
                            {:urakkatyyppi :hoito
                             :hoitokauden-alkuvuosi 2015
                             :urakka-idt nil
-                            :ely-id nil})) "Ei oikeutta, poikkeus heitetään")
+                            :ely-idt #{}})) "Ei oikeutta, poikkeus heitetään")
 
   ;; Urakoitsijan Laadunvalvojakaan ei ainakaan vielä saa nähdä asioita
   (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -73,23 +73,23 @@
                            {:urakkatyyppi :hoito
                             :hoitokauden-alkuvuosi 2020
                             :urakka-idt #{@kemin-alueurakan-2019-2023-id}
-                            :ely-id nil})) "Ei oikeutta, poikkeus heitetään")
+                            :ely-idt #{}})) "Ei oikeutta, poikkeus heitetään")
 
-;; myöskään urakoitsijan pääkäyttäjälle ei palauteta tietoa
-(is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                         :hae-urakat-kojelautaan
+  ;; myöskään urakoitsijan pääkäyttäjälle ei palauteta tietoa
+  (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :hae-urakat-kojelautaan
                          kemin-alueurakan-2019-2023-paakayttaja
                          {:urakkatyyppi :hoito
                           :hoitokauden-alkuvuosi 2020
                           :urakka-idt #{@kemin-alueurakan-2019-2023-id}
-                          :ely-id nil})) "Ei oikeutta, poikkeus heitetään"))
+                          :ely-idt #{}})) "Ei oikeutta, poikkeus heitetään"))
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2005-ei-palauta-yhtaan
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                           :hoitokauden-alkuvuosi 2005
                                                           :urakka-idt nil
-                                                          :ely-id nil})]
+                                                          :ely-idt #{}})]
 
     (is (= 0 (count vastaus)) "Urakoiden lukumäärä")))
 
@@ -99,7 +99,7 @@
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                           :hoitokauden-alkuvuosi 2024
                                                           :urakka-idt nil
-                                                          :ely-id pop-ely-id})]
+                                                          :ely-idt #{pop-ely-id}})]
     (is (str/includes? vastaus "Iin MHU") "Iin MHU")
     (is (str/includes? vastaus "Raahen MHU") "Iin MHU")
     (is (str/includes? vastaus "MHU Suomussalmi") "Iin MHU")
@@ -113,7 +113,7 @@
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                           :hoitokauden-alkuvuosi 2024
                                                           :urakka-idt [iin-mhu-urakka-id]
-                                                          :ely-id nil})]
+                                                          :ely-idt #{}})]
     (is (= (:indeksikerroin (first vastaus)) 1.298) "Indeksikerroin palautuu oikein")
     (is (str/includes? vastaus "Iin MHU") "Iin MHU")
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
@@ -124,9 +124,9 @@
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                           :hoitokauden-alkuvuosi 2022
                                                           :urakka-idt [urakka-id]
-                                                          :ely-id nil})
+                                                          :ely-idt #{}})
         rivi (first (filter #(= 2022 (:hoitokauden_alkuvuosi %))
-                                       vastaus))]
+                      vastaus))]
     (is (str/includes? vastaus "Oulun MHU") "Oulun MHU")
     (is (= (:indeksikerroin rivi) 1.352) "Indeksikerroin palautuu oikein")
     (is (= "aloittamatta" (get-in rivi [:ks_tila :suunnitelman_tila])) "tila")
@@ -151,7 +151,7 @@
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                           :hoitokauden-alkuvuosi 2024
                                                           :urakka-idt [urakka-id]
-                                                          :ely-id nil})
+                                                          :ely-idt #{}})
         rivi (first (filter #(= 2024 (:hoitokauden_alkuvuosi %))
                       vastaus))]
     (is (str/includes? vastaus "Raahen MHU") "Raahen MHU")
@@ -180,7 +180,7 @@
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                           :hoitokauden-alkuvuosi 2024
                                                           :urakka-idt [iin-mhu-urakka-id]
-                                                          :ely-id nil})
+                                                          :ely-idt #{}})
         vahvistettu-2024-rivi (first (filter #(= 2024 (:hoitokauden_alkuvuosi %))
                                        vastaus))]
     (is (str/includes? vastaus "Iin MHU") "Iin MHU")
@@ -199,7 +199,7 @@
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                           :hoitokauden-alkuvuosi 2025
                                                           :urakka-idt [iin-mhu-urakka-id]
-                                                          :ely-id nil})
+                                                          :ely-idt #{}})
         vahvistettu-2024-rivi (first (filter #(= 2025 (:hoitokauden_alkuvuosi %))
                                        vastaus))]
     (is (str/includes? vastaus "Iin MHU") "Iin MHU")
@@ -219,7 +219,7 @@
                                     :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                                             :hoitokauden-alkuvuosi 2024
                                                                             :urakka-idt [urakka-id]
-                                                                            :ely-id nil}))
+                                                                            :ely-idt #{}}))
         ;; lisätään kantaan seuraavat päätökset:
         ;; 1. tavoitehinnan ylitys
         _ (i (format "INSERT INTO urakka_paatos (\"hoitokauden-alkuvuosi\", \"urakka-id\", \"hinnan-erotus\", \"urakoitsijan-maksu\", \"tilaajan-maksu\", siirto, tyyppi, \"lupaus-luvatut-pisteet\", \"lupaus-toteutuneet-pisteet\", \"lupaus-tavoitehinta\", muokattu, \"muokkaaja-id\", \"luoja-id\", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id)
@@ -236,7 +236,7 @@
                     :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                             :hoitokauden-alkuvuosi 2024
                                                             :urakka-idt [urakka-id]
-                                                            :ely-id nil}))]
+                                                            :ely-idt #{}}))]
     (is (= urakka-id (get-in vastaus-ennen-paatoksia [:id])) "Urakka")
     (is (= hallintayksikko-id (get-in vastaus-ennen-paatoksia [:ely_id])) "POP ELY")
     (is (nil? (get-in vastaus-ennen-paatoksia [:tavoitehintapaatos])) "Tavoitehinta")
@@ -258,7 +258,7 @@
                     :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                             :hoitokauden-alkuvuosi 2024
                                                             :urakka-idt [urakka-id]
-                                                            :ely-id nil}))
+                                                            :ely-idt #{}}))
         urakka-jossa-ei-tavoitepisteita (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
         vastaus-jossa-tei-avoitepisteita
         (first
@@ -266,7 +266,7 @@
             :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                     :hoitokauden-alkuvuosi 2024
                                                     :urakka-idt [urakka-jossa-ei-tavoitepisteita]
-                                                    :ely-id nil}))]
+                                                    :ely-idt #{}}))]
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")
     (is (= hallintayksikko-id (get-in vastaus [:ely_id])) "POP ELY")
     (is (= 76 (get-in vastaus [:lupaus_tavoitepisteet])) "lupaus_tavoitepisteet")
@@ -305,7 +305,7 @@
                     :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                             :hoitokauden-alkuvuosi 2024
                                                             :urakka-idt [urakka-id]
-                                                            :ely-id nil}))]
+                                                            :ely-idt #{}}))]
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")
     (is (= hallintayksikko-id (get-in vastaus [:ely_id])) "POP ELY")
     (is (= 76 (get-in vastaus [:lupaus_tavoitepisteet])) "lupaus_tavoitepisteet")
