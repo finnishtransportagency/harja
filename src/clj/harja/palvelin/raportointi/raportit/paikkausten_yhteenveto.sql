@@ -127,4 +127,15 @@ SELECT pk.pkluokka,
    AND pk.alkupvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
    AND pk."paikkauskohteen-tila" = 'valmis'
    AND pk.poistettu = FALSE
- GROUP BY pk.pkluokka;
+ GROUP BY pk.pkluokka
+
+UNION
+
+SELECT p.pkluokka,
+       COALESCE(SUM(p."kustannus"), 0)  AS "toteutunut-hinta"
+  FROM paikkaus p
+ WHERE p."urakka-id" = :urakkaid
+   AND p."paikkaus-tyyppi" = 'reikapaikkaus'
+   AND p.alkuaika BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+   AND p.poistettu = FALSE
+ GROUP BY p.pkluokka;
