@@ -135,7 +135,7 @@
               [palstat-tagi
                [palsta-tagi
                 [:div.row.form-group.required
-                 [:label.control-label {:for (str "tehtava-valikko-" indeksi)} [:span [:span.kentan-label "Tehtävä"]]]
+                 [:label.control-label [:span [:span.kentan-label "Tehtävä"]]]
                  [kentat/tee-kentta
                   {:otsikko               "Tehtävä"
                    :nimi                  [::t/toteumat indeksi ::t/tehtava]
@@ -154,7 +154,7 @@
                   (r/wrap tehtava
                           (r/partial paivita! ::t/tehtava indeksi))]]
                 [:div.row.form-group.required
-                 [:label.control-label {:for (str "toteutunut-maara-" indeksi)} [:span [:span.kentan-label "Toteutunut määrä"]]]
+                 [:label.control-label [:span [:span.kentan-label "Toteutunut määrä"]]]
                  [kentat/tee-kentta
                   {::ui-lomake/col-luokka ""
                    :vayla-tyyli?          true
@@ -163,16 +163,16 @@
                    :tyyppi                :numero
                    :yksikko               yksikko
                    :data-cy               (str "maara-input-" indeksi)
-                   :pakollinen?           true}
+                   :pakollinen? true}
                   (r/wrap maara
-                          (r/partial paivita! ::t/maara indeksi))]]
+                    (r/partial paivita! ::t/maara indeksi))]]
                 [:div.row
                  [:label "Lisätieto"]
                  [kentat/tee-kentta
                   {::ui-lomake/col-luokka ""
-                   :vayla-tyyli?          true
-                   :virhe?                (kentassa-virhe? [::t/toteumat indeksi ::t/lisatieto] validius)
-                   :tyyppi                :string}
+                   :vayla-tyyli? true
+                   :virhe? (kentassa-virhe? [::t/toteumat indeksi ::t/lisatieto] validius)
+                   :tyyppi :string}
                   (r/wrap lisatieto
                           (r/partial paivita! ::t/lisatieto indeksi))]]]
                (when useampi?

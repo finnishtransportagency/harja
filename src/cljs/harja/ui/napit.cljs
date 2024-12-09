@@ -172,7 +172,8 @@
             (when (and data-attributes (every? #(and (keyword? %)
                                                      (re-find #"^data-" (name %)))
                                                (keys data-attributes)))
-              data-attributes))
+              data-attributes)
+            (when data-cy {:data-cy data-cy}))
           (when tallennus-kaynnissa?
             [y/ajax-loader])
           (when tallennus-kaynnissa?

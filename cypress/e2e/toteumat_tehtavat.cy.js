@@ -50,11 +50,12 @@ describe('Toteumat / Tehtävät sivu toimii', function ()
         cy.wait(100)
 
         // Valitse tehtävä
-        cy.get('label[for=tehtava-0] + div').valinnatValitse({valinta: 'AB-paikkaus levittäjällä'})
+        //cy.get('label[for=tehtava-0] + div').valinnatValitse({valinta: 'AB-paikkaus levittäjällä'})
+        cy.get('[data-cy="tehtava-valikko-0"]').valinnatValitse({valinta: 'AB-paikkaus levittäjällä'})
         cy.wait(100)
 
         // Aseta määrä
-        cy.get('label[for=toteutunut-maara-0] + span > input').type('{selectall}15')
+        cy.get('[data-cy="maara-input-0"]').type('{selectall}15')
 
         // Aseta tieosoite
         cy.get('input.tierekisteri.input-default.tr-numero').type('{selectall}4')
@@ -63,6 +64,7 @@ describe('Toteumat / Tehtävät sivu toimii', function ()
         cy.get('input.tierekisteri.input-default.tr-loppuosa').type('{selectall}420')
         cy.get('input.tierekisteri.input-default.tr-loppuetaisyys').type('{selectall}1000')
         // Tallenna
+        cy.get('[data-cy="maara-input-0"]')
         cy.get('[data-cy="Tallenna-toteuma-nappi"]').click();
         // Toteuma tallennettu teksti tulee näkyviin, eli tallennus on onnistunut
         cy.contains('Toteuma tallennettu', { timeout: clickTimeout }).should('be.visible');
