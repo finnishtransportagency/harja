@@ -127,3 +127,14 @@ SET     poistettu = TRUE,
         "muokkaaja-id" = :kayttaja-id -- Halutaanko poistossa asettaa muokkaajan tiedot? 
 WHERE   "urakka-id" = :urakka-id 
 AND     "ulkoinen-id" = :ulkoinen-id;
+
+-- name: hae-reikapaikkausid
+-- single?: true
+SELECT id
+  FROM paikkaus
+ WHERE "paikkaus-tyyppi" = 'reikapaikkaus'
+   AND "urakka-id" = :urakka-id
+   AND "ulkoinen-id" = :ulkoinen-id;
+
+-- name: laske-pkluokka-reikapaikkaukselle!
+SELECT * FROM paivita_reikapaikkauksen_korjausluokka(:id);

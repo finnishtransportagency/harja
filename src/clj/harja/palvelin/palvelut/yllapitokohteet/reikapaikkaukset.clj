@@ -76,12 +76,18 @@
                     :lahde lahde}
         ;; Onko paikkaus kannassa, tyhjä tulos palauttaa (), johon seq lyö nilliä, joten boolean -> seq -> tulos 
         paikkaus-olemassa? (boolean (seq (q/hae-reikapaikkaus-vaikka-poistettu db {:ulkoinen-id tunniste
-                                                                                   :urakka-id urakka-id})))]
-    ;; Jos paikkausta ei ole olemassa -> lisätään se, muuten kutsutaan UPDATE 
-    (if paikkaus-olemassa?
-      (q/paivita-reikapaikkaus! db parametrit)
-      (q/lisaa-reikapaikkaus! db parametrit))))
+                                                                                   :urakka-id urakka-id})))
+        ;; Jos paikkausta ei ole olemassa -> lisätään se, muuten kutsutaan UPDATE
+        _
+        (if paikkaus-olemassa?
+          (q/paivita-reikapaikkaus! db parametrit)
+          (q/lisaa-reikapaikkaus! db parametrit))
 
+        reikapaikkausid (q/hae-reikapaikkausid db {:ulkoinen-id tunniste
+                                         :urakka-id urakka-id})
+        
+        ;; Laske PK-luokka reikapaikkaukselle
+        _ (q/laske-pkluokka-reikapaikkaukselle! db {:id reikapaikkausid})]))
 
 (defn tallenna-reikapaikkaus
   "Yksittäisen reikäpaikkauksen muokkauksen tallennus (käyttöliittymän kautta)"
