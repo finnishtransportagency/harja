@@ -49,7 +49,8 @@ INSERT INTO paikkaus (
   tierekisteriosoite, 
   tyomenetelma, 
   massatyyppi, 
-  leveys, 
+  leveys,
+  lahde,
   massamenekki, 
   massamaara, 
   "pinta-ala", 
@@ -77,6 +78,7 @@ VALUES (
   COALESCE(:tyomenetelma-id, (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = :tyomenetelma)), -- tyomenetelma 
   'Ei määritelty', -- massatyyppi, 'Ei määritelty' reikäpaikkauksille
   NULL::NUMERIC, -- leveys
+  :lahde::lahde, -- harja-api / harja-ui
   NULL::NUMERIC, -- massamenekki
   NULL::NUMERIC, -- massamaara
   NULL::NUMERIC, -- "pinta-ala"

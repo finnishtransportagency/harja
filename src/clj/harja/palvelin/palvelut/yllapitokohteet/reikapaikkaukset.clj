@@ -54,7 +54,7 @@
   [db kayttaja-id urakka-id paikkaus]
   ;; Destruktoi paikkaus
   (let [{:keys [tunniste tie aosa aet losa let pvm menetelma
-                tyomenetelma-id maara yksikko kustannus alkuaika loppuaika]} paikkaus
+                tyomenetelma-id maara yksikko kustannus alkuaika loppuaika lahde]} paikkaus
         ;; Koosta parametrit, alku/loppuaika reikäpaikkauksilla tällä hetkellä samoja (loppuaikaa ei ole speksattu)
         ;; joka on 'pvm' kun data tuodaan Excelistä, frontilta alkuaika/loppuaika
         parametrit {:luoja-id kayttaja-id
@@ -72,7 +72,8 @@
                     :tyomenetelma menetelma
                     :maara maara
                     :kustannus kustannus
-                    :yksikko yksikko}
+                    :yksikko yksikko
+                    :lahde lahde}
         ;; Onko paikkaus kannassa, tyhjä tulos palauttaa (), johon seq lyö nilliä, joten boolean -> seq -> tulos 
         paikkaus-olemassa? (boolean (seq (q/hae-reikapaikkaus-vaikka-poistettu db {:ulkoinen-id tunniste
                                                                                    :urakka-id urakka-id})))]
@@ -90,7 +91,7 @@
 
 
 (defn tallenna-reikapaikkaukset
-  "Tallentaa kaikki Excelin reikäpaikkaukset valitulle urakalle (Excel-tuonti)"
+  "Tallentaa kaikki API:n/Excelin reikäpaikkaukset valitulle urakalle."
   [db {:keys [id]} urakka-id reikapaikkaukset]
   (doseq [paikkaus reikapaikkaukset]
     (luo-tai-paivita-reikapaikkaus db id urakka-id paikkaus)))
@@ -99,6 +100,8 @@
 (defn- kasittele-excel [db urakka-id kayttaja pyynto]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in pyynto [:params "file" :tempfile]))))
         reikapaikkaukset (p-excel/parsi-syotetyt-reikapaikkaukset workbook)
+        ;; Lisää excelistä saatuihin reikäpaikkauksiin lähteeksi harja-ui
+        reikapaikkaukset (map #(assoc % :lahde "harja-ui") reikapaikkaukset)
         ;; Kerää kaikki parsinnan virheet
         virheet (reduce (fn [acc arvo]
                           (if-let [virhe (get arvo :virhe)]
