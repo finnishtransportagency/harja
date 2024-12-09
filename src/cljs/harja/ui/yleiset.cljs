@@ -167,7 +167,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   ([otsikko url]
    (tiedoston-lataus-linkki otsikko url nil))
   ([otsikko url {:keys [luokat] :as _opts}]
-   [:a {:class (concat ["nappi-reunaton"] luokat)
+   [:a {:class (concat ["nappi-toissijainen"] luokat)
         :href url
         :download ""}
     [ikonit/ikoni-ja-teksti (ikonit/livicon-download) otsikko]]))

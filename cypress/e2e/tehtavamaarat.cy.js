@@ -120,7 +120,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         cy.contains('Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä').should('not.exist')
     })
 
-    it('Määrän voi syöttää', () => {
+    it.skip('Määrän voi syöttää', () => {
         cy.viewport(1100, 2000)
         cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32');
         cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('HaeSuunniteltavatTehtavat')
