@@ -72,7 +72,7 @@
   "Tarkistetaan onko kentässä virhettä. Kaikille kentille ei ole välttämättä annettu vielä validointiarvoja.
   Mikäli validointiarvoja ei ole annettu, kenttä on aina virheetön."
   [polku validiarvot]
- (if validiarvot
+  (if validiarvot
     (and @tiedot/nayta-validoinnit? (not (get-in validiarvot [polku :validi?])))
     false))
 
@@ -135,7 +135,7 @@
               [palstat-tagi
                [palsta-tagi
                 [:div.row.form-group.required
-                 [:label.control-label {:for (str "tehtava-" indeksi)} [:span [:span.kentan-label "Tehtävä"]]]
+                 [:label.control-label {:for (str "tehtava-valikko-" indeksi)} [:span [:span.kentan-label "Tehtävä"]]]
                  [kentat/tee-kentta
                   {:otsikko               "Tehtävä"
                    :nimi                  [::t/toteumat indeksi ::t/tehtava]

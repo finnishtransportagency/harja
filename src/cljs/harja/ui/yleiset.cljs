@@ -175,21 +175,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
 
-(defn virheviesti-sailio
-  "Käytetään enää palvelinkutsuissa. Jos haluat näyttää virheen sivulla, esimerkiksi validoinnin yhteydessä,
-  kun painetaan Tallenna-nappia, niin käytä 'info-laatikko' -elementtiä. Tämä virheviesti-sailio luo virheviestin
-  'sivun sisään'. Jos toinen parametri on jotain muuta kuin nil tai false, säiliön display asetetaan inline-blockiksi."
-  ([viesti] (virheviesti-sailio viesti nil false))
-  ([viesti rasti-funktio] (virheviesti-sailio viesti rasti-funktio false))
-  ([viesti rasti-funktio inline-block?]
-   (let [sulkemisnappi [:button.inlinenappi.nappi-kielteinen {:on-click #(rasti-funktio)}
-                        [ikonit/remove] " Sulje"]]
-     (if inline-block?
-       [:div.virheviesti-sailio {:style {:display :inline-block}} viesti
-        (when rasti-funktio sulkemisnappi)]
-       [:div.virheviesti-sailio viesti
-        (when rasti-funktio sulkemisnappi)]))))
-
 (def valinta-ul-max-korkeus-px "420px")
 
 (defn linkki-jossa-valittu-checked

@@ -30,9 +30,9 @@
   https://www.paciellogroup.com/blog/2012/01/html5-accessibility-chops-title-attribute-use-and-abuse/
 
   - ikoni. Oletuksena haetaan luokan perusteella, mutta on mahdollista antaa myös itse.
-  - virheen-esitystapa (:vertical), joko :modal, :flash, :vertical tai :horizontal
-    * Nappi käyttää harja.ui.yleiset/virheviesti-sailiota, modalia ja viestia
-    * horizontal asettaa sailion tyylin inline-blockiksi
+  - virheen-esitystapa, joko :modal tai :flash
+    * Nappi käyttää harja.ui.yleiset/modalia ja viestia
+
   - suljettava-virhe? (false)
     * Jos virhe on suljettava, annetaan inline viestille oikeaan yläkulmaan rasti.
     * Oletuksena viestit suljetaan aina, kun tätä nappia painetaan uudelleen
@@ -55,8 +55,6 @@
             virheen-esitystapa (case (:virheen-esitystapa asetukset)
                                  :modal :modal
                                  :flash :flash
-                                 :vertical :vertical
-                                 :horizontal :horizontal
                                  :flash)
             suljettava-virhe? (or (:suljettava-virhe? asetukset) false)
             sulkemisfunktio #(reset! nayta-virheviesti? false)
@@ -101,9 +99,7 @@
                                                               viesti/viestin-nayttoaika-keskipitka))
                       (sulkemisfunktio)
                       nil)
-             :modal (do (modal/nayta! {:otsikko "Virhe tapahtui" :sulje sulkemisfunktio} virheviesti) nil)
-             :horizontal (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio) :inline-block)
-             :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))))]))))
+             :modal (do (modal/nayta! {:otsikko "Virhe tapahtui" :sulje sulkemisfunktio} virheviesti) nil)))]))))
 
 (defn nappi
   "Yleinen nappikomponentti, jota voi muokata optioilla.
