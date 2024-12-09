@@ -48,7 +48,7 @@ describe('Talvihoitoreitit näkymä aukeaa', function ()
     {
         cy.contains('Reitti 1');
         cy.contains('Reitti 2');
-        cy.contains('Tuo kohteet excelistä');
+        cy.contains('Tuo kohteet Excelistä');
         cy.contains('Lataa Excel-pohja');
 
         // Avataan Reitti 1

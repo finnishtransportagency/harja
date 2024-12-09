@@ -180,12 +180,12 @@
                                                                          :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
                                                                          :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
                                   [:button {:type "submit"
-                                            :class #{"nappi-reunaton"}}
+                                            :class #{"nappi-toissijainen"}}
                                    [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
 
                               [liitteet/lataa-tiedosto
                                {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
-                               {:nappi-teksti "Tuo kohteet excelistä"
+                               {:nappi-teksti "Tuo kohteet Excelistä"
                                 :url "lue-paikkauskohteet-excelista"
                                 :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
                                 :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
