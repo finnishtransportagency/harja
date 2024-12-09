@@ -114,8 +114,7 @@
     ;; -> hae-paikkaus-kustannukset
     ;; -> hae-sanktiot-ja-bonukset
     ;; Kun tullaan näkymään -> Resetoi aina tila
-    (let [_ (js/console.log "HaeKustannustiedot")
-          nollaa-arvot (assoc default-arvot :haku-kaynnissa? true)
+    (let [nollaa-arvot (assoc default-arvot :haku-kaynnissa? true)
           aikavali (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi)
           vuosi @urakka/valittu-urakan-vuosi
           urakka @nav/valittu-urakka

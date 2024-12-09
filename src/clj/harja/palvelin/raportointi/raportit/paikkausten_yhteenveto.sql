@@ -51,7 +51,7 @@ SELECT pt.id                         AS id,
        COALESCE(SUM(p.kustannus), 0) AS "toteutunut-hinta",
        COALESCE(SUM(p.maara), 0)     AS "toteutunut-maara"
   FROM paikkauskohde_tyomenetelma pt
-           LEFT JOIN paikkaus p ON pt.id = p.tyomenetelma AND p."urakka-id" = :urakkaid
+           JOIN paikkaus p ON pt.id = p.tyomenetelma AND p."paikkaus-tyyppi" = 'reikapaikkaus' AND p."urakka-id" = :urakkaid
       AND p.alkuaika BETWEEN :alkupvm::DATE AND :loppupvm::DATE
       AND p.poistettu = FALSE
  GROUP BY pt.id, pt.nimi, p."reikapaikkaus-yksikko"
@@ -104,9 +104,10 @@ SELECT x.nimi                     AS nimi,
                COALESCE(SUM(p.maara), 0) AS "toteutunut-maara",
                NULL                      AS "suunniteltu-maara"
           FROM paikkauskohde_tyomenetelma pt
-                   LEFT JOIN paikkaus p ON pt.id = p.tyomenetelma AND p."urakka-id" = :urakkaid
-              AND p.alkuaika BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-              AND p.poistettu = FALSE
+                   JOIN paikkaus p ON pt.id = p.tyomenetelma AND p."paikkaus-tyyppi" = 'reikapaikkaus'
+                                          AND p."urakka-id" = :urakkaid
+                                          AND p.alkuaika BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+                                          AND p.poistettu = FALSE
          GROUP BY pt.id, pt.nimi, p."reikapaikkaus-yksikko") x
  GROUP BY nimi, yksikko
 ORDER BY nimi ASC;

@@ -78,7 +78,7 @@
         paikkaus-olemassa? (boolean (seq (q/hae-reikapaikkaus-vaikka-poistettu db {:ulkoinen-id tunniste
                                                                                    :urakka-id urakka-id})))
         ;; Jos paikkausta ei ole olemassa -> lisätään se, muuten kutsutaan UPDATE
-        _
+        vastaus
         (if paikkaus-olemassa?
           (q/paivita-reikapaikkaus! db parametrit)
           (q/lisaa-reikapaikkaus! db parametrit))
@@ -87,7 +87,8 @@
                                          :urakka-id urakka-id})
         
         ;; Laske PK-luokka reikapaikkaukselle
-        _ (q/laske-pkluokka-reikapaikkaukselle! db {:id reikapaikkausid})]))
+        _ (q/laske-pkluokka-reikapaikkaukselle! db {:id reikapaikkausid})]
+    vastaus))
 
 (defn tallenna-reikapaikkaus
   "Yksittäisen reikäpaikkauksen muokkauksen tallennus (käyttöliittymän kautta)"
