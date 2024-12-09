@@ -17,7 +17,8 @@ SELECT    p.id,
           p.alkuaika,
           p.loppuaika,
           p.maara, 
-          p.kustannus
+          p.kustannus,
+          p.pkluokka
 FROM      paikkaus p 
 WHERE     p."urakka-id" = :urakka-id 
 AND       (:tie::TEXT IS NULL OR (p.tierekisteriosoite).tie = :tie)
