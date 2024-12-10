@@ -355,7 +355,7 @@
 ;; ks. harja.fmt/desimaali-fmt
 (defmethod tee-kentta :numero [{:keys [elementin-id oletusarvo validoi-kentta-fn koko input-luokka
                                        desimaalien-maara min-desimaalit max-desimaalit on-key-down
-                                       veda-oikealle? luokka teksti-oikealla]
+                                       veda-oikealle? luokka teksti-oikealla data-cy]
                                 :as kentta} data]
   (let [fmt (or (numero-fmt kentta) str)
         teksti (atom nil)
@@ -392,61 +392,62 @@
                                                      "})?"))]
           
           [:span.numero
-           [:input {:id id
-                    :class (cond-> nil
-                             (and lomake?
-                               (not vayla-tyyli?)) (str "form-control ")
-                             vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
-                             disabled? (str "disabled")
-                             input-luokka (str " " input-luokka)
-                             veda-oikealle? (str " veda-oikealle"))
-                    :style (when (and veda-oikealle? yksikko)
-                             {:padding-right (str "calc(19px + " (count yksikko) "ch")})
-                    :type "text"
-                    :disabled disabled?
-                    :auto-complete (if disabloi-autocomplete? "off" "on")
-                    :placeholder (placeholder kentta data)
-                    :size (or koko nil)
-                    :on-key-down (or on-key-down nil)
-                    :on-focus #(when on-focus (on-focus))
-                    :on-blur #(do
-                                (when on-blur
-                                  (on-blur %))
-                                (reset! teksti nil))
-                    :value nykyinen-teksti
-                    :on-change #(let [v (normalisoi-numero (-> % .-target .-value) salli-whitespace?)
-                                      v (cond
-                                          vaadi-ei-negatiivinen?
-                                          (str/replace v #"-" "")
-                                          vaadi-negatiivinen?
-                                          (if (= (first v) \-)
-                                            v
-                                            (str "-" v))
-                                          :default v)]
-                                  (when (and
-                                          (or (nil? validoi-kentta-fn)
-                                            (validoi-kentta-fn v))
-                                          (or (= v "")
-                                            (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                            (re-matches (if kokonaisluku?
-                                                          kokonaisluku-re-pattern
-                                                          desimaaliluku-re-pattern)
-                                                ;; Matchataan whitespacesta huolimatta
-                                              (str/replace v #"\s" ""))))
-                                    (reset! teksti v)
+           [:input (merge {:id id
+                           :class (cond-> nil
+                                    (and lomake?
+                                      (not vayla-tyyli?)) (str "form-control ")
+                                    vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
+                                    disabled? (str "disabled")
+                                    input-luokka (str " " input-luokka)
+                                    veda-oikealle? (str " veda-oikealle"))
+                           :style (when (and veda-oikealle? yksikko)
+                                    {:padding-right (str "calc(19px + " (count yksikko) "ch")})
+                           :type "text"
+                           :disabled disabled?
+                           :auto-complete (if disabloi-autocomplete? "off" "on")
+                           :placeholder (placeholder kentta data)
+                           :size (or koko nil)
+                           :on-key-down (or on-key-down nil)
+                           :on-focus #(when on-focus (on-focus))
+                           :on-blur #(do
+                                       (when on-blur
+                                         (on-blur %))
+                                       (reset! teksti nil))
+                           :value nykyinen-teksti
+                           :on-change #(let [v (normalisoi-numero (-> % .-target .-value) salli-whitespace?)
+                                             v (cond
+                                                 vaadi-ei-negatiivinen?
+                                                 (str/replace v #"-" "")
+                                                 vaadi-negatiivinen?
+                                                 (if (= (first v) \-)
+                                                   v
+                                                   (str "-" v))
+                                                 :default v)]
+                                         (when (and
+                                                 (or (nil? validoi-kentta-fn)
+                                                   (validoi-kentta-fn v))
+                                                 (or (= v "")
+                                                   (when-not vaadi-ei-negatiivinen? (= v "-"))
+                                                   (re-matches (if kokonaisluku?
+                                                                 kokonaisluku-re-pattern
+                                                                 desimaaliluku-re-pattern)
+                                                     ;; Matchataan whitespacesta huolimatta
+                                                     (str/replace v #"\s" ""))))
+                                           (reset! teksti v)
 
-                                    ;; Numeron parsimista varten pitää poistaa whitespace,
-                                    ;; vaikka haluttaisiin näyttää se.
-                                    (let [v (str/replace v #"\s" "")
-                                          numero (if kokonaisluku?
-                                                   (js/parseInt v)
-                                                   (js/parseFloat (str/replace v #"," ".")))]
-                                      (if (not (js/isNaN numero))
-                                        (reset! data numero)
-                                        (reset! data nil))
-                                      (when toiminta-f
-                                        (toiminta-f (when-not (js/isNaN numero)
-                                                      numero))))))}]
+                                           ;; Numeron parsimista varten pitää poistaa whitespace,
+                                           ;; vaikka haluttaisiin näyttää se.
+                                           (let [v (str/replace v #"\s" "")
+                                                 numero (if kokonaisluku?
+                                                          (js/parseInt v)
+                                                          (js/parseFloat (str/replace v #"," ".")))]
+                                             (if (not (js/isNaN numero))
+                                               (reset! data numero)
+                                               (reset! data nil))
+                                             (when toiminta-f
+                                               (toiminta-f (when-not (js/isNaN numero)
+                                                             numero))))))}
+                     (when data-cy {:data-cy data-cy}))]
            (when (and yksikko vayla-tyyli?)
              [:span.sisainen-label.black-lighter {:style 
                                                   {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))
@@ -874,7 +875,7 @@
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
-            pakollinen? tarkenne muokattu? valitse-oletus?]} data]
+            pakollinen? tarkenne muokattu? valitse-oletus? data-cy]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
@@ -924,22 +925,23 @@
                 :pakollinen? pakollinen?
                 :vayla-tyyli? vayla-tyyli?
                 :elementin-id elementin-id
-                :tarkenne tarkenne}]
-      (if-not (and linkki-fn nykyinen-arvo linkki-icon)
-        [livi-pudotusvalikko opts
-         valinnat]
-        [:div.valinta-ja-linkki-container
-         [:span {:style {:color "#004D99"}}
-          [napit/nappi ""
-           #(linkki-fn nykyinen-arvo)
-           {:ikoni linkki-icon
-            :ikoninappi? true
-            :luokka "valinnan-vierusnappi napiton-nappi"}]]
-         (if disabled?
-           [:div.disabled-valinta {:on-click #(linkki-fn nykyinen-arvo)}
-            (or (and valinta-nayta (valinta-nayta valinta))
-                nykyinen-arvo)]
-           [livi-pudotusvalikko opts valinnat])])))
+                :tarkenne tarkenne
+                :data-cy (or data-cy (str "valinta-" elementin-id))}]
+     (if-not (and linkki-fn nykyinen-arvo linkki-icon)
+       [livi-pudotusvalikko opts
+        valinnat]
+       [:div.valinta-ja-linkki-container
+        [:span {:style {:color "#004D99"}}
+         [napit/nappi ""
+          #(linkki-fn nykyinen-arvo)
+          {:ikoni linkki-icon
+           :ikoninappi? true
+           :luokka "valinnan-vierusnappi napiton-nappi"}]]
+        (if disabled?
+          [:div.disabled-valinta {:on-click #(linkki-fn nykyinen-arvo)}
+           (or (and valinta-nayta (valinta-nayta valinta))
+             nykyinen-arvo)]
+          [livi-pudotusvalikko opts valinnat])])))
   ([{:keys [jos-tyhja]} data data-muokkaus-fn]
    ;; HUOM!! Erona 2-arity tapaukseen, valinta-nayta funktiolle annetaan vain yksi argumentti kahden sijasta
    (let [jos-tyhja-default-fn (constantly (or jos-tyhja "Ei valintoja"))]

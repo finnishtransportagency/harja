@@ -158,6 +158,7 @@
                           (when-not (or (= :paikkaukset-yllapito (nav/valittu-valilehti :urakat))
                                       (= :lupaukset (nav/valittu-valilehti :valitavoitteet))
                                       (= :kustannusten-seuranta (nav/valittu-valilehti :laskutus))
+                                      (= :maarien-toteumat (nav/valittu-valilehti :toteumat))
                                       (= :suola (nav/valittu-valilehti :suunnittelu))
                                       (= :tehtavat (nav/valittu-valilehti :suunnittelu))
                                       (= :pohjavesialueiden-suola (nav/valittu-valilehti :toteumat)))
