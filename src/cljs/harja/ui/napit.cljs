@@ -120,7 +120,7 @@
    teksti-nappi?              Tekstimuotoinen ei borderia tai taustaa -nappi"
   ([teksti toiminto] (nappi teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? data-attributes
-                            sticky? ikoninappi? title style ikoni-oikealle? aria-label data-cy] :as optiot}]
+                            sticky? ikoninappi? title style ikoni-oikealle? aria-label] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
@@ -172,8 +172,7 @@
             (when (and data-attributes (every? #(and (keyword? %)
                                                      (re-find #"^data-" (name %)))
                                                (keys data-attributes)))
-              data-attributes)
-            (when data-cy {:data-cy data-cy}))
+              data-attributes))
           (when tallennus-kaynnissa?
             [y/ajax-loader])
           (when tallennus-kaynnissa?

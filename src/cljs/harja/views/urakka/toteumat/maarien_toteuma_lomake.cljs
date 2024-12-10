@@ -352,7 +352,7 @@
                           (when (and lomake-validi? sijainnit-valideja?) (laheta-lomake! data)))
                        {:vayla-tyyli? true
                         :luokka "suuri"
-                        :data-cy "Tallenna-toteuma-nappi"}]
+                        :data-attributes {:data-cy "Tallenna-toteuma-nappi"}}]
                       [napit/peruuta
                        "Peruuta"
                        #(tyhjenna-lomake! data)

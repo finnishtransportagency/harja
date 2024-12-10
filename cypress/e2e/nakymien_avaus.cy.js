@@ -53,6 +53,7 @@ describe('Päänäkymien avaamiset', function () {
     })
 
     it("Info -sivu toimii", function () {
+        cy.wait(100)
         cy.contains('ul li a span', 'INFO').click({ force: true });
         cy.contains('Hupsista').should('not.exist')
         cy.contains('Harja uutiset').should('exist')
@@ -158,6 +159,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+        cy.wait(100)
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
         cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click()
