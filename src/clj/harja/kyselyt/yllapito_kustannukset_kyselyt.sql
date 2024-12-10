@@ -1,5 +1,5 @@
 -- name: hae-paikkaus-kustannukset
--- Hakee könttänä muiden paikkausten, reikäpaikkausten sekä mpu kustannusten tiedot 
+-- Hakee könttänä muiden paikkausten, reikäpaikkausten sekä ylläpidon kustannusten tiedot
 SELECT id, 
        tyomenetelma, 
        kustannustyyppi,
@@ -44,8 +44,8 @@ FROM (
         pt.nimi, pt.id
     UNION ALL
     
-    -- MPU kustannukset 
-    SELECT concat('paikkauskohde-kustannus-',id) AS id,
+    -- paikkauskustannukset
+    SELECT concat('kustannus-',id) AS id,
 		   kustannustyyppi,
 		   SUM(summa)                               AS kokonaiskustannus,
 		   ''                                       AS tyomenetelma,
@@ -67,7 +67,7 @@ GROUP BY tyomenetelma, id, kustannustyyppi, selite
 ORDER BY tyomenetelma, id;
 
 
--- name: tallenna-mpu-kustannus!
+-- name: tallenna-yllapito-kustannus!
 INSERT INTO paikkauskustannukset (
     urakka, 
     selite, 
@@ -87,5 +87,5 @@ INSERT INTO paikkauskustannukset (
 );
 
 
--- name: hae-mpu-selitteet
+-- name: hae-kustannusten-selitteet
 SELECT DISTINCT(selite) FROM paikkauskustannukset WHERE urakka = :urakka-id;

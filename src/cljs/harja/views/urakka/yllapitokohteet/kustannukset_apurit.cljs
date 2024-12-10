@@ -1,5 +1,5 @@
-(ns harja.views.urakka.yllapitokohteet.kustannukset_apurit
-  "MPU kustannusten apufunktiot"
+(ns harja.views.urakka.yllapitokohteet.kustannukset-apurit
+  "Ylläpidon kustannusten apufunktiot"
   (:require [harja.tiedot.urakka.yllapitokohteet.kustannukset-tiedot :as tiedot]
             [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
@@ -43,16 +43,16 @@
      :muokkaa! #(e! (tiedot/->MuokkaaLomaketta %))
      ;; Header
      :header [:div.col-md-12
-              [:h2.header-yhteiset {:data-cy "mpu-kustannus-lisays"} "Lisää kustannus"]
+              [:h2.header-yhteiset {:data-cy "yllapito-kustannus-lisays"} "Lisää kustannus"]
               [:hr]]
      ;; Footer
      :footer [:<>
               [:div.muokkaus-modal-napit
                ;; Tallenna
                [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaKustannus lomake-valinnat))  {:disabled (not voi-tallentaa?)
-                                                                                               :data-attributes {:data-cy "tallena-mpu-kustannus"}}]
+                                                                                               :data-attributes {:data-cy "tallena-yllapito-kustannus"}}]
                ;; Peruuta 
-               [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeLomake)) {:data-attributes {:data-cy "mpu-kustannus-peruuta"}}]]]}
+               [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeLomake)) {:data-attributes {:data-cy "yllapito-kustannus-peruuta"}}]]]}
     
     ;; Tyyppi
     [(lomake/rivi
@@ -108,7 +108,7 @@
               :voi-kumota? false
               :piilota-toiminnot? true
               :piilota-otsikot? true
-              ;; MPU kustannukset yhteenveto 
+              ;; Ylläpidon kustannuksten yhteenveto
               ;; Lisätään 2 riviä gridin päätteeksi
               :rivi-jalkeen-fn (fn [_rivit]
                                  [;; Vuosi yhteensä

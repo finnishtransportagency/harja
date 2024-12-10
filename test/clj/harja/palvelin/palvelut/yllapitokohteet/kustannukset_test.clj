@@ -32,7 +32,7 @@
   (kutsu-palvelua (:http-palvelin jarjestelma) kutsu +kayttaja-jvh+ params))
 
 
-(deftest hae-mpu-selitteet-toimii
+(deftest hae-kustannusten-selitteet-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         odotettu-vastaus '({:selite "Arvoa muutettiin"} 
                            {:selite "Indeksimuutos 2017 elokuu"} 
@@ -41,7 +41,7 @@
                            {:selite "Työvoimakustannukset"} 
                            {:selite "Vanha kustannus"})
 
-        vastaus (tee-kutsu {:urakka-id urakka-id} :hae-mpu-selitteet)]
+        vastaus (tee-kutsu {:urakka-id urakka-id} :hae-kustannusten-selitteet)]
 
     (is (= vastaus odotettu-vastaus))
     (is (= (-> vastaus count) 6))))
@@ -84,7 +84,7 @@
     (is (= (-> (:kustannukset vastaus) count) 25))))
 
 
-(deftest tallenna-mpu-kustannus-toimii
+(deftest tallenna-yllapito-kustannus-toimii
   (let [vuosi 2024
         vastaus-maara-ennen 25
         urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
@@ -99,7 +99,7 @@
                       :luoja nil
                       :kustannustyyppi "Muut kustannukset"
                       :vuosi vuosi
-                      :summa 142000} :tallenna-mpu-kustannus)
+                      :summa 142000} :tallenna-yllapito-kustannus)
 
         odotettu-tallennus {:id "paikkauskohde-kustannus-7", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 142000M, :selite "Päällystettiin Kuusamon luontopolku"}
 

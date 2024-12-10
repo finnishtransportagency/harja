@@ -1,5 +1,5 @@
 (ns harja.views.urakka.yllapitokohteet.kustannukset-nakyma
-  "MPU sopimustyyppisten urakoiden kustannukset"
+  "MPU ja PPU sopimustyyppisten urakoiden kustannukset"
   (:require [tuck.core :refer [tuck]]
             [cljs-time.core :as t]
             [harja.domain.oikeudet :as oikeudet]

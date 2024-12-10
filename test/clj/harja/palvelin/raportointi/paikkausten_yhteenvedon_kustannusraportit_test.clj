@@ -230,7 +230,7 @@
 
         _ (laadunseuranta-palvelu/tallenna-suorasanktio (:db jarjestelma) +kayttaja-jvh+ sanktio laatupoikkeama (:urakka-id tiedot) nil)
         ;; Tallennetaan muu kustannus
-        _ (kustannukset-palvelu/tallenna-mpu-kustannus (:db jarjestelma) +kayttaja-jvh+ {:urakka-id (:urakka-id tiedot)
+        _ (kustannukset-palvelu/tallenna-yllapito-kustannus (:db jarjestelma) +kayttaja-jvh+ {:urakka-id (:urakka-id tiedot)
                                                                                          :selite "Haravoitiin lehdet asfaltilta"
                                                                                          :luoja nil
                                                                                          :kustannustyyppi "Muut kustannukset"

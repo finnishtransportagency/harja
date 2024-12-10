@@ -1,5 +1,5 @@
 // E2E   
-// MPU Kustannukset 
+// Ylläpidon Kustannukset
 //
 
 let clickTimeout = 6000;
@@ -78,14 +78,14 @@ describe('MPU Kustannusnäkymä toimii', function ()
       .click({ force: true });
 
     // Kustannuksen lomake aukesi
-    cy.get('h2.header-yhteiset[data-cy="mpu-kustannus-lisays"]', {timeout: clickTimeout}).contains('Lisää kustannus');
+    cy.get('h2.header-yhteiset[data-cy="yllapito-kustannus-lisays"]', {timeout: clickTimeout}).contains('Lisää kustannus');
 
     // Kustannuksen tyyppi -> Arvonmuutokset
     cy.get('.nappi-alasveto .valittu.overflow-ellipsis').eq(0).click({ force: true });
     cy.contains('Arvonmuutokset').click({ force: true });
 
     // Tallenna napin ei pitäisi olla vielä näkyvissä
-    cy.get('[data-cy="tallena-mpu-kustannus"]').should('be.disabled');
+    cy.get('[data-cy="tallena-yllapito-kustannus"]').should('be.disabled');
 
     // Kustannus -> 88,060e
     cy.get('.form-group.maara-valinnat.required.sisaltaa-virheen', { timeout: clickTimeout })
@@ -93,7 +93,7 @@ describe('MPU Kustannusnäkymä toimii', function ()
       .type('88060.0').blur();
 
     // Kaikki syötetty, tallenna napin pitäisi näkyä
-    cy.get('[data-cy="tallena-mpu-kustannus"]', { timeout: clickTimeout })
+    cy.get('[data-cy="tallena-yllapito-kustannus"]', { timeout: clickTimeout })
       .should('be.visible')
       .should('not.be.disabled')
 
@@ -102,7 +102,7 @@ describe('MPU Kustannusnäkymä toimii', function ()
     cy.route('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot'); 
 
     // Tallenna 
-    cy.get('[data-cy="tallena-mpu-kustannus"]').click();
+    cy.get('[data-cy="tallena-yllapito-kustannus"]').click();
 
     // Kutsu pitäisi triggeraa, odota että taulukko lataa ja sorttaa
     cy.wait('@kustannukset', {timeout: clickTimeout});
@@ -112,7 +112,7 @@ describe('MPU Kustannusnäkymä toimii', function ()
     cy.contains('Kustannus tallennettu onnistuneesti', { timeout: clickTimeout }).should('be.visible');
 
     // Lomakkeen pitäisi olla nyt kiinni 
-    cy.get('body').find('h2.header-yhteiset[data-cy="mpu-kustannus-lisays"]').should('not.exist');
+    cy.get('body').find('h2.header-yhteiset[data-cy="yllapito-kustannus-lisays"]').should('not.exist');
     cy.wait(1000);
   });
 
@@ -144,7 +144,7 @@ describe('MPU Kustannusnäkymä toimii', function ()
       .click({ force: true });
 
     // Kustannuksen lomake aukesi
-    cy.get('h2.header-yhteiset[data-cy="mpu-kustannus-lisays"]', {timeout: clickTimeout}).contains('Lisää kustannus');
+    cy.get('h2.header-yhteiset[data-cy="yllapito-kustannus-lisays"]', {timeout: clickTimeout}).contains('Lisää kustannus');
 
     // Kustannuksen tyyppi -> Muut kustannukset
     cy.get('.nappi-alasveto .valittu.overflow-ellipsis').eq(0).click({ force: true });
@@ -157,13 +157,13 @@ describe('MPU Kustannusnäkymä toimii', function ()
     cy.get('label[for="kustannus-selite"]').parent().find('input').type('Oma cypress selite').blur();
 
     // Tallenna napin ei pitäisi olla vielä näkyvissä
-    cy.get('[data-cy="tallena-mpu-kustannus"]').should('be.disabled');
+    cy.get('[data-cy="tallena-yllapito-kustannus"]').should('be.disabled');
 
     // Kustannus -> 123456,12 e
     cy.get('label[for="kustannus"]').parent().find('input').type('123456.12').blur();
 
     // Kaikki syötetty, tallenna napin pitäisi näkyä
-    cy.get('[data-cy="tallena-mpu-kustannus"]', { timeout: clickTimeout })
+    cy.get('[data-cy="tallena-yllapito-kustannus"]', { timeout: clickTimeout })
       .should('be.visible')
       .should('not.be.disabled');
 
@@ -172,7 +172,7 @@ describe('MPU Kustannusnäkymä toimii', function ()
     cy.route('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot'); 
 
     // Tallenna 
-    cy.get('[data-cy="tallena-mpu-kustannus"]').click();
+    cy.get('[data-cy="tallena-yllapito-kustannus"]').click();
 
     // Kutsu pitäisi triggeraa, odota että taulukko lataa ja sorttaa
     cy.wait('@kustannukset', {timeout: clickTimeout});
@@ -182,7 +182,7 @@ describe('MPU Kustannusnäkymä toimii', function ()
     cy.contains('Kustannus tallennettu onnistuneesti', { timeout: clickTimeout }).should('be.visible');
 
     // Lomakkeen pitäisi olla nyt kiinni 
-    cy.get('body').find('h2.header-yhteiset[data-cy="mpu-kustannus-lisays"]').should('not.exist');
+    cy.get('body').find('h2.header-yhteiset[data-cy="yllapito-kustannus-lisays"]').should('not.exist');
     cy.wait(1000);
   });
 
