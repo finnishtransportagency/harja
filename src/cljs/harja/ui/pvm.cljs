@@ -194,7 +194,7 @@
                                        (.preventDefault %)
 
                                        (cond
-                                         (and (dom/enter-nappain? %) valittava?)
+                                         (and (or (dom/enter-nappain? %) (dom/valilyonti? %)) valittava?)
                                          (do (valitse paiva) (sulje-kalenteri))
 
                                          (dom/esc-nappain? %)
