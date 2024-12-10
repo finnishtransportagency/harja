@@ -166,6 +166,7 @@
          tyyppi (if (= :pvm-aika (:tyyppi asetukset))
                   :pvm-aika
                   :pvm)
+         elementin-nimi (:elementin-nimi asetukset)
          uusi-aikavali (fn [paa uusi-arvo]
                          {:pre [(contains? #{:alku :loppu} paa)]}
                          (let [uusi-arvo (if (= tyyppi :pvm-aika)
@@ -225,13 +226,15 @@
            [tee-kentta {:tyyppi tyyppi
                         :pakota-suunta aloitusaika-pakota-suunta
                         :validointi validointi
-                        :vayla-tyyli? vayla-tyyli?}
+                        :vayla-tyyli? vayla-tyyli?
+                        :elementin-nimi (when elementin-nimi (str elementin-nimi "-alku"))}
             aikavalin-alku]
            [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
            [tee-kentta {:tyyppi tyyppi
                         :pakota-suunta paattymisaika-pakota-suunta
                         :validointi validointi
-                        :vayla-tyyli? vayla-tyyli?}
+                        :vayla-tyyli? vayla-tyyli?
+                        :elementin-nimi (when elementin-nimi (str elementin-nimi "-loppu"))}
             aikavalin-loppu]]])))))
 
 (defn numerovali
@@ -344,8 +347,10 @@
      [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn (:otsikko kuukausi)])
    (when-let [{:keys [urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]} toimenpide]
      [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn])
-   (when-let [{:keys [valittu-aikavali-atom]} aikavali-optiot]
-     [aikavali valittu-aikavali-atom])])
+   (when-let [{:keys [valittu-aikavali-atom elementin-nimi]} aikavali-optiot]
+     (if elementin-nimi
+       [aikavali valittu-aikavali-atom {:elementin-nimi elementin-nimi}]
+       [aikavali valittu-aikavali-atom]))])
 
 (defn vuosi
   ([ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom]

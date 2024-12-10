@@ -75,7 +75,8 @@
                (e! (laatupoikkeamat/->PaivitaAikavali arvo (:listaus-tyyppi app) urakka-id))))))
        {:otsikko "Aikaväli"
         :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
-        :vayla-tyyli? true}]
+        :vayla-tyyli? true
+        :elementin-nimi "laatupoikkeamat-aikavali"}]
 
       ^{:key "urakkatoiminnot"}
       [valinnat/urakkatoiminnot {:urakka urakka-id}

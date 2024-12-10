@@ -1062,7 +1062,8 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi on-datepicker-select vayla-tyyli?]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi
+                                    on-datepicker-select vayla-tyyli? elementin-nimi]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -1125,7 +1126,9 @@
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
                                 (pvm-tyhjana rivi))
-               elementin-id (str (gensym "pvm-input"))
+               elementin-id (if elementin-nimi
+                              elementin-nimi
+                              (str (gensym "pvm-input")))
                input-komponentti [:input {:class (yleiset/luokat (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
                                                                  (cond
                                                                    kentan-tyylit (apply str kentan-tyylit)
@@ -1167,7 +1170,9 @@
               [pvm-valinta/pvm-valintakalenteri {:valitse #(when (validoi %)
                                                              (reset! auki false)
                                                              (muuta-data! %)
-                                                             (reset! teksti (pvm/pvm %)))
+                                                             (reset! teksti (pvm/pvm %))
+                                                             (when elementin-nimi
+                                                               (js/setTimeout (fn [] (some-> js/document (.getElementById elementin-id) .focus)) 200)))
                                                  :pvm naytettava-pvm
                                                  :pakota-suunta pakota-suunta
                                                  :valittava?-fn (when validoi?
@@ -1187,7 +1192,7 @@
 
 (defn- resetoi-jos-tyhja-tai-matchaa [t re atomi]
   (when (or (str/blank? t)
-            (re-matches re t))
+          (re-matches re t))
     (reset! atomi t)))
 
 (defn- aseta-aika! [aika-text aseta-fn!]
@@ -1202,7 +1207,7 @@
         (aseta-fn! (str (subs aika-text 0 1) ":" (subs aika-text 1)))))
 
     (when (or (str/blank? aika-text)
-              (re-matches +aika-regex+ aika-text))
+            (re-matches +aika-regex+ aika-text))
       (aseta-fn! aika-text))))
 
 (defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus on-blur lomake? pakota-suunta vayla-tyyli?]}
