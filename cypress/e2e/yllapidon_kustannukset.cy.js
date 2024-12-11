@@ -65,6 +65,7 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
     });
 
     it('Pitäisi lisätä uusi Arvomuutos ja tallentaa se onnistuneesti', function () {
+        cy.viewport(1100, 2000);
         // Klikkaa 'Lisää kustannus'
         cy.get('button.button-primary-default[type="button"]')
             .contains('span', 'Lisää kustannus')
@@ -111,17 +112,20 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
 
 
     it('Pitäisi löytää tallennettu arvo taulukosta', function () {
+        cy.viewport(1100, 2000);
         // Toisen gridin toinen rivi pitäisi olla (juuri lisätty) "Arvomuutokset", kun taulukko on aakkosissa
         cy.get('.grid').eq(1).find('tr').eq(0).find('td').eq(0).contains('Arvonmuutokset');
         // Arvomuutoksen kolmas sarake eli kustannus pitäisi olla 88 060,00 €
         cy.get('.grid').eq(1).find('tr').eq(0).find('td').eq(2).contains('88 060,00 €');
 
         // Yhteensä
-        cy.get('.grid .kustannukset-yhteenveto').contains('337 580,00 €');
+        cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(0).contains('337 580,00 €');
+        cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(1).contains('342 580,00 €');
     });
 
 
     it('Pitäisi lisätä uusi oma selitteinen kustannus ja tallentaa se onnistuneesti', function () {
+        cy.viewport(1100, 2000);
         // Klikkaa 'Lisää kustannus'
         cy.get('button.button-primary-default[type="button"]')
             .contains('span', 'Lisää kustannus')
@@ -172,6 +176,7 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
 
 
     it('Pitäisi löytää tallennettu arvo taulukosta', function () {
+        cy.viewport(1100, 2000);
         // Lisäämä oma selite pitäisi näkyä, ja yhteensä arvon muuttua
         cy.get('.grid').eq(1).find('tr').eq(2).find('td').eq(0).contains('Muut kustannukset');
         cy.get('.grid').eq(1).find('tr').eq(2).find('td').eq(1).contains('Oma cypress selite');
