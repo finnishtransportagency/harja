@@ -164,28 +164,59 @@
                 },
                 "sanktion-maara": {
                   "type": "number",
-                  "description": "Sanktion määrä euroissa."
+                  "description": "Sanktion määrä. Yksikkö: euro."
+                },
+                "sanktion-maara-indeksikorjattuna": {
+                  "type": "number",
+                  "description": "Sanktion määrä korjattuna indeksin mukaisella indeksikertoimella. Yksikkö: euro."
                 },
                 "indeksi": {
                   "type": "string",
-                  "description": "Sanktion määrän laskennassa käytetty indeksi, jos määrässä on indeksikorjaus mukana. Esim. MAKU 2015."
+                  "description": "Sanktion määrän indeksikorjauksen laskennassa käytetty indeksi, jos määrässä on indeksikorjaus mukana. Esim. MAKU 2015."
                 },
-                "bonustyyppi": {
-                  "type": "enum",
-                  "description": ""
+                "toimenpide-id": {
+                  "type": "integer",
+                  "description": "Sen Harjan toimenpiteen id, johon sanktio kustannuksena kohdistuu. Esim. Talvihoito."
                 },
-                "bonuksen-kasittelytapa": {
-                  "type": "enum",
-                  "description": ""
+                "suorasanktio": {
+                  "type": "boolean",
+                  "description": "True kun sanktio on suorasanktio. Oletus: false."
+                },
+                "sanktiolaji": {
+                  "type": "string",
+                  "description": "Sanktion laji (aiemmin käytetty myös nimeä sanktioryhmä). Maanteiden hoidon urakat: 'A' - A-ryhmä (tehtäväkohtainen sanktio), 'B' - B-ryhmä (vakava laiminlyönti), 'C' - C-ryhmä (määräpäivän ylitys, hallinnollinen laiminlyönti jne.), 'muistutus', 'arvonvahennyssanktio', 'pohjavesisuolan_ylitys', 'talvisuolan_ylitys', vaihtosanktio' - Vastuuhenkilön vaihto, 'testikeskiarvo-sanktio' - Vastuuhenkilön testipistemäärän alentuminen, 'tenttikeskiarvo-sanktio' - Vastuuhenkilön tenttipistemäärän alentuminen, 'lupaussanktio'. Päällystysurakat: 'yllapidon_sakko', 'yllapidon_bonus', 'yllapidon_muistutus'."
+                },
+                "sanktiotyyppi": {
+                  "type": "object",
+                  "properties": {
+                    "koodi": {
+                      "type": "integer",
+                      "description": "Sanktiotyypin koodi Harjassa."
+                    },
+                    "nimi": {
+                      "type": "string",
+                      "description": "Sanktiotyypin nimi Harjassa."
+                    },
+                    "toimenpide-id": {
+                      "type": "integer",
+                      "description": "Toimenpiteen id, jos sanktiotyyppi kykeytyy aina tiettyyn toimenpiteeseen."
+                    }
+                  }
+                },
+                "laatupoikkeama-id": {
+                  "type": "integrer",
+                  "description": "Laatupoikkeaman id Harjassa, jos sanktio liityy laatupoikkeamaan."
                 },
                 "poistettu": {
                   "type": "boolean",
-                  "description": "True kun sanktio on merkitty poistetuksi Harjassa. Oletus: false."
+                  "description": "True kun bonus on merkitty poistetuksi Harjassa. Oletus: false."
                 }
               },
               "required": [
                 "sanktio-id",
-                "sanktion-ajankohta"
+                "sanktion-ajankohta",
+                "suorasanktio",
+                "sanktiolaji"
               ]
             }
           }
@@ -203,7 +234,7 @@
                 "bonuksen-ajankohta": {
                   "type": "string",
                   "format": "date",
-                  "description": "Bonuksen päiväys (laskut."
+                  "description": "Bonuksen päiväys. Ajankohta joilloin bonuksesta on syntynyt kustannus."
                 },
                 "bonuksen-maara": {
                   "type": "number",
@@ -213,31 +244,24 @@
                   "type": "string",
                   "description": "Sanktion määrän laskennassa käytetty indeksi, jos määrässä on indeksikorjaus mukana. Esim. MAKU 2015."
                 },
-                "suorasanktio": {
-                  "type": "boolean",
-                  "description": "True kun sanktio on suorasanktio. Oletus: false."
+                "bonustyyppi": {
+                  "type": "string",
+                  "description": "Bonuksen tyyppi. Harjan tietokannassa enumeraatio, joka sisältää arvot: 'asiakastyytyvaisyysbonus', 'alihankintabonus', 'lupausbonus', 'tavoitepalkkio', 'muu-bonus'. Jos palautuu arvo 'muu', ei ole kysymys bonuksesta vaan samaan tauluun tallennetusta erilliskustannuksesta."
                 },
-                "sanktiolaji": {
-                  "type": "object",
-                  "properties": {
-                    "koodi": {
-                      "type": "integer",
-                      "description": "Sanktiolajin koodi Harjassa."
-                    },
-                    "nimi": {
-                      "type": "string",
-                      "description": "Sanktiolajin nimi Harjassa."
-                    }
-                  }
+                "bonuksen-kasittelyajankohta": {
+                  "type": "string",
+                  "format": "date",
+                  "description": "Ajankohta jolloin bonus on käsitelty urakassa."
                 },
-                "sanktio-liittyy-laatupoikkeamaan": {
-                  "type": "boolean",
-                  "description": "True kun sanktio on linkitetty raportoituun laatupoikkeamaan. Oletus: false."
+                "bonuksen-kasittelytapa": {
+                  "type": "string",
+                  "description": "Tapa jolla bonusasia käsiteltiin urakassa. Harjan tietokannassa enumeraatio, joka sisältää arvot: 'tyomaakokous', 'puhelin', 'kommentit', 'muu', 'valikatselmus'"
                 },
                 "poistettu": {
                   "type": "boolean",
                   "description": "True kun bonus on merkitty poistetuksi Harjassa. Oletus: false."
                 }
+
               },
               "required": [
                 "bonus-id",
@@ -246,45 +270,127 @@
             }
           }
         },
-        "tavoitehinnan_oikaisut": {
+        "hoitovuoden-paatokset": {
           "type": "array",
           "properties": {
-            "tavoitehinnan-oikaisu": {
+            "hoitovuoden-paatos": {
               "type": "object",
               "properties": {
-                "oikaisu-id": {
+                "paatos-id": {
                   "type": "integer",
-                  "description": "Tavoitehinnan oikaisurivin id Harjassa. Huom. Älä laske tavoitehinnan oikaisuja mukaan, kun lasket yhteen toteutuneita kustannuksia. Oikaisumääriä voi pitää jonkinlaisena erittelynä välikatselmuksessa mahdollisesti syntyville kulukirjauksille. Nämä kirjaukset kohdistuvat kolmeen tehtäväryhmään: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä."
+                  "description": "Päätösrivin id. Päätökset ovat hoitovuoden päättymisen jälkeen suoritettavan välikatselmuksen päätöksiä. Ne tavoitteiden saavuttamiseen liittyviin sakkoihin ja bonuksiin sekä mahdollisten tavoite-ja kattohinnan ylitysten ja alitusten käsittelyyn. HUOM. Tämän rajapinnan kautta "
                 },
-                "oikaisun-hoitokausi": {
-                  "type": "integer",
-                  "description": "Sen hoitokauden alkuvuosi, jota tavoitehinnan oikaisu koskee. Jos hoitokausi on 2023-24, tässä palautuu 2023."
-                },
-                "oikaisukategoria": {
+                "paatoksen-hoitovuosi": {
                   "type": "string",
-                  "description": "Tavoitehinnan oikaisun luokittelu. Arvot 28.1.2024 (muutoksiin on syytä varautua): Alleviivatun fontin vaikutus tavoitehintaan, Bonukset ja sanktiot, Hoitoluokkamuutokset, Liikennejärjestelyt, Materiaalit, Muut, Tehtävämuutokset, Tiestömuutokset, Tiestömuutos, Työmäärämuutokset, Yleiset Liikennejärjestelyt."
+                  "format": "date",
+                  "description": "Sen hoitovuoden aloitusvuosi, jota päätös koskee. Jos kyseessä on hoitovuosi 2023-24, tässä palautuu 2023."
                 },
-                "oikaisun-selite": {
+                "paatostyyppi": {
                   "type": "string",
-                  "description": "Vapaamuotoinen selite tavoitehinnan oikaisulle."
+                  "description": "Hoitovuoden päätökseen liityvän rivin sisältöä kuvaava tyyppi. Harjan tietokannassa enumeraatio: 'tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus', 'lupausbonus', 'lupaussanktio'"
                 },
-                "oikaisun-summa": {
-                  "type": "number",
-                  "description": "Tavoitehinnan oikaisun määrä. Älä laske oikaisuna palautuneita määriä toteutuneiden kustannusten yhteissummaan. Tavoitehinnan oikaisujen ja välikatselmuksessa tehtyjen päätösten pohjalta lasketaan mahdollinen hoitokauden päättämiseen liittyvä kulu. Kulu kirjataan kulukohdistuksena jollekin näistä kolmesta tehtäväryhmästä: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä. Tavoitehinnan oikaisun määrä voi olla negatiivinen (tavoitehinnasta vähennetän) tai positiivinen (tavoitehintaan lisätään). Yksikkö: euro. "
+                "paatoksen-tulos": {
+                  "type": "object",
+                  "properties": {
+                    "kokonaismaara": {
+                      "type": "number",
+                      "description": ""
+                    },
+                    "urakoitsija-maksaa": {
+                      "type": "number",
+                      "description": "Hoitovuoden tuloksen perusteella laskettu ja määritetty summa, jonka urakoitsija maksaa. Negatiivinen luku tarkoittaa, että tilaaja maksaa urakoitsijalle. Lupaussanktiosta syntynyt kulu löytyy sanoman sanktiot-osiosta santio-id:n perusteella. Tavoite- ja kattohinnan ylityksistä ja alituksista syntyy kulu-id:n perusteella kulut-osiosta löytyvä positiivinen tai negatiivinen kustannus."
+                    },
+                    "tilaaja-maksaa": {
+                      "type": "number",
+                      "description": "Hoitovuoden tuloksen perusteella laskettu ja määritetty summa, jonka tilaaja maksaa. Käytännössä joko lubausbonus tai tilaajan kattama osuus tavoitehinnan ylityksestä. Bonuksesta syntynyt kulu löytyy sanoman bonukset-osiosta bonus-id:n perusteella."
+                    },
+                    "siirretaan-seuraavalle-hoitovuodelle": {
+                      "type": "number",
+                      "description": "Hoitovuoden tuloksen perusteella laskettu ja määritetty summa, joka siirtyy seuraavan hoitovuoden kustannussuunnitelmaan. Voi olla negatiivinen tai positiivinen."
+                    },
+                    "tavoitehinta": {
+                      "type": "number",
+                      "description": "Päätökseen kirjattu tavoitehinta."
+                    }
+                  }
+                },
+                "lupausten-tulos": {
+                  "type": "object",
+                  "properties": {
+                    "luvatut-pisteet": {
+                      "type": "integer",
+                      "description": "Urakoitsijan hoitovuodelle antamien lupausten kokonaispistemäärä."
+                    },
+                    "toteutuneet-pisteet": {
+                      "type": "integer",
+                      "description": "Urakoitsijan hoitovuoden kuluessa toteutuneiden lupauspisteiden yhteismäärä."
+                    }
+                  }
+                },
+                "tavoitehinnan_oikaisut": {
+                  "type": "array",
+                  "properties": {
+                    "tavoitehinnan-oikaisu": {
+                      "type": "object",
+                      "properties": {
+                        "oikaisu-id": {
+                          "type": "integer",
+                          "description": "Tavoitehinnan oikaisurivin id Harjassa. Huom. Älä laske tavoitehinnan oikaisuja mukaan, kun lasket yhteen toteutuneita kustannuksia. Oikaisumääriä voi pitää jonkinlaisena erittelynä välikatselmuksessa mahdollisesti syntyville kulukirjauksille. Nämä kirjaukset kohdistuvat kolmeen tehtäväryhmään: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä."
+                        },
+                        "oikaisun-hoitovuosi": {
+                          "type": "integer",
+                          "description": "Sen hoitovuoden alkuvuosi, jota tavoitehinnan oikaisu koskee. Jos hoitovuosi on 2023-24, tässä palautuu 2023."
+                        },
+                        "oikaisun-summa": {
+                          "type": "number",
+                          "description": "Tavoitehinnan oikaisun määrä. Älä laske oikaisuna palautuneita määriä toteutuneiden kustannusten yhteissummaan. Tavoitehinnan oikaisujen ja välikatselmuksessa tehtyjen päätösten pohjalta lasketaan mahdollinen hoitokauden päättämiseen liittyvä kulu. Kulu kirjataan kulukohdistuksena jollekin näistä kolmesta tehtäväryhmästä: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä. Tavoitehinnan oikaisun määrä voi olla negatiivinen (tavoitehinnasta vähennetän) tai positiivinen (tavoitehintaan lisätään). Yksikkö: euro. "
+                        },
+                        "oikaisukategoria": {
+                          "type": "string",
+                          "description": "Tavoitehinnan oikaisun luokittelu. Arvot 28.1.2024 (muutoksiin on syytä varautua): Alleviivatun fontin vaikutus tavoitehintaan, Bonukset ja sanktiot, Hoitoluokkamuutokset, Liikennejärjestelyt, Materiaalit, Muut, Tehtävämuutokset, Tiestömuutokset, Tiestömuutos, Työmäärämuutokset, Yleiset Liikennejärjestelyt."
+                        },
+                        "oikaisun-selite": {
+                          "type": "string",
+                          "description": "Vapaamuotoinen selite tavoitehinnan oikaisulle."
+                        },
+                        "poistettu": {
+                          "type": "boolean",
+                          "default": false,
+                          "description": "True kun oikaisu on merkitty Harjassa poistetuksi. Oletus: false."
+                        }
+                      },
+                      "required": [
+                        "oikaisu-id",
+                        "oikaisun-hoitovuosi",
+                        "oikaisukategoria",
+                        "oikaisun-selite",
+                        "oikaisun-summa"
+                      ]
+                    }
+                  }
+                },
+                "viittaukset-toteutuneisiin-kustannuksiin": {
+                  "type": "object",
+                  "properties": {
+                    "kulu-id": {
+                      "type": "integer",
+                      "description": "Harjan kulurivin id mikäli päätökseen sisältyy kuluksi kirjattava kustannus. Kulu kirjataan, jos urakoitsija saa tavoitehinnan alituksesta tavoitepalkkiota tai jos urakoitsijalle jää tavoitehinnan ylityksestä korvattavaa. Urakoitsijan tilaajalle tavoitehinnan ylityksestä maksama määrä kirjataan negatiivisena lukuna. Kulun tiedot löytyvät palautuneen sanoman kulujen joukosta tällä id:llä."
+                    },
+                    "sanktio-id": {
+                      "type": "integer",
+                      "description": "Harjan sanktiorivin id mikäli päätökseen sisältyy lupaussanktio. Sanktion tiedot löytyvät palautuneen sanoman sanktioiden joukosta tällä id:llä."
+                    },
+                    "bonus-id": {
+                      "type": "integer",
+                      "description": "Harjan bonusrivin id mikäli päätökseen sisältyy lupausbonus. Bonuksen tiedot löytyvät palautuneen sanoman bonusten joukosta tällä id:llä."
+                    }
+                  }
                 },
                 "poistettu": {
                   "type": "boolean",
-                  "default": false,
-                  "description": "True kun oikaisu on merkitty Harjassa poistetuksi. Oletus: false."
+                  "description": "True kun päätös on merkitty poistetuksi Harjassa. Oletus: false."
                 }
-              },
-              "required": [
-                "oikaisu-id",
-                "oikaisun-hoitokausi",
-                "oikaisukategoria",
-                "oikaisun-selite",
-                "oikaisun-summa"
-              ]
+              }
             }
           }
         }
