@@ -51,12 +51,12 @@
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         alkupvm (c/to-date (t/local-date 2023 10 1))
         loppupvm (c/to-date (t/local-date 2024 9 30))
-        odotettu-vastaus-hk-2023 '({:id "paikkauskohde-kustannus-1", :tyomenetelma "", :kustannustyyppi "Arvonmuutokset", :kokonaiskustannus 1337M, :selite "Arvoa muutettiin"}
-                                   {:id "paikkauskohde-kustannus-2", :tyomenetelma "", :kustannustyyppi "Indeksi- ja kustannustason muutokset", :kokonaiskustannus 80500M, :selite "Indeksimuutos syyskuu"}
-                                   {:id "paikkauskohde-kustannus-3", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 200000M, :selite "Työvoimakustannukset"}
-                                   {:id "paikkauskohde-kustannus-4", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 75000M, :selite "Kalustokustannukset"}
-                                   {:id "paikkauskohde-kustannus-5", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 75000M, :selite "Vanha kustannus"}
-                                   {:id "paikkauskohde-kustannus-6", :tyomenetelma "", :kustannustyyppi "Indeksi- ja kustannustason muutokset", :kokonaiskustannus 75000M, :selite "Indeksimuutos 2017 elokuu"}
+        odotettu-vastaus-hk-2023 '({:id "kustannus-1", :tyomenetelma "", :kustannustyyppi "Arvonmuutokset", :kokonaiskustannus 1337M, :selite "Arvoa muutettiin"}
+                                   {:id "kustannus-2", :tyomenetelma "", :kustannustyyppi "Indeksi- ja kustannustason muutokset", :kokonaiskustannus 80500M, :selite "Indeksimuutos syyskuu"}
+                                   {:id "kustannus-3", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 200000M, :selite "Työvoimakustannukset"}
+                                   {:id "kustannus-4", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 75000M, :selite "Kalustokustannukset"}
+                                   {:id "kustannus-5", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 75000M, :selite "Vanha kustannus"}
+                                   {:id "kustannus-6", :tyomenetelma "", :kustannustyyppi "Indeksi- ja kustannustason muutokset", :kokonaiskustannus 75000M, :selite "Indeksimuutos 2017 elokuu"}
                                    {:id "paikkauskohde-tyomenetelma-16", :tyomenetelma "AB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
                                    {:id "paikkauskohde-tyomenetelma-1", :tyomenetelma "AB-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
                                    {:id "paikkauskohde-tyomenetelma-11", :tyomenetelma "Avarrussaumaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
@@ -101,7 +101,7 @@
                       :vuosi vuosi
                       :summa 142000} :tallenna-yllapito-kustannus)
 
-        odotettu-tallennus {:id "paikkauskohde-kustannus-7", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 142000M, :selite "Päällystettiin Kuusamon luontopolku"}
+        odotettu-tallennus {:id "kustannus-7", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 142000M, :selite "Päällystettiin Kuusamon luontopolku"}
 
         vastaus-tallennettu (tee-kutsu {:vuosi vuosi
                                         :urakka-id urakka-id} :hae-paikkaus-kustannukset)]
