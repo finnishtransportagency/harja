@@ -124,22 +124,23 @@
       raportti
       (assoc-in
         [1 :raportin-yleiset-tiedot]
-        {:urakka (case konteksti
-                   "urakka" (:nimi urakka)
+        (merge {:urakka (case konteksti
+                          "urakka" (:nimi urakka)
 
-                   "monta-urakkaa" (str/join ", " urakoiden-nimet)
+                          "monta-urakkaa" (str/join ", " urakoiden-nimet)
 
-                   "hallintayksikko" hy-nimi
+                          "hallintayksikko" hy-nimi
 
-                   "koko maa" "Koko maa")
-         :alkupvm (or
-                    (some-> parametrit :alkupvm pvm/pvm)
-                    (some-> (:parametrit parametrit) :alkupvm pvm/pvm))
-         :loppupvm (or
-                     (some-> parametrit :loppupvm pvm/pvm)
-                     (some-> (:parametrit parametrit) :loppupvm pvm/pvm))
-         :vuosi (or (:vuosi parametrit) nil)
-         :raportin-nimi (get-in raportti [1 :nimi])})
+                          "koko maa" "Koko maa")
+                :alkupvm (or
+                           (some-> parametrit :alkupvm pvm/pvm)
+                           (some-> (:parametrit parametrit) :alkupvm pvm/pvm))
+                :loppupvm (or
+                            (some-> parametrit :loppupvm pvm/pvm)
+                            (some-> (:parametrit parametrit) :loppupvm pvm/pvm))
+                :raportin-nimi (get-in raportti [1 :nimi])}
+          (when (:vuosi parametrit)
+            {:vuosi (:vuosi parametrit)})))
       (assoc-in
         [1 :tietoja]
         (as-> [["Kohde" (case konteksti
