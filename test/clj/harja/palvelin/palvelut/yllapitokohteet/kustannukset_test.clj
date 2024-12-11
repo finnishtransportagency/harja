@@ -57,25 +57,25 @@
                                    {:id "kustannus-4", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 75000M, :selite "Kalustokustannukset"}
                                    {:id "kustannus-5", :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 75000M, :selite "Vanha kustannus"}
                                    {:id "kustannus-6", :tyomenetelma "", :kustannustyyppi "Indeksi- ja kustannustason muutokset", :kokonaiskustannus 75000M, :selite "Indeksimuutos 2017 elokuu"}
-                                   {:id "paikkauskohde-tyomenetelma-16", :tyomenetelma "AB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-1", :tyomenetelma "AB-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-11", :tyomenetelma "Avarrussaumaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-9", :tyomenetelma "Jyrsintäkorjaukset (HJYR/TJYR)", :kustannustyyppi nil, :kokonaiskustannus 34520.0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-10", :tyomenetelma "Kannukaatosaumaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-15", :tyomenetelma "Käsin tehtävät paikkaukset pikapaikkausmassalla", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-5", :tyomenetelma "Konetiivistetty reikävaluasfalttipaikkaus (REPA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-4", :tyomenetelma "KT-valuasfalttipaikkaus (KTVA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-19", :tyomenetelma "Massapintaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-18", :tyomenetelma "Muu päällysteiden paikkaustyö", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-17", :tyomenetelma "PAB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-2", :tyomenetelma "PAB-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-13", :tyomenetelma "Reunapalkin ja päällysteen välisen sauman tiivistäminen", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-14", :tyomenetelma "Reunapalkin liikuntasauman tiivistäminen", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-12", :tyomenetelma "Sillan kannen päällysteen päätysauman korjaukset", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-7", :tyomenetelma "Sirotepintauksena tehty lappupaikkaus (SIPA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-6", :tyomenetelma "Sirotepuhalluspaikkaus (SIPU)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-3", :tyomenetelma "SMA-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
-                                   {:id "paikkauskohde-tyomenetelma-8", :tyomenetelma "Urapaikkaus (UREM/RREM)", :kustannustyyppi nil, :kokonaiskustannus 215000.0M, :selite ""})
+                                   {:id "reikapaikkaus-tyomenetelma-16", :tyomenetelma "AB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-1", :tyomenetelma "AB-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-11", :tyomenetelma "Avarrussaumaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-9", :tyomenetelma "Jyrsintäkorjaukset (HJYR/TJYR)", :kustannustyyppi nil, :kokonaiskustannus 34520.0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-10", :tyomenetelma "Kannukaatosaumaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-15", :tyomenetelma "Käsin tehtävät paikkaukset pikapaikkausmassalla", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-5", :tyomenetelma "Konetiivistetty reikävaluasfalttipaikkaus (REPA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-4", :tyomenetelma "KT-valuasfalttipaikkaus (KTVA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-19", :tyomenetelma "Massapintaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-18", :tyomenetelma "Muu päällysteiden paikkaustyö", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-17", :tyomenetelma "PAB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-2", :tyomenetelma "PAB-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-13", :tyomenetelma "Reunapalkin ja päällysteen välisen sauman tiivistäminen", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-14", :tyomenetelma "Reunapalkin liikuntasauman tiivistäminen", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-12", :tyomenetelma "Sillan kannen päällysteen päätysauman korjaukset", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-7", :tyomenetelma "Sirotepintauksena tehty lappupaikkaus (SIPA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-6", :tyomenetelma "Sirotepuhalluspaikkaus (SIPU)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-3", :tyomenetelma "SMA-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "reikapaikkaus-tyomenetelma-8", :tyomenetelma "Urapaikkaus (UREM/RREM)", :kustannustyyppi nil, :kokonaiskustannus 215000.0M, :selite ""})
         
         vastaus (tee-kutsu {:aikavali [alkupvm loppupvm]
                             :urakka-id urakka-id} :hae-paikkaus-kustannukset)]
@@ -92,7 +92,7 @@
         vastaus-ennen (tee-kutsu {:vuosi vuosi
                                   :urakka-id urakka-id} :hae-paikkaus-kustannukset)
 
-        odotettu-vastaus {:id "paikkauskohde-tyomenetelma-16", :tyomenetelma "AB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+        odotettu-vastaus {:id "reikapaikkaus-tyomenetelma-16", :tyomenetelma "AB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
 
         _ (tee-kutsu {:urakka-id urakka-id
                       :selite "Päällystettiin Kuusamon luontopolku"

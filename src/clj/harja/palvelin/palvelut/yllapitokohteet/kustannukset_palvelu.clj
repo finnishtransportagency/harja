@@ -1,5 +1,5 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.kustannukset-palvelu
-  "MPU Kustannukset näkymän palvelut"
+  "Ylläpidon kustannukset näkymän palvelut"
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.konversio :as konversio]

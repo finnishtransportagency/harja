@@ -6,9 +6,9 @@ SELECT id,
        SUM(kokonaiskustannus) AS kokonaiskustannus,
        selite
 FROM (
-    -- Muut paikkaukset
-    SELECT   
-        concat('paikkauskohde-',pt.id)          AS id,
+    -- Paikkauskohteiden kustannukset
+    SELECT
+        CONCAT('paikkauskohde-',pt.id)          AS id,
         NULL::mpu_kustannustyyppi_enum          AS kustannustyyppi,
         COALESCE(SUM(pk."toteutunut-hinta"), 0) AS kokonaiskustannus,
         pt.nimi                                 AS tyomenetelma,
@@ -24,11 +24,12 @@ FROM (
         AND pk."urakka-id" = :urakka-id
     GROUP BY 
         pt.nimi, pt.id
+
     UNION ALL
 
-    -- Reikäpaikkaukset
+    -- Reikäpaikkausten kustannukset
     SELECT
-        concat('paikkauskohde-tyomenetelma-',pt.id) AS id,
+        CONCAT('reikapaikkaus-tyomenetelma-',pt.id) AS id,
         NULL::mpu_kustannustyyppi_enum              AS kustannustyyppi,
         COALESCE(SUM(p.kustannus), 0)               AS kokonaiskustannus,
         pt.nimi                                     AS tyomenetelma,
@@ -40,19 +41,21 @@ FROM (
                   AND (:alkuaika::DATE IS NULL OR p.alkuaika >= :alkuaika::DATE)
                   AND (:loppuaika::DATE IS NULL OR p.loppuaika <= :loppuaika::DATE)
                   AND p.poistettu = FALSE
+                  AND p."paikkaus-tyyppi" = 'reikapaikkaus'
     GROUP BY 
         pt.nimi, pt.id
+
     UNION ALL
     
-    -- paikkauskustannukset
-    SELECT concat('kustannus-',id) AS id,
+    -- Muut paikkauskustannukset
+    SELECT CONCAT('kustannus-',id) AS id,
 		   kustannustyyppi,
 		   SUM(summa)                               AS kokonaiskustannus,
 		   ''                                       AS tyomenetelma,
 	     selite
 	  FROM
           paikkauskustannukset
-    WHERE 
+    WHERE
         urakka = :urakka-id
         AND poistettu IS FALSE
       -- Samalla kyselyllä haetaan yksittäisen vuoden kustannukset sekä useamman vuoden kustannukset
@@ -60,7 +63,7 @@ FROM (
         AND (:alkuvuosi::INTEGER IS NULL AND :loppuvuosi::INTEGER IS NULL
                  OR (:alkuvuosi::INTEGER IS NOT NULL
         AND :alkuvuosi::INTEGER IS NOT NULL AND vuosi BETWEEN :alkuvuosi::INTEGER AND :loppuvuosi::INTEGER))
-    GROUP BY 
+    GROUP BY
         id, selite, kustannustyyppi
 ) AS kustannukset
 GROUP BY tyomenetelma, id, kustannustyyppi, selite
