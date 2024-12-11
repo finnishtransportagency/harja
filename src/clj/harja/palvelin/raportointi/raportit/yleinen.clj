@@ -252,6 +252,7 @@
   (let [urakka (:urakka (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         alkupvm (:alkupvm (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         loppupvm (:loppupvm (:raportin-yleiset-tiedot raportin-tunnistetiedot))
+        vuosi (:vuosi (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         raportin-nimi (:raportin-nimi (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         lyhennetty? (:lyhennetty-tiedostonimi raportin-tunnistetiedot)
         ;; Jos loppupvm on täysin sama, sitä ei tarvitse mainita
@@ -269,6 +270,9 @@
 
       (and (not urakka) raportin-nimi alkupvm loppupvm)
       (str raportin-nimi ", " alkupvm " - " loppupvm)
+
+      (and (not alkupvm) (not loppupvm) raportin-nimi vuosi)
+      (str urakka ", " raportin-nimi ", " vuosi)
 
       :else
       (str raportin-nimi))))

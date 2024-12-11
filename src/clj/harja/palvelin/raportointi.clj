@@ -138,6 +138,7 @@
          :loppupvm (or
                      (some-> parametrit :loppupvm pvm/pvm)
                      (some-> (:parametrit parametrit) :loppupvm pvm/pvm))
+         :vuosi (or (:vuosi parametrit) nil)
          :raportin-nimi (get-in raportti [1 :nimi])})
       (assoc-in
         [1 :tietoja]
