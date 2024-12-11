@@ -244,11 +244,7 @@
         raportti
         [:raportti {:nimi raportin-nimi
                     :otsikon-koko :keskikoko
-                    :tiedot nil
-                    :raportin-yleiset-tiedot {:raportin-nimi "Paikkausten yhteeveto"
-                                              :urakka (:nimi urakka)
-                                              :alkupvm alkupvm
-                                              :loppupvm loppupvm}}
+                    :tiedot nil}
          [:teksti (str (:nimi urakka) " " (pvm/vuosi (:alkupvm urakka)) "-" (pvm/vuosi (:loppupvm urakka)))]
          [:teksti (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
 
