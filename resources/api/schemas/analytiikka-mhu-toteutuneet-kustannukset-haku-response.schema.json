@@ -288,7 +288,7 @@
                 "muutoksen-maara": {
                   "type": "number",
                   "required": true,
-                  "description": "Tavoitehinnan muutoksen määrä. Älä laske muutosten määriä toteutuneiden kustannusten yhteissummaan. Välikatselmuksen pohjalta lasketaan hoitokauden päättämiseen liittyvä kulu. Kulu kirjataan kulukohdistuksena jollekin näistä kolmesta tehtäväryhmästä: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä. Tavoitehinnan muutoksen määrä voi olla negatiivinen (tavoitehinnasta vähennetän) tai positiivinen (tavoitehintaan lisätään). Yksikkö: euro. "
+                  "description": "Tavoitehinnan muutoksen määrä. Älä laske muutosten määriä toteutuneiden kustannusten yhteissummaan. Välikatselmuksen pohjalta lasketaan hoitokauden päättämiseen liittyvä kulu. Kulu kirjataan kulukohdistuksena jollekin näistä kolmesta tehtäväryhmästä: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä. Tavoitehinnan muutoksen määrä voi olla negatiivinen (tavoitehinnasta vähennetään) tai positiivinen (tavoitehintaan lisätään). Yksikkö: euro. "
                 },
                 "muutoskategoria": {
                   "type": "string",
@@ -318,7 +318,7 @@
                 "paatos-id": {
                   "type": "integer",
                   "required": true,
-                  "description": "Hoitovuoden päättämiseen liittyvä rivi Harjan tietokannassa. Hoitovuoden päättyessa pidetään välkatselmus. Tavoitehinnan muutosten ja lupauspisteiden perusteella lasketaan, onko tavoitehinta alittunut tai ylittynyt, onko kattohinta ylittynyt sekä saako urakoitsija lupauksistaan sanktota tai bonusta. Lopputulokset tallentuvat päätösriveinä. Hoitovuoden päättämiseen liittyvät päätösrivit eivät ole omia erillisiä kustannusrivejä. Jos päätösriviin liittyy toteutunut kustannus, siihen viitataan viittaukset-toteutuneisiin-kustannuksiin-osion id:llä. Toteutunut kustannus voi olla negatiivinen tai positiivinen kulu, sanktio tai bonus. Hoitokauden päättämiseen liittyvästä päätösrivistä ei aina generoidu toteutunutta kustannusta. Aina kynnys kustannuksen generoimiseen ei ylity. Rivi voi sisältää myös seuraavalle hoitokaudelle kustannussuunnitelmaan siirtyvän negatiivisen tai positiivisen summan. Rivin sisältöä kuvaa paatostyyppi-attribuutti."
+                  "description": "Hoitovuoden päättämiseen liittyvä rivi Harjan tietokannassa. Hoitovuoden päättyessa pidetään välkatselmus. Tavoitehinnan muutosten ja lupauspisteiden perusteella lasketaan, onko tavoitehinta alittunut tai ylittynyt, onko kattohinta ylittynyt sekä saako urakoitsija lupauksistaan sanktota tai bonusta. Lopputulokset tallentuvat päätösriveinä. Hoitovuoden päättämiseen liittyvät päätösrivit eivät ole omia erillisiä kustannusrivejä. Jos päätösriviin liittyy toteutunut kustannus, siihen viitataan viittaukset-toteutuneisiin-kustannuksiin-osion id:llä. Toteutunut kustannus voi olla negatiivinen tai positiivinen kulu, sanktio tai bonus. Hoitokauden päättämiseen liittyvästä päätösrivistä ei aina generoidu toteutunutta kustannusta. Aina kynnys kustannuksen generoimiseen ei ylity. Rivi voi sisältää myös seuraavalle hoitokaudelle kustannussuunnitelmaan siirtyvän negatiivisen tai positiivisen summan. Rivin sisältöä kuvaa paatostyyppi-attribuutti. Toteutuksessa kannattaa varautua siihen, että päätöstyyppejä voi tulevaisuudessa tulla lisää."
                 },
                 "paatoksen-hoitovuosi": {
                   "type": "string",
@@ -328,7 +328,7 @@
                 "paatostyyppi": {
                   "type": "string",
                   "required": true,
-                  "description": "Hoitovuoden päätökseen liityvän rivin sisältöä kuvaava tyyppi. Harjan tietokannassa enumeraatio: 'tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus', 'lupausbonus', 'lupaussanktio'"
+                  "description": "Hoitovuoden päätökseen liityvän rivin sisältöä kuvaava tyyppi. Harjan tietokannassa enumeraatio: 'tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus', 'lupausbonus', 'lupaussanktio'. Toteutuksessa kannattaa varautua siihen, että päätöstyyppejä voi tulevaisuudessa tulla lisää."
                 },
                 "paatoksen-tulos": {
                   "type": "object",
