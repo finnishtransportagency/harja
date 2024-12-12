@@ -260,7 +260,7 @@ WHERE tyyppi = 'sakko'
                               FROM sanktio
                               WHERE id = :sanktio)
   AND toimenpideinstanssi IN
-      (select id from toimenpideinstanssi where loppupvm > current_timestamp - INTERVAL '3 months');
+      (SELECT id FROM toimenpideinstanssi WHERE loppupvm > current_timestamp - INTERVAL '3 months');
 
 -- name: hae-sanktiotyypit
 -- Hakee kaikki sanktiotyypit
