@@ -34,6 +34,7 @@
     [harja.kyselyt.kulut :as kulu-kyselyt]
     [harja.kyselyt.sanktiot :as sanktio-kyselyt]
     [harja.kyselyt.erilliskustannus-kyselyt :as bonus-kyselyt]
+    [harja.kyselyt.valikatselmus :as valitavoite-kyselyt]
     [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
     [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
     [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat])
@@ -873,9 +874,9 @@
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         kulut (kulu-kyselyt/hae-toteutuneet-kustannukset-analytiikalle db {:urakka-id urakka-id})
         sanktiot (sanktio-kyselyt/hae-urakan-sanktiot-analytiikalle db urakka-id)
-        bonukset (sanktio-kyselyt/hae-urakan-bonukset-analytiikalle db urakka-id)
-        paatokset (sanktio-kyselyt/hae-urakan-paatokset-analytiikalle db urakka-id)
-        tavoitehinnan-oikaisut (sanktio-kyselyt/hae-urakan-tavoitehinnan-oikaisut-analytiikalle db urakka-id)
+        bonukset (bonus-kyselyt/hae-urakan-bonukset-analytiikalle db urakka-id)
+        muutokset (valitavoite-kyselyt/hae-urakan-tavoitehintaan-vaikuttavat-muutokset-analytiikalle db urakka-id)
+        paatokset (valitavoite-kyselyt/hae-urakan-hoitovuosien-paatokset-analytiikalle db urakka-id)
         kulut (map (fn [k]
                      (let [k (update k :kulukohdistukset konversio/jsonb->clojuremap)
                            k (update k :kulukohdistukset
@@ -909,24 +910,22 @@
                         {:bonus (-> b
                                   (konversio/alaviiva->rakenne))})
                    bonukset)
-        oikaisut (map (fn [o]
-                        {:tavoitehinnan-oikaisu (-> o
+        muutokset (map (fn [m]
+                        {:tavoitehinnan-muutos (-> m
                                   (konversio/alaviiva->rakenne))})
-                   tavoitehinnan-oikaisut)
+                   muutokset)
         paatokset (map (fn [p]
-                         (println "**** P " p)
                          {:hoitovuoden-paatos (-> p
-                                                ;; (assoc :tavoitehinnan-oikaisut oikaisut)
                                                 (konversio/alaviiva->rakenne)
                                                 )})
-                    paatokset)
-        ]
+                    paatokset)]
 
     {:toteutuneet-kustannukset {:urakka urakka-id
                                 :urakkatunnus (:alueurakkanumero urakan-tiedot)
                                 :kulut kulut
                                 :sanktiot sanktiot
                                 :bonukset bonukset
+                                :tavoitehinnan-muutokset muutokset
                                 :hoitovuoden-paatokset paatokset}}))
 
 (defn hae-kustannussuunnitelmat [db {:keys [urakka-id] :as parametrit}]

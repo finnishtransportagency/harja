@@ -85,7 +85,6 @@ SET poistettu = TRUE,
     muokkaaja = :muokkaaja
 WHERE id = :id;
 
-
 -- name: hae-urakan-sanktiot
 -- row-fn: muunna-urakan-sanktio
 -- Palauttaa kaikki urakalle kirjatut sanktiot perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
@@ -335,60 +334,4 @@ FROM sanktio s
          JOIN toimenpide tp ON tpi.toimenpide = tp.id
          JOIN urakka u ON tpi.urakka = u.id
 WHERE u.id = :urakka-id;
-
--- name: hae-urakan-bonukset-analytiikalle
--- Hakee kaikki urakan bonukset palautettavaksi analytiikalle toteutuneiden kustannusten rajapinnan kautta.
--- Palauttaa myös poistetut bonukset.
--- Käytetään MH-urakoissa, soveltuu myös vanhojen alueurakoiden bonusten palauttamiseen.
-SELECT ek.id               AS "bonus-id",
-       ek.laskutuskuukausi AS "bonuksen-ajankohta",
-       ek.indeksin_nimi    AS "indeksi",
-       ek.rahasumma        AS "bonuksen-maara",
-       tp.id               AS "toimenpide-id",
-       ek.tyyppi           AS "bonustyyppi",
-       ek.pvm              AS "bonuksen-kasittelyajankohta",
-       ek.kasittelytapa    AS "bonuksen-kasittelytapa",
-       ek.poistettu        AS "poistettu"
-FROM erilliskustannus ek
-         JOIN toimenpideinstanssi tpi ON ek.toimenpideinstanssi = tpi.id
-         JOIN toimenpide tp ON tpi.toimenpide = tp.id
-         JOIN urakka u ON tpi.urakka = u.id
-WHERE u.id = :urakka-id
-  AND ek.tyyppi != 'muu';
-
--- name: hae-urakan-paatokset-analytiikalle
--- Hakee urakan välikatselmukseen liittyvät päätökset palautettavaksi analytiikalle toteutuneiden kustannusten rajapinnan kautta.
--- Käytetään MH-urakoissa.
-SELECT id                           AS "paatos-id",
-       "hoitokauden-alkuvuosi"      AS "paatoksen-hoitovuosi",
-       tyyppi                       AS "paatostyyppi", -- 'tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus', 'lupausbonus', 'lupaussanktio'
-       "hinnan-erotus"              AS "paatoksen-tulos_kokonaismaara",
-       "urakoitsijan-maksu"         AS "paatoksen-tulos_urakoitsija-maksaa",
-       "tilaajan-maksu"             AS "paatoksen-tulos_tilaaja-maksaa",
-       siirto                       AS "paatoksen-tulos_siirretaan-seuraavalle-hoitovuodelle",
-       "lupaus-tavoitehinta"        AS "paatoksen-tulos_tavoitehinta",
-       "lupaus-luvatut-pisteet"     AS "lupausten-tulos_luvatut-pisteet",
-       "lupaus-toteutuneet-pisteet" AS "lupausten-tulos_toteutuneet-pisteet",
-       kulu_id                      AS "viittaukset-toteutuneisiin-kustannuksiin_kulu-id",
-       sanktio_id                   AS "viittaukset-toteutuneisiin-kustannuksiin_sanktio-id",
-       erilliskustannus_id          AS "viittaukset-toteutuneisiin-kustannuksiin_bonus-id",
-       poistettu                    AS "poistettu"
-FROM urakka_paatos up
-WHERE "urakka-id" = :urakka-id
-ORDER BY "hoitokauden-alkuvuosi", tyyppi;
-
--- name: hae-urakan-tavoitehinnan-oikaisut-analytiikalle
--- Hakee kaikki välikatselmukseen liittyvät tavoitehinnan oikaisut palautettavaksi analytiikalle toteutuneiden kustannusten rajapinnan kautta.
--- Palauttaa myös poistetuksi merkityt tavoitehinnan oikaisut.
--- Käytetään MH-urakoissa.
-SELECT id                      AS "tavoitehinnan-oikaisu_oikaisu-id",
-       "hoitokauden-alkuvuosi" AS "tavoitehinnan-oikaisun_hoitovuosi",
-       summa                   AS "tavoitehinnan-oikaisun_maara",
-       otsikko                 AS "tavoitehinnan-oikaisu_oikaisukategoria",
-       selite                  AS "tavoitehinnan-oikaisu_oikaisun-selite",
-       poistettu               AS "tavoitehinnan-poistettu"
-FROM tavoitehinnan_oikaisu toi
-WHERE "urakka-id" = :urakka-id
-ORDER BY "hoitokauden-alkuvuosi", otsikko, id;
-
 
