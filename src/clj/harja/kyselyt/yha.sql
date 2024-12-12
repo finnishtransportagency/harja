@@ -24,10 +24,10 @@ SELECT
   u.sopimustyyppi          AS "sopimustyyppi",
   u.sampoid                AS "urakka-sampoid",
   'TYP-' || u.urakkanro    AS "palvelusopimus-sampoid"  -- koskee vain urakoita, joiden sopimustyyppi on palvelusopimus
-FROM yhatiedot yt
-  LEFT JOIN urakka u ON u.id = yt.urakka
+FROM urakka u
+  LEFT JOIN yhatiedot yt ON u.id = yt.urakka
   LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
-WHERE urakka = :urakka;
+WHERE u.id = :urakka;
 
 -- name: poista-urakan-yllapitokohteet!
 UPDATE yllapitokohde
