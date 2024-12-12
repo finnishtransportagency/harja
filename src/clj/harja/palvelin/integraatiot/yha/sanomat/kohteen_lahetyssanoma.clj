@@ -173,7 +173,10 @@
 
 ;; YHA ohjaa paikkauskohteiden pot-lomakkeet poikkeuskäsittelyllä yhteisesti sovitun kohde id:n avulla
 (def paikkauskohteiden-yha-id 99)
-
+;; paikkauspoteissa voi olla tilanne, ettei Harjan ja YHA:n välille ole tehty urakoiden paritusta
+;; käytetään tällöin tiimien kesken sovittua ID:tä 99 yha-id ja tunnus kenttiin, jonka avulla YHA osaa ohjata kohteet oikeaan paikkaan
+;; urakkatiedon puutteesta huolimatta. Näin ei tarvita skeemamuutosta, skeema vaatii jonkin arvon urakan id:lle
+(def puuttuvan-urakan-id 99)
 
 (defn poista-nil-arvot-vektoreista [data]
   (walk/postwalk
@@ -206,7 +209,7 @@
                                  [:toteutunuthinta (if paikkauskohde-id
                                                      paikkauskohde-toteutunut-hinta
                                                      (laske-hinta-kokonaishinta paallystysilmoitus))]
-                                 (tee-tierekisteriosoitevali kohde) ;; TODO: Miksi tässä (dissoc kohde :tr-ajorata :tr-kaista)
+                                 (tee-tierekisteriosoitevali kohde)
                                  (when alustalle-tehdyt-toimet
                                    (reduce conj [:alustalle-tehdyt-toimet]
                                      (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapaivamaara)
@@ -220,10 +223,10 @@
   [:urakan-kohteiden-toteumatietojen-kirjaus
    {:xmlns "http://www.vayla.fi/xsd/yha"}
    [:urakka
-    [:yha-id yhaid]
+    [:yha-id (or yhaid puuttuvan-urakan-id)]
     [:harja-id harjaid]
     [:sampotunnus sampoid]
-    [:tunnus yhatunnus]
+    [:tunnus (or yhatunnus puuttuvan-urakan-id)]
     (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:kulutuskerrokselle-tehdyt-toimet %) (:alustalle-tehdyt-toimet %) (:paallystysilmoitus %)) kohteet))]])
 
 (defn muodosta [urakka kohteet]
