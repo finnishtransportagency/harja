@@ -244,6 +244,10 @@
                   "type": "string",
                   "description": "Sanktion määrän laskennassa käytetty indeksi, jos määrässä on indeksikorjaus mukana. Esim. MAKU 2015."
                 },
+                "toimenpide-id": {
+                  "type": "integer",
+                  "description": "Sen Harjan toimenpiteen id, johon bonus kustannuksena kohdistuu. Esim. Talvihoito."
+                },
                 "bonustyyppi": {
                   "type": "string",
                   "description": "Bonuksen tyyppi. Harjan tietokannassa enumeraatio, joka sisältää arvot: 'asiakastyytyvaisyysbonus', 'alihankintabonus', 'lupausbonus', 'tavoitepalkkio', 'muu-bonus'. Jos palautuu arvo 'muu', ei ole kysymys bonuksesta vaan samaan tauluun tallennetusta erilliskustannuksesta."
