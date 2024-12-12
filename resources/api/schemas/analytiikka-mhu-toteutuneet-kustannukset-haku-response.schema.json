@@ -155,11 +155,13 @@
               "properties": {
                 "sanktio-id": {
                   "type": "integer",
+                  "required": true,
                   "description": "Sanktiorivin id Harjassa."
                 },
                 "sanktion-ajankohta": {
                   "type": "string",
                   "format": "date",
+                  "required": true,
                   "description": "Ajankohta jolloin sanktioon liittyvä maksu kirjanpidon kannalta toteutuu."
                 },
                 "sanktion-maara": {
@@ -180,10 +182,12 @@
                 },
                 "suorasanktio": {
                   "type": "boolean",
+                  "required": true,
                   "description": "True kun sanktio on suorasanktio. Oletus: false."
                 },
                 "sanktiolaji": {
                   "type": "string",
+                  "required": true,
                   "description": "Sanktion laji (aiemmin käytetty myös nimeä sanktioryhmä). Maanteiden hoidon urakat: 'A' - A-ryhmä (tehtäväkohtainen sanktio), 'B' - B-ryhmä (vakava laiminlyönti), 'C' - C-ryhmä (määräpäivän ylitys, hallinnollinen laiminlyönti jne.), 'muistutus', 'arvonvahennyssanktio', 'pohjavesisuolan_ylitys', 'talvisuolan_ylitys', vaihtosanktio' - Vastuuhenkilön vaihto, 'testikeskiarvo-sanktio' - Vastuuhenkilön testipistemäärän alentuminen, 'tenttikeskiarvo-sanktio' - Vastuuhenkilön tenttipistemäärän alentuminen, 'lupaussanktio'. Päällystysurakat: 'yllapidon_sakko', 'yllapidon_bonus', 'yllapidon_muistutus'."
                 },
                 "sanktiotyyppi": {
@@ -211,13 +215,7 @@
                   "type": "boolean",
                   "description": "True kun sanktio on merkitty poistetuksi Harjassa. Oletus: false."
                 }
-              },
-              "required": [
-                "sanktio-id",
-                "sanktion-ajankohta",
-                "suorasanktio",
-                "sanktiolaji"
-              ]
+              }
             }
           }
         },
@@ -229,11 +227,13 @@
               "properties": {
                 "bonus-id": {
                   "type": "integer",
+                  "required": true,
                   "description": "Bonusrivin id Harjassa."
                 },
                 "bonuksen-ajankohta": {
                   "type": "string",
                   "format": "date",
+                  "required": true,
                   "description": "Bonuksen päiväys. Ajankohta jolloin bonuksesta syntyy kustannus."
                 },
                 "bonuksen-maara": {
@@ -265,12 +265,7 @@
                   "type": "boolean",
                   "description": "True kun bonus on merkitty poistetuksi Harjassa. Oletus: false."
                 }
-
-              },
-              "required": [
-                "bonus-id",
-                "bonuksen-ajankohta"
-              ]
+              }
             }
           }
         },
@@ -282,22 +277,27 @@
               "properties": {
                 "muutos-id": {
                   "type": "integer",
+                  "required": true,
                   "description": "Tavoitehintaan vaikuttavan muutosrivin id Harjassa. Huom. Älä laske muutoksia mukaan, kun lasket yhteen toteutuneita kustannuksia. Muutosmäärät toimivat taustatietona. "
                 },
                 "muutoksen-hoitovuosi": {
                   "type": "integer",
+                  "required": true,
                   "description": "Sen hoitovuoden alkuvuosi, jota tavoitehintaan vaikuttava muutos koskee. Jos hoitovuosi on 2023-24, tässä palautuu 2023."
                 },
                 "muutoksen-maara": {
                   "type": "number",
+                  "required": true,
                   "description": "Tavoitehinnan muutoksen määrä. Älä laske muutosten määriä toteutuneiden kustannusten yhteissummaan. Välikatselmuksen pohjalta lasketaan hoitokauden päättämiseen liittyvä kulu. Kulu kirjataan kulukohdistuksena jollekin näistä kolmesta tehtäväryhmästä: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä. Tavoitehinnan muutoksen määrä voi olla negatiivinen (tavoitehinnasta vähennetän) tai positiivinen (tavoitehintaan lisätään). Yksikkö: euro. "
                 },
                 "muutoskategoria": {
                   "type": "string",
+                  "required": true,
                   "description": "Tavoitehinnan muutoksen luokittelu. Arvot 28.1.2024 (muutoksiin on syytä varautua): Alleviivatun fontin vaikutus tavoitehintaan, Bonukset ja sanktiot, Hoitoluokkamuutokset, Liikennejärjestelyt, Materiaalit, Muut, Tehtävämuutokset, Tiestömuutokset, Tiestömuutos, Työmäärämuutokset, Yleiset Liikennejärjestelyt."
                 },
                 "muutoksen-selite": {
                   "type": "string",
+                  "required": true,
                   "description": "Vapaamuotoinen selite tavoitehintaa muuttavalle tiedolle."
                 },
                 "poistettu": {
@@ -305,14 +305,7 @@
                   "default": false,
                   "description": "True kun muutos on merkitty Harjassa poistetuksi. Oletus: false."
                 }
-              },
-              "required": [
-                "muutos-id",
-                "muutoksen-hoitovuosi",
-                "muutoskategoria",
-                "muutoksen-selite",
-                "muutoksen-maara"
-              ]
+              }
             }
           }
         },
@@ -324,19 +317,22 @@
               "properties": {
                 "paatos-id": {
                   "type": "integer",
+                  "required": true,
                   "description": "Hoitovuoden päättämiseen liittyvä rivi Harjan tietokannassa. Hoitovuoden päättyessa pidetään välkatselmus. Tavoitehinnan muutosten ja lupauspisteiden perusteella lasketaan, onko tavoitehinta alittunut tai ylittynyt, onko kattohinta ylittynyt sekä saako urakoitsija lupauksistaan sanktota tai bonusta. Lopputulokset tallentuvat päätösriveinä. Hoitovuoden päättämiseen liittyvät päätösrivit eivät ole omia erillisiä kustannusrivejä. Jos päätösriviin liittyy toteutunut kustannus, siihen viitataan viittaukset-toteutuneisiin-kustannuksiin-osion id:llä. Toteutunut kustannus voi olla negatiivinen tai positiivinen kulu, sanktio tai bonus. Hoitokauden päättämiseen liittyvästä päätösrivistä ei aina generoidu toteutunutta kustannusta. Aina kynnys kustannuksen generoimiseen ei ylity. Rivi voi sisältää myös seuraavalle hoitokaudelle kustannussuunnitelmaan siirtyvän negatiivisen tai positiivisen summan. Rivin sisältöä kuvaa paatostyyppi-attribuutti."
                 },
                 "paatoksen-hoitovuosi": {
                   "type": "string",
-                  "format": "date",
+                  "required": true,
                   "description": "Sen hoitovuoden aloitusvuosi, jota päätös koskee. Jos kyseessä on hoitovuosi 2023-24, tässä palautuu 2023."
                 },
                 "paatostyyppi": {
                   "type": "string",
+                  "required": true,
                   "description": "Hoitovuoden päätökseen liityvän rivin sisältöä kuvaava tyyppi. Harjan tietokannassa enumeraatio: 'tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus', 'lupausbonus', 'lupaussanktio'"
                 },
                 "paatoksen-tulos": {
                   "type": "object",
+                  "required": true,
                   "properties": {
                     "kokonaismaara": {
                       "type": "number",
@@ -393,13 +389,7 @@
                 "poistettu": {
                   "type": "boolean",
                   "description": "True kun päätös on merkitty poistetuksi Harjassa. Oletus: false."
-                },
-                "required": [
-                  "paatos-id",
-                  "paatoksen-hoitovuosi",
-                  "paatostyyppi",
-                  "paatoksen-tulos"
-                ]
+                }
               }
             }
           }
