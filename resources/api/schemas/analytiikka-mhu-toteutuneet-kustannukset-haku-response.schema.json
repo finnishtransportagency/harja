@@ -209,7 +209,7 @@
                 },
                 "poistettu": {
                   "type": "boolean",
-                  "description": "True kun bonus on merkitty poistetuksi Harjassa. Oletus: false."
+                  "description": "True kun sanktio on merkitty poistetuksi Harjassa. Oletus: false."
                 }
               },
               "required": [
@@ -234,7 +234,7 @@
                 "bonuksen-ajankohta": {
                   "type": "string",
                   "format": "date",
-                  "description": "Bonuksen päiväys. Ajankohta joilloin bonuksesta on syntynyt kustannus."
+                  "description": "Bonuksen päiväys. Ajankohta jolloin bonuksesta syntyy kustannus."
                 },
                 "bonuksen-maara": {
                   "type": "number",
@@ -278,7 +278,7 @@
               "properties": {
                 "muutos-id": {
                   "type": "integer",
-                  "description": "Tavoitehintaan vaikuttavan muutosrivin id Harjassa. Huom. Älä laske muutoksia mukaan, kun lasket yhteen toteutuneita kustannuksia. Muutosmääriä voi pitää jonkinlaisena erittelynä välikatselmuksessa mahdollisesti syntyville tavoitehinnan alitukseen tai ylitykseen liittyvälle kulukirjaukselle. Hoitovuoden päättämiseen liittyvät kulut kohdistuvat kolmeen tehtäväryhmään: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä. Lisäksi hoitovuotta päättäessä voi syntyä lupaussanktio tai -bonus."
+                  "description": "Tavoitehintaan vaikuttavan muutosrivin id Harjassa. Huom. Älä laske muutoksia mukaan, kun lasket yhteen toteutuneita kustannuksia. Muutosmäärät toimivat taustatietona. "
                 },
                 "muutoksen-hoitovuosi": {
                   "type": "integer",
@@ -286,7 +286,7 @@
                 },
                 "muutoksen-maara": {
                   "type": "number",
-                  "description": "Tavoitehinnan muutoksen määrä. Älä laske muutoksena palautuneita määriä toteutuneiden kustannusten yhteissummaan. Välikatselmuksen pohjalta lasketaan hoitokauden päättämiseen liittyvä kulu. Kulu kirjataan kulukohdistuksena jollekin näistä kolmesta tehtäväryhmästä: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä. Tavoitehinnan muutoksen määrä voi olla negatiivinen (tavoitehinnasta vähennetän) tai positiivinen (tavoitehintaan lisätään). Yksikkö: euro. "
+                  "description": "Tavoitehinnan muutoksen määrä. Älä laske muutosten määriä toteutuneiden kustannusten yhteissummaan. Välikatselmuksen pohjalta lasketaan hoitokauden päättämiseen liittyvä kulu. Kulu kirjataan kulukohdistuksena jollekin näistä kolmesta tehtäväryhmästä: Hoitovuoden päättäminen / Tavoitepalkkio, Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä. Tavoitehinnan muutoksen määrä voi olla negatiivinen (tavoitehinnasta vähennetän) tai positiivinen (tavoitehintaan lisätään). Yksikkö: euro. "
                 },
                 "muutoskategoria": {
                   "type": "string",
@@ -307,7 +307,7 @@
                 "muutoksen-hoitovuosi",
                 "muutoskategoria",
                 "muutoksen-selite",
-                "muutoksen-summa"
+                "muutoksen-maara"
               ]
             }
           }
@@ -340,11 +340,11 @@
                     },
                     "urakoitsija-maksaa": {
                       "type": "number",
-                      "description": "Hoitovuoden tuloksen perusteella laskettu ja määritetty summa, jonka urakoitsija maksaa. Negatiivinen luku tarkoittaa, että tilaaja maksaa urakoitsijalle. Lupaussanktiosta syntynyt kulu löytyy sanoman sanktiot-osiosta santio-id:n perusteella. Tavoite- ja kattohinnan ylityksistä ja alituksista syntyy kulu-id:n perusteella kulut-osiosta löytyvä positiivinen tai negatiivinen kustannus."
+                      "description": "Hoitovuoden tuloksen perusteella laskettu ja määritetty summa, jonka urakoitsija maksaa. Lupaussanktiosta syntynyt kulu löytyy sanoman sanktiot-osiosta santio-id:n perusteella. Tavoite- ja kattohinnan ylityksistä ja alituksista syntyy kulu-id:n perusteella kulut-osiosta löytyvä positiivinen tai negatiivinen kustannus."
                     },
                     "tilaaja-maksaa": {
                       "type": "number",
-                      "description": "Hoitovuoden tuloksen perusteella laskettu ja määritetty summa, jonka tilaaja maksaa. Käytännössä joko lubausbonus tai tilaajan kattama osuus tavoitehinnan ylityksestä. Bonuksesta syntynyt kulu löytyy sanoman bonukset-osiosta bonus-id:n perusteella."
+                      "description": "Hoitovuoden tuloksen perusteella laskettu ja määritetty summa, jonka tilaaja maksaa. Käytännössä joko lupausbonus tai tilaajan kattama osuus tavoitehinnan ylityksestä. Bonuksesta syntynyt kulu löytyy sanoman bonukset-osiosta bonus-id:n perusteella."
                     },
                     "siirretaan-seuraavalle-hoitovuodelle": {
                       "type": "number",
@@ -365,7 +365,7 @@
                     },
                     "toteutuneet-pisteet": {
                       "type": "integer",
-                      "description": "Urakoitsijan hoitovuoden kuluessa toteutuneiden lupauspisteiden yhteismäärä."
+                      "description": "Urakoitsijan hoitovuoden kuluessa toteutuneiden lupauspisteiden yhteismäärä. Ylityksestä voi saada bonusta, alituksesta sanktiota. Lupausbonus- tai sanktio listataan muiden bonusten ja sanktioiden tapaan bonus- ja sanktio-osioissa. Viittaukset toteutuneisiin kustannuksiin sisältää id:t päätökseen liittyviin kulu-, sanktio- ja bonuskirjauksiin."
                     }
                   }
                 },
