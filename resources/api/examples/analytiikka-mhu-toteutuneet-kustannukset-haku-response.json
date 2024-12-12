@@ -45,40 +45,40 @@
     "sanktiot": [
       {
         "sanktio": {
+          "sanktio-id": 36,
+          "sanktion-ajankohta": "2022-09-08",
           "sanktion-maara": 1000,
-          "suorasanktio": false,
-          "sanktion-ajankohta": "2022-09-08T21:00:00Z",
+          "sanktion-maara-indeksikorjattuna": 1012,
+          "indeksi": "MAKU 2015",
           "toimenpide-id": 618,
+          "suorasanktio": false,
+          "sanktiolaji": "A",
           "sanktiotyyppi": {
             "nimi": "Talvihoito, päätiet",
             "koodi": 13,
             "toimenpide-id": 618
           },
-          "indeksi": "MAKU 2015",
-          "sanktiolaji": "A",
-          "poistettu": false,
-          "sanktion-maara-indeksikorjattuna": 0,
           "laatupoikkeama-id": 44,
-          "sanktio-id": 36
+          "poistettu": false
         }
       },
       {
         "sanktio": {
+          "sanktio-id": 73,
+          "sanktion-ajankohta": "2024-11-01",
           "sanktion-maara": 1000,
-          "suorasanktio": true,
-          "sanktion-ajankohta": "2024-11-01T22:00:00Z",
+          "sanktion-maara-indeksikorjattuna": 0,
+          "indeksi": null,
           "toimenpide-id": 608,
+          "suorasanktio": true,
+          "sanktiolaji": "A",
           "sanktiotyyppi": {
             "nimi": "Muut hoitourakan tehtäväkokonaisuudet",
             "koodi": 17,
             "toimenpide-id": null
           },
-          "indeksi": null,
-          "sanktiolaji": "A",
-          "poistettu": false,
-          "sanktion-maara-indeksikorjattuna": 0,
           "laatupoikkeama-id": 53,
-          "sanktio-id": 73
+          "poistettu": false
         }
       }
     ],
@@ -86,27 +86,27 @@
       {
         "bonus": {
           "bonus-id": 46,
-          "toimenpide-id": 601,
-          "bonuksen-kasittelyajankohta": "2024-11-11T22:00:00Z",
-          "bonuksen-kasittelytapa": "tyomaakokous",
+          "bonuksen-ajankohta": "2024-11-11",
           "bonuksen-maara": 11111,
           "indeksi": null,
-          "poistettu": false,
-          "bonuksen-ajankohta": "2024-11-11T22:00:00Z",
-          "bonustyyppi": "asiakastyytyvaisyysbonus"
+          "toimenpide-id": 601,
+          "bonustyyppi": "asiakastyytyvaisyysbonus",
+          "bonuksen-kasittelyajankohta": "2024-11-11",
+          "bonuksen-kasittelytapa": "tyomaakokous",
+          "poistettu": false
         }
       },
       {
         "bonus": {
           "bonus-id": 48,
-          "toimenpide-id": 601,
-          "bonuksen-kasittelyajankohta": "2024-09-14T21:00:00Z",
-          "bonuksen-kasittelytapa": "valikatselmus",
+          "bonuksen-ajankohta": "2024-09-14",
           "bonuksen-maara": 1989,
           "indeksi": null,
-          "poistettu": false,
-          "bonuksen-ajankohta": "2024-09-14T21:00:00Z",
-          "bonustyyppi": "lupausbonus"
+          "toimenpide-id": 601,
+          "bonustyyppi": "lupausbonus",
+          "bonuksen-kasittelyajankohta": "2024-09-14",
+          "bonuksen-kasittelytapa": "valikatselmus",
+          "poistettu": false
         }
       }
     ],
@@ -211,41 +211,33 @@
     "hoitovuoden-paatokset": [
       {
         "hoitovuoden-paatos": {
+          "paatos-id": 3,
+          "paatoksen-hoitovuosi": 2023,
+          "paatostyyppi": "tavoitehinnan-alitus",
+          "paatoksen-tulos": {
+            "kokonaismaara": null,
+            "tilaaja-maksaa": 0,
+            "urakoitsija-maksaa": -17087.3367,
+            "siirretaan-seuraavalle-hoitovuodelle": -153786.03029999998,
+            "tavoitehinta": null
+          },
+          "lupausten-tulos": {
+            "luvatut-pisteet": null,
+            "toteutuneet-pisteet": null
+          },
           "viittaukset-toteutuneisiin-kustannuksiin": {
             "bonus-id": null,
             "kulu-id": 45,
             "sanktio-id": null
           },
-          "paatos-id": 3,
-          "paatostyyppi": "tavoitehinnan-alitus",
-          "lupausten-tulos": {
-            "luvatut-pisteet": null,
-            "toteutuneet-pisteet": null
-          },
-          "paatoksen-tulos": {
-            "kokonaismaara": null,
-            "tilaaja-maksaa": 0,
-            "urakoitsija-maksaa": -17087.3367,
-            "tavoitehinta": null,
-            "siirretaan-seuraavalle-hoitovuodelle": -153786.03029999998
-          },
-          "paatoksen-hoitovuosi": 2023,
           "poistettu": false
         }
       },
       {
         "hoitovuoden-paatos": {
-          "viittaukset-toteutuneisiin-kustannuksiin": {
-            "bonus-id": 48,
-            "kulu-id": null,
-            "sanktio-id": null
-          },
           "paatos-id": 4,
+          "paatoksen-hoitovuosi": 2023,
           "paatostyyppi": "lupausbonus",
-          "lupausten-tulos": {
-            "luvatut-pisteet": 76,
-            "toteutuneet-pisteet": 93
-          },
           "paatoksen-tulos": {
             "kokonaismaara": null,
             "tilaaja-maksaa": 1988.9999999999998,
@@ -253,23 +245,23 @@
             "tavoitehinta": 90000,
             "siirretaan-seuraavalle-hoitovuodelle": 0
           },
-          "paatoksen-hoitovuosi": 2023,
+          "lupausten-tulos": {
+            "luvatut-pisteet": 76,
+            "toteutuneet-pisteet": 93
+          },
+          "viittaukset-toteutuneisiin-kustannuksiin": {
+            "bonus-id": 48,
+            "kulu-id": null,
+            "sanktio-id": null
+          },
           "poistettu": false
         }
       },
       {
         "hoitovuoden-paatos": {
-          "viittaukset-toteutuneisiin-kustannuksiin": {
-            "bonus-id": null,
-            "kulu-id": 44,
-            "sanktio-id": null
-          },
           "paatos-id": 2,
+          "paatoksen-hoitovuosi": 2024,
           "paatostyyppi": "tavoitehinnan-alitus",
-          "lupausten-tulos": {
-            "luvatut-pisteet": null,
-            "toteutuneet-pisteet": null
-          },
           "paatoksen-tulos": {
             "kokonaismaara": null,
             "tilaaja-maksaa": 0,
@@ -277,7 +269,15 @@
             "tavoitehinta": null,
             "siirretaan-seuraavalle-hoitovuodelle": -115917
           },
-          "paatoksen-hoitovuosi": 2024,
+          "lupausten-tulos": {
+            "luvatut-pisteet": null,
+            "toteutuneet-pisteet": null
+          },
+          "viittaukset-toteutuneisiin-kustannuksiin": {
+            "bonus-id": null,
+            "kulu-id": 44,
+            "sanktio-id": null
+          },
           "poistettu": true
         }
       }
