@@ -1,14 +1,14 @@
 -- name: hae-paikkaus-kustannukset
--- Hakee könttänä muiden paikkausten, reikäpaikkausten sekä mpu kustannusten tiedot 
+-- Hakee könttänä muiden paikkausten, reikäpaikkausten sekä ylläpidon kustannusten tiedot
 SELECT id, 
        tyomenetelma, 
        kustannustyyppi,
        SUM(kokonaiskustannus) AS kokonaiskustannus,
        selite
 FROM (
-    -- Muut paikkaukset
-    SELECT   
-        pt.id                                   AS id,
+    -- Paikkauskohteiden kustannukset
+    SELECT
+        CONCAT('paikkauskohde-',pt.id)          AS id,
         NULL::mpu_kustannustyyppi_enum          AS kustannustyyppi,
         COALESCE(SUM(pk."toteutunut-hinta"), 0) AS kokonaiskustannus,
         pt.nimi                                 AS tyomenetelma,
@@ -24,15 +24,16 @@ FROM (
         AND pk."urakka-id" = :urakka-id
     GROUP BY 
         pt.nimi, pt.id
+
     UNION ALL
 
-    -- Reikäpaikkaukset
-    SELECT   
-        pt.id                           AS id,
-        NULL::mpu_kustannustyyppi_enum  AS kustannustyyppi,
-        COALESCE(SUM(p.kustannus), 0)   AS kokonaiskustannus,
-        pt.nimi                         AS tyomenetelma,
-        ''                              AS selite
+    -- Reikäpaikkausten kustannukset
+    SELECT
+        CONCAT('reikapaikkaus-tyomenetelma-',pt.id) AS id,
+        NULL::mpu_kustannustyyppi_enum              AS kustannustyyppi,
+        COALESCE(SUM(p.kustannus), 0)               AS kokonaiskustannus,
+        pt.nimi                                     AS tyomenetelma,
+        ''                                          AS selite
     FROM     
         paikkauskohde_tyomenetelma pt
     LEFT JOIN 
@@ -40,31 +41,37 @@ FROM (
                   AND (:alkuaika::DATE IS NULL OR p.alkuaika >= :alkuaika::DATE)
                   AND (:loppuaika::DATE IS NULL OR p.loppuaika <= :loppuaika::DATE)
                   AND p.poistettu = FALSE
+                  AND p."paikkaus-tyyppi" = 'reikapaikkaus'
     GROUP BY 
         pt.nimi, pt.id
+
     UNION ALL
     
-    -- MPU kustannukset 
-    SELECT id, 
+    -- Muut paikkauskustannukset
+    SELECT CONCAT('kustannus-',id) AS id,
 		   kustannustyyppi,
-		   SUM(summa)       AS kokonaiskustannus,
-		   ''               AS tyomenetelma,
+		   SUM(summa)                               AS kokonaiskustannus,
+		   ''                                       AS tyomenetelma,
 	     selite
-	  FROM 
-        mpu_kustannukset 
-    WHERE 
+	  FROM
+          paikkauskustannukset
+    WHERE
         urakka = :urakka-id
-        AND poistettu IS FALSE 
-        AND (:vuosi::INTEGER IS NULL OR vuosi = :vuosi)
-    GROUP BY 
+        AND poistettu IS FALSE
+      -- Samalla kyselyllä haetaan yksittäisen vuoden kustannukset sekä useamman vuoden kustannukset
+        AND (:vuosi::INTEGER IS NULL OR (:vuosi::INTEGER IS NOT NULL AND vuosi = :vuosi))
+        AND (:alkuvuosi::INTEGER IS NULL AND :loppuvuosi::INTEGER IS NULL
+                 OR (:alkuvuosi::INTEGER IS NOT NULL
+        AND :alkuvuosi::INTEGER IS NOT NULL AND vuosi BETWEEN :alkuvuosi::INTEGER AND :loppuvuosi::INTEGER))
+    GROUP BY
         id, selite, kustannustyyppi
 ) AS kustannukset
 GROUP BY tyomenetelma, id, kustannustyyppi, selite
 ORDER BY tyomenetelma, id;
 
 
--- name: tallenna-mpu-kustannus!
-INSERT INTO mpu_kustannukset (
+-- name: tallenna-yllapito-kustannus!
+INSERT INTO paikkauskustannukset (
     urakka, 
     selite, 
     kustannustyyppi, 
@@ -83,5 +90,5 @@ INSERT INTO mpu_kustannukset (
 );
 
 
--- name: hae-mpu-selitteet
-SELECT DISTINCT(selite) FROM mpu_kustannukset WHERE urakka = :urakka-id;
+-- name: hae-kustannusten-selitteet
+SELECT DISTINCT(selite) FROM paikkauskustannukset WHERE urakka = :urakka-id;

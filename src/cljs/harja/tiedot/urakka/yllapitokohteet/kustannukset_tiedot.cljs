@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.mpu-kustannukset
+(ns harja.tiedot.urakka.yllapitokohteet.kustannukset-tiedot
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [cljs-time.core :as t]
@@ -54,17 +54,17 @@
 (defrecord TallennaKustannus [rivi])
 (defrecord TallennaKustannusOnnistui [vastaus])
 (defrecord TallennaKustannusEpaonnistui [vastaus])
-(defrecord HaeMPUSelitteetOnnistui [vastaus])
-(defrecord HaeMPUSelitteetEpaonnistui [vastaus])
+(defrecord HaeYllapitoSelitteetOnnistui [vastaus])
+(defrecord HaeYllapitoSelitteetEpaonnistui [vastaus])
 
 
-(defn- hae-mpu-selitteet
+(defn- hae-kustannusten-selitteet
   "Hakee käyttäjien aikaisemmin kirjoittamat omat selitteet muille kustannuksille. Käytetään autofill ominaisuudessa."
   [app]
-  (tuck-apurit/post! app :hae-mpu-selitteet
+  (tuck-apurit/post! app :hae-kustannusten-selitteet
     {:urakka-id @nav/valittu-urakka-id}
-    {:onnistui ->HaeMPUSelitteetOnnistui
-     :epaonnistui ->HaeMPUSelitteetEpaonnistui}))
+    {:onnistui ->HaeYllapitoSelitteetOnnistui
+     :epaonnistui ->HaeYllapitoSelitteetEpaonnistui}))
 
 
 (defn- hae-paikkaus-kustannukset 
@@ -89,8 +89,8 @@
      :epaonnistui ->HaeSanktiotJaBonuksetEpaonnistui}))
 
 
-(defn- tallenna-mpu-kustannus [app kustannus-tyyppi selite summa]
-  (tuck-apurit/post! app :tallenna-mpu-kustannus
+(defn- tallenna-yllapito-kustannus [app kustannus-tyyppi selite summa]
+  (tuck-apurit/post! app :tallenna-yllapito-kustannus
     {:urakka-id @nav/valittu-urakka-id
      :selite selite
      :kustannustyyppi kustannus-tyyppi
@@ -103,14 +103,14 @@
 (defn- generoi-avain 
   "Gridi haluaa tr elementeille uniikki id:t (:tunniste)"
   []
-  (gensym "mpu-kustannus"))
+  (gensym "yllapito-kustannus"))
 
 
 (extend-protocol tuck/Event
 
   HaeKustannustiedot
   (process-event [_ app]
-    ;; hae-mpu-selitteet (autofill)
+    ;; hae-kustannusten-selitteet (autofill)
     ;; -> hae-paikkaus-kustannukset
     ;; -> hae-sanktiot-ja-bonukset
     ;; Kun tullaan näkymään -> Resetoi aina tila
@@ -127,9 +127,8 @@
           ;; Nouda koko urakka-ajan kustannukset yhteensä (pelkästään summa näytetään)
           callback-koko-urakka {:onnistui ->HaeKustannuksetYhteensaOnnistui
                                 :epaonnistui ->HaeKustannuksetYhteensaEpaonnistui}]
-      (hae-mpu-selitteet app)
+      (hae-kustannusten-selitteet app)
       (hae-paikkaus-kustannukset app aikavali vuosi callback-valittu)
-      (hae-paikkaus-kustannukset app aikavali-koko-urakka nil callback-koko-urakka)
       nollaa-arvot))
 
   HaeKustannuksetYhteensaOnnistui
@@ -147,7 +146,7 @@
 
   HaeKustannustiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [kustannukset-yhteensa (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))
+    (let [kustannukset-yhteensa (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) (:kustannukset vastaus)))
 
           ;; Mäppää vastaus vectoreihin mikä kelpaa gridille
           muut-kustannukset (reduce (fn [rivit r]
@@ -159,7 +158,7 @@
                                          :selite (:selite r)}))
                               []
                               ;; Muut kustannukset eivät sisällä työmenetelmää
-                              (filter (fn [r] (empty? (:tyomenetelma r))) vastaus))
+                              (filter (fn [r] (empty? (:tyomenetelma r))) (:kustannukset vastaus)))
 
           tyomenetelmittain (reduce (fn [rivit r]
                                       ;; Työmenetelmittäiset kustannukset tulee omalle gridille
@@ -172,14 +171,15 @@
                                          :selite (:selite r)}))
                               []
                               ;; Vaadi että kaikilla työmenetelmittäisillä kustannuksilla on olemassa työmenetelmä 
-                              (filter (fn [r] (and (:tyomenetelma r) (seq (:tyomenetelma r)))) vastaus))]
+                              (filter (fn [r] (and (:tyomenetelma r) (seq (:tyomenetelma r)))) (:kustannukset vastaus)))]
 
       (hae-sanktiot-ja-bonukset app)
       (assoc app
         :tallennus-kaynnissa? false
         :muut-kustannukset muut-kustannukset
         :tyomenetelmittain tyomenetelmittain
-        :kustannukset-yhteensa kustannukset-yhteensa)))
+        :kustannukset-yhteensa kustannukset-yhteensa
+        :urakka-ajan-kustannukset-yhteensa (:urakka-ajan-kustannukset-yhteensa vastaus))))
 
   HaeKustannustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -241,7 +241,7 @@
                        (second kustannus-selite))
                      ;; Käyttäjä ei kirjoittanut mitään 
                      "")]
-        (tallenna-mpu-kustannus app kustannus-tyyppi selite kustannus))
+        (tallenna-yllapito-kustannus app kustannus-tyyppi selite kustannus))
 
       (assoc app
         :muokataan false
@@ -260,9 +260,9 @@
     (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
-  HaeMPUSelitteetOnnistui
+  HaeYllapitoSelitteetOnnistui
   (process-event [{vastaus :vastaus} app]
-    ;; Palautetaan tilaan kaikki mpu_kustannukset taulun selitteet (käyttäjien lisäämät selitteet) vectorina
+    ;; Palautetaan tilaan kaikki paikkauskustannukset taulun selitteet (käyttäjien lisäämät selitteet) vectorina
     (let [fn-kokoa-selitteet (fn [suodata vastaus]
                                (let [vastauksen-selitteet (map :selite vastaus)
                                      ;; Suodata vakio selitteet tästä, tätä käytetään vain autofillissä
@@ -271,7 +271,7 @@
       (assoc app
         :kayttajien-selitteet (fn-kokoa-selitteet (:kustannusten-selitteet app) vastaus))))
 
-  HaeMPUSelitteetEpaonnistui
+  HaeYllapitoSelitteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Selitteiden haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Selitteiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
