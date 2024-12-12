@@ -916,8 +916,7 @@
                    muutokset)
         paatokset (map (fn [p]
                          {:hoitovuoden-paatos (-> p
-                                                (konversio/alaviiva->rakenne)
-                                                )})
+                                                (konversio/alaviiva->rakenne))})
                     paatokset)]
 
     {:toteutuneet-kustannukset {:urakka urakka-id
