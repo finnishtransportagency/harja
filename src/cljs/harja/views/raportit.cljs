@@ -54,6 +54,7 @@
 
 (def mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
+                  v-sopimustyyppi (:sopimustyyppi v-ur)
                   v-hal @nav/valittu-hallintayksikko
                   v-urakkatyyppi #{(:arvo @nav/urakkatyyppi)}
                   ;; vesiväylä-urakkatyypillä toistaiseksi tunnistetaan kanava vs. vesiväylät hallintayksikön nimestä
@@ -75,9 +76,15 @@
                                              (when v-hal "hallintayksikko") #{"hallintayksikko"}
                                              :default #{"koko maa"})
                                            #{"urakka"})
+                  sopimustyypin-raportit (filter
+                                          (fn [rivi]
+                                            (if-not (nil? (:sopimustyyppi rivi))
+                                              (contains? (:sopimustyyppi rivi) v-sopimustyyppi)
+                                              true))
+                                          (vals @raporttityypit))
                   urakkatyypin-raportit (filter
                                           #(set/subset? v-urakkatyyppi (:urakkatyyppi %))
-                                          (vals @raporttityypit))
+                                          sopimustyypin-raportit)
                   kontekstityypin-raportit (filter (fn [ur]
                                                    (every? (fn [k]
                                                              (contains? (:konteksti ur) k)) mahdolliset-kontekstit))

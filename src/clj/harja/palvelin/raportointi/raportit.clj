@@ -53,6 +53,7 @@
   [harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat]
   [harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat]
   [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara]
+  [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto]
   [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
@@ -433,7 +434,25 @@
     :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu/suorita
     :kuvaus-tarkenne "Paikkausten yhteenveto MHU"
     :kuvaus       "MHUPaikkaustenyhteenveto"
-    :urakkatyyppi #{:teiden-hoito}}])
+    :urakkatyyppi #{:teiden-hoito}}
+
+   {:nimi         :ppu-paikkausten-yhteenveto
+    :parametrit   [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
+    :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto/suorita-ppu
+    :kuvaus-tarkenne "Paikkausten yhteenveto PPU"
+    :kuvaus       "KokonaisurakanPaikkaustenyhteenveto"
+    :urakkatyyppi #{:paallystys}
+    :sopimustyyppi #{:kokonaisurakka}}
+
+   {:nimi         :mpu-paikkausten-yhteenveto
+    :parametrit   [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
+    :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto/suorita-mpu
+    :kuvaus-tarkenne "Paikkausten yhteenveto MPU"
+    :kuvaus       "MPUPaikkaustenyhteenveto"
+    :urakkatyyppi #{:paallystys}
+    :sopimustyyppi #{:mpu}}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))

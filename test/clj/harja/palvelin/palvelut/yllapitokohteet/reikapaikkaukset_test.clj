@@ -18,7 +18,7 @@
           :http-palvelin (testi-http-palvelin)
           :excel-vienti (component/using (excel-vienti/luo-excel-vienti)
                           [:http-palvelin])
-          :paikkauskohteet (component/using
+          :reikapaikkaukset (component/using
                              (reikapaikkaukset/->Reikapaikkaukset)
                              [:http-palvelin :db :excel-vienti])))))
 

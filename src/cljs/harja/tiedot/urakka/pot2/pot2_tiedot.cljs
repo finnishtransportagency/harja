@@ -283,26 +283,20 @@
     (let [kaistat (yllapitokohteet-domain/kaikki-kaistat rivi
                     (get-in app [:paallystysilmoitus-lomakedata
                                  :tr-osien-tiedot
-                                 (:tr-numero rivi)]))
-          rivi-ja-sen-kopiot (map #(assoc rivi :tr-kaista %) kaistat)
+                                 (:tr-numero rivi)])) 
+          rivin-kopiot (keep #(when (not= (:tr-kaista rivi) %)
+                                      (assoc rivi :tr-kaista %))
+                               kaistat)
           kaikki-rivit (vals @toimenpiteet-taulukko-atom)
-          rivit-idt-korjattuna (yllapitokohteet-domain/sailyta-idt-jos-sama-tr-osoite rivi-ja-sen-kopiot kaikki-rivit)
-          avain-ja-rivi (fn [rivi]
-                          {(select-keys rivi [:tr-numero :tr-ajorata :tr-kaista
-                                              :tr-alkuosa :tr-alkuetaisyys
-                                              :tr-loppuosa :tr-loppuetaisyys
-                                              :toimenpide])
-                           rivi})
-          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivit-idt-korjattuna))
-          rivit-ja-kopiot (->> haettavat-rivit
-                            (into {})
-                            vals
-                            (jarjesta-rivit-fn-mukaan
-                              (fn [rivi]
-                                (jarjesta-valitulla-sort-funktiolla @sort-atom {:massat (:massat app)
-                                                                                :murskeet (:murskeet app)
-                                                                                :materiaalikoodistot (:materiaalikoodistot app)}
-                                  rivi))))]
+          rivit-idt-korjattuna (yllapitokohteet-domain/sailyta-idt-jos-sama-tr-osoite rivin-kopiot kaikki-rivit) 
+          haettavat-rivit (concat kaikki-rivit rivit-idt-korjattuna)
+          rivit-ja-kopiot (jarjesta-rivit-fn-mukaan
+                             (fn [rivi]
+                               (jarjesta-valitulla-sort-funktiolla @sort-atom {:massat (:massat app)
+                                                                               :murskeet (:murskeet app)
+                                                                               :materiaalikoodistot (:materiaalikoodistot app)}
+                                 rivi))
+                             haettavat-rivit)]
       (when toimenpiteet-taulukko-atom
         (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
         (merkitse-muokattu app)))
