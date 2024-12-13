@@ -120,6 +120,9 @@
 (defmethod muodosta-solu :arvo-ja-osuus [[_ {:keys [arvo osuus]}] solun-tyyli]
   [arvo solun-tyyli])
 
+(defmethod muodosta-solu :arvo-yksikko-ja-osuus [[_ {:keys [arvo osuus yksikko]}] solun-tyyli]
+  [(str arvo " " yksikko " ("osuus " %)" ) solun-tyyli])
+
 (defmethod muodosta-solu :arvo-ja-yksikko [[_ {:keys [arvo yksikko desimaalien-maara]}] solun-tyyli]
   [arvo solun-tyyli (when desimaalien-maara
                       (if (= yksikko "%")

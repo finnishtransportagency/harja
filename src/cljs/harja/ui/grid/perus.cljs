@@ -1344,7 +1344,7 @@
                                          :esta-tiivis-grid? esta-tiivis-grid?
                                          :piilota-border? piilota-border?}))
                 ;; Lisätty tuki lisätä useammpi rivi vectorin sisään.
-                ;; Toimii myös vanhalla tavalla, mallia useamman rivin yhteenvetoon voi katsoa "MPU kustannukset yhteenveto"
+                ;; Toimii myös vanhalla tavalla, mallia useamman rivin yhteenvetoon voi katsoa "Ylläpito kustannukset yhteenveto"
                 (when-let [rivit-jalkeen (and 
                                            (:rivi-jalkeen-fn opts)
                                            ((:rivi-jalkeen-fn opts)

@@ -108,6 +108,13 @@
    [:fo:inline " "]
    [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " osuus "%)")]])
 
+(defmethod muodosta-pdf :arvo-yksikko-ja-osuus [[_ {:keys [arvo osuus fmt yksikko]}]]
+  [:fo:inline
+   [:fo:inline (if fmt (fmt arvo) arvo)]
+   [:fo:inline (str "\u00A0" yksikko)]
+   [:fo:inline " "]
+   [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " osuus "%)")]])
+
 ;; Toimii tismalleen samoin, kuin :arvo-ja-yksikko, mutta tämän avulla
 ;; PDF:lle saadaan yksittäisille soluille korostuksia
 (defmethod muodosta-pdf :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko fmt desimaalien-maara ryhmitelty?]}]]

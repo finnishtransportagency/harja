@@ -1,22 +1,23 @@
-(ns harja.views.urakka.yllapitokohteet.mpu-kustannukset
-  "MPU sopimustyyppisten urakoiden kustannukset"
+(ns harja.views.urakka.yllapitokohteet.kustannukset-nakyma
+  "MPU ja PPU sopimustyyppisten urakoiden kustannukset"
   (:require [tuck.core :refer [tuck]]
-            [harja.tiedot.urakka.mpu-kustannukset :as tiedot]
-            [harja.tiedot.urakka :as urakka]
-            [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.debug :as debug]
+            [harja.ui.valinnat :as valinnat]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.oikeudet :as oikeudet]
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
             [harja.ui.napit :as napit]
-            [harja.views.urakka.yllapitokohteet.mpu-apurit :as apurit]
-            [harja.tiedot.istunto :as istunto]))
+            [harja.tiedot.urakka.yllapitokohteet.kustannukset-tiedot :as tiedot]
+            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.istunto :as istunto]
+            [harja.views.urakka.yllapitokohteet.kustannukset-apurit :as apurit]))
 
 
-(defn mpu-kustannukset* [e! _app]
+(defn kustannukset* [e! _app]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan #(e! (tiedot/->HaeKustannustiedot)))
@@ -31,17 +32,17 @@
                              (tiedot/voi-tallentaa? lomake-valinnat))]
 
         (if tallennus-kaynnissa?
-          [:dix.ajax-loader-valistys
+          [:div.ajax-loader-valistys
            [ajax-loader-pieni "Haetaan tietoja..."]]
 
-          [:div.mpu-kustannukset
+          [:div.kustannukset
            ;; Lomake
            (when muokataan
              (apurit/kustannuksen-lisays-lomake e! app voi-tallentaa?))
 
            ;; Pääotsikko
            [:h2.header-yhteiset "Kustannukset"]
-
+[debug/debug app]
            [:div.kalenterivalinta
             ;; Vuosi valinta
             [valinnat/vuosi
@@ -98,6 +99,5 @@
            (apurit/muut-kustannukset-grid app @urakka/valittu-urakan-vuosi)])))))
 
 
-(defn mpu-kustannukset []
-  [tuck tiedot/tila mpu-kustannukset*])
- 
+(defn kustannukset []
+  [tuck tiedot/tila kustannukset*])
