@@ -16,6 +16,8 @@
 (defrecord ValitseUrakkaOnnistui [vastaus])
 (defrecord ValitseUrakkaEpaonnistui [vastaus])
 
+(def vuosi-valinta 2024)
+
 (def tila (atom {:valittu-urakka nil
                  :urakat nil
                  :urakan-paallystysilmoitukset nil}))
@@ -24,7 +26,7 @@
   HaePaallystysUrakat
     (process-event [{:keys [vuosi]} app]
       (tuck-apurit/post! :hae-paallystys-urakat-hallintaan
-        {:vuosi 2024}
+        {:vuosi vuosi}
         {:onnistui ->HaePaallystysUrakatOnnistui
          :epaonnistui ->HaePaallystysUrakatEpaonnistui
          :paasta-virhe-lapi? true})
@@ -45,7 +47,7 @@
     (tuck-apurit/post! :urakan-paallystysilmoitukset
       {:urakka-id (:id urakka)
         :sopimus-id (:sopimus-id urakka)
-        :vuosi 2024}
+        :vuosi vuosi-valinta}
       {:onnistui ->ValitseUrakkaOnnistui
        :epaonnistui ->ValitseUrakkaEpaonnistui
        :paasta-virhe-lapi? true})

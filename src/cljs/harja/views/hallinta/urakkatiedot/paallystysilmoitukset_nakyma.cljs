@@ -167,7 +167,7 @@
 (defn paallystysilmoitukset* [e! app]
   (komp/luo
     (komp/sisaan #(do
-                    (e! (tiedot/->HaePaallystysUrakat {:vuosi valittu-vuosi}))))
+                    (e! (tiedot/->HaePaallystysUrakat valittu-vuosi))))
     (fn [e! {:keys [urakat valittu-urakka urakan-paallystysilmoitukset] :as app}]
       (let [valittu-sopimusnumero [(:sopimus-id valittu-urakka)]
             urakka-id (:id valittu-urakka)
