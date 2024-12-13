@@ -112,7 +112,6 @@
           ::muokkaustiedot/poistettu? false}))
 
 (defn tee-paatos [db paatos]
-  (prn "Jarno tee päätös: " paatos)
   (upsert! db ::valikatselmus/urakka-paatos paatos))
 
 (defn poista-paatokset [db urakka-id hoitokauden-alkuvuosi kayttaja-id]
