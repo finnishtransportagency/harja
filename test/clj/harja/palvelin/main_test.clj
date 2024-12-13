@@ -164,6 +164,7 @@
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
+    :paallystysilmoitukset-hallinta
     :urakkatilanne
     :api-talvihoitoreitit
     :talvihoitoreitit
@@ -249,6 +250,7 @@
     :api-talvihoitoreitit
     :talvihoitoreitit
     :lupaukset-hallinta
+    :paallystysilmoitukset-hallinta
     :urakkatilanne
     :tieosoitteet-hallinta})
 
