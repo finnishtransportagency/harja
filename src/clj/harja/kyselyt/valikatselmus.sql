@@ -90,12 +90,12 @@ ORDER BY "hoitokauden-alkuvuosi", tyyppi;
 -- Hakee kaikki välikatselmukseen liittyvät tavoitehintaan vaikuttavat muutokset palautettavaksi analytiikalle toteutuneiden kustannusten rajapinnan kautta.
 -- Palauttaa myös poistetuksi merkityt muutokset.
 -- Käytetään MH-urakoissa. Tavoitehintaan vaikuttavista muutoksista on käytetty koodissa myös ilmaisua tavoitehinnan oikaisut.
-SELECT id                      AS "tavoitehinnan-muutos_muutos-id",
-       "hoitokauden-alkuvuosi" AS "tavoitehinnan-muutos_muutoksen-hoitovuosi",
-       summa                   AS "tavoitehinnan-muutoksen-maara",
-       otsikko                 AS "tavoitehinnan-muutos_muutoskategoria",
-       selite                  AS "tavoitehinnan-muutos_muutoksen-selite",
-       poistettu               AS "tavoitehinnan-muutos_poistettu"
+SELECT id                      AS "muutos-id",
+       "hoitokauden-alkuvuosi" AS "muutoksen-hoitovuosi",
+       summa                   AS "muutoksen-maara",
+       otsikko                 AS "muutoskategoria",
+       selite                  AS "muutoksen-selite",
+       poistettu               AS "poistettu"
 FROM tavoitehinnan_oikaisu toi
 WHERE "urakka-id" = :urakka-id
 ORDER BY "hoitokauden-alkuvuosi", otsikko, id;

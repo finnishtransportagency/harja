@@ -911,8 +911,7 @@
                                   (konversio/alaviiva->rakenne))})
                    bonukset)
         muutokset (map (fn [m]
-                        {:tavoitehinnan-muutos (-> m
-                                  (konversio/alaviiva->rakenne))})
+                        {:tavoitehinnan-muutos m})
                    muutokset)
         paatokset (map (fn [p]
                          {:hoitovuoden-paatos (-> p

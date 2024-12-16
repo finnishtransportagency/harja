@@ -113,98 +113,82 @@
     "tavoitehinnan-muutokset": [
       {
         "tavoitehinnan-muutos": {
-          "tavoitehinnan-muutoksen-summa": 20000,
-          "tavoitehinnan-muutos": {
-            "muutos-id": 1,
-            "muutoksen-hoitovuosi": 2021,
-            "muutoskategoria": "Muu",
-            "muutoksen-selite": "Muokattava testioikaisu",
-            "poistettu": false
-          }
+          "muutos-id": 1,
+          "muutoksen-summa": 20000,
+          "muutoksen-hoitovuosi": 2021,
+          "muutoskategoria": "Muu",
+          "muutoksen-selite": "Muokattava testioikaisu",
+          "poistettu": false
         }
       },
       {
         "tavoitehinnan-muutos": {
-          "tavoitehinnan-muutoksen-summa": 1234,
-          "tavoitehinnan-muutos": {
-            "muutos-id": 2,
-            "muutoksen-hoitovuosi": 2021,
-            "muutoskategoria": "Muu",
-            "muutoksen-selite": "Poistettava testioikaisu",
-            "poistettu": true
-          }
+          "muutos-id": 2,
+          "muutoksen-summa": 1234,
+          "muutoksen-hoitovuosi": 2021,
+          "muutoskategoria": "Muu",
+          "muutoksen-selite": "Poistettava testioikaisu",
+          "poistettu": true
         }
       },
       {
         "tavoitehinnan-muutos": {
-          "tavoitehinnan-muutoksen-summa": 1234,
-          "tavoitehinnan-muutos": {
-            "muutos-id": 3,
-            "muutoksen-hoitovuosi": 2021,
-            "muutoskategoria": "Muu",
-            "muutoksen-selite": "Tavoitehintaan vaikuttava muutos",
-            "poistettu": false
-          }
+          "muutos-id": 3,
+          "muutoksen-summa": 1234,
+          "muutoksen-hoitovuosi": 2021,
+          "muutoskategoria": "Muu",
+          "muutoksen-selite": "Tavoitehintaan vaikuttava muutos",
+          "poistettu": false
         }
       },
       {
         "tavoitehinnan-muutos": {
-          "tavoitehinnan-muutoksen-summa": 123.99,
-          "tavoitehinnan-muutos": {
-            "muutos-id": 9,
-            "muutoksen-hoitovuosi": 2023,
-            "muutoskategoria": "Materiaalit",
-            "muutoksen-selite": "Lisää matksua",
-            "poistettu": false
-          }
+          "muutos-id": 9,
+          "muutoksen-summa": 123.99,
+          "muutoksen-hoitovuosi": 2023,
+          "muutoskategoria": "Materiaalit",
+          "muutoksen-selite": "Lisää matksua",
+          "poistettu": false
         }
       },
       {
         "tavoitehinnan-muutos": {
-          "tavoitehinnan-muutoksen-summa": 34.9,
-          "tavoitehinnan-muutos": {
-            "muutos-id": 8,
-            "muutoksen-hoitovuosi": 2023,
-            "muutoskategoria": "Tiestömuutokset",
-            "muutoksen-selite": "Uutta tietä",
-            "poistettu": false
-          }
+          "muutos-id": 8,
+          "muutoksen-summa": 34.9,
+          "muutoksen-hoitovuosi": 2023,
+          "muutoskategoria": "Tiestömuutokset",
+          "muutoksen-selite": "Uutta tietä",
+          "poistettu": false
         }
       },
       {
         "tavoitehinnan-muutos": {
-          "tavoitehinnan-muutoksen-summa": -78.98,
-          "tavoitehinnan-muutos": {
-            "muutos-id": 6,
-            "muutoksen-hoitovuosi": 2024,
-            "muutoskategoria": "Hoitoluokkamuutokset",
-            "muutoksen-selite": "Alennettiin hoitoluokkaa",
-            "poistettu": false
-          }
+          "muutos-id": 6,
+          "muutoksen-summa": -78.98,
+          "muutoksen-hoitovuosi": 2024,
+          "muutoskategoria": "Hoitoluokkamuutokset",
+          "muutoksen-selite": "Alennettiin hoitoluokkaa",
+          "poistettu": false
         }
       },
       {
         "tavoitehinnan-muutos": {
-          "tavoitehinnan-muutoksen-summa": 300000,
-          "tavoitehinnan-muutos": {
-            "muutos-id": 5,
-            "muutoksen-hoitovuosi": 2024,
-            "muutoskategoria": "Liikennejärjestelyt",
-            "muutoksen-selite": "Eipä mitään",
-            "poistettu": true
-          }
+          "muutos-id": 5,
+          "muutoksen-summa": 300000,
+          "muutoksen-hoitovuosi": 2024,
+          "muutoskategoria": "Liikennejärjestelyt",
+          "muutoksen-selite": "Eipä mitään",
+          "poistettu": true
         }
       },
       {
         "tavoitehinnan-muutos": {
-          "tavoitehinnan-muutoksen-summa": 2444.8,
-          "tavoitehinnan-muutos": {
-            "muutos-id": 7,
-            "muutoksen-hoitovuosi": 2024,
-            "muutoskategoria": "Materiaalit",
-            "muutoksen-selite": "Lisää matskua",
-            "poistettu": false
-          }
+          "muutos-id": 7,
+          "muutoksen-summa": 2444.8,
+          "muutoksen-hoitovuosi": 2024,
+          "muutoskategoria": "Materiaalit",
+          "muutoksen-selite": "Lisää matskua",
+          "poistettu": false
         }
       }
     ],
