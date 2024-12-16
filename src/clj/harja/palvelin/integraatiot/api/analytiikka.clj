@@ -1152,13 +1152,13 @@
 
     (julkaise-reitti
       http :analytiikka-toteutuneet-kustannukset
-      (GET "/api/analytiikka/toteutuneet-kustannukset/:urakka-id" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
-          :analytiikka-hae-toteutuneet-kustannukset request
-          (fn [parametrit kayttaja db]
+      (GET "/api/analytiikka/toteutuneet-kustannukset/:urakka-id" parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-toteutuneet-kustannukset parametrit
+          json-skeemat/+analytiikka-mhu-toteutuneet-kustannukset-vastaus+
+          (fn [parametrit _kayttaja db]
             (palauta-toteutuneet-kustannukset db parametrit))
           ;; Vaaditaan analytiikka-oikeudet
-          :analytiikka)))
+          :analytiikka "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-hae-kustannussuunnitelmat
