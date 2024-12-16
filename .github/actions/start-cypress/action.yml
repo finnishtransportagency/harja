@@ -67,8 +67,8 @@ runs:
           -v $GITHUB_WORKSPACE:/harja \
           -w /harja \
           "$IMAGE_NAME" \
-          bash -c 'echo -e "Chrome version:  $(google-chrome --version) \nEdge version:  $(edge --version) \n";
-                   echo "-------------------";
-                   cypress run --browser "${BROWSER}"'
+          bash -c "echo -e 'Chrome version:  $(google-chrome --version) \nEdge version:  $(edge --version) \n';
+                   echo '-------------------';
+                   cypress run --browser $BROWSER"
       shell: bash
 
