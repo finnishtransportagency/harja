@@ -463,7 +463,7 @@
       (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
       (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Testikohde 1"]))
 
-      (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2024-12-12"]))
+      (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) [(tee-pvm-tulos)]))
       (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["4000.4"])))))
 
 
