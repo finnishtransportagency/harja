@@ -24,7 +24,7 @@ inputs:
   image:
     description: 'Cypress kontin imagen nimi'
     required: false
-    default: ghcr.io/finnishtransportagency/harja_cypress:latest
+    default: ghcr.io/finnishtransportagency/harja_cypress:test-2024-12-16
   GITHUB_WORKSPACE:
     description: 'Github jobin workspace path. Tämä mountataan cypress kontin sisälle.'
     required: true
@@ -66,7 +66,9 @@ runs:
           --network host \
           -v $GITHUB_WORKSPACE:/harja \
           -w /harja \
-          ghcr.io/finnishtransportagency/harja_cypress:test-2024-12-16 \
-          cypress run --browser "${BROWSER}"
+          "$IMAGE_NAME" \
+          bash -c 'echo "Chrome version:  $(google-chrome --version) \nEdge version:  $(edge --version) \n";
+                   echo "-------------------";
+                   cypress run --browser "${BROWSER}"'
       shell: bash
 
