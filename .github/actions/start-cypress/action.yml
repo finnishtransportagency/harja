@@ -56,7 +56,7 @@ runs:
     # sekä myöhemmin jobissa ennen mounttia workspaceen lisätyn sisällön, kuten esimerkiksi asennetut NPM-paketit.
     - name: Aja cypress-testit
       env:
-        IMAGE_NAME: ${{ inputs.registry }}
+        IMAGE_NAME: ${{ inputs.image }}
         GITHUB_WORKSPACE: ${{ inputs.GITHUB_WORKSPACE }}
         BROWSER: ${{ inputs.browser }}
       run: |
