@@ -141,7 +141,6 @@
         false
         {:rivi-luokka "grid-column-end-span-2"
          :aikavalivalitsin-flex? true
-         :palstoja 2
          :vayla-tyyli? true})
       (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
         tiedot/toimenpiteiden-aikavalit

@@ -59,7 +59,7 @@
 
 
 .kalenteri-kontti {
-  display: flex;
+  display: inline-block;
   flex-direction: column;
   width: 100%;
   position: relative;
@@ -67,6 +67,10 @@
   font-size: 14px;
   line-height:29px;
   color: @gray100;
+
+  input {
+    padding: @valistys-8;
+  }
 
   &.auki {
     z-index: 2000;

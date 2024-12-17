@@ -63,6 +63,7 @@
 (defn historiankuvan-aikavalinnat []
   [:div#tk-historiakuvan-aikavalit
    [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko? false
+                                                        :vayla-tyyli? true
                                                         :aikavalin-rajoitus [12 :kuukausi]
                                                         :aloitusaika-pakota-suunta :alas-oikea
                                                         :paattymisaika-pakota-suunta :alas-vasen}]])
