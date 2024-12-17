@@ -1217,4 +1217,5 @@ u.urakkanro IS NOT NULL AND -- testiurakat pois
 (:vuosi BETWEEN
          EXTRACT (YEAR FROM u.alkupvm) AND
          EXTRACT (YEAR FROM u.loppupvm))
- GROUP BY u.id, u.nimi, s.id; 
+ GROUP BY u.id, u.nimi, s.id
+ ORDER BY "lahettaja-puuttuu" DESC, "lahetetty-onnistuneesti" DESC,  u.nimi; 
