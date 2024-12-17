@@ -1876,3 +1876,22 @@
                                           :tr-numero 20}]}}
            (paallystys/lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus kohdeosat))
         "Kohdeosille on lisätty id:t oikein, kun ajorataa ja kaistaa ei ole")))
+
+{:kohdeosa-id 36683, :tr-kaista 11, :leveys 4.30M, :kokonaismassamaara 1441.2M, :velho-lahetyksen-aika nil, :tr-ajorata 0, :pinta_ala 14362M, :tr-loppuosa 215, :jarjestysnro 1,
+ :velho-lahetyksen-vastaus nil, :tr-alkuosa 214, :massamenekki 100.3M, :tr-loppuetaisyys 1270,
+ :nimi nil, :rc-prosentti nil, :materiaali 7273, :velho-rivi-lahetyksen-tila "ei-lahetetty", :tr-alkuetaisyys 918, :piennar false, :tr-numero 3, :toimenpide 12, :pot2p_id 24963}
+
+(def testidata-hypyton-mutta-ajorata-vaihtuu
+  [{:kohdeosa-id 36683, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36686, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36684, :tr-numero 3, :tr-ajorata 1, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 1270, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36687, :tr-numero 3, :tr-ajorata 2, :tr-kaista 21, :tr-alkuosa 215, :tr-alkuetaisyys 1270, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36685, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}
+   {:kohdeosa-id 36688, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}])
+
+;; joskus tiestöllä ajorata voi muuttua esim 0 --> 1, ja kaista pysyy samana, esim 11, ja taas palataan takaisin ajoradalle 0.
+;; tällaisessa tilanteessa jos päällyste on kaistalle jatkuva, ei tule raportoida hyppyä. Tehdään erillinen testi tälle, koska
+;; toimintaa jouduttiin tältä osin korjaamaan HARJA-1153 myötä
+(deftest ajaradan-muutos-ei-tarkoita-hyppya-test
+  (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyton-mutta-ajorata-vaihtuu 0 0)]
+    (is (= 0 hyppyjen-lkm) "Ei hyppyjä")))
