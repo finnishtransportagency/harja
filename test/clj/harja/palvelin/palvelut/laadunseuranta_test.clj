@@ -22,7 +22,8 @@
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [clojure.string :as str]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
@@ -71,22 +72,6 @@
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each jarjestelma-fixture)
-
-
-;; Helpottaa testien roskien keruuta. Toisinaan kun omalla koneella ajaa kaikki testit useampaan kertaan,
-;; jäävät siivoamattomat sanktiot testikantaan vääristämään tuloksia
-(defn poista-sanktio-perustelulla
-  "Poistaa laatupoikkeaman perustelukentän sisällön mukaan tunnistaen, ja siihen liittyvät sanktiot."
-  [perustelu]
-  (let [laatupoikkeama-idt (map first (q (str "SELECT id FROM laatupoikkeama where perustelu = '" perustelu "';")))
-        sanktio-idt (when
-                      (seq laatupoikkeama-idt)
-                      (map first (q (str "SELECT id FROM sanktio where laatupoikkeama IN (" (str/join "," laatupoikkeama-idt) ");"))))]
-
-    (when (seq sanktio-idt)
-      (u "DELETE FROM sanktio WHERE id IN (" (str/join "," sanktio-idt) ");"))
-    (when (seq laatupoikkeama-idt)
-      (u "DELETE FROM laatupoikkeama WHERE id IN(" (str/join "," laatupoikkeama-idt) ");"))))
 
 (deftest tallenna-laatupoikkeama
   (let [laatupoikkeama {:yllapitokohde nil
@@ -155,7 +140,7 @@
                                           :sanktiot [olemassa-oleva-sanktio])))))
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla "Testi")))
+    (testidatan-kaytto/poista-sanktio-perustelulla "Testi")))
 
 (deftest laatupoikkeaman-selvityspyynnosta-lahtee-sms
   (let [laatupoikkeama {:sijainti {:type :point
@@ -274,7 +259,7 @@
         (is (= perustelu (get-in lisatty-sakko [:laatupoikkeama :paatos :perustelu])) "Päällystysurakan sanktiorunko oikea summa")))
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 (deftest tallenna-suorasanktio-hoidon-urakassa-sakko
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -331,7 +316,7 @@
 
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 (deftest tallenna-suorasanktio-2021-alkavassa-mhu-urakassa-sakko
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
@@ -364,7 +349,7 @@
 
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 (deftest tallenna-suorasanktio-ei-salli-vaaran-urakkatyypin-sanktiolajia
   (let [perustelu "ABC gorilla gävelee"
@@ -393,7 +378,7 @@
                                +kayttaja-jvh+ paallystys-sakko laatupoikkeama-paallystys hk-alkupvm hk-loppupvm))))
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 (deftest paivita-eri-urakan-suorasanktiota
   (let [perustelu "ABC möhöfantti kävelee"
@@ -414,7 +399,7 @@
                                +kayttaja-jvh+ paallystys-sakko laatupoikkeama-paallystys hk-alkupvm hk-loppupvm))))
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 (deftest suorasanktion-poistaminen-vs-laatupoikkeamaan-liitetyn-sanktion-poistaminen
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -494,7 +479,7 @@
               (= false (:lp_poistettu poistettu-lp-sanktio-kannassa))))))
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 
 (deftest hae-laatupoikkeaman-tiedot
