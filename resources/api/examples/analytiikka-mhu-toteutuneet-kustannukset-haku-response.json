@@ -4,42 +4,115 @@
     "urakkatunnus": "PR0001234",
     "kulut": [
       {
-        "kulu-id": 1234,
-        "laskun-tunniste": "2024A0001",
-        "kulun-kuvaus": "Ylimääräinen suolausreitti: Keskikylän risteys.",
-        "poistettu": false,
-        "kulun-ajankohta": {
-          "koontilaskun-vuosi": 2024,
-          "koontilaskun-kuukausi": 1,
-          "laskun-paivamaara": "2024-01-15"
-        },
-        "kulun-kokonaissumma": 1000.12,
-        "kulukohdistukset": [
-          {
-            "kulukohdistus-id": 9327,
-            "rivinumero": 1,
-            "tyyppi": "lisatyo",
-            "lisatieto": "Keskikylän risteys, työ",
-            "summa": 300.12,
-            "kohdistus": {
-              "toimenpide": 144,
-              "tehtavaryhma": 1,
-              "rahavaraus": 14
-            }
+        "kulu": {
+          "kulu-id": 45,
+          "kulun-kuvaus": "Välikatselmuksessa luotu kulu. Tavoitehinta alitettiin. Urakoitsijalle maksetaan tavoitepalkkiota.",
+          "kulun-ajankohta": {
+            "koontilaskun-vuosi": 2024,
+            "laskun-paivamaara": "2024-09-14T21:00:00Z",
+            "koontilaskun-kuukausi": 9
           },
-          {
-            "kulukohdistus-id": 9328,
-            "rivinumero": 2,
-            "tyyppi": "lisatyo",
-            "lisatieto": "Keskikylän risteys, suola",
-            "summa": 700.00,
-            "kohdistus": {
-              "toimenpide": 144,
-              "tehtavaryhma": 2,
-              "rahavaraus": 14
+          "kulun-kokonaissumma": 17087.3367,
+          "kulukohdistukset": [
+            {
+              "kulukohdistus": {
+                "kohdistus": {
+                  "toimenpide": 601,
+                  "tehtavaryhma": 29
+                },
+                "poistettu": false,
+                "kulukohdistus-id": 48,
+                "rivinumero": 0,
+                "tyyppi": "kokonaishintainen",
+                "lisatieto": "Välikatselmuksessa luotu kulu. Tavoitehinta alitettiin. Urakoitsijalle maksetaan tavoitepalkkiota.",
+                "summa": 17087.3367
+              }
             }
-          }
-        ]
+          ],
+          "poistettu": false
+        }
+      },
+      {
+        "kulu": {
+          "kulu-id": 42,
+          "laskun-tunniste": "76",
+          "kulun-ajankohta": {
+            "koontilaskun-vuosi": 2024,
+            "laskun-paivamaara": "2024-10-31T22:00:00Z",
+            "koontilaskun-kuukausi": 11
+          },
+          "kulun-kokonaissumma": 545.67,
+          "kulukohdistukset": [
+            {
+              "kulukohdistus": {
+                "kohdistus": {
+                  "toimenpide": 612,
+                  "tehtavaryhma": 14
+                },
+                "poistettu": false,
+                "kulukohdistus-id": 45,
+                "rivinumero": 0,
+                "tyyppi": "kokonaishintainen",
+                "summa": 200
+              }
+            },
+            {
+              "kulukohdistus": {
+                "kohdistus": {
+                  "toimenpide": 618,
+                  "tehtavaryhma": 2
+                },
+                "poistettu": false,
+                "kulukohdistus-id": 50,
+                "rivinumero": 1,
+                "tyyppi": "kokonaishintainen",
+                "summa": 345.67
+              }
+            }
+          ],
+          "poistettu": false
+        }
+      },
+      {
+        "kulu": {
+          "kulu-id": 43,
+          "laskun-tunniste": "2323",
+          "kulun-ajankohta": {
+            "koontilaskun-vuosi": 2024,
+            "laskun-paivamaara": "2024-10-31T22:00:00Z",
+            "koontilaskun-kuukausi": 11
+          },
+          "kulun-kokonaissumma": 350,
+          "kulukohdistukset": [
+            {
+              "kulukohdistus": {
+                "kohdistus": {
+                  "toimenpide": 612,
+                  "tehtavaryhma": 13
+                },
+                "poistettu": false,
+                "kulukohdistus-id": 46,
+                "rivinumero": 0,
+                "tyyppi": "kokonaishintainen",
+                "summa": 230
+              }
+            },
+            {
+              "kulukohdistus": {
+                "kohdistus": {
+                  "toimenpide": 612,
+                  "tehtavaryhma": 14
+                },
+                "poistettu": false,
+                "kulukohdistus-id": 49,
+                "rivinumero": 1,
+                "tyyppi": "kokonaishintainen",
+                "summa": 120
+              }
+            }
+          ],
+          "poistettu": false
+        }
       }
     ],
     "sanktiot": [
@@ -114,7 +187,7 @@
       {
         "tavoitehinnan-muutos": {
           "muutos-id": 1,
-          "muutoksen-summa": 20000,
+          "muutoksen-maara": 20000,
           "muutoksen-hoitovuosi": 2021,
           "muutoskategoria": "Muu",
           "muutoksen-selite": "Muokattava testioikaisu",
@@ -124,7 +197,7 @@
       {
         "tavoitehinnan-muutos": {
           "muutos-id": 2,
-          "muutoksen-summa": 1234,
+          "muutoksen-maara": 1234,
           "muutoksen-hoitovuosi": 2021,
           "muutoskategoria": "Muu",
           "muutoksen-selite": "Poistettava testioikaisu",
@@ -134,7 +207,7 @@
       {
         "tavoitehinnan-muutos": {
           "muutos-id": 3,
-          "muutoksen-summa": 1234,
+          "muutoksen-maara": 1234,
           "muutoksen-hoitovuosi": 2021,
           "muutoskategoria": "Muu",
           "muutoksen-selite": "Tavoitehintaan vaikuttava muutos",
@@ -144,7 +217,7 @@
       {
         "tavoitehinnan-muutos": {
           "muutos-id": 9,
-          "muutoksen-summa": 123.99,
+          "muutoksen-maara": 123.99,
           "muutoksen-hoitovuosi": 2023,
           "muutoskategoria": "Materiaalit",
           "muutoksen-selite": "Lisää matksua",
@@ -154,7 +227,7 @@
       {
         "tavoitehinnan-muutos": {
           "muutos-id": 8,
-          "muutoksen-summa": 34.9,
+          "muutoksen-maara": 34.9,
           "muutoksen-hoitovuosi": 2023,
           "muutoskategoria": "Tiestömuutokset",
           "muutoksen-selite": "Uutta tietä",
@@ -164,7 +237,7 @@
       {
         "tavoitehinnan-muutos": {
           "muutos-id": 6,
-          "muutoksen-summa": -78.98,
+          "muutoksen-maara": -78.98,
           "muutoksen-hoitovuosi": 2024,
           "muutoskategoria": "Hoitoluokkamuutokset",
           "muutoksen-selite": "Alennettiin hoitoluokkaa",
@@ -174,7 +247,7 @@
       {
         "tavoitehinnan-muutos": {
           "muutos-id": 5,
-          "muutoksen-summa": 300000,
+          "muutoksen-maara": 300000,
           "muutoksen-hoitovuosi": 2024,
           "muutoskategoria": "Liikennejärjestelyt",
           "muutoksen-selite": "Eipä mitään",
@@ -184,7 +257,7 @@
       {
         "tavoitehinnan-muutos": {
           "muutos-id": 7,
-          "muutoksen-summa": 2444.8,
+          "muutoksen-maara": 2444.8,
           "muutoksen-hoitovuosi": 2024,
           "muutoskategoria": "Materiaalit",
           "muutoksen-selite": "Lisää matskua",
