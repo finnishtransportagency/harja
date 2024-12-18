@@ -129,10 +129,24 @@
             [:td {:class (y/luokat "ei-muokattava" tasaus-luokka (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))}
              ((or fmt str) (hae rivi))])))})))
 
+;; Luo funktio etsimään seuraavan input elementin
+(defn etsi-seuraava-input
+  "Fokusoitu-rivi parametri odottaa saavansa fokusoituneen rivin, jonka kautta etsitään seuraava input-elementti.
+  Suunta parametri odottaa saavansa arvot :eteen tai :taakse."
+  [fokusoitu-rivi suunta]
+  (let [edellinen-rivi (.-previousElementSibling (.-parentElement (.-parentElement fokusoitu-rivi)))
+        seuraava-rivi (.-nextElementSibling (.-parentElement (.-parentElement fokusoitu-rivi)))
+        rivi (if (= suunta :taakse) edellinen-rivi seuraava-rivi)
+        ;; Valitaan rivin ensimmäinen tai toinen td, riippuen siitä, että onko ensimmäisessä jokin input-elementti.
+        input (when rivi (or
+                           (-> (.getElementsByTagName rivi "td") (aget 0) (.querySelector "input, button, select, checkbox"))
+                           (-> (.getElementsByTagName rivi "td") (aget 1) (.querySelector "input, button, select, checkbox"))))]
+    input))
+
 (defn- muokkausrivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
                    esta-poistaminen-tooltip piilota-toiminnot? tallennus-kaynnissa?
                    fokus aseta-fokus! tulevat-rivit vetolaatikot
-                   voi-muokata-rivia? rivi-index esta-tiivis-grid?] :as asetukset}
+                   voi-muokata-rivia? rivi-index esta-tiivis-grid? tallenna-id] :as asetukset}
                      skeema rivi index]
   (when (nil? rivi)
     (log "muokkausrivi on nil"))
@@ -153,11 +167,24 @@
         (if (and esta-poistaminen? (esta-poistaminen? rivi))
           [:span (ui-ikonit/livicon-trash-disabled (esta-poistaminen-tooltip rivi))]
           [napit/poista ""
-           #(muokkaa! id assoc :poistettu true)
+           #(let [;; Otetaan rivin focus talteen
+                  fokusoitu-rivi (.-activeElement js/document)
+                  edellinen-input (etsi-seuraava-input fokusoitu-rivi :taakse)
+                  seuraava-input (etsi-seuraava-input fokusoitu-rivi :eteen)
+                  tallenna-nappi (js/document.getElementById tallenna-id)]
+              (muokkaa! id assoc :poistettu true)
+              (cond
+                (not (nil? edellinen-input)) (.focus edellinen-input)
+                (not (nil? seuraava-input)) (.focus seuraava-input)
+                ;; Jos rivejä ei ole, niin myös tyhjä taulukko voidaan tallentaa
+                :else (yleiset/fn-viiveella (fn [] (some-> tallenna-nappi .focus)) 250)))
+
+
            {:teksti-nappi? false
             :vayla-tyyli? true
             :tooltip "Poista rivi"
-            :luokka "napiton-nappi pelkka-ikoni"}]))
+            :luokka "napiton-nappi pelkka-ikoni"
+            :on-focus #(aseta-fokus! [id :poista-nappi])}]))
       (when-not (empty? rivin-virheet)
         [:span.rivilla-virheita {:role "alert" :aria-label "Rivillä virheitä."}
          (ui-ikonit/livicon-warning-sign)])])])
@@ -333,7 +360,7 @@
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru! voi-kumota?
                                 peruuta otsikko validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?
-                                raporttivienti raporttiparametrit virhe-viesti raporttivienti-lapinakyva?]} skeema tiedot]
+                                raporttivienti raporttiparametrit virhe-viesti raporttivienti-lapinakyva? tallenna-id]} skeema tiedot]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -477,7 +504,8 @@
                                      (let [vastaus (<! (tallenna tallennettavat))]
                                        (if (nollaa-muokkaustiedot-tallennuksen-jalkeen? vastaus)
                                          (nollaa-muokkaustiedot!)
-                                         (reset! tallennus-kaynnissa false))))))))}
+                                         (reset! tallennus-kaynnissa false))))))))
+              :id tallenna-id}
              [ui-ikonit/ikoni-ja-teksti (ui-ikonit/tallenna) "Tallenna"]])))
 
       (when-not muokkaa-aina
@@ -647,7 +675,7 @@
                                        salli-valiotsikoiden-piilotus?
                                        piilotetut-valiotsikot tiedot gridin-tietoja
                                        esta-poistaminen-tooltip piilota-toiminnot?
-                                       voi-muokata-rivia? skeema vetolaatikot-auki esta-tiivis-grid?]}]
+                                       voi-muokata-rivia? skeema vetolaatikot-auki esta-tiivis-grid? tallenna-id]}]
   (let [muokatut @muokatut
         jarjestys @jarjestys
         tulevat-rivit (fn [aloitus-idx]
@@ -696,7 +724,8 @@
                                                   :voi-muokata-rivia? voi-muokata-rivia?
                                                   :tallennus-kaynnissa? tallennus-kaynnissa?
                                                   :gridin-tietoja gridin-tietoja
-                                                  :esta-tiivis-grid? esta-tiivis-grid?}
+                                                  :esta-tiivis-grid? esta-tiivis-grid?
+                                                  :tallenna-id tallenna-id}
                                     skeema rivi i]
                                     (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))))
                          jarjestys)))))))
@@ -1250,7 +1279,8 @@
                        @infolaatikko-nakyvissa? (conj "livi-grid-infolaatikolla")
                        sivuttain-rullattava? (conj "skrollattava")
                        ensimmainen-sarake-sticky? (conj "ensimmainen-sarake-sticky"))
-              muokattu? (not (empty? @historia))]
+              muokattu? (not (empty? @historia))
+              tallenna-id (str "tallenna-" (gensym))]
           [:div.panel.panel-default.livi-grid (merge
                                                 {:id (:id opts)
                                                  :class luokat}
@@ -1273,7 +1303,8 @@
                                :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
                                :raporttivienti-lapinakyva? raporttivienti-lapinakyva?
-                               :validoi-fn validoi-fn :virhe-viesti virhe-viesti}
+                               :validoi-fn validoi-fn :virhe-viesti virhe-viesti
+                               :tallenna-id tallenna-id}
                               skeema
                               tiedot))
            [:div.panel-body
@@ -1319,7 +1350,8 @@
                                            :vetolaatikot-auki vetolaatikot-auki
                                            :avattavat-rivit-auki avattavat-rivit-auki
                                            :tallennus-kaynnissa? tallennus-kaynnissa
-                                           :esta-tiivis-grid? esta-tiivis-grid?})
+                                           :esta-tiivis-grid? esta-tiivis-grid?
+                                           :tallenna-id tallenna-id})
                   (nayttokayttoliittyma {:renderoi-max-rivia renderoi-max-rivia
                                          :tiedot tiedot :colspan colspan :tyhja tyhja
                                          :tunniste tunniste :ohjaus ohjaus
