@@ -250,11 +250,13 @@
     (let [rivi (get-in data [i])
           rivi-tie (:tr-numero rivi)
           rivi-aet (:tr-alkuetaisyys rivi)
+          rivi-losa (:tr-loppuosa rivi)
           rivi-let (:tr-loppuetaisyys rivi)
           rivi-kaista (:tr-kaista rivi)
 
           seuraava-rivi (get-in data [(inc i)])
           seuraava-rivi-tie (:tr-numero seuraava-rivi)
+          seuraava-rivi-aosa (:tr-alkuosa seuraava-rivi)
           seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
           seuraava-rivi-kaista (:tr-kaista seuraava-rivi)
 
@@ -262,7 +264,9 @@
                                 rivi-aet seuraava-rivi-aet
                                 (= rivi-tie seuraava-rivi-tie)
                                 (= rivi-kaista seuraava-rivi-kaista)
-                                (> seuraava-rivi-aet rivi-let))
+                                (= rivi-losa seuraava-rivi-aosa)
+                                ;; jos seur. rivin alku on 1-50 isompi, samalla tieosalla, kyseessä hyppy
+                                (< 0 (- seuraava-rivi-aet rivi-let) pot-domain/hypyn-kynnysarvo-metreina))
                             true
                             false)]
       (if hyppy-olemassa?
@@ -275,10 +279,10 @@
    Palauttaa vectorin kohdeosista joihin lisätty hyppyjen tiedot avaimiin
    Avaimet käsitellään frontissa paallystekerros.cljs missä ne passataan muokkaus.cljs korostusta varten
    Laitetaan aluksi 50 metriä rajaksi, eli kaikki alle 50 metrin hypyt näytetään fronttiin
-   Hyppy tulee tunnistaa kun mennään samalla ajoradalla, tiellä sekä samalla kaistalla. 
-   Jos kaista tai tie vaihtuu, silloin tämä ei ole hyppy.
-   Tiellä voi olla yksi (0) tai kaksi ajorataa (1 ja 2)
-   Ajoradalla on vähintään yksi kaista
+   Hyppy tulee tunnistaa kun mennään samalla tiellä, tienosalla ja kaistalla.
+   Jos tie, tienosa tai kaista vaihtuu, silloin tämä ei ole hyppy.
+   Tiellä voi olla yksi (0) tai kaksi ajorataa (1 ja 2), ja kaista voi jatkua yhtenäisenä vaikka ajoratojen lukumäärä muuttuu.
+   Ajoradalla on vähintään yksi kaista.
    Aet = Alkuetäisyys metreinä
    Let = Loppuetäisyys metreinä"
   [y data palautus maara]
@@ -286,17 +290,21 @@
     (let [rivi (nth data y nil)
           rivi-tie (:tr-numero rivi)
           rivi-kaista (:tr-kaista rivi)
+          rivi-aosa (:tr-alkuosa rivi)
           rivi-aet (:tr-alkuetaisyys rivi)
+          rivi-losa (:tr-loppuosa rivi)
           rivi-let (:tr-loppuetaisyys rivi)
 
           edellinen-rivi (nth data (dec y) nil)
           edellinen-rivi-tie (:tr-numero edellinen-rivi)
           edellinen-rivi-kaista (:tr-kaista edellinen-rivi)
+          edellinen-rivi-losa (:tr-loppuosa edellinen-rivi)
           edellinen-rivi-let (:tr-loppuetaisyys edellinen-rivi)
 
           seuraava-rivi (nth data (inc y) nil)
           seuraava-rivi-tie (:tr-numero seuraava-rivi)
           seuraava-rivi-kaista (:tr-kaista seuraava-rivi)
+          seuraava-rivi-aosa (:tr-alkuosa seuraava-rivi)
           seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
 
           rivi (cond
@@ -308,8 +316,10 @@
                    (= rivi-kaista seuraava-rivi-kaista)
                    (= rivi-tie edellinen-rivi-tie)
                    (= rivi-kaista edellinen-rivi-kaista)
-                   (> seuraava-rivi-aet rivi-let)
-                   (> rivi-aet edellinen-rivi-let))
+                   (= seuraava-rivi-aosa rivi-losa)
+                   (< 0 (- seuraava-rivi-aet rivi-let) pot-domain/hypyn-kynnysarvo-metreina)
+                   (= edellinen-rivi-losa rivi-aosa)
+                   (< 0 (- rivi-aet edellinen-rivi-let) pot-domain/hypyn-kynnysarvo-metreina))
                  (merge rivi {:aet-hyppy? true :let-hyppy? true})
 
                  ;; Seuraava ja tämä rivi olemassa sekä molemmilla sama tie&ajorata&kaista
@@ -319,7 +329,8 @@
                    rivi-aet seuraava-rivi-aet
                    (= rivi-tie seuraava-rivi-tie)
                    (= rivi-kaista seuraava-rivi-kaista)
-                   (> seuraava-rivi-aet rivi-let))
+                   (= seuraava-rivi-aosa rivi-losa)
+                   (< 0 (- seuraava-rivi-aet rivi-let) pot-domain/hypyn-kynnysarvo-metreina))
                  (merge rivi {:let-hyppy? true})
 
                  ;; Tämä rivi ja edellinen rivi olemassa sekä molemmilla sama tie&ajorata&kaista
@@ -329,7 +340,8 @@
                    rivi-aet edellinen-rivi-let
                    (= rivi-tie edellinen-rivi-tie)
                    (= rivi-kaista edellinen-rivi-kaista)
-                   (> rivi-aet edellinen-rivi-let))
+                   (= edellinen-rivi-losa rivi-aosa)
+                   (< 0 (- rivi-aet edellinen-rivi-let) pot-domain/hypyn-kynnysarvo-metreina))
                  (merge rivi {:aet-hyppy? true})
 
                  ;; Ei hyppyjä
