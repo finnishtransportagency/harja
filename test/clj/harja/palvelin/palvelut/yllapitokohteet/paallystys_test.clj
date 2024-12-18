@@ -944,7 +944,7 @@
                              (assoc-in [:paallystekerros 1 :tr-alkuosa] 1)
                              (assoc-in [:paallystekerros 1 :tr-loppuosa] 1)
                              (assoc-in [:paallystekerros 1 :tr-loppuetaisyys] 3827)
-                             (assoc-in [:paallystekerros 1 :tr-alkuetaisyys] (+ aet 100))
+                             (assoc-in [:paallystekerros 1 :tr-alkuetaisyys] (+ aet (- pot-domain/hypyn-kynnysarvo-metreina 1)))
                              (assoc-in [:paallystekerros 1 :tr-numero] 20)
                              (assoc-in [:paallystekerros 1 :tr-kaista] 12)
                              (assoc-in [:paallystekerros 1 :tr-ajorata] 1))
@@ -1876,3 +1876,63 @@
                                           :tr-numero 20}]}}
            (paallystys/lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus kohdeosat))
         "Kohdeosille on lisätty id:t oikein, kun ajorataa ja kaistaa ei ole")))
+
+;; huom. hyppyjä tarkasteltaessa on välttämätöntä järjestää rivit kaistoittain
+;; ao. testidatassa se on tehty käsin, palvelu tekee tämän toki itsestään
+;; alla testataan vain funktiota joten tehdään sortti sitä ennen käsin
+(def testidata-hypyton-mutta-ajorata-vaihtuu
+  [{:kohdeosa-id 36683, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36684, :tr-numero 3, :tr-ajorata 1, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 1270, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36685, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}
+   {:kohdeosa-id 36686, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36687, :tr-numero 3, :tr-ajorata 2, :tr-kaista 21, :tr-alkuosa 215, :tr-alkuetaisyys 1270, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36688, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}])
+
+(def testidata-hypyllinen-ja-ajorata-vaihtuu
+  [{:kohdeosa-id 36683, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36684, :tr-numero 3, :tr-ajorata 1, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 1272, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36685, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}
+   {:kohdeosa-id 36686, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36687, :tr-numero 3, :tr-ajorata 2, :tr-kaista 21, :tr-alkuosa 215, :tr-alkuetaisyys 1272, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36688, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}])
+
+(def testidata-hypyllinen-ja-alle-kynnysarvon
+  [{:kohdeosa-id 36683, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36684, :tr-numero 3, :tr-ajorata 1, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys (+ (- pot-domain/hypyn-kynnysarvo-metreina 1) 1270), :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36685, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}])
+
+(def testidata-hypyllinen-mutta-yli-kynnysarvon-joten-ei-huomioida
+  [{:kohdeosa-id 36683, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36684, :tr-numero 3, :tr-ajorata 1, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys (+ pot-domain/hypyn-kynnysarvo-metreina 1272), :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36685, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}])
+
+(def testidata-hypyton-tienosa-vaihtuu
+  [{:kohdeosa-id 36683, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36686, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   ;; tässä keinotekoisesti muutetaan tien osaa hyvin paljon, tämä ei ole hyppy vaan selkeästi toisistaan erillään olevat alikohteet
+   {:kohdeosa-id 36684, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 218, :tr-alkuetaisyys 1272, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36685, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 218, :tr-alkuetaisyys 1272, :tr-loppuosa 215, :tr-loppuetaisyys 3083}])
+
+;; joskus tiestöllä ajorata voi muuttua esim 0 --> 1, ja kaista pysyy samana, esim 11, ja taas palataan takaisin ajoradalle 0.
+;; tällaisessa tilanteessa jos päällyste on kaistalle jatkuva, ei tule raportoida hyppyä. Tehdään erillinen testi tälle, koska
+;; toimintaa jouduttiin tältä osin korjaamaan HARJA-1153 myötä
+(deftest ajaradan-muutos-ei-tarkoita-hyppya-test
+  (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyton-mutta-ajorata-vaihtuu 0 0)]
+    (is (= 0 hyppyjen-lkm) "Ei hyppyjä")))
+
+(deftest hyppy-loytyy
+  (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyllinen-ja-ajorata-vaihtuu 0 0)]
+    (is (= 2 hyppyjen-lkm) "2 hyppyä")))
+
+(deftest hyppy-on-ja-alle-kynnysarvon
+  (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyllinen-ja-alle-kynnysarvon 0 0)]
+    (is (= 1 hyppyjen-lkm) "Hyppy")))
+
+(deftest hyppya-ei-ole-koska-etaisyys-yli-kynnysarvon
+  (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyllinen-mutta-yli-kynnysarvon-joten-ei-huomioida 0 0)]
+    (is (= 0 hyppyjen-lkm) "ei hyppyä")))
+
+(deftest hyppya-ei-ole-koska-tienosa-vaihtuu
+  (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyton-tienosa-vaihtuu 0 0)]
+    (is (= 0 hyppyjen-lkm) "ei hyppyä")))
+
