@@ -55,7 +55,6 @@
      {:otsikko "Päivämäärä"
       :for-teksti "filtteri-aikavali"
       :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta reikapaikkaus-pvm "}
-      :ikoni-sisaan? true
       :vayla-tyyli? true
       :aikavalin-rajoitus [6 :kuukausi]}]]
 
@@ -100,7 +99,6 @@
         :komponentti (fn []
                        [:span {:data-cy "reikapaikkaus-muokkaa-pvm"}
                         [kentat/tee-kentta {:tyyppi :pvm
-                                            :ikoni-sisaan? true
                                             :vayla-tyyli? true}
                          (r/wrap
                            alkuaika

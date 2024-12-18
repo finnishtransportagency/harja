@@ -154,7 +154,7 @@
         [:span.takuuaika.inline
          (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
            [:span
-            [tee-kentta {:tyyppi :pvm :placeholder "Ei asetettu"}
+            [tee-kentta {:tyyppi :pvm :placeholder "Ei asetettu" :elementin-nimi "takuuaika"}
              (r/wrap (get-in ur [:takuu :loppupvm])
                      #(do (reset! tallennus-kaynnissa (:id ur))
                           (nav/paivita-urakan-tiedot! (:id ur) assoc-in [:takuu :loppupvm] %)
