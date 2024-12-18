@@ -80,19 +80,19 @@
                                     (and (= :hyvaksytty paatos-tekninen-osa)
                                       (contains? #{:valmis :lukittu} tila)
                                       (nil? lahettaja)))
-        kohde-id (map #(:paallystyskohde-id %) (filter ilmoituksen-voi-lahettaa? paallystysilmoitus))
+        kohde-idt (map #(:paallystyskohde-id %) (filter ilmoituksen-voi-lahettaa? paallystysilmoitus))
         kaikki-kohteet-maara (count paallystysilmoitus)
-        kohteet-lahetyksessa-maara (count kohde-id) 
+        kohteet-lahetyksessa-maara (count kohde-idt) 
         kun-onnistuu-fn #(e! (tiedot/->ValitseUrakka %))
         paivita-urakkatilanne-fn #(e! (tiedot/->HaePaallystysUrakat %))]
     [napit/palvelinkutsu-nappi
      (str "Kehittäjä: Lähetä kaikki valmiit kohteet YHA:aan " kohteet-lahetyksessa-maara "/" kaikki-kohteet-maara)
      #(do
         (log "[YHA/VELHO] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
-          ") kohde (id:" (pr-str kohde-id) ") YHA:n ja Velhoon (VELHO DISABLED)")
+          ") kohde (id:" (pr-str kohde-idt) ") YHA:n ja Velhoon (VELHO DISABLED)")
         (k/post! :laheta-pot-yhaan-ja-velhoon {:urakka-id urakka-id
                                                :sopimus-id sopimus-id
-                                               :kohde-id kohde-id
+                                               :kohde-id kohde-idt
                                                :vuosi vuosi}
           nil
           true))
@@ -107,7 +107,7 @@
                       (paivita-urakkatilanne-fn valittu-vuosi)
                       (viesti/nayta-toast! "Kohteet lähettetty onnistuneesti" :onnistui)
                       (log "[YHA/VELHO] Lähetys onnistui urakan (id:" urakka-id ") sopimuksen (id: " (first sopimus-id)
-                        ") kohde (id:" (pr-str kohde-id) ") YHA:an. Vastaus: " (pr-str vastaus)))
+                        ") kohde (idt:" (pr-str kohde-idt) ") YHA:an. Vastaus: " (pr-str vastaus)))
       :kun-virhe (fn [vastaus]
                    (kun-onnistuu-fn valittu-urakka)
                    (paivita-urakkatilanne-fn valittu-vuosi)
