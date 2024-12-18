@@ -52,7 +52,7 @@
     [napit/palvelinkutsu-nappi
      "Lähetä"
      #(do
-        (log "[YHA/VELHO] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
+        (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
           ") kohde (id:" (pr-str kohde-id) ") YHA:n")
         (k/post! :laheta-pot-yhaan-ja-velhoon {:urakka-id urakka-id
                                                :sopimus-id sopimus-id
@@ -65,10 +65,9 @@
       :disabled (or false
                   (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
       :virheviestin-nayttoaika viesti/viestin-nayttoaika-pitka
-      :kun-valmis #(do) 
       :kun-onnistuu (fn [vastaus]
                       (kun-onnistuu-fn valittu-urakka)
-                      (log "[YHA/VELHO] Lähetys onnistui urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
+                      (log "[YHA] Lähetys onnistui urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
                         ") kohde (id:" (pr-str kohde-id) ") YHA:an. Vastaus: " (pr-str vastaus)))
       :kun-virhe (fn [vastaus]
                    (kun-onnistuu-fn valittu-urakka)
@@ -88,8 +87,8 @@
     [napit/palvelinkutsu-nappi
      (str "Kehittäjä: Lähetä kaikki valmiit kohteet YHA:aan " kohteet-lahetyksessa-maara "/" kaikki-kohteet-maara)
      #(do
-        (log "[YHA/VELHO] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
-          ") kohde (id:" (pr-str kohde-idt) ") YHA:n ja Velhoon (VELHO DISABLED)")
+        (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
+          ") kohde (id:" (pr-str kohde-idt) ") YHA:n")
         (k/post! :laheta-pot-yhaan-ja-velhoon {:urakka-id urakka-id
                                                :sopimus-id sopimus-id
                                                :kohde-id kohde-idt
@@ -106,12 +105,12 @@
                       (kun-onnistuu-fn valittu-urakka)
                       (paivita-urakkatilanne-fn valittu-vuosi)
                       (viesti/nayta-toast! "Kohteet lähettetty onnistuneesti" :onnistui)
-                      (log "[YHA/VELHO] Lähetys onnistui urakan (id:" urakka-id ") sopimuksen (id: " (first sopimus-id)
+                      (log "[YHA] Lähetys onnistui urakan (id:" urakka-id ") sopimuksen (id: " (first sopimus-id)
                         ") kohde (idt:" (pr-str kohde-idt) ") YHA:an. Vastaus: " (pr-str vastaus)))
       :kun-virhe (fn [vastaus]
                    (kun-onnistuu-fn valittu-urakka)
                    (paivita-urakkatilanne-fn valittu-vuosi)
-                   (log "[YHA] Lähetys epäonnistui osalle kohteista YHAan. Vastaus: " (pr-str vastaus)) ;; TODO enable VELHO
+                   (log "[YHA] Lähetys epäonnistui osalle kohteista YHAan. Vastaus: " (pr-str vastaus))
                    )
       :nayta-virheviesti? false}]))
 
