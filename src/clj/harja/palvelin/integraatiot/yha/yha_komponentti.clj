@@ -345,7 +345,8 @@
               urakka (assoc urakan-yhatiedot :harjaid urakka-id
                        :sampoid (yhaan-lahetettava-sampoid urakan-yhatiedot))]
           (doseq [kohde-id kohde-idt]
-            (let [kohde (hae-kohteen-tiedot-pot2 db kohde-id)
+            (let [_ (log/info (format "Lähetetään kohteen (id: %s) tiedot YHA:an." kohde-id))
+                  kohde (hae-kohteen-tiedot-pot2 db kohde-id)
                   url (str url "toteumatiedot")
                   kutsudata (kohteen-lahetyssanoma/muodosta urakka [kohde])
                   otsikot (yha-yhteiset/yha-otsikot api-key false)
@@ -353,7 +354,8 @@
                                   :url url
                                   :otsikot otsikot}
                   {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
-              (kasittele-urakan-kohdelahetysvastaus db body headers [kohde] user)))))
+              (kasittele-urakan-kohdelahetysvastaus db body headers [kohde] user)
+              (Thread/sleep 1000))))) ;; Rajoitetaan YHAan lähetysten nopeutta jos kyseessä on massalähetys
       {:virhekasittelija (fn [konteksti e]
                            (doseq [kohde-id kohde-idt]
                              (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
