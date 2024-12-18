@@ -9,6 +9,7 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [slingshot.slingshot :refer [throw+ try+]]
             [dk.ative.docjure.spreadsheet :as xls]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-excel :as t-excel]))
 
 (defn hae-urakan-talvihoitoreitit [db user {:keys [urakka-id]}]
@@ -91,7 +92,7 @@
 
 (defrecord Talvihoitoreitit []
   component/Lifecycle
-  (start [{:keys [http-palvelin db] :as this}]
+  (start [{:keys [http-palvelin db excel-vienti] :as this}]
 
     (julkaise-palvelut http-palvelin :hae-urakan-talvihoitoreitit
       (fn [user tiedot]
@@ -100,6 +101,10 @@
     (julkaise-palvelu http-palvelin :lue-talvihoitoreitit-excelista
       (wrap-multipart-params (fn [request] (vastaanota-excel db request)))
       {:ring-kasittelija? true})
+
+    (when excel-vienti
+      (excel-vienti/rekisteroi-excel-kasittelija! excel-vienti :lataa-talvihoitoreitit-exceliin
+        (partial #'t-excel/lataa-talvihoitoreitit-exceliin db)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]

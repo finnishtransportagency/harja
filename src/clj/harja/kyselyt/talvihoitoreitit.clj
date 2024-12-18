@@ -3,6 +3,7 @@
   (:require [jeesql.core :refer [defqueries]]
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [clojure.string :as str]
+            [harja.kyselyt.konversio :as konv]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.laadunseuranta.talvihoitoreitit-domain :as talvihoitoreitit-domain]
             [taoensso.timbre :as log]
