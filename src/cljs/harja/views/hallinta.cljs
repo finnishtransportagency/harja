@@ -27,6 +27,7 @@
             [harja.views.hallinta.tarjoushinnat :as tarjoushinnat]
             [harja.views.hallinta.rahavaraukset :as rahavaraukset]
             [harja.views.hallinta.urakkatiedot.lupaukset-nakyma :as lupaukset]
+            [harja.views.hallinta.urakkatiedot.paallystysilmoitukset-nakyma :as paallystysilmoitukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
             [harja.tiedot.istunto :as istunto]))
@@ -97,6 +98,12 @@
     (when (oikeudet/hallinta-lupaukset)
       ^{:key "lupaukset"}
       [lupaukset/lupaukset])
+    
+    "Paallystysilmoitukset"
+    :paallystysilmoitukset
+    (when (oikeudet/hallinta-paallystysilmoitukset)
+      ^{:key "paallystysilmoitukset"}
+      [paallystysilmoitukset/paallystysilmoitukset])
     
     "Rahavaraukset"
     :rahavaraukset
