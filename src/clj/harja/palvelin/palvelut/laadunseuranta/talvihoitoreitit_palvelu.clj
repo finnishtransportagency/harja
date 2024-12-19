@@ -20,14 +20,16 @@
 
     (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)))
 
-(defn- kasittele-excel [db urakka-id kayttaja req]
+(defn kasittele-excel [db urakka-id kayttaja req workbook]
   (let [;; Excelistä löytyneille talvihoitoreitteille koostetaan atomeihin statuksia. Päivittyneet omaansa, uudet lisäykset omaansa
         ;; ja virheet omaansa
         lisatyt-atom (atom [])
         paivitetyt-atom (atom [])
         virheet-atom (atom [])
-        ;; Lue excelistä kaikki tiedot talteen
-        workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
+        ;; Lue excelistä kaikki tiedot talteen -- Testiä varten mahdollista workbookin antaminen parametrina
+        workbook (if (nil? workbook)
+                   (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
+                   workbook)
         talvihoitoreitit (try+
                            (t-excel/lue-talvihoitoreitit-excelista workbook)
                            (catch [:type :validaatiovirhe] {:keys [virheet]}
@@ -86,7 +88,7 @@
         kayttaja (:kayttaja request)]
     ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
     (if (and urakka-id kayttaja)
-      (kasittele-excel db urakka-id kayttaja request)
+      (kasittele-excel db urakka-id kayttaja request nil)
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
