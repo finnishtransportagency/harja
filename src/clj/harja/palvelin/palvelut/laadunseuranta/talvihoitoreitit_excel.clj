@@ -151,7 +151,7 @@
                   (= :kup avain) (when-not (empty? kup-kalusto) (:kalustomaara (first kup-kalusto))))]
     kalusto))
 
-(defn lataa-talvihoitoreitit-exceliin [db workbook user {:keys [urakka-id] :as tiedot}]
+(defn lataa-talvihoitoreitit-exceliin [db workbook user {:keys [urakka-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
   (let [urakan-tiedot (first (harja.kyselyt.urakat/hae-urakka db {:id urakka-id}))
         urakan-talvihoitoreitit (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
@@ -209,7 +209,6 @@
                           urakan-talvihoitoreitit)
         reitti-taulukko [:taulukko reitti-optiot reitti-sarakkeet reitti-rivit]
         taulukot (conj []
-                   [:otsikko "Otsikkoteksti"]
                    [:otsikko-heading "Reitti tunnistetaan nimen perusteella."]
                    kalusto-taulukko reitti-taulukko)
         raportti (concat
