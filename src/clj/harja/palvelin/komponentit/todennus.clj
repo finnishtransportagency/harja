@@ -1,12 +1,12 @@
 (ns harja.palvelin.komponentit.todennus
   "Tämä namespace määrittelee käyttäjäidentiteetin todentamisen. Käyttäjän todentaminen
-  WWW-palvelussa tehdään KOKA ympäristön antamilla header tiedoilla. Tämä komponentti ei tee
-  käyttöoikeustarkistuksia, vaan pelkästään hakee käyttäjälle sallitut käyttöoikeudet
-  ja tarkistaa käyttäjän identiteetin."
+   WWW-palvelussa tehdään KOKA ympäristön antamilla header tiedoilla. Tämä komponentti ei tee
+   käyttöoikeustarkistuksia, vaan pelkästään hakee käyttäjälle sallitut käyttöoikeudet ja tarkistaa käyttäjän identiteetin."
   (:require [cheshire.core :as cheshire]
             [clojure.core.cache :as cache]
             [clojure.set :as set]
             [clojure.string :as str]
+            [clojure.data.json :as json]
             [com.stuartsierra.component :as component]
             [harja.domain
              [oikeudet :as oikeudet]]
@@ -21,9 +21,8 @@
 
 (defn- ryhman-rooli-ja-linkki
   "Etsii annetulle OAM ryhmälle roolin. Ryhmä voi olla suoraan roolin nimi
-tai linkitetyssä roolissa muotoa <linkitetty id>_<roolin nimi>. Palauttaa
-roolin tiedot ja linkitetyn id:n vektorissa, jos rooli ei ole linkitetty id
-on nil."
+   tai linkitetyssä roolissa muotoa <linkitetty id>_<roolin nimi>. Palauttaa
+   roolin tiedot ja linkitetyn id:n vektorissa, jos rooli ei ole linkitetty id on nil."
   [roolit ryhma]
   (let [roolit (vals roolit)
         ryhmanimet (into #{}
@@ -82,11 +81,12 @@ on nil."
         (group-by second
                   (filter (comp #(= "urakoitsija" %) :linkki first)
                           roolit-ja-linkit))))
+
 (defn kayttajan-roolit
   "Palauttaa annetun käyttäjän roolit OAM_GROUPS header arvon perusteella.
-  Roolit on mäppäys roolinimestä sen tietoihin. Sähken antama urakan tai
-  urakoitsijan id muutetaan harjan id:ksi kutsumalla annettuja urakan-id
-  ja urakoitsijan-id funktioita."
+   Roolit on mäppäys roolinimestä sen tietoihin. Sähken antama urakan tai
+   urakoitsijan id muutetaan harjan id:ksi kutsumalla annettuja urakan-id
+   ja urakoitsijan-id funktioita."
   [urakan-id urakoitsijan-id roolit oam-groups]
   (let [roolit-ja-linkit (->> (str/split oam-groups #",")
                               (keep (partial ryhman-rooli-ja-linkki roolit)))]
@@ -164,10 +164,10 @@ on nil."
 
 (defn prosessoi-apikayttaja-header
   "Integraatioväylä välittää apikäyttäjän tunnuksen Harjaan harja-api-username-nimisessä headerissä.
-  Koodissa käyttäjätieto luetaan oam_remote_user-headeristä. Muutetaan headerin nimi, jotta tarvittava apikäyttäjätunnus saadaan käyttöön.
-  Tilannetta jolloin cognito-headereitten käsittelystä syntyy oam_remote_user ja headereissa on välitetty username, ei pitäisi syntyä.
-  Ylikirjoitetaan kuitenkin varalta mahdollinen ylimääräinen oam_remote_user-header.
-  Funktio suoritetaan pilvipuolella, kun koka- ei oam-headereitä ei saada kutsun yhteydessä."
+   Koodissa käyttäjätieto luetaan oam_remote_user-headeristä. Muutetaan headerin nimi, jotta tarvittava apikäyttäjätunnus saadaan käyttöön.
+   Tilannetta jolloin cognito-headereitten käsittelystä syntyy oam_remote_user ja headereissa on välitetty username, ei pitäisi syntyä.
+   Ylikirjoitetaan kuitenkin varalta mahdollinen ylimääräinen oam_remote_user-header.
+   Funktio suoritetaan pilvipuolella, kun koka- ei oam-headereitä ei saada kutsun yhteydessä."
   [headerit]
   (if (get headerit "harja-api-username")
     (assoc-in headerit ["oam_remote_user"] (get headerit "harja-api-username"))
@@ -175,8 +175,8 @@ on nil."
 
 (defn prosessoi-kayttaja-headerit
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
-  Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään
-  muiden headereiden joukkoon."
+   Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään 
+   muiden headereiden joukkoon."
   [headerit]
   (if (empty? (koka-headerit headerit))
     (->
@@ -222,7 +222,7 @@ on nil."
 
 (defn- varmista-kayttajatiedot
   "Ottaa tietokannan ja käyttäjän OAM headerit. Varmistaa että käyttäjä on olemassa
-ja palauttaa käyttäjätiedot"
+   ja palauttaa käyttäjätiedot"
   [db {kayttajanimi "oam_remote_user"
        ryhmat "oam_groups"
        ely "oam_departmentnumber"
@@ -238,10 +238,11 @@ ja palauttaa käyttäjätiedot"
   (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
   (if (q/onko-jarjestelma? db kayttajanimi)
     (throw+ todennusvirhe)
-    (let [roolit (kayttajan-roolit (partial q/hae-urakan-id-sampo-idlla db)
-                                   (partial q/hae-urakoitsijan-id-ytunnuksella db)
-                                   oikeudet/roolit
-                                   ryhmat)
+    (let [roolit (kayttajan-roolit
+                   (partial q/hae-urakan-id-sampo-idlla db)
+                   (partial q/hae-urakoitsijan-id-ytunnuksella db)
+                   oikeudet/roolit
+                   ryhmat)
           organisaatio (hae-kayttajalle-organisaatio db ely y-tunnus organisaation_nimi roolit)
           kayttaja {:kayttajanimi kayttajanimi
                     :etunimi etunimi
@@ -259,51 +260,72 @@ ja palauttaa käyttäjätiedot"
                               {:organisaatio (:org_id kayttaja-kannassa)})
           kayttajan-tiedot-samat? (= kayttaja kayttaja-kannassa)
           kayttaja-id (or
-                      kayttaja-id-kannassa
-                       (:id (q/luo-kayttaja<! db kayttaja)))]
+                        kayttaja-id-kannassa
+                        (:id (q/luo-kayttaja<! db kayttaja)))]
       (when (and kayttaja-id-kannassa (not kayttajan-tiedot-samat?))
         (q/paivita-kayttaja! db (merge kayttaja
                                   {:id kayttaja-id})))
-     (log/info "SÄHKE HEADERIT: " (str kayttajanimi ": " ryhmat)
-       "; ELY-NUMERO: " ely
-       "; ORGANISAATION NIMI: " organisaation_nimi
-       "; Y-TUNNUS: " y-tunnus
-       "; KÄYTTÄJÄ ID: " kayttaja-id
-       "; ORGANISAATIO: " organisaatio)
-     (merge (assoc kayttaja
-              :organisaatio organisaatio
-              :organisaation-urakat (into #{}
-                                          (map :id)
-                                          (q/hae-organisaation-urakat db (:id organisaatio)))
-              :id kayttaja-id)
-            roolit))))
+      (log/info
+        "SÄHKE HEADERIT: " (str kayttajanimi ": " ryhmat)
+        "; ELY-NUMERO: " ely
+        "; ORGANISAATION NIMI: " organisaation_nimi
+        "; Y-TUNNUS: " y-tunnus
+        "; KÄYTTÄJÄ ID: " kayttaja-id
+        "; ORGANISAATIO: " organisaatio)
+      (merge (assoc kayttaja
+               :organisaatio organisaatio
+               :organisaation-urakat (into #{}
+                                       (map :id)
+                                       (q/hae-organisaation-urakat db (:id organisaatio)))
+               :id kayttaja-id)
+        roolit))))
 
 (defn- ohita-oikeudet
   "Mahdollista kaikkien OAM_* headerien ohittaminen tietyille käyttäjille konfiguraatiossa.
-Jos käyttäjälle on ohitetut headerit, ne palautetaan KOKAn antamien headerien sijasta, muuten
-headerit palautetaan normaalisti."
+   Jos käyttäjälle on ohitetut headerit, ne palautetaan KOKAn antamien headerien sijasta, muuten
+   headerit palautetaan normaalisti."
   [{kayttaja "oam_remote_user" :as koka-headerit} oikeudet]
   (or (and oikeudet (oikeudet kayttaja))
       koka-headerit))
 
+(defn onko-jasonia? [value]
+  (try
+    (json/read-str value)
+    true
+    (catch Exception _ false)))
+
+(defn parsi-jason-oam-groups [json-string]
+  (->>
+    (json/read-str json-string)
+    (str/join ",")))
+
 (defn koka->kayttajatiedot [db headerit oikeudet]
   (let [headerit (prosessoi-kayttaja-headerit headerit)
+        ;; TODO mikäli tämä on oikea tapa, lisää testi -> todennus_test.clj 
+        ;;
+        ;; Aseta oam groupit ENTRAID muotoon manuaalisesti:
+        ;; headerit (assoc headerit "oam_groups" (json/write-str ["Jarjestelmavastaava" "MHU-TESTI-LAP-ROV_vastuuhenkilo" "MHU-TESTI-LAP-IVA_vastuuhenkilo"]))
+        headerit (let [oam-groups (get headerit "oam_groups")
+                       json? (onko-jasonia? oam-groups)
+                       ;; Jos groupit ovat json muodossa, parsitaan jotta Harja tunnistaa
+                       normalisoitu-groups (if json? (parsi-jason-oam-groups oam-groups) oam-groups)]
+                   (assoc headerit "oam_groups" normalisoitu-groups))
         oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
     (try
-      (get (swap! kayttajatiedot-cache-atom
-                  #(cache/through
-                    (fn [oam-tiedot]
-                      (varmista-kayttajatiedot db oam-tiedot))
-                    %
-                    oam-tiedot))
-           oam-tiedot)
+      (get (swap! kayttajatiedot-cache-atom #(cache/through
+                                               (fn [oam-tiedot]
+                                                 (varmista-kayttajatiedot db oam-tiedot))
+                                               %
+                                               oam-tiedot))
+        oam-tiedot)
       (catch Throwable t
         (log/error t "Käyttäjätietojen varmistuksessa virhe!")))))
 
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
-  (todenna-pyynto [this req] "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden
-req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
+  (todenna-pyynto [this req] 
+    "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden
+     req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
 (defrecord HttpTodennus [oikeudet]
   component/Lifecycle
@@ -324,8 +346,9 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
         (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
           (assoc req :kayttaja kayttajatiedot)
           (do
-            (log/warn (str "Ei löydetty koka-käyttäjätietoja id:lle: " (headerit "oam_remote_user")
-                        " Jos kyseessä on järjestelmäkäyttäjä, tarkista kutsutaanko oikeaa endpointtia: " (:uri req)))
+            (log/warn (str
+                        "Ei löydetty koka-käyttäjätietoja id:lle: " (headerit "oam_remote_user") " "
+                        "Jos kyseessä on järjestelmäkäyttäjä, tarkista kutsutaanko oikeaa endpointtia: " (:uri req)))
             (throw+ todennusvirhe)))))))
 
 (defrecord FeikkiHttpTodennus [kayttaja]
