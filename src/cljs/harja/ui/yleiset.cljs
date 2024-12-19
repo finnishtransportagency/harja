@@ -245,8 +245,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                    vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo
                    pakollinen? valikko-ref valittu-rivi] :as optiot}]
 
-        (let [lista-elementit (vec (array-seq (.querySelectorAll @valikko-ref "li")))
-              alasvedon-nappi (.querySelector @valikko-ref "button")]
+        (let [listan-rivit (vec (array-seq (.querySelectorAll @valikko-ref "li")))
+              alasvedon-nappi (.querySelector @valikko-ref "button")
+              checkbox-rivi? (= :checkbox (get (get (nth vaihtoehdot @valittu-rivi) 1) :tyyppi))]
 
           [:ul {:class "dropdown-menu livi-alasvetolista"
                 :style (if vayla-tyyli?
@@ -270,18 +271,19 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   (.preventDefault %)
                                   (.stopPropagation %)
                                   (reset! auki? false)
+                                  (reset! valittu-rivi 0)
                                   (r/after-render (fn [] (.focus alasvedon-nappi))))
 
                                 (dom/nuoli-alas? %)
                                 (do
                                   (.preventDefault %)
                                   (.stopPropagation %)
-                                  (if (< (inc @valittu-rivi) (count lista-elementit))
+                                  (if (< (inc @valittu-rivi) (count listan-rivit))
                                     (do
-                                      (.focus (get lista-elementit (inc @valittu-rivi)))
+                                      (.focus (get listan-rivit (inc @valittu-rivi)))
                                       (reset! valittu-rivi (inc @valittu-rivi)))
                                     (do
-                                      (.focus (get lista-elementit 0))
+                                      (.focus (get listan-rivit 0))
                                       (reset! valittu-rivi 0))))
 
                                 (dom/nuoli-ylos? %)
@@ -290,19 +292,25 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   (.stopPropagation %)
                                   (if (= 0 @valittu-rivi)
                                     (do
-                                      (.focus (get lista-elementit (dec (count lista-elementit))))
-                                      (reset! valittu-rivi (dec (count lista-elementit))))
+                                      (.focus (get listan-rivit (dec (count listan-rivit))))
+                                      (reset! valittu-rivi (dec (count listan-rivit))))
                                     (do
-                                      (.focus (get lista-elementit (dec @valittu-rivi)))
+                                      (.focus (get listan-rivit (dec @valittu-rivi)))
                                       (reset! valittu-rivi (dec @valittu-rivi)))))
 
                                 (dom/enter-nappain? %)
                                 (do
                                   (.preventDefault %)
                                   (.stopPropagation %)
-                                  (valitse-fn (nth vaihtoehdot @valittu-rivi))
-                                  (reset! auki? false)
-                                  (r/after-render (fn [] (.focus alasvedon-nappi)))))}
+
+                                  (if checkbox-rivi?
+                                    (do
+                                      (.click (.querySelector (get listan-rivit @valittu-rivi) "input"))
+                                      (r/after-render (fn [] (.focus (get (vec (array-seq (.querySelectorAll @valikko-ref "li"))) @valittu-rivi)))))
+                                    (do
+                                      (valitse-fn (nth vaihtoehdot @valittu-rivi))
+                                      (reset! auki? false)
+                                      (r/after-render (fn [] (.focus alasvedon-nappi)))))))}
            
            (doall
              (if ryhmissa?
@@ -339,7 +347,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                vaihtoehdot (if (map? vaihtoehdot)
                                              (mapv (fn [avain]
                                                      (-> [avain (get vaihtoehdot avain)]))
-                                                   (keys vaihtoehdot))
+                                               (keys vaihtoehdot))
                                              vaihtoehdot)
                                siirra-fokus (fn [i] (when (and @auki? @valikko-ref)
                                                       (js/setTimeout #(.focus (nth (vec (array-seq (.querySelectorAll @valikko-ref "li"))) i)) 150)))]
@@ -368,8 +376,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                      (reset! auki? (not @auki?))
                                      (when @auki?
                                        (if nykyinen-valittu-idx
-                                         (siirra-fokus nykyinen-valittu-idx)
-                                         (siirra-fokus 0))))
+                                         (do (siirra-fokus nykyinen-valittu-idx)
+                                           (reset! valittu-rivi nykyinen-valittu-idx))
+                                         (do (siirra-fokus 0)
+                                           (reset! valittu-rivi 0)))))
 
                                    (dom/esc-nappain? event)                     ;; esc
                                    (reset! auki? false)
@@ -390,7 +400,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
       (komp/klikattu-ulkopuolelle #(when @auki?
                                      (reset! auki? false)
                                      (when kiinni-fn! (kiinni-fn!)))
-                                  {:tarkista-komponentti? true})
+        {:tarkista-komponentti? true})
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
