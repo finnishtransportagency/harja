@@ -4,6 +4,7 @@
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.domain.oikeudet :as oikeudet]
             [harja.testi :refer :all]
+            [clojure.data.json :as json]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta])
@@ -93,7 +94,7 @@
     "client" "3ctc20d3i4ghv34ks0semt4e16"
     "signer" "arn:aws:elasticloadbalancing:eu-west-1:083539282917:loadbalancer/app/foobar/8dad8bb767eb8568"
     "exp" 1687175356}
-   {"custom:rooli" "[\"Jarjestelmavastaava\",\"MHU-TESTI-LAP-ROV_vastuuhenkilo\",\"MHU-TESTI-LAP-IVA_vastuuhenkilo\"]"
+   {"custom:rooli" (json/write-str ["Jarjestelmavastaava" "MHU-TESTI-LAP-ROV_vastuuhenkilo" "MHU-TESTI-LAP-IVA_vastuuhenkilo"])
     "custom:sukunimi" "tonttu"
     "email" "toni@tonttu.com"
     "custom:uid" "Jarjestelmavastaava"
