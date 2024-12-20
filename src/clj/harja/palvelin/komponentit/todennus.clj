@@ -7,6 +7,7 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [clojure.data.json :as json]
+            [harja.kyselyt.konversio :as konv]
             [com.stuartsierra.component :as component]
             [harja.domain
              [oikeudet :as oikeudet]]
@@ -105,6 +106,11 @@
     (.decode (BCodec.) teksti)
     teksti))
 
+(defn parsi-json-oam-groups [oam-groups]
+  (->>
+    (json/read-str oam-groups)
+    (str/join ",")))
+
 (defn- pura-cognito-headerit
   "Purkaa AWS Cognitolta palautuneet relevantit headerit ja hakee niistä OAM-tiedot.
   Tiedot mapataan vanhan mallisiksi OAM_-headereiksi"
@@ -133,7 +139,15 @@
     ;; TODO: Siirrytään mahdollisesti myöhemmin käyttämään pelkkiä cognito-headereita
     (reduce-kv
       (fn [m k v]
-        (assoc m k (pura-header-arvo v)))
+        (let [parsittu
+              (if
+                ;; Katsotaan onko roolit EntraID muodossa, eli jsonina
+                (and (= k "oam_groups") (konv/onko-json? v))
+                ;; Normalisoi json muodossa olevat roolit
+                (parsi-json-oam-groups v)
+                ;; Muuten käsitellään normaalisti 
+                (pura-header-arvo v))]
+          (assoc m k parsittu)))
       {}
       (set/rename-keys dekoodatut-headerit
         {"custom:rooli" "oam_groups"
@@ -288,28 +302,8 @@
   (or (and oikeudet (oikeudet kayttaja))
       koka-headerit))
 
-(defn onko-jasonia? [value]
-  (try
-    (json/read-str value)
-    true
-    (catch Exception _ false)))
-
-(defn parsi-jason-oam-groups [json-string]
-  (->>
-    (json/read-str json-string)
-    (str/join ",")))
-
 (defn koka->kayttajatiedot [db headerit oikeudet]
   (let [headerit (prosessoi-kayttaja-headerit headerit)
-        ;; TODO mikäli tämä on oikea tapa, lisää testi -> todennus_test.clj 
-        ;;
-        ;; Aseta oam groupit ENTRAID muotoon manuaalisesti:
-        ;; headerit (assoc headerit "oam_groups" (json/write-str ["Jarjestelmavastaava" "MHU-TESTI-LAP-ROV_vastuuhenkilo" "MHU-TESTI-LAP-IVA_vastuuhenkilo"]))
-        headerit (let [oam-groups (get headerit "oam_groups")
-                       json? (onko-jasonia? oam-groups)
-                       ;; Jos groupit ovat json muodossa, parsitaan jotta Harja tunnistaa
-                       normalisoitu-groups (if json? (parsi-jason-oam-groups oam-groups) oam-groups)]
-                   (assoc headerit "oam_groups" normalisoitu-groups))
         oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
     (try
       (get (swap! kayttajatiedot-cache-atom #(cache/through
