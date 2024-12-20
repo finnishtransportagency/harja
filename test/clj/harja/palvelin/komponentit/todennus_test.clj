@@ -133,16 +133,29 @@
         jwt (str (str/join "." jwt) "." (nth x-iam-data 2))]
     {"x-iam-data" jwt}))
 
-(deftest cognito-headereiden-purku
+(deftest cognito-headereiden-purku-oam-ja-entraid
   (let [handler (->
                   (fn [req] req)
                   (harja.palvelin.komponentit.http-palvelin/wrap-with-common-wrappers))
         todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)
-        destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))]
-    (testing "Cognito headeri: x-iam-data on purettu oikein ja tarvittava OAM-data on saatu"
+
+        destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))
+        virasto-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'")))]
+    
+    (testing "Cognito headeri EntraID muodossa: x-iam-data on purettu oikein ja tarvittava OAM-data on saatu"
+      (let [req (handler {:headers (testi-cognito-parser test-entraid-json-headerit)})
+            req (todenna req)]
+        (is (= (get-in req [:kayttaja :organisaatio :id]) virasto-id))
+        (is (= (get-in req [:kayttaja :sahkoposti]) "toni@tonttu.com"))
+        (is (= (get-in req [:kayttaja :kayttajanimi]) "Jarjestelmavastaava"))
+        (is (= (get-in req [:kayttaja :etunimi]) "toni"))
+        (is (= (get-in req [:kayttaja :sukunimi]) "tonttu"))
+        (is (= (get-in req [:kayttaja :roolit]) #{"Jarjestelmavastaava"}))
+        (is (= (get-in req [:kayttaja :urakkaroolit]) {31 #{"vastuuhenkilo"}, 34 #{"vastuuhenkilo"}}))))
+    
+    (testing "Cognito headeri OAM muodossa: x-iam-data on purettu oikein ja tarvittava OAM-data on saatu"
       (let [req (handler {:headers (testi-cognito-parser test-oam-headerit)})
             req (todenna req)]
-
         (is (= (get-in req [:kayttaja :organisaatio :id]) destia-id))
         (is (= (get-in req [:kayttaja :sahkoposti]) "daniel@example.com"))
         (is (= (get-in req [:kayttaja :kayttajanimi]) "daniel"))
