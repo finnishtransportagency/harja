@@ -84,9 +84,9 @@
     (fn [rivi]
       (when-not (nil? (first rivi))
         {:nimi (nth rivi 0)
-         :tr (nth rivi 1) ;; Traktori
-         :ka (nth rivi 2) ;; Kuorma-auto
-         :kup (nth rivi 3) ;; Kup
+         :tr (when (> (count rivi) 1) (nth rivi 1)) ;; Traktori
+         :ka (when (> (count rivi) 2) (nth rivi 2)) ;; Kuorma-auto
+         :kup (when (> (count rivi) 3) (nth rivi 3)) ;; Kup
          }))
     (subvec data (inc otsikkotiedot))))
 

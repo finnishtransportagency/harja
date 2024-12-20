@@ -84,14 +84,15 @@
                   [:div.body-text.musta.semibold.talvihoitoreitti-valistys (:kalustotyyppi kalusto)]
                   [:div.small-text.musta.talvihoitoreitti-valistys (:kalustomaara kalusto)]]))]]
       
-      ;; Kartta toggle 
+      ;; Toiminnallisuudet
       [:div.basis192.grow2.shrink2
        [:div.body-text.strong.musta ""]
        ;; Näytä valittu rivi kartalla tai piilota se
        [:<>
         (if (contains? valitut-kohteet id)
           (napit/avaa "Piilota kartalta" #(e! (tiedot/->PoistaValittuKohdeKartalta id)) {:luokka "talvihoitoreitti-kartan-naytto"})
-          (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle id)) {:luokka "talvihoitoreitti-kartan-naytto"}))]]]
+          (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle id)) {:luokka "talvihoitoreitti-kartan-naytto"}))]
+       [:div (napit/poista "Poista" #(e! (tiedot/->PoistaTalvihoitoreitti ulkoinen_id)) {:luokka "talvihoitoreitti-poisto"})]]]
 
      ;; Otsikkokoponentin voi avata ja avaamisen jälkeen näytetään lista (grid) reiteistä
      (when (and
@@ -168,7 +169,7 @@
              :tunniste :id
              :komponentti (fn [{:keys [laskettu_pituus nimi kalustot
                                        id varikoodi hoitoluokat ulkoinen_id reitit urakka_id]}]
-                            ;; Väkänen / rivi 
+                            ;; Väkänen / rivi
                             (talvihoitoreitti-rivi
                               app e!
                               laskettu_pituus nimi kalustot

@@ -27,6 +27,7 @@ SELECT tr.id,
        tr.luoja
   FROM talvihoitoreitti tr
  WHERE tr.urakka_id = :urakka_id
+   AND tr.poistettu = FALSE
  GROUP BY tr.id
  ORDER BY tr.id;
 
@@ -61,7 +62,8 @@ SELECT tr.id,
        tr.luoja
   FROM talvihoitoreitti tr
  WHERE tr.ulkoinen_id = :ulkoinen_id
-   AND tr.urakka_id = :urakka_id;
+   AND tr.urakka_id = :urakka_id
+   AND tr.poistettu = FALSE;
 
 -- name: poista-talvihoitoreitin-sijainnit!
 DELETE
@@ -76,17 +78,16 @@ UPDATE talvihoitoreitti
  WHERE id = :talvihoitoreitti_id;
 
 -- name: poista-talvihoitoreitti!
-DELETE
-  FROM talvihoitoreitti
- WHERE ulkoinen_id = :ulkoinen_id
-   AND urakka_id = :urakka_id;
+UPDATE talvihoitoreitti SET poistettu = TRUE
+ WHERE ulkoinen_id = :ulkoinen_id::TEXT
+   AND urakka_id = :urakka_id::INT;
 
 -- name: hae-leikkaavat-geometriat
 -- Tarkista onko urakalla jo samalle tielle osuvia geometrioita
 SELECT trs.id, trs.tie, trs.alkuosa, trs.loppuosa, trs.alkuetaisyys, trs.loppuetaisyys
   FROM talvihoitoreitti_sijainti trs
             -- Ei verrata itseensä. Jos ulkoinen- täsmää, niin siihen ei verrata, jotta voidaan päivittää olemassa olevaa reittiä
-           JOIN talvihoitoreitti tr ON trs.talvihoitoreitti_id = tr.id AND tr.ulkoinen_id != :ulkoinen-id
+           JOIN talvihoitoreitti tr ON trs.talvihoitoreitti_id = tr.id AND tr.ulkoinen_id != :ulkoinen-id AND tr.poistettu = FALSE
            JOIN urakka u ON tr.urakka_id = u.id AND u.id = :urakka_id
  WHERE ST_Intersects(trs.reitti::geometry, (SELECT *
                                     FROM tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT,

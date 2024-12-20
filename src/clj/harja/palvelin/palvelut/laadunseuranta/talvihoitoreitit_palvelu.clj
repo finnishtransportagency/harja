@@ -161,6 +161,21 @@
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
+(defn poista-talvihoitoreitti [db user {:keys [urakka-id ulkoinenid]}]
+  (if (contains? (:roolit user) "Jarjestelmavastaava")
+    ;;(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
+    (let [urakka-id (konv/konvertoi->int urakka-id)
+          ;; Varmistetaan, että talvihoitoreitti on olemassa
+          tr (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka-id :ulkoinen_id ulkoinenid})
+          _ (if tr
+              (talvihoitoreitit-q/poista-talvihoitoreitti! db {:ulkoinen_id ulkoinenid
+                                                                      :urakka_id urakka-id})
+              (throw+ {:type "Error"
+                       :virheet [{:koodi "ERROR" :viesti "Ei löydy poistettavaa talvihoitoreittiä. Tarkista tiedot."}]}))]
+      {:onnistui "Talvihoitoreitti poistettu onnistuneesti."})
+    (throw+ {:type "Error"
+             :virheet [{:koodi "ERROR" :viesti "Ei käyttöoikeuksia."}]})))
+
 (defrecord Talvihoitoreitit []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -172,10 +187,16 @@
     (julkaise-palvelu http-palvelin :lue-talvihoitoreitit-excelista
       (wrap-multipart-params (fn [request] (vastaanota-excel db request)))
       {:ring-kasittelija? true})
+
+    (julkaise-palvelu http-palvelin :poista-talvihoitoreitti
+      (fn [user tiedot]
+        (poista-talvihoitoreitti db user tiedot)))
+
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-urakan-talvihoitoreitit
-      :lue-talvihoitoreitit-excelista)
+      :lue-talvihoitoreitit-excelista
+      :poista-talvihoitoreitti)
     this))
