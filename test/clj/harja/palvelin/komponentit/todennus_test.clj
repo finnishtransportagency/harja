@@ -85,7 +85,7 @@
                                               13343 #{"ELY_Urakanvalvoja"}}}]
     (is (= vastaus odotetut-roolit))))
 
-(def test-entraid-json-headerit
+(def testi-cognito-headerit-entraid
   [{"typ" "JWT"
     "kid" "7d2ed764-76dd-44c3-b4cf-8cde89fe6e5f"
     "alg" "ES256"
@@ -102,7 +102,7 @@
    ;; Tämä on vain signature. Ei relevantti näiden testien kannalta tällä hetkellä.
    "TDZJ0uQA-H2GEfw38cVc-OS8gAsRVlW_EyPojJOtLKbqMalXUcq59BFB-ZJY1UXmxhdNDX04IEAQs70qa5p2Gw=="])
 
-(def test-oam-headerit 
+(def testi-cognito-headerit-oam 
   [{"typ" "JWT"
     "kid" "7d2ed764-76dd-44c3-b4cf-8cde89fe6e5f"
     "alg" "ES256"
@@ -122,7 +122,7 @@
    ;; Tämä on vain signature. Ei relevantti näiden testien kannalta tällä hetkellä.
    "TDZJ0uQA-H2GEfw38cVc-OS8gAsRVlW_EyPojJOtLKbqMalXUcq59BFB-ZJY1UXmxhdNDX04IEAQs70qa5p2Gw=="])
 
-(defn testi-cognito-parser [iam-payload]
+(defn testi-enkoodaa-payload-jwt [iam-payload]
   (let [x-iam-data iam-payload
         jwt (map #(->
                     %
@@ -143,7 +143,7 @@
         virasto-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'")))]
     
     (testing "Cognito headeri EntraID muodossa: x-iam-data on purettu oikein ja tarvittava OAM-data on saatu"
-      (let [req (handler {:headers (testi-cognito-parser test-entraid-json-headerit)})
+      (let [req (handler {:headers (testi-enkoodaa-payload-jwt testi-cognito-headerit-entraid)})
             req (todenna req)]
         (is (= (get-in req [:kayttaja :organisaatio :id]) virasto-id))
         (is (= (get-in req [:kayttaja :sahkoposti]) "toni@tonttu.com"))
@@ -154,7 +154,7 @@
         (is (= (get-in req [:kayttaja :urakkaroolit]) {31 #{"vastuuhenkilo"}, 34 #{"vastuuhenkilo"}}))))
     
     (testing "Cognito headeri OAM muodossa: x-iam-data on purettu oikein ja tarvittava OAM-data on saatu"
-      (let [req (handler {:headers (testi-cognito-parser test-oam-headerit)})
+      (let [req (handler {:headers (testi-enkoodaa-payload-jwt testi-cognito-headerit-oam)})
             req (todenna req)]
         (is (= (get-in req [:kayttaja :organisaatio :id]) destia-id))
         (is (= (get-in req [:kayttaja :sahkoposti]) "daniel@example.com"))
@@ -188,7 +188,7 @@
         todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)]
 
     (testing "Cognito headeri: harja-api-username -headerin arvo löytyy custom:uid-headerin arvon sijaan"
-      (let [req (handler {:headers (merge (testi-cognito-parser test-oam-headerit) {"harja-api-username" "LOTTA"}) })
+      (let [req (handler {:headers (merge (testi-enkoodaa-payload-jwt testi-cognito-headerit-oam) {"harja-api-username" "LOTTA"}) })
             req (todenna req)]
 
         (is (= (get-in req [:kayttaja :kayttajanimi]) "LOTTA"))

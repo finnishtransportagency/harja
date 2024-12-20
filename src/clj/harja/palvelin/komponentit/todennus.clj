@@ -106,7 +106,7 @@
     (.decode (BCodec.) teksti)
     teksti))
 
-(defn parsi-json-oam-groups [oam-groups]
+(defn parsi-json-entraid-roolit [oam-groups]
   (->>
     (json/read-str oam-groups)
     (str/join ",")))
@@ -144,7 +144,7 @@
                 ;; Katsotaan onko roolit EntraID muodossa, eli jsonina
                 (and (= k "oam_groups") (konv/onko-json? v))
                 ;; Normalisoi json muodossa olevat roolit
-                (parsi-json-oam-groups v)
+                (parsi-json-entraid-roolit v)
                 ;; Muuten käsitellään normaalisti 
                 (pura-header-arvo v))]
           (assoc m k parsittu)))
