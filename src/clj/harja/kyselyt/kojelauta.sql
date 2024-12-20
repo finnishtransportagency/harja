@@ -60,7 +60,9 @@ SELECT u.id,
        COUNT(*) FILTER (WHERE y.lahetetty IS NOT NULL AND pot2.tila IN ('valmis', 'lukittu')
            AND y.lahetys_onnistunut IS FALSE) AS epaonnistuneet_lahetetyt,
        COUNT(*) FILTER (WHERE pot2.tila IN ('valmis', 'lukittu') AND y.lahetetty IS NULL) AS valmiit_ei_lahetetty,
-       COUNT(*) FILTER (WHERE y.id IS NOT NULL AND NOT exists (select id from paallystysilmoitus WHERE paallystyskohde = y.id)) AS aloittamatta
+       COUNT(*) FILTER (WHERE y.id IS NOT NULL AND NOT exists (select id from paallystysilmoitus WHERE paallystyskohde = y.id)) AS aloittamatta,
+       -- hox tästä puuttuu niitä where ehdon lauseita, Laurin haarassa on oikeat ehdot...
+       (SELECT ARRAY_AGG(ROW(y.id::TEXT, y.kohdenumero::TEXT, y.tunnus::TEXT, y.nimi::TEXT)) FROM yllapitokohde y WHERE y.lahetysvirhe is not null and y.urakka = u.id) as virheelliset_kohteet
   FROM urakka u
            JOIN organisaatio o ON u.hallintayksikko = o.id
            JOIN yllapitokohde y ON y.urakka = u.id

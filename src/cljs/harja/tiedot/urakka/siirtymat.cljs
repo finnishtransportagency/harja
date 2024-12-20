@@ -121,8 +121,10 @@
           nykyinen-valilehti-taso2 (nav/valittu-valilehti :urakat)
           nykyinen-valilehti-taso3 (nav/valittu-valilehti :kohdeluettelo-paallystys)]
 
+      (nav/esta-url-paivitys!)
       ;; aseta urakka ja hy jos tarpeen
-      (when-not (and valittu-urakka-id (= valittu-urakka-id kohteen-urakka-id urakka-id))
+      (when-not (and valittu-urakka-id (= valittu-urakka-id kohteen-urakka-id urakka-id)
+                  (= @nav/valittu-hallintayksikko-id hallintayksikko-id))
         (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id))
 
       ;; Vaihdetaan välilehtiä jos tarvetta
@@ -134,6 +136,7 @@
 
       (when-not (= nykyinen-valilehti-taso3 :paallystysilmoitukset)
         (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystysilmoitukset))
+      (nav/salli-url-paivitys!)
 
       (when (= paallystyskohde-id yllapitokohde-id) ; estä pääsy toiseen ilmoitukseen esim. spoofaamalla ypk-id
         ;; Deeppi harppuuna: avataan päällystysilmoitus asettamalla päällystystieto ns:n atomiin data

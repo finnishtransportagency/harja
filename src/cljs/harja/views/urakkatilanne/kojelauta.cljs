@@ -1,5 +1,6 @@
 (ns harja.views.urakkatilanne.kojelauta
-  (:require [harja.pvm :as pvm]
+  (:require [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
+            [harja.pvm :as pvm]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.navigaatio :as nav]
@@ -254,7 +255,19 @@
      :muokattava? (constantly false)
      :nimi :aloittamatta :leveys 6
      :tyyppi :positiivinen-numero :kokonaisluku? true
-     :tasaa :oikea}]
+     :tasaa :oikea}
+    {:otsikko "Virheet"
+     :muokattava? (constantly false)
+     :nimi :virheelliset_kohteet :leveys 6
+     :tyyppi :komponentti
+     :komponentti
+     (fn [rivi]
+       (for [kohde (:virheelliset_kohteet rivi)]
+         ^{:key (:id kohde)}
+        [yleiset/linkki (pot-yhteinen/paallystyskohteen-fmt kohde)
+         #(siirtymat/avaa-paallystysilmoitus! {:paallystyskohde-id (:id kohde)
+                                               :kohteen-urakka-id (:id rivi)
+                                               :valittu-urakka-id @nav/valittu-urakka-id})]))}]
    urakat])
 
 (defn taulukko-hoitourakat [e! {:keys [urakat haku-kaynnissa?]}]
