@@ -133,21 +133,17 @@
                               ^String jwt-body
                               Base64/decodeBase64
                               String.
-                              cheshire/decode)]
+                              cheshire/decode)
+        ;; Käsittele vielä EntraID muodossa olevat roolit (json)
+        dekoodatut-headerit (update dekoodatut-headerit "custom:rooli" #(if (konv/onko-json? %)
+                                                                          (parsi-json-entraid-roolit %)
+                                                                          %))]
 
     ;; Mapataan Cognito-headerit vanhan mallisiksi vastaaviksi OAM-headereiksi
     ;; TODO: Siirrytään mahdollisesti myöhemmin käyttämään pelkkiä cognito-headereita
     (reduce-kv
       (fn [m k v]
-        (let [parsittu
-              (if
-                ;; Katsotaan onko roolit EntraID muodossa, eli jsonina
-                (and (= k "oam_groups") (konv/onko-json? v))
-                ;; Normalisoi json muodossa olevat roolit
-                (parsi-json-entraid-roolit v)
-                ;; Muuten käsitellään normaalisti 
-                (pura-header-arvo v))]
-          (assoc m k parsittu)))
+        (assoc m k (pura-header-arvo v)))
       {}
       (set/rename-keys dekoodatut-headerit
         {"custom:rooli" "oam_groups"
