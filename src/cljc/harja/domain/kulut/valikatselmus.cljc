@@ -56,12 +56,14 @@
     "poistettu" ::muokkaustiedot/poistettu?}])
 
 (defn luokat [urakka]
-  (if (#{2019 2020} (pvm/vuosi (:alkupvm urakka)))
-    #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
-      "Liikennejärjestelyt" "Alleviivatun fontin vaikutus tavoitehintaan"
-      "Materiaalit" "Muut"}
-    #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
-      "Liikennejärjestelyt" "Materiaalit" "Muut"}))
+  (if (and urakka (:alkupvm urakka))
+    (if (#{2019 2020} (pvm/vuosi (:alkupvm urakka)))
+      #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
+        "Liikennejärjestelyt" "Alleviivatun fontin vaikutus tavoitehintaan"
+        "Materiaalit" "Muut"}
+      #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
+        "Liikennejärjestelyt" "Materiaalit" "Muut"})
+    #{}))
 
 (def +tavoitepalkkio-kerroin+ 0.3)
 (def +urakoitsijan-osuus-ylityksesta+ 0.3)
