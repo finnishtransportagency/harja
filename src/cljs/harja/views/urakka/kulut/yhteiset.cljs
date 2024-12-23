@@ -230,7 +230,8 @@
      [{:otsikko "Luokka"
        :nimi ::valikatselmus/otsikko
        :tyyppi :valinta
-       :valinnat (valikatselmus/luokat @nav/valittu-urakka)
+       :valinnat (into [](valikatselmus/luokat @nav/valittu-urakka))
+       :validoi [[:ei-tyhja "Valitse arvo"]]
        :leveys 2}
       {:otsikko "Selite"
        :nimi ::valikatselmus/selite
