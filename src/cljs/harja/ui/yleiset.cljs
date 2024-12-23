@@ -375,12 +375,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
         [:div {:class #{(str "select-" (if virhe?
                                          "error-"
                                          "") "default") (when @auki? "open")}}
-         [:button.nappi-alasveto
-          {:on-click #(swap! auki? not)
-            :on-key-press #(when (or (= (.-key %) "Enter")
-                                    (= (.-key %) " "))
-                            (swap! auki? not))
-            :disabled disabled}
+         [:button.nappi-alasveto {:on-click #(swap! auki? not) :disabled disabled}
           [:div.valittu
            (or (formaatti-fn valittu) "Ei valittu")]
           [:div.livicon-chevron-down]]
