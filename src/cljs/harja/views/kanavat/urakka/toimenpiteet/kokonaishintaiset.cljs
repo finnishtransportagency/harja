@@ -22,13 +22,18 @@
   (:require-macros
     [harja.makrot :refer [defc]]))
 
-(defn hakuehdot [e! {:keys [huoltokohteet] :as app} kohteet elementin-nimi]
-  (let [urakka-map (get-in app [:valinnat :urakka])]
+(defn hakuehdot [e! {:keys [huoltokohteet] :as app} kohteet]
+  (let [urakka-map (assoc (get-in app [:valinnat :urakka])
+                     :sopimusnro-elementti-id "sopimusnumero"
+                     :hoitokausi-elementti-id "urakkavuosi"
+                     :toimenpide-elementti-id "toimenpide"
+                     :viive-fokuksen-siirtoon? true
+                     :aikavali-elementti-id  "kokonaishintaiset-aikavali")]
     [valinnat/urakkavalinnat {:urakka urakka-map}
      ^{:key "valinnat"}
      [:div.kanava-suodattimet
       [:div.ryhma
-       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map elementin-nimi]]
+       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]]
 
       [:div.ryhma
        [valinnat/kanava-kohde
@@ -97,7 +102,7 @@
         (if avattu-toimenpide
           [kokonaishintainen-toimenpidelomake e! app]
           [:div
-           [hakuehdot e! app kohteet "kokonaishintaiset-aikavali"]
+           [hakuehdot e! app kohteet]
            [kokonaishintaiset-toimenpiteet-taulukko e! app]])]]
       [ajax-loader "Ladataan..."])))
 

@@ -33,6 +33,8 @@
     [livi-pudotusvalikko {:valinta @valittu-sopimusnumero-atom
                           :format-fn second
                           :valitse-fn valitse-fn
+                          :elementin-id (:sopimusnro-elementti-id ur)
+                          :viive-fokuksen-siirtoon? (:viive-fokuksen-siirtoon? ur)
                           :li-luokka-fn #(when (= (first %) (:paasopimus ur))
                                            "bold")}
      (if kaikki-valinta?
@@ -60,7 +62,9 @@
      [:span.alasvedon-otsikko vuosi-termi]
      [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
                            :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % @hoitokaudet vuosi-termi) "Valitse")
-                           :valitse-fn valitse-fn}
+                           :valitse-fn valitse-fn
+                           :elementin-id (:sopimusnro-elementti-id ur)
+                           :viive-fokuksen-siirtoon? (:viive-fokuksen-siirtoon? ur)}
       @hoitokaudet]]))
 
 (defn urakan-hoitokausi-tuck
@@ -271,18 +275,22 @@
     "Ei toimenpidettä"))
 
 (defn urakan-toimenpide
-  [urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
-  (when (not (some
-               #(= % @valittu-toimenpideinstanssi-atom)
-               @urakan-toimenpideinstanssit-atom))
-    ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
-    (reset! valittu-toimenpideinstanssi-atom (first @urakan-toimenpideinstanssit-atom)))
-  [:div.label-ja-alasveto.toimenpide
-   [:span.alasvedon-otsikko "Toimenpide"]
-   [livi-pudotusvalikko {:valinta @valittu-toimenpideinstanssi-atom
-                         :format-fn #(toimenpideinstanssi-fmt %)
-                         :valitse-fn valitse-fn}
-    @urakan-toimenpideinstanssit-atom]])
+  ([urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
+   (urakan-toimenpide urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn nil))
+  ([urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn ur]
+   (when (not (some
+                #(= % @valittu-toimenpideinstanssi-atom)
+                @urakan-toimenpideinstanssit-atom))
+     ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
+     (reset! valittu-toimenpideinstanssi-atom (first @urakan-toimenpideinstanssit-atom)))
+   [:div.label-ja-alasveto.toimenpide
+    [:span.alasvedon-otsikko "Toimenpide"]
+    [livi-pudotusvalikko {:valinta @valittu-toimenpideinstanssi-atom
+                          :format-fn #(toimenpideinstanssi-fmt %)
+                          :valitse-fn valitse-fn
+                          :elementin-id (:toimenpide-elementti-id ur)
+                          :viive-fokuksen-siirtoon? (:viive-fokuksen-siirtoon? ur)}
+     @urakan-toimenpideinstanssit-atom]]))
 
 (defn urakan-kokonaishintainen-tehtava
   [urakan-kokonaishintaiset-tehtavat-atom
@@ -347,10 +355,10 @@
    (when-let [{:keys [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]} kuukausi]
      [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn (:otsikko kuukausi)])
    (when-let [{:keys [urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]} toimenpide]
-     [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn])
-   (when-let [{:keys [valittu-aikavali-atom elementin-nimi]} aikavali-optiot]
-     (if elementin-nimi
-       [aikavali valittu-aikavali-atom {:elementin-nimi elementin-nimi}]
+     [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn urakka])
+   (when-let [{:keys [valittu-aikavali-atom]} aikavali-optiot]
+     (if (:aikavali-elementti-id urakka)
+       [aikavali valittu-aikavali-atom {:elementin-nimi (:aikavali-elementti-id urakka)}]
        [aikavali valittu-aikavali-atom]))])
 
 (defn vuosi
@@ -519,7 +527,9 @@
    [:span.alasvedon-otsikko "Kohde"]
    [livi-pudotusvalikko {:valinta @valittu-kohde-atom
                          :format-fn format-fn
-                         :valitse-fn #(reset! valittu-kohde-atom %)}
+                         :valitse-fn #(reset! valittu-kohde-atom %)
+                         :elementin-id "kanava-kohde"
+                         :viive-fokuksen-siirtoon? true}
     kohteet]])
 
 (defn kanava-aluslaji
@@ -537,7 +547,9 @@
    [:span.alasvedon-otsikko "Huoltokohde"]
    [livi-pudotusvalikko {:valinta @valittu-huoltokohde-atom
                          :format-fn format-fn
-                         :valitse-fn #(reset! valittu-huoltokohde-atom %)}
+                         :valitse-fn #(reset! valittu-huoltokohde-atom %)
+                         :elementin-id "huoltokohde"
+                         :viive-fokuksen-siirtoon? true}
     kohteet]])
 
 (defn urakkavalinnat [{:keys [urakka]} & sisalto]
