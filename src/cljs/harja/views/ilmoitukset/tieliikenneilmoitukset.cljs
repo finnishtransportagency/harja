@@ -141,7 +141,8 @@
         false
         {:rivi-luokka "grid-column-end-span-2"
          :aikavalivalitsin-flex? true
-         :vayla-tyyli? true})
+         :vayla-tyyli? true
+         :elementin-id "tiedotettu-urakkaan"})
       (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
         tiedot/toimenpiteiden-aikavalit
         (merge valinnat-nyt {:palstoita-vapaa-aikavali? true})
@@ -152,7 +153,8 @@
         {:rivi-luokka "grid-column-end-span-2"
          :aikavalivalitsin-flex? true
          :palstoja 2
-         :vayla-tyyli? true})
+         :vayla-tyyli? true
+         :elementin-id "toimenpiteet-aloitettu"})
       {:nimi :hakuehto :otsikko "Hakusana"
        :placeholder "Hae tekstillä..."
        :tyyppi :string
