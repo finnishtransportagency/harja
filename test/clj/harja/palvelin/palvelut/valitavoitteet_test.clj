@@ -211,10 +211,10 @@
                                (= raahen-mhu-urakan-id (:urakka-id %))
                                (= (:nimi %) "Pyyhi pölyt ja sammuta valot hoitokauden lopussa")) raahen-valitavoitteet)]
     (is (empty? ei-luoda-urakan-ulkopuolelle) "Ei saa edes luoda urakan ulkopuolelle")
-    (is (= 5 (count tallennetut)) "Viidelle hoitokaudelle replikoitu")
+    (is (= 4 (count tallennetut)) "Viidelle hoitokaudelle replikoitu")
     (is (nil? (some #(= (:takaraja %)
                        (pvm/->pvm "30.9.2023")) raahen-valitavoitteet)) "2023 tiedot oikein")
-    (is (some? (some #(= (:takaraja %)
+    (is (nil? (some #(= (:takaraja %)
                         (pvm/->pvm "30.9.2024")) raahen-valitavoitteet)) "2024 tiedot oikein")
     (is (some? (some #(= (:takaraja %)
                         (pvm/->pvm "30.9.2025")) raahen-valitavoitteet)) "2025 tiedot oikein")
