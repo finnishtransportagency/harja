@@ -24,9 +24,10 @@
 
 (defn tallenna-talvihoitoreitti [db data kayttaja_id urakka_id]
   (let [;; Tallenna talvihoitoreitin perustiedot
+        _ (println "tallenna-talvihoitoreitti :: data" data)
         talvihoitoreitti-id (:id (talvihoitoreitit-q/lisaa-talvihoitoreitti-tietokantaan db data urakka_id kayttaja_id))
         ;; Lisää kalustot ja reitit
-        _ (talvihoitoreitit-q/lisaa-kalustot-ja-reitit db talvihoitoreitti-id data)
+        _ (talvihoitoreitit-q/lisaa-reitit db talvihoitoreitti-id data)
         ;; Koosta vastaus apikutsun tekijälle
         vastaus (tee-kirjausvastauksen-body {:id (:tunniste data) :ilmoitukset "Talvihoitoreitti lisätty onnistuneesti."})]
     vastaus))

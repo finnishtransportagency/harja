@@ -15,7 +15,7 @@
   hae-urakan-talvihoitoreitit hae-sijainti-talvihoitoreitille hae-talvihoitoreitti-ulkoisella-idlla
   hae-leikkaavat-geometriat)
 
-(defn lisaa-kalustot-ja-reitit [db talvihoitoreitti-id data]
+(defn lisaa-reitit [db talvihoitoreitti-id data]
   ;; Lisää reitit
   (doseq [sijainti (remove nil? (:sijainnit data))
           :let [sijainti-id (:id (lisaa-sijainti-talvihoitoreitille<! db
@@ -26,12 +26,7 @@
                                     :loppuosa (:losa sijainti)
                                     :loppuetaisyys (:let sijainti)
                                     :pituus (:pituus sijainti) ;; Pituus on metreinä
-                                    :hoitoluokka (:hoitoluokka sijainti)}))
-                _ (doseq [kalusto (:kalustot sijainti)]
-                    (lisaa-kalusto-sijainnille<! db
-                      {:sijainti_id sijainti-id
-                       :maara (:kalusto-lkm kalusto)
-                       :kalustotyyppi (:kalustotyyppi kalusto)}))]]))
+                                    :hoitoluokka (:hoitoluokka sijainti)}))]]))
 
 (defn lisaa-talvihoitoreitti-tietokantaan [db data urakka_id kayttaja_id]
   ;; Generoidaan talvihoitoreitille värikoodi tietokantaan, jotta se ei vaihdu, kun käyttöliittymässä piirretään
@@ -40,6 +35,9 @@
                                 :ulkoinen_id (:tunniste data)
                                 :urakka_id urakka_id
                                 :kayttaja_id kayttaja_id
+                                :tr_maara (get-in data [:kalustot :tr_maara])
+                                :kup_maara (get-in data [:kalustot :kup_maara])
+                                :ka_maara (get-in data [:kalustot :ka_maara])
                                 :varikoodi (talvihoitoreitit-domain/anna-random-vari nil)}))
 
 (defn paivita-talvihoitoreitti-tietokantaan [db data urakka_id kayttaja_id]
@@ -53,9 +51,12 @@
             ;; Päivitä talvihoitoreitin perustiedot
             (paivita-talvihoitoreitti<! db {:talvihoitoreitti_id (:id talvihoitoreitti)
                                             :nimi (:reittinimi data)
+                                            :tr_maara (get-in data [:kalustot :tr_maara])
+                                            :kup_maara (get-in data [:kalustot :kup_maara])
+                                            :ka_maara (get-in data [:kalustot :ka_maara])
                                             :kayttaja_id kayttaja_id})
             ;; Lisää kalustot ja reitit
-            (lisaa-kalustot-ja-reitit db (:id talvihoitoreitti) data))]
+            (lisaa-reitit db (:id talvihoitoreitti) data))]
     ;; Jos ei tule erroreita, niin palautetaan ulkoinen-id
     (:tunniste data)))
 

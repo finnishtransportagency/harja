@@ -37,16 +37,6 @@
           talvihoitoreitit (mapv (fn [rivi]
                                    (let [;; Hae reitit erikseen
                                          reitit (talvihoitoreitit-q/hae-sijainti-talvihoitoreitille db {:talvihoitoreitti_id (:id rivi)})
-                                         ;; Kalustot mäpätään eri taulusta array_aggregateksi. Se pitää purkaa psql vector objectista clojuren ymmärtämään muotoon
-                                         reitit (mapv (fn [rivi]
-                                                        (-> rivi
-                                                          (update :kalustot
-                                                            (fn [rivi]
-                                                              (mapv
-                                                                #(konv/pgobject->map % :kalustotyyppi :string :kalustomaara :long)
-                                                                (konv/pgarray->vector rivi))))))
-                                                  reitit)
-
                                          ;; Formatoi käyttöliittymälle valmiiksi
                                          reitit (map (fn [r]
                                                        (-> r
@@ -61,18 +51,7 @@
                                                                                               (dissoc r :sijainti :tie :alkuosa
                                                                                                 :alkuetaisyys :loppuosa :loppuetaisyys
                                                                                                 :id :formatoitu-tr)) reitit))))
-
-                                         ;; Hae kaikki kalustot
-                                         reitin-kalustot (conj (flatten (map (fn [r] (:kalustot r)) reitit)))
-                                         ;; Ryhmitellään reitin kalustot kalustotyypin mukaan
-                                         ryhmitellyt-kalustot (group-by :kalustotyyppi reitin-kalustot)
-
-                                         kalustot (mapv (fn [avain]
-                                                          (let [kalustotyyppi avain
-                                                                kalustomaara (apply + (map #(:kalustomaara %) (get ryhmitellyt-kalustot avain)))]
-                                                            {:kalustotyyppi kalustotyyppi
-                                                             :kalustomaara kalustomaara}))
-                                                    (keys ryhmitellyt-kalustot))
+                                         
                                          ;; Lasketaan jokaiselle hoitoluokalle pituus
                                          hoitoluokat (mapv (fn [hoitoluokka-vec]
                                                              {:ryhma (hoitoluokkaryhma (:hoitoluokka (first hoitoluokka-vec)))
@@ -85,7 +64,6 @@
                                                 (assoc :reitit reitit)
                                                 (assoc :laskettu_pituus (reduce + (map :laskettu_pituus reitit)))
                                                 (assoc :hoitoluokat hoitoluokat)
-                                                (assoc :kalustot kalustot)
                                                 (dissoc :muokkaaja :muokattu :luotu :luoja))]
                                      rivi))
                              urakan-talvihoitoreitit)]
@@ -137,7 +115,7 @@
                        ;; Jos talvihoitoreitin perustiedot on onnistuneesti tallennettu, niin tallennetaan myös kalustot ja reitit
                        (when (and (nil? talvihoitoreitti-db) talvihoitoreitti-id)
                          (do
-                           (talvihoitoreitit-q/lisaa-kalustot-ja-reitit db talvihoitoreitti-id t)
+                           (talvihoitoreitit-q/lisaa-reitit db talvihoitoreitti-id t)
                            (swap! lisatyt-atom conj (:reittinimi t))))))))
 
         vastaus (if (and (empty? @lisatyt-atom) (empty? @virheet-atom) (empty? @paivitetyt-atom))
