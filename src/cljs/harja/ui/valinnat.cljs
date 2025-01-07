@@ -82,6 +82,7 @@
      [:label.alasvedon-otsikko-vayla vuosi-termi]
      [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                    :vayla-tyyli? true
+                                   :skrollattava? true
                                    :valitse-fn tuck-event
                                    :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet vuosi-termi) "Valitse")}
       hoitokaudet]]))
