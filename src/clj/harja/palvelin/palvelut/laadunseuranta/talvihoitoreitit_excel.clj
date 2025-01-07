@@ -6,6 +6,7 @@
             [slingshot.slingshot :refer [throw+]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.raportointi.excel :as excel]))
 
 (defn- nimea-hoitoluokka-mahdollisesti
@@ -153,7 +154,7 @@
 
 (defn lataa-talvihoitoreitit-exceliin [db workbook user {:keys [urakka-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
-  (let [urakan-tiedot (first (harja.kyselyt.urakat/hae-urakka db {:id urakka-id}))
+  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         urakan-talvihoitoreitit (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
         kaluste-sarakkeet [{:otsikko "Reitin nimi" :lihavoitu? true}
                            {:otsikko "TR (kpl)" :lihavoitu? true}
@@ -162,7 +163,7 @@
         kalusto-optiot {:nimi "Talvihoitoreitit"
                         :otsikko "HARJA Talvihoitoreitit"
                         :sheet-nimi "Reittien nimet & kalusto"
-                        :tyhja (if (empty? urakan-talvihoitoreitit) "Urakalla ei ole talvihoitoreittejä.")
+                        :tyhja (when (empty? urakan-talvihoitoreitit) "Urakalla ei ole talvihoitoreittejä.")
                         :rivi-ennen [{:sarakkeita 1 :taustavari :WHITE}
                                      {:teksti "Kalusto"
                                       :sarakkeita 3
