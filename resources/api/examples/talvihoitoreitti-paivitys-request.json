@@ -10,12 +10,11 @@
       "let": 5001,
       "hoitoluokka": "Ise",
       "pituus": 12840,
-      "kalustot": [
-        {
-          "kalusto-lkm": 4,
-          "kalustotyyppi": "KA"
-        }
-      ]
+      "kalustot":  {
+        "tr_maara": 4,
+        "ka_maara": 3,
+        "kup_maara": 2
+      }
     },
     {
       "tie": 20,
@@ -25,16 +24,11 @@
       "let": 3001,
       "pituus": 3001,
       "hoitoluokka":"I",
-      "kalustot": [
-        {
-          "kalusto-lkm": 1,
-          "kalustotyyppi": "TR"
-        },
-        {
-          "kalusto-lkm": 2,
-          "kalustotyyppi": "KA"
-        }
-      ]
+      "kalustot":  {
+        "tr_maara": 3,
+        "ka_maara": 2,
+        "kup_maara": 1
+      }
     },
     {
       "tie": 20,
@@ -44,16 +38,11 @@
       "let": 14000,
       "pituus": 14000,
       "hoitoluokka": "Ise",
-      "kalustot": [
-        {
-          "kalusto-lkm": 2,
-          "kalustotyyppi": "TR"
-        },
-        {
-          "kalusto-lkm": 1,
-          "kalustotyyppi": "KA"
-        }
-      ]
+      "kalustot":  {
+        "tr_maara": 3,
+        "ka_maara": 2,
+        "kup_maara": 1
+      }
     }
   ]
 }

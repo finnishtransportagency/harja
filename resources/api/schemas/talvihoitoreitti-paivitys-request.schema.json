@@ -13,6 +13,33 @@
       "required": true,
       "description": "Päivitetty reitin nimi."
     },
+    "kalustot": {
+      "type": "object",
+      "description": "Reitin hoitamisessa käytettävän kaluston määrä tyypeittäin. TR = Traktori, KUP = Kuorma-auton perävaunu, KA = Kuorma-auto.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": true,
+        "properties": {
+          "tr_maara": {
+            "type": "integer",
+            "required": false,
+            "description": "Traktoreiden määrä"
+          },
+          "kup_maara": {
+            "type": "integer",
+            "required": false,
+            "description": "Kuorma-auton perävaunujen määrä"
+          },
+          "ka_maara": {
+            "type": "integer",
+            "required": false,
+            "description": "Kuorma-auton määrä"
+          }
+        }
+
+      }
+    },
     "sijainnit": {
       "type": "array",
       "description": "Päivitetyt reitit",
@@ -60,27 +87,6 @@
             "enum": ["Ise", "Is", "I", "Ib", "Ic", "II", "III", "L", "K1", "K2", "K", "Talvihoito", "Hoito osin", "Ei talvihoitoa"],
             "required": true,
             "description": "Reitin hoitoluokka. Hoitoluokkavaihtoehdot, Maantie: Ise, Is, I, Ib, Ic, II, III. Kävelyn ja pyöräilyn väylät: L, K1, K2, K. Huoltoaukot ja pysäköintialueet: Talvihoito, Hoito osin, Ei talvihoitoa."
-          },
-          "kalustot": {
-            "type": "array",
-            "description": "Yhdellä tieosuudella voi olla useita ei kalustoja.",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "kalustotyyppi": {
-                  "type": "string",
-                  "required": true,
-                  "description": "Kalustotyyppi, jota käytetään tällä reitillä. Esim. TR tai KA."
-                },
-                "kalusto-lkm": {
-                  "type": "integer",
-                  "required": true,
-                  "description": "Kaluston lukumäärä, jota kalustotyypistä käytetään. Esim. 4",
-                  "minimum": 1
-                }
-              }
-            }
           }
         }
       }
