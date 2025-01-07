@@ -1,6 +1,11 @@
 {
   "tunniste": "__ULKOINENID__",
   "reittinimi": "__NIMI__",
+  "kalustot": {
+    "tr_maara": 1,
+    "ka_maara": 2,
+    "kup_maara": 0
+  },
   "sijainnit": [
     {
       "tie": 4,
@@ -9,13 +14,7 @@
       "losa": 405,
       "let": 5000,
       "hoitoluokka": "Ise",
-      "pituus": 2500,
-      "kalustot": [
-        {
-          "kalusto-lkm": 3,
-          "kalustotyyppi": "TR"
-        }
-      ]
+      "pituus": 2500
     },
     {
       "tie": 20,
@@ -24,13 +23,7 @@
       "losa": 3,
       "let": 1000,
       "hoitoluokka": "Ise",
-      "pituus": 3000,
-      "kalustot": [
-        {
-          "kalusto-lkm": 3,
-          "kalustotyyppi": "TR"
-        }
-      ]
+      "pituus": 3000
     },
     {
       "tie": 20,
@@ -39,17 +32,7 @@
       "losa": 10,
       "let": 14000,
       "hoitoluokka": "Ib",
-      "pituus": 25000,
-      "kalustot": [
-        {
-          "kalusto-lkm": 3,
-          "kalustotyyppi": "KA"
-        },
-        {
-          "kalusto-lkm": 1,
-          "kalustotyyppi": "TR"
-        }
-      ]
+      "pituus": 25000
     }
   ]
 }
