@@ -8,6 +8,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as kartta-tasot]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.talvihoitoreitit-tiedot :as tiedot]
             [harja.ui.grid :as grid]
@@ -20,13 +21,23 @@
                               {:keys [laskettu_pituus nimi id varikoodi hoitoluokat ulkoinen_id reitit urakka_id
                                       tr_maara ka_maara kup_maara]}]
   
-  (let [_ (js/console.log "rivi: " (pr-str rivi))
+  (let [_ (js/console.log "talvihoitoreitti-rivi :: hoitoluokat" (pr-str hoitoluokat))
         valitut-kohteet @tiedot/valitut-kohteet-atom
         reittien-maara (count reitit)
         auki? (contains? talvihoitoreittien-tilat id)
-        reitteja-olemassa? (> reittien-maara 0)]
+        reitteja-olemassa? (> reittien-maara 0)
+        talvihoito (some #(when (= "Talvihoito" (:hoitoluokka %))
+                            (:hoitoluokka %))
+                     (get hoitoluokat :huoltoaukot))
+        talvihoito-osin (some #(when (= "Talvihoito osin" (:hoitoluokka %))
+                            (:hoitoluokka %))
+                     (get hoitoluokat :huoltoaukot))
+        ei-talvihoitoa (some #(when (= "Ei talvihoitoa" (:hoitoluokka %))
+                            (:hoitoluokka %))
+                     (get hoitoluokat :huoltoaukot))]
     [:<>
      [:div.flex-row.venyta.otsikkokomponentti {:class (str "" (when reitteja-olemassa? " klikattava"))
+                                               ;  :style {:margin-top "0"}
                                                :on-click #(when reitteja-olemassa? (e! (tiedot/->AvaaTalvihoitoreitti id)))
                                                :data-cy (str "avaa-reitti-" nimi)}
       ;; Nuoli
@@ -39,69 +50,59 @@
       ;; Nimi
       [:div.basis192.nogrow.shrink3.rajaus.slim
        [:div.talvihoitoreitti-ryhma
-        [:span.talvihoitoreitti-nimi {:style {:background-color varikoodi}}]
-        [:div.body-text.semibold.musta.talvihoitoreitti-riviotsikko (str nimi)]]
-       [:div.body-text.musta.semibold (fmt/desimaaliluku-opt laskettu_pituus 2) " km"]]
+        [:span.talvihoitoreitti-nimi {:style {:background-color varikoodi :min-width "12px" :margin-right "5px"}}]
+        [:div
+         [:div.body-text.semibold.musta (str nimi)]
+         [:div.body-text.musta (str "(" (fmt/desimaaliluku-opt laskettu_pituus 2) " km )")]]]]
 
-      ;; Osuudet
-      [:div.basis384.grow2.shrink3.rajaus
-       [:div.body-text.semibold.musta.talvihoitoreitti-riviotsikko "Hoitoluokkien osuudet reitillä (km)"]
+      ;; Hoitoluokat
+      [:div.basis256.grow2.shrink3.rajaus
+       [:div.body-text.musta "HOITOLUOKAT (KM)"]
+       [:div.ryhma-pilari
+        [:div {:style {:display "flex" :flex-wrap "wrap"}}
+         (doall (for [h (get hoitoluokat :maantiet)]
+                  ^{:key (hash (str "hoitoluokka-" (gensym)))}
+                  [:div
+                   [:div.body-text.musta.semibold (:hoitoluokka h)
+                    [:span.small-text.musta.talvihoitoreitti-valistys (fmt/desimaaliluku-opt (:pituus h) 2)]]]))]]]
 
-       (when (get hoitoluokat :kavely_ja_pyoraily)
-         [:div.talvihoitoreitti-rivi-tausta
-          [:div.body-text.semibold.musta.talvihoitoluokka-otsikko "KÄVELYN JA PYÖRÄILYN VÄYLÄT"]
-          [:div.ryhma-rivitys
-           (doall (for [h (get hoitoluokat :kavely_ja_pyoraily)]
-                    ^{:key (hash (str "hoitoluokka-" (gensym)))}
-                    [:div.rivitys-yksittainen
-                     [:div.body-text.musta.semibold.talvihoitoreitti-valistys (:hoitoluokka h)]
-                     [:div.small-text.musta.talvihoitoreitti-valistys (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])
-
-       (when (get hoitoluokat :maantiet)
-         [:div.talvihoitoreitti-rivi-tausta.ryhma-pilari
-          [:div.body-text.semibold.musta.talvihoitoluokka-otsikko "MAANTIET"]
-          [:div.ryhma-rivitys
-           (doall (for [h (get hoitoluokat :maantiet)]
-                    ^{:key (hash (str "hoitoluokka-" (gensym)))}
-                    [:div.rivitys-yksittainen
-                     [:div.body-text.musta.semibold.talvihoitoreitti-valistys (:hoitoluokka h)]
-                     [:div.small-text.musta.talvihoitoreitti-valistys (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])
-
-       (when (get hoitoluokat :huoltoaukot)
-         [:div.talvihoitoreitti-rivi-tausta.ryhma-pilari
-          [:div.body-text.semibold.musta.talvihoitoluokka-otsikko "HUOLTOAUKOT JA PYSÄKÖINTIALUEET"]
-          [:div.ryhma-rivitys
-           (doall (for [h (get hoitoluokat :huoltoaukot)]
-                    ^{:key (hash (str "hoitoluokka-" (gensym)))}
-                    [:div.rivitys-yksittainen
-                     [:div.body-text.musta.semibold.talvihoitoreitti-valistys (:hoitoluokka h)]
-                     [:div.small-text.musta.talvihoitoreitti-valistys (fmt/desimaaliluku-opt (:pituus h) 2)]]))]])]
+      ;; Huoltoaukot
+      [:div.basis256.grow2.shrink3.rajaus
+       [:div.body-text.musta "HUOLTOAUKOT JA PYSÄKÖINTIALUEET"]
+       [:div
+        [:div
+         [:div.body-text.musta.semibold "Talvihoito:"
+          [:span.small-text.musta.talvihoitoreitti-valistys (or talvihoito 0)]]]
+        [:div
+         [:div.body-text.musta.semibold "Kuoma-autot:"
+          [:span.small-text.musta.talvihoitoreitti-valistys (or talvihoito-osin 0)]]]
+        [:div
+         [:div.body-text.musta.semibold "Kuppi-kuomaajat:"
+          [:span.small-text.musta.talvihoitoreitti-valistys (or ei-talvihoitoa 0)]]]]]
 
       ;; Kalusto
-      [:div.basis192.grow2.shrink3.rajaus
-       [:div.body-text.semibold.musta.talvihoitoreitti-riviotsikko "Kalusto (kpl)"]
-       [:div.talvihoitoreitti-rivi-tausta.ryhma-rivitys
-        (when (> tr_maara 0)
-          [:div
-           [:div.body-text.musta.semibold.talvihoitoreitti-valistys "TR"]
-           [:div.small-text.musta.talvihoitoreitti-valistys tr_maara]])
-        (when (> ka_maara 0)
-          [:div
-           [:div.body-text.musta.semibold.talvihoitoreitti-valistys "KA"]
-           [:div.small-text.musta.talvihoitoreitti-valistys ka_maara]])
-        (when (> kup_maara 0)
-          [:div
-           [:div.body-text.musta.semibold.talvihoitoreitti-valistys "KUP"]
-           [:div.small-text.musta.talvihoitoreitti-valistys kup_maara]])]]
-      
+      [:div.basis128.grow2.shrink3.rajaus
+       [:div.body-text.musta "KALUSTO"]
+       [:div
+        [:div
+         [:div.body-text.musta.semibold "Traktorit:"
+          [:span.small-text.musta.talvihoitoreitti-valistys (or tr_maara 0)]]]
+        [:div
+         [:div.body-text.musta.semibold "Kuoma-autot:"
+          [:span.small-text.musta.talvihoitoreitti-valistys (or ka_maara 0)]]]
+        [:div
+         [:div.body-text.musta.semibold "Kuppi-kuomaajat:"
+          [:span.small-text.musta.talvihoitoreitti-valistys (or kup_maara 0)]]]]]
+
       ;; Toiminnallisuudet
-      [:div.basis192.grow2.shrink2
+      [:div.basis128.grow2.shrink2
        [:div.body-text.strong.musta ""]
        ;; Näytä valittu rivi kartalla tai piilota se
        [:<>
         (if (contains? valitut-kohteet id)
           (napit/avaa "Piilota kartalta" #(e! (tiedot/->PoistaValittuKohdeKartalta id)) {:luokka "talvihoitoreitti-kartan-naytto"})
           (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle id)) {:luokka "talvihoitoreitti-kartan-naytto"}))]
+       ;; Keskitä yhteen yksittäiseen reittiin
        [:div (napit/yleinen "Keskitä"
                :toissijainen
                #(e! (tiedot/->KeskitaTalvihoitoreitti id reitit))
@@ -109,7 +110,13 @@
                 :luokka "talvihoitoreitti-poisto"})]
        [:div (napit/yleinen "Poista"
                :toissijainen
-               #(e! (tiedot/->PoistaTalvihoitoreitti ulkoinen_id))
+
+
+               #(varmista-kayttajalta/varmista-kayttajalta
+                  {:otsikko "Poista talvihoitoreitti"
+                   :sisalto [:div "Oletko varma, että haluat poistaa talvihoitoreitin?"]
+                   :hyvaksy "Poista"
+                   :toiminto-fn (fn [] (e! (tiedot/->PoistaTalvihoitoreitti ulkoinen_id)))})
                {:ikoni    (ikonit/livicon-trash)
                 :luokka "talvihoitoreitti-poisto"})]]]
 
