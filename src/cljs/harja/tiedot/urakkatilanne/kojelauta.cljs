@@ -89,10 +89,19 @@
   [urakat]
   (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
         aloittamatta-lkm (reduce + 0 (map :aloittamatta urakat))
-        aloittamatta-yheenveto (when-not (empty? urakat) [:span.aloittamatta
+        aloittamatta-yhteenveto (when-not (empty? urakat) [:span.aloittamatta
                                                           [yleiset/tietoja {:class "body-text"}
                                                            "Aloittamatta: " (str aloittamatta-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina aloittamatta-lkm kohteiden-lukumaara) 0) ")")]])]
-    aloittamatta-yheenveto))
+    aloittamatta-yhteenveto))
+
+(defn virheelliset-yhteenveto
+  [urakat]
+  (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
+        virheelliset-lkm (reduce + 0 (map :virheellinen urakat))
+        virheelliset-yhteenveto (when-not (empty? urakat) [:span.aloittamatta
+                                                          [yleiset/tietoja {:class "body-text"}
+                                                           "Virheelliset: " (str virheelliset-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina virheelliset-lkm kohteiden-lukumaara) 0) ")")]])]
+    virheelliset-yhteenveto))
 
 (defn poikkeusten-yhteenveto
   [urakat]

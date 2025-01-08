@@ -192,7 +192,16 @@
 
 (def urakoiden-maara-per-sivu 20)
 
-(defn taulukko-paallystysurakat [e!  {:keys [urakat haku-kaynnissa?]}]
+(defn otsikko-tila-sarake
+  [rivi]
+  (println "rivi: " rivi)
+  [yleiset/wrap-if true
+   [yleiset/tooltip {} :% "Siirry ilmoitukseen"]
+   [:a.klikattava {:href "#"
+                   :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {})}]])
+
+(defn taulukko-paallystysurakat [e! {:keys [urakat haku-kaynnissa?]}]
+  (println "DEBUG lauri urakat " urakat)
   [grid/grid
    {:otsikko (str "")
     :tyhja (if haku-kaynnissa?
@@ -205,7 +214,9 @@
                              lahetetty (tiedot/lahetetyt-yhteenveto urakat)
                              valmiit-ei-lahetetty (tiedot/valmiit-ei-lahetetty-yhteenveto urakat)
                              epaonnistuneet-lahetetty (tiedot/epaonnistuneet-lahetetyt-yhteenveto urakat)
-                             aloittamatta (tiedot/aloittamatta-yhteenveto urakat)]
+                             aloittamatta (tiedot/aloittamatta-yhteenveto urakat)
+                             virheelliset (tiedot/virheelliset-yhteenveto urakat)
+                             ]
                          (when-not (empty? urakat)
                            [{:teksti "Yhteensä" :luokka "lihavoitu"}
                             {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
@@ -214,7 +225,8 @@
                             {:teksti lahetetty :luokka "lihavoitu"}
                             {:teksti valmiit-ei-lahetetty :luokka "lihavoitu"}
                             {:teksti epaonnistuneet-lahetetty :luokka "lihavoitu"}
-                            {:teksti aloittamatta :luokka "lihavoitu"}])))}
+                            {:teksti aloittamatta :luokka "lihavoitu"}
+                            {:teksti virheelliset :luokka "lihavoitu"}])))}
    [{:otsikko "Urakka"
      :tyyppi :string
      :nimi :nimi
@@ -254,6 +266,14 @@
      :muokattava? (constantly false)
      :nimi :aloittamatta :leveys 6
      :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
+    {:otsikko "Virheelliset"
+     :muokattava? (constantly false)
+     :nimi :virheelliset_kohteet :leveys 6
+     :tyyppi :komponentti :kokonaisluku? true
+     :komponentti (fn [rivi] (str rivi)
+                    #_(for [kohde ] )
+                    )
      :tasaa :oikea}]
    urakat])
 
