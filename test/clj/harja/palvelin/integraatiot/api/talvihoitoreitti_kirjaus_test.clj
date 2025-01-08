@@ -117,7 +117,7 @@
                           lahetysdata1)
         vastaus-lisays2 (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                           lahetysdata2)
-        ;; HAetaan kannasta ja varmistetaan, että lisäys on onnistunut
+        ;; Haetaan kannasta ja varmistetaan, että lisäys on onnistunut
         talvihoitoreitti-kannassa (q-map (format "SELECT id, nimi FROM talvihoitoreitti
           WHERE urakka_id = %s" urakka-id))
         _ (is (= 2 (count talvihoitoreitti-kannassa)))
@@ -128,7 +128,7 @@
                          delete-json)
         ;; Tarkistetaan, että toinen talvihoitoreitti on poistettu
         talvihoitoreitti-kannassa (q-map (format "SELECT nimi FROM talvihoitoreitti
-          WHERE urakka_id = %s" urakka-id))
+          WHERE urakka_id = %s AND poistettu = FALSE" urakka-id))
         _ (is (= 0 (count talvihoitoreitti-kannassa)))]))
 
 (deftest tallenna-talvihoitoreitti-epaonnistuu
