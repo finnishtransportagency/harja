@@ -164,7 +164,7 @@
                           lahetysdata1)
         vastaus-lisays2 (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                           lahetysdata2)
-        ;; HAetaan kannasta ja varmistetaan, että lisäys on onnistunut
+        ;; Haetaan kannasta ja varmistetaan, että lisäys on onnistunut
         talvihoitoreitti-kannassa (q-map (format "SELECT id, nimi FROM talvihoitoreitti
           WHERE urakka_id = %s" urakka-id))
         _ (is (= 2 (count talvihoitoreitti-kannassa)))
@@ -175,7 +175,7 @@
                          delete-json)
         ;; Tarkistetaan, että toinen talvihoitoreitti on poistettu
         talvihoitoreitti-kannassa (q-map (format "SELECT nimi FROM talvihoitoreitti
-          WHERE urakka_id = %s" urakka-id))
+          WHERE urakka_id = %s AND poistettu = FALSE" urakka-id))
         _ (is (= 0 (count talvihoitoreitti-kannassa)))]))
 
 (deftest tallenna-talvihoitoreitti-epaonnistuu
@@ -240,7 +240,7 @@
 
     (is (= 400 (:status vastaus)))
     (is (= "invalidi-json" (get-in virhe [:virhe :koodi])))
-    (is (.contains (str (get-in virhe [:virhe :viesti])) "Tiellä 1 ei ole tieosaa loppuosa."))))
+    (is (.contains (str (get-in virhe [:virhe :viesti])) "Tielle 1 ei löydy tieosaa: loppuosa."))))
 
 (deftest paivita-talvihoitoreitti-epaonnistuu-koska-post
   (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")

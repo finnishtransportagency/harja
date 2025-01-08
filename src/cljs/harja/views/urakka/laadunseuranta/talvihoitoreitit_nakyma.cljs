@@ -20,7 +20,8 @@
                               {:keys [laskettu_pituus nimi id varikoodi hoitoluokat ulkoinen_id reitit urakka_id
                                       tr_maara ka_maara kup_maara]}]
   
-  (let [valitut-kohteet @tiedot/valitut-kohteet-atom
+  (let [_ (js/console.log "rivi: " (pr-str rivi))
+        valitut-kohteet @tiedot/valitut-kohteet-atom
         reittien-maara (count reitit)
         auki? (contains? talvihoitoreittien-tilat id)
         reitteja-olemassa? (> reittien-maara 0)]
@@ -93,14 +94,24 @@
            [:div.body-text.musta.semibold.talvihoitoreitti-valistys "KUP"]
            [:div.small-text.musta.talvihoitoreitti-valistys kup_maara]])]]
       
-      ;; Kartta toggle 
+      ;; Toiminnallisuudet
       [:div.basis192.grow2.shrink2
        [:div.body-text.strong.musta ""]
        ;; Näytä valittu rivi kartalla tai piilota se
        [:<>
         (if (contains? valitut-kohteet id)
           (napit/avaa "Piilota kartalta" #(e! (tiedot/->PoistaValittuKohdeKartalta id)) {:luokka "talvihoitoreitti-kartan-naytto"})
-          (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle id)) {:luokka "talvihoitoreitti-kartan-naytto"}))]]]
+          (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle id)) {:luokka "talvihoitoreitti-kartan-naytto"}))]
+       [:div (napit/yleinen "Keskitä"
+               :toissijainen
+               #(e! (tiedot/->KeskitaTalvihoitoreitti id reitit))
+               {:ikoni    (ikonit/zoom-in)
+                :luokka "talvihoitoreitti-poisto"})]
+       [:div (napit/yleinen "Poista"
+               :toissijainen
+               #(e! (tiedot/->PoistaTalvihoitoreitti ulkoinen_id))
+               {:ikoni    (ikonit/livicon-trash)
+                :luokka "talvihoitoreitti-poisto"})]]]
 
      ;; Otsikkokoponentin voi avata ja avaamisen jälkeen näytetään lista (grid) reiteistä
      (when (and
@@ -186,7 +197,7 @@
              :solun-luokka #(str "talvihoitoreitti-rivi")
              :tunniste :id
              :komponentti (fn [reitti]
-                            ;; Väkänen / rivi 
+                            ;; Väkänen / rivi
                             (talvihoitoreitti-rivi app e! reitti))
              :leveys 1}]
            talvihoitoreitit]))])])

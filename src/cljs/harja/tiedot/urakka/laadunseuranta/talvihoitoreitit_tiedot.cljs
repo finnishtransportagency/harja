@@ -90,6 +90,10 @@
 ;; Manipuloi kartalla näytettäviä reittejä atomin kautta
 (defrecord PoistaValittuKohdeKartalta [id])
 (defrecord LisaaValittuKohdeKartalle [id])
+(defrecord KeskitaTalvihoitoreitti [id reitit])
+(defrecord PoistaTalvihoitoreitti [ulkoinenid])
+(defrecord PoistaTalvihoitoreittiOnnistui [vastaus])
+(defrecord PoistaTalvihoitoreittiEpaonnistui [vastaus])
 
 ;; Listan käsittely
 (defrecord AvaaTalvihoitoreitti [avain])
@@ -162,6 +166,32 @@
           alue (harja.geo/extent-monelle (map :sijainti valitut-talvihoitoreitit))]
       (reset! nav/kartan-extent alue)
       app))
+
+  KeskitaTalvihoitoreitti
+  (process-event [{:keys [id reitit]} app]
+    (let [alue (harja.geo/extent-monelle (map :sijainti reitit))
+          _ (reset! nav/kartan-extent alue)]
+      app))
+
+  PoistaTalvihoitoreitti
+  (process-event [{:keys [ulkoinenid]} app]
+    (let []
+      (tuck-apurit/post! :poista-talvihoitoreitti
+        {:ulkoinenid ulkoinenid
+         :urakka-id (:id @nav/valittu-urakka)}
+        {:onnistui ->PoistaTalvihoitoreittiOnnistui
+         :epaonnistui ->PoistaTalvihoitoreittiEpaonnistui})
+      (assoc app :poisto-kaynnissa? true)))
+
+  PoistaTalvihoitoreittiOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Talvihoitoreitti poistettu onnistuneesti!" :onnistui)
+    (hae-talvihoitoreitit (assoc app :poisto-kaynnissa? false)))
+
+  PoistaTalvihoitoreittiEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Talvihoitoreitin poisto ei onnistunut!" :varoitus)
+    (hae-talvihoitoreitit (assoc app :poisto-kaynnissa? false)))
 
   TiedostoLadattu
   (process-event [{:keys [vastaus]} app]
