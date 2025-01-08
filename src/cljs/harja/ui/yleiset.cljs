@@ -243,11 +243,17 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
       (fn [{:keys [ryhmissa? nayta-ryhmat ryhman-otsikko ryhmitellyt-itemit
                    li-luokka-fn itemit-komponentteja? format-fn valitse-fn
                    vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo
-                   pakollinen? valikko-ref valittu-rivi nappi-id viive-fokuksen-siirtoon? maaritelty-id?] :as optiot}]
+                   pakollinen? valikko-ref valittu-rivi nappi-id viive-fokuksen-siirtoon?
+                   maaritelty-id? pitka-teksti?] :as optiot}]
 
         (let [listan-rivit (vec (array-seq (.querySelectorAll @valikko-ref "li")))
               alasvedon-nappi (.querySelector @valikko-ref "button")
-              checkbox-rivi? (= :checkbox (get (get (nth vaihtoehdot @valittu-rivi) 1) :tyyppi))]
+              checkbox-rivi? (= :checkbox (get (get (nth vaihtoehdot @valittu-rivi) 1) :tyyppi))
+              sijainti-ja-tekstin-pituus (do
+                                           (when @sijainti-ylos?
+                                             {:bottom "100%"})
+                                           (when pitka-teksti?
+                                             {:white-space "normal"}))]
 
           [:ul {:class "dropdown-menu livi-alasvetolista"
                 :style (if vayla-tyyli?
@@ -260,11 +266,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                            (when skrollattava?
                              {:overflow "scroll"
                               :max-height valinta-ul-max-korkeus-px})
-                           (when @sijainti-ylos?
-                             {:bottom "100%"}))
+                           sijainti-ja-tekstin-pituus)
                          (merge {:max-height valinta-ul-max-korkeus-px}
-                           (when @sijainti-ylos?
-                             {:bottom "100%"})))
+                           sijainti-ja-tekstin-pituus))
                 :on-key-down #(cond
                                 (or (dom/tab-nappain-ilman-shiftia? %) (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
                                 (do
@@ -416,7 +420,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
-                   pakollinen? tarkenne muokattu? viive-fokuksen-siirtoon?] :as asetukset} vaihtoehdot]
+                   pakollinen? tarkenne muokattu? viive-fokuksen-siirtoon? pitka-teksti?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -473,7 +477,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                :valittu-rivi valittu-rivi
                                :nappi-id nappi-id
                                :viive-fokuksen-siirtoon? viive-fokuksen-siirtoon?
-                               :maaritelty-id? maaritelty-id?})])])))))
+                               :maaritelty-id? maaritelty-id?
+                               :pitka-teksti? pitka-teksti?})])])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div {:class (or (:wrap-luokka optiot) "label-ja-alasveto")}
