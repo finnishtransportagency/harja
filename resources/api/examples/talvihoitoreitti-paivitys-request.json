@@ -1,6 +1,11 @@
 {
   "tunniste": "Valtavan uniikki 1234",
   "reittinimi": "Nelostien pikkumutka",
+  "kalustot":  {
+    "tr_maara": 3,
+    "ka_maara": 2,
+    "kup_maara": 1
+  },
   "sijainnit": [
     {
       "tie": 4,
@@ -9,12 +14,7 @@
       "losa": 405,
       "let": 5001,
       "hoitoluokka": "Ise",
-      "pituus": 12840,
-      "kalustot":  {
-        "tr_maara": 4,
-        "ka_maara": 3,
-        "kup_maara": 2
-      }
+      "pituus": 12840
     },
     {
       "tie": 20,
@@ -23,12 +23,7 @@
       "losa": 1,
       "let": 3001,
       "pituus": 3001,
-      "hoitoluokka":"I",
-      "kalustot":  {
-        "tr_maara": 3,
-        "ka_maara": 2,
-        "kup_maara": 1
-      }
+      "hoitoluokka":"I"
     },
     {
       "tie": 20,
@@ -37,12 +32,7 @@
       "losa": 4,
       "let": 14000,
       "pituus": 14000,
-      "hoitoluokka": "Ise",
-      "kalustot":  {
-        "tr_maara": 3,
-        "ka_maara": 2,
-        "kup_maara": 1
-      }
+      "hoitoluokka": "Ise"
     }
   ]
 }
