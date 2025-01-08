@@ -43,12 +43,11 @@
 
                  (= urakkatyyppi :paallystys)
                  (mapv (fn [rivi]
-                         (println "Virheelliset kohteet tyyppi: " (type (:virheelliset_kohteet rivi)))
                          (-> rivi
                            (update :virheelliset_kohteet
                              (fn [kohteet]
                                (mapv
-                                 #(konv/pgobject->map % :id :long :kohdenumero :string :nimi :string)
+                                 #(konv/pgobject->map % :id :long :kohdenumero :string :tunnus :string :kohdenimi :string)
                                  (konv/pgarray->vector kohteet))))))
                    (q/hae-paallystysurakat-kojelautaan db (set/rename-keys params {:hoitokauden_alkuvuosi :vuosi}))))]
     urakat))

@@ -61,7 +61,7 @@ SELECT u.id,
            AND y.lahetys_onnistunut IS FALSE) AS epaonnistuneet_lahetetyt,
        COUNT(*) FILTER (WHERE pot2.tila IN ('valmis', 'lukittu') AND y.lahetetty IS NULL) AS valmiit_ei_lahetetty,
        COUNT(*) FILTER (WHERE y.id IS NOT NULL AND NOT exists (select id from paallystysilmoitus WHERE paallystyskohde = y.id)) AS aloittamatta,
-       (SELECT array_agg(ARRAY[id::TEXT, kohdenumero::TEXT, nimi::TEXT]) from yllapitokohde y
+       (SELECT array_agg(ROW(y.id::TEXT, y.kohdenumero::TEXT, y.tunnus::TEXT, y.nimi::TEXT)) FROM yllapitokohde y
         WHERE y.lahetetty IS NOT NULL AND y.lahetysvirhe IS NOT NULL
           AND y.vuodet @> ARRAY[:vuosi]::INTEGER[] AND y.poistettu IS FALSE AND y.urakka = u.id) AS virheelliset_kohteet
 FROM urakka u
