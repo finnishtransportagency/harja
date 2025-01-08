@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]
+            [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
@@ -100,7 +101,7 @@
           tr (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka-id :ulkoinen_id ulkoinenid})
           _ (if tr
               (talvihoitoreitit-q/poista-talvihoitoreitti! db {:ulkoinen_id ulkoinenid
-                                                                      :urakka_id urakka-id})
+                                                               :urakka_id urakka-id})
               (throw+ {:type "Error"
                        :virheet [{:koodi "ERROR" :viesti "Ei löydy poistettavaa talvihoitoreittiä. Tarkista tiedot."}]}))]
       {:onnistui "Talvihoitoreitti poistettu onnistuneesti."})
