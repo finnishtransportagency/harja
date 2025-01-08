@@ -63,26 +63,26 @@
          (doall (for [h (get hoitoluokat :maantiet)]
                   ^{:key (hash (str "hoitoluokka-" (gensym)))}
                   [:div
-                   [:div.body-text.musta.semibold (:hoitoluokka h)
+                   [:div.body-text.musta.semibold (str (:hoitoluokka h) ":")
                     [:span.small-text.musta.talvihoitoreitti-valistys (fmt/desimaaliluku-opt (:pituus h) 2)]]]))]]]
 
       ;; Huoltoaukot
       [:div.basis256.grow2.shrink3.rajaus
-       [:div.body-text.musta "HUOLTOAUKOT JA PYSÄKÖINTIALUEET"]
+       [:div.body-text.musta "HUOLTOAUKOT JA PYSÄKÖINTIALUEET (KM)"]
        [:div
         [:div
          [:div.body-text.musta.semibold "Talvihoito:"
-          [:span.small-text.musta.talvihoitoreitti-valistys (or talvihoito 0)]]]
+          [:span.small-text.musta.talvihoitoreitti-valistys (or talvihoito "0,00")]]]
         [:div
-         [:div.body-text.musta.semibold "Kuoma-autot:"
-          [:span.small-text.musta.talvihoitoreitti-valistys (or talvihoito-osin 0)]]]
+         [:div.body-text.musta.semibold "Talvihoito-osin:"
+          [:span.small-text.musta.talvihoitoreitti-valistys (or talvihoito-osin "0,00")]]]
         [:div
-         [:div.body-text.musta.semibold "Kuppi-kuomaajat:"
-          [:span.small-text.musta.talvihoitoreitti-valistys (or ei-talvihoitoa 0)]]]]]
+         [:div.body-text.musta.semibold "Ei talvihoitoa:"
+          [:span.small-text.musta.talvihoitoreitti-valistys (or ei-talvihoitoa "0,00")]]]]]
 
       ;; Kalusto
       [:div.basis128.grow2.shrink3.rajaus
-       [:div.body-text.musta "KALUSTO"]
+       [:div.body-text.musta "KALUSTO (KPL)"]
        [:div
         [:div
          [:div.body-text.musta.semibold "Traktorit:"
@@ -100,25 +100,23 @@
        ;; Näytä valittu rivi kartalla tai piilota se
        [:<>
         (if (contains? valitut-kohteet id)
-          (napit/avaa "Piilota kartalta" #(e! (tiedot/->PoistaValittuKohdeKartalta id)) {:luokka "talvihoitoreitti-kartan-naytto"})
-          (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle id)) {:luokka "talvihoitoreitti-kartan-naytto"}))]
+          (napit/avaa "Piilota kartalta" #(e! (tiedot/->PoistaValittuKohdeKartalta id)) {:luokka "btn-xs talvihoitoreitti-kartan-naytto"})
+          (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle id)) {:luokka "btn-xs talvihoitoreitti-kartan-naytto"}))]
        ;; Keskitä yhteen yksittäiseen reittiin
        [:div (napit/yleinen "Keskitä"
                :toissijainen
                #(e! (tiedot/->KeskitaTalvihoitoreitti id reitit))
                {:ikoni    (ikonit/zoom-in)
-                :luokka "talvihoitoreitti-poisto"})]
+                :luokka "btn-xs talvihoitoreitti-poisto"})]
        [:div (napit/yleinen "Poista"
                :toissijainen
-
-
                #(varmista-kayttajalta/varmista-kayttajalta
                   {:otsikko "Poista talvihoitoreitti"
                    :sisalto [:div "Oletko varma, että haluat poistaa talvihoitoreitin?"]
                    :hyvaksy "Poista"
                    :toiminto-fn (fn [] (e! (tiedot/->PoistaTalvihoitoreitti ulkoinen_id)))})
                {:ikoni    (ikonit/livicon-trash)
-                :luokka "talvihoitoreitti-poisto"})]]]
+                :luokka "btn-xs talvihoitoreitti-poisto"})]]]
 
      ;; Otsikkokoponentin voi avata ja avaamisen jälkeen näytetään lista (grid) reiteistä
      (when (and
