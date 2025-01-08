@@ -193,7 +193,7 @@
 
     (is (= 400 (:status vastaus)))
     (is (= "invalidi-json" (get-in virhe [:virhe :koodi])))
-    (is (.contains (str (get-in virhe [:virhe :viesti])) "Tiellä 1 ei ole tieosaa loppuosa."))))
+    (is (.contains (str (get-in virhe [:virhe :viesti])) "Tielle 1 ei löydy tieosaa: loppuosa."))))
 
 (deftest paivita-talvihoitoreitti-epaonnistuu-koska-post
   (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
