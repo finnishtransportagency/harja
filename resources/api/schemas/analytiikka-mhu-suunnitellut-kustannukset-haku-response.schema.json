@@ -319,6 +319,101 @@
               }
             }
           },
+          "kustannustavoitteet": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kustannustavoite": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "tavoite-id": {
+                      "type": "integer",
+                      "description": "Hoitokausikohtaisen tavoiterivin id Harjan tietokannassa. Rivi sisältää hoitokauden tavoite- ja kattohintaan liittyvät tiedot."
+                    },
+                    "hoitokausi": {
+                      "type": "integer",
+                      "description": "Sen hoitokauden alkuvuosi, jota tavoitehinta koskee. Jos hoitokausi on 2023-24, tässä palautuu 2023."
+                    },
+                    "tavoitehinta": {
+                      "type": "object",
+                      "properties": {
+                        "summa": {
+                          "type": "number",
+                          "description": "Hoitokauden tavoitehinta. Yksikkö: euro."
+                        },
+                        "indeksikorjattu-summa": {
+                          "type": "number",
+                          "description": "Hoitokauden tavoitehinta indeksikorjattuna. Yksikkö: euro."
+                        },
+                        "siirretty-summa": {
+                          "type": "number",
+                          "description": "Hoitokaudelle edellisen hoitokauden välikatselmuksessa siirretty tavoitehinnan lisä. Yksikkö: euro."
+                        },
+                        "indeksikorjattu-siirretty-summa": {
+                          "type": "number",
+                          "description": "Hoitokaudelle edellisen hoitokauden välikatselmuksessa siirretty tavoitehinnan lisä indeksikorjattuna. Yksikkö: euro."
+                        },
+                        "indeksikorjauksen-vahvistusajankohta": {
+                          "type": "string",
+                          "format": "datetime",
+                          "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Vahvistus koskee sekä tavoitehintaa että edelliseltä vuodelta siirrettyä tavoitehinnan lisää. Jos tyhjä, ei indeksikorjausta tavoitehinnalle ole vielä hyväksytty tai indeksikorjaus ei ole relevantti (esimerkiksi ensimmäisellä hoitokaudella)."
+                        },
+                        "tarjouksen-tavoitehinta": {
+                          "type": "number",
+                          "description": "Urakkatarjouksessa annettu, hoitovuosikohtainen tavoitehinta. Yksikkö: euro."
+                        },
+                        "required": [
+                          "summa"
+                        ]
+                      }
+                    },
+                    "kattohinta": {
+                      "type": "object",
+                      "properties": {
+                        "summa": {
+                          "type": "number",
+                          "description": "Hoitokauden kattohinta. Yksikkö: euro."
+                        },
+                        "indeksikorjattu-summa": {
+                          "type": "number",
+                          "description": "Hoitokauden kattohinta indeksikorjattuna. Yksikkö: euro."
+                        },
+                        "siirretty-summa": {
+                          "type": "number",
+                          "description": "Hoitokaudelle edellisen hoitokauden välikatselmuksessa siirretty kattohinnan lisä. Yksikkö: euro."
+                        },
+                        "indeksikorjattu-siirretty-summa": {
+                          "type": "number",
+                          "description": "Hoitokaudelle edellisen hoitokauden välikatselmuksessa siirretty kattohinnan lisä indeksikorjattuna. Yksikkö: euro."
+                        },
+                        "indeksikorjauksen-vahvistusajankohta": {
+                          "type": "string",
+                          "format": "datetime",
+                          "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Vahvistus koskee sekä tavoitehintaa että edelliseltä vuodelta siirrettyä kattohinnan lisää. Jos tyhjä, ei indeksikorjausta tavoitehinnalle ole vielä hyväksytty tai indeksikorjaus ei ole relevantti (esimerkiksi ensimmäisellä hoitokaudella)."
+                        },
+                        "required": [
+                          "summa"
+                        ]
+                      }
+                    },
+                    "versio": {
+                      "type": "integer",
+                      "description": "Kustannustavoitteen versio. Käytetään ehkä tulevaisuudessa tavoite- ja kattohinnan muutoshistorian seuraamiseen. Versio on nolla, kun versiointia ei ole käytössä."
+                    },
+                    "required": [
+                      "tavoite-id",
+                      "ajankohta",
+                      "tavoitehinta",
+                      "kattohinta"
+                    ]
+                  }
+                }
+              }
+            }
+          },
           "required": [
             "urakka",
             "urakkatunnus"

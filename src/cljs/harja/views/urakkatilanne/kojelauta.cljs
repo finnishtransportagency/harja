@@ -41,16 +41,16 @@
      [:label.alasvedon-otsikko-vayla {:for "elyhaku"} "Hallintayksikkö"]
      [kentat/tee-kentta
       {:input-id "elyhaku" :tyyppi :haku
-       :nayta #(or (hal/elynumero-ja-nimi %) "Kaikki")
+       :nayta #(hal/elynumero-ja-nimi %)
        :lahde elyhaku
        :hakuikoni? true
        :hae-kun-yli-n-merkkia 0
        :tarkkaile-ulkopuolisia-muutoksia? true
-       :placeholder "Valitse yksi tai useampi"
+       :placeholder "Käytä suurennuslasia tai anna nimi"
        :monivalinta? true
        :monivalinta-teksti #(case (count %)
                               0 "Kaikki"
-                              1 (hal/elynumero-ja-nimi %)
+                              1 (hal/elynumero-ja-nimi (first %))
                               (str (count %) " hallintayksikköä valittu"))
        :disabled? haku-kaynnissa?}
       (r/wrap (:elyt valinnat) #(do
@@ -78,7 +78,7 @@
        :monivalinta? true
        :tarkkaile-ulkopuolisia-muutoksia? true
        :hakuikoni? true
-       :placeholder "Käytä suurennuslasia tai anna urakan nimi"
+       :placeholder "Käytä suurennuslasia tai anna nimi"
        :monivalinta-teksti #(case (count %)
                               0 ""
                               1 (:nimi (first %))
