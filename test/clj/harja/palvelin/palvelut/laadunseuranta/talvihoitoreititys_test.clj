@@ -45,7 +45,9 @@
     (is (= (count vastaus) 6) "Urakalla on kuusi reittiä.")
     (is (= (:nimi (nth vastaus 5)) "Pysäköinti") "Kohteen nimi on Pysäköinti.")
     (is (= (:laskettu_pituus (nth vastaus 5)) 0.012) "Pysäköintikohteen pituus on 0.012.")
-    (is (= (:kalustot (nth vastaus 5)) [{:kalustotyyppi "TR", :kalustomaara 2}]) "Kalustot täsmää")
+    (is (= (:tr_maara (nth vastaus 5)) 2) "TR täsmää")
+    (is (= (nil? (:ka_maara (nth vastaus 5)))) "KA täsmää")
+    (is (= (nil? (:kup_maara (nth vastaus 5)))) "KA täsmää")
     (is (= (:hoitoluokat (nth vastaus 5))
           {:huoltoaukot [{:ryhma :huoltoaukot, :hoitoluokka "Talvihoito", :pituus 0.012}]}) "Hoitoluokat täsmää")))
 

@@ -117,8 +117,6 @@
 
         ;; Koska saman nimiselle reitille voi tulla useita tieosoitteita, niin groupataan reitit nimen perusteella
         reitti-rivit (group-by :nimi reitti-rivit)
-        kalusto-rivit (group-by :nimi kalusto-rivit)
-
         reittien-nimet (keys reitti-rivit)
 
         ;; Reitti ja kalusto tabeilla täytyy olla sama määrä rivejä
@@ -131,14 +129,14 @@
         reitit (reduce
                  (fn [tulos nimi]
                    (let [;; Excelistä tuotavalla talvihoitoreitillä ei ole tunnistetta tai ulkoista id:tä, joten käytetään nimeä
+                         reitin-kalusto (some #(when (= (:nimi %) nimi) %) kalusto-rivit)
                          talvihoitoreitti {:reittinimi nimi
                                            :tunniste nimi
-                                           :sijainnit (map #(dissoc % :nimi) (get-in reitti-rivit [nimi]))}
-                         kalustot (mapv #(dissoc % :nimi) (get-in kalusto-rivit [nimi]))
-                         lopulliset-kalustot (mapv #(jaa-mappi-helpperi %) kalustot)
-                         reitit (map (fn [reitti] (assoc reitti :kalustot (flatten lopulliset-kalustot))) (:sijainnit talvihoitoreitti))
-                         lopullinen-talvihoitoreitti (assoc talvihoitoreitti :sijainnit reitit)]
-                     (conj tulos lopullinen-talvihoitoreitti)))
+                                           :sijainnit (map #(dissoc % :nimi) (get-in reitti-rivit [nimi]))
+                                           :kalustot {:tr_maara (when-not (nil? (:tr reitin-kalusto)) (int (:tr reitin-kalusto)))
+                                                      :ka_maara (when-not (nil? (:ka reitin-kalusto)) (int (:ka reitin-kalusto)))
+                                                      :kup_maara (when-not (nil? (:kup reitin-kalusto)) (int (:kup reitin-kalusto)))}}]
+                     (conj tulos talvihoitoreitti)))
                  [] reittien-nimet)]
     reitit))
 

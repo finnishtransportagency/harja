@@ -18,7 +18,7 @@ $$
         INSERT INTO talvihoitoreitti (nimi, urakka_id, ulkoinen_id, varikoodi, tr_maara, kup_maara, ka_maara, muokattu, muokkaaja, luotu, luoja)
         VALUES ('Reitti 1', urakka_id, 'Reitti 1', '#FF8D1A', 1,1,1,NULL, NULL, NOW(), luoja_id);
         INSERT INTO talvihoitoreitti (nimi, urakka_id, ulkoinen_id, varikoodi, tr_maara, kup_maara, ka_maara, muokattu, muokkaaja, luotu, luoja)
-        VALUES ('Reitti 2', urakka_id, 'Reitti 2', '#FF8D1A', 2,3,4,NULL, NULL, NOW(), luoja_id);
+        VALUES ('Reitti 2', urakka_id, 'Reitti 2', '#FF1493', 2,3,4,NULL, NULL, NOW(), luoja_id);
 
         -- Haetaan reittien id:t lisäämisen jälkeen
         SELECT id INTO reitti1_id FROM talvihoitoreitti WHERE nimi = 'Reitti 1';
