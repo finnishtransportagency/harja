@@ -3,6 +3,8 @@
   (:require [harja.fmt :as fmt]
             [harja.ui.liitteet :as liitteet]
             [tuck.core :as tuck]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.transit :as transit]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as kartta-tasot]
@@ -143,9 +145,19 @@
       [ajax-loader "Ladataan talvihoitoreittejä..."]]
 
      [:div.talvihoitoreititys
-      [:div.flex-row
+      [:div.flex-row {:style {:justify-content "space-between"}}
        [:h2 "Talvihoitoreititys"]
-       [:div
+       [:div {:style {:display "flex"}}
+        ;; Jos talvihoitoreittejä on olemassa, niin annetaan käyttäjän ladata ne Exceliin
+        (when-not (empty? talvihoitoreitit)
+          [:span [:form {:style {:margin-left "auto"}
+                         :target "_blank" :method "POST"
+                         :action (k/excel-url :lataa-talvihoitoreitit-exceliin)}
+                  [:input {:type "hidden" :name "parametrit"
+                           :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)})}]
+                  [:button {:type "submit"
+                            :class #{"nappi-toissijainen"}}
+                   [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa talvihoitoreitit-Excel"]]]])
         [liitteet/lataa-tiedosto
          {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
          {:nappi-teksti "Tuo kohteet Excelistä"

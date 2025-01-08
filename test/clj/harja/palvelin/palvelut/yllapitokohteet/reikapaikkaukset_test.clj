@@ -206,4 +206,4 @@
     (is (= (first vastaus) :pohjan-taytto) "Excel-viennin tyypin pitäisi olla :pohjan-taytto")
     (is (= (count vastaus) 3) "Halutaan kolme elementtiä, tyyppi, parametrit ja data")
     (is (= (last (first (last vastaus))) 249520.0M) "Datan ensimmäisen rivin viimeinen tieto pitäisi olla reikäpaikkausten kulujen summa")
-    (is (= (count (last vastaus)) 7))) "Datarivejä pitäisi olla 7, yhteenvetorivi, tyhjä rivi välissä ja 5 reikäpaikkausta")
+    (is (= (count (last vastaus)) 7) "Datarivejä pitäisi olla 7, yhteenvetorivi, tyhjä rivi välissä ja 5 reikäpaikkausta" )))

@@ -2,8 +2,6 @@
   "Talvihoitoreittien UI:n endpointit."
   (:require [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
-            [harja.domain.tierekisteri :as tr]
-            [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]
             [taoensso.timbre :as log]
@@ -11,72 +9,26 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [slingshot.slingshot :refer [throw+ try+]]
             [dk.ative.docjure.spreadsheet :as xls]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-excel :as t-excel]))
-
-(defn- hoitoluokkaryhma
-  "Hoitoluokat kuuluvat UI:lla kolmeen ryhmään: Kävelyn ja pyöräilyn väylät, Maantiet ja Huoltoaukot ja pysäköintialueet.
-   Ryhmitellään hoitoluokat näiden ryhmien mukaan."
-  [hoitoluokka]
-  (case hoitoluokka
-    "Talvihoito" :huoltoaukot
-    "Hoito osin" :huoltoaukot
-    "Ei talvihoitoa" :huoltoaukot
-    "L" :kavely_ja_pyoraily
-    "K1" :kavely_ja_pyoraily
-    "K2" :kavely_ja_pyoraily
-    :maantiet))
-
 
 (defn hae-urakan-talvihoitoreitit [db user {:keys [urakka-id]}]
   (log/debug "hae-urakan-talvihoitoreitit ::user" user)
   ;; Estä muut, kuin järjestelmävastaavat näkemästä talvihoitoreittejä
   (when (contains? (:roolit user) "Jarjestelmavastaava")
     ;;(oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
-    (let [urakan-talvihoitoreitit (talvihoitoreitit-q/hae-urakan-talvihoitoreitit db {:urakka_id urakka-id})
-          _ (log/debug "hae-urakan-talvihoitoreitit :: urakan-talvihoitoreitit" urakan-talvihoitoreitit)
-          talvihoitoreitit (mapv (fn [rivi]
-                                   (let [;; Hae reitit erikseen
-                                         reitit (talvihoitoreitit-q/hae-sijainti-talvihoitoreitille db {:talvihoitoreitti_id (:id rivi)})
-                                         ;; Formatoi käyttöliittymälle valmiiksi
-                                         reitit (map (fn [r]
-                                                       (-> r
-                                                         (assoc :sijainti (:reitti r))
-                                                         (assoc :formatoitu-tr (tr/tr-osoite-moderni-fmt
-                                                                                 (:tie r) (:alkuosa r) (:alkuetaisyys r)
-                                                                                 (:loppuosa r) (:loppuetaisyys r)))
-                                                         (dissoc :reitti))) reitit)
+    (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)))
 
-                                         ;; Jaotellaan reitti hoitoluokittan UI:ta varten
-                                         hoitoluokat (vec (vals (group-by :hoitoluokka (map (fn [r]
-                                                                                              (dissoc r :sijainti :tie :alkuosa
-                                                                                                :alkuetaisyys :loppuosa :loppuetaisyys
-                                                                                                :id :formatoitu-tr)) reitit))))
-                                         
-                                         ;; Lasketaan jokaiselle hoitoluokalle pituus
-                                         hoitoluokat (mapv (fn [hoitoluokka-vec]
-                                                             {:ryhma (hoitoluokkaryhma (:hoitoluokka (first hoitoluokka-vec)))
-                                                              :hoitoluokka (:hoitoluokka (first hoitoluokka-vec))
-                                                              :pituus (reduce + (map :laskettu_pituus hoitoluokka-vec))})
-                                                       hoitoluokat)
-                                         ;; Ryhmitellään lopuksi hoitoluokat ryhmän mukaan
-                                         hoitoluokat (group-by :ryhma hoitoluokat)
-                                         rivi (-> rivi
-                                                (assoc :reitit reitit)
-                                                (assoc :laskettu_pituus (reduce + (map :laskettu_pituus reitit)))
-                                                (assoc :hoitoluokat hoitoluokat)
-                                                (dissoc :muokkaaja :muokattu :luotu :luoja))]
-                                     rivi))
-                             urakan-talvihoitoreitit)]
-      talvihoitoreitit)))
-
-(defn- kasittele-excel [db urakka-id kayttaja req]
+(defn kasittele-excel [db urakka-id kayttaja req workbook]
   (let [;; Excelistä löytyneille talvihoitoreitteille koostetaan atomeihin statuksia. Päivittyneet omaansa, uudet lisäykset omaansa
         ;; ja virheet omaansa
         lisatyt-atom (atom [])
         paivitetyt-atom (atom [])
         virheet-atom (atom [])
-        ;; Lue excelistä kaikki tiedot talteen
-        workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
+        ;; Lue excelistä kaikki tiedot talteen -- Testiä varten mahdollista workbookin antaminen parametrina
+        workbook (if (nil? workbook)
+                   (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
+                   workbook)
         talvihoitoreitit (try+
                            (t-excel/lue-talvihoitoreitit-excelista workbook)
                            (catch [:type :validaatiovirhe] {:keys [virheet]}
@@ -135,13 +87,13 @@
         kayttaja (:kayttaja request)]
     ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
     (if (and urakka-id kayttaja)
-      (kasittele-excel db urakka-id kayttaja request)
+      (kasittele-excel db urakka-id kayttaja request nil)
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
 (defrecord Talvihoitoreitit []
   component/Lifecycle
-  (start [{:keys [http-palvelin db] :as this}]
+  (start [{:keys [http-palvelin db excel-vienti] :as this}]
 
     (julkaise-palvelut http-palvelin :hae-urakan-talvihoitoreitit
       (fn [user tiedot]
@@ -150,6 +102,10 @@
     (julkaise-palvelu http-palvelin :lue-talvihoitoreitit-excelista
       (wrap-multipart-params (fn [request] (vastaanota-excel db request)))
       {:ring-kasittelija? true})
+
+    (when excel-vienti
+      (excel-vienti/rekisteroi-excel-kasittelija! excel-vienti :lataa-talvihoitoreitit-exceliin
+        (partial #'t-excel/lataa-talvihoitoreitit-exceliin db)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]

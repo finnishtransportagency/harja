@@ -524,7 +524,7 @@
 
       :talvihoitoreitit (component/using
                           (talvihoitoreitit/->Talvihoitoreitit)
-                          [:http-palvelin :db])
+                          [:http-palvelin :db :excel-vienti])
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)

@@ -4,6 +4,7 @@
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.domain.oikeudet :as oikeudet]
             [harja.testi :refer :all]
+            [clojure.data.json :as json]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta])
@@ -85,25 +86,45 @@
                                               13343 #{"ELY_Urakanvalvoja"}}}]
     (is (= vastaus odotetut-roolit))))
 
-(defn testi-cognito-headerit []
-  (let [x-iam-data [{"typ" "JWT"
-                     "kid" "7d2ed764-76dd-44c3-b4cf-8cde89fe6e5f"
-                     "alg" "ES256"
-                     "iss" "https://cognito-idp.eu-west-1.amazonaws.com/foobar"
-                     "client" "3ctc20d3i4ghv34ks0semt4e16"
-                     "signer" "arn:aws:elasticloadbalancing:eu-west-1:083539282917:loadbalancer/app/foobar/8dad8bb767eb8568"
-                     "exp" 1687175356}
-                    {"custom:rooli" "2234567-8_Paakayttaja"
-                     "custom:sukunimi" "Destialainen"
-                     "custom:ytunnus" "2163026-3"
-                     "email" "daniel@example.com"
-                     "exp" 1687175356
-                     "custom:uid" "daniel"
-                     "custom:puhelin" "1234567890"
-                     "custom:organisaatio" "Destia Oy"
-                     "custom:etunimi" "Daniel"}
-                    ;; Tämä on vain signature. Ei relevantti näiden testien kannalta tällä hetkellä.
-                    "TDZJ0uQA-H2GEfw38cVc-OS8gAsRVlW_EyPojJOtLKbqMalXUcq59BFB-ZJY1UXmxhdNDX04IEAQs70qa5p2Gw=="]
+(def testi-cognito-headerit-entraid
+  [{"typ" "JWT"
+    "kid" "7d2ed764-76dd-44c3-b4cf-8cde89fe6e5f"
+    "alg" "ES256"
+    "iss" "https://cognito-idp.eu-west-1.amazonaws.com/foobar"
+    "client" "3ctc20d3i4ghv34ks0semt4e16"
+    "signer" "arn:aws:elasticloadbalancing:eu-west-1:083539282917:loadbalancer/app/foobar/8dad8bb767eb8568"
+    "exp" 1687175356}
+   {"custom:rooli" (json/write-str ["Jarjestelmavastaava" "MHU-TESTI-LAP-ROV_vastuuhenkilo" "MHU-TESTI-LAP-IVA_vastuuhenkilo"])
+    "custom:sukunimi" "tonttu"
+    "email" "toni@tonttu.com"
+    "custom:uid" "Jarjestelmavastaava"
+    "custom:organisaatio" "Liikennevirasto"
+    "custom:etunimi" "toni"}
+   ;; Tämä on vain signature. Ei relevantti näiden testien kannalta tällä hetkellä.
+   "TDZJ0uQA-H2GEfw38cVc-OS8gAsRVlW_EyPojJOtLKbqMalXUcq59BFB-ZJY1UXmxhdNDX04IEAQs70qa5p2Gw=="])
+
+(def testi-cognito-headerit-oam 
+  [{"typ" "JWT"
+    "kid" "7d2ed764-76dd-44c3-b4cf-8cde89fe6e5f"
+    "alg" "ES256"
+    "iss" "https://cognito-idp.eu-west-1.amazonaws.com/foobar"
+    "client" "3ctc20d3i4ghv34ks0semt4e16"
+    "signer" "arn:aws:elasticloadbalancing:eu-west-1:083539282917:loadbalancer/app/foobar/8dad8bb767eb8568"
+    "exp" 1687175356}
+   {"custom:rooli" "2234567-8_Paakayttaja"
+    "custom:sukunimi" "Destialainen"
+    "custom:ytunnus" "2163026-3"
+    "email" "daniel@example.com"
+    "exp" 1687175356
+    "custom:uid" "daniel"
+    "custom:puhelin" "1234567890"
+    "custom:organisaatio" "Destia Oy"
+    "custom:etunimi" "Daniel"}
+   ;; Tämä on vain signature. Ei relevantti näiden testien kannalta tällä hetkellä.
+   "TDZJ0uQA-H2GEfw38cVc-OS8gAsRVlW_EyPojJOtLKbqMalXUcq59BFB-ZJY1UXmxhdNDX04IEAQs70qa5p2Gw=="])
+
+(defn testi-enkoodaa-payload-jwt [iam-payload]
+  (let [x-iam-data iam-payload
         jwt (map #(->
                     %
                     cheshire/encode
@@ -112,16 +133,30 @@
                     (String. "UTF-8")) [(first x-iam-data) (second x-iam-data)])
         jwt (str (str/join "." jwt) "." (nth x-iam-data 2))]
     {"x-iam-data" jwt}))
-(deftest cognito-headereiden-purku
+
+(deftest cognito-headereiden-purku-oam-ja-entraid
   (let [handler (->
                   (fn [req] req)
                   (harja.palvelin.komponentit.http-palvelin/wrap-with-common-wrappers))
         todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)
-        destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))]
-    (testing "Cognito headeri: x-iam-data on purettu oikein ja tarvittava OAM-data on saatu"
-      (let [req (handler {:headers (testi-cognito-headerit)})
-            req (todenna req)]
 
+        destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))
+        virasto-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'")))]
+    
+    (testing "Cognito headeri EntraID muodossa: x-iam-data on purettu oikein ja tarvittava OAM-data on saatu"
+      (let [req (handler {:headers (testi-enkoodaa-payload-jwt testi-cognito-headerit-entraid)})
+            req (todenna req)]
+        (is (= (get-in req [:kayttaja :organisaatio :id]) virasto-id))
+        (is (= (get-in req [:kayttaja :sahkoposti]) "toni@tonttu.com"))
+        (is (= (get-in req [:kayttaja :kayttajanimi]) "Jarjestelmavastaava"))
+        (is (= (get-in req [:kayttaja :etunimi]) "toni"))
+        (is (= (get-in req [:kayttaja :sukunimi]) "tonttu"))
+        (is (= (get-in req [:kayttaja :roolit]) #{"Jarjestelmavastaava"}))
+        (is (= (get-in req [:kayttaja :urakkaroolit]) {31 #{"vastuuhenkilo"}, 34 #{"vastuuhenkilo"}}))))
+    
+    (testing "Cognito headeri OAM muodossa: x-iam-data on purettu oikein ja tarvittava OAM-data on saatu"
+      (let [req (handler {:headers (testi-enkoodaa-payload-jwt testi-cognito-headerit-oam)})
+            req (todenna req)]
         (is (= (get-in req [:kayttaja :organisaatio :id]) destia-id))
         (is (= (get-in req [:kayttaja :sahkoposti]) "daniel@example.com"))
         (is (= (get-in req [:kayttaja :kayttajanimi]) "daniel"))
@@ -154,7 +189,7 @@
         todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)]
 
     (testing "Cognito headeri: harja-api-username -headerin arvo löytyy custom:uid-headerin arvon sijaan"
-      (let [req (handler {:headers (merge (testi-cognito-headerit) {"harja-api-username" "LOTTA"}) })
+      (let [req (handler {:headers (merge (testi-enkoodaa-payload-jwt testi-cognito-headerit-oam) {"harja-api-username" "LOTTA"}) })
             req (todenna req)]
 
         (is (= (get-in req [:kayttaja :kayttajanimi]) "LOTTA"))

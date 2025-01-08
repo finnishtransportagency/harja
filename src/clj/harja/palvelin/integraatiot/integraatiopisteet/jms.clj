@@ -95,17 +95,7 @@
      (jms/kuuntele! jms-client jono
                       (with-meta (fn [viesti]
                                    (log/debug (format "Vastaanotettiin jonosta: %s viesti: %s" jono viesti))
-                                   (let [multipart-viesti? (try (instance? (Class/forName "progress.message.jimpl.xmessage.MultipartMessage") viesti)
-                                                                (catch java.lang.ClassNotFoundException e
-                                                                  (log/error "Ei löytynyt MultipartMessage luokkaa: " e)
-                                                                  nil))
-                                         viestin-sisalto (if multipart-viesti?
-                                                           ;; Oletuksena on, että multipartvastaus sisältää vain yhden osan
-                                                           (-> viesti
-                                                               (.getPart 0)
-                                                               (.getContentBytes)
-                                                               (String.))
-                                                           (.getText viesti))
+                                   (let [viestin-sisalto (.getText viesti)
                                          data (viestiparseri viestin-sisalto)
                                          viesti-id (viesti->id data)
                                          onnistunut (onnistunut? data)]
