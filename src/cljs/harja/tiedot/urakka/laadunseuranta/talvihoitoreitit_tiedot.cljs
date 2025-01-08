@@ -90,6 +90,7 @@
 ;; Manipuloi kartalla näytettäviä reittejä atomin kautta
 (defrecord PoistaValittuKohdeKartalta [id])
 (defrecord LisaaValittuKohdeKartalle [id])
+(defrecord KeskitaTalvihoitoreitti [id reitit])
 (defrecord PoistaTalvihoitoreitti [ulkoinenid])
 (defrecord PoistaTalvihoitoreittiOnnistui [vastaus])
 (defrecord PoistaTalvihoitoreittiEpaonnistui [vastaus])
@@ -166,6 +167,12 @@
       (reset! nav/kartan-extent alue)
       app))
 
+  KeskitaTalvihoitoreitti
+  (process-event [{:keys [id reitit]} app]
+    (let [alue (harja.geo/extent-monelle (map :sijainti reitit))
+          _ (reset! nav/kartan-extent alue)]
+      app))
+
   PoistaTalvihoitoreitti
   (process-event [{:keys [ulkoinenid]} app]
     (let []
@@ -173,8 +180,8 @@
         {:ulkoinenid ulkoinenid
          :urakka-id (:id @nav/valittu-urakka)}
         {:onnistui ->PoistaTalvihoitoreittiOnnistui
-         :epaonnistui ->PoistaTalvihoitoreittiEpaonnistui}))
-      (assoc app :poisto-kaynnissa? true))
+         :epaonnistui ->PoistaTalvihoitoreittiEpaonnistui})
+      (assoc app :poisto-kaynnissa? true)))
 
   PoistaTalvihoitoreittiOnnistui
   (process-event [{:keys [vastaus]} app]
