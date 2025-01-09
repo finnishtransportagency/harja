@@ -46,9 +46,9 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
 
     cy.contains('Kulujen kohdistus');
 
-    cy.get('.pvm-kentta > input').eq(0).click().wait(3000).type('{selectall}29.09.2021');
-    cy.get('.pvm-kentta > input').eq(1).click().wait(3000).type('{selectall}29.09.2021');
-    cy.get('.pvm-kentta > input').eq(1).should('have.value', "29.09.2021").type('{enter}');
+    cy.get('.pvm-kentta > .pvm-ikoni > input').eq(0).click().wait(3000).type('{selectall}29.09.2021');
+    cy.get('.pvm-kentta > .pvm-ikoni > input').eq(1).click().wait(3000).type('{selectall}29.09.2021');
+    cy.get('.pvm-kentta > .pvm-ikoni > input').eq(1).should('have.value', "29.09.2021").type('{enter}');
 
     if (Array.isArray(kuluTaiKulut)) {
         cy.get('table.grid tr.klikattava').eq(0).click();
@@ -74,8 +74,8 @@ describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
         // Klikkaa tehtäväryhmä alasvetovalikko auki
         cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"]').click();
 
-        // Valitse Talvihoito (A)
-        cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"] span').contains('Talvihoito (A)').click();
+        // Valitse A - Talvihoito
+        cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"] span').contains('A - Talvihoito').click();
 
         valitseKulunPvm();
 

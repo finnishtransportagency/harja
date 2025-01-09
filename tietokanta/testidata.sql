@@ -99,7 +99,7 @@ SELECT paivita_pohjavesialueet();
 \i testidata/yllapito/reikapaikkaukset.sql
 
 -- MPU kustannukset 
-\i testidata/yllapito/mpu_kustannukset.sql
+\i testidata/yllapito/paikkauskustannukset.sql
 
 -- Ylläpidon toteumat
 \i testidata/yllapito/yllapito_toteumat.sql
@@ -115,6 +115,8 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 -- Turvallisuuspoikkeamat
 \i testidata/turvallisuuspoikkeamat.sql
 
+--== Laadunseuranta ==--
+\i testidata/laadunseuranta/talvihoitoreitit_testidata.sql
 -- Laatupoikkeamat
 
 \i testidata/laatupoikkeamat.sql

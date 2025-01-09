@@ -855,7 +855,7 @@ BEGIN
     -- HOIDONJOHTO --  erillishankinnat
     erillishankinnat_rivi :=
         (SELECT hj_erillishankinnat(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, '23150'::TEXT,
-                                    hoidonjohto_tpi_id::INTEGER, ur::INTEGER, sopimus_id::INTEGER));
+                                    hoidonjohto_tpi_id::INTEGER, ur::INTEGER));
 
     erillishankinnat_hoitokausi_yht := 0.0;
     erillishankinnat_val_aika_yht := 0.0;
@@ -974,12 +974,15 @@ BEGIN
             lk.tavoitehintainen AS tavoitehintainen 
         FROM kulu l
         JOIN kulu_kohdistus lk ON lk.kulu = l.id
+        JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
         -- Etsi pelkästään muukulu tyyppiset  kirjaukset, toimenpideinstansseilla ei ole näissä väliä 
         -- Tavoitehintaiset kuuluu tehtäväryhmälle, ei tavoitehintaiset kuuluu toimenpiteelle, mutta työmaakokouksessa ei tarvitse niputtaa
         WHERE lk.tyyppi = 'muukulu'
           AND lk.poistettu IS NOT TRUE
           AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-          AND l.urakka = ur 
+          AND l.urakka = ur
+          -- J - Johto- ja hallintokorvaus huomioidaan myös muukulu-tyyppiseksi kirjattuna laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä, joten karsitaan pois tässä.
+          AND ((tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54') OR tr.yksiloiva_tunniste IS NULL)
     LOOP
         IF rivi.erapaiva <= aikavali_loppupvm THEN
             --

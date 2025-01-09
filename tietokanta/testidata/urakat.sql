@@ -56,7 +56,7 @@ BEGIN
   VALUES ('1337133-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
                                                               FROM organisaatio
                                                               WHERE lyhenne = 'POP'), 'Utajärven päällystysurakka',
-          '2021-01-01', '2024-12-31', 'paallystys', 'uta1', (SELECT id
+          '2021-01-01', '2025-12-31', 'paallystys', 'uta1', (SELECT id
                                                                            FROM organisaatio
                                                                            WHERE ytunnus = '0651792-4'));
 END $$;

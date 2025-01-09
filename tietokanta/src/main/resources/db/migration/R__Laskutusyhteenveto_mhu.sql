@@ -89,7 +89,7 @@ BEGIN
         RAISE NOTICE 'Hoitovuoden päättämiseen liittyvät kulut otetaan mukaan, koska toimenpideinstanssi on hoidon johto: %. Toimenpidekoodi on %.', t_instanssi, toimenpide_koodi;
 
         -- HOITOVUODEN PÄÄTTÄMINEN, TAVOITEPALKKIO
-        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio');
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3'); -- Hoitovuoden päättäminen / Tavoitepalkkio
         RAISE NOTICE '    Tavoitepalkkio. Tehtavaryhma_id: % ' , tehtavaryhma_id;
 
         kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
@@ -99,7 +99,7 @@ BEGIN
         hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan := kulut[2];
 
         -- HOITOVUODEN PÄÄTTÄMINEN, TAVOITEHINNAN YLITYS
-        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä');
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '19907c24-dd26-460f-9cb4-2ed974b891aa'); -- 'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä'
         RAISE NOTICE '    Tavoitehinnan ylitys. Tehtavaryhma_id: % ' , tehtavaryhma_id;
 
         kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
@@ -109,7 +109,7 @@ BEGIN
         hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan := kulut[2];
 
         -- HOITOVUODEN PÄÄTTÄMINEN, KATTOHINNAN YLITYS
-        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä');
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'be34116b-2264-43e0-8ac8-3762b27a9557'); -- 'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä'
         RAISE NOTICE '   Kattohinnan ylitys : Tehtavaryhma_id: % ' , tehtavaryhma_id;
 
         kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
@@ -142,9 +142,10 @@ CREATE TYPE HJERILLISHANKINNAT_RIVI AS
     hj_erillishankinnat_laskutettu  NUMERIC,
     hj_erillishankinnat_laskutetaan NUMERIC
 );
+DROP FUNCTION IF EXISTS hj_erillishankinnat(DATE, DATE, DATE, TEXT, INTEGER, INTEGER, INTEGER);
 CREATE OR REPLACE FUNCTION hj_erillishankinnat(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                               toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
-                                               sopimus_id INTEGER) RETURNS SETOF HJERILLISHANKINNAT_RIVI AS
+                                               toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id_ INTEGER)
+    RETURNS SETOF HJERILLISHANKINNAT_RIVI AS
 $$
 DECLARE
 
@@ -156,8 +157,8 @@ DECLARE
     tehtavaryhma_id                 INTEGER;
 
 BEGIN
-    -- Haetaan hoidon johdon erillishankinnat
-    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
+    -- Haetaan hoidon johdon erillishankinnat: 'Erillishankinnat (W)'
+    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c');
     RAISE NOTICE 'hj_erillishankinnat: toimenpidekoodi % -- tehtavaryhma_i: % ' , toimenpide_koodi, tehtavaryhma_id;
 
     hj_erillishankinnat_laskutettu := 0.0;
@@ -168,24 +169,24 @@ BEGIN
         RAISE NOTICE 'hj_erillishankinnat lasketaan mukaan, koska toimenpideinstanssi on hoidon johto. %', t_instanssi;
 
         -- Ennen tarkasteltavaa aikaväliä laskutetut hoidonjohdon erillishankinnat - (päätellään tpi:stä ja toimenpidekoodista )
-        -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja kulu_kohdistus
+        -- Käydään läpi tiedot tauluista: toteutuneet_kustannukset ja kulu_kohdistus
         -- Laskutettu
-        FOR laskutettu_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa -- Ota indeksikorjattu summa, jos se on
-                                   FROM kustannusarvioitu_tyo kat
-                                   WHERE kat.toimenpideinstanssi = t_instanssi
-                                     AND kat.tehtavaryhma = tehtavaryhma_id
-                                     AND kat.sopimus = sopimus_id
-                                     AND (SELECT (date_trunc('MONTH',
-                                                             format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
-                               UNION ALL
-                               SELECT coalesce(lk.summa, 0) AS summa
-                                   FROM kulu l
-                                            JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                   WHERE lk.toimenpideinstanssi = t_instanssi
-                                     AND lk.poistettu IS NOT TRUE
-                                     AND l.urakka = urakka_id
-                                     AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-                                     AND lk.tehtavaryhma = tehtavaryhma_id
+        FOR laskutettu_rivi IN SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa -- Ota indeksikorjattu summa, jos se on
+                                 FROM toteutuneet_kustannukset tk
+                                WHERE tk.toimenpideinstanssi = t_instanssi
+                                  AND tk.tehtavaryhma = tehtavaryhma_id
+                                  AND tk.urakka_id = urakka_id_
+                                  AND (SELECT (DATE_TRUNC('MONTH',
+                                                          FORMAT('%s-%s-%s', tk.vuosi, tk.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
+                                UNION ALL
+                               SELECT COALESCE(lk.summa, 0) AS summa
+                                 FROM kulu l
+                                          JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                                WHERE lk.toimenpideinstanssi = t_instanssi
+                                  AND lk.poistettu IS NOT TRUE
+                                  AND l.urakka = urakka_id_
+                                  AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+                                  AND lk.tehtavaryhma = tehtavaryhma_id
 
             LOOP
                 RAISE NOTICE 'Erillishankinnat laskutettu :: summa: %', laskutettu_rivi.summa;
@@ -193,24 +194,24 @@ BEGIN
             END LOOP;
 
         -- Tarkasteltavalla aikavälillä laskutettavat erillishankinnat
-        -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja kulu_kohdistus
+        -- Käydään läpi tiedot tauluista: toteutuneet_kustannukset ja kulu_kohdistus
         -- Laskutetaan
-        FOR laskutetaan_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa
-                                    FROM kustannusarvioitu_tyo kat
-                                    WHERE kat.toimenpideinstanssi = t_instanssi
-                                      AND kat.sopimus = sopimus_id
-                                      AND kat.tehtavaryhma = tehtavaryhma_id
-                                      AND (SELECT (date_trunc('MONTH',
-                                                              format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
-                                UNION ALL
-                                SELECT coalesce(lk.summa, 0) AS summa
-                                    FROM kulu l
-                                             JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                    WHERE lk.toimenpideinstanssi = t_instanssi
-                                      AND lk.poistettu IS NOT TRUE
-                                      AND l.urakka = urakka_id
-                                      AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
-                                      AND lk.tehtavaryhma = tehtavaryhma_id
+        FOR laskutetaan_rivi IN SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+                                  FROM toteutuneet_kustannukset tk
+                                 WHERE tk.toimenpideinstanssi = t_instanssi
+                                   AND tk.urakka_id = urakka_id_
+                                   AND tk.tehtavaryhma = tehtavaryhma_id
+                                   AND (SELECT (DATE_TRUNC('MONTH',
+                                                           FORMAT('%s-%s-%s', tk.vuosi, tk.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+                                 UNION ALL
+                                SELECT COALESCE(lk.summa, 0) AS summa
+                                  FROM kulu l
+                                           JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                                 WHERE lk.toimenpideinstanssi = t_instanssi
+                                   AND lk.poistettu IS NOT TRUE
+                                   AND l.urakka = urakka_id_
+                                   AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+                                   AND lk.tehtavaryhma = tehtavaryhma_id
             LOOP
                 RAISE NOTICE 'Erillishankinnat laskutetaan :: summa: %', laskutetaan_rivi.summa;
                 hj_erillishankinnat_laskutetaan :=
@@ -241,8 +242,9 @@ CREATE TYPE HJPALKKIO_RIVI AS
     hj_palkkio_laskutetaan NUMERIC
 );
 
+DROP FUNCTION IF EXISTS hj_palkkio(DATE, DATE, DATE, TEXT, INTEGER, INTEGER, INTEGER);
 CREATE OR REPLACE FUNCTION hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                      toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER, sopimus_id INTEGER)
+                                      toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id_ INTEGER, sopimus_id INTEGER)
                                       RETURNS SETOF HJPALKKIO_RIVI AS
 $$
 DECLARE
@@ -262,7 +264,7 @@ BEGIN
     RAISE NOTICE 'HJ-Palkkio: toimenpidekoodi %' , toimenpide_koodi;
     -- Hoidon johdon palkkiot koostuvat tehtäväryhmästä 'Hoidonjohtopalkkio (G)'
     -- sekä toimenpidekoodista 'Hoitourakan työnjohto' JA 'Hoidonjohtopalkkio'
-    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
+    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68'); -- 'Hoidonjohtopalkkio'
     toimenpidekoodi_id_hu_tyonjohto := (SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744');
     toimenpidekoodi_id_hj_palkkio := (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8');
 
@@ -274,24 +276,26 @@ BEGIN
         RAISE NOTICE 'HJ-Palkkio lasketaan mukaan, koska toimenpideinstanssi on hoidon johto. %', t_instanssi;
 
         -- Ennen tarkasteltavaa aikaväliä laskutetut hoidonjohdon palkkiot - (päätellään tpi:stä ja toimenpidekoodista)
-        -- Käydään läpi tiedot taulusta: kustannusarvioitu_tyo
+        -- Käydään läpi tiedot taulusta: toteutuneet_kustannukset - oli ennen kustannusarvioitu_tyo taulussa, mutta muutettu.
         -- HJ-Palkkio - laskutettu
-        FOR laskutettu_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa
-                                   FROM kustannusarvioitu_tyo kat
-                                   WHERE kat.toimenpideinstanssi = t_instanssi
-                                     AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava IN (toimenpidekoodi_id_hu_tyonjohto, toimenpidekoodi_id_hj_palkkio))
-                                     AND kat.sopimus = sopimus_id
-                                     AND (SELECT (date_trunc('MONTH',
-                                                             format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
-                               UNION ALL
-                               SELECT coalesce(lk.summa, 0) AS summa
-                                   FROM kulu l
-                                            JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                   WHERE lk.toimenpideinstanssi = t_instanssi
-                                     AND lk.poistettu IS NOT TRUE
-                                     AND l.urakka = urakka_id
-                                     AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-                                     AND lk.tehtavaryhma = tehtavaryhma_id
+        FOR laskutettu_rivi IN SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+                                 FROM toteutuneet_kustannukset tk
+                                WHERE tk.toimenpideinstanssi = t_instanssi
+                                  AND (tk.tehtavaryhma = tehtavaryhma_id OR
+                                       tk.tehtava IN (toimenpidekoodi_id_hu_tyonjohto, toimenpidekoodi_id_hj_palkkio))
+                                  AND tk.urakka_id = urakka_id_
+                                  AND (SELECT (DATE_TRUNC('MONTH',
+                                                          FORMAT('%s-%s-%s', tk.vuosi, tk.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
+
+                                UNION ALL
+                               SELECT COALESCE(lk.summa, 0) AS summa
+                                 FROM kulu l
+                                          JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                                WHERE lk.toimenpideinstanssi = t_instanssi
+                                  AND lk.poistettu IS NOT TRUE
+                                  AND l.urakka = urakka_id_
+                                  AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+                                  AND lk.tehtavaryhma = tehtavaryhma_id
 
             LOOP
                 RAISE NOTICE 'HJ-palkkio laskutettu :: summa: %', laskutettu_rivi.summa;
@@ -299,24 +303,26 @@ BEGIN
             END LOOP;
 
         -- Tarkasteltavalla aikavälillä laskutetut tai laskutettavat hoidonjohdon kustannukset
-        -- Käydään läpi tiedot taulusta: kustannusarvioitu_tyo
+        -- Käydään läpi tiedot taulusta: toteutuneet_kustannukset
         -- hj_palkkio - laskutetaan
-        FOR hj_palkkio_laskutetaan_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa
-                                               FROM kustannusarvioitu_tyo kat
-                                               WHERE kat.toimenpideinstanssi = t_instanssi
-                                                 AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava IN (toimenpidekoodi_id_hu_tyonjohto, toimenpidekoodi_id_hj_palkkio))
-                                                 AND kat.sopimus = sopimus_id
-                                                 AND (SELECT (date_trunc('MONTH',
-                                                                         format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
-                                           UNION ALL
-                                           SELECT coalesce(lk.summa, 0) AS summa
-                                               FROM kulu l
-                                                        JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                               WHERE lk.toimenpideinstanssi = t_instanssi
-                                                 AND lk.poistettu IS NOT TRUE
-                                                 AND l.urakka = urakka_id
-                                                 AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
-                                                 AND lk.tehtavaryhma = tehtavaryhma_id
+        FOR hj_palkkio_laskutetaan_rivi IN SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+                                             FROM toteutuneet_kustannukset tk
+                                            WHERE tk.toimenpideinstanssi = t_instanssi
+                                              AND (tk.tehtavaryhma = tehtavaryhma_id OR tk.tehtava IN
+                                                                                         (toimenpidekoodi_id_hu_tyonjohto,
+                                                                                          toimenpidekoodi_id_hj_palkkio))
+                                              AND tk.urakka_id = urakka_id_
+                                              AND (SELECT (DATE_TRUNC('MONTH',
+                                                                      FORMAT('%s-%s-%s', tk.vuosi, tk.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+                                            UNION ALL
+                                           SELECT COALESCE(lk.summa, 0) AS summa
+                                             FROM kulu l
+                                                      JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                                            WHERE lk.toimenpideinstanssi = t_instanssi
+                                              AND lk.poistettu IS NOT TRUE
+                                              AND l.urakka = urakka_id_
+                                              AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+                                              AND lk.tehtavaryhma = tehtavaryhma_id
 
             LOOP
                 RAISE NOTICE 'HJ-palkkio laskutetaan :: summa: %', hj_palkkio_laskutetaan_rivi.summa;
@@ -347,8 +353,9 @@ CREATE TYPE HOIDONJOHTO_RIVI AS
     johto_ja_hallinto_laskutetaan NUMERIC
 );
 
+DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(DATE, DATE, DATE, TEXT, INTEGER, INTEGER, INTEGER);
 CREATE OR REPLACE FUNCTION hoidon_johto_yhteenveto(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                                   toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
+                                                   toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id_ INTEGER,
                                                    sopimus_id INTEGER) RETURNS SETOF HOIDONJOHTO_RIVI AS
 $$
 DECLARE
@@ -363,10 +370,10 @@ DECLARE
 
 
 BEGIN
-    -- Haetaan hoidon johdon yhteenvetoja tauluista: johto_ja_hallintokorvaus, kulu_kohdistus sekä kustannusarvioitu_tyo.
-    -- kustannusarvioitu_tyo haetaan pelkästään tehtävällä, koska tehtäväryhmät viittaavat aina Tavoitehinnan ulkopuolisiin rahavarauksiin
-    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
-    -- kustannusarvioitu_tyo taulusta haetaan toimenpidekoodin perusteella - Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
+    -- Haetaan hoidon johdon yhteenvetoja tauluista: johto_ja_hallintokorvaus, kulu_kohdistus sekä toteutuneet_kustannukset.
+    -- toteutuneet_kustannukset haetaan pelkästään tehtävällä, koska tehtäväryhmät viittaavat aina Tavoitehinnan ulkopuolisiin rahavarauksiin
+    tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'); -- 'Johto- ja hallintokorvaus'
+    -- toteutuneet_kustannukset taulusta haetaan toimenpidekoodin perusteella - Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
     toimistotarvike_koodi :=
             (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');
 
@@ -381,39 +388,38 @@ BEGIN
         -- Ennen tarkasteltavaa aikaväliä ja aikavälillä laskutetut hoidonjohdon kustannukset
         -- Käytetään taulua: johto_ja_hallintokorvaus
 
-        -- johto_ja_hallintokorvaus - laskutettu
+
         FOR laskutettu IN
-            SELECT CASE
-                       WHEN jhk.tuntipalkka_indeksikorjattu IS NOT NULL
-                           THEN coalesce((jhk.tunnit * jhk.tuntipalkka_indeksikorjattu * jhk."osa-kuukaudesta"), 0)
-                       ELSE coalesce((jhk.tunnit * jhk.tuntipalkka * jhk."osa-kuukaudesta"), 0)
-                       END
-                       AS summa
-            FROM johto_ja_hallintokorvaus jhk
-            WHERE "urakka-id" = urakka_id
-              AND (SELECT (date_trunc('MONTH',
-                                      format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm::DATE AND aikavali_loppupvm::DATE
+            -- johto_ja_hallintokorvaus - Toteutuneet_kustannukset
+            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+              FROM toteutuneet_kustannukset tk
+             WHERE tk.urakka_id = urakka_id_
+               AND tk.tehtavaryhma = tehtavaryhma_id
+               AND (SELECT (DATE_TRUNC('MONTH',
+                                       FORMAT('%s-%s-%s', tk.vuosi, tk.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm::DATE AND aikavali_loppupvm::DATE
 
-            UNION ALL
+             UNION ALL
 
-            SELECT coalesce(lk.summa, 0) AS summa
-            FROM kulu l
-                 JOIN kulu_kohdistus lk ON lk.kulu = l.id
-            WHERE lk.toimenpideinstanssi = t_instanssi
-              AND lk.poistettu IS NOT TRUE
-              AND l.urakka = urakka_id
-              AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-              AND lk.tehtavaryhma = tehtavaryhma_id
+            -- johto_ja_hallintokorvaus - lisätyt kulut
+            SELECT COALESCE(lk.summa, 0) AS summa
+              FROM kulu l
+                       JOIN kulu_kohdistus lk ON lk.kulu = l.id
+             WHERE lk.toimenpideinstanssi = t_instanssi
+               AND lk.poistettu IS NOT TRUE
+               AND l.urakka = urakka_id_
+               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+               AND lk.tehtavaryhma = tehtavaryhma_id
 
-            UNION ALL
+             UNION ALL
 
-            SELECT coalesce(kt.summa_indeksikorjattu, kt.summa, 0) AS summa
-            FROM kustannusarvioitu_tyo kt
-            WHERE kt.toimenpideinstanssi = t_instanssi
-              AND kt.sopimus = sopimus_id
-              AND kt.tehtava = toimistotarvike_koodi -- Kustannussuunnitelmassa "Muut kulut" on toimistotarvikekuluja
-              AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE)))
-                  BETWEEN hk_alkupvm AND aikavali_loppupvm
+            -- Toimistotarvikkeet - toteutuneet_kustannukset
+            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+              FROM toteutuneet_kustannukset tk
+             WHERE tk.toimenpideinstanssi = t_instanssi
+               AND tk.urakka_id = urakka_id_
+               AND tk.tehtava = toimistotarvike_koodi -- Kustannussuunnitelmassa "Muut kulut" on toimistotarvikekuluja
+               AND (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', tk.vuosi, tk.kuukausi, 1)::DATE)))
+                 BETWEEN hk_alkupvm AND aikavali_loppupvm
 
             LOOP
                 johto_ja_hallinto_laskutettu := johto_ja_hallinto_laskutettu + COALESCE(laskutettu.summa, 0.0);
@@ -427,38 +433,37 @@ BEGIN
 
         -- johto_ja_hallintokorvaus - laskutetaan
         FOR laskutetaan IN
-            SELECT CASE
-                       WHEN jhk.tuntipalkka_indeksikorjattu IS NOT NULL
-                           THEN coalesce((jhk.tunnit * jhk.tuntipalkka_indeksikorjattu * jhk."osa-kuukaudesta"), 0)
-                       ELSE coalesce((jhk.tunnit * jhk.tuntipalkka * jhk."osa-kuukaudesta"), 0)
-                       END
-                       AS summa
-            FROM johto_ja_hallintokorvaus jhk
-            WHERE "urakka-id" = urakka_id
-              AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE)))
-                  BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+            -- johto_ja_hallintokorvaus - Toteutuneet_kustannukset
+            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+              FROM toteutuneet_kustannukset tk
+             WHERE tk.urakka_id = urakka_id_
+               AND tk.tehtavaryhma = tehtavaryhma_id
+               AND (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', tk.vuosi, tk.kuukausi, 1)::DATE)))
+                 BETWEEN aikavali_alkupvm AND aikavali_loppupvm
 
-            UNION ALL
+             UNION ALL
 
-            SELECT coalesce(lk.summa, 0) AS summa
-            FROM kulu l
-                     JOIN kulu_kohdistus lk ON lk.kulu = l.id
-            WHERE lk.toimenpideinstanssi = t_instanssi
-              AND lk.poistettu = FALSE
-              AND l.urakka = urakka_id
-              AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
-              AND lk.tehtavaryhma = tehtavaryhma_id
+            -- Toimistotarvikkeet - Lisätyt kulut
+            SELECT COALESCE(lk.summa, 0) AS summa
+              FROM kulu l
+                       JOIN kulu_kohdistus lk ON lk.kulu = l.id
+             WHERE lk.toimenpideinstanssi = t_instanssi
+               AND lk.poistettu = FALSE
+               AND l.urakka = urakka_id_
+               AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+               AND lk.tehtavaryhma = tehtavaryhma_id
 
-            UNION ALL
+             UNION ALL
 
-            SELECT coalesce(kt.summa_indeksikorjattu, kt.summa, 0) AS summa
-            FROM kustannusarvioitu_tyo kt
-            WHERE kt.toimenpideinstanssi = t_instanssi
-              AND kt.sopimus = sopimus_id
-              AND kt.tehtava = toimistotarvike_koodi
-              AND (SELECT (date_trunc('MONTH',
-                                      format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE)))
-                  BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+            -- Toimistotarvikkeet - toteutuneet_kustannukset
+            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+              FROM toteutuneet_kustannukset tk
+             WHERE tk.toimenpideinstanssi = t_instanssi
+               AND tk.urakka_id = urakka_id_
+               AND tk.tehtava = toimistotarvike_koodi
+               AND (SELECT (DATE_TRUNC('MONTH',
+                                       FORMAT('%s-%s-%s', tk.vuosi, tk.kuukausi, 1)::DATE)))
+                 BETWEEN aikavali_alkupvm AND aikavali_loppupvm
 
             LOOP
                 -- Kuukauden laskutettava määrä päivittyy laskutettavaan summaan ja lähetettävään maksuerään vasta kuukauden viimeisenä päivänä.
@@ -1001,7 +1006,7 @@ BEGIN
             -- HOIDONJOHTO --  erillishankinnat
             hj_erillishankinnat_rivi :=
                     (SELECT hj_erillishankinnat(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi,
-                                                t.tpi, ur, sopimus_id));
+                                                t.tpi, ur));
 
             hj_erillishankinnat_laskutettu := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutettu;
             hj_erillishankinnat_laskutetaan := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutetaan;
@@ -1147,12 +1152,15 @@ BEGIN
                 l.erapaiva
             FROM kulu l
             JOIN kulu_kohdistus lk ON lk.kulu = l.id
-            JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id 
+            JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id
+            LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
             WHERE lk.tyyppi = 'muukulu'
                 AND lk.poistettu IS NOT TRUE
                 AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                 AND l.urakka = ur
                 AND tpi.id = t.tpi
+              -- J - Johto- ja hallintokorvaus huomioidaan myös muukulu-tyyppiseksi kirjattuna laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä, joten karsitaan pois tässä.
+              AND ((tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54') OR tr.yksiloiva_tunniste IS NULL)
         LOOP
             IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
                 -- Hoitokausi yhteensä

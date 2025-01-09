@@ -3,8 +3,7 @@
   (:require [schema.core :as s]
             [harja.domain.skeema :refer [pvm-tyyppi] :as skeema]
             [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti Sijainti]]
-            [taoensso.timbre :as log]
-            [clojure.string :as str]))
+            [taoensso.timbre :as log]))
 
 (def Kasittelytapa (s/enum :tyomaakokous :puhelin :kommentit :muu))
 (def Paatostyyppi (s/enum :sanktio :ei_sanktiota :hylatty))

@@ -167,27 +167,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   ([otsikko url]
    (tiedoston-lataus-linkki otsikko url nil))
   ([otsikko url {:keys [luokat] :as _opts}]
-   [:a {:class (concat ["nappi-reunaton"] luokat)
+   [:a {:class (concat ["nappi-toissijainen"] luokat)
         :href url
         :download ""}
     [ikonit/ikoni-ja-teksti (ikonit/livicon-download) otsikko]]))
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
-
-(defn virheviesti-sailio
-  "Luo virheviestin 'sivun sisään'. Jos toinen parametri on jotain muuta kuin nil tai false,
-  säiliön display asetetaan inline-blockiksi."
-  ([viesti] (virheviesti-sailio viesti nil false))
-  ([viesti rasti-funktio] (virheviesti-sailio viesti rasti-funktio false))
-  ([viesti rasti-funktio inline-block?]
-   (let [sulkemisnappi [:button.inlinenappi.nappi-kielteinen {:on-click #(rasti-funktio)}
-                        [ikonit/remove] " Sulje"]]
-     (if inline-block?
-       [:div.virheviesti-sailio {:style {:display :inline-block}} viesti
-        (when rasti-funktio sulkemisnappi)]
-       [:div.virheviesti-sailio viesti
-        (when rasti-funktio sulkemisnappi)]))))
 
 (def valinta-ul-max-korkeus-px "420px")
 
@@ -531,19 +517,28 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
                          [:div {:class arvo-class :style {:max-width arvo-max-pituus}} arvo]]))
                  (partition 2 otsikot-ja-arvot))])
 
-(defn- luo-haitarin-rivi [piiloita? rivi]
-  (let [avaa-tai-sulje-haitari (fn [event]
-                         (.preventDefault event)
-                         (swap! rivi assoc :auki (not (:auki @rivi))))]
+(defn- luo-haitarin-rivi [rivi]
+  (let [auki? (:auki @rivi)
+        avaa-tai-sulje-haitari (fn [event]
+                                 (.preventDefault event)
+                                 (swap! rivi assoc :auki (not auki?)))
+        sisallon-id (str "sisalto-" (name (or (:id @rivi) (hash @rivi))))]
     ^{:key (:otsikko @rivi)}
     [:div.haitari-rivi
-     [:div.haitari-heading.klikattava
-      {:on-click #(avaa-tai-sulje-haitari %)
+     [:button.haitari-heading.klikattava
+      {:aria-expanded (if auki? "true" "false")
+       :aria-controls sisallon-id
+       :on-click #(avaa-tai-sulje-haitari %)
        :on-key-down #(when (dom/enter-nappain? %)
                        (avaa-tai-sulje-haitari %))}
-      [:span.haitarin-tila {:tabIndex "0"} (if (:auki @rivi) (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
-      [:div.haitari-title (when piiloita? {:class "haitari-piilossa"}) (or (:otsikko @rivi) "")]]
-     [:div.haitari-sisalto (if (:auki @rivi) {:class "haitari-auki"} {:class "haitari-kiinni"}) (:sisalto @rivi)]]))
+      [:span.haitarin-tila {:tabIndex "0"} (if auki? (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
+      [:div.haitari-title (or (:otsikko @rivi) "")]]
+     [:div.haitari-sisalto {:id sisallon-id
+                            :aria-hidden (if auki? "false" "true")
+                            :class (if auki?
+                                     "haitari-auki"
+                                     "haitari-kiinni")}
+      (:sisalto @rivi)]]))
 
 (defn- pakota-haitarin-rivi-auki
   ([rivit] (pakota-haitarin-rivi-auki rivit (first (keys @rivit))))
@@ -570,7 +565,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
   :otsikko       mahdollinen otsikko koko haitarille"
 
-  [{:keys [toggle-osio! auki luokka leijuva? otsikko]} & otsikko-avain-ja-komponentti]
+  [{:keys [toggle-osio! auki luokka leijuva? otsikko aria-label]} & otsikko-avain-ja-komponentti]
   [:div.harja-haitari (when luokka {:class luokka})
    [:div.haitari
     (doall
@@ -579,22 +574,26 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
                   avaa-tai-sulje-haitari (fn [event]
                                  (do
                                    (.preventDefault event)
-                                   (toggle-osio! avain)))]]
+                                   (toggle-osio! avain)))
+                  sisallon-id (str "sisalto" (name (or avain otsikko)))]]
         ^{:key (str avain)}
         [:div.haitari-rivi
-         [:div.haitari-heading.klikattava
-          {:on-click #(avaa-tai-sulje-haitari %)
+         [:button.haitari-heading.klikattava
+          {:aria-controls sisallon-id
+           :aria-expanded (if auki? "true" "false")
+           :aria-label aria-label
+           :on-click #(avaa-tai-sulje-haitari %)
            :on-key-down #(when (dom/enter-nappain? %)
                            (avaa-tai-sulje-haitari %))}
-          [:span.haitarin-tila {:tabIndex "0"}
+          [:span.haitarin-tila
            (if auki?
              (ikonit/livicon-chevron-down)
              (ikonit/livicon-chevron-right))]
-          [:div.haitari-title
-           (when-not auki? {:class "haitari-piilossa"})
-           otsikko]]
+          [:div.haitari-title otsikko]]
          [:div.haitari-sisalto
-          {:class (if auki? "haitari-auki" "haitari-kiinni")}
+          {:id sisallon-id
+           :aria-hidden (if auki? "false" "true")
+           :class (if auki? "haitari-auki" "haitari-kiinni")}
           komponentti]]))]])
 
 (defn haitari
@@ -612,7 +611,6 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
       [:div.haitari
        (for [[avain rivi] @rivit]
          (luo-haitarin-rivi
-           piilota?
            (r/wrap
              rivi
              (fn [uusi]
@@ -632,15 +630,6 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
                  (when-not (some (fn [[_ r]] (:auki r)) @rivit)
                    (swap! rivit assoc-in [avain :auki] true)))))))]])))
 
-(defn pudotuspaneeli
-  ([sisalto] (pudotuspaneeli sisalto {}))
-  ([sisalto opts]
-   (let [piilota? (or (:piilota-kun-kiinni? opts) false)
-         rivi (atom (assoc opts :sisalto sisalto
-                                :auki (or (:auki opts) false)))]
-     (fn [sisalto opts]
-       [:div.harja-haitari [:div.haitari (luo-haitarin-rivi piilota? rivi)]]))))
-
 (def +valitse-kuukausi+
   "- Valitse kuukausi -")
 
@@ -652,6 +641,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (def +vari-lemon-dark+ "#654D00")
 (def +vari-black-light+ "#5C5C5C")
+(def +vari-black-default+ "#000000")
 (def +vari-blue-dark+ "#004D99FF")
 
 (defn vihje
@@ -728,28 +718,42 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (defn varoitus-vihje [ensisijainen-viesti toissijainen-viesti]
   (keltainen-vihjelaatikko ensisijainen-viesti toissijainen-viesti))
 
+(defonce infolaatikko-nakyvissa? (atom {}))
+
 (defn info-laatikko
   ([tyyppi ensisijainen-viesti]
    (info-laatikko tyyppi ensisijainen-viesti nil nil {}))
   ([tyyppi ensisijainen-viesti toissijainen-viesti leveys]
    (info-laatikko tyyppi ensisijainen-viesti toissijainen-viesti leveys {}))
-  ([tyyppi ensisijainen-viesti toissijainen-viesti leveys {:keys [luokka]}]
+  ([tyyppi ensisijainen-viesti toissijainen-viesti leveys {:keys [luokka sulje-fn sulje-nappi-id]}]
    (assert (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus} tyyppi)
      "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
-   [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka]))
-          :style {:width leveys :white-space "pre-line"}}
-    [:div.infolaatikon-ikoni
-     (case tyyppi
-       :varoitus (ikonit/livicon-warning-sign)
-       :onnistunut (ikonit/livicon-check)
-       :vahva-ilmoitus (ikonit/status-info-inline-svg +vari-black-light+)
-       :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
-    [:div {:style {:width "95%" :padding-top "16px" :padding-bottom "16px"}}
-     [:div {:style {:padding-left "8px" :white-space "pre-line"}}
-      ensisijainen-viesti]
-     (when toissijainen-viesti
-       [:div {:style {:padding-left "8px" :font-weight 400}}
-        toissijainen-viesti])]]))
+   (let [sulje-nappi-id (keyword sulje-nappi-id)]
+     (when (or (nil? (get @infolaatikko-nakyvissa? sulje-nappi-id))
+             (get @infolaatikko-nakyvissa? sulje-nappi-id))
+       [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka]))
+              :style {:width leveys :white-space "pre-line"}}
+        [:div.infolaatikon-ikoni
+         (case tyyppi
+           :varoitus (ikonit/livicon-warning-sign)
+           :onnistunut (ikonit/livicon-check)
+           :vahva-ilmoitus (ikonit/status-info-inline-svg +vari-black-light+)
+           :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
+        [:div {:style {:width "95%" :padding-top "14px" :padding-bottom "14px"}}
+         [:div {:style {:white-space "pre-line" :color +vari-black-default+}}
+          ensisijainen-viesti]
+         (when toissijainen-viesti
+           [:div {:style {:padding-left "8px" :font-weight 400}}
+            toissijainen-viesti])]
+        (when sulje-nappi-id
+          ;; circular dependency, joten ei voi käyttää harja.ui.ikonit/sulje
+          [:button {:class "napiton-nappi pelkka-ikoni infolaatikon-sulje-ikoni"
+                    :aria-label "Sulje"
+                    :on-click #(do
+                                 (reset! infolaatikko-nakyvissa? (merge @infolaatikko-nakyvissa? {sulje-nappi-id false}))
+                                 (when sulje-fn
+                                   (sulje-fn)))}
+           [ikonit/sulje]])]))))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 

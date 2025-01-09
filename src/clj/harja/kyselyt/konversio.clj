@@ -6,6 +6,7 @@
             [clj-time.coerce :as coerce]
             [taoensso.timbre :as log]
             [clj-time.format :as format]
+            [clojure.data.json :as json]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [harja.pvm :as pvm]
@@ -249,6 +250,14 @@
   "Luo java.util.Date objektin annetusta unix-timestampista (sekunteja)."
   [unix-date]
   (java.util.Date. unix-date))
+
+(defn onko-json? 
+  "Palauttaa booleanin onko datatyyppi jsonia"
+  [data]
+  (try
+    (json/read-str data)
+    true
+    (catch Exception _ false)))
 
 (defn jsonb->clojuremap
   "Muuntaa JSONin Clojuremapiksi"

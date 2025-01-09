@@ -107,7 +107,9 @@ jobs:
         with:
           mask-password: "true"
 
-      - name: Build, tag and push image to ECR
+      # Buildataan image ja tagataan se annetun commit SHA:n perusteella
+      # Mikäli imagen build epäonnistuu, niin ei edetä DB migraatioon tai ECS taskin päivitykseen.
+      - name: Build and tag Harja Docker image
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -118,9 +120,7 @@ jobs:
         run: |
           echo "Building image with tag $IMAGE_TAG"
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file $DOCKERFILE_PATH .
-
-          echo "Pushing 'latest' and '${IMAGE_TAG}' tags to ECR"
-          docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY
+          
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       # !! Vain DEV-ympäristö !!
@@ -143,8 +143,18 @@ jobs:
           # Käytetään tässä annettua commit SHA:ta, jolla ECR image myös tagataan.
           commit-sha: ${{ inputs.commit-sha }}
 
-      # Migraatioiden ajon jälkeen hoidetaan imagen ECS task deployment loppuun alla.
-      # Uusi image on jo julkaistu ECR:ään odottamaan käyttöönottoa aiemmassa vaiheessa, jotta sitä ei tarvitse odottaa tässä.
+      # Onnistuneen migraatioiden ajon jälkeen hoidetaan imagen ja ECS Task Definitionin päivitys ja deployaus
+      # Näin varmistutaan siitä, että uusi sovelluksen versio tulee käyttöön vasta kun DB migraatio onnistuu.
+      - name: Push all Harja image tags to ECR
+        id: push-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: ${{ inputs.commit-sha }}
+        run: |
+          echo "Pushing 'latest' and '${IMAGE_TAG}' tags to ECR"
+          docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY
+
       - name: Download task definition
         env:
           ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
@@ -185,9 +195,11 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
         if: failure()
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           # Slack Block Kit -tyyppinen rikastettu viesti
           payload: |
             {
@@ -202,6 +214,4 @@ jobs:
               ]
             }
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
           JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

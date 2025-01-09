@@ -6,11 +6,15 @@
     [com.stuartsierra.component :as component]
     [harja.pvm :as pvm]
     [harja.testi :refer :all]
-    [harja.kyselyt.urakat :as urakat-kyselyt]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
     [harja.palvelin.integraatiot.api.analytiikka :as api-analytiikka]
-    [harja.palvelin.palvelut.kulut.kulut :as kulut]))
+    [harja.palvelin.palvelut.kulut.kulut :as kulut]
+    [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto]
+    [harja.tyokalut.testidatan-generointi :as testidatan-generointi]
+    [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
+    [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
+    [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmus-palvelu]))
 
 (def kayttaja-yit "yit-rakennus")
 (def kayttaja-analytiikka "analytiikka-testeri")
@@ -48,7 +52,7 @@
                    :rivi 1
                    :summa 493827160.5
                    :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
-                   :tehtavaryhma (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                   :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                    :tehtava nil
                    :tyyppi :hankintakulu
                    :tavoitehintainen :true}
@@ -56,13 +60,13 @@
                    :rivi 2
                    :summa 493827160.5
                    :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
-                   :tehtavaryhma (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                   :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                    :tehtava nil
                    :tyyppi :hankintakulu
                    :tavoitehintainen :true}]
    :koontilaskun-kuukausi "elokuu/5-hoitovuosi"})
 
-(deftest hae-toteutuneet-kustannukset-onnistuu-test
+(deftest hae-toteutuneet-kustannukset-kulut-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
 
@@ -105,6 +109,118 @@
     (is (= "2024-08-01T21:00:00Z" (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :laskun-paivamaara])))
     (is (= (count kulut-kannasta) (count (get-in encoodattu-body [:toteutuneet-kustannukset :kulut]))))))
 
+
+(deftest hae-toteutuneet-kustannukset-sanktiot-onnistuu-test
+  (let [;; Pakotetaan urakaksi Oulu MHU
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        ;; Luodaan sanktio, joka on pakko löytyä aineistosta
+        sanktiolle-sopiva-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23104") ;; "Oulumhun talvihoito" TODO: Kehittele näiden instanssien hallintaan joku muu tapa, kuin kaivella ne aina suoraa tietokannasta.
+        sanktio-summa 123.12M
+        sanktio-aika (pvm/nyt)
+        laatupoikkeama (testidatan-generointi/luo-laatupoikkeama urakka-id)
+        uusi-sanktio (testidatan-generointi/uusi-sanktio (pvm/nyt) sanktio-summa sanktiolle-sopiva-toimenpideinstanssi-id)
+        uusi-paatos (testidatan-generointi/luo-sanktio-paatos sanktio-aika "Testi")
+        laatupoikkeama (assoc laatupoikkeama
+                         :paatos uusi-paatos
+                         :sanktiot [uusi-sanktio])
+        _ (laadunseuranta-palvelu/tallenna-laatupoikkeama
+            {:db (:db jarjestelma)
+             :user +kayttaja-jvh+
+             :fim nil
+             :email nil
+             :sms nil
+             :laatupoikkeama laatupoikkeama})
+
+        ;; Varmista, että vastauksesta löytyy juuri luotu sanktio
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        juuri-luotu-sanktio-rajapinnasta (first (filter (fn [k]
+                                                          (= (bigdec (get-in k [:sanktio :sanktion-maara])) sanktio-summa))
+                                                  (get-in encoodattu-body [:toteutuneet-kustannukset :sanktiot])))
+
+        ;; Siivoa roskat
+        _ (testidatan-kaytto/poista-sanktio-perustelulla "Testi")]
+    (is (= 200 (:status vastaus)))
+    (is (= sanktio-summa
+          (bigdec (get-in juuri-luotu-sanktio-rajapinnasta [:sanktio :sanktion-maara]))) "Rajapinnan sanktio ei täsmää.")))
+
+(deftest hae-toteutuneet-kustannukset-bonukset-onnistuu-test
+  (let [;; Pakotetaan urakaksi Oulu MHU
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        sopimus-id (hae-sopimus-id-urakka-idlla urakka-id)
+        sopiva-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23151") ;; "Hoidon johto" TODO: Kehittele näiden instanssien hallintaan joku muu tapa, kuin kaivella ne aina suoraa tietokannasta.
+        bonus-summa 123.12M
+        bonus-aika (pvm/nyt)
+        uusi-bonus (testidatan-generointi/uusi-bonus bonus-summa urakka-id bonus-aika sopiva-toimenpideinstanssi-id
+                     sopimus-id "Lisätietoja" "asiakastyytyvaisyysbonus")
+        _ (toteumat-palvelu/tallenna-erilliskustannus (:db jarjestelma) +kayttaja-jvh+ uusi-bonus)
+
+        ;; Varmista, että vastauksesta löytyy juuri luotu bonus
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        juuri-luotu-bonus-rajapinnasta (first (filter (fn [k]
+                                                        (= (bigdec (get-in k [:bonus :bonuksen-maara])) bonus-summa))
+                                                (get-in encoodattu-body [:toteutuneet-kustannukset :bonukset])))
+
+        ;; Siivoa roskat
+        _ (testidatan-kaytto/poista-bonus-idlla (:bonus-id juuri-luotu-bonus-rajapinnasta))]
+    (is (= 200 (:status vastaus)))
+    (is (= bonus-summa
+          (bigdec (get-in juuri-luotu-bonus-rajapinnasta [:bonus :bonuksen-maara]))) "Rajapinnan bonus ei täsmää.")))
+
+(deftest hae-toteutuneet-kustannukset-tavoitehinnan-muutokset-onnistuu-test
+  (let [;; Pakotetaan urakaksi Oulu MHU
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        hoitokauden-alkuvuosi 2023
+        oikaisu-summa 123.12M
+        selite "Kovasti tuuli"
+        uusi-oikaisu (testidatan-generointi/uusi-tavoitehinnan-muutos urakka-id hoitokauden-alkuvuosi oikaisu-summa selite)
+        _ (valikatselmus-palvelu/tallenna-tavoitehinnan-oikaisu (:db jarjestelma) +kayttaja-jvh+ uusi-oikaisu)
+
+        ;; Varmista, että vastauksesta löytyy juuri luotu oikaisu
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        juuri-luotu-oikaisu-rajapinnasta (first (filter (fn [k]
+                                                          (= (bigdec (get-in k [:tavoitehinnan-muutos :muutoksen-maara])) oikaisu-summa))
+                                                  (get-in encoodattu-body [:toteutuneet-kustannukset :tavoitehinnan-muutokset])))
+
+        ;; Siivoa roskat
+        _ (testidatan-kaytto/poista-tavoitehinnan-muutos-idlla (:muutos-id juuri-luotu-oikaisu-rajapinnasta))]
+    (is (= 200 (:status vastaus)))
+    (is (= oikaisu-summa
+          (bigdec (get-in juuri-luotu-oikaisu-rajapinnasta [:tavoitehinnan-muutos :muutoksen-maara]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")))
+
+(deftest hae-toteutuneet-kustannukset-hoitovuoden-paatokset-onnistuu-test
+  (let [;; Pakotetaan urakaksi Oulu MHU
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        hoitokauden-alkuvuosi 2023
+        tavoihinta 2000000
+        kattohinta 2100000
+        tilaajan-maksu 123.12M
+        urakoitsijan-maksu 321.32M
+
+        ;; Lisätään urakalle sopiva tavoitehinta - Poistetaan olemassa oleva, jos sellaisia on
+        _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = 5;" urakka-id))
+        insert-str (format "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, luotu) VALUES (%s, 5, %s, %s, %s, %s, now());"
+                     urakka-id tavoihinta tavoihinta kattohinta kattohinta)
+        _ (u insert-str)
+
+        uusi-paatos (testidatan-generointi/uusi-paatos-tavoitehinnan-ylitys urakka-id hoitokauden-alkuvuosi tilaajan-maksu urakoitsijan-maksu)
+        _ (valikatselmus-palvelu/tee-paatos-urakalle (:db jarjestelma) +kayttaja-jvh+ uusi-paatos)
+
+        ;; Varmista, että vastauksesta löytyy juuri luotu oikaisu
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        juuri-luotu-paatos-rajapinnasta (first (filter (fn [k]
+                                                         (= (bigdec (get-in k [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa])) tilaajan-maksu))
+                                                 (get-in encoodattu-body [:toteutuneet-kustannukset :hoitovuoden-paatokset])))
+        ;; Siivoa roskat
+        _ (testidatan-kaytto/poista-paatos-idlla (:paatos-id juuri-luotu-paatos-rajapinnasta))]
+    (is (= 200 (:status vastaus)))
+    (is (= tilaajan-maksu
+          (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
+    (is (= urakoitsijan-maksu
+          (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :urakoitsija-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")))
 
 (deftest hae-kustannussuunnitelma-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU

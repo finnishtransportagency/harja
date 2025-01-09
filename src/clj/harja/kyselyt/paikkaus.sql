@@ -412,7 +412,8 @@ SELECT pk.id                                       AS id,
                         CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
            ELSE NULL
            END                                     AS geometria,
-       pk.tiemerkintapvm                           AS tiemerkintapvm
+       pk.tiemerkintapvm                           AS tiemerkintapvm,
+       pk.pkluokka
 FROM paikkauskohde pk,
      urakka u,
      organisaatio o
@@ -590,4 +591,7 @@ FROM paikkaus p
          LEFT JOIN paikkauksen_tienkohta ptk ON p.id = ptk."paikkaus-id"
          LEFT JOIN paikkauskohde_tyomenetelma tm ON p.tyomenetelma = tm.id
 WHERE p.luotu BETWEEN :alku AND :loppu
-   OR p.muokattu BETWEEN :alku AND :loppu
+   OR p.muokattu BETWEEN :alku AND :loppu;
+
+-- name: paivita-paikkauskohteen-korjausluokka
+SELECT * FROM paivita_paikkauskohteen_korjausluokka(:id);

@@ -28,9 +28,8 @@ FROM yrita_tierekisteriosoite_pisteille2(
 -- alkupisteen, loppupisteen ja viivan geometrian. Jos viivaa
 -- ei löydy, palauttaa NULL geometriana.
 SELECT *
-FROM
-      tieviivat_pisteille(ST_GeomFromText(:pisteet), :threshold :: INTEGER)
-    AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY);
+  FROM tieviivat_pisteille(ST_GeomFromText(:pisteet), :threshold :: INTEGER)
+       AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY);
 
 -- name: hae-tieviivat-pisteille-aika
 -- Hakee tieverkolle projisoidut viivat annetuille pisteille.
@@ -177,14 +176,12 @@ ORDER BY tie
 LIMIT 100;
 
 -- name: hae-tieosan-tiedot
-SELECT "tr-numero",
-       "tr-osa",
-       MIN("tr-alkuetaisyys") as "tr-alkuetaisyys",
-       MAX("tr-loppuetaisyys") as "tr-loppuetaisyys"
-  FROM tr_osoitteet tr
- WHERE tr."tr-numero" = :tie
-   AND tr."tr-osa" = :osa
- GROUP BY "tr-numero", "tr-osa";
+SELECT tie,
+       osa,
+       pituus
+  FROM tr_osien_pituudet trop
+ WHERE trop.tie = :tie
+   AND trop.osa = :osa;
 
 -- name: onko-tr-yhtenainen?
 -- single?: true
@@ -196,6 +193,18 @@ SELECT count(distinct ("tr-osa")) as kpl
 -- name: onko-tie-olemassa?
 -- single?: true
 select exists(
-    SELECT "tr-numero"
-      FROM tr_osoitteet tr
-     WHERE tr."tr-numero" = :tie);
+    SELECT tr.tie
+      FROM tr_osien_pituudet tr
+     WHERE tr.tie = :tie);
+
+-- name: hae-tieosoitteet
+-- Ei haeta tässä vaiheessa vielä kaistoja tai ajoratoja
+SELECT * FROM (
+SELECT DISTINCT ON (CONCAT("tr-numero", "tr-osa", "tr-alkuetaisyys")) CONCAT("tr-numero", "tr-osa", "tr-alkuetaisyys") AS tunniste,
+                                                                      "tr-numero"                                      AS tie,
+                                                                      "tr-osa"                                         AS osa,
+                                                                      "tr-alkuetaisyys"                                AS alkuetaisyys,
+                                                                      "tr-loppuetaisyys"                               AS loppuetaisyys,
+                                                                      tietyyppi
+  FROM tr_osoitteet) as tiet
+ORDER BY tie, osa, alkuetaisyys;

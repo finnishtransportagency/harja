@@ -309,6 +309,8 @@ button > .ajax-loader {
     border-style: solid;
     border-color: @harmaa7;
     border-width: 0 0 1px 0;
+    text-align: left;
+    width: 100%;
   }
 
   // Caret
@@ -328,11 +330,11 @@ button > .ajax-loader {
     line-height: 29px;
   }
 
-  .haitari-title.haitari-piilossa {
-    display: none;
-  }
-
   .haitari-sisalto {
+    .panel-heading {
+      margin-left: @valistys-8;
+      margin-top: @valistys-8;
+    }
 
   }
 
@@ -594,6 +596,30 @@ button > .ajax-loader {
 .pvm-kentta .ikoni-input {
     min-width: 120px;
     max-width: 150px;
+    width: fit-content;
+}
+
+.pvm-aika-kentta .ikoni-input {
+  min-width: 120px;
+  max-width: 150px;
+  width: fit-content;
+}
+
+.pvm-ikoni {
+  position: relative;
+}
+
+.ikoni-osio {
+  color: @blue-dark;
+  width: 26px;
+  background-color: transparent;
+  border: none;
+  height: 100%;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  top: 0;
+  right: 0;
 }
 
 .flex-lista {

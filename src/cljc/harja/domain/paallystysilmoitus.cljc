@@ -87,7 +87,7 @@
    {:nimi "AN22" :koodi 7}])
 
 (def +kyylamyllyt-ja-nil+
-  (conj +kuulamyllyt+ {:nimi "Ei kuulamyllyä" :koodi nil}))
+  (conj +kuulamyllyt+  {:nimi "Ei tietoa" :koodi 9} {:nimi "Ei kuulamyllyä" :koodi nil}))
 
 (def +kuulamylly-tai-nil+ "Kuulamylly annetulla koodilla"
   (apply schema/enum (map :koodi +kyylamyllyt-ja-nil+)))
@@ -358,3 +358,7 @@
 
 ;; POT2 lomaketta aletaan käyttää kesällä 2021 ja siitä eteenpäin.
 (def pot2-vuodesta-eteenpain 2021)
+
+;; jos kaista ei ole yhtenäinen ja tyhjä väli on 0 < hyppy < kynnysarvo, merkataan se hypyksi
+;; konsepti liittyy päällystysilmoitukseen missä on tarve visualisoida hypyt
+(def hypyn-kynnysarvo-metreina 50)

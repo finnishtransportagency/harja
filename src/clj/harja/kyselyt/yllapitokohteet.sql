@@ -1071,7 +1071,7 @@ WHERE yllapitokohde = :id;
 
 -- name: merkitse-kohteen-lahetystiedot!
 UPDATE yllapitokohde
-SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut, lahetysvirhe = :lahetysvirhe
+SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut, lahetysvirhe = :lahetysvirhe, lahettaja = :lahettaja
 WHERE id = :kohdeid;
 
 -- name: merkitse-kohteen-lahetystiedot-velhoon!
