@@ -7,6 +7,7 @@
             [harja.domain.kanavat.kohteenosa :as kohteenosa]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.vesivaylat.materiaali :as materiaali]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.roolit :as roolit]
@@ -28,19 +29,19 @@
   (let [onko-jvh? (roolit/jvh? @istunto/kayttaja)
         ;; Näytä pääkäyttäjälle luotu sekä muokkaajan tiedot
         jvh-sarakkeet [{:otsikko "Luotu"
-                        :nimi ::kanavan-toimenpide/luotu
+                        :nimi ::muokkaustiedot/luotu
                         :tyyppi :pvm
                         :fmt pvm/pvm-opt
                         :leveys 10}
                        {:otsikko "Muokattu"
-                        :nimi ::kanavan-toimenpide/muokattu
+                        :nimi ::muokkaustiedot/muokattu
                         :tyyppi :pvm
                         :fmt pvm/pvm-opt
                         :leveys 10}
                        {:otsikko "Muokkaaja"
-                        :nimi ::kanavan-toimenpide/muokkaaja
+                        :nimi ::muokkaustiedot/muokkaaja
                         :tyyppi :string
-                        :hae #(kayttaja/kokonimi (::kanavan-toimenpide/muokkaaja %))
+                        :hae #(kayttaja/kokonimi (::muokkaustiedot/muokkaaja %))
                         :leveys 10}]
         ;; Nämä näytetään normaalisti
         taulukon-sarakkeet [{:otsikko "Päivä\u00ADmäärä"
