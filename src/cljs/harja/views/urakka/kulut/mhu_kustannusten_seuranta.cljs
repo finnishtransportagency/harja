@@ -1,17 +1,11 @@
 (ns harja.views.urakka.kulut.mhu-kustannusten-seuranta
   "Urakan 'Toteumat' välilehden Määrien toteumat osio"
   (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<! >! chan]]
-            [cljs.core.async :refer [<! timeout]]
-            [cljs-time.core :as t]
             [clojure.string :as str]
             [tuck.core :as tuck]
-            [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.ui.dom :as dom]
-            [harja.ui.debug :as debug]
-            [harja.ui.protokollat :refer [Haku hae]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+ ajax-loader-pieni]]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
@@ -22,17 +16,10 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
-            [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.tyokalut.big :as big]
-            [harja.ui.napit :as napit]
-            [harja.views.urakka.kulut.valikatselmus :as valikatselmus]
             [harja.views.urakka.kulut.yhteiset :refer [fmt->big yhteenveto-laatikko]]
             [harja.ui.ikonit :as ikonit]
-            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
 
 (defn- muotoile-prosentti
   "Olettaa saavansa molemmat parametrit big arvoina."
@@ -435,9 +422,9 @@
                              2019
                              (:hoitokauden-alkuvuosi app))
         valittu-kuukausi (:valittu-kuukausi app)
-        hoitokauden-kuukaudet (vec (pvm/aikavalin-kuukausivalit
-                                     [(pvm/hoitokauden-alkupvm valittu-hoitokausi)
-                                      (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))]))
+        hoitokausi-vec [(pvm/hoitokauden-alkupvm valittu-hoitokausi)
+                        (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))]
+        hoitokauden-kuukaudet (vec (pvm/aikavalin-kuukausivalit hoitokausi-vec))
         hoitokauden-kuukaudet (into ["Kaikki"] hoitokauden-kuukaudet)
         haun-alkupvm (if (and valittu-kuukausi (not= "Kaikki" valittu-kuukausi))
                        (first valittu-kuukausi)
@@ -506,11 +493,10 @@
          
          [:div.filtteri {:style {:padding-top "25px"}}
           (if valikatselmus-tekematta?
-            [napit/yleinen-ensisijainen
-             "Tee välikatselmus"
-             #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))
-             {:luokka "nappi-korkeus-36"}]
-            [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma nappi-korkeus-36" :ikoni (ikonit/harja-icon-action-show)}])]]]
+            [yleiset/linkki "Tee välikatselmus"
+             #(siirtymat/avaa-valikatselmus hoitokausi-vec)]
+            [yleiset/linkki "Avaa välikatselmus"
+             #(siirtymat/avaa-valikatselmus hoitokausi-vec)])]]]
 
        (if (:haku-kaynnissa? app)
          [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]
@@ -530,7 +516,6 @@
                                                 (first urakan-hoitokaudet)
                                                 kuluva-hoitokausi)
                             kuluva-vuosi (pvm/vuosi (first kuluva-hoitokausi))]
-                        (e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake))
                         (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))
                         (e! (kustannusten-seuranta-tiedot/->HaeKustannukset hoitokauden-alkuvuosi
                               (if (= "Kaikki" valittu-kuukausi)
@@ -545,11 +530,8 @@
                         (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi valittu-urakka-id kuluva-vuosi)))))
     (fn [e! {:keys [valikatselmus-auki?] :as app}]
       [:div {:id "vayla"}
-       (if valikatselmus-auki?
-         [:div
-          [valikatselmus/valikatselmus e! app]]
-         [:div
-          [kustannukset e! app]])])))
+       [:div
+        [kustannukset e! app]]])))
 
 (defn kustannusten-seuranta []
   (tuck/tuck tila/kustannusten-seuranta kustannusten-seuranta*))

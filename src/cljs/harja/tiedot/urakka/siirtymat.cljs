@@ -171,15 +171,16 @@
     (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaukset :toteumat)
     (swap! urakka-tila/paikkaustoteumat assoc :harja.domain.paikkaus/toteumataulukon-tilat #{paikkauskohde-id})))
 
-(defn avaa-valikatselmus [valittu-hoitokausi]
+(defn avaa-valikatselmus
+  "Anna valittu-hoitokausi muodossa [#inst '2018-10-01' #inst '2019-09-30']"
+  [valittu-hoitokausi]
   (go
     (let [app-state {:valikatselmus-auki? true
                      :hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
                      :valittu-hoitokausi valittu-hoitokausi}]
       (do
-        ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
-        (nav/aseta-valittu-valilehti! :laskutus :kustannusten-seuranta)
-        (nav/aseta-valittu-valilehti! :urakat :laskutus)
+        ;; Aseta oikea välilehti, välikatselmuksella ei ole vielä erillistä sivua, kun välilehden alla on vain yksi tabi.
+        (nav/aseta-valittu-valilehti! :urakat :valikatselmus)
         (swap! urakka-tila/kustannusten-seuranta merge app-state)))))
 
 (defn avaa-lupaukset [hoitokauden-alkuvuosi]
