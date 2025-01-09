@@ -30,18 +30,21 @@
         ;; Näytä pääkäyttäjälle luotu sekä muokkaajan tiedot
         jvh-sarakkeet [{:otsikko "Luotu"
                         :nimi ::muokkaustiedot/luotu
-                        :tyyppi :pvm
-                        :fmt pvm/pvm-opt
-                        :leveys 10}
+                        :tyyppi :pvm-aika
+                        :fmt pvm/pvm-aika
+                        :leveys 5}
                        {:otsikko "Muokattu"
                         :nimi ::muokkaustiedot/muokattu
-                        :tyyppi :pvm
-                        :fmt pvm/pvm-opt
-                        :leveys 10}
+                        :tyyppi :pvm-aika
+                        :fmt pvm/pvm-aika
+                        :leveys 5}
                        {:otsikko "Muokkaaja"
-                        :nimi ::muokkaustiedot/muokkaaja
+                        :nimi ::kanavan-toimenpide/muokkaajan-tiedot
+                        :hae #(str
+                                (-> % (get-in [::kanavan-toimenpide/muokkaajan-tiedot]) first ::kayttaja/etunimi)
+                                " "
+                                (-> % (get-in [::kanavan-toimenpide/muokkaajan-tiedot]) first ::kayttaja/sukunimi))
                         :tyyppi :string
-                        :hae #(kayttaja/kokonimi (::muokkaustiedot/muokkaaja %))
                         :leveys 10}]
         ;; Nämä näytetään normaalisti
         taulukon-sarakkeet [{:otsikko "Päivä\u00ADmäärä"

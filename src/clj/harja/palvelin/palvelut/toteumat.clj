@@ -74,9 +74,9 @@
   (let [toteuman-tyyppi (:tyyppi (first (toteumat-q/toteuman-tyyppi db toteuma-id)))
         _ (case toteuman-tyyppi
             "yksikkohintainen"
-            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot   user urakka-id)
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot user urakka-id)
             "kokonaishintainen"
-            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id)
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
             ;; Kaikki seuraavat ovat pohjimmiltaan muutos- ja lisätöitä
             "muutostyo"
             (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id)
