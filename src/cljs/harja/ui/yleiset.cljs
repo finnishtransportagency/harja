@@ -3,6 +3,7 @@
   (:require [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [reagent.ratom :as ratom]
             [harja.ui.komponentti :as komp]
             [goog.events :as events]
@@ -799,7 +800,7 @@ jatkon."
         wrapperin-koko (:wrapperin-koko opts)]
     (komp/luo
       (komp/piirretty
-        #(let [n (r/dom-node %)
+        #(let [n (rdom/dom-node %)
                parent-rect (aget (.getClientRects (.-parentNode n)) 0)
                width (if (map? wrapperin-koko)
                        (:leveys wrapperin-koko)

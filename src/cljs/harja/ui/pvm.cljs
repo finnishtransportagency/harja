@@ -1,6 +1,7 @@
 (ns harja.ui.pvm
   "Päivämäärän valintakomponentti"
   (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [cljs-time.core :as t]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
@@ -17,9 +18,9 @@
 
 (defn selvita-kalenterin-suunta [komponentti sijainti-atom]
   (let [etaisyys-alareunaan (dom/elementin-etaisyys-viewportin-alareunaan
-                              (.-parentNode (r/dom-node komponentti)))
+                              (.-parentNode (rdom/dom-node komponentti)))
         etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-viewportin-oikeaan-reunaan
-                                   (.-parentNode (r/dom-node komponentti)))
+                                   (.-parentNode (rdom/dom-node komponentti)))
         uusi-suunta (if (< etaisyys-alareunaan 250)
                       (if (< etaisyys-oikeaan-reunaan 100)
                         :ylos-vasen

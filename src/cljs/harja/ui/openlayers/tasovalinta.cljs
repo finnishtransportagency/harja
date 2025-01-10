@@ -3,6 +3,7 @@
   Kaikille taustakarttatasoille, jotka ovat valittavissa, lisätään
   kartalle on/off ikoninappi, josta tason saa kytkettyä päälle tai pois"
   (:require [reagent.core :as r]
+            [reagent.dom :as rdom]
             [ol.control.Control]))
 
 (defn- control [content-component]
@@ -24,7 +25,7 @@
     ;; koska ol3/React eventtien käsittelyeroista johtuen :on-click asetetut
     ;; handlerit eivät koskaan laukea kontrollien stopevent parentin takia.
     :component-did-mount (fn [this]
-                           (let [d (r/dom-node this)]
+                           (let [d (rdom/dom-node this)]
                              (set! (.-onclick d)
                                    #(do
                                       (.setVisible the-layer
@@ -45,7 +46,7 @@
      ;; koska ol3/React eventtien käsittelyeroista johtuen :on-click asetetut
      ;; handlerit eivät koskaan laukea kontrollien stopevent parentin takia.
      :component-did-mount (fn [this]
-                            (let [d (r/dom-node this)]
+                            (let [d (rdom/dom-node this)]
                               (set! (.-onclick d)
                                 #(do
                                    (swap! atom not)
