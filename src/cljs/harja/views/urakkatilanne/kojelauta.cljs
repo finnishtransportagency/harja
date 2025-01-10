@@ -200,10 +200,17 @@
 
 (def urakoiden-maara-per-sivu 20)
 
-#_(defn virheelliset-tila-sarake
+(defn virheelliset-tila-sarake
   [rivi]
-  [yleiset/wrap-if true
-   [yleiset/tooltip {} :% "Siirry ilmoitukseen"]
+  (fn [rivi]
+    (for [kohde (:virheelliset_kohteet rivi)]
+      ^{:key (:id kohde)}
+      [yleiset/linkki (pot-yhteinen/paallystyskohteen-fmt kohde)
+       #(siirtymat/avaa-paallystysilmoitus! {:paallystyskohde-id (:id kohde)
+                                             :kohteen-urakka-id (:id rivi)})
+       {:block? true}])))
+  #_[yleiset/wrap-if true
+   [yleiset/tooltip {} :% "Siirry kohteeseen"]
    [:a.klikattava {:href "#"
                    :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {})}]])
 
