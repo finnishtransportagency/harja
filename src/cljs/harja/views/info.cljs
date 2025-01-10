@@ -1,11 +1,12 @@
  (ns harja.views.info
   "Infonäkymä mihin siirretty koulutusvideot julkiselta sisäiseen palvelimeen.
    Videot haetaan tietokannasta rajapintaa käyttäen"
-  (:require [tuck.core :refer [tuck]]
-            [harja.ui.komponentti :as komp]
-            [harja.ui.ikonit :as ikonit]
-            [harja.pvm :as pvm]
-            [harja.tiedot.info :as tiedot]))
+   (:require [harja.ui.yleiset :as yleiset]
+             [tuck.core :refer [tuck]]
+             [harja.ui.komponentti :as komp]
+             [harja.ui.ikonit :as ikonit]
+             [harja.pvm :as pvm]
+             [harja.tiedot.info :as tiedot]))
 
 (defn videolistaus [_ videot]
   [:div
@@ -24,7 +25,7 @@
                    [ikonit/ikoni-ja-teksti (m :otsikko) [ikonit/livicon-external]]]]]])
           videot)))]])
 
-(defn videot* [e! _]
+(defn harja-info [e! _]
   (komp/luo
     (komp/sisaan
       #(do
@@ -32,29 +33,31 @@
 
     (fn [e! {:keys [videot]}]
       [:span
-       [:div.section
-        [:h1 {:class "header-yhteiset"} "Harja Info"
+       [:div.harja-info
+        [:h1 {:class "header-yhteiset"} "Harja Info"]
          [:div {:class "otsikko-viiva"}]
+         [:section.linkit
+          [:span
+           [yleiset/staattinen-linkki-uuteen-ikkunaan
+            [:h2 "Harja uutiset "
+             [ikonit/livicon-external]]
+            "https://finnishtransportagency.github.io/harja/"]]
+          [:span
+           [yleiset/staattinen-linkki-uuteen-ikkunaan
+            [:h2 "Tietoja henkilötietojesi käsittelystä "
+             [ikonit/livicon-external]]
+            "https://vayla.fi/tietoa-meista/yhteystiedot/tietosuoja"]]
+          [:span
+           [yleiset/staattinen-linkki-uuteen-ikkunaan
+            [:h2 "Saavutettavuusseloste "
+             [ikonit/livicon-external]]
+            "https://palju.vaylapilvi.fi/palju/Extranet/Muut/Saavutettavuusselosteet/Saavutettavuusseloste_Harja.pdf"]]
 
-         [:ul
-          [:h2 {:class "header-yhteiset"} "Harja uutiset"]
-          [:ul
-           [:h3 {:class "header-yhteiset"} [:a {:href "https://finnishtransportagency.github.io/harja/" :target "_blank" :style {:color "#004D99"}}
-                                            [ikonit/ikoni-ja-teksti "https://finnishtransportagency.github.io/harja/ " [ikonit/livicon-external]]]]]]
-
-         [:ul
-          [:h2 {:class "header-yhteiset"} "Tietoja henkilötietojesi käsittelystä"]
-          [:ul
-           [:h3 {:class "header-yhteiset"} [:a {:href "https://vayla.fi/tietoa-meista/yhteystiedot/tietosuoja" :target "_blank" :style {:color "#004D99"}}
-                                            [ikonit/ikoni-ja-teksti "https://vayla.fi/tietoa-meista/yhteystiedot/tietosuoja " [ikonit/livicon-external]]]]]]
-
-         [:ul {:class "info-heading"} "Harja koulutusvideot"
-          [:p {:class "info-heading-pieni main"} "Koulutusvideoita HARJA:n käytön tueksi."]
-
-          [:div {:class "videot"}
-           [videolistaus e! videot]]]]]])))
+          [:div {:class "info-heading"} "Harja-koulutusvideot"]
+          [yleiset/vihje "Huomaathan, että osa Harjan koulutusvideoista on melko vanhoja, ja järjestelmä on monilta osin muuttunut videoiden tekemisen jälkeen."]
+          [:div [videolistaus e! videot]]]]])))
 
 (defn info
   "Hakee koulutusvideot kun käyttäjä tulee näkymään"
   []
-  [tuck tiedot/tila videot*]) 
+  [tuck tiedot/tila harja-info])
