@@ -34,7 +34,13 @@
 
                      ;; Nätetään arvot vain jos on olemassa
                      (when (yhteiset/raha-arvo-olemassa? (:hoitokauden_tavoitehinta data))
-                       (valitaulukko-rivi data false "Tavoitehinta (indeksikorjattu)" :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil))
+                       
+                       (valitaulukko-rivi data false (str "Tavoitehinta " 
+                                                       ;; Jos tavoitehintaa on oikaistu, näytä se Tavoitehinta (oikaistu) 
+                                                       (if (:tavoitehinta_on_oikaistu data) 
+                                                                            "(oikaistu)" 
+                                                                            "(indeksikorjattu)")) 
+                         :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil))
 
                      (when (yhteiset/raha-arvo-olemassa? (:hk_tavhintsiirto_ed_vuodelta data))
                        (valitaulukko-rivi data false "Siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true "red" nil))
