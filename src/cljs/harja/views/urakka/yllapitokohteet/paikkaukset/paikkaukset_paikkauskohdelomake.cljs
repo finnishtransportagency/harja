@@ -27,11 +27,11 @@
             [harja.domain.tierekisteri :as tr-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn- viesti-tiemerkintaan-modal [e! lomake tiemerkintaurakat tyomenetelmat]
+(defn- viesti-tiemerkintaan-modal [e! lomake tiemerkintaurakat tyomenetelmat nakyvissa?]
   (let [voi-lahettaa? (::tila/validi? lomake)]
     [modal/modal
      {:otsikko (str "Viesti tiemerkintaan")
-      :nakyvissa? true
+      :nakyvissa? nakyvissa?
       :sulje-fn #(e! (t-paikkauskohteet/->SuljeTiemerkintaModal))
       :footer [:div.row
                [:div.col-xs-6 {:style {:text-align "left"}}
@@ -50,7 +50,7 @@
                 [napit/peruuta
                  "Kumoa"
                  #(e! (t-paikkauskohteet/->SuljeTiemerkintaModal))]]]}
-
+     (when (and lomake tiemerkintaurakat tyomenetelmat)
      [:div
       [lomake/lomake {:ei-borderia? true
                       :muokkaa! #(e! (t-paikkauskohteet/->PaivitaTiemerkintaModal %))}
@@ -111,7 +111,7 @@
          :nimi :kopio-itselle?
          ::lomake/col-luokka "col-xs-12"
          :tyyppi :checkbox}]
-       lomake]]]))
+       lomake]])]))
 
 (defn lukutila-rivi [otsikko arvo]
   [:div {:style {:padding-top "16px" :padding-bottom "8px"}}
@@ -986,85 +986,85 @@
                  (and raportointitila? (= :pot (:toteumatyyppi lomake)) (nil? (:valiaika-takuuaika lomake)))
                  (assoc lomake :valiaika-takuuaika (:takuuaika lomake))
                  :else lomake)]
-    [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
-     #_ [debug/debug app]
-     ;; Näytä tarvittaessa tiemerkintämodal
-     (when (:tiemerkintamodal lomake)
-       [viesti-tiemerkintaan-modal e! (:tiemerkintalomake app) (:tiemerkintaurakat app) tyomenetelmat])
-
-     ;; Tarkistetaan muokkaustila
-     (when (and (not muokkaustila?) (not raportointitila?))
-       [lomake-lukutila e! lomake nayta-muokkaus? tyomenetelmat])
-
-     (when toteumalomake-auki?
-       [sivupalkki/oikea {:leveys "570px" :jarjestys 2}
-        ;; Lisätään yskikkö toteumalomakkeelle, jotta osataan näyttää kenttien otsikkotekstit oikein
-        [v-toteumalomake/toteumalomake e!
-         (assoc app :toteumalomake (-> toteumalomake
-                                       (assoc :toteumien-maara (:toteumien-maara lomake))
-                                       (assoc :paikkauskohde-nimi (:nimi lomake))
-                                       (assoc :paikkauskohde-tila (:paikkauskohteen-tila lomake))
-                                       (assoc :tyomenetelma (:tyomenetelma lomake))
-                                       (assoc :kohteen-yksikko (:yksikko lomake))
-                                       (assoc :paikkauskohde-id (:id lomake))))]])
-
-     (when pmr-lomake-auki?
-       [sivupalkki/oikea {:leveys "570px" :jarjestys 2}
-        [v-pmrlomake/pmr-lomake e! pmr-lomake tyomenetelmat]])
-
-     [lomake/lomake
-      {:ei-borderia? true
-       :voi-muokata? muokkaustila?
-       :tarkkaile-ulkopuolisia-muutoksia? true
-       :otsikko (when (and muokkaustila? (not raportointitila?))
-                  (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta"))
-       :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
-       :header-fn (when raportointitila? #(raporointi-header e! lomake muokkaustila? tyomenetelmat))
-       :footer-fn (fn [lomake]
-                    [:div.row
-                     [:hr]
-
-                     ;; Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
-                     ;; Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
-                     (when (and (not muokkaustila?)
+    [sivupalkki/oikea {:leveys "600px" :jarjestys 2}
+       [:div
+        #_ [debug/debug app]
+         ;; Näytä tarvittaessa tiemerkintämodal 
+          [viesti-tiemerkintaan-modal e! (:tiemerkintalomake app) (:tiemerkintaurakat app) tyomenetelmat (:tiemerkintamodal lomake)]
+    
+         ;; Tarkistetaan muokkaustila
+        (when (and (not muokkaustila?) (not raportointitila?))
+          [lomake-lukutila e! lomake nayta-muokkaus? tyomenetelmat])
+    
+        (when toteumalomake-auki?
+          [sivupalkki/oikea {:leveys "570px" :jarjestys 2}
+            ;; Lisätään yskikkö toteumalomakkeelle, jotta osataan näyttää kenttien otsikkotekstit oikein
+           [v-toteumalomake/toteumalomake e!
+            (assoc app :toteumalomake (-> toteumalomake
+                                        (assoc :toteumien-maara (:toteumien-maara lomake))
+                                        (assoc :paikkauskohde-nimi (:nimi lomake))
+                                        (assoc :paikkauskohde-tila (:paikkauskohteen-tila lomake))
+                                        (assoc :tyomenetelma (:tyomenetelma lomake))
+                                        (assoc :kohteen-yksikko (:yksikko lomake))
+                                        (assoc :paikkauskohde-id (:id lomake))))]])
+    
+        (when pmr-lomake-auki?
+          [sivupalkki/oikea {:leveys "570px" :jarjestys 2}
+           [v-pmrlomake/pmr-lomake e! pmr-lomake tyomenetelmat]])
+    
+        [lomake/lomake
+         {:ei-borderia? true
+          :voi-muokata? muokkaustila?
+          :tarkkaile-ulkopuolisia-muutoksia? true
+          :otsikko (when (and muokkaustila? (not raportointitila?))
+                     (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta"))
+          :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+          :header-fn (when raportointitila? #(raporointi-header e! lomake muokkaustila? tyomenetelmat))
+          :footer-fn (fn [lomake]
+                       [:div.row
+                        [:hr]
+    
+                         ;; Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
+                         ;; Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
+                        (when (and (not muokkaustila?)
                                 (nayta-pot-valinta? lomake tyomenetelmat))
-                       [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "24px" :padding-bottom "8px"}}
-                        [:div.row
-                         [:div.col-xs-12
-                          [:h4 "RAPORTOINTITAPA"]]]
-                        [:div.row {:style {:padding-left "16px"}}
-                         [kentat/tee-kentta {:tyyppi :radio-group
-                                             :nimi :toteumatyyppi
-                                             :otsikko ""
-                                             :vaihtoehdot [:normaali :pot]
-                                             :nayta-rivina? true
-                                             :vayla-tyyli? true
-                                             :vaihtoehto-nayta {:pot "POT-lomake"
-                                                                :normaali "Toteumat"}
-                                             :valitse-fn #(e! (t-paikkauskohteet/->AsetaToteumatyyppi %))}
-                          toteumatyyppi-arvo]]])
-                     (when (and (not muokkaustila?)
+                          [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "24px" :padding-bottom "8px"}}
+                           [:div.row
+                            [:div.col-xs-12
+                             [:h4 "RAPORTOINTITAPA"]]]
+                           [:div.row {:style {:padding-left "16px"}}
+                            [kentat/tee-kentta {:tyyppi :radio-group
+                                                :nimi :toteumatyyppi
+                                                :otsikko ""
+                                                :vaihtoehdot [:normaali :pot]
+                                                :nayta-rivina? true
+                                                :vayla-tyyli? true
+                                                :vaihtoehto-nayta {:pot "POT-lomake"
+                                                                   :normaali "Toteumat"}
+                                                :valitse-fn #(e! (t-paikkauskohteet/->AsetaToteumatyyppi %))}
+                             toteumatyyppi-arvo]]])
+                        (when (and (not muokkaustila?)
                                 (nil? (:ulkoinen-id lomake)))
-                       (kentat/nayta-arvo {:nimi :tiemerkinta-alert
-                                           :tyyppi :komponentti
-                                           :komponentti (fn []
-                                                          [harja.ui.yleiset/varoitus-vihje
-                                                           "Tarkista paikkauskohteen tiedot ennen tilausta"
-                                                           "Kohteen numero puuttuu"])
-                                           ::lomake/col-luokka "col-xs-12"
-                                           :rivi-luokka "lomakeryhman-rivi-tausta"}))
-                     (when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
-                       [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
-
-                     ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
-                     ;; Tarkistetaan ensin, että mitkä napit tulevat vasemmalle
-                     [:div.row
-                      [:div.col-xs-8 {:style {:padding-left "0"}}
-                       [footer-vasemmat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]
-                      [:div.col-xs-4
-                       [footer-oikeat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu?]]]])}
-      (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake tyomenetelmat)
-      lomake]]))
+                          (kentat/nayta-arvo {:nimi :tiemerkinta-alert
+                                              :tyyppi :komponentti
+                                              :komponentti (fn []
+                                                             [harja.ui.yleiset/varoitus-vihje
+                                                              "Tarkista paikkauskohteen tiedot ennen tilausta"
+                                                              "Kohteen numero puuttuu"])
+                                              ::lomake/col-luokka "col-xs-12"
+                                              :rivi-luokka "lomakeryhman-rivi-tausta"}))
+                        (when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
+                          [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
+    
+                         ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
+                         ;; Tarkistetaan ensin, että mitkä napit tulevat vasemmalle
+                        [:div.row
+                         [:div.col-xs-8 {:style {:padding-left "0"}}
+                          [footer-vasemmat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]
+                         [:div.col-xs-4
+                          [footer-oikeat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu?]]]])}
+         (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake tyomenetelmat)
+         lomake]]]))
 
 (defn paikkauslomake [e! app]
   [paikkauskohde-lomake e! app])
