@@ -886,7 +886,8 @@
      [raporttivalinnat ensimmainen-urakka-viimeksi]
      (cond
        (= :ladataan r)
-       [yleiset/ajax-loader "Raporttia suoritetaan..."]
+       [:div.ajax-loader-valistys
+        [yleiset/ajax-loader "Raporttia suoritetaan..."]]
 
        (= :raportoinnissa-ruuhkaa r)
        [raporteissa-ruuhkaa]
