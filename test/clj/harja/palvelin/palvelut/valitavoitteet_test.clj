@@ -333,3 +333,23 @@
 
         (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
         (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))))
+
+(deftest valtakunnallisten-valitavoitteiden-valmispvm-voi-poistaa
+    (let [muhoksen-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                  :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                  (hae-urakan-id-nimella "Muhoksen päällystysurakka"))
+          rivi (first (filter #(= "Se iso kivi siirretty pois tieltä" (:nimi %)) muhoksen-urakan-vanhat-valitavoitteet))
+          urakka-id (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Muhoksen päällystysurakka'")))
+
+          vastaus (kutsu-palvelua
+                    (:http-palvelin jarjestelma)
+                    :tallenna-urakan-valitavoitteet
+                    +kayttaja-jvh+
+                    {:urakka-id      urakka-id
+                     :valitavoitteet [(assoc rivi :valmispvm nil)]})
+          muhoksen-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                      :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                      (hae-urakan-id-nimella "Muhoksen päällystysurakka"))]
+      (is (nil? (:valmispvm (first (filter #(= "Se iso kivi siirretty pois tieltä" (:nimi %)) muhoksen-urakan-paivitetyt-valitavoitteet)))))))
