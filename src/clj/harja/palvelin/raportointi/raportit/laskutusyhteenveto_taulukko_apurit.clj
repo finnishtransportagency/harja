@@ -98,6 +98,7 @@
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)]
 
                     :else
+                    ;;  Tuotekohtainen -> tavoitehinta
                     [(toteutuneet-rivi data kyseessa-kk-vali? "Tavoite / jäljellä" :tavoite-hinta :jaljella true nil nil)
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)])))]
