@@ -37,7 +37,7 @@ description: |
           </ul>
       </li>
   </ol>
-version: 1.0.64
+version: 1.0.65
 mediaType: application/json
 protocols:
   - HTTPS
@@ -133,10 +133,16 @@ documentation:
       - urakka 9001 JCDeaux JCDeauxin mainossoppari
   - title: Versiohistoria
     content: |
-      <b>Nykyinen versio: 1.0.63</b>
-      <b>Julkaistu: 22.08.2023</b>
+      <b>Nykyinen versio: 1.0.65</b>
+      <b>Julkaistu: 9.01.2024</b>
 
       <b>Versiohistoria:</b>
+      - Versionumero 1.0.65 Julkaistu 9.1.2025
+         - Lisätty reikäpaikkausrajapinta.
+         - Päivitetty materiaaliraporttirajapinnalle toteumarajapinnasta erillinen materiaalimääritys, jotta myös negatiiviset määrävirheiden korjaukset voidaan palauttaa rajapinnan kautta.
+      - Versionumero 1.0.64 Julkaistu 1.10.2024
+          - Työmaapäiväkirjan versio 2. Käytä tätä versiota, kun kehität uutta.
+          - Lisätty talvihoitoreittirajapinta.
       - Versionumero 1.0.63 Julkaistu 22.08.2023
           - Lisätty tieturvallisuustarkastus rajapinta.
       - Versionumero 1.0.62 Julkaistu 14.08.2023
@@ -2040,7 +2046,7 @@ types:
               - string
               - integer
           materiaaliraportti:
-            type: file_resources_api_schemas_entities_materiaalit.schema.json
+            type: file_resources_api_schemas_entities_raportti_materiaalit.schema.json
             required: false
         additionalProperties: false
         required: false
