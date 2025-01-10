@@ -8,7 +8,7 @@
 
 (defn- control [content-component]
   (let [elt (js/document.createElement "span")
-        comp (r/render [content-component] elt)]
+        comp (rdom/render [content-component] elt)]
     (ol.control.Control. #js {:element elt})))
 
 (defn- layer-icon [icon visible? nimi the-layer on-change]

@@ -297,7 +297,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 (defn luo-overlay [koordinaatti sisalto]
   (let [elt (js/document.createElement "span")
-        comp (reagent/render sisalto elt)]
+        comp (rdom/render sisalto elt)]
     (ol.Overlay. (clj->js {:element   elt
                            :position  koordinaatti
                            :stopEvent false}))))
