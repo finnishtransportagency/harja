@@ -27,7 +27,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Yhdistää linestring ja multilinestringit yhdeksi multilinestringiksi
+-- Yhdistää pisteet (point), viivat (linestring) ja multilinestringit yhdeksi multilinestringiksi
 CREATE OR REPLACE FUNCTION yhdista_multilinestring(geometriat GEOMETRY)
   RETURNS GEOMETRY AS $$
 DECLARE
@@ -39,14 +39,18 @@ BEGIN
   tulos := ARRAY[]::GEOMETRY[];
   FOR i IN 1..ST_NumGeometries(geometriat) LOOP
     viiva := ST_GeometryN(geometriat, i);
-    IF ST_GeometryType(viiva) = 'ST_MultiLineString' THEN
-      FOR j IN 1..ST_NumGeometries(viiva) LOOP
-        tulos := tulos || ST_GeometryN(viiva, j);
+        CASE
+        WHEN ST_GeometryType(viiva) = 'ST_MultiLineString' THEN
+            FOR j IN 1..ST_NumGeometries(viiva)
+            LOOP
+                tulos := tulos || ST_GeometryN(viiva, j);
+            END LOOP;
+        WHEN ST_GeometryType(viiva) = 'ST_Point' THEN
+            tulos := tulos || ST_MakeLine(viiva);
+        ELSE
+            tulos := tulos || viiva;
+        END CASE;
       END LOOP;
-    ELSE
-      tulos := tulos || viiva;
-    END IF;
-  END LOOP;
   RETURN ST_Collect(tulos);
 END;
 $$ LANGUAGE plpgsql;
@@ -162,9 +166,12 @@ CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
   tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
   RETURNS SETOF geometry
 AS $$
+DECLARE
+    piste GEOMETRY;
 BEGIN
   IF aosa_=losa_ AND aet_=let_ THEN
-    RETURN NEXT tierekisteriosoitteelle_piste(tie_, aosa_, aet_);
+    piste := tierekisteriosoitteelle_piste(tie_, aosa_, aet_);
+    RETURN NEXT ST_MakeLine(piste, piste);
   ELSE
     RETURN NEXT tieosoitteelle_viiva(tie_, aosa_, aet_, losa_, let_);
   END IF;
