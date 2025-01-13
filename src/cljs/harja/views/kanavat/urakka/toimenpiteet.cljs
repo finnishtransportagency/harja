@@ -32,12 +32,12 @@
                         :nimi ::muokkaustiedot/luotu
                         :tyyppi :pvm-aika
                         :fmt pvm/pvm-aika
-                        :leveys 5}
+                        :leveys 10}
                        {:otsikko "Muokattu"
                         :nimi ::muokkaustiedot/muokattu
                         :tyyppi :pvm-aika
                         :fmt pvm/pvm-aika
-                        :leveys 5}
+                        :leveys 10}
                        {:otsikko "Muokkaaja"
                         :nimi ::kanavan-toimenpide/muokkaajan-tiedot
                         :hae #(str
