@@ -24,7 +24,6 @@
 
 (defn tallenna-talvihoitoreitti [db data kayttaja_id urakka_id]
   (let [;; Tallenna talvihoitoreitin perustiedot
-        _ (println "tallenna-talvihoitoreitti :: data" data)
         talvihoitoreitti-id (:id (talvihoitoreitit-q/lisaa-talvihoitoreitti-tietokantaan db data urakka_id kayttaja_id))
         ;; Lisää kalustot ja reitit
         _ (talvihoitoreitit-q/lisaa-reitit db talvihoitoreitti-id data)

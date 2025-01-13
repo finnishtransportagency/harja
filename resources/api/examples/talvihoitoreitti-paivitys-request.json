@@ -2,9 +2,9 @@
   "tunniste": "Valtavan uniikki 1234",
   "reittinimi": "Nelostien pikkumutka",
   "kalustot":  {
-    "tr_maara": 3,
-    "ka_maara": 2,
-    "kup_maara": 1
+    "tr_maara": 0,
+    "ka_maara": 1,
+    "kup_maara": 3
   },
   "sijainnit": [
     {

@@ -133,9 +133,9 @@
                          talvihoitoreitti {:reittinimi nimi
                                            :tunniste nimi
                                            :sijainnit (map #(dissoc % :nimi) (get-in reitti-rivit [nimi]))
-                                           :kalustot {:tr_maara (when-not (nil? (:tr reitin-kalusto)) (int (:tr reitin-kalusto)))
-                                                      :ka_maara (when-not (nil? (:ka reitin-kalusto)) (int (:ka reitin-kalusto)))
-                                                      :kup_maara (when-not (nil? (:kup reitin-kalusto)) (int (:kup reitin-kalusto)))}}]
+                                           :kalustot {:tr_maara (konversio/konvertoi->int (:tr reitin-kalusto))
+                                                      :ka_maara (konversio/konvertoi->int (:ka reitin-kalusto))
+                                                      :kup_maara (konversio/konvertoi->int (:kup reitin-kalusto))}}]
                      (conj tulos talvihoitoreitti)))
                  [] reittien-nimet)]
     reitit))
