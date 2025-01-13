@@ -56,7 +56,7 @@ describe('Päänäkymien avaamiset', function () {
         cy.wait(100)
         cy.contains('ul li a span', 'INFO').click({ force: true });
         cy.contains('Hupsista').should('not.exist')
-        cy.contains('Harja uutiset').should('exist')
+        cy.contains('Saavutettavuusseloste ').should('exist')
     })
 })
 
