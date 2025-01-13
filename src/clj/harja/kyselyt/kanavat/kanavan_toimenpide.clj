@@ -5,6 +5,7 @@
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.hinta :as hinta]
+            [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.kanavat.kommentti :as kommentti]
             [harja.id :refer [id-olemassa?]]
@@ -24,14 +25,17 @@
 
 (defn hae-kanavatoimenpiteet-specql [db hakuehdot]
   (let [toimenpiteet (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot)
+        muokkaaja #(fetch db ::kayttaja/kayttaja kayttaja/perustiedot {::kayttaja/id %})
         kommentit #(fetch db ::kommentti/toimenpiteen-kommentti
-                          (set/union kommentti/perustiedot kommentti/kayttajan-tiedot)
-                          {::kommentti/toimenpide-id %})]
+                     (set/union kommentti/perustiedot kommentti/kayttajan-tiedot)
+                     {::kommentti/toimenpide-id %})]
     (for [tp toimenpiteet
-          :let [tp-id (::toimenpide/id tp)]]
+          :let [tp-id (::toimenpide/id tp)
+                muokkaaja-id (::muokkaustiedot/muokkaaja-id tp)]]
       (merge tp {::toimenpide/hinnat (hae-toimenpiteen-hinnat db tp-id)
                  ::toimenpide/tyot (hae-toimenpiteen-tyot db tp-id)
-                 ::toimenpide/kommentit (kommentit tp-id)}))))
+                 ::toimenpide/kommentit (kommentit tp-id)
+                 ::toimenpide/muokkaajan-tiedot (when muokkaaja-id (muokkaaja muokkaaja-id))}))))
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 
