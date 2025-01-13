@@ -1,0 +1,81 @@
+/* Info-näkymän avaus painike (oikea ylä) */
+.info-nakyma {
+  cursor: pointer;
+
+  span {
+    color: @sininen4;
+
+    &:hover {
+      color: @sininen1;
+      text-decoration: underline;
+    }
+  }
+
+  &:visited {
+    color: @sininen4;
+  }
+
+  &.aktiivinen {
+    font-weight: 900;
+  }
+}
+
+/* Harja-Info sivu */
+.harja-info {
+  section {
+    font-size: @valistys-14;
+    margin: @valistys-32 @valistys-32;
+    &.klinikat {
+      ul {
+        padding-inline-start: @valistys-16;
+      }
+    }
+  }
+  ul {
+    padding-left: 0;
+  }
+  .sisalto {
+    max-width: 1000px;
+  }
+  .linkit {
+    a {
+      text-decoration: underline;
+    }
+  }
+  /* Video-lista komponentti, oma fonttikoko. Pienempi header on liian pieni */
+  .info-lista {
+    font-weight: 600;
+    font-size: 17px;
+    line-height: 20px;
+
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding-top: 10px;
+
+    &:last-child {
+      padding-bottom: 10px;
+    }
+
+    .video-wrap {
+      padding-top: 5px;
+    }
+  }
+
+  /* Video linkit */
+  .video-otsikko {
+    transition: 0.5s;
+    height: 40px;
+    cursor: pointer;
+    color: #004D99;
+    width: 100%;
+    transition: 0.1s;
+  }
+
+  .video-otsikko:hover {
+    color: hwb(204 51% 28%);
+    transition: 0.1s;
+  }
+}
