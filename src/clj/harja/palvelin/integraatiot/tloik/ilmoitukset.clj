@@ -209,7 +209,11 @@
         tapahtuma-id (lokittaja :saapunut-jms-viesti jms-viesti-id viestin-sisalto ilmoitusviestijono)]
 
     (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" viestin-sisalto)
-      (let [{:keys [viesti-id ilmoitus-id] :as ilmoitus} (ilmoitus-sanoma/lue-viesti viestin-sisalto)]
+      (let [{:keys [viesti-id ilmoitus-id kuvat] :as ilmoitus} (ilmoitus-sanoma/lue-viesti viestin-sisalto)
+            kuvat (keep #(when (seq %) %) kuvat)
+            ilmoitus (if (seq kuvat)
+                       (assoc ilmoitus :kuvat kuvat)
+                       (dissoc ilmoitus :kuvat))]
         (try+
           (if-let [urakka (hae-urakka db ilmoitus)]
             (kasittele-ilmoitus itmf ilmoitusasetukset lokittaja db kuittausjono urakka
