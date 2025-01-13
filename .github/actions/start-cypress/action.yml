@@ -71,6 +71,6 @@ runs:
           "$IMAGE_NAME" \
           bash -c "echo -e \"Chrome version:  \$(google-chrome --version) \nEdge version:  \$(edge --version) \n\";
                    echo '-------------------';
-                   cypress run --spec cypress/e2e/nakymien_avaus.cy.js --browser $BROWSER"
+                   cypress run --browser $BROWSER"
       shell: bash
 
