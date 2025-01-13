@@ -33,28 +33,49 @@
 
     (fn [e! {:keys [videot]}]
       [:div.harja-info
-       [:h1 {:class "header-yhteiset"} "Harja Info"]
-       [:div {:class "otsikko-viiva"}]
+       [:h1 "Harja-info"]
+       [:hr]
        [:section.linkit
-        [:span
-         [yleiset/staattinen-linkki-uuteen-ikkunaan
-          [:h2 "Harja uutiset "
-           [ikonit/livicon-external]]
-          "https://finnishtransportagency.github.io/harja/"]]
-        [:span
-         [yleiset/staattinen-linkki-uuteen-ikkunaan
-          [:h2 "Tietoja henkilötietojesi käsittelystä "
-           [ikonit/livicon-external]]
-          "https://vayla.fi/tietoa-meista/yhteystiedot/tietosuoja"]]
-        [:span
-         [yleiset/staattinen-linkki-uuteen-ikkunaan
-          [:h2 "Saavutettavuusseloste "
-           [ikonit/livicon-external]]
-          "https://palju.vaylapilvi.fi/palju/Extranet/Muut/Saavutettavuusselosteet/Saavutettavuusseloste_Harja.pdf"]]
+        [:h2 "Uutiset ja selosteet"]
+        [:div.sisalto
+         [:span
+          [yleiset/staattinen-linkki-uuteen-valilehteen
+           [:h2 "Harja-uutiset "
+            [ikonit/livicon-external]]
+           "https://finnishtransportagency.github.io/harja/"]]
+         [:span
+          [yleiset/staattinen-linkki-uuteen-valilehteen
+           [:h2 "Tietoja henkilötietojesi käsittelystä "
+            [ikonit/livicon-external]]
+           "https://vayla.fi/tietoa-meista/yhteystiedot/tietosuoja"]]
+         [:span
+          [yleiset/staattinen-linkki-uuteen-valilehteen
+           [:h2 "Saavutettavuusseloste "
+            [ikonit/livicon-external]]
+           "https://palju.vaylapilvi.fi/palju/Extranet/Muut/Saavutettavuusselosteet/Saavutettavuusseloste_Harja.pdf"
+           {:title "Tietoa Harjan saavutettavuuden tasosta."}]]]]
 
-        [:div {:class "info-heading"} "Harja-koulutusvideot"]
-        [yleiset/vihje "Huomaathan, että osa Harjan koulutusvideoista on melko vanhoja, ja järjestelmä on monilta osin muuttunut videoiden tekemisen jälkeen."]
-        [:div [videolistaus e! videot]]]])))
+       [:section.klinikat
+        [:h2 "Harja-klinikat"]
+        [:p.sisalto "Vuonna 2025 Harjan kehitystiimi järjestää joka neljäs keskiviikko Harja-klinikoita. Niissä kerrotaan ajankohtaisia Harjan käyttöön liittyviä asioita, sekä on mahdollista esittää kysymyksiä. Alla Harja-klinikoiden alustavia päivämääriä (voi tulla muutoksia). Pyrimme ilmoittamaan Harja-klinikoista myös Harjassa näkyvillä mainosbannereilla. Tervetuloa!"]
+        (when (< (pvm/nyt) (pvm/->pvm "18.6.2025"))
+          [:span
+           [:br]
+           [:p "Seuraavat Harja-klinikat:"]
+           [:ul
+            (when (< (pvm/nyt) (pvm/->pvm "29.1.2025")) [:li "Ke 29.1.2025"])
+            (when (< (pvm/nyt) (pvm/->pvm "26.2.2025")) [:li "Ke 26.2.2025"])
+            (when (< (pvm/nyt) (pvm/->pvm "26.3.2025")) [:li "Ke 26.3.2025"])
+            (when (< (pvm/nyt) (pvm/->pvm "23.4.2025")) [:li "Ke 23.4.2025"])
+            (when (< (pvm/nyt) (pvm/->pvm "21.5.2025")) [:li "Ke 21.5.2025"])
+            (when (< (pvm/nyt) (pvm/->pvm "18.6.2025")) [:li "Ke 18.6.2025"])]])]
+
+
+        [:section.koulutusvideot
+         [:h2 "Harja-koulutusvideot"]
+         [:div.sisalto
+          [yleiset/vihje "Huomaathan, että osa Harjan koulutusvideoista on melko vanhoja, ja järjestelmä on monilta osin muuttunut videoiden tekemisen jälkeen."]
+          [:div [videolistaus e! videot]]]]])))
 
 (defn info
   "Hakee koulutusvideot kun käyttäjä tulee näkymään"

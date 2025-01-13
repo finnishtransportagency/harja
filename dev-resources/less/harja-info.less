@@ -22,8 +22,22 @@
 
 /* Harja-Info sivu */
 .harja-info {
+  section {
+    font-size: @valistys-14;
+    margin: @valistys-32 @valistys-32;
+    &.klinikat {
+      ul {
+        padding-inline-start: @valistys-16;
+      }
+    }
+  }
+  ul {
+    padding-left: 0;
+  }
+  .sisalto {
+    max-width: 1000px;
+  }
   .linkit {
-    margin-left: @valistys-32;
     a {
       text-decoration: underline;
     }
@@ -48,21 +62,6 @@
     .video-wrap {
       padding-top: 5px;
     }
-  }
-
-  /* Pääotsikon alaviiva */
-  .otsikko-viiva {
-    margin-top: 5px;
-    border-top: 0.2em solid #c8c8c8;
-  }
-
-  /* Nämä tarvitaan, ei käytetä yleisiä typography classeja */
-  .info-heading {
-    text-align: left;
-    font-weight: 600;
-    font-size: 20px;
-    line-height: 24px;
-    padding-top: 20px;
   }
 
   /* Video linkit */
