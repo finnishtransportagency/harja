@@ -520,7 +520,7 @@ jobs:
           
           echo "Lisätään downloads oikeudet Cypressille"
           mkdir -p cypress/downloads
-          sudo chmod -R 755 cypress/downloads
+          sudo chmod -R 711 cypress/downloads
           
           echo "Käynnistetään Harja..."
           java -cp :harja-0.0.1-SNAPSHOT-standalone.jar harja.palvelin.main > harja.out 2>&1 &
