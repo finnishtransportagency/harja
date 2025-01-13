@@ -1001,7 +1001,7 @@ BEGIN
             lk.tavoitehintainen AS tavoitehintainen 
         FROM kulu l
         JOIN kulu_kohdistus lk ON lk.kulu = l.id
-        JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
+        LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
         -- Etsi pelkästään muukulu tyyppiset  kirjaukset, toimenpideinstansseilla ei ole näissä väliä 
         -- Tavoitehintaiset kuuluu tehtäväryhmälle, ei tavoitehintaiset kuuluu toimenpiteelle, mutta työmaakokouksessa ei tarvitse niputtaa
         WHERE lk.tyyppi = 'muukulu'
