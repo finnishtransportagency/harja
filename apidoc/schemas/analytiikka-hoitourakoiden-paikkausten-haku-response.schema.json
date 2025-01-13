@@ -124,15 +124,15 @@
     "tehtavaryhma": {
       "type": "string",
       "enum": [
-        "KT-Valu (Y3)",
-        "Kuumapäällyste (Y1)",
-        "Kylmäpäällyste (Y2)",
-        "Käsipaikkaus pikapaikkausmassalla (Y4)",
-        "Puhallus-SIP (Y5)",
-        "Päällysteiden paikkaus (Y)",
-        "Saumojen juottaminen bitumilla (Y6)",
-        "Siltapäällysteet (H)",
-        "Valu (Y7)"
+        "Y3 - KT-Valu",
+        "Y1 - Kuumapäällyste",
+        "Y2 - Kylmäpäällyste",
+        "Y4 - Käsipaikkaus pikapaikkausmassalla",
+        "Y5 - Puhallus-SIP",
+        "Y8 - Päällysteiden paikkaus, muut työt",
+        "Y6 - Saumojen juottaminen bitumilla",
+        "H - Siltapäällysteet",
+        "Y7 - Valu"
       ]
     },
     "tierekisteriosoitevali": {

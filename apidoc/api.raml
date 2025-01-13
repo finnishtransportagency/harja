@@ -20,11 +20,11 @@ description: |
           <li>Reaaliaikaisten seurantatietojen, kuten esim. aura-auton liikkeiden kirjaus</li>
         </ul>
       </li>
-    <li>ilmoitukset: 
+    <li>ilmoitukset:
       <ul>
         <li>Tieliikennekeskuksen urakalle tekemien ilmoitusten haku</li>
         <li>Kuittausten eli toimenpiteiden tekeminen ilmoituksille</li>
-      </ul>   
+      </ul>
     </li>
     <li>tieluvat:
         <ul>
@@ -37,7 +37,7 @@ description: |
           </ul>
       </li>
   </ol>
-version: 1.0.64
+version: 1.0.65
 mediaType: application/json
 protocols:
   - HTTPS
@@ -61,11 +61,11 @@ documentation:
               <li>Reaaliaikaisten seurantatietojen, kuten esim. aura-auton liikkeiden kirjaus</li>
             </ul>
           </li>
-        <li>ilmoitukset: 
+        <li>ilmoitukset:
           <ul>
             <li>Tieliikennekeskuksen urakalle tekemien ilmoitusten haku</li>
             <li>Kuittausten eli toimenpiteiden tekeminen ilmoituksille</li>
-          </ul>   
+          </ul>
         </li>
         <li>tieluvat:
             <ul>
@@ -80,17 +80,26 @@ documentation:
       </ol>
   - title: Tekninen kuvaus
     content: |-
-      Harja -järjestelmän rajapinta on toteutettu REST-API:na, jossa tieto liikkuu JSON-formaatissa. 
+      Harja -järjestelmän rajapinta on toteutettu REST-API:na, jossa tieto liikkuu JSON-formaatissa.
 
-      Tietoliikenne Harjan palvelimille kulkee Väylän keskitetyn gatewayn kautta (Oracle Enterprice Gateway). Siirtoprotokollana käytetään HTTPS. Käyttäjän tunnistaminen tehdään käyttäen HTTP Basic autentikaatiota tunnus-salasana -parina. Väylä hallinnoi järjestelmä-/urakoitsijakohtaisia tunnuksia.
+      Tietoliikenne Harjan palvelimille kulkee Väylänpilven keskitetyn integraatioväylän kautta. Siirtoprotokollana käytetään HTTPS.
+      Käyttäjän tunnistaminen tehdään käyttäen HTTP Basic autentikaatiota tunnus-salasana -parina. Väylä hallinnoi järjestelmä-/urakoitsijakohtaisia tunnuksia.
 
       Kutsut voi lähettää gzipillä pakattuina merkitsemällä content encodingin gzipiksi.
 
-      Huomioitavaa:
+      <b>Huomioitavaa:</b>
       <ul>
         <li>Kaikki ajat raportoidaan Suomen aikavyöhykkeessä GMT+2/3. Aikaleimat täytyy siis raportoida formaatissa: "2016-11-03T03:43:14+02:00"</li>
         <li>Kaikki toteumien tehtävien ja materiaalien määrät raportoidaan Harjan urakkahaun palauttamassa yksikössä. Harja ei tee muunnoksia raportoiduille yksiköille.</li>
       </ul>
+
+      <b>Rajapintakutsujen rajoitukset integraatioväylällä:</b>
+      <ul>
+        <li>Sanoman maksimikoko: 20 MB</li>
+        <li>Aikakatkaisu: 180 s</li>
+        <li>Harja käsittelee kutsun loppuun omien sääntöjensä mukaan, vaikka integraatioväylä palauttaisi kutsujalle aikakatkaisuun liittyvän virheen.</li>
+      </ul>
+
   - title: Sijaintitiedot
     content: |
       Kaikki koordinaattisijainnit ilmoitetaan Harjaan EUREF-FIN koordinaatistossa. Koordinaattipisteiden lisäksi vastaanotetaan suunta joka on aseteluku väliltä: 0-360.
@@ -124,10 +133,16 @@ documentation:
       - urakka 9001 JCDeaux JCDeauxin mainossoppari
   - title: Versiohistoria
     content: |
-      <b>Nykyinen versio: 1.0.63</b>
-      <b>Julkaistu: 22.08.2023</b>
+      <b>Nykyinen versio: 1.0.65</b>
+      <b>Julkaistu: 9.01.2024</b>
 
       <b>Versiohistoria:</b>
+      - Versionumero 1.0.65 Julkaistu 9.1.2025
+         - Lisätty reikäpaikkausrajapinta.
+         - Päivitetty materiaaliraporttirajapinnalle toteumarajapinnasta erillinen materiaalimääritys, jotta myös negatiiviset määrävirheiden korjaukset voidaan palauttaa rajapinnan kautta.
+      - Versionumero 1.0.64 Julkaistu 1.10.2024
+          - Työmaapäiväkirjan versio 2. Käytä tätä versiota, kun kehität uutta.
+          - Lisätty talvihoitoreittirajapinta.
       - Versionumero 1.0.63 Julkaistu 22.08.2023
           - Lisätty tieturvallisuustarkastus rajapinta.
       - Versionumero 1.0.62 Julkaistu 14.08.2023
@@ -174,7 +189,7 @@ documentation:
       - Versionumero 1.0.41 Julkaistu 8.2.2019
           - Työkoneseurannassa voi antaa sijaintitiedon viivageometriana pisteen sijasta.
       - Versionumero 1.0.40 Julkaistu 21.12.2018
-          - Organisaatio päivitetty esimerkeissä Väyläksi. Päivitys ei sisällä toiminnallista rajapintamuutosta. 
+          - Organisaatio päivitetty esimerkeissä Väyläksi. Päivitys ei sisällä toiminnallista rajapintamuutosta.
       - Versionumero 1.0.39 Julkaistu 11.12.2018
           - Päällystysilmoituksen kirjaus rajapinta on muuttunut. Pääkohteelle ei ilmoiteta kaistaa eikä ajorataa, mutta nämä tiedot on annettava alikohteille sekä alustalle tehdyille toimenpiteille.
       - Versionumero 1.0.38 Julkaistu 22.11.2018
@@ -187,15 +202,15 @@ documentation:
           - Tieluvan kirjaus ottaa alueurakat arrayna.
       - Versionumero 1.0.35 Julkaistu 27.4.2018
           - Päällystysilmoituksen kirjauksessa voi nyt kirjata alustatoimenpiteillä tienumeron. Jos tienumeroa ei anna, käytetään pääkohteen tienumeroa.
-      - Versionumero: 1.0.34 Julkaistu: 29.3.2018: 
-          - Kuulamyllyarvojen etuliitteet oikaistu.  
+      - Versionumero: 1.0.34 Julkaistu: 29.3.2018:
+          - Kuulamyllyarvojen etuliitteet oikaistu.
               - N10 -> AN10
               - N14 -> AN14
-              - N19 -> AN19 
-              - N30 -> AN30 
-              - N2 -> AN2 
-      - Versionumero: 1.0.33 Julkaistu: 20.3.2018: 
-          - Päällystyskohteilta poistettu hypyt. Jatkossa hypyt voi antaa yksinkertaisesti jättämällä alikohteiden väliin tyhjää. 
+              - N19 -> AN19
+              - N30 -> AN30
+              - N2 -> AN2
+      - Versionumero: 1.0.33 Julkaistu: 20.3.2018:
+          - Päällystyskohteilta poistettu hypyt. Jatkossa hypyt voi antaa yksinkertaisesti jättämällä alikohteiden väliin tyhjää.
       - Versionumero: 1.0.32 Julkaistu: 28.2.2018:
           - Ylläpitokohteiden ja päällystysilmoituksen päivitys ottaa nyt vastaan uuden, vapaaehtoisen hyppy-kentän alikohteelle. Jos sen arvo on true, merkitään alikohde hypyksi. Urakan kohteiden haku palauttaa tiedon, onko kyseessä hyppy-alikohde.
       - Versionumero: 1.0.31 Julkaistu: 1.2.2018:
@@ -203,7 +218,7 @@ documentation:
       - Versionumero: 1.0.30 Julkaistu: 27.11.2017:
           - Lisätty uusi rajapinta tielupien kirjaamiselle Harjaan.
       - Versionumero: 1.0.29 Julkaistu: 3.11.2017:
-          - Tilaajan laadunvalvontakonsulteille lisätty oma tehtävä API:n työkoneseurantaan: tilaajan laadunvalvonta. Nämä havainnot näytetään vain tilaajan käyttäjille. 
+          - Tilaajan laadunvalvontakonsulteille lisätty oma tehtävä API:n työkoneseurantaan: tilaajan laadunvalvonta. Nämä havainnot näytetään vain tilaajan käyttäjille.
       - Versionumero: 1.0.28 Julkaistu: 21.9.2017:
           - Ilmoituskuittausten kautta voidaan ilmoittaa lopetuksen yhteydessä aiheuttiko ilmoitus toimenpiteitä vai ei.
       - Versionumero: 1.0.27 Julkaistu: 11.9.2017:
@@ -252,7 +267,7 @@ documentation:
           - Työkoneiden reaaliaikaseurannan rajapintaan lisätty jyrät uutena työkonetyyppinä.
           - Lisätty uusi rajapinta ylläpitokohteen tietojen päivittämiselle
       - Versionumero: 1.0.5 Julkaistu: 21.12.2016:
-          - Urakan yhteystietorajapintaan lisätty tieto urakan vastuu- ja varahenkilöistä 
+          - Urakan yhteystietorajapintaan lisätty tieto urakan vastuu- ja varahenkilöistä
       - Versionumero: 1.0.4 Julkaistu: 16.11.2016:
           - Poistettu päällystysilmoitukselta omat aikataulutiedot. Jatkossa päällystysilmoituksen aloituspvm, kohteen valmistumispvm ja päällystyksen valmistumispvm ovat sama asia kuin ilmoitukseen kuuluvan ylläpitokohteen vastaavat tiedot.
           - Lisätty päällystysilmoituksen kirjaukseen uusi kenttä "valmis-kasiteltavaksi" (true/false/null). Jos tässä kentässä on arvona true, asetetaan päällystysilmoitus valmiiksi tilaajan käsiteltäväksi (ellei jo ole käsiteltävänä tai käsitelty).
@@ -280,14 +295,14 @@ documentation:
       - Versionumero: 0.2.6. Julkaistu: 11.8.2016:
           - Työkoneiden reaaliaikaseurantaan on lisätty uudet tehtävät ylläpidon ajoneuvoja varten: asfaltointi (pääasfaltointilaite), tiemerkintä, kuumennus (kuumennus-/remix-laitteet), sekoitus tai stabilointi (sekoitus- ja stabilointijyrsimet), turvalaite (TMA-laitteet)
       - Versionumero: 0.2.5. Julkaistu 8.8.2016:
-          - Sopimusnumero on muutettu vaihtoehtoiseksi toteumille. Jos sopimusnumeroa ei ole annettu, tehdään kirjaus automaattisesti urakan pääsopimukselle. 
+          - Sopimusnumero on muutettu vaihtoehtoiseksi toteumille. Jos sopimusnumeroa ei ole annettu, tehdään kirjaus automaattisesti urakan pääsopimukselle.
       - Versionumero: 0.2.4. Julkaistu 27.7.2016:
           - Varusterajapinnat päivitetty. Jatkossa varusteiden ja laitteiden teknisten arvojen parsinta tehdään Harjan puolella. Samalla mahdollistettu usean varustetoteuman sekä yksittäisen varustetoteuman sisällä usean toimenpiteen kirjaaminen kerralla.
       - Versionumero: 0.2.3. Julkaistu 15.7.2016:
           - Yhtenäistetty työkoneiden tehtävien enum-arvot kannan omien enumien kanssa, mistä johtuen tehtävien nimiin tehty pieniä muutoksia.
           - Ylläpito-urakoissa seuraavat kirjattavat työkone-tyypit näytetään Tilannekuvassa Ylläpito-osiossa: paaasfalttilevitin, remix-laite, sekoitus-ja-stabilointijyrsin, tma-laite
       - Versionumero: 0.2.2. Julkaistu 13.7.2016:
-          - Lisätty rajapinnat suljettujen tieosien kirjaamiselle ja poistolle. 
+          - Lisätty rajapinnat suljettujen tieosien kirjaamiselle ja poistolle.
       - Versionumero: 0.2.1. Julkaistu 6.7.2016:
           - Turvallisuuspoikkeama yhtenäistetty TURI:n kanssa, mistä johtuen tehty seuraavat muutokset:
           - Poistettu kenttä: paattynyt
@@ -399,7 +414,7 @@ types:
           type: object
           properties:
             tunniste:
-              type: schemas/entities/tunniste.schema.json
+              type: file_resources_api_schemas_entities_tunniste.schema.json
               additionalProperties: false
               required: false
             varoitukset:
@@ -449,27 +464,27 @@ types:
               type: object
               properties:
                 tiedot:
-                  type: schemas/entities/urakka-otsikko.schema.json
+                  type: file_resources_api_schemas_entities_urakka-otsikko.schema.json
                   additionalProperties: false
               additionalProperties: false
           additionalProperties: false
         required: false
     additionalProperties: false
   urakan-haku-response:
-    type: schemas/entities/urakka.schema.json
+    type: file_resources_api_schemas_entities_urakka.schema.json
     additionalProperties: false
   reittitoteuman-kirjaus-request:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       reittitoteuma:
-        type: schemas/entities/reittitoteuma.schema.json
+        type: file_resources_api_schemas_entities_reittitoteuma.schema.json
         additionalProperties: false
         required: false
       reittitoteumat:
-        type: schemas/entities/reittitoteumat.schema.json
+        type: file_resources_api_schemas_entities_reittitoteumat.schema.json
         additionalProperties: false
         required: false
     additionalProperties: false
@@ -477,14 +492,14 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       pistetoteuma:
-        type: schemas/entities/pistetoteuma.schema.json
+        type: file_resources_api_schemas_entities_pistetoteuma.schema.json
         additionalProperties: false
         required: false
       pistetoteumat:
-        type: schemas/entities/pistetoteumat.schema.json
+        type: file_resources_api_schemas_entities_pistetoteumat.schema.json
         additionalProperties: false
         required: false
     additionalProperties: false
@@ -492,7 +507,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       viimeksipaivitetty:
         type: string
@@ -504,13 +519,13 @@ types:
           type: object
           properties:
             tunniste:
-              type: schemas/entities/tunniste.schema.json
+              type: file_resources_api_schemas_entities_tunniste.schema.json
               additionalProperties: false
             kohde:
-              type: schemas/entities/kohde.schema.json
+              type: file_resources_api_schemas_entities_kohde.schema.json
               additionalProperties: false
             sijainti:
-              type: schemas/entities/sijainti.schema.json
+              type: file_resources_api_schemas_entities_sijainti.schema.json
             vaylamuoto:
               type: string
               enum:
@@ -528,7 +543,7 @@ types:
                   - turvallisuushavainto
               required: false
             ilmoittaja:
-              type: schemas/entities/henkilo.schema.json
+              type: file_resources_api_schemas_entities_henkilo.schema.json
               additionalProperties: false
               required: false
             otsikko:
@@ -547,7 +562,7 @@ types:
               type: string
               required: false
             turvallisuuskoordinaattori:
-              type: schemas/entities/henkilo.schema.json
+              type: file_resources_api_schemas_entities_henkilo.schema.json
               additionalProperties: false
               required: false
             kuvaus:
@@ -563,7 +578,7 @@ types:
               type: boolean
               required: false
             henkilovahinko:
-              type: schemas/entities/henkilovahinko.schema.json
+              type: file_resources_api_schemas_entities_henkilovahinko.schema.json
               additionalProperties: false
               required: false
             vahinkoluokittelu:
@@ -603,13 +618,13 @@ types:
                     (oas-format): date-time
                     required: false
                   vastaavahenkilo:
-                    type: schemas/entities/henkilo.schema.json
+                    type: file_resources_api_schemas_entities_henkilo.schema.json
                     additionalProperties: false
                     required: false
                 additionalProperties: false
               required: false
             liitteet:
-              type: schemas/entities/liitteet.schema.json
+              type: file_resources_api_schemas_entities_liitteet.schema.json
               additionalProperties: false
               required: false
             kommentit:
@@ -624,13 +639,13 @@ types:
                 additionalProperties: false
               required: false
             juurisyy1:
-              type: schemas/entities/turvallisuuspoikkeama-juurisyy.schema.json
+              type: file_resources_api_schemas_entities_turvallisuuspoikkeama-juurisyy.schema.json
               required: false
             juurisyy2:
-              type: schemas/entities/turvallisuuspoikkeama-juurisyy.schema.json
+              type: file_resources_api_schemas_entities_turvallisuuspoikkeama-juurisyy.schema.json
               required: false
             juurisyy3:
-              type: schemas/entities/turvallisuuspoikkeama-juurisyy.schema.json
+              type: file_resources_api_schemas_entities_turvallisuuspoikkeama-juurisyy.schema.json
               required: false
           additionalProperties: false
         required: false
@@ -639,7 +654,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tarkastukset:
         maxItems: 2000
@@ -648,7 +663,7 @@ types:
           type: object
           properties:
             tarkastus:
-              type: schemas/entities/tarkastus.schema.json
+              type: file_resources_api_schemas_entities_tarkastus.schema.json
               additionalProperties: false
           additionalProperties: false
         required: false
@@ -657,7 +672,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tarkastukset:
         maxItems: 1000
@@ -666,7 +681,7 @@ types:
           type: object
           properties:
             tarkastus:
-              type: schemas/entities/tarkastus.schema.json
+              type: file_resources_api_schemas_entities_tarkastus.schema.json
               additionalProperties: false
             mittaus:
               type: object
@@ -698,7 +713,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tarkastukset:
         maxItems: 1000
@@ -707,7 +722,7 @@ types:
           type: object
           properties:
             tarkastus:
-              type: schemas/entities/tarkastus.schema.json
+              type: file_resources_api_schemas_entities_tarkastus.schema.json
               additionalProperties: false
             mittaus:
               type: object
@@ -743,19 +758,19 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
       siltatarkastus:
         type: object
         properties:
           tunniste:
-            type: schemas/entities/tunniste.schema.json
+            type: file_resources_api_schemas_entities_tunniste.schema.json
           siltatunnus:
             type: string
           tarkastusaika:
             type: string
             (oas-format): date-time
           tarkastaja:
-            type: schemas/entities/henkilo.schema.json
+            type: file_resources_api_schemas_entities_henkilo.schema.json
           sillantarkastuskohteet:
             type: object
             properties:
@@ -763,103 +778,103 @@ types:
                 type: object
                 properties:
                   maatukienSiisteysJaKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   valitukienSiisteysJaKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   laakeritasojenSiisteysJaKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
               paallysrakenne:
                 type: object
                 properties:
                   kansilaatta:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   paallysteenKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   reunapalkinSiisteysJaKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   reunapalkinLiikuntasauma:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   sillanpaidenSaumat:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   sillanJaPenkereenRaja:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
               varusteetJaLaitteet:
                 type: object
                 properties:
                   kaiteidenJaSuojaverkkojenVauriot:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   liikuntasaumalaitteidenSiisteysJaKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   laakerit:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   syoksytorvet:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   tippuputket:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   kosketussuojatJaNiidenKiinnitykset:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   valaistuslaitteet:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   johdotJaKaapelit:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   liikennemerkit:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
               siltapaikanRakenteet:
                 type: object
                 properties:
                   kuivatuslaitteidenSiisteysJaKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   etuluiskienSiisteysJaKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   keilojenSiisteysJaKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   tieluiskienSiisteysJaKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
                   portaidenSiisteysJaKunto:
-                    type: schemas/entities/siltatarkastuskohde.schema.json
+                    type: file_resources_api_schemas_entities_siltatarkastuskohde.schema.json
                     additionalProperties: false
           liitteet:
-            type: schemas/entities/liitteet.schema.json
+            type: file_resources_api_schemas_entities_liitteet.schema.json
             required: false
   laatupoikkeaman-kirjaus:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tunniste:
-        type: schemas/entities/tunniste.schema.json
+        type: file_resources_api_schemas_entities_tunniste.schema.json
         additionalProperties: false
       alkusijainti:
-        type: schemas/entities/koordinaattisijainti.schema.json
+        type: file_resources_api_schemas_entities_koordinaattisijainti.schema.json
         additionalProperties: false
       loppusijainti:
-        type: schemas/entities/koordinaattisijainti.schema.json
+        type: file_resources_api_schemas_entities_koordinaattisijainti.schema.json
         additionalProperties: false
         required: false
       kohde:
@@ -868,7 +883,7 @@ types:
         maxLength: 4096
         type: string
       kirjaaja:
-        type: schemas/entities/henkilo.schema.json
+        type: file_resources_api_schemas_entities_henkilo.schema.json
         additionalProperties: false
       aika:
         type: string
@@ -877,7 +892,7 @@ types:
         type: boolean
         required: false
       liitteet:
-        type: schemas/entities/liitteet.schema.json
+        type: file_resources_api_schemas_entities_liitteet.schema.json
         additionalProperties: false
         required: false
       kommentit:
@@ -896,7 +911,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       havainnot:
         maxItems: 4096
@@ -919,7 +934,7 @@ types:
                       type: string
                   additionalProperties: false
                 sijainti:
-                  type: schemas/entities/geometria-sijainti.schema.json
+                  type: file_resources_api_schemas_entities_geometria-sijainti.schema.json
                 suunta:
                   type: string
                   required: false
@@ -930,7 +945,7 @@ types:
                   type: string
                   (oas-format): date-time
                 suoritettavatTehtavat:
-                  type: schemas/entities/suoritettavat-tehtavat.schema.json
+                  type: file_resources_api_schemas_entities_suoritettavat-tehtavat.schema.json
                   additionalProperties: false
                   required: false
           additionalProperties: false
@@ -939,7 +954,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       havainnot:
         maxItems: 4096
@@ -962,7 +977,7 @@ types:
                       type: string
                   additionalProperties: false
                 sijainti:
-                  type: schemas/entities/geometria-viivasijainti.schema.json
+                  type: file_resources_api_schemas_entities_geometria-viivasijainti.schema.json
                 suunta:
                   type: string
                   required: false
@@ -974,7 +989,7 @@ types:
                   (oas-format): date-time
                 suoritettavatTehtavat:
                   maxItems: 10
-                  type: schemas/entities/suoritettavat-tehtavat.schema.json
+                  type: file_resources_api_schemas_entities_suoritettavat-tehtavat.schema.json
                   additionalProperties: false
                   required: false
           additionalProperties: false
@@ -1003,6 +1018,7 @@ types:
                     - vastaanotettu
                     - aloitettu
                     - lopetettu
+                    - ei-valitetty
                 alueurakkanumero:
                   type:
                     - string
@@ -1033,10 +1049,10 @@ types:
                 yhteydenottopyynto:
                   type: boolean
                 ilmoittaja:
-                  type: schemas/entities/henkilo-opt.schema.json
+                  type: file_resources_api_schemas_entities_henkilo-opt.schema.json
                   additionalProperties: false
                 lahettaja:
-                  type: schemas/entities/henkilo-opt.schema.json
+                  type: file_resources_api_schemas_entities_henkilo-opt.schema.json
                   additionalProperties: false
                 emon-ilmoitusid:
                   type: integer
@@ -1088,7 +1104,7 @@ types:
                   additionalProperties: false
                   required: false
                 sijainti:
-                  type: schemas/entities/sijainti-myos-vanhat-kaistat.schema.json
+                  type: file_resources_api_schemas_entities_sijainti-myos-vanhat-kaistat.schema.json
                 tienumero:
                   minimum: 0
                   type: integer
@@ -1112,7 +1128,7 @@ types:
                     type: object
                     properties:
                       kuittaus:
-                        type: schemas/entities/toimenpidekuittaus.schema.json
+                        type: file_resources_api_schemas_entities_toimenpidekuittaus.schema.json
                         additionalProperties: false
                     additionalProperties: false
                   required: false
@@ -1125,7 +1141,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       ilmoitustoimenpide:
         type: object
@@ -1148,20 +1164,20 @@ types:
             type: object
             properties:
               henkilo:
-                type: schemas/entities/henkilo.schema.json
+                type: file_resources_api_schemas_entities_henkilo.schema.json
                 additionalProperties: false
               organisaatio:
-                type: schemas/entities/organisaatio.schema.json
+                type: file_resources_api_schemas_entities_organisaatio.schema.json
                 additionalProperties: false
             additionalProperties: false
           kasittelija:
             type: object
             properties:
               henkilo:
-                type: schemas/entities/henkilo.schema.json
+                type: file_resources_api_schemas_entities_henkilo.schema.json
                 additionalProperties: false
               organisaatio:
-                type: schemas/entities/organisaatio.schema.json
+                type: file_resources_api_schemas_entities_organisaatio.schema.json
                 additionalProperties: false
             additionalProperties: false
           vapaateksti:
@@ -1174,7 +1190,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       paivystykset:
         maxItems: 1000
@@ -1183,7 +1199,7 @@ types:
           type: object
           properties:
             paivystys:
-              type: schemas/entities/paivystys.schema.json
+              type: file_resources_api_schemas_entities_paivystys.schema.json
               additionalProperties: false
           additionalProperties: false
     additionalProperties: false
@@ -1200,7 +1216,7 @@ types:
               type: object
               properties:
                 tiedot:
-                  type: schemas/entities/urakka-otsikko.schema.json
+                  type: file_resources_api_schemas_entities_urakka-otsikko.schema.json
                   additionalProperties: false
                 paivystykset:
                   maxItems: 1000
@@ -1209,7 +1225,7 @@ types:
                     type: object
                     properties:
                       paivystys:
-                        type: schemas/entities/paivystys.schema.json
+                        type: file_resources_api_schemas_entities_paivystys.schema.json
                     additionalProperties: false
                   required: false
           additionalProperties: false
@@ -1219,7 +1235,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       paivystysidt:
         minItems: 1
@@ -1254,17 +1270,17 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tielupa:
-        type: schemas/entities/tielupa.schema.json
+        type: file_resources_api_schemas_entities_tielupa.schema.json
         additionalProperties: false
     additionalProperties: false
   tielupien-haku-request:
     type: object
     properties:
       sijainti:
-        type: schemas/entities/sijainti-myos-vanhat-kaistat.schema.json
+        type: file_resources_api_schemas_entities_sijainti-myos-vanhat-kaistat.schema.json
       alueurakkanumero:
         type:
           - string
@@ -1314,7 +1330,7 @@ types:
                       required: false
                   additionalProperties: false
                 sijainti:
-                  type: schemas/entities/sijainti-myos-vanhat-kaistat.schema.json
+                  type: file_resources_api_schemas_entities_sijainti-myos-vanhat-kaistat.schema.json
               additionalProperties: false
               required: false
           additionalProperties: false
@@ -1324,13 +1340,13 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tietyoilmoitus:
         type: object
         properties:
           tunniste:
-            type: schemas/entities/tunniste.schema.json
+            type: file_resources_api_schemas_entities_tunniste.schema.json
             additionalProperties: false
           tyyppi:
             type: object
@@ -1394,7 +1410,7 @@ types:
             type: object
             properties:
               sijainti:
-                type: schemas/entities/sijainti.schema.json
+                type: file_resources_api_schemas_entities_sijainti.schema.json
               alkaa:
                 type: string
                 (oas-format): date-time
@@ -1511,7 +1527,7 @@ types:
           type: object
           properties:
             yllapitokohde:
-              type: schemas/entities/yllapitokohde.schema.json
+              type: file_resources_api_schemas_entities_yllapitokohde.schema.json
               additionalProperties: false
           additionalProperties: false
         required: false
@@ -1519,10 +1535,10 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       aikataulu:
-        type: schemas/entities/tiemerkinnan-aikataulu.schema.json
+        type: file_resources_api_schemas_entities_tiemerkinnan-aikataulu.schema.json
         additionalProperties: false
         required: false
     additionalProperties: false
@@ -1530,10 +1546,10 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       aikataulu:
-        type: schemas/entities/paallystyksen-aikataulu.schema.json
+        type: file_resources_api_schemas_entities_paallystyksen-aikataulu.schema.json
         additionalProperties: false
         required: false
     additionalProperties: false
@@ -1541,7 +1557,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tietyomaa:
         type: object
@@ -1549,9 +1565,9 @@ types:
           id:
             type: integer
           alkuaidan-sijainti:
-            type: schemas/entities/sijainti.schema.json
+            type: file_resources_api_schemas_entities_sijainti.schema.json
           loppuaidan-sijainti:
-            type: schemas/entities/sijainti.schema.json
+            type: file_resources_api_schemas_entities_sijainti.schema.json
           aika:
             type: string
             (oas-format): date-time
@@ -1598,7 +1614,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tietyomaa:
         type: object
@@ -1713,13 +1729,13 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       yllapitokohde:
         type: object
         properties:
           sijainti:
-            type: schemas/entities/tieosoitevali.schema.json
+            type: file_resources_api_schemas_entities_tieosoitevali.schema.json
             additionalProperties: false
             required: false
           alikohteet:
@@ -1732,14 +1748,14 @@ types:
                   type: object
                   properties:
                     tunniste:
-                      type: schemas/entities/tunniste.schema.json
+                      type: file_resources_api_schemas_entities_tunniste.schema.json
                       additionalProperties: false
                     nimi:
                       maxLength: 128
                       type: string
                       required: false
                     sijainti:
-                      type: schemas/entities/tieosoitevali-kaistalla-ja-ajoradalla.schema.json
+                      type: file_resources_api_schemas_entities_tieosoitevali-kaistalla-ja-ajoradalla.schema.json
                       additionalProperties: false
                       required: false
                     toimenpide:
@@ -1747,14 +1763,14 @@ types:
                       type: string
                       required: false
                     paallystetyyppi:
-                      type: schemas/entities/paallyste.schema.json
+                      type: file_resources_api_schemas_entities_paallyste.schema.json
                       additionalProperties: false
                       required: false
                     raekoko:
-                      type: schemas/entities/paallystys_raekoko.schema.json
+                      type: file_resources_api_schemas_entities_paallystys_raekoko.schema.json
                       required: false
                     tyomenetelma:
-                      type: schemas/entities/paallystys_tyomenetelma.schema.json
+                      type: file_resources_api_schemas_entities_paallystys_tyomenetelma.schema.json
                       additionalProperties: false
                       required: false
                     massamaara:
@@ -1768,7 +1784,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       maaramuutokset:
         maxItems: 500
@@ -1780,7 +1796,7 @@ types:
               type: object
               properties:
                 tunniste:
-                  type: schemas/entities/tunniste.schema.json
+                  type: file_resources_api_schemas_entities_tunniste.schema.json
                   additionalProperties: false
                 tyyppi:
                   type: string
@@ -1811,7 +1827,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tarkastukset:
         maxItems: 1000
@@ -1820,7 +1836,7 @@ types:
           type: object
           properties:
             tarkastus:
-              type: schemas/entities/tarkastus.schema.json
+              type: file_resources_api_schemas_entities_tarkastus.schema.json
               additionalProperties: false
             tarkastustyyppi:
               type: string
@@ -1836,7 +1852,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tiemerkintatoteumat:
         maxItems: 4096
@@ -1848,7 +1864,7 @@ types:
               type: object
               properties:
                 tunniste:
-                  type: schemas/entities/tunniste.schema.json
+                  type: file_resources_api_schemas_entities_tunniste.schema.json
                   additionalProperties: false
                 hinta:
                   minimum: 0
@@ -1878,7 +1894,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tiemerkintatoteumat:
         maxItems: 4096
@@ -1890,7 +1906,7 @@ types:
               type: object
               properties:
                 tunniste:
-                  type: schemas/entities/tunniste.schema.json
+                  type: file_resources_api_schemas_entities_tunniste.schema.json
                   additionalProperties: false
                 hinta:
                   minimum: 0
@@ -1911,7 +1927,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tyotunnit:
         maxItems: 4096
@@ -1936,7 +1952,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       toteumien-tunnisteet:
         minItems: 1
@@ -1949,7 +1965,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tarkastusten-tunnisteet:
         minItems: 1
@@ -1962,7 +1978,7 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       paikkaukset:
         maxItems: 200
@@ -1971,14 +1987,14 @@ types:
           type: object
           properties:
             paikkaus:
-              type: schemas/entities/paikkaus.schema.json
+              type: file_resources_api_schemas_entities_paikkaus.schema.json
           additionalProperties: false
     additionalProperties: false
   paikkauskustannusten-kirjaus-request:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       paikkauskustannukset:
         maxItems: 200
@@ -1987,14 +2003,14 @@ types:
           type: object
           properties:
             paikkauskustannus:
-              type: schemas/entities/paikkauskustannus.schema.json
+              type: file_resources_api_schemas_entities_paikkauskustannus.schema.json
           additionalProperties: false
     additionalProperties: false
   paikkausten-poisto-request:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       poistettavat-paikkauskohteet:
         maxItems: 200
@@ -2024,13 +2040,13 @@ types:
           nimi:
             type: string
           aikavali:
-            type: schemas/entities/paivamaaravali.schema.json
+            type: file_resources_api_schemas_entities_paivamaaravali.schema.json
           alueurakkanumero:
             type:
               - string
               - integer
           materiaaliraportti:
-            type: schemas/entities/materiaalit.schema.json
+            type: file_resources_api_schemas_entities_raportti_materiaalit.schema.json
             required: false
         additionalProperties: false
         required: false
@@ -2039,23 +2055,27 @@ types:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tyomaapaivakirja:
-        type: schemas/entities/tyomaapaivakirja-kirjaus.schema.json
+        type: file_resources_api_schemas_entities_tyomaapaivakirja-kirjaus.schema.json
         additionalProperties: false
     additionalProperties: false
   tyomaapaivakirja-paivitys-request:
     type: object
     properties:
       otsikko:
-        type: schemas/entities/otsikko.schema.json
+        type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tyomaapaivakirja:
         type: object
         additionalProperties: false
         required: false
     additionalProperties: false
+  tyomaapaivakirja-kirjaus-v2-request:
+    type: string
+  tyomaapaivakirja-paivitys-v2-request:
+    type: string
   tyomaapaivakirja-kirjaus-ok-response:
     type: object
     properties:
@@ -2089,6 +2109,30 @@ types:
         items:
           type: string
         required: false
+    additionalProperties: false
+  talvihoitoreitti-kirjaus-request:
+    type: object
+    properties:
+      talvihoitoreitti:
+        type: !include schemas/talvihoitoreitti-kirjaus-request.schema.json
+        additionalProperties: false
+    additionalProperties: false
+  talvihoitoreitti-paivitys-request:
+    type: object
+    properties:
+      talvihoitoreitti:
+        type: !include schemas/talvihoitoreitti-paivitys-request.schema.json
+        additionalProperties: false
+        required: false
+    additionalProperties: false
+  talvihoitoreitti-poisto-request:
+    type: object
+    properties:
+      talvihoitoreittien-tunnisteet:
+        type: array
+        items:
+          type: string
+          required: false
     additionalProperties: false
 /urakat:
   description: Urakoiden tietojen hallinta.
@@ -5221,11 +5265,84 @@ types:
                             maara: 13.2
               type: paikkauskustannusten-kirjaus-request
               required: false
+    /reikapaikkaus:
+      post:
+        is:
+          - secured
+        description: Uuden reikäpaikkauksen kirjaaminen.
+        body:
+          application/json:
+            example: !include examples/reikapaikkausten-kirjaus-request.json
+            schema: reikapaikkausten-kirjaus-request
+        responses:
+          200:
+           body:
+             application/json:
+               example: !include examples/onnistunut-kirjaus-response.json
+               schema: kirjaus-response
+          400:
+           body:
+             application/json:
+               example: !include examples/virhe-response.json
+               schema: virhe-response
+          500:
+           body:
+             application/json:
+               example: !include examples/virhe-response.json
+               schema: virhe-response
+      put:
+        is:
+          - secured
+        description: Jo lähetetyn reikäpaikkauksen päivitys.
+        body:
+          application/json:
+            example: !include examples/reikapaikkausten-paivitys-request.json
+            schema: reikapaikkausten-paivitys-request
+        responses:
+          200:
+           body:
+             application/json:
+               example: !include examples/onnistunut-kirjaus-response.json
+               schema: kirjaus-response
+          400:
+           body:
+             application/json:
+               example: !include examples/virhe-response.json
+               schema: virhe-response
+          500:
+           body:
+             application/json:
+               example: !include examples/virhe-response.json
+               schema: virhe-response
+      delete:
+          is:
+            - secured
+          description: Reikäpaikkausten poisto
+          body:
+            application/json:
+              example: !include examples/reikapaikkausten-poisto-request.json
+              schema: reikapaikkausten-poisto-request
+          responses:
+            200:
+             body:
+               application/json:
+                 example: !include examples/onnistunut-kirjaus-response.json
+                 schema: kirjaus-response
+            400:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
+            500:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
     /tyomaapaivakirja:
       post:
         is:
           - secured
-        description: Uuden työmaapäiväkirjan luominen. Toteutus voi vielä elää palautteen perusteella.
+        description: 'Deprekoituu 31.12.2025. Käytä uudempaa rajapintaa, jossa asetetaan query parametri'
         responses:
           '200':
             body:
@@ -5341,7 +5458,7 @@ types:
         put:
           is:
             - secured
-          description: Työmaapäiväkirjan päivittäminen. Korvaa edeltävän version. Toteutus voi vielä elää palautteen perusteella.
+          description: 'Työmaapäiväkirjan päivittäminen. Deprekoituu 31.12.2024. Siirry käyttämään uudempaa versiota, jossa versionumero annetaan query parametrilla ja päivitettävä työmaapäiväkirja päätellään päivästä, eikä url parametrista.'
           responses:
             '200':
               body:
@@ -5462,6 +5579,123 @@ types:
               required: false
         uriParameters:
           tyomaapaivakirjaid: {}
+    /talvihoitoreitti:
+        post:
+          is:
+              - secured
+          description: 'Talvihoitoreitin lisäys.'
+          responses:
+              '200':
+                body:
+                  application/json:
+                    type: !include examples/onnistunut-kirjaus-response.json
+              '400':
+                body:
+                  application/json:
+                    example:
+                      virheet:
+                        - virhe:
+                            koodi: invalidi-json
+                            viesti: 'Syy virheelle.'
+                    type: virhe-response
+                    required: false
+              '500':
+                body:
+                  application/json:
+                    example:
+                      virheet:
+                        - virhe:
+                            koodi: virheen koodi
+                            viesti: 'Syy virheelle.'
+                    type: virhe-response
+                    required: false
+          body:
+            application/json:
+              example:
+              type: !include examples/talvihoitoreitti-kirjaus-request.json
+        put:
+          is:
+            - secured
+          description: 'Talvihoitoreitin päivitys.'
+          responses:
+            '200':
+              body:
+                application/json:
+                  example:
+                    ilmoitukset: Kaikki toteumat kirjattu onnistuneesti
+                    kohteet:
+                      - tunniste:
+                          id: 123
+                        tiedotukset:
+                          - tiedotus: ''
+                  type: kirjaus-response
+                  required: false
+            '400':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                           koodi: invalidi-json
+                           viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+            '500':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                          koodi: Virheen koodi
+                          viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+          body:
+            application/json:
+              example:
+              type: !include examples/talvihoitoreitti-paivitys-request.json
+        delete:
+          is:
+            - secured
+          description: 'Talvihoitoreitin poisto.'
+          responses:
+            '200':
+              body:
+                application/json:
+                  example:
+                    ilmoitukset: Kaikki toteumat kirjattu onnistuneesti
+                    kohteet:
+                      - tunniste:
+                          id: 123
+                        tiedotukset:
+                          - tiedotus: ''
+                  type: kirjaus-response
+                  required: false
+            '400':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                           koodi: invalidi-json
+                           viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+            '500':
+              body:
+                application/json:
+                  example:
+                    virheet:
+                      - virhe:
+                          koodi: Virheen koodi
+                          viesti: 'Syy virheelle.'
+                  type: virhe-response
+                  required: false
+          body:
+            application/json:
+              example:
+              type: !include examples/talvihoitoreitti-poisto-request.json
+
     '/raportit/materiaali/{alkupvm}':
       uriParameters:
         alkupvm: {}
