@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 while true; do
-read -p "Onko ../apidoc-kansiossa uusin API-dokumentaatio? (K/E)" ke
+read -p "Onko ../apidoc-kansiossa (versiohallinann ulkopuolella) uusin API-dokumentaatio (muodostetaan develop-haarasta)? (K/E)" ke
 case $ke in
 [Kk]* )
   githaara_nykyinen=$(git rev-parse --abbrev-ref HEAD)
