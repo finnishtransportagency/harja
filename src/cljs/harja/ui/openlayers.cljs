@@ -1,6 +1,7 @@
 (ns harja.ui.openlayers
   "OpenLayers 3 kartta."
   (:require [reagent.core :as reagent :refer [atom]]
+            [reagent.dom :as rdom]
             [clojure.string :as str]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! >! chan timeout] :as async]
@@ -296,7 +297,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 (defn luo-overlay [koordinaatti sisalto]
   (let [elt (js/document.createElement "span")
-        comp (reagent/render sisalto elt)]
+        comp (rdom/render sisalto elt)]
     (ol.Overlay. (clj->js {:element   elt
                            :position  koordinaatti
                            :stopEvent false}))))
@@ -350,7 +351,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
         _ (reset!
             openlayers-kartan-leveys
-            (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0)))
+            (.-offsetWidth (aget (.-childNodes (rdom/dom-node this)) 0)))
         _ (reset! the-kartta ol3)
         extent (:extent mapspec)
         selection (:selection mapspec)
@@ -441,7 +442,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 (defn- ol3-did-update [this _]
   (let [uusi-leveys (.-offsetWidth
-                     (aget (.-childNodes (reagent/dom-node this)) 0))]
+                     (aget (.-childNodes (rdom/dom-node this)) 0))]
     (when-not (= uusi-leveys
                  @openlayers-kartan-leveys)
       (reset! openlayers-kartan-leveys uusi-leveys)
