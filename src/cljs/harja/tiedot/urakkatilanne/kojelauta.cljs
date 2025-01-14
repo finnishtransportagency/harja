@@ -97,8 +97,8 @@
 (defn virheelliset-yhteenveto
   [urakat]
   (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
-        virheelliset-lkm (reduce + 0 (map :virheellinen urakat))
-        virheelliset-yhteenveto (when-not (empty? urakat) [:span.aloittamatta
+        virheelliset-lkm (count (filter not-empty (map :virheelliset_kohteet urakat)))
+        virheelliset-yhteenveto (when-not (empty? urakat) [:span.virheelliset
                                                           [yleiset/tietoja {:class "body-text"}
                                                            "Virheelliset: " (str virheelliset-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina virheelliset-lkm kohteiden-lukumaara) 0) ")")]])]
     virheelliset-yhteenveto))

@@ -122,13 +122,6 @@
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Ei tavoitepistemäärää")})
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ok")}))]]]))
 
-
-(defn virheelliset-sarake
-  [rivi]
-  (let [
-        ]))
-
-
 (defn valikatselmus-sarake
   [rivi]
   (let [{:keys [urakan_alkuvuosi tavoitehintapaatos kattohintapaatos lupauspaatokset hoitokauden_alkuvuosi]} rivi
@@ -202,17 +195,16 @@
 
 (defn virheelliset-tila-sarake
   [rivi]
-  (fn [rivi]
-    (for [kohde (:virheelliset_kohteet rivi)]
-      ^{:key (:id kohde)}
-      [yleiset/linkki (pot-yhteinen/paallystyskohteen-fmt kohde)
-       #(siirtymat/avaa-paallystysilmoitus! {:paallystyskohde-id (:id kohde)
-                                             :kohteen-urakka-id (:id rivi)})
-       {:block? true}])))
-  #_[yleiset/wrap-if true
-   [yleiset/tooltip {} :% "Siirry kohteeseen"]
-   [:a.klikattava {:href "#"
-                   :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {})}]])
+  (if (empty? (:virheelliset_kohteet rivi))
+    (str "0")
+    [yleiset/wrap-if true
+     [yleiset/tooltip {} :% "Siirry kohteeseen"]
+     (for [kohde (:virheelliset_kohteet rivi)]
+       ^{:key (:id kohde)}
+       [yleiset/linkki (pot-yhteinen/paallystyskohteen-fmt kohde)
+        #(siirtymat/avaa-paallystysilmoitus! {:paallystyskohde-id (:id kohde)
+                                              :kohteen-urakka-id (:id rivi)})
+        {:block? true}])]))
 
 (defn taulukko-paallystysurakat [e! {:keys [urakat haku-kaynnissa?]}]
   [grid/grid
@@ -227,7 +219,8 @@
                              lahetetty (tiedot/lahetetyt-yhteenveto urakat)
                              valmiit-ei-lahetetty (tiedot/valmiit-ei-lahetetty-yhteenveto urakat)
                              epaonnistuneet-lahetetty (tiedot/epaonnistuneet-lahetetyt-yhteenveto urakat)
-                             aloittamatta (tiedot/aloittamatta-yhteenveto urakat)]
+                             aloittamatta (tiedot/aloittamatta-yhteenveto urakat)
+                             virheelliset (tiedot/virheelliset-yhteenveto urakat)]
                          (when-not (empty? urakat)
                            [{:teksti "Yhteensä" :luokka "lihavoitu"}
                             {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
@@ -236,7 +229,8 @@
                             {:teksti lahetetty :luokka "lihavoitu"}
                             {:teksti valmiit-ei-lahetetty :luokka "lihavoitu"}
                             {:teksti epaonnistuneet-lahetetty :luokka "lihavoitu"}
-                            {:teksti aloittamatta :luokka "lihavoitu"}])))}
+                            {:teksti aloittamatta :luokka "lihavoitu"}
+                            {:teksti virheelliset :luokka "lihavoitu"}])))}
    [{:otsikko "Urakka"
      :tyyppi :string
      :nimi :nimi
@@ -281,13 +275,7 @@
      :muokattava? (constantly false)
      :nimi :virheelliset_kohteet :leveys 6
      :tyyppi :komponentti
-     :komponentti (fn [rivi]
-                    (for [kohde (:virheelliset_kohteet rivi)]
-                      ^{:key (:id kohde)}
-                      [yleiset/linkki (pot-yhteinen/paallystyskohteen-fmt kohde)
-                       #(siirtymat/avaa-paallystysilmoitus! {:paallystyskohde-id (:id kohde)
-                                                             :kohteen-urakka-id (:id rivi)})
-                       {:block? true}]))}]
+     :komponentti (fn [rivi] (virheelliset-tila-sarake rivi))}]
    urakat])
 
 (defn taulukko-hoitourakat [e! {:keys [urakat haku-kaynnissa?]}]
