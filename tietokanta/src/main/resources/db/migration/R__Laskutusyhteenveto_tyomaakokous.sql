@@ -36,6 +36,7 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     tavhin_hoitokausi_yht                 NUMERIC,
     tavhin_val_aika_yht                   NUMERIC,
     hoitokauden_tavoitehinta              NUMERIC,
+    tavoitehinta_on_oikaistu              BOOLEAN,
     hk_tavhintsiirto_ed_vuodelta          NUMERIC,
     budjettia_jaljella                    NUMERIC,
     lisatyo_talvihoito_hoitokausi_yht     NUMERIC,
@@ -236,6 +237,7 @@ DECLARE
     hoitokauden_nro                       NUMERIC;
     hoitokauden_vuosi                     NUMERIC; -- Käytetään kun loopataan valitut hoitovuodet aikavälistä
     hoitokauden_tavoitehinta              NUMERIC;
+    tavoitehinta_on_oikaistu              BOOLEAN;
     hk_tavhintsiirto_ed_vuodelta          NUMERIC;
     budjettia_jaljella                    NUMERIC;
     urakan_tiedot                         RECORD;
@@ -301,7 +303,9 @@ BEGIN
 
         IF hoitokauden_nro >= (hk_alkuvuosi - urakan_alkuvuosi + 1) 
         AND hoitokauden_nro <= (hk_loppuvuosi - urakan_alkuvuosi + 1) THEN
+
             RAISE NOTICE 'Lasketaan tavoitehinta hoitokauden_vuosi: %, hoitokauden_nro: %', hoitokauden_vuosi, hoitokauden_nro;
+
             hoitokauden_tavoitehinta := hoitokauden_tavoitehinta + 
             COALESCE(
               ( SELECT SUM(COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0))
@@ -309,6 +313,29 @@ BEGIN
                  WHERE ut.hoitokausi = hoitokauden_nro
                    AND ut.urakka = ur), 0
             );
+
+            -- Onko tavoitehintaa oikaistu 
+            IF EXISTS (
+              SELECT 1 
+              FROM tavoitehinnan_oikaisu to2 
+              WHERE to2."urakka-id" = ur 
+                AND to2."hoitokauden-alkuvuosi" = hk_alkuvuosi 
+                AND to2.poistettu = false
+            ) THEN
+              tavoitehinta_on_oikaistu := true;
+              
+              -- Lisää oikaistu määrä tavoitehintaan, oli sitten miinusta tai plussaa 
+              hoitokauden_tavoitehinta := hoitokauden_tavoitehinta + 
+                COALESCE(
+                    (SELECT SUM(to2.summa) 
+                     FROM tavoitehinnan_oikaisu to2 
+                     WHERE to2."urakka-id" = ur 
+                       AND to2."hoitokauden-alkuvuosi" = hk_alkuvuosi 
+                       AND to2.poistettu = false), 0
+                );
+            ELSE 
+              tavoitehinta_on_oikaistu := false;
+            END IF;
         END IF;
     END LOOP;
 
@@ -974,7 +1001,7 @@ BEGIN
             lk.tavoitehintainen AS tavoitehintainen 
         FROM kulu l
         JOIN kulu_kohdistus lk ON lk.kulu = l.id
-        JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
+        LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
         -- Etsi pelkästään muukulu tyyppiset  kirjaukset, toimenpideinstansseilla ei ole näissä väliä 
         -- Tavoitehintaiset kuuluu tehtäväryhmälle, ei tavoitehintaiset kuuluu toimenpiteelle, mutta työmaakokouksessa ei tarvitse niputtaa
         WHERE lk.tyyppi = 'muukulu'
@@ -1307,7 +1334,9 @@ BEGIN
         -- Tavoitehinnat yht.
               tavhin_hoitokausi_yht, tavhin_val_aika_yht,
         -- Tavoitehinnan muodostus
-              hoitokauden_tavoitehinta, hk_tavhintsiirto_ed_vuodelta,
+              hoitokauden_tavoitehinta, 
+              tavoitehinta_on_oikaistu,
+              hk_tavhintsiirto_ed_vuodelta,
               budjettia_jaljella,
         -- Lisätyöt
         -- Lisätyö talvihoito
