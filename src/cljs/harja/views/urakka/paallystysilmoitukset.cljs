@@ -296,7 +296,7 @@
        ;; paallystysilmoitus-lomakedata, mutta tiedot tallennetaan eri rakenteella
        ;; Muistattava asettaa lomakedata arvoon nil, aina kun poistutaan lomakkeelta
        (if paallystysilmoitus-lomakedata
-         (if (= 1 (:versio paallystysilmoitus-lomakedata))
+         (if (= 1 (get-in paallystysilmoitus-lomakedata [:perustiedot :versio]))
                [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
                [pot2-lomake/pot2-lomake e! (select-keys app #{:paallystysilmoitus-lomakedata
                                                               :massat :murskeet :materiaalikoodistot
