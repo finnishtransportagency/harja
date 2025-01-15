@@ -195,16 +195,18 @@
 
 (defn virheelliset-tila-sarake
   [rivi]
-  (if (empty? (:virheelliset_kohteet rivi))
-    (str "0")
+  (for [kohde (:virheelliset_kohteet rivi)]
+    ^{:key (:id kohde)}
     [yleiset/wrap-if true
-     [yleiset/tooltip {} :% "Siirry kohteeseen"]
-     (for [kohde (:virheelliset_kohteet rivi)]
-       ^{:key (:id kohde)}
-       [yleiset/linkki (pot-yhteinen/paallystyskohteen-fmt kohde)
-        #(siirtymat/avaa-paallystysilmoitus! {:paallystyskohde-id (:id kohde)
-                                              :kohteen-urakka-id (:id rivi)})
-        {:block? true}])]))
+     [yleiset/tooltip {} :%
+      [:div
+       [:p "Siirry päällystys\u00ADilmoitukseen."]
+       (when (:lahetysvirhe kohde)
+         [:p "Virhe: " (:lahetysvirhe kohde)])]]
+     [yleiset/linkki (pot-yhteinen/paallystyskohteen-fmt kohde)
+      #(siirtymat/avaa-paallystysilmoitus! {:paallystyskohde-id (:id kohde)
+                                            :kohteen-urakka-id (:id rivi)})
+      {:block? true}]]))
 
 (defn taulukko-paallystysurakat [e! {:keys [urakat haku-kaynnissa?]}]
   [grid/grid
@@ -219,18 +221,17 @@
                              lahetetty (tiedot/lahetetyt-yhteenveto urakat)
                              valmiit-ei-lahetetty (tiedot/valmiit-ei-lahetetty-yhteenveto urakat)
                              epaonnistuneet-lahetetty (tiedot/epaonnistuneet-lahetetyt-yhteenveto urakat)
-                             aloittamatta (tiedot/aloittamatta-yhteenveto urakat)
-                             virheelliset (tiedot/virheelliset-yhteenveto urakat)]
+                             aloittamatta (tiedot/aloittamatta-yhteenveto urakat)]
                          (when-not (empty? urakat)
                            [{:teksti "Yhteensä" :luokka "lihavoitu"}
-                            {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
+                            {:teksti (str (count urakat) " urak\u00ADkaa") :luokka "lihavoitu"}
                             {:teksti yhteenveto :luokka "lihavoitu"}
+                            {:teksti aloittamatta :luokka "lihavoitu"}
+                            {:teksti valmiit-ei-lahetetty :luokka "lihavoitu"}
                             {:teksti valmiit-kohteet :luokka "lihavoitu"}
                             {:teksti lahetetty :luokka "lihavoitu"}
-                            {:teksti valmiit-ei-lahetetty :luokka "lihavoitu"}
                             {:teksti epaonnistuneet-lahetetty :luokka "lihavoitu"}
-                            {:teksti aloittamatta :luokka "lihavoitu"}
-                            {:teksti virheelliset :luokka "lihavoitu"}])))}
+                            {:teksti ""}])))}
    [{:otsikko "Urakka"
      :tyyppi :string
      :nimi :nimi
@@ -246,6 +247,16 @@
      :nimi :yllapitokohteiden_lkm :leveys 4
      :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea}
+    {:otsikko "Aloittamatta"
+     :muokattava? (constantly false)
+     :nimi :aloittamatta :leveys 6
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
+    {:otsikko "Valmiit, ei vielä lähetetty"
+     :muokattava? (constantly false)
+     :nimi :valmiit_ei_lahetetty :leveys 6
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
     {:otsikko "Valmis/hyväksytty"
      :muokattava? (constantly false)
      :nimi :valmis_hyvaksytty :leveys 6
@@ -256,22 +267,12 @@
      :nimi :lahetetty_onnistuneesti :leveys 6
      :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea}
-    {:otsikko "Valmiit, ei vielä lähetetty"
-     :muokattava? (constantly false)
-     :nimi :valmiit_ei_lahetetty :leveys 6
-     :tyyppi :positiivinen-numero :kokonaisluku? true
-     :tasaa :oikea}
-    {:otsikko "Epäonnistuneet YHA-lähetykset"
+    {:otsikko "Epäonnistu\u00ADneet YHA-lähetykset"
      :muokattava? (constantly false)
      :nimi :epaonnistuneet_lahetetyt :leveys 6
      :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea}
-    {:otsikko "Aloittamatta"
-     :muokattava? (constantly false)
-     :nimi :aloittamatta :leveys 6
-     :tyyppi :positiivinen-numero :kokonaisluku? true
-     :tasaa :oikea}
-    {:otsikko "Lähetys\u00ADvirheet"
+    {:otsikko "Kohteet, joissa lähetys\u00ADvirhe"
      :muokattava? (constantly false)
      :nimi :virheelliset_kohteet :leveys 6
      :tyyppi :komponentti
