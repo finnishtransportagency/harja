@@ -47,7 +47,12 @@
                            (update :virheelliset_kohteet
                              (fn [kohteet]
                                (mapv
-                                 #(konv/pgobject->map % :id :long :kohdenumero :string :tunnus :string :kohdenimi :string)
+                                 #(konv/pgobject->map %
+                                    :id :long
+                                    :kohdenumero :string
+                                    :tunnus :string
+                                    :kohdenimi :string
+                                    :lahetysvirhe :string)
                                  (konv/pgarray->vector kohteet))))))
                    (q/hae-paallystysurakat-kojelautaan db (set/rename-keys params {:hoitokauden_alkuvuosi :vuosi}))))]
     urakat))

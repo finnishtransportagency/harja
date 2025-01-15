@@ -340,20 +340,34 @@
                                                                                 :urakka-idt [urakka-id]
                                                                                 :ely-idt #{}}))
 
-        _ (u (format "UPDATE yllapitokohde SET lahetetty = NOW(), lahetysvirhe = 'paha virhe' WHERE id = %s;" kohde-id))
+        _ (u (format "UPDATE yllapitokohde SET lahetetty = NOW(), lahetysvirhe = 'paha virhe', lahetys_onnistunut = FALSE WHERE id = %s;" kohde-id))
         vastaus-lahetys-epaonnistuu (first
+                                      (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :paallystys
+                                                                                :hoitokauden-alkuvuosi 2022
+                                                                                :urakka-idt [urakka-id]
+                                                                                :ely-idt #{}}))
+        kohteen-odotettu-virhe {:kohdenimi    "Tärkeä kohde mt20 2022"
+                                :kohdenumero  "L42"
+                                :lahetysvirhe "paha virhe"
+                                :tunnus       "B"}
+        ;; merkataan vielä lähetys onnistuneeksi ja assertataan niiden määrä
+        _ (u (format "UPDATE yllapitokohde SET lahetetty = NOW(), lahetysvirhe = null, lahetys_onnistunut = TRUE WHERE id = %s;" kohde-id))
+        vastaus-lahetys-onnistuu (first
                                       (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :paallystys
                                                                                 :hoitokauden-alkuvuosi 2022
                                                                                 :urakka-idt [urakka-id]
                                                                                 :ely-idt #{}}))]
     (is (= urakka-id (get-in vastaus-aloitettu [:id])) "Urakka")
-    (is (= 1 (get-in vastaus-aloittamatta [:aloittamatta])) "Urakka")
-    (is (= 1 (get-in vastaus-aloitettu [:yllapitokohteiden_lkm])) "Urakka")
-    (is (= 1 (get-in vastaus-lahetys-epaonnistuu [:epaonnistuneet_lahetetyt])) "Urakka")
-    (is (= 1 (get-in vastaus-valmis-ei-lahetetty [:valmiit_ei_lahetetty])) "Urakka")
-    (is (= 1 (get-in vastaus-aloitettu [:valmis_hyvaksytty])) "Urakka")
-    (is (= 1 (get-in vastaus-valmis-ei-lahetetty [:valmis_hyvaksytty])) "Urakka")
-    (is (= 1 (get-in vastaus-lahetys-epaonnistuu [:valmis_hyvaksytty])) "Urakka")))
+    (is (= 1 (get-in vastaus-aloittamatta [:aloittamatta])) "Kohteita aloittamatta")
+    (is (= 1 (get-in vastaus-aloitettu [:yllapitokohteiden_lkm])) "ylläpitokohteiden lkm")
+    (is (= 1 (get-in vastaus-lahetys-epaonnistuu [:epaonnistuneet_lahetetyt])) "epäonnistuneet lähetykset")
+    (is (= 1 (get-in vastaus-lahetys-onnistuu [:lahetetty_onnistuneesti])) "lahetetty_onnistuneesti")
+    (is (= 1 (get-in vastaus-valmis-ei-lahetetty [:valmiit_ei_lahetetty])) "valmis ei lähetetty")
+    (is (= 1 (get-in vastaus-aloitettu [:valmis_hyvaksytty])) "valmis hyväksytty")
+    (is (= kohteen-odotettu-virhe
+          ;; kohteen id voi muuttua kun testidata elää, dissocataan id sen vuoksi niin testi on robustimpi
+          (dissoc (first (get-in vastaus-lahetys-epaonnistuu [:virheelliset_kohteet])) :id)) "Kohteen virhetiedot")))
 
 
