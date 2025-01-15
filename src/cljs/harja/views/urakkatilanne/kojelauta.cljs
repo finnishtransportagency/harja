@@ -7,6 +7,7 @@
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
+            [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
             [reagent.core :as r]
             [tuck.core :refer [tuck]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -192,7 +193,22 @@
 
 (def urakoiden-maara-per-sivu 20)
 
-(defn taulukko-paallystysurakat [e!  {:keys [urakat haku-kaynnissa?]}]
+(defn virheelliset-tila-sarake
+  [rivi]
+  (for [kohde (:virheelliset_kohteet rivi)]
+    ^{:key (:id kohde)}
+    [yleiset/wrap-if true
+     [yleiset/tooltip {} :%
+      [:div
+       [:p "Siirry päällystys\u00ADilmoitukseen."]
+       (when (:lahetysvirhe kohde)
+         [:p "Virhe: " (:lahetysvirhe kohde)])]]
+     [yleiset/linkki (pot-yhteinen/paallystyskohteen-fmt kohde)
+      #(siirtymat/avaa-paallystysilmoitus! {:paallystyskohde-id (:id kohde)
+                                            :kohteen-urakka-id (:id rivi)})
+      {:block? true}]]))
+
+(defn taulukko-paallystysurakat [e! {:keys [urakat haku-kaynnissa?]}]
   [grid/grid
    {:otsikko (str "")
     :tyhja (if haku-kaynnissa?
@@ -208,13 +224,14 @@
                              aloittamatta (tiedot/aloittamatta-yhteenveto urakat)]
                          (when-not (empty? urakat)
                            [{:teksti "Yhteensä" :luokka "lihavoitu"}
-                            {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
+                            {:teksti (str (count urakat) " urak\u00ADkaa") :luokka "lihavoitu"}
                             {:teksti yhteenveto :luokka "lihavoitu"}
+                            {:teksti aloittamatta :luokka "lihavoitu"}
+                            {:teksti valmiit-ei-lahetetty :luokka "lihavoitu"}
                             {:teksti valmiit-kohteet :luokka "lihavoitu"}
                             {:teksti lahetetty :luokka "lihavoitu"}
-                            {:teksti valmiit-ei-lahetetty :luokka "lihavoitu"}
                             {:teksti epaonnistuneet-lahetetty :luokka "lihavoitu"}
-                            {:teksti aloittamatta :luokka "lihavoitu"}])))}
+                            {:teksti ""}])))}
    [{:otsikko "Urakka"
      :tyyppi :string
      :nimi :nimi
@@ -230,6 +247,16 @@
      :nimi :yllapitokohteiden_lkm :leveys 4
      :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea}
+    {:otsikko "Aloittamatta"
+     :muokattava? (constantly false)
+     :nimi :aloittamatta :leveys 6
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
+    {:otsikko "Valmiit, ei vielä lähetetty"
+     :muokattava? (constantly false)
+     :nimi :valmiit_ei_lahetetty :leveys 6
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
     {:otsikko "Valmis/hyväksytty"
      :muokattava? (constantly false)
      :nimi :valmis_hyvaksytty :leveys 6
@@ -240,21 +267,16 @@
      :nimi :lahetetty_onnistuneesti :leveys 6
      :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea}
-    {:otsikko "Valmiit, ei vielä lähetetty"
-     :muokattava? (constantly false)
-     :nimi :valmiit_ei_lahetetty :leveys 6
-     :tyyppi :positiivinen-numero :kokonaisluku? true
-     :tasaa :oikea}
-    {:otsikko "Epäonnistuneet YHA-lähetykset"
+    {:otsikko "Epäonnistu\u00ADneet YHA-lähetykset"
      :muokattava? (constantly false)
      :nimi :epaonnistuneet_lahetetyt :leveys 6
      :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea}
-    {:otsikko "Aloittamatta"
+    {:otsikko "Kohteet, joissa lähetys\u00ADvirhe"
      :muokattava? (constantly false)
-     :nimi :aloittamatta :leveys 6
-     :tyyppi :positiivinen-numero :kokonaisluku? true
-     :tasaa :oikea}]
+     :nimi :virheelliset_kohteet :leveys 6
+     :tyyppi :komponentti
+     :komponentti (fn [rivi] (virheelliset-tila-sarake rivi))}]
    urakat])
 
 (defn taulukko-hoitourakat [e! {:keys [urakat haku-kaynnissa?]}]
