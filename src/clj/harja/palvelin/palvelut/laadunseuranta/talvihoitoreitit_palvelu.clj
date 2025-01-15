@@ -17,7 +17,6 @@
   ;; Estä muut, kuin järjestelmävastaavat näkemästä talvihoitoreittejä
   (when (contains? (:roolit user) "Jarjestelmavastaava")
     ;;(oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
-
     (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)))
 
 (defn kasittele-excel [db urakka-id kayttaja req workbook]
@@ -68,7 +67,7 @@
                        ;; Jos talvihoitoreitin perustiedot on onnistuneesti tallennettu, niin tallennetaan myös kalustot ja reitit
                        (when (and (nil? talvihoitoreitti-db) talvihoitoreitti-id)
                          (do
-                           (talvihoitoreitit-q/lisaa-kalustot-ja-reitit db talvihoitoreitti-id t)
+                           (talvihoitoreitit-q/lisaa-reitit db talvihoitoreitti-id t)
                            (swap! lisatyt-atom conj (:reittinimi t))))))))
 
         vastaus (if (and (empty? @lisatyt-atom) (empty? @virheet-atom) (empty? @paivitetyt-atom))
