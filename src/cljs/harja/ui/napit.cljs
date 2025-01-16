@@ -296,6 +296,7 @@
                                             :else "nappi-toissijainen") " " luokka)})]))
 
 (defn yleinen
+  "Hyödynnä tätä, mikäli valmiista napeista mikään ei oikein osu tarpeeseen."
   ([teksti tyyppi toiminto] (yleinen teksti tyyppi toiminto {}))
   ([teksti tyyppi toiminto {:keys [disabled luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
