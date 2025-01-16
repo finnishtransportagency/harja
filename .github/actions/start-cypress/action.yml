@@ -11,6 +11,9 @@ name: 'Start Cypress'
 description: 'Käynnistää Cypress kontin ja ajaa komennon sen sisällä kerran'
 
 inputs:
+  container-name:
+    description: 'Docker kontin nimi, joka annetaan ajettavalle cypress-kontille'
+    required: true
   registry:
     description: 'Container registry, josta haetaan cypress kontin image'
     required: true
@@ -32,6 +35,10 @@ inputs:
     description: 'Selain, jota vasten testit ajetaan. Cypress-konttiin asennetut selaimet: chrome, edge'
     default: 'chrome'
     required: false
+  specs:
+    description: 'Cypress testitiedostot, jotka ajetaan'
+    required: false
+    default: 'cypress/e2e/**/*.spec.js'
 
 
 runs:
@@ -60,10 +67,14 @@ runs:
         IMAGE_NAME: ${{ inputs.image }}
         GITHUB_WORKSPACE: ${{ inputs.GITHUB_WORKSPACE }}
         BROWSER: ${{ inputs.browser }}
+        CYPRESS_SPECS: ${{ inputs.specs }}
+        CONTAINER_NAME: ${{ inputs.container-name }}
       run: |
         echo "Ajetaan cypress komento kontissa"
         
         docker run \
+          -d \
+          --name="$CONTAINER_NAME" \
           --network host \
           -e ELECTRON_EXTRA_LAUNCH_ARGS='--disable-gpu' \
           -v $GITHUB_WORKSPACE:/harja \
@@ -71,6 +82,6 @@ runs:
           "$IMAGE_NAME" \
           bash -c "echo -e \"Chrome version:  \$(google-chrome --version) \nEdge version:  \$(edge --version) \n\";
                    echo '-------------------';
-                   cypress run --browser $BROWSER"
+                   cypress run --browser $BROWSER" --spec "$CYPRESS_SPECS"
       shell: bash
 

@@ -561,14 +561,32 @@ jobs:
 
       # Ajaa cypress testit erillisessä kontissa
       # Konttiin mountataan GITHUB_WORKSPACE, joka sisältää myös aiemmin asennetut node-moduulit, joita testit tarvitsevat
-      - name: Run cypress for ${{ matrix.browser }}
+      - name: Run cypress for ${{ matrix.browser }} Part 1/2
         uses: ./.github/actions/start-cypress
         with:
+          container-name: cypress-part-1
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}
           browser: ${{ matrix.browser }}
+          specs: 'cypress/e2e/mhu_*'
+
+      - name: Run cypress for ${{ matrix.browser }} Part 2
+        uses: ./.github/actions/start-cypress
+        with:
+          container-name: cypress-part-2
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}
+          browser: ${{ matrix.browser }}
+          specs: 'cypress/e2e/[!mhu]*'
+
+      - name: Wait for cypress to finish
+        run: |
+          docker wait cypress-part-1
+          docker wait cypress-part-2
 
       - name: Publish Test Report for ${{ matrix.browser }}
         uses: mikepenz/action-junit-report@62516aa379bff6370c95fd5894d5a27fb6619d9b
