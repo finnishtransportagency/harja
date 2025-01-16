@@ -9,6 +9,7 @@
         <tloik>0</tloik>
         <palautevayla>1</palautevayla>
         <mobiilisovellus>0</mobiilisovellus>
+        <channel>2</channel>
     </subject>
     <subject>
         <active>1</active>
@@ -19,6 +20,7 @@
         <tloik>1</tloik>
         <palautevayla>1</palautevayla>
         <mobiilisovellus>0</mobiilisovellus>
+        <channel>null</channel>
     </subject>
     <subject>
         <active>0</active>
@@ -29,5 +31,6 @@
         <tloik>1</tloik>
         <palautevayla>1</palautevayla>
         <mobiilisovellus>0</mobiilisovellus>
+        <channel>1</channel>
     </subject>
 </subjects>
