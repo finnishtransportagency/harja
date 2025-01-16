@@ -57,8 +57,11 @@
     ;; Palautetaan kutsujalle ulkoinen id
     (is (= ulkoinen-id (:id dekoodattu-body)))
 
-    (let [talvihoitoreitti-kannassa (q-map (format "SELECT nimi, luoja, luotu FROM talvihoitoreitti WHERE urakka_id = %s " urakka-id))]
-      (is (= 1 (count talvihoitoreitti-kannassa))))))
+    (let [talvihoitoreitti-kannassa (q-map (format "SELECT nimi, luoja, luotu, tr_maara, ka_maara, kup_maara FROM talvihoitoreitti WHERE urakka_id = %s " urakka-id))]
+      (is (= 1 (count talvihoitoreitti-kannassa)))
+      (is (= 1 (:tr_maara (first talvihoitoreitti-kannassa))))
+      (is (= 2 (:ka_maara (first talvihoitoreitti-kannassa))))
+      (is (= 0 (:kup_maara (first talvihoitoreitti-kannassa)))))))
 
 (deftest paivita-talvihoitoreitti-nimi-onnistuu
   (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
@@ -76,8 +79,11 @@
                          lahetysdata)]
 
     (is (= 200 (:status vastaus-lisays)))
-    (let [talvihoitoreitti-kannassa (q-map (format "SELECT nimi, luoja, luotu FROM talvihoitoreitti WHERE urakka_id = %s " urakka-id))]
-      (is (= 1 (count talvihoitoreitti-kannassa))))
+    (let [talvihoitoreitti-kannassa (q-map (format "SELECT nimi, luoja, luotu, tr_maara, ka_maara, kup_maara FROM talvihoitoreitti WHERE urakka_id = %s " urakka-id))]
+      (is (= 1 (count talvihoitoreitti-kannassa)))
+      (is (= 1 (:tr_maara (first talvihoitoreitti-kannassa))))
+      (is (= 2 (:ka_maara (first talvihoitoreitti-kannassa))))
+      (is (= 0 (:kup_maara (first talvihoitoreitti-kannassa)))))
 
     ;; Päivitetään talvihoitoreitti
     (let [uusinimi "uusinimi"

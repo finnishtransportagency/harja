@@ -1,16 +1,12 @@
 (ns harja.palvelin.palvelut.laadunseuranta.talvihoitoreititys-test
-  (:require [cheshire.core :as cheshire]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [dk.ative.docjure.spreadsheet :as xls]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-palvelu :as talvihoitoreitit-palvelu]
-            [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-excel :as t-excel]
-            [harja.pvm :as pvm]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]
-            [tuck.remoting.transit :as transit]))
+            [com.stuartsierra.component :as component]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -54,11 +50,9 @@
 (deftest testaa-talvihoitoreititys-excel-tuonti-virheellisella-excelilla
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         workbook (xls/load-workbook-from-file "test/resurssit/excel/talvihoitoreitit_tuonti_fail.xlsx")
-        _ (println "workbook" workbook)
-
         ;; Tallenna Excelistä luetut talvihoitoreitit kantaan
         excel-vastaus (talvihoitoreitit-palvelu/kasittele-excel (:db jarjestelma) urakka-id +kayttaja-jvh+ nil workbook)]
-    (is (= (str/includes? excel-vastaus "Reittien ja kaluston määrä ei täsmää.")) "Excel lataus ei onnistu.")))
+    (is (= (str/includes? (str excel-vastaus) "Reittien ja kaluston määrä ei täsmää.")) "Excel lataus ei onnistu.")))
 
 
 (deftest testaa-talvihoitoreititys-excel-vienti

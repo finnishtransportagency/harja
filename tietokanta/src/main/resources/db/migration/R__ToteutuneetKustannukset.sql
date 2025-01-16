@@ -28,8 +28,8 @@ BEGIN
            MD5(CONCAT(k.id, k.vuosi, k.kuukausi, k.summa, k.tyyppi, k.tehtava, k.tehtavaryhma,
                       k.toimenpideinstanssi, k.sopimus, k.luotu, k.luoja, k.muokattu, k.muokkaaja)::TEXT)
       FROM kustannusarvioitu_tyo k
--- Siirretään vain edellisen kuukauden jutut. Ei siis kuluvan kuukauden hommia
-     WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm)
+     -- Siirretään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
+     WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
        -- Siirretään vain ne, joita ei ole vielä siirretty
        AND k."siirretty?" = FALSE
        -- Siirretään vain tietyn tehtäväryhmän tehtäviä tai yksilöityjä tehtäviä
@@ -77,17 +77,17 @@ BEGIN
                       j.luotu, j.luoja, j.muokattu, j.muokkaaja, j.vuosi, j.kuukausi,
                       j."ennen-urakkaa", j."osa-kuukaudesta")::TEXT)
       FROM johto_ja_hallintokorvaus j
--- Siirretään vain edellisen kuukauden jutut
-     WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm)
+       -- Siirretään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
+       WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
        -- Ja ne, joita ei ole vielä siirretty
        AND j."siirretty?" = FALSE
-        ON CONFLICT DO NOTHING;
+       ON CONFLICT DO NOTHING;
 
     -- Päivitetään kaikkiin juuri siirrettyihin riveihin tieto, että ne on käsitelty ja siirretty
     UPDATE kustannusarvioitu_tyo k
        SET "siirretty?" = TRUE
--- Päivitetään vain edellisen kuukauden jutut
-     WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm)
+       -- Päivitetään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
+       WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
        -- Ja vain ne, joita ei ole aiemin päivitetty siirretyksi
        AND k."siirretty?" = FALSE
        -- Päivitetään vain tietyn tehtäväryhmän tehtäviä tai yksilöityjä tehtäviä
@@ -104,11 +104,11 @@ BEGIN
 
     -- Päivitetään kaikkiin juuri siirrettyihin riveihin tieto, että ne on käsitelty ja siirrety
     UPDATE johto_ja_hallintokorvaus j
-       SET "siirretty?" = TRUE
--- Päivitetään vain edellisen kuukauden jutut
-     WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm)
-       -- Ja vain ne, joita ei ole aiemmin päivitetty siirrettäväksi
-       AND j."siirretty?" = FALSE;
+        SET "siirretty?" = TRUE
+        -- Päivitetään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
+        WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
+        -- Ja vain ne, joita ei ole aiemmin päivitetty siirrettäväksi
+        AND j."siirretty?" = FALSE;
 
     -- Merkitään hoidon johdon maksuerä likaiseksi kaikissa voimassaolevissa MH-urakoissa
     UPDATE maksuera
@@ -149,8 +149,8 @@ BEGIN
            MD5(CONCAT(k.id, k.vuosi, k.kuukausi, k.summa, k.tyyppi, k.tehtava, k.tehtavaryhma,
                       k.toimenpideinstanssi, k.sopimus, k.luotu, k.luoja, k.muokattu, k.muokkaaja)::TEXT)
       FROM kustannusarvioitu_tyo k
--- Siirretään edelleen vain kaikki menneet (alkaen edellisestä kuukaudesta)
-     WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm)
+        -- Siirretään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
+        WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
        -- Nyt ei kiinnitetä huomiota siihen, onko rivi jo siirretty
        -- AND k."siirretty?" = false
        -- Siirretään vain tietyn tehtäväryhmän tehtäviä tai yksilöityjä tehtäviä
@@ -205,10 +205,10 @@ BEGIN
                       j.luotu, j.luoja, j.muokattu, j.muokkaaja, j.vuosi, j.kuukausi,
                       j."ennen-urakkaa", j."osa-kuukaudesta")::TEXT)
       FROM johto_ja_hallintokorvaus j
--- Siirretään menneet
-     WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm)
--- Eikä kiinnitetä huomiota siihen, onko ne jo siirretty vai ei
---AND j."siirretty?" = false
+        -- Siirretään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
+        WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
+        -- Eikä kiinnitetä huomiota siihen, onko ne jo siirretty vai ei
+        --AND j."siirretty?" = false
         ON CONFLICT (rivin_tunnistin)
             DO UPDATE SET summa_indeksikorjattu      = EXCLUDED.summa_indeksikorjattu,
                           indeksikorjaus_vahvistettu = EXCLUDED.indeksikorjaus_vahvistettu,
@@ -217,8 +217,8 @@ BEGIN
     -- Päivitetään kaikkiin juuri siirrettyihin riveihin tieto, että ne on käsitelty ja siirretty
     UPDATE kustannusarvioitu_tyo k
        SET "siirretty?" = TRUE
--- Päivitetään vain edellisen kuukauden jutut
-     WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm)
+        -- Päivitetään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
+        WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
        -- Ja vain ne, joita ei ole aiemin päivitetty siirretyksi
        AND k."siirretty?" = FALSE
        -- Päivitetään vain tietyn tehtäväryhmän tehtäviä tai yksilöityjä tehtäviä
@@ -236,8 +236,8 @@ BEGIN
     -- Päivitetään kaikkiin juuri siirrettyihin riveihin tieto, että ne on käsitelty ja siirrety
     UPDATE johto_ja_hallintokorvaus j
        SET "siirretty?" = TRUE
--- Päivitetään vain edellisen kuukauden jutut
-     WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm)
+       -- Päivitetään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
+       WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
        -- Ja vain ne, joita ei ole aiemmin päivitetty siirrettäväksi
        AND j."siirretty?" = FALSE;
 

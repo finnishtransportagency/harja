@@ -23,17 +23,20 @@
         "properties": {
           "tr_maara": {
             "type": "integer",
-            "required": false,
+            "required": true,
+            "minimum": 0,
             "description": "Traktoreiden määrä"
           },
           "kup_maara": {
             "type": "integer",
-            "required": false,
-            "description": "Kuorma-auton perävaunujen määrä"
+            "required": true,
+            "minimum": 0,
+            "description": "Kuppi-kuormaajien määrä"
           },
           "ka_maara": {
             "type": "integer",
-            "required": false,
+            "required": true,
+            "minimum": 0,
             "description": "Kuorma-auton määrä"
           }
         }

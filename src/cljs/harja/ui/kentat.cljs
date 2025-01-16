@@ -1,6 +1,7 @@
 (ns harja.ui.kentat
   "UI-input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
   (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [reagent.ratom :as ratom]
             [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
@@ -296,7 +297,7 @@
       (when (= koko-rivit :auto)
         {:component-did-update
          (fn [this _]
-           (let [n (-> this r/dom-node
+           (let [n (-> this rdom/dom-node
                        (.getElementsByTagName "textarea")
                        (aget 0))
                  erotus (- (.-scrollHeight n) (.-clientHeight n))]
