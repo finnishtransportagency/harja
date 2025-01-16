@@ -93,14 +93,24 @@
            [:div.body-text.musta.semibold.talvihoitoreitti-valistys "KUP"]
            [:div.small-text.musta.talvihoitoreitti-valistys kup_maara]])]]
       
-      ;; Kartta toggle 
+      ;; Toiminnallisuudet
       [:div.basis192.grow2.shrink2
        [:div.body-text.strong.musta ""]
        ;; Näytä valittu rivi kartalla tai piilota se
        [:<>
         (if (contains? valitut-kohteet id)
           (napit/avaa "Piilota kartalta" #(e! (tiedot/->PoistaValittuKohdeKartalta id)) {:luokka "talvihoitoreitti-kartan-naytto"})
-          (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle id)) {:luokka "talvihoitoreitti-kartan-naytto"}))]]]
+          (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle id)) {:luokka "talvihoitoreitti-kartan-naytto"}))]
+       [:div (napit/yleinen "Keskitä"
+               :toissijainen
+               #(e! (tiedot/->KeskitaTalvihoitoreitti id reitit))
+               {:ikoni    (ikonit/zoom-in)
+                :luokka "talvihoitoreitti-poisto"})]
+       [:div (napit/yleinen "Poista"
+               :toissijainen
+               #(e! (tiedot/->PoistaTalvihoitoreitti ulkoinen_id))
+               {:ikoni    (ikonit/livicon-trash)
+                :luokka "talvihoitoreitti-poisto"})]]]
 
      ;; Otsikkokoponentin voi avata ja avaamisen jälkeen näytetään lista (grid) reiteistä
      (when (and
