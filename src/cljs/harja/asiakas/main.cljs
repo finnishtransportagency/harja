@@ -9,7 +9,6 @@
             [harja.tiedot.istunto :as istunto]
 
             [reagent.core :as reagent]
-            [reagent.dom :as rdom]
             [harja.loki :refer [log error]]
 
             [cljsjs.react]
@@ -20,7 +19,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn render []
-  (rdom/render [#'main-view/main] (.getElementById js/document "app")))
+  (reagent/render [#'main-view/main] (.getElementById js/document "app")))
 
 (defn harja []
   (ymparisto/alusta {:on-reload #(try

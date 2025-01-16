@@ -5,14 +5,14 @@
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as y]
             [goog.events.EventType :as EventType]
-            [reagent.core :refer [atom] :as r]
-            [reagent.dom :as rdom]
+            [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
 
             [cljs.core.async :refer [<!]]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
+            [reagent.core :as r]
             [harja.loki :as loki]
             [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -147,7 +147,7 @@
        (when sticky?
          (komp/piirretty #(reset! napin-etaisyys-ylareunaan
                                   (dom/elementin-etaisyys-dokumentin-ylareunaan
-                                    (rdom/dom-node %)))))
+                                    (r/dom-node %)))))
        (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex type
                                     ikoni-oikealle? esta-prevent-default?] :as optiot}]
          [:button

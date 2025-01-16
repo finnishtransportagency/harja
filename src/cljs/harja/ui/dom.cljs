@@ -1,7 +1,6 @@
 (ns harja.ui.dom
   "Yleisiä apureita DOMin ja selaimen hallintaan"
   (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
             [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! timeout] :as async]
@@ -14,7 +13,7 @@
   "Tarkistaa onko annettu tapahtuma tämän React komponentin sisällä."
   ([komponentti tapahtuma] (sisalla? komponentti tapahtuma nil))
   ([komponentti tapahtuma {elementti? :elementti?}]
-   (let [dom (rdom/dom-node komponentti)
+   (let [dom (r/dom-node komponentti)
          elt (if elementti? tapahtuma (.-target tapahtuma))]
      (when (and (not (nil? elt)) (not (nil? (.-parentNode elt))))
        (loop [ylempi (.-parentNode elt)]

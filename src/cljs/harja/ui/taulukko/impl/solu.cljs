@@ -11,7 +11,7 @@
             [harja.ui.taulukko.impl.grid :as grid]
             [harja.ui.taulukko.kaytokset :as kaytokset]
             [harja.virhekasittely :as virhekasittely]
-            [reagent.dom :as rdom]
+            [reagent.dom :as dom]
             [clojure.set :as clj-set]))
 
 (def ^:dynamic *this* nil)
@@ -82,7 +82,7 @@
   (-piirra [this]
     (r/create-class
       {:constructor (fn [this props]
-                      (set! (.-domNode this) (fn [] (rdom/dom-node this)))
+                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
                       (set! (.-state this) #js {:error nil}))
        :get-derived-state-from-error (fn [error]
                                        #js {:error error})
@@ -137,7 +137,7 @@
   (-piirra [this]
     (r/create-class
       {:constructor (fn [this props]
-                      (set! (.-domNode this) (fn [] (rdom/dom-node this)))
+                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
                       (set! (.-state this) #js {:error nil}))
        :get-derived-state-from-error (fn [error]
                                        #js {:error error})
@@ -173,7 +173,7 @@
   (-piirra [this]
     (r/create-class
       {:constructor (fn [this props]
-                      (set! (.-domNode this) (fn [] (rdom/dom-node this)))
+                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
                       (set! (.-state this) #js {:error nil}))
        :get-derived-state-from-error (fn [error]
                                        #js {:error error})
@@ -246,7 +246,7 @@
                                                (:kayttaytymiset this))]
       (r/create-class
         {:constructor (fn [this props]
-                        (set! (.-domNode this) (fn [] (rdom/dom-node this)))
+                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
                         (set! (.-state this) #js {:error nil}))
          :get-derived-state-from-error (fn [error]
                                          #js {:error error})
@@ -358,7 +358,7 @@
                                                (:kayttaytymiset this))]
       (r/create-class
         {:constructor (fn [this props]
-                        (set! (.-domNode this) (fn [] (rdom/dom-node this)))
+                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
                         (set! (.-state this) #js {:error nil}))
          :get-derived-state-from-error (fn [error]
                                          #js {:error error})
@@ -441,7 +441,7 @@
     (let [auki? (atom auki-alussa?)]
       (r/create-class
         {:constructor (fn [this props]
-                        (set! (.-domNode this) (fn [] (rdom/dom-node this)))
+                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
                         (set! (.-state this) #js {:error nil}))
          :get-derived-state-from-error (fn [error]
                                          #js {:error error})
@@ -517,7 +517,7 @@
   (-piirra [this]
     (r/create-class
       {:constructor (fn [this props]
-                      (set! (.-domNode this) (fn [] (rdom/dom-node this)))
+                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
                       (set! (.-state this) #js {:error nil}))
        :get-derived-state-from-error (fn [error]
                                        #js {:error error})
@@ -594,7 +594,7 @@
                        rivi-overflow-hidden!)]
       (r/create-class
         {:constructor (fn [this props]
-                        (set! (.-domNode this) (fn [] (rdom/dom-node this)))
+                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
                         (set! (.-state this) #js {:error nil}))
          :get-derived-state-from-error (fn [error]
                                          #js {:error error})

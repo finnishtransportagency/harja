@@ -4,7 +4,6 @@
             [cljs-react-test.utils :as rt-utils]
             [dommy.core :as dommy]
             [reagent.core :as r]
-            [reagent.dom :as rdom]
             [cljs.core.async :refer [<! >! timeout alts!] :as async]
             [cljs-react-test.simulate :as sim]
             [clojure.string :as str])
@@ -20,7 +19,7 @@
 (defn render
   "Renderöi annetun komponentin (hiccup vektori) testi containeriin"
   [component]
-  (rdom/render component @*test-container*))
+  (r/render component @*test-container*))
 
 
 (defn sel [path]
