@@ -3,6 +3,7 @@
   Refaktoroitu vanhasta harja.views.urakka.valinnat namespacesta."
   (:require [harja.tiedot.navigaatio :as nav]
             [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
 
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
@@ -566,7 +567,7 @@
                           (maarita-sticky!)))
       (komp/piirretty #(reset! elementin-etaisyys-ylareunaan
                                (dom/elementin-etaisyys-dokumentin-ylareunaan
-                                 (r/dom-node %))))
+                                 (rdom/dom-node %))))
       (fn [{:keys [urakka] :as optiot} & sisalto]
         [:div.urakkatoiminnot {:class (str (when @naulattu? "urakkatoiminnot-naulattu ")
                                            (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
