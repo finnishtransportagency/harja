@@ -20,8 +20,7 @@
                               {:keys [laskettu_pituus nimi id varikoodi hoitoluokat ulkoinen_id reitit urakka_id
                                       tr_maara ka_maara kup_maara]}]
   
-  (let [_ (js/console.log "rivi: " (pr-str rivi))
-        valitut-kohteet @tiedot/valitut-kohteet-atom
+  (let [valitut-kohteet @tiedot/valitut-kohteet-atom
         reittien-maara (count reitit)
         auki? (contains? talvihoitoreittien-tilat id)
         reitteja-olemassa? (> reittien-maara 0)]
