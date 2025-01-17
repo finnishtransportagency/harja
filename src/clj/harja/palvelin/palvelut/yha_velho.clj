@@ -10,13 +10,24 @@
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho]
             [harja.domain.oikeudet :as oikeudet]))
 
+(defn- muunna-arvo-vectoriksi [arvo]
+  (if (sequential? arvo)
+    arvo
+    (vector arvo)))
+
+
+(defn- palauta-arvo-tai-ensimmainen [arvo]
+  (if (sequential? arvo)
+    (first arvo)
+    arvo))
+
 (defn laheta-pot-yhaan-ja-velhoon
   "Lähettää annettu pot YHAan ja Velhoon."
   [db yha velho kehitysmoodi? user {:keys [urakka-id kohde-id paallystetoteuma-url]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (yha-apurit/tarkista-lahetettavat-kohteet db [kohde-id])
-  (log/debug (format "Lähetetään kohde: %s YHAan ja Velhoon" kohde-id))
-  (let [yha-lahetys (try+ (yha/laheta-kohteet yha urakka-id [kohde-id] user)
+  (yha-apurit/tarkista-lahetettavat-kohteet db (muunna-arvo-vectoriksi kohde-id))
+  (log/debug (format "Lähetetään kohde: %s YHAan ja Velhoon" (muunna-arvo-vectoriksi kohde-id)))
+  (let [yha-lahetys (try+ (yha/laheta-kohteet yha urakka-id (muunna-arvo-vectoriksi kohde-id) user)
                           (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                             virheet))
         ;; Velho-lähetys toistaiseksi pois päältä. Testattu enimmäkseen toimivaksi testiympäristössä. On vielä selvityksessä, otetaanko Velho-lähetys käyttöön.
@@ -24,7 +35,7 @@
                         (try+ (velho/laheta-kohde velho urakka-id kohde-id)
                           (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                             virheet)))
-        tila (first (q-yllapitokohteet/hae-yha-velho-lahetyksen-tila db {:kohde-id kohde-id}))]
+        tila (first (q-yllapitokohteet/hae-yha-velho-lahetyksen-tila db {:kohde-id (palauta-arvo-tai-ensimmainen kohde-id)}))]
     tila))
 
 (defrecord YhaVelho [asetukset]

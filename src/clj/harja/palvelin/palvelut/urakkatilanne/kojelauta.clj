@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.urakkatilanne.kojelauta
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.set :as set]
+            [com.stuartsierra.component :as component]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -22,9 +23,14 @@
 (defn muunna-paatos [rivi avain]
   (update rivi avain konv/pgarray->vector))
 
-(defn hae-urakat-kojelautaan [db kayttaja {:keys [urakkatyyppi hoitokauden-alkuvuosi urakka-idt ely-id] :as hakuehdot}]
+(defn hae-urakat-kojelautaan [db kayttaja {:keys [urakkatyyppi hoitokauden-alkuvuosi urakka-idt ely-idt] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakkatilanne kayttaja)
-  (let [urakat (cond
+  (let [params {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                :urakat_annettu (boolean (seq urakka-idt))
+                :urakka_idt urakka-idt
+                :elyt_annettu (boolean (seq ely-idt))
+                :ely_idt ely-idt}
+        urakat (cond
                  (= urakkatyyppi :hoito)                    ;; tässä kohti hoito = MHU, vanhoja alueurakoita ei tueta
                  (into []
                    (mapv
@@ -33,16 +39,22 @@
                          (update ks-tilat :ks_tila konv/jsonb->clojuremap))
                        #(liita-indeksikertoimet db kayttaja %)
                        #(muunna-paatos % :lupauspaatokset))
-                     (q/hae-hoidon-urakat-kojelautaan db {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                                                          :urakat_annettu (boolean (seq urakka-idt))
-                                                          :urakka_idt urakka-idt
-                                                          :ely_id ely-id})))
+                     (q/hae-hoidon-urakat-kojelautaan db params)))
 
                  (= urakkatyyppi :paallystys)
-                 (q/hae-paallystysurakat-kojelautaan db {:vuosi hoitokauden-alkuvuosi
-                                                         :urakat_annettu (boolean (seq urakka-idt))
-                                                         :urakka_idt urakka-idt
-                                                         :ely_id ely-id}))]
+                 (mapv (fn [rivi]
+                         (-> rivi
+                           (update :virheelliset_kohteet
+                             (fn [kohteet]
+                               (mapv
+                                 #(konv/pgobject->map %
+                                    :id :long
+                                    :kohdenumero :string
+                                    :tunnus :string
+                                    :kohdenimi :string
+                                    :lahetysvirhe :string)
+                                 (konv/pgarray->vector kohteet))))))
+                   (q/hae-paallystysurakat-kojelautaan db (set/rename-keys params {:hoitokauden_alkuvuosi :vuosi}))))]
     urakat))
 
 (defrecord KojelautaHallinta []

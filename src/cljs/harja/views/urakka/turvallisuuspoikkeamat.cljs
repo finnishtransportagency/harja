@@ -579,7 +579,7 @@
        (cond
          ;; Klikattiin poikkeamaa, haku kesken
          @tiedot/haku-kesken?
-         [:dix.ajax-loader-valistys
+         [:div.ajax-loader-valistys
           [ajax-loader-pieni "Haetaan turvallisuuspoikkeamaa"]]
 
          ;; Klikattiin poikkeamaa, poikkeama haettu

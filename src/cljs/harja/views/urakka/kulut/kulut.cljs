@@ -288,6 +288,7 @@
                 [:div.aikavali-valinnat
                  [kentat/tee-kentta {:tyyppi :pvm
                                      :vayla-tyyli? true
+                                     :elementin-nimi "kulut-aikavali-alku"
                                      :on-datepicker-select #(do
                                                               (e! (tiedot/->AsetaHakuAlkuPvm %))
                                                               (when (and % @haun-loppupvm-atom)
@@ -299,6 +300,7 @@
                  [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
                  [kentat/tee-kentta {:tyyppi :pvm
                                      :vayla-tyyli? true
+                                     :elementin-nimi "kulut-aikavali-loppu"
                                      :on-datepicker-select (fn [loppupvm]
                                                              (do
                                                                (e! (tiedot/->AsetaHakuLoppuPvm loppupvm))
@@ -319,4 +321,3 @@
 (defn kohdistetut-kulut
   []
   [tuck/tuck tila/laskutus-kohdistetut-kulut kohdistetut*])
-

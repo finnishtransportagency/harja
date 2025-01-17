@@ -3,7 +3,7 @@
 ----------------------------
 
 -- MPU kustannukset testidata 
-INSERT INTO mpu_kustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja) 
+INSERT INTO paikkauskustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja)
 VALUES (
   (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka'), 
   'Arvoa muutettiin', 
@@ -15,7 +15,7 @@ VALUES (
 );
 
 
-INSERT INTO mpu_kustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja) 
+INSERT INTO paikkauskustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja)
 VALUES (
   (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka'), 
   'Indeksimuutos syyskuu', 
@@ -27,7 +27,7 @@ VALUES (
 );
 
 
-INSERT INTO mpu_kustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja) 
+INSERT INTO paikkauskustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja)
 VALUES (
   (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka'), 
   'Työvoimakustannukset', 
@@ -39,7 +39,7 @@ VALUES (
 );
 
 
-INSERT INTO mpu_kustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja) 
+INSERT INTO paikkauskustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja)
 VALUES (
   (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka'), 
   'Kalustokustannukset', 
@@ -50,7 +50,7 @@ VALUES (
   (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
 );
 
-INSERT INTO mpu_kustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja) 
+INSERT INTO paikkauskustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja)
 VALUES (
   (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka'), 
   'Vanha kustannus', 
@@ -62,7 +62,7 @@ VALUES (
 );
 
 
-INSERT INTO mpu_kustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja) 
+INSERT INTO paikkauskustannukset (urakka, selite, kustannustyyppi, summa, vuosi, luotu, luoja)
 VALUES (
   (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka'), 
   'Indeksimuutos 2017 elokuu', 

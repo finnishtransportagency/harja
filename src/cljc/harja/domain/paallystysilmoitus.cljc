@@ -358,3 +358,7 @@
 
 ;; POT2 lomaketta aletaan käyttää kesällä 2021 ja siitä eteenpäin.
 (def pot2-vuodesta-eteenpain 2021)
+
+;; jos kaista ei ole yhtenäinen ja tyhjä väli on 0 < hyppy < kynnysarvo, merkataan se hypyksi
+;; konsepti liittyy päällystysilmoitukseen missä on tarve visualisoida hypyt
+(def hypyn-kynnysarvo-metreina 50)

@@ -905,7 +905,8 @@
   (let [vuosi @u/valittu-urakan-vuosi
         ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
         ;; myös toisilla riveillä olevat validoinnit.
-        validoitu (yllapitokohteet-domain/validoi-muukohde paakohde rivi [] (get @paallystys-tiedot/tr-osien-tiedot (:tr-numero rivi)) vuosi)]
+        ;; 5.12.24: Poistettu tr-osien-tiedot validointi, koska tr-tietoa ei haettu muille kohteille ja mahdollisuus poimia väärä tieto pääkohteelta
+        validoitu (yllapitokohteet-domain/validoi-muukohde paakohde rivi [] nil vuosi)]
     (yllapitokohteet-domain/validoitu-kohde-tekstit (dissoc validoitu :muukohde-paallekkyys) false)))
 
 (defn muukohde-toisten-kanssa-paallekkain-validointi

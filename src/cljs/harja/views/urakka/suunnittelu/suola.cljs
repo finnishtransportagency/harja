@@ -577,7 +577,7 @@
               [lomake-talvisuolan-kayttoraja-alueurakka e! app urakka]
               [yleiset/ajax-loader "Ladataan..."])
 
-            [yleiset/virheviesti-sailio "Tuntematon urakkatyyppi"])
+            [yleiset/info-laatikko :varoitus "Tuntematon urakkatyyppi" nil "400px" {:sulje-nappi-id (gensym)}])
 
           (when (= :teiden-hoito (:tyyppi urakka))
             [:<>

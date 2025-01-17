@@ -341,25 +341,21 @@
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "yha" "kohteiden-lahetys" nil
       (fn [konteksti]
-        (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
-          (let [urakka (assoc urakka :harjaid urakka-id
-                         :sampoid (yhaan-lahetettava-sampoid urakka))]
-            (doseq [kohde-id kohde-idt]
-              (let [kohde (hae-kohteen-tiedot-pot2 db kohde-id)
-                    url (str url "toteumatiedot")
-                    kutsudata (kohteen-lahetyssanoma/muodosta urakka [kohde])
-                    otsikot (yha-yhteiset/yha-otsikot api-key false)
-                    http-asetukset {:metodi :POST
-                                    :url url
-                                    :otsikot otsikot}
-                    {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
-                (kasittele-urakan-kohdelahetysvastaus db body headers [kohde] user))))
-        
-          (let [virhe (format "Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)]
-            (log/error virhe)
-            (throw+
-              {:type +virhe-kohteen-lahetyksessa+
-               :virheet {:virhe virhe}}))))
+        (let [urakan-yhatiedot (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))
+              urakka (assoc urakan-yhatiedot :harjaid urakka-id
+                       :sampoid (yhaan-lahetettava-sampoid urakan-yhatiedot))]
+          (doseq [kohde-id kohde-idt]
+            (let [_ (log/info (format "Lähetetään kohteen (id: %s) tiedot YHA:an." kohde-id))
+                  kohde (hae-kohteen-tiedot-pot2 db kohde-id)
+                  url (str url "toteumatiedot")
+                  kutsudata (kohteen-lahetyssanoma/muodosta urakka [kohde])
+                  otsikot (yha-yhteiset/yha-otsikot api-key false)
+                  http-asetukset {:metodi :POST
+                                  :url url
+                                  :otsikot otsikot}
+                  {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
+              (kasittele-urakan-kohdelahetysvastaus db body headers [kohde] user)
+              (Thread/sleep 1000))))) ;; Rajoitetaan YHAan lähetysten nopeutta jos kyseessä on massalähetys
       {:virhekasittelija (fn [konteksti e]
                            (doseq [kohde-id kohde-idt]
                              (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})

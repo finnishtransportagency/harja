@@ -78,6 +78,7 @@
               {:otsikko "Huvi", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.4, :tyyppi :varillinen-teksti}
               {:otsikko "Tie odotus (h)", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.5, :tyyppi :varillinen-teksti}
               {:otsikko "Ajoneuvot", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.7, :tyyppi :varillinen-teksti}
+              {:otsikko "Korjaaja" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.6 :tyyppi :varillinen-teksti}
               {:otsikko "Toimenpide", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 1, :tyyppi :varillinen-teksti}
               {:otsikko "Korjaus aika", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
               {:otsikko "Tila", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}

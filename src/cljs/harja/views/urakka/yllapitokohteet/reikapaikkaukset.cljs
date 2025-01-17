@@ -69,7 +69,7 @@
                                                  :aikavali (:aikavali valinnat)
                                                  :urakka-id @nav/valittu-urakka-id})}]
           [:button {:type "submit"
-                    :class #{"nappi-reunaton"}}
+                    :class #{"nappi-toissijainen"}}
            [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]]
         ;; Excel tuonti
         [:div.lataus-nappi

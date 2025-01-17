@@ -370,6 +370,15 @@
    :harjaid 5,
    :sampoid "4242523-TES2"})
 
+(def testiurakka-kun-yha-sidonta-puuttuu
+  {:yhatunnus nil,
+   :yhaid nil,
+   :yhanimi nil,
+   :elyt nil,
+   :vuodet nil,
+   :harjaid 5,
+   :sampoid "4242523-TES3"})
+
 (def kohteen-tienumero "456")
 (def karttapvm #inst "2015-12-31T22:00:00.000-00:00")
 
@@ -430,6 +439,33 @@
   (testing "muodosta-sanoma funktio"
     (let [tulos (kohteen-lahetyssanoma/muodosta-sanoma testiurakka testikohteet)]
       (is (= testikohteet-tulos tulos)))))
+
+(deftest muodosta-pot-sanoma-kun-urakkasidonta-puuttuu
+  (testing "muodosta-sanoma funktio"
+    (let [sisalto (kohteen-lahetyssanoma/muodosta-sanoma testiurakka-kun-yha-sidonta-puuttuu testikohteet)
+          luotu-xml (xml/tee-xml-sanoma sisalto)
+          xml (xml/lue luotu-xml)
+          urakka (xml/luetun-xmln-tagien-sisalto
+                   xml
+                   :urakan-kohteiden-toteumatietojen-kirjaus :urakka)
+          kohde (xml/luetun-xmln-tagien-sisalto
+                  urakka
+                  :kohteet :kohde)]
+      (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str kohteen-lahetyssanoma/puuttuvan-urakan-id)]))
+      (is (= (xml/luetun-xmln-tagin-sisalto urakka :tunnus) [(str kohteen-lahetyssanoma/puuttuvan-urakan-id)]))
+      (is (= (xml/luetun-xmln-tagin-sisalto urakka :sampotunnus) [(:sampoid testiurakka-kun-yha-sidonta-puuttuu)]))
+      (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str (:harjaid testiurakka-kun-yha-sidonta-puuttuu))]))
+
+
+      (is (= (xml/luetun-xmln-tagin-sisalto kohde :yha-id) [(str kohteen-lahetyssanoma/paikkauskohteiden-yha-id)]))
+      (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdenumero) ["323"]))
+      (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
+      (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
+      (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Testikohde 1"]))
+
+      (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) [(tee-pvm-tulos)]))
+      (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["4000.4"])))))
+
 
 (deftest tarkista-xmln-validius
   (let [xml (kohteen-lahetyssanoma/muodosta testiurakka testikohteet)]

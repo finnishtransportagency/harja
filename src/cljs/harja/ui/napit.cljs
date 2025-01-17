@@ -1,17 +1,18 @@
 (ns harja.ui.napit
-  (:require [harja.ui.ikonit :as ikonit]
+  (:require [clojure.string :as str]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.viesti :as viesti]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as y]
             [goog.events.EventType :as EventType]
-            [reagent.core :refer [atom]]
+            [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
 
             [cljs.core.async :refer [<!]]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
-            [reagent.core :as r]
             [harja.loki :as loki]
             [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -29,9 +30,9 @@
   https://www.paciellogroup.com/blog/2012/01/html5-accessibility-chops-title-attribute-use-and-abuse/
 
   - ikoni. Oletuksena haetaan luokan perusteella, mutta on mahdollista antaa myös itse.
-  - virheen-esitystapa (:vertical), joko :modal, :flash, :vertical tai :horizontal
-    * Nappi käyttää harja.ui.yleiset/virheviesti-sailiota, modalia ja viestia
-    * horizontal asettaa sailion tyylin inline-blockiksi
+  - virheen-esitystapa, joko :modal tai :flash
+    * Nappi käyttää harja.ui.yleiset/modalia ja viestia
+
   - suljettava-virhe? (false)
     * Jos virhe on suljettava, annetaan inline viestille oikeaan yläkulmaan rasti.
     * Oletuksena viestit suljetaan aina, kun tätä nappia painetaan uudelleen
@@ -54,8 +55,6 @@
             virheen-esitystapa (case (:virheen-esitystapa asetukset)
                                  :modal :modal
                                  :flash :flash
-                                 :vertical :vertical
-                                 :horizontal :horizontal
                                  :flash)
             suljettava-virhe? (or (:suljettava-virhe? asetukset) false)
             sulkemisfunktio #(reset! nayta-virheviesti? false)
@@ -100,9 +99,7 @@
                                                               viesti/viestin-nayttoaika-keskipitka))
                       (sulkemisfunktio)
                       nil)
-             :modal (do (modal/nayta! {:otsikko "Virhe tapahtui" :sulje sulkemisfunktio} virheviesti) nil)
-             :horizontal (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio) :inline-block)
-             :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))))]))))
+             :modal (do (modal/nayta! {:otsikko "Virhe tapahtui" :sulje sulkemisfunktio} virheviesti) nil)))]))))
 
 (defn nappi
   "Yleinen nappikomponentti, jota voi muokata optioilla.
@@ -150,7 +147,7 @@
        (when sticky?
          (komp/piirretty #(reset! napin-etaisyys-ylareunaan
                                   (dom/elementin-etaisyys-dokumentin-ylareunaan
-                                    (r/dom-node %)))))
+                                    (rdom/dom-node %)))))
        (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex type
                                     ikoni-oikealle? esta-prevent-default?] :as optiot}]
          [:button
@@ -161,7 +158,7 @@
                              luokka)
              :tab-index tabindex
              :aria-label (or aria-label
-                           "Painike")
+                           teksti)
              :disabled  disabled
              :style     style
              :title     title
@@ -183,9 +180,11 @@
 
           (if (and ikoni
                    (not tallennus-kaynnissa?))
-            (if ikoni-oikealle?
-              [ikonit/teksti-ja-ikoni teksti ikoni]
-              [ikonit/ikoni-ja-teksti ikoni teksti])
+            (if (str/blank? teksti)
+              ikoni
+              (if ikoni-oikealle?
+                [ikonit/teksti-ja-ikoni teksti ikoni]
+                [ikonit/ikoni-ja-teksti ikoni teksti]))
             teksti)])))))
 
 (defn harmaa
@@ -297,6 +296,7 @@
                                             :else "nappi-toissijainen") " " luokka)})]))
 
 (defn yleinen
+  "Hyödynnä tätä, mikäli valmiista napeista mikään ei oikein osu tarpeeseen."
   ([teksti tyyppi toiminto] (yleinen teksti tyyppi toiminto {}))
   ([teksti tyyppi toiminto {:keys [disabled luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
@@ -328,14 +328,15 @@
 
 (defn yleinen-toissijainen
   ([teksti toiminto] (yleinen-toissijainen teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+  ([teksti toiminto {:keys [disabled luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str (cond
                                             (and vayla-tyyli?
                                                  teksti-nappi?) "button-secondary-text"
                                             vayla-tyyli? "button-secondary-default"
-                                            :else "nappi-toissijainen") " " luokka)})]))
+                                            :else "nappi-toissijainen") " " luokka)
+                             :disabled disabled})]))
 
 (defn yleinen-reunaton
   ([teksti toiminto] (yleinen-reunaton teksti toiminto {}))
@@ -371,10 +372,11 @@
 
 (defn tallenna
   ([teksti toiminto] (tallenna teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi? data-cy] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:aria-label (or (:aria-label optiot) "Tallenna")
+                             :data-cy (or data-cy "Tallenna-nappi")
                              :luokka (str (cond (and vayla-tyyli?
                                                      teksti-nappi?) "button-primary-text"
                                                 vayla-tyyli? "button-primary-default"

@@ -3,6 +3,7 @@
   (:require [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [reagent.ratom :as ratom]
             [harja.ui.komponentti :as komp]
             [goog.events :as events]
@@ -155,10 +156,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             :on-click #(do (when stop-propagation (.stopPropagation %)) (.preventDefault %) (toiminto))}
         sisalto]))))
 
-(defn staattinen-linkki-uuteen-ikkunaan [otsikko linkki]
-  [:a.klikattava.alleviivaa {:href linkki
-       :target "_blank"
-       :rel "noopener noreferrer"} otsikko])
+(defn staattinen-linkki-uuteen-valilehteen
+  ([otsikko linkki]
+   (staattinen-linkki-uuteen-valilehteen otsikko linkki {}))
+   ([otsikko linkki {:keys [title] :as opts}]
+    [:a {:href linkki
+         :target "_blank"
+         :title title
+         :rel "noopener noreferrer"} otsikko]))
 
 (defn tiedoston-lataus-linkki
   "Tarkoitettu esimerkiksi erillisen esxel tiedoston lataamiseen. Käyttää html5 speksin linkin download atriboottia.
@@ -167,27 +172,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   ([otsikko url]
    (tiedoston-lataus-linkki otsikko url nil))
   ([otsikko url {:keys [luokat] :as _opts}]
-   [:a {:class (concat ["nappi-reunaton"] luokat)
+   [:a {:class (concat ["nappi-toissijainen"] luokat)
         :href url
         :download ""}
     [ikonit/ikoni-ja-teksti (ikonit/livicon-download) otsikko]]))
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
-
-(defn virheviesti-sailio
-  "Luo virheviestin 'sivun sisään'. Jos toinen parametri on jotain muuta kuin nil tai false,
-  säiliön display asetetaan inline-blockiksi."
-  ([viesti] (virheviesti-sailio viesti nil false))
-  ([viesti rasti-funktio] (virheviesti-sailio viesti rasti-funktio false))
-  ([viesti rasti-funktio inline-block?]
-   (let [sulkemisnappi [:button.inlinenappi.nappi-kielteinen {:on-click #(rasti-funktio)}
-                        [ikonit/remove] " Sulje"]]
-     (if inline-block?
-       [:div.virheviesti-sailio {:style {:display :inline-block}} viesti
-        (when rasti-funktio sulkemisnappi)]
-       [:div.virheviesti-sailio viesti
-        (when rasti-funktio sulkemisnappi)]))))
 
 (def valinta-ul-max-korkeus-px "420px")
 
@@ -655,6 +646,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (def +vari-lemon-dark+ "#654D00")
 (def +vari-black-light+ "#5C5C5C")
+(def +vari-black-default+ "#000000")
 (def +vari-blue-dark+ "#004D99FF")
 
 (defn vihje
@@ -691,7 +683,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def tietyoilmoitus-siirtynyt-txt
   [:div.inline-block.tietyo-info
    "Tietyöilmoituksen tekeminen on siirtynyt Harjasta Fintrafficin puolelle. Voit tehdä sen "
-   [staattinen-linkki-uuteen-ikkunaan "tämän linkin kautta."
+   [staattinen-linkki-uuteen-valilehteen "tämän linkin kautta."
     "https://tietyoilmoitus.tieliikennekeskus.fi/#/"]])
 
 (defn tietyoilmoitus-siirtynyt-toast []
@@ -731,28 +723,42 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (defn varoitus-vihje [ensisijainen-viesti toissijainen-viesti]
   (keltainen-vihjelaatikko ensisijainen-viesti toissijainen-viesti))
 
+(defonce infolaatikko-nakyvissa? (atom {}))
+
 (defn info-laatikko
   ([tyyppi ensisijainen-viesti]
    (info-laatikko tyyppi ensisijainen-viesti nil nil {}))
   ([tyyppi ensisijainen-viesti toissijainen-viesti leveys]
    (info-laatikko tyyppi ensisijainen-viesti toissijainen-viesti leveys {}))
-  ([tyyppi ensisijainen-viesti toissijainen-viesti leveys {:keys [luokka]}]
+  ([tyyppi ensisijainen-viesti toissijainen-viesti leveys {:keys [luokka sulje-fn sulje-nappi-id]}]
    (assert (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus} tyyppi)
      "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
-   [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka]))
-          :style {:width leveys :white-space "pre-line"}}
-    [:div.infolaatikon-ikoni
-     (case tyyppi
-       :varoitus (ikonit/livicon-warning-sign)
-       :onnistunut (ikonit/livicon-check)
-       :vahva-ilmoitus (ikonit/status-info-inline-svg +vari-black-light+)
-       :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
-    [:div {:style {:width "95%" :padding-top "16px" :padding-bottom "16px"}}
-     [:div {:style {:padding-left "8px" :white-space "pre-line"}}
-      ensisijainen-viesti]
-     (when toissijainen-viesti
-       [:div {:style {:padding-left "8px" :font-weight 400}}
-        toissijainen-viesti])]]))
+   (let [sulje-nappi-id (keyword sulje-nappi-id)]
+     (when (or (nil? (get @infolaatikko-nakyvissa? sulje-nappi-id))
+             (get @infolaatikko-nakyvissa? sulje-nappi-id))
+       [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka]))
+              :style {:width leveys :white-space "pre-line"}}
+        [:div.infolaatikon-ikoni
+         (case tyyppi
+           :varoitus (ikonit/livicon-warning-sign)
+           :onnistunut (ikonit/livicon-check)
+           :vahva-ilmoitus (ikonit/status-info-inline-svg +vari-black-light+)
+           :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
+        [:div {:style {:width "95%" :padding-top "14px" :padding-bottom "14px"}}
+         [:div {:style {:white-space "pre-line" :color +vari-black-default+}}
+          ensisijainen-viesti]
+         (when toissijainen-viesti
+           [:div {:style {:padding-left "8px" :font-weight 400}}
+            toissijainen-viesti])]
+        (when sulje-nappi-id
+          ;; circular dependency, joten ei voi käyttää harja.ui.ikonit/sulje
+          [:button {:class "napiton-nappi pelkka-ikoni infolaatikon-sulje-ikoni"
+                    :aria-label "Sulje"
+                    :on-click #(do
+                                 (reset! infolaatikko-nakyvissa? (merge @infolaatikko-nakyvissa? {sulje-nappi-id false}))
+                                 (when sulje-fn
+                                   (sulje-fn)))}
+           [ikonit/sulje]])]))))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
@@ -798,7 +804,7 @@ jatkon."
         wrapperin-koko (:wrapperin-koko opts)]
     (komp/luo
       (komp/piirretty
-        #(let [n (r/dom-node %)
+        #(let [n (rdom/dom-node %)
                parent-rect (aget (.getClientRects (.-parentNode n)) 0)
                width (if (map? wrapperin-koko)
                        (:leveys wrapperin-koko)

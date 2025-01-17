@@ -49,6 +49,13 @@
    [:span " "]
    [:span.osuus (str "(" osuus "%)")]])
 
+(defmethod muodosta-html :arvo-yksikko-ja-osuus [[_ {:keys [arvo osuus fmt yksikko]}]]
+  [:span.arvo-ja-osuus
+   [:span.arvo (if fmt (fmt arvo) arvo)]
+   [:span.yksikko (str "\u00A0" yksikko)]
+   [:span " "]
+   [:span.osuus (str "(" osuus "%)")]])
+
 ;; Tavallisesti raportin solujen tyylit tulevat rivitasolta ja HTML raporteissa yksittäisen solun tyyli annetaan luokka
 ;; määritteessä (:sarakkeen-luokka). Niinpä tämän elementin ainoa olemassaolon syy on se, että tätä vaaditaan PDF ja Excelraportoissa.
 ;; Tämä on siis identtinen :arvo-ja-yksikkö elementin kanssa, mutta sallii raportin toiminnan.

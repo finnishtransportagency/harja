@@ -18,6 +18,7 @@ SELECT
   ypkk.bitumi_indeksi           AS "bitumi-indeksi",
   ypkk.kaasuindeksi,
   ypk.lahetetty                 AS lahetetty,
+  ypk.lahettaja                 AS lahettaja,
   lahetys_onnistunut            AS "lahetys-onnistunut",
   lahetysvirhe,
   ypk.velho_lahetyksen_aika     AS "velho-lahetyksen-aika",
@@ -119,7 +120,8 @@ SELECT
   ypk.lahetetty,
   ypk.lahetys_onnistunut        AS "lahetys-onnistunut",
   ypk.lahetysvirhe,
-  u.id                          AS "urakka-id"
+  u.id                          AS "urakka-id",
+  u.hallintayksikko             AS "hallintayksikko-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
@@ -1193,3 +1195,28 @@ FROM kulu k
 WHERE tro.otsikko = '4 PÄÄLLYSTEIDEN PAIKKAUS'
   AND (k.luotu BETWEEN :alku AND :loppu OR
        k.muokattu BETWEEN :alku AND :loppu);
+
+
+-- name: hae-paallystys-urakat-hallintaan
+SELECT
+  u.id,
+  u.nimi,
+  u.alkupvm,
+  u.loppupvm,
+  s.id AS "sopimus-id",
+  COUNT(*) FILTER (WHERE y.lahetetty IS NOT NULL
+           AND    y.lahetys_onnistunut IS TRUE) AS "lahetetty-onnistuneesti",
+  COUNT(*) FILTER (WHERE y.lahetetty IS NOT NULL
+           AND y.lahettaja IS NULL) AS "lahettaja-puuttuu"
+FROM urakka u
+	JOIN yllapitokohde y ON y.urakka = u.id
+	JOIN sopimus s ON s.urakka = u.id
+WHERE
+y.urakka = u.id AND y.poistettu IS FALSE AND y.vuodet @> ARRAY[:vuosi]::INTEGER[] AND
+u.tyyppi = 'paallystys' AND
+u.urakkanro IS NOT NULL AND -- testiurakat pois
+(:vuosi BETWEEN
+         EXTRACT (YEAR FROM u.alkupvm) AND
+         EXTRACT (YEAR FROM u.loppupvm))
+ GROUP BY u.id, u.nimi, s.id
+ ORDER BY "lahettaja-puuttuu" DESC, "lahetetty-onnistuneesti" DESC,  u.nimi; 

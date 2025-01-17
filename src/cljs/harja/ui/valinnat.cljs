@@ -3,6 +3,7 @@
   Refaktoroitu vanhasta harja.views.urakka.valinnat namespacesta."
   (:require [harja.tiedot.navigaatio :as nav]
             [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
 
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
@@ -166,6 +167,7 @@
          tyyppi (if (= :pvm-aika (:tyyppi asetukset))
                   :pvm-aika
                   :pvm)
+         elementin-nimi (:elementin-nimi asetukset)
          uusi-aikavali (fn [paa uusi-arvo]
                          {:pre [(contains? #{:alku :loppu} paa)]}
                          (let [uusi-arvo (if (= tyyppi :pvm-aika)
@@ -209,8 +211,7 @@
                             (remove-watch valittu-aikavali-atom :aikavali-komponentin-kuuntelija)))
        (fn [_ {:keys [nayta-otsikko? aikavalin-rajoitus luokka
                       aloitusaika-pakota-suunta paattymisaika-pakota-suunta
-                      lomake? otsikko for-teksti validointi vayla-tyyli?
-                      ikoni-sisaan?]}]
+                      lomake? otsikko for-teksti validointi vayla-tyyli?]}]
          (when-not (= aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom))
            (swap! asetukset-atom assoc :aikavalin-rajoitus aikavalin-rajoitus))
          [:span {:class (cond
@@ -226,15 +227,15 @@
            [tee-kentta {:tyyppi tyyppi
                         :pakota-suunta aloitusaika-pakota-suunta
                         :validointi validointi
-                        :ikoni-sisaan? ikoni-sisaan?
-                        :vayla-tyyli? vayla-tyyli?}
+                        :vayla-tyyli? vayla-tyyli?
+                        :elementin-nimi (when elementin-nimi (str elementin-nimi "-alku"))}
             aikavalin-alku]
            [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
            [tee-kentta {:tyyppi tyyppi
                         :pakota-suunta paattymisaika-pakota-suunta
                         :validointi validointi
-                        :ikoni-sisaan? ikoni-sisaan?
-                        :vayla-tyyli? vayla-tyyli?}
+                        :vayla-tyyli? vayla-tyyli?
+                        :elementin-nimi (when elementin-nimi (str elementin-nimi "-loppu"))}
             aikavalin-loppu]]])))))
 
 (defn numerovali
@@ -347,8 +348,10 @@
      [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn (:otsikko kuukausi)])
    (when-let [{:keys [urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]} toimenpide]
      [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn])
-   (when-let [{:keys [valittu-aikavali-atom]} aikavali-optiot]
-     [aikavali valittu-aikavali-atom])])
+   (when-let [{:keys [valittu-aikavali-atom elementin-nimi]} aikavali-optiot]
+     (if elementin-nimi
+       [aikavali valittu-aikavali-atom {:elementin-nimi elementin-nimi}]
+       [aikavali valittu-aikavali-atom]))])
 
 (defn vuosi
   ([ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom]
@@ -411,12 +414,12 @@
          alkuaikakentta {:nimi (or (:alkuaika kenttien-nimet) :alkuaika)
                          :otsikko "Alku"
                          ::lomake/col-luokka (when aikavalivalitsin-flex?
-                                               "lomakepalsta-flex-puolikas")
+                                               "lomakepalsta-flex-kokonainen paivays")
                          :tyyppi (if vain-pvm :pvm :pvm-aika)
                          :validoi [[:ei-tyhja "Anna alkuaika"]]}
          loppuaikakentta {:nimi (or (:loppuaika kenttien-nimet) :loppuaika)
                           ::lomake/col-luokka (when aikavalivalitsin-flex?
-                                                "lomakepalsta-flex-puolikas")
+                                                "lomakepalsta-flex-kokonainen paivays")
                           :otsikko "Loppu"
                           :tyyppi (if vain-pvm :pvm :pvm-aika)
                           :validoi [[:ei-tyhja "Anna loppuaika"]
@@ -564,7 +567,7 @@
                           (maarita-sticky!)))
       (komp/piirretty #(reset! elementin-etaisyys-ylareunaan
                                (dom/elementin-etaisyys-dokumentin-ylareunaan
-                                 (r/dom-node %))))
+                                 (rdom/dom-node %))))
       (fn [{:keys [urakka] :as optiot} & sisalto]
         [:div.urakkatoiminnot {:class (str (when @naulattu? "urakkatoiminnot-naulattu ")
                                            (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))

@@ -222,6 +222,7 @@
                                      (assoc :let (:let tieosoite))
                                      (assoc :urakka-id urakka-id)
                                      (assoc :tyomenetelma-id tyomenetelma-id)
+                                     (assoc :lahde "harja-api")
                                      (dissoc :sijainti)
                                      (assoc :tunniste (get-in (first reikapaikkaukset) [:tunniste :id])))]
                                r))

@@ -154,7 +154,7 @@
         [:span.takuuaika.inline
          (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
            [:span
-            [tee-kentta {:tyyppi :pvm :placeholder "Ei asetettu"}
+            [tee-kentta {:tyyppi :pvm :placeholder "Ei asetettu" :elementin-nimi "takuuaika"}
              (r/wrap (get-in ur [:takuu :loppupvm])
                      #(do (reset! tallennus-kaynnissa (:id ur))
                           (nav/paivita-urakan-tiedot! (:id ur) assoc-in [:takuu :loppupvm] %)
@@ -233,10 +233,11 @@
                   (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
          [:span
-          [:span.klikattava {:on-click #(swap! auki? not)}
-           " "
-           (ikonit/livicon-wrench)
-           " "]
+          [napit/muokkaa
+           nil
+           #(swap! auki? not)
+           {:luokka "nappi-reunaton"
+            :aria-label "Muokkaa urakan indeksiä"}]
           (when @auki?
             [napit/yleinen-toissijainen "Poista indeksi käytöstä"
              (fn []
@@ -427,12 +428,11 @@
        [:span " (tieliikenneilmoituksien kesävasteaika)"]
        (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
-         [:span
-          [:span.klikattava {:on-click (fn []
-                                         (swap! auki? not))}
-           " "
-           (ikonit/livicon-wrench)
-           " "]])]
+         [napit/muokkaa
+          nil
+          #(swap! auki? not)
+          {:luokka "nappi-reunaton"
+           :aria-label "Muokkaa urakan kesäaikaa"}])]
         (let [aikavali-alku (atom nil) ; on auki
               aikavali-loppu (atom nil)]
         [:<>

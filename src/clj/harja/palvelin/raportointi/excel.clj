@@ -120,6 +120,9 @@
 (defmethod muodosta-solu :arvo-ja-osuus [[_ {:keys [arvo osuus]}] solun-tyyli]
   [arvo solun-tyyli])
 
+(defmethod muodosta-solu :arvo-yksikko-ja-osuus [[_ {:keys [arvo osuus yksikko]}] solun-tyyli]
+  [(str arvo " " yksikko " ("osuus " %)" ) solun-tyyli])
+
 (defmethod muodosta-solu :arvo-ja-yksikko [[_ {:keys [arvo yksikko desimaalien-maara]}] solun-tyyli]
   [arvo solun-tyyli (when desimaalien-maara
                       (if (= yksikko "%")
@@ -219,7 +222,7 @@
     :bold true}))
 
 (defn- luo-saraketyyli
-  [workbook lista-tyyli? taustavari]
+  [workbook lista-tyyli? taustavari lihavoitu?]
   (excel/create-cell-style! workbook (if lista-tyyli?
                                        {:border-bottom :thin
                                         :border-top :thin
@@ -227,14 +230,16 @@
                                         :border-right :thin
                                         :font (font-otsikko 14)}
                                        {:background (or taustavari :grey_25_percent)
-                                        :font {:color :black :name "Open Sans" :size 12}})))
+                                        :font (merge
+                                                {:color :black :name "Open Sans" :size 12}
+                                                (when lihavoitu? {:bold true} ))})))
 
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet workbook lista-tyyli?]
   (dorun
     (map-indexed
-      (fn [sarake-nro {:keys [otsikko taustavari] :as sarake}]
+      (fn [sarake-nro {:keys [otsikko taustavari lihavoitu?] :as sarake}]
         (let [cell (.createCell otsikko-rivi sarake-nro)
-              sarake-tyyli (luo-saraketyyli workbook lista-tyyli? taustavari)]
+              sarake-tyyli (luo-saraketyyli workbook lista-tyyli? taustavari lihavoitu?)]
           (excel/set-cell! cell (ilman-soft-hyphenia otsikko))
           (excel/set-cell-style! cell sarake-tyyli)))
       sarakkeet)))
@@ -300,7 +305,22 @@
   (let [rivi (.createRow sheet (dec nolla))
         solu (.createCell rivi 0)]
     (excel/set-cell! solu nimi)
-    (excel/set-cell-style! solu raportin-tiedot-tyyli)))
+    (excel/set-cell-style! solu raportin-tiedot-tyyli)
+    (.addMergedRegion sheet (CellRangeAddress. nolla nolla 0 20))))
+
+(defn- tee-sheet-otsikkoteksti [sheet rivinumero otsikkoteksti tyyli]
+  (let [rivi (.createRow sheet rivinumero)
+        solu (.createCell rivi 0)]
+    (excel/set-cell! solu otsikkoteksti)
+    (excel/set-cell-style! solu tyyli)
+    (.addMergedRegion sheet (CellRangeAddress. rivinumero rivinumero 0 20))))
+
+(defn- tee-tekstirivi [sheet rivinumero teksti tyyli]
+  (let [rivi (.createRow sheet rivinumero)
+        solu (.createCell rivi 0)]
+    (excel/set-cell! solu teksti)
+    (excel/set-cell-style! solu tyyli)
+    (.addMergedRegion sheet (CellRangeAddress. rivinumero rivinumero 0 20))))
 
 (defn- font-leipateksti
   ([] (font-leipateksti 11))
@@ -315,7 +335,7 @@
                            HorizontalAlignment/LEFT)))
 
 (defn- luo-rivi-ennen-tyyli
-  [workbook lista-tyyli? taustavari tummenna-teksti?]
+  [workbook lista-tyyli? taustavari tummenna-teksti? lihavoitu?]
   (excel/create-cell-style! workbook (if lista-tyyli?
                                        {:border-bottom :thin
                                         :border-top :thin
@@ -325,7 +345,8 @@
                                        {:background (or taustavari (if tummenna-teksti? 
                                                                      :pale_blue 
                                                                      :grey_25_percent))
-                                        :font {:color :black :name "Open Sans" :size 12}})))
+                                        :font (merge {:color :black :name "Open Sans" :size 12}
+                                                (when lihavoitu? {:bold true}))})))
 
 (defn luo-rivi-jalkeen-tyyli [workbook]
   (excel/create-cell-style! workbook {:font (font-leipateksti)}))
@@ -333,11 +354,11 @@
 (defn- luo-rivi-ennen-tai-jalkeen
   "Luo rivin joko ennen tai jälkeen varsinaisen taulukon."
   [rivi-maaritys riviolio rivi-nro sheet workbook lista-tyyli? rivi-ennen?]
-  (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita taustavari tummenna-teksti?]}]
+  (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita taustavari tummenna-teksti? lihavoitu?]}]
             (let [sarakeryhman-tyyli (cond
 
                                        rivi-ennen?
-                                       (luo-rivi-ennen-tyyli workbook lista-tyyli? taustavari tummenna-teksti?)
+                                       (luo-rivi-ennen-tyyli workbook lista-tyyli? taustavari tummenna-teksti? lihavoitu?)
 
                                        (not rivi-ennen?)
                                        (luo-rivi-jalkeen-tyyli workbook))
@@ -368,7 +389,7 @@
     (raportti-domain/tee-solu harmaa-sivu nil tyyli)
     rivi-numero))
 
-(defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko raportin-tiedot
+(defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko excel-alkutekstit raportin-tiedot
                                                 viimeinen-rivi-yhteenveto? lista-tyyli?
                                                 sheet-nimi samalle-sheetille?
                                                 rivi-ennen rivi-jalkeen] :as optiot}
@@ -396,6 +417,7 @@
           nolla (+ 2 nolla)
 
           ;; Tehdään vähän väliä raporttirivien ja taulukon otsikolle, kun on useampi taulukko samalla sheetillä
+          ;; Nolla on nimetty vähän heikosti, mutta tarkoittaa nollariviä itse taulukon tiedoille. Eli rivin järjestynumero, josta taulukko alkaa
           nolla (if (and samalle-sheetille? tee-raporttitiedot-rivi?)
                   (+ 2 nolla)
                   nolla)
@@ -405,6 +427,8 @@
           rivi-jalkeen-nro (+ puskuririvien-maara-ennen-rivi-jalkeen (count data))
           rivi-jalkeen-rivi (when rivi-jalkeen (.createRow sheet rivi-jalkeen-nro))
           nolla (if rivi-ennen (inc nolla) nolla)
+          nolla (if excel-alkutekstit (+ nolla (count excel-alkutekstit))
+                  nolla)
           otsikko-rivi (.createRow sheet nolla)
           luodut-tyylit (atom {})
           luo-uusi-tyyli (fn [solun-tyyli formaatti-fn sarake-fmt]
@@ -427,6 +451,22 @@
         ;; Jos taulukon nimeä ei ole, käytä taulukon otsikkoa
         (let [rivi-otsikko (if (nil? nimi) otsikko nimi)]
           (tee-taulukon-nimiotsikko sheet nolla rivi-otsikko raportin-tiedot-tyyli)))
+
+      ;;Luodaan sheet:tille otsikko - Käytä taulukolle annettua otsikkoa, jos se on annettu
+      (when otsikko
+        (tee-sheet-otsikkoteksti sheet 1 otsikko raportin-tiedot-tyyli))
+
+      ;;Luodaan sheet:tille apuotsikot
+      (when excel-alkutekstit
+        (dorun
+          (map-indexed
+            (fn [rivi-nro rivi]
+              (tee-tekstirivi sheet (+ 2 rivi-nro) rivi (excel/create-cell-style! workbook {:font {:color :black
+                                                                                                            :size 14
+                                                                                                            :name "Open Sans"
+                                                                                                            :bold false}})))
+            excel-alkutekstit)))
+
 
       (taulukko-otsikkorivi otsikko-rivi sarakkeet workbook lista-tyyli?)
 

@@ -219,7 +219,7 @@
             (vec (concat [nil] (sort (:integraatiot @tiedot/valittu-jarjestelma))))]])
 
 
-        [valinnat/aikavali tiedot/valittu-aikavali {:tyyppi :pvm-aika}]
+        [valinnat/aikavali tiedot/valittu-aikavali {:tyyppi :pvm-aika :vayla-tyyli? true}]
         [lomake/lomake
          {:otsikko "Vapaaehtoiset tarkemmat hakuehdot"
           :muokkaa! #(reset! tiedot/hakuehdot %)}
