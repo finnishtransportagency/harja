@@ -184,7 +184,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
     ^{:key (str "vetolaatikontila" id)}
     [:td {:class (if (coll? luokat) luokat [luokat])}
      (when vetolaatikko?
-       [:button.vetolaatikon-sailio
+       [:div.vetolaatikon-sailio.klikattava
         {:on-click #(do
                       (.preventDefault %)
                       (.stopPropagation %)
@@ -203,7 +203,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
     ^{:key (str "avattava-rivi-tila" id)}
     [:td {:class (str luokat)}
      (when avattava-rivi?
-       [:button.vetolaatikon-sailio
+       [:div.vetolaatikon-sailio.klikattava
         {:on-click #(do
                       (.preventDefault %)
                       (.stopPropagation %)
