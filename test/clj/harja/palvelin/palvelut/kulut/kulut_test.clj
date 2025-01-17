@@ -402,10 +402,10 @@
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         vanha-erapaiva nil
         ;; Feikkaa, että välikatselmus on pidetty
-        ei-saa-koska-valikatselmus-pidetty (with-redefs [valikatselmus-kyselyt/onko-valikatselmus-pidetty? (fn [_ _] true)]
+        ei-saa-koska-valikatselmus-pidetty (with-redefs [valikatselmus-kyselyt/hintapaatos-tehty? (fn [_ _] true)]
                 (kulut/tarkista-saako-kulua-tallentaa (:db jarjestelma) urakka-id erapaiva vanha-erapaiva))
         ;; Feikkaa, että välikatselmusta ei ole vielä ehditty pitää
-        saa-koska-valikatselmus-pitamatta (with-redefs [valikatselmus-kyselyt/onko-valikatselmus-pidetty? (fn [_ _] false)]
+        saa-koska-valikatselmus-pitamatta (with-redefs [valikatselmus-kyselyt/hintapaatos-tehty? (fn [_ _] false)]
                                              (kulut/tarkista-saako-kulua-tallentaa (:db jarjestelma) urakka-id erapaiva vanha-erapaiva))]
     (is (= false ei-saa-koska-valikatselmus-pidetty))
     (is (= true saa-koska-valikatselmus-pitamatta))))
