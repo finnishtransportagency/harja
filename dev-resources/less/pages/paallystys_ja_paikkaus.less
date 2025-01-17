@@ -46,13 +46,15 @@
 
 .aikataulu-valinnat {
     display: flex;
+    flex-wrap: wrap;
     background-color: @gray240;
     padding: @valistys-16;
+
     input:not([type=checkbox]) {
         height:36px;
     }
 
-    > :first-child {
+    > div:first-child > :nth-child(-n+2) {
       position: relative;
       bottom: 5px;
       margin-right: @valistys-6;

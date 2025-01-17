@@ -238,73 +238,86 @@
                   aloittamatta))))
 
 (defn valinnat [ur paallystys?]
-  (let [{jarjestys :jarjestys} @tiedot/valinnat]
+  (let [{jarjestys :jarjestys} @tiedot/valinnat
+        parametrit (raportit/urakkaraportin-parametrit
+                     (:id ur)
+                     :yllapidon-aikataulu
+                     {:jarjestys jarjestys
+                      :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
+                      :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?
+                      :vuosi @u/valittu-urakan-vuosi})]
+    ;; Flex 
     [:span.aikataulu-valinnat
-     [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
-     [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero nil {:kentan-parametrit {:vayla-tyyli? true}
-                                                                            :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]
-     [valinnat/tienumero yllapito-tiedot/tienumero nil {:kentan-parametrit {:vayla-tyyli? true}
-                                                        :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]
+     ;; Ryhmä #1 
+     [:div
+      ;; 1 Vuosi
+      [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
+      ;; 2 Järjestä kohteet
+      [yleiset/pudotusvalikko
+       "Järjestä kohteet"
+       {:valinta jarjestys
+        :vayla-tyyli? true
+        :valitse-fn tiedot/jarjesta-kohteet!
+        :format-fn {:aika "Päällystyksen aloitusajan mukaan"
+                    :paallystyksen-loppu "Päällystyksen lopetusajan mukaan"
+                    :tiemerkinnan-voidaan-aloittaa "Tiemerkinnän voidaan aloittaa -ajan mukaan"
+                    :tiemerkinnan-alku "Tiemerkinnän aloitusajan mukaan"
+                    :tiemerkinnan-loppu "Tiemerkinnän lopetusajan mukaan"
+                    :tiemerkinnan-valmis-viimeistaan "Tiemerkinnän valmis viimeistään ajan mukaan"
+                    :paallystyskohde-valmis "Päällystyskohde valmis ajan mukaan"
+                    :kohdenumero "Kohdenumeron mukaan"
+                    :tr "Tieosoitteen mukaan"}}
+       (into [] (keep identity)
+         [:aika :paallystyksen-loppu :tiemerkinnan-voidaan-aloittaa :tiemerkinnan-alku
+          :tiemerkinnan-loppu :tiemerkinnan-valmis-viimeistaan (when paallystys? :paallystyskohde-valmis)
+          :kohdenumero :tr])]
 
-     [yleiset/pudotusvalikko
-      "Järjestä kohteet"
-      {:valinta jarjestys
-       :vayla-tyyli? true
-       :valitse-fn tiedot/jarjesta-kohteet!
-       :format-fn {:aika "Päällystyksen aloitusajan mukaan"
-                   :paallystyksen-loppu "Päällystyksen lopetusajan mukaan"
-                   :tiemerkinnan-voidaan-aloittaa "Tiemerkinnän voidaan aloittaa -ajan mukaan"
-                   :tiemerkinnan-alku "Tiemerkinnän aloitusajan mukaan"
-                   :tiemerkinnan-loppu "Tiemerkinnän lopetusajan mukaan"
-                   :tiemerkinnan-valmis-viimeistaan "Tiemerkinnän valmis viimeistään ajan mukaan"
-                   :paallystyskohde-valmis "Päällystyskohde valmis ajan mukaan"
-                   :kohdenumero "Kohdenumeron mukaan"
-                   :tr "Tieosoitteen mukaan"}}
-      (into [] (keep identity)
-        [:aika :paallystyksen-loppu :tiemerkinnan-voidaan-aloittaa :tiemerkinnan-alku
-         :tiemerkinnan-loppu :tiemerkinnan-valmis-viimeistaan (when paallystys? :paallystyskohde-valmis)
-         :kohdenumero :tr])]
+      ;; 3 Kohdenumero
+      [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero nil {:kentan-parametrit {:vayla-tyyli? true}
+                                                                             :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]
+      ;; 4 Tienumero
+      [valinnat/tienumero yllapito-tiedot/tienumero nil {:kentan-parametrit {:vayla-tyyli? true}
+                                                         :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]]
 
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Aikajana"
-       :otsikon-luokka "alasvedon-otsikko-vayla"
-       :luokka "label-ja-kentta-puolikas"
-       :kentta-params {:tyyppi :toggle
-                       :vayla-tyyli? true
-                       :paalle-teksti "Näytä aikajana"
-                       :pois-teksti "Piilota aikajana"
-                       :toggle! tiedot/toggle-nayta-aikajana!}
-       :arvo-atom tiedot/nayta-aikajana?}]
-     [kentat/tee-otsikko-ja-kentat
-      {:otsikko "Aikajanan asetukset"
-       :luokka "label-ja-kentta"
-       :otsikon-luokka "alasvedon-otsikko-vayla"
-       :kentat [{:kentta-params {:tyyppi :checkbox
-                                 :teksti "Näytä tarkka aikataulu"}
-                 :arvo-atom tiedot/nayta-tarkka-aikajana?}
-                {:kentta-params {:tyyppi :checkbox
-                                 :teksti "Näytä välitavoitteet"}
-                 :arvo-atom tiedot/nayta-valitavoitteet?}]}]
+     ;; Ryhmä #2 
+     [:div
+      ;; 1 Aikajana 
+      [kentat/tee-otsikollinen-kentta
+       {:otsikko "Aikajana"
+        :otsikon-luokka "alasvedon-otsikko-vayla"
+        :luokka "label-ja-kentta-puolikas"
+        :kentta-params {:tyyppi :toggle
+                        :vayla-tyyli? true
+                        :paalle-teksti "Näytä aikajana"
+                        :pois-teksti "Piilota aikajana"
+                        :toggle! tiedot/toggle-nayta-aikajana!}
+        :arvo-atom tiedot/nayta-aikajana?}]
 
-     (let [parametrit (raportit/urakkaraportin-parametrit
-                        (:id ur)
-                        :yllapidon-aikataulu
-                        {:jarjestys jarjestys
-                         :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
-                         :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?
-                         :vuosi @u/valittu-urakan-vuosi})]
-       [upotettu-raportti/raportin-vientimuodot
-        (assoc parametrit
-          :otsikko "PDF"
-          :kasittelija :pdf)
-        (assoc parametrit
-          :otsikko "Excel"
-          :kasittelija :excel)
-        (-> parametrit
-          (assoc
-            :otsikko "Alikohteiden Excel"
-            :kasittelija :excel)
-          (assoc-in [:parametrit :alikohderaportti?] true))])]))
+      ;; 2 Aikajanan asetukset 
+      [kentat/tee-otsikko-ja-kentat
+       {:otsikko "Aikajanan asetukset"
+        :luokka "label-ja-kentta"
+        :otsikon-luokka "alasvedon-otsikko-vayla"
+        :kentat [{:kentta-params {:tyyppi :checkbox
+                                  :teksti "Näytä tarkka aikataulu"}
+                  :arvo-atom tiedot/nayta-tarkka-aikajana?}
+                 {:kentta-params {:tyyppi :checkbox
+                                  :teksti "Näytä välitavoitteet"}
+                  :arvo-atom tiedot/nayta-valitavoitteet?}]}]
+
+      ;; 3 Raporttivienti
+      [upotettu-raportti/raportin-vientimuodot
+       (assoc parametrit
+         :otsikko "PDF"
+         :kasittelija :pdf)
+       (assoc parametrit
+         :otsikko "Excel"
+         :kasittelija :excel)
+       (-> parametrit
+         (assoc
+           :otsikko "Alikohteiden Excel"
+           :kasittelija :excel)
+         (assoc-in [:parametrit :alikohderaportti?] true))]]]))
 
 (defn- nayta-yhteystiedot?
   [rivi nakyma]
