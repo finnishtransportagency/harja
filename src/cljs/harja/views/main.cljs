@@ -68,7 +68,7 @@
           (concat [nil] @istunto/testikayttajat)]]))))
 
 (defn harja-info [s]
-  [:a.klikattava.alleviivaa
+  [:a.klikattava
    {:id "info"
     :href "#"
     :class (str "info-nakyma" (when (= s :info) " aktiivinen"))

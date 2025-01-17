@@ -83,7 +83,7 @@
                                  [:span " ennen palautteen lähettämistä?"]]]])))
 
 (defn palaute-linkki []
-  [:a.klikattava.alleviivaa {:href "#"
+  [:a.klikattava {:href "#"
                   :id "palautelinkki"
                   :on-click #(modal/nayta! {:otsikko "Palautteen lähettäminen"
                                             :luokka "palaute-dialog"}
