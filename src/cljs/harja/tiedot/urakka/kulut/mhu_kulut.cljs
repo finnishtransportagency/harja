@@ -57,9 +57,9 @@
 (defrecord PoistaLiite [id])
 
 ;; Haetaan välikatselmukset, eli päätökset, koska kulua ei voi syöttää/päivittää niille hoitokausille, joille välikatselmus on jo tehty
-(defrecord HaeUrakanValikatselmukset [])
-(defrecord HaeUrakanValikatselmuksetOnnistui [vastaus])
-(defrecord HaeUrakanValikatselmuksetEpaonnistui [vastaus])
+(defrecord HaeUrakanHintapaatokset [])
+(defrecord HaeUrakanHintapaatoksetOnnistui [vastaus])
+(defrecord HaeUrakanHintapaatoksetEpaonnistui [vastaus])
 
 ;; Haetaan urakan rahavaraukset
 (defrecord HaeUrakanRahavaraukset [])
@@ -481,7 +481,7 @@
   TallennusOnnistui
   (process-event [_ {{:keys [viimeisin-haku]} :parametrit :as app}]
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
-    ((tuck/current-send-function) (->HaeUrakanValikatselmukset))
+    ((tuck/current-send-function) (->HaeUrakanHintapaatokset))
     (-> app
       (assoc :syottomoodi false)
       (assoc :lomake (alusta-lomake app))))
@@ -658,7 +658,7 @@
   (process-event
     [_ {{:keys [viimeisin-haku]} :parametrit :as app}]
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
-    ((tuck/current-send-function) (->HaeUrakanValikatselmukset))
+    ((tuck/current-send-function) (->HaeUrakanHintapaatokset))
     (-> app
       (assoc :syottomoodi false)
       (assoc :lomake (alusta-lomake app))))
@@ -703,19 +703,19 @@
       (assoc-in [:parametrit :haun-kuukausi] nil)
       (assoc-in [:parametrit :haun-loppupvm] pvm)))
 
-  HaeUrakanValikatselmukset
+  HaeUrakanHintapaatokset
   (process-event [_ app]
-    (tuck-apurit/post! :hae-urakan-valikatselmukset
+    (tuck-apurit/post! :hae-urakan-hintapaatokset
       {:urakka-id (-> @tila/yleiset :urakka :id)}
-      {:onnistui ->HaeUrakanValikatselmuksetOnnistui
-       :epaonnistui ->HaeUrakanValikatselmuksetEpaonnistui})
+      {:onnistui ->HaeUrakanHintapaatoksetOnnistui
+       :epaonnistui ->HaeUrakanHintapaatoksetEpaonnistui})
     app)
 
-  HaeUrakanValikatselmuksetOnnistui
+  HaeUrakanHintapaatoksetOnnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app :vuosittaiset-valikatselmukset vastaus))
 
-  HaeUrakanValikatselmuksetEpaonnistui
+  HaeUrakanHintapaatoksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app :vuosittaiset-valikatselmukset nil))
 
