@@ -23,6 +23,7 @@
 (defrecord KoontilaskunKuukausi [arvo])
 (defrecord ValitseErapaiva [erapaiva])
 (defrecord KoontilaskunNumero [koontilaskunnumero])
+(defrecord KulunLisatieto [lisatieto])
 (defrecord ValitseHoitokausi [vuosi])
 
 (defrecord KulujenSyotto [auki?])
@@ -116,15 +117,6 @@
                                          (assoc meta-kentta :tarkistettu? false
                                                             :koskettu? true)))))
       paivitetty-lomake)))
-
-(defn lomakkeen-paivitys
-  [lomake polut-ja-arvot {:keys [jalkiprosessointi-fn] :as optiot} & args]
-  (let [jalkiprosessointi (or jalkiprosessointi-fn
-                              identity)]
-    (jalkiprosessointi
-      (reduce (r/partial merkitse-kentta-kosketuksi optiot args)
-              lomake
-              (partition 2 polut-ja-arvot)))))
 
 (defn- vuoden-paatoksen-kulu? [{:keys [tehtavaryhmat]} kulu]
   (let [vuoden-paatoksen-tehtavaryhmat-set
@@ -403,6 +395,11 @@
   KoontilaskunNumero
   (process-event [{koontilaskunnumero :koontilaskunnumero} app]
     (let [app (assoc-in app [:lomake :laskun-numero] koontilaskunnumero)]
+      app))
+
+  KulunLisatieto
+  (process-event [{lisatieto :lisatieto} app]
+    (let [app (assoc-in app [:lomake :lisatieto] lisatieto)]
       app))
 
   ValitseHoitokausi

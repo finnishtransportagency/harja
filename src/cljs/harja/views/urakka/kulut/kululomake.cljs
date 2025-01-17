@@ -382,7 +382,7 @@
         lopullinen-summa (if (neg? summa-yht)
                            (str "-" (fmt/euro (* -1 summa-yht)))
                            (fmt/euro (or summa-yht 0)))]
-    [:div
+    [:div.kululomake
      [:div.row
       #_[debug/debug app]]
      [:div.row
@@ -432,11 +432,11 @@
 
      ;; Laskun tiedot
      [:div.row
-      [:div.col-xs-12.col-md-6
-       [:h5 "Laskun tiedot"]]]
+      [:div.col-xs-12.col-md-4 [:h5 "Laskun tiedot"]]
+      [:div.col-xs-12.col-md-6 [:h5 "Lisätiedot"]]]
 
      [:div.row
-      [:div.col-xs-12.col-md-6
+      [:div.col-xs-12.col-md-4
        [:div.label-ja-alasveto
         [:span.alasvedon-otsikko "Koontilaskun kuukausi*"]
         [yleiset/livi-pudotusvalikko {:data-cy "koontilaskun-kk-dropdown"
@@ -462,7 +462,18 @@
            [yleiset/keltainen-vihjelaatikko
             [:div
              [:strong "Urakalle on tehty päätöksiä välikatselmuksessa ko. hoitovuodelle. "]
-             "Ota yhteyttä urakanvalvojaan, jos haluat kirjata kuluja ko. hoitovuodelle."] :info]])]]]
+             "Ota yhteyttä urakanvalvojaan, jos haluat kirjata kuluja ko. hoitovuodelle."] :info]])]]
+      [:div.col-xs-12.col-md-6.lisatiedot
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Lisätieto"
+         :luokka #{}
+         :arvo-atom (r/wrap (:lisatieto lomake)
+                      #(e! (tiedot/->KulunLisatieto %)))
+         :kentta-params {:tyyppi :text
+                         :koko [50 2]
+                         :vayla-tyyli? true
+                         :aputeksti "Kirjoita tähän halutessasi lisätietoa"
+                         :disabled? (or haku-menossa kulu-lukittu?)}}]]]
 
      [:div.row
       [:div.col-xs-12.col-md-2
@@ -510,8 +521,7 @@
                    ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero.")])]]
 
      [:div.row
-      [:div.col-xs-12.col-md-4 {:style {:padding-left "20px"}}
-       [:h5 "Määrä € *"]
+      [:div.col-xs-12.col-md-4 {:style {:padding-left "20px"}} [:h5 "Määrä € *"]
        [:h2 lopullinen-summa]]
       [:div.col-xs-12.col-md-6
        [liitteet e! kulu-lukittu? lomake]]]
