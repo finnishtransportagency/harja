@@ -16,7 +16,7 @@
             [clojure.string :as str]
             [harja.pvm :as pvm]))
 
-(def kulu-lukittu-teksti "Hoitokauden välikatselmus on pidetty ja kuluja ei voi enää lisätä tai muokata.")
+(def kulu-lukittu-teksti "Hoitokauden välikatselmuksen tavoitehintaan liittyvät päätökset on tehty, joten kuluja ei voi enää lisätä tai muokata.")
 
 (defn- kulun-poistovarmistus-modaali
   [{:keys [varmistus-fn koontilaskun-kuukausi laskun-pvm kohdistukset tehtavaryhmat]}]

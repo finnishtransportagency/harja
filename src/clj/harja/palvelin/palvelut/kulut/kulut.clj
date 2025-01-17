@@ -284,8 +284,8 @@
         erapaivan-vuosi (pvm/hoitokauden-alkuvuosi joda-local-time-erapaiva)
         vanhan-erapaivan-vuosi (when vanha-erapaiva
                                  (pvm/hoitokauden-alkuvuosi joda-local-time-vanha-erapaiva))
-        valikatselmus-pidetty? (valikatselmus-kyselyt/onko-valikatselmus-pidetty? db {:urakka-id urakka-id
-                                                                                      :vuodet [erapaivan-vuosi vanhan-erapaivan-vuosi]})]
+        valikatselmus-pidetty? (valikatselmus-kyselyt/hintapaatos-tehty? db {:urakka-id urakka-id
+                                                                             :vuodet [erapaivan-vuosi vanhan-erapaivan-vuosi]})]
     ;; Muutetaan negaatioksi, koska kysymyksen asettelu
     (not valikatselmus-pidetty?)))
 
@@ -437,8 +437,8 @@
                    (pvm/pvm loppupvm)
                    kulut-kuukausien-mukaan)))
 
-(defn hae-urakan-valikatselmukset
-  "Haetaan urakalle vuodet, joille on olemassa välikatselmus/päätös. Ja ui:lla voidaan sen mukaan näyttää päiviä,
+(defn hae-urakan-hintapaatokset
+  "Haetaan urakalle vuodet, joille on olemassa hintapäätös. Ja ui:lla voidaan sen mukaan näyttää päiviä,
   joille kuluja voidaan lisäillä"
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
@@ -448,12 +448,12 @@
                      (str "Virheellinen urakka-id " urakka-id))))
         alkupvm (:alkupvm urakan-tiedot)
         loppupvm (:loppupvm urakan-tiedot)
-        valikatselmukset (map :hoitokauden-alkuvuosi (valikatselmus-kyselyt/hae-urakan-valikatselmukset-vuosittain db {:urakka-id urakka-id}))
-        vuosittaiset-valikatselmukset (reduce (fn [listaus vuosi]
+        hintapaatokset (map :hoitokauden-alkuvuosi (valikatselmus-kyselyt/hae-urakan-hintapaatokset db {:urakka-id urakka-id}))
+        vuosittaiset-hintapaatokset (reduce (fn [listaus vuosi]
                                                 (conj listaus {:vuosi vuosi
-                                                               :paatos-tehty? (some #(= vuosi %) valikatselmukset)}))
+                                                               :paatos-tehty? (some #(= vuosi %) hintapaatokset)}))
                                         [] (range (pvm/vuosi alkupvm) (pvm/vuosi loppupvm)))]
-    vuosittaiset-valikatselmukset))
+    vuosittaiset-hintapaatokset))
 
 (def db-vastaus->speqcl-avaimet
   {:f1 :id
@@ -567,9 +567,9 @@
       (julkaise-palvelu http :tarkista-laskun-numeron-paivamaara
                         (fn [user hakuehdot]
                           (tarkista-laskun-numeron-paivamaara db user hakuehdot)))
-      (julkaise-palvelu http :hae-urakan-valikatselmukset
+      (julkaise-palvelu http :hae-urakan-hintapaatokset
         (fn [user hakuehdot]
-          (hae-urakan-valikatselmukset db user hakuehdot)))
+          (hae-urakan-hintapaatokset db user hakuehdot)))
       (julkaise-palvelu http :hae-urakan-rahavaraukset
         (fn [user hakuehdot]
           (hae-urakan-rahavaraukset db user hakuehdot)))
@@ -588,7 +588,7 @@
       :poista-kohdistus
       :poista-kulun-liite
       :tarkista-laskun-numeron-paivamaara
-      :hae-urakan-valikatselmukset
+      :hae-urakan-hintapaatokset
       :hae-urakan-rahavaraukset)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))

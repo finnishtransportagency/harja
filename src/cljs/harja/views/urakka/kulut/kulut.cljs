@@ -160,7 +160,7 @@
                      (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
                                                    :alkupvm (first (pvm/kuukauden-aikavali (pvm/nyt)))
                                                    :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))
-                     (e! (tiedot/->HaeUrakanValikatselmukset))
+                     (e! (tiedot/->HaeUrakanHintapaatokset))
                      (e! (tiedot/->HaeUrakanRahavaraukset))))
    (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
    (fn [e! {kulut :kulut syottomoodi :syottomoodi 
