@@ -753,7 +753,7 @@
 (defn harja-icon-action-current-location [] [:span.harja-icon-action-current-location])
 (defn harja-icon-action-decrease-volume [] [:span.harja-icon-action-decrease-volume])
 (defn harja-icon-action-delete [] [:span.harja-icon-action-delete  {:alt "poista" :aria-label "poista"}])
-(defn harja-icon-action-download [] [:span.harja-icon-action-download {:alt "lataa tiedosto" :aria-label "lataa tiedosto"}])
+(defn harja-icon-action-download [] [:span.harja-icon-action-download {:alt "lataa tiedosto"}])
 (defn harja-icon-action-edit [] [:span.harja-icon-action-edit {:alt "muokkaa" :aria-label "muokkaa"}])
 (defn harja-icon-action-filter [] [:span.harja-icon-action-filter {:alt "suodata" :aria-label "suodata"}])
 (defn harja-icon-action-increase-volume [] [:span.harja-icon-action-increase-volume])
