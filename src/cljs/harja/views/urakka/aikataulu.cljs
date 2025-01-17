@@ -239,12 +239,12 @@
 
 (defn valinnat [ur paallystys?]
   (let [{jarjestys :jarjestys} @tiedot/valinnat]
-    [:span.aikataulu-valinnat.flex-row.alkuun.venyta
+    [:span.aikataulu-valinnat
      [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
      [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero nil {:kentan-parametrit {:vayla-tyyli? true}
                                                                             :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]
      [valinnat/tienumero yllapito-tiedot/tienumero nil {:kentan-parametrit {:vayla-tyyli? true}
-                                                                            :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]
+                                                        :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]
 
      [yleiset/pudotusvalikko
       "Järjestä kohteet"
@@ -260,9 +260,9 @@
                    :paallystyskohde-valmis "Päällystyskohde valmis ajan mukaan"
                    :kohdenumero "Kohdenumeron mukaan"
                    :tr "Tieosoitteen mukaan"}}
-      (into [] (keep identity) 
-        [:aika :paallystyksen-loppu :tiemerkinnan-voidaan-aloittaa :tiemerkinnan-alku 
-         :tiemerkinnan-loppu :tiemerkinnan-valmis-viimeistaan (when paallystys? :paallystyskohde-valmis) 
+      (into [] (keep identity)
+        [:aika :paallystyksen-loppu :tiemerkinnan-voidaan-aloittaa :tiemerkinnan-alku
+         :tiemerkinnan-loppu :tiemerkinnan-valmis-viimeistaan (when paallystys? :paallystyskohde-valmis)
          :kohdenumero :tr])]
 
      [kentat/tee-otsikollinen-kentta
@@ -286,22 +286,22 @@
                                  :teksti "Näytä välitavoitteet"}
                  :arvo-atom tiedot/nayta-valitavoitteet?}]}]
 
-     (let [parametrit (raportit/urakkaraportin-parametrit 
-                        (:id ur) 
+     (let [parametrit (raportit/urakkaraportin-parametrit
+                        (:id ur)
                         :yllapidon-aikataulu
                         {:jarjestys jarjestys
                          :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
                          :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?
-                         :vuosi @u/valittu-urakan-vuosi})] 
-       [upotettu-raportti/raportin-vientimuodot 
-        (assoc parametrit 
+                         :vuosi @u/valittu-urakan-vuosi})]
+       [upotettu-raportti/raportin-vientimuodot
+        (assoc parametrit
           :otsikko "PDF"
           :kasittelija :pdf)
         (assoc parametrit
           :otsikko "Excel"
           :kasittelija :excel)
-        (-> parametrit 
-          (assoc       
+        (-> parametrit
+          (assoc
             :otsikko "Alikohteiden Excel"
             :kasittelija :excel)
           (assoc-in [:parametrit :alikohderaportti?] true))])]))
