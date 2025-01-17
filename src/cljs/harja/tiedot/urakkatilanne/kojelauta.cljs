@@ -90,8 +90,8 @@
   (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
         aloittamatta-lkm (reduce + 0 (map :aloittamatta urakat))
         aloittamatta-yhteenveto (when-not (empty? urakat) [:span.aloittamatta
-                                                          [yleiset/tietoja {:class "body-text"}
-                                                           "Aloittamatta: " (str aloittamatta-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina aloittamatta-lkm kohteiden-lukumaara) 0) ")")]])]
+                                                           [yleiset/tietoja {:class "body-text"}
+                                                            "Aloittamatta: " (str aloittamatta-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina aloittamatta-lkm kohteiden-lukumaara) 0) ")")]])]
     aloittamatta-yhteenveto))
 
 (defn poikkeusten-yhteenveto
