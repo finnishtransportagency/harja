@@ -309,7 +309,7 @@
 (defn livicon-circle []
   [:span.livicon-circle])
 (defn livicon-download []
-  [:span.livicon-download {:alt "lataa tiedosto" :aria-label "lataa tiedosto"}])
+  [:span.livicon-download {:alt "lataa tiedosto"}])
 (defn livicon-external []
   ;; Ikonia on käytetty sekä ulkoisissa linkeissä että Harjan sisällä toiselle sivulle linkatessa
   [:span.livicon-external {:alt "linkki" :aria-label "linkki"}])
