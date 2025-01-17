@@ -595,25 +595,3 @@
     (when (:excel-vienti this)
       (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :kulut))
     this))
-
-;[:raportti
-; {:nimi Oulun MHU 2019-2024_Mon Jan 01 00:00:00 EET 1990-Wed May 06 09:51:32 EEST 2020, :orientaatio :landscape}
-; [[:taulukko
-;   {:sheet-nimi Oulun MHU 2019-2024, :otsikko Oulun MHU 2019-2024}
-;   [{:otsikko Eräpäivä}
-;    {:otsikko Toimenpide}
-;    {:otsikko Tehtäväryhmä}
-;    {:otsikko Maksuerä}
-;    {:otsikko Summa}]
-;   ([2019/09 blaa blaa blaa blaa]
-;     [15.09.2019 Oulu MHU Talvihoito TP Talvihoito (A) HA69 [:arvo-ja-yksikko {:arvo 3666.66M, :yksikko €, :fmt? false}]])]
-;  [:taulukko
-;   {:sheet-nimi Oulun MHU 2019-2024, :otsikko Oulun MHU 2019-2024}
-;   [{:otsikko Eräpäivä} {:otsikko Toimenpide} {:otsikko Tehtäväryhmä} {:otsikko Maksuerä} {:otsikko Summa}]
-;   ([2019/10 blaa blaa blaa blaa] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Äkilliset hoitotyöt, Liikenneympäristön hoito (T1) HA70 [:arvo-ja-yksikko {:arvo 4444.44M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Rummut, päällystetiet (R) HA70 [:arvo-ja-yksikko {:arvo 2222.22M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Puhtaanapito (P) HA70 [:arvo-ja-yksikko {:arvo 111.11M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Nurmetukset ja muut vihertyöt (N) HA70 [:arvo-ja-yksikko {:arvo 222.22M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Vesakonraivaukset ja puun poisto (V) HA70 [:arvo-ja-yksikko {:arvo 333.33M, :yksikko €, :fmt? false}]])]
-;  [:taulukko
-;   {:sheet-nimi Oulun MHU 2019-2024, :otsikko Oulun MHU 2019-2024}
-;   [{:otsikko Eräpäivä} {:otsikko Toimenpide} {:otsikko Tehtäväryhmä} {:otsikko Maksuerä} {:otsikko Summa}]
-;   ([2020/04 blaa blaa blaa blaa]
-;     [08.04.2020 Oulu MHU Talvihoito TP KFo, NaFo (B2) HA69 [:arvo-ja-yksikko {:arvo 22222M, :yksikko €, :fmt? false}]]
-;     [23.04.2020 Oulu MHU MHU Ylläpito TP Lisätyö HA74 [:arvo-ja-yksikko {:arvo 12M, :yksikko €, :fmt? false}]])]]]
