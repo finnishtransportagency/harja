@@ -9,7 +9,7 @@
 (defqueries "harja/kyselyt/valikatselmus.sql"
             {:positional? true})
 
-(declare hae-urakan-valikatselmukset-vuosittain onko-valikatselmus-pidetty?)
+(declare hae-urakan-hintapaatokset hintapaatos-tehty?)
 
 ;; Tavoitehinnan oikaisut
 
