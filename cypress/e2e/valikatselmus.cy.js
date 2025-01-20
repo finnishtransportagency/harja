@@ -4,7 +4,7 @@ const testiaika = new Date(2021, 9, 15, 12).getTime() // Urakan 1. vuoden loppu
 describe('Välikatselmus aukeaa', () => {
     it('Välikatselmuksen voi avata kustannusten seurannasta', () => {
         cy.intercept('POST', 'urakan-kustannusten-seuranta-paaryhmittain' ).as('hae-kustannukset')
-        cy.viewport(1100, 2000)
+        cy.viewport(1400, 1600)
         cy.visit('/')
         cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa', {timeout}).click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
@@ -25,7 +25,7 @@ describe('Välikatselmus aukeaa', () => {
         cy.intercept('POST', 'tallenna-tavoitehinnan-oikaisu' ).as('tavoitehinnan-oikaisu')
         cy.intercept('POST', 'poista-tavoitehinnan-oikaisu' ).as('poista-tavoitehinnan-oikaisu')
 
-        cy.viewport(1100, 2000)
+        cy.viewport(1400, 1600)
         cy.visit('/')
         cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa', {timeout}).click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
