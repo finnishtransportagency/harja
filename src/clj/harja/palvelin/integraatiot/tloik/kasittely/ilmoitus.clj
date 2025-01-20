@@ -96,7 +96,7 @@
                    :valitetty-urakkaan      (pvm/nyt)
                    :aihe                    (:aihe luokittelu)
                    :tarkenne                (:tarkenne luokittelu)
-                   :kuvat                   (konv/seq->array (map name kuvat))
+                   :kuvat                   (when (seq kuvat) (konv/seq->array (map name kuvat)))
                    :emon-ilmoitusid         emon-ilmoitusid}))]
 
     (paivita-ilmoittaja db id ilmoittaja)
