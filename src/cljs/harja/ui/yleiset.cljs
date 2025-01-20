@@ -879,7 +879,9 @@ jatkon."
                                 [:div.inline-block
                                  {:class wrapper-luokka
                                   :on-mouse-enter #(reset! tooltip-visible?-atom true)
-                                  :on-mouse-leave #(reset! tooltip-visible?-atom false)}
+                                  :on-mouse-leave #(reset! tooltip-visible?-atom false)
+                                  :on-focus #(reset! tooltip-visible?-atom true)
+                                  :on-blur #(reset! tooltip-visible?-atom false)}
                                  komponentti
                                  [tooltip-sisalto opts @tooltip-visible?-atom sisalto]])
     komponentti))
