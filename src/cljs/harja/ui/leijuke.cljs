@@ -2,6 +2,7 @@
   "Yleinen leijuke -komponentti. Leijuke on muun sisällön päälle tuleva absoluuttisesti
   positioitu pieni elementti, esim. lyhyt lomake."
   (:require [reagent.core :as r]
+            [reagent.dom :as rdom]
             [reagent.core :refer [atom] :as r]
             [harja.ui.napit :as napit]
             [harja.ui.komponentti :as komp]
@@ -30,7 +31,7 @@
                 :top "auto"}})
 
 (defn- maarita-suunta [komponentti]
-  (let [wrapper-node (r/dom-node komponentti)
+  (let [wrapper-node (rdom/dom-node komponentti)
         komponentti-node (.-firstChild wrapper-node)
         [_ _ leveys korkeus :as sij] (dom/sijainti komponentti-node)
         viewport-korkeus @dom/korkeus

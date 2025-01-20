@@ -284,8 +284,8 @@
         erapaivan-vuosi (pvm/hoitokauden-alkuvuosi joda-local-time-erapaiva)
         vanhan-erapaivan-vuosi (when vanha-erapaiva
                                  (pvm/hoitokauden-alkuvuosi joda-local-time-vanha-erapaiva))
-        valikatselmus-pidetty? (valikatselmus-kyselyt/onko-valikatselmus-pidetty? db {:urakka-id urakka-id
-                                                                                      :vuodet [erapaivan-vuosi vanhan-erapaivan-vuosi]})]
+        valikatselmus-pidetty? (valikatselmus-kyselyt/hintapaatos-tehty? db {:urakka-id urakka-id
+                                                                             :vuodet [erapaivan-vuosi vanhan-erapaivan-vuosi]})]
     ;; Muutetaan negaatioksi, koska kysymyksen asettelu
     (not valikatselmus-pidetty?)))
 
@@ -437,8 +437,8 @@
                    (pvm/pvm loppupvm)
                    kulut-kuukausien-mukaan)))
 
-(defn hae-urakan-valikatselmukset
-  "Haetaan urakalle vuodet, joille on olemassa välikatselmus/päätös. Ja ui:lla voidaan sen mukaan näyttää päiviä,
+(defn hae-urakan-hintapaatokset
+  "Haetaan urakalle vuodet, joille on olemassa hintapäätös. Ja ui:lla voidaan sen mukaan näyttää päiviä,
   joille kuluja voidaan lisäillä"
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
@@ -448,12 +448,12 @@
                      (str "Virheellinen urakka-id " urakka-id))))
         alkupvm (:alkupvm urakan-tiedot)
         loppupvm (:loppupvm urakan-tiedot)
-        valikatselmukset (map :hoitokauden-alkuvuosi (valikatselmus-kyselyt/hae-urakan-valikatselmukset-vuosittain db {:urakka-id urakka-id}))
-        vuosittaiset-valikatselmukset (reduce (fn [listaus vuosi]
+        hintapaatokset (map :hoitokauden-alkuvuosi (valikatselmus-kyselyt/hae-urakan-hintapaatokset db {:urakka-id urakka-id}))
+        vuosittaiset-hintapaatokset (reduce (fn [listaus vuosi]
                                                 (conj listaus {:vuosi vuosi
-                                                               :paatos-tehty? (some #(= vuosi %) valikatselmukset)}))
+                                                               :paatos-tehty? (some #(= vuosi %) hintapaatokset)}))
                                         [] (range (pvm/vuosi alkupvm) (pvm/vuosi loppupvm)))]
-    vuosittaiset-valikatselmukset))
+    vuosittaiset-hintapaatokset))
 
 (def db-vastaus->speqcl-avaimet
   {:f1 :id
@@ -567,9 +567,9 @@
       (julkaise-palvelu http :tarkista-laskun-numeron-paivamaara
                         (fn [user hakuehdot]
                           (tarkista-laskun-numeron-paivamaara db user hakuehdot)))
-      (julkaise-palvelu http :hae-urakan-valikatselmukset
+      (julkaise-palvelu http :hae-urakan-hintapaatokset
         (fn [user hakuehdot]
-          (hae-urakan-valikatselmukset db user hakuehdot)))
+          (hae-urakan-hintapaatokset db user hakuehdot)))
       (julkaise-palvelu http :hae-urakan-rahavaraukset
         (fn [user hakuehdot]
           (hae-urakan-rahavaraukset db user hakuehdot)))
@@ -588,32 +588,10 @@
       :poista-kohdistus
       :poista-kulun-liite
       :tarkista-laskun-numeron-paivamaara
-      :hae-urakan-valikatselmukset
+      :hae-urakan-hintapaatokset
       :hae-urakan-rahavaraukset)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
     (when (:excel-vienti this)
       (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :kulut))
     this))
-
-;[:raportti
-; {:nimi Oulun MHU 2019-2024_Mon Jan 01 00:00:00 EET 1990-Wed May 06 09:51:32 EEST 2020, :orientaatio :landscape}
-; [[:taulukko
-;   {:sheet-nimi Oulun MHU 2019-2024, :otsikko Oulun MHU 2019-2024}
-;   [{:otsikko Eräpäivä}
-;    {:otsikko Toimenpide}
-;    {:otsikko Tehtäväryhmä}
-;    {:otsikko Maksuerä}
-;    {:otsikko Summa}]
-;   ([2019/09 blaa blaa blaa blaa]
-;     [15.09.2019 Oulu MHU Talvihoito TP Talvihoito (A) HA69 [:arvo-ja-yksikko {:arvo 3666.66M, :yksikko €, :fmt? false}]])]
-;  [:taulukko
-;   {:sheet-nimi Oulun MHU 2019-2024, :otsikko Oulun MHU 2019-2024}
-;   [{:otsikko Eräpäivä} {:otsikko Toimenpide} {:otsikko Tehtäväryhmä} {:otsikko Maksuerä} {:otsikko Summa}]
-;   ([2019/10 blaa blaa blaa blaa] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Äkilliset hoitotyöt, Liikenneympäristön hoito (T1) HA70 [:arvo-ja-yksikko {:arvo 4444.44M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Rummut, päällystetiet (R) HA70 [:arvo-ja-yksikko {:arvo 2222.22M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Puhtaanapito (P) HA70 [:arvo-ja-yksikko {:arvo 111.11M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Nurmetukset ja muut vihertyöt (N) HA70 [:arvo-ja-yksikko {:arvo 222.22M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Vesakonraivaukset ja puun poisto (V) HA70 [:arvo-ja-yksikko {:arvo 333.33M, :yksikko €, :fmt? false}]])]
-;  [:taulukko
-;   {:sheet-nimi Oulun MHU 2019-2024, :otsikko Oulun MHU 2019-2024}
-;   [{:otsikko Eräpäivä} {:otsikko Toimenpide} {:otsikko Tehtäväryhmä} {:otsikko Maksuerä} {:otsikko Summa}]
-;   ([2020/04 blaa blaa blaa blaa]
-;     [08.04.2020 Oulu MHU Talvihoito TP KFo, NaFo (B2) HA69 [:arvo-ja-yksikko {:arvo 22222M, :yksikko €, :fmt? false}]]
-;     [23.04.2020 Oulu MHU MHU Ylläpito TP Lisätyö HA74 [:arvo-ja-yksikko {:arvo 12M, :yksikko €, :fmt? false}]])]]]

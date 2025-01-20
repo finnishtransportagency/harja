@@ -168,6 +168,7 @@
                                               "Muut")
                            :on-select #(valitse-hakutulos %)
                            :aputeksti "Hae Harjasta"
+                           :aria-label "Hae Harjasta"
                            :tunniste #((juxt :tyyppi :id) %)
                            :vinkki #(when-not (empty? @hakutermi)
                                       (if (liikaa-osumia? @hakutulokset)

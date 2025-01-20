@@ -57,10 +57,50 @@
     ;; Palautetaan kutsujalle ulkoinen id
     (is (= ulkoinen-id (:id dekoodattu-body)))
 
-    (let [talvihoitoreitti-kannassa (q-map (format "SELECT nimi, luoja, luotu FROM talvihoitoreitti WHERE urakka_id = %s " urakka-id))]
-      (is (= 1 (count talvihoitoreitti-kannassa))))))
+    (let [talvihoitoreitti-kannassa (q-map (format "SELECT nimi, luoja, luotu, tr_maara, ka_maara, kup_maara FROM talvihoitoreitti WHERE urakka_id = %s " urakka-id))]
+      (is (= 1 (count talvihoitoreitti-kannassa)))
+      (is (= 1 (:tr_maara (first talvihoitoreitti-kannassa))))
+      (is (= 2 (:ka_maara (first talvihoitoreitti-kannassa))))
+      (is (= 0 (:kup_maara (first talvihoitoreitti-kannassa)))))))
 
-(deftest paivita-talvihoitoreitti-onnistuu
+(deftest paivita-talvihoitoreitti-nimi-onnistuu
+  (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        ;; Siivotaan kanta varulta
+        _ (poista-talvihoitoreitit-urakalta urakka-id)
+        ;; Anna oikeudet käyttäjälle
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        ulkoinen-id 123456
+        nimi "Nelostien pikkumutka"
+        lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-ok.json"
+                      slurp
+                      (.replace "__ULKOINENID__" (str ulkoinen-id))
+                      (.replace "__NIMI__" (str nimi)))
+        vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+                         lahetysdata)]
+
+    (is (= 200 (:status vastaus-lisays)))
+    (let [talvihoitoreitti-kannassa (q-map (format "SELECT nimi, luoja, luotu, tr_maara, ka_maara, kup_maara FROM talvihoitoreitti WHERE urakka_id = %s " urakka-id))]
+      (is (= 1 (count talvihoitoreitti-kannassa)))
+      (is (= 1 (:tr_maara (first talvihoitoreitti-kannassa))))
+      (is (= 2 (:ka_maara (first talvihoitoreitti-kannassa))))
+      (is (= 0 (:kup_maara (first talvihoitoreitti-kannassa)))))
+
+    ;; Päivitetään talvihoitoreitti
+    (let [uusinimi "uusinimi"
+          lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-ok.json"
+                        slurp
+                        (.replace "__ULKOINENID__" (str ulkoinen-id))
+                        (.replace "__NIMI__" (str uusinimi)))
+          vastaus-paivitys (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+                             lahetysdata)
+
+          ;; Tarkistetaan kannasta, onko nimi muuttunut
+          talvihoitoreitti-kannassa (q-map (format "SELECT nimi FROM talvihoitoreitti
+          WHERE urakka_id = %s AND ulkoinen_id = '%s' " urakka-id ulkoinen-id))]
+      (is (= 200 (:status vastaus-paivitys)))
+      (is (= uusinimi (:nimi (first talvihoitoreitti-kannassa)))))))
+
+(deftest paivita-talvihoitoreitti-kalustot-onnistuu
   (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         ;; Siivotaan kanta varulta
         _ (poista-talvihoitoreitit-urakalta urakka-id)
@@ -81,18 +121,31 @@
 
     ;; Päivitetään talvihoitoreitti
     (let [uusinimi "uusinimi"
+          kalustomaara 12
           lahetysdata (-> "test/resurssit/api/talvihoitoreitit/talvihoitoreitti-ok.json"
                         slurp
                         (.replace "__ULKOINENID__" (str ulkoinen-id))
                         (.replace "__NIMI__" (str uusinimi)))
+
+          ;; Muunnetaan clojuremäpiksi
+          data (cheshire/decode lahetysdata true)
+          data (-> data
+                 (assoc-in [:kalustot :tr_maara] kalustomaara)
+                 (assoc-in [:kalustot :ka_maara] kalustomaara)
+                 (assoc-in [:kalustot :kup_maara] kalustomaara))
+          ;; Muunnetaan takaisin jsoniksi
+          lahetysdata (cheshire/encode data)
+
           vastaus-paivitys (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                              lahetysdata)
 
           ;; Tarkistetaan kannasta, onko nimi muuttunut
-          talvihoitoreitti-kannassa (q-map (format "SELECT nimi FROM talvihoitoreitti
+          talvihoitoreitti-kannassa (q-map (format "SELECT nimi, tr_maara, ka_maara, kup_maara FROM talvihoitoreitti
           WHERE urakka_id = %s AND ulkoinen_id = '%s' " urakka-id ulkoinen-id))]
       (is (= 200 (:status vastaus-paivitys)))
-      (is (= uusinimi (:nimi (first talvihoitoreitti-kannassa)))))))
+      (is (= kalustomaara (:tr_maara (first talvihoitoreitti-kannassa))))
+      (is (= kalustomaara (:ka_maara (first talvihoitoreitti-kannassa))))
+      (is (= kalustomaara (:kup_maara (first talvihoitoreitti-kannassa)))))))
 
 (deftest poista-talvihoitoreitti-onnistuu
   (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
@@ -117,7 +170,7 @@
                           lahetysdata1)
         vastaus-lisays2 (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                           lahetysdata2)
-        ;; HAetaan kannasta ja varmistetaan, että lisäys on onnistunut
+        ;; Haetaan kannasta ja varmistetaan, että lisäys on onnistunut
         talvihoitoreitti-kannassa (q-map (format "SELECT id, nimi FROM talvihoitoreitti
           WHERE urakka_id = %s" urakka-id))
         _ (is (= 2 (count talvihoitoreitti-kannassa)))
@@ -128,7 +181,7 @@
                          delete-json)
         ;; Tarkistetaan, että toinen talvihoitoreitti on poistettu
         talvihoitoreitti-kannassa (q-map (format "SELECT nimi FROM talvihoitoreitti
-          WHERE urakka_id = %s" urakka-id))
+          WHERE urakka_id = %s AND poistettu = FALSE" urakka-id))
         _ (is (= 0 (count talvihoitoreitti-kannassa)))]))
 
 (deftest tallenna-talvihoitoreitti-epaonnistuu
@@ -172,7 +225,7 @@
     (is (= 400 (:status vastaus)))
     (is (= "invalidi-json" (get-in virhe [:virhe :koodi])))
     (is (.contains (get-in virhe [:virhe :viesti]) "[0]/tie: Pakollinen arvo puuttuu"))
-    (is (.contains (get-in virhe [:virhe :viesti]) "sijainnit[1]/kalustot[0]/kalusto-lkm: Pakollinen arvo puuttuu"))
+    (is (.contains (get-in virhe [:virhe :viesti]) "/kalustot: Pakollinen arvo puuttuu"))
     (is (.contains (get-in virhe [:virhe :viesti]) "sijainnit[2]/hoitoluokka: Pakollinen arvo puuttuu"))))
 
 (deftest tallenna-talvihoitoreitti-epaonnistuu-vaara-tieosoite
@@ -193,7 +246,7 @@
 
     (is (= 400 (:status vastaus)))
     (is (= "invalidi-json" (get-in virhe [:virhe :koodi])))
-    (is (.contains (str (get-in virhe [:virhe :viesti])) "Tiellä 1 ei ole tieosaa loppuosa."))))
+    (is (.contains (str (get-in virhe [:virhe :viesti])) "Tielle 1 ei löydy tieosaa: loppuosa."))))
 
 (deftest paivita-talvihoitoreitti-epaonnistuu-koska-post
   (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
@@ -262,12 +315,10 @@
     (is (nil? (:muokattu (first vastaus-haku))))
     (is (= urakka-id (:urakka_id (first vastaus-haku))))
     (is (= ulkoinen-id (:ulkoinen_id (first vastaus-haku))))
-    (is (= 2 (count (:kalustot (first vastaus-haku)))))
+    (is (= 1 (:tr_maara (first vastaus-haku))))
+    (is (= 2 (:ka_maara (first vastaus-haku))))
+    (is (= 0 (:kup_maara (first vastaus-haku))))
 
-    ;; Kuorma-autot
-    (is (= 7 (get-in (first vastaus-haku) [:kalustot 0 :kalustomaara])))
-    ;; Traktorit
-    (is (= 3 (get-in (first vastaus-haku) [:kalustot 1 :kalustomaara])))
     ;; Hoitoluokat
     (is (= 2 (count (:maantiet (:hoitoluokat (first vastaus-haku))))))
     (is (= "Ise" (get-in (first vastaus-haku) [:hoitoluokat :maantiet 0 :hoitoluokka])))

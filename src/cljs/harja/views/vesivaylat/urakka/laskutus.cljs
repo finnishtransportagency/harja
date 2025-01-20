@@ -54,4 +54,5 @@
 
          (if-let [tiedot @laskutus-tiedot]
            [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutus-vesivaylat)]
-           [yleiset/ajax-loader "Raporttia suoritetaan..."])]))))
+           [:div.ajax-loader-valistys
+            [yleiset/ajax-loader "Raporttia suoritetaan..."]])]))))
