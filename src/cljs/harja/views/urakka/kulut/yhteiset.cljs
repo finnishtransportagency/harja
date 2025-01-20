@@ -232,7 +232,9 @@
        :tyyppi :valinta
        :valinnat (into [](valikatselmus/luokat @nav/valittu-urakka))
        :validoi [[:ei-tyhja "Valitse arvo"]]
-       :leveys 2}
+       :leveys 2
+       :data-cy (str "luokka-" uusi-id)
+       :elementin-id (str "luokka-" uusi-id)}
       {:otsikko "Selite"
        :nimi ::valikatselmus/selite
        :tyyppi :string
@@ -252,5 +254,6 @@
        :tasaa :oikea
        :fmt #(str (Math/abs %))
        :validoi [[:ei-tyhja "Täytä arvo"]]
-       :leveys 2}]
+       :leveys 2
+       :elementin-id (str "summa-" uusi-id)}]
      hoitokauden-oikaisut-atom]))
