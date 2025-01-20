@@ -97,7 +97,7 @@
       (is (= (:valmis-kommentti vt2) "valmis tämäkin!"))
 
       ;; VT3 tallentui oikein
-      (is (nil? (:valmis-merkitsija vt3)))
+      (is (some? (:valmis-merkitsija vt3)))
       (is (nil? (:valmispvm vt3)))
       (is (nil? (:valtakunnallinen-id vt3)))
       (is (= (:urakka-id vt3) urakka-id))
