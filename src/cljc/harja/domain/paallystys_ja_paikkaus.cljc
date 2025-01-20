@@ -1,6 +1,6 @@
 (ns harja.domain.paallystys-ja-paikkaus
   "Päällystys- ja paikkausurakoiden yhteisiä apureita"
-  (:require [schema.core :as s]))
+  (:require [schema.core :as s :include-macros true]))
 
 (def +paallystetyypit+
   "Kaikki päällystetyypit POT-lomake Excelistä"
