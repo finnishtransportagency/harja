@@ -239,7 +239,8 @@
        :nimi ::valikatselmus/selite
        :tyyppi :string
        :validoi [[:ei-tyhja "Täytä arvo"]]
-       :leveys 3}
+       :leveys 3
+       :elementin-id (str "selite-" uusi-id)}
       {:otsikko "Lisäys / Vähennys"
        :nimi :lisays-tai-vahennys
        :tyyppi :valinta
