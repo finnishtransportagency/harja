@@ -1,5 +1,6 @@
 (ns harja-laadunseuranta.ui.kartta
   (:require [reagent.core :as reagent :refer [atom]]
+            [reagent.dom :as rdom]
             [ol]
             [ol.Map]
             [ol.Feature]
@@ -303,7 +304,7 @@
                                      ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot
                                      kayttaja-muutti-zoomausta-aikaleima-atom keskita-ajoneuvoon-atom]}]
   (let [alustava-sijainti-saatu? (cljs.core/atom false)
-        map-element (reagent/dom-node this)
+        map-element (rdom/dom-node this)
 
         ajoneuvo (tee-piste-feature (:nykyinen @ajoneuvon-sijainti-atomi))
         ajettu-reitti (tee-viiva-featuret @reittipisteet-atomi)

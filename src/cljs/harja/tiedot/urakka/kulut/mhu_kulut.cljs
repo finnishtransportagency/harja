@@ -23,6 +23,7 @@
 (defrecord KoontilaskunKuukausi [arvo])
 (defrecord ValitseErapaiva [erapaiva])
 (defrecord KoontilaskunNumero [koontilaskunnumero])
+(defrecord KulunLisatieto [lisatieto])
 (defrecord ValitseHoitokausi [vuosi])
 
 (defrecord KulujenSyotto [auki?])
@@ -57,9 +58,9 @@
 (defrecord PoistaLiite [id])
 
 ;; Haetaan välikatselmukset, eli päätökset, koska kulua ei voi syöttää/päivittää niille hoitokausille, joille välikatselmus on jo tehty
-(defrecord HaeUrakanValikatselmukset [])
-(defrecord HaeUrakanValikatselmuksetOnnistui [vastaus])
-(defrecord HaeUrakanValikatselmuksetEpaonnistui [vastaus])
+(defrecord HaeUrakanHintapaatokset [])
+(defrecord HaeUrakanHintapaatoksetOnnistui [vastaus])
+(defrecord HaeUrakanHintapaatoksetEpaonnistui [vastaus])
 
 ;; Haetaan urakan rahavaraukset
 (defrecord HaeUrakanRahavaraukset [])
@@ -116,15 +117,6 @@
                                          (assoc meta-kentta :tarkistettu? false
                                                             :koskettu? true)))))
       paivitetty-lomake)))
-
-(defn lomakkeen-paivitys
-  [lomake polut-ja-arvot {:keys [jalkiprosessointi-fn] :as optiot} & args]
-  (let [jalkiprosessointi (or jalkiprosessointi-fn
-                              identity)]
-    (jalkiprosessointi
-      (reduce (r/partial merkitse-kentta-kosketuksi optiot args)
-              lomake
-              (partition 2 polut-ja-arvot)))))
 
 (defn- vuoden-paatoksen-kulu? [{:keys [tehtavaryhmat]} kulu]
   (let [vuoden-paatoksen-tehtavaryhmat-set
@@ -405,6 +397,11 @@
     (let [app (assoc-in app [:lomake :laskun-numero] koontilaskunnumero)]
       app))
 
+  KulunLisatieto
+  (process-event [{lisatieto :lisatieto} app]
+    (let [app (assoc-in app [:lomake :lisatieto] lisatieto)]
+      app))
+
   ValitseHoitokausi
   (process-event [{vuosi :vuosi} app]
     (let [alkupvm (pvm/hoitokauden-alkupvm vuosi)
@@ -481,7 +478,7 @@
   TallennusOnnistui
   (process-event [_ {{:keys [viimeisin-haku]} :parametrit :as app}]
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
-    ((tuck/current-send-function) (->HaeUrakanValikatselmukset))
+    ((tuck/current-send-function) (->HaeUrakanHintapaatokset))
     (-> app
       (assoc :syottomoodi false)
       (assoc :lomake (alusta-lomake app))))
@@ -658,7 +655,7 @@
   (process-event
     [_ {{:keys [viimeisin-haku]} :parametrit :as app}]
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
-    ((tuck/current-send-function) (->HaeUrakanValikatselmukset))
+    ((tuck/current-send-function) (->HaeUrakanHintapaatokset))
     (-> app
       (assoc :syottomoodi false)
       (assoc :lomake (alusta-lomake app))))
@@ -703,19 +700,19 @@
       (assoc-in [:parametrit :haun-kuukausi] nil)
       (assoc-in [:parametrit :haun-loppupvm] pvm)))
 
-  HaeUrakanValikatselmukset
+  HaeUrakanHintapaatokset
   (process-event [_ app]
-    (tuck-apurit/post! :hae-urakan-valikatselmukset
+    (tuck-apurit/post! :hae-urakan-hintapaatokset
       {:urakka-id (-> @tila/yleiset :urakka :id)}
-      {:onnistui ->HaeUrakanValikatselmuksetOnnistui
-       :epaonnistui ->HaeUrakanValikatselmuksetEpaonnistui})
+      {:onnistui ->HaeUrakanHintapaatoksetOnnistui
+       :epaonnistui ->HaeUrakanHintapaatoksetEpaonnistui})
     app)
 
-  HaeUrakanValikatselmuksetOnnistui
+  HaeUrakanHintapaatoksetOnnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app :vuosittaiset-valikatselmukset vastaus))
 
-  HaeUrakanValikatselmuksetEpaonnistui
+  HaeUrakanHintapaatoksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app :vuosittaiset-valikatselmukset nil))
 

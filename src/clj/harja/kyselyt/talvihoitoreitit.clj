@@ -29,7 +29,7 @@
     "K2" :kavely_ja_pyoraily
     :maantiet))
 
-(defn lisaa-kalustot-ja-reitit [db talvihoitoreitti-id data]
+(defn lisaa-reitit [db talvihoitoreitti-id data]
   ;; Lisää reitit
   (doseq [sijainti (remove nil? (:sijainnit data))
           :let [sijainti-id (:id (lisaa-sijainti-talvihoitoreitille<! db
@@ -40,12 +40,7 @@
                                     :loppuosa (:losa sijainti)
                                     :loppuetaisyys (:let sijainti)
                                     :pituus (:pituus sijainti) ;; Pituus on metreinä
-                                    :hoitoluokka (:hoitoluokka sijainti)}))
-                _ (doseq [kalusto (:kalustot sijainti)]
-                    (lisaa-kalusto-sijainnille<! db
-                      {:sijainti_id sijainti-id
-                       :maara (:kalusto-lkm kalusto)
-                       :kalustotyyppi (:kalustotyyppi kalusto)}))]]))
+                                    :hoitoluokka (:hoitoluokka sijainti)}))]]))
 
 (defn lisaa-talvihoitoreitti-tietokantaan [db data urakka_id kayttaja_id]
   ;; Generoidaan talvihoitoreitille värikoodi tietokantaan, jotta se ei vaihdu, kun käyttöliittymässä piirretään
@@ -54,6 +49,9 @@
                                 :ulkoinen_id (:tunniste data)
                                 :urakka_id urakka_id
                                 :kayttaja_id kayttaja_id
+                                :tr_maara (get-in data [:kalustot :tr_maara])
+                                :kup_maara (get-in data [:kalustot :kup_maara])
+                                :ka_maara (get-in data [:kalustot :ka_maara])
                                 :varikoodi (talvihoitoreitit-domain/anna-random-vari nil)}))
 
 (defn paivita-talvihoitoreitti-tietokantaan [db data urakka_id kayttaja_id]
@@ -67,9 +65,12 @@
             ;; Päivitä talvihoitoreitin perustiedot
             (paivita-talvihoitoreitti<! db {:talvihoitoreitti_id (:id talvihoitoreitti)
                                             :nimi (:reittinimi data)
+                                            :tr_maara (get-in data [:kalustot :tr_maara])
+                                            :kup_maara (get-in data [:kalustot :kup_maara])
+                                            :ka_maara (get-in data [:kalustot :ka_maara])
                                             :kayttaja_id kayttaja_id})
             ;; Lisää kalustot ja reitit
-            (lisaa-kalustot-ja-reitit db (:id talvihoitoreitti) data))]
+            (lisaa-reitit db (:id talvihoitoreitti) data))]
     ;; Jos ei tule erroreita, niin palautetaan ulkoinen-id
     (:tunniste data)))
 
@@ -117,19 +118,10 @@
 
 (defn hae-ja-muokkaa-talvihoitoreitit [db urakka-id]
   (let [urakan-talvihoitoreitit (hae-urakan-talvihoitoreitit db {:urakka_id urakka-id})
+        _ (log/debug "hae-urakan-talvihoitoreitit :: urakan-talvihoitoreitit" urakan-talvihoitoreitit)
         talvihoitoreitit (mapv (fn [rivi]
                                  (let [;; Hae reitit erikseen
                                        reitit (hae-sijainti-talvihoitoreitille db {:talvihoitoreitti_id (:id rivi)})
-                                       ;; Kalustot mäpätään eri taulusta array_aggregateksi. Se pitää purkaa psql vector objectista clojuren ymmärtämään muotoon
-                                       reitit (mapv (fn [rivi]
-                                                      (-> rivi
-                                                        (update :kalustot
-                                                          (fn [rivi]
-                                                            (mapv
-                                                              #(konv/pgobject->map % :kalustotyyppi :string :kalustomaara :long)
-                                                              (konv/pgarray->vector rivi))))))
-                                                reitit)
-
                                        ;; Formatoi käyttöliittymälle valmiiksi
                                        reitit (map (fn [r]
                                                      (-> r
@@ -145,17 +137,6 @@
                                                                                               :alkuetaisyys :loppuosa :loppuetaisyys
                                                                                               :id :formatoitu-tr)) reitit))))
 
-                                       ;; Hae kaikki kalustot
-                                       reitin-kalustot (conj (flatten (map (fn [r] (:kalustot r)) reitit)))
-                                       ;; Ryhmitellään reitin kalustot kalustotyypin mukaan
-                                       ryhmitellyt-kalustot (group-by :kalustotyyppi reitin-kalustot)
-
-                                       kalustot (mapv (fn [avain]
-                                                        (let [kalustotyyppi avain
-                                                              kalustomaara (apply + (map #(:kalustomaara %) (get ryhmitellyt-kalustot avain)))]
-                                                          {:kalustotyyppi kalustotyyppi
-                                                           :kalustomaara kalustomaara}))
-                                                  (keys ryhmitellyt-kalustot))
                                        ;; Lasketaan jokaiselle hoitoluokalle pituus
                                        hoitoluokat (mapv (fn [hoitoluokka-vec]
                                                            {:ryhma (hoitoluokkaryhma (:hoitoluokka (first hoitoluokka-vec)))
@@ -168,7 +149,6 @@
                                               (assoc :reitit reitit)
                                               (assoc :laskettu_pituus (reduce + (map :laskettu_pituus reitit)))
                                               (assoc :hoitoluokat hoitoluokat)
-                                              (assoc :kalustot kalustot)
                                               (dissoc :muokkaaja :muokattu :luotu :luoja))]
                                    rivi))
                            urakan-talvihoitoreitit)]

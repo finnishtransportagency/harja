@@ -51,14 +51,19 @@
 (defn- koosta-tavoite [tiedot urakka-tavoite]
   (let [kaikki-tavoitehintaiset-laskutettu (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutettu %)))
                                                             (:tavoitehintaiset_laskutettu %)
-                                                            0) tiedot))]
+                                                            0) tiedot))
+        oikaistu? (and
+                    (some? (:tavoitehinta-oikaistu urakka-tavoite))
+                    (some? (:tavoitehinta-indeksikorjattu urakka-tavoite))
+                    (not= (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite)))]
+
     (if urakka-tavoite
-      {:tavoite-hinta (or (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M)
-       :jaljella (- (or (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M) kaikki-tavoitehintaiset-laskutettu)
-       :nimi "Tavoite"}
+      {:tavoite-hinta (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M)
+       :jaljella (- (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M) kaikki-tavoitehintaiset-laskutettu)
+       :oikaistu? oikaistu?}
       {:tavoite-hinta 0
        :jaljella 0
-       :nimi "Tavoite"})))
+       :oikaistu? oikaistu?})))
 
 
 (defn- taulukko-rivi
@@ -287,6 +292,8 @@
      (when hoitokausi?
        (taulukot/toteutuneet-valitaulukko {:data (second koostettu-yhteenveto)
                                            :otsikko ""
-                                           :laskutettu-teksti "Tavoitehinta"
+                                           :laskutettu-teksti (str (if (-> koostettu-yhteenveto second :oikaistu?)
+                                                                     "Tavoitehinta (oikaistu)"
+                                                                     "Tavoitehinta (indeksikorjattu)"))
                                            :laskutetaan-teksti "Budjettia jäljellä"
                                            :kyseessa-kk-vali? true}))]))

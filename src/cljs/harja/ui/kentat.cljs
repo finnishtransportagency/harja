@@ -1,6 +1,7 @@
 (ns harja.ui.kentat
   "UI-input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
   (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [reagent.ratom :as ratom]
             [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
@@ -270,7 +271,7 @@
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
 ;; pituus-max oletusarvo on 256, koska se on toteuman lisätiedon tietokantasarakkeissa
 (defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus on-blur lomake?
-                                     disabled? pituus-max toiminta-f]} data]
+                                     disabled? pituus-max toiminta-f aputeksti]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
                       1
@@ -296,14 +297,15 @@
       (when (= koko-rivit :auto)
         {:component-did-update
          (fn [this _]
-           (let [n (-> this r/dom-node
+           (let [n (-> this rdom/dom-node
                        (.getElementsByTagName "textarea")
                        (aget 0))
                  erotus (- (.-scrollHeight n) (.-clientHeight n))]
              (when (> erotus 1) ;; IE11 näyttää aluksi 24 vs 25
                (swap! rivit + (/ erotus 19)))))})
 
-      (fn [{:keys [nimi koko on-focus on-blur lomake? disabled?]} data]
+      (fn [{:keys [nimi koko on-focus on-blur lomake? disabled?
+                   aputeksti]} data]
         [:span.kentta-text
          [:textarea {:value @data
                      :on-change #(muuta! data %)
@@ -316,6 +318,7 @@
                                     lomake? (str "form-control ")
                                     disabled? (str "disabled"))
                      :placeholder placeholder}]
+         (when aputeksti [:div aputeksti])
          ;; näytetään laskuri kun merkkejä on jäljellä alle 25%
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))

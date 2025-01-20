@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]
+            [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
@@ -17,7 +18,6 @@
   ;; Estä muut, kuin järjestelmävastaavat näkemästä talvihoitoreittejä
   (when (contains? (:roolit user) "Jarjestelmavastaava")
     ;;(oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
-
     (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)))
 
 (defn kasittele-excel [db urakka-id kayttaja req workbook]
@@ -68,7 +68,7 @@
                        ;; Jos talvihoitoreitin perustiedot on onnistuneesti tallennettu, niin tallennetaan myös kalustot ja reitit
                        (when (and (nil? talvihoitoreitti-db) talvihoitoreitti-id)
                          (do
-                           (talvihoitoreitit-q/lisaa-kalustot-ja-reitit db talvihoitoreitti-id t)
+                           (talvihoitoreitit-q/lisaa-reitit db talvihoitoreitti-id t)
                            (swap! lisatyt-atom conj (:reittinimi t))))))))
 
         vastaus (if (and (empty? @lisatyt-atom) (empty? @virheet-atom) (empty? @paivitetyt-atom))
@@ -92,6 +92,21 @@
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
+(defn poista-talvihoitoreitti [db user {:keys [urakka-id ulkoinenid]}]
+  (if (contains? (:roolit user) "Jarjestelmavastaava")
+    ;;(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
+    (let [urakka-id (konv/konvertoi->int urakka-id)
+          ;; Varmistetaan, että talvihoitoreitti on olemassa
+          tr (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka-id :ulkoinen_id ulkoinenid})
+          _ (if tr
+              (talvihoitoreitit-q/poista-talvihoitoreitti! db {:ulkoinen_id ulkoinenid
+                                                               :urakka_id urakka-id})
+              (throw+ {:type "Error"
+                       :virheet [{:koodi "ERROR" :viesti "Ei löydy poistettavaa talvihoitoreittiä. Tarkista tiedot."}]}))]
+      {:onnistui "Talvihoitoreitti poistettu onnistuneesti."})
+    (throw+ {:type "Error"
+             :virheet [{:koodi "ERROR" :viesti "Ei käyttöoikeuksia."}]})))
+
 (defrecord Talvihoitoreitit []
   component/Lifecycle
   (start [{:keys [http-palvelin db excel-vienti] :as this}]
@@ -104,13 +119,19 @@
       (wrap-multipart-params (fn [request] (vastaanota-excel db request)))
       {:ring-kasittelija? true})
 
+    (julkaise-palvelu http-palvelin :poista-talvihoitoreitti
+      (fn [user tiedot]
+        (poista-talvihoitoreitti db user tiedot)))
+
     (when excel-vienti
       (excel-vienti/rekisteroi-excel-kasittelija! excel-vienti :lataa-talvihoitoreitit-exceliin
         (partial #'t-excel/lataa-talvihoitoreitit-exceliin db)))
+
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-urakan-talvihoitoreitit
-      :lue-talvihoitoreitit-excelista)
+      :lue-talvihoitoreitit-excelista
+      :poista-talvihoitoreitti)
     this))

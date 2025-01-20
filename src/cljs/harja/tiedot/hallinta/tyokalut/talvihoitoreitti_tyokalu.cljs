@@ -41,10 +41,9 @@
                                   :valittu-hallintayksikko nil
                                   :suorittaja-nimi "Urakoitsija Oy"
                                   :reittinimi "Nelostien kaaos"
-                                  :kalusto-lkm 1
-                                  :kalustotyyppi "KA"
-                                  :kalusto-lkm2 2
-                                  :kalustotyyppi2 "TR"
+                                  :tr_maara 1
+                                  :ka_maara 0
+                                  :kup_maara 0
                                   :tierekisteriosoite {:tie 4 :aosa 410 :aet 0 :losa 415 :let 1000}
                                   :tierekisteriosoite2 {:tie 4 :aosa 420 :aet 0 :losa 425 :let 1000}
                                   }
@@ -56,6 +55,9 @@
 (defn koostettu-data [app]
   {:tunniste (get-in app [:talvihoitoreitti :ulkoinen-id])
    :reittinimi (get-in app [:talvihoitoreitti :reittinimi])
+   :kalustot {:tr_maara (get-in app [:talvihoitoreitti :tr_maara])
+              :ka_maara (get-in app [:talvihoitoreitti :ka_maara])
+              :kup_maara (get-in app [:talvihoitoreitti :kup_maara])}
    ;; Reitti koostuu oikeasti useammasta tieosoitteesta
    :sijainnit (conj [{:tie (get-in app [:talvihoitoreitti :tierekisteriosoite :numero])
                       :aosa (get-in app [:talvihoitoreitti :tierekisteriosoite :alkuosa])
@@ -63,9 +65,7 @@
                       :losa (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuosa])
                       :let (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuetaisyys])
                       :hoitoluokka (hoitoluokka-numerosta (yleiset/random-luku-valilta 1 9))
-                      :pituus (yleiset/random-luku-valilta 1 30000)
-                      :kalustot [{:kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi])
-                                  :kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm])}]}]
+                      :pituus (yleiset/random-luku-valilta 1 30000)}]
                 ;; Koska ollaan kiireessä, niin varmistetaan, että pelkkä tien numero on lisätty ja oletetaan että muutkin on
                 (when (get-in app [:talvihoitoreitti :tierekisteriosoite2 :numero])
                   {:tie (get-in app [:talvihoitoreitti :tierekisteriosoite2 :numero])
@@ -74,9 +74,7 @@
                    :losa (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuosa])
                    :let (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuetaisyys])
                    :hoitoluokka (hoitoluokka-numerosta (yleiset/random-luku-valilta 1 9))
-                   :pituus (yleiset/random-luku-valilta 1 30000)
-                   :kalustot [{:kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi2])
-                               :kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm2])}]}))})
+                   :pituus (yleiset/random-luku-valilta 1 30000)}))})
 
 (def valittu-urakka (atom nil))
 (defrecord Muokkaa [talvihoitoreitti])

@@ -1,5 +1,6 @@
 (ns harja.views.tilannekuva.tilannekuva
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.tilannekuva.tilannekuva :as tiedot]
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
@@ -12,7 +13,6 @@
             [harja.ui.kentat :as kentat]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.dom :as dom]
-            [reagent.core :as r]
             [goog.events.EventType :as EventType]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.istunto :as istunto]
@@ -295,14 +295,14 @@
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
-                            (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
+                            (aseta-hallintapaneelin-max-korkeus (rdom/dom-node this)))]
     (komp/luo
       (komp/sisaan (fn [this]
                      (when-not (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                        (let [tilaajan-laadunvalvonta-avain (some #(when (= "tilaajan laadunvalvonta" (:nimi %)) %)
                                                                  (keys (:tarkastukset @tiedot/suodattimet)))]
                          (swap! tiedot/suodattimet update :tarkastukset dissoc tilaajan-laadunvalvonta-avain)))))
-      (komp/piirretty (fn [this] (aseta-hallintapaneelin-max-korkeus (r/dom-node this))))
+      (komp/piirretty (fn [this] (aseta-hallintapaneelin-max-korkeus (rdom/dom-node this))))
       (komp/dom-kuuntelija js/window
                            EventType/RESIZE resize-kuuntelija)
       (fn []

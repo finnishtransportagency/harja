@@ -17,8 +17,8 @@
             [harja.ui.napit :as napit]))
 
 (defn- talvihoitoreitti-rivi [{:keys [talvihoitoreittien-tilat] :as app} e!
-                              laskettu_pituus nimi kalustot
-                              id varikoodi hoitoluokat ulkoinen_id reitit urakka_id]
+                              {:keys [laskettu_pituus nimi id varikoodi hoitoluokat ulkoinen_id reitit urakka_id
+                                      tr_maara ka_maara kup_maara]}]
   
   (let [valitut-kohteet @tiedot/valitut-kohteet-atom
         reittien-maara (count reitit)
@@ -80,20 +80,37 @@
       [:div.basis192.grow2.shrink3.rajaus
        [:div.body-text.semibold.musta.talvihoitoreitti-riviotsikko "Kalusto (kpl)"]
        [:div.talvihoitoreitti-rivi-tausta.ryhma-rivitys
-        (doall (for [kalusto kalustot]
-                 ^{:key (hash kalusto)}
-                 [:div
-                  [:div.body-text.musta.semibold.talvihoitoreitti-valistys (:kalustotyyppi kalusto)]
-                  [:div.small-text.musta.talvihoitoreitti-valistys (:kalustomaara kalusto)]]))]]
+        (when (> tr_maara 0)
+          [:div
+           [:div.body-text.musta.semibold.talvihoitoreitti-valistys "TR"]
+           [:div.small-text.musta.talvihoitoreitti-valistys tr_maara]])
+        (when (> ka_maara 0)
+          [:div
+           [:div.body-text.musta.semibold.talvihoitoreitti-valistys "KA"]
+           [:div.small-text.musta.talvihoitoreitti-valistys ka_maara]])
+        (when (> kup_maara 0)
+          [:div
+           [:div.body-text.musta.semibold.talvihoitoreitti-valistys "KUP"]
+           [:div.small-text.musta.talvihoitoreitti-valistys kup_maara]])]]
       
-      ;; Kartta toggle 
+      ;; Toiminnallisuudet
       [:div.basis192.grow2.shrink2
        [:div.body-text.strong.musta ""]
        ;; Näytä valittu rivi kartalla tai piilota se
        [:<>
         (if (contains? valitut-kohteet id)
           (napit/avaa "Piilota kartalta" #(e! (tiedot/->PoistaValittuKohdeKartalta id)) {:luokka "talvihoitoreitti-kartan-naytto"})
-          (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle id)) {:luokka "talvihoitoreitti-kartan-naytto"}))]]]
+          (napit/avaa "Näytä kartalla" #(e! (tiedot/->LisaaValittuKohdeKartalle id)) {:luokka "talvihoitoreitti-kartan-naytto"}))]
+       [:div (napit/yleinen "Keskitä"
+               :toissijainen
+               #(e! (tiedot/->KeskitaTalvihoitoreitti id reitit))
+               {:ikoni    (ikonit/zoom-in)
+                :luokka "talvihoitoreitti-poisto"})]
+       [:div (napit/yleinen "Poista"
+               :toissijainen
+               #(e! (tiedot/->PoistaTalvihoitoreitti ulkoinen_id))
+               {:ikoni    (ikonit/livicon-trash)
+                :luokka "talvihoitoreitti-poisto"})]]]
 
      ;; Otsikkokoponentin voi avata ja avaamisen jälkeen näytetään lista (grid) reiteistä
      (when (and
@@ -178,13 +195,9 @@
            [{:tyyppi :komponentti
              :solun-luokka #(str "talvihoitoreitti-rivi")
              :tunniste :id
-             :komponentti (fn [{:keys [laskettu_pituus nimi kalustot
-                                       id varikoodi hoitoluokat ulkoinen_id reitit urakka_id]}]
+             :komponentti (fn [reitti]
                             ;; Väkänen / rivi 
-                            (talvihoitoreitti-rivi
-                              app e!
-                              laskettu_pituus nimi kalustot
-                              id varikoodi hoitoluokat ulkoinen_id reitit urakka_id))
+                            (talvihoitoreitti-rivi app e! reitti))
              :leveys 1}]
            talvihoitoreitit]))])])
 

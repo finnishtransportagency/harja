@@ -28,7 +28,7 @@ FROM urakka_tavoite ut
 WHERE ut.urakka = :urakka-id
   AND EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = :hoitokauden-alkuvuosi;
 
--- name: onko-valikatselmus-pidetty?
+-- name: hintapaatos-tehty?
 -- single?: true
 SELECT EXISTS(
     SELECT up.id as id
@@ -38,13 +38,13 @@ SELECT EXISTS(
        AND up."urakka-id" = :urakka-id
        AND up.tyyppi IN ('tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus'));
 
--- name: hae-urakan-valikatselmukset-vuosittain
+-- name: hae-urakan-hintapaatokset
 -- Haetaan vuosittain tulevat välikatselmukset ja niille tieto, että onko päätöstä/välikatselmusta tehty
 SELECT up."hoitokauden-alkuvuosi"
   FROM urakka_paatos up
  WHERE up.poistettu = FALSE
    AND up."urakka-id" = :urakka-id
-   AND up.tyyppi IN ('tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus')
+   AND up.tyyppi IN ('tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus');
 
 -- name: hae-urakan-bonuksen-toimenpideinstanssi-id
 -- single?: true
