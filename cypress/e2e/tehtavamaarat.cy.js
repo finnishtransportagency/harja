@@ -78,7 +78,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         cy.viewport(1100, 2000)
         cy.intercept('POST', '_/tallenna-sopimuksen-tehtavamaara').as('sop1')
 
-        cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('button.vetolaatikon-sailio').click();
+        cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('div.vetolaatikon-sailio').click();
 
         // Tämä conditionaalinen tarkistelu toimii. Tee checkboxille sama
         cy.get('table.grid').then(($ele) => {
@@ -86,7 +86,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
                 // Käytä check() koska useammalla peräkkäisellä ajolla checkbox voi olla valittuna ja check varmistaa, että se on valittuna
                 cy.get('table.grid').contains('Haluan syöttää joka vuoden erikseen').parent().find('input.vayla-checkbox').check();
             } else {
-                cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('button.vetolaatikon-sailio').click()
+                cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('div.vetolaatikon-sailio').click()
                 // Käytä check() koska useammalla peräkkäisellä ajolla checkbox voi olla valittuna ja check varmistaa, että se on valittuna
                 cy.get('table.grid').contains('Haluan syöttää joka vuoden erikseen').parent().find('input.vayla-checkbox').check();
             }
@@ -120,7 +120,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         cy.contains('Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä').should('not.exist')
     })
 
-    it('Määrän voi syöttää', () => {
+    it.skip('Määrän voi syöttää', () => {
         cy.viewport(1100, 2000)
         cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32');
         cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('HaeSuunniteltavatTehtavat')

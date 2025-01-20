@@ -81,7 +81,8 @@
     ::tarkistettu
     ::tarkistaja-id
     ::ilmoitettu-virhe
-    ::yksikko})
+    ::yksikko
+    ::pkluokka})
 
 (def paikkauksen-perustiedot
   #{::id

@@ -5,7 +5,7 @@
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-ikkunaan ajax-loader livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-valilehteen ajax-loader livi-pudotusvalikko]]
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.ui.palaute :as palaute]
@@ -71,7 +71,6 @@
   [:a.klikattava
    {:id "info"
     :href "#"
-    :role "presentation"
     :class (str "info-nakyma" (when (= s :info) " aktiivinen"))
     :on-click #(nav/vaihda-sivu! :info)}
 
@@ -94,38 +93,38 @@
    [:ul#sivut.nav.nav-pills
 
     (when (oikeudet/urakat)
-      [:li {:role "presentation" :class (when (= s :urakat) "active")}
+      [:li {:class (when (= s :urakat) "active")}
        [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]])
 
     (when (oikeudet/raportit)
-      [:li {:role "presentation" :class (when (= s :raportit) "active")}
+      [:li {:class (when (= s :raportit) "active")}
        [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]])
 
     (when (oikeudet/tilannekuva)
-      [:li {:role "presentation" :class (when (= s :tilannekuva) "active")}
+      [:li {:class (when (= s :tilannekuva) "active")}
        [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]])
 
     (when (oikeudet/ilmoitukset)
-      [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
+      [:li {:class (when (= s :ilmoitukset) "active")}
        [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]])
 
     (when (and (oikeudet/tieluvat)
                (istunto/ominaisuus-kaytossa? :tienpidon-luvat))
-      [:li {:role "presentation" :class (when (= s :tienpidon-luvat) "active")}
+      [:li {:class (when (= s :tienpidon-luvat) "active")}
        [linkki "Tienpidon luvat" #(nav/vaihda-sivu! :tienpidon-luvat)]])
 
     (when (oikeudet/urakkatilanne)
-      [:li {:role "presentation" :class (when (= s :urakoiden-tilanne) "active")}
+      [:li {:class (when (= s :urakoiden-tilanne) "active")}
        [linkki "Urakoiden tilanne" #(nav/vaihda-sivu! :urakoiden-tilanne)]])
 
     (when (oikeudet/hallinta)
-      [:li {:role "presentation" :class (when (= s :hallinta) "active")}
+      [:li {:class (when (= s :hallinta) "active")}
        [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])
 
     (when (and (mobiiliselain?)
                (oikeudet/laadunseuranta))
-      [:li {:role "presentation"}
-       [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu"
+      [:li
+       [staattinen-linkki-uuteen-valilehteen "Laadunseurannan mobiilityökalu"
         (str k/+polku+ "laadunseuranta")]])]
 
    :right

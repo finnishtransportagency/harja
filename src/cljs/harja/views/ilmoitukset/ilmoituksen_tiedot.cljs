@@ -102,7 +102,8 @@
                              :class "body-text"
                              :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
             "Ilmoittaja " (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
-                                tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
+                                tyyppi (when (get-in ilmoitus [:ilmoittaja :tyyppi])
+                                         (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi]))))]
                             (if (and henkilo tyyppi)
                               (str henkilo ", " tyyppi)
                               (str (or henkilo tyyppi))))

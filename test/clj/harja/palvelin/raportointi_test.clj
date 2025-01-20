@@ -142,6 +142,12 @@
 (def suorituskontekstin-kuvaus-parametrit-koko-maa
   {:nimi :erilliskustannukset, :konteksti "koko maa", :parametrit {:alkupvm #inst "2014-09-30T21:00:00.000-00:00", :loppupvm #inst "2015-09-30T20:59:59.000-00:00", :urakkatyyppi :hoito}})
 
+(defn suorituskontekstin-kuvaus-urakka-paallystys-vuosi-parametrit [urakka-id]
+  {:nimi :mpu-paikkausten-yhteenveto, :urakka-id urakka-id :konteksti "urakka", :parametrit {:vuosi 2024, :urakkatyyppi :paallystys}})
+
+(def suorituskontekstin-raportti-urakka-paallystys-vuosi-dummy
+  [:raportti {:nimi "Paikkausten yhteenveto MPU"}])
+
 (deftest suorituskontekstin-kuvaus-urakka
   (let [kuvaus-liitetty (r/liita-suorituskontekstin-kuvaus (:db jarjestelma)
                                                            suorituskontekstin-kuvaus-parametrit-urakka
@@ -217,6 +223,26 @@
                                        "Koko maa"]
                                       ["Tyypin hoito urakoita käynnissä"
                                        2]]}]]
+    (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
+
+(deftest suorituskontekstin-kuvaus-urakka-paallystys-vuosi
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        kuvaus-liitetty (r/liita-suorituskontekstin-kuvaus (:db jarjestelma)
+                          (suorituskontekstin-kuvaus-urakka-paallystys-vuosi-parametrit urakka-id)
+                          suorituskontekstin-raportti-urakka-paallystys-vuosi-dummy)
+        odotettu-liitetty [:raportti
+                           {:nimi "Paikkausten yhteenveto MPU"
+                            :raportin-yleiset-tiedot {:alkupvm nil
+                                                      :loppupvm nil
+                                                      :vuosi 2024
+                                                      :raportin-nimi "Paikkausten yhteenveto MPU"
+                                                      :urakka "Muhoksen päällystysurakka"}
+                            :tietoja [["Kohde"
+                                       "Urakka"]
+                                      ["Urakka"
+                                       "Muhoksen päällystysurakka"]
+                                      ["Urakoitsija"
+                                       "Skanska Asfaltti Oy"]]}]]
     (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
 
 ;; Varmistetaan, että korjataan ongelma, jossa materialisoitu näkymä unohtui päivittää

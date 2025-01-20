@@ -9,7 +9,7 @@
 (defqueries "harja/kyselyt/valikatselmus.sql"
             {:positional? true})
 
-(declare hae-urakan-valikatselmukset-vuosittain onko-valikatselmus-pidetty?)
+(declare hae-urakan-hintapaatokset hintapaatos-tehty?)
 
 ;; Tavoitehinnan oikaisut
 
@@ -112,7 +112,6 @@
           ::muokkaustiedot/poistettu? false}))
 
 (defn tee-paatos [db paatos]
-  (prn "Jarno tee päätös: " paatos)
   (upsert! db ::valikatselmus/urakka-paatos paatos))
 
 (defn poista-paatokset [db urakka-id hoitokauden-alkuvuosi kayttaja-id]

@@ -37,7 +37,7 @@ description: |
           </ul>
       </li>
   </ol>
-version: 1.0.64
+version: 1.0.65
 mediaType: application/json
 protocols:
   - HTTPS
@@ -82,15 +82,24 @@ documentation:
     content: |-
       Harja -järjestelmän rajapinta on toteutettu REST-API:na, jossa tieto liikkuu JSON-formaatissa.
 
-      Tietoliikenne Harjan palvelimille kulkee Väylän keskitetyn gatewayn kautta (Oracle Enterprice Gateway). Siirtoprotokollana käytetään HTTPS. Käyttäjän tunnistaminen tehdään käyttäen HTTP Basic autentikaatiota tunnus-salasana -parina. Väylä hallinnoi järjestelmä-/urakoitsijakohtaisia tunnuksia.
+      Tietoliikenne Harjan palvelimille kulkee Väylänpilven keskitetyn integraatioväylän kautta. Siirtoprotokollana käytetään HTTPS.
+      Käyttäjän tunnistaminen tehdään käyttäen HTTP Basic autentikaatiota tunnus-salasana -parina. Väylä hallinnoi järjestelmä-/urakoitsijakohtaisia tunnuksia.
 
       Kutsut voi lähettää gzipillä pakattuina merkitsemällä content encodingin gzipiksi.
 
-      Huomioitavaa:
+      <b>Huomioitavaa:</b>
       <ul>
         <li>Kaikki ajat raportoidaan Suomen aikavyöhykkeessä GMT+2/3. Aikaleimat täytyy siis raportoida formaatissa: "2016-11-03T03:43:14+02:00"</li>
         <li>Kaikki toteumien tehtävien ja materiaalien määrät raportoidaan Harjan urakkahaun palauttamassa yksikössä. Harja ei tee muunnoksia raportoiduille yksiköille.</li>
       </ul>
+
+      <b>Rajapintakutsujen rajoitukset integraatioväylällä:</b>
+      <ul>
+        <li>Sanoman maksimikoko: 20 MB</li>
+        <li>Aikakatkaisu: 180 s</li>
+        <li>Harja käsittelee kutsun loppuun omien sääntöjensä mukaan, vaikka integraatioväylä palauttaisi kutsujalle aikakatkaisuun liittyvän virheen.</li>
+      </ul>
+
   - title: Sijaintitiedot
     content: |
       Kaikki koordinaattisijainnit ilmoitetaan Harjaan EUREF-FIN koordinaatistossa. Koordinaattipisteiden lisäksi vastaanotetaan suunta joka on aseteluku väliltä: 0-360.
@@ -124,10 +133,16 @@ documentation:
       - urakka 9001 JCDeaux JCDeauxin mainossoppari
   - title: Versiohistoria
     content: |
-      <b>Nykyinen versio: 1.0.63</b>
-      <b>Julkaistu: 22.08.2023</b>
+      <b>Nykyinen versio: 1.0.65</b>
+      <b>Julkaistu: 9.01.2024</b>
 
       <b>Versiohistoria:</b>
+      - Versionumero 1.0.65 Julkaistu 9.1.2025
+         - Lisätty reikäpaikkausrajapinta.
+         - Päivitetty materiaaliraporttirajapinnalle toteumarajapinnasta erillinen materiaalimääritys, jotta myös negatiiviset määrävirheiden korjaukset voidaan palauttaa rajapinnan kautta.
+      - Versionumero 1.0.64 Julkaistu 1.10.2024
+          - Työmaapäiväkirjan versio 2. Käytä tätä versiota, kun kehität uutta.
+          - Lisätty talvihoitoreittirajapinta.
       - Versionumero 1.0.63 Julkaistu 22.08.2023
           - Lisätty tieturvallisuustarkastus rajapinta.
       - Versionumero 1.0.62 Julkaistu 14.08.2023
@@ -2031,7 +2046,7 @@ types:
               - string
               - integer
           materiaaliraportti:
-            type: file_resources_api_schemas_entities_materiaalit.schema.json
+            type: file_resources_api_schemas_entities_raportti_materiaalit.schema.json
             required: false
         additionalProperties: false
         required: false

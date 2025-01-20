@@ -512,11 +512,10 @@
                    {::paikkaus/tyomenetelma tyomenetelma
                     ::paikkaus/paikkauskohde paikkauskohde})
                 {:disabled (not tilattu?)
-                 :ikoni (ikonit/livicon-plus)
-                 :luokka "nappi-reunaton"}])
+                 :ikoni (ikonit/livicon-plus)}])
              ;; Näytetään virheen ilmoitus vain tilaajalle
              (when tilaaja?
-               [napit/yleinen-reunaton
+               [napit/yleinen-toissijainen
                 "Ilmoita virhe"
                 #(e! (tiedot/->AvaaVirheModal paikkauskohde))
                 {:ikoni (ikonit/harja-icon-action-send-email)
@@ -532,7 +531,7 @@
                  [:div.body-text.harmaa [ikonit/livicon-check] "Tarkistettu"]
                  ;; Annetaan vain tilaajan merkitä kohde tarkistetuksi
                  (when tilaaja?
-                   [napit/yleinen-reunaton "Merkitse tarkistetuksi"
+                   [napit/yleinen-toissijainen "Merkitse tarkistetuksi"
                     #(e! (tiedot/->PaikkauskohdeTarkistettu
                            {::paikkaus/paikkauskohde paikkauskohde}))
                     {:disabled (or

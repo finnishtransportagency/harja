@@ -160,7 +160,7 @@
                      (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
                                                    :alkupvm (first (pvm/kuukauden-aikavali (pvm/nyt)))
                                                    :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))
-                     (e! (tiedot/->HaeUrakanValikatselmukset))
+                     (e! (tiedot/->HaeUrakanHintapaatokset))
                      (e! (tiedot/->HaeUrakanRahavaraukset))))
    (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
    (fn [e! {kulut :kulut syottomoodi :syottomoodi 
@@ -288,6 +288,7 @@
                 [:div.aikavali-valinnat
                  [kentat/tee-kentta {:tyyppi :pvm
                                      :vayla-tyyli? true
+                                     :elementin-nimi "kulut-aikavali-alku"
                                      :on-datepicker-select #(do
                                                               (e! (tiedot/->AsetaHakuAlkuPvm %))
                                                               (when (and % @haun-loppupvm-atom)
@@ -299,6 +300,7 @@
                  [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
                  [kentat/tee-kentta {:tyyppi :pvm
                                      :vayla-tyyli? true
+                                     :elementin-nimi "kulut-aikavali-loppu"
                                      :on-datepicker-select (fn [loppupvm]
                                                              (do
                                                                (e! (tiedot/->AsetaHakuLoppuPvm loppupvm))
@@ -319,4 +321,3 @@
 (defn kohdistetut-kulut
   []
   [tuck/tuck tila/laskutus-kohdistetut-kulut kohdistetut*])
-

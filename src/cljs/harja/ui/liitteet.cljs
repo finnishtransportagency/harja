@@ -160,7 +160,6 @@
       [:span
        [:a.klikattava {:role "status"
                        :aria-live "polite"
-                       :tabindex "0"
                        :title (let [tooltip (:nimi liite)]
                                 (if (nil? nayta-tooltip?)
                                   tooltip
@@ -174,7 +173,6 @@
       [:span
        [:a.klikattava {:role "status"
                        :aria-live "polite"
-                       :tabindex "0"
                        :tooltip (str "Liitetiedoston nimi:" (:nimi liite))
                        :title (:nimi liite)
                        :href (k/liite-url (:id liite))
@@ -293,7 +291,8 @@
                               :salli-poisto? salli-poistaa-lisatty-liite?
                               :poista-liite-fn poista-liite}]
                             [liitetiedosto liite {:salli-poisto? salli-poistaa-lisatty-liite?
-                                                  :poista-liite-fn poista-liite}]))]
+                                                  :poista-liite-fn poista-liite}]))
+            inputin-id "tiedoston-lataus-input"]
         [:span
          ;; Näytä vastikään ladattu liite / liitteet
          (when (and nayta-lisatyt-liitteet? @tiedosto)
@@ -308,14 +307,17 @@
            [:progress {:value edistyminen :max 100}]
            ;; Näytetään uuden liitteen lisäyspainike
            [:span.liitekomponentti
-            [:button {:tabIndex "0"
-                      :id "tiedoston-lataus-label"
+            [:button {:id "tiedoston-lataus-label"
                       :class (str "file-upload nappi-toissijainen "
                                (when grid? "nappi-grid ")
                                (when disabled? "disabled "))
-                      :on-click #(.stopPropagation %)
+                      :on-click #(do
+                                   (.stopPropagation %)
+                                   (-> (.getElementById js/document inputin-id) .click))
                       :on-key-down #(when (harja-dom/enter-nappain? %)
-                                      (.click (.querySelector js/document (str "[id=tiedoston-lataus-input]"))))}
+                                      (.stopPropagation %)
+                                      (.preventDefault %)
+                                      (-> (.getElementById js/document inputin-id) .click))}
              [ikonit/ikoni-ja-teksti
               (ikonit/livicon-upload)
               (if @tiedosto
@@ -351,12 +353,12 @@
                                                                      (if (:viesti ed)
                                                                        (str " (" (:viesti ed) ")")))))))))))]
 
-                {:id "tiedoston-lataus-input"
+                {:id inputin-id
                  :type "file"
                  :style {:display "none"}
-                 :on-key-down #(if (harja-dom/enter-nappain? %)
-                                 (on-change-fn (.-target %) urakka-id)
-                                 (js/console.log "Ei enteriä : %" (pr-str %)))
+                 :on-click #(.stopPropagation %)
+                 :on-key-down #(when (harja-dom/enter-nappain? %)
+                                 (on-change-fn (.-target %) urakka-id))
                  :on-change #(on-change-fn (.-target %) urakka-id)})]]
             [:div.liite-virheviesti @virheviesti]])]))))
 
@@ -443,19 +445,26 @@
   nappi-luokka              Voidaan tällä hetkellä tehdä napiton-nappi"
   [params-map opts]
   (fn [params-map {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
-    [:span
-     [:span.liitekomponentti
-      [:label {:class (str "file-upload nappi-reunaton ei-margin-topia "
+    (let [inputin-id "tiedoston-lataus-input"]
+      [:span
+       [:span.liitekomponentti
+        [:button {:class (str "file-upload nappi-toissijainen "
                            (when grid? "nappi-grid ")
-                           (when disabled? "disabled ")
-                           (when nappi-luokka (str nappi-luokka " ")))
-               :on-click #(.stopPropagation %)}
-       [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
-       [:input.upload
-        {:type "file"
-         :style {:display "none"}
-         :on-input #(do
-                      (k/laheta-tiedosto! url (.-target %) params-map tiedosto-ladattu lataus-epaonnistui)
-                      ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
-                      ;; uudestaan.
-                      (set! (.-value (.-target %)) nil))}]]]]))
+                           (when disabled? "disabled "))
+                  :on-click #(do
+                               (.stopPropagation %)
+                               (-> (.getElementById js/document inputin-id) .click))
+                  :on-key-down #(when (harja-dom/enter-nappain? %)
+                                  (.stopPropagation %)
+                                  (.preventDefault %)
+                                  (-> (.getElementById js/document inputin-id) .click))}
+         [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
+         [:input.upload
+          {:id inputin-id
+           :type "file"
+           :style {:display "none"}
+           :on-input #(do
+                        (k/laheta-tiedosto! url (.-target %) params-map tiedosto-ladattu lataus-epaonnistui)
+                        ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
+                        ;; uudestaan.
+                        (set! (.-value (.-target %)) nil))}]]]])))

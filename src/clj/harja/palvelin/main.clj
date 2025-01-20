@@ -75,6 +75,7 @@
     [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
     [harja.palvelin.palvelut.hallinta.lupaukset-palvelu :as lupaukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.paallystysilmoitukset-hallinta-palvelu :as paallystysilmoitukset-hallinta]
     [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
@@ -114,7 +115,7 @@
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
     [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
-    [harja.palvelin.palvelut.yllapitokohteet.mpu-kustannukset :as mpu-kustannukset]
+    [harja.palvelin.palvelut.yllapitokohteet.kustannukset-palvelu :as kustannukset-palvelu]
     [harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelu]
     [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
 
@@ -237,12 +238,13 @@
                        (http-palvelin/luo-http-palvelin http-palvelin
                          kehitysmoodi)
                        [:todennus :metriikka :db])
-      :tuck-remoting (component/using
+      ;; FIXME: Tuck-remoting otettu toistaiseksi pois testikäytöstä kokonaan, koska se ei toimi kunnolla
+      #_#_:tuck-remoting (component/using
                        (tuck-remoting/luo-tuck-remoting (:sahke-headerit asetukset))
                        [:http-palvelin :db])
 
       ;; Tuck-remoting palvelu ilmoitusten välittämiseen WebSocketin yli
-      :ilmoitukset-ws-palvelu (component/using
+      #_#_:ilmoitukset-ws-palvelu (component/using
                                 (ilmoitukset-ws/luo-ilmoitukset-ws)
                                 [:tuck-remoting :db])
 
@@ -459,7 +461,7 @@
                      (paikkaukset/->Paikkaukset)
                      [:http-palvelin :db :fim :api-sahkoposti :yha-paikkauskomponentti])
       :paikkauskohteet (component/using
-                         (paikkauskohteet/->Paikkauskohteet (:kehitysmoodi asetukset))
+                         (paikkauskohteet/->Paikkauskohteet)
                          [:http-palvelin :db :fim :api-sahkoposti :excel-vienti])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
@@ -524,7 +526,7 @@
 
       :talvihoitoreitit (component/using
                           (talvihoitoreitit/->Talvihoitoreitit)
-                          [:http-palvelin :db])
+                          [:http-palvelin :db :excel-vienti])
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
@@ -542,8 +544,8 @@
                           (reikapaikkaukset/->Reikapaikkaukset)
                           [:http-palvelin :db :excel-vienti])
 
-      :mpu-kustannukset (component/using
-                          (mpu-kustannukset/->MPUKustannukset)
+      :kustannukset (component/using
+                          (kustannukset-palvelu/->Kustannukset)
                           [:http-palvelin :db])
 
       :tyomaapaivakirja (component/using
@@ -835,6 +837,11 @@
       :lupaukset-hallinta
       (component/using
         (lupaukset-hallinta/->LupauksetHallinta)
+        [:http-palvelin :db])
+      
+      :paallystysilmoitukset-hallinta
+      (component/using
+        (paallystysilmoitukset-hallinta/->PaallystysilmoituksetHallinta)
         [:http-palvelin :db])
 
       :rahavaraukset-hallinta

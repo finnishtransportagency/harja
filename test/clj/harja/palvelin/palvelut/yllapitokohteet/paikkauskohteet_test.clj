@@ -17,6 +17,7 @@
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.kyselyt.konversio :as konv]))
 
+(declare thrown?)
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -26,7 +27,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :paikkauskohteet (component/using
-                                           (paikkauskohteet/->Paikkauskohteet false) ;; Asetetaan kehitysmoodi falseksi
+                                           (paikkauskohteet/->Paikkauskohteet)
                                            [:http-palvelin :db])))))
 
   (testit)
@@ -113,7 +114,7 @@
         kohde (merge {:urakka-id urakka-id}
                 (default-paikkauskohde (rand-int 999999)))
 
-        kohde-id (kutsu-palvelua (:http-palvelin jarjestelma)
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :tallenna-paikkauskohde-urakalle
                                  +kayttaja-jvh+
                                  kohde)
@@ -242,7 +243,7 @@
         kohde (merge {:id (:id kohde-id)}
                      kohde)
         ;; Poistetaan paikkauskohde
-        poistettu-kohde (kutsu-palvelua (:http-palvelin jarjestelma)
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :poista-paikkauskohde
                                         +kayttaja-jvh+
                                         kohde)
@@ -396,8 +397,7 @@
 (defn vastaanota-excel [urakka-id kayttaja tiedoston-nimi]
   (paikkauskohteet/vastaanota-excel (:db jarjestelma) nil nil {:params {"urakka-id" (str urakka-id)
                                                                         "file" {:tempfile (io/file tiedoston-nimi)}}
-                                                               :kayttaja kayttaja}
-                                    false)) ;; Kehitysmoodi falseksi
+                                                               :kayttaja kayttaja}))
 
 (deftest tallenna-validit-paikkauskohteet-excelista-kantaan
   (let [urakka-id @kemin-alueurakan-2019-2023-id
@@ -475,7 +475,7 @@
     (is (= 90 (:pituus laskettu51)))))
 
 ;; Testataan käsin lisätyn paikkauksen toimintaa
-(defn testipaikkaus [paikkauskohde-id urakka-id kayttaja-id]
+(defn testipaikkaus [paikkauskohde-id urakka-id]
   {:alkuaika #inst"2021-04-21T10:47:24.183975000-00:00"
    :loppuaika #inst"2021-04-21T11:47:24.183975000-00:00"
    :tyomenetelma 5
@@ -494,13 +494,12 @@
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
                 (default-paikkauskohde (rand-int 999999)))
-        tyomenetelmat @paikkauskohde-tyomenetelmat
         kayttaja-id (:id +kayttaja-jvh+)
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :tallenna-paikkauskohde-urakalle
                                       +kayttaja-jvh+
                                       (assoc kohde :paikkauskohteen-tila "tilattu"))
-        paikkaus (testipaikkaus (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
+        paikkaus (testipaikkaus (:id paikkauskohde) urakka-id)
         tallennettu-paikkaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-kasinsyotetty-paikkaus
                                              +kayttaja-jvh+
@@ -517,12 +516,11 @@
     (is (= vertailtava-paikkaus odotettu-paikkaus))
     (is (= 5 (::paikkaus/tyomenetelma tallennettu-paikkaus) ;; Konetiivistetty reikävaluasfalttipaikkaus (REPA)
            #_(hae-tyomenetelman-arvo :nimi :id (::paikkaus/tyomenetelma tallennettu-paikkaus))))
-    (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))
-    ))
+    (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))))
 
 
 ;; Tallennetaan käsin lisättävä levittimellä tehty paikkaus
-(defn testipaikkauslevittimella [paikkauskohde-id urakka-id kayttaja-id]
+(defn testipaikkauslevittimella [paikkauskohde-id urakka-id]
   {:alkuaika #inst"2021-06-21T10:47:24.183975000-00:00"
    :loppuaika #inst"2021-06-21T11:47:24.183975000-00:00"
    :tyomenetelma 1
@@ -548,13 +546,11 @@
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
                 (default-paikkauskohde (rand-int 999999)))
-        tyomenetelmat @paikkauskohde-tyomenetelmat
-
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :tallenna-paikkauskohde-urakalle
                                       +kayttaja-jvh+
                                       (assoc kohde :paikkauskohteen-tila "tilattu"))
-        paikkaus (testipaikkauslevittimella (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
+        paikkaus (testipaikkauslevittimella (:id paikkauskohde) urakka-id)
         tallennettu-paikkaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-kasinsyotetty-paikkaus
                                              +kayttaja-jvh+
@@ -571,7 +567,7 @@
                                       :tallenna-paikkauskohde-urakalle
                                       +kayttaja-jvh+
                                       (assoc kohde :paikkauskohteen-tila "tilattu"))
-        paikkaus (testipaikkauslevittimella (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
+        paikkaus (testipaikkauslevittimella (:id paikkauskohde) urakka-id)
         ;; Muutetaan alkuosa liian suureksi.
         paikkaus (assoc paikkaus :aosa 99999999999999
                                  :aet 100
@@ -601,7 +597,7 @@
                                       +kayttaja-jvh+
                                       (assoc kohde :paikkauskohteen-tila "tilattu"))
         alkup-paikkausmaara (count (hae-paikkaukset urakka-id (:id paikkauskohde)))
-        paikkaus (testipaikkaus (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
+        paikkaus (testipaikkaus (:id paikkauskohde) urakka-id)
         tallennettu-paikkaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-kasinsyotetty-paikkaus
                                              +kayttaja-jvh+

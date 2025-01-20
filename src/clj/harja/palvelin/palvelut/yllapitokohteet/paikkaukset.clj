@@ -1,29 +1,20 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkaukset
   (:require [com.stuartsierra.component :as component]
-            [clojure.java.jdbc :as jdbc]
-            [specql.op :as op]
-            [harja.geo :as geo]
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.tieverkko :as tv]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
             [taoensso.timbre :as log]
             [slingshot.slingshot :refer [try+]]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
-            [specql.core :as specql]
             [clojure.data.json :as json])
-  (:import (java.text SimpleDateFormat ParseException)
-           (java.sql Date)
-           (java.util TimeZone)))
+  (:import (java.text SimpleDateFormat)))
 
 (defn kasittele-koko-ja-sijainti
   "Paikkauskohteiden sisään haetaan siis json objektina paikkaukset. Ja koska kyseessä on json objekti, niin kaikki
