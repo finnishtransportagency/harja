@@ -95,7 +95,7 @@
 (defn poista-kattohinnan-oikaisu [app]
   (tuck-apurit/post! app :poista-kattohinnan-oikaisu
     {::urakka/id (-> @tila/yleiset :urakka :id)
-     :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
+     ::valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
     {:onnistui ->PoistaKattohinnanOikaisuOnnistui
      :epaonnistui ->PoistaKattohinnanOikaisuEpaonnistui
      :paasta-virhe-lapi? true}))
@@ -112,9 +112,8 @@
   TallennaOikaisu
   (process-event [{oikaisu :oikaisu id :id} app]
     (let [oikaisu (merge {::urakka/id (-> @tila/yleiset :urakka :id)
-                          :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
-                    oikaisu)
-          _ (js/console.log "TallennaOikaisu" (pr-str oikaisu))]
+                          ::valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
+                    oikaisu)]
       ;; Lähetetään oikaisun tallennus serverille vain, jos kaikki tiedot on syötetty
       (when (and (::valikatselmus/otsikko oikaisu)
               (::valikatselmus/selite oikaisu)
@@ -207,7 +206,7 @@
   (process-event [_ {{uusi-kattohinta :uusi-kattohinta} :kattohinnan-oikaisu :as app}]
     (if uusi-kattohinta
       (let [oikaisu {::urakka/id (-> @tila/yleiset :urakka :id)
-                     :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
+                     ::valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
                      ::valikatselmus/uusi-kattohinta uusi-kattohinta}]
         (tuck-apurit/post! :tallenna-kattohinnan-oikaisu
           oikaisu
@@ -385,7 +384,7 @@
   HaeValikatselmuksenTiedot
   (process-event [{urakkaid :urakkaid hoitovuosi :hoitovuosi} app]
     (hae-valikatselmuksen-tiedot urakkaid hoitovuosi)
-    app)
+    (assoc app :haku-kaynnissa? true))
 
   HaeValikatselmuksenTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -402,4 +401,6 @@
   HaeValikatselmuksenTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "HaeValikatselmuksenTiedotEpaonnistui :: vastaus" (pr-str vastaus))
-    (assoc app :valikatselmuksen-tiedot nil)))
+    (-> app
+      (assoc :valikatselmuksen-tiedot nil)
+      (assoc :haku-kaynnissa? false))))

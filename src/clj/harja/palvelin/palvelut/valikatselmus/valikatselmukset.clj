@@ -45,30 +45,6 @@
 (defn heita-virhe [viesti] (throw+ {:type "Error"
                                     :virheet {:koodi "ERROR" :viesti viesti}}))
 
-(defn tarkista-aikavali
-  "Tarkistaa, ollaanko kutsuhetkellä (nyt) tavoitehinnan oikaisujen tai päätösten teon sallitussa aikavälissä, eli
-  Suomen aikavyöhykkeellä syyskuun 1. päivän ja joulukuun viimeisen päivän välissä valitun hoitokauden aikana. Muulloin heittää virheen."
-  [urakka toimenpide kayttaja valittu-hoitokausi]
-  (let [nykyhetki (pvm/nyt)
-        toimenpide-teksti (case toimenpide
-                            :paatos "Urakan päätöksiä"
-                            :tavoitehinnan-oikaisu "Tavoitehinnan oikaisuja")
-        urakka-aktiivinen? (pvm/valissa? (pvm/nyt) (:alkupvm urakka) (:loppupvm urakka))
-        sallitussa-aikavalissa? (sallitussa-aikavalissa? valittu-hoitokausi nykyhetki)
-        jvh? (roolit/jvh? kayttaja)
-
-        ;; MH urakoissa on pakko sallia muutokset vuosille 2019 ja 2020, koska päätöksiä ei ole voitu ennen vuoden 2021 syksyä
-        ;; näille urakoille tehdä, johtuen päätösten myöhäisestä valmistumisesta. Niinpä sallitaan 2023 vuoteen asti näille muutokset
-        ;; sallimalla aikavälitarkistus.
-        viimeinen-poikkeusaika (pvm/->pvm "31.12.2022")
-        poikkeusvuosi? (and
-                         (pvm/sama-tai-ennen? (pvm/nyt) viimeinen-poikkeusaika)
-                         (lupaus-domain/urakka-19-20? urakka))]
-    (when-not (or jvh? urakka-aktiivinen? poikkeusvuosi?) (heita-virhe (str toimenpide-teksti " ei voi käsitellä urakka-ajan ulkopuolella")))
-    (when-not (or jvh? sallitussa-aikavalissa? poikkeusvuosi?)
-      (throw+ {:type "Error"
-               :virheet {:koodi "ERROR" :viesti (str toimenpide-teksti " saa käsitellä ainoastaan sallitulla aikavälillä.")}}))))
-
 (defn tarkista-valikatselmusten-urakkatyyppi [urakka toimenpide]
   (let [toimenpide-teksti (case toimenpide
                             :paatos "Urakan päätöksiä"

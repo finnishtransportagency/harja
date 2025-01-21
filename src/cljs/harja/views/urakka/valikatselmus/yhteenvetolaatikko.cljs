@@ -35,8 +35,7 @@
         ;; Tilaajan saatavat
         lupaussanktio (or (get-in valikatselmuksen-tiedot [:lupaustiedot :yhteenveto :bonus-tai-sanktio :sanktio]) 0)
         ;; Tilaajalle sanktio on positiivinen luku
-        lupaussanktio (if (not= 0) (* -1 lupaussanktio)
-                        lupaussanktio)
+        lupaussanktio (if (zero? lupaussanktio) lupaussanktio (- lupaussanktio))
         muut-sanktiot (apply + (map (fn [a]
                                       (if (not (contains? #{"lupaussanktio" "arvonvahennyssanktio"} (:sakkoryhma a)))
                                         (+ (:maara a) (:indeksikorjaus a))

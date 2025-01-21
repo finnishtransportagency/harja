@@ -286,7 +286,7 @@
         lomakkeen-tila (cond
                          paatos-tehty? :paatos-tehty
                          urakan-osuus-yli-maksimin? :yli-maksimin
-                         :oletus :ali-maksimin)]
+                         :else :ali-maksimin)]
     [:div.paatos
      [:div {:class ["paatos-check" (when-not paatos-tehty? "ei-tehty")]}
       [ikonit/livicon-check]]
@@ -658,7 +658,7 @@
         [:div {:id "vayla"}
          (if (:haku-kaynnissa? app)
            [:div {:style {:padding-top "20px"}}
-            [yleiset/ajax-loader "Päätöksiä haetaan..."]]
+            [yleiset/ajax-loader "Haetaan välikatselmuksen tietoja..."]]
            [:div.valikatselmus-container
             #_ [debug/debug app]
             [:div.col-xs-12.col-md-7
