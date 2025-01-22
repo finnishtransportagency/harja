@@ -193,7 +193,7 @@
       "Hoitokaudelle ei ole asetettu tavoitehintaa!"]]
     [:p "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle"]]])
 
-(defn tavoitehinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi urakan-paatokset]} toteuma
+(defn tavoitehinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi urakan-paatokset tallennus-kesken?]} toteuma
                                    oikaistu-tavoitehinta oikaistu-kattohinta voi-muokata?]
   (let [ylityksen-maara (if (> toteuma oikaistu-kattohinta)
                           (- oikaistu-kattohinta oikaistu-tavoitehinta)
@@ -231,16 +231,16 @@
            [urakalla-ei-tavoitehintaa-varoitus])
          [napit/yleinen-ensisijainen "Tallenna päätös"
           #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
-          {:disabled (not voi-muokata?)}]]
+          {:disabled (or tallennus-kesken? (not voi-muokata?))}]]
 
         [napit/nappi
          "Kumoa päätös"
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
-         {:disabled (not voi-muokata?)
+         {:disabled (or tallennus-kesken? (not voi-muokata?))
           :luokka "nappi-toissijainen napiton-nappi"
           :ikoni [ikonit/harja-icon-action-undo]}])]]))
 
-(defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi urakan-paatokset]} toteuma
+(defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi urakan-paatokset tallennus-kesken?]} toteuma
                                    oikaistu-tavoitehinta tavoitehinta voi-muokata?]
   (let [alituksen-maara (- oikaistu-tavoitehinta toteuma)
         urakoitsijan-osuus (* valikatselmus/+tavoitepalkkio-kerroin+ alituksen-maara) ;; 30% alituksesta
@@ -311,12 +311,12 @@
 
          [napit/yleinen-ensisijainen "Tallenna päätös"
           #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
-          {:disabled (not voi-muokata?)}]]
+          {:disabled (or tallennus-kesken? (not voi-muokata?))}]]
 
         [napit/nappi
          "Kumoa päätös"
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
-         {:disabled (not voi-muokata?)
+         {:disabled (or tallennus-kesken? (not voi-muokata?))
           :luokka "nappi-toissijainen napiton-nappi"
           :ikoni [ikonit/harja-icon-action-undo]}])]]))
 
@@ -340,7 +340,8 @@
                                     :arvo-atom (r/wrap siirto
                                                  #(e! (valikatselmus-tiedot/->PaivitaPaatosLomake (assoc kattohinnan-ylitys-lomake :siirto %) :kattohinnan-ylitys-lomake)))}]])
 
-(defn kattohinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi kattohinnan-ylitys-lomake] :as app} toteuma oikaistu-kattohinta tavoitehinta voi-muokata?]
+(defn kattohinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi kattohinnan-ylitys-lomake tallennus-kesken?] :as app}
+                                 toteuma oikaistu-kattohinta tavoitehinta voi-muokata?]
   (let [ylityksen-maara (- toteuma oikaistu-kattohinta)
         muokattava? (or (not (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)) (:muokataan? kattohinnan-ylitys-lomake))
         maksun-tyyppi (:maksun-tyyppi kattohinnan-ylitys-lomake)
@@ -425,24 +426,22 @@
               [urakalla-ei-tavoitehintaa-varoitus])
             [napit/yleinen-ensisijainen "Tallenna päätös"
              #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
-             {:disabled (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake)))}]]
+             {:disabled (or tallennus-kesken? (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake))))}]]
            [napit/nappi
             "Kumoa päätös"
             #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake) ::valikatselmus/kattohinnan-ylitys))
             {:luokka "nappi-toissijainen napiton-nappi"
-             :ikoni [ikonit/harja-icon-action-undo]}]))]]]))
+             :ikoni [ikonit/harja-icon-action-undo]
+             :disabled tallennus-kesken?}]))]]]))
 
-(defn lupaus-lomake [e! app voi-muokata?]
-  (let [yhteenveto (:yhteenveto app)
-        hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
+(defn lupaus-lomake [e! {:keys [hoitokauden-alkuvuosi yhteenveto tallennus-kesken?] :as app} voi-muokata?]
+  (let [paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
         luvatut-pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
         toteutuneet-pisteet (get-in app [:yhteenveto :pisteet :toteuma])
         tavoitehinta (get-in app [:yhteenveto :tavoitehinta])
         lupausbonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
         lupaussanktio (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
         tavoite-taytetty? (get-in app [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
-        tallennus-kesken? (:tallennus-kesken? app)
         urakoitsijan-maksu (cond lupaussanktio lupaussanktio
                                  tavoite-taytetty? 0M
                                  :else nil)

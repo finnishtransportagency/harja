@@ -356,22 +356,26 @@
 
   PoistaPaatos
   (process-event [{id :id tyyppi :tyyppi} app]
-    (tuck-apurit/post! app :poista-paatos
-      {::valikatselmus/paatoksen-id id}
-      {:onnistui ->PoistaPaatosOnnistui
-       :onnistui-parametrit [tyyppi]
-       :epaonnistui ->PoistaPaatosEpaonnistui}) )
+    (-> app
+      (assoc :tallennus-kesken? true)
+      (tuck-apurit/post! :poista-paatos
+        {::valikatselmus/paatoksen-id id}
+        {:onnistui ->PoistaPaatosOnnistui
+         :onnistui-parametrit [tyyppi]
+         :epaonnistui ->PoistaPaatosEpaonnistui})))
 
   PoistaPaatosOnnistui
   (process-event [{tyyppi :tyyppi} app]
     (hae-urakan-paatokset app (-> @tila/yleiset :urakka :id))
-    (update app (tyyppi->lomake tyyppi) dissoc ::valikatselmus/paatoksen-id))
+    (-> app
+      (assoc :tallennus-kesken? false)
+      (update (tyyppi->lomake tyyppi) dissoc ::valikatselmus/paatoksen-id)))
 
   PoistaPaatosEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "PoistaPaatosEpaonnistui" vastaus)
     (viesti/nayta-toast! "Päätöksen kumoamisessa tapahtui virhe" :varoitus)
-    app)
+    (assoc app :tallennus-kesken? false))
 
   MuokkaaPaatosta
   (process-event [{lomake-avain :lomake-avain} app]
