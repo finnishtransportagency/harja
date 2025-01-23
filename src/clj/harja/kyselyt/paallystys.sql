@@ -120,7 +120,8 @@ SELECT
   ypk.lahetetty,
   ypk.lahetys_onnistunut        AS "lahetys-onnistunut",
   ypk.lahetysvirhe,
-  u.id                          AS "urakka-id"
+  u.id                          AS "urakka-id",
+  u.hallintayksikko             AS "hallintayksikko-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE

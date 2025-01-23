@@ -48,8 +48,10 @@ describe('Talvihoitoreitit näkymä aukeaa', function ()
     {
         cy.contains('Reitti 1');
         cy.contains('Reitti 2');
-        cy.contains('Tuo kohteet Excelistä');
         cy.contains('Lataa Excel-pohja');
+        cy.contains('Tuo kohteet Excelistä');
+        cy.contains('Lataa talvihoitoreitit-Excel');
+
 
         // Avataan Reitti 1
         cy.get('[data-cy="avaa-reitti-Reitti 1"]').click();
@@ -62,7 +64,7 @@ describe('Talvihoitoreitit näkymä aukeaa', function ()
 
         // Varmistetaan, että Reitti 1:sen alta löytyy oikeat tiedot
         cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(0).contains('4');
-        cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(1).contains('4 - 414/1 - 420/1000');
+        cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(1).contains('414/1 - 420/1000');
         cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(2).contains('Is');
         cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(3).contains('0,05');
         // Pituuteen ei voi asettaa tarkkaa arvoa, koska se on laskettu mahdollisesti erilaisella tieverkkoaineistolla
@@ -70,7 +72,7 @@ describe('Talvihoitoreitit näkymä aukeaa', function ()
         //cy.get('table.grid').eq(0).find('tr').eq(2).find('td').eq(4).should('be.gte', 28);
 
         cy.get('table.grid').eq(0).find('tr').eq(3).find('td').eq(0).contains('4');
-        cy.get('table.grid').eq(0).find('tr').eq(3).find('td').eq(1).contains('4 - 404/1 - 408/1000');
+        cy.get('table.grid').eq(0).find('tr').eq(3).find('td').eq(1).contains('404/1 - 408/1000');
         cy.get('table.grid').eq(0).find('tr').eq(3).find('td').eq(2).contains('Ib');
         cy.get('table.grid').eq(0).find('tr').eq(3).find('td').eq(3).contains('0,01');
         // Pituuteen ei voi asettaa tarkkaa arvoa, koska se on laskettu mahdollisesti erilaisella tieverkkoaineistolla

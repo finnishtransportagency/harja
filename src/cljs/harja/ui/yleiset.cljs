@@ -3,6 +3,7 @@
   (:require [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [reagent.ratom :as ratom]
             [harja.ui.komponentti :as komp]
             [goog.events :as events]
@@ -155,10 +156,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             :on-click #(do (when stop-propagation (.stopPropagation %)) (.preventDefault %) (toiminto))}
         sisalto]))))
 
-(defn staattinen-linkki-uuteen-ikkunaan [otsikko linkki]
-  [:a {:href linkki
-       :target "_blank"
-       :rel "noopener noreferrer"} otsikko])
+(defn staattinen-linkki-uuteen-valilehteen
+  ([otsikko linkki]
+   (staattinen-linkki-uuteen-valilehteen otsikko linkki {}))
+   ([otsikko linkki {:keys [title] :as opts}]
+    [:a {:href linkki
+         :target "_blank"
+         :title title
+         :rel "noopener noreferrer"} otsikko]))
 
 (defn tiedoston-lataus-linkki
   "Tarkoitettu esimerkiksi erillisen esxel tiedoston lataamiseen. Käyttää html5 speksin linkin download atriboottia.
@@ -678,7 +683,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def tietyoilmoitus-siirtynyt-txt
   [:div.inline-block.tietyo-info
    "Tietyöilmoituksen tekeminen on siirtynyt Harjasta Fintrafficin puolelle. Voit tehdä sen "
-   [staattinen-linkki-uuteen-ikkunaan "tämän linkin kautta."
+   [staattinen-linkki-uuteen-valilehteen "tämän linkin kautta."
     "https://tietyoilmoitus.tieliikennekeskus.fi/#/"]])
 
 (defn tietyoilmoitus-siirtynyt-toast []
@@ -799,7 +804,7 @@ jatkon."
         wrapperin-koko (:wrapperin-koko opts)]
     (komp/luo
       (komp/piirretty
-        #(let [n (r/dom-node %)
+        #(let [n (rdom/dom-node %)
                parent-rect (aget (.getClientRects (.-parentNode n)) 0)
                width (if (map? wrapperin-koko)
                        (:leveys wrapperin-koko)
@@ -874,7 +879,9 @@ jatkon."
                                 [:div.inline-block
                                  {:class wrapper-luokka
                                   :on-mouse-enter #(reset! tooltip-visible?-atom true)
-                                  :on-mouse-leave #(reset! tooltip-visible?-atom false)}
+                                  :on-mouse-leave #(reset! tooltip-visible?-atom false)
+                                  :on-focus #(reset! tooltip-visible?-atom true)
+                                  :on-blur #(reset! tooltip-visible?-atom false)}
                                  komponentti
                                  [tooltip-sisalto opts @tooltip-visible?-atom sisalto]])
     komponentti))

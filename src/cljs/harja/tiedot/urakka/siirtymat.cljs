@@ -108,11 +108,12 @@
 
 (defn avaa-paallystysilmoitus!
   "Navigoi päällystysilmoitukseen näyttäen tiedot."
-  [{:keys [paallystyskohde-id kohteen-urakka-id valittu-urakka-id] :as tiedot}]
+  [{:keys [paallystyskohde-id kohteen-urakka-id] :as tiedot}]
   (go
     (let [{:keys [yllapitokohde-id urakka-id hallintayksikko-id] :as vastaus}
           (<! (hae-paallystysilmoituksen-tiedot {:paallystyskohde-id paallystyskohde-id
                                                  :urakka-id kohteen-urakka-id}))
+          valittu-urakka-id @nav/valittu-urakka-id
           pot-versio (:versio vastaus)
           vastaus (if (= 1 pot-versio)
                     (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
@@ -120,9 +121,10 @@
           nykyinen-valilehti-taso1 @nav/valittu-sivu
           nykyinen-valilehti-taso2 (nav/valittu-valilehti :urakat)
           nykyinen-valilehti-taso3 (nav/valittu-valilehti :kohdeluettelo-paallystys)]
-
+      (nav/esta-url-paivitys!)
       ;; aseta urakka ja hy jos tarpeen
-      (when-not (and valittu-urakka-id (= valittu-urakka-id kohteen-urakka-id urakka-id))
+      (when-not (and valittu-urakka-id (= valittu-urakka-id kohteen-urakka-id urakka-id)
+                  (= @nav/valittu-hallintayksikko-id hallintayksikko-id))
         (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id))
 
       ;; Vaihdetaan välilehtiä jos tarvetta
@@ -135,13 +137,14 @@
       (when-not (= nykyinen-valilehti-taso3 :paallystysilmoitukset)
         (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystysilmoitukset))
 
+      (nav/salli-url-paivitys!)
       (when (= paallystyskohde-id yllapitokohde-id) ; estä pääsy toiseen ilmoitukseen esim. spoofaamalla ypk-id
         ;; Deeppi harppuuna: avataan päällystysilmoitus asettamalla päällystystieto ns:n atomiin data
         (swap! paallystys/tila assoc :paallystysilmoitus-lomakedata
                (assoc vastaus
                  :kirjoitusoikeus?
                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                           valittu-urakka-id)))))))
+                                           urakka-id)))))))
 
 (defn avaa-paikkausten-pot!
   "Navigoi paikkausten päällystysilmoituksiin ja avaa pot lomake."

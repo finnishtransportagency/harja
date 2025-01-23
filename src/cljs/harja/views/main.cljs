@@ -5,7 +5,7 @@
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-ikkunaan ajax-loader livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-valilehteen ajax-loader livi-pudotusvalikko]]
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.ui.palaute :as palaute]
@@ -124,7 +124,7 @@
     (when (and (mobiiliselain?)
                (oikeudet/laadunseuranta))
       [:li
-       [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu"
+       [staattinen-linkki-uuteen-valilehteen "Laadunseurannan mobiilityökalu"
         (str k/+polku+ "laadunseuranta")]])]
 
    :right

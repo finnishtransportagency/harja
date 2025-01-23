@@ -2,6 +2,7 @@
   "Harjan käyttöön soveltuva geneerinen jatkuvassa
    muokkaustilassa oleva ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [harja.ui.yleiset :refer [virheen-ohje] :as y]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
@@ -126,7 +127,7 @@
                                         (fn [_ _ _ uusi-arvo]
                                           (@grid-tilan-muokkaus-fn uusi-arvo))))
        :component-did-mount (fn [this]
-                              (reset! this-node (r/dom-node this))
+                              (reset! this-node (rdom/dom-node this))
                               (.addEventListener js/window EventType/RESIZE virhelaatikon-max-koon-asetus)
                               (virhelaatikon-max-koon-asetus nil))
        :component-will-unmount (fn [& _]
@@ -376,7 +377,7 @@
     (r/create-class
      {:display-name "muokkausgridin-runko"
       :component-did-mount (fn [this]
-                             (swap! gridin-tietoja assoc :grid-node (r/dom-node this)))
+                             (swap! gridin-tietoja assoc :grid-node (rdom/dom-node this)))
       :reagent-render
       (fn [{:keys [muokatut skeema tyhja virheet varoitukset huomautukset valiotsikot ohjaus vetolaatikot disable-input?
                    nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
