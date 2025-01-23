@@ -505,6 +505,12 @@
   [tie alkuosa alkuet loppuosa loppuet]
   (str tie " - " alkuosa "/" alkuet " - " loppuosa "/" loppuet))
 
+(defn osoiteosat-moderni-fmt
+  "Formatoi tieosoitteen kentät modernilla tavalla ilman tienumeroa, esim 1/0 - 3/300"
+  ;; Tätä on alettu käyttää enemmän noin 2022 tienoilla, ainakin paikkauspuolella.
+  [alkuosa alkuet loppuosa loppuet]
+  (str alkuosa "/" alkuet " - " loppuosa "/" loppuet))
+
 ;; Hoitourakoissa on asiakkaan kanssa sovittu, että seuraaville Päällysteiden paikkaus -toimenpiteen
 ;; alaisille tehtäville vaaditaan syöttölomakkeella aina sijainti
 (def tehtavat-joille-sijainti-pakollinen
