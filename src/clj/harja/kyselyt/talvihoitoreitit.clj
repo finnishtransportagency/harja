@@ -24,9 +24,6 @@
     "Talvihoito" :huoltoaukot
     "Hoito osin" :huoltoaukot
     "Ei talvihoitoa" :huoltoaukot
-    "L" :kavely_ja_pyoraily
-    "K1" :kavely_ja_pyoraily
-    "K2" :kavely_ja_pyoraily
     :maantiet))
 
 (defn lisaa-reitit [db talvihoitoreitti-id data]
@@ -126,8 +123,8 @@
                                        reitit (map (fn [r]
                                                      (-> r
                                                        (assoc :sijainti (:reitti r))
-                                                       (assoc :formatoitu-tr (tr/tr-osoite-moderni-fmt
-                                                                               (:tie r) (:alkuosa r) (:alkuetaisyys r)
+                                                       (assoc :formatoitu-tr (tr/osoiteosat-moderni-fmt
+                                                                               (:alkuosa r) (:alkuetaisyys r)
                                                                                (:loppuosa r) (:loppuetaisyys r)))
                                                        (dissoc :reitti))) reitit)
 
