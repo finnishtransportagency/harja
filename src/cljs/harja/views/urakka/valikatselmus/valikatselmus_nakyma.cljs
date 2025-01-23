@@ -212,7 +212,7 @@
     [:p "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle"]]])
 
 (defn tavoitehinnan-ylitys-lomake [e! hoitokauden-alkuvuosi paatokset toteuma
-                                   oikaistu-tavoitehinta oikaistu-kattohinta voi-muokata?]
+                                   oikaistu-tavoitehinta oikaistu-kattohinta voi-muokata? tallennus-kesken?]
   (let [ylityksen-maara (if (> toteuma oikaistu-kattohinta)
                           (- oikaistu-kattohinta oikaistu-tavoitehinta)
                           (- toteuma oikaistu-tavoitehinta))
@@ -249,17 +249,17 @@
            [urakalla-ei-tavoitehintaa-varoitus])
          [napit/yleinen-ensisijainen "Tallenna päätös"
           #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
-          {:disabled (not voi-muokata?)}]]
+          {:disabled (or tallennus-kesken? (not voi-muokata?))}]]
 
         [napit/nappi
          "Kumoa päätös"
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
-         {:disabled (not voi-muokata?)
+         {:disabled (or tallennus-kesken? (not voi-muokata?))
           :luokka "nappi-toissijainen napiton-nappi"
           :ikoni [ikonit/harja-icon-action-undo]}])]]))
 
 (defn tavoitehinnan-alitus-lomake [e! hoitokauden-alkuvuosi paatokset toteuma
-                                   oikaistu-tavoitehinta tavoitehinta voi-muokata?]
+                                   oikaistu-tavoitehinta tavoitehinta voi-muokata? tallennus-kesken?]
   (let [alituksen-maara (- oikaistu-tavoitehinta toteuma)
         urakoitsijan-osuus (* valikatselmus/+tavoitepalkkio-kerroin+ alituksen-maara) ;; 30% alituksesta
         viimeinen-hoitokausi? (>= hoitokauden-alkuvuosi (dec (pvm/vuosi (:loppupvm @nav/valittu-urakka))))
@@ -329,12 +329,12 @@
 
          [napit/yleinen-ensisijainen "Tallenna päätös"
           #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
-          {:disabled (not voi-muokata?)}]]
+          {:disabled (or tallennus-kesken? (not voi-muokata?))}]]
 
         [napit/nappi
          "Kumoa päätös"
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
-         {:disabled (not voi-muokata?)
+         {:disabled (or tallennus-kesken? (not voi-muokata?))
           :luokka "nappi-toissijainen napiton-nappi"
           :ikoni [ikonit/harja-icon-action-undo]}])]]))
 
@@ -358,7 +358,7 @@
                                     :arvo-atom (r/wrap siirto
                                                  #(e! (valikatselmus-tiedot/->PaivitaPaatosLomake (assoc kattohinnan-ylitys-lomake :siirto %) :kattohinnan-ylitys-lomake)))}]])
 
-(defn kattohinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi] :as app} toteuma oikaistu-kattohinta tavoitehinta voi-muokata?]
+(defn kattohinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi] :as app} toteuma oikaistu-kattohinta tavoitehinta voi-muokata? tallennus-kesken?]
   (let [kattohinnan-ylitys-lomake (get-in app [:valikatselmuksen-tiedot :kattohinnan-ylitys-lomake])
         ylityksen-maara (- toteuma oikaistu-kattohinta)
         muokattava? (or (not (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)) (:muokataan? kattohinnan-ylitys-lomake))
@@ -444,14 +444,15 @@
               [urakalla-ei-tavoitehintaa-varoitus])
             [napit/yleinen-ensisijainen "Tallenna päätös"
              #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
-             {:disabled (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake)))}]]
+             {:disabled (or tallennus-kesken? (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake))))}]]
            [napit/nappi
             "Kumoa päätös"
             #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake) ::valikatselmus/kattohinnan-ylitys))
             {:luokka "nappi-toissijainen napiton-nappi"
-             :ikoni [ikonit/harja-icon-action-undo]}]))]]]))
+             :ikoni [ikonit/harja-icon-action-undo]
+             :disabled tallennus-kesken?}]))]]]))
 
-(defn lupaus-lomake [e! app voi-muokata?]
+(defn lupaus-lomake [e! app voi-muokata? tallennus-kesken?]
   (let [yhteenveto (get-in app [:valikatselmuksen-tiedot :lupaustiedot :yhteenveto])
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
@@ -599,18 +600,19 @@
                               (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
                               (or
                                 poikkeusvuosi?
-                                (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))]
+                                (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))
+        tallennus-kesken? (:tallennus-kesken? app)]
 
     ;; Piilotetaan kaikki mahdollisuudet tehdä päätös, jos tavoitehintaa ei ole asetettu.
     (when (and oikaistu-tavoitehinta (> oikaistu-tavoitehinta 0))
       [:div
        [:h2 "Budjettiin liittyvät päätökset"]
        (when tavoitehinnan-ylitys?
-         [tavoitehinnan-ylitys-lomake e! hoitokauden-alkuvuosi (get-in app [:valikatselmuksen-tiedot :paatokset]) toteuma oikaistu-tavoitehinta oikaistu-kattohinta oikeudet-muokata?])
+         [tavoitehinnan-ylitys-lomake e! hoitokauden-alkuvuosi (get-in app [:valikatselmuksen-tiedot :paatokset]) toteuma oikaistu-tavoitehinta oikaistu-kattohinta oikeudet-muokata? tallennus-kesken?])
        (when kattohinnan-ylitys?
-         [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta tavoitehinta oikeudet-muokata?])
+         [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta tavoitehinta oikeudet-muokata? tallennus-kesken?])
        (when tavoitehinnan-alitus?
-         [tavoitehinnan-alitus-lomake e! hoitokauden-alkuvuosi (get-in app [:valikatselmuksen-tiedot :paatokset]) toteuma oikaistu-tavoitehinta tavoitehinta oikeudet-muokata?])
+         [tavoitehinnan-alitus-lomake e! hoitokauden-alkuvuosi (get-in app [:valikatselmuksen-tiedot :paatokset]) toteuma oikaistu-tavoitehinta tavoitehinta oikeudet-muokata? tallennus-kesken?])
        [:h2 "Lupauksiin liittyvät päätökset"]
        (if lupaukset-valmiina?
          [lupaus-lomake e! app oikeudet-muokata?]
