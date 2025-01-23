@@ -160,7 +160,6 @@
       [:span
        [:a.klikattava {:role "status"
                        :aria-live "polite"
-                       :tabindex "0"
                        :title (let [tooltip (:nimi liite)]
                                 (if (nil? nayta-tooltip?)
                                   tooltip
@@ -174,7 +173,6 @@
       [:span
        [:a.klikattava {:role "status"
                        :aria-live "polite"
-                       :tabindex "0"
                        :tooltip (str "Liitetiedoston nimi:" (:nimi liite))
                        :title (:nimi liite)
                        :href (k/liite-url (:id liite))
