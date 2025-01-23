@@ -94,18 +94,18 @@
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry laatupoikkeamiin"]
       [:a.klikattava.alleviivaa {:href "#"
-                      :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                    :taso2 :laadunseuranta
-                                                                                                    :taso3 :laatupoikkeamat})}
+                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                               :taso2 :laadunseuranta
+                                                                                                               :taso3 :laatupoikkeamat})}
        (if (> avoimet_laatupoikkeamat 0)
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly (str "Avoimia laatupoikkeamia: " avoimet_laatupoikkeamat))})
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia laatupoikkeamia")}))]]
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry turvallisuuspoikkeamiin"]
       [:a.klikattava.alleviivaa {:href "#"
-                      :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                    :taso2 :turvallisuuspoikkeamat
-                                                                                                    :taso3 nil})}
+                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                               :taso2 :turvallisuuspoikkeamat
+                                                                                                               :taso3 nil})}
        (if (> avoimet_turvallisuuspoikkeamat 0)
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly (str "Avoimia turvallisuuspoikkeamia: " avoimet_turvallisuuspoikkeamat))})
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia turvallisuuspoikkeamia")}))]]]))
@@ -116,7 +116,7 @@
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry lupausnäkymään"]
      [:a.klikattava.alleviivaa {:href "#"
-                     :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
+                                :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
       [:div.lupauspisteet
        (if (nil? lupaus_tavoitepisteet)
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Ei tavoitepistemäärää")})
@@ -136,9 +136,9 @@
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannusten seurantaan"]
      [:a.klikattava.alleviivaa {:href "#"
-                     :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                   :taso2 :laskutus
-                                                                                                   :taso3 :kustannusten-seuranta})}
+                                :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                              :taso2 :laskutus
+                                                                                                              :taso3 :kustannusten-seuranta})}
       [:div.tavoitehintapaatos
        (if (nil? tavoitehintapaatos)
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
@@ -171,9 +171,9 @@
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannussuunnitelmaan"]
      [:a.klikattava.alleviivaa {:href "#"
-                     :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                   :taso2 :suunnittelu
-                                                                                                   :taso3 :kustannussuunnitelma})}
+                                :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                              :taso2 :suunnittelu
+                                                                                                              :taso3 :kustannussuunnitelma})}
       (cond
         (= "aloittamatta" suunnitelman_tila)
         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Aloittamatta")})
