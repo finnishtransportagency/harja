@@ -81,8 +81,8 @@
                                                             #{%})))
         lahetys-tehty-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa]
                                                       (disj kohteet-yha-lahetyksessa %)))
-        kun-onnistuu-fn #(e! (paallystys/->YHAVelhoVientiOnnistui %))
-        kun-virhe-fn #(e! (paallystys/->YHAVelhoVientiEpaonnistui %))
+        kun-onnistuu-fn #(e! (paallystys/->YHAVientiOnnistui %))
+        kun-virhe-fn #(e! (paallystys/->YHAVientiEpaonnistui %))
         kohde-id (:paallystyskohde-id paallystysilmoitus)]
     [napit/palvelinkutsu-nappi
      (ikonit/ikoni-ja-teksti (ikonit/envelope) "Lähetä")

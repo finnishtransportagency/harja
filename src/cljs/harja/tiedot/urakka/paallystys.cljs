@@ -411,8 +411,8 @@
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
-(defrecord YHAVelhoVientiOnnistui [vastaus])
-(defrecord YHAVelhoVientiEpaonnistui [vastaus])
+(defrecord YHAVientiOnnistui [vastaus])
+(defrecord YHAVientiEpaonnistui [vastaus])
 
 
 (extend-protocol tuck/Event
@@ -771,12 +771,12 @@
     app)
 
 
-  YHAVelhoVientiOnnistui
+  YHAVientiOnnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
                                         (:paallystysilmoitukset app) vastaus)))
 
-  YHAVelhoVientiEpaonnistui
+  YHAVientiEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
                                         (:paallystysilmoitukset app) vastaus))))
