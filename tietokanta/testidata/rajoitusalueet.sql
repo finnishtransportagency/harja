@@ -1,3 +1,4 @@
+-- Oulu MHU:lle pari rajoitusaluetta
 DO
 $$
     DECLARE
@@ -10,29 +11,54 @@ $$
         _luotu := '2022-07-11 15:00:18.947853';
 
         -- Pohjavesialue: Hanko
-        INSERT INTO rajoitusalue(id, tierekisteriosoite, sijainti, pituus, ajoratojen_pituus, urakka_id, luotu, luoja)
-        VALUES (1, ROW (25, 2, 200, 3, 2837, NULL)::TR_OSOITE,
-                (select * from tierekisteriosoitteelle_viiva(25, 2, 200, 3, 2837) as sijainti),
-                NULL, NULL, _urakka, _luotu, _kayttaja);
+        WITH ra1 AS (
+            INSERT INTO rajoitusalue (tierekisteriosoite, sijainti, pituus, ajoratojen_pituus, urakka_id, luotu, luoja)
+                VALUES (ROW (25, 2, 200, 3, 2837, NULL)::TR_OSOITE,
+                        st_union((SELECT * FROM tierekisteriosoitteelle_viiva_ajr(25, 2, 200, 3, 2837, 1) AS sijainti),
+                                 (SELECT * FROM tierekisteriosoitteelle_viiva_ajr(25, 2, 200, 3, 2837, 2) AS sijainti)),
+                        NULL, NULL, _urakka, _luotu, _kayttaja) RETURNING id)
+        INSERT
+        INTO rajoitusalue_rajoitus (rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu, luoja)
+        SELECT id, 6.6, FALSE, 2019, _luotu, _kayttaja
+        FROM ra1
+        UNION ALL
+        SELECT id, 6.6, FALSE, 2020, _luotu, _kayttaja
+        FROM ra1
+        UNION ALL
+        SELECT id, 6.6, FALSE, 2021, _luotu, _kayttaja
+        FROM ra1
+        UNION ALL
+        SELECT id, 7.0, FALSE, 2022, _luotu, _kayttaja
+        FROM ra1
+        UNION ALL
+        SELECT id, 7.0, FALSE, 2023, _luotu, _kayttaja
+        FROM ra1;
 
-
-        INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
-                                          luoja)
-        VALUES (1, 6.6, FALSE, 2020, _luotu, _kayttaja);
-        INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
-                                          luoja)
-        VALUES (1, 6.6, FALSE, 2021, _luotu, _kayttaja);
-        INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
-                                          luoja)
-        VALUES (1, 6.6, FALSE, 2022, _luotu, _kayttaja);
-        INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
-                                          luoja)
-        VALUES (1, 7.0, FALSE, 2023, _luotu, _kayttaja);
-        INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
-                                          luoja)
-        VALUES (1, 7.0, FALSE, 2024, _luotu, _kayttaja);
-        ---
-
+        -- Pohjavesialue: Jääli
+        WITH ra2 AS (
+            INSERT INTO rajoitusalue (tierekisteriosoite, pituus, ajoratojen_pituus, sijainti, urakka_id, luotu,
+                                      luoja)
+                VALUES ((20, 4, 2440, 4, 3583, NULL)::tr_osoite, 1143, 1143,
+                        st_union(
+                            (SELECT * FROM tierekisteriosoitteelle_viiva_ajr(20, 4, 2440, 4, 3583, 1) AS sijainti),
+                            (SELECT * FROM tierekisteriosoitteelle_viiva_ajr(20, 4, 2440, 4, 3583, 2) AS sijainti)),
+                        _urakka, _luotu, _kayttaja) RETURNING id)
+        INSERT
+        INTO rajoitusalue_rajoitus (rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu, luoja)
+        SELECT id, 10, FALSE, 2019, _luotu, _kayttaja
+        FROM ra2
+        UNION ALL
+        SELECT id, 10, FALSE, 2020, _luotu, _kayttaja
+        FROM ra2
+        UNION ALL
+        SELECT id, 10, FALSE, 2021, _luotu, _kayttaja
+        FROM ra2
+        UNION ALL
+        SELECT id, 10, FALSE, 2022, _luotu, _kayttaja
+        FROM ra2
+        UNION ALL
+        SELECT id, 10, FALSE, 2023, _luotu, _kayttaja
+        FROM ra2;
 
         -- FIXME: Ei voi lisätä, koska tällä hetkellä rajoitusalue constraint 'tierekisteriosoite_ei_leikkaa' ei salli
         --       sellaisen tierekisteriosoitteen lisäämistä, joka alkaa suoraan edellisen osoitteen loppuosasta.
@@ -47,6 +73,41 @@ $$
     END
 $$;
 
--- Jostain syystä rajoitusalueen id:n serial sequenssi menee sekaisin, niin päivitetään se kuntoon samalla
-SELECT SETVAL('public.rajoitusalue_id_seq', (SELECT nextval('public.rajoitusalue_id_seq') + 1));
+-- Rovaniemen MHU testiurakka (1. hoitovuosi) urakalle pari rajoitusaluetta
+DO
+$$
+    DECLARE
+        _kayttaja INTEGER;
+        _urakka   INTEGER;
+        _luotu    TIMESTAMP;
+    BEGIN
+        _kayttaja := (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh');
+        _urakka := (SELECT id FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)');
+        _luotu := '2024-11-11 15:00:18.947853';
+
+        -- Pohjavesialue: Rovaniemi
+          WITH ra1 AS (
+              INSERT INTO rajoitusalue (tierekisteriosoite, sijainti, pituus, ajoratojen_pituus, urakka_id, luotu, luoja)
+                  VALUES (ROW (79, 1, 0, 1, 5188, NULL)::TR_OSOITE,
+                          st_union((SELECT * FROM tierekisteriosoitteelle_viiva_ajr(79, 1, 0, 1, 5188, 1) AS sijainti),
+                                   (SELECT * FROM tierekisteriosoitteelle_viiva_ajr(79, 1, 0, 1, 5188, 2) AS sijainti)),
+                          NULL, NULL, _urakka, _luotu, _kayttaja) RETURNING id)
+        INSERT
+          INTO rajoitusalue_rajoitus (rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu, luoja)
+        SELECT id, 6.6, FALSE, 2024, _luotu, _kayttaja
+          FROM ra1
+         UNION ALL
+        SELECT id, 6.6, FALSE, 2025, _luotu, _kayttaja
+          FROM ra1
+         UNION ALL
+        SELECT id, 6.6, FALSE, 2026, _luotu, _kayttaja
+          FROM ra1
+         UNION ALL
+        SELECT id, 7.0, FALSE, 2027, _luotu, _kayttaja
+          FROM ra1
+         UNION ALL
+        SELECT id, 7.0, FALSE, 2028, _luotu, _kayttaja
+          FROM ra1;
+    END
+$$;
 

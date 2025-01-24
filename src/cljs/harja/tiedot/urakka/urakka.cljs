@@ -18,13 +18,13 @@
 
 (defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
                                                                          :maksetaan                      :molemmat
-                                                                         :kopioidaan-tuleville-vuosille? true
+                                                                         :kopioidaan-tuleville-vuosille? false
                                                                          :laskutukseen-perustuen-valinta #{}}}
                                        :suodattimet          {:hankinnat                      {:toimenpide                     :talvihoito
                                                                                                :maksetaan                      :molemmat
-                                                                                               :kopioidaan-tuleville-vuosille? true
+                                                                                               :kopioidaan-tuleville-vuosille? false
                                                                                                :laskutukseen-perustuen-valinta #{}}
-                                                              :kopioidaan-tuleville-vuosille? true}})
+                                                              :kopioidaan-tuleville-vuosille? false}})
 
 (def suolarajoitukset-default {:rajoitusalue-lomake-auki? false
                                :lomake [:kopioidaan-tuleville-vuosille? true]
@@ -94,11 +94,13 @@
                   :kulut/negatiivinen-summa    [ei-nil negatiivinen-numero]
                   :kulut/laskun-numero         [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
+                  :kulut/rahavaraus            [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
                   :kulut/koontilaskun-kuukausi [ei-nil ei-tyhja]
                   :kulut/y-tunnus              [(ei-pakollinen y-tunnus)]
                   :kulut/lisatyon-lisatieto    [ei-nil ei-tyhja]
-                  :kulut/toimenpideinstanssi   [ei-nil ei-tyhja]})
+                  :kulut/toimenpideinstanssi   [ei-nil ei-tyhja]
+                  :kulut/toimenpide            [ei-nil ei-tyhja]})
 
 (defn validoi!
   [{:keys [validius validi?] :as lomake-meta} lomake]
@@ -271,25 +273,52 @@
   ([kulu]
    (kulun-validointi-meta kulu {}))
   ([{:keys [kohdistukset] :as _kulu} opts]
-   (apply luo-validius-tarkistukset
-          (concat kulun-oletus-validoinnit
-                  (mapcat (fn [i]
-                            (if (= "lisatyo"
-                                   (:maksueratyyppi
-                                     (get kohdistukset i)))
-                              [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                               [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
-                               [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)]
-                              [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                               [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)]))
-                          (range (count kohdistukset)))))))
+   (let [kohdistusvalidoinnit (mapcat (fn [i]
+                                        (let [kohdistus (get kohdistukset i)]
+                                          (cond
+                                            (= :lisatyo (:tyyppi kohdistus))
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
+                                             [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)
+                                             [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)]
 
-(def kulut-kohdistus-default {:tehtavaryhma        nil
+                                            ;; Hankintakululla on pakko olla tehtäväryhmä
+                                            (= :hankintakulu (:tyyppi kohdistus))
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)]
+
+                                            ;; Rahavarauksella on pakko olla rahavaraus ja tehtäväryhmä
+                                            (= :rahavaraus (:tyyppi kohdistus))
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
+                                             [:kohdistukset i :rahavaraus] (:kulut/rahavaraus validoinnit)]
+
+                                            ;; Kun Muu kulu on tavoitehintainen tarkistetaan summa, lisätieto ja tehtäväryhmä
+                                            (and (= :muukulu (:tyyppi kohdistus)) (= :true (:tavoitehintainen kohdistus)))
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
+                                             [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)]
+
+                                            ;; Kun Muu kulu on ei-tavoitehintainen tarkistetaan summa, lisätieto ja toimenpideinstanssi
+                                            (and (= :muukulu (:tyyppi kohdistus)) (= :false (:tavoitehintainen kohdistus)))
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)
+                                             [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)]
+                                            )))
+                                (range (count kohdistukset)))
+         #_ (js/console.log "kulun-validointi-meta :: kohdistusvalidoinnit: " (pr-str kohdistusvalidoinnit))]
+
+     (apply luo-validius-tarkistukset (concat kulun-oletus-validoinnit kohdistusvalidoinnit)))))
+
+(def kulut-kohdistus-default {:tehtavaryhma nil
                               :toimenpideinstanssi nil
-                              :summa               0
-                              :poistettu           false
-                              :lisatyo?            false
-                              :rivi                0})
+                              :summa 0
+                              :poistettu false
+                              :lisatyo? false
+                              :tyyppi :hankintakulu
+                              :tavoitehintainen :true
+                              :rivi 0
+                              :lukittu? false})
 
 (def kulut-lomake-default (with-meta {:kohdistukset          [kulut-kohdistus-default]
                                       :aliurakoitsija        nil
@@ -297,7 +326,7 @@
                                       :laskun-numero         nil
                                       :lisatieto             nil
                                       :suorittaja-nimi       nil
-                                      :erapaiva              nil
+                                      :erapaiva              (pvm/nyt)
                                       :liitteet              []
                                       :paivita               0}
                                      (kulun-validointi-meta {:kohdistukset [{}]})))
@@ -383,6 +412,9 @@
                          :pot2-massa-lomake nil
                          :pot2-lomake nil})
 
+(def talvihoitoreitit-default {:haku-kaynnissa? false?
+                               :talvihoitoreitit nil})
+
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laatupoikkeamat laatupoikkeamat-default
                      :laskutus    laskutus-default
@@ -391,7 +423,8 @@
                      :suunnittelu suunnittelu-default-arvot
                      :toteumat    toteumat-default-arvot
                      :paikkaukset paikkaus-default-arvot
-                     :kustannusten-seuranta kustannusten-seuranta-default-arvot}))
+                     :kustannusten-seuranta kustannusten-seuranta-default-arvot
+                     :talvihoitoreitit talvihoitoreitit-default}))
 
 (defonce laatupoikkeamat (cursor tila [:laatupoikkeamat]))
 (defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
@@ -408,6 +441,7 @@
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
 (defonce lupaukset (cursor tila [:lupaukset]))
+(defonce talvihoitoreitit (cursor tila [:talvihoitoreitit]))
 
 (defonce yleiset (cursor tila [:yleiset]))
 

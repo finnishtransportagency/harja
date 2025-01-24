@@ -10,6 +10,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit-kyselyt]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
@@ -53,13 +54,16 @@
 
 (defn geometrisoi-reittoteuma [db json]
   (let [parsittu  (cheshire/decode json)
+        nopeusrajoitus (apply min
+                         (map #(toimenpidekoodit-kyselyt/hae-tehtavan-nopeusrajoitus db (get-in % ["tehtava" "id"]))
+                           (get-in parsittu ["reittitoteuma" "toteuma" "tehtavat"])))
         reitti (or (get-in parsittu ["reittitoteuma" "reitti"])
                    (get-in parsittu ["reittitoteumat" 0 "reittitoteuma" "reitti"]))
         pisteet (mapv (fn [{{koordinaatit "koordinaatit"
                              aika "aika"} "reittipiste"}]
                         [(get koordinaatit "x") (get koordinaatit "y") aika])
                       reitti)]
-    (reittitoteuma/hae-reitti db pisteet)))
+    (reittitoteuma/hae-reitti db reittitoteuma/maksimi-linnuntien-etaisyys nopeusrajoitus pisteet)))
 
 (defn geometrisoi-tarkastus [db json]
   (let [tarkastukset (get-in (cheshire/decode json) ["tarkastukset"])

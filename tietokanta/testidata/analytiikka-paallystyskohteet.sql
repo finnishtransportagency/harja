@@ -504,9 +504,8 @@ WITH urakka AS (SELECT id
                 FROM urakka
                 WHERE nimi = 'Raahen MHU 2023-2028'),
      kulu AS (
-         INSERT INTO kulu (tyyppi, kokonaissumma, erapaiva, urakka, luotu, muokattu, poistettu, koontilaskun_kuukausi)
-             SELECT 'laskutettava'::laskutyyppi,
-                    1000,
+         INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luotu, muokattu, poistettu, koontilaskun_kuukausi)
+             SELECT 1000,
                     '2023-11-01',
                     urakka.id,
                     '2023-11-01T12:00:00.000',
@@ -515,16 +514,15 @@ WITH urakka AS (SELECT id
                     'lokakuu/1-hoitovuosi'
              FROM urakka RETURNING id)
 INSERT
-INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi,
-                     suoritus_alku, suoritus_loppu, luotu, muokattu)
+INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi,
+                     luotu, muokattu)
 SELECT 0,
        kulu.id,
        1000,
        (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Raahen MHU 2023-2028 Päällystepaikkaukset TP'),
-       (SELECT id FROM tehtavaryhma WHERE nimi = 'Kuumapäällyste (Y1)'),
+       (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'b1cca2a5-6445-4f49-878d-a95f144cc190'), -- Kuumapäällyste
        'kokonaishintainen'::maksueratyyppi,
-       '2023-11-01T12:00:00.000',
-       '2023-11-01T13:00:00.000',
+       'hankintakulu',
        '2023-11-01T14:00:00.000',
        '2023-11-01T14:00:00.000'
 FROM kulu;

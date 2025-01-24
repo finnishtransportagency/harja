@@ -30,7 +30,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi", t.vers
       (SELECT array_agg(row(tyyppi::TEXT, kuvaus))
        FROM tyomaapaivakirja_tapahtuma
        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as tapahtumat,
-      (SELECT array_agg(row(kuvaus, aika))
+      (SELECT array_agg(row(kuvaus, tuntimaara))
        FROM tyomaapaivakirja_toimeksianto
        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as toimeksiannot,
       t.luotu, t.luoja, t.muokattu, t.muokkaaja,
@@ -130,7 +130,7 @@ SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
 -- name: hae-toimeksianto-muutokset
 SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
   'tyomaapaivakirja_toimeksianto',        -- taulu mistä haetaan
-  ARRAY['versio', 'kuvaus', 'aika', 'muokattu', 'urakka_id'], -- sarakkeet mitä verrataan ja palautetaan
+  ARRAY['versio', 'kuvaus', 'tuntimaara', 'muokattu', 'urakka_id'], -- sarakkeet mitä verrataan ja palautetaan
   ARRAY['muokattu', 'versio'],            -- sarakkeet mitä ei verrata
   :tyomaapaivakirja_id::INTEGER,          -- tyomaapaivakirja_id
   :urakka_id::INTEGER,                    -- urakka_id
@@ -225,8 +225,8 @@ INSERT INTO tyomaapaivakirja_tapahtuma (urakka_id, tyomaapaivakirja_id, versio, 
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :tyyppi::tyomaapaivakirja_tapahtumatyyppi, :kuvaus, now());
 
 -- name: lisaa-toimeksianto<!
-INSERT INTO tyomaapaivakirja_toimeksianto (urakka_id, tyomaapaivakirja_id, versio, kuvaus, aika, muokattu)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :aika, now());
+INSERT INTO tyomaapaivakirja_toimeksianto (urakka_id, tyomaapaivakirja_id, versio, kuvaus, tuntimaara, muokattu)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :tuntimaara, now());
 
 -- name: lisaa-kommentti<!
 INSERT INTO tyomaapaivakirja_kommentti (urakka_id, tyomaapaivakirja_id, versio, kommentti, luotu, luoja, urakoitsijan_merkinta)

@@ -1,5 +1,6 @@
 (ns harja.views.tilannekuva.tilannekuva
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.tilannekuva.tilannekuva :as tiedot]
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
@@ -12,7 +13,6 @@
             [harja.ui.kentat :as kentat]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.dom :as dom]
-            [reagent.core :as r]
             [goog.events.EventType :as EventType]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.istunto :as istunto]
@@ -63,6 +63,7 @@
 (defn historiankuvan-aikavalinnat []
   [:div#tk-historiakuvan-aikavalit
    [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko? false
+                                                        :vayla-tyyli? true
                                                         :aikavalin-rajoitus [12 :kuukausi]
                                                         :aloitusaika-pakota-suunta :alas-oikea
                                                         :paattymisaika-pakota-suunta :alas-vasen}]])
@@ -106,23 +107,23 @@
                               (and kokoelma-atom
                                    (= otsikko @kokoelma-atom))))
              valittujen-lkm (count (filter true? (vals (get-in @suodattimet-atom ryhma-polku))))
-             kokonais-lkm (count (vals (get-in @suodattimet-atom ryhma-polku)))]
+             kokonais-lkm (count (vals (get-in @suodattimet-atom ryhma-polku)))
+             avaa-tai-sulje-ryhma (fn []
+                               (if kokoelma-atom
+                                 ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
+                                 (if (= otsikko @kokoelma-atom)
+                                   (reset! kokoelma-atom nil)
+                                   (reset! kokoelma-atom otsikko))
+                                 ;; Ylläpitää itse omaa auki/kiinni-tilaansa
+                                 (swap! auki-tila not))
+                               (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))]
          (when-not (empty? ryhman-elementtien-avaimet)
            [:div {:class (str "tk-checkbox-ryhma" (when luokka (str " " luokka)))}
-            [:div
-             {:class (str "tk-checkbox-ryhma-otsikko klikattava " (when (auki?) "alaraja"))
-              :on-click (fn [_]
-                          (if kokoelma-atom
-                            ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
-                            (if (= otsikko @kokoelma-atom)
-                              (reset! kokoelma-atom nil)
-                              (reset! kokoelma-atom otsikko))
-                            ;; Ylläpitää itse omaa auki/kiinni-tilaansa
-                            (swap! auki-tila not))
-                          (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))}
-             [:span {:class (str
-                              "tk-chevron-ryhma-tila chevron-rotate "
-                              (when-not (auki?) "chevron-rotate-down"))}
+            [:button
+             {:aria-label "Karttatasoryhmän kytkinpainike"
+              :class (str "tk-checkbox-ryhma-otsikko klikattava " (when (auki?) "alaraja"))
+              :on-click avaa-tai-sulje-ryhma}
+             [:span {:class "tk-chevron-ryhma-tila chevron-rotate"}
               (if (auki?)
                 (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
              [:div.tk-checkbox-ryhma-checkbox {:on-click #(.stopPropagation %)}
@@ -149,24 +150,27 @@
                          (conj ryhma-polku elementti)]))])]))))))
 
 (defn- asetuskokoelma
-  [otsikko {:keys [salli-piilotus? luokka auki-atomi? otsikon-luokka] :as optiot} sisalto]
+  "Tekee asetuskokoelman. Default-variaatiossa otsikkokin on nappi, jonka voi muuttaa optiolla."
+  [otsikko {:keys [otsikko-on-nappi? salli-piilotus? luokka auki-atomi? otsikon-luokka] :as optiot} sisalto]
   (when otsikko
     (let [auki? (or auki-atomi? (atom true))]
-      (fn [otsikko {:keys [salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
+      (fn [otsikko {:keys [otsikko-on-nappi? salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
         [:div {:class (str "tk-asetuskokoelma" (when luokka (str " " luokka)))}
-         (when salli-piilotus?
-           [:div {:class (str
-                           "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
-                           (when-not @auki? "chevron-rotate-down"))
-                  :on-click #(swap! auki? not)}
-            (if @auki?
-              (ikonit/livicon-chevron-down)
-              (ikonit/livicon-chevron-right))])
-         [:div {:class (str "tk-otsikko "
-                            (when salli-piilotus?
-                              "tk-otsikko-sisenna")
-                            (when otsikon-luokka (str " " otsikon-luokka)))}
-          otsikko]
+         [(if (false? otsikko-on-nappi?) :div :button)
+          {:class (if-not (false? otsikko-on-nappi?) "klikattava")
+           :aria-expanded (if-not (false? otsikko-on-nappi?) (if @auki? "true" "false"))
+           :on-click #(if-not (false? otsikko-on-nappi?) (swap! auki? not))}
+          (when salli-piilotus?
+            [:div {:class "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma"}
+             (if @auki?
+               (ikonit/livicon-chevron-down)
+               (ikonit/livicon-chevron-right))])
+          [:div
+           {:class (str "tk-otsikko "
+                     (when salli-piilotus?
+                       "tk-otsikko-sisenna")
+                     (when otsikon-luokka (str " " otsikon-luokka)))}
+           otsikko]]
          (when @auki?
            sisalto)]))))
 
@@ -244,7 +248,8 @@
     [asetuskokoelma
      (str "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
                                 " (max. yksi vuosi):"))
-     {:salli-piilotus? false
+     {:otsikko-on-nappi? false
+      :salli-piilotus? false
       :luokka "taustavari-taso0"}
      [:div
       (when (= :nykytilanne @tiedot/valittu-tila)
@@ -271,10 +276,7 @@
          [[otsikko polku] suodatinryhmat]
          [checkbox-suodatinryhma otsikko tiedot/suodattimet polku
           (merge yleiset-asetukset
-                 {:auki-atomi? (paneelin-tila-atomi! (str polku) false)})])]
-      [:div.tk-yksittaiset-suodattimet.fontti-taso3
-       [yksittainen-suodatincheckbox "Varustetoteumat"
-        tiedot/suodattimet [:varustetoteumat tk/varustetoteumat]]]]]))
+                 {:auki-atomi? (paneelin-tila-atomi! (str polku) false)})])]]]))
 
 (defn nykytilanne-valinnat []
   [:span.tilannekuva-nykytilanne-valinnat
@@ -293,14 +295,14 @@
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
-                            (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
+                            (aseta-hallintapaneelin-max-korkeus (rdom/dom-node this)))]
     (komp/luo
       (komp/sisaan (fn [this]
                      (when-not (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                        (let [tilaajan-laadunvalvonta-avain (some #(when (= "tilaajan laadunvalvonta" (:nimi %)) %)
                                                                  (keys (:tarkastukset @tiedot/suodattimet)))]
                          (swap! tiedot/suodattimet update :tarkastukset dissoc tilaajan-laadunvalvonta-avain)))))
-      (komp/piirretty (fn [this] (aseta-hallintapaneelin-max-korkeus (r/dom-node this))))
+      (komp/piirretty (fn [this] (aseta-hallintapaneelin-max-korkeus (rdom/dom-node this))))
       (komp/dom-kuuntelija js/window
                            EventType/RESIZE resize-kuuntelija)
       (fn []
@@ -327,6 +329,7 @@
   [yleiset/haitari-paneelit
    {:auki @hallintapaneeli-auki
     :luokka "haitari-tilannekuva"
+    :aria-label "Kartan hallintapaneelin kytkinpainike"
     :toggle-osio! #(swap! hallintapaneeli-auki update % not)}
 
    "Hallintapaneeli" :hallintapaneeli [suodattimet]])
@@ -349,14 +352,6 @@
                   {:yllapitokohde-id (:yllapitokohde-id yllapitokohdeosa)
                    :urakkatyyppi :paallystys}))
     :teksti "Näytä yhteyshenkilöt"}
-
-   :varustetoteuma
-   {:toiminto (comp siirtymat/nayta-varustetoteuma! :id)
-    :teksti "Toteumanäkymään"
-    :tooltip "Siirry urakan varustetoteumiin"
-
-    ;; Näytä vain, jos käyttäjällä oikeus urakan varustetoteumiin
-    :when (comp oikeudet/urakat-toteumat-varusteet :urakka-id)}
 
    :ilmoitus
    {:toiminto #(jaettu/nayta-kuittausten-tiedot (:kuittaukset %))

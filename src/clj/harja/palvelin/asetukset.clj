@@ -21,6 +21,9 @@
   "Harja-palvelinasetuksien skeema"
   {(s/optional-key :alusta) s/Keyword
    (s/optional-key :sahke-headerit) {s/Str {s/Str s/Str}}
+
+   (s/optional-key :clojure-async-thread-poolin-koko) s/Int
+
    :http-palvelin {:portti s/Int
                    :url s/Str
                    (s/optional-key :threads) s/Int
@@ -99,6 +102,7 @@
                                            (s/optional-key :tieosoiteverkon-osoite) s/Str
                                            (s/optional-key :tieosoiteverkon-tuontikohde) s/Str
                                            (s/optional-key :laajennetun-tieosoiteverkon-tiedot) s/Str
+                                           (s/optional-key :paivita-kaista-aineisto) s/Bool
                                            (s/optional-key :pohjavesialueen-shapefile) s/Str
                                            (s/optional-key :pohjavesialueen-osoite) s/Str
                                            (s/optional-key :pohjavesialueen-tuontikohde) s/Str

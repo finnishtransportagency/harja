@@ -89,7 +89,7 @@
        [:div
         [:p (if hairio
               (listaa-hairioilmoitus hairio)
-              "Ei voimassaolevaa häiriöilmoitusta. Kun asetat häiriöilmoituksen, se näytetään kaikille Harjan käyttäjille selaimen alapalkissa. Ilmoituksen yhteydessä näytetään aina ilmoituksen päivämäärä, joten sitä ei tarvitse kirjoittaa erikseen.")]
+              "Ei voimassaolevaa häiriöilmoitusta. Kun asetat häiriöilmoituksen, se näytetään kaikille Harjan käyttäjille selaimen alapalkissa. Ilmoituksen yhteydessä näytetään aina ilmoituksen päivämäärä, joten sitä ei tarvitse kirjoittaa erikseen. Voit myös ajastaa häiriöilmoituksia etukäteen.")]
 
         (when hairio
           [napit/poista "Poista häiriöilmoitus" #(tiedot/poista-hairioilmoitus {:id (::hairio/id hairio)})
@@ -122,13 +122,14 @@
         (if (nil? hairiotilmoitukset)
           [ajax-loader "Haetaan..."]
 
-          [:div
+          [:div.hairioilmoitukset
            [harja.ui.debug/debug {:a hairiotilmoitukset
                                   :voimassaoleva voimassaoleva-hairio
                                   :tulevat tulevat-hairiot
                                   :vanhat vanhat-hairiot}]
            [voimassaoleva-hairioilmoitus voimassaoleva-hairio]
            [tulevat-hairioilmoitukset tulevat-hairiot]
-           [vanhat-hairioilmoitukset vanhat-hairiot]
            [napit/yleinen-ensisijainen "Aseta häiriöilmoitus"
-            #(reset! tiedot/asetetaan-hairioilmoitus? true)]])))))
+            #(reset! tiedot/asetetaan-hairioilmoitus? true)]
+           [:hr]
+           [vanhat-hairioilmoitukset vanhat-hairiot]])))))

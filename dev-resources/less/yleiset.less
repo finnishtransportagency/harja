@@ -10,7 +10,24 @@
 }
 
 .ajax-loader-valistys {
+  display: inline-block;
   padding: @valistys-16;
+
+  /* Jos käytetään isompaa ajax-loaderia, teksti menee aina rumasti, tämä korjaa */
+  .ajax-loader {
+    display: flex;
+    gap: @valistys-6;
+  }
+  .viesti {
+    align-content: center;
+  }
+}
+
+.ajax-loader-valistys-kustannukset {
+  margin-top: 0;
+  padding-top: 0;
+  display: flex;
+  justify-content: right;
 }
 
 div.tietorivi {
@@ -292,6 +309,8 @@ button > .ajax-loader {
     border-style: solid;
     border-color: @harmaa7;
     border-width: 0 0 1px 0;
+    text-align: left;
+    width: 100%;
   }
 
   // Caret
@@ -311,11 +330,11 @@ button > .ajax-loader {
     line-height: 29px;
   }
 
-  .haitari-title.haitari-piilossa {
-    display: none;
-  }
-
   .haitari-sisalto {
+    .panel-heading {
+      margin-left: @valistys-8;
+      margin-top: @valistys-8;
+    }
 
   }
 
@@ -577,6 +596,30 @@ button > .ajax-loader {
 .pvm-kentta .ikoni-input {
     min-width: 120px;
     max-width: 150px;
+    width: fit-content;
+}
+
+.pvm-aika-kentta .ikoni-input {
+  min-width: 120px;
+  max-width: 150px;
+  width: fit-content;
+}
+
+.pvm-ikoni {
+  position: relative;
+}
+
+.ikoni-osio {
+  color: @blue-dark;
+  width: 26px;
+  background-color: transparent;
+  border: none;
+  height: 100%;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  top: 0;
+  right: 0;
 }
 
 .flex-lista {
@@ -662,6 +705,7 @@ button > .ajax-loader {
 @valistys-6: 0.375rem;
 @valistys-8: 0.5rem;
 @valistys-12: 0.75rem;
+@valistys-14: 0.875rem;
 @valistys-16: 1rem;
 @valistys-24: 1.5rem;
 @valistys-32: 2rem;
@@ -743,4 +787,8 @@ button > .ajax-loader {
 
 .vahvistamaton {
     background-color: @yellow;
+}
+
+.poista-label-top-margin > label {
+  margin-top: 0px;
 }

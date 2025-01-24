@@ -1,12 +1,11 @@
 (ns harja.kyselyt.paikkaus
   (:require [clojure.set :as set]
+            [clojure.spec.alpha :as s]
             [jeesql.core :refer [defqueries]]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
             [specql.op :as op]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.roolit :as roolit]
-            [clojure.string :as str]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tierekisteri :as tierekisteri]
@@ -17,11 +16,15 @@
             [taoensso.timbre :as log]
             [specql.core :as specql]
             [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [slingshot.slingshot :refer [throw+]]
             [harja.domain.tierekisteri.validointi :as tr-validointi]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.tierekisteri :as tr-domain]))
+
+(declare hae-urakan-paikkauskohteet-ja-paikkaukset hae-paikkauskohteen-tyomenetelma hae-paikkauskohde
+  hae-paikkauskohteet-ulkoisella-idlla paivita-paikkauskohteen-korjausluokka
+  paivita-paikkauskohteen-ilmoitettu-virhe!
+  tallenna-paikkauskohde<! paivita-paikkauskohde! poista-paikkauskohde!)
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman.")
@@ -321,14 +324,24 @@
                                           ::paikkaus/urakka-id urakka-id
                                           ::paikkaus/ulkoinen-id ulkoinen-id}))
 
+(defn paikkaus-validi? [paikkaus]
+  (and
+    (s/valid? ::paikkaus/alkuaika (::paikkaus/alkuaika paikkaus))
+    (s/valid? ::paikkaus/massamaara (::paikkaus/massamaara paikkaus))
+    (s/valid? ::paikkaus/raekoko (::paikkaus/raekoko paikkaus))
+    (every? #(s/valid? ::paikkaus/reunat (::paikkaus/reunat %)) (::paikkaus/tienkohdat paikkaus))))
+
 (defn tallenna-paikkaus
   "APIa varten tehty paikkauksen tallennus. Olettaa saavansa ulkoisen id:n"
   [db urakka-id kayttaja-id paikkaus]
   (let [_ (log/debug "tallenna-paikkaus :: paikkaus:" (pr-str paikkaus))
-        paikkauskohde-id (::paikkaus/id
-                           (tallenna-paikkauskohde db urakka-id kayttaja-id
-                             (::paikkaus/paikkauskohde paikkaus)
-                             (::paikkaus/alkuaika paikkaus)))
+        valid? (paikkaus-validi? paikkaus)
+        _ (when-not valid? (log/error "tallenna-paikkaus :: paikkaus ei ole validi! :: paikkaus" paikkaus))
+        paikkauskohde-id (when valid?
+                           (::paikkaus/id
+                             (tallenna-paikkauskohde db urakka-id kayttaja-id
+                               (::paikkaus/paikkauskohde paikkaus)
+                               (::paikkaus/alkuaika paikkaus))))
         {id ::paikkaus/id
          ulkoinen-id ::paikkaus/ulkoinen-id
          materiaalit ::paikkaus/materiaalit
@@ -337,38 +350,38 @@
          tienkohdat ::paikkaus/tienkohdat
          leveys ::paikkaus/leveys
          massamenekki ::paikkaus/massamenekki
-         massamaara ::paikkaus/massamaara } paikkaus
+         massamaara ::paikkaus/massamaara} paikkaus
         paikkaus (cond-> paikkaus
-                         (not (nil? massamenekki)) (update ::paikkaus/massamenekki bigdec))
+                   (not (nil? massamenekki)) (update ::paikkaus/massamenekki bigdec))
         tr-osoite-tr-muodossa (tr-domain/tr-alkuiseksi tr-osoite)
         osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db [tr-osoite-tr-muodossa])
         pituus (tr-domain/laske-tien-pituus (osien-pituudet-tielle (::tierekisteri/tie tr-osoite)) tr-osoite-tr-muodossa)
-
         pinta-ala (when (and leveys pituus)
                     (* leveys pituus))
         ;; lisätään paikkauksiin pinta-ala ja massamäärä, jos ne luvut saatavilla mistä pystytään johtamaan
-        paikkaus (cond-> paikkaus
-                   true (assoc
-                          ::paikkaus/pinta-ala pinta-ala)
+        paikkaus (when valid?
+                   (cond-> paikkaus
+                     true (assoc
+                            ::paikkaus/pinta-ala pinta-ala)
 
-                   ;; Vanha tapa kirjata paikkaus massamenekillä. Voidaan poistaa myöhemmin, kun massamäärällä kirjaus
-                   ;; on saatu otettua käyttöön, pitäisi tapahtua 24.8.2023.
-                   (and pinta-ala (some? massamenekki) (nil? massamaara))
-                   ;; massamenekki on kg/m2, kokonaismassamäärä puolestaan aina tonneja -->
-                   ;; kokonaismassamäärä tonneina = massamenekki tonneina / m2 * pinta-ala m2
-                   (assoc
-                     ::paikkaus/massamaara (* (/ massamenekki 1000) pinta-ala))
+                     ;; Vanha tapa kirjata paikkaus massamenekillä. Voidaan poistaa myöhemmin, kun massamäärällä kirjaus
+                     ;; on saatu otettua käyttöön, pitäisi tapahtua 24.8.2023.
+                     (and pinta-ala (some? massamenekki) (nil? massamaara))
+                     ;; massamenekki on kg/m2, kokonaismassamäärä puolestaan aina tonneja -->
+                     ;; kokonaismassamäärä tonneina = massamenekki tonneina / m2 * pinta-ala m2
+                     (assoc
+                       ::paikkaus/massamaara (* (/ massamenekki 1000) pinta-ala))
 
-                   ;; 24.8.2023 jälkeen rajapinnasta pitäisi saada massamäärä kilogrammoina massamenekin sijaan.
-                   (and (some? massamaara) (nil? massamenekki))
-                   (assoc
-                     ;; Rajapinnasta saadaan massamäärä kilogrammoina. -->
-                     ;; massamenekki kg/m^2 = massamäärä / pinta-ala.
-                     ;; Massamenekin pitäisi olla kymmenissä, joten with-precision 5 pitäisi olla riittävä.
-                     ::paikkaus/massamenekki (bigdec (with-precision 5 (/ massamaara pinta-ala)))
-                     ;; Muutetaan massamäärä vielä tonneiksi ennen kantaan tallennusta.
-                     ;; Massaa on maksimissaan kymmenissä tonneissa. Varalta kuitenkin with-precision 10.
-                     ::paikkaus/massamaara (bigdec (with-precision 10 (/ massamaara 1000)))))
+                     ;; 24.8.2023 jälkeen rajapinnasta pitäisi saada massamäärä kilogrammoina massamenekin sijaan.
+                     (and (some? massamaara) (nil? massamenekki))
+                     (assoc
+                       ;; Rajapinnasta saadaan massamäärä kilogrammoina. -->
+                       ;; massamenekki kg/m^2 = massamäärä / pinta-ala.
+                       ;; Massamenekin pitäisi olla kymmenissä, joten with-precision 5 pitäisi olla riittävä.
+                       ::paikkaus/massamenekki (bigdec (with-precision 5 (/ massamaara pinta-ala)))
+                       ;; Muutetaan massamäärä vielä tonneiksi ennen kantaan tallennusta.
+                       ;; Massaa on maksimissaan kymmenissä tonneissa. Varalta kuitenkin with-precision 10.
+                       ::paikkaus/massamaara (bigdec (with-precision 10 (/ massamaara 1000))))))
         tyomenetelma (if (string? tyomenetelma)
                        (hae-tyomenetelman-id db tyomenetelma)
                        tyomenetelma)
@@ -376,22 +389,24 @@
                                                        :aet (::tierekisteri/aet tr-osoite) :losa (::tierekisteri/losa tr-osoite)
                                                        :loppuet (::tierekisteri/let tr-osoite)})
         uusi-paikkaus (dissoc (assoc paikkaus ::paikkaus/paikkauskohde-id paikkauskohde-id
-                                              ::muokkaustiedot/luoja-id kayttaja-id
-                                              ::paikkaus/sijainti sijainti
-                                              ::paikkaus/lahde "harja-api"
-                                              ::paikkaus/tyomenetelma tyomenetelma)
-                              ::paikkaus/materiaalit
-                              ::paikkaus/tienkohdat
-                              ::paikkaus/paikkauskohde)
+                                ::muokkaustiedot/luoja-id kayttaja-id
+                                ::paikkaus/sijainti sijainti
+                                ::paikkaus/lahde "harja-api"
+                                ::paikkaus/tyomenetelma tyomenetelma)
+                        ::paikkaus/materiaalit
+                        ::paikkaus/tienkohdat
+                        ::paikkaus/paikkauskohde)
         muokattu-paikkaus (assoc uusi-paikkaus ::muokkaustiedot/muokkaaja-id kayttaja-id
-                                               ::muokkaustiedot/muokattu (pvm/nyt)
-                                               ::muokkaustiedot/poistettu? false)
+                            ::muokkaustiedot/muokattu (pvm/nyt)
+                            ::muokkaustiedot/poistettu? false)
         paivita? (or (id-olemassa? id) (onko-paikkaus-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-id))
-        id (::paikkaus/id (if paivita?
-                            (paivita-paikkaus db urakka-id muokattu-paikkaus)
-                            (luo-paikkaus db uusi-paikkaus)))]
-    (tallenna-materiaalit db id materiaalit)
-    (tallenna-tienkohdat db id tienkohdat)))
+        id (when valid?
+             (::paikkaus/id (if paivita?
+                              (paivita-paikkaus db urakka-id muokattu-paikkaus)
+                              (luo-paikkaus db uusi-paikkaus))))]
+    (when valid? (tallenna-materiaalit db id materiaalit))
+    (when valid? (tallenna-tienkohdat db id tienkohdat))
+    (when-not valid? "Paikkaus ei ole validi. Tarkista tiedot.")))
 
 (defn- hae-paikkauskohteen-tila [db kohteen-id]
   (-> db

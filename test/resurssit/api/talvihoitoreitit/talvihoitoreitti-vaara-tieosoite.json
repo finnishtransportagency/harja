@@ -1,0 +1,20 @@
+{
+  "tunniste": "__ULKOINENID__",
+  "reittinimi": "__NIMI__",
+  "kalustot": {
+    "tr_maara": 3,
+    "ka_maara": 3,
+    "kup_maara": 3
+  },
+  "sijainnit": [
+    {
+      "tie": 1,
+      "aosa": 40,
+      "aet": 0,
+      "losa": 40,
+      "let": 10,
+      "hoitoluokka": "Ise",
+      "pituus": 10
+    }
+  ]
+}

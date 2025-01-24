@@ -1,6 +1,7 @@
 (ns harja.ui.dom
   "Yleisiä apureita DOMin ja selaimen hallintaan"
   (:require [reagent.core :as r]
+            [reagent.dom :as rdom]
             [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! timeout] :as async]
@@ -13,7 +14,7 @@
   "Tarkistaa onko annettu tapahtuma tämän React komponentin sisällä."
   ([komponentti tapahtuma] (sisalla? komponentti tapahtuma nil))
   ([komponentti tapahtuma {elementti? :elementti?}]
-   (let [dom (r/dom-node komponentti)
+   (let [dom (rdom/dom-node komponentti)
          elt (if elementti? tapahtuma (.-target tapahtuma))]
      (when (and (not (nil? elt)) (not (nil? (.-parentNode elt))))
        (loop [ylempi (.-parentNode elt)]
@@ -77,6 +78,16 @@
   (let [ua (-> js/window .-navigator .-userAgent)
         ie-versio (maarita-ie-versio-user-agentista ua)]
     (and (integer? ie-versio) (<= 10 ie-versio))))
+
+(defn enter-nappain? [event] (= "Enter" (-> event .-key)))
+(defn tab+shift-nappaimet? [event] (and (= "Tab" (-> event .-key)) (-> event .-shiftKey)))
+(defn tab-nappain-ilman-shiftia? [event] (and (= "Tab" (-> event .-key)) (not (-> event .-shiftKey))))
+(defn esc-nappain? [event] (= "Escape" (-> event .-key)))
+(defn nuoli-oikealle? [event] (= "ArrowRight" (-> event .-key)))
+(defn nuoli-vasemmalle? [event] (= "ArrowLeft" (-> event .-key)))
+(defn nuoli-ylos? [event] (= "ArrowUp" (-> event .-key)))
+(defn nuoli-alas? [event] (= "ArrowDown" (-> event .-key)))
+(defn valilyonti? [event] (= " " (-> event .-key)))
 
 (defonce korkeus (r/atom (-> js/window .-innerHeight)))
 (defonce leveys (r/atom (-> js/window .-innerWidth)))

@@ -381,23 +381,23 @@
   '(#:harja.domain.pot2{:dop-nro "12345abc"
                         :kaytossa ()
                         :kuulamyllyluokka "AN5"
-                        :lisaaineet ({:harja.domain.pot2/massa-id 7
-                                      :lisaaine/id 7
+                        :lisaaineet ({:harja.domain.pot2/massa-id 8
+                                      :lisaaine/id 8
                                       :lisaaine/pitoisuus 1.5M
                                       :lisaaine/tyyppi 1})
                         :litteyslukuluokka "FI15"
-                        :massa-id 7
+                        :massa-id 8
                         :max-raekoko 5
                         :nimen-tarkenne "Tarkenne"
-                        :runkoaineet [{:harja.domain.pot2/massa-id 7
+                        :runkoaineet [{:harja.domain.pot2/massa-id 8
                                        :runkoaine/esiintyma "Zatelliitti"
-                                       :runkoaine/id 12
+                                       :runkoaine/id 14
                                        :runkoaine/kuulamyllyarvo 12.1M
                                        :runkoaine/litteysluku 4.1M
                                        :runkoaine/massaprosentti 34.0M
                                        :runkoaine/tyyppi 1}]
-                        :sideaineet ({:harja.domain.pot2/massa-id 7
-                                      :sideaine/id 7
+                        :sideaineet ({:harja.domain.pot2/massa-id 8
+                                      :sideaine/id 8
                                       :sideaine/lopputuote? true
                                       :sideaine/pitoisuus 10.6M
                                       :sideaine/tyyppi 1})
@@ -413,8 +413,8 @@
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :hae-urakan-massat-ja-murskeet
                         +kayttaja-jvh+ {:urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")})]
-    (is (= massat (concat oletetut-massat-utajarvi oletettu-testimassa-vastauksessa)))
-    (is (= murskeet oletetut-murskeet-utajarvi))))
+    (is (= (concat oletetut-massat-utajarvi oletettu-testimassa-vastauksessa) massat))
+    (is (= oletetut-murskeet-utajarvi murskeet))))
 
 (deftest hae-pot2-koodistot-test
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -479,6 +479,8 @@
         oletetut (list
                    {:id (hae-urakan-id-nimella "Analytiikan testipäällystysurakka")
                     :nimi "Analytiikan testipäällystysurakka"}
+                   {:id (hae-urakan-id-nimella "POT2 testipäällystysurakka"), 
+                    :nimi "POT2 testipäällystysurakka"}
                    {:id (hae-urakan-id-nimella "Utajärven päällystysurakka")
                     :nimi "Utajärven päällystysurakka"})
         muut-urakat-paikkausurakasta (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -489,6 +491,8 @@
                                      :nimi "Analytiikan testipäällystysurakka"}
                                     {:id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
                                      :nimi "Muhoksen päällystysurakka"}
+                                    {:id (hae-urakan-id-nimella "POT2 testipäällystysurakka"),
+                                     :nimi "POT2 testipäällystysurakka"}
                                     {:id (hae-urakan-id-nimella "Utajärven päällystysurakka")
                                      :nimi "Utajärven päällystysurakka"}
                                     )]
@@ -515,9 +519,11 @@
                         +kayttaja-jvh+ {:urakka-id (hae-oulun-alueurakan-2014-2019-id)})
         oletetut-kemin-urakoitsija (list) ;; Tällä urakoitsijalla ei materiaaleja
         oletetut-skanska (list {:id (hae-urakan-id-nimella "Analytiikan testipäällystysurakka")
-                                :nimi "Analytiikan testipäällystysurakka"}
+                                :nimi "Analytiikan testipäällystysurakka"} 
                            {:id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
-                            :nimi "Muhoksen päällystysurakka"})
+                            :nimi "Muhoksen päällystysurakka"}
+                           {:id (hae-urakan-id-nimella "POT2 testipäällystysurakka")
+                            :nimi "POT2 testipäällystysurakka"})
         oletetut-yit (list {:id (hae-urakan-id-nimella "Aktiivinen Oulu Päällystys Testi")
                             :nimi "Aktiivinen Oulu Päällystys Testi"})]
     (is (= muut-urakat-kemi oletetut-kemin-urakoitsija) "Muut urakat oikein")

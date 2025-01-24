@@ -20,6 +20,7 @@
    [harja.fmt :as fmt]
    [harja.domain.paikkaus :as paikkaus]))
 
+(def maksimimaara-validoitaville-riveille 50)
 
 (defn validoi-paallystekerros
   [rivi taulukko]
@@ -110,7 +111,8 @@
                                   (second data))]
                         (+ acc pituus)))
                     0
-                    @kohdeosat-atom)]
+                    @kohdeosat-atom)
+        rivien-maara (count @kohdeosat-atom)]
     [:div
      [grid/muokkaus-grid
       {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
@@ -176,9 +178,13 @@
        :virheet virheet-atom
        :varoitukset varoitukset-atom
        :piilota-toiminnot? true
+       :jarjesta-avaimen-mukaan identity
+       :virheet-ylos? false
        ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
        ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
-       :rivi-varoitus (:rivi validointi)
+       ;; Validointia rajoitettu maksimimaara-validoitaville-riveille huonon suorituskyvyn vuoksi. 
+       :rivi-varoitus (when (<= rivien-maara maksimimaara-validoitaville-riveille)
+                        (:rivi validointi))
        :taulukko-varoitus (:taulukko validointi)
        :tyhja (if (nil? @kohdeosat-atom)
                 [ajax-loader "Haetaan kohdeosia..."]

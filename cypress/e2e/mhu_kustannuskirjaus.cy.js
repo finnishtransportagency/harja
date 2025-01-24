@@ -30,10 +30,13 @@ let valitseKulunPvm = () => {
     cy.get('[data-cy="koontilaskun-kk-dropdown"]').within(() => {
         cy.get('button').click({force: true});
         cy.contains('Syyskuu - 2. hoitovuosi').click();
-    })
+    });
+
+    // Dropdown jää auki, ellei focusta siirretä muualle
+    cy.get('#kohdistuksen-summa-0').click().blur();
 
     cy.get('.kalenteri-kontti').within(() => {
-        cy.get('input').click();
+        cy.get('input').focus().click();
         cy.get('td').contains('29').click();
     })
 }
@@ -43,9 +46,9 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
 
     cy.contains('Kulujen kohdistus');
 
-    cy.get('.pvm-kentta > input').eq(0).click().wait(3000).type('{selectall}29.09.2021');
-    cy.get('.pvm-kentta > input').eq(1).click().wait(3000).type('{selectall}29.09.2021');
-    cy.get('.pvm-kentta > input').eq(1).should('have.value', "29.09.2021").type('{enter}');
+    cy.get('.pvm-kentta > .pvm-ikoni > input').eq(0).click().wait(3000).type('{selectall}29.09.2021');
+    cy.get('.pvm-kentta > .pvm-ikoni > input').eq(1).click().wait(3000).type('{selectall}29.09.2021');
+    cy.get('.pvm-kentta > .pvm-ikoni > input').eq(1).should('have.value', "29.09.2021").type('{enter}');
 
     if (Array.isArray(kuluTaiKulut)) {
         cy.get('table.grid tr.klikattava').eq(0).click();
@@ -66,20 +69,26 @@ describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
         avaaKulunKirjaus();
     });
 
-    it('Tehdään Normaali suunniteltu tai määrämitattava hankintakulu', () => {
-        cy.contains('Normaali suunniteltu tai määrämitattava hankintakulu').click();
+    it('Tehdään hankintakulu', () => {
 
-        cy.get('[data-cy="kulu-tehtavaryhma-dropdown"]').within(() => {
-            cy.get('button').click({force: true});
-            cy.contains('Talvihoito (A)').click();
-        });
+        // Klikkaa tehtäväryhmä alasvetovalikko auki
+        cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"]').click();
+
+        // Valitse A - Talvihoito
+        cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"] span').contains('A - Talvihoito').click();
 
         valitseKulunPvm();
 
-        cy.get('input.maara-input').type('{selectall}-999').then(() => {
+        // Varmista, että negatiivisen kulun kirjaaminen onnistuu
+        cy.get('#kohdistuksen-summa-0').type('{selectall}-999').then(() => {
             cy.focused().blur({force: true})
         });
-        cy.get('input.maara-input').should('have.value', '-999,00');
+
+        // Varmista, että positiivisen kulun kirjaaminen onnistuu
+        cy.get('#kohdistuksen-summa-0').type('{selectall}999').then(() => {
+            cy.focused().blur({force: true})
+        });
+        cy.get('#kohdistuksen-summa-0').should('have.value', '999,00');
         tallennaJaTarkistaKulu('Talvihoito laaja TPI');
 
 

@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tunniste": {
+      "type": "string",
+      "required": true,
+      "description": "Lähettävän järjestelmän sisäinen tunniste. Käytetään reitin päivityksessä ja poistossa."
+    },
+    "reittinimi": {
+      "type": "string",
+      "required": true,
+      "description": "Reitin nimi."
+    },
+    "kalustot": {
+      "type": "object",
+      "description": "Reitin hoitamisessa käytettävän kaluston määrä tyypeittäin. TR = Traktori, KUP = Kuppi-kuormaajat, KA = Kuorma-auto.",
+      "required": true,
+      "properties": {
+        "tr_maara": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "description": "Traktoreiden määrä"
+        },
+        "kup_maara": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "description": "Kuppi-kuormaajien määrä"
+        },
+        "ka_maara": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "description": "Kuorma-auton määrä"
+        }
+      }
+    },
+    "sijainnit": {
+      "type": "array",
+      "description": "Reitti voi koostua useista tieosoitteista. Katko tien vaihtuessa reitti useampaan osaan tai jos samalla tiellä on katkoja.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tie": {
+            "type": "integer",
+            "required": true,
+            "minimum": 0,
+            "description": "Tienumero"
+          },
+          "aosa": {
+            "type": "integer",
+            "required": true,
+            "minimum": 0,
+            "description": "Tien alkuosa."
+          },
+          "aet": {
+            "type": "integer",
+            "required": true,
+            "minimum": 0,
+            "description": "Alkuetäisyys osalla."
+          },
+          "losa": {
+            "type": "integer",
+            "required": true,
+            "minimum": 0,
+            "description": "Loppuosa."
+          },
+          "let": {
+            "type": "integer",
+            "required": true,
+            "minimum": 0,
+            "description": "Loppuetäisyys osalla."
+          },
+          "pituus": {
+            "type": "number",
+            "required": true,
+            "description": "Reitin pituus metreinä.",
+            "minimum": 0
+          },
+          "hoitoluokka": {
+            "enum": [
+              "Ise",
+              "Is",
+              "I",
+              "Ib",
+              "Ic",
+              "II",
+              "III",
+              "L",
+              "K1",
+              "K2",
+              "K",
+              "Talvihoito",
+              "Hoito osin",
+              "Ei talvihoitoa"
+            ],
+            "required": true,
+            "description": "Reitin hoitoluokka. Hoitoluokkavaihtoehdot, Maantie: Ise, Is, I, Ib, Ic, II, III. Kävelyn ja pyöräilyn väylät: L, K1, K2, K. Huoltoaukot ja pysäköintialueet: Talvihoito, Hoito osin, Ei talvihoitoa."
+          }
+        }
+      }
+    }
+  }
+}

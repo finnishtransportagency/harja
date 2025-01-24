@@ -191,8 +191,8 @@
 
 (defn- yhteenveto [e! {:keys [kuukausipisteet muokkaa-luvattuja-pisteita? lupaus-sitoutuminen yhteenveto] :as app} urakka]
   (let [hoitokauden-jarj-nro (when (:valittu-hoitokausi app) (urakka-tiedot/hoitokauden-jarjestysnumero
-                                                               (pvm/vuosi (first (:valittu-hoitokausi app)))
-                                                               (-> @tila/yleiset :urakka :loppupvm)))
+                                                               (-> @tila/yleiset :urakka :alkupvm)
+                                                               (pvm/vuosi (first (:valittu-hoitokausi app)))))
         vanha-urakka? (lupaus-domain/urakka-19-20? urakka)]
     [:div.lupausten-yhteenveto
      [:div.otsikko-ja-kuukausi
@@ -258,8 +258,8 @@
                   :else 0M)
           ennusteen-tila-teksti (if bonusta? "bonusta" "sanktioita")
           hoitokauden-jarj-nro (when (:valittu-hoitokausi app) (urakka-tiedot/hoitokauden-jarjestysnumero
-                                                                 (pvm/vuosi (first (:valittu-hoitokausi app)))
-                                                                 (-> @tila/yleiset :urakka :loppupvm)))
+                                                                 (-> @tila/yleiset :urakka :alkupvm)
+                                                                 (pvm/vuosi (first (:valittu-hoitokausi app)))))
           tavoitehinta (get-in app [:yhteenveto :tavoitehinta])]
       [:div.lupausten-ennuste {:class (cond bonusta? " bonusta"
                                             tavoite-taytetty? " bonusta"
@@ -376,9 +376,10 @@
             [:div.row {:style (merge {}
                                      (when (not (empty? (:lupausryhmat app)))
                                        {:border-top "1px solid #D6D6D6"}))}
-             (for [ryhma (:lupausryhmat app)]
-               ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
-               [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))])]))
+             (let [lupausryhmat (sort-by :jarjestys (:lupausryhmat app))]
+                 (for [ryhma lupausryhmat]
+                   ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
+                   [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))]))]))
          [testausvalinnat e! app]]))))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]

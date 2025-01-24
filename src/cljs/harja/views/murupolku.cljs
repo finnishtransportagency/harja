@@ -32,68 +32,75 @@
 
 (defn hallintayksikko [valinta-auki]
   (let [valittu @nav/valittu-hallintayksikko]
-    [:li.dropdown.livi-alasveto {:class (when (= :hallintayksikko @valinta-auki) "open")}
+    [:li.murupolkuvalitsin
+     [:label {:for "alasveto-hallintayksikko"} "Hallintayksikkö"]
+     [:div.dropdown.livi-alasveto {:id "alasveto-hallintayksikko"
+                                  :class (when (= :hallintayksikko @valinta-auki) "open")}
+      (let [vu @nav/valittu-urakka
+            va @valinta-auki]
+        (if (or (not (nil? vu)) (= va :hallintayksikko))
+          [:a.murupolkuteksti {:href "#"
+                               :on-click #(do
+                                            (.preventDefault %)
+                                            (nav/valitse-hallintayksikko! valittu))}
+           (str (or (:nimi valittu) "- Hallintayksikkö -") " ")]
 
-     (let [vu @nav/valittu-urakka
-           va @valinta-auki]
-       (if (or (not (nil? vu)) (= va :hallintayksikko))
-         [:a.murupolkuteksti {:href "#"
-                              :on-click #(do
-                                          (.preventDefault %)
-                                          (nav/valitse-hallintayksikko! valittu))}
-          (str (or (:nimi valittu) "- Hallintayksikkö -") " ")]
+          [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
 
-         [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
+      [:button.nappi-murupolkualasveto.dropdown-toggle
+       {:aria-label "Avaa hallintayksikkövalikko"
+        :on-click #(swap! valinta-auki
+                     (fn [v]
+                       (if (= v :hallintayksikko)
+                         nil
+                         :hallintayksikko)))}
+       [:span.livicon-chevron-down]]
 
-     [:button.nappi-murupolkualasveto.dropdown-toggle
-      {:on-click #(swap! valinta-auki
-                         (fn [v]
-                           (if (= v :hallintayksikko)
-                             nil
-                             :hallintayksikko)))}
-      [:span.livicon-chevron-down]]
-
-     ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
-     [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
-      (for [muu-yksikko (filter #(not= % valittu) @hal/vaylamuodon-hallintayksikot)]
-        ^{:key (str "hy-" (:id muu-yksikko))}
-        [:li.harja-alasvetolistaitemi
-         [linkki (hal/elynumero-ja-nimi muu-yksikko)
-          #(do (reset! valinta-auki nil)
-               (nav/valitse-hallintayksikko! muu-yksikko))]])]]))
+      ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
+      [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
+       (for [muu-yksikko (filter #(not= % valittu) @hal/vaylamuodon-hallintayksikot)]
+         ^{:key (str "hy-" (:id muu-yksikko))}
+         [:li.harja-alasvetolistaitemi
+          [linkki (hal/elynumero-ja-nimi muu-yksikko)
+           #(do (reset! valinta-auki nil)
+              (nav/valitse-hallintayksikko! muu-yksikko))]])]]]))
 
 (defn urakka [valinta-auki]
   (when @nav/valittu-hallintayksikko
     (let [valittu @nav/valittu-urakka]
-      [:li.dropdown.livi-alasveto {:class (when (= :urakka @valinta-auki) "open")}
-       [:span.valittu-urakka.murupolkuteksti (or (:nimi valittu) "- Urakka -") " "]
+      [:li.murupolkuvalitsin
+       [:label {:for "alasveto-urakka"} "Urakka"]
+       [:div.dropdown.livi-alasveto {:id "alasveto-urakka"
+                                    :class (when (= :urakka @valinta-auki) "open")}
+        [:span.valittu-urakka.murupolkuteksti (or (:nimi valittu) "- Urakka -") " "]
 
-       [:button.nappi-murupolkualasveto.dropdown-toggle {:on-click #(swap! valinta-auki
-                                                                           (fn [v]
-                                                                             (if (= v :urakka)
-                                                                               nil
-                                                                               :urakka)))}
-        [:span.livicon-chevron-down]]
+        [:button.nappi-murupolkualasveto.dropdown-toggle {:on-click #(swap! valinta-auki
+                                                                       (fn [v]
+                                                                         (if (= v :urakka)
+                                                                           nil
+                                                                           :urakka)))}
+         [:span.livicon-chevron-down]]
 
-       ;; Alasvetovalikko urakan nopeaa vaihtamista varten
-       [:ul.urakkalista.dropdown-menu.livi-alasvetolista {:role "menu"}
+        ;; Alasvetovalikko urakan nopeaa vaihtamista varten
+        [:ul.urakkalista.dropdown-menu.livi-alasvetolista {:role "menu"}
 
-        (let [muut-kaynnissaolevat-urakat (sort-by :nimi
-                                                   (filter #(and
-                                                             (not= % valittu)
-                                                             (pvm/jalkeen? (:loppupvm %) (pvm/nyt)))
-                                                           @nav/suodatettu-urakkalista))]
-          (if (empty? muut-kaynnissaolevat-urakat)
-            [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita, joita on oikeus tarkastella."]
+         (let [muut-kaynnissaolevat-urakat (sort-by :nimi
+                                             (filter #(and
+                                                        (not= % valittu)
+                                                        (pvm/jalkeen? (:loppupvm %) (pvm/nyt)))
+                                               @nav/suodatettu-urakkalista))]
+           (if (empty? muut-kaynnissaolevat-urakat)
+             [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita, joita on oikeus tarkastella."]
 
-            (for [urakka muut-kaynnissaolevat-urakat]
-              ^{:key (str "urakka-" (:id urakka))}
-              [:li.harja-alasvetolistaitemi [linkki (:nimi urakka) #(nav/valitse-urakka! urakka)]])))]])))
+             (for [urakka muut-kaynnissaolevat-urakat]
+               ^{:key (str "urakka-" (:id urakka))}
+               [:li.harja-alasvetolistaitemi [linkki (:nimi urakka) #(nav/valitse-urakka! urakka)]])))]]])))
 
 (defn urakoitsija []
   [:div.murupolku-urakoitsija
-   [:div.livi-valikkonimio.murupolku-urakoitsija-otsikko "Urakoitsija"]
-   [livi-pudotusvalikko {:valinta @nav/valittu-urakoitsija
+   [:label {:for "alasveto-urakoitsija"} "Urakoitsija"]
+   [livi-pudotusvalikko {:elementin-id "alasveto-urakoitsija"
+                         :valinta @nav/valittu-urakoitsija
                          :format-fn #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/valitse-urakoitsija!
                          :class (str "alasveto-urakoitsija"
@@ -113,8 +120,9 @@
 
 (defn urakkatyyppi []
   [:div.murupolku-urakkatyyppi
-   [:div.livi-valikkonimio.murupolku-urakkatyyppi-otsikko "Urakkatyyppi"]
-   [livi-pudotusvalikko {:valinta @nav/urakkatyyppi
+   [:label {:for "alasveto-urakkatyyppi"} "Urakkatyyppi"]
+   [livi-pudotusvalikko {:elementin-id "alasveto-urakkatyyppi"
+                         :valinta @nav/urakkatyyppi
                          :format-fn #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/vaihda-urakkatyyppi!
                          :class (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
@@ -131,8 +139,6 @@
         [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu
          :urakka-valittu :urakkavalinta-poistettu]
         #(reset! valinta-auki false)
-        ;; FIXME Tässä voisi käyttää (komp/klikattu-ulkopuolelle #(reset! valinta-auki false))
-        ;; Mutta aiheuttaa mystisen virheen kun raporteista poistutaan
         :body-klikkaus
         (fn [this {klikkaus :tapahtuma}]
           (when-not (dom/sisalla? this klikkaus)
@@ -144,18 +150,19 @@
         (let [ur @nav/valittu-urakka
               ei-urakkaa? (nil? ur)
               urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
-          [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
-                           (if @nav/murupolku-nakyvissa?
-                             ""
-                             "hide"))}
-           (if ei-urakkaa?
-             [:ol.murupolku
-              [:div.col-sm-6.murupolku-vasen
-               [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]
-              [:div.col-sm-6.murupolku-oikea
+          [:nav {:aria-label "murupolku"
+                 :class (str "murupolku "
+                          (when (empty? @nav/tarvitsen-isoa-karttaa)
+                            (if @nav/murupolku-nakyvissa?
+                              ""
+                              "hide")))}
+           [:ol.col-sm-7.murupolku-vasen
+            [koko-maa]
+            [hallintayksikko valinta-auki]
+            [urakka valinta-auki]]
+           (when ei-urakkaa?
+             [:div.col-sm-5.murupolku-oikea
+              [:div
+               [urakkatyyppi]
                (when-not urakoitsija?
-                 [urakoitsija])
-               [urakkatyyppi]]]
-             [:ol.murupolku
-              [:div.col-sm-12.murupolku-vasen
-               [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]])])))))
+                 [urakoitsija])]])])))))

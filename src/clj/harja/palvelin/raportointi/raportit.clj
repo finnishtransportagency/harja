@@ -2,8 +2,10 @@
   "Sisältää kaikki Harjan raportit. Nämä tiedot ennen ladattiin tietokannasta,
   nyt ne on määritelty kätevästi `raportit` vektorissa.
 
-  Jos lisäät uuden raportin, lisää sen nimiavaruuden require alle sekä
-  raportin tiedot `raportit` vektoriin."
+  Jos lisäät uuden raportin joudut tekemään kolme toimenpidettä:
+  - lisää sille oikeudet roolit -exceliin
+  - lisää sen nimiavaruus require alle
+  - lisää raportin tiedot, konteksti ja parametrit `raportit` vektoriin."
 
  (:require
   ;; vaaditaan built in raportit
@@ -51,6 +53,8 @@
   [harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat]
   [harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat]
   [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara]
+  [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto]
+  [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
@@ -146,6 +150,7 @@
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :tiestotarkastusraportti
+    :rajoita-pdf-rivimaara  30000
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
                    {:tyyppi "tienumero", :konteksti nil, :pakollinen false, :nimi "Tienumero"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
@@ -376,6 +381,8 @@
 
    {:nimi         :kanavien-liikennetapahtumat
     :konteksti    #{}
+    ;; Älä nosta PDF rajaa tälle raportille, aiheutuu liiallista muisti allocaatiota
+    :rajoita-pdf-rivimaara  1200
     :kuvaus       "Liikennetapahtumat"
     :suorita      #'harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat/suorita
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}
@@ -419,7 +426,33 @@
     :konteksti    #{"urakka"}
     :kuvaus       "Kulut tehtäväryhmittäin"
     :suorita      #'harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain/suorita
-    :urakkatyyppi #{:teiden-hoito}}])
+    :urakkatyyppi #{:teiden-hoito}}
+
+   {:nimi         :paikkausten-yhteenveto
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
+    :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu/suorita
+    :kuvaus-tarkenne "Paikkausten yhteenveto MHU"
+    :kuvaus       "MHUPaikkaustenyhteenveto"
+    :urakkatyyppi #{:teiden-hoito}}
+
+   {:nimi         :ppu-paikkausten-yhteenveto
+    :parametrit   [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
+    :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto/suorita-ppu
+    :kuvaus-tarkenne "Paikkausten yhteenveto PPU"
+    :kuvaus       "KokonaisurakanPaikkaustenyhteenveto"
+    :urakkatyyppi #{:paallystys}
+    :sopimustyyppi #{:kokonaisurakka}}
+
+   {:nimi         :mpu-paikkausten-yhteenveto
+    :parametrit   [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
+    :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto/suorita-mpu
+    :kuvaus-tarkenne "Paikkausten yhteenveto MPU"
+    :kuvaus       "MPUPaikkaustenyhteenveto"
+    :urakkatyyppi #{:paallystys}
+    :sopimustyyppi #{:mpu}}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))

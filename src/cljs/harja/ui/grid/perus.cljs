@@ -1,6 +1,7 @@
 (ns harja.ui.grid.perus
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [harja.loki :refer [log tarkkaile! logt] :refer-macros [mittaa-aika]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje vihje] :as y]
             [harja.ui.ikonit :as ikonit]
@@ -44,7 +45,7 @@
     (r/create-class
      {:display-name "Perus-gridin-muokkauselementti"
       :component-did-mount (fn [this]
-                             (reset! this-node (r/dom-node this))
+                             (reset! this-node (rdom/dom-node this))
                              (.addEventListener js/window EventType/RESIZE virhelaatikon-max-koon-asetus)
                              (virhelaatikon-max-koon-asetus nil))
       :component-will-unmount (fn [this]
@@ -129,10 +130,24 @@
             [:td {:class (y/luokat "ei-muokattava" tasaus-luokka (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))}
              ((or fmt str) (hae rivi))])))})))
 
+;; Luo funktio etsimään seuraavan input elementin
+(defn etsi-seuraava-input
+  "Fokusoitu-rivi parametri odottaa saavansa fokusoituneen rivin, jonka kautta etsitään seuraava input-elementti.
+  Suunta parametri odottaa saavansa arvot :eteen tai :taakse."
+  [fokusoitu-rivi suunta]
+  (let [edellinen-rivi (.-previousElementSibling (.-parentElement (.-parentElement fokusoitu-rivi)))
+        seuraava-rivi (.-nextElementSibling (.-parentElement (.-parentElement fokusoitu-rivi)))
+        rivi (if (= suunta :taakse) edellinen-rivi seuraava-rivi)
+        ;; Valitaan rivin ensimmäinen tai toinen td, riippuen siitä, että onko ensimmäisessä jokin input-elementti.
+        input (when rivi (or
+                           (-> (.getElementsByTagName rivi "td") (aget 0) (.querySelector "input, button, select, checkbox"))
+                           (-> (.getElementsByTagName rivi "td") (aget 1) (.querySelector "input, button, select, checkbox"))))]
+    input))
+
 (defn- muokkausrivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
                    esta-poistaminen-tooltip piilota-toiminnot? tallennus-kaynnissa?
                    fokus aseta-fokus! tulevat-rivit vetolaatikot
-                   voi-muokata-rivia? rivi-index esta-tiivis-grid?] :as asetukset}
+                   voi-muokata-rivia? rivi-index esta-tiivis-grid? tallenna-id] :as asetukset}
                      skeema rivi index]
   (when (nil? rivi)
     (log "muokkausrivi on nil"))
@@ -152,11 +167,27 @@
       (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
         (if (and esta-poistaminen? (esta-poistaminen? rivi))
           [:span (ui-ikonit/livicon-trash-disabled (esta-poistaminen-tooltip rivi))]
-          [:span.klikattava {:on-click #(do (.preventDefault %)
-                                            (muokkaa! id assoc :poistettu true))}
-           (ui-ikonit/livicon-trash)]))
+          [napit/poista ""
+           #(let [;; Otetaan rivin focus talteen
+                  fokusoitu-rivi (.-activeElement js/document)
+                  edellinen-input (etsi-seuraava-input fokusoitu-rivi :taakse)
+                  seuraava-input (etsi-seuraava-input fokusoitu-rivi :eteen)
+                  tallenna-nappi (js/document.getElementById tallenna-id)]
+              (muokkaa! id assoc :poistettu true)
+              (cond
+                (not (nil? edellinen-input)) (.focus edellinen-input)
+                (not (nil? seuraava-input)) (.focus seuraava-input)
+                ;; Jos rivejä ei ole, niin myös tyhjä taulukko voidaan tallentaa
+                :else (yleiset/fn-viiveella (fn [] (some-> tallenna-nappi .focus)) 250)))
+
+
+           {:teksti-nappi? false
+            :vayla-tyyli? true
+            :tooltip "Poista rivi"
+            :luokka "napiton-nappi pelkka-ikoni"
+            :on-focus #(aseta-fokus! [id :poista-nappi])}]))
       (when-not (empty? rivin-virheet)
-        [:span.rivilla-virheita
+        [:span.rivilla-virheita {:role "alert" :aria-label "Rivillä virheitä."}
          (ui-ikonit/livicon-warning-sign)])])])
 
 (defn- rivin-infolaatikko* [sisalto rivi data]
@@ -330,7 +361,7 @@
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru! voi-kumota?
                                 peruuta otsikko validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?
-                                raporttivienti raporttiparametrit virhe-viesti raporttivienti-lapinakyva?]} skeema tiedot]
+                                raporttivienti raporttiparametrit virhe-viesti raporttivienti-lapinakyva? tallenna-id]} skeema tiedot]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -474,7 +505,8 @@
                                      (let [vastaus (<! (tallenna tallennettavat))]
                                        (if (nollaa-muokkaustiedot-tallennuksen-jalkeen? vastaus)
                                          (nollaa-muokkaustiedot!)
-                                         (reset! tallennus-kaynnissa false))))))))}
+                                         (reset! tallennus-kaynnissa false))))))))
+              :id tallenna-id}
              [ui-ikonit/ikoni-ja-teksti (ui-ikonit/tallenna) "Tallenna"]])))
 
       (when-not muokkaa-aina
@@ -524,6 +556,7 @@
                (if-not sarake-sort
                  [:div otsikko]
                  [:div.ilmoitukset-sort
+                  ;;TODO: Muuta span.klikattava buttoniksi jossakin vaiheessa.
                   [:span.klikattava {:on-click (:fn sarake-sort)}
                    otsikko " " (sort-ikoni (:suunta sarake-sort)) " "]]))]) skeema)
         (when (or nayta-toimintosarake?
@@ -555,7 +588,7 @@
         aseta-leijuvan-otsikkorivin-sarakkeet! (fn [this & _]
                                                  (when @taulukon-ref-atom
                                                    (aseta-leijuvan-otsikkorivin-sarakkeet!
-                                                     (r/dom-node this)
+                                                     (rdom/dom-node this)
                                                      @taulukon-ref-atom
                                                      taulukon-leveys
                                                      @taulukon-scroll
@@ -643,7 +676,7 @@
                                        salli-valiotsikoiden-piilotus?
                                        piilotetut-valiotsikot tiedot gridin-tietoja
                                        esta-poistaminen-tooltip piilota-toiminnot?
-                                       voi-muokata-rivia? skeema vetolaatikot-auki esta-tiivis-grid?]}]
+                                       voi-muokata-rivia? skeema vetolaatikot-auki esta-tiivis-grid? tallenna-id]}]
   (let [muokatut @muokatut
         jarjestys @jarjestys
         tulevat-rivit (fn [aloitus-idx]
@@ -692,7 +725,8 @@
                                                   :voi-muokata-rivia? voi-muokata-rivia?
                                                   :tallennus-kaynnissa? tallennus-kaynnissa?
                                                   :gridin-tietoja gridin-tietoja
-                                                  :esta-tiivis-grid? esta-tiivis-grid?}
+                                                  :esta-tiivis-grid? esta-tiivis-grid?
+                                                  :tallenna-id tallenna-id}
                                     skeema rivi i]
                                     (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))))
                          jarjestys)))))))
@@ -1153,18 +1187,18 @@
         kiinnita-otsikkorivi? (atom false) ;; Jos true, otsikkorivi naulataan kiinni selaimen yläreunaan scrollatessa
         kiinnitetyn-otsikkorivin-leveys (atom 0)
         maarita-kiinnitetyn-otsikkorivin-leveys (fn [this]
-                                                  (reset! kiinnitetyn-otsikkorivin-leveys (dom/elementin-leveys (r/dom-node this))))
+                                                  (reset! kiinnitetyn-otsikkorivin-leveys (dom/elementin-leveys (rdom/dom-node this))))
         maarita-rendattavien-rivien-maara (fn [this]
                                             ;; Kasvatetaan max. rendattavien rivien määrää jos viewportissa on tilaa
-                                            (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
+                                            (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (rdom/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))
         kasittele-otsikkorivin-kiinnitys (fn [this]
                                            (if (and
                                                  (empty? @vetolaatikot-auki) ;; Jottei naulattu otsikkorivi peitä sisältöä
-                                                 (> (dom/elementin-korkeus (r/dom-node this)) @dom/korkeus)
-                                                 (< (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)) -20)
-                                                 (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
+                                                 (> (dom/elementin-korkeus (rdom/dom-node this)) @dom/korkeus)
+                                                 (< (dom/elementin-etaisyys-viewportin-ylareunaan (rdom/dom-node this)) -20)
+                                                 (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (rdom/dom-node this))))
                                              (reset! kiinnita-otsikkorivi? true)
                                              (reset! kiinnita-otsikkorivi? false)))
         kasittele-scroll-event (fn [this _]
@@ -1205,7 +1239,7 @@
 
        :component-did-mount
        (fn [this _]
-         (swap! gridin-tietoja assoc :grid-node (r/dom-node this))
+         (swap! gridin-tietoja assoc :grid-node (rdom/dom-node this))
          (maarita-kiinnitetyn-otsikkorivin-leveys this)
          (maarita-rendattavien-rivien-maara this))
 
@@ -1246,7 +1280,8 @@
                        @infolaatikko-nakyvissa? (conj "livi-grid-infolaatikolla")
                        sivuttain-rullattava? (conj "skrollattava")
                        ensimmainen-sarake-sticky? (conj "ensimmainen-sarake-sticky"))
-              muokattu? (not (empty? @historia))]
+              muokattu? (not (empty? @historia))
+              tallenna-id (str "tallenna-" (gensym))]
           [:div.panel.panel-default.livi-grid (merge
                                                 {:id (:id opts)
                                                  :class luokat}
@@ -1269,7 +1304,8 @@
                                :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
                                :raporttivienti-lapinakyva? raporttivienti-lapinakyva?
-                               :validoi-fn validoi-fn :virhe-viesti virhe-viesti}
+                               :validoi-fn validoi-fn :virhe-viesti virhe-viesti
+                               :tallenna-id tallenna-id}
                               skeema
                               tiedot))
            [:div.panel-body
@@ -1315,7 +1351,8 @@
                                            :vetolaatikot-auki vetolaatikot-auki
                                            :avattavat-rivit-auki avattavat-rivit-auki
                                            :tallennus-kaynnissa? tallennus-kaynnissa
-                                           :esta-tiivis-grid? esta-tiivis-grid?})
+                                           :esta-tiivis-grid? esta-tiivis-grid?
+                                           :tallenna-id tallenna-id})
                   (nayttokayttoliittyma {:renderoi-max-rivia renderoi-max-rivia
                                          :tiedot tiedot :colspan colspan :tyhja tyhja
                                          :tunniste tunniste :ohjaus ohjaus
@@ -1340,7 +1377,7 @@
                                          :esta-tiivis-grid? esta-tiivis-grid?
                                          :piilota-border? piilota-border?}))
                 ;; Lisätty tuki lisätä useammpi rivi vectorin sisään.
-                ;; Toimii myös vanhalla tavalla, mallia useamman rivin yhteenvetoon voi katsoa "MPU kustannukset yhteenveto"
+                ;; Toimii myös vanhalla tavalla, mallia useamman rivin yhteenvetoon voi katsoa "Ylläpito kustannukset yhteenveto"
                 (when-let [rivit-jalkeen (and 
                                            (:rivi-jalkeen-fn opts)
                                            ((:rivi-jalkeen-fn opts)

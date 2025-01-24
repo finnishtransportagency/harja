@@ -242,29 +242,30 @@
     :tr-alkuetaisyys :tr-numero :materiaali :toimenpide :piennar :kokonaismassamaara
     :leveys :pinta_ala :massamenekki :jarjestysnro :pot2p_id :rc-prosentti})
 
-(defn- laske-kulutuskerroksen-hypyt
+(defn laske-kulutuskerroksen-hypyt
   "Laskee ja palauttaa kulutuskerroksessa hyppyjen määrän integerinä"
   [data i hypyt]
   (if (> (count data) (dec i))
     (let [rivi (get-in data [i])
           rivi-tie (:tr-numero rivi)
-          rivi-ajorata (:tr-ajorata rivi)
           rivi-aet (:tr-alkuetaisyys rivi)
+          rivi-losa (:tr-loppuosa rivi)
           rivi-let (:tr-loppuetaisyys rivi)
           rivi-kaista (:tr-kaista rivi)
 
           seuraava-rivi (get-in data [(inc i)])
           seuraava-rivi-tie (:tr-numero seuraava-rivi)
-          seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
+          seuraava-rivi-aosa (:tr-alkuosa seuraava-rivi)
           seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
           seuraava-rivi-kaista (:tr-kaista seuraava-rivi)
 
           hyppy-olemassa? (if (and
                                 rivi-aet seuraava-rivi-aet
                                 (= rivi-tie seuraava-rivi-tie)
-                                (= rivi-ajorata seuraava-rivi-ajorata)
                                 (= rivi-kaista seuraava-rivi-kaista)
-                                (> seuraava-rivi-aet rivi-let))
+                                (= rivi-losa seuraava-rivi-aosa)
+                                ;; jos seur. rivin alku on 1-50 isompi, samalla tieosalla, kyseessä hyppy
+                                (< 0 (- seuraava-rivi-aet rivi-let) pot-domain/hypyn-kynnysarvo-metreina))
                             true
                             false)]
       (if hyppy-olemassa?
@@ -277,32 +278,32 @@
    Palauttaa vectorin kohdeosista joihin lisätty hyppyjen tiedot avaimiin
    Avaimet käsitellään frontissa paallystekerros.cljs missä ne passataan muokkaus.cljs korostusta varten
    Laitetaan aluksi 50 metriä rajaksi, eli kaikki alle 50 metrin hypyt näytetään fronttiin
-   Hyppy tulee tunnistaa kun mennään samalla ajoradalla, tiellä sekä samalla kaistalla. 
-   Jos kaista tai tie vaihtuu, silloin tämä ei ole hyppy.
-   Ajorata = Rata jossa on yksi tai usea tie (ajoradalla voi olla esim. moottoritie jossa 2 tietä)
-   Tie = Tie jossa 2 kaistaa
-   Kaista = Tien kaista 
+   Hyppy tulee tunnistaa kun mennään samalla tiellä, tienosalla ja kaistalla.
+   Jos tie, tienosa tai kaista vaihtuu, silloin tämä ei ole hyppy.
+   Tiellä voi olla yksi (0) tai kaksi ajorataa (1 ja 2), ja kaista voi jatkua yhtenäisenä vaikka ajoratojen lukumäärä muuttuu.
+   Ajoradalla on vähintään yksi kaista.
    Aet = Alkuetäisyys metreinä
    Let = Loppuetäisyys metreinä"
   [y data palautus maara]
   (when (> (count data) (dec y))
     (let [rivi (nth data y nil)
           rivi-tie (:tr-numero rivi)
-          rivi-ajorata (:tr-ajorata rivi)
           rivi-kaista (:tr-kaista rivi)
+          rivi-aosa (:tr-alkuosa rivi)
           rivi-aet (:tr-alkuetaisyys rivi)
+          rivi-losa (:tr-loppuosa rivi)
           rivi-let (:tr-loppuetaisyys rivi)
 
           edellinen-rivi (nth data (dec y) nil)
           edellinen-rivi-tie (:tr-numero edellinen-rivi)
-          edellinen-rivi-ajorata (:tr-ajorata edellinen-rivi)
           edellinen-rivi-kaista (:tr-kaista edellinen-rivi)
+          edellinen-rivi-losa (:tr-loppuosa edellinen-rivi)
           edellinen-rivi-let (:tr-loppuetaisyys edellinen-rivi)
 
           seuraava-rivi (nth data (inc y) nil)
           seuraava-rivi-tie (:tr-numero seuraava-rivi)
-          seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
           seuraava-rivi-kaista (:tr-kaista seuraava-rivi)
+          seuraava-rivi-aosa (:tr-alkuosa seuraava-rivi)
           seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
 
           rivi (cond
@@ -311,13 +312,13 @@
                    rivi-aet seuraava-rivi-aet
                    rivi-aet edellinen-rivi-let
                    (= rivi-tie seuraava-rivi-tie)
-                   (= rivi-ajorata seuraava-rivi-ajorata)
                    (= rivi-kaista seuraava-rivi-kaista)
                    (= rivi-tie edellinen-rivi-tie)
-                   (= rivi-ajorata edellinen-rivi-ajorata)
                    (= rivi-kaista edellinen-rivi-kaista)
-                   (> seuraava-rivi-aet rivi-let)
-                   (> rivi-aet edellinen-rivi-let))
+                   (= seuraava-rivi-aosa rivi-losa)
+                   (< 0 (- seuraava-rivi-aet rivi-let) pot-domain/hypyn-kynnysarvo-metreina)
+                   (= edellinen-rivi-losa rivi-aosa)
+                   (< 0 (- rivi-aet edellinen-rivi-let) pot-domain/hypyn-kynnysarvo-metreina))
                  (merge rivi {:aet-hyppy? true :let-hyppy? true})
 
                  ;; Seuraava ja tämä rivi olemassa sekä molemmilla sama tie&ajorata&kaista
@@ -326,9 +327,9 @@
                  (and
                    rivi-aet seuraava-rivi-aet
                    (= rivi-tie seuraava-rivi-tie)
-                   (= rivi-ajorata seuraava-rivi-ajorata)
                    (= rivi-kaista seuraava-rivi-kaista)
-                   (> seuraava-rivi-aet rivi-let))
+                   (= seuraava-rivi-aosa rivi-losa)
+                   (< 0 (- seuraava-rivi-aet rivi-let) pot-domain/hypyn-kynnysarvo-metreina))
                  (merge rivi {:let-hyppy? true})
 
                  ;; Tämä rivi ja edellinen rivi olemassa sekä molemmilla sama tie&ajorata&kaista
@@ -337,9 +338,9 @@
                  (and
                    rivi-aet edellinen-rivi-let
                    (= rivi-tie edellinen-rivi-tie)
-                   (= rivi-ajorata edellinen-rivi-ajorata)
                    (= rivi-kaista edellinen-rivi-kaista)
-                   (> rivi-aet edellinen-rivi-let))
+                   (= edellinen-rivi-losa rivi-aosa)
+                   (< 0 (- rivi-aet edellinen-rivi-let) pot-domain/hypyn-kynnysarvo-metreina))
                  (merge rivi {:aet-hyppy? true})
 
                  ;; Ei hyppyjä
@@ -370,19 +371,19 @@
                                                 {:kohdeosa-id (:id kohdeosa)}) pot2-paallystekerroksen-avaimet)]
                         rivi))
                     (:kohdeosat paallystysilmoitus))
-        
-        kohdeosat (vec (sort-by yllapitokohteet-domain/yllapitokohteen-jarjestys kohdeosat))
+        ;; järjestetään kaistoittain hyppyjen tunnistamiseksi
+        kohdeosat (vec (sort-by #(yllapitokohteet-domain/yllapitokohteen-jarjestys % true) kohdeosat))
         ;; Laske hypyt
         hyppyjen-maara (laske-kulutuskerroksen-hypyt kohdeosat 0 0)
         ;; Lisää avaimet riveille joissa hyppy 
         kohdeosat (tunnista-paallystys-hypyt 0 kohdeosat [] hyppyjen-maara)]
-    kohdeosat))
+    (vec (sort-by yllapitokohteet-domain/yllapitokohteen-jarjestys kohdeosat))))
 
 (defn pot2-alusta
   "Kasaa POT2-ilmoituksen tarvitsemaan muotoon alustakerroksen rivit"
   [db paallystysilmoitus]
   (into []
-        (q/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})))
+        (q/hae-pot2-alustarivit-ilmoitukseen db {:pot2_id (:id paallystysilmoitus)})))
 
 (defn- pot2-paallystekerros-ja-alusta
   "Hakee pot2-spesifiset tiedot lomakkeelle, kuten päällystekerros ja alusta"
@@ -789,7 +790,7 @@
 (defn- tallenna-pot2-alustarivit
   [db paallystysilmoitus pot2-id]
   (let [alustarivit (:alusta paallystysilmoitus)
-        idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit db {:pot2_id pot2-id})))
+        idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit-ilmoitukseen db {:pot2_id pot2-id})))
         hyotykuorman-idt (into #{} (map :pot2a_id alustarivit))
         poistuneet-idt (set/difference idt-ennen-tallennusta hyotykuorman-idt)]
 

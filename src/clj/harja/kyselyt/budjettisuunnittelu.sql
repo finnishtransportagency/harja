@@ -185,9 +185,7 @@ with muuttuneet as (
              where u.tyyppi = 'teiden-hoito'
                and u.indeksi = :nimi
                and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9) -- seuraavan hoitovuoden rivit
-               -- syys/loka/marraskuun indeksi vaikuttaa indeksilaskennan peruslukuun, ja sitä kautta indeksikorjauksiin
-               -- indeksikerroin on edellisen hoitovuoden syyskuun arvo jaettuna perusluvulla
-               and :kuukausi in (9, 10, 11)
+               and :kuukausi in (8, 9, 10, 11) -- MAKU indeksin kuukausi 
                and indeksikorjaus_vahvistettu is null
          ) indeksikorjaus
     where vanha is distinct from uusi
@@ -214,11 +212,11 @@ with muuttuneet as (
              where u.tyyppi = 'teiden-hoito'
                and u.indeksi = :nimi
                and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
-               and :kuukausi in (9, 10, 11)
+               and :kuukausi in (8, 9, 10, 11) -- MAKU indeksin kuukausi 
                and indeksikorjaus_vahvistettu is null
                -- Tilaajan rahavarauksille ei lasketa indeksikorjauksia
                and not (
-                     -- Johto- ja hallintokorvaus (J)
+                     -- J - Johto- ja hallintokorvaus
                      tr.yksiloiva_tunniste is not null and tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'
                      -- MHU ja HJU Hoidon johto
                      and tpi.toimenpide = (select id from toimenpide where koodi = '23151'))
@@ -245,7 +243,7 @@ with muuttuneet as (
              where u.tyyppi = 'teiden-hoito'
                and u.indeksi = :nimi
                and (jk.vuosi, jk.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
-               and :kuukausi in (9, 10, 11)
+               and :kuukausi in (8, 9, 10, 11) -- MAKU indeksin kuukausi 
                and indeksikorjaus_vahvistettu is null
          ) indeksikorjaus
     where vanha is distinct from uusi
@@ -291,7 +289,7 @@ with muuttuneet as (
              where u.tyyppi = 'teiden-hoito'
                and u.indeksi = :nimi
                and EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1 between :vuosi and :vuosi + 1
-               and :kuukausi in (9, 10, 11)
+               and :kuukausi in (8, 9, 10, 11)  -- MAKU indeksin kuukausi 
                and indeksikorjaus_vahvistettu is null
          ) indeksikorjaus
     where tavoitehinta_indeksikorjattu_vanha is distinct from tavoitehinta_indeksikorjattu_uusi
@@ -314,21 +312,29 @@ SELECT u.id                           AS urakka,
        ut.tarjous_tavoitehinta        AS "tarjous-tavoitehinta",
        ut.hoitokausi,
        u.loppupvm < CURRENT_DATE      AS "urakka-paattynyt?",
+       (EXTRACT(YEAR FROM u.loppupvm) - EXTRACT(YEAR FROM u.alkupvm)) + 1   AS urakan_pituus, -- vuosista saadaan yhden liian lyhyt
        EXISTS(SELECT *
               FROM urakka_paatos up
               WHERE up.tyyppi IN ('lupausbonus', 'lupaussanktio')
                 AND up."urakka-id" = ut.urakka
                 AND up."hoitokauden-alkuvuosi" = EXTRACT(YEAR FROM u.alkupvm) + ut.hoitokausi - 1
                 AND up.poistettu = FALSE) AS "on-paatos"
-FROM urakka_tavoite ut
-         LEFT JOIN urakka u ON ut.urakka = u.id
-ORDER BY u.alkupvm DESC, ut.hoitokausi;
+FROM urakka u
+     LEFT JOIN urakka_tavoite ut ON ut.urakka = u.id
+WHERE u.tyyppi = 'teiden-hoito'
+ORDER BY u.alkupvm DESC, ut.hoitokausi, u.nimi ;
 
 
 -- name: paivita-tarjoushinta<!
 UPDATE urakka_tavoite
-SET tarjous_tavoitehinta = :tarjous-tavoitehinta
+SET tarjous_tavoitehinta = :tarjous-tavoitehinta,
+    muokkaaja = :kayttaja_id,
+    muokattu = CURRENT_TIMESTAMP
 WHERE id = :id;
+
+-- name: lisaa-tarjoushinta<!
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tarjous_tavoitehinta, luotu, luoja)
+VALUES (:urakka_id, :hoitokausi, :tarjous-tavoitehinta, CURRENT_TIMESTAMP, :kayttaja_id);
 
 -- name: hae-kiinteat-kustannukset
 -- Kiinteät kustannukset analytiikan api hakuun

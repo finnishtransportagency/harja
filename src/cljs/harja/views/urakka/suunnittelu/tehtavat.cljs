@@ -2,13 +2,12 @@
   (:require [reagent.core :as r]
             [tuck.core :as tuck]
             [clojure.string :as str]
-            [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-tehtavat :as t]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
             [harja.tyokalut.vieritys :as vieritys]
@@ -30,7 +29,7 @@
             loppuvuosi (pvm/vuosi loppupvm)
             hoitokaudet (into [] (range vuosi loppuvuosi))]
         [:<>
-         [:div.flex-row.sticky-ylos.valkoinen-tausta
+         [:div.flex-row.sticky-ylos.valkoinen-tausta.tehtavamaara-valinnat
           {:style {:justify-content "flex-start"
                    :align-items "flex-end"}}
           [:div
@@ -204,7 +203,7 @@
                                       rivit)))))
 
 (defn- tehtava-maarat-taulukko 
-  [e! {:keys [sopimukset-syotetty? taso-4-tehtavat valinnat] :as app} toimenpiteen-tiedot]
+  [e! {:keys [sopimukset-syotetty? taso-4-tehtavat valinnat tallennetaan?] :as app} toimenpiteen-tiedot]
   (let [{:keys [nimi sisainen-id alue-tehtavia maara-tehtavia]} toimenpiteen-tiedot
         {:keys [nayta-aluetehtavat? nayta-suunniteltavat-tehtavat?]} valinnat
         aluetiedot-tila (r/cursor t/taulukko-tila [:alueet sisainen-id])
@@ -263,16 +262,19 @@
                "70%")}
             ;; ennen urakkaa -moodi
             (if sopimukset-syotetty?
-              {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+              {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :string :fmt #(fmt/trimmaa-normaali-luku %) :leveys "180px"
                :validoi [[:ei-tyhja "Anna määrä"]]
                :muokattava? (constantly false) :tasaa :oikea :veda-oikealle? true}
-              {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+              {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :fmt #(fmt/trimmaa-normaali-luku %) :leveys "180px"
                :validoi [[:ei-tyhja "Anna määrä"]]
-               :muokattava? (or (partial rahavarausperustainen-muokattava?) (partial yksikkoperustainen-muokattava?))
+               :muokattava? #(and
+                               ;; Tallennuksen ajaksi laita sarakkeet kiinni
+                               (not tallennetaan?)
+                               (or (partial rahavarausperustainen-muokattava?) (partial yksikkoperustainen-muokattava?)))
                :tasaa :oikea :veda-oikealle? true})
             ;; urakan ajan suunnittelu -moodi         
             (when sopimukset-syotetty?
-              {:otsikko "Muuttunut määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :muokattava? (comp kun-yksikko kun-ei-rahavaraus) :leveys "180px" :tasaa :oikea :veda-oikealle? true})
+              {:otsikko "Muuttunut määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :fmt #(fmt/trimmaa-normaali-luku %) :muokattava? (comp kun-yksikko kun-ei-rahavaraus) :leveys "180px" :tasaa :oikea :veda-oikealle? true})
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
            aluetiedot-tila]])
        (when (and (> maara-tehtavia 0) nayta-suunniteltavat-tehtavat?)
@@ -308,19 +310,19 @@
                "70%")}
             ;; ennen urakkaa -moodi
             (when (not sopimukset-syotetty?)
-              {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+              {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimus-maara :tyyppi :numero :fmt #(fmt/trimmaa-normaali-luku %) :leveys "180px"
                :validoi [[:ei-tyhja]]
                :muokattava? (comp kun-yksikko kun-kaikki-samat kun-ei-rahavaraus) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo
                :veda-oikealle? true :tasaa :oikea})
             ;; urakan ajan suunnittelu -moodi
             (when sopimukset-syotetty? 
               {:otsikko "Koko urakka-ajan määrä tarjouksessa" :nimi :sopimuksen-tehtavamaarat-yhteensa
-               :tyyppi :numero :muokattava? (constantly false) :leveys "160px" :tasaa :oikea :veda-oikealle? true})
+               :tyyppi :string :fmt #(fmt/trimmaa-normaali-luku %) :muokattava? (constantly false) :leveys "160px" :tasaa :oikea :veda-oikealle? true})
             (when sopimukset-syotetty? 
-              {:otsikko "Koko urakka-ajan määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string 
+              {:otsikko "Koko urakka-ajan määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :fmt #(fmt/trimmaa-normaali-luku %)
                :muokattava? (constantly false) :leveys "160px" :tasaa :oikea :veda-oikealle? true})
             (when sopimukset-syotetty? 
-              {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :tasaa :oikea :muokattava? kun-yksikko :leveys "180px" :veda-oikealle? true})
+              {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :fmt #(fmt/trimmaa-normaali-luku %) :tasaa :oikea :muokattava? kun-yksikko :leveys "180px" :veda-oikealle? true})
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
            maarat-tila]])])))
 
@@ -339,14 +341,20 @@
        [yleiset/keltainen-vihjelaatikko "Näytettäviä tietoja/määriä ei valittu, tarkista valinnat"])]))
 
 (defn sopimuksen-tallennus-boksi
-  [e!]
+  [e! tallennetaan?]
   (let [aluetietoja-puuttuu? (t/aluetietoja-puuttuu?)
         maaratietoja-puuttuu? (t/maaratietoja-puuttuu?)]
     [:div.table-default-even.col-xs-12
      [:div.flex-row
       [:h3 "Syötä tarjouksen määrät"]
+
+      (when tallennetaan?
+        [:div.ajax-loader-valistys-kustannukset
+         [ajax-loader-pieni (str "Tallennetaan tietoja...")]])
+      
       [napit/yleinen-ensisijainen "Tallenna" (comp (vieritys/vierita ::top) #(e! (t/->TallennaSopimus true)))
-       {:disabled (or aluetietoja-puuttuu? maaratietoja-puuttuu?)}]]
+       {:disabled (or tallennetaan? aluetietoja-puuttuu? maaratietoja-puuttuu?)}]]
+     
      (when (or aluetietoja-puuttuu? maaratietoja-puuttuu?)
        [yleiset/info-laatikko :neutraali
         "Jotta voit tallentaa, syötä kaikkiin tehtäviin ensin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'"
@@ -373,7 +381,7 @@
                       (e! (t/->HaeSopimuksenTila))
                       (e! (t/->HaeTehtavat
                             {:hoitokausi :kaikki}))))
-    (fn [e! {:keys [sopimukset-syotetty?] :as app}]
+    (fn [e! {:keys [sopimukset-syotetty? tallennetaan?] :as app}]
       [:div#vayla
        [vieritys/majakka ::top]
        [:div.flex-row
@@ -394,13 +402,9 @@
            [:div "Urakan aluksi syötä tehtäville tarjouksen tehtävä- ja määräluettelosta määrät. Hoitoluokkatiedot syötetään sellaisenaan tarjouksesta. Suunnitellut määrät kerrotaan suunnittelua varten oletuksena hoitovuosien määrän mukaan. Jos haluat suunnitella vuosikohtaisesti niin aukaise rivi ja valitse “Haluan syöttää joka vuoden erikseen”."]
            [:div "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä ‘0’. Tarjouksien määriä käytetään apuna urakan määrien suunnitteluun ja seurantaan."]]
           :info])
-       [yleiset/keltainen-vihjelaatikko
-        [:<>
-         [:div "Määrät, joita ei voi syöttää, kuuluvat rahavaraukseen."]]
-        :info]
 
        (when (not sopimukset-syotetty?)
-         [sopimuksen-tallennus-boksi e!])
+         [sopimuksen-tallennus-boksi e! tallennetaan?])
        ;; Vain pääkäyttäjille testiympäristössä mahdollisuus luoda nopeasti arvot kaikille tehtäville
        (when (and (k/kehitysymparistossa?)
                (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)

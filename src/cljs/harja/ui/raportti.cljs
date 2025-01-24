@@ -18,13 +18,9 @@
             [harja.visualisointi :as vis]
             [harja.domain.raportointi :as raportti-domain]
             [harja.loki :refer [log]]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.modal :as modal]
-            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.ui.aikajana :as aikajana]
             [harja.ui.ikonit :as ikonit]
-            [clojure.string :as str]
             [harja.ui.kentat :as kentat]))
 
 (defmulti muodosta-html
@@ -50,6 +46,13 @@
 (defmethod muodosta-html :arvo-ja-osuus [[_ {:keys [arvo osuus fmt]}]]
   [:span.arvo-ja-osuus
    [:span.arvo (if fmt (fmt arvo) arvo)]
+   [:span " "]
+   [:span.osuus (str "(" osuus "%)")]])
+
+(defmethod muodosta-html :arvo-yksikko-ja-osuus [[_ {:keys [arvo osuus fmt yksikko]}]]
+  [:span.arvo-ja-osuus
+   [:span.arvo (if fmt (fmt arvo) arvo)]
+   [:span.yksikko (str "\u00A0" yksikko)]
    [:span " "]
    [:span.osuus (str "(" osuus "%)")]])
 
@@ -103,7 +106,9 @@
 
 (defmethod muodosta-html :saa-ikoni [[_ {:keys [olomuoto havaintoaika maara]}]]
   ;; Generoidaan sää ikoni olomuotoon ja havaintoaikaan nähden
-  [ikonit/generoi-saa-ikoni (int olomuoto) (int maara) havaintoaika])
+  (if olomuoto
+    [ikonit/generoi-saa-ikoni (int olomuoto) (int maara) havaintoaika]
+    [:span raportti-domain/placeholder-ei-tietoja]))
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
@@ -289,13 +294,13 @@
   [:h1 teksti])
 
 (defmethod muodosta-html :otsikko-heading [[_ teksti tyyli]]
-  [:h2 {:style (merge {:font-size "1.25rem"} tyyli)} teksti])
+  [:h2 {:style (merge {:font-size "16px"} tyyli)} teksti])
+
+(defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
+  [:h1 {:style {:font-size "12px"}} teksti])
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
-
-(defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
-  [:h4 {:style {:font-size "1rem"}} teksti])
 
 (defmethod muodosta-html :jakaja [ei-valitysta]
   (if ei-valitysta
@@ -366,6 +371,9 @@
 
        (= (:piilota-otsikko? raportin-tunnistetiedot) true)
        [:span]
+
+       (= (:otsikon-koko raportin-tunnistetiedot) :keskikoko)
+       [:h1 {:style {:font-size "20px"}} (:nimi raportin-tunnistetiedot)]
 
        :else
        [:h3 (:nimi raportin-tunnistetiedot)]))

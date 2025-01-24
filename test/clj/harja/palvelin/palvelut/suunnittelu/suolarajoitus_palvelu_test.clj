@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :as t]
-            [clojure.string :as str]
+            [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [com.stuartsierra.component :as component]
             [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]))
 
@@ -271,14 +271,14 @@
 
 (deftest laske-tierekisteriosoitteelle-pituus3-onnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
-        tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 4 :let 5756}
+        tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 4 :let 5752}
         ;; tie 20, osan 4 pituus on yht: 5752 josta loput 1667m on kahta ajorataa, se vaihtuu kahdeksi ajoradaksi kohdassa 4089
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                    :tierekisterin-tiedot
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 1752 (:pituus pituudet)))
-    (is (= 3423 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
+    (is (= 3415 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
 
 (deftest laske-tierekisteriosoitteelle-pituus4-onnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -373,23 +373,25 @@
     ;; Virhe
     (is (= 400 (:status vastaus)))
     ;; Virheitä on 2
-    (is (= 3 (count (:vastaus vastaus))))
-    (is (= "Tieosoite puutteellinen." (first (:vastaus vastaus))))))
+    (is (= 2 (count (:vastaus vastaus))))
+    (is (= "Tieosoite puutteellinen. " (first (:vastaus vastaus))))))
 
-(deftest tr-osoitteen-validointi-test
+(deftest tieosoitteen-validointi-test
   (testing "Tieosoite on yksinkertainen ja on olemassa"
     (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
           tierekisteriosoite {:tie 130 :aosa 1 :aet 1 :losa 1 :let 100}
           suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
-          vastaus (suolarajoitus-palvelu/tr-osoitteen-validointi (:db t/jarjestelma) suolarajoitus)]
-      (is (= nil (:validaatiovirheet vastaus)) "Tierekisteriä ei löydy tietokannasta.")))
+          vastaus (tieverkko-kyselyt/tieosoitteen-validointi (:db t/jarjestelma)
+                    (:tie suolarajoitus) (:aosa suolarajoitus) (:aet suolarajoitus) (:losa suolarajoitus) (:let suolarajoitus))]
+      (is (= nil (:validaatiovirheet vastaus)) "Tieosoitetta ei löydy tietokannasta.")))
   (testing "Tieosoite on katki, eli osa 9 puuttuu tietokannasta."
     (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
           tierekisteriosoite {:tie 130 :aosa 8 :aet 1 :losa 10 :let 100}
           suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
-          vastaus (suolarajoitus-palvelu/tr-osoitteen-validointi (:db t/jarjestelma) suolarajoitus)]
+          vastaus (tieverkko-kyselyt/tieosoitteen-validointi (:db t/jarjestelma)
+                    (:tie suolarajoitus) (:aosa suolarajoitus) (:aet suolarajoitus) (:losa suolarajoitus) (:let suolarajoitus))]
       (is (= (nil? (:validaatiovirheet vastaus))))
-      (is (= "Tierekisteriosoite ei ole yhtenäinen." (first (:validaatioinfot vastaus))) "Tierekisteriosoitte ei ole yhtenäinen."))))
+      (is (= "Tieosoite ei ole yhtenäinen. " (first (:validaatioinfot vastaus))) "Tieosoite ei ole yhtenäinen."))))
 
 
 (deftest laske-tierekisteriosoitteelle-pituus-vaarilla-tiedoilla-ei-onnistu-test
@@ -404,7 +406,7 @@
                    :tierekisterin-tiedot
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 400 (:status vastaus)))
-    (is (= (first (:vastaus vastaus)) "Loppuetäisyys on tieosan 4 ulkopuolella. Tieosa päättyy etäisyyteen 5756.") "Väärillä tiedoilla ei voi laskea pituutta.")))
+    (is (= (first (:vastaus vastaus)) "Loppuetäisyys on tieosan 4 ulkopuolella. Tieosa päättyy etäisyyteen 5752. ") "Väärillä tiedoilla ei voi laskea pituutta.")))
 
 (deftest validoi-nolla-let-arvo-onnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -595,7 +597,7 @@
         (is (= 400 (:status tr-tiedot-alku-keskella3)) "Alku keskellä, eikä saa tallentaa")))
 
     (testing "Varmisetaan, että tallennus onnistuu, kun annettu tierekisteri ei ole lähelläkään olemassaolevia rajoituksia"
-      (let [tr-ei-lahellakaan {:tie 25 :aosa 11 :aet 1 :losa 11 :let 3001}
+      (let [tr-ei-lahellakaan {:tie 25 :aosa 11 :aet 1 :losa 11 :let 3011}
             suolarajoitus-ei-lahella (merge perusrajoitus tr-ei-lahellakaan)
             tr-tiedot-ei-lahella (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                                    :tierekisterin-tiedot
@@ -606,7 +608,7 @@
             tr-tiedot-ei-lahella2 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                                     :tierekisterin-tiedot
                                     t/+kayttaja-jvh+ suolarajoitus-ei-lahella2)]
-        (is (= {:pituus 3000, :ajoratojen_pituus 3000,
+        (is (= {:pituus 3010, :ajoratojen_pituus 3010,
                 :pohjavesialueet '({:nimi "Björknäs", :tunnus "183551"}
                                    {:nimi "Ekerö", :tunnus "160651"})} tr-tiedot-ei-lahella) "Ei lähelläkään muita rajoituksia.")
         (is (= 5969 (:pituus tr-tiedot-ei-lahella2)) "Ei lähelläkään muita rajoituksia.")))

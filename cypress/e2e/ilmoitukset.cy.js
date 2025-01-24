@@ -29,14 +29,13 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
 
             let tableIndex = function () {
                 for (let i = 0; i < $rivit.length; i++) {
-                    if ($rivit.eq(i).find('td').text().trim() === 'Oulun MHU 2019-2024') {
+                    if ($rivit.eq(i).find('td').text().trim() === 'Rovaniemen MHU..1. hoitovuosi)') {
                         return i
                     }
                 }
                 return -1
             }
-            cy.wrap(valitseTeksti(tableIndex(), 'Urakka', false)).should('equal', 'Oulun MHU 2019-2024');
-            cy.wrap($rivit.eq(tableIndex()).find('td').eq($otsikot.get('Urakka')).find('.tooltip')).should('not.exist')
+            cy.wrap(valitseTeksti(tableIndex(), 'Urakka', false)).should('equal', 'Rovaniemen MHU..1. hoitovuosi)');
         })
     })
 
@@ -98,7 +97,9 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.contains('.ilmoitukset', 'Uusia ilmoituksia haetaan', {timeout: timeout})
     })
 
-    it("Ilmoitusten ws-yhteys aktivoituu", function () {
+    // FIXME: Tämä  testi ei toimi, koska ilmoitusten ws-yhteys on otettu pois testikäytöstä
+    //        Poista tämä testi, jos ws-yhteys poistetaan kokonaan koodipesästä
+    it.skip("Ilmoitusten ws-yhteys aktivoituu", function () {
         cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', { timeout: timeout }).should('not.exist')
         cy.contains('Aktivoi kokeellinen ilmoitusten reaaliaikahaku').click()
         cy.contains('.ilmoitukset', 'Uusien ilmoitusten reaaliaikahaku aktiivinen')

@@ -238,7 +238,7 @@
        :otsikko [:div (when saa-muokata?
                         (if muokkaustila? "Muokkaa rajoitusta" "Lisää rajoitusalue"))
                  [:div.small-text.harmaa
-                  (str (urakka/hoitokauden-jarjestysnumero valittu-hoitovuosi (:loppupvm urakka)) ". hoitovuosi"
+                  (str (urakka/hoitokauden-jarjestysnumero (:alkupvm urakka) valittu-hoitovuosi) ". hoitovuosi"
                     " (" (pvm/hoitokausi-str-alkuvuodesta-vuodet valittu-hoitovuosi) ")")]]
        :muokkaa! (r/partial #(e! (suolarajoitukset-tiedot/->PaivitaLomake % false)))
        :footer-fn (fn [lomake-tila]
@@ -577,7 +577,7 @@
               [lomake-talvisuolan-kayttoraja-alueurakka e! app urakka]
               [yleiset/ajax-loader "Ladataan..."])
 
-            [yleiset/virheviesti-sailio "Tuntematon urakkatyyppi"])
+            [yleiset/info-laatikko :varoitus "Tuntematon urakkatyyppi" nil "400px" {:sulje-nappi-id (gensym)}])
 
           (when (= :teiden-hoito (:tyyppi urakka))
             [:<>

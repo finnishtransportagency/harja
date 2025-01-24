@@ -311,7 +311,6 @@
        (when voi-muokata?
          {:otsikko "Arv. aloitus"
           :tyyppi :pvm
-          :ikoni-sisaan? true
           :nimi :alkupvm
           :pakollinen? true
           :vayla-tyyli? true
@@ -321,7 +320,6 @@
          {:otsikko "Arv. lopetus"
           :tyyppi :pvm
           :nimi :loppupvm
-          :ikoni-sisaan? true
           :pakollinen? true
           :vayla-tyyli? true
           :pvm-tyhjana #(:alkupvm %)
@@ -519,7 +517,6 @@
          (lomake/rivi
            {:otsikko "Työ alkoi"
             :tyyppi :pvm
-            :ikoni-sisaan? true
             :nimi :pot-tyo-alkoi
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-tyo-alkoi] lomake)
@@ -528,7 +525,6 @@
             :pakollinen? true}
            {:otsikko "Työ päättyi"
             :tyyppi :pvm
-            :ikoni-sisaan? true
             :nimi :pot-tyo-paattyi
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-tyo-paattyi] lomake)
@@ -543,7 +539,6 @@
            {:otsikko "Valmistumispvm"
             :tyyppi :pvm
             :nimi :pot-valmistumispvm
-            :ikoni-sisaan? true
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-valmistumispvm] lomake)
             :virheteksti (validointi/nayta-virhe-teksti [:pot-valmistumispvm] lomake)

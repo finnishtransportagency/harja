@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "type": "object",
+  "properties": {
+    "tehtavat": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "required": true
+          },
+          "nimi": {
+            "type": "string",
+            "required": true
+          },
+          "tehtavaryhma": {
+            "type": ["integer", "null"]
+          },
+          "emo": {
+            "type": ["integer", "null"]
+          },
+          "toimenpidekoodi": {
+            "type": ["string", "null"]
+          },
+          "hinnoittelu": {
+            "type": "array",
+            "items": {
+              "type": ["string", "null"]
+            }
+          },
+          "suunnitteluyksikko": {
+            "type": ["string", "null"]
+          },
+          "jarjestys": {
+            "type": ["integer", "null"]
+          },
+          "materiaaliluokka_id": {
+            "type": ["integer", "null"]
+          },
+          "yksikko": {
+            "type": ["string", "null"]
+          },
+          "materiaalikoodi_id": {
+            "type": ["integer", "null"]
+          },
+          "yksiloiva_tunniste": {
+            "type": ["string", "null"]
+          },
+          "voimassaolo_alkuvuosi": {
+            "type": ["integer", "null"]
+          },
+          "voimassaolo_loppuvuosi": {
+            "type": ["integer", "null"]
+          },
+          "piilota": {
+            "type": ["boolean", "null"]
+          },
+          "suoritettavatehtava": {
+            "type": ["string", "null"]
+          },
+
+          "kasin_lisattava_maara": {
+            "type": "boolean",
+            "required": true
+          },
+          "aluetieto": {
+            "type": "boolean",
+            "required": true
+          },
+          "raportoi-tehtava?": {
+            "type": "boolean"
+          },
+          "ensisijainen": {
+            "type": "boolean"
+          },
+          "muokattu": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "luotu": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "poistettu": {
+            "type": "boolean",
+            "required": true
+          }
+        },
+        "required": [
+          "id",
+          "nimi",
+          "kasin_lisattava_maara",
+          "aluetieto",
+          "poistettu"
+        ]
+      }
+    },
+    "tehtavaryhmat": {
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "required": true
+          },
+          "nimi": {
+            "type": "string",
+            "required": true
+          },
+          "otsikko": {
+            "type": "string",
+            "required": true
+          },
+          "jarjestys": {
+            "type": "integer"
+          },
+          "yksiloiva_tunniste": {
+            "type": ["string", "null"]
+          },
+          "voimassaolo_loppuvuosi": {
+            "type": ["integer", "null"]
+          },
+          "toimenpidekoodi": {
+            "type": "string"
+          },
+          "voimassaolo_alkuvuosi": {
+            "type": ["integer", "null"]
+          },
+          "luotu": {
+            "type": "string",
+            "format": "date-time",
+            "required": true
+          },
+          "muokattu": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "poistettu": {
+            "type": "boolean",
+            "required": true
+          },
+          "versio": {
+            "type": ["string", "null"]
+          }
+        },
+        "required": [
+          "luotu",
+          "nimi",
+          "otsikko",
+          "id",
+          "poistettu"
+        ]
+      }
+    }
+  },
+  "required": ["tehtavat", "tehtavaryhmat"]
+}

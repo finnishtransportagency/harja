@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.toteumat.maarien-toteumat
   "UI controlleri määrien toteutumille"
-  (:require [reagent.core :as r]
+  (:require [harja.domain.tierekisteri :as tr-domain]
+            [reagent.core :as r]
             [tuck.core :refer [process-event] :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.toteuma :as t]
@@ -12,6 +13,8 @@
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
             [namespacefy.core :as namespacefy]
             [clojure.string :as str]))
+
+(def nayta-validoinnit? (atom false))
 
 (declare hae-toteutuneet-maarat)
 (declare hae-tehtavat)
@@ -67,6 +70,8 @@
                    ::t/lisatieto nil
                    ::t/maara nil})
 
+
+
 (defn validoinnit
   ([avain lomake indeksi]
    (avain {::t/maara [(tila/silloin-kun #(= :maaramitattava (::t/tyyppi lomake)) tila/ei-nil)
@@ -93,14 +98,15 @@
    [::t/tyyppi] (validoinnit ::t/tyyppi)])
 
 (defn toteuma-lomakkeen-validoinnit [{toteumat ::t/toteumat :as lomake}]
-  (apply tila/luo-validius-tarkistukset
-         (concat toteuma-lomakkeen-oletus-validoinnit
-                 (mapcat (fn [i]
-                           [[::t/toteumat i ::t/maara] (validoinnit ::t/maara lomake i)
-                            [::t/toteumat i ::t/tehtava] (validoinnit ::t/tehtava lomake i)
-                            [::t/toteumat i ::t/sijainti] (validoinnit ::t/sijainti lomake i)
-                            [::t/toteumat i ::t/lisatieto] (validoinnit ::t/lisatieto lomake)])
-                         (range (count toteumat))))))
+  (let [val (apply tila/luo-validius-tarkistukset
+              (concat toteuma-lomakkeen-oletus-validoinnit
+                (mapcat (fn [i]
+                          [[::t/toteumat i ::t/maara] (validoinnit ::t/maara lomake i)
+                           [::t/toteumat i ::t/tehtava] (validoinnit ::t/tehtava lomake i)
+                           [::t/toteumat i ::t/sijainti] (validoinnit ::t/sijainti lomake i)
+                           [::t/toteumat i ::t/lisatieto] (validoinnit ::t/lisatieto lomake)])
+                  (range (count toteumat)))))]
+    val))
 
 (defn- hae-tehtavat-tyypille
   ([toimenpide]
@@ -292,7 +298,8 @@
                             :loppupvm loppupvm
                             :toteumat toteumat}
                            {:onnistui ->TallennaToteumaOnnistui
-                            :epaonnistui ->TallennaToteumaEpaonnistui})
+                            :epaonnistui ->TallennaToteumaEpaonnistui
+                            :paasta-virhe-lapi? true})
         (viesti/nayta! "Puuttuvia tai virheellisiä kenttiä, tarkista kentät!" :danger))
       (-> app
           (dissoc :avattu-tehtava)
@@ -317,14 +324,10 @@
     (let [osoite (get-in lomake [indeksi :tierekisteriosoite])
           ; Kun sijaintia muokataan, pitää vanha sijainti poistaa kartalta
           _ (reset! maarien-toteumat-kartalla/karttataso-toteumat nil)]
-      (if (and
-            (not (empty? osoite))
-            (not (nil? (get osoite :alkuetaisyys))))
-        (-> app
-            ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
-            ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
-            (assoc-in [:sijainti indeksi] osoite))
-        app)))
+      (-> app
+        ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
+        ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
+        (assoc-in [:sijainti indeksi] osoite))))
   
   PaivitaLomake
   (process-event [{{useampi? ::t/useampi-toteuma
@@ -359,6 +362,13 @@
           app (if toimenpide
                 (assoc-in app [:lomake ::t/toimenpide] toimenpide)
                 app)
+          ;; Jos valitaan tehtävä, jolle pakotetaan sijainti, asetetaan ei-sijaintia falseksi
+          asetetun-tehtavan-nimi (get-in app [:lomake ::t/toteumat indeksi ::t/tehtava :tehtava])
+          pakota-sijainti? (boolean (tr-domain/tehtavat-joille-sijainti-pakollinen asetetun-tehtavan-nimi))
+          app (assoc-in app [:lomake ::t/toteumat indeksi ::t/pakota-sijainti?] pakota-sijainti?)
+          app (if pakota-sijainti?
+                (-> app (assoc-in [:lomake ::t/toteumat indeksi ::t/ei-sijaintia] false))
+                app)
           ;; Jos yksittäisen toteuman sijainti muutetaan ei sijainnittomaksi
           app (if (= polku [::t/toteumat indeksi ::t/ei-sijaintia])
                 (do
@@ -383,7 +393,7 @@
 
                 ;; Default
                 app)
-          ;Valitoidaan lomake
+          ;; Validoidaan lomake
           {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)
           app (-> app
@@ -581,8 +591,8 @@
                   ;; Aseta valittu toimenpide
                   (and
                     (not (nil? toimenpide))
-                    (not= {:otsikko "Kaikki" :id 0} toimenpide)) (assoc-in [:lomake ::t/toimenpide] toimenpide)
-                  (= {:otsikko "Kaikki" :id 0} toimenpide) (assoc-in [:lomake ::t/toimenpide] nil)
+                    (not= "Kaikki" (:otsikko toimenpide))) (assoc-in [:lomake ::t/toimenpide] toimenpide)
+                  (= "Kaikki" (:otsikko toimenpide)) (assoc-in [:lomake ::t/toimenpide] nil)
                   ;; Laita default arvot lomakkeelle
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-id] nil)
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-tehtava-id] nil)
@@ -623,7 +633,7 @@
 
   TallennaToteumaEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta! "Toteuman tallennus epäonnistui!" :danger)
+    (viesti/nayta! (str "Toteuman tallennus epäonnistui! " (get-in vastaus [:response :virhe])) :danger)
     app))
 
 (defn hae-toteutuneet-maarat [urakka-id toimenpide hoitokauden-alkuvuosi]

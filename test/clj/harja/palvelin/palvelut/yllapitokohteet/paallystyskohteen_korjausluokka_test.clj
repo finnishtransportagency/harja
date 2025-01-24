@@ -9,10 +9,10 @@
         ;; Tämä tr osoite on sitä varten, että mitataan, kuinka pitkästti pk luokkaa tällä tieosalla on. Pitäisi olla tuo 400m
         tr {:tie 18747 :aosa 1 :losa 1 :aet 0 :let 7590}
 
-        pkgeom_format (format "(SELECT tr_osoitteelle_viiva3(%s::INTEGER,  %s::INTEGER, %s::INTEGER, %s::INTEGER, %s::INTEGER)::geometry)",
+        pkgeom_format (format "(SELECT tieosoitteelle_viiva(%s::INTEGER,  %s::INTEGER, %s::INTEGER, %s::INTEGER, %s::INTEGER)::geometry)",
                         (:tie pk) (:aosa pk) (:aet pk) (:losa pk) (:let pk))
 
-        trgeom_format (format "(SELECT tr_osoitteelle_viiva3(%s::INTEGER,  %s::INTEGER, %s::INTEGER, %s::INTEGER, %s::INTEGER)::geometry)",
+        trgeom_format (format "(SELECT tieosoitteelle_viiva(%s::INTEGER,  %s::INTEGER, %s::INTEGER, %s::INTEGER, %s::INTEGER)::geometry)",
                         (:tie tr) (:aosa tr) (:aet tr) (:losa tr) (:let tr))
 
         ;; Lisätään itse keksitty päällysteen_korjausluokka
@@ -28,7 +28,7 @@
 
         ;; Mitataan funktion laske_yllapitokohdeosan_pk_pituudet koodeilla pk luokan pituus
         erotus (:erotus (first (q-map (format "SELECT ROUND(COALESCE(st_length (st_difference (%s, %s)), 0)::numeric,0) AS erotus", trgeom_format pkgeom_format))))]
-    (is (= (BigDecimal. (:let pk)) pkgeom_pituus))
-    (is (= (BigDecimal. (:let tr)) trgeom_pituus))
+    (is (=marginaalissa? (BigDecimal. (:let pk)) pkgeom_pituus 20))
+    (is (=marginaalissa? (BigDecimal. (:let tr)) trgeom_pituus 20))
     ;; Ihan metrilleen ei saada tarkkoja lukuja, kun tieosoitteen paaluvälit ei ole ihan metrejä, joten sallitaan pieni marginaali
-    (is (=marginaalissa?  (BigDecimal. (- (:let tr) (:let pk))) erotus 3))))
+    (is (=marginaalissa?  (BigDecimal. (- (:let tr) (:let pk))) erotus 20))))

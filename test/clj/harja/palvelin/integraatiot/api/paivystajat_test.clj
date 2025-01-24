@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.api.paivystajat-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
+            [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.paivystajatiedot :as api-paivystajatiedot]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
@@ -142,9 +143,17 @@
     (is (= 400 (:status vastaus)))))
 
 (deftest hae-paivystajatiedot-sijainnilla-kayttaen-lyhytta-aikavalia
+
   (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         _ (anna-lukuoikeus kayttaja-yit)
+        uusi-alkupvm (str (pvm/vuosi (pvm/nyt)) "-09-30")
+        ;; Hoitourakat eivät ala päivystämään uudella sijainnilla 1.10 hoitokauden vaihtuessa heti. Vaan
+        ;; vasta 12h päästä, joten muokataan alkupäivä alkamaan aiemmin, jos tämä testi ajetaan 1.10.
+        _ (when (and
+                  (= 10 (pvm/kuukausi (pvm/nyt)))
+                  (= 1 (pvm/paiva (pvm/nyt))))
+            (u (format "UPDATE urakka SET alkupvm = '%s' WHERE id = %s" uusi-alkupvm urakka-id)))
         vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=443199&y=7377324"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
@@ -176,6 +185,15 @@
   (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         _ (anna-lukuoikeus kayttaja-yit)
+        ;; Hoitourakat eivät ala päivystämään uudella sijainnilla 1.10 hoitokauden vaihtuessa heti. Vaan
+        ;; vasta 12h päästä, joten muokataan alkupäivä alkamaan aiemmin, jos tämä testi ajetaan 1.10.
+        urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+        uusi-alkupvm (str (pvm/vuosi (pvm/nyt)) "-09-30")
+        _ (when (and
+                  (= 10 (pvm/kuukausi (pvm/nyt)))
+                  (= 1 (pvm/paiva (pvm/nyt))))
+            (u (format "UPDATE urakka SET alkupvm = '%s' WHERE id = %s" uusi-alkupvm urakka-id)))
+
         vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=443199&y=7377324"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))

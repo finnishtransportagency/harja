@@ -4,9 +4,7 @@
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
@@ -49,7 +47,8 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Tiestötarkastusraportti"
-                     :orientaatio :landscape}
+                     :orientaatio :landscape
+                     :rajoita-pdf-rivimaara 30000}
                     [:taulukko
                      {:otsikko "Oulun alueurakka 2014-2019, Tiestötarkastusraportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Tiestötarkastusraportti"
@@ -138,7 +137,8 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Tiestötarkastusraportti"
-                     :orientaatio :landscape}
+                     :orientaatio :landscape
+                     :rajoita-pdf-rivimaara 30000}
                     [:taulukko
                      {:otsikko "Pohjois-Pohjanmaa, Tiestötarkastusraportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Tiestötarkastusraportti"
@@ -226,7 +226,8 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Tiestötarkastusraportti"
-                     :orientaatio :landscape}
+                     :orientaatio :landscape
+                     :rajoita-pdf-rivimaara 30000}
                     [:taulukko
                      {:otsikko "KOKO MAA, Tiestötarkastusraportti ajalta 01.01.2014 - 31.12.2015"
                       :sheet-nimi "Tiestötarkastusraportti"

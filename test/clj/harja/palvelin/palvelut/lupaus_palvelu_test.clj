@@ -70,6 +70,9 @@
 (defn- etsi-ryhma [ryhmat jarjestys-numero]
   (first (filter #(= jarjestys-numero (:jarjestys %)) ryhmat)))
 
+(defn etsi-vaihtoehto [vaihtoehdot vaihtoehto-seuraava-ryhma-id]
+  (first (filter #(= vaihtoehto-seuraava-ryhma-id (:vaihtoehto-seuraava-ryhma-id %)) vaihtoehdot)))
+
 (deftest urakan-lupaustietojen-haku-toimii
   (let [tiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
@@ -164,11 +167,12 @@
         vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
                   tiedot)
-        eka-vaihtoehto (first (:vaihtoehdot (etsi-lupaus vastaus 3)))]
-    (is (= "> 25 %" (:vaihtoehto eka-vaihtoehto)) "vaihtoehto oikein")
-    (is (= 1 (:vaihtoehto-askel eka-vaihtoehto)) "askel oikein")
-    (is (= 3 (:vaihtoehto-seuraava-ryhma-id eka-vaihtoehto)) "seuraava ryhmä oikein")
-    (is (= "Testiotsikko 1" (:ryhma-otsikko eka-vaihtoehto)) "ryhma-otsikko oikein")))
+        vaihtoehdot (:vaihtoehdot (etsi-lupaus vastaus 3))
+        vaihtoehto (etsi-vaihtoehto vaihtoehdot 3)]
+    (is (= "> 25 %" (:vaihtoehto vaihtoehto)) "vaihtoehto oikein")
+    (is (= 1 (:vaihtoehto-askel vaihtoehto)) "askel oikein")
+    (is (= 3 (:vaihtoehto-seuraava-ryhma-id vaihtoehto)) "seuraava ryhmä oikein")
+    (is (= "Testiotsikko 1" (:ryhma-otsikko vaihtoehto)) "ryhma-otsikko oikein")))
 
 (deftest odottaa-kannanottoa
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -336,6 +340,57 @@
                                                                                    #inst "2022-09-30T20:59:59.000-00:00"]})
         sitoutuminen (:lupaus-sitoutuminen lupaustiedot)]
     (is (= 67 (:pisteet sitoutuminen)) "luvattu-pistemaara oikein")))
+
+(deftest urakan-lupaussitoumuksia-vain-yksi-per-urakka
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-luvatut-pisteet +kayttaja-jvh+
+            {:pisteet 67
+             :urakka-id urakka-id})
+        sitoutuminen-1 (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                                                     #inst "2022-09-30T20:59:59.000-00:00"]})
+        sitoumusrivien-maara-1 (ffirst (q (format "SELECT count(*) FROM lupaus_sitoutuminen WHERE \"urakka-id\" = %s;" urakka-id)))
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-luvatut-pisteet +kayttaja-jvh+
+            {:pisteet nil
+             :urakka-id urakka-id})
+        sitoutuminen-2 (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                                                     #inst "2022-09-30T20:59:59.000-00:00"]})
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-luvatut-pisteet +kayttaja-jvh+
+            {:pisteet 55
+             :urakka-id urakka-id})
+        sitoumusrivien-maara-2 (ffirst (q (format "SELECT count(*) FROM lupaus_sitoutuminen WHERE \"urakka-id\" = %s;" urakka-id)))
+        sitoutuminen-3 (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                                                     #inst "2022-09-30T20:59:59.000-00:00"]})]
+    (is (= 1 sitoumusrivien-maara-1) "Useampi tallennus ei lisää rivien määrää")
+    (is (= 67 (get-in sitoutuminen-1 [:lupaus-sitoutuminen :pisteet])) "luvattu-pistemaara oikein")
+    (is (= urakka-id (get-in sitoutuminen-1 [:lahtotiedot :urakka-id])) "urakka-id oikein")
+    (is (= 1 sitoumusrivien-maara-2) "Useampi tallennus ei lisää rivien määrää")
+    (is (nil? (get-in sitoutuminen-2 [:lupaus-sitoutuminen :pisteet])) "luvattu-pistemaara oikein")
+    (is (= urakka-id (get-in sitoutuminen-2 [:lahtotiedot :urakka-id])) "urakka-id oikein")
+    (is (= 55 (get-in sitoutuminen-3 [:lupaus-sitoutuminen :pisteet])) "luvattu-pistemaara oikein")
+    (is (= urakka-id (get-in sitoutuminen-3 [:lahtotiedot :urakka-id])) "urakka-id oikein")))
+
+(deftest poistettu-sitoutuminen-ei-palaudu-palvelusta
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-luvatut-pisteet +kayttaja-jvh+
+            {:pisteet 67
+             :urakka-id urakka-id})
+        sitoutuminen-ennen-poistoa (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                            :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                                                                 #inst "2022-09-30T20:59:59.000-00:00"]})
+        _ (u (format "UPDATE lupaus_sitoutuminen SET poistettu = TRUE WHERE \"urakka-id\" = %s;" urakka-id))
+        sitoutuminen-poiston-jalkeen (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                              :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                                                                   #inst "2022-09-30T20:59:59.000-00:00"]})]
+    (is (= 67 (get-in sitoutuminen-ennen-poistoa [:lupaus-sitoutuminen :pisteet])) "luvattu-pistemaara oikein")
+    (is (= urakka-id (get-in sitoutuminen-ennen-poistoa [:lahtotiedot :urakka-id])) "urakka-id oikein")
+    (is (nil? (get-in sitoutuminen-poiston-jalkeen [:lupaus-sitoutuminen :pisteet])) "poistettu rivi ei nouse")))
 
 (deftest urakan-lupauspisteiden-tallennus-vaatii-oikean-urakkaidn
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

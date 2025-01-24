@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/tehtavaryhmat.sql"
   {:positional? true})
+
+(declare hae-tehtavaryhma)

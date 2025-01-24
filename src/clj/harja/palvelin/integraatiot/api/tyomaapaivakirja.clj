@@ -10,8 +10,9 @@
             [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.json :as tyokalut-json]
+            [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-virhevastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -65,17 +66,17 @@
     virheet kalustot))
 
 (defn validoi-paivystajat-ja-tyonjohtajat [tiedot omistaja-avain kuvaava-nimi virheet]
-  (reduce (fn [t t]
+  (reduce (fn [agg_virheet t]
             (let [tieto (omistaja-avain t)
                   aloitus (tyokalut-json/pvm-string->joda-date (:aloitus tieto))
                   lopetus (tyokalut-json/pvm-string->joda-date (:lopetus tieto))
-                  virheet (if (pvm/ennen? lopetus aloitus)
-                            (conj virheet (format "%s lopetusaika täytyy olla aloitusajan jälkeen." kuvaava-nimi))
-                            virheet)
-                  virheet (if (> 4 (count (:nimi tieto)))
-                            (conj virheet (format "%s nimi liian lyhyt. Oli nyt %s." kuvaava-nimi (:nimi tieto)))
-                            virheet)]
-              virheet))
+                  agg_virheet (if (pvm/ennen? lopetus aloitus)
+                                (conj agg_virheet (format "%s lopetusaika täytyy olla aloitusajan jälkeen." kuvaava-nimi))
+                                agg_virheet)
+                  agg_virheet (if (> 4 (count (:nimi tieto)))
+                                (conj agg_virheet (format "%s nimi liian lyhyt. Oli nyt %s." kuvaava-nimi (:nimi tieto)))
+                                agg_virheet)]
+              agg_virheet))
     virheet tiedot))
 
 (defn validoi-tieston-toimenpiteet [db toimenpiteet virheet]
@@ -228,7 +229,13 @@
           :let [saa (:saatieto s)
                 saa (-> saa
                       (assoc :havaintoaika (tyokalut-json/aika-string->java-sql-date (:havaintoaika saa)))
-                      (assoc :aseman-tietojen-paivityshetki (tyokalut-json/aika-string->java-sql-date (:aseman-tietojen-paivityshetki saa))))]]
+                      (assoc :aseman-tietojen-paivityshetki (tyokalut-json/aika-string->java-sql-date (:aseman-tietojen-paivityshetki saa)))
+                      ;; Varmista että valinnaiset ja puuttuvat attribuutit saavat null-arvon, jos tietoa ei ole välitetty
+                      (assoc :tien-lampotila (:tien-lampotila saa))
+                      (assoc :keskituuli (:keskituuli saa))
+                      (assoc :sateen-olomuoto (:sateen-olomuoto saa))
+                      (assoc :sadesumma (:sadesumma saa))
+                      )]]
     (tyomaapaivakirja-kyselyt/lisaa-saatiedot<! db (merge
                                                      saa
                                                      {:versio versio
@@ -344,16 +351,29 @@
                                                          :tyomaapaivakirja_id tyomaapaivakirja-id
                                                          :urakka_id urakka-id
                                                          :kuvaus (:kuvaus (:viranomaisen-avustus v))
-                                                         :aika (:tunnit (:viranomaisen-avustus v))}))))
+                                                         :tuntimaara (:tunnit (:viranomaisen-avustus v))}))))
 
-(defn tallenna-tyomaapaivakirja [db urakka-id data kayttaja tyomaapaivakirja-id]
+(defn tallenna-tyomaapaivakirja [db urakka-id data kayttaja ensimmainen-lahetys?]
   (let [_ (log/debug "tallenna-tyomaapaivakirja :: data" (pr-str data))
-        tyomaapaivakirja-id (konv/konvertoi->int tyomaapaivakirja-id)
+        ;; Jos lähettäjä on päivittämässä jo olemassa olevaa työmaapäiväkirjaa, niin tarkistetaan, että löydetäänkö sellaista kannasta
         versiotiedot (hae-tyomaapaivakirjan-versiotiedot db kayttaja {:urakka_id urakka-id
                                                                       :paivamaara (get-in data [:tunniste :paivamaara])})
+        ;; Jos käyttäjä on lähettänyt PUT rajapintaan päivityksen, mutta versiotietoja ei löydy
+        ;; Niin päätellään, että kyseessä on ensimmäinen lähetys ja kieltäydytään ottamasta sitä vastaan ja palautetaan virhe
+        _ (when (and (nil? (:tyomaapaivakirja_id versiotiedot)) (not ensimmainen-lahetys?))
+            (throw+
+              {:type virheet/+tyomaapaivakirja-ei-loydy+
+               :virheet [{:koodi virheet/+tyomaapaivakirja-ei-loydy-virhe-koodi+
+                          :viesti "Työmaapäiväkirjaa ei löytynyt. Päiväkirjan ensimmäinen versio pitää lähettää tekemällä se HTTP POST-metodilla."}]}))
+
         versio (or
-                 (get-in data [:tunniste :versio])
-                 (inc (or (:versio versiotiedot) 0)))
+                 (inc (or (:versio versiotiedot) 0))
+                 (get-in data [:tunniste :versio]))
+
+        ;; Jos lähettäjä on päivittämässä työmaapäiväkirjaa, niin otetaan tietokannasta id
+        tyomaapaivakirja-id (when (and versiotiedot (:tyomaapaivakirja_id versiotiedot))
+                              (:tyomaapaivakirja_id versiotiedot))
+
         tyomaapaivakirja {:urakka_id urakka-id
                           :kayttaja (:id kayttaja)
                           :paivamaara (tyokalut-json/pvm-string->java-sql-date (get-in data [:tunniste :paivamaara]))
@@ -395,14 +415,14 @@
         _ (tallenna-urakoitsijan-merkinnat db data versio tyomaapaivakirja-id urakka-id)]
     tyomaapaivakirja-id))
 
-(defn kirjaa-tyomaapaivakirja [db {:keys [id tid] :as parametrit} data kayttaja]
+(defn kirjaa-tyomaapaivakirja [db {:keys [id] :as parametrit} data kayttaja ensimmainen-lahetys?]
   (validoi-tyomaapaivakirja db data)
   (tarkista-parametrit parametrit)
   (let [urakka-id (konv/konvertoi->int id)
         tyomaapaivakirja (:tyomaapaivakirja data)
         ;; Tallenna
         tyomaapaivakirja-id (jdbc/with-db-transaction [db db]
-                              (tallenna-tyomaapaivakirja db urakka-id tyomaapaivakirja kayttaja tid))
+                              (tallenna-tyomaapaivakirja db urakka-id tyomaapaivakirja kayttaja ensimmainen-lahetys?))
         ;; Muodosta OK vastaus - Error vastaus pärähtää throwssa ja sen käsittelee kutsu-kasittelijä
         vastaus {:status "OK"
                  :tyomaapaivakirja-id tyomaapaivakirja-id}]
@@ -414,16 +434,60 @@
     (julkaise-reitti
       http :kirjaa-tyomaapaivakirja
       (POST "/api/urakat/:id/tyomaapaivakirja" request
-        (kasittele-kutsu db
-          integraatioloki
-          :kirjaa-tyomaapaivakirja
-          request
-          json-skeemat/tyomaapaivakirja-kirjaus-request
-          json-skeemat/tyomaapaivakirja-kirjaus-response
-          (fn [parametrit data kayttaja db]
-            (kirjaa-tyomaapaivakirja db parametrit data kayttaja))
-          :kirjoitus))
+        ;; Jos query parametrina lisätään versio 2 tai jos nykyhetki on myöhemmin, kuin 31.12.2025 niin käytetään versiota 2
+        (let [versionumero (apurit/requestin-versionumero request)]
+          (if (or
+                (and versionumero (= 2 versionumero))
+                (pvm/sama-tai-jalkeen? (pvm/nyt) (pvm/->pvm "01.01.2026")))
+            ;; Versio 2
+            (kasittele-kutsu db
+              integraatioloki
+              :kirjaa-tyomaapaivakirja-v2
+              request
+              json-skeemat/tyomaapaivakirja-kirjaus-v2-request
+              json-skeemat/tyomaapaivakirja-kirjaus-response
+              (fn [parametrit data kayttaja db]
+                (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
+              :kirjoitus)
+            ;; Versio 1 - Deprekoituu 31.12.2025
+            (kasittele-kutsu db
+              integraatioloki
+              :kirjaa-tyomaapaivakirja
+              request
+              json-skeemat/tyomaapaivakirja-kirjaus-request
+              json-skeemat/tyomaapaivakirja-kirjaus-response
+              (fn [parametrit data kayttaja db]
+                (kirjaa-tyomaapaivakirja db parametrit data kayttaja true))
+              :kirjoitus))))
       true)
+
+    ;; Korvaa vanhan päivitysrajapinnnan
+    (julkaise-reitti
+      http :paivita-tyomaapaivakirja-v2
+      ;; Käytä queryparametri api_version=2 -> "/api/urakat/:id/tyomaapaivakirja?api_version=2"
+      (PUT "/api/urakat/:id/tyomaapaivakirja" request
+        ;; Odottaa saavansa versionumeron query parametrina
+        (let [versionumero (apurit/requestin-versionumero request)]
+          (if (or
+                (and versionumero (= 2 versionumero))
+                (pvm/sama-tai-jalkeen? (pvm/nyt) (pvm/->pvm "01.01.2026")))
+            (kasittele-kutsu db
+              integraatioloki
+              :paivita-tyomaapaivakirja-v2
+              request
+              json-skeemat/tyomaapaivakirja-paivitys-v2-request
+              json-skeemat/tyomaapaivakirja-kirjaus-response
+              (fn [parametrit data kayttaja db]
+                (kirjaa-tyomaapaivakirja db parametrit data kayttaja false))
+              :kirjoitus)
+
+            ;; Palautetaan virhe ja komento käyttää uutta versiota
+            (tee-virhevastaus 403 [{:koodi "virheellinen-api-versio"
+                                    :viesti "Työmaapäiväkirjan päivitys http put metodilla ilman työmaapäiväkirjaid:tä olettaa saavansa query parametrina versionumeron.
+          Anna versionumero seuraavasti '/api/urakat/<urakkaid>/tyomaapaivakirja?api_version=2'"}] (get-in request [:headers "origin"])))))
+      true)
+
+    ;; ;; Deprekoituu 31.12.2025
     (julkaise-reitti
       http :paivita-tyomaapaivakirja
       (PUT "/api/urakat/:id/tyomaapaivakirja/:tid" request
@@ -434,9 +498,10 @@
           json-skeemat/tyomaapaivakirja-paivitys-request
           json-skeemat/tyomaapaivakirja-kirjaus-response
           (fn [parametrit data kayttaja db]
-            (kirjaa-tyomaapaivakirja db parametrit data kayttaja))
+            (kirjaa-tyomaapaivakirja db parametrit data kayttaja false))
           :kirjoitus))
       true)
+
     (julkaise-palvelu (:http-palvelin this)
       :hae-tyomaapaivakirjan-versiotiedot
       (fn [user tiedot]
@@ -446,6 +511,8 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
       :kirjaa-tyomaapaivakirja
+      :kirjaa-tyomaapaivakirja-v2
       :paivita-tyomaapaivakirja
+      :paivita-tyomaapaivakirja-v2
       :hae-tyomaapaivakirjan-versiotiedot)
     this))

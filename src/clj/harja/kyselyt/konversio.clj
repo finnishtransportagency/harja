@@ -6,6 +6,7 @@
             [clj-time.coerce :as coerce]
             [taoensso.timbre :as log]
             [clj-time.format :as format]
+            [clojure.data.json :as json]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [harja.pvm :as pvm]
@@ -250,6 +251,14 @@
   [unix-date]
   (java.util.Date. unix-date))
 
+(defn onko-json? 
+  "Palauttaa booleanin onko datatyyppi jsonia"
+  [data]
+  (try
+    (json/read-str data)
+    true
+    (catch Exception _ false)))
+
 (defn jsonb->clojuremap
   "Muuntaa JSONin Clojuremapiksi"
   ([json]
@@ -334,9 +343,9 @@
   (let [kentat (partition 2 kenttien-nimet-ja-tyypit)
         kentat-str (lue-pgobject pgobject)]
     (assert (= (count kentat) (count kentat-str))
-            (str "Odotettu kenttien määrä: " (count kentat)
-                 ", saatu kenttien määrä: " (count kentat-str)
-                 ", data: " pgobject))
+      (str "Odotettu kenttien määrä: " (count kentat)
+        ", saatu kenttien määrä: " (count kentat-str)
+        ", data: " pgobject))
 
     (loop [m {}
            [[nimi tyyppi] & kentat] kentat
@@ -344,15 +353,15 @@
       (if-not nimi
         m
         (recur
-         (assoc m nimi
-                (case tyyppi
-                  :long (when-not (str/blank? arvo) (Long/parseLong arvo))
-                  :double (Double/parseDouble arvo)
-                  :string arvo
-                  :date (when-not (str/blank? arvo) (lue-pgobject-date arvo))
-                  (assert false (str "Ei tuettu tyyppi: " tyyppi ", arvo: " arvo))))
-         kentat
-         arvot)))))
+          (assoc m nimi
+            (case tyyppi
+              :long (when-not (str/blank? arvo) (Long/parseLong arvo))
+              :double (when-not (str/blank? arvo) (Double/parseDouble arvo))
+              :string arvo
+              :date (when-not (str/blank? arvo) (lue-pgobject-date arvo))
+              (assert false (str "Ei tuettu tyyppi: " tyyppi ", arvo: " arvo))))
+          kentat
+          arvot)))))
 
 (defn lue-tr-osoite
   "Lukee yrita_tierekisteriosoite_pisteelle2 sprocin palauttaman arvon tekstimuodosta

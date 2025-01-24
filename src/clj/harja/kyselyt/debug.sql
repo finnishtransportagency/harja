@@ -27,7 +27,7 @@ from tr_osoitteet tr,
      urakka u
 WHERE u.id = :urakka-id
   and st_within(
-    tr_osoitteelle_viiva3(tr."tr-numero", tr."tr-osa", tr."tr-alkuetaisyys", tr."tr-osa", tr."tr-loppuetaisyys"),
+    tieosoitteelle_viiva(tr."tr-numero", tr."tr-osa", tr."tr-alkuetaisyys", tr."tr-osa", tr."tr-loppuetaisyys"),
     u.alue)
 order by tr."tr-numero" asc, tr."tr-osa" asc
 limit 200;

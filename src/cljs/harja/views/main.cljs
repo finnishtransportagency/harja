@@ -1,10 +1,11 @@
 (ns harja.views.main
   "Harjan päänäkymä"
-  (:require [harja.ui.bootstrap :as bs]
+  (:require [clojure.string :as str]
+            [harja.ui.bootstrap :as bs]
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-ikkunaan ajax-loader livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-valilehteen ajax-loader livi-pudotusvalikko]]
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.ui.palaute :as palaute]
@@ -18,6 +19,7 @@
 
             [harja.views.urakat :as urakat]
             [harja.views.info :as info]
+            [harja.views.urakkatilanne.kojelauta :as kojelauta]
             [harja.views.raportit :as raportit]
             [harja.views.tilannekuva.tilannekuva :as tilannekuva]
             [harja.views.ilmoitukset.tieliikenneilmoitukset :as ilmoitukset]
@@ -41,10 +43,13 @@
 
 (defn kayttajatiedot [kayttaja]
   (let [{:keys [etunimi sukunimi]} @kayttaja
-        kayttajainfo [:a {:href "#" :on-click #(do
-                                                 (.preventDefault %)
-                                                 (haku/nayta-kayttaja @kayttaja))}
-                      etunimi " " sukunimi]]
+        kayttajainfo [:a.klikattava
+                      {:href "#"
+                       :id "kayttajatiedot-linkki"
+                       :on-click #(do
+                                    (.preventDefault %)
+                                    (haku/nayta-kayttaja @kayttaja))}
+                      [ikonit/ikoni-ja-teksti (ikonit/harja-icon-navigation-user) (str etunimi " " sukunimi)]]]
     (if-not (istunto/testikaytto-mahdollista?)
       kayttajainfo
 
@@ -63,19 +68,20 @@
           (concat [nil] @istunto/testikayttajat)]]))))
 
 (defn harja-info [s]
-  [:div {:id "info"
-         :role "presentation"
-         :class (str "info-nakyma" (when (= s :info) " aktiivinen"))}
+  [:a.klikattava
+   {:id "info"
+    :href "#"
+    :class (str "info-nakyma" (when (= s :info) " aktiivinen"))
+    :on-click #(nav/vaihda-sivu! :info)}
 
-   [ikonit/livicon-info-circle]
-   [linkki " INFO" #(nav/vaihda-sivu! :info)]])
+   [ikonit/ikoni-ja-teksti (ikonit/livicon-info-circle) "INFO"]])
 
 (defn- mobiiliselain? []
-  (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+  (some #(re-matches % (str/lower-case js/window.navigator.userAgent))
         [#".*android.*" #".*ipad.*"]))
 
 (defn header [s]
-  [bs/navbar {:luokka (when (k/kehitysymparistossa?) "testiharja")}
+  [bs/navbar {:luokka (str/join " " ["harja-ylin-header" (when (k/kehitysymparistossa?) "testiharja")])}
    [:span
     [:img#harja-brand-icon {:alt "HARJA"
                             :src "images/harja_logo_soft.svg"
@@ -87,34 +93,38 @@
    [:ul#sivut.nav.nav-pills
 
     (when (oikeudet/urakat)
-      [:li {:role "presentation" :class (when (= s :urakat) "active")}
+      [:li {:class (when (= s :urakat) "active")}
        [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]])
 
     (when (oikeudet/raportit)
-      [:li {:role "presentation" :class (when (= s :raportit) "active")}
+      [:li {:class (when (= s :raportit) "active")}
        [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]])
 
     (when (oikeudet/tilannekuva)
-      [:li {:role "presentation" :class (when (= s :tilannekuva) "active")}
+      [:li {:class (when (= s :tilannekuva) "active")}
        [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]])
 
     (when (oikeudet/ilmoitukset)
-      [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
+      [:li {:class (when (= s :ilmoitukset) "active")}
        [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]])
 
     (when (and (oikeudet/tieluvat)
                (istunto/ominaisuus-kaytossa? :tienpidon-luvat))
-      [:li {:role "presentation" :class (when (= s :tienpidon-luvat) "active")}
+      [:li {:class (when (= s :tienpidon-luvat) "active")}
        [linkki "Tienpidon luvat" #(nav/vaihda-sivu! :tienpidon-luvat)]])
 
+    (when (oikeudet/urakkatilanne)
+      [:li {:class (when (= s :urakoiden-tilanne) "active")}
+       [linkki "Urakoiden tilanne" #(nav/vaihda-sivu! :urakoiden-tilanne)]])
+
     (when (oikeudet/hallinta)
-      [:li {:role "presentation" :class (when (= s :hallinta) "active")}
+      [:li {:class (when (= s :hallinta) "active")}
        [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])
 
     (when (and (mobiiliselain?)
                (oikeudet/laadunseuranta))
-      [:li {:role "presentation"}
-       [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu"
+      [:li
+       [staattinen-linkki-uuteen-valilehteen "Laadunseurannan mobiilityökalu"
         (str k/+polku+ "laadunseuranta")]])]
 
    :right
@@ -191,7 +201,7 @@
        (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten)
        [yhteys-palautunut-ilmoitus])
 
-     [:div.container
+     [:div#harja-header.container
       [header sivu]]
 
      [:div.container
@@ -210,7 +220,8 @@
           :info [info/info]
           :ilmoitukset [ilmoitukset/ilmoitukset]
           :tienpidon-luvat [tieluvat/tieluvat]
-          :hallinta [hallinta/hallinta]
+          :urakoiden-tilanne (when (oikeudet/urakkatilanne) [kojelauta/kojelauta])
+          :hallinta (when (oikeudet/hallinta) [hallinta/hallinta])
           :tilannekuva [tilannekuva/tilannekuva]
           :about [about/about]
           :tr [tierekisteri/tierekisteri]

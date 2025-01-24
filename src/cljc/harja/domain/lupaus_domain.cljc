@@ -380,6 +380,20 @@
 (defn etsi-lupaus-kuukausi [kuukaudet kohdekuukausi]
   (first (filter #(= kohdekuukausi (:kuukausi %)) kuukaudet)))
 
+(defn etsi-nykyinen-valinta-askel [valittu-arvo vaihtoehdot]
+  (let [arvo (first (filter #(= (:id %) valittu-arvo) vaihtoehdot))
+        vaihtoehto-askel (:vaihtoehto-askel arvo)]
+    vaihtoehto-askel))
+
+(defn etsi-edeltavat-monivalinnan-valitut-arvot [valittu-arvo vaihtoehdot]
+  (let [arvo (first (filter #(= (:id %) valittu-arvo) vaihtoehdot))
+        askel (:vaihtoehto-askel arvo)
+        edellinen-valinta (when askel
+                            (first (filter #(= (:vaihtoehto-seuraava-ryhma-id %) askel) vaihtoehdot)))]
+    (if edellinen-valinta
+      (cons edellinen-valinta (etsi-edeltavat-monivalinnan-valitut-arvot (:id edellinen-valinta) vaihtoehdot))
+      [])))
+
 (defn lupauspaatokset
   "Suodata lupaustyyppiset päätökset urakan päätöksistä."
   [urakan-paatokset]

@@ -1,6 +1,8 @@
 (ns harja.views.urakka.toteumat.maarien-toteumat
   "Urakan 'Toteumat' välilehden Määrien toteumat osio"
   (:require [reagent.core :refer [atom] :as r]
+            [clojure.string :as str]
+            [harja.ui.dom :as dom]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+]]
             [harja.ui.napit :as napit]
@@ -44,6 +46,7 @@
        :on-click (fn [event]
                    (do
                      (.preventDefault event)
+                     (reset! maarien-toteumat/nayta-validoinnit? false)
                      (e! (maarien-toteumat/->MuokkaaToteumaa toteuma-id))))}
    (if db-aika
      (pvm/pvm db-aika)
@@ -60,9 +63,12 @@
                              t))
                          (get-in app [:toimenpiteet]))]
     [:a {:href "#"
+         :aria-label "Lisää uusi toteuma"
+         :data-cy (str "lisaa-toteuma-" (str/replace tehtavan-nimi #" " ""))
          :on-click (fn [event]
                      (do
                        (.preventDefault event)
+                       (reset! maarien-toteumat/nayta-validoinnit? false)
                        (e! (maarien-toteumat/->ToteumanSyotto true tehtava toimenpide))))}
      (str "+ Lisää toteuma")]))
 
@@ -112,12 +118,15 @@
                                         ;; Tyyppi on joko kokonaishintainen tai lisätyö
                                         tehtava-tyyppi (first (second rivi))
                                         ;; Rahavaraukselle ei näytetä suunniteltuja määriä eikä toteumaprosenttia
-                                        rahavaraus? (not (nil? (:rahavaraus (first (second rivi)))))]
+                                        rahavaraus? (not (nil? (:rahavaraus (first (second rivi)))))
+                                        avaa-tai-sulje-rivi (fn [rivi] (e! (maarien-toteumat/->HaeTehtavanToteumat (first (second rivi)))))]
                                     (concat
                                       [^{:key (hash rivi)}
                                        [:tr (merge
                                               (when kasin-lisattava?
-                                                {:on-click #(e! (maarien-toteumat/->HaeTehtavanToteumat (first (second rivi))))})
+                                                {:on-click #(avaa-tai-sulje-rivi rivi)
+                                                 :on-key-down #(when (dom/enter-nappain? %)
+                                                                 (avaa-tai-sulje-rivi rivi))})
                                               {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd") " " (when kasin-lisattava? "klikattava"))})
                                         [:td.strong {:style {:width (:tehtava leveydet)}} (first rivi) (when (and (:haetut-toteumat-lataa app)
                                                                                                                   (= (:avattu-tehtava app) (first rivi)))
@@ -125,9 +134,9 @@
                                         [:td {:style {:width (:caret leveydet)}} (if
                                                                                    (= (:avattu-tehtava app) (first rivi))
                                                                                    (when kasin-lisattava?
-                                                                                     [ikonit/livicon-chevron-up])
+                                                                                     [:span.livicon-chevron-up {:tabIndex "0"}])
                                                                                    (when kasin-lisattava?
-                                                                                     [ikonit/livicon-chevron-down]))]
+                                                                                     [:span.livicon-chevron-down {:tabIndex "0"}]))]
                                         [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (maarita-yksikko (first (second rivi))))]
                                         [:td {:style {:width (:suunniteltu leveydet)
                                                       :color fontin-vari}} (cond
@@ -234,12 +243,12 @@
         filtterit (:hakufiltteri app)]
     [:div.maarien-toteumat
 
-     [debug/debug app]
+     #_ [debug/debug app]
      [:div
       [yleiset/info-laatikko :vahva-ilmoitus "Ohje: tehtävämäärien, materiaalien ja rahavarausten kirjaaminen"
        (gstring/unescapeEntities "&ensp;&#x2022;&ensp; Kirjaa tällä välilehdellä vain sellaisten tehtävien toteumat, jotka eivät ole materiaaleja (liikennemerkkien kappale- ja neliömäärät, rumpujen metrit jne.) \t
-       &ensp;&#x2022;&ensp; Materiaalien toteumat tuodaan Harjaan rajapinnan kautta tai kirjataan käsin Muut materiaalit-välilehdeltä. \t
-       &ensp;&#x2022;&ensp; Rahavarausten käyttö kirjataan kuluihin. Kirjatut rahavaraukset näkyvät Kustannusten seuranta-välilehdellä \t") "70%"]]
+       &ensp;&#x2022;&ensp; Materiaalien toteumat tuodaan Harjaan rajapinnan kautta tai kirjataan käsin Muut materiaalit -välilehdeltä. \t
+       &ensp;&#x2022;&ensp; Rahavarausten käyttö kirjataan kuluihin. Kirjatut rahavaraukset näkyvät Kustannusten seuranta -välilehdellä \t") "70%"]]
      [:div.row {:style {:margin-left "-15px"}}
       [:div.col-xs-12.col-md-6
        [:label.alasvedon-otsikko-vayla "Toimenpide"]
@@ -260,6 +269,7 @@
         "Lisää toteuma"
         (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (dissoc (:valittu-toimenpide app) :id))))
         {:vayla-tyyli? true
+         :data-cy "lisaa-toteuma-nappi"
          :luokka "suuri"}]]]
      [:div.flex-row
       [kentat/tee-kentta {:tyyppi :checkbox-group

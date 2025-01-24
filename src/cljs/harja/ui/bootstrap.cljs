@@ -2,6 +2,7 @@
   "Common Bootstrap components for Reagent UI."
   (:require [reagent.core :refer [atom]]
             [harja.loki :refer [log]]
+            [harja.ui.dom :as dom]
             [harja.ui.komponentti :as komp]
             [clojure.string :as clj-str]))
 
@@ -34,7 +35,10 @@ The following keys are supported in the configuration:
                           (partition 3 alternating-title-and-component))
              [active-tab-title active-tab-keyword active-component]
              (or (first (filter #(= @active (nth % 1)) tabs))
-                 (first tabs))]
+                 (first tabs))
+             vaihda-aktiivinen-tabi (fn [keyword event]
+                                      (.preventDefault event)
+                                      (reset! active keyword))]
          (if (empty? tabs)
            [:span "Ei käyttöoikeutta."]
            [:span
@@ -45,9 +49,10 @@ The following keys are supported in the configuration:
                      :class (when (= keyword active-tab-keyword)
                               "active")}
                 [:a.klikattava (merge
-                                 {:on-click #(do
-                                               (.preventDefault %)
-                                               (reset! active keyword))}
+                                 {:tabIndex "0"
+                                  :on-click #(vaihda-aktiivinen-tabi keyword %)
+                                  :on-key-down #(when (dom/enter-nappain? %)
+                                                  (vaihda-aktiivinen-tabi keyword %))}
                                  (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
                                        cy-title (-> title
                                                     str

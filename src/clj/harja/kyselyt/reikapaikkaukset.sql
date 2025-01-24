@@ -17,7 +17,8 @@ SELECT    p.id,
           p.alkuaika,
           p.loppuaika,
           p.maara, 
-          p.kustannus
+          p.kustannus,
+          p.pkluokka
 FROM      paikkaus p 
 WHERE     p."urakka-id" = :urakka-id 
 AND       (:tie::TEXT IS NULL OR (p.tierekisteriosoite).tie = :tie)
@@ -49,7 +50,8 @@ INSERT INTO paikkaus (
   tierekisteriosoite, 
   tyomenetelma, 
   massatyyppi, 
-  leveys, 
+  leveys,
+  lahde,
   massamenekki, 
   massamaara, 
   "pinta-ala", 
@@ -77,6 +79,7 @@ VALUES (
   COALESCE(:tyomenetelma-id, (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = :tyomenetelma)), -- tyomenetelma 
   'Ei määritelty', -- massatyyppi, 'Ei määritelty' reikäpaikkauksille
   NULL::NUMERIC, -- leveys
+  :lahde::lahde, -- harja-api / harja-ui
   NULL::NUMERIC, -- massamenekki
   NULL::NUMERIC, -- massamaara
   NULL::NUMERIC, -- "pinta-ala"
@@ -104,10 +107,14 @@ UPDATE paikkaus SET
   poistettu               = FALSE -- Jos tuodaan jo poistettu rivi, merkataan se ei-poistetuksi 
 WHERE "urakka-id" = :urakka-id AND "ulkoinen-id" = :ulkoinen-id;
 
-
--- name: hae-reikapaikkaus
-SELECT * FROM paikkaus WHERE "paikkaus-tyyppi" = 'reikapaikkaus' AND "urakka-id" = :urakka-id AND "ulkoinen-id" = :ulkoinen-id;
-
+-- name: hae-reikapaikkaus-vaikka-poistettu
+-- Tätä käytetään myös API:n kautta. On tärkeää löytää myös poistetut reikäpaikkaukset, jotta niitä voidaan muokata.
+-- Jos tämä ei palauta poistettuja, niin API:n kautta samalla tunnisteella lähetettävä päivityspyyntö ei onnistu.
+SELECT *
+  FROM paikkaus
+ WHERE "paikkaus-tyyppi" = 'reikapaikkaus'
+   AND "urakka-id" = :urakka-id
+   AND "ulkoinen-id" = :ulkoinen-id;
 
 -- name: hae-kaikki-tyomenetelmat
 SELECT * FROM paikkauskohde_tyomenetelma;
@@ -121,3 +128,14 @@ SET     poistettu = TRUE,
         "muokkaaja-id" = :kayttaja-id -- Halutaanko poistossa asettaa muokkaajan tiedot? 
 WHERE   "urakka-id" = :urakka-id 
 AND     "ulkoinen-id" = :ulkoinen-id;
+
+-- name: hae-reikapaikkausid
+-- single?: true
+SELECT id
+  FROM paikkaus
+ WHERE "paikkaus-tyyppi" = 'reikapaikkaus'
+   AND "urakka-id" = :urakka-id
+   AND "ulkoinen-id" = :ulkoinen-id;
+
+-- name: laske-pkluokka-reikapaikkaukselle!
+SELECT * FROM paivita_reikapaikkauksen_korjausluokka(:id);

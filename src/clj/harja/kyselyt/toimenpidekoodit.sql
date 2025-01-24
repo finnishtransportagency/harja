@@ -296,3 +296,7 @@ SELECT t.id,
            LEFT JOIN toimenpide emo ON t.emo = emo.id
  WHERE t.suoritettavatehtava IS NOT NULL
  ORDER BY nimi ASC;
+
+-- name: hae-tehtavan-nopeusrajoitus
+-- single?: true
+SELECT nopeusrajoitus FROM tehtava WHERE api_tunnus=:tehtava;

@@ -290,9 +290,10 @@
                  ::valikatselmus/kulu-id kulu_id
                  ::muokkaustiedot/poistettu? false
                  ::muokkaustiedot/luoja-id (:id kayttaja)
-                 ::muokkaustiedot/muokkaaja-id (:id kayttaja)
+                 ::muokkaustiedot/muokkaaja-id (when (::muokkaustiedot/luotu tiedot) (:id kayttaja))
                  ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
-                 ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))}))
+                 ::muokkaustiedot/muokattu (when (::muokkaustiedot/luotu tiedot)
+                                             (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt)))}))
 
 (defn hae-urakan-paatokset [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-valikatselmus
@@ -325,6 +326,7 @@
         ::valikatselmus/lupausbonus (paatos-apurit/tarkista-lupausbonus db kayttaja tiedot)
         ::valikatselmus/lupaussanktio (paatos-apurit/tarkista-lupaussanktio db kayttaja tiedot))
       (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi erilliskustannus_id sanktio_id kulu_id)))))
+
 (defn poista-paatos [db kayttaja {::valikatselmus/keys [paatoksen-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (::urakka/id tiedot))
   (log/debug "poista-paatos :: tiedot:" (pr-str tiedot))
@@ -342,7 +344,7 @@
                  {:id (:erilliskustannus_id paatos) :urakka-id urakka-id})
                (not (nil? (:kulu_id paatos)))
                (kulut-palvelu/poista-kulu-tietokannasta db kayttaja {:urakka-id urakka-id :id (:kulu_id paatos)}))
-           vastaus (valikatselmus-q/poista-paatos db paatoksen-id)]
+           vastaus (valikatselmus-q/poista-paatos db paatoksen-id (:id kayttaja))]
        vastaus))
     (heita-virhe "Päätöksen id puuttuu!")))
 

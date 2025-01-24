@@ -29,13 +29,7 @@
                              (assoc-in [:http-palvelin :dev-resources-path] "dev-resources")
                              (assoc :tietokanta testi/testitietokanta)
                              (assoc :tietokanta-replica testi/testitietokanta)
-                             (assoc :itmf {:url (str "tcp://"
-                                                      (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
-                                                      ":"
-                                                      (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61616))
-                                            :kayttaja ""
-                                            :salasana ""
-                                            :tyyppi :activemq})
+                             (assoc :itmf integraatio/itmf-asetukset)
                              (assoc :tloik {:ilmoitusviestijono tloik-tyokalut/+tloik-ilmoitusviestijono+
                                             :ilmoituskuittausjono tloik-tyokalut/+tloik-ilmoituskuittausjono+
                                             :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
@@ -104,7 +98,7 @@
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
-    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset :tuck-remoting :ilmoitukset-ws-palvelu
+    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset #_:tuck-remoting #_:ilmoitukset-ws-palvelu
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
@@ -166,9 +160,15 @@
     :tehtavat-hallinta
     :tarjoushinnat-hallinta
     :reikapaikkaukset
-    :mpu-kustannukset
+    :kustannukset
     :rahavaraukset-hallinta
-    :urakkahenkilot-hallinta})
+    :urakkahenkilot-hallinta
+    :lupaukset-hallinta
+    :paallystysilmoitukset-hallinta
+    :urakkatilanne
+    :api-talvihoitoreitit
+    :talvihoitoreitit
+    :tieosoitteet-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -182,7 +182,7 @@
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
-    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset :tuck-remoting :ilmoitukset-ws-palvelu
+    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset #_:tuck-remoting #_:ilmoitukset-ws-palvelu
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
@@ -244,9 +244,15 @@
     :tehtavat-hallinta
     :tarjoushinnat-hallinta
     :reikapaikkaukset
-    :mpu-kustannukset
+    :kustannukset
     :rahavaraukset-hallinta
-    :urakkahenkilot-hallinta})
+    :urakkahenkilot-hallinta
+    :api-talvihoitoreitit
+    :talvihoitoreitit
+    :lupaukset-hallinta
+    :paallystysilmoitukset-hallinta
+    :urakkatilanne
+    :tieosoitteet-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

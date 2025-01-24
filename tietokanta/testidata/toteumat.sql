@@ -335,16 +335,16 @@ INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, urakka_id) VALUES 
 INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
  (SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
  ARRAY[
-  ROW('2008-09-09 10:00.00', st_makepoint(498919, 7247099)::POINT, 2, NULL,
+  ROW('2008-09-09 10:00.00', st_makepoint(490295.6,7239883.7)::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
-  ROW('2008-09-09 10:03.00', st_makepoint(499271, 7248395) ::POINT, 2, NULL,
+  ROW('2008-09-09 10:03.00', st_makepoint(491233.4,7239780.7) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
       ARRAY[(1, 2), (7,4)]::reittipiste_materiaali[])::reittipistedata,
-  ROW('2008-09-09 10:06.00', st_makepoint(499399, 7249019) ::POINT, 2, NULL,
+  ROW('2008-09-09 10:06.00', st_makepoint(492031.9,7239573.7) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
       ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
-  ROW('2008-09-09 10:09.00', st_makepoint(440919, 7207099) ::POINT, 2, NULL,
+  ROW('2008-09-09 10:09.00', st_makepoint(493371.8,7239093.7) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
       ARRAY[]::reittipiste_materiaali[])::reittipistedata
  ]::reittipistedata[]);
@@ -682,3 +682,49 @@ UPDATE toteuma_tehtava SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi =
 
 -- Määritellään vain halutut tehtävät mahdolliseksi lisätä suunnitellulle tehtävälle käsin
 UPDATE tehtava set kasin_lisattava_maara = TRUE WHERE ID in (1428,1431,1430,1429,3062,1439,1403,3021,3022, 3025, 3026, 3023, 3024,3027, 3028, 3063,3064, 3065, 3066, 3067, 1414,3040, 3068, 3041, 3042, 3043, 3069,3050, 3051);
+
+-- Rovaniemen MHU testiurakka (1. hoitovuosi) urakalle toteumia, joissa on vähän reittipisteitä ja joiden
+-- tiedot pitäisi mennä suolatoteuma_reittipiste -tauluun.
+DO
+$$
+    DECLARE
+        urakkaid  INT  := (SELECT id
+                             FROM urakka
+                            WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)');
+        sopimusid INT  := (SELECT id
+                             FROM sopimus
+                            WHERE urakka = urakkaid);
+        aikaleima DATE := (SELECT NOW());
+    BEGIN
+        INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
+        VALUES ('harja-ui'::lahde, urakkaid, sopimusid, NOW(), aikaleima, aikaleima + '12 seconds'::INTERVAL,
+                'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6',
+                'Reitillinen toteuma suolatoteuma_reittipisteeksi 1',
+                (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+
+        INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet)
+        VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen toteuma suolatoteuma_reittipisteeksi 1'),
+                ARRAY [
+                    ROW (aikaleima + '2 seconds'::INTERVAL, st_makepoint(440425.1410856291, 7380932.787185088) ::POINT, 3, NULL, ARRAY [ROW (1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY [(1, 0)]::reittipiste_materiaali[])::reittipistedata,
+                    ROW (aikaleima + '3 seconds'::INTERVAL,st_makepoint(440647.2419999992, 7380150.2600003155) ::POINT, 3, NULL, ARRAY [ROW (1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY [(1, 7)]::reittipiste_materiaali[])::reittipistedata,
+                    ROW (aikaleima + '4 seconds'::INTERVAL,st_makepoint(440830.8449999992, 7379944.2830003165) ::POINT, 3, NULL, ARRAY [ROW (1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY [(1, 7)]::reittipiste_materiaali[])::reittipistedata,
+                    ROW (aikaleima + '5 seconds'::INTERVAL,st_makepoint(441077.64399999916, 7379668.583000317) ::POINT, 3, NULL, ARRAY [ROW (1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY [(1, 7)]::reittipiste_materiaali[])::reittipistedata
+                    ]::reittipistedata[]);
+
+        INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
+        VALUES ('harja-ui'::lahde, urakkaid, sopimusid, NOW(), aikaleima, aikaleima + '12 seconds'::INTERVAL,
+                'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6',
+                'Reitillinen toteuma suolatoteuma_reittipisteeksi 2',
+                (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+
+        INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet)
+        VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen toteuma suolatoteuma_reittipisteeksi 2'),
+                ARRAY [
+                    ROW (aikaleima + '2 seconds'::INTERVAL, st_makepoint(441273.0529999994, 7379405.490000319) ::POINT, 3, NULL, ARRAY [ROW (1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY [(7, 0.0)]::reittipiste_materiaali[])::reittipistedata,
+                    ROW (aikaleima + '3 seconds'::INTERVAL,st_makepoint(441287.47799999913, 7379386.309000317) ::POINT, 3, NULL, ARRAY [ROW (1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY [(7, 0.1)]::reittipiste_materiaali[])::reittipistedata,
+                    ROW (aikaleima + '4 seconds'::INTERVAL,st_makepoint(441439.25599999924, 7379209.7270003185) ::POINT, 3, NULL, ARRAY [ROW (1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY [(7, 0.2)]::reittipiste_materiaali[])::reittipistedata,
+                    ROW (aikaleima + '5 seconds'::INTERVAL,st_makepoint(441639.81083681446, 7379039.335550768) ::POINT, 3, NULL, ARRAY [ROW (1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY [(7, 0.3)]::reittipiste_materiaali[])::reittipistedata
+                    ]::reittipistedata[]);
+-- Funktio päättyy
+    END
+$$ LANGUAGE plpgsql;

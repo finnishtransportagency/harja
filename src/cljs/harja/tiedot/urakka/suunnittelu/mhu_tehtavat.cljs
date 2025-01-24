@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.suunnittelu.mhu-tehtavat
   (:require [tuck.core :refer [process-event] :as tuck]
+            [clojure.string :as str]
             [harja.tiedot.urakka.urakka :as tiedot]
             [harja.tiedot.urakka :as urakka]
             [harja.ui.viesti :as viesti]
@@ -346,16 +347,20 @@ sopimusmaarat))
 
 (defn tallenna-sopimuksen-tehtavamaara
   [app {:keys [tehtava maara vuosi samat?]}]
-  (tallenna
-    app
-    {:polku :tallenna-sopimuksen-tehtavamaara
-     :parametrit {:onnistui ->SopimuksenTehtavaTallennusOnnistui
-                  :epaonnistui ->SopimuksenTehtavaTallennusEpaonnistui}}
-    {:urakka-id (-> @tiedot/yleiset :urakka :id)
-     :tehtava-id tehtava
-     :hoitovuosi vuosi
-     :samat-maarat-vuosittain? samat?
-     :maara maara}))
+  (let [;; Korjataan varalta pilkulla annetut luvut pisteeksi, ennen tallennusta
+        maara (if (string? maara)
+                (js/parseFloat (str/replace maara "," "."))
+                maara)]
+   (tallenna
+     app
+     {:polku :tallenna-sopimuksen-tehtavamaara
+      :parametrit {:onnistui ->SopimuksenTehtavaTallennusOnnistui
+                   :epaonnistui ->SopimuksenTehtavaTallennusEpaonnistui}}
+     {:urakka-id (-> @tiedot/yleiset :urakka :id)
+      :tehtava-id tehtava
+      :hoitovuosi vuosi
+      :samat-maarat-vuosittain? samat?
+      :maara maara})))
 
 (defn tallenna-tehtavamaarat
   [app {:keys [hoitokausi tehtavamaarat]}]
@@ -374,19 +379,19 @@ sopimusmaarat))
   NaytaAluetehtavat
   (process-event [{tila :tila} app]
     (assoc-in app [:valinnat :nayta-aluetehtavat?] tila))
-  
+
   NaytaSuunniteltavatTehtavat
   (process-event [{tila :tila} app]
     (assoc-in app [:valinnat :nayta-suunniteltavat-tehtavat?] tila))
-  
+
   AsetaOletusHoitokausi
-  (process-event 
+  (process-event
     [_ app]
     (assoc-in app [:valinnat :hoitokausi] (if (< (pvm/kuukausi (pvm/nyt)) 10)
                                             (dec (pvm/vuosi (pvm/nyt)))
                                             (pvm/vuosi (pvm/nyt)))))
   SopimuksenTallennusOnnistui
-  (process-event 
+  (process-event
     [{:keys [vastaus]} {:keys [valinnat] :as app}]
     (do
       ;; Päivitetään vielä varalta koko taulukon sisältö
@@ -397,16 +402,19 @@ sopimusmaarat))
       (viesti/nayta-toast! "Tallennus onnistui")
       (swap! taulukko-tila paivita-kaikki-maarat valinnat)
       (-> app
+        (assoc :tallennetaan? false)
         (assoc-in [:valinnat :nayta-suunniteltavat-tehtavat?] true)
         (assoc-in [:valinnat :nayta-aluetehtavat?] true)
         (assoc :sopimukset-syotetty? (:tallennettu vastaus))
         (update-in [:valinnat :noudetaan] dec))))
 
   SopimuksenTallennusEpaonnistui
-  (process-event 
+  (process-event
     [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Sopimuksen määrien tallennus epäonnistui" :danger)
-    (update-in app [:valinnat :noudetaan] dec))
+    (-> app
+      (assoc :tallennetaan? false)
+      (update-in app [:valinnat :noudetaan] dec)))
 
   TallennaSopimus
   (process-event
@@ -418,7 +426,9 @@ sopimusmaarat))
          :tallennettu tallennettu}
         {:onnistui ->SopimuksenTallennusOnnistui
          :epaonnistui ->SopimuksenTallennusEpaonnistui})
-      (update-in app [:valinnat :noudetaan] inc)))
+      (-> app
+        (assoc :tallennetaan? true)
+        (update-in [:valinnat :noudetaan] inc))))
 
   TestiTallennaKaikkiinTehtaviinArvo
   (process-event
@@ -435,15 +445,15 @@ sopimusmaarat))
         {:urakka-id (-> @tiedot/yleiset :urakka :id)})))
 
   SopimuksenTilaEiHaettu
-  (process-event 
+  (process-event
     [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Sopimuksen määrien tilan tarkastus epäonnistui!" :danger)
     (update-in app [:valinnat :noudetaan] dec))
 
   SopimuksenTilaHaettu
-  (process-event 
+  (process-event
     [{:keys [vastaus]} {:keys [taulukko] :as app}]
-    (-> app 
+    (-> app
       (assoc :sopimukset-syotetty? (:tallennettu vastaus))
       (update-in [:valinnat :noudetaan] dec)))
 
@@ -459,34 +469,34 @@ sopimusmaarat))
   TehtavaTallennusEpaonnistui
   (process-event
     [_ app]
-    (viesti/nayta! "Tallennus epäonnistui" :danger) 
-    (-> app      
-      (assoc-in [:valinnat :virhe-tallennettaessa] true)
-      (assoc-in [:valinnat :tallennetaan] false)))
+    (viesti/nayta! "Tallennus epäonnistui" :danger)
+    (-> app
+      (assoc-in [:valinnat :virhe-tallennettaessa] true)))
 
   TehtavaTallennusOnnistui
   (process-event
     [vastaus {:keys [sopimuksen-maarat] :as app}]
-    (-> app 
-      (assoc-in [:valinnat :virhe-tallennettaessa] false)
-      (assoc-in [:valinnat :tallennetaan] false)))
+    (-> app
+      (assoc-in [:valinnat :virhe-tallennettaessa] false)))
 
   SopimuksenTehtavaTallennusOnnistui
-  (process-event 
+  (process-event
     [{:keys [vastaus]} app]
     (let [onnistunut-tehtava-id (:harja.domain.toimenpidekoodi/id (first vastaus))
           virheet (dissoc @taulukko-virheet onnistunut-tehtava-id)]
       (reset! taulukko-virheet virheet)
-      (dissoc app :tallennettava)))
+      (-> app
+        (dissoc :tallennettava))))
 
   SopimuksenTehtavaTallennusEpaonnistui
-  (process-event 
+  (process-event
     [{:keys [vastaus]} {:keys [tallennettava] :as app}]
     (viesti/nayta-toast! "Tallennus epäonnistui" :varoitus)
     (let [{:keys [id]} tallennettava
           virheet (assoc-in {} [id :sopimus-maara] ["Tallennus epäonnistui"])]
-      (reset! taulukko-virheet virheet))      
-    (dissoc app :tallennettava))
+      (reset! taulukko-virheet virheet))
+    (-> app
+      (dissoc :tallennettava)))
 
   TallennaMuuttunutAluemaara
   (process-event
@@ -513,8 +523,7 @@ sopimusmaarat))
                             urakan-vuodet)})
         (update :valinnat
           assoc
-          :virhe-tallennettaessa false
-          :tallennetaan true))))
+          :virhe-tallennettaessa false))))
 
   TallennaSopimuksenAluemaara
   (process-event
@@ -522,7 +531,7 @@ sopimusmaarat))
     (let [{:keys [id sopimus-maara vanhempi]} tehtava
           ;; Päivitetään taulukon-tila atomi heti, kun arvo saadaan
           _ (swap! taulukko-tila assoc-in [:alueet vanhempi id :sopimus-maara] sopimus-maara)]
-      (-> app                             
+      (-> app
         (assoc :tallennettava tehtava)
         (tallenna-sopimuksen-tehtavamaara {:maara sopimus-maara
                                            ;; Miksi täällä on vuosi? Tarjouksia on vain yksi
@@ -552,7 +561,7 @@ sopimusmaarat))
     [{tehtava :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat taulukko :taulukko :as app}]
     (let [{:keys [id maara-muuttunut-tarjouksesta]} tehtava
           urakan-loppuvuosi (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi)
-          tehtava (if samat-tuleville? 
+          tehtava (if samat-tuleville?
                     (reduce syotetty-maara-tuleville-vuosille tehtava (range hoitokausi urakan-loppuvuosi))
                     (-> tehtava
                       (assoc :hoitokausi hoitokausi)
@@ -569,13 +578,12 @@ sopimusmaarat))
         (tallenna-tehtavamaarat app {:hoitokausi hoitokausi
                                      :tehtavamaarat [{:tehtava-id id
                                                       :maara maara-muuttunut-tarjouksesta
-                                                      :hoitokauden-alkuvuosi hoitokausi}]})) 
+                                                      :hoitokauden-alkuvuosi hoitokausi}]}))
       (swap! taulukko-tila paivita-sovitut-jaljella-sarake tehtava samat-tuleville? hoitokausi urakan-loppuvuosi)
-      
-      (update app :valinnat 
-        assoc 
-        :virhe-tallennettaessa false
-        :tallennetaan true)))
+
+      (update app :valinnat
+        assoc
+        :virhe-tallennettaessa false)))
 
   HakuEpaonnistui
   (process-event
@@ -586,29 +594,29 @@ sopimusmaarat))
   TehtavaHakuOnnistui
   (process-event
     [{:keys [tehtavat parametrit]} {:keys [valinnat] :as app}]
-    (let [toimenpide {:nimi "0 KAIKKI" :id :kaikki}           
-          vetolaatikot-auki (into #{} 
-                              (keep 
-                                erikseen-syotetyt-vuodet-auki) 
+    (let [toimenpide {:nimi "0 KAIKKI" :id :kaikki}
+          vetolaatikot-auki (into #{}
+                              (keep
+                                erikseen-syotetyt-vuodet-auki)
                               (mapcat :tehtavat tehtavat))
           taulukko (muodosta-taulukko tehtavat valinnat)]
       (reset! taulukko-avatut-vetolaatikot vetolaatikot-auki)
       (-> app
         (assoc :tehtavat-ja-toimenpiteet tehtavat)
         (assoc :taulukko taulukko)
-        (assoc :taso-4-tehtavat (into #{} (comp 
+        (assoc :taso-4-tehtavat (into #{} (comp
                                             (mapcat :tehtavat)
                                             (filter vain-taso-4)
                                             (filter vain-yksikolliset))
                                   tehtavat))
         (assoc :vetolaatikot-auki vetolaatikot-auki)
-        (update :valinnat #(assoc % 
+        (update :valinnat #(assoc %
                              :noudetaan (dec (:noudetaan %))
-                             :toimenpide-valikko-valinnat (sort-by :nimi 
-                                                            (concat 
-                                                              [{:nimi "0 KAIKKI" :id :kaikki}] 
-                                                              (into [] 
-                                                                valitason-toimenpiteet 
+                             :toimenpide-valikko-valinnat (sort-by :nimi
+                                                            (concat
+                                                              [{:nimi "0 KAIKKI" :id :kaikki}]
+                                                              (into []
+                                                                valitason-toimenpiteet
                                                                 tehtavat)))
                              :hoitokausi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
                              :toimenpide toimenpide)))))
@@ -631,7 +639,7 @@ sopimusmaarat))
   ValitseTaso
   (process-event
     [{:keys [arvo taso]} {:keys [taulukko valinnat] :as app}]
-    (as-> app a      
+    (as-> app a
       (assoc-in a [:valinnat taso] arvo)
       (assoc a :taulukko (paivita-taulukko-valitulle-tasolle taulukko (:valinnat a)))))
 
@@ -663,7 +671,7 @@ sopimusmaarat))
           {:tehtava id
            :vuosi vuosi
            :samat? (not (true? ruksittu?))
-           :maara sopimuksen-tehtavamaara})        
+           :maara sopimuksen-tehtavamaara})
         (do
           (doseq [vuosi (range vuosi loppuvuosi)]
             (tallenna-sopimuksen-tehtavamaara

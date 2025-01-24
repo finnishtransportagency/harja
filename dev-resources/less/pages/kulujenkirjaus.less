@@ -1,6 +1,17 @@
 @import '../yleiset';
+.kululomake {
+  .label-ja-alasveto, .kalenteri-kontti, div.kentta {
+    width: 320px;
+  }
+  .lisatiedot {
+    label.kentan-otsikko {
+      margin-top: 0;
+    }
 
-.kulujen-kohdistus {
+  }
+
+}
+.kulujen-listaus {
   @media screen and (min-width: 954px) {
     .livi-grid table {
       word-break: normal;
@@ -12,7 +23,29 @@
   }
 }
 
-.kulujen-kirjaus {
+.kulujen-kirjaus 
+{
+  .vihje-paatoksia-tehty {
+    padding-bottom: @valistys-16;
+    margin-top: @valistys-12;
+  }
+
+  .koontilaskun-kuukaudet-komp {
+    display: flex;
+    gap: @valistys-12;
+    justify-content: flex-start;
+    margin: auto;
+    width: 100%;
+    align-items: center;
+    cursor: pointer;
+    min-height: 10px;
+    height: 100%;
+    img {
+      width: 70%;
+      height: 100%;
+    }
+  }
+
   .lomake-sisempi-osio {
     width: 100%;
     padding: 16px;
@@ -60,7 +93,6 @@
     }
   }
 
-
   .liiterivi {
     height: 40px;
     display: flex;
@@ -76,8 +108,15 @@
     }
   }
 
+  .kulu-valistys-oikea {
+    padding-right: @valistys-16;
+  }
+
+  .kulu-valistys-top {
+    padding-top: @valistys-16;
+  }
+
   .kulu-napit {
-    margin-left: 28px;
     width: 100%;
     margin-top: 120px;
     display: flex;
@@ -88,6 +127,12 @@
       &:first-child {
         margin-right: 39px;
       }
+    }
+
+    .kulu-ladataan {
+      padding-left: @valistys-16;
+      width: 100%;
+      margin: auto;
     }
   }
 
@@ -224,6 +269,7 @@
   }
 
   .maara-input {
-    width: 60%;
+    width: 110px !important;
+    height: 34px !important;
   }
 }

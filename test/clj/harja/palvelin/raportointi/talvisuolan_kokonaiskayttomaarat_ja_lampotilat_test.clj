@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.talvisuolan_kokonaiskayttomaarat_ja_lampotilat_test
+(ns harja.palvelin.raportointi.talvisuolan-kokonaiskayttomaarat-ja-lampotilat-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [harja.pvm :as pvm]
@@ -92,10 +92,10 @@
           (talvisuola-rap/jasenna-raportin-otsikko urakan-tiedot hoitovuodet)))))
 
 (deftest paattele-kaytettava-keskilampotilajakso-test
-  (let [lampotila-vuodelle {:keskilampotila-1971-2000 1     ;; ennen vuotta 2014
-                            :keskilampotila-1981-2010 2     ;; ennen vuotta 2022
-                            :keskilampotila-1991-2020 3}    ;; muut
-                            ]
+  (let [lampotila-vuodelle {:keskilampotila-1971-2000 1 ;; ennen vuotta 2014
+                            :keskilampotila-1981-2010 2 ;; ennen vuotta 2022
+                            :keskilampotila-1991-2020 3} ;; muut
+        ]
     ;; Jos ei ole tiedossa, niin palautetaan nil
     (is (= nil (talvisuola-rap/paattele-kaytettava-keskilampotilajakso nil lampotila-vuodelle)))
     (is (= 1 (talvisuola-rap/paattele-kaytettava-keskilampotilajakso 2012 lampotila-vuodelle)))
@@ -127,7 +127,8 @@
 
       (is (= vastaus
             [:raportti {:nimi "Oulun MHU 2019-2024"
-                        :orientaatio :landscape}
+                        :orientaatio :landscape
+                        :rajoita-pdf-rivimaara nil}
              [:taulukko {:otsikko (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu 01.10.2019 - 30.09." (inc (apply max hoitovuodet))), :tyhja nil, :sheet-nimi "Talvihoitosuolat"}
               [{:otsikko "Hoitovuosi", :leveys 1, :fmt :kokonaisluku, :tasaa :vasen}
                {:otsikko "Keskilämpötilojen keskiarvo tarkastelujaksolla (°C)", :leveys 1, :fmt :numero, :tasaa :oikea}

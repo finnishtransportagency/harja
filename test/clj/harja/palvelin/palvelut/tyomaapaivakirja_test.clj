@@ -6,9 +6,9 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
+            [harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelu]
             [harja.palvelin.integraatiot.api.tyomaapaivakirja :as api-tyomaapaivakirja]
-            [harja.palvelin.integraatiot.api.tyomaapaivakirja-test :as integraatio-test]))
+            [harja.palvelin.integraatiot.api.tyomaapaivakirja-api-test :as integraatio-test]))
 
 (def kayttaja-jvh "jvh")
 (def kayttaja-yit "yit-rakennus")
@@ -28,7 +28,7 @@
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :tyomaapaivakirja (component/using
-                              (tyomaapaivakirja/->Tyomaapaivakirja true)
+                              (tyomaapaivakirja-palvelu/->Tyomaapaivakirja true)
                               [:db :http-palvelin])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -45,7 +45,7 @@
 
 (defn- hae-paivakirjat [urakka-id alkuaika loppuaika]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-    :tyomaapaivakirja-hae +kayttaja-jvh+
+    :hae-tyomaapaivakirjat +kayttaja-jvh+
     {:urakka-id urakka-id
      :alkuaika alkuaika
      :loppuaika loppuaika}))
@@ -222,17 +222,17 @@
         ;; Lisätään uusi toimeksianto
         _ (i (format
                "INSERT INTO tyomaapaivakirja_toimeksianto
-                (urakka_id, tyomaapaivakirja_id, versio, kuvaus, aika, muokattu) 
+                (urakka_id, tyomaapaivakirja_id, versio, kuvaus, tuntimaara, muokattu)
                 VALUES (%s, %s, %s, 'Tehtiin jokin toimeksianto', 17, now());"
                urakka-id typa-id versio))
 
         muutoshistoria (fn-hae-muutoshistoria urakka-id versio typa-id)
         toiminto (-> muutoshistoria first (nth 8 nil) :toiminto)
         kuvaus (-> muutoshistoria first (nth 8 nil) :uudet :kuvaus)
-        aika (-> muutoshistoria first (nth 8 nil) :uudet :aika)
+        tuntimaara (-> muutoshistoria first (nth 8 nil) :uudet :tuntimaara)
         _ (is (= toiminto "lisatty") "Lisätty toimeksianto")
         _ (is (= kuvaus "Tehtiin jokin toimeksianto") "Lisätty kuvaus täsmää")
-        _ (is (= aika 17) "Lisätty aika täsmää")
+        _ (is (= tuntimaara 17) "Lisätty tuntimaara täsmää")
 
         ;; Työnjohtaja
         ;; ___________________

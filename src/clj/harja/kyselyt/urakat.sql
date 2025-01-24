@@ -793,6 +793,10 @@ FROM (SELECT u.id                                                    as id,
                      (u.tyyppi IN ('hoito', 'teiden-hoito') AND
                       (u.alkupvm IS NULL OR u.alkupvm + interval '12 hour' <= current_timestamp)
                          AND (u.loppupvm IS NULL OR u.loppupvm + interval '36 hour' >= current_timestamp))
+                 WHEN (:urakkatyyppi = 'paikkaus') THEN -- T-LOIK käyttää urakkatyyppiä paikkaus. Sampossa ja Harjassa urakkatyyppi on paallystys, sopimustyyppi on mpu eli maanteiden paikkausurakka.
+                     (u.tyyppi = 'paallystys' :: urakkatyyppi
+                         AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+                         AND (u.loppupvm IS NULL OR u.loppupvm >= current_date))
                  ELSE (u.tyyppi = :urakkatyyppi :: urakkatyyppi
                      AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
                      AND (u.loppupvm IS NULL OR u.loppupvm >= current_date))

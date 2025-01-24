@@ -1,5 +1,8 @@
 (ns harja.views.urakka.toteumat.maarien-toteuma-lomake
-  (:require [tuck.core :as tuck]
+  (:require [harja.domain.tierekisteri :as tr-domain]
+            [harja.ui.viesti :as viesti]
+            [harja.ui.yleiset :as yleiset]
+            [tuck.core :as tuck]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.toteumat.maarien-toteumat :as tiedot]
             [harja.ui.lomake :as ui-lomake]
@@ -10,9 +13,7 @@
             [reagent.core :as r]
             [harja.ui.kentat :as kentat]
             [harja.ui.modal :as modal]
-            [harja.pvm :as pvm]
-            [harja.views.kartta.tasot :as tasot]))
-
+            [harja.pvm :as pvm]))
 
 (defn- laheta! [e! data]
   (e! (tiedot/->LahetaLomake data)))
@@ -67,10 +68,17 @@
                                     ::t/poistettu
                                     indeksi))))))
 
+(defn- kentassa-virhe?
+  "Tarkistetaan onko kentässä virhettä. Kaikille kentille ei ole välttämättä annettu vielä validointiarvoja.
+  Mikäli validointiarvoja ei ole annettu, kenttä on aina virheetön."
+  [polku validiarvot]
+  (if validiarvot
+    (and @tiedot/nayta-validoinnit? (not (get-in validiarvot [polku :validi?])))
+    false))
+
 (defn- maaramitattavat-toteumat
   [{:keys [e! tehtavat app]} {{toteumat ::t/toteumat
                                validius ::tila/validius
-                               toimenpide ::t/toimenpide
                                :as      lomake} :data}]
   (let [paivita! (fn [polku indeksi arvo]
                    (if-not
@@ -78,11 +86,7 @@
                      (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi))
                      (e! (tiedot/->PaivitaSijaintiMonelle arvo indeksi))))
         useampi? (> (count toteumat) 1)
-        yksittainen? (= (count toteumat) 1)
-        validi? (fn [polku]
-                  (if validius
-                    (not (get-in validius [polku :validi?]))
-                    false))]
+        yksittainen? (= (count toteumat) 1)]
     [:div
      (doall
        (map-indexed
@@ -90,6 +94,7 @@
                        maara        ::t/maara
                        lisatieto    ::t/lisatieto
                        ei-sijaintia ::t/ei-sijaintia
+                       pakota-sijainti? ::t/pakota-sijainti?
                        toteuma-id   ::t/toteuma-id
                        poistettu    ::t/poistettu
                        :as          _toteuma}]
@@ -135,13 +140,15 @@
                   {:otsikko               "Tehtävä"
                    :nimi                  [::t/toteumat indeksi ::t/tehtava]
                    ::ui-lomake/col-luokka ""
-                   :virhe?                (validi? [::t/toteumat indeksi ::t/tehtava])
+                   :virhe?                (kentassa-virhe? [::t/toteumat indeksi ::t/tehtava] validius)
                    :tyyppi                :valinta
                    :valinta-nayta         :tehtava
                    :vayla-tyyli?          true
                    :valinta-arvo          identity
                    :valinnat              tehtavat
                    :pakollinen?           true
+                   :muokattu?             true
+                   :data-cy               (str "tehtava-valikko-" indeksi)
                    :jos-tyhja             "Tälle toimenpiteelle ei ole tehtäviä"
                    :elementin-id          (str "tehtava-valikko-" indeksi)}
                   (r/wrap tehtava
@@ -151,19 +158,21 @@
                  [kentat/tee-kentta
                   {::ui-lomake/col-luokka ""
                    :vayla-tyyli?          true
-                   :virhe?                (validi? [::t/toteumat indeksi ::t/maara])
+                   :virhe?                (kentassa-virhe? [::t/toteumat indeksi ::t/maara] validius)
+                   :muokattu?             true
                    :tyyppi                :numero
                    :yksikko               yksikko
-                   :pakollinen?           true}
+                   :data-cy               (str "maara-input-" indeksi)
+                   :pakollinen? true}
                   (r/wrap maara
-                          (r/partial paivita! ::t/maara indeksi))]]
+                    (r/partial paivita! ::t/maara indeksi))]]
                 [:div.row
                  [:label "Lisätieto"]
                  [kentat/tee-kentta
                   {::ui-lomake/col-luokka ""
-                   :vayla-tyyli?          true
-                   :virhe?                (validi? [::t/toteumat indeksi ::t/lisatieto])
-                   :tyyppi                :string}
+                   :vayla-tyyli? true
+                   :virhe? (kentassa-virhe? [::t/toteumat indeksi ::t/lisatieto] validius)
+                   :tyyppi :string}
                   (r/wrap lisatieto
                           (r/partial paivita! ::t/lisatieto indeksi))]]]
                (when useampi?
@@ -172,10 +181,12 @@
                    [kentat/tee-kentta
                     {:nimi                  [indeksi :tierekisteriosoite]
                      ::ui-lomake/col-luokka ""
-                     :teksti                "Kyseiseen tehtävään ei ole sijaintia"
                      :pakollinen?           (not ei-sijaintia)
                      :disabled?             ei-sijaintia
                      :tyyppi                :tierekisteriosoite
+                     :muokattu?             true
+                     :virhe?                (kentassa-virhe? [::t/toteumat indeksi ::t/sijainti] validius)
+                     :vaadi-vali? false
                      :vayla-tyyli?          true
                      :sijainti              (r/wrap sijainti (constantly true))}
                     (r/wrap sijainti
@@ -184,7 +195,10 @@
                    [kentat/tee-kentta
                     {:label-luokka          "ei-sijaintia-checkbox-monta"
                      :vayla-tyyli?          true
-                     :teksti                "Kyseiseen tehtävään ei ole sijaintia"
+                     :disabled? pakota-sijainti?
+                     :teksti                (if pakota-sijainti?
+                                              "Tähän tehtävään sijainti on pakollinen"
+                                              "Kyseiseen tehtävään ei ole sijaintia")
                      :tyyppi                :checkbox}
                     (r/wrap ei-sijaintia
                             (r/partial paivita! ::t/ei-sijaintia indeksi))]]])]]))
@@ -197,6 +211,12 @@
          :vayla-tyyli?  true
          :teksti-nappi? true}])]))
 
+(defn nayta-lomake-validoinnit
+  "Näytä lomakkeen validoinnit, kun käyttäjä painaa Tallenna- nappia."
+  [e! lomakedata]
+  (e! (tiedot/->PaivitaLomake lomakedata :tallenna 0))
+  (reset! tiedot/nayta-validoinnit? true))
+
 (defn maarien-toteuman-syottolomake*
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
   (let [;; Poista toimenpiteistä id, jotta toimenpiteen valinta voi toimia
@@ -205,24 +225,27 @@
         tehtavat (filter #(and (nil? (:rahavaraus %))
                              (:kasin_lisattava_maara %))
                          tehtavat)
+        ;; Tehtävälistaukseen hyväksytään vain tehtävät, joilla on käsin lisättävä määrä, mutta itse lomake ei ymmärrä
+        ;; että käsin lisättävä määrä on tehtävä itemillä avaimena, joten se pitää poistaa
+        tehtavat (mapv #(dissoc % :kasin_lisattava_maara) tehtavat)
         lomake (update lomake ::t/toimenpide #(dissoc % :id))
         {tyyppi       ::t/tyyppi
          toteumat     ::t/toteumat
          validius     ::tila/validius
-         koko-validi? ::tila/validi?} lomake
+         lomake-validi? ::tila/validi?} lomake
         {ei-sijaintia ::t/ei-sijaintia
+         pakota-sijainti? ::t/pakota-sijainti?
          toteuma-id   ::t/toteuma-id
          sijainti     ::t/sijainti} (-> toteumat first)
-        validi? (fn [polku]
-                  (if validius
-                    (not (get-in validius [polku :validi?]))
-                    false))
+        useampi? (> (count toteumat) 1)
         laheta-lomake! (r/partial laheta! e!)
         tyhjenna-lomake! (r/partial tyhjenna! e!)
         maaramitattava-skeema [{:otsikko "Työ valmis"
                                 :nimi ::t/pvm
-                                ::ui-lomake/col-luokka ""
+                                ::ui-lomake/col-luokka (if useampi? "max-puolikas" "")
                                 :pakollinen? true
+                                :muokattu? true
+                                :virhe? (kentassa-virhe? [::t/pvm] validius)
                                 :tyyppi :pvm}
                                {:nimi ::t/toteumat
                                 ::ui-lomake/col-luokka ""
@@ -234,13 +257,13 @@
         lisatyo-skeema [{:otsikko "Pvm"
                          :nimi ::t/pvm
                          ::ui-lomake/col-luokka ""
-                         :virhe? (validi? [::t/pvm])
+                         :virhe? (kentassa-virhe? [::t/pvm] validius)
                          :tyyppi :pvm
                          :pakollinen? true}
                         {:otsikko "Tehtävä"
                          :nimi [::t/toteumat 0 ::t/tehtava]
                          ::ui-lomake/col-luokka ""
-                         :virhe? (validi? [::t/toteumat 0 ::t/tehtava])
+                         :virhe? (kentassa-virhe? [::t/toteumat 0 ::t/tehtava] validius)
                          :tyyppi :valinta
                          :valinta-nayta :tehtava
                          :valinta-arvo identity
@@ -250,7 +273,7 @@
                         {:otsikko "Kuvaus"
                          ::ui-lomake/col-luokka ""
                          :nimi [::t/toteumat 0 ::t/lisatieto]
-                         :virhe? (validi? [::t/toteumat 0 ::t/lisatieto])
+                         :virhe? (kentassa-virhe? [::t/toteumat 0 ::t/lisatieto] validius)
                          :tyyppi :string
                          :vihje "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."
                          :pakollinen? true}]
@@ -258,11 +281,20 @@
                             :e!         e!
                             :lomake     lomake
                             :paivita!   (fn [polku indeksi arvo]
-                                          (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi)))})]
+                                          (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi)))})
+
+        sijainnit-valideja? (every? true?
+                              (map-indexed (fn [indeksi toteuma]
+                                             (let [kaytettava-sijainti (or (get-in app [:sijainti indeksi]) (::t/sijainti toteuma))]
+                                               ;; vaaditaan kaikilta toteumilta joko ei sijaintia, tai validi vähintään pistemäinen tieosoite
+                                               (boolean (or
+                                                          (::t/ei-sijaintia toteuma)
+                                                          (tr-domain/validi-osoite? kaytettava-sijainti)))))
+                                toteumat))]
     [:div#vayla
-     #_#_#_[debug/debug app]
-     [debug/debug lomake]
-     [debug/debug validius]
+     #_[debug/debug app]
+     #_ [debug/debug lomake]
+     #_ [debug/debug validius]
      [:div.flex-row {:style {:padding-left  "15px"
                              :padding-right "15px"}}
       [napit/takaisin "Takaisin" #(tyhjenna-lomake! nil) {:vayla-tyyli? true :teksti-nappi? true}]]
@@ -275,6 +307,7 @@
                      (e! (tiedot/->PaivitaSijainti data 0))
                      (e! (tiedot/->PaivitaLomake data nil 0))))
        :voi-muokata? true
+       :luokka "toteumamaarat-lomake"
        :tarkkaile-ulkopuolisia-muutoksia? true
        :palstoja 2
        :header-fn (fn [data]
@@ -301,53 +334,68 @@
                               :tyyppi (::t/tyyppi lomake)}])
                          {:vayla-tyyli? true :teksti-nappi? true}])]])
        :footer-fn (fn [data]
-                    [:div.flex-row.alkuun
-                     [napit/tallenna
-                      "Tallenna"
-                      #(laheta-lomake! data)
-                      {:vayla-tyyli? true
-                       :luokka "suuri"
-                       :disabled (not koko-validi?)}]
-                     [napit/peruuta
-                      "Peruuta"
-                      #(tyhjenna-lomake! data)
-                      {:vayla-tyyli? true
-                       :luokka "suuri"}]])
+                    [:div
+                     (when (and @tiedot/nayta-validoinnit?
+                             (or (not lomake-validi?)
+                               (not sijainnit-valideja?))) [:div {:style {:padding-bottom "2rem"}}
+                                                            [yleiset/info-laatikko :varoitus
+                                                             (str "Tallennus epäonnistui. " (if-not lomake-validi?
+                                                                                              "Pakollisia tietoja puuttuu."
+                                                                                              "Sijainti virheellinen."))
+                                                             nil "450px" {:sulje-fn #(reset! tiedot/nayta-validoinnit? false)
+                                                                          :sulje-nappi-id (gensym)}]])
+                     [:div.flex-row.alkuun
+                      [napit/tallenna
+                       "Tallenna"
+                       #(do
+                          (nayta-lomake-validoinnit e! data)
+                          (when (and lomake-validi? sijainnit-valideja?) (laheta-lomake! data)))
+                       {:vayla-tyyli? true
+                        :luokka "suuri"
+                        :data-attributes {:data-cy "Tallenna-toteuma-nappi"}}]
+                      [napit/peruuta
+                       "Peruuta"
+                       #(tyhjenna-lomake! data)
+                       {:vayla-tyyli? true
+                        :luokka "suuri"}]]])
        :vayla-tyyli? true}
-      [{:teksti                "Mihin toimenpiteeseen työ liittyy?"
-        :tyyppi                :valiotsikko
+      [{:teksti "Mihin toimenpiteeseen työ liittyy?"
+        :tyyppi :valiotsikko
         ::ui-lomake/col-luokka "col-xs-12"}
-       {:otsikko               "Toimenpide"
-        :nimi                  ::t/toimenpide
+       {:otsikko "Toimenpide"
+        :nimi ::t/toimenpide
         ::ui-lomake/col-luokka "col-xs-12 col-sm-12 col-md-8"
-        :virhe?                (validi? [::t/toimenpide])
-        :valinnat              toimenpiteet
-        :valinta-nayta         :otsikko
-        :valinta-arvo          identity
-        :aseta-vaikka-sama?    true
-        :tyyppi                :valinta
-        :vayla-tyyli?          true
-        :palstoja              1
-        :disabled?             (not (= :maaramitattava (::t/tyyppi lomake)))
-        :pakollinen?           true
-        :elementin-id          (str "toimenpiteet-")}
-       {:tyyppi           :radio-group
-        :nimi             ::t/tyyppi
-        :otsikko          ""
-        :vaihtoehdot      [:maaramitattava :lisatyo]
-        :nayta-rivina?    true
-        :palstoja         2
-        :vayla-tyyli?     true
-        :disabloitu?      (not (nil? (get-in lomake [::t/toteumat 0 ::t/toteuma-id])))
-        :vaihtoehto-nayta {:maaramitattava     "Määrämitattava tehtävä"
-                           :lisatyo            "Lisätyö"}}
+        :virhe? (kentassa-virhe? [::t/toimenpide] validius)
+        :valinnat toimenpiteet
+        :valinta-nayta :otsikko
+        :valinta-arvo identity
+        :aseta-vaikka-sama? true
+        :tyyppi :valinta
+        :vayla-tyyli? true
+        :palstoja 1
+        :disabled? (not (= :maaramitattava (::t/tyyppi lomake)))
+        :pakollinen? true
+        :muokattu? true
+        :jos-tyhja "Valitse toimenpide"
+        :data-cy "toimenpide-valikko"
+        :elementin-id (str "toimenpiteet-")}
+       {:tyyppi :radio-group
+        :nimi ::t/tyyppi
+        :otsikko ""
+        :vaihtoehdot [:maaramitattava :lisatyo]
+        :nayta-rivina? true
+        :palstoja 2
+        :vayla-tyyli? true
+        :disabloitu? (not (nil? (get-in lomake [::t/toteumat 0 ::t/toteuma-id])))
+        :vaihtoehto-nayta {:maaramitattava "Määrämitattava tehtävä"
+                           :lisatyo "Lisätyö"}}
        (when (and
                (= :maaramitattava tyyppi)
                (nil? (get-in lomake [::t/toteumat 0 ::t/toteuma-id])))
-         {:tyyppi    :checkbox
-          :nimi      ::t/useampi-toteuma
+         {:tyyppi :checkbox
+          :nimi ::t/useampi-toteuma
           :disabled? (not= tyyppi :maaramitattava)
-          :teksti    "Haluan syöttää useamman toteuman tälle toimenpiteelle"})
+          :teksti "Haluan syöttää useamman toteuman tälle toimenpiteelle"})
        (ui-lomake/palstat
          {}
          {:otsikko "Tehtävän tiedot"}
@@ -360,16 +408,19 @@
          (when (= (count toteumat) 1)
            [{:nimi [0 :tierekisteriosoite]
              ::ui-lomake/col-luokka ""
-             :teksti "Kyseiseen tehtävään ei ole sijaintia"
              :pakollinen? (not ei-sijaintia)
              :disabled? ei-sijaintia
              :tyyppi :tierekisteriosoite
+             :vaadi-vali? false
              :vayla-tyyli? true
              :sijainti (r/wrap sijainti (constantly true))
              :lataa-piirrettaessa-koordinaatit? true}
             {:nimi [::t/toteumat 0 ::t/ei-sijaintia]
+             :disabled? pakota-sijainti?
              ::ui-lomake/col-luokka "ei-sijaintia-checkbox"
-             :teksti "Kyseiseen tehtävään ei ole sijaintia"
+             :teksti (if pakota-sijainti?
+                       "Tähän tehtävään sijainti on pakollinen"
+                       "Kyseiseen tehtävään ei ole sijaintia")
              :tyyppi :checkbox}]))]
       lomake]]))
 

@@ -1,5 +1,6 @@
 (ns harja.ui.img-with-exif
   (:require [reagent.core :refer [atom]]
+            [reagent.dom :as rdom]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.loki :refer [log]]
             [harja.tiedot.exif :as exif]
@@ -50,7 +51,7 @@
     (komp/luo
       (komp/piirretty
         (fn [this]
-          (reset! img-node (.-lastChild (r/dom-node this)))))
+          (reset! img-node (.-lastChild (rdom/dom-node this)))))
       (fn [optiot]
         (let [lopulliset-optiot (merge optiot exif-optiot)
               lopulliset-optiot (maarita-kuvan-luokat lopulliset-optiot @exif-orientaatio @exif-luettu?)]

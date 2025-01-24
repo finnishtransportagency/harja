@@ -120,7 +120,7 @@
       [:input {:type "hidden" :name "parametrit"
                :value (transit/clj->transit tiedot)}]
       [:button {:type "submit"
-                :class #{"nappi-reunaton"}}
+                :class #{"nappi-toissijainen"}}
        [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa kustannus-Excel"]]]]
     (when (>= (:vuosi tiedot) nayta-kustannusexcelin-tuonti-alkaen-vuodesta)
       [liitteet/lataa-tiedosto
@@ -225,9 +225,10 @@
          [:div.paallystyskohteet
           [kartta/kartan-paikka]
 
-          [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
-          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-          [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]
+          [:span.paallystys-valinnat
+           [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
+           [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+           [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]]
 
           [validointivirheet-modal]
           [excel-toiminnot {:urakka-id (:id ur)

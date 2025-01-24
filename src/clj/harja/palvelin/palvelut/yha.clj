@@ -263,7 +263,7 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (yha-apurit/tarkista-lahetettavat-kohteet db  (muunna-arvo-vectoriksi kohde-idt))
   (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
-  (let [lahetys (try+ (yha/laheta-kohteet yha urakka-id (muunna-arvo-vectoriksi kohde-idt))
+  (let [lahetys (try+ (yha/laheta-kohteet yha urakka-id (muunna-arvo-vectoriksi kohde-idt) user)
                       (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                         virheet))
         lahetys-onnistui? (not (contains? lahetys :virhe))

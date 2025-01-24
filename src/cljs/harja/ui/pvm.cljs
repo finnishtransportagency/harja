@@ -1,6 +1,7 @@
 (ns harja.ui.pvm
   "Päivämäärän valintakomponentti"
   (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [cljs-time.core :as t]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
@@ -17,14 +18,14 @@
 
 (defn selvita-kalenterin-suunta [komponentti sijainti-atom]
   (let [etaisyys-alareunaan (dom/elementin-etaisyys-viewportin-alareunaan
-                              (.-parentNode (r/dom-node komponentti)))
+                              (.-parentNode (rdom/dom-node komponentti)))
         etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-viewportin-oikeaan-reunaan
-                                   (.-parentNode (r/dom-node komponentti)))
+                                   (.-parentNode (rdom/dom-node komponentti)))
         uusi-suunta (if (< etaisyys-alareunaan 250)
-                      (if (< etaisyys-oikeaan-reunaan 200)
+                      (if (< etaisyys-oikeaan-reunaan 100)
                         :ylos-vasen
                         :ylos-oikea)
-                      (if (< etaisyys-oikeaan-reunaan 200)
+                      (if (< etaisyys-oikeaan-reunaan 100)
                         :alas-vasen
                         :alas-oikea))]
     (reset! sijainti-atom uusi-suunta)))
@@ -94,10 +95,21 @@
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL scroll-kuuntelija)
 
-      (fn [{:keys [pvm valitse style valittava?-fn vayla-tyyli?] :as optiot}]
+      (fn [{:keys [pvm valitse style valittava?-fn vayla-tyyli? sulje-kalenteri input-id] :as optiot}]
         (let [[vuosi kk] @nayta
               naytettava-kk (t/date-time vuosi (inc kk) 1)
-              naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
+              naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)
+              fokus-paiva (if (and pvm (naytettava-kk-paiva? pvm)) (t/day pvm) 1)
+              nayta-edellinen-kk #(swap! nayta
+                                    (fn [[vuosi kk]]
+                                      (if (= kk 0)
+                                        [(dec vuosi) 11]
+                                        [vuosi (dec kk)])))
+              nayta-seuraava-kk #(swap! nayta
+                                   (fn [[vuosi kk]]
+                                     (if (= kk 11)
+                                       [(inc vuosi) 0]
+                                       [vuosi (inc kk)])))]
           [:table {:class (str tyyli-kalenteri)
                    :style (merge
                             {:display (if @sijainti-atom "table" "none")
@@ -115,22 +127,36 @@
             [:tr
              [:td.pvm-edellinen-kuukausi.klikattava
               {:on-click #(do (.preventDefault %)
-                              (swap! nayta
-                                     (fn [[vuosi kk]]
-                                       (if (= kk 0)
-                                         [(dec vuosi) 11]
-                                         [vuosi (dec kk)])))
-                              nil)}
+                              (nayta-edellinen-kk)
+                              nil)
+               :tabIndex "0"
+               :on-key-down  #(do
+                                (when (dom/enter-nappain? %)
+                                  (.preventDefault %)
+                                  (nayta-edellinen-kk))
+                                (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
+                                  (.preventDefault %)
+                                  (sulje-kalenteri))
+                                nil)}
               (ikonit/livicon-chevron-left)]
              [:td {:col-span 5} [:span.pvm-kuukausi (nth pvm/+kuukaudet+ kk)] " " [:span.pvm-vuosi vuosi]]
              [:td.pvm-seuraava-kuukausi.klikattava
               {:on-click #(do (.preventDefault %)
-                              (swap! nayta
-                                     (fn [[vuosi kk]]
-                                       (if (= kk 11)
-                                         [(inc vuosi) 0]
-                                         [vuosi (inc kk)])))
-                              nil)}
+                              (nayta-seuraava-kk)
+                              nil)
+               :tabIndex "0"
+               :id "seuraava-kk"
+               :on-key-down #(do
+                               (when (dom/enter-nappain? %)
+                                 (.preventDefault %)
+                                 (nayta-seuraava-kk))
+                               (when (dom/tab-nappain-ilman-shiftia? %)
+                                 (.preventDefault %)
+                                 (r/after-render (fn [] (some-> js/document (.getElementById (str "paiva_" fokus-paiva)) .focus))))
+                               (when (dom/esc-nappain? %)
+                                 (.preventDefault %)
+                                 (sulje-kalenteri))
+                               nil)}
               (ikonit/livicon-chevron-right)]]
             [:tr {:class tyyli-otsikkorivi}
              (for [paiva +paivat+]
@@ -161,7 +187,41 @@
                        :on-click #(do (.stopPropagation %)
                                       (when valittava?
                                         (valitse paiva))
-                                      nil)}
+                                      nil)
+                       :tabIndex (if (and valittava? (naytettava-kk-paiva? paiva))
+                                   "0")
+                       :id (when (and valittava? (naytettava-kk-paiva? paiva)) (str "paiva_" (t/day paiva)))
+                       :on-key-down #(do
+                                       (.preventDefault %)
+
+                                       (cond
+                                         (and (or (dom/enter-nappain? %) (dom/valilyonti? %)) valittava?)
+                                         (do (valitse paiva) (sulje-kalenteri))
+
+                                         (dom/esc-nappain? %)
+                                         (sulje-kalenteri)
+
+                                         (dom/tab+shift-nappaimet? %)
+                                         (r/after-render (fn [] (some-> js/document (.getElementById "seuraava-kk") .focus)))
+
+                                         (dom/tab-nappain-ilman-shiftia? %)
+                                         (r/after-render (fn [] (some-> js/document (.getElementById "tanaan") .focus)))
+
+                                         (dom/nuoli-oikealle? %)
+                                         (r/after-render (fn [] (some-> js/document (.getElementById (str "paiva_" (inc (t/day paiva)))) .focus)))
+
+                                         (dom/nuoli-vasemmalle? %)
+                                         (r/after-render (fn [] (some-> js/document (.getElementById (str "paiva_" (dec (t/day paiva)))) .focus)))
+
+                                         (dom/nuoli-ylos? %)
+                                         (r/after-render (fn [] (some-> js/document (.getElementById (str "paiva_" (- (t/day paiva) 7))) .focus)))
+
+                                         (dom/nuoli-alas? %)
+                                         (r/after-render (fn [] (some-> js/document (.getElementById (str "paiva_" (+ (t/day paiva) 7))) .focus)))
+
+                                         :else nil)
+
+                                       nil)}
                   (t/day paiva)])])]
            [:tfoot.pvm-tanaan-text
             [:tr [:td {:colSpan 7}
@@ -169,46 +229,71 @@
                                     (.preventDefault %)
                                     (.stopPropagation %)
                                     (when (or (not (some? valittava?-fn))
-                                              (valittava?-fn (pvm/nyt)))
-                                      (valitse (pvm/nyt))))}
+                                            (valittava?-fn (pvm/nyt)))
+                                      (valitse (pvm/nyt))))
+                       :tabIndex "0"
+                       :id "tanaan"
+                       :on-key-down #(do
+                                       (.preventDefault %)
+                                       (when (and (dom/enter-nappain? %)
+                                               (or (not (some? valittava?-fn))
+                                                 (valittava?-fn (pvm/nyt))))
+                                         (valitse (pvm/nyt))
+                                         (sulje-kalenteri))
+                                       (when (dom/tab+shift-nappaimet? %)
+                                         (r/after-render (fn []
+                                                           (some-> js/document (.getElementById (if pvm
+                                                                                                  (str "paiva_" (t/day pvm))
+                                                                                                  (str "paiva_1"))) .focus))))
+                                       (when (or (dom/tab-nappain-ilman-shiftia? %) (dom/esc-nappain? %))
+                                         (sulje-kalenteri))
+                                       nil)}
                    "Tänään"]]]]])))))
-
-(def ^:const
-pvm-popupin-sulkevat-nappaimet
-  "Näppäimet, joille pvm popup suljetaan, kun focus on input-kentässä. Tab, enter ja esc."
-  #{9 13 27})
 
 (defn pvm-valintakalenteri-inputilla
   [_]
   (let [auki? (r/atom false)
         suora-syotto-sisalto (r/atom "")]
-    (fn [{:keys [paivamaara valitse luokat valittava?-fn disabled sumeutus-fn placeholder]}]
-      (let [kiinni #(reset! % false)]
-        [:div.kalenteri-kontti
-         [:input {:disabled    disabled
-                  :type        :text
-                  :class       (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
-                  :value       (cond
-                                 (seq @suora-syotto-sisalto) @suora-syotto-sisalto
-                                 (not (nil? paivamaara)) (pvm/pvm paivamaara)
-                                 :else "")
-                  :placeholder placeholder
-                  :on-change   #(reset! suora-syotto-sisalto (-> % .-target .-value))
-                  :on-click    #(reset! auki? true)
-                  :on-focus    #(reset! auki? true)
-                  :on-key-down #(when (pvm-popupin-sulkevat-nappaimet (.-keyCode %))
-                                  (kiinni auki?))
-                  :on-blur     (fn []
-                                 (when (not paivamaara) (kiinni auki?)) ; jos ei ole päivämäärää määritelty, niin valintoja ei voi tehdä. droppari jää auki, kunnes koontilaskun kuukausi klikataan. tällä estetään se tilanne.
-                                 (when sumeutus-fn (sumeutus-fn))
-                                 (when (seq @suora-syotto-sisalto)
-                                   (let [pvm-sisalto (pvm/->pvm @suora-syotto-sisalto)]
-                                     (when (valittava?-fn pvm-sisalto)
-                                       (valitse (pvm/->pvm @suora-syotto-sisalto))))
-                                   (reset! suora-syotto-sisalto "")))}]
-         (when @auki?
-           [pvm-valintakalenteri {:valitse       #(do
-                                                    (kiinni auki?)
-                                                    (valitse %))
-                                  :valittava?-fn valittava?-fn
-                                  :pvm           paivamaara}])]))))
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(reset! auki? false))
+      (fn [{:keys [paivamaara valitse luokat valittava?-fn disabled sumeutus-fn placeholder]}]
+        (let [kiinni #(reset! % false)
+              elementin-id (str (gensym "pvm-pakollinen-input"))]
+          [:div.kalenteri-kontti {:on-click  #(reset! auki? true)}
+           [:div.pvm-ikoni
+            [:input {:disabled disabled
+                     :type :text
+                     :class (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
+                     :value (cond
+                              (seq @suora-syotto-sisalto) @suora-syotto-sisalto
+                              (not (nil? paivamaara)) (pvm/pvm paivamaara)
+                              :else "")
+                     :placeholder placeholder
+                     :aria-label "päiväys"
+                     :on-change #(reset! suora-syotto-sisalto (-> % .-target .-value))
+                     :on-key-down #(do
+                                     (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
+                                       (kiinni auki?))
+                                     (when (dom/enter-nappain? %)
+                                       (reset! auki? (not @auki?))))
+                     :on-blur     (fn []
+                                    (when (not paivamaara) (kiinni auki?)) ; jos ei ole päivämäärää määritelty, niin valintoja ei voi tehdä. droppari jää auki, kunnes koontilaskun kuukausi klikataan. tällä estetään se tilanne.
+                                    (when sumeutus-fn (sumeutus-fn))
+                                    (when (seq @suora-syotto-sisalto)
+                                      (let [pvm-sisalto (pvm/->pvm @suora-syotto-sisalto)]
+                                        (when (valittava?-fn pvm-sisalto)
+                                          (valitse (pvm/->pvm @suora-syotto-sisalto))))
+                                      (reset! suora-syotto-sisalto "")))
+                     :id elementin-id}]
+            [:span.ikoni-osio
+             (ikonit/calendar)]]
+           (when @auki?
+             [pvm-valintakalenteri {:valitse       #(do
+                                                      (kiinni auki?)
+                                                      (valitse %))
+                                    :valittava?-fn valittava?-fn
+                                    :pvm           paivamaara
+                                    :sulje-kalenteri #(do
+                                                        (some-> js/document (.getElementById elementin-id) .focus)
+                                                        (reset! auki? false))
+                                    :input-id elementin-id}])])))))

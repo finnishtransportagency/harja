@@ -7,7 +7,7 @@ DROP VIEW IF EXISTS tietyoilmoitus_pituus;
 CREATE VIEW tietyoilmoitus_pituus AS
   SELECT tti.*, CASE
                   WHEN (tti.osoite).losa IS NOT NULL THEN
-                   ST_Length(tr_osoitteelle_viiva3(
+                   ST_Length(tieosoitteelle_viiva(
                                 (tti.osoite).tie, (tti.osoite).aosa,
                                   (tti.osoite).aet, (tti.osoite).losa,
                                   (tti.osoite).let))

@@ -359,10 +359,10 @@
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             {:otsikko "Työ aloitettu" :tyyppi :pvm :nimi :aloituspvm
              :label-ja-kentta-samalle-riville? true
-             :ikoni-sisaan? true :vayla-tyyli? true :pakollinen? true
+             :vayla-tyyli? true :pakollinen? true
              ::lomake/col-luokka "col-xs-12"}
             {:otsikko "Kohde valmistunut" :tyyppi :pvm :nimi :valmispvm-kohde :pakollinen? true
-             :label-ja-kentta-samalle-riville? true :ikoni-sisaan? true :vayla-tyyli? true
+             :label-ja-kentta-samalle-riville? true :vayla-tyyli? true
              :validoi [[:pvm-kentan-jalkeen :aloituspvm "Valmistumisen pitää olla työn alkamisen jälkeen"]]
              ::lomake/col-luokka "col-xs-12"}
             (if paikkauskohteet?

@@ -9,6 +9,8 @@
 (def +sisainen-kasittelyvirhe+ ::sisainen-kasittelyvirhe)
 (def +duplikaatti-tyomaapaivakirja+ ::duplikaatti-tyomaapaivakirja)
 (def +vaara-versio-tyomaapaivakirja+ ::vaara-versio-tyomaapaivakirja)
+(def +tyomaapaivakirja-ei-loydy+ ::tyomaapaivakirjaa-ei-loydy)
+(def +talvihoitoreittia-ei-loydy+ ::talvihoitoreittia-ei-loydy)
 
 ;; Virhekoodit
 (def +invalidi-json-koodi+ "invalidi-json")
@@ -19,6 +21,7 @@
 (def +virheellinen-liite-koodi+ "virheellinen-liite")
 (def +tuntematon-urakka-koodi+ "tuntematon-urakka")
 (def +tuntematon-sopimus-koodi+ "tuntematon-sopimus")
+(def +tuntematon-reikapaikkaus+ "tuntematon-reikapaikkaus")
 (def +urakkaa-ei-loydy+ "urakkaa-ei-loydy")
 (def +paivystajia-ei-loydy+ "paivystajia-ei-loydy")
 (def +tuntematon-kayttaja-koodi+ "tuntematon-kayttaja")
@@ -33,6 +36,9 @@
 (def +tuntematon-ely+ "tuntematon-ely")
 (def +puuttuva-geometria-alueurakassa+ "tuntematon-ely")
 (def +tieluvan-data-vaarin+ "tieluvan-data-vaarin")
+(def +tyomaapaivakirja-ei-loydy-virhe-koodi+ "tyomaapaivakirjaa-ei-loydy")
+(def +talvihoitoreittia-ei-loydy-virhe-koodi+ "talvihoitoreittia-ei-loydy")
+(def +vaara-http-metodi+ "vaara-http-metodi")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")

@@ -124,21 +124,23 @@
       raportti
       (assoc-in
         [1 :raportin-yleiset-tiedot]
-        {:urakka (case konteksti
-                   "urakka" (:nimi urakka)
+        (merge {:urakka (case konteksti
+                          "urakka" (:nimi urakka)
 
-                   "monta-urakkaa" (str/join ", " urakoiden-nimet)
+                          "monta-urakkaa" (str/join ", " urakoiden-nimet)
 
-                   "hallintayksikko" hy-nimi
+                          "hallintayksikko" hy-nimi
 
-                   "koko maa" "Koko maa")
-         :alkupvm (or
-                    (some-> parametrit :alkupvm pvm/pvm)
-                    (some-> (:parametrit parametrit) :alkupvm pvm/pvm))
-         :loppupvm (or
-                     (some-> parametrit :loppupvm pvm/pvm)
-                     (some-> (:parametrit parametrit) :loppupvm pvm/pvm))
-         :raportin-nimi (get-in raportti [1 :nimi])})
+                          "koko maa" "Koko maa")
+                :alkupvm (or
+                           (some-> parametrit :alkupvm pvm/pvm)
+                           (some-> (:parametrit parametrit) :alkupvm pvm/pvm))
+                :loppupvm (or
+                            (some-> parametrit :loppupvm pvm/pvm)
+                            (some-> (:parametrit parametrit) :loppupvm pvm/pvm))
+                :raportin-nimi (get-in raportti [1 :nimi])}
+          (when (:vuosi parametrit)
+            {:vuosi (:vuosi parametrit)})))
       (assoc-in
         [1 :tietoja]
         (as-> [["Kohde" (case konteksti
@@ -338,8 +340,9 @@
           (binding [*raportin-suoritus* this]
             ;; Tallennetaan loki raportin ajon startista
             (let [parametrit (assoc parametrit :kasittelija kasittelija)
+                  rajoita-pdf-rivimaara (:rajoita-pdf-rivimaara suoritettava-raportti)
                   _ (when-not (= nimi :ilmoitukset-raportti)
-                      (log/debug "SUORITETAAN RAPORTTI: " nimi " kontekstissa: " konteksti " parametreilla: " parametrit))
+                      (log/info "SUORITETAAN RAPORTTI: " nimi " kontekstissa: " konteksti " parametreilla: " parametrit " PDF rajoitus: " rajoita-pdf-rivimaara))
                   suoritus-id (luo-suoritustieto-raportille
                                db 
                                kayttaja 
@@ -361,7 +364,8 @@
                               "koko maa" parametrit))]
               ;; tallennetaan suorituksen lopetusaika
               (paivita-suorituksen-valmistumisaika db suoritus-id)
-              raportti)))))))
+              ;; Lisää vielä PDF rajoitus suoraa raportin elementteihin, jotta tämä saadaan passattua pdf generointiin
+              (update-in raportti [1] assoc :rajoita-pdf-rivimaara rajoita-pdf-rivimaara))))))))
 
 
 (defn luo-raportointi []

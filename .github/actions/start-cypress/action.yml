@@ -54,9 +54,10 @@ runs:
 
     # Konttiin mountataan /harja workdirectoryyn GITHUB_WORKSPACE, joka sisältää jobin checkoutissa haetun sisällön
     # sekä myöhemmin jobissa ennen mounttia workspaceen lisätyn sisällön, kuten esimerkiksi asennetut NPM-paketit.
+    # NOTE: Disabloidaan GPU, käyttämällä ELECTRON_EXTRA_LAUNCH_ARGS asetusta (https://github.com/cypress-io/cypress/issues/25357)
     - name: Aja cypress-testit
       env:
-        IMAGE_NAME: ${{ inputs.registry }}
+        IMAGE_NAME: ${{ inputs.image }}
         GITHUB_WORKSPACE: ${{ inputs.GITHUB_WORKSPACE }}
         BROWSER: ${{ inputs.browser }}
       run: |
@@ -64,9 +65,12 @@ runs:
         
         docker run \
           --network host \
+          -e ELECTRON_EXTRA_LAUNCH_ARGS='--disable-gpu' \
           -v $GITHUB_WORKSPACE:/harja \
           -w /harja \
-          ghcr.io/finnishtransportagency/harja_cypress:latest \
-          cypress run --browser "${BROWSER}"
+          "$IMAGE_NAME" \
+          bash -c "echo -e \"Chrome version:  \$(google-chrome --version) \nEdge version:  \$(edge --version) \n\";
+                   echo '-------------------';
+                   cypress run --browser $BROWSER"
       shell: bash
 

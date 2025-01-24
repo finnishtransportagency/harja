@@ -3,6 +3,7 @@
   (:refer-clojure :exclude [atom])
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [warn]]
+            [harja.ui.dom :as ui.dom]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.taulukko.protokollat.grid-osa :as gop]
@@ -10,7 +11,7 @@
             [harja.ui.taulukko.impl.grid :as grid]
             [harja.ui.taulukko.kaytokset :as kaytokset]
             [harja.virhekasittely :as virhekasittely]
-            [reagent.dom :as dom]
+            [reagent.dom :as rdom]
             [clojure.set :as clj-set]))
 
 (def ^:dynamic *this* nil)
@@ -81,7 +82,7 @@
   (-piirra [this]
     (r/create-class
       {:constructor (fn [this props]
-                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                      (set! (.-domNode this) (fn [] (rdom/dom-node this)))
                       (set! (.-state this) #js {:error nil}))
        :get-derived-state-from-error (fn [error]
                                        #js {:error error})
@@ -136,7 +137,7 @@
   (-piirra [this]
     (r/create-class
       {:constructor (fn [this props]
-                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                      (set! (.-domNode this) (fn [] (rdom/dom-node this)))
                       (set! (.-state this) #js {:error nil}))
        :get-derived-state-from-error (fn [error]
                                        #js {:error error})
@@ -172,7 +173,7 @@
   (-piirra [this]
     (r/create-class
       {:constructor (fn [this props]
-                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                      (set! (.-domNode this) (fn [] (rdom/dom-node this)))
                       (set! (.-state this) #js {:error nil}))
        :get-derived-state-from-error (fn [error]
                                        #js {:error error})
@@ -245,7 +246,7 @@
                                                (:kayttaytymiset this))]
       (r/create-class
         {:constructor (fn [this props]
-                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                        (set! (.-domNode this) (fn [] (rdom/dom-node this)))
                         (set! (.-state this) #js {:error nil}))
          :get-derived-state-from-error (fn [error]
                                          #js {:error error})
@@ -357,7 +358,7 @@
                                                (:kayttaytymiset this))]
       (r/create-class
         {:constructor (fn [this props]
-                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                        (set! (.-domNode this) (fn [] (rdom/dom-node this)))
                         (set! (.-state this) #js {:error nil}))
          :get-derived-state-from-error (fn [error]
                                          #js {:error error})
@@ -440,7 +441,7 @@
     (let [auki? (atom auki-alussa?)]
       (r/create-class
         {:constructor (fn [this props]
-                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                        (set! (.-domNode this) (fn [] (rdom/dom-node this)))
                         (set! (.-state this) #js {:error nil}))
          :get-derived-state-from-error (fn [error]
                                          #js {:error error})
@@ -461,16 +462,20 @@
                                         ikonit/oi-caret-top)
                            ikoni-kiinni (if (= ikoni "chevron")
                                           ikonit/livicon-chevron-down
-                                          ikonit/oi-caret-bottom)]
+                                          ikonit/oi-caret-bottom)
+                           avaa-tai-sulje-haitari (fn [event]
+                                            (.preventDefault event)
+                                            (swap! auki? not)
+                                            (aukaise-fn this @auki?))]
                        [:span.solu.klikattava.solu-laajenna
                         {:class (when class
                                   (apply str (interpose " " class)))
                          :id id
                          :data-cy (:id this)
-                         :on-click
-                         #(do (.preventDefault %)
-                              (swap! auki? not)
-                              (aukaise-fn this @auki?))}
+                         :tabIndex "0"
+                         :on-click #(avaa-tai-sulje-haitari %)
+                         :on-key-down #(when (ui.dom/enter-nappain? %)
+                                         (avaa-tai-sulje-haitari %))}
                         [:span.laajenna-teksti ((::fmt this) arvo)]
                         (if @auki?
                           ^{:key "laajenna-auki"}
@@ -512,7 +517,7 @@
   (-piirra [this]
     (r/create-class
       {:constructor (fn [this props]
-                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                      (set! (.-domNode this) (fn [] (rdom/dom-node this)))
                       (set! (.-state this) #js {:error nil}))
        :get-derived-state-from-error (fn [error]
                                        #js {:error error})
@@ -589,7 +594,7 @@
                        rivi-overflow-hidden!)]
       (r/create-class
         {:constructor (fn [this props]
-                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                        (set! (.-domNode this) (fn [] (rdom/dom-node this)))
                         (set! (.-state this) #js {:error nil}))
          :get-derived-state-from-error (fn [error]
                                          #js {:error error})

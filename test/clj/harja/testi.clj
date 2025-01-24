@@ -3,7 +3,9 @@
   (:require
     [clojure.test :refer :all]
     [clojure.core.async :as async :refer [alts! >! <! go timeout chan <!!]]
+    [specql.core :refer [fetch columns]]
     [taoensso.timbre :as log]
+    [harja.domain.reittipiste :as reittipiste]
     [harja.palvelin.asetukset :as a]
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.http-palvelin :as http]
@@ -456,8 +458,7 @@
 (defn- post-kutsu? [f]
   (= 2 (arg-count f)))
 
-(defn- heita-jos-ei-ole-validi [spec palvelun-nimi payload]
-  (when-not (s/valid? spec payload)
+(defn- heita-jos-ei-ole-validi [spec palvelun-nimi payload] (when-not (s/valid? spec payload)
     (throw (Exception. (str "Palvelun " palvelun-nimi " ei ole validi.
     Riippuen testista, tämä voi olla sekä odotettu tila että virhe!
     Payload: " payload "
@@ -901,8 +902,20 @@
 (defn hae-toimenpidekoodin-id [nimi koodi]
   (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "' AND emo = (select id from toimenpide WHERE koodi = '" koodi "');"))))
 
+(defn hae-tehtavan-id-nimella [nimi]
+  (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "';"))))
+
+(defn hae-tehtavan-id-tunnisteella [tunniste]
+  (ffirst (q (str "SELECT id from tehtava where yksiloiva_tunniste = '" tunniste "';"))))
+
 (defn hae-tehtavaryhman-id [nimi]
   (ffirst (q (str "SELECT id from tehtavaryhma where nimi = '" nimi "';"))))
+
+(defn hae-tehtavaryhman-id-tunnisteella [tunniste]
+  (ffirst (q (str "SELECT id from tehtavaryhma where yksiloiva_tunniste = '" tunniste "';"))))
+
+(defn hae-rahavaraus-nimella [nimi]
+  (ffirst (q-map (format "SELECT id, nimi from rahavaraus where nimi = '%s';" nimi))))
 
 (defn hae-yit-rakennus-id []
   (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'"))))
@@ -989,6 +1002,30 @@
                       FROM   toimenpideinstanssi
                       WHERE  nimi = '%s'"
                      nimi))))
+
+(defn hae-sopimus-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   sopimus
+                      WHERE  nimi = '%s';"
+               nimi))))
+
+(defn hae-sopimus-id-urakka-idlla [id]
+  (ffirst (q (format "SELECT id
+                      FROM   sopimus
+                      WHERE  urakka = %s;"
+               id))))
+
+(defn hae-organisaatio-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   organisaatio
+                      WHERE  nimi = '%s';"
+               nimi))))
+
+(defn hae-kayttajan-id-kayttajanimella [kayttajanimi]
+  (ffirst (q (format "SELECT id
+                      FROM   kayttaja
+                      WHERE  kayttajanimi = '%s';"
+               kayttajanimi))))
 
 (defn hae-kittila-mhu-talvihoito-tpi-id []
   (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Talvihoito TP"))
@@ -1285,6 +1322,14 @@
 
 (use-fixtures :once urakkatieto-fixture)
 
+(defn ely-paakayttaja []
+  {:sahkoposti "elypk@example.org", :kayttajanimi "ely-pk-urakanvalvoja",
+   :roolit #{"ELY_Paakayttaja"}, :id 4178,
+   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
+   :organisaatioroolit {}
+   :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
+   :urakkaroolit {}})
+
 (defn oulun-2005-urakan-tilaajan-urakanvalvoja []
   {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
    :roolit #{"ELY_Urakanvalvoja"}, :id 417,
@@ -1335,7 +1380,7 @@
    :roolit #{"Laadunvalvoja"}, :id 18, :etunimi "Keppi",
    :organisaatio {:id @kemin-aluerakennus-id, :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
    :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
-   :organisaatioroolit {} #_{@kemin-aluerakennus-id #{"laadunvalvoja"}}
+   :organisaatioroolit {}
    :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Laadunvalvoja"}}})
 
 (defn kemin-alueurakan-2019-2023-urakan-tilaajan-urakanvalvoja []
@@ -1828,9 +1873,11 @@
   (let [urakan-tiedot (first (q-map (format "SELECT alkupvm FROM urakka WHERE id = %s" urakka-id)))
         laskutuspvm (pvm/iso-8601->pvm erapaiva)
         koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakan-tiedot))
-
-        _ (u (format "INSERT INTO kulu (tyyppi, kokonaissumma, erapaiva, urakka, koontilaskun_kuukausi, luotu)
-                      VALUES ('laskutettava'::LASKUTYYPPI, %s, '%s'::DATE, %s, '%s', NOW());"
+        kohdistustyyppi (if (= maksueratyyppi "lisatyo")
+                          "lisatyo"
+                          "hankintakulu")
+        _ (u (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, koontilaskun_kuukausi, luotu)
+                      VALUES (%s, '%s'::DATE, %s, '%s', NOW());"
                summa erapaiva urakka-id koontilaskun-kuukausi))
 
         ;; HAetaan viimeisin id
@@ -1840,9 +1887,9 @@
                                      summa urakka-id))))
 
         _ (u (format "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi,
-                                                  suoritus_alku, suoritus_loppu, luotu)
-                      VALUES (0, %s, %s, %s, %s, '%s', '%s'::TIMESTAMP, '%s'::TIMESTAMP, now());"
-               kulu-id summa tpi-id tryhma-id maksueratyyppi laskutuspvm laskutuspvm))]))
+                                                  tyyppi, luotu)
+                      VALUES (0, %s, %s, %s, %s, '%s', '%s', now());"
+               kulu-id summa tpi-id tryhma-id maksueratyyppi kohdistustyyppi))]))
 
 (defn lisaa-sanktio-urakalle
   "Anna sakkoryhma 'C'
@@ -1889,3 +1936,33 @@
                           s1)))
         ero (/ matka (float (count s1)))]
     (< ero threshold)))
+
+(defn odota-reittipisteet [toteuma-id]
+  (odota-ehdon-tayttymista
+    (fn []
+      (let [{reittipisteet ::reittipiste/reittipisteet} (first (fetch ds ::reittipiste/toteuman-reittipisteet
+                                                                 (columns ::reittipiste/toteuman-reittipisteet)
+                                                                 {::reittipiste/toteuma-id toteuma-id}))]
+        (not (nil? reittipisteet))))
+    "Reittipisteet löytyvät"
+    1000))
+
+(defn odota-suolatoteuma-reittipisteet [toteuma-id]
+  (odota-ehdon-tayttymista
+    (fn []
+      (let [reittipisteet (first (q-map (format "SELECT aika,pohjavesialue,materiaalikoodi,maara,rajoitusalue_id FROM suolatoteuma_reittipiste where toteuma = %s" toteuma-id)))]
+        (not (nil? reittipisteet))))
+    "Suolatoteuma_reittipisteet löytyvät"
+    1000))
+
+(defn edellinen-materiaalin-kayton-paivitys [sopimus]
+  (ffirst (q (format "SELECT muokattu FROM sopimuksen_kaytetty_materiaali WHERE sopimus=%s order by muokattu desc limit 1" sopimus))))
+
+(defn odota-materiaalin-kaytto-paivittynyt [sopimus aika-ennen]
+  (odota-ehdon-tayttymista
+    (fn []
+      (if (nil? aika-ennen)
+        (not (empty? (q (format "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = %s" sopimus))))
+        (not (empty? (q (format "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = %s and muokattu > '%s'" sopimus aika-ennen))))))
+    "Materiaalin käyttö päivittynyt"
+    5000))

@@ -28,6 +28,8 @@
                    [harja.atom :refer [reaction<!]]))
 
 
+(def maksimimaara-validoitaville-riveille 50)
+
 (defn alustan-validointi [rivi taulukko]
   (let [{:keys [tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
         alikohteet (vals @pot2-tiedot/kohdeosat-atom)
@@ -200,7 +202,8 @@
                        (let [{:keys [tr-ajorata]} rivi]
                          (e! (paallystys/->HaeKaistat
                                (select-keys rivi tr/paaluvali-avaimet)
-                               tr-ajorata))))]
+                               tr-ajorata))))
+        rivien-maara (count @alustarivit-atom)]
     [:div.alusta
      (when alustalomake
        [alustalomake-nakyma e! {:alustalomake alustalomake
@@ -223,12 +226,16 @@
        :virheet virheet-atom
        :varoitukset varoitukset-atom
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
+       :jarjesta-avaimen-mukaan identity
+       :virheet-ylos? false
        ;; TODO: Digiroad-kaistojen haku disabloitu, kunnes Digiroad-rajapinnan käyttö ja kaista-aineiston hyödyntäminen
        ;;       on suunniteltu kuntoon validointia ajatellen
        #_#_:on-rivi-blur on-rivi-blur
        ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
        ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
-       :rivi-varoitus (:rivi validointi)
+       ;; Validointia rajoitettu maksimimaara-validoitaville-riveille huonon suorituskyvyn vuoksi. 
+       :rivi-varoitus (when (<= rivien-maara maksimimaara-validoitaville-riveille)
+                        (:rivi validointi))
        :taulukko-varoitus (:taulukko validointi)
        :tyhja (if (nil? @alustarivit-atom)
                 [ajax-loader "Haetaan alustarivejä..."]

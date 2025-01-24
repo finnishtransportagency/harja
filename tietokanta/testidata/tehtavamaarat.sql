@@ -94,6 +94,30 @@ INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, h
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Is ohituskaistat'), 1500, NOW(), null, 2022);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Is ohituskaistat'), 1100, NOW(), null, 2023);
 
+-- Levittäjällä tehtävien Päällysteiden paikkaus -tehtävien osalta erikoisvaatimus, että aina vaaditaan lomakkeella sijainti. Lisätään nämä testidataan, jotta voidaan testata.
+INSERT INTO tehtava (nimi, emo, luotu, poistettu, yksikko, jarjestys, hinnoittelu, api_seuranta, suoritettavatehtava, piilota, api_tunnus, tehtavaryhma, "mhu-tehtava?", yksiloiva_tunniste, suunnitteluyksikko, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", materiaaliluokka_id, materiaalikoodi_id, aluetieto, nopeusrajoitus)
+VALUES
+    ('AB-paikkaus levittäjällä', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'tonni', 1341, '{kokonaishintainen}', true, null, null, 24628,
+     (SELECT id from tehtavaryhma WHERE yksiloiva_tunniste = 'b1cca2a5-6445-4f49-878d-a95f144cc190'), -- Kuumapäällyste
+     true, null, 'tonni', 2020, null, true, false, null, null, false, 108),
+    ('PAB-paikkaus levittäjällä', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'tonni', 1341, '{kokonaishintainen}', true, null, null, 24629,
+     (SELECT id from tehtavaryhma WHERE yksiloiva_tunniste = '91c147a3-4469-40c5-9c8b-9aac05da52db'), -- Kylmäpäällyste
+     true, null, 'tonni', 2020, null, true, false, null, null, false, 108),
+    ('KT-reikävaluasfalttipaikkaus', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'kpl', 1344, '{kokonaishintainen}', false, null, null, null,
+     (SELECT id from tehtavaryhma WHERE yksiloiva_tunniste = '34aa4298-9430-4843-9256-baa743e24e50'), -- KT-valu
+     true, null, 'kpl', 2020, null, true, false, null, null, false, 108),
+    ('KT-valuasfalttipaikkaus K', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'tonni', 1040, '{kokonaishintainen}', false, null, null, null,
+     (SELECT id from tehtavaryhma WHERE yksiloiva_tunniste = '34aa4298-9430-4843-9256-baa743e24e50'), -- KT-valu
+     true, null, 'tonni', 2020, null, true, false, null, null, false, 108),
+    ('KT-valuasfalttipaikkaus T', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'tonni', 1041, '{kokonaishintainen}', false, null, null, null,
+     (SELECT id from tehtavaryhma WHERE yksiloiva_tunniste = '34aa4298-9430-4843-9256-baa743e24e50'), -- KT-valu
+     true, null, 'tonni', 2020, null, true, false, null, null, false, 108),
+    ('KT-valuasfalttisaumaus', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'jm', 1345, '{kokonaishintainen}', false, null, null, null,
+     (SELECT id from tehtavaryhma WHERE yksiloiva_tunniste = '34aa4298-9430-4843-9256-baa743e24e50'), -- KT-valu
+     true, null, 'jm', 2020, null, true, true, null, null, false, 108)
+    ON CONFLICT DO NOTHING;
+
+
 DO
 $$
 declare 

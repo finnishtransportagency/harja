@@ -1,12 +1,11 @@
 (ns harja.views.urakka.turvallisuuspoikkeamat
   (:require [reagent.core :refer [atom] :as r]
-            [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as tiedot]
             [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni] :as yleiset]
             [harja.pvm :as pvm]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
@@ -19,17 +18,12 @@
             [harja.domain.kommentti :as kommentti]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.domain.urakan-tyotunnit :as ut]
-            [harja.domain.urakka :as u-domain]
-            [harja.ui.viesti :as viesti]
-            [harja.geo :as geo]
-            [harja.asiakas.kommunikaatio :as k])
-  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
-                   [harja.makrot :refer [defc fnc]]
-                   [reagent.ratom :refer [reaction run!]]
+            [harja.domain.urakka :as u-domain])
+  (:require-macros [harja.atom :refer [reaction-writable]]
+                   [harja.makrot :refer [fnc]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama-atom]
@@ -228,6 +222,7 @@
         turvallisuupoikkeama-liite-latautumassa? (atom false)
         kommentti-liite-latautumassa? (atom false)
         vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)]
+    
     (fnc [urakka]
       (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @turvallisuuspoikkeama))
                                       ((:vahinkoluokittelu @turvallisuuspoikkeama) :henkilovahinko))
@@ -521,14 +516,19 @@
 
 (defn valitse-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
   (go
-    (reset! tiedot/valittu-turvallisuuspoikkeama
-            (<! (tiedot/hae-turvallisuuspoikkeama urakka-id turvallisuuspoikkeama-id)))))
+    (do
+      (reset! tiedot/valittu-turvallisuuspoikkeama
+        (<! (tiedot/hae-turvallisuuspoikkeama urakka-id turvallisuuspoikkeama-id)))
+      (reset! tiedot/haku-kesken? false))))
 
 (defn turvallisuuspoikkeamalistaus
   []
   (let [urakka @nav/valittu-urakka]
-    [:div.sanktiot
-     [urakka-valinnat/urakan-hoitokausi urakka]
+    [:div.turvallisuuspoikkeamat
+
+     [:span.turvallisuuspoikkeama-hoitokausi
+      [urakka-valinnat/urakan-hoitokausi urakka]]
+
      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id urakka))]
        (yleiset/wrap-if
          (not oikeus?)
@@ -540,21 +540,22 @@
                        @tiedot/turvallisuuspoikkeaman-luonti-kesken?
                        (not oikeus?))}]))
 
-     [grid/grid
-      {:otsikko "Turvallisuuspoikkeamat"
-       :tyhja (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan turvallisuuspoikkeamia"])
-       :rivi-klikattu #(valitse-turvallisuuspoikkeama (:id urakka) (:id %))}
-      [{:otsikko "Ta\u00ADpah\u00ADtu\u00ADnut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 15 :tyyppi :pvm}
-       {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys 15
-        :hae turpodomain/kuvaile-tyontekijan-ammatti}
-       {:otsikko "Ku\u00ADvaus" :nimi :kuvaus :tyyppi :string :leveys 45}
-       {:otsikko "Tila" :nimi :tila :tyyppi :string :leveys 8 :fmt turpodomain/kuvaa-turpon-tila
-        :validoi [[:ei-tyhja "Valitse tila"]]}
-       {:otsikko "Pois\u00ADsa" :nimi :poissa :tyyppi :string :leveys 5
-        :hae (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
-       {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys 5
-        :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
-      (sort-by :tapahtunut pvm/jalkeen? @tiedot/haetut-turvallisuuspoikkeamat)]]))
+     [:div.turvallisuuspoikkeama-taulukko
+      [grid/grid
+       {:otsikko "Turvallisuuspoikkeamat"
+        :tyhja (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan turvallisuuspoikkeamia"])
+        :rivi-klikattu #(valitse-turvallisuuspoikkeama (:id urakka) (:id %))}
+       [{:otsikko "Ta\u00ADpah\u00ADtu\u00ADnut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 15 :tyyppi :pvm}
+        {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys 15
+         :hae turpodomain/kuvaile-tyontekijan-ammatti}
+        {:otsikko "Ku\u00ADvaus" :nimi :kuvaus :tyyppi :string :leveys 45}
+        {:otsikko "Tila" :nimi :tila :tyyppi :string :leveys 8 :fmt turpodomain/kuvaa-turpon-tila
+         :validoi [[:ei-tyhja "Valitse tila"]]}
+        {:otsikko "Pois\u00ADsa" :nimi :poissa :tyyppi :string :leveys 5
+         :hae (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
+        {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys 5
+         :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
+       (sort-by :tapahtunut pvm/jalkeen? @tiedot/haetut-turvallisuuspoikkeamat)]]]))
 
 (defn turvallisuuspoikkeamat [urakka]
   (komp/luo
@@ -575,6 +576,17 @@
     (fn [urakka]
       [:span
        [kartta/kartan-paikka]
-       (if @tiedot/valittu-turvallisuuspoikkeama
+       (cond
+         ;; Klikattiin poikkeamaa, haku kesken
+         @tiedot/haku-kesken?
+         [:div.ajax-loader-valistys
+          [ajax-loader-pieni "Haetaan turvallisuuspoikkeamaa"]]
+
+         ;; Klikattiin poikkeamaa, poikkeama haettu
+         (and
+           @tiedot/valittu-turvallisuuspoikkeama
+           (not @tiedot/haku-kesken?))
          [turvallisuuspoikkeaman-tiedot urakka]
-         [turvallisuuspoikkeamalistaus])])))
+
+         ;; Valittua poikkeamaa ei ole, näytä listaus
+         :else [turvallisuuspoikkeamalistaus])])))

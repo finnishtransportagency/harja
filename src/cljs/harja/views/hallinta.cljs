@@ -16,14 +16,18 @@
             [harja.views.vesivaylat.hallinta :as vu]
             [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
-            [harja.views.hallinta.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
-            [harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
+            [harja.views.hallinta.tyokalut.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
+            [harja.views.hallinta.tyokalut.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
+            [harja.views.hallinta.tyokalut.talvihoitoreitit-tyokalu-nakyma :as talvihoitoreitit-tyokalu-nakyma]
+            [harja.views.hallinta.tyokalut.tieosoitteet-nakyma :as tieosoitteet-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
             [harja.views.hallinta.urakkatiedot.tehtava-nakyma :as tehtava-nakyma]
             [harja.views.hallinta.tarjoushinnat :as tarjoushinnat]
             [harja.views.hallinta.rahavaraukset :as rahavaraukset]
+            [harja.views.hallinta.urakkatiedot.lupaukset-nakyma :as lupaukset]
+            [harja.views.hallinta.urakkatiedot.paallystysilmoitukset-nakyma :as paallystysilmoitukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
             [harja.tiedot.istunto :as istunto]))
@@ -87,8 +91,20 @@
     :mhu-tarjoushinnat
     (when (oikeudet/hallinta-tarjoushinnat)
       ^{:key "mhu-tarjoushinnat"}
-      [tarjoushinnat/tarjoushinnat])
-
+      [tarjoushinnat/tarjoushinnat]) 
+    
+    "Lupaukset"
+    :lupaukset
+    (when (oikeudet/hallinta-lupaukset)
+      ^{:key "lupaukset"}
+      [lupaukset/lupaukset])
+    
+    "Paallystysilmoitukset"
+    :paallystysilmoitukset
+    (when (oikeudet/hallinta-paallystysilmoitukset)
+      ^{:key "paallystysilmoitukset"}
+      [paallystysilmoitukset/paallystysilmoitukset])
+    
     "Rahavaraukset"
     :rahavaraukset
     (when (oikeudet/hallinta-rahavaraukset)
@@ -187,6 +203,20 @@
             (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
       ^{:key "tyomaapaivakirjatyokalu"}
       [paivakirjatyokalu-nakyma/simuloi-tyomaapaivakirja])
+
+    "Talvihoitoreittityökalu"
+    :talvihoitoreittityokalu
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "talvihoitoreittityokalu"}
+      [talvihoitoreitit-tyokalu-nakyma/simuloi-talvihoitoreitti])
+
+    "Tieosoitteet"
+    :tieosoitteet
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "tieosoitteet"}
+      [tieosoitteet-nakyma/tieosoitteet])
 
     "Viestitestaus"
     :viestitestaus

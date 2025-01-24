@@ -154,7 +154,7 @@
   width: 26px;
   background-color: transparent;
   border: none;
-  height: @input-korkeus + 3;
+  height: 100%;
   position: absolute;
   top: 0;
   right: 0;
@@ -200,6 +200,19 @@
     &.tumma {
         color: @blue-dark;
     }
+  &.pelkka-ikoni {
+    color: @black-default;
+    padding: 0px;
+    outline: none;
+    border-style: none;
+    background-color: transparent;
+    border-color: transparent;
+    padding-top: 3px;
+    height: 24px;
+  }
+  &.pelkka-ikoni:focus {
+     border: 1px solid @blue-default;
+   }
 }
 
 .nappi-korkeus-36 {

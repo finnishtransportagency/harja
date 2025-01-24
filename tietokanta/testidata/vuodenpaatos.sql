@@ -29,7 +29,7 @@ $$
 
         -- Kiinteähintaiset, talvihoito
         tpi := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kittilä MHU Talvihoito TP');
-        tr := (SELECT id FROM tehtavaryhma WHERE nimi = 'Talvihoito (A)');
+        tr := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac'); -- Talvihoito
 
         FOR kuukausi_ IN 1..12
             LOOP
@@ -44,21 +44,20 @@ $$
                 ON CONFLICT DO NOTHING;
 
                 -- Toteutuneet, alitetaan tavoitehinta
-                INSERT INTO kulu (tyyppi, kokonaissumma, erapaiva, urakka, luotu, luoja,
-                                  koontilaskun_kuukausi)
-                VALUES ('laskutettava', indeksikorjattu_summa * 0.9,
+                INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luotu, luoja, koontilaskun_kuukausi)
+                VALUES (indeksikorjattu_summa * 0.9,
                         (vuosi_::TEXT || '-' || kuukausi_::TEXT || '-' || '15')::DATE, urakka_id_, NOW(),
                         kayttaja_, kuukauden_nimi(kuukausi_) || '-1-hoitovuosi')
                 RETURNING id INTO kulun_id_;
 
-                INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, luotu,
-                                            luoja)
-                VALUES (0, kulun_id_, indeksikorjattu_summa * 0.9, tpi, tr, 'kokonaishintainen', NOW(), kayttaja_);
+                INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi,
+                                            tyyppi, luotu, luoja)
+                VALUES (0, kulun_id_, indeksikorjattu_summa * 0.9, tpi, tr, 'kokonaishintainen', 'hankintakulu', NOW(), kayttaja_);
             END LOOP;
 
         -- kustannusarvioidut
         tpi := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kittilä MHU Hallinnolliset toimenpiteet TP');
-        tr := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
+        tr := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c'); -- Erillishankinnat
         FOR kuukausi_ IN 1..12
             LOOP
                 vuosi_ := (CASE WHEN (kuukausi_ <= 9) THEN 2020 ELSE 2019 END);
@@ -98,7 +97,7 @@ $$
 
             END LOOP;
 
-        -- Johto- ja hallintakorvaus, tuntipalkat.
+        -- Johto- ja hallintokorvaus, tuntipalkat.
         FOR kuukausi_ IN 1..12
             LOOP
                 vuosi_ := (CASE WHEN (kuukausi_ <= 9) THEN 2020 ELSE 2019 END);

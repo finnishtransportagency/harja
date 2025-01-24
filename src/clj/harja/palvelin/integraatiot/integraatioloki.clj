@@ -7,7 +7,8 @@
             [com.stuartsierra.component :as component]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm])
-  (:import (java.net InetAddress)))
+  (:import (java.net InetAddress)
+           (org.postgresql.util PSQLException)))
 
 (defprotocol IntegraatiolokiKirjaus
   (kirjaa-alkanut-integraatio [this jarjestelma integraation-nimi ulkoinen-id viesti])
@@ -77,10 +78,13 @@
      sisalto otsikko parametrit kasitteleva-palvelin)))
 
 (defn luo-alkanut-integraatio [db jarjestelma nimi ulkoinen-id viesti]
-  (let [tapahtumaid (:id (integraatioloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))]
-    (when viesti
-      (kirjaa-viesti db tapahtumaid viesti))
-    tapahtumaid))
+  (try
+    (let [tapahtumaid (:id (integraatioloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))]
+      (when viesti
+        (kirjaa-viesti db tapahtumaid viesti))
+      tapahtumaid)
+    (catch PSQLException e
+      (log/error (format "Virhe integraation lokituksessa! Järjestelmä: %s, Nimi: %s. \nVirhe: %s" jarjestelma nimi (ex-message e))))))
 
 (defn kirjaa-paattynyt-integraatio [db viesti lisatietoja onnistunut tapahtuma-id ulkoinen-id]
   (let [kasitellyn-tapahtuman-id

@@ -35,6 +35,11 @@ on:
         default: 'true'
         type: string
         required: false
+      deps-tree:
+        description: 'Enabloi deps-tree job'
+        default: 'true'
+        type: string
+        required: false
       lint-clj:
         description: 'Enabloi lint-clj job'
         default: 'true'
@@ -66,6 +71,28 @@ env:
   GH_DOCKER_REGISTRY: ghcr.io
 
 jobs:
+  # Tulosta Clojure deps tree, jotta voidaan nähdä riippuuvuuksien hierarkia PR:ssä
+  deps-tree:
+    if: ${{ inputs.deps-tree == 'true' }}
+    name: "Print Clojure deps tree"
+    runs-on: ubuntu-latest
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-build-env-and-tools
+
+      # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
+      - name: Lein deps :tree
+        continue-on-error: true
+        run: lein with-profile +pedantic-warn deps :tree
+        #run: lein with-profile +pedantic-abort deps :tree
+
   # Linter job
   lint-clj:
     if: ${{ inputs.lint-clj == 'true' }}
@@ -279,7 +306,7 @@ jobs:
         run: lein test2junit
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
+        uses: mikepenz/action-junit-report@62516aa379bff6370c95fd5894d5a27fb6619d9b
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
@@ -329,7 +356,7 @@ jobs:
         run: lein test2junit :hidas
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
+        uses: mikepenz/action-junit-report@62516aa379bff6370c95fd5894d5a27fb6619d9b
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
@@ -398,7 +425,7 @@ jobs:
         run: lein test2junit :integraatio
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
+        uses: mikepenz/action-junit-report@62516aa379bff6370c95fd5894d5a27fb6619d9b
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
@@ -452,6 +479,7 @@ jobs:
         uses: ./.github/actions/setup-build-env-and-tools
         with:
           install-java: true
+          install-leiningen: false
           install-clojure-deps: false
           install-node-deps: false
 
@@ -488,7 +516,11 @@ jobs:
           mkdir -p ../.harja
           echo aaaa > ../.harja/anti-csrf-token
           touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,labyrintti-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti-salasana,digiroad-api-key}
-          touch ../.harja/harjalle_ajorata_kaista_puoli_20230519.csv
+          touch ../.harja/kaista-aineisto.csv
+          
+          echo "Lisätään downloads oikeudet Cypressille"
+          mkdir -p cypress/downloads
+          sudo chmod -R 711 cypress/downloads
           
           echo "Käynnistetään Harja..."
           java -cp :harja-0.0.1-SNAPSHOT-standalone.jar harja.palvelin.main > harja.out 2>&1 &
@@ -539,7 +571,7 @@ jobs:
           browser: ${{ matrix.browser }}
 
       - name: Publish Test Report for ${{ matrix.browser }}
-        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
+        uses: mikepenz/action-junit-report@62516aa379bff6370c95fd5894d5a27fb6619d9b
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()

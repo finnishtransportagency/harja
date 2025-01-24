@@ -1,0 +1,38 @@
+{
+  "tunniste": "__ULKOINENID__",
+  "reittinimi": "__NIMI__",
+  "kalustot": {
+      "tr_maara": 3,
+      "ka_maara": 3,
+      "kup_maara": 0
+    },
+  "sijainnit": [
+    {
+      "tie": 4,
+      "aosa": 420,
+      "aet": 0,
+      "losa": 425,
+      "let": 5000,
+      "hoitoluokka": "Ise",
+      "pituus": 2500
+    },
+    {
+      "tie": 20,
+      "aosa": 12,
+      "aet": 0,
+      "losa": 13,
+      "let": 1000,
+      "hoitoluokka": "Ise",
+      "pituus": 3000
+    },
+    {
+      "tie": 20,
+      "aosa": 14,
+      "aet": 0,
+      "losa": 17,
+      "let": 1000,
+      "hoitoluokka": "Ib",
+      "pituus": 25000
+    }
+  ]
+}

@@ -329,14 +329,9 @@ SELECT ypk.id,
    AND ypk.poistettu IS NOT TRUE
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
+   -- Näytetään nykytilanteessa vuoden kaikki päällystyskohteet tilasta ja aikarajauksesta riippumatta.
    AND ((:nykytilanne AND
-        date_part('year', now())=ANY(ypk.vuodet) AND
-        ((ypka.kohde_valmis IS NULL AND
-          ypka.tiemerkinta_loppu IS NULL) OR
-         (ypka.kohde_valmis IS NULL AND
-          ypka.tiemerkinta_loppu IS NOT NULL AND
-          (now() - ypka.tiemerkinta_loppu) < INTERVAL '7 days') OR
-         (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
+        date_part('year', now())=ANY(ypk.vuodet))
         OR
         (:historiakuva AND (ypka.kohde_alku < :loppu
                             AND ((ypka.kohde_valmis IS NULL AND
@@ -385,14 +380,9 @@ SELECT ypko.id,
  WHERE ST_Distance84(ypko.sijainti, ST_MakePoint(:x, :y)) < :toleranssi
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
+   -- Näytetään nykytilanteessa vuoden kaikki päällystyskohteet tilasta ja aikarajauksesta riippumatta.
    AND ((:nykytilanne AND
-         date_part('year', now())=ANY(ypk.vuodet) AND
-         ((ypka.kohde_valmis IS NULL AND
-           ypka.tiemerkinta_loppu IS NULL) OR
-         (ypka.kohde_valmis IS NULL AND
-          ypka.tiemerkinta_loppu IS NOT NULL AND
-          (now() - ypka.tiemerkinta_loppu) < INTERVAL '7 days') OR
-         (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
+         date_part('year', now())=ANY(ypk.vuodet))
         OR
         (:historiakuva AND (ypka.kohde_alku < :loppu
                             AND ((ypka.kohde_valmis IS NULL AND
@@ -678,31 +668,6 @@ WHERE st.poistettu IS NULL
       AND st.yllapitokohde IN (SELECT id FROM yllapitokohde WHERE urakka IN (:urakat)
                                                             OR suorittava_tiemerkintaurakka IN (:urakat))
       AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.envelope);
-
--- name: hae-varustetoteumat
-SELECT t.id,
-       t.tyyppi as toteumatyyppi,
-       t.reitti as sijainti,
-       t.alkanut, t.paattynyt,
-       t.suorittajan_nimi AS suorittaja_nimi,
-       vt.tr_numero AS tierekisteriosoite_numero,
-       vt.tr_alkuosa AS tierekisteriosoite_alkuosa,
-       vt.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
-       vt.tr_loppuosa AS tierekisteriosoite_loppuosa,
-       vt.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys,
-       vt.tunniste,
-       vt.kuntoluokka,
-       vt.tietolaji,
-       vt.alkupvm, vt.loppupvm, vt.toimenpide,
-       vt.arvot,
-       u.id AS "urakka-id"
-  FROM varustetoteuma vt
-       JOIN toteuma t ON vt.toteuma = t.id
-       JOIN urakka u ON t.urakka = u.id
- WHERE t.urakka IN (:urakat)
-   AND ((t.alkanut BETWEEN :alku AND :loppu) OR
-        (t.paattynyt BETWEEN :alku AND :loppu));
-
 
 -- name: urakoitsijan-urakat
 SELECT
