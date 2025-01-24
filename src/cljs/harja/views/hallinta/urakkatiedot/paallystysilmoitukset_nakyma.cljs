@@ -54,10 +54,10 @@
      #(do
         (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
           ") kohde (id:" (pr-str kohde-id) ") YHA:n")
-        (k/post! :laheta-pot-yhaan-ja-velhoon {:urakka-id urakka-id
-                                               :sopimus-id sopimus-id
-                                               :kohde-id kohde-id
-                                               :vuosi vuosi}
+        (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
+                                        :sopimus-id sopimus-id
+                                        :kohde-id kohde-id
+                                        :vuosi vuosi}
           nil
           true))
      {:ikoni (ikonit/envelope)
