@@ -229,7 +229,7 @@
                   aloittamatta))))
 
 (defn valinnat [ur paallystys?]
-  (let [{jarjestys :jarjestys} @tiedot/valinnat
+  (let [{jarjestys :jarjestys} @tiedot/aikataulu-suodattimet
         parametrit (raportit/urakkaraportin-parametrit
                      (:id ur)
                      :yllapidon-aikataulu
@@ -525,7 +525,7 @@
   (let [aikataulurivit (map (fn [rivi]
                               (assoc rivi :aikataulu-tiemerkinta-loppu-alkuperainen (:aikataulu-tiemerkinta-loppu rivi)))
                             aikataulurivit)
-        otsikoidut-aikataulurivit (if (tiedot/aikapohjainen-jarjestys-valittu? (:jarjestys @tiedot/valinnat))
+        otsikoidut-aikataulurivit (if (tiedot/aikapohjainen-jarjestys-valittu? (:jarjestys @tiedot/aikataulu-suodattimet))
                                     (otsikoi-aikataulurivit
                                       (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
                                     aikataulurivit)
@@ -786,7 +786,7 @@
             voi-muokata-tiemerkinta? (fn [rivi] (boolean (and (= (:nakyma optiot) :tiemerkinta)
                                                            saa-merkita-valmiiksi?
                                                            (:valmis-tiemerkintaan rivi))))
-            aikajana? (:nayta-aikajana? @tiedot/valinnat)
+            aikajana? (:nayta-aikajana? @tiedot/aikataulu-suodattimet)
             paallystys? (= (:nakyma optiot) :paallystys)]
         [:div.aikataulu
          [valinnat ur paallystys?]
