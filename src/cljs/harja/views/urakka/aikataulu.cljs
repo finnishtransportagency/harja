@@ -647,7 +647,8 @@
                            :yhteysurakan-nimi (when (= :tiemerkinta (:nakyma optiot))
                                                 (:paallystysurakka rivi))
                            :oikeus-paallystysurakkaan? (oikeudet/voi-lukea? oikeudet/urakat-aikataulu (:urakka rivi))})
-                       {:disabled (not (nayta-yhteystiedot? rivi (:nakyma optiot)))
+                       {:aria-label "näytä yhteystiedot"
+                        :disabled (not (nayta-yhteystiedot? rivi (:nakyma optiot)))
                         :ikoni (ikonit/user)
                         :luokka "btn-xs"}])}
       ;; Tiemerkintä-puoli näkee, Merkintä ja Jyrsinnät

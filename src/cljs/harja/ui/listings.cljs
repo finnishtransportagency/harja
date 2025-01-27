@@ -63,6 +63,7 @@
           {:type        "text"
            :value       @term
            :placeholder (:aputeksti opts)
+           :aria-label (:aria-label opts)
 
            ;; käsitellään ylos/alas/enter näppäimet, joilla listasta voi valita näppäimistöllä
            :on-key-down (nuolivalinta

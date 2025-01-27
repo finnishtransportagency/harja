@@ -1,5 +1,6 @@
 (ns harja-laadunseuranta.ui.paanavigointi
-  (:require [reagent.core :as reagent :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [cljs.core.async :refer [<! >! timeout]]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.ui.nappaimisto :as nappaimisto]
@@ -10,7 +11,6 @@
             [clojure.set :as set]
             [harja-laadunseuranta.ui.yleiset.dom :as dom]
             [harja-laadunseuranta.utils :as utils]
-            [reagent.core :as r]
             [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
@@ -214,7 +214,7 @@
 
     (r/create-class
       {:component-did-mount (fn [this]
-                              (reset! dom-node (reagent/dom-node this))
+                              (reset! dom-node (rdom/dom-node this))
                               (reset! body-click-kuuntelija
                                       (tapahtumat/kuuntele! :body-click
                                                             #(when-not (dom/sisalla? @dom-node (:tapahtuma %))

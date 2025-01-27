@@ -93,19 +93,19 @@
     [:span.avoimet-poikkeamat
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry laatupoikkeamiin"]
-      [:a.klikattava {:href "#"
-                      :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                    :taso2 :laadunseuranta
-                                                                                                    :taso3 :laatupoikkeamat})}
+      [:a.klikattava.alleviivaa {:href "#"
+                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                               :taso2 :laadunseuranta
+                                                                                                               :taso3 :laatupoikkeamat})}
        (if (> avoimet_laatupoikkeamat 0)
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly (str "Avoimia laatupoikkeamia: " avoimet_laatupoikkeamat))})
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia laatupoikkeamia")}))]]
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry turvallisuuspoikkeamiin"]
-      [:a.klikattava {:href "#"
-                      :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                    :taso2 :turvallisuuspoikkeamat
-                                                                                                    :taso3 nil})}
+      [:a.klikattava.alleviivaa {:href "#"
+                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                               :taso2 :turvallisuuspoikkeamat
+                                                                                                               :taso3 nil})}
        (if (> avoimet_turvallisuuspoikkeamat 0)
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly (str "Avoimia turvallisuuspoikkeamia: " avoimet_turvallisuuspoikkeamat))})
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia turvallisuuspoikkeamia")}))]]]))
@@ -115,8 +115,8 @@
   (let [{:keys [lupaus_tavoitepisteet hoitokauden_alkuvuosi]} rivi]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry lupausnäkymään"]
-     [:a.klikattava {:href "#"
-                     :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
+     [:a.klikattava.alleviivaa {:href "#"
+                                :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
       [:div.lupauspisteet
        (if (nil? lupaus_tavoitepisteet)
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Ei tavoitepistemäärää")})
@@ -135,10 +135,10 @@
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannusten seurantaan"]
-     [:a.klikattava {:href "#"
-                     :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                   :taso2 :laskutus
-                                                                                                   :taso3 :kustannusten-seuranta})}
+     [:a.klikattava.alleviivaa {:href "#"
+                                :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                              :taso2 :laskutus
+                                                                                                              :taso3 :kustannusten-seuranta})}
       [:div.tavoitehintapaatos
        (if (nil? tavoitehintapaatos)
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
@@ -170,10 +170,10 @@
         {:keys [aloittamattomia vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannussuunnitelmaan"]
-     [:a.klikattava {:href "#"
-                     :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                   :taso2 :suunnittelu
-                                                                                                   :taso3 :kustannussuunnitelma})}
+     [:a.klikattava.alleviivaa {:href "#"
+                                :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                              :taso2 :suunnittelu
+                                                                                                              :taso3 :kustannussuunnitelma})}
       (cond
         (= "aloittamatta" suunnitelman_tila)
         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Aloittamatta")})
@@ -362,7 +362,7 @@
        Tässä vaiheessa osio näkyy vain pääkäyttäjille sekä ELY:jen pääkäyttäjille ja urakanvalvojille.
        Myöhemmin laajennamme mahdollisesti tiedon näkyvyyttä myös urakoitsijoille heidän omien urakoidensa osalta. Jos löydät tiedoista virheitä tai sinulla
        on muita toiveita tämän osion kehittämiseksi, voit "
-   [:a {:href (palaute-tiedot/mailto-kehitystiimi)} "laittaa meille viestiä osoitteeseen harjapalaute@solita.fi"]])
+   [:a.klikattava.alleviivaa {:href (palaute-tiedot/mailto-kehitystiimi)} "laittaa meille viestiä osoitteeseen harjapalaute@solita.fi"]])
 
 (defn kojelauta* [e! app]
   (komp/luo
