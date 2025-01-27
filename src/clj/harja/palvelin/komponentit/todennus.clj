@@ -124,6 +124,9 @@
 
                                         ;; Käyttäjän sub-kenttä Cognitossa
                                         "x-iam-identity"])
+        tt (seq (get headerit "x-iam-data"))
+        _ (if tt
+            (log/info (str "Headerit: " headerit)))
         jwt (some->
               (get headerit "x-iam-data")
               ;; Jaetaan kolmeen osaan: header, body, signature
@@ -134,6 +137,8 @@
                               Base64/decodeBase64
                               String.
                               cheshire/decode)
+        _ (if tt 
+            (log/info (str "Dekoodattu: " dekoodatut-headerit))) 
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
         dekoodatut-headerit (update dekoodatut-headerit "custom:rooli" #(if (konv/onko-json? %)
                                                                           (parsi-json-entraid-roolit %)
