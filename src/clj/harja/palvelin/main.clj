@@ -210,7 +210,9 @@
 
   ;; Aseta clojure.async thread-poolin koko (default 8)
   ;; Asetetaan koko tässä, jotta hallitsemme thread-poolin kokoa itse Harjan tarpeiden mukaan.
-  (System/setProperty "clojure.core.async.pool-size" (str (or koko 8))))
+  (System/setProperty "clojure.core.async.pool-size" (str (or koko 8)))
+
+  (log/info "Asetettiin clojure.async thread-poolin koko: " (Long/getLong "clojure.core.async.pool-size")))
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
