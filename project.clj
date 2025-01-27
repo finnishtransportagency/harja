@@ -55,6 +55,9 @@
                  ;; Pattern match kirjasto
                  [org.clojure/core.match "1.1.0"]
 
+                 ;; Authentikaatio / kirjautumisen allekirjoituksen varmistus
+                 [buddy/buddy-sign "3.5.351"]
+
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
