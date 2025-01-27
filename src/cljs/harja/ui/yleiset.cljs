@@ -248,7 +248,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
         (let [listan-rivit (when @auki? (vec (array-seq (.querySelectorAll @valikko-ref "li"))))
               alasvedon-nappi (when @auki? (.querySelector @valikko-ref "button"))
-              checkbox-rivi? (when @auki? (= :checkbox (get (get (nth vaihtoehdot @valittu-rivi) 1) :tyyppi)))]
+              checkbox-rivi? (when @auki? (= :checkbox (get (get (nth vaihtoehdot @valittu-rivi) 1) :tyyppi)))
+              rivi-disabled? (fn [rivi-nro]
+                               (and disabled-vaihtoehdot
+                                 (contains? disabled-vaihtoehdot (nth vaihtoehdot rivi-nro))))]
 
           [:ul {:class "dropdown-menu livi-alasvetolista"
                 :style (merge
@@ -280,24 +283,28 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   (.preventDefault %)
                                   (.stopPropagation %)
                                   (if (< (inc @valittu-rivi) (count listan-rivit))
+                                    (when-not (rivi-disabled? (inc @valittu-rivi))
+                                      (do
+                                        (.focus (get listan-rivit (inc @valittu-rivi)))
+                                        (reset! valittu-rivi (inc @valittu-rivi))))
                                     (do
-                                      (.focus (get listan-rivit (inc @valittu-rivi)))
-                                      (reset! valittu-rivi (inc @valittu-rivi)))
-                                    (do
-                                      (.focus (get listan-rivit 0))
-                                      (reset! valittu-rivi 0))))
+                                      (when-not (rivi-disabled? 0)
+                                        (.focus (get listan-rivit 0))
+                                        (reset! valittu-rivi 0)))))
 
                                 (dom/nuoli-ylos? %)
                                 (do
                                   (.preventDefault %)
                                   (.stopPropagation %)
                                   (if (= 0 @valittu-rivi)
-                                    (do
-                                      (.focus (get listan-rivit (dec (count listan-rivit))))
-                                      (reset! valittu-rivi (dec (count listan-rivit))))
-                                    (do
-                                      (.focus (get listan-rivit (dec @valittu-rivi)))
-                                      (reset! valittu-rivi (dec @valittu-rivi)))))
+                                    (when-not (rivi-disabled? (dec (count listan-rivit)))
+                                      (do
+                                        (.focus (get listan-rivit (dec (count listan-rivit))))
+                                        (reset! valittu-rivi (dec (count listan-rivit)))))
+                                    (when-not (rivi-disabled? (dec @valittu-rivi))
+                                      (do
+                                        (.focus (get listan-rivit (dec @valittu-rivi)))
+                                        (reset! valittu-rivi (dec @valittu-rivi))))))
 
                                 (dom/enter-nappain? %)
                                 (do
@@ -357,11 +364,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                         nil))
         on-key-down-fn (fn [{:keys [vaihtoehdot valinta valitse-fn format-fn]} event]
                          (let [kc (.-keyCode event)
-                               vaihtoehdot (if (map? vaihtoehdot)
-                                             (mapv (fn [avain]
-                                                     (-> [avain (get vaihtoehdot avain)]))
-                                               (keys vaihtoehdot))
-                                             vaihtoehdot)
                                siirra-fokus (fn [i] (when (and @auki? @valikko-ref)
                                                       (js/setTimeout #(.focus (nth (vec (array-seq (.querySelectorAll @valikko-ref "li"))) i)) 150)))]
 
