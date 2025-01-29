@@ -7,7 +7,9 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [clojure.data.json :as json]
+            [org.httpkit.client :as http]
             [harja.kyselyt.konversio :as konv]
+            [buddy.sign.jwt :as jwt]
             [com.stuartsierra.component :as component]
             [harja.domain
              [oikeudet :as oikeudet]]
@@ -111,12 +113,88 @@
     (json/read-str oam-groups)
     (str/join ",")))
 
+
+;; --------------------------------------------------------------------------------------------------------
+;; --------------------------------------------------------------------------------------------------------
+;; --------------------------------------------------------------------------------------------------------
+
+;; TODO: Koodimössöä
+(def cognito-issuer "blank")
+(def jwks-url (str cognito-issuer "/.well-known/jwks.json"))
+
+(def headers {"OAM_REMOTE_USER" "lx-test"
+              "OAM_GROUPS" (interpose "," "Ja")
+              "Content-Type" "application/json"
+              "x-csrf-token" "baz"})
+
+;; 1. Hae JWKS avaimet Cotnitolta
+(defn get-jwks []
+  (let [response @(http/get jwks-url {:headers headers})
+        response (json/read-json (:body response))
+        _ (println "\n response: " response)]
+    (:keys response)))
+
+;; 2. Hae public avaimesta JWT täsmäävä `kid` arvo 
+(defn get-public-key [kid]
+  (some #(do 
+           (println "\n entry: " (:kid %))
+           (when 
+           (= kid (:kid %)) %) )
+    (get-jwks)))
+
+(defn decode-base64-json [s]
+  (-> s Base64/decodeBase64 String. (json/read-json)))
+
+(defn decode-jwt [token]
+  (let [[header payload signature] (str/split token #"\.")]
+    {:header  (decode-base64-json header)
+     :payload (decode-base64-json payload)
+     :signature signature}))
+
+;; 3. Varmista JWT Signature
+(defn verify-jwt [token accesstoken]
+  (let [header (json/read-json (String. (Base64/decodeBase64 (first (clojure.string/split token #"\.")))))
+        _ (println "\n header access: " (decode-jwt accesstoken))
+        
+        header (-> accesstoken decode-jwt :header)
+        kid (:kid header)
+        jwk (get-public-key kid)
+        _ (println "\n kid: " kid)
+        _ (println "\n jwk: " jwk)
+        public-key (buddy.core.keys/jwk->public-key jwk)
+        ;; Palauttaa Cognito map responsen, jos kirjautuminen menee läpi ja token on voimassa 
+        response (jwt/unsign accesstoken public-key {:alg :rs256})
+        _ (println "\n res: " response)]
+    response))
+
+
+(def cached-decode (memoize (fn [jwt-body x-iam-data accesstoken]
+                              ;; memoize funktio kutsuu tätä vain kerran, jotta ei tehdä spammilla get kutsuja  
+                              (println "\n Decoding JWT for the first time...")
+                              (try
+                                ;; Tässä tapahtuu tokenin verifiointi
+                                (verify-jwt x-iam-data accesstoken)
+                                (catch Exception e
+                                  (do
+                                    (println "\nERROR, TODO: Kirjautuminen ei edennyt.")
+                                    (println "Virhe: " (.getMessage e))
+                                    (throw (Exception. "Kirjautuminen Harjaan ei onnistunut.")))))
+
+                              ;; TODO tee tällekin jokin wrapperi
+                              (some->
+                                ^String jwt-body
+                                Base64/decodeBase64
+                                String.
+                                cheshire/decode))))
+
 (defn- pura-cognito-headerit
   "Purkaa AWS Cognitolta palautuneet relevantit headerit ja hakee niistä OAM-tiedot.
   Tiedot mapataan vanhan mallisiksi OAM_-headereiksi"
   [headerit]
-
-  (let [headerit (select-keys headerit [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n
+  (let [;; TODO, koodimössöä
+        token (get headerit "x-iam-data")
+        accesstoken (get headerit "x-iam-accesstoken") 
+        headerit (select-keys headerit [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n
                                         "x-iam-accesstoken"
 
                                         ;; Sisältää käyttäjään liittyviä tietoja, mm. roolit
@@ -125,20 +203,17 @@
                                         ;; Käyttäjän sub-kenttä Cognitossa
                                         "x-iam-identity"])
         tt (seq (get headerit "x-iam-data"))
-        _ (if tt
-            (log/info (str "Headerit: " headerit)))
         jwt (some->
               (get headerit "x-iam-data")
               ;; Jaetaan kolmeen osaan: header, body, signature
               (clojure.string/split #"\."))
         jwt-body (second jwt)
-        dekoodatut-headerit (some->
-                              ^String jwt-body
-                              Base64/decodeBase64
-                              String.
-                              cheshire/decode)
-        _ (if tt 
-            (log/info (str "Dekoodattu: " dekoodatut-headerit))) 
+        dekoodatut-headerit (cached-decode jwt-body token accesstoken)
+        #_ #_ _ (if tt
+            (println (str "\n Dekoodattu: " dekoodatut-headerit)))
+        ;_ (println "\n token: " token)
+        ;; _ (println "\n verif: " (verify-jwt token))
+
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
         dekoodatut-headerit (update dekoodatut-headerit "custom:rooli" #(if (konv/onko-json? %)
                                                                           (parsi-json-entraid-roolit %)
@@ -161,6 +236,7 @@
          "custom:osasto" "oam_departmentnumber"
          "custom:organisaatio" "oam_organization"
          "custom:ytunnus" "oam_user_companyid"}))))
+
 
 (defn- koka-headerit [headerit]
   (reduce-kv
@@ -187,6 +263,17 @@
   (if (get headerit "harja-api-username")
     (assoc-in headerit ["oam_remote_user"] (get headerit "harja-api-username"))
     headerit))
+
+
+(defn testi-enkoodattu-uu []
+  "blank"
+  )
+
+
+(defn testi-enkoodattu []
+
+  "blank"
+  )
 
 (defn prosessoi-kayttaja-headerit
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
