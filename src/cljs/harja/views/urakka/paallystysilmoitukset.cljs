@@ -140,9 +140,10 @@
 
       nayta-nappi?
       [lahetys-yha-nappi e! {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet
-                                   :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
-                                   :vuosi valittu-urakan-vuosi :paallystysilmoitus rivi
-                                   :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
+                             :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
+                             :vuosi valittu-urakan-vuosi
+                             :paallystysilmoitus rivi
+                             :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
 
       nayta-lahetyksen-aika?
       [:span.lahetyksen-aika
