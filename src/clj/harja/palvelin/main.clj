@@ -232,7 +232,7 @@
                     kehitysmoodi)
 
       :todennus (component/using
-                  (todennus/http-todennus (:sahke-headerit asetukset))
+                  (todennus/http-todennus (:sahke-headerit asetukset) (:kehitysmoodi asetukset))
                   [:db])
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin

@@ -1,7 +1,5 @@
 (ns harja.palvelin.komponentit.fim-test
-  (:require [harja.palvelin.komponentit.todennus :as todennus]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.testi :refer :all]
+  (:require [harja.testi :refer :all]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]

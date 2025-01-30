@@ -418,7 +418,7 @@
                                                                  kehitysmoodi
                                                                  anti-csrf-token-secret-key))
                                                          (conj ui-kasittelija))]
-                        (reitita (todennus/todenna-pyynto todennus req) todennettavat-kasittelijat
+                        (reitita (todennus/todenna-pyynto todennus req kehitysmoodi) todennettavat-kasittelijat
                           {:vaadi-oikeustarkistus? true}))))
                   (catch [:virhe :todennusvirhe] _
                     {:status 403 :body "Todennusvirhe"})

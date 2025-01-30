@@ -18,7 +18,7 @@
       (component/system-map
        :db (tietokanta/luo-tietokanta testitietokanta)
        :todennus (component/using
-                  (todennus/http-todennus nil)
+                  (todennus/http-todennus nil true)
                   [:db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))

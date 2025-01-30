@@ -1623,7 +1623,7 @@
                            :db-replica (tietokanta/luo-tietokanta testitietokanta)
 
                            :todennus (component/using
-                                       (todennus/http-todennus)
+                                       (todennus/http-todennus nil true)
                                        [:db])
                            :http-palvelin (component/using
                                             (http/luo-http-palvelin portti true)

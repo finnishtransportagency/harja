@@ -1,7 +1,6 @@
 (ns harja.palvelin.integraatiot.api.ilmoitukset
   "Tieliikennelmoitusten haku ja ilmoitustoimenpiteiden kirjaus"
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.todennus :as todennus]
             [org.httpkit.server :refer [with-channel on-close send!]]
             [clojure.spec.alpha :as s]
             [clj-time.coerce :as c]

@@ -2,20 +2,17 @@
   "Tämä namespace määrittelee käyttäjäidentiteetin todentamisen. Käyttäjän todentaminen
    WWW-palvelussa tehdään KOKA ympäristön antamilla header tiedoilla. Tämä komponentti ei tee
    käyttöoikeustarkistuksia, vaan pelkästään hakee käyttäjälle sallitut käyttöoikeudet ja tarkistaa käyttäjän identiteetin."
-  (:require [cheshire.core :as cheshire]
-            [clojure.core.cache :as cache]
+  (:require [clojure.core.cache :as cache]
             [clojure.set :as set]
             [clojure.string :as str]
             [clojure.data.json :as json]
-            [org.httpkit.client :as http]
             [harja.kyselyt.konversio :as konv]
-            [buddy.sign.jwt :as jwt]
             [com.stuartsierra.component :as component]
             [harja.domain
              [oikeudet :as oikeudet]]
             [harja.kyselyt
              [kayttajat :as q]]
-            [slingshot.slingshot :refer [throw+ try+]]
+            [slingshot.slingshot :refer [throw+]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.todennus-varmistus :as varmistus])
   (:import (org.apache.commons.codec.binary Base64)
@@ -302,7 +299,7 @@
   (or (and oikeudet (oikeudet kayttaja))
       koka-headerit))
 
-(defn koka->kayttajatiedot [db headerit oikeudet]
+(defn koka->kayttajatiedot [db headerit oikeudet kehitysmoodi?]
   (let [headerit (prosessoi-kayttaja-headerit headerit)
         oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
     (try
@@ -317,11 +314,11 @@
 
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
-  (todenna-pyynto [this req] 
+  (todenna-pyynto [this req kehitysmoodi?] 
     "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden
      req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
-(defrecord HttpTodennus [oikeudet]
+(defrecord HttpTodennus [oikeudet kehitysmoodi?]
   component/Lifecycle
   (start [this]
     (log/info "Todennetaan HTTP käyttäjä KOKA headereista.")
@@ -330,14 +327,14 @@
     this)
 
   Todennus
-  (todenna-pyynto [{db :db :as this} req]
+  (todenna-pyynto [{db :db :as this} req kehitysmoodi?]
     (let [headerit (:headers req)
           kayttaja-id (headerit "oam_remote_user")]
       (if (nil? kayttaja-id)
         (do
           (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan" headerit))
           (throw+ todennusvirhe))
-        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
+        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi?)]
           (assoc req :kayttaja kayttajatiedot)
           (do
             (log/warn (str
@@ -354,14 +351,14 @@
     this)
 
   Todennus
-  (todenna-pyynto [this req]
+  (todenna-pyynto [this req kehitysmoodi?]
     (assoc req
       :kayttaja kayttaja)))
 
 (defn http-todennus
-  ([] (http-todennus nil))
-  ([oikeudet]
-   (->HttpTodennus oikeudet)))
+  ([] (http-todennus nil false))
+  ([oikeudet kehitysmoodi?]
+   (->HttpTodennus oikeudet kehitysmoodi?)))
 
 (defn feikki-http-todennus [kayttaja]
   (->FeikkiHttpTodennus kayttaja))
