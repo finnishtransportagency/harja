@@ -1,0 +1,17 @@
+/* Yleiskäyttöistä badge komponenttia varten. Hyödyntää bootstrapin olemassa olevia koodeja. Hieman muokattu
+ enemmän Harja tyyliseksi. */
+.badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  margin-left: @valistys-16;
+
+  &.paatetty {
+    background: @green-light;
+    color: @green-darker;
+  }
+  &.avoin {
+    background: @lemon-light;
+    color: @lemon-dark;
+  }
+}
