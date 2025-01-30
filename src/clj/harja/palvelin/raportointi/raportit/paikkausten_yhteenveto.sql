@@ -80,7 +80,11 @@ SELECT x.tehtava                AS tehtava,
 SELECT COALESCE(SUM(kt.summa_indeksikorjattu), SUM(kt.summa), 0) AS summa
   FROM kiinteahintainen_tyo kt
            JOIN sopimus s ON kt.sopimus = s.id AND s.urakka = :urakkaid
- WHERE (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE);
+ WHERE (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+AND kt.toimenpideinstanssi = (SELECT id FROM toimenpideinstanssi tpi
+                                        WHERE tpi.urakka = :urakkaid
+                                          -- Päällysteiden paikkaus toimenpiteen TPI
+                                          AND toimenpide = (SELECT id FROM toimenpide WHERE koodi = '20107'));
 
 -- name: hae-kustannukset-tyomenetelmittain
 SELECT x.nimi                     AS nimi,
