@@ -144,7 +144,7 @@
         jwt-body (second jwt)
 
 
-        dekoodatut-headerit (varmistus/cached-decode jwt-body accesstoken)
+        dekoodatut-headerit (varmistus/dekoodaa-ja-varmista-cached jwt-body accesstoken)
         _ (println (str "\n Dekoodattu: " dekoodatut-headerit))
         
 
