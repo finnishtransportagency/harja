@@ -308,7 +308,7 @@
         vastaus))
     (heita-virhe "Päätöksen id puuttuu!")))
 
-(defn hae-valikatselmuksen-tiedot-hoitovuodelle [db user {:keys [urakkaid hoitovuosi] :as tiedot}]
+(defn hae-valikatselmuksen-tiedot-hoitovuodelle_talteen [db user {:keys [urakkaid hoitovuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakkaid)
   (let [urakan-tiedot (first (q-urakat/hae-urakka db urakkaid))
         vanha-urakka? (lupaus-domain/urakka-19-20? urakan-tiedot)
@@ -362,6 +362,163 @@
      :sanktiot sanktiot
      :budjettitavoite budjettitavoite}))
 
+(defn hae-valikatselmuksen-tiedot-hoitovuodelle [db user {:keys [urakkaid hoitovuosi] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakkaid)
+  (let [urakan-tiedot (first (q-urakat/hae-urakka db urakkaid))
+        vanha-urakka? (lupaus-domain/urakka-19-20? urakan-tiedot)
+        hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)
+        hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitovuosi))
+        tarjouksen-tavoitehinta (lupaus-palvelu/maarita-urakan-tavoitehinta db urakkaid hoitokauden-alkupvm)
+
+        ;; Tavoitehinnan muutokset gridille
+        tavoitehinnan-muutokset (valikatselmus-q/hae-oikaisut db {::urakka/id urakkaid})
+        ;; UI haluaa tavoitehinnan muutokset tietyssä formaatissa. Formatoidaan ne tässä, eikä ui:lla, kuten ennen
+        ;; Data on muodossa {vuosi [{data} {data}]}
+        ;; Muutetaan se {vuosi {0 {data}
+        ;;                      1 {data}}}
+        tavoitehinnan-muutokset (fmap #(zipmap (range) (map (fn [o] (-> o (assoc :koskematon true))) %))
+                                  tavoitehinnan-muutokset)
+
+        ]
+    {:paatokset [{:lupaukset {:paatos-id nil
+                              :urakkaid urakkaid
+                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :tyyppi :bonus
+                              :tavoitehinta tarjouksen-tavoitehinta
+                              :luvatut_pisteet 90
+                              :toteutuneet_pisteet 98
+                              :lupausbonus 100
+                              :lupaussanktio nil}}
+                 {:lupaukset {:paatos-id 6
+                              :urakkaid urakkaid
+                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :tyyppi :bonus
+                              :tavoitehinta tarjouksen-tavoitehinta
+                              :luvatut_pisteet 90
+                              :toteutuneet_pisteet 98
+                              :lupausbonus 100
+                              :lupaussanktio nil}}
+                 {:lupaukset {:paatos-id 5
+                              :urakkaid urakkaid
+                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :tyyppi :sanktio
+                              :tavoitehinta tarjouksen-tavoitehinta
+                              :luvatut_pisteet 98
+                              :toteutuneet_pisteet 90
+                              :lupausbonus nil
+                              :lupaussanktio 100}}
+                 {:lupaukset {:paatos-id nil
+                              :urakkaid urakkaid
+                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :tyyppi :sanktio
+                              :tavoitehinta tarjouksen-tavoitehinta
+                              :luvatut_pisteet 98
+                              :toteutuneet_pisteet 90
+                              :lupausbonus nil
+                              :lupaussanktio 100}}
+                 {:lupaukset {:paatos-id 4
+                              :urakkaid urakkaid
+                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :tyyppi :taytetty
+                              :tavoitehinta tarjouksen-tavoitehinta
+                              :luvatut_pisteet 98
+                              :toteutuneet_pisteet 98
+                              :lupausbonus nil
+                              :lupaussanktio nil}}
+                 {:lupaukset {:paatos-id nil
+                              :urakkaid urakkaid
+                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :tyyppi :taytetty
+                              :tavoitehinta nil
+                              :luvatut_pisteet 98
+                              :toteutuneet_pisteet 98
+                              :lupausbonus nil
+                              :lupaussanktio nil}}
+
+                 {:tavoitehinnan-muutokset {:paatos-id nil
+                                            :urakkaid urakkaid
+                                            :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                            :versio 1
+                                            :tavoitehinta 100000}}
+                 {:tavoitehinnan-muutokset {:paatos-id 1
+                                            :urakkaid urakkaid
+                                            :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                            :versio 1
+                                            :tavoitehinta 100000}}
+                 {:tavoitehinta-ylitys {:paatos-id nil
+                                        :urakkaid urakkaid
+                                        :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                        :versio 1
+                                        :tavoitehinta 100000
+                                        :toteutuneet_kustannukset 123123
+                                        :ylityksen_maara 24999
+                                        :tilaajan_prosentti 70
+                                        :urakoitsijan_prosentti 30
+                                        :tilaaja_maksaa (* 0.7 24999)
+                                        :urakoitsija_maksaa (* 0.3 24999)}}
+                 {:tavoitehinta-ylitys {:paatos-id 1
+                                        :urakkaid urakkaid
+                                        :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                        :versio 2
+                                        :tavoitehinta 100000
+                                        :toteutuneet_kustannukset 123123
+                                        :ylityksen_maara 24999
+                                        :tilaajan_prosentti 50
+                                        :urakoitsijan_prosentti 50
+                                        :tilaaja_maksaa (* 0.5 24999)
+                                        :urakoitsija_maksaa (* 0.5 24999)}}
+                 {:tavoitehinta-ylitys {:paatos-id 1
+                                        :urakkaid urakkaid
+                                        :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                        :versio 2
+                                        :tavoitehinta 100000
+                                        :toteutuneet_kustannukset 123123
+                                        :ylityksen_maara 24999
+                                        :tilaajan_prosentti 25
+                                        :urakoitsijan_prosentti 75
+                                        :tilaaja_maksaa (* 0.25 24999)
+                                        :urakoitsija_maksaa (* 0.75 24999)}}
+                 {:tavoitehinta-alitus {:paatos-id nil
+                                        :urakkaid urakkaid
+                                        :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                        :versio 1
+                                        :tavoitehinta 123123
+                                        :toteutuneet_kustannukset 100000
+                                        :alituksen_maara 23123
+                                        :siirron_maara (* 0.3 23123)
+                                        :tilaaja_maksaa (* 0.3 23123) ;; Versiossa 1 tilaaja maksaa 30% alituksen määrästä, mutta max 3%
+                                        :tavoitepalkkio (* 0.3 23123)}}
+                 {:tavoitehinta-alitus {:paatos-id 1
+                                        :urakkaid urakkaid
+                                        :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                        :versio 2
+                                        :tavoitehinta 123123
+                                        :toteutuneet_kustannukset 100000
+                                        :alituksen_maara 23123
+                                        :siirron_maara (* 0.75 23123) ;; 3% ylimenevä osuus menee automatic siirroksi, paitsi vikanavuonna, jolloin se maksetaan
+                                        :tilaaja_maksaa (* 0.75 23123) ;; Versiossa 2, tilaaja maksaa 75% alituksen määrästä, mutta max 3% tavoitehinnasta
+                                        :tavoitepalkkio (* 0.75 23123)}}
+                 {:kattohinta-ylitys {:paatos-id nil
+                                      :urakkaid urakkaid
+                                      :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                      :toteutuneet_kustannukset 2342343
+                                      :kattohinta 23423423
+                                      :ylityksen_maara 23423
+                                      :siirrettava_maara 53423
+                                      :urakoitsija_maksaa 45654
+                                      :siirra? true}}
+                 {:kattohinta-ylitys {:paatos-id 1
+                                      :urakkaid urakkaid
+                                      :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                      :toteutuneet_kustannukset 2342343
+                                      :kattohinta 23423423
+                                      :ylityksen_maara 23423
+                                      :siirrettava_maara 53423
+                                      :urakoitsija_maksaa 45654
+                                      :siirra? true}}]
+     :tavoitehinnan-muutokset tavoitehinnan-muutokset
+     :yhteenveto {}}
+    ))
 
 (defrecord Valikatselmukset []
   component/Lifecycle

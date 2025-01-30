@@ -67,7 +67,7 @@
    :f8 :veto-oikeus-aika
    :f9 :paatos})
 
-(defn- maarita-urakan-tavoitehinta
+(defn maarita-urakan-tavoitehinta
   "Urakalle voidaan budjetoida tavoitehinta hoitokausittain. Päätellään siis hoitokauden järjestysnumero ja tarkistetaan urakka_tavoite taulusta,
   että mikä on kulloisenkin hoitokauden tavoitehinta."
   [db urakka-id hk-alkupvm]
