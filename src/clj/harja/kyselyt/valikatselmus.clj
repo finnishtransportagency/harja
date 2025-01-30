@@ -22,7 +22,9 @@
   (group-by ::valikatselmus/hoitokauden-alkuvuosi
             (fetch db ::valikatselmus/tavoitehinnan-oikaisu
                    (columns ::valikatselmus/tavoitehinnan-oikaisu)
-                   {::urakka/id id ::muokkaustiedot/poistettu? false})))
+                   {::urakka/id id ::muokkaustiedot/poistettu? false}
+              {:specql.core/order-by ::valikatselmus/oikaisun-id
+               :specql.core/order-direction :asc})))
 
 (defn hae-oikaisut-hoitovuodelle [db urakka-id hoitokauden-alkuvuosi]
   (fetch db ::valikatselmus/tavoitehinnan-oikaisu
