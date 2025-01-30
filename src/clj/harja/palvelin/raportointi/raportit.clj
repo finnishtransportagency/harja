@@ -437,7 +437,7 @@
     :urakkatyyppi #{:teiden-hoito}}
 
    {:nimi         :ppu-paikkausten-yhteenveto
-    :parametrit   [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
     :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto/suorita-ppu
     :kuvaus-tarkenne "Paikkausten yhteenveto PPU"
@@ -446,7 +446,7 @@
     :sopimustyyppi #{:kokonaisurakka}}
 
    {:nimi         :mpu-paikkausten-yhteenveto
-    :parametrit   [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
     :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto/suorita-mpu
     :kuvaus-tarkenne "Paikkausten yhteenveto MPU"
