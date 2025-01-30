@@ -117,8 +117,8 @@
 
 (deftest paikkausten-yhteenvedon-kustannusraportti-PPU-toimii
   (let [tiedot (testien-yhteiset-tiedot "Utajärven päällystysurakka" 2025)
-        parametrit {:vuosi (:vuosi tiedot) :urakkatyyppi :paallystys, :kasittelija nil, :urakka-id (:urakka-id tiedot)}
-
+        parametrit {:alkupvm (:alkupvm tiedot) :loppupvm (:loppupvm tiedot)
+                    :urakkatyyppi :paallystys, :kasittelija nil, :urakka-id (:urakka-id tiedot)}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
@@ -162,8 +162,8 @@
 
 (deftest paikkausten-yhteenvedon-kustannusraportti-MPU-toimii
   (let [tiedot (testien-yhteiset-tiedot "Muhoksen päällystysurakka" 2024)
-        parametrit {:vuosi (:vuosi tiedot) :urakkatyyppi :paallystys, :kasittelija nil, :urakka-id (:urakka-id tiedot)}
-
+        parametrit {:alkupvm (:alkupvm tiedot) :loppupvm (:loppupvm tiedot)
+                    :urakkatyyppi :paallystys, :kasittelija nil, :urakka-id (:urakka-id tiedot)}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
@@ -210,7 +210,7 @@
 
         ;; Haetaan bonukset, sanktiot ja käsin lisätyt kustannukset
         muut-kustannukset (paikkausten-yhteenveto/koosta-muut-kustannukset
-                            (:db jarjestelma) +kayttaja-jvh+ (:urakka-id tiedot) (:vuosi tiedot) (:alkupvm tiedot) (:loppupvm tiedot))
+                            (:db jarjestelma) +kayttaja-jvh+ (:urakka-id tiedot) (:alkupvm tiedot) (:loppupvm tiedot))
         muut-kustannukset-tyhja-vastaus [{:nimi "Bonukset", :toteutunut-hinta 0M} {:nimi "Sanktiot", :toteutunut-hinta 0M} {:nimi "Yhteensä", :toteutunut-hinta 0M, :yhteenveto true}]
         _ (is (= muut-kustannukset-tyhja-vastaus muut-kustannukset))
 
@@ -237,7 +237,7 @@
                                                                                          :vuosi (:vuosi tiedot)
                                                                                          :summa muukustannus-summa})
         muut-kustannukset-uudestaan (paikkausten-yhteenveto/koosta-muut-kustannukset
-                                      (:db jarjestelma) +kayttaja-jvh+ (:urakka-id tiedot) (:vuosi tiedot) (:alkupvm tiedot) (:loppupvm tiedot))]
+                                      (:db jarjestelma) +kayttaja-jvh+ (:urakka-id tiedot) (:alkupvm tiedot) (:loppupvm tiedot))]
     (is (= bonus-summa (->> muut-kustannukset-uudestaan
                          (filter #(= (:nimi %) "Bonukset"))
                          first
