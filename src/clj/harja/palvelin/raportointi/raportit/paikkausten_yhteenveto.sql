@@ -90,36 +90,20 @@ AND kt.toimenpideinstanssi = (SELECT id FROM toimenpideinstanssi tpi
 SELECT x.nimi                     AS nimi,
        SUM(x."toteutunut-hinta")  AS "toteutunut-hinta",
        SUM(x."suunniteltu-hinta") AS "suunniteltu-hinta"
-  FROM (SELECT pt.id,
-               pt.nimi,
+  FROM (SELECT pt.nimi,
                SUM(pk."toteutunut-hinta")  AS "toteutunut-hinta",
                SUM(pk."suunniteltu-hinta") AS "suunniteltu-hinta"
           FROM paikkauskohde_tyomenetelma pt
                    JOIN paikkauskohde pk ON pt.id = pk.tyomenetelma
          WHERE pk."urakka-id" = :urakkaid
            AND pk.alkupvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-           AND pk."paikkauskohteen-tila" = 'valmis'
+           AND pk."paikkauskohteen-tila" IN ('tilattu', 'valmis', 'tarkistettu')
            AND pk.poistettu = FALSE
          GROUP BY pt.id, pk."paikkauskohteen-tila"
 
-         UNION
-
-        SELECT pt.id,
-               pt.nimi,
-               NULL                        AS "toteutunut-hinta",
-               SUM(pk."suunniteltu-hinta") AS "suunniteltu-hinta"
-          FROM paikkauskohde_tyomenetelma pt
-                   JOIN paikkauskohde pk ON pt.id = pk.tyomenetelma
-         WHERE pk."urakka-id" = :urakkaid
-           AND pk.alkupvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-           AND pk."paikkauskohteen-tila" = 'tilattu'
-           AND pk.poistettu = FALSE
-         GROUP BY pt.id, pk."paikkauskohteen-tila"
-
-         UNION
+         UNION ALL
 -- Reikäpaikkaukset
-        SELECT pt.id                         AS id,
-               pt.nimi,
+        SELECT pt.nimi,
                COALESCE(SUM(p.kustannus), 0) AS "toteutunut-hinta",
                NULL                          AS "suunniteltu-hinta"
           FROM paikkauskohde_tyomenetelma pt
@@ -166,11 +150,12 @@ SELECT x.nimi                     AS nimi,
               AND p.alkuaika BETWEEN :alkupvm::DATE AND :loppupvm::DATE
               AND p.poistettu = FALSE
          WHERE pk."urakka-id" = :urakkaid
+           AND pk."paikkauskohteen-tila" IN ('tilattu', 'valmis', 'tarkistettu')
            AND pk.alkupvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
            AND pk.poistettu IS FALSE
          GROUP BY pt.id, pk.yksikko, pk.id
 
-         UNION
+         UNION ALL -- UNION ALL, ettei tapahdu mahdollisten identtisten mutta validien rivien deduplkointia
 -- Reikäpaikkaukset
         SELECT pt.nimi                   AS nimi,
                p."reikapaikkaus-yksikko" AS yksikko,
