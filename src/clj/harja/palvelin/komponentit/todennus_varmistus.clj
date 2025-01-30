@@ -8,20 +8,18 @@
             [org.httpkit.client :as http]
             [harja.kyselyt.konversio :as konv]
             [buddy.sign.jwt :as jwt]
+            [buddy.core.keys :as keys]
             [com.stuartsierra.component :as component]
             [slingshot.slingshot :refer [throw+ try+]]
             [taoensso.timbre :as log])
   (:import (org.apache.commons.codec.binary Base64)
            (org.apache.commons.codec.net BCodec)))
 
-
 (defn testi-enkoodattu-uu []
   "blank")
 
-
 (defn testi-enkoodattu []
-  "blank")
-
+  "balnk")
 
 ;; TODO: Koodimössöä
 (def cognito-issuer "blank")
@@ -57,37 +55,34 @@
      :signature signature}))
 
 ;; 3. Varmista JWT Signature
-(defn verify-jwt [token accesstoken]
-  (let [header (json/read-json (String. (Base64/decodeBase64 (first (clojure.string/split token #"\.")))))
-        _ (println "\n header access: " (decode-jwt accesstoken))
-        
+(defn verify-jwt [accesstoken]
+  (let [;; Halutaan verrata headerin :kid arvo
         header (-> accesstoken decode-jwt :header)
         kid (:kid header)
+        ;; Hae public avain jolla sama :kid
         jwk (get-public-key kid)
-        _ (println "\n kid: " kid)
-        _ (println "\n jwk: " jwk)
-        public-key (buddy.core.keys/jwk->public-key jwk)
+        ;; Muunna java muotoon 
+        public-key (keys/jwk->public-key jwk)
+        ;; Verifioi kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
         ;; Palauttaa Cognito map responsen, jos kirjautuminen menee läpi ja token on voimassa 
+        ;; Heittää virheen, jos tiedoissa on jotain väärin 
         response (jwt/unsign accesstoken public-key {:alg :rs256})
         _ (println "\n res: " response)]
     response))
 
 
-(def cached-decode (memoize (fn [jwt-body x-iam-data accesstoken]
+(def cached-decode (memoize (fn [jwt-body accesstoken]
                               ;; memoize funktio kutsuu tätä vain kerran, jotta ei tehdä spammilla get kutsuja  
                               (println "\n Decoding JWT for the first time...")
                               (try
-                                ;; Tässä tapahtuu tokenin verifiointi
-                                (verify-jwt x-iam-data accesstoken)
+                                (let [_ (verify-jwt accesstoken)]
+                                  (some->
+                                    ^String jwt-body
+                                    Base64/decodeBase64
+                                    String.
+                                    cheshire/decode))
                                 (catch Exception e
                                   (do
                                     (println "\nERROR, TODO: Kirjautuminen ei edennyt.")
                                     (println "Virhe: " (.getMessage e))
-                                    (throw (Exception. "Kirjautuminen Harjaan ei onnistunut.")))))
-
-                              ;; TODO tee tällekin jokin wrapperi
-                              (some->
-                                ^String jwt-body
-                                Base64/decodeBase64
-                                String.
-                                cheshire/decode))))
+                                    {}))))))

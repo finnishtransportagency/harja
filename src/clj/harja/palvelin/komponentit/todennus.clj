@@ -127,6 +127,7 @@
   (let [;; TODO, koodimössöä
         token (get headerit "x-iam-data")
         accesstoken (get headerit "x-iam-accesstoken") 
+        ;; Kaikilla header tokeneilla on header, body, signature pilkulla eroteltu
         headerit (select-keys headerit [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n
                                         "x-iam-accesstoken"
 
@@ -139,9 +140,14 @@
         jwt (some->
               (get headerit "x-iam-data")
               ;; Jaetaan kolmeen osaan: header, body, signature
-              (clojure.string/split #"\."))
+              (str/split #"\."))
         jwt-body (second jwt)
-        dekoodatut-headerit (varmistus/cached-decode jwt-body token accesstoken)
+
+
+        dekoodatut-headerit (varmistus/cached-decode jwt-body accesstoken)
+        _ (println (str "\n Dekoodattu: " dekoodatut-headerit))
+        
+
         #_ #_ _ (if tt
             (println (str "\n Dekoodattu: " dekoodatut-headerit)))
         ;_ (println "\n token: " token)
