@@ -154,8 +154,8 @@ SELECT x.nimi                     AS nimi,
                    WHEN pk.yksikko = 't' THEN COALESCE(SUM(p.massamaara), 0)
                    WHEN pk.yksikko = 'm2' THEN COALESCE(SUM(p."pinta-ala"), 0)
                    ELSE 0
-                   END                     AS "toteutunut-maara",
-               SUM(pk."suunniteltu-maara") AS "suunniteltu-maara"
+                   END                AS "toteutunut-maara",
+               pk."suunniteltu-maara" AS "suunniteltu-maara"
           FROM paikkauskohde_tyomenetelma pt
                    JOIN paikkauskohde pk ON pt.id = pk.tyomenetelma
                    LEFT JOIN paikkaus p ON pk.id = p."paikkauskohde-id"
@@ -163,23 +163,8 @@ SELECT x.nimi                     AS nimi,
               AND p.poistettu = FALSE
          WHERE pk."urakka-id" = :urakkaid
            AND pk.alkupvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-           AND pk."paikkauskohteen-tila" = 'valmis'
            AND pk.poistettu IS FALSE
-         GROUP BY pt.id, pk."paikkauskohteen-tila", pk.yksikko
-
-         UNION
-
-        SELECT pt.nimi                     AS nimi,
-               pk.yksikko                  AS yksikko,
-               0                           AS "toteutunut-maara",
-               SUM(pk."suunniteltu-maara") AS "suunniteltu-maara"
-          FROM paikkauskohde_tyomenetelma pt
-                   JOIN paikkauskohde pk ON pt.id = pk.tyomenetelma
-         WHERE pk."urakka-id" = :urakkaid
-           AND pk.alkupvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-           AND pk."paikkauskohteen-tila" = 'tilattu'
-           AND pk.poistettu IS FALSE
-         GROUP BY pt.id, pk."paikkauskohteen-tila", pk.yksikko
+         GROUP BY pt.id, pk.yksikko, pk.id
 
          UNION
 -- Reikäpaikkaukset
