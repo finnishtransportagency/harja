@@ -46,7 +46,8 @@
 
 
 (defn varmista-jwt-signature 
-  "Varmistaa kirjautumisen oikellisuuden Cogniton x-iam-accesstoken header tokenista"
+  "Varmistaa kirjautumisen oikellisuuden Cogniton x-iam-accesstoken header tokenista
+   https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html#amazon-cognito-user-pools-using-tokens-manually-inspect"
   [accesstoken]
   (let [header (-> accesstoken dekoodaa-token :header)
         issuer (-> accesstoken dekoodaa-token :payload :iss)
@@ -73,8 +74,13 @@
                                                 (tunnistetiedot jwt-body))
                                               (catch Exception e
                                                 (do
-                                                  (println "\nERROR, TODO: Kirjautuminen ei edennyt.")
-                                                  (println "Virhe: " (.getMessage e))
+                                                  (log/error (str
+                                                               "Kirjautumisen varmistus ei onnistunut (JWT signature): " (.getMessage e) "  -  "
+                                                               "\nKäyttäjätiedot: " (select-keys (tunnistetiedot jwt-body) ["custom:rooli" "custom:sukunimi" "custom:email" "custom:ytunnus" "custom:uid"])))
+                                                  (log/error (str
+                                                               "Saatu JWT Header: " (-> accesstoken dekoodaa-token :header) "  -  "
+                                                               "Saatu payload: " (-> accesstoken dekoodaa-token :payload)))
+
                                                   ;; Kirjautuminen ei mennyt läpi, poista oikeudet käyttäjältä
                                                   ;; Tämä uudelleenohjaa "Ei käyttöoikeutta" näkymään
                                                   (apply dissoc (tunnistetiedot jwt-body) ["oam_groups"])))))))
