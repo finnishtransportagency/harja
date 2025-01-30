@@ -200,7 +200,7 @@ SELECT x.nimi                     AS nimi,
 SELECT SUM(pk.summa) AS "toteutunut-hinta",
        pk.kustannustyyppi     AS nimi
   FROM paikkauskustannukset pk
- WHERE vuosi = :vuosi
+ WHERE vuosi BETWEEN :alkuvuosi AND :loppuvuosi
    AND pk.urakka = :urakkaid
  GROUP BY pk.kustannustyyppi;
 
