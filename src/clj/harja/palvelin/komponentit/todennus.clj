@@ -114,7 +114,7 @@
 (defn- pura-cognito-headerit
   "Purkaa AWS Cognitolta palautuneet relevantit headerit ja hakee niistä OAM-tiedot.
   Tiedot mapataan vanhan mallisiksi OAM_-headereiksi"
-  [headerit]
+  [headerit kehitysmoodi?]
   (let [accesstoken (get headerit "x-iam-accesstoken") 
         ;; Kaikilla header tokeneilla on header, body, signature pilkulla eroteltu
         headerit (select-keys headerit [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n
@@ -131,7 +131,7 @@
               (str/split #"\."))
         
         jwt-body (second jwt)
-        dekoodatut-headerit (varmistus/dekoodaa-ja-varmista jwt-body accesstoken)
+        dekoodatut-headerit (varmistus/dekoodaa-ja-varmista jwt-body accesstoken kehitysmoodi?)
         ;;_ (println (str "\n Dekoodattu: " dekoodatut-headerit))
 
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
@@ -188,10 +188,10 @@
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
    Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään 
    muiden headereiden joukkoon."
-  [headerit]
+  [headerit kehitysmoodi?]
   (if (empty? (koka-headerit headerit))
     (->
-      (merge headerit (pura-cognito-headerit headerit))
+      (merge headerit (pura-cognito-headerit headerit kehitysmoodi?))
       (prosessoi-apikayttaja-header))
     headerit))
 
@@ -300,7 +300,7 @@
       koka-headerit))
 
 (defn koka->kayttajatiedot [db headerit oikeudet kehitysmoodi?]
-  (let [headerit (prosessoi-kayttaja-headerit headerit)
+  (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi?)
         oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
     (try
       (get (swap! kayttajatiedot-cache-atom #(cache/through

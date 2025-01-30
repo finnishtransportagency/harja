@@ -339,18 +339,18 @@
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
   Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään
   muiden headereiden joukkoon."
-  [handler]
+  [handler kehitysmoodi]
   (fn [req]
     (->
-      (assoc req :headers (todennus/prosessoi-kayttaja-headerit (:headers req)))
+      (assoc req :headers (todennus/prosessoi-kayttaja-headerit (:headers req) kehitysmoodi))
       (handler))))
 
 (defn wrap-with-common-wrappers
   "Käärii HTTP-pääkäsittelijän ympärille yleisiä wrappereita."
-  [handler]
+  [handler kehitysmoodi]
   (-> handler
     (cookies/wrap-cookies)
-    (wrap-prosessoi-headerit)))
+    (wrap-prosessoi-headerit kehitysmoodi)))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true
@@ -426,7 +426,8 @@
                   (finally
                     (metriikka/muuta! mittarit
                       :aktiiviset_pyynnot dec
-                      :pyyntoja_palveltu inc)))))
+                      :pyyntoja_palveltu inc))))
+                      kehitysmoodi)
 
             {:port portti
              :thread (or (:threads asetukset) 8)

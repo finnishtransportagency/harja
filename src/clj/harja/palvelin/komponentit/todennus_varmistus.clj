@@ -102,7 +102,7 @@
    Nyt, tuloksena, jos kirjautumisen aikana muokataan Cognito payloadia esim -> 'rooli:jarjestelmavastaava', 
    -> laskettu allekirjoitus ei täsmää enää alkuperäiseen 
    -> kirjautuminen estetään, ja virhe heitetään"
-  [jwt-body accesstoken]
+  [jwt-body accesstoken kehitysmoodi?]
   (let [cache-key accesstoken]
     ;; Todennusta kutsutaan ilman malttia, joten tarvimme jonkin cachetuksen
     ;; Cachetus tyyli sama kun defn koka->kayttajatiedot
@@ -111,7 +111,7 @@
                                               (fn [_]
                                                 (try
                                                     ;; Jos tietoja ei ole, kutsu varmistus
-                                                  (let [_ (varmista-jwt-signature accesstoken)]
+                                                  (let [_ (when-not kehitysmoodi? (varmista-jwt-signature accesstoken))]
                                                     (tunnistetiedot jwt-body))
                                                   (catch Exception e
                                                     (do
