@@ -305,22 +305,19 @@
   (let [rivi (.createRow sheet (dec nolla))
         solu (.createCell rivi 0)]
     (excel/set-cell! solu nimi)
-    (excel/set-cell-style! solu raportin-tiedot-tyyli)
-    (.addMergedRegion sheet (CellRangeAddress. nolla nolla 0 20))))
+    (excel/set-cell-style! solu raportin-tiedot-tyyli)))
 
 (defn- tee-sheet-otsikkoteksti [sheet rivinumero otsikkoteksti tyyli]
   (let [rivi (.createRow sheet rivinumero)
         solu (.createCell rivi 0)]
     (excel/set-cell! solu otsikkoteksti)
-    (excel/set-cell-style! solu tyyli)
-    (.addMergedRegion sheet (CellRangeAddress. rivinumero rivinumero 0 20))))
+    (excel/set-cell-style! solu tyyli)))
 
 (defn- tee-tekstirivi [sheet rivinumero teksti tyyli]
   (let [rivi (.createRow sheet rivinumero)
         solu (.createCell rivi 0)]
     (excel/set-cell! solu teksti)
-    (excel/set-cell-style! solu tyyli)
-    (.addMergedRegion sheet (CellRangeAddress. rivinumero rivinumero 0 20))))
+    (excel/set-cell-style! solu tyyli)))
 
 (defn- font-leipateksti
   ([] (font-leipateksti 11))
