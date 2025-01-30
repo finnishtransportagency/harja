@@ -114,19 +114,11 @@
     (json/read-str oam-groups)
     (str/join ",")))
 
-
-;; --------------------------------------------------------------------------------------------------------
-;; --------------------------------------------------------------------------------------------------------
-;; --------------------------------------------------------------------------------------------------------
-
-
 (defn- pura-cognito-headerit
   "Purkaa AWS Cognitolta palautuneet relevantit headerit ja hakee niistä OAM-tiedot.
   Tiedot mapataan vanhan mallisiksi OAM_-headereiksi"
   [headerit]
-  (let [;; TODO, koodimössöä
-        token (get headerit "x-iam-data")
-        accesstoken (get headerit "x-iam-accesstoken") 
+  (let [accesstoken (get headerit "x-iam-accesstoken") 
         ;; Kaikilla header tokeneilla on header, body, signature pilkulla eroteltu
         headerit (select-keys headerit [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n
                                         "x-iam-accesstoken"
@@ -136,22 +128,14 @@
 
                                         ;; Käyttäjän sub-kenttä Cognitossa
                                         "x-iam-identity"])
-        tt (seq (get headerit "x-iam-data"))
         jwt (some->
               (get headerit "x-iam-data")
               ;; Jaetaan kolmeen osaan: header, body, signature
               (str/split #"\."))
-        jwt-body (second jwt)
-
-
-        dekoodatut-headerit (varmistus/dekoodaa-ja-varmista-cached jwt-body accesstoken)
-        ;;_ (println (str "\n Dekoodattu: " dekoodatut-headerit))
         
-
-        #_ #_ _ (if tt
-            (println (str "\n Dekoodattu: " dekoodatut-headerit)))
-        ;_ (println "\n token: " token)
-        ;; _ (println "\n verif: " (verify-jwt token))
+        jwt-body (second jwt)
+        dekoodatut-headerit (varmistus/dekoodaa-ja-varmista jwt-body accesstoken)
+        ;;_ (println (str "\n Dekoodattu: " dekoodatut-headerit))
 
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
         dekoodatut-headerit (update dekoodatut-headerit "custom:rooli" #(if (konv/onko-json? %)
