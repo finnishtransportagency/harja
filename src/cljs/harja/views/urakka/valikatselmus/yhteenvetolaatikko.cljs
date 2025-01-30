@@ -70,9 +70,9 @@
                                                         0)]
     [:div.valikatselmus-yhteenveto.elevation-2
      [:h2 [:span "Yhteenveto"]]
-     [:div.rivi [:span.bold "Hoitovuoden lopun tavoitehinta"]
+     [:div.rivi [:span.bold "Hoitokauden lopun tavoitehinta"]
       [:span (fmt/euro-opt oikaistu-tavoitehinta)]]
-     [:div.rivi [:span.bold "Hoitovuoden lopun kattohinta"]
+     [:div.rivi [:span.bold "Hoitokauden lopun kattohinta"]
       [:span (fmt/euro-opt oikaistu-kattohinta)]]
 
      [:h3 [:span "Tavoitehintaan kuuluvat toteutuneet kustannukset"]]

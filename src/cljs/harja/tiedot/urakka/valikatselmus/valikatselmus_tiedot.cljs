@@ -45,6 +45,13 @@
 (defrecord PoistaLupausPaatos [id])
 (defrecord PoistaLupausPaatosOnnistui [vastaus])
 (defrecord PoistaLupausPaatosEpaonnistui [vastaus])
+(defrecord TallennaTavoitehinnanMuutosPaatos [paatos])
+(defrecord PoistaTavoitehinnanMuutosPaatos [paatos-id])
+(defrecord TallennaHintaPaatos [paatos])
+(defrecord PoistaHintaPaatos [paatos-id])
+(defrecord PaivitaKattohinnanSiirtoCheckbox [uusi-arvo])
+(defrecord PaivitaKattohinnanSiirtoMaara [uusi-arvo])
+
 
 (defrecord ValitseHoitokausi [urakkaid vuosi])
 (defrecord HaeValikatselmuksenTiedotOnnistui [vastaus])
@@ -52,6 +59,8 @@
 
 ;; Hae Välikatselmuksen tiedot
 (defrecord HaeValikatselmuksenTiedot [urakkaid hoitovuosi])
+
+(defrecord AvaaPaatos [avain])
 
 (def tyyppi->lomake
   {::valikatselmus/kattohinnan-ylitys :kattohinnan-ylitys-lomake
@@ -130,34 +139,11 @@
 
   TallennaOikaisuOnnistui
   (process-event [{vastaus :vastaus id :id} {:keys [hoitokauden-alkuvuosi tavoitehinnan-oikaisut] :as app}]
-    (let [;;TODO: Vähennyksen lisääminen ei toimi, koska :lisays-tai-vahennys arvo ei tule bäkäriltä, vaan se kaivetaan vanhalta tiedolta
-          ;; Joka ei voi tietää, jos sitä on muutettu. Vähennyksen saa aikaiseksi vain, jos ensin syöttää summan ja sitten vaihtaa vähennykseksi.
-          ;; Käyttöliittymän valinnan yli siis ajetaan sillä arvolla, joka oli jo lomakkeella. Vaikka sen pitäisi tulla käyttäjän valinnasta.
-          vanha (get-in tavoitehinnan-oikaisut [hoitokauden-alkuvuosi id])
-          uusi (if (map? vastaus)
-                 vastaus
-                 (select-keys vanha [::valikatselmus/oikaisun-id
-                                     ::valikatselmus/hoitokauden-alkuvuosi
-                                     ::valikatselmus/otsikko
-                                     ::valikatselmus/selite
-                                     :lisays-tai-vahennys
-                                     ::valikatselmus/summa]))
-          uusi-summa (::valikatselmus/summa uusi)
-          uusi (assoc-in uusi [:valikatselmuksen-tiedot :lisays-tai-vahennys]
-                 (cond
-                   (or (= 0 uusi-summa) (nil? uusi-summa))
-                   (:lisays-tai-vahennys vanha)
-                   (neg? (::valikatselmus/summa uusi))
-                   :vahennys
-
-                   :else
-                   :lisays))]
+    (let [_ (js/console.log "TallennaOikaisuOnnistui" (pr-str vastaus))]
       (viesti/nayta-toast! "Oikaisu tallennettu")
-      ;; Päivitetään sekä välikatselmuksen, että kustannusseurannan tiedot
+      ;; Haetaan välikatselmuksen tiedot uusiksi
       (hae-valikatselmuksen-tiedot (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi)
-      (cond-> app
-        uusi (assoc-in [:valikatselmuksen-tiedot :tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
-        :aina (nollaa-paatokset))))
+      (nollaa-paatokset app)))
 
   TallennaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -390,19 +376,34 @@
 
   HaeValikatselmuksenTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [{kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
-           lupausbonus-lomake :lupausbonus-lomake
-           lupaussanktio-lomake :lupaussanktio-lomake} (alusta-paatos-lomakkeet (:paatokset vastaus) (:hoitokauden-alkuvuosi app))]
-      (cond-> app
-        true (assoc :valikatselmuksen-tiedot vastaus)
-        true (assoc :haku-kaynnissa? false)
-        kattohinnan-ylitys-lomake (assoc-in [:valikatselmuksen-tiedot :kattohinnan-ylitys-lomake] kattohinnan-ylitys-lomake)
-        lupausbonus-lomake (assoc-in [:valikatselmuksen-tiedot :lupausbonus-lomake] lupausbonus-lomake)
-        lupaussanktio-lomake (assoc-in [:valikatselmuksen-tiedot :lupaussanktio-lomake] lupaussanktio-lomake))))
+    (-> app
+      (assoc :paatokset (:paatokset vastaus))
+      (assoc :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus))
+      (assoc :haku-kaynnissa? false)))
 
   HaeValikatselmuksenTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "HaeValikatselmuksenTiedotEpaonnistui :: vastaus" (pr-str vastaus))
     (-> app
       (assoc :valikatselmuksen-tiedot nil)
-      (assoc :haku-kaynnissa? false))))
+      (assoc :haku-kaynnissa? false)))
+
+  ;; Monta paatosta voi olla avattuna kerrallaan
+  AvaaPaatos
+  (process-event [{avain :avain} app]
+    (let [_ (js/console.log "AvaaPaatos :: avain " (pr-str avain) "avatus päätökset: " (pr-str (:avatut-paatokset app)))
+          app (if (nil? (:avatut-paatokset app))
+                (assoc app :avatut-paatokset #{})
+                app)]
+      (if (contains? (:avatut-paatokset app) avain)
+        (assoc app :avatut-paatokset (disj (:avatut-paatokset app) avain))
+        (assoc app :avatut-paatokset (merge (:avatut-paatokset app) avain)))))
+
+  PaivitaKattohinnanSiirtoCheckbox
+  (process-event [{uusi-arvo :uusi-arvo} app]
+    (js/console.log "PaivitaKattohinnanSiirtoCheckbox :: uusi-arvo:" (pr-str uusi-arvo))
+    (assoc-in app [:paatokset :tavoitehinta-ylitys :siirra?] uusi-arvo))
+  )
+
+
+(defn avaa-tai-sulje-haitari [avain])
