@@ -1,5 +1,5 @@
 name: 'Start Harja Fargate tasks'
-description: 'Käynnnistää uudelleen Harja servicen käynnissä olevat Fargate taskit (OIDC autentikaatio vaadittu)'
+description: 'Käynnistää sammutetut Harja servicen Fargate taskit (OIDC autentikaatio vaadittu)'
 
 inputs:
   cluster:
