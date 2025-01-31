@@ -314,14 +314,15 @@
         paallysteen-paikkauksen-tpi-kittila (ffirst (q (format "SELECT id FROM toimenpideinstanssi WHERE urakka = %s AND
         toimenpide = (SELECT id FROM toimenpide WHERE koodi = '20107');" urakka-id)))
         paikkausten-summa 250
+        indeksikorjattuna 280M
         id (i (format "INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, tehtavaryhma,
          tehtava, sopimus, luotu, luoja, muokattu, muokkaaja, summa_indeksikorjattu, indeksikorjaus_vahvistettu, vahvistaja,
-          versio) VALUES (2020, 6, %s, %s, null, null, %s, '2025-01-30 10:25:54.517112', 1, null, null, 13345,
-           '2025-01-30 10:25:54.517112', 1, 0);" paikkausten-summa paallysteen-paikkauksen-tpi-kittila sopimus-id))
-        vastaus (:summa (first
-                          (paikkausten-yhteenveto-mhu/mhu-paikkausten-suunnitellut-kustannukset (:db jarjestelma)
-                            {:urakkaid urakka-id
-                             :alkupvm (pvm/->pvm "1.10.2019")
-                             :loppupvm (pvm/->pvm "30.09.2020")})))]
+          versio) VALUES (2020, 6, %s, %s, null, null, %s, '2025-01-30 10:25:54.517112', 1, null, null, %s,
+           '2025-01-30 10:25:54.517112', 1, 0);" paikkausten-summa paallysteen-paikkauksen-tpi-kittila sopimus-id indeksikorjattuna))
+        haku (paikkausten-yhteenveto-mhu/mhu-paikkausten-suunnitellut-kustannukset (:db jarjestelma)
+               {:urakkaid urakka-id
+                :alkupvm (pvm/->pvm "1.10.2019")
+                :loppupvm (pvm/->pvm "30.09.2020")})
+        summa (:summa (first haku))]
     (is (integer? id) "Palautuu uusi id")
-    (is (= paikkausten-summa vastaus) "paikkausten-summa")))
+    (is (= indeksikorjattuna summa) "paikkausten-summa")))
