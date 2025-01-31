@@ -11,25 +11,6 @@ function tarkasta_riippuvuus {
 
 # Ladataan Harjan tarvitsemat staattiset tiedostot ja ylimääräiset kirjastot
 
-## Sonic kirjaston jar-tiedostot
-echo "Ladataan sonic-client.jar..."
-aws s3api get-object --bucket "$HARJA_CONFIG_S3_BUCKET" --key "${HARJA_CONFIG_S3_SONIC_HAKEMISTO}/sonic-client.jar" sonic-client.jar
-echo "DONE"
-
-tarkasta_riippuvuus sonic-client.jar
-
-echo "Ladataan sonic-xmessage.jar..."
-aws s3api get-object --bucket "$HARJA_CONFIG_S3_BUCKET" --key "${HARJA_CONFIG_S3_SONIC_HAKEMISTO}/sonic-xmessage.jar" sonic-xmessage.jar
-echo "DONE"
-
-tarkasta_riippuvuus sonic-xmessage.jar
-
-echo "Ladataan sonic-crypto.jar..."
-aws s3api get-object --bucket "$HARJA_CONFIG_S3_BUCKET" --key "${HARJA_CONFIG_S3_SONIC_HAKEMISTO}/sonic-crypto.jar" sonic-crypto.jar
-echo "DONE"
-
-tarkasta_riippuvuus sonic-crypto.jar
-
 ## Uusin kaista-aineisto (csv)
 
 echo "Ladataan uusin kaista-aineisto..."
