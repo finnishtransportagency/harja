@@ -40,7 +40,10 @@
         tavoitepalkkio (or (get-in valikatselmuksen-tiedot [:kustannukset :tavoitepalkkio :toimenpide-toteutunut-summa]) 0)
 
         ;; Tilaajan saatavat
-        lupaussanktio (or (get-in valikatselmuksen-tiedot [:lupaustiedot :yhteenveto :bonus-tai-sanktio :sanktio]) 0)
+        lupaussanktio (or
+                        (and
+                          (get-in valikatselmuksen-tiedot [:lupaustiedot :yhteenveto :valikatselmus-tehty-urakalle?])
+                          (get-in valikatselmuksen-tiedot [:lupaustiedot :yhteenveto :bonus-tai-sanktio :sanktio])) 0)
         ;; Tilaajalle sanktio on positiivinen luku
         lupaussanktio (if (zero? lupaussanktio) lupaussanktio (- lupaussanktio))
         muut-sanktiot (apply + (map (fn [a]
