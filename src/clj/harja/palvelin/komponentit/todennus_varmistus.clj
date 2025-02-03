@@ -31,7 +31,9 @@
       (nil? @jwk-cache)
       (> (- (System/currentTimeMillis) (:fetched-at @jwk-cache)) (* 15 60 1000))) ;; 15 min 
     (try
-      (let [response @(http/get (str issuer "/.well-known/jwks.json") {:headers {"OAM_REMOTE_USER" kayttajatunnus
+      (let [response @(http/get (str issuer "/.well-known/jwks.json") {:headers {;; TODO, käyttäjätunnus ei tässä ole niinkään relevantti, kosk kutsu tehdään joka 15min
+                                                                                 ;; Tämä on cognitolle inffona, mistä kutsu on tullut, voisi laittaa järjestelmän nimen, tms.
+                                                                                 "OAM_REMOTE_USER" kayttajatunnus
                                                                                  "Content-Type" "application/json"}})
             response (json/read-json (:body response))
             _ (reset! jwk-cache {:keys response :fetched-at (System/currentTimeMillis)})]
