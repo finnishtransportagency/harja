@@ -110,7 +110,7 @@
     (get (swap! dekoodaa-ja-varmista-cache #(cache/through
                                               (fn [_]
                                                 (try
-                                                    ;; Jos tietoja ei ole, kutsu varmistus
+                                                  ;; Jos tietoja ei ole, kutsu varmistus
                                                   (let [_ (when-not kehitysmoodi? (varmista-jwt-signature accesstoken))]
                                                     (tunnistetiedot jwt-body))
                                                   (catch Exception e
@@ -122,8 +122,8 @@
                                                                    "Saatu JWT Header: " (-> accesstoken dekoodaa-token :header) "  -  "
                                                                    "Saatu payload: " (-> accesstoken dekoodaa-token :payload)))
                                                       ;; Kirjautuminen ei mennyt läpi, poista oikeudet käyttäjältä
-                                                      ;; Tämä uudelleenohjaa "Ei käyttöoikeutta" näkymään
-                                                      (apply dissoc (tunnistetiedot jwt-body) ["oam_groups"])))))
+                                                      ;; Tämä uudelleenohjaa "Ei käyttöoikeutta" näkymään 
+                                                      (apply dissoc (tunnistetiedot jwt-body) ["custom:rooli"])))))
                                               ;; Tiedot on jo cachessa, palauta
                                               %
                                               cache-key))
