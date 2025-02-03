@@ -10,15 +10,17 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [slingshot.slingshot :refer [throw+ try+]]
             [dk.ative.docjure.spreadsheet :as xls]
+            [harja.domain.roolit :as roolit]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-excel :as t-excel]))
 
 (defn hae-urakan-talvihoitoreitit [db user {:keys [urakka-id]}]
   (log/debug "hae-urakan-talvihoitoreitit ::user" user)
   ;; Estä muut, kuin järjestelmävastaavat näkemästä talvihoitoreittejä
-  (when (contains? (:roolit user) "Jarjestelmavastaava")
+  (if (or (roolit/jvh? user) (roolit/ely-urakanvalvoja-urakkaroolissa? user urakka-id))
     ;;(oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
-    (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)))
+    (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
+    {:error "Ei käyttöoikeuksia."}))
 
 (defn kasittele-excel [db urakka-id kayttaja req workbook]
   (let [;; Excelistä löytyneille talvihoitoreitteille koostetaan atomeihin statuksia. Päivittyneet omaansa, uudet lisäykset omaansa
@@ -81,7 +83,9 @@
     (transit-vastaus vastaus)))
 
 (defn vastaanota-excel [db request]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys
+  (or (roolit/jvh? (:kayttaja request))
+    (roolit/ely-urakanvalvoja-urakkaroolissa? (:kayttaja request) (Integer/parseInt (get (:params request) "urakka-id"))))
+  #_ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys
     (:kayttaja request)
     (Integer/parseInt (get (:params request) "urakka-id")))
   (let [urakka-id (Integer/parseInt (get (:params request) "urakka-id"))
@@ -93,7 +97,7 @@
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
 (defn poista-talvihoitoreitti [db user {:keys [urakka-id ulkoinenid]}]
-  (if (contains? (:roolit user) "Jarjestelmavastaava")
+  (if (or (roolit/jvh? user) (roolit/ely-urakanvalvoja-urakkaroolissa? user urakka-id))
     ;;(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
     (let [urakka-id (konv/konvertoi->int urakka-id)
           ;; Varmistetaan, että talvihoitoreitti on olemassa
