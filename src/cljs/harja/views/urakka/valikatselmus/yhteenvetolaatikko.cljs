@@ -1,10 +1,17 @@
 (ns harja.views.urakka.valikatselmus.yhteenvetolaatikko
   (:require [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
             [harja.tiedot.urakka.urakka :as tila]))
 
+;;TODO: Kunhan yhteenvetolaatikko kirjoitetaan uusiksi, niin siirrä tämä ja kaikki mahdollinen muu logiikka backendiin
+(defn- aseta-tavoitehinnan-ylitysprosentti [urakkatyyppi valittu-hoitokauden-alkuvuosi urakan-alkuvuosi]
+  (let [; MHU+ urakoilla on 50/50, ja vuodelle 2025 tulee 25/75. Mutta tässä vaiheessa kaikki on 70/30
+        ]
+    {:urakoitsija 30
+     :tilaaja 70}))
 (defn yhteenvetolaatikko [e! app]
   (let [valikatselmuksen-tiedot (:valikatselmuksen-tiedot app)
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
