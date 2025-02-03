@@ -75,6 +75,7 @@
     [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
     [harja.palvelin.palvelut.hallinta.lupaukset-palvelu :as lupaukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.ajastukset-palvelu :as ajastukset-hallinta]
     [harja.palvelin.palvelut.hallinta.paallystysilmoitukset-hallinta-palvelu :as paallystysilmoitukset-hallinta]
     [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
@@ -832,6 +833,11 @@
       :lupaukset-hallinta
       (component/using
         (lupaukset-hallinta/->LupauksetHallinta)
+        [:http-palvelin :db])
+
+      :ajastukset-hallinta
+      (component/using
+        (ajastukset-hallinta/->AjastuksetHallinta)
         [:http-palvelin :db])
       
       :paallystysilmoitukset-hallinta
