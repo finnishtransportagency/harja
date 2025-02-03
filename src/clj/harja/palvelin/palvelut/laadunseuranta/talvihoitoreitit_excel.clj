@@ -2,6 +2,7 @@
   "Luetaan talvihoitoreitit excelistä tiedot ulos"
   (:require [clojure.string :as str]
             [dk.ative.docjure.spreadsheet :as xls]
+            [harja.domain.roolit :as roolit]
             [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]
             [slingshot.slingshot :refer [throw+]]
             [harja.domain.oikeudet :as oikeudet]
@@ -151,7 +152,8 @@
     kalusto))
 
 (defn lataa-talvihoitoreitit-exceliin [db workbook user {:keys [urakka-id]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
+  (if (or (roolit/roolissa? user "Jarjestelmavastaava") (roolit/rooli-urakassa? user "ELY_Urakanvalvoja" urakka-id))
+  #_ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         urakan-talvihoitoreitit (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
         kaluste-sarakkeet [{:otsikko "Reitin nimi" :lihavoitu? true}
@@ -217,4 +219,5 @@
                    (if (empty? taulukot)
                      [[:taulukko {} nil [["Ei kustannuksia valitulla aikavälillä"]]]]
                      taulukot))]
-    (excel/muodosta-excel (vec raportti) workbook)))
+    (excel/muodosta-excel (vec raportti) workbook))
+  {:error "Ei käyttöoikeuksia."}))

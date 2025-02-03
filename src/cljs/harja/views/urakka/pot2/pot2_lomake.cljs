@@ -130,10 +130,10 @@
 
 
 ;; -- START -- Lomakkeen virheiden ja varoitusten infolaatikko --
-(def yha-ja-velho-lahetys-onnistunut-leveys "320px")
+(def yha-lahetys-onnistunut-leveys "320px")
 
-(defn- yha-ja-velho-lahetyksen-tila
-  "Komponentti näyttää YHA- ja myöhemmin Velho-lähetyksen tilan päällystysilmoituksella."
+(defn- yha-lahetyksen-tila
+  "Komponentti näyttää YHA-lähetyksen tilan päällystysilmoituksella."
   [{:keys [lahetys-onnistunut lahetetty] :as lahetyksen-tila}
    {:keys [tila muokattu]}]
   (let [virhe-teksti (pot-yhteinen/lahetys-virhe-teksti lahetyksen-tila)
@@ -156,7 +156,7 @@
          (str "Ilmoitusta on muokattu YHA:an lähettämisen jälkeen "
            (pvm/pvm-aika-opt muokattu)
            ". Voit tarvittaessa lähettää ilmoituksen uudelleen listausnäkymästä."))
-       (when-not muokattu-yhaan-lahettamisen-jalkeen? yha-ja-velho-lahetys-onnistunut-leveys)]
+       (when-not muokattu-yhaan-lahettamisen-jalkeen? yha-lahetys-onnistunut-leveys)]
 
       ;; näytetään vain valmiiksi täytetyille ilmoituksille, jos lähetystä ei ole tehty
       (and (nil? lahetetty) (false? lahetys-onnistunut)
@@ -258,8 +258,8 @@
             (into [:<>] alustan-tekstit)])]
         nil])
 
-     ;; YHA- ja VELHO-lähetyksen tila näytetään omassa info-laatikossaan, mutta saman virhe-elementin alla.
-     [yha-ja-velho-lahetyksen-tila lahetyksen-tila perustiedot]]))
+     ;; YHA-lähetyksen tila näytetään omassa info-laatikossaan, mutta saman virhe-elementin alla.
+     [yha-lahetyksen-tila lahetyksen-tila perustiedot]]))
 
 ;; -- END -- Lomakkeen virheiden ja varoitusten infolaatikko --
 
