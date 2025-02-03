@@ -17,9 +17,6 @@
 
 (def +velho-api-juuri+ "http://localhost:1234")
 
-(def +velho-urakka-oid-url+ (str +velho-api-juuri+ "/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"))
-(def +velho-urakka-kohde-url+ (str +velho-api-juuri+ "hallintorekisteri/api/v1/kohteet"))
-
 (def +velho-toimenpiteet-oid-url+ (re-pattern (str +velho-api-juuri+ "/toimenpiderekisteri/api/v1/tunnisteet/[^/]+/[^/]+")))
 (def +velho-toimenpiteet-kohde-url+ (re-pattern (str +velho-api-juuri+ "/toimenpiderekisteri/api/v1/historia/kohteet")))
 
@@ -41,8 +38,6 @@
                                                      :kayttajatunnus "abc-123"
                                                      :salasana "blabla"
                                                      :varuste-api-juuri-url +velho-api-juuri+
-                                                     :varuste-urakka-oid-url +velho-urakka-oid-url+
-                                                     :varuste-urakka-kohteet-url +velho-urakka-kohde-url+
                                                      :varuste-toimenpiteet-oid-url +velho-toimenpiteet-oid-url+
                                                      :varuste-toimenpiteet-kohteet-url +velho-toimenpiteet-kohde-url+
                                                      :varuste-client-id "feffefef"

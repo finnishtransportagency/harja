@@ -1,5 +1,5 @@
 INSERT INTO paikkauskohde ("luoja-id", luotu, "ulkoinen-id", nimi, "urakka-id", "yhalahetyksen-tila",
-                           "ilmoitettu-virhe", muokattu, "muokkaaja-id", tarkistettu, "tarkistaja-id", lisatiedot)
+                           "ilmoitettu-virhe", muokattu, "muokkaaja-id", tarkistettu, "tarkistaja-id", lisatiedot, yksikko, "suunniteltu-maara")
 VALUES ((SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'yit-rakennus'
@@ -21,7 +21,9 @@ VALUES ((SELECT id
 (SELECT id
    FROM kayttaja
   WHERE kayttajanimi = 'jvh'
-  LIMIT 1), 'Oulun testipaikkauskohde'),
+  LIMIT 1), 'Oulun testipaikkauskohde',
+        NULL,
+        NULL),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'destia'
@@ -32,6 +34,8 @@ VALUES ((SELECT id
   (SELECT id
     FROM urakka
     WHERE sampoid = '1245142-KAJ2'),
+   NULL,
+   NULL,
    NULL,
    NULL,
    NULL,
@@ -55,6 +59,8 @@ VALUES ((SELECT id
    NULL,
    NULL,
    NULL,
+   NULL,
+   NULL,
    NULL),
    ((SELECT id
        FROM kayttaja
@@ -72,6 +78,8 @@ VALUES ((SELECT id
     NULL,
     NULL,
     NULL,
+    NULL,
+    NULL,
     NULL),
   ((SELECT id
     FROM kayttaja
@@ -83,6 +91,8 @@ VALUES ((SELECT id
    (SELECT id
     FROM urakka
     WHERE sampoid = '1242141-OULU2'),
+   NULL,
+   NULL,
    NULL,
    NULL,
    NULL,
@@ -106,7 +116,9 @@ VALUES ((SELECT id
    NULL,
    NULL,
    NULL,
-   NULL);
+   NULL,
+   't',
+   10);
 
 
 DO $$ DECLARE
