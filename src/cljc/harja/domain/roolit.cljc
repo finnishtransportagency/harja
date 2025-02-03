@@ -88,9 +88,6 @@ rooleista."
 (defn jvh? [kayttaja]
   (roolissa? kayttaja jarjestelmavastaava))
 
-(defn ely-urakanvalvoja-urakkaroolissa? [kayttaja urakka-id]
-  (rooli-urakassa? kayttaja ely-urakanvalvoja urakka-id))
-
 (defn rooli-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
   #?(:cljs ([rooli urakka-id] (rooli-urakassa? @istunto/kayttaja rooli urakka-id)))
@@ -105,6 +102,9 @@ rooleista."
       ;; Tai käyttäjällä on rooli organisaatiossa ja urakka on organisaation urakka
       (and (organisaation-urakka? kayttaja urakka-id)
            (some roolit (organisaatioroolit kayttaja)))))))
+
+(defn ely-urakanvalvoja-urakkaroolissa? [kayttaja urakka-id]
+  (rooli-urakassa? kayttaja ely-urakanvalvoja urakka-id))
 
 (defn rooli-jossain-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli jossain urakassa (ei väliä missä)."
