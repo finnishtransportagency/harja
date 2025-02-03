@@ -30,7 +30,7 @@
                                         (:rahasumma bonus)
                                         0))
                                  (:bonukset valikatselmuksen-tiedot)))
-        tavoitepalkkio (or (get-in valikatselmuksen-tiedot [:kustannukset :tavoitepalkkio-toteutunut]) 0)
+        tavoitepalkkio (or (get-in valikatselmuksen-tiedot [:kustannukset :tavoitepalkkio :toimenpide-toteutunut-summa]) 0)
 
         ;; Tilaajan saatavat
         lupaussanktio (or (get-in valikatselmuksen-tiedot [:lupaustiedot :yhteenveto :bonus-tai-sanktio :sanktio]) 0)
