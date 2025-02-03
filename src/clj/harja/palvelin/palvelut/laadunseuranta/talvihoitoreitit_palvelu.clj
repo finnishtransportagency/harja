@@ -17,7 +17,7 @@
 (defn hae-urakan-talvihoitoreitit [db user {:keys [urakka-id]}]
   (log/debug "hae-urakan-talvihoitoreitit ::user" user)
   ;; Estä muut, kuin järjestelmävastaavat näkemästä talvihoitoreittejä
-  (if (or (roolit/roolissa? user "Jarjestelmavastaava") (roolit/rooli-urakassa? user "ELY_Urakanvalvoja" urakka-id))
+  (if (or (roolit/jvh? user) (roolit/ely-urakanvalvoja-urakkaroolissa? user urakka-id))
     ;;(oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
     (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
     {:error "Ei käyttöoikeuksia."}))
@@ -83,8 +83,8 @@
     (transit-vastaus vastaus)))
 
 (defn vastaanota-excel [db request]
-  (or (roolit/roolissa? (:kayttaja request) "Jarjestelmavastaava")
-    (roolit/rooli-urakassa? (:kayttaja request) "ELY_Urakanvalvoja" (Integer/parseInt (get (:params request) "urakka-id"))))
+  (or (roolit/jvh? (:kayttaja request))
+    (roolit/ely-urakanvalvoja-urakkaroolissa? (:kayttaja request) (Integer/parseInt (get (:params request) "urakka-id"))))
   #_ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys
     (:kayttaja request)
     (Integer/parseInt (get (:params request) "urakka-id")))
@@ -97,8 +97,7 @@
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
 (defn poista-talvihoitoreitti [db user {:keys [urakka-id ulkoinenid]}]
-  (if (or (roolit/roolissa? user "Jarjestelmavastaava")
-        (roolit/rooli-urakassa? user "ELY_Urakanvalvoja" urakka-id))
+  (if (or (roolit/jvh? user) (roolit/ely-urakanvalvoja-urakkaroolissa? user urakka-id))
     ;;(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
     (let [urakka-id (konv/konvertoi->int urakka-id)
           ;; Varmistetaan, että talvihoitoreitti on olemassa
