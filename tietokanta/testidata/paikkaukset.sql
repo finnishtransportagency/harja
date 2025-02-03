@@ -467,6 +467,13 @@ SET "paikkauskohteen-tila" = 'valmis',
                        WHERE p."paikkauskohde-id" = pk.id)
 WHERE pk."paikkauskohteen-tila" IS NULL;
 
+INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu, "muokkaaja-id", muokattu, "urakka-id", "yhalahetyksen-tila",
+                           virhe, tarkistettu, "tarkistaja-id", "ilmoitettu-virhe", alkupvm, loppupvm, tilattupvm, tyomenetelma, tierekisteriosoite_laajennettu,
+                           "paikkauskohteen-tila", "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot, "pot?", valmistumispvm, tiemerkintapvm, "toteutunut-hinta",
+                       "tiemerkintaa-tuhoutunut?", takuuaika, "yllapitokohde-id", "yhalahetyksen-aika", pkluokka)
+VALUES  ((SELECT id FROM harja.public.kayttaja WHERE kayttajanimi = 'jvh'), 100, 'Kt66 testipaikkauskohde PK2-alueella', false, '2024-04-18 14:10:22.087000', NULL, '2024-04-18 14:43:50.405000',
+         (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), null, null, null, null, null, '2024-04-22', '2024-04-22', null, 5, '(66,15,0,18,3700,0,,,,)', 'hylatty', 50, 10000, 't', null, false, null, null, null, null, null, null, null, 'Ei tiedossa');
+
 -- Päivitetään paikkauskohdeluokat kaikille paikkauskohteille
 SELECT * FROM paivita_paikkauskohteiden_korjausluokat('1900-01-01'::DATE, '2100-01-01'::DATE);
 SELECT * FROM paivita_reikapaikkausten_korjausluokat('1900-01-01'::DATE, '2100-01-01'::DATE);
