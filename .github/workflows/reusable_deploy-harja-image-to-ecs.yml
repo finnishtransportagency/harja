@@ -199,15 +199,16 @@ jobs:
         env:
           ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
         run: |
-          # Kaksi revisionia vanhempi task definition merkitään inaktiiviseksi
-          OLD_REVISION=$(($(cat harja-task-definition.json | jq .revision) - 2))
+          # Neljä revisionia vanhempi task definition merkitään inaktiiviseksi
+          OLD_REVISION=$(($(cat harja-task-definition.json | jq .revision) - 4))
 
           if [[ "$OLD_REVISION" -lt 1 ]]; then
             echo "Ei poistettavaa vanhempaa task definitionia."
             exit 0
           fi
 
-          aws ecs deregister-task-definition --task-definition $ECS_TASK_DEFINITION_NAME:$OLD_REVISION
+          # Derekisteröi vanha task definition ja ohjaa task definition output dev/nulliin
+          aws ecs deregister-task-definition --task-definition $ECS_TASK_DEFINITION_NAME:$OLD_REVISION 1> /dev/null
 
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
