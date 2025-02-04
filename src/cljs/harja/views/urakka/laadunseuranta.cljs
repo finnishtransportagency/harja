@@ -53,7 +53,8 @@
     :talvihoitoreititys (and
                           (= :teiden-hoito tyyppi)
                           #_ (oikeudet/urakat-laadunseuranta-talvihoitoreititys id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
-                          (roolit/jvh? @istunto/kayttaja))))
+                          (or (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
+                            (roolit/rooli-urakassa? @istunto/kayttaja roolit/ely-urakanvalvoja id)))))
 
 (defn laadunseuranta [_ur]
   (komp/luo

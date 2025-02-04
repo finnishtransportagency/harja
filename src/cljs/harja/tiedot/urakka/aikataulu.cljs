@@ -1,14 +1,10 @@
 (ns harja.tiedot.urakka.aikataulu
   "Ylläpidon urakoiden aikataulu"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.loki :refer [log logt tarkkaile!]]
-            [cljs.core.async :refer [<! timeout]]
-            [harja.ui.protokollat :refer [Haku hae]]
-            [harja.loki :refer [log]]
+            [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as urakka]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
@@ -29,7 +25,7 @@
 
 (defonce aikataulu-nakymassa? (atom false))
 
-(defonce valinnat
+(defonce aikataulu-suodattimet
   (local-storage/local-storage-atom
     :aikataulu-valinnat
     {:nayta-aikajana? true
@@ -38,15 +34,15 @@
      :jarjestys :aika}
     nil))
 
-(defonce nayta-aikajana? (r/cursor valinnat [:nayta-aikajana?]))
-(defonce nayta-tarkka-aikajana? (r/cursor valinnat [:nayta-tarkka-aikana?]))
-(defonce nayta-valitavoitteet? (r/cursor valinnat [:nayta-valitavoitteet?]))
+(defonce nayta-aikajana? (r/cursor aikataulu-suodattimet [:nayta-aikajana?]))
+(defonce nayta-tarkka-aikajana? (r/cursor aikataulu-suodattimet [:nayta-tarkka-aikana?]))
+(defonce nayta-valitavoitteet? (r/cursor aikataulu-suodattimet [:nayta-valitavoitteet?]))
 
 (defn toggle-nayta-aikajana! []
-  (swap! valinnat update :nayta-aikajana? not))
+  (swap! aikataulu-suodattimet update :nayta-aikajana? not))
 
 (defn jarjesta-kohteet! [kentta]
-  (swap! valinnat assoc :jarjestys kentta))
+  (swap! aikataulu-suodattimet assoc :jarjestys kentta))
 
 (defn hae-aikataulu [urakka-id sopimus-id vuosi]
   (k/post! :hae-yllapitourakan-aikataulu {:urakka-id urakka-id
@@ -95,7 +91,7 @@ kohteiden-sahkopostitiedot (atom nil))
 
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-               vuosi @urakka/valittu-urakan-vuosi
+               vuosi @u/valittu-urakan-vuosi
                [valittu-sopimus-id _] @u/valittu-sopimusnumero
                nakymassa? @aikataulu-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
@@ -111,7 +107,7 @@ kohteiden-sahkopostitiedot (atom nil))
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   kohdenumero @yllapito-tiedot/kohdenumero
                   aikataulurivit @aikataulurivit
-                  jarjestys (:jarjestys @valinnat)]
+                  jarjestys (:jarjestys @aikataulu-suodattimet)]
               (when aikataulurivit
                 (let [kohteet (yllapitokohteet/suodata-yllapitokohteet aikataulurivit
                                                                        {:tienumero tienumero
