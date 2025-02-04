@@ -4,6 +4,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.pvm :as pvm]
+            [clj-time.coerce :as c]
             [taoensso.timbre :as log]))
 
 
@@ -14,7 +15,12 @@
   [db kayttaja]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-toteumatyokalu kayttaja)
   (log/debug "aja-kustannusarviot-toteumiksi käynnistetty!")
-  (kustannusarvioidut-toteumat/siirra-kustannukset db (pvm/nyt)))
+  (let [;; ajopäivän täytyy olla aina kuukauden ensimmäinen, joten otetaan ensi kuun ensimmäinen päivä defaultiksi
+        nyt (pvm/nyt)
+        kuukauden-viimeinen (pvm/kuukauden-viimeinen-paiva (pvm/nyt))
+        kuukauden-ensimmainen (pvm/ajan-muokkaus kuukauden-viimeinen true 1 :paiva)
+        sql-kuukauden-ensimmainen (c/to-sql-time kuukauden-ensimmainen)]
+    (kustannusarvioidut-toteumat/siirra-kustannukset db sql-kuukauden-ensimmainen)))
 
 (defrecord AjastuksetHallinta []
   component/Lifecycle
