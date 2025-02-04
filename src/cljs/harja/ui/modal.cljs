@@ -41,7 +41,6 @@
 
 (defn- modal-container* [{:keys [modaalin-fokus-elementti]}]
   (let [modal-ref (r/atom nil)
-        focusable-elementit (r/atom nil)
         siirra-fokus (fn [modal-nakyma fokus-elementti]
                         (when (and modal-nakyma fokus-elementti)
                           (dom/siirra-fokus-nakymaan modal-nakyma fokus-elementti)))]
@@ -64,7 +63,7 @@
                                  (dom/tee-fokus-ansa modal-ref)))
        :reagent-render
        (fn [{:keys [otsikko otsikon-alle-komp otsikko-tyyli footer nakyvissa? luokka
-                    leveys content-tyyli body-tyyli modal-luokka sulje-fn sulje-ruksista-fn modaalin-fokus-elementti]} sisalto]
+                    leveys content-tyyli body-tyyli modal-luokka sulje-fn sulje-ruksista-fn]} sisalto]
          (let [sulje!  #(do
                           (.stopPropagation %)
                           (when sulje-fn
