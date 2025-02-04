@@ -1,6 +1,5 @@
 (ns harja.ui.sivupalkki
-  (:require [harja.loki :refer [log logt tarkkaile!]]
-            [harja.ui.komponentti :as komp]
+  (:require [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
             [reagent.core :as r]))
 
@@ -9,7 +8,7 @@
   avattava palkki on 570px. Järjestys numero on väliltä 1-2. Järejestys 1 on leveä normaali
   sivupalkki ja järjestys 2 on kapeampi normaalin päälle avattava sivupalkki.
   Anna komponentti -parametrisa koko sivupalkin sisältö."
-  [{:keys [leveys jarjestys luokka sulku-fn] :as opts} komponentti]
+  []
   (let [ref-elementti (r/atom nil)
         edellinen-elementti (r/atom nil)]
     (komp/luo
