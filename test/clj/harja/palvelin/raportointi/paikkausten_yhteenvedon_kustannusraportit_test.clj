@@ -10,6 +10,7 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu :as paikkausten-yhteenveto-mhu]
             [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto :as paikkausten-yhteenveto]
             [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
             [harja.palvelin.palvelut.yllapitokohteet.kustannukset-palvelu :as kustannukset-palvelu]
@@ -117,8 +118,8 @@
 
 (deftest paikkausten-yhteenvedon-kustannusraportti-PPU-toimii
   (let [tiedot (testien-yhteiset-tiedot "Utajärven päällystysurakka" 2025)
-        parametrit {:vuosi (:vuosi tiedot) :urakkatyyppi :paallystys, :kasittelija nil, :urakka-id (:urakka-id tiedot)}
-
+        parametrit {:alkupvm (:alkupvm tiedot) :loppupvm (:loppupvm tiedot)
+                    :urakkatyyppi :paallystys, :kasittelija nil, :urakka-id (:urakka-id tiedot)}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
@@ -162,8 +163,8 @@
 
 (deftest paikkausten-yhteenvedon-kustannusraportti-MPU-toimii
   (let [tiedot (testien-yhteiset-tiedot "Muhoksen päällystysurakka" 2024)
-        parametrit {:vuosi (:vuosi tiedot) :urakkatyyppi :paallystys, :kasittelija nil, :urakka-id (:urakka-id tiedot)}
-
+        parametrit {:alkupvm (:alkupvm tiedot) :loppupvm (:loppupvm tiedot)
+                    :urakkatyyppi :paallystys, :kasittelija nil, :urakka-id (:urakka-id tiedot)}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
@@ -210,7 +211,7 @@
 
         ;; Haetaan bonukset, sanktiot ja käsin lisätyt kustannukset
         muut-kustannukset (paikkausten-yhteenveto/koosta-muut-kustannukset
-                            (:db jarjestelma) +kayttaja-jvh+ (:urakka-id tiedot) (:vuosi tiedot) (:alkupvm tiedot) (:loppupvm tiedot))
+                            (:db jarjestelma) +kayttaja-jvh+ (:urakka-id tiedot) (:alkupvm tiedot) (:loppupvm tiedot))
         muut-kustannukset-tyhja-vastaus [{:nimi "Bonukset", :toteutunut-hinta 0M} {:nimi "Sanktiot", :toteutunut-hinta 0M} {:nimi "Yhteensä", :toteutunut-hinta 0M, :yhteenveto true}]
         _ (is (= muut-kustannukset-tyhja-vastaus muut-kustannukset))
 
@@ -237,7 +238,7 @@
                                                                                          :vuosi (:vuosi tiedot)
                                                                                          :summa muukustannus-summa})
         muut-kustannukset-uudestaan (paikkausten-yhteenveto/koosta-muut-kustannukset
-                                      (:db jarjestelma) +kayttaja-jvh+ (:urakka-id tiedot) (:vuosi tiedot) (:alkupvm tiedot) (:loppupvm tiedot))]
+                                      (:db jarjestelma) +kayttaja-jvh+ (:urakka-id tiedot) (:alkupvm tiedot) (:loppupvm tiedot))]
     (is (= bonus-summa (->> muut-kustannukset-uudestaan
                          (filter #(= (:nimi %) "Bonukset"))
                          first
@@ -304,3 +305,24 @@
         lopulliset-maarat (paikkausten-yhteenveto/hae-toteutuneet-maarat-tyomenetelmittain (:db jarjestelma) parametrit)
         odotettu-vastaus [{:nimi "Avarrussaumaus", :suunniteltu-maara 1000M :toteutunut-maara 456M :yksikko "jm"}]]
     (is (= odotettu-vastaus lopulliset-maarat))))
+
+(deftest paikkausten-yhteenvedon-mpu-paikkauskustannusten-haku
+  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2019-2024")
+        ;; luodaan pieni suunnitelma paikkaushommiin, jotta todetaan että juuri se nousee kannasta
+        ;; muuta sälää ja kulua on valmiiksi testidatassa, se ei saa nousta
+        sopimus-id (hae-sopimus-id-nimella "Kittilän MHU sopimus")
+        paallysteen-paikkauksen-tpi-kittila (ffirst (q (format "SELECT id FROM toimenpideinstanssi WHERE urakka = %s AND
+        toimenpide = (SELECT id FROM toimenpide WHERE koodi = '20107');" urakka-id)))
+        paikkausten-summa 250
+        indeksikorjattuna 280M
+        id (i (format "INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, tehtavaryhma,
+         tehtava, sopimus, luotu, luoja, muokattu, muokkaaja, summa_indeksikorjattu, indeksikorjaus_vahvistettu, vahvistaja,
+          versio) VALUES (2020, 6, %s, %s, null, null, %s, '2025-01-30 10:25:54.517112', 1, null, null, %s,
+           '2025-01-30 10:25:54.517112', 1, 0);" paikkausten-summa paallysteen-paikkauksen-tpi-kittila sopimus-id indeksikorjattuna))
+        haku (paikkausten-yhteenveto-mhu/mhu-paikkausten-suunnitellut-kustannukset (:db jarjestelma)
+               {:urakkaid urakka-id
+                :alkupvm (pvm/->pvm "1.10.2019")
+                :loppupvm (pvm/->pvm "30.09.2020")})
+        summa (:summa (first haku))]
+    (is (integer? id) "Palautuu uusi id")
+    (is (= indeksikorjattuna summa) "paikkausten-summa")))
