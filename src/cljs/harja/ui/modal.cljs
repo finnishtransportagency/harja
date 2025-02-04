@@ -67,8 +67,6 @@
        (fn [{:keys [otsikko otsikon-alle-komp otsikko-tyyli footer nakyvissa? luokka
                     leveys content-tyyli body-tyyli modal-luokka sulje-fn sulje-ruksista-fn modaalin-fokus-elementti]} sisalto]
          (let [sulje!  #(do
-                          ;; estää file-open dialogin poistamisen
-                          #_(.preventDefault %)
                           (.stopPropagation %)
                           (when sulje-fn
                             (sulje-fn))
