@@ -1,7 +1,5 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohdelomake
-  (:require [harja.loki :refer [log]]
-            [clojure.string :as str]
-            [harja.domain.oikeudet :as oikeudet]
+  (:require [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
             [harja.domain.paikkaus :as paikkaus]
             [harja.fmt :as fmt]
@@ -24,8 +22,7 @@
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake :as v-pmrlomake]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.domain.tierekisteri :as tr-domain])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.domain.tierekisteri :as tr-domain]))
 
 (defn- viesti-tiemerkintaan-modal [e! lomake tiemerkintaurakat tyomenetelmat nakyvissa?]
   (let [voi-lahettaa? (::tila/validi? lomake)]
