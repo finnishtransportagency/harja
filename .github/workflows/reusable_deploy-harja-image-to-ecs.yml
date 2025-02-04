@@ -198,9 +198,10 @@ jobs:
       - name: Deregister old task definition
         env:
           ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
-          # Kaksi revisionia vanhempi task definition merkitään inaktiiviseksi
-          OLD_REVISION: $(($(cat harja-task-definition.json | jq .revision) - 2))
         run: |
+          # Kaksi revisionia vanhempi task definition merkitään inaktiiviseksi
+          OLD_REVISION=$(($(cat harja-task-definition.json | jq .revision) - 2))
+
           if [[ "$OLD_REVISION" -lt 1 ]]; then
             echo "Ei poistettavaa vanhempaa task definitionia."
             exit 0
