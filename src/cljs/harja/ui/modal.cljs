@@ -2,7 +2,6 @@
   "Modaali näyttökomponentti. Näitä yksi kappale päätasolle."
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.dom :as dom]
-            [harja.loki :refer [log logt]]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.ikonit :as ikonit]))
 
