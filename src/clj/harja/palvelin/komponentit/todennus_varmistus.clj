@@ -105,7 +105,7 @@
     response))
 
 
-(defn- kasittele-virhe
+(defn- kirjautuminen-epaonnistui
   "Käsitellään kirjautumisvirhe, ohjaa käyttäjän 'Ei käyttöoikeutta Harjaan.'- näkymään
    
    'Message seems manipulated': 
@@ -164,6 +164,8 @@
    3. Jos kaikki OK, palautetaan dekoodattu tunnusdata, ja jatketaan kirjautumista 
    4. Tuloksena käyttäjän roolitiedot on vahvistettu oikeiksi, eikä mitään ole sorkittu matkalla"
   ([accesstoken iam-data iam-identity kehitysmoodi?]
+   ;; yrita-uudelleen? on defaulttina aina false
+   ;; Jos kirjautuminen epäonnistuu, yritetään kerran uudelleen päivitetyllä public-avaimella
    (vahvista-jwt-signaturet accesstoken iam-data iam-identity false kehitysmoodi?))
   ([accesstoken iam-data iam-identity yrita-uudelleen? kehitysmoodi?]
    (let [cache-key accesstoken]
@@ -172,25 +174,18 @@
                                                (fn [_]
                                                  (try
                                                    ;; Cachessa ei ole tietoja, varmistetaan signaturet 
-                                                   (let [
-                                                         _ (println "\n yrita uudelleen: " yrita-uudelleen? "\n ")
-                                                         _ (when-not kehitysmoodi?
-                                                             (varmista-jwt-signature accesstoken iam-data iam-identity yrita-uudelleen?))
-                                                         inject (-> (tunnistetiedot iam-data)
-                                                                  (assoc "custom:rooli" "Jarjestelmavastaava"))]
-                                                     (tunnistetiedot iam-data)
-                                                     (println "\n bb: " (tunnistetiedot iam-data))
-                                                     ;; Tykitä jvh koska ei ole kvh oikeuksia
-                                                     inject)
+                                                   (let [_ (when-not kehitysmoodi?
+                                                             (varmista-jwt-signature accesstoken iam-data iam-identity yrita-uudelleen?))]
+                                                     (tunnistetiedot iam-data))
                                                    (catch Exception e
                                                      (if
                                                        (and
                                                          (not yrita-uudelleen?)
                                                          (= (.getMessage e) "Message seems corrupt or manipulated"))
-                                                       ;; Tarkista, onko public key rotatoitunut, yritä uudelleen
+                                                       ;; Tarkista, onko public key rotatoitunut yrittämällä uudelleen
                                                        (vahvista-jwt-signaturet accesstoken iam-data iam-identity true kehitysmoodi?)
-                                                       ;; Public key on ajan tasalla, ja vieläkin tulee virhe, joten käsitellään se
-                                                       (kasittele-virhe e iam-data)))))
+                                                       ;; Public key on ajan tasalla, ja vieläkin tulee virhe, heitetään hälytys logiin 
+                                                       (kirjautuminen-epaonnistui e iam-data)))))
                                                ;; Tiedot on jo cachessa, palauta ne 
                                                %
                                                cache-key))
