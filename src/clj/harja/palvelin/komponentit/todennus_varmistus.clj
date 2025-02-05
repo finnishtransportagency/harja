@@ -8,7 +8,11 @@
             [buddy.sign.jwt :as jwt]
             [buddy.core.keys :as keys]
             [taoensso.timbre :as log])
-  (:import (org.apache.commons.codec.binary Base64)))
+  (:import (org.apache.commons.codec.binary Base64)
+           [java.security KeyFactory]
+           [java.security.spec X509EncodedKeySpec]
+           [org.bouncycastle.util.io.pem PemReader]
+           [java.io StringReader]))
 
 ;; Accesstokenin public key 
 (defonce accesstoken-jwk-cache (atom nil))
@@ -65,7 +69,7 @@
     (-> @accesstoken-jwk-cache :keys)))
 
 
-(defn hae-public-key
+(defn hae-accesstoken-pk
   "Kutsuttu rajapinta palauttaa accesstokenin public avaimen
    Mukana on 2 avainta, joten suodatetaan vaan haluttu avain (key identifier)"
   [kid issuer paivita? lx-kayttaja]
@@ -86,36 +90,58 @@
      :signature signature}))
 
 
+(defn parse-public-key [pem-key]
+  (let [reader (PemReader. (StringReader. pem-key))
+        pem-object (.readPemObject reader)
+        key-bytes (.getContent pem-object)
+        key-spec (X509EncodedKeySpec. key-bytes)
+        key-factory (KeyFactory/getInstance "EC")] ;; "RSA" RSA avaimille, "EC" ECDSA avaimille
+    (.generatePublic key-factory key-spec)))
+
+
+(defn hae-iam-data-PEM-pk
+  "Tekee GET kutsun joka hakee PEM muodossa olevan public avaimen
+   Jolla voimme vahvistaa käyttäjäroolien signaturen (x-iam-data)"
+  [lx-kayttaja paivita? url kid]
+  (try
+    (let [response @(http/get (str url kid) {:headers {"User-Agent" (if paivita?
+                                                                      (str user-agent-headers " (update public-key/" lx-kayttaja ")")
+                                                                      user-agent-headers)
+                                                       "Content-Type" "application/json"}})
+          response (parse-public-key (slurp (:body response)))]
+      response)
+    (catch Exception e
+      (log/error (str "Failed to refresh PEM public key cache: " (.getMessage e))))))
+
 (defn varmista-jwt-signature
   "Varmistaa kirjautumisen oikellisuuden Cogniton x-iam-accesstoken header tokenista
    https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html#amazon-cognito-user-pools-using-tokens-manually-inspect"
   [accesstoken iam-data iam-identity paivita? iam-data-public-url]
-  (let [header (-> accesstoken dekoodaa-token :header)
-        issuer (-> accesstoken dekoodaa-token :payload :iss)
-        kid (:kid header)
-        lx-kayttaja (-> iam-data dekoodaa-token :payload :custom:uid)
-        ;; Hae public avain jolla sama :kid
-        jwk (hae-public-key kid issuer paivita? lx-kayttaja)
-        ;; Muunna java muotoon 
-        public-key (keys/jwk->public-key jwk)
+  (let [lx-kayttaja (-> iam-data dekoodaa-token :payload :custom:uid)
+        accesstoken-header (-> accesstoken dekoodaa-token :header)
+        accesstoken-issuer (-> accesstoken dekoodaa-token :payload :iss)
+        accesstoken-kid (:kid accesstoken-header)
+        kayttaja-roolit-kid (-> iam-data dekoodaa-token :header :kid)
+        accesstoken-public-key (hae-accesstoken-pk accesstoken-kid accesstoken-issuer paivita? lx-kayttaja)
+        ;; Muunna java muotoon, joka käy javan signature librarylle
+        accesstoken-public-key (keys/jwk->public-key accesstoken-public-key)
 
-        _ (println "\n accesstoken payload: " header (-> accesstoken dekoodaa-token :payload))
-        _ (println "\n accesstoken header: " header (-> accesstoken dekoodaa-token :header))
-        _ (println "\n accesstoken signature: " header (-> accesstoken dekoodaa-token :signature) " \n \n" " ---- \n")
+        _ (println "\n accesstoken payload: " accesstoken-header (-> accesstoken dekoodaa-token :payload))
+        _ (println "\n accesstoken header: " accesstoken-header (-> accesstoken dekoodaa-token :header))
+        _ (println "\n accesstoken signature: " accesstoken-header (-> accesstoken dekoodaa-token :signature) " \n \n" " ---- \n")
         _ (println "\n iam-data payload: " (-> iam-data dekoodaa-token :payload))
         _ (println "\n iam-data header: " (-> iam-data dekoodaa-token :header))
         _ (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature) " \n \n" " ---- \n")
         _ (println "\n iam-identity payload: " iam-identity " \n ")
         _ (println "\n custom uid: " (-> iam-data dekoodaa-token :payload :custom:uid) " \n ")
-
         _ (println "\n iam-data-public-url: " iam-data-public-url "\n ")
 
-        ;; Verifioi kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
-        ;; Palauttaa Cognito map responsen, jos kirjautuminen menee läpi ja token on voimassa 
-        ;; Heittää virheen, jos tiedoissa on jotain väärin 
-        response (jwt/unsign accesstoken public-key {:alg :rs256})
-        _ (println "\n res: " response " \n")]
-    response))
+        ;; Hae iam-data (jossa käyttäjärooli väitteet) public avain, jotta voidaan varmistaa sen signature
+        iam-data-public-key (hae-iam-data-PEM-pk lx-kayttaja paivita? iam-data-public-url kayttaja-roolit-kid)
+
+        ;; Verifioi tokenit kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
+        _ (jwt/unsign iam-data iam-data-public-key {:alg :es256})
+        _ (jwt/unsign accesstoken accesstoken-public-key {:alg :rs256})]))
 
 
 (defn- kirjautuminen-epaonnistui

@@ -19,7 +19,7 @@
                                             "oam_organization" "Liikennevirasto"}}
  
  ;; JWT tokenin signaturen public key x-iam-data (käyttäjäroolit) 
- :roolit-jwt-signature {:public-key-url ""}
+ :roolit-jwt-signature {:public-key-url #=(eval (harja.tyokalut.env/env "COGNITO_IAMDATA_PUBLIC_KEY_URL" nil))}
 
  :tietokanta {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))
               :tietokanta "harja"
