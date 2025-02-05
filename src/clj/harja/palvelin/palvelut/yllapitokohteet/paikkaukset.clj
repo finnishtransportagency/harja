@@ -79,7 +79,7 @@
   "Haetaan paikkauskohteet, joita ei ole poistettu ja joiden tila on tilattu/valmis ja joilla ei ole pot raportointitilana.
   Samalla haetaan paikkauskohteille paikkaus taulusta rivit (eli paikkauksen toteumat, huomaa taulujen nimiöinti) sekä
   paikkausten materiaalit ja tienkohdat."
-  [db user {:keys [aikavali-kuluva tyomenetelmat tr nayta] :as tiedot}]
+  [db user {:keys [aikavali-kuluva tyomenetelmat tr nayta aikavali] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (or (::paikkaus/urakka-id tiedot)
                                                                          (:urakka-id tiedot)))
   (let [urakka-id (or (::paikkaus/urakka-id tiedot)
@@ -88,12 +88,10 @@
         menetelmat (when (> (count menetelmat) 0)
                      menetelmat)
         vain-kohteet-joilla-toteumia? (= nayta :kohteet-joilla-toteumia)
-        _ (log/debug "hae-urakan-paikkaukset :: tiedot" (pr-str tiedot) (pr-str (konversio/sql-date (first aikavali-kuluva))) "tr" (pr-str tr) "vain-kohteet-joilla-toteumia?" vain-kohteet-joilla-toteumia?)
+        [alkuaika loppuaika] (or aikavali aikavali-kuluva)
         paikkauskohteet (q/hae-urakan-paikkauskohteet-ja-paikkaukset db {:urakka-id urakka-id
-                                                                         :alkuaika (when (and aikavali-kuluva (first aikavali-kuluva))
-                                                                                     (konversio/sql-date (first aikavali-kuluva)))
-                                                                         :loppuaika (when (and aikavali-kuluva (second aikavali-kuluva))
-                                                                                      (konversio/sql-date (second aikavali-kuluva)))
+                                                                         :alkuaika (konversio/sql-date alkuaika)
+                                                                         :loppuaika (konversio/sql-date loppuaika)
                                                                          :tyomenetelmat menetelmat
                                                                          :tie (:numero tr)
                                                                          :aosa (:alkuosa tr)

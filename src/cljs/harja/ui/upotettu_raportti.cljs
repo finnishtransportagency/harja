@@ -25,7 +25,7 @@
                              k/pdf-url) :raportointi)}
            [:input {:type "hidden" :name "parametrit"
                     :value (t/clj->transit (dissoc p :otsikko :kasittelija))}]  
-           [napit/tallenna (str otsikko) (constantly true) {:ikoni (ikonit/harja-icon-action-download) :type "submit" :vayla-tyyli? true :esta-prevent-default? true}]])))])
+           [napit/tallenna (str otsikko) (constantly true) {:ikoni (ikonit/harja-icon-action-download) :type "submit" :vayla-tyyli? false :esta-prevent-default? true}]])))])
   ([parametrit]
    ;; Säädetty tallenna- napit MHU urakoille etteivät ole rumasti
    (let [class (cond
