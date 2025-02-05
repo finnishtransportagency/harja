@@ -145,11 +145,12 @@
       [:span (fmt/euro-opt muut-bonukset)]]
      [:div.rivi [:span "Tavoitepalkkio"]
       [:span (fmt/euro-opt tavoitepalkkio)]]
-     [:div.rivi [:span "Tavoitehinnan ylitys " (when (> (:tilaaja tavoitehinnan-ylitysprosentti) 0)
-                                                 (str "(" (:tilaaja tavoitehinnan-ylitysprosentti) "%)"))]
-      [:span (if (> urakoitsijan-osuus-tavoitehinnan-ylitys 0)
-               (fmt/euro-opt urakoitsijan-osuus-tavoitehinnan-ylitys)
-               (fmt/euro-opt 0))]]
+     (when tavoitehinnan-ylityspaatos
+       [:div.rivi [:span "Tavoitehinnan ylitys " (when (> (:tilaaja tavoitehinnan-ylitysprosentti) 0)
+                                                   (str "(" (:tilaaja tavoitehinnan-ylitysprosentti) "%)"))]
+        [:span (if (> urakoitsijan-osuus-tavoitehinnan-ylitys 0)
+                 (fmt/euro-opt urakoitsijan-osuus-tavoitehinnan-ylitys)
+                 (fmt/euro-opt 0))]])
 
      [:h3 [:span "Tilaajan saatavat"]]
      [:div.rivi [:span "Lupaussanktio"]
@@ -158,15 +159,17 @@
       [:span (fmt/euro-opt muut-sanktiot)]]
      [:div.rivi [:span "Arvonvähennykset"]
       [:span (fmt/euro-opt arvonvahennykset)]]
-     [:div.rivi [:span "Tavoitehinnan ylitys " (when (> (:urakoitsija tavoitehinnan-ylitysprosentti) 0)
-                                                 (str "(" (:urakoitsija tavoitehinnan-ylitysprosentti) "%)"))]
-      [:span (if (> tavoitehinnan-ylitys 0)
-               (fmt/euro-opt tilaajan-osuus-tavoitehinnan-ylitys)
-               (fmt/euro-opt 0))]]
-     [:div.rivi [:span "Kattohinnan ylitys"]
-      [:span (if (> urakoitsijan-hyvitysosuus 0)
-               (fmt/euro-opt urakoitsijan-hyvitysosuus)
-               (fmt/euro-opt 0))]]
+     (when tavoitehinnan-ylityspaatos
+       [:div.rivi [:span "Tavoitehinnan ylitys " (when (> (:urakoitsija tavoitehinnan-ylitysprosentti) 0)
+                                                   (str "(" (:urakoitsija tavoitehinnan-ylitysprosentti) "%)"))]
+        [:span (if (> tavoitehinnan-ylitys 0)
+                 (fmt/euro-opt tilaajan-osuus-tavoitehinnan-ylitys)
+                 (fmt/euro-opt 0))]])
+     (when kattohinnan-ylityspaatos
+      [:div.rivi [:span "Kattohinnan ylitys"]
+       [:span (if (> urakoitsijan-hyvitysosuus 0)
+                (fmt/euro-opt urakoitsijan-hyvitysosuus)
+                (fmt/euro-opt 0))]])
 
      [:h3 [:span "Siirrot"]]
      [:div.rivi [:span "Siirto seuraavan vuoden hankintakustannuksiin"]
