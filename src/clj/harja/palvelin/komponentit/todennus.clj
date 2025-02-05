@@ -112,32 +112,29 @@
     (str/join ",")))
 
 (defn- pura-cognito-headerit
-  "Purkaa AWS Cognitolta palautuneet relevantit headerit ja hakee niistä OAM-tiedot.
-  Tiedot mapataan vanhan mallisiksi OAM_-headereiksi"
+  "Purkaa AWS Cognitolta palautuneet headerit ja hakee niistä OAM-tiedot.
+   Tiedot mapataan vanhan mallisiksi OAM_-headereiksi
+   Signaturen vahvistus tehdään myös"
   [headerit kehitysmoodi?]
-  (let [accesstoken (get headerit "x-iam-accesstoken") 
-        ;; Kaikilla header tokeneilla on header, body, signature pilkulla eroteltu
-        headerit (select-keys headerit [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n
-                                        "x-iam-accesstoken"
+  (let [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n, kertoo koska token on annettu, ja kenelle
+        ;; Mukana myös signature, kid (key identifier), joka vahvistetaan
+        accesstoken (get headerit "x-iam-accesstoken")
 
-                                        ;; Sisältää käyttäjään liittyviä tietoja, mm. roolit
-                                        "x-iam-data"
+        ;; Sisältää käyttäjän sessio tietoja, Roolit, puh, y tunnus, org, lx tunnus, email, nimi
+        ;; Mukana myös signature, kid (key identifier), joka vahvistetaan
+        iam-data (get headerit "x-iam-data")
 
-                                        ;; Käyttäjän sub-kenttä Cognitossa
-                                        "x-iam-identity"])
-        jwt (some->
-              (get headerit "x-iam-data")
-              ;; Jaetaan kolmeen osaan: header, body, signature
-              (str/split #"\."))
-        
-        jwt-body (second jwt)
-        dekoodatut-headerit (varmistus/dekoodaa-ja-varmista jwt-body accesstoken kehitysmoodi?)
-        ;;_ (println (str "\n Dekoodattu: " dekoodatut-headerit))
+        ;; Subject ID (sub), eli käyttäjä kenelle JWT on myönnetty
+        ;; Tämä pitäisi täsmätä yllä olevien tokenien :sub kenttään
+        iam-identity (get headerit "x-iam-identity")
+
+        ;; Vahvistetaan JWT signaturet 
+        vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi?)
 
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
-        dekoodatut-headerit (update dekoodatut-headerit "custom:rooli" #(if (konv/onko-json? %)
-                                                                          (parsi-json-entraid-roolit %)
-                                                                          %))]
+        dekoodatut-headerit (update vahvistetut-tunnustiedot "custom:rooli" #(if (konv/onko-json? %)
+                                                                               (parsi-json-entraid-roolit %)
+                                                                               %))]
 
     ;; Mapataan Cognito-headerit vanhan mallisiksi vastaaviksi OAM-headereiksi
     ;; TODO: Siirrytään mahdollisesti myöhemmin käyttämään pelkkiä cognito-headereita
