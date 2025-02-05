@@ -114,8 +114,8 @@
 (defn- pura-cognito-headerit
   "Purkaa AWS Cognitolta palautuneet headerit ja hakee niistä OAM-tiedot.
    Tiedot mapataan vanhan mallisiksi OAM_-headereiksi
-   Signaturen vahvistus tehdään myös"
-  [headerit kehitysmoodi?]
+   Signaturen vahvistukset tehdään myös"
+  [headerit kehitysmoodi? public-key-url]
   (let [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n, kertoo koska token on annettu, ja kenelle
         ;; Mukana myös signature, kid (key identifier), joka vahvistetaan
         accesstoken (get headerit "x-iam-accesstoken")
@@ -129,7 +129,7 @@
         iam-identity (get headerit "x-iam-identity")
 
         ;; Vahvistetaan JWT signaturet 
-        vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi?)
+        vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi? public-key-url)
 
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
         dekoodatut-headerit (update vahvistetut-tunnustiedot "custom:rooli" #(if (konv/onko-json? %)
@@ -185,10 +185,10 @@
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
    Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään 
    muiden headereiden joukkoon."
-  [headerit kehitysmoodi?]
+  [headerit kehitysmoodi? public-key-url]
   (if (empty? (koka-headerit headerit))
     (->
-      (merge headerit (pura-cognito-headerit headerit kehitysmoodi?))
+      (merge headerit (pura-cognito-headerit headerit kehitysmoodi? public-key-url))
       (prosessoi-apikayttaja-header))
     headerit))
 
@@ -296,8 +296,8 @@
   (or (and oikeudet (oikeudet kayttaja))
       koka-headerit))
 
-(defn koka->kayttajatiedot [db headerit oikeudet kehitysmoodi?]
-  (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi?)
+(defn koka->kayttajatiedot [db headerit oikeudet kehitysmoodi? public-key-url]
+  (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? public-key-url)
         oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
     (try
       (get (swap! kayttajatiedot-cache-atom #(cache/through
@@ -315,7 +315,8 @@
     "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden
      req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
-(defrecord HttpTodennus [oikeudet kehitysmoodi?]
+(defrecord HttpTodennus 
+  [oikeudet kehitysmoodi? public-key-url]
   component/Lifecycle
   (start [this]
     (log/info "Todennetaan HTTP käyttäjä KOKA headereista.")
@@ -331,7 +332,7 @@
         (do
           (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan: " headerit))
           (throw+ todennusvirhe))
-        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi?)]
+        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? public-key-url)]
           (assoc req :kayttaja kayttajatiedot)
           (do
             (log/warn (str
@@ -355,7 +356,9 @@
 (defn http-todennus
   ([] (http-todennus nil false))
   ([oikeudet kehitysmoodi?]
-   (->HttpTodennus oikeudet kehitysmoodi?)))
+   (->HttpTodennus oikeudet kehitysmoodi? nil))
+  ([oikeudet kehitysmoodi? public-key-url]
+   (->HttpTodennus oikeudet kehitysmoodi? public-key-url)))
 
 (defn feikki-http-todennus [kayttaja]
   (->FeikkiHttpTodennus kayttaja))

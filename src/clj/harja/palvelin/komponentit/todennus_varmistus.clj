@@ -11,8 +11,10 @@
   (:import (org.apache.commons.codec.binary Base64)))
 
 (defonce jwk-cache (atom nil))
+
 (def +jwk-cache-paivitys-min+ 120)
 (def +kayttaja-varmistus-cache-min+ 15)
+
 (def user-agent-headers "HARJA/0.0.1-SNAPSHOT (JWT signature/harja.palaute@solita.fi)")
 
 
@@ -85,7 +87,7 @@
 (defn varmista-jwt-signature
   "Varmistaa kirjautumisen oikellisuuden Cogniton x-iam-accesstoken header tokenista
    https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html#amazon-cognito-user-pools-using-tokens-manually-inspect"
-  [accesstoken iam-data iam-identity paivita?]
+  [accesstoken iam-data iam-identity paivita? iam-data-public-url]
   (let [header (-> accesstoken dekoodaa-token :header)
         issuer (-> accesstoken dekoodaa-token :payload :iss)
         kid (:kid header)
@@ -103,6 +105,8 @@
         _ (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature) " \n \n" " ---- \n")
         _ (println "\n iam-identity payload: " iam-identity " \n ")
         _ (println "\n custom uid: " (-> iam-data dekoodaa-token :payload :custom:uid) " \n ")
+
+        _ (println "\n iam-data-public-url: " iam-data-public-url "\n ")
 
         ;; Verifioi kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
         ;; Palauttaa Cognito map responsen, jos kirjautuminen menee läpi ja token on voimassa 
@@ -170,11 +174,11 @@
    
    3. Jos kaikki OK, palautetaan dekoodattu tunnusdata, ja jatketaan kirjautumista 
    4. Tuloksena käyttäjän roolitiedot on vahvistettu oikeiksi, eikä mitään ole sorkittu matkalla"
-  ([accesstoken iam-data iam-identity kehitysmoodi?]
+  ([accesstoken iam-data iam-identity kehitysmoodi? public-key-url]
    ;; yrita-uudelleen? on defaulttina aina false
    ;; Jos kirjautuminen epäonnistuu, yritetään kerran uudelleen päivitetyllä public-avaimella
-   (vahvista-jwt-signaturet accesstoken iam-data iam-identity false kehitysmoodi?))
-  ([accesstoken iam-data iam-identity yrita-uudelleen? kehitysmoodi?]
+   (vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi? public-key-url false))
+  ([accesstoken iam-data iam-identity kehitysmoodi? public-key-url yrita-uudelleen?]
    (let [cache-key accesstoken]
      ;; Todennusta kutsutaan ilman malttia, joten cachella kutsutaan vaan tarvittaessa per käyttäjä
      (get (swap! kayttaja-varmistettu-cache #(cache/through
@@ -182,7 +186,7 @@
                                                  (try
                                                    ;; Cachessa ei ole tietoja, varmistetaan signaturet 
                                                    (let [_ (when-not kehitysmoodi?
-                                                             (varmista-jwt-signature accesstoken iam-data iam-identity yrita-uudelleen?))]
+                                                             (varmista-jwt-signature accesstoken iam-data iam-identity yrita-uudelleen? public-key-url))]
                                                      (tunnistetiedot iam-data))
                                                    (catch Exception e
                                                      (if
@@ -190,7 +194,7 @@
                                                          (not yrita-uudelleen?)
                                                          (= (.getMessage e) "Message seems corrupt or manipulated"))
                                                        ;; Tarkista, onko public key rotatoitunut yrittämällä uudelleen
-                                                       (vahvista-jwt-signaturet accesstoken iam-data iam-identity true kehitysmoodi?)
+                                                       (vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi? public-key-url true)
                                                        ;; Public key on ajan tasalla, ja vieläkin tulee virhe, heitetään hälytys logiin 
                                                        (kirjautuminen-epaonnistui e iam-data)))))
                                                ;; Tiedot on jo cachessa, palauta ne 

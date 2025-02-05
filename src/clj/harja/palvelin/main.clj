@@ -232,7 +232,10 @@
                     kehitysmoodi)
 
       :todennus (component/using
-                  (todennus/http-todennus (:sahke-headerit asetukset) (:kehitysmoodi asetukset))
+                  (todennus/http-todennus 
+                    (:sahke-headerit asetukset) 
+                    (:kehitysmoodi asetukset)
+                    (get-in asetukset [:roolit-jwt-signature :public-key-url]))
                   [:db])
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
