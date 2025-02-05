@@ -95,10 +95,6 @@
          }))
     (subvec data (inc otsikkotiedot))))
 
-(defn jaa-mappi-helpperi [mappi]
-  (keep (fn [[k v]] (when-not (nil? v)
-                      {:kalustotyyppi (str/upper-case (name k)) :kalusto-lkm v})) mappi))
-
 (defn lue-talvihoitoreitit-excelista [workbook]
   (let [nimet-ja-kalusto-sivu (first (xls/sheet-seq workbook))
         reitit-sivu (second (xls/sheet-seq workbook))
@@ -141,83 +137,74 @@
                  [] reittien-nimet)]
     reitit))
 
-(defn- kalustomaara [avain kalustot]
-  (let [tr-kalusto (filter #(= "TR" (:kalustotyyppi %)) kalustot)
-        ka-kalusto (filter #(= "KA" (:kalustotyyppi %)) kalustot)
-        kup-kalusto (filter #(= "KUP" (:kalustotyyppi %)) kalustot)
-        kalusto (cond
-                  (= :tr avain) (when-not (empty? tr-kalusto) (:kalustomaara (first tr-kalusto)))
-                  (= :ka avain) (when-not (empty? ka-kalusto) (:kalustomaara (first ka-kalusto)))
-                  (= :kup avain) (when-not (empty? kup-kalusto) (:kalustomaara (first kup-kalusto))))]
-    kalusto))
-
 (defn lataa-talvihoitoreitit-exceliin [db workbook user {:keys [urakka-id]}]
-  (if (or (roolit/roolissa? user "Jarjestelmavastaava") (roolit/rooli-urakassa? user "ELY_Urakanvalvoja" urakka-id))
-  #_ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
-  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
-        urakan-talvihoitoreitit (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
-        kaluste-sarakkeet [{:otsikko "Reitin nimi" :lihavoitu? true}
-                           {:otsikko "TR (kpl)" :lihavoitu? true}
-                           {:otsikko "KA (kpl)" :lihavoitu? true}
-                           {:otsikko "Kup (kpl)" :lihavoitu? true}]
-        kalusto-optiot {:nimi "Talvihoitoreitit"
-                        :otsikko "HARJA Talvihoitoreitit"
-                        :sheet-nimi "Reittien nimet & kalusto"
-                        :tyhja (when (empty? urakan-talvihoitoreitit) "Urakalla ei ole talvihoitoreittejä.")
-                        :rivi-ennen [{:sarakkeita 1 :taustavari :WHITE}
-                                     {:teksti "Kalusto"
-                                      :sarakkeita 3
-                                      :tummenna-teksti? true
-                                      :tasaa :keskita
-                                      :taustavari :GREY_25_PERCENT
-                                      :lihavoitu? true}]}
-        kalusto-rivit (mapv (fn [reitti]
-                              {:rivi [(:nimi reitti)
-                                      (kalustomaara :tr (:kalustot reitti))
-                                      (kalustomaara :ka (:kalustot reitti))
-                                      (kalustomaara :kup (:kalustot reitti))],
-                               :lihavoi? false})
-                        urakan-talvihoitoreitit)
-        kalusto-taulukko [:taulukko kalusto-optiot kaluste-sarakkeet kalusto-rivit]
-        reitti-optiot {:nimi "Talvihoitoreitit"
-                       :sheet-nimi "Reittien tiedot"
-                       :otsikko "HARJA Talvihoitoreitit"
-                       :excel-alkutekstit ["Kaikki tiedot ovat pakollisia täyttää"
-                                    "Reitin tulee sisältää kaikki siihen kuuluvat tiet (myös rampit, kiertoliittymät ja käpy-väylät). Ei hoitourakkaan kuulumattomia tietä, esim. katuja."
-                                    "Reitti tunnistetaan nimen perusteella. Varmista, että kaikilla saman reitin tieosilla on sama nimi. Reitin nimet määritellään toisella välilehdellä."]
-
-                       :tyhja (if (empty? urakan-talvihoitoreitit) "Urakalla ei ole talvihoitoreittejä.")}
-        reitti-sarakkeet [{:otsikko "Reitin nimi*" :lihavoitu? true}
-                          {:otsikko "Tienro*" :lihavoitu? true}
-                          {:otsikko "Aosa*" :lihavoitu? true}
-                          {:otsikko "Aet*" :lihavoitu? true}
-                          {:otsikko "Losa*" :lihavoitu? true}
-                          {:otsikko "Let*" :lihavoitu? true}
-                          {:otsikko "Hoitoluokka*" :lihavoitu? true}
-                          {:otsikko "Pituus (km)*" :lihavoitu? true}]
-        reitti-rivit  (mapcat (fn [reitti]
-                                (concat
-                                  (mapv (fn [rivi]
-                                          {:rivi [(:nimi reitti)
-                                                  (:tie rivi)
-                                                  (:alkuosa rivi)
-                                                  (:alkuetaisyys rivi)
-                                                  (:loppuosa rivi)
-                                                  (:loppuetaisyys rivi)
-                                                  (:hoitoluokka rivi)
-                                                  (:pituus rivi)]})
-                                    (:reitit reitti))))
+  ; Käyttöoikeus van Järjestelmävalvojalla ja ELY-urakanvalvojalla ei muilla. Muiden oikeuksia lisätään myöhemmin.
+  (if (or (roolit/jvh? user) (roolit/ely-urakanvalvoja-urakkaroolissa? user urakka-id))
+    #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
+    (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+          urakan-talvihoitoreitit (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
+          kaluste-sarakkeet [{:otsikko "Reitin nimi" :lihavoitu? true}
+                             {:otsikko "TR (kpl)" :lihavoitu? true}
+                             {:otsikko "KA (kpl)" :lihavoitu? true}
+                             {:otsikko "Kup (kpl)" :lihavoitu? true}]
+          kalusto-optiot {:nimi "Talvihoitoreitit"
+                          :otsikko "HARJA Talvihoitoreitit"
+                          :sheet-nimi "Reittien nimet & kalusto"
+                          :tyhja (when (empty? urakan-talvihoitoreitit) "Urakalla ei ole talvihoitoreittejä.")
+                          :rivi-ennen [{:sarakkeita 1 :taustavari :WHITE}
+                                       {:teksti "Kalusto"
+                                        :sarakkeita 3
+                                        :tummenna-teksti? true
+                                        :tasaa :keskita
+                                        :taustavari :GREY_25_PERCENT
+                                        :lihavoitu? true}]}
+          kalusto-rivit (mapv (fn [reitti]
+                                {:rivi [(:nimi reitti)
+                                        (:tr_maara reitti)
+                                        (:ka_maara reitti)
+                                        (:kup_maara reitti)],
+                                 :lihavoi? false})
                           urakan-talvihoitoreitit)
-        reitti-taulukko [:taulukko reitti-optiot reitti-sarakkeet reitti-rivit]
-        taulukot (conj []
-                   [:otsikko-heading "Reitti tunnistetaan nimen perusteella."]
-                   kalusto-taulukko reitti-taulukko)
-        raportti (concat
-                   [:raportti {:nimi (str (:nimi urakan-tiedot) " - Talvihoitoreitit")
-                               :raportin-yleiset-tiedot {:raportin-nimi (str (:nimi urakan-tiedot) "- Talvihoitoreitit")
-                                                         :urakka (:nimi urakan-tiedot)}}]
-                   (if (empty? taulukot)
-                     [[:taulukko {} nil [["Ei kustannuksia valitulla aikavälillä"]]]]
-                     taulukot))]
-    (excel/muodosta-excel (vec raportti) workbook))
-  {:error "Ei käyttöoikeuksia."}))
+          kalusto-taulukko [:taulukko kalusto-optiot kaluste-sarakkeet kalusto-rivit]
+          reitti-optiot {:nimi "Talvihoitoreitit"
+                         :sheet-nimi "Reittien tiedot"
+                         :otsikko "HARJA Talvihoitoreitit"
+                         :excel-alkutekstit ["Kaikki tiedot ovat pakollisia täyttää"
+                                             "Reitin tulee sisältää kaikki siihen kuuluvat tiet (myös rampit, kiertoliittymät ja käpy-väylät). Ei hoitourakkaan kuulumattomia tietä, esim. katuja."
+                                             "Reitti tunnistetaan nimen perusteella. Varmista, että kaikilla saman reitin tieosilla on sama nimi. Reitin nimet määritellään toisella välilehdellä."]
+
+                         :tyhja (if (empty? urakan-talvihoitoreitit) "Urakalla ei ole talvihoitoreittejä.")}
+          reitti-sarakkeet [{:otsikko "Reitin nimi*" :lihavoitu? true}
+                            {:otsikko "Tienro*" :lihavoitu? true}
+                            {:otsikko "Aosa*" :lihavoitu? true}
+                            {:otsikko "Aet*" :lihavoitu? true}
+                            {:otsikko "Losa*" :lihavoitu? true}
+                            {:otsikko "Let*" :lihavoitu? true}
+                            {:otsikko "Hoitoluokka*" :lihavoitu? true}
+                            {:otsikko "Pituus (km)*" :lihavoitu? true}]
+          reitti-rivit (mapcat (fn [reitti]
+                                 (concat
+                                   (mapv (fn [rivi]
+                                           {:rivi [(:nimi reitti)
+                                                   (:tie rivi)
+                                                   (:alkuosa rivi)
+                                                   (:alkuetaisyys rivi)
+                                                   (:loppuosa rivi)
+                                                   (:loppuetaisyys rivi)
+                                                   (:hoitoluokka rivi)
+                                                   (:pituus rivi)]})
+                                     (:reitit reitti))))
+                         urakan-talvihoitoreitit)
+          reitti-taulukko [:taulukko reitti-optiot reitti-sarakkeet reitti-rivit]
+          taulukot (conj []
+                     [:otsikko-heading "Reitti tunnistetaan nimen perusteella."]
+                     kalusto-taulukko reitti-taulukko)
+          raportti (concat
+                     [:raportti {:nimi (str (:nimi urakan-tiedot) " - Talvihoitoreitit")
+                                 :raportin-yleiset-tiedot {:raportin-nimi (str (:nimi urakan-tiedot) "- Talvihoitoreitit")
+                                                           :urakka (:nimi urakan-tiedot)}}]
+                     (if (empty? taulukot)
+                       [[:taulukko {} nil [["Ei reittejä lisättynä."]]]]
+                       taulukot))]
+      (excel/muodosta-excel (vec raportti) workbook))
+    {:error "Ei käyttöoikeuksia."}))
