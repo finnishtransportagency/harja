@@ -204,7 +204,7 @@
                                  :raportin-yleiset-tiedot {:raportin-nimi (str (:nimi urakan-tiedot) "- Talvihoitoreitit")
                                                            :urakka (:nimi urakan-tiedot)}}]
                      (if (empty? taulukot)
-                       [[:taulukko {} nil [["Ei kustannuksia valitulla aikavälillä"]]]]
+                       [[:taulukko {} nil [["Ei reittejä lisättynä."]]]]
                        taulukot))]
       (excel/muodosta-excel (vec raportti) workbook))
     {:error "Ei käyttöoikeuksia."}))
