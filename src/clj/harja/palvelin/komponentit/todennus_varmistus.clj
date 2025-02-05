@@ -1,7 +1,6 @@
 (ns harja.palvelin.komponentit.todennus-varmistus
-  "Kirjautumisen JWT tokenin varmistus joka tulee Cognitolta"
-  (:require [cheshire.core :as cheshire]
-            [clojure.string :as str]
+  "Kirjautumisen JWT tokenien varmistus jotka saadaan Cognitolta"
+  (:require [clojure.string :as str]
             [clojure.data.json :as json]
             [org.httpkit.client :as http]
             [clojure.core.cache :as cache]
@@ -11,16 +10,6 @@
   (:import (org.apache.commons.codec.binary Base64)))
 
 (defonce jwk-cache (atom nil))
-
-
-(defn- tunnistetiedot 
-  "Palauttaa dekoodatut tunnistetiedot käyttäjästä, sisältää roolit yms (x-iam-data)"
-  [jwt-body]
-  (some->
-    ^String jwt-body
-    Base64/decodeBase64
-    String.
-    cheshire/decode))
 
 
 (defn- onko-jwk-vanhentunut? 
@@ -64,20 +53,6 @@
   (-> s Base64/decodeBase64 String. (json/read-json)))
 
 
-(defn encode-base64-json [data]
-  (-> data
-    cheshire/generate-string
-    (.getBytes "UTF-8")
-    (Base64/encodeBase64)))
-
-
-(defn encode-token [decoded-token]
-  (let [{:keys [header payload signature]} decoded-token]
-    (str (encode-base64-json header) "."
-      (encode-base64-json payload) "."
-      signature)))
-
-
 (defn dekoodaa-token [token]
   (let [[header payload signature] (str/split token #"\.")]
     {:header  (decode-base64-json header)
@@ -106,16 +81,6 @@
         _ (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature) " \n \n" " ---- \n")
 
         _ (println "\n iam-identity payload: " iam-identity)
-        
-
-        ;; Vaihdettu expiration date
-        ;inject_payload (-> accesstoken dekoodaa-token)
-        ;new-payload (assoc (:payload inject_payload) :exp "1798652411")
-        ;injected-token (encode-token (assoc inject_payload :payload new-payload))
-
-        ;; Verifioi kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
-        ;; Palauttaa Cognito map responsen, jos kirjautuminen menee läpi ja token on voimassa 
-        ;; Heittää virheen, jos tiedoissa on jotain väärin 
         response (jwt/unsign accesstoken public-key {:alg :rs256})
         _ (println "\n res: " response " \n")]
     response))
@@ -159,10 +124,15 @@
                                                   (catch Exception e
                                                     (do
                                                       (log/error (str
-                                                                   "Kirjautumisen varmistus ei onnistunut (JWT signature): " (.getMessage e) "  -  "
-                                                                   "\nKäyttäjätiedot: " (select-keys (-> iam-data dekoodaa-token :payload) ["custom:rooli" "custom:sukunimi" "custom:email" "custom:ytunnus" "custom:uid"])))
+                                                                   "Kirjautumisen varmistus ei onnistunut (JWT signature): "
+                                                                   (.getMessage e) 
+                                                                   "  -  "
+                                                                   "Käyttäjätiedot: "
+                                                                   (select-keys (-> iam-data dekoodaa-token :payload)
+                                                                     ["custom:rooli" "custom:sukunimi" "custom:email" "custom:ytunnus" "custom:uid"])))
                                                       (log/error (str
-                                                                   "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :header) "  -  "
+                                                                   "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :header) 
+                                                                   "  -  "
                                                                    "Saatu payload (iam-data): " (-> iam-data dekoodaa-token :payload)))
                                                       ;; Kirjautuminen ei mennyt läpi, poista oikeudet käyttäjältä
                                                       ;; Tämä uudelleenohjaa "Ei käyttöoikeutta" näkymään 
