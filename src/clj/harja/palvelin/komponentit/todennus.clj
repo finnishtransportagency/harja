@@ -329,7 +329,7 @@
           kayttaja-id (headerit "oam_remote_user")]
       (if (nil? kayttaja-id)
         (do
-          (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan" headerit))
+          (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan: " headerit))
           (throw+ todennusvirhe))
         (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi?)]
           (assoc req :kayttaja kayttajatiedot)
