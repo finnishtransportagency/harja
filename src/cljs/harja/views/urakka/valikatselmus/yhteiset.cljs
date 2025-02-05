@@ -30,25 +30,17 @@
         false)))
 
 (defn paatosotsikko-ja-avaus [e! otsikko paatos-tehty? paatos-avain avatut-paatokset avaa-tai-sulje-haitari-fn avaa-paatos-fn]
-  [:div.row {:on-click #(e! avaa-paatos-fn)}
-   [:div.col-xs-1
-    [:div {:style {:width "20px"}}
-     ;; Kun päätosavainta ei löydy setistä, niin pidetään päätös avattuna (defaulttina kaikki on auki)
-     (if (not (contains? avatut-paatokset paatos-avain))
-       [:img {:alt "Avattu"
-              :src "images/expander-down.svg"
-              :tabIndex "0"
-              :on-key-down #(avaa-tai-sulje-haitari-fn %)}]
-       [:img {:alt "Suljettu"
-              :src "images/expander.svg"
-              :tabIndex "0"
-              :on-key-down #(avaa-tai-sulje-haitari-fn %)}])]]
-   [:div.col-xs-6.col-md-5 {:style {:margin-top "-14px"}}
-    [:h3 otsikko]]
-   [:div.col-xs-5
+  [:div.paatos-komponentti-otsikko-row {:on-click #(e! avaa-paatos-fn)}
+   [:div.navigation-ikoni {:on-click #(avaa-tai-sulje-haitari-fn %)}
+    ;; Kun päätosavainta ei löydy setistä, niin pidetään päätös avattuna (defaulttina kaikki on auki)
+    (if (not (contains? avatut-paatokset paatos-avain))
+      [ikonit/navigation-ympyrassa :up]
+      [ikonit/navigation-ympyrassa :down])]
+   [:h2.paatos-komponentti-otsikko otsikko]
+   [:div
     (if paatos-tehty?
-      [:div.badge.paatetty "Päätetty"]
-      [:div.badge.avoin "Avoin"])]])
+      [:div.badge.paatetty.paatos-badge "Päätetty"]
+      [:div.badge.avoin.paatos-badge "Avoin"])]])
 
 (defn paatosnapit [paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata? tallenna-paatos-fn poista-paatos-fn]
   (if (not paatos-tehty?)

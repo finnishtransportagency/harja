@@ -434,6 +434,14 @@
                               :toteutuneet_pisteet 98
                               :lupausbonus nil
                               :lupaussanktio nil}}
+                 {:lupaukset {:paatos-id nil
+                              :urakkaid urakkaid
+                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :tavoitehinta tarjouksen-tavoitehinta
+                              :luvatut_pisteet 98
+                              :toteutuneet_pisteet nil
+                              :lupausbonus nil
+                              :lupaussanktio nil}}
 
                  {:tavoitehinnan-muutokset {:paatos-id nil
                                             :urakkaid urakkaid
