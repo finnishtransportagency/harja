@@ -95,10 +95,6 @@
          }))
     (subvec data (inc otsikkotiedot))))
 
-(defn jaa-mappi-helpperi [mappi]
-  (keep (fn [[k v]] (when-not (nil? v)
-                      {:kalustotyyppi (str/upper-case (name k)) :kalusto-lkm v})) mappi))
-
 (defn lue-talvihoitoreitit-excelista [workbook]
   (let [nimet-ja-kalusto-sivu (first (xls/sheet-seq workbook))
         reitit-sivu (second (xls/sheet-seq workbook))
@@ -142,7 +138,8 @@
     reitit))
 
 (defn lataa-talvihoitoreitit-exceliin [db workbook user {:keys [urakka-id]}]
-  (if (or (roolit/roolissa? user "Jarjestelmavastaava") (roolit/rooli-urakassa? user "ELY_Urakanvalvoja" urakka-id))
+  ; Käyttöoikeus van Järjestelmävalvojalla ja ELY-urakanvalvojalla ei muilla. Muiden oikeuksia lisätään myöhemmin.
+  (if (or (roolit/jvh? user) (roolit/ely-urakanvalvoja-urakkaroolissa? user urakka-id))
     #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
     (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
           urakan-talvihoitoreitit (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
