@@ -18,7 +18,7 @@
       (component/system-map
        :db (tietokanta/luo-tietokanta testitietokanta)
        :todennus (component/using
-                  (todennus/http-todennus nil true)
+                  (todennus/http-todennus)
                   [:db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -138,7 +138,7 @@
   (let [handler (->
                   (fn [req] req)
                   (harja.palvelin.komponentit.http-palvelin/wrap-with-common-wrappers))
-        todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)
+        todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % true) 
 
         destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))
         virasto-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'")))]
@@ -186,7 +186,7 @@
   (let [handler (->
                   (fn [req] req)
                   (harja.palvelin.komponentit.http-palvelin/wrap-with-common-wrappers))
-        todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)]
+        todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % true)]
 
     (testing "Cognito headeri: harja-api-username -headerin arvo löytyy custom:uid-headerin arvon sijaan"
       (let [req (handler {:headers (merge (testi-enkoodaa-payload-jwt testi-cognito-headerit-oam) {"harja-api-username" "LOTTA"}) })
@@ -207,7 +207,7 @@
         (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))))))
 
 (deftest ota-organisaatio-roolin-y-tunnuksesta
-  (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)
+  (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % true)
         destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))
         lampunvaihtajat-id (first (first (q "SELECT id FROM organisaatio WHERE ytunnus = '2234567-8'")))]
     (testing "Organisaatio löytyy, jos OAM_ORGANIZATION on annettu oikein"
@@ -228,11 +228,11 @@
                                                     "oam_user_mail" "alpo@example.com"
                                                     "oam_user_mobile" "1234567890"
                                                     "oam_organization" "Eitällaistaolekaan Oy"
-                                                    "oam_groups" "2234567-8_Paakayttaja"}})]
+                                                    "oam_groups" "2234567-8_Paakayttaja"}} true)]
         (is (= (get-in req [:kayttaja :organisaatio :id]) lampunvaihtajat-id))))))
 
 (deftest ota-organisaatio-companyid-headerista
-  (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)
+  (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % true)
         destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))]
     (testing "Organisaatio löytyy, jos OAM_USER_COMPANYID on annettu oikein vaikka nimi olisi väärä"
       (let [req (todenna {:headers {"oam_remote_user" "daniel"
@@ -254,5 +254,5 @@
                                                     "oam_user_mobile" "1234567890"
                                                     "oam_organization" "Destia oy"
                                                     "oam_user_companyid" "NOT_FOUND"
-                                                    "oam_groups" ""}})]
+                                                    "oam_groups" ""}} true)]
         (is (= (get-in req [:kayttaja :organisaatio :id]) destia-id))))))

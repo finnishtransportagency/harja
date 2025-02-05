@@ -10,11 +10,13 @@
             [taoensso.timbre :as log])
   (:import (org.apache.commons.codec.binary Base64)))
 
-(defonce jwk-cache (atom nil))
-
-(def +jwk-cache-paivitys-min+ 120)
+;; Accesstokenin public key 
+(defonce accesstoken-jwk-cache (atom nil))
+;; Accesstokenin public avaimen päivitys intervalli (minuuteissa)
+(def +accesstoken-cache-paivitys-min+ 120)
+;; Pidetään käyttäjätietoja muistissa vartti
 (def +kayttaja-varmistus-cache-min+ 15)
-
+;; Annetaan Cognitolle GET kutsuun user-agent tietoja 
 (def user-agent-headers "HARJA/0.0.1-SNAPSHOT (JWT signature/harja.palaute@solita.fi)")
 
 
@@ -34,19 +36,19 @@
    Ei ole tiedossa kuinka tiheään, mutta Cognitolla on ominaisuus rotatoida public avaimia
    Tämä päivitetään myös sen yhteydessä, jos käyttäjän kirjautuminen epäonnistuu"
   [minuutit]
-  (> (- (System/currentTimeMillis) (:fetched-at @jwk-cache)) (* minuutit 60 1000)))
+  (> (- (System/currentTimeMillis) (:fetched-at @accesstoken-jwk-cache)) (* minuutit 60 1000)))
 
 
-(defn hae-jwks-json
-  "Tekee GET kutsun joka hakee jwks (json web key set/public avaimet) Cognitolta"
+(defn hae-accesstoken-jwks
+  "Tekee GET kutsun joka hakee jwks (json web key set/public avaimet) Cognitolta (x-iam-accesstoken)"
   [issuer paivita? lx-kayttaja]
   (if
     ;; Jos public avainta ei ole päivitetty 120 minuuttiin
     ;; Tällainen cachetus vielä, koska yksi backend, monta käyttäjää, Cognito ei rotatoi public avaimia kovin tiheään 
     (or
       paivita? ;; Käyttäjä ei päässyt sisälle, yritetään yhden kerran uudelleen
-      (nil? @jwk-cache)
-      (onko-jwk-vanhentunut? +jwk-cache-paivitys-min+))
+      (nil? @accesstoken-jwk-cache)
+      (onko-jwk-vanhentunut? +accesstoken-cache-paivitys-min+))
     (try
       (let [response @(http/get (str issuer "/.well-known/jwks.json") {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
                                                                                  "User-Agent" (if paivita?
@@ -55,12 +57,12 @@
                                                                                                 user-agent-headers)
                                                                                  "Content-Type" "application/json"}})
             response (json/read-json (:body response))
-            _ (reset! jwk-cache {:keys (:keys response) :fetched-at (System/currentTimeMillis)})]
+            _ (reset! accesstoken-jwk-cache {:keys (:keys response) :fetched-at (System/currentTimeMillis)})]
         (:keys response))
       (catch Exception e
         (log/error (str "Failed to refresh JWKS cache: " (.getMessage e)))))
     ;; Public avaimet on ajan tasalla, palauta tallennettu arvo 
-    (-> @jwk-cache :keys)))
+    (-> @accesstoken-jwk-cache :keys)))
 
 
 (defn hae-public-key
@@ -68,7 +70,7 @@
    Mukana on 2 avainta, joten suodatetaan vaan haluttu avain (key identifier)"
   [kid issuer paivita? lx-kayttaja]
   (some #(when (= kid (:kid %)) %)
-    (hae-jwks-json issuer paivita? lx-kayttaja)))
+    (hae-accesstoken-jwks issuer paivita? lx-kayttaja)))
 
 
 (defn- decode-base64-json [s]
