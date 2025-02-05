@@ -1,10 +1,10 @@
 (ns harja.palvelin.komponentit.todennus-varmistus
   "Kirjautumisen JWT tokenien varmistus jotka saadaan Cognitolta"
   (:require [clojure.string :as str]
-            [cheshire.core :as cheshire]
-            [clojure.data.json :as json]
-            [org.httpkit.client :as http]
             [clojure.core.cache :as cache]
+            [clojure.data.json :as json]
+            [cheshire.core :as cheshire]
+            [org.httpkit.client :as http]
             [buddy.sign.jwt :as jwt]
             [buddy.core.keys :as keys]
             [taoensso.timbre :as log])
@@ -18,6 +18,10 @@
 (defonce accesstoken-jwk-cache (atom nil))
 ;; Accesstokenin public avaimen päivitys intervalli (minuuteissa)
 (def +accesstoken-cache-paivitys-min+ 120)
+;; Iam-data (käyttäjäroolit) public key (PEM)
+(defonce iam-data-pk-cache (atom nil))
+;; Iam-data public avaimen päivitys intervalli (minuuteissa)
+(def +iam-data-cache-paivitys-min+ 120)
 ;; Pidetään käyttäjätietoja muistissa vartti
 (def +kayttaja-varmistus-cache-min+ 15)
 ;; Annetaan Cognitolle GET kutsuun user-agent tietoja 
@@ -35,46 +39,67 @@
     cheshire/decode))
 
 
-(defn- onko-jwk-vanhentunut?
+(defn parsi-PEM-public-key [pem-key]
+  (let [reader (PemReader. (StringReader. pem-key))
+        pem-object (.readPemObject reader)
+        key-bytes (.getContent pem-object)
+        key-spec (X509EncodedKeySpec. key-bytes)
+        key-factory (KeyFactory/getInstance "EC")] ;; "RSA" RSA avaimille, "EC" ECDSA avaimille
+    (.generatePublic key-factory key-spec)))
+
+
+(defn- public-key-vanhentunut?
   "Hakee uuden public keyn, jos sitä ei ole haettu vähään aikaan
    Ei ole tiedossa kuinka tiheään, mutta Cognitolla on ominaisuus rotatoida public avaimia
    Tämä päivitetään myös sen yhteydessä, jos käyttäjän kirjautuminen epäonnistuu"
-  [minuutit]
-  (> (- (System/currentTimeMillis) (:fetched-at @accesstoken-jwk-cache)) (* minuutit 60 1000)))
+  [cache-atom paivitys-intervalli]
+  (> (- (System/currentTimeMillis) (:fetched-at @cache-atom)) (* paivitys-intervalli 60 1000)))
 
 
-(defn hae-accesstoken-jwks
+(defn- generoi-GET-headerit [paivita? lx-kayttaja]
+  {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
+             "User-Agent" (if paivita?
+                            ;; Koska kirjautuminen epäonnistui, laita LX tunnus mukaan 
+                            (str user-agent-headers " (update public-key/" lx-kayttaja ")")
+                            user-agent-headers)
+             "Content-Type" "application/json"}})
+
+
+(defn hae-public-key
   "Tekee GET kutsun joka hakee jwks (json web key set/public avaimet) Cognitolta (x-iam-accesstoken)"
-  [issuer paivita? lx-kayttaja]
+  [paivita? lx-kayttaja api-url PEM? cache-atom paivitys-intervalli]
   (if
-    ;; Jos public avainta ei ole päivitetty 120 minuuttiin
+    ;; Jos public avainta ei ole päivitetty x minuuttiin, päivitetään se
     ;; Tällainen cachetus vielä, koska yksi backend, monta käyttäjää, Cognito ei rotatoi public avaimia kovin tiheään 
     (or
-      paivita? ;; Käyttäjä ei päässyt sisälle, yritetään yhden kerran uudelleen
-      (nil? @accesstoken-jwk-cache)
-      (onko-jwk-vanhentunut? +accesstoken-cache-paivitys-min+))
+      paivita? ;; Tämä on true jos käyttäjä ei päässyt sisälle, yritetään yhden kerran uudelleen
+      (nil? @cache-atom)
+      (public-key-vanhentunut? cache-atom paivitys-intervalli))
     (try
-      (let [response @(http/get (str issuer "/.well-known/jwks.json") {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
-                                                                                 "User-Agent" (if paivita?
-                                                                                                ;; Koska kirjautuminen epäonnistui, laita LX tunnus mukaan 
-                                                                                                (str user-agent-headers " (update public-key/" lx-kayttaja ")")
-                                                                                                user-agent-headers)
-                                                                                 "Content-Type" "application/json"}})
-            response (json/read-json (:body response))
-            _ (reset! accesstoken-jwk-cache {:keys (:keys response) :fetched-at (System/currentTimeMillis)})]
-        (:keys response))
+      (let [response @(http/get api-url (generoi-GET-headerit paivita? lx-kayttaja))
+            response (if PEM?
+                       (-> response :body (slurp) (parsi-PEM-public-key))
+                       (-> response :body (json/read-json) :keys))
+            _ (reset! cache-atom {:key response :fetched-at (System/currentTimeMillis)})]
+        response)
       (catch Exception e
-        (log/error (str "Failed to refresh JWKS cache: " (.getMessage e)))))
+        (log/error (str "Failed to refresh public key cache: " (.getMessage e) " PEM?: " PEM?))))
     ;; Public avaimet on ajan tasalla, palauta tallennettu arvo 
-    (-> @accesstoken-jwk-cache :keys)))
+    (-> @cache-atom :key)))
 
 
-(defn hae-accesstoken-pk
+(defn hae-ja-suodata-accesstoken-public-key
   "Kutsuttu rajapinta palauttaa accesstokenin public avaimen
    Mukana on 2 avainta, joten suodatetaan vaan haluttu avain (key identifier)"
   [kid issuer paivita? lx-kayttaja]
   (some #(when (= kid (:kid %)) %)
-    (hae-accesstoken-jwks issuer paivita? lx-kayttaja)))
+    (hae-public-key 
+      paivita? 
+      lx-kayttaja 
+      (str issuer "/.well-known/jwks.json") 
+      false 
+      accesstoken-jwk-cache 
+      +accesstoken-cache-paivitys-min+)))
 
 
 (defn- decode-base64-json [s]
@@ -90,41 +115,33 @@
      :signature signature}))
 
 
-(defn parse-public-key [pem-key]
-  (let [reader (PemReader. (StringReader. pem-key))
-        pem-object (.readPemObject reader)
-        key-bytes (.getContent pem-object)
-        key-spec (X509EncodedKeySpec. key-bytes)
-        key-factory (KeyFactory/getInstance "EC")] ;; "RSA" RSA avaimille, "EC" ECDSA avaimille
-    (.generatePublic key-factory key-spec)))
-
-
-(defn hae-iam-data-PEM-pk
-  "Tekee GET kutsun joka hakee PEM muodossa olevan public avaimen
-   Jolla voimme vahvistaa käyttäjäroolien signaturen (x-iam-data)"
-  [lx-kayttaja paivita? url kid]
-  (try
-    (let [response @(http/get (str url kid) {:headers {"User-Agent" (if paivita?
-                                                                      (str user-agent-headers " (update public-key/" lx-kayttaja ")")
-                                                                      user-agent-headers)
-                                                       "Content-Type" "application/json"}})
-          response (parse-public-key (slurp (:body response)))]
-      response)
-    (catch Exception e
-      (log/error (str "Failed to refresh PEM public key cache: " (.getMessage e))))))
-
-(defn varmista-jwt-signature
-  "Varmistaa kirjautumisen oikellisuuden Cogniton x-iam-accesstoken header tokenista
+(defn varmista-jwt-tokenit
+  "Varmistaa kirjautumisen oikellisuuden Cogniton antamista tokeneista
+   Tokenit mitkä vahvistetaan: x-iam-accesstoken (tokenin metadata), x-iam-data (käyttäjän tiedot&roolit)
    https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html#amazon-cognito-user-pools-using-tokens-manually-inspect"
   [accesstoken iam-data iam-identity paivita? iam-data-public-url]
   (let [lx-kayttaja (-> iam-data dekoodaa-token :payload :custom:uid)
         accesstoken-header (-> accesstoken dekoodaa-token :header)
-        accesstoken-issuer (-> accesstoken dekoodaa-token :payload :iss)
         accesstoken-kid (:kid accesstoken-header)
-        kayttaja-roolit-kid (-> iam-data dekoodaa-token :header :kid)
-        accesstoken-public-key (hae-accesstoken-pk accesstoken-kid accesstoken-issuer paivita? lx-kayttaja)
+        accesstoken-issuer (-> accesstoken dekoodaa-token :payload :iss)
+        iam-data-header (-> iam-data dekoodaa-token :header)
+        iam-data-kid (:kid iam-data-header)
+        ;; Hae accesstoken (tokenin metadata väitteet) public avain
+        accesstoken-public-key (hae-ja-suodata-accesstoken-public-key accesstoken-kid accesstoken-issuer paivita? lx-kayttaja)
+        _ (println "\n ac pub: " accesstoken-public-key)
         ;; Muunna java muotoon, joka käy javan signature librarylle
         accesstoken-public-key (keys/jwk->public-key accesstoken-public-key)
+        ;; Hae iam-data (jossa käyttäjärooli väitteet) public avain, tämä on PEM muodossa 
+        iam-data-public-key (hae-public-key
+                              paivita?
+                              lx-kayttaja
+                              (str iam-data-public-url iam-data-kid)
+                              true
+                              iam-data-pk-cache
+                              +iam-data-cache-paivitys-min+)
+        ;; Avainten algoritmit, buddy kirjasto haluaa nämä lowercasena
+        accesstoken-algoritmi (-> accesstoken-header :alg (str/lower-case) (keyword))
+        iam-data-algoritmi (-> iam-data-header :alg (str/lower-case) (keyword))
 
         _ (println "\n accesstoken payload: " accesstoken-header (-> accesstoken dekoodaa-token :payload))
         _ (println "\n accesstoken header: " accesstoken-header (-> accesstoken dekoodaa-token :header))
@@ -134,14 +151,12 @@
         _ (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature) " \n \n" " ---- \n")
         _ (println "\n iam-identity payload: " iam-identity " \n ")
         _ (println "\n custom uid: " (-> iam-data dekoodaa-token :payload :custom:uid) " \n ")
-        _ (println "\n iam-data-public-url: " iam-data-public-url "\n ")
+        _ (println "\n iam-data-public-url: " iam-data-public-url "\n  algo: " accesstoken-algoritmi)
 
-        ;; Hae iam-data (jossa käyttäjärooli väitteet) public avain, jotta voidaan varmistaa sen signature
-        iam-data-public-key (hae-iam-data-PEM-pk lx-kayttaja paivita? iam-data-public-url kayttaja-roolit-kid)
 
         ;; Verifioi tokenit kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
-        _ (jwt/unsign iam-data iam-data-public-key {:alg :es256})
-        _ (jwt/unsign accesstoken accesstoken-public-key {:alg :rs256})]))
+        _ (jwt/unsign iam-data iam-data-public-key {:alg iam-data-algoritmi})
+        _ (jwt/unsign accesstoken accesstoken-public-key {:alg accesstoken-algoritmi})]))
 
 
 (defn- kirjautuminen-epaonnistui
@@ -214,7 +229,7 @@
                                                  (try
                                                    ;; Cachessa ei ole tietoja, varmistetaan signaturet 
                                                    (let [_ (when-not kehitysmoodi?
-                                                             (varmista-jwt-signature accesstoken iam-data iam-identity yrita-uudelleen? public-key-url))]
+                                                             (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? public-key-url))]
                                                      (tunnistetiedot iam-data))
                                                    (catch Exception e
                                                      (if
