@@ -13,14 +13,15 @@
 (defonce jwk-cache (atom nil))
 (def +jwk-cache-paivitys-min+ 120)
 (def +kayttaja-varmistus-cache-min+ 15)
+(def user-agent-headers "HARJA/0.0.1-SNAPSHOT (JWT signature/harja.palaute@solita.fi)")
 
 
 (defn- tunnistetiedot
   "Palauttaa dekoodatut tunnistetiedot käyttäjästä, sisältää roolit yms (x-iam-data)"
-  [jwt]
-  (some-> jwt
-    (str/split #"\.")
-    second
+  [iam-data]
+  (some-> iam-data
+    (str/split #"\.") ;; HEADER.PAYLOAD.SIGNATURE
+    second ;; Meillä kiinnostaa tässä kohti vain payload
     Base64/decodeBase64
     String.
     cheshire/decode))
@@ -28,24 +29,28 @@
 
 (defn- onko-jwk-vanhentunut?
   "Hakee uuden public keyn, jos sitä ei ole haettu vähään aikaan
-   Ei ole tiedossa kuinka tiheään, mutta Cognitolla on ominaisuus rotatoida public avaimia"
+   Ei ole tiedossa kuinka tiheään, mutta Cognitolla on ominaisuus rotatoida public avaimia
+   Tämä päivitetään myös sen yhteydessä, jos käyttäjän kirjautuminen epäonnistuu"
   [minuutit]
   (> (- (System/currentTimeMillis) (:fetched-at @jwk-cache)) (* minuutit 60 1000)))
 
 
 (defn hae-jwks-json
   "Tekee GET kutsun joka hakee jwks (json web key set/public avaimet) Cognitolta"
-  [issuer paivita?]
+  [issuer paivita? lx-kayttaja]
   (if
     ;; Jos public avainta ei ole päivitetty 120 minuuttiin
     ;; Tällainen cachetus vielä, koska yksi backend, monta käyttäjää, Cognito ei rotatoi public avaimia kovin tiheään 
     (or
-      paivita? ;; Käyttäjä ei päässyt sisälle, yritetään yhden kerran uudelleen päivittämällä public avain
+      paivita? ;; Käyttäjä ei päässyt sisälle, yritetään yhden kerran uudelleen
       (nil? @jwk-cache)
       (onko-jwk-vanhentunut? +jwk-cache-paivitys-min+))
     (try
       (let [response @(http/get (str issuer "/.well-known/jwks.json") {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
-                                                                                 "User-Agent" "HARJA dev: (JWT signature verification)"
+                                                                                 "User-Agent" (if paivita?
+                                                                                                ;; Koska kirjautuminen epäonnistui, laita LX tunnus mukaan 
+                                                                                                (str user-agent-headers " (update public-key/" lx-kayttaja ")")
+                                                                                                user-agent-headers)
                                                                                  "Content-Type" "application/json"}})
             response (json/read-json (:body response))
             _ (reset! jwk-cache {:keys (:keys response) :fetched-at (System/currentTimeMillis)})]
@@ -59,9 +64,9 @@
 (defn hae-public-key
   "Kutsuttu rajapinta palauttaa accesstokenin public avaimen
    Mukana on 2 avainta, joten suodatetaan vaan haluttu avain (key identifier)"
-  [kid issuer paivita?]
+  [kid issuer paivita? lx-kayttaja]
   (some #(when (= kid (:kid %)) %)
-    (hae-jwks-json issuer paivita?)))
+    (hae-jwks-json issuer paivita? lx-kayttaja)))
 
 
 (defn- decode-base64-json [s]
@@ -84,8 +89,9 @@
   (let [header (-> accesstoken dekoodaa-token :header)
         issuer (-> accesstoken dekoodaa-token :payload :iss)
         kid (:kid header)
+        lx-kayttaja (-> iam-data dekoodaa-token :payload :custom:uid)
         ;; Hae public avain jolla sama :kid
-        jwk (hae-public-key kid issuer paivita?)
+        jwk (hae-public-key kid issuer paivita? lx-kayttaja)
         ;; Muunna java muotoon 
         public-key (keys/jwk->public-key jwk)
 
@@ -96,6 +102,7 @@
         _ (println "\n iam-data header: " (-> iam-data dekoodaa-token :header))
         _ (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature) " \n \n" " ---- \n")
         _ (println "\n iam-identity payload: " iam-identity " \n ")
+        _ (println "\n custom uid: " (-> iam-data dekoodaa-token :payload :custom:uid) " \n ")
 
         ;; Verifioi kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
         ;; Palauttaa Cognito map responsen, jos kirjautuminen menee läpi ja token on voimassa 
