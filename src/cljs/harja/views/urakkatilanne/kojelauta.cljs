@@ -33,7 +33,8 @@
      :valinta (:urakkatyyppi valinnat)
      :format-fn :nimi
      :vayla-tyyli? true
-     :disabled haku-kaynnissa?}
+     :disabled haku-kaynnissa?
+     :viive-fokuksen-siirtoon? true}
     (filter (fn [ut]
               (#{:hoito :paallystys} (:arvo ut)))
       nav/+urakkatyypit+)]
@@ -66,7 +67,8 @@
                      (e! (tiedot/->HaeUrakat)))
       :valinta (:urakkavuosi valinnat)
       :vayla-tyyli? true
-      :disabled haku-kaynnissa?}
+      :disabled haku-kaynnissa?
+      :viive-fokuksen-siirtoon? true}
      (mahdolliset-hoitokauden-alkuvuodet (pvm/nyt))]
 
     [:div.label-ja-alasveto
