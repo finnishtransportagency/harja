@@ -253,9 +253,9 @@ valintaoptiot {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
   (fn [ur]
     (valinnat/urakan-valinnat ur (select-keys valintaoptiot [:hoitokausi :aikavali-optiot]))))
 
-(defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur]
-  (fn [ur]
-    (valinnat/urakan-valinnat ur (select-keys valintaoptiot [:sopimus :hoitokausi :aikavali-optiot :toimenpide]))))
+(defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur elementin-nimi]
+  (fn [ur elementin-nimi]
+    (valinnat/urakan-valinnat ur (assoc-in (select-keys valintaoptiot [:sopimus :hoitokausi :aikavali-optiot :toimenpide]) [:aikavali-optiot :elementin-nimi] elementin-nimi))))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali
   ([ur] (urakan-sopimus-ja-hoitokausi-ja-aikavali ur {}))
