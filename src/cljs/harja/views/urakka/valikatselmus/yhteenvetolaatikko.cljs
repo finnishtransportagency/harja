@@ -63,10 +63,6 @@
         totutuneet-kustannukset (or (get-in app [:valikatselmuksen-tiedot :kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         oikaistu-tavoitehinta (t-yhteiset/hoitokauden-oikaistu-tavoitehinta valittu-hoitovuosi-nro (:valikatselmuksen-tiedot app))
         oikaistu-kattohinta (t-yhteiset/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro (:valikatselmuksen-tiedot app))
-        tavoitehinnan-oikaisut (vals (get-in (:tavoitehinnan-muutokset valikatselmuksen-tiedot) [valittu-hoitokauden-alkuvuosi]))
-        tavoitehinnanoikaisu (if (seq? tavoitehinnan-oikaisut)
-                               (apply + (map ::valikatselmus/summa tavoitehinnan-oikaisut))
-                               0)
         ;; Tavoitehinnan ylitys otetaan huomioon vasta, kun päätös on tehty
         tavoitehinnan-ylityspaatos (some #(when (= (str (:harja.domain.kulut.valikatselmus/tyyppi %)) "tavoitehinnan-ylitys")
                                             true)
@@ -111,9 +107,6 @@
       [:span (fmt/euro-opt oikaistu-tavoitehinta)]]
      [:div.rivi [:span.bold "Hoitovuoden lopun kattohinta"]
       [:span (fmt/euro-opt oikaistu-kattohinta)]]
-     (when (> tavoitehinnanoikaisu 0)
-       [:div.rivi [:span "Tavoitehinnan oikaisu"]
-        [:span (fmt/euro-opt tavoitehinnanoikaisu)]])
 
      [:h3 [:span "Tavoitehintaan kuuluvat toteutuneet kustannukset"]]
      [:div.rivi [:span "Hankintakustannukset"]
