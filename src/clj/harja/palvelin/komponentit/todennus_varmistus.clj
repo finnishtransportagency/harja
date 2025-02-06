@@ -53,15 +53,15 @@
 (defn- public-key-vanhentunut?
   "Hakee uuden public keyn, jos sitä ei ole haettu vähään aikaan
    Cognitolla on ominaisuus rotatoida public avaimia 
-   Tämä tehdään myös sen yhteydessä, jos käyttäjän todennus epäonnistuu"
+   Tämä tehdään myös sen yhteydessä, jos käyttäjän todennus epäonnistuu (eli avain mahdollisesti rotatoitunut)"
   [cache-atom paivitys-intervalli]
   (> (- (System/currentTimeMillis) (:fetched-at @cache-atom)) (* paivitys-intervalli 60 1000)))
 
 
 (defn hae-public-key
-  "Tekee GET kutsun joka hakee public avaimet Cognitolta (x-iam-accesstoken & x-iam-data)
-   Jos public avain on jo cachessa, palautetaan tallennettu arvo
-   Jos public avaimet rotatoituu cachen aikana, tähän on failsafe, eli päivitetään public avaimet jos todennus epäonnistuu"
+  "Tekee GET kutsun joka hakee public avaimen Cognitolta (x-iam-accesstoken & x-iam-data)
+   Jos avain on jo cachessa, palautetaan tallennettu arvo
+   Jos avaimet rotatoituu cachen aikana, ne päivitetään automaattisesti"
   [paivita? lx-kayttaja api-url PEM? cache-atom paivitys-intervalli]
   (if
     ;; Jos public avainta ei ole päivitetty x minuuttiin, päivitetään se
@@ -168,6 +168,7 @@
    'Token is expired'
      - Token mennyt vanhaksi, kestää yleensä noin 10 min, tätä ei pitäisi näkyä (välittäjälle yhteyttä)
      - Voi olla järjestelmävirhe, mutta tämä testataan huolella
+     - Käyttäjän kirjautuminen on cachessa ainakin vartin, jonka jälkeen todennuksen pitäisi päivittää uusi token
    
    'Audience does not match'
      - Audience, eli järjestelmän tunnus mille token annettu, ei jostain syystä täsmää (välittäjälle yhteyttä)
@@ -233,6 +234,7 @@
                                                              (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? public-key-url))]
                                                      ;; Jos todennus onnistui, palauta tiedot ja jatka kirjautumista 
                                                      (tunnistetiedot iam-data))
+                                                   ;; Todennus epäonnistui
                                                    (catch Exception e
                                                      (if
                                                        (and

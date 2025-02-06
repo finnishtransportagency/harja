@@ -124,11 +124,12 @@
         ;; Mukana myös signature, kid (key identifier), joka vahvistetaan
         iam-data (get headerit "x-iam-data")
 
-        ;; Subject ID (sub), eli käyttäjä kenelle JWT on myönnetty
-        ;; Tämä pitäisi täsmätä yllä olevien tokenien :sub kenttään
+        ;; Subject ID (sub), eli käyttäjä kenelle JWT on myönnetty, tällä voidaan tunnistaa käyttäjä
+        ;; Tätä me ei erityisesti käytetä, mutta on olemassa. Yllä olevissa signatureissa on myös sub kenttä, joka kyllä tarkistetaan
+        ;; Tällä voidaan esim invalitoida token, kun käyttäjä kirjautuu ulos, mutta Harjassa ei tuollaista tarvetta kirjoitushetkellä taida olla
         iam-identity (get headerit "x-iam-identity")
         
-        ;; Vahvistetaan JWT signaturet 
+        ;; Vahvistetaan että payload ei ole muuttunut matkalla
         vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi? public-key-url)
 
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
