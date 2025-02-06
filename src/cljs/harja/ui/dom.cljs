@@ -190,6 +190,33 @@
         leveys (.-width r)]
     leveys))
 
+(defn hae-nakyman-elementit [nakyma]
+  (->> (.querySelectorAll nakyma "button, [href], input, select, textarea")
+    array-seq
+    (filter #(not (.-disabled %)))
+    (filter #(not (.-hidden %)))))
+
+(defn siirra-fokus-nakymaan [nakyma siirra-fokus-elementtiin]
+  (let [focusable-elementit (hae-nakyman-elementit nakyma)]
+    (when focusable-elementit
+      (cond
+        (= siirra-fokus-elementtiin :last) (.focus (last focusable-elementit))
+        (= siirra-fokus-elementtiin :second) (.focus (second focusable-elementit))
+        :else (.focus (first focusable-elementit))))))
+
+(defn tee-fokus-ansa
+  "Fokusoidaan elementti, mutta jos käyttäjä yrittää siirtää fokusta pois, se palautetaan takaisin."
+  [ref]
+  (let [focusable-elementit (when @ref (hae-nakyman-elementit @ref))]
+    (set! (.-onkeydown js/document)
+      (fn [e]
+        (when (and (tab+shift-nappaimet? e) (= (.-activeElement js/document) (first focusable-elementit)))
+          (.preventDefault e)
+          (.focus (last focusable-elementit)))
+        (when (and (tab-nappain-ilman-shiftia? e) (= (.-activeElement js/document) (last focusable-elementit)))
+          (.preventDefault e)
+          (.focus (first focusable-elementit)))))))
+
 (defn lataus-komponentille
   "Jos komponentin luominen kestää pitkää, tämän voi wrapata komponentin ympärille, jolloinka
    näytetään lataus gif sen aikaa, että react on kerennyt mountata komponentin."

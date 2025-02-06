@@ -189,11 +189,16 @@
   :tallenna-oikaisu-fn    Funktio, jolla tallennetaan oikaisu, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
   :tallenna-oikaisut-fn   Funktio, jolla päivitetään oikaisut, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
                           Kutsutaan jokaisesta muutoksesta."
-  [hoitokauden-oikaisut-atom {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn]}]
+  [hoitokauden-oikaisut-atom {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn hoitokauden-alkuvuosi]}]
   (let [virheet (atom {})
         uusi-id (if (empty? (keys @hoitokauden-oikaisut-atom))
                   0
-                  (inc (apply max (keys @hoitokauden-oikaisut-atom))))]
+                  (inc (apply max (keys @hoitokauden-oikaisut-atom))))
+        ;; Koostetaan yhteenvetorivi
+        tavoitehinnan-oikaisut (vals @hoitokauden-oikaisut-atom)
+        yhteensa (if (seq? tavoitehinnan-oikaisut)
+                               (apply + (map ::valikatselmus/summa tavoitehinnan-oikaisut))
+                               0)]
     [grid/muokkaus-grid
      {:otsikko "Tavoitehinnan oikaisut"
       :tyhja "Ei oikaisuja"
@@ -226,7 +231,11 @@
                           (tallenna-oikaisu-fn oikaisu i))))
       :uusi-id uusi-id
       :virheet virheet
-      :nayta-virheikoni? false}
+      :nayta-virheikoni? false
+      :rivi-jalkeen [{:teksti "Yhteensä" :luokka "yhteensa" :yhteenveto-vayla true}
+                     {:teksti "" :sarakkeita 2 :luokka "yhteensa"}
+                     {:teksti (str (fmt/euro-opt false yhteensa)) :tasaa :oikea :luokka "yhteensa"}
+                     {:teksti "" :sarakkeita 1 :luokka "yhteensa"}]}
      [{:otsikko "Luokka"
        :nimi ::valikatselmus/otsikko
        :tyyppi :valinta
