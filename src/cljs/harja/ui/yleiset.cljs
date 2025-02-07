@@ -243,7 +243,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
       (fn [{:keys [ryhmissa? nayta-ryhmat ryhman-otsikko ryhmitellyt-itemit
                    li-luokka-fn itemit-komponentteja? format-fn valitse-fn
                    vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo
-                   pakollinen? valikko-ref valittu-rivi] :as optiot}]
+                   pakollinen? valikko-ref valittu-rivi nappi-id viive-fokuksen-siirtoon? maaritelty-id?] :as optiot}]
 
         (let [listan-rivit (vec (array-seq (.querySelectorAll @valikko-ref "li")))
               alasvedon-nappi (.querySelector @valikko-ref "button")
@@ -310,8 +310,19 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                     (do
                                       (valitse-fn (nth vaihtoehdot @valittu-rivi))
                                       (reset! auki? false)
-                                      (r/after-render (fn [] (.focus alasvedon-nappi)))))))}
-           
+                                      (r/after-render (fn [] (cond
+                                                               (and (not maaritelty-id?) (not viive-fokuksen-siirtoon?))
+                                                               (.focus alasvedon-nappi)
+
+                                                               (and maaritelty-id? (not viive-fokuksen-siirtoon?) (.getElementById js/document nappi-id))
+                                                               (.focus (.getElementById js/document nappi-id))
+
+                                                               (and maaritelty-id? viive-fokuksen-siirtoon?)
+                                                               (js/setTimeout (fn [] (.focus (.getElementById js/document nappi-id)) ) 100)
+
+                                                               :else
+                                                               (.focus alasvedon-nappi))))))))}
+
            (doall
              (if ryhmissa?
                (for [ryhma nayta-ryhmat]
@@ -331,7 +342,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
   [{:keys [auki-fn! kiinni-fn! elementin-id]} _]
-  (let [elementin-id (or elementin-id (str (gensym "livi-pudotusvalikko")))
+  (let [maaritelty-id? (when elementin-id true)
+        elementin-id (or elementin-id (str (gensym "livi-pudotusvalikko")))
         auki? (atom false)
         term (atom "")
         valikko-ref (atom false)
@@ -404,7 +416,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
-                   pakollinen? tarkenne muokattu?] :as asetukset} vaihtoehdot]
+                   pakollinen? tarkenne muokattu? viive-fokuksen-siirtoon?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -414,7 +426,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                             (mapv (fn [avain]
                                     (-> [avain (get vaihtoehdot avain)]))
                               (keys vaihtoehdot))
-                            vaihtoehdot)]
+                            vaihtoehdot)
+              nappi-id (str "btn-" (or elementin-id "") "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title))]
           [:div (merge
                   {:class (str (if vayla-tyyli?
                                  (str "select-" (if (and muokattu? virhe?) "error-" "") "default")
@@ -425,7 +438,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                   (when data-cy
                     {:data-cy data-cy}))
            [:button
-            {:id (str "btn-" (or elementin-id "") "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title))
+            {:id nappi-id
              :class (str (when disabled "disabled ") (when-not vayla-tyyli? "nappi-alasveto "))
              :type "button"
              :disabled (if disabled "disabled" "")
@@ -457,7 +470,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                :valittu-arvo valinta
                                :auki? auki?
                                :valikko-ref valikko-ref
-                               :valittu-rivi valittu-rivi})])])))))
+                               :valittu-rivi valittu-rivi
+                               :nappi-id nappi-id
+                               :viive-fokuksen-siirtoon? viive-fokuksen-siirtoon?
+                               :maaritelty-id? maaritelty-id?})])])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div {:class (or (:wrap-luokka optiot) "label-ja-alasveto")}
