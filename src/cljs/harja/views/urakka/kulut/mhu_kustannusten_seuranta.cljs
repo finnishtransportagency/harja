@@ -469,6 +469,8 @@
           [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                         :vayla-tyyli? true
                                         :data-cy "hoitokausi-valinta"
+                                        :viive-fokuksen-siirtoon? true
+                                        :elementin-id "hoitovuosi"
                                         :valitse-fn #(do (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                                        (e! (t-yhteiset/->NollaaValikatselmuksenPaatokset)))
                                         :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet "Hoitovuosi")
@@ -478,6 +480,8 @@
           [:span.alasvedon-otsikko-vayla "Kuukausi"]
           [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
                                         :vayla-tyyli? true
+                                        :viive-fokuksen-siirtoon? true
+                                        :elementin-id "kuukausi"
                                         :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseKuukausi (:id @nav/valittu-urakka) % valittu-hoitokausi))
                                         :format-fn #(if %
                                                       (if (= "Kaikki" %)

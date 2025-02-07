@@ -109,7 +109,7 @@
 
 (defn kuukausi
   "Kuukausivalinnan komponentti. Mahdollista käytön sekä atomin että ei-atomin (tuck) kanssa."
-  [{:keys [disabled nil-valinta disabloi-tulevat-kk? valitse-fn vayla-tyyli?] :or {disabloi-tulevat-kk? false}}
+  [{:keys [disabled nil-valinta disabloi-tulevat-kk? valitse-fn vayla-tyyli? viive-fokuksen-siirtoon?] :or {disabloi-tulevat-kk? false}}
    kuukaudet valittu-kuukausi]
   (assert (or (instance? reagent.ratom/Reaction valittu-kuukausi)
               (vector? valittu-kuukausi)
@@ -143,6 +143,7 @@
                            :disabled-vaihtoehdot disabled-vaihtoehdot
                            :format-fn format-fn
                            :valitse-fn valitse-fn
+                           :viive-fokuksen-siirtoon? viive-fokuksen-siirtoon?
                            :vayla-tyyli? vayla-tyyli?}
       kuukaudet]]))
 
