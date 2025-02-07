@@ -203,19 +203,17 @@
    Palauttaa dekoodatut tunnistetiedot, mikäli signaturet OK
    JWT (Json Web Token) sisältää pisteellä erotetut osiot (enkoodattuna): HEADER.PAYLOAD.SIGNATURE
    
-   Molemmilla tokeneilla (accesstoken, iam-data) on nämä otsikkotiedot:
+   Tokenien osiot:
      Header: Metadata 
      Payload: Claims (väitteet, mitkä pitää todentaa oikeiksi)
-     Signature: Kryptografinen allekirjoitus Coognitolta, perustuu alkuperäiseen hash-arvoon 
+     Signature: Kryptografinen allekirjoitus Cognitolta, perustuu alkuperäiseen header.payload hash-arvoon 
 
-   1. Accesstokenin vahvistukseen haetaan ensin oikea public avain:
-        cognito-idp.../.well-known/jwks.json   -  Tämä linkki on headereissa sisällä :iss (issuer) avaimessa
-        Täsmätään :kid (key identifier) payloadin :kid arvoon, jolloin meillä on oikea public avain
-        Public avainta käytetään signaturen decryptaamiseen ja vahvistukseen 
+   1. Haetaan ja parsitaan public avaimet, joita käytetään signaturen vahvistukseen 
+        X-Iam-accesstoken public avaimen linkki on headereissa sisällä :iss (issuer) 
+        X-Iam-data public avain on erillinen staattinen linkki, joka on PEM muodossa (passataan asetukset.edn kautta) 
    
-   2. Lasketaan odotettu signature hash (jwt/unsign), ja verrataan alkuperäiseen jwt:n signatureen
+   2. Lasketaan odotettu hash, ja verrataan alkuperäiseen signaturen hashiin (jwt/unsign)
       Täällä myös katsotaan tokenin expiration yms, virhe heitetään jos mitään on väärin 
-   
    3. Jos kaikki OK, palautetaan dekoodattu tunnusdata, ja jatketaan kirjautumista 
    4. Tuloksena käyttäjän roolitiedot on vahvistettu oikeiksi, eikä mitään ole sorkittu matkalla"
   ([accesstoken iam-data iam-identity kehitysmoodi? public-key-url]

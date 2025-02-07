@@ -114,22 +114,21 @@
 (defn- pura-cognito-headerit
   "Purkaa AWS Cognitolta palautuneet headerit ja hakee niistä OAM-tiedot.
    Tiedot mapataan vanhan mallisiksi OAM_-headereiksi
-   Signaturen vahvistukset tehdään myös"
+   JWT Signaturen vahvistukset suoritetaan samalla, jonka epäonnistuessa kirjautuminen ei etene"
   [headerit kehitysmoodi? public-key-url]
   (let [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n, kertoo koska token on annettu, ja kenelle
-        ;; Mukana myös signature, kid (key identifier), joka vahvistetaan
+        ;; Mukana myös signature joka vahvistetaan
         accesstoken (get headerit "x-iam-accesstoken")
 
-        ;; Sisältää käyttäjän sessio tietoja, Roolit, puh, y tunnus, org, lx tunnus, email, nimi
-        ;; Mukana myös signature, kid (key identifier), joka vahvistetaan
+        ;; Sisältää käyttäjän käyttäjän tietoja, roolit, yhteystiedot, lxtunnus
+        ;; Mukana myös signature joka vahvistetaan 
         iam-data (get headerit "x-iam-data")
 
-        ;; Subject ID (sub), eli käyttäjä kenelle JWT on myönnetty, tällä voidaan tunnistaa käyttäjä
-        ;; Tätä me ei erityisesti käytetä, mutta on olemassa. Yllä olevissa signatureissa on myös sub kenttä, joka kyllä tarkistetaan
+        ;; Subject ID (sub), eli käyttäjä kenelle JWT on myönnetty, tällä voidaan tunnistaa käyttäjä (mukana myös yllä olevissa tokeneissa)
         ;; Tällä voidaan esim invalitoida token, kun käyttäjä kirjautuu ulos, mutta Harjassa ei tuollaista tarvetta kirjoitushetkellä taida olla
         iam-identity (get headerit "x-iam-identity")
         
-        ;; Vahvistetaan että payload ei ole muuttunut matkalla
+        ;; Vahvistetaan että tokenien payloadit ei ole muuttunut matkalla 
         vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi? public-key-url)
 
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
