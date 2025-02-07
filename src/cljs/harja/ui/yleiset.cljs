@@ -233,7 +233,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                             (selvita-etaisyydet this sijainti-ylos?))]
 
     (komp/luo
-      {:component-did-mount
+      {:component-did-update
        (fn [this _]
          (selvita-etaisyydet this sijainti-ylos?))}
 
@@ -246,29 +246,26 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                    pakollinen? valikko-ref valittu-rivi nappi-id viive-fokuksen-siirtoon?
                    maaritelty-id? pitka-teksti?] :as optiot}]
 
-        (let [listan-rivit (vec (array-seq (.querySelectorAll @valikko-ref "li")))
-              alasvedon-nappi (.querySelector @valikko-ref "button")
-              checkbox-rivi? (= :checkbox (get (get (nth vaihtoehdot @valittu-rivi) 1) :tyyppi))
-              sijainti-ja-tekstin-pituus (do
-                                           (when @sijainti-ylos?
-                                             {:bottom "100%"})
-                                           (when pitka-teksti?
-                                             {:white-space "normal"}))]
+        (let [listan-rivit (when @auki? (vec (array-seq (.querySelectorAll @valikko-ref "li"))))
+              alasvedon-nappi (when @auki? (.querySelector @valikko-ref "button"))
+              checkbox-rivi? (when @auki? (= :checkbox (get (get (nth vaihtoehdot @valittu-rivi) 1) :tyyppi)))]
 
           [:ul {:class "dropdown-menu livi-alasvetolista"
-                :style (if vayla-tyyli?
-                         (merge {:padding-top "4px"
-                                 :z-index "1000"
-                                 :position :absolute
-                                 :display #(if @auki?
-                                             "block"
-                                             "none")}
-                           (when skrollattava?
-                             {:overflow "scroll"
-                              :max-height valinta-ul-max-korkeus-px})
-                           sijainti-ja-tekstin-pituus)
-                         (merge {:max-height valinta-ul-max-korkeus-px}
-                           sijainti-ja-tekstin-pituus))
+                :style (merge
+                         (if vayla-tyyli?
+                           (merge
+                             {:padding-top "4px"
+                              :z-index "1000"
+                              :position :absolute
+                              :display (if @auki?
+                                         "block"
+                                         "none")}
+                             (when skrollattava?
+                               {:overflow "scroll"
+                                :max-height valinta-ul-max-korkeus-px}))
+                           {:max-height valinta-ul-max-korkeus-px})
+                         (when @sijainti-ylos? {:bottom "100%"})
+                         (when pitka-teksti? {:white-space "normal"}))
                 :on-key-down #(cond
                                 (or (dom/tab-nappain-ilman-shiftia? %) (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
                                 (do
@@ -480,20 +477,19 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            ;; tarkenne voi olla Hiccup-komponentti, esim. [:span.minun-tarkenne minun-arvo]
            (when tarkenne
              [tarkenne valinta])
-           (when @auki?
-             [alasvetolista (merge (select-keys asetukset #{:nayta-ryhmat :ryhman-otsikko :li-luokka-fn :itemit-komponentteja?
-                                                            :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})
-                              {:ryhmissa? ryhmissa? :ryhmitellyt-itemit ryhmitellyt-itemit
-                               :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot
-                               :pakollinen? pakollinen?
-                               :valittu-arvo valinta
-                               :auki? auki?
-                               :valikko-ref valikko-ref
-                               :valittu-rivi valittu-rivi
-                               :nappi-id nappi-id
-                               :viive-fokuksen-siirtoon? viive-fokuksen-siirtoon?
-                               :maaritelty-id? maaritelty-id?
-                               :pitka-teksti? pitka-teksti?})])])))))
+           [alasvetolista (merge (select-keys asetukset #{:nayta-ryhmat :ryhman-otsikko :li-luokka-fn :itemit-komponentteja?
+                                                          :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})
+                            {:ryhmissa? ryhmissa? :ryhmitellyt-itemit ryhmitellyt-itemit
+                             :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot
+                             :pakollinen? pakollinen?
+                             :valittu-arvo valinta
+                             :auki? auki?
+                             :valikko-ref valikko-ref
+                             :valittu-rivi valittu-rivi
+                             :nappi-id nappi-id
+                             :viive-fokuksen-siirtoon? viive-fokuksen-siirtoon?
+                             :maaritelty-id? maaritelty-id?
+                             :pitka-teksti? pitka-teksti?})]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div {:class (or (:wrap-luokka optiot) "label-ja-alasveto")}
