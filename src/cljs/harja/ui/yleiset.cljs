@@ -426,12 +426,27 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))
-              vaihtoehdot (if (map? vaihtoehdot)
+              nappi-id (str "btn-" (or elementin-id "") "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title))
+              ryhmitellyt-vaihtoehdot (atom [])
+              ryhmittely-fn (fn []
+                              (when ryhmittely
+                                (doseq [ryhma nayta-ryhmat]
+                                  (doseq [vaihtoehto (get ryhmitellyt-itemit ryhma)]
+                                    (swap! ryhmitellyt-vaihtoehdot conj vaihtoehto)))))
+              vaihtoehdot (cond
+                            ryhmittely
+                            (do
+                              (ryhmittely-fn)
+                              @ryhmitellyt-vaihtoehdot)
+
+                            (map? vaihtoehdot)
                             (mapv (fn [avain]
                                     (-> [avain (get vaihtoehdot avain)]))
                               (keys vaihtoehdot))
-                            vaihtoehdot)
-              nappi-id (str "btn-" (or elementin-id "") "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title))]
+
+                            :else
+                            vaihtoehdot)]
+
           [:div (merge
                   {:class (str (if vayla-tyyli?
                                  (str "select-" (if (and muokattu? virhe?) "error-" "") "default")
