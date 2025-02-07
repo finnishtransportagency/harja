@@ -314,11 +314,11 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                                (and (not maaritelty-id?) (not viive-fokuksen-siirtoon?))
                                                                (.focus alasvedon-nappi)
 
-                                                               (and maaritelty-id? (not viive-fokuksen-siirtoon?) (.getElementById js/document nappi-id))
+                                                               (and maaritelty-id? (.getElementById js/document nappi-id) (not viive-fokuksen-siirtoon?))
                                                                (.focus (.getElementById js/document nappi-id))
 
-                                                               (and maaritelty-id? viive-fokuksen-siirtoon?)
-                                                               (js/setTimeout (fn [] (.focus (.getElementById js/document nappi-id)) ) 100)
+                                                               viive-fokuksen-siirtoon?
+                                                               (js/setTimeout (fn [] (.focus (.getElementById js/document nappi-id))) 300)
 
                                                                :else
                                                                (.focus alasvedon-nappi))))))))}
