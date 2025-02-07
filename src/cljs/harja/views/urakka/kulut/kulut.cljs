@@ -262,7 +262,6 @@
              [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                            :disabled haku-menossa
                                            :vayla-tyyli? true
-                                           :viive-fokuksen-siirtoon? true
                                            :data-cy "hoitokausi-valinta"
                                            :valitse-fn #(do
                                                           ;; Nullaa mahdollinen aikaväli
@@ -273,7 +272,6 @@
               hoitovuodet]]
             [valinnat/kuukausi {:nil-valinta "Koko hoitokausi"
                                 :vayla-tyyli? true
-                                :viive-fokuksen-siirtoon? true
                                 :disabled haku-menossa
                                 :valitse-fn #(do
                                                (e! (tiedot/->AsetaHakukuukausi %))

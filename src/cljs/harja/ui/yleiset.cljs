@@ -243,8 +243,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
       (fn [{:keys [ryhmissa? nayta-ryhmat ryhman-otsikko ryhmitellyt-itemit
                    li-luokka-fn itemit-komponentteja? format-fn valitse-fn
                    vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo
-                   pakollinen? valikko-ref valittu-rivi nappi-id viive-fokuksen-siirtoon?
-                   maaritelty-id? pitka-teksti?] :as optiot}]
+                   pakollinen? valikko-ref valittu-rivi pitka-teksti?] :as optiot}]
 
         (let [listan-rivit (when @auki? (vec (array-seq (.querySelectorAll @valikko-ref "li"))))
               alasvedon-nappi (when @auki? (.querySelector @valikko-ref "button"))
@@ -273,7 +272,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                 (or (dom/tab-nappain-ilman-shiftia? %) (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
                                 (do
                                   (.preventDefault %)
-                                  (.stopPropagation %)
                                   (reset! auki? false)
                                   (reset! valittu-rivi 0)
                                   (r/after-render (fn [] (.focus alasvedon-nappi))))
@@ -281,7 +279,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                 (dom/nuoli-alas? %)
                                 (do
                                   (.preventDefault %)
-                                  (.stopPropagation %)
                                   (if (< (inc @valittu-rivi) (count listan-rivit))
                                     (when-not (rivi-disabled? (inc @valittu-rivi))
                                       (do
@@ -295,7 +292,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                 (dom/nuoli-ylos? %)
                                 (do
                                   (.preventDefault %)
-                                  (.stopPropagation %)
                                   (if (= 0 @valittu-rivi)
                                     (when-not (rivi-disabled? (dec (count listan-rivit)))
                                       (do
@@ -309,8 +305,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                 (dom/enter-nappain? %)
                                 (do
                                   (.preventDefault %)
-                                  (.stopPropagation %)
-
                                   (if checkbox-rivi?
                                     (do
                                       (.click (.querySelector (get listan-rivit @valittu-rivi) "input"))
@@ -318,18 +312,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                     (do
                                       (valitse-fn (nth vaihtoehdot @valittu-rivi))
                                       (reset! auki? false)
-                                      (r/after-render (fn [] (cond
-                                                               (and (not maaritelty-id?) (not viive-fokuksen-siirtoon?))
-                                                               (.focus alasvedon-nappi)
-
-                                                               (and maaritelty-id? (.getElementById js/document nappi-id) (not viive-fokuksen-siirtoon?))
-                                                               (.focus (.getElementById js/document nappi-id))
-
-                                                               viive-fokuksen-siirtoon?
-                                                               (js/setTimeout (fn [] (.focus (.getElementById js/document nappi-id))) 300)
-
-                                                               :else
-                                                               (.focus alasvedon-nappi))))))))}
+                                      (.focus alasvedon-nappi)))))}
 
            (doall
              (if ryhmissa?
@@ -350,8 +333,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
   [{:keys [auki-fn! kiinni-fn! elementin-id]} _]
-  (let [maaritelty-id? (when elementin-id true)
-        elementin-id (or elementin-id (str (gensym "livi-pudotusvalikko")))
+  (let [elementin-id (or elementin-id (str (gensym "livi-pudotusvalikko")))
         auki? (atom false)
         term (atom "")
         valikko-ref (atom false)
@@ -362,7 +344,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                           (when auki-fn! (auki-fn!))
                           (when kiinni-fn! (kiinni-fn!)))
                         nil))
-        on-key-down-fn (fn [{:keys [vaihtoehdot valinta valitse-fn format-fn]} event]
+        on-key-down-fn (fn [{:keys [vaihtoehdot disabled-vaihtoehdot valinta valitse-fn format-fn]} event]
                          (let [kc (.-keyCode event)
                                siirra-fokus (fn [i] (when (and @auki? @valikko-ref)
                                                       (js/setTimeout #(.focus (nth (vec (array-seq (.querySelectorAll @valikko-ref "li"))) i)) 150)))]
@@ -381,13 +363,11 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                    (do
                                      (when @auki?
                                        (.preventDefault event)
-                                       (.stopPropagation event)
                                        (reset! auki? false)))
 
                                    (or (dom/enter-nappain? event) (dom/valilyonti? event))     ;; enter tai välilyönti
                                    (do
                                      (.preventDefault event)
-                                     (.stopPropagation event)
                                      (reset! auki? (not @auki?))
                                      (when @auki?
                                        (if nykyinen-valittu-idx
@@ -400,15 +380,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                    (reset! auki? false)
 
                                    :else
-                                   (when-not (dom/tab+shift-nappaimet? event)
-                                     (do                          ;; Valitaan inputtia vastaava vaihtoehto
-                                       (.preventDefault event)
-                                       (.stopPropagation event)
-                                       (reset! term (char kc))
-                                       (when-let [itemi (first (filter (fn [vaihtoehto]
-                                                                         (= (.indexOf (.toLowerCase (str (format-fn vaihtoehto)))
-                                                                              (.toLowerCase @term)) 0))
-                                                                 vaihtoehdot))]
+                                   (do                          ;; Valitaan inputtia vastaava vaihtoehto
+                                     (reset! term (char kc))
+                                     (let [itemi (first (filter (fn [vaihtoehto]
+                                                                       (= (.indexOf (.toLowerCase (str (format-fn vaihtoehto)))
+                                                                            (.toLowerCase @term)) 0))
+                                                               vaihtoehdot))
+                                           disabled? (contains? disabled-vaihtoehdot itemi)]
+                                       (when (not disabled?)
                                          (valitse-fn itemi)
                                          (reset! auki? false))))))))))]
     (komp/luo
@@ -417,9 +396,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                      (when kiinni-fn! (kiinni-fn!)))
         {:tarkista-komponentti? true})
 
-      (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
+      (fn [{:keys [valinta format-fn valitse-fn class disabled disabled-vaihtoehdot itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
-                   pakollinen? tarkenne muokattu? viive-fokuksen-siirtoon? pitka-teksti?] :as asetukset} vaihtoehdot]
+                   pakollinen? tarkenne muokattu? pitka-teksti?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -465,6 +444,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
              :on-focus on-focus
              :on-key-down (partial on-key-down-fn
                                    {:vaihtoehdot vaihtoehdot
+                                    :disabled-vaihtoehdot disabled-vaihtoehdot
                                     :valinta valinta
                                     :valitse-fn valitse-fn
                                     :format-fn format-fn})}
@@ -488,9 +468,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                              :auki? auki?
                              :valikko-ref valikko-ref
                              :valittu-rivi valittu-rivi
-                             :nappi-id nappi-id
-                             :viive-fokuksen-siirtoon? viive-fokuksen-siirtoon?
-                             :maaritelty-id? maaritelty-id?
                              :pitka-teksti? pitka-teksti?})]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]

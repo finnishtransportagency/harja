@@ -189,9 +189,7 @@
                                                   :mpu "Palvelusopimus (MPU)"
                                                   "Ei sopimustyyppiä")
                                     :valitse-fn #(tallenna-sopimustyyppi ur %)
-                                    :disabled (not kirjoitusoikeus?)
-                                    :viive-fokuksen-siirtoon? true
-                                    :elementin-id "sopimustyyppi"}
+                                    :disabled (not kirjoitusoikeus?)}
        sopimus/+sopimustyypit+])))
 
 (defn yha-tiedot [ur]
