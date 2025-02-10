@@ -499,7 +499,7 @@
 ;; simuloidaan siis T-Loik lähetysvirheitä lisäämällä virhe_lkm counteria
 (deftest ilmoitustoimenpiteen-asteittaisesti-harveneva-uudelleenlahetys
   (let [db (:db jarjestelma)
-        kaikki-uudelleenlahetettavat-alussa (ffirst (q "SELECT count(*) FROM ilmoitustoimenpide where (tila IS NULL or tila = 'virhe') AND kuittaustyyppi != 'valitys';"))
+        kaikki-uudelleenlahetettavat-alussa (ffirst (q "SELECT count(*) FROM ilmoitustoimenpide where (tila IS NULL or tila IN ('virhe', 'odottaa_vastausta')) AND kuittaustyyppi != 'valitys' AND kuitattu > '2024-01-01';"))
         uudelleen-lahetettavat-kaikissa-urakoissa-ennen (count (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))
 
         _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = virhe_lkm + 1, ed_lahetysvirhe = NOW() - interval '5 minutes';")
@@ -531,7 +531,7 @@
 
         ;; palautellaan varalta asiat alkutilaan...
         _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = 0, ed_lahetysvirhe = NULL;")]
-    (is (> kaikki-uudelleenlahetettavat-alussa 50) "Varmistetaan että ehdot täyttäviä kuittauksia on enemmän kuin nolla.")
+    (is (> kaikki-uudelleenlahetettavat-alussa 5) "Varmistetaan että ehdot täyttäviä kuittauksia on enemmän kuin nolla.")
 
     (is (= uudelleen-lahetettavat-kaikissa-urakoissa-ennen kaikki-uudelleenlahetettavat-alussa) "Kaikki lähetettävät nostetaan...")
     (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-5min-virheita-1 0) "1 virhe, alle 10min mennyt, ei nosteta...")
@@ -545,14 +545,14 @@
 
 (deftest ilmoitustoimenpiteen-uudelleenlahetys-huomioi-myos-vastausta-odottavat
   (let [db (:db jarjestelma)
-        kaikki-uudelleenlahetettavat-alussa (ffirst (q "SELECT count(*) FROM ilmoitustoimenpide where (tila IS NULL or tila = 'virhe') AND kuittaustyyppi != 'valitys';"))
+        kaikki-uudelleenlahetettavat-alussa (ffirst (q "SELECT count(*) FROM ilmoitustoimenpide where (tila IS NULL or tila IN ('virhe', 'odottaa_vastausta')) AND kuittaustyyppi != 'valitys' AND kuitattu > '2024-01-01';"))
         uudelleen-lahetettavat-kaikissa-urakoissa-ennen (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db)
         yksi-toimenpide-id (:id (first uudelleen-lahetettavat-kaikissa-urakoissa-ennen))
         _ (u (format "UPDATE ilmoitustoimenpide SET tila = 'odottaa_vastausta' WHERE id = %s;" yksi-toimenpide-id))
         uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db)
         ;; palautellaan varalta asiat alkutilaan...
         _ (u "UPDATE ilmoitustoimenpide SET tila = NULL, virhe_lkm = 0, ed_lahetysvirhe = NULL;")]
-    (is (> kaikki-uudelleenlahetettavat-alussa 50) "Varmistetaan että ehdot täyttäviä kuittauksia on enemmän kuin nolla.")
+    (is (> kaikki-uudelleenlahetettavat-alussa 5) "Varmistetaan että ehdot täyttäviä kuittauksia on enemmän kuin nolla.")
     (is (= (count uudelleen-lahetettavat-kaikissa-urakoissa-ennen) kaikki-uudelleenlahetettavat-alussa) "Kaikki lähetettävät nostetaan...")
     ;; myös odottaa_vastausta tilassa oleva kuittaus nousee uudelleenlähetettävien määrään
     (is (some #(= (:id %) yksi-toimenpide-id) uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen) "Yksi odottaa_vastausta toimenpide nousee uudelleenlähetettäviin...")
