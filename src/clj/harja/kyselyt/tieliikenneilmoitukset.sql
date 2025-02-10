@@ -752,7 +752,10 @@ SELECT id
 FROM ilmoitustoimenpide
 WHERE
   (tila IS NULL OR tila IN ('virhe', 'odottaa_vastausta')) AND
-  kuittaustyyppi != 'valitys' and
+   kuittaustyyppi != 'valitys' AND
+   -- Älä lähetä uudelleen 1.1.2024 aiempia ilmoituksia, niitä olisi yli 12k, eikä ole tähän hetkeen tarkoituksen mukaista.
+   -- Jos asia ratkaistaan muulla tavoin, esim. tuotantodataa muuntaen tmv. voi tämän tarkistuksen poistaa
+   kuitattu > '2024-01-01' AND
   (ed_lahetysvirhe IS NULL OR
       -- mitä useampi lähetysvirhe jo takana, sitä harvemmin uudelleen lähetys
       -- Jos edellisestä lähetysvirheestä on kulunut virheiden lukumäärä * 10min, niin lähetetään uudelleen
