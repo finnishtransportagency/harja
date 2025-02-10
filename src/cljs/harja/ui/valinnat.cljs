@@ -78,6 +78,7 @@
      [:label.alasvedon-otsikko-vayla vuosi-termi]
      [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                    :vayla-tyyli? true
+                                   :skrollattava? true
                                    :valitse-fn tuck-event
                                    :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet vuosi-termi) "Valitse")}
       hoitokaudet]]))
@@ -271,18 +272,20 @@
     "Ei toimenpidettä"))
 
 (defn urakan-toimenpide
-  [urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
-  (when (not (some
-               #(= % @valittu-toimenpideinstanssi-atom)
-               @urakan-toimenpideinstanssit-atom))
-    ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
-    (reset! valittu-toimenpideinstanssi-atom (first @urakan-toimenpideinstanssit-atom)))
-  [:div.label-ja-alasveto.toimenpide
-   [:span.alasvedon-otsikko "Toimenpide"]
-   [livi-pudotusvalikko {:valinta @valittu-toimenpideinstanssi-atom
-                         :format-fn #(toimenpideinstanssi-fmt %)
-                         :valitse-fn valitse-fn}
-    @urakan-toimenpideinstanssit-atom]])
+  ([urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
+   (urakan-toimenpide urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn nil))
+  ([urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn ur]
+   (when (not (some
+                #(= % @valittu-toimenpideinstanssi-atom)
+                @urakan-toimenpideinstanssit-atom))
+     ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
+     (reset! valittu-toimenpideinstanssi-atom (first @urakan-toimenpideinstanssit-atom)))
+   [:div.label-ja-alasveto.toimenpide
+    [:span.alasvedon-otsikko "Toimenpide"]
+    [livi-pudotusvalikko {:valinta @valittu-toimenpideinstanssi-atom
+                          :format-fn #(toimenpideinstanssi-fmt %)
+                          :valitse-fn valitse-fn}
+     @urakan-toimenpideinstanssit-atom]]))
 
 (defn urakan-kokonaishintainen-tehtava
   [urakan-kokonaishintaiset-tehtavat-atom

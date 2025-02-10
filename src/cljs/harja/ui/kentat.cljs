@@ -877,7 +877,7 @@
   ([{:keys [alasveto-luokka valinta-nayta valinta-arvo tasaa linkki-fn linkki-icon
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
-            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
+            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id pitka-teksti?
             pakollinen? tarkenne muokattu? valitse-oletus? data-cy]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
@@ -928,6 +928,7 @@
                 :pakollinen? pakollinen?
                 :vayla-tyyli? vayla-tyyli?
                 :elementin-id elementin-id
+                :pitka-teksti? pitka-teksti?
                 :tarkenne tarkenne
                 :data-cy (or data-cy (str "valinta-" elementin-id))}]
      (if-not (and linkki-fn nykyinen-arvo linkki-icon)
@@ -951,7 +952,7 @@
      (fn [{:keys [alasveto-luokka valinta-nayta valinta-arvo data-cy
                   valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
                   jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
-                  nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id]} data data-muokkaus-fn]
+                  nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id pitka-teksti?]} data data-muokkaus-fn]
        (assert (not (satisfies? IDeref data)) "Jos käytät tee-kentta 3 aritylla, data ei saa olla derefable. Tämä sen takia, ettei React turhaan renderöi elementtiä")
        (assert (fn? data-muokkaus-fn) "Data-muokkaus-fn pitäisi olla funktio, joka muuttaa näytettävää dataa jotenkin")
        (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
@@ -974,6 +975,7 @@
                                :disabled disabled?
                                :data-cy data-cy
                                :vayla-tyyli? vayla-tyyli?
+                               :pitka-teksti? pitka-teksti?
                                :elementin-id elementin-id}
           valinnat])))))
 
