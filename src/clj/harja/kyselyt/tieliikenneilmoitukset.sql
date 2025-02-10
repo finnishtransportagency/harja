@@ -751,12 +751,12 @@ WHERE
 SELECT id
 FROM ilmoitustoimenpide
 WHERE
-  (tila IS NULL OR tila = 'virhe') AND
+  (tila IS NULL OR tila IN ('virhe', 'odottaa_vastausta')) AND
   kuittaustyyppi != 'valitys' and
   (ed_lahetysvirhe IS NULL OR
       -- mitä useampi lähetysvirhe jo takana, sitä harvemmin uudelleen lähetys
       -- Jos edellisestä lähetysvirheestä on kulunut virheiden lukumäärä * 10min, niin lähetetään uudelleen
-      -- esim jo 4 yritystä epäonnistunut, vaaditaan 40min viive. Näin vältetään T-Loikin pään tukahduttamista viesteihin ongelmatilanteessa
+      -- esim. jos 4 yritystä epäonnistunut, vaaditaan 40min viive. Näin vältetään T-Loikin pään tukahduttamista viesteihin ongelmatilanteessa
       -- max 10 uudelleenyritystä, jonka jälkeen luovutetaan ja tarvittaessa säädetään käsipelillä
       -- 1 virhe: 10min viive, 2 virhettä: 20min, 3 virhettä: 30min... 10 virhettä: 100min, 10+ virhettä: luovuta
    (((NOW() - ed_lahetysvirhe) > (virhe_lkm * interval '10 minutes')) AND virhe_lkm < 11));
@@ -765,14 +765,17 @@ WHERE
 SELECT count(*) AS maara,
        array_agg(id) idt,
        (now() - kuitattu > interval '10 minutes') AS "halytys-annettava",
-       myohastymisvaroitus,
+       myohastymisvaroitus AS "varoitus-annettu",
        array_agg(DISTINCT ilmoitusid::TEXT) AS korrelaatioidt
 FROM ilmoitustoimenpide
 WHERE tila = 'odottaa_vastausta'
   AND (kanava = 'harja' OR kanava='ulkoinen_jarjestelma')
+  -- varoituksen kynnys ylittyy
   AND kuitattu < (now() - interval '1 minute')
+  -- eikä hälytystä ole vielä annettu, mutta ehkä varoitus
   AND (myohastymisvaroitus != 'halytys' OR myohastymisvaroitus IS NULL)
-  AND NOT (myohastymisvaroitus IS NOT NULL AND myohastymisvaroitus = 'varoitus' AND (now() - kuitattu < interval '10 minutes'))
+  -- poistetaan ne, joista varoitus annettu, mutta ei ole vielä aika hälyttää
+  AND NOT (myohastymisvaroitus = 'varoitus' AND (now() - kuitattu < interval '10 minutes'))
 GROUP BY (now() - kuitattu > interval '10 minutes'), myohastymisvaroitus;
 
 --name: merkitse-ilmoitustoimenpide-varoitus-annetuksi!
