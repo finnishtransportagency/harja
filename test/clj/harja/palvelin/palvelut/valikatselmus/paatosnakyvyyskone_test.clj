@@ -11,6 +11,13 @@
         tulos (kone/paatosnakyvyyskone mhu-tyyppi urakan-alkuvuosi kuluva-hoitovuosi)]
     (is (not (nil? tulos)))))
 
+;; Varmista, että mhu ja mhu+ urakat saa oikean urakkatyypin
+(deftest urakan-hoitotyyppi-test
+  (let [vaativa-hoitourakka-f false
+        vaativa-hoitourakka-t true]
+    (is (= "MHU" (kone/urakan-hoitotyyppi vaativa-hoitourakka-f)))
+    (is (= "MHU+" (kone/urakan-hoitotyyppi vaativa-hoitourakka-t)))))
+
 (deftest mhu+-vuodelle-2023-palautaa-oikein
   (let [mhu-tyyppi "MHU+"
         urakan-alkuvuosi 2023]

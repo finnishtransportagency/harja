@@ -34,14 +34,14 @@
     (:indeksi urakan-tiedot)
     nil))
 
-(defn tallenna-lupaussanktio [db paatoksen-tiedot kayttaja]
-  (when (= ::valikatselmus/lupaussanktio (::valikatselmus/tyyppi paatoksen-tiedot))
-    (let [urakka-id (::urakka/id paatoksen-tiedot)
+(defn tallenna-lupaussanktio [db paatos kayttaja]
+  (when (= "sakko" (:tyyppi paatos))
+    (let [urakka-id (:urakkaid paatos)
           urakka (first (q-urakat/hae-urakka db urakka-id))
           toimenpideinstanssi-id (valikatselmus-q/hae-urakan-bonuksen-toimenpideinstanssi-id db urakka-id)
-          perustelu (str "Urakoitsija sai " (::valikatselmus/lupaus-toteutuneet-pisteet paatoksen-tiedot)
-                      " pistettä ja lupasi " (::valikatselmus/lupaus-luvatut-pisteet paatoksen-tiedot) " pistettä.")
-          kohdistuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
+          perustelu (str "Urakoitsija sai " (:toteutuneet_pisteet paatos)
+                      " pistettä ja lupasi " (:luvatut_pisteet paatos) " pistettä.")
+          kohdistuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (:hoitokauden_alkuvuosi paatos)) 9 15))
 
           ; "Riippuen urakan alkuvuodesta, indeksejä ei välttämättä käytetä sakoissa/sanktioissa. MHU urakoissa joiden alkuvuosi 2021 tai eteenpäin niitä ei sidota indeksiin"
           indeksi (lupauksen-indeksi urakka)
@@ -55,7 +55,7 @@
           sanktio {:kasittelyaika (pvm/nyt)
                    :suorasanktio true,
                    :laji :lupaussanktio,
-                   :summa (::valikatselmus/urakoitsijan-maksu paatoksen-tiedot),
+                   :summa (:lupaussanktio paatos),
                    :toimenpideinstanssi toimenpideinstanssi-id,
                    :perintapvm kohdistuspvm
                    ;; Lupaussanktion tyyppiä ei tarvitse valita
@@ -68,23 +68,23 @@
 
 (defn tallenna-lupausbonus
   "Lupauspäätöstä tallennettaessa voidaan tallentaa myös lupausbonus"
-  [db paatoksen-tiedot kayttaja]
-  (when (= ::valikatselmus/lupausbonus (::valikatselmus/tyyppi paatoksen-tiedot))
-    (let [urakka-id (::urakka/id paatoksen-tiedot)
+  [db paatos kayttaja]
+  (when (= "bonus"  (:tyyppi paatos))
+    (let [urakka-id (:urakkaid paatos)
           urakan-tiedot (first (urakat-q/hae-urakka db urakka-id))
           indeksin-nimi (lupauksen-indeksi urakan-tiedot)
           toimenpideinstanssi-id (valikatselmus-q/hae-urakan-bonuksen-toimenpideinstanssi-id db urakka-id)
           sopimus-id (:id (first (urakat-q/hae-urakan-sopimukset db urakka-id)))
           ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle
-          laskutuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
-          lisatiedot (str "Urakoitsija sai " (::valikatselmus/lupaus-toteutuneet-pisteet paatoksen-tiedot)
-                       " pistettä ja lupasi " (::valikatselmus/lupaus-luvatut-pisteet paatoksen-tiedot) " pistettä.")
+          laskutuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (:hoitokauden_alkuvuosi paatos)) 9 15))
+          lisatiedot (str "Urakoitsija sai " (:toteutuneet_pisteet paatos)
+                       " pistettä ja lupasi " (:luvatut_pisteet paatos) " pistettä.")
           ek {:tyyppi "lupausbonus"
               :urakka urakka-id
               :sopimus sopimus-id
               :toimenpideinstanssi toimenpideinstanssi-id
               :pvm laskutuspvm
-              :rahasumma (::valikatselmus/tilaajan-maksu paatoksen-tiedot)
+              :rahasumma (:lupausbonus paatos)
               :indeksin_nimi indeksin-nimi
               :lisatieto lisatiedot
               :laskutuskuukausi laskutuspvm

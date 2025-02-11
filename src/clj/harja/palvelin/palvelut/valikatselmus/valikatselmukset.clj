@@ -13,6 +13,7 @@
     [harja.domain.urakka :as urakka]
     [harja.kyselyt.urakat :as q-urakat]
     [harja.kyselyt.valikatselmus :as valikatselmus-q]
+    [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
     [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
     [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
@@ -24,7 +25,8 @@
     [harja.domain.roolit :as roolit]
     [harja.domain.lupaus-domain :as lupaus-domain]
     [clojure.java.jdbc :as jdbc]
-    [harja.tyokalut.yleiset :refer [round2]]))
+    [harja.tyokalut.yleiset :refer [round2]]
+    [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]))
 
 (defn oikaisujen-sallittu-aikavali
   "Rakennetaan sallittu aikaväli valitun hoitokauden perusteella.
@@ -362,6 +364,37 @@
      :sanktiot sanktiot
      :budjettitavoite budjettitavoite}))
 
+(defn tee-lupauspaatos [db kayttaja paatos]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
+  (log/debug "tee-lupauspaatos :: paatos" (pr-str paatos))
+  (jdbc/with-db-transaction [db db]
+    (let [validaatio #{}
+          urakka-id (:urakkaid paatos)
+          urakka (first (q-urakat/hae-urakka db urakka-id))
+          hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
+          ;; Verrataan tieotkannan tavoitehintaa saatuun tavoitehintaan
+          tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
+                                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          validaatio (if-not (= tavoitehinta (:tavoitehinta paatos))
+                       (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"  ))
+                       validaatio)
+          kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
+                                                                  :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          validaatio (if-not (= kattohinta (:kattohinta paatos))
+                       (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa. Suunniteltu kattohinta:" kattohinta " €. Päätöksen mukainen kattohinta: " (:kattohinta paatos) " €"  ))
+                       validaatio)
+          ;; Jos ollaan tekemässä lupauspäätöstä, josta tulee bonusta
+          erilliskustannus_id (when (and "bonus" (:tyyppi paatos) (:lupausbonus paatos))
+                                (paatos-apurit/tallenna-lupausbonus db paatos kayttaja))
+          ;; Tai jos tulee sakkoja, niin tehdään sanktio
+          sanktio_id (when (and "sakko" (:tyyppi paatos) (:lupaussanktio paatos))
+                       (paatos-apurit/tallenna-lupaussanktio db paatos kayttaja))
+          paatos (-> paatos
+                   (assoc :erilliskustannus_id erilliskustannus_id)
+                   (assoc :sanktio_id sanktio_id))]
+      (if (seq validaatio)
+        (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
+        (paatos-kyselyt/tee-lupauspaatos db {:urakkaid paatos} paatos)))))
 
 (defrecord Valikatselmukset []
   component/Lifecycle
@@ -399,6 +432,10 @@
         :hae-valikatselmuksen-tiedot-hoitovuodelle
         (fn [user tiedot]
           (hae-valikatselmuksen-tiedot-hoitovuodelle (:db this) user tiedot)))
+      (julkaise-palvelu (:http-palvelin this)
+        :tee-lupauspaatos
+        (fn [user tiedot]
+          (tee-lupauspaatos (:db this) user tiedot)))
       this))
   (stop [this]
     (poista-palvelut (:http-palvelin this)
@@ -411,5 +448,6 @@
       :hae-urakan-paatokset
       :tallenna-urakan-paatos
       :poista-paatos
-      :hae-valikatselmuksen-tiedot-hoitovuodelle)
+      :hae-valikatselmuksen-tiedot-hoitovuodelle
+      :tee-lupauspaatos)
     this))
