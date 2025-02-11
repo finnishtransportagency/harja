@@ -103,19 +103,19 @@ BEGIN
                     LOOP
                         IF suolamateriaalikoodit @> ARRAY [m.materiaalikoodi] THEN
                             IF edellinen_rp IS DISTINCT FROM NULL THEN
-                                FOR suolausalue IN SELECT tyyppi, rajoitusalue_id, pohjavesialue_tunnus, osuus FROM pistevalin_suolausalueet(edellinen_rp.sijainti, rp.sijainti, urakkaid, hoitokauden_alkuvuosi)
+                                FOR suolausalue IN SELECT tyyppi, rajoitusalue_id, osuus FROM pistevalin_suolausalueet(edellinen_rp.sijainti, rp.sijainti, urakkaid, hoitokauden_alkuvuosi)
                                     LOOP
                                         -- Lisätään rajoitusalueisiin liittyvät määrät
                                         IF suolausalue.rajoitusalue_id IS DISTINCT FROM NULL AND
                                            suolausalue.tyyppi = 'rajoitusalue' THEN
-                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue, rajoitusalue_id)
-                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus, NULL, suolausalue.rajoitusalue_id);
+                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id)
+                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus, suolausalue.rajoitusalue_id);
                                         END IF;
 
                                         -- Lisätään rajoittamattomien alueiden määrät
                                         IF suolausalue.tyyppi = 'muu' THEN
-                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue, rajoitusalue_id)
-                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus, NULL, NULL);
+                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id)
+                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus,NULL);
                                         END IF;
                                     END LOOP;
                             END IF;
@@ -174,26 +174,26 @@ BEGIN
                         LOOP
                             IF suolamateriaalikoodit @> ARRAY [m.materiaalikoodi] THEN
                                 IF edellinen_rp IS DISTINCT FROM NULL THEN
-                                    FOR suolausalue IN SELECT tyyppi, rajoitusalue_id, pohjavesialue_tunnus, osuus
+                                    FOR suolausalue IN SELECT tyyppi, rajoitusalue_id, osuus
                                                        FROM pistevalin_suolausalueet(edellinen_rp.sijainti, rp.sijainti, urakkaid, loydetyt_toteuman_reittipisteet.hoitokauden_alkuvuosi)
                                         LOOP
                                             IF suolausalue.rajoitusalue_id IS DISTINCT FROM NULL AND
                                                suolausalue.tyyppi = 'rajoitusalue' THEN
                                                 INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti,
                                                                                       materiaalikoodi,
-                                                                                      maara, pohjavesialue,
+                                                                                      maara,
                                                                                       rajoitusalue_id)
                                                 VALUES (loydetyt_toteuman_reittipisteet.toteuma, rp.aika, rp.sijainti,
-                                                        m.materiaalikoodi,m.maara * suolausalue.osuus, NULL, suolausalue.rajoitusalue_id);
+                                                        m.materiaalikoodi,m.maara * suolausalue.osuus, suolausalue.rajoitusalue_id);
                                             END IF;
 
                                             IF suolausalue.tyyppi = 'muu' THEN
                                                 INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti,
                                                                                       materiaalikoodi,
-                                                                                      maara, pohjavesialue,
+                                                                                      maara,
                                                                                       rajoitusalue_id)
                                                 VALUES (loydetyt_toteuman_reittipisteet.toteuma, rp.aika, rp.sijainti,
-                                                        m.materiaalikoodi,m.maara * suolausalue.osuus, NULL, NULL);
+                                                        m.materiaalikoodi,m.maara * suolausalue.osuus, NULL);
                                             END IF;
                                         END LOOP;
                                 END IF;
