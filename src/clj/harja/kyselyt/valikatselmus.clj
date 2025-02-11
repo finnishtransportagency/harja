@@ -9,7 +9,8 @@
 (defqueries "harja/kyselyt/valikatselmus.sql"
             {:positional? true})
 
-(declare hae-urakan-hintapaatokset hintapaatos-tehty?)
+(declare hae-urakan-hintapaatokset hintapaatos-tehty? hae-urakan-bonuksen-toimenpideinstanssi-id
+  hae-oikaistu-tavoitehinta hae-oikaistu-kattohinta)
 
 ;; Tavoitehinnan oikaisut
 
