@@ -16,37 +16,7 @@
   [db {:keys [numero nimi kanavaalue kiinnittym porttiseli kayttoseli sulkuleve0 sulkulevey
               alusleveys aluspituus alussyvyys aluskorkeu id sulkuja putouskork putouskor0 vesisto
               kanavapitu kanavaleve mista mihin omistaja the_geom]} :as kanavasulku]
-  (let [kanavanro (:numero kanavasulku)
-        aluenro (:aluenro kanavasulku)
-        nimi (:nimi kanavasulku)
-        kanavatyyppi (:kanava_ty kanavasulku)
-        aluetyyppi (:alue_ty kanavasulku)
-        kiinnitys (:kiinnit kanavasulku)
-        porttityyppi (:portti_ty kanavasulku)
-        kayttotapa (:kaytto_ty kanavasulku)
-        sulku_leveys (:sulku_lev kanavasulku)
-        sulku_pituus (:sulku_pit kanavasulku)
-        alus_leveys (:alus_lev kanavasulku)
-        alus_pituus (:alus_pit kanavasulku)
-        alus_syvyys (:alus_syv kanavasulku)
-        alus_korkeus (:alus_kor kanavasulku)
-        sulkumaara (:sulkuja kanavasulku)
-        putouskorkeus_1 (:putousk_1 kanavasulku)
-        putouskorkeus_2 (:putousk_2 kanavasulku)
-        alakanavan_alavertaustaso (:ala_ver_1 kanavasulku)
-        alakanavan_ylavertaustaso (:ala_ver_2 kanavasulku)
-        ylakanavan_alavertaustaso (:yla_ver_1 kanavasulku)
-        ylakanavan_ylavertaustaso (:yla_ver_2 kanavasulku)
-        kynnys_1 (:kynnys_1 kanavasulku)
-        kynnys_2 (:kynnys_2 kanavasulku)
-        vesisto (:vesisto kanavasulku)
-        kanavakokonaisuus (:kanavakok kanavasulku)
-        kanava_pituus (:kanava_pit kanavasulku)
-        kanava_leveys (:kanava_lev kanavasulku)
-        lahtopaikka (:mista kanavasulku)
-        kohdepaikka (:mihin kanavasulku)
-        omistaja (:omistaja kanavasulku)
-        geometria (.toString (:the_geom kanavasulku))
+  (let [geometria (.toString (:the_geom kanavasulku))
         sql-parametrit {:kanavanro kanavanro
                         :aluenro aluenro
                         :nimi nimi
