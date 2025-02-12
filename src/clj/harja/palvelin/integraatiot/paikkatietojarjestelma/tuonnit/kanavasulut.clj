@@ -8,7 +8,14 @@
 (defn merkitse-kanavasulut-poistetuksi [db]
   (q-kanavasulut/merkitse-kanavasulut-poistetuksi<! db {:muokkaaja "Integraatio"}))
 
-(defn vie-kanavasulku-entry [db kanavasulku]
+(defn vie-kanavasulku-entry
+  "Aineistossa myös seuraavat arvot, mutta näillä ei juurikaan mitään tehdä:
+   aluenro, kanavatyyppi, kynnys_1, kynnys_2
+   alakanavan_alavertaustaso, alakanavan_ylavertaustaso
+   ylakanavan_ylavertaustaso, ylakanavan_alavertaustaso"
+  [db {:keys [numero nimi kanavaalue kiinnittym porttiseli kayttoseli sulkuleve0 sulkulevey
+              alusleveys aluspituus alussyvyys aluskorkeu id sulkuja putouskork putouskor0 vesisto
+              kanavapitu kanavaleve mista mihin omistaja the_geom]} :as kanavasulku]
   (let [kanavanro (:numero kanavasulku)
         aluenro (:aluenro kanavasulku)
         nimi (:nimi kanavasulku)
@@ -80,10 +87,15 @@
 (defn vie-kanavasulut-kantaan [db shapefile]
   (if shapefile
     (do
-      (log/debug (str "Tuodaan kanavasulut kantaan tiedostosta " shapefile))
+      ; (log/debug (str "Tuodaan kanavasulut kantaan tiedostosta " shapefile))
+      (println "\n Ajetaan sulut.. " shapefile)
       (jdbc/with-db-transaction [db db]
-                                (merkitse-kanavasulut-poistetuksi db) ;; poistetut kanavat ovat poistuneet aineistosta
-                                (doseq [kanavasulku (shapefile/tuo shapefile)]
-                                  (vie-kanavasulku-entry db kanavasulku)))
+        (merkitse-kanavasulut-poistetuksi db) ;; poistetut kanavat ovat poistuneet aineistosta
+        (doseq [kanavasulku (shapefile/tuo shapefile)]
+          (dorun
+            (println "\n sulku: " kanavasulku)
+            #_(vie-kanavasulku-entry db kanavasulku)
+            (doseq [x kanavasulku]
+              (println "x: " (first x) " - " (second x))))))
       (log/debug "Kanavasulkujen tuonti kantaan valmis."))
     (log/debug "Kanavasulkujen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
