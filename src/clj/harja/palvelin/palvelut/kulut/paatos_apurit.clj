@@ -96,74 +96,61 @@
 (defn tallenna-kulu
   "Välikatselmuksen päätöksestä voi tulla automaattisia kuluja. Tavoitehinnan alituksesta muodostetaan kulu, jonka tilaaja maksaa.
   Tavoite- ja kattohinnan ylitykistä luodaan negatiivinen kulu, joka tulee urakoitsijan maksettavaksi."
-  [db paatoksen-tiedot kayttaja paatoksen-tyyppi]
-  (when (and
-          ;; Vaadi kulun summa
-          (::valikatselmus/urakoitsijan-maksu paatoksen-tiedot)
-          ;; Varmista oikea päätöksen tyyppi
-          (or
-            (= ::valikatselmus/tavoitehinnan-ylitys paatoksen-tyyppi)
-            (= ::valikatselmus/tavoitehinnan-alitus paatoksen-tyyppi)
-            ;; Jos on kattohinnan ylitys, niin summan täytyy olla pienempi kuin nolla
-            ;; Koska on mahdollista, että kattohinnan ylityksen summa on siirretty seuraavalle vuodelle ja urakoitsija ei maksa nyt mitään
-            (and
-              (= ::valikatselmus/kattohinnan-ylitys paatoksen-tyyppi)
-              (> (::valikatselmus/urakoitsijan-maksu paatoksen-tiedot) 0))))
-    (let [urakka-id (::urakka/id paatoksen-tiedot)
-          urakka (first (q-urakat/hae-urakka db urakka-id))
-          tehtavaryhman-avain (cond
-                                (= ::valikatselmus/tavoitehinnan-ylitys paatoksen-tyyppi)
-                                "19907c24-dd26-460f-9cb4-2ed974b891aa"
-                                (= ::valikatselmus/tavoitehinnan-alitus paatoksen-tyyppi)
-                                "55c920e7-5656-4bb0-8437-1999add714a3" ; Tavoitepalkkio
-                                (= ::valikatselmus/kattohinnan-ylitys paatoksen-tyyppi)
-                                "be34116b-2264-43e0-8ac8-3762b27a9557"
-                                :else nil)
-          ;; Haetaan avaimen perusteella tehtäväryhmä
-          tehtavaryhma (first (kulut-q/hae-tehtavaryhman-tiedot-tunnisteella db {:tunniste tehtavaryhman-avain}))
-          toimenpideinstanssi-id (:id (first (kulut-q/hae-urakan-hoidon-johdon-toimenpideinstanssi db {:urakka urakka-id})))
-          lisatiedot (cond
-                       (= ::valikatselmus/tavoitehinnan-ylitys paatoksen-tyyppi)
-                       "Välikatselmuksessa luotu kulu. Tavoitehinnan ylitys. Urakoitsija maksaa."
-                       (= ::valikatselmus/tavoitehinnan-alitus paatoksen-tyyppi)
-                       "Välikatselmuksessa luotu kulu. Tavoitehinta alitettiin. Urakoitsijalle maksetaan tavoitepalkkiota."
-                       (= ::valikatselmus/kattohinnan-ylitys paatoksen-tyyppi)
-                       "Välikatselmuksessa luotu kulu. Kattohinnan ylitys. Urakoitsija maksaa hyvitystä."
-                       :else nil)
-          ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle
-          laskutuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
-          kokonaissumma (::valikatselmus/urakoitsijan-maksu paatoksen-tiedot)
-          ;; Kulu
-          kulu {:tyyppi "laskutettava"
-                :numero nil
-                :koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakka))
-                ;; Summa tulee päätöksistä aina ristiriitaisena kululle. Kun urakoitsija on maksumiehenä, niin summan täytyy olla negatiivinen
-                ;; Ja tavoitehinnan alituksessa, kun summan täytyy olla positiivinen (bonusta urakoitsijalle ja uusi laskut tilaajalle) niin summan täytyy olla positiivinen
-                :kokonaissumma (* -1 kokonaissumma)
-                :erapaiva laskutuspvm
-                :urakka urakka-id
-                :kayttaja (:id kayttaja)
-                :lisatieto lisatiedot}
-          uusin-kulu (kulut-q/luo-kulu<! db kulu)
-          uusi-kulu-id (:id uusin-kulu)
+  [db paatos kayttaja paatoksen-tyyppi kokonaissumma]
+  (let [urakka-id (:urakkaid paatos)
+        urakka (first (q-urakat/hae-urakka db urakka-id))
+        tehtavaryhman-avain (cond
+                              (= :tavoitehinnan-ylitys paatoksen-tyyppi)
+                              "19907c24-dd26-460f-9cb4-2ed974b891aa"
+                              (= :tavoitehinnan-alitus paatoksen-tyyppi)
+                              "55c920e7-5656-4bb0-8437-1999add714a3" ; Tavoitepalkkio
+                              (= :kattohinnan-ylitys paatoksen-tyyppi)
+                              "be34116b-2264-43e0-8ac8-3762b27a9557"
+                              :else nil)
+        ;; Haetaan avaimen perusteella tehtäväryhmä
+        tehtavaryhma (first (kulut-q/hae-tehtavaryhman-tiedot-tunnisteella db {:tunniste tehtavaryhman-avain}))
+        toimenpideinstanssi-id (:id (first (kulut-q/hae-urakan-hoidon-johdon-toimenpideinstanssi db {:urakka urakka-id})))
+        lisatiedot (cond
+                     (= :tavoitehinnan-ylitys paatoksen-tyyppi)
+                     "Välikatselmuksessa luotu kulu. Tavoitehinnan ylitys. Urakoitsija maksaa."
+                     (= :tavoitehinnan-alitus paatoksen-tyyppi)
+                     "Välikatselmuksessa luotu kulu. Tavoitehinta alitettiin. Urakoitsijalle maksetaan tavoitepalkkiota."
+                     (= :kattohinnan-ylitys paatoksen-tyyppi)
+                     "Välikatselmuksessa luotu kulu. Kattohinnan ylitys. Urakoitsija maksaa hyvitystä."
+                     :else nil)
+        ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle
+        laskutuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (:hoitokauden_alkuvuosi paatos)) 9 15))
+        ;; Kulu
+        kulu {:tyyppi "laskutettava"
+              :numero nil
+              :koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakka))
+              ;; Summa tulee päätöksistä aina ristiriitaisena kululle. Kun urakoitsija on maksumiehenä, niin summan täytyy olla negatiivinen
+              ;; Ja tavoitehinnan alituksessa, kun summan täytyy olla positiivinen (bonusta urakoitsijalle ja uusi laskut tilaajalle) niin summan täytyy olla positiivinen
+              :kokonaissumma (* -1 kokonaissumma)
+              :erapaiva laskutuspvm
+              :urakka urakka-id
+              :kayttaja (:id kayttaja)
+              :lisatieto lisatiedot}
+        uusin-kulu (kulut-q/luo-kulu<! db kulu)
+        uusi-kulu-id (:id uusin-kulu)
 
-          ;; Tallenna kulu_kohdistus
-          kulukohdistus {:id nil
-                         :rivi 0
-                         :kulu uusi-kulu-id
-                         :summa (:kokonaissumma kulu)
-                         :toimenpideinstanssi toimenpideinstanssi-id
-                         :tehtavaryhma (:id tehtavaryhma)
-                         :maksueratyyppi "kokonaishintainen"
-                         :alkupvm laskutuspvm
-                         :loppupvm laskutuspvm
-                         :kayttaja (:id kayttaja)
-                         :lisatyon-lisatieto lisatiedot
-                         :rahavarausid nil
-                         :tavoitehintainen false
-                         :tyyppi "paatos"}
-          _ (kulut-q/luo-kulun-kohdistus<! db kulukohdistus)]
-      uusi-kulu-id)))
+        ;; Tallenna kulu_kohdistus
+        kulukohdistus {:id nil
+                       :rivi 0
+                       :kulu uusi-kulu-id
+                       :summa (:kokonaissumma kulu)
+                       :toimenpideinstanssi toimenpideinstanssi-id
+                       :tehtavaryhma (:id tehtavaryhma)
+                       :maksueratyyppi "kokonaishintainen"
+                       :alkupvm laskutuspvm
+                       :loppupvm laskutuspvm
+                       :kayttaja (:id kayttaja)
+                       :lisatyon-lisatieto lisatiedot
+                       :rahavarausid nil
+                       :tavoitehintainen false
+                       :tyyppi "paatos"}
+        _ (kulut-q/luo-kulun-kohdistus<! db kulukohdistus)]
+    uusi-kulu-id))
 
 (defn tarkista-lupausbonus
   "Varmista, että annettu bonus täsmää lupauksista saatavaan bonukseen"

@@ -54,7 +54,7 @@
    :luoja luoja})
 
 (defn tavoitehinnan-alituspaatos [urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
-                                  alituksen-maara siirron-maara tavoitepalkkio siirto kulu-id luoja]
+                                  alituksen-maara siirron-maara tavoitepalkkio kulu-id luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
    :versio versio
@@ -63,7 +63,6 @@
    :alituksen_maara alituksen-maara
    :siirron_maara siirron-maara
    :tavoitepalkkio tavoitepalkkio
-   :siirto siirto
    :kulu_id kulu-id
    :luoja luoja})
 
@@ -119,7 +118,7 @@
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-tavoitehinnan-alitus [paatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
-                                   alituksen-maara siirron-maara tavoitepalkkio siirto kulu-id luoja]
+                                   alituksen-maara siirron-maara tavoitepalkkio kulu-id luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
   (is (= versio (:versio paatos)))
@@ -128,7 +127,6 @@
   (is (= alituksen-maara (:alituksen_maara paatos)))
   (is (= siirron-maara (:siirron_maara paatos)))
   (is (= tavoitepalkkio (:tavoitepalkkio paatos)))
-  (is (= siirto (:siirto paatos)))
   (is (= kulu-id (:kulu_id paatos)))
   (is (= luoja (:luoja paatos))))
 
@@ -173,8 +171,8 @@
         toteutuneet-pisteet 10
         lupausbonus 100M
         lupaussanktio nil
-        erilliskustannus-id nil
-        sanktio-id nil
+        erilliskustannus-id 1
+        sanktio-id 1
         lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet toteutuneet-pisteet
                        lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
 
@@ -216,7 +214,7 @@
                              (catch Exception e e))
         ;; Kun tehdään lupaus päätös, siitä muodostetaan joko lupaussanktio tai lupausbonus, nyt on tehty lupausbonus
         erilliskustannus-bonus (first (erilliskustannus-kyselyt/hae-erilliskustannus (:db jarjestelma) {:urakka-id urakkaid
-                                                                                             :id (:erilliskustannus_id tallennettu-paatos)}))]
+                                                                                                        :id (:erilliskustannus_id tallennettu-paatos)}))]
     (is (= lupausbonus (:lupausbonus tallennettu-paatos)) "Lupausbonuspäätöslukemat täsmää validoinnin jälkeen")
     (is (= lupausbonus (:rahasumma erilliskustannus-bonus)))))
 
@@ -258,7 +256,7 @@
     (is (= lupaussanktio (:maara sanktio)))))
 
 ;; Haetaan lupauspaatos
-(deftest lupausbonus-haku-onnistuu-test
+(deftest kysely-lupausbonus-haku-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         kayttajaid (:id +kayttaja-jvh+)
@@ -269,8 +267,8 @@
         toteutuneet-pisteet 10
         lupausbonus 100M
         lupaussanktio nil
-        erilliskustannus-id nil
-        sanktio-id nil
+        erilliskustannus-id 1
+        sanktio-id 1
         lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet
                        toteutuneet-pisteet lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
 
@@ -282,7 +280,7 @@
       lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)))
 
 ;; Poistetaan lupauspaatos
-(deftest lupausbonus-poisto-onnistuu-test
+(deftest kysely-lupausbonus-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         kayttajaid (:id +kayttaja-jvh+)
@@ -308,8 +306,52 @@
         v (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi)]
     (is (nil? (first v)))))
 
+(deftest rajapinta-poista-lupauksetpaatos-sanktio-onnistuu-test
+  (let [urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2021
+        tyyppi "sakko"
+        tavoitehinta 5M
+        luvatut-pisteet 50
+        toteutuneet-pisteet 10
+        lupausbonus nil
+        lupaussanktio 1500M
+        erilliskustannus-id nil
+        sanktio-id nil
+        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet toteutuneet-pisteet
+                       lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
+
+        rajapinta-lupauspaatos (try
+                                 (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
+                                               ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
+                                               lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
+                                                                                                      {:lupaus-sitoutuminen {:pisteet 50}
+                                                                                                       :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                                                    :pisteet {:maksimi 100
+                                                                                                                              :ennuste 100
+                                                                                                                              :toteuma 100}
+                                                                                                                    :bonus-tai-sanktio {:sanktio lupaussanktio}
+                                                                                                                    :tavoitehinta tavoitehinta
+                                                                                                                    :odottaa-kannanottoa 0
+                                                                                                                    :merkitsevat-odottaa-kannanottoa 0}})
+                                               ;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
+                                               valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                                   (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos))
+                                 (catch Exception e e))
+
+        ;; Kun tehdään lupaus päätös, siitä muodostetaan joko lupaussanktio tai lupausbonus, nyt on tehty lupaussanktio
+        lupauspaatoksen-sanktio (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id rajapinta-lupauspaatos)))
+        ;; Poistetaan päätös
+        poistettu-paatos (kutsu-palvelua (:http-palvelin jarjestelma) :poista-lupauspaatos +kayttaja-jvh+ rajapinta-lupauspaatos)
+        ;; Päätöksen poistamisen jälkeen enää ei pitäisi löytyä sanktiota
+        lupauspaatoksen-poistettu-sanktio (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id rajapinta-lupauspaatos)))]
+    (is (not (nil? lupauspaatoksen-sanktio)))
+    (is (= lupaussanktio (:maara lupauspaatoksen-sanktio)))
+    (is (nil? lupauspaatoksen-poistettu-sanktio))
+    (is (= poistettu-paatos (:id rajapinta-lupauspaatos)))))
+
 ;; Testaa tavoitehinnan muutospäätöksen lisäys
-(deftest tavoitehinnan-muutos-lisays-onnistuu-test
+(deftest kysely-tavoitehinnan-muutos-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         kayttajaid (:id +kayttaja-jvh+)
@@ -321,6 +363,28 @@
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos)]
     (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi versio tavoitehinta kattohinta kayttajaid)))
+
+(deftest rajapinta-tavoitehinnan-muutos-lisays-onnistuu-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2021
+        versio "1a"
+        tavoitehinta 5M
+        kattohinta 5M
+        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta kattohinta kayttajaid)
+        ;; Tarvitaanko feikattuja kyselyitä?
+        tallennettu-paatos (try
+                             (with-redefs [
+                                           ;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
+                                           valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit]
+                                                                                           kattohinta)
+                                           ;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
+                                           valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-muutospaatos +kayttaja-jvh+ paatos))
+                             (catch Exception e e))]
+    (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
+    (is (= kattohinta (:kattohinta tallennettu-paatos)) "Kattohinnan muutospäätöslukemat täsmää validoinnin jälkeen")))
 
 ;; Poistetaan tavoitehinnan muutospäätös
 (deftest tavoitehinnan-muutos-poisto-onnistuu-test
@@ -344,8 +408,34 @@
         v (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi)]
     (is (nil? (first v)))))
 
+(deftest rajapinta-tavoitehinnan-muutospaatos-poisto-onnistuu-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2021
+        versio "1a"
+        tavoitehinta 5M
+        kattohinta 5M
+        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta kattohinta kayttajaid)
+        tallennettu-paatos (try
+                             (with-redefs [
+                                           ;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
+                                           valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit]
+                                                                                           kattohinta)
+                                           ;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
+                                           valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-muutospaatos +kayttaja-jvh+ paatos))
+                             (catch Exception e e))
+        _ (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
+        _ (is (= kattohinta (:kattohinta tallennettu-paatos)) "Kattohinnan muutospäätöslukemat täsmää validoinnin jälkeen")
+
+        ;; Poistetaan juuri lisätty päätös.
+        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-tavoitehinnan-muutospaatos +kayttaja-jvh+ tallennettu-paatos)]
+    (is (= true (:poistettu poistovastaus)))
+    (is (= kayttajaid (:poistaja poistovastaus)))))
+
 ;; Testaa tavoitehinnan alituspäätöksen lisäsy
-(deftest tavoitehinnan-alitus-lisays-onnistuu-test
+(deftest kysely-tavoitehinnan-alitus-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         kayttajaid (:id +kayttaja-jvh+)
@@ -356,17 +446,38 @@
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
-        siirto 50M
-        kulu-id nil
+        kulu-id 1
         paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio siirto kulu-id kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakkaid paatos)]
     (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
-      alituksen-maara siirron-maara tavoitepalkkio siirto kulu-id kayttajaid)))
+      alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)))
+
+(deftest rajapinta-tavoitehinnan-alitus-lisays-onnistuu-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2021
+        tavoitehinta 5M
+        versio "1a"
+        toteutuneet-kustannukset 5M
+        alituksen-maara 10M
+        siirron-maara 100M
+        tavoitepalkkio 150M
+        kulu-id nil
+        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
+        tallennettu-paatos (try
+                             (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
+                                           valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-alituspaatos +kayttaja-jvh+ paatos))
+                             (catch Exception e e))]
+    (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
+    (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")))
 
 ;; Poistetaan tavoitehinnan alituspäätös
-(deftest tavoitehinnanalitus-poisto-onnistuu-test
+(deftest kysely-tavoitehinnanalitus-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         kayttajaid (:id +kayttaja-jvh+)
@@ -377,10 +488,9 @@
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
-        siirto 50M
-        kulu-id nil
+        kulu-id 1
         paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio siirto kulu-id kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
         _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakkaid paatos)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
@@ -393,8 +503,57 @@
         v (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi)]
     (is (nil? (first v)))))
 
+(deftest rajapinta-tavoitehinnan-alitus-poisto-onnistuu-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2021
+        tavoitehinta 5M
+        versio "1a"
+        toteutuneet-kustannukset 5M
+        alituksen-maara 10M
+        siirron-maara 100M
+        tavoitepalkkio 150M
+        kulu-id nil
+        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
+        tallennettu-paatos (try
+                             (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
+                                           valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-alituspaatos +kayttaja-jvh+ paatos))
+                             (catch Exception e e))
+        ;; Poistetaan juuri lisätty päätös.
+        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-tavoitehinnan-alituspaatos +kayttaja-jvh+ tallennettu-paatos)]
+    (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
+    (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")
+    (is (= true (:poistettu poistovastaus)))
+    (is (= kayttajaid (:poistaja poistovastaus)))))
+
 ;; Tavoitehinnan ylitys lisäys
-(deftest tavoitehinnan-ylitys-lisays-onnistuu-test
+(deftest kysely-tavoitehinnan-ylitys-lisays-onnistuu-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2021
+        versio "A"
+        tavoitehinta 5M
+        toteutuneet-kustannukset 5M
+        ylityksen-maara 10M
+        tilaajan-prosentti 30 ;; Versio A 30/70, B 50/50, V 25/75
+        urakoitsijan-prosentti 70
+        tilaaja-maksaa 150M
+        urakoitsija-maksaa 50M
+        siirto 50M
+        kulu-id 1
+        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+                 ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
+                 urakoitsija-maksaa siirto kulu-id kayttajaid)
+
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
+    (testaa-tavoitehinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+      ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa urakoitsija-maksaa siirto kulu-id kayttajaid)))
+
+(deftest rajapinta-tavoitehinnan-ylitys-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         kayttajaid (:id +kayttaja-jvh+)
@@ -412,13 +571,16 @@
         paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id kayttajaid)
+        tallennettu-paatos (try
+                             (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
+                                           valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-ylityspaatos +kayttaja-jvh+ paatos))
+                             (catch Exception e e))]
+    (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
+    (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")))
 
-        vastaus (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
-    (testaa-tavoitehinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
-      ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa urakoitsija-maksaa siirto kulu-id kayttajaid)))
-
-;; Tavoitehinnan ylitys lisäys - Poisto
-(deftest tavoitehinnan-ylityspaatoksen-poisto-onnistuu-test
+;; Tavoitehinnan ylitys - Poisto
+(deftest kysely-tavoitehinnan-ylityspaatoksen-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         kayttajaid (:id +kayttaja-jvh+)
@@ -432,7 +594,7 @@
         tilaaja-maksaa 150M
         urakoitsija-maksaa 50M
         siirto 50M
-        kulu-id nil
+        kulu-id 1
         paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id kayttajaid)
@@ -448,8 +610,56 @@
         v (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi)]
     (is (nil? (first v)))))
 
+(deftest rajapinta-tavoitehinnan-ylityspaatoksen-poisto-onnistuu-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2021
+        versio "A"
+        tavoitehinta 5M
+        toteutuneet-kustannukset 5M
+        ylityksen-maara 10M
+        tilaajan-prosentti 30 ;; Versio A 30/70, B 50/50, V 25/75
+        urakoitsijan-prosentti 70
+        tilaaja-maksaa 150M
+        urakoitsija-maksaa 50M
+        siirto 50M
+        kulu-id nil
+        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+                 ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
+                 urakoitsija-maksaa siirto kulu-id kayttajaid)
+        tallennettu-paatos (try
+                             (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
+                                           valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-ylityspaatos +kayttaja-jvh+ paatos))
+                             (catch Exception e e))
+        ;; Poistetaan juuri lisätty päätös.
+        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-tavoitehinnan-ylityspaatos +kayttaja-jvh+ tallennettu-paatos)]
+    (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
+    (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")
+    (is (= true (:poistettu poistovastaus)))
+    (is (= kayttajaid (:poistaja poistovastaus)))))
+
 ;; Kattohinnan ylitys lisäys
-(deftest kattohinnan-ylitys-lisays-onnistuu-test
+(deftest kysely-kattohinnan-ylitys-lisays-onnistuu-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2021
+        kattohinta 5M
+        toteutuneet-kustannukset 5M
+        ylityksen-maara 10M
+        urakoitsija-maksaa 50M
+        siirrettava-maara 50M
+        kulu-id 1
+        paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id kayttajaid)
+
+        vastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
+    (testaa-kattohinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+      ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id kayttajaid)))
+
+(deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         kayttajaid (:id +kayttaja-jvh+)
@@ -463,12 +673,18 @@
         paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
-    (testaa-kattohinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-      ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id kayttajaid)))
+        tallennettu-paatos (try
+                             (with-redefs [;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
+                                           valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit]
+                                                                                           kattohinta)]
+                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-kattohinnan-ylityspaatos +kayttaja-jvh+ paatos))
+                             (catch Exception e e))]
+
+    (is (= kattohinta (:kattohinta tallennettu-paatos)) "Kattohinnan muutospäätöslukemat täsmää validoinnin jälkeen")
+    (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")))
 
 ;; Kattohinnan ylitys lisäys - Poisto
-(deftest kattohinnan-ylityspaatoksen-poisto-onnistuu-test
+(deftest kysely-kattohinnan-ylityspaatoksen-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         kayttajaid (:id +kayttaja-jvh+)
@@ -492,3 +708,30 @@
         ;; Tarkista, että päätös on poistettu
         v (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi)]
     (is (nil? (first v)))))
+
+(deftest rajapinta-kattohinnan-ylityspaatoksen-poisto-onnistuu-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2021
+        kattohinta 5M
+        toteutuneet-kustannukset 5M
+        ylityksen-maara 10M
+        urakoitsija-maksaa 50M
+        siirrettava-maara 50M
+        kulu-id nil
+        paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id kayttajaid)
+
+        tallennettu-paatos (try
+                             (with-redefs [;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
+                                           valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit]
+                                                                                           kattohinta)]
+                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-kattohinnan-ylityspaatos +kayttaja-jvh+ paatos))
+                             (catch Exception e e))
+        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-kattohinnan-ylityspaatos +kayttaja-jvh+ tallennettu-paatos)]
+
+    (is (= kattohinta (:kattohinta tallennettu-paatos)) "Kattohinnan muutospäätöslukemat täsmää validoinnin jälkeen")
+    (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")
+    (is (= true (:poistettu poistovastaus)))
+    (is (= kayttajaid (:poistaja poistovastaus)))))

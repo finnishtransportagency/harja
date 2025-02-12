@@ -74,9 +74,8 @@ CREATE TABLE paatos_tavoitehinta_alitus
     tavoitehinta             NUMERIC(10, 2) NOT NULL,
     toteutuneet_kustannukset NUMERIC(10, 2) NOT NULL,
     alituksen_maara          NUMERIC(10, 2),
-    siirron_maara            NUMERIC(10, 2),
+    siirron_maara            NUMERIC(10, 2), -- Jos siirretään seuraavalle vuodelle niin tähän se summa. Viimeisenä vuotena ei voida enää siirtää
     tavoitepalkkio           NUMERIC(10, 2),
-    siirto                   NUMERIC(10, 2),          -- Jos siirretään seuraavalle vuodelle niin tähän se summa. Viimeisenä vuotena ei voida enää siirtää
     kulu_id                  INTEGER,
     luotu                    TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     luoja                    INTEGER        NOT NULL,

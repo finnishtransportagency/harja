@@ -13,7 +13,7 @@
   tee-tavoitehinnan-muutos-paatos<! hae-tavoitehinnan-muutospaatos poista-tavoitehinnan-muutos-paatos<!
   tee-tavoitehinnan-alitus-paatos<! poista-tavoitehinnan-alitus-paatos<! hae-tavoitehinnnan-alitus-paatokset hae-tavoitehinnan-alituspaatos
   tee-tavoitehinnan-ylitys-paatos<! hae-tavoitehinnan-ylityspaatos hae-tavoitehinnnan-ylitys-paatokset poista-tavoitehinnan-ylitys-paatos<!
-  tee-kattohointa-paatos<! hae-kattohinta-paatos poista-kattohinta-paatos<!)
+  tee-kattohinta-paatos<! hae-kattohinta-paatos poista-kattohinta-paatos<!)
 
 ;; Haetaan päätöskoneen listauksen mukaiset päätökset tietokannasta
 (defn hae-paatokset
@@ -51,15 +51,14 @@
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   ;;TODO: Tee validaatio
-  (println "**** tee-lupauspaatos paatos" paatos)
   (tee-lupauspaatos<! db paatos))
 
 (defn poista-lupauspaatos [db urakkaid kayttajaid paatosid]
   (let [;; Varmistetaan ensin, että lupaus löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
-        lupaus (first (hae-lupauspaatos db {:paatos-id paatosid}))
+        lupauspaatos (first (hae-lupauspaatos db {:paatos-id paatosid}))
         _ (when (or
-                (nil? lupaus)
-                (not= urakkaid (:urakkaid lupaus)))
+                (nil? lupauspaatos)
+                (not= urakkaid (:urakkaid lupauspaatos)))
             ;; Throw exception
             (throw (Exception. "Lupauspäätös ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))]
     (poista-lupauspaatos<! db {:poistaja kayttajaid :id paatosid})))
@@ -75,17 +74,16 @@
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   ;;TODO: Tee validaatio
-  (println "**** tee-tavoitehinnan-muutospaatos" paatos)
   (tee-tavoitehinnan-muutos-paatos<! db paatos))
 
 (defn poista-tavoitehinnan-muutospaatos [db urakkaid kayttajaid paatosid]
   (let [;; Varmistetaan ensin, että lupaus löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
-        lupaus (first (hae-tavoitehinnan-muutospaatos db {:paatos-id paatosid}))
+        paatos (first (hae-tavoitehinnan-muutospaatos db {:paatos-id paatosid}))
         _ (when (or
-                  (nil? lupaus)
-                  (not= urakkaid (:urakkaid lupaus)))
+                  (nil? paatos)
+                  (not= urakkaid (:urakkaid paatos)))
             ;; Throw exception
-            (throw (Exception. "Lupauspäätös ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))]
+            (throw (Exception. "Tavoitehinnan muutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle.")))]
     (poista-tavoitehinnan-muutos-paatos<! db {:poistaja kayttajaid :id paatosid})))
 
 (defn tee-tavoitehinnan-alituspaatos
@@ -98,13 +96,11 @@
   :alituksen_maara <eurot>
   :siirron_maara <eurot>
   :tavoitepalkkio <eurot>
-  :siirto <eurot>
   :kulu_id <luodun kulun id>
   :luoja <kuka>}"
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   ;;TODO: Tee validaatio
-  (println "**** tee-tavoitehinnan-alitus-paatos :: paatos" paatos)
   (tee-tavoitehinnan-alitus-paatos<! db paatos))
 
 (defn poista-tavoitehinnan-alituspaatos [db urakkaid kayttajaid paatosid]
@@ -135,7 +131,6 @@
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   ;;TODO: Tee validaatio
-  (println "**** tee-tavoitehinnan-ylityspaatos :: paatos" paatos)
   (tee-tavoitehinnan-ylitys-paatos<! db paatos))
 
 (defn poista-tavoitehinnan-ylityspaatos [db urakkaid kayttajaid paatosid]
@@ -162,8 +157,7 @@
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   ;;TODO: Tee validaatio
-  (println "**** tee-kattohinnan-ylityspaatos :: paatos" paatos)
-  (tee-kattohointa-paatos<! db paatos))
+  (tee-kattohinta-paatos<! db paatos))
 
 (defn poista-kattohinnan-ylityspaatos [db urakkaid kayttajaid paatosid]
   (let [;; Varmistetaan ensin, että tavoitehinnan ylityspäätös löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
