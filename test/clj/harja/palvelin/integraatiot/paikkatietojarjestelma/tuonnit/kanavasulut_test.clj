@@ -44,7 +44,6 @@
   {:kanavanro 6666
    :aluenro 216737
    :nimi "Iskrovka (Särkijärvi)"
-   :kanavatyyppi "Sulkukanava"
    :aluetyyppi "Sulku"
    :kiinnitys "Liikkuvat pollarit"
    :porttityyppi "Salpaus + Nosto/Lasku"

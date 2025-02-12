@@ -21,7 +21,7 @@
                         :nimi nimi
                         ; :kanavatyyppi kanavatyyppi
                         ;; Tyyppiä ei enää ole, taitaa olla sama kun aluetyyppi, eli esim "Sulku"
-                        ;; Tätäkään arvoa, ei Harjassa käytet 
+                        ;; Tätäkään arvoa, ei Harjassa käytetä, ja poistettu kannasta
                         :aluetyyppi kanavaalue
                         :kiinnitys kiinnittym
                         :porttityyppi porttiseli
