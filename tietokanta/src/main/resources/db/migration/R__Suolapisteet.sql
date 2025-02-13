@@ -46,12 +46,12 @@ BEGIN
                 INTO osuus;
 
                 jaljella_osuutta := jaljella_osuutta - osuus;
-                RETURN NEXT ('rajoitusalue', ra.id, NULL, osuus)::suolausalueen_osuus;
+                RETURN NEXT ('rajoitusalue', ra.id, osuus)::suolausalueen_osuus;
             END LOOP;
 
         -- Jäljelle jää se osuus, joka ei kuulu rajoitetuille alueille.
         IF (jaljella_osuutta > 0) THEN
-            RETURN NEXT ('muu', NULL, NULL, jaljella_osuutta)::suolausalueen_osuus;
+            RETURN NEXT ('muu', NULL, jaljella_osuutta)::suolausalueen_osuus;
         END IF;
     END IF;
     RETURN;
@@ -204,3 +204,12 @@ BEGIN
         END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Varmistetaan, että trigger on olemassa
+DROP TRIGGER IF EXISTS toteuman_reittipisteet_trigger ON toteuman_reittipisteet;
+
+CREATE TRIGGER toteuman_reittipisteet_trigger
+    AFTER INSERT OR UPDATE OR DELETE
+    ON toteuman_reittipisteet
+    FOR EACH ROW
+EXECUTE PROCEDURE toteuman_reittipisteet_trigger_fn();
