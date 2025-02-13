@@ -11,7 +11,6 @@
    :numero 6666
    :aluenro 216737
    :nimi "Iskrovka (Särkijärvi)"
-   :kanava_ty "Sulkukanava"
    :alue_ty "Sulku"
    :kiinnit "Liikkuvat pollarit"
    :portti_ty "Salpaus + Nosto/Lasku"
@@ -29,8 +28,6 @@
    :ala_ver_2 "10"
    :yla_ver_1 "21,28"
    :yla_ver_2 "21,28"
-   :kynnys_1 "4,42"
-   :kynnys_2 "15,73"
    :vesisto "Vuoksen vesistö"
    :kanavakok "Saimaan kanava"
    :kanava_pit 85
@@ -57,14 +54,7 @@
    :sulkumaara 1
    :putouskorkeus_1 1.1
    :putouskorkeus_2 11.38
-   :alakanavan_alavertaustaso "9,82"
-   :alakanavan_ylavertaustaso "10"
-   :ylakanavan_alavertaustaso "21,28"
-   :ylakanavan_ylavertaustaso "21,28"
-   :kynnys_1 "4,42"
-   :kynnys_2 "15,73"
    :vesisto "Vuoksen vesistö"
-   :kanavakokonaisuus "Saimaan kanava"
    :kanava_pituus 85
    :kanava_leveys 13.02
    :lahtopaikka "Brusnitchnoe"
@@ -85,7 +75,7 @@
 
   ;; Päivitetty kanava
   (let [paivitetty-kanava (assoc referenssi-kanavasulku-shapefilesta :nimi "Iskrovka" :kaytto_ty "Itsepalvelu" :kanavakok "Saimaa")
-        paivitetty-kanava-tietokannasta  (assoc referenssi-kanavasulku-tietokannasta :nimi "Iskrovka" :kayttotapa "Itsepalvelu" :kanavakokonaisuus "Saimaa")]
+        paivitetty-kanava-tietokannasta  (assoc referenssi-kanavasulku-tietokannasta :nimi "Iskrovka" :kayttotapa "Itsepalvelu")]
     (kanavasulku-tuonti/vie-kanavasulku-entry (:db ht/jarjestelma) paivitetty-kanava)
     (ht/tarkista-map-arvot paivitetty-kanava-tietokannasta (first (q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666})) ))
   (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohteenosa where lahdetunnus = 6666;")) 1))

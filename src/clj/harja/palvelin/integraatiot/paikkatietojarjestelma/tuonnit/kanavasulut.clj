@@ -14,7 +14,7 @@
    ylakanavan_ylavertaustaso, ylakanavan_alavertaustaso"
   [db {:keys [numero nimi kanavaalue kiinnittym porttiseli kayttoseli sulkuleve0 sulkulevey
               alusleveys aluspituus alussyvyys aluskorkeu id sulkuja putouskork putouskor0 vesisto
-              kanavapitu kanavaleve mista mihin omistaja the_geom]} :as kanavasulku]
+              kanavapitu kanavaleve mista mihin omistaja the_geom] :as kanavasulku}]
   (let [geometria (.toString the_geom)
         sql-parametrit {:kanavanro numero
                         :aluenro id
@@ -37,7 +37,7 @@
                         :putouskorkeus_2 putouskor0
                         :vesisto vesisto
                         ; :kanavakokonaisuus kanavakokonaisuus
-                        ; Kokonaisuutta ei myöskään uudessa aineistossa enää ole 
+                        ; Kokonaisuutta ei myöskään uudessa aineistossa enää ole, eli jos aineistoon tulee uusi sulku, kokonaisuutta ei tiedetä 
                         :kanava_pituus kanavapitu
                         :kanava_leveys kanavaleve
                         :lahtopaikka mista
@@ -47,8 +47,7 @@
                         :luoja "Integraatio"
                         :muokkaaja "Integraatio"
                         :poistettu false}]
-    (do
-      (q-kanavasulut/luo-kanavasulku<! db sql-parametrit))))
+    (q-kanavasulut/luo-kanavasulku<! db sql-parametrit)))
 
 (defn vie-kanavasulut-kantaan [db shapefile]
   (if shapefile
@@ -57,11 +56,15 @@
       (println "\n Ajetaan sulut.. " shapefile)
       (jdbc/with-db-transaction [db db]
         (merkitse-kanavasulut-poistetuksi db) ;; poistetut kanavat ovat poistuneet aineistosta
-        (doseq [kanavasulku (shapefile/tuo shapefile)]
+        (let [data (shapefile/tuo shapefile)
+              count (count data)
+              
+        ]
+          (doseq [kanavasulku data]
           (dorun
-            (println "\n sulku: " kanavasulku)
-            #_(vie-kanavasulku-entry db kanavasulku)
-            (doseq [x kanavasulku]
-              (println "x: " (first x) " - " (second x))))))
+            ; (println "\n sulku: " kanavasulku "  total: " count)
+            (vie-kanavasulku-entry db kanavasulku)
+            #_ (doseq [x kanavasulku]
+              (println "x: " (first x) " - " (second x)))))))
       (log/debug "Kanavasulkujen tuonti kantaan valmis."))
     (log/debug "Kanavasulkujen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
