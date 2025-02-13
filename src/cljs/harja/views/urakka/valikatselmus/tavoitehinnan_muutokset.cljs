@@ -36,7 +36,7 @@
                   0
                   (inc (apply max (keys @hoitokauden-oikaisut-atom))))]
     [grid/muokkaus-grid
-     (merge {:tyhja "Ei oikaisuja"
+     (merge {:tyhja "Ei muutoksia tavoitehintaan"
              :voi-kumota? false
              :voi-muokata? voi-muokata?
 
@@ -64,13 +64,15 @@
              :nayta-virheikoni? false}
        (when voi-muokata?
          {;; Lisää oikaisunappula taulukon yläpuolella oikealla
-          :custom-toiminto {:teksti "Lisää oikaisu"
+          :custom-toiminto {:teksti "Lisää muutos"
                             :toiminto #(do
                                          (swap! hoitokauden-oikaisut-atom assoc uusi-id
                                            {:id uusi-id :koskematon true :lisays-tai-vahennys :lisays}))
+                            :keskita-vasemmalle true
+                            :keskita-ylos true
                             :opts {:ikoni (ikonit/livicon-plus)
                                    :luokka "nappi-toissijainen"}}}))
-     [{:otsikko "Luokka"
+     [{:otsikko "Muutos"
        :nimi ::valikatselmus/otsikko
        :tyyppi :valinta
        :valinnat (into [] (valikatselmus/luokat @nav/valittu-urakka))
@@ -80,7 +82,8 @@
        :elementin-id (str "luokka-" uusi-id)}
       {:otsikko "Perustelu"
        :nimi ::valikatselmus/selite
-       :tyyppi :string
+       :tyyppi :text ;;:string
+       :koko [:auto 3]
        :validoi [[:ei-tyhja "Täytä arvo"]]
        :leveys 3
        :elementin-id (str "selite-" uusi-id)}

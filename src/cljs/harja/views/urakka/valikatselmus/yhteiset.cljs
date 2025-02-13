@@ -47,7 +47,8 @@
     [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
      (when on-oikeudet?
        [napit/yleinen-ensisijainen "Tallenna päätös" tallenna-paatos-fn
-        {:disabled (or tallennus-kesken? (not voi-muokata?))}])]
+        {:ikoni [ikonit/harja-icon-status-selected]
+         :disabled (or tallennus-kesken? (not voi-muokata?))}])]
     [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
      (when on-oikeudet?
        [napit/nappi
