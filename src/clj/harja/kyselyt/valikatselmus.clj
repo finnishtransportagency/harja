@@ -10,7 +10,7 @@
             {:positional? true})
 
 (declare hae-urakan-hintapaatokset hintapaatos-tehty? hae-urakan-bonuksen-toimenpideinstanssi-id
-  hae-oikaistu-tavoitehinta hae-oikaistu-kattohinta)
+  hae-oikaistu-tavoitehinta hae-oikaistu-kattohinta hae-paatos hae-bonukset hae-sanktiot)
 
 ;; Tavoitehinnan oikaisut
 

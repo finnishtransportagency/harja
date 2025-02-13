@@ -257,13 +257,14 @@
                  ::muokkaustiedot/muokattu (when (::muokkaustiedot/luotu tiedot)
                                              (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt)))}))
 
+;;TODO: Tätä kutsutaan kustannusten seuranannassa. Tämä palauttaa vanhat datat. Korjaa
 (defn hae-urakan-paatokset [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-valikatselmus
     kayttaja
     (::urakka/id tiedot))
   (valikatselmus-q/hae-urakan-paatokset db tiedot))
 
-(defn tee-paatos-urakalle [db kayttaja tiedot]
+#_ (defn tee-paatos-urakalle [db kayttaja tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus
     kayttaja
     (::urakka/id tiedot))
@@ -289,7 +290,7 @@
         ::valikatselmus/lupaussanktio (paatos-apurit/tarkista-lupaussanktio db kayttaja tiedot))
       (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi erilliskustannus_id sanktio_id kulu_id)))))
 
-(defn poista-paatos [db kayttaja {::valikatselmus/keys [paatoksen-id] :as tiedot}]
+#_ (defn poista-paatos [db kayttaja {::valikatselmus/keys [paatoksen-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (::urakka/id tiedot))
   (log/debug "poista-paatos :: tiedot:" (pr-str tiedot))
   (if (number? paatoksen-id)
@@ -579,10 +580,10 @@
       (julkaise-palvelu http :hae-urakan-paatokset
         (fn [user tiedot]
           (hae-urakan-paatokset db user tiedot)))
-      (julkaise-palvelu http :tallenna-urakan-paatos
+      #_ (julkaise-palvelu http :tallenna-urakan-paatos
         (fn [user tiedot]
           (tee-paatos-urakalle db user tiedot)))
-      (julkaise-palvelu http :poista-paatos
+      #_ (julkaise-palvelu http :poista-paatos
         (fn [user tiedot]
           (poista-paatos db user tiedot)))
       (julkaise-palvelu (:http-palvelin this)
@@ -639,8 +640,8 @@
       :hae-kattohintojen-oikaisut
       :poista-kattohinnan-oikaisu
       :hae-urakan-paatokset
-      :tallenna-urakan-paatos
-      :poista-paatos
+      #_ :tallenna-urakan-paatos
+      #_ :poista-paatos
       :hae-valikatselmuksen-tiedot-hoitovuodelle
       :tee-lupauspaatos
       :poista-lupauspaatos

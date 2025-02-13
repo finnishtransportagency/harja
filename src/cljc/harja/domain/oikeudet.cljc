@@ -24,7 +24,8 @@
   urakat-paikkaukset-toteumat
   urakat-paikkaukset-kustannukset
   urakat-paikkaukset-paikkauskohteetkustannukset
-  urakat-kulut-valikatselmus)
+  urakat-kulut-valikatselmus
+  urakat-valitavoitteet)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
