@@ -29,7 +29,7 @@
         nyt-vuosi (pvm/vuosi nyt)
         nyt-kuukausi (pvm/kuukausi nyt)
         nyt-paiva (pvm/paiva nyt)
-        onko-kuukauden-ensimmainen-paiva? (and (= nyt-paiva 1) )
+        onko-kuukauden-ensimmainen-paiva? (and (= nyt-paiva 1))
         ;; Edellinen kuukausi voi olla nolla, jos vähennetään tammikuussa 1
         edellinen-kuukausi (if (= 0 (dec nyt-kuukausi))
                              12

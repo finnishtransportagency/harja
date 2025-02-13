@@ -23,12 +23,12 @@
 (defn- muokkauspaneeli [{:keys [otsikko otsikko-tyyli voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
                                 virhe-viesti custom-toiminto custom-yla-panel]}]
-  [:div.panel-heading
+  [:div.panel-heading {:style (when (:keskita-ylos custom-toiminto) {:padding-top "0px"})}
    (when otsikko [:h2.panel-title (when otsikko-tyyli {:style otsikko-tyyli}) otsikko])
    (when custom-yla-panel custom-yla-panel)
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
-     [:span.pull-right.muokkaustoiminnot
+     [:span {:class (if (:keskita-vasemmalle custom-toiminto) "pull-left muokkaustoiminnot" "pull-right muokkaustoiminnot")}
       (when custom-toiminto
         [napit/nappi (:teksti custom-toiminto)
          (:toiminto custom-toiminto)

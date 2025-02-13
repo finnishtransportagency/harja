@@ -80,42 +80,30 @@ SELECT x.tehtava                AS tehtava,
 SELECT COALESCE(SUM(kt.summa_indeksikorjattu), SUM(kt.summa), 0) AS summa
   FROM kiinteahintainen_tyo kt
            JOIN sopimus s ON kt.sopimus = s.id AND s.urakka = :urakkaid
- WHERE (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE);
+ WHERE (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+AND kt.toimenpideinstanssi = (SELECT id FROM toimenpideinstanssi tpi
+                                        WHERE tpi.urakka = :urakkaid
+                                          -- Päällysteiden paikkaus toimenpiteen TPI
+                                          AND toimenpide = (SELECT id FROM toimenpide WHERE koodi = '20107'));
 
 -- name: hae-kustannukset-tyomenetelmittain
 SELECT x.nimi                     AS nimi,
        SUM(x."toteutunut-hinta")  AS "toteutunut-hinta",
        SUM(x."suunniteltu-hinta") AS "suunniteltu-hinta"
-  FROM (SELECT pt.id,
-               pt.nimi,
+  FROM (SELECT pt.nimi,
                SUM(pk."toteutunut-hinta")  AS "toteutunut-hinta",
                SUM(pk."suunniteltu-hinta") AS "suunniteltu-hinta"
           FROM paikkauskohde_tyomenetelma pt
                    JOIN paikkauskohde pk ON pt.id = pk.tyomenetelma
          WHERE pk."urakka-id" = :urakkaid
            AND pk.alkupvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-           AND pk."paikkauskohteen-tila" = 'valmis'
+           AND pk."paikkauskohteen-tila" IN ('tilattu', 'valmis', 'tarkistettu')
            AND pk.poistettu = FALSE
          GROUP BY pt.id, pk."paikkauskohteen-tila"
 
-         UNION
-
-        SELECT pt.id,
-               pt.nimi,
-               NULL                        AS "toteutunut-hinta",
-               SUM(pk."suunniteltu-hinta") AS "suunniteltu-hinta"
-          FROM paikkauskohde_tyomenetelma pt
-                   JOIN paikkauskohde pk ON pt.id = pk.tyomenetelma
-         WHERE pk."urakka-id" = :urakkaid
-           AND pk.alkupvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-           AND pk."paikkauskohteen-tila" = 'tilattu'
-           AND pk.poistettu = FALSE
-         GROUP BY pt.id, pk."paikkauskohteen-tila"
-
-         UNION
+         UNION ALL
 -- Reikäpaikkaukset
-        SELECT pt.id                         AS id,
-               pt.nimi,
+        SELECT pt.nimi,
                COALESCE(SUM(p.kustannus), 0) AS "toteutunut-hinta",
                NULL                          AS "suunniteltu-hinta"
           FROM paikkauskohde_tyomenetelma pt
@@ -154,34 +142,20 @@ SELECT x.nimi                     AS nimi,
                    WHEN pk.yksikko = 't' THEN COALESCE(SUM(p.massamaara), 0)
                    WHEN pk.yksikko = 'm2' THEN COALESCE(SUM(p."pinta-ala"), 0)
                    ELSE 0
-                   END                     AS "toteutunut-maara",
-               SUM(pk."suunniteltu-maara") AS "suunniteltu-maara"
+                   END                AS "toteutunut-maara",
+               pk."suunniteltu-maara" AS "suunniteltu-maara"
           FROM paikkauskohde_tyomenetelma pt
                    JOIN paikkauskohde pk ON pt.id = pk.tyomenetelma
                    LEFT JOIN paikkaus p ON pk.id = p."paikkauskohde-id"
               AND p.alkuaika BETWEEN :alkupvm::DATE AND :loppupvm::DATE
               AND p.poistettu = FALSE
          WHERE pk."urakka-id" = :urakkaid
+           AND pk."paikkauskohteen-tila" IN ('tilattu', 'valmis', 'tarkistettu')
            AND pk.alkupvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-           AND pk."paikkauskohteen-tila" = 'valmis'
            AND pk.poistettu IS FALSE
-         GROUP BY pt.id, pk."paikkauskohteen-tila", pk.yksikko
+         GROUP BY pt.id, pk.yksikko, pk.id
 
-         UNION
-
-        SELECT pt.nimi                     AS nimi,
-               pk.yksikko                  AS yksikko,
-               0                           AS "toteutunut-maara",
-               SUM(pk."suunniteltu-maara") AS "suunniteltu-maara"
-          FROM paikkauskohde_tyomenetelma pt
-                   JOIN paikkauskohde pk ON pt.id = pk.tyomenetelma
-         WHERE pk."urakka-id" = :urakkaid
-           AND pk.alkupvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-           AND pk."paikkauskohteen-tila" = 'tilattu'
-           AND pk.poistettu IS FALSE
-         GROUP BY pt.id, pk."paikkauskohteen-tila", pk.yksikko
-
-         UNION
+         UNION ALL -- UNION ALL, ettei tapahdu mahdollisten identtisten mutta validien rivien deduplkointia
 -- Reikäpaikkaukset
         SELECT pt.nimi                   AS nimi,
                p."reikapaikkaus-yksikko" AS yksikko,
@@ -200,7 +174,7 @@ SELECT x.nimi                     AS nimi,
 SELECT SUM(pk.summa) AS "toteutunut-hinta",
        pk.kustannustyyppi     AS nimi
   FROM paikkauskustannukset pk
- WHERE vuosi = :vuosi
+ WHERE vuosi BETWEEN :alkuvuosi AND :loppuvuosi
    AND pk.urakka = :urakkaid
  GROUP BY pk.kustannustyyppi;
 
