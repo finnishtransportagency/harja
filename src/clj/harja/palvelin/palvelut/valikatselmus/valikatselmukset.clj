@@ -329,7 +329,7 @@
         mhu-tyyppi (paatoskone/urakan-hoitotyyppi mhu+urakka?)
         tavoitehinta (:tavoitehinta-oikaistu budjettitavoite)
         kattohinta (:kattohinta-oikaistu budjettitavoite)
-        tarjouksen-tavoitehinta (:tarjouksen-tavoitehinta budjettitavoite)
+        tarjouksen-tavoitehinta (:tarjous-tavoitehinta budjettitavoite)
 
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi kuluva-hoitovuosi)
 
