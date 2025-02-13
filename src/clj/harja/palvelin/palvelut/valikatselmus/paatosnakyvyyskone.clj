@@ -3,7 +3,7 @@
 
 (def paatostyypit
   [{:nimi "Lupaukset" :tyyppi "bonus" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 1}
-   {:nimi "Lupaukset" :tyyppi "sakko" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 2}
+   {:nimi "Lupaukset" :tyyppi "sanktio" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 2}
    {:nimi "Lupaukset" :tyyppi "taytetty" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 3}
    {:nimi "Tavoitehinnan muutokset" :versio "1a" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 4}
    {:nimi "Tavoitehinnan muutokset" :versio "1b" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2021 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 5}
@@ -52,14 +52,18 @@
              m1))
          pk-paatokset)))
 
-(defn valmistele-lupauspaatokset [paatokset toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta]
+(defn valmistele-lupauspaatokset [paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta]
+  (println "valmistele-lupauspaatokset :: toteutuneet-pisteet: " toteutuneet-pisteet "  luvatut-pisteet: " luvatut-pisteet " tarjouksen-tavoitehinta: "tarjouksen-tavoitehinta)
   ;; Ota mukaan oikea lupauspäätös, jos ehdot täyttyvät
-  (if (and toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta)
+  (if (and toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta tavoitehinta)
     (let [erotus (- luvatut-pisteet toteutuneet-pisteet)
+          _ (println "erotus: " erotus)
           tyyppi (cond
                    (= erotus 0) "taytetty"
-                   (> erotus 0) "bonus"
-                   (< erotus 0) "sakko")
+                   (< erotus 0) "bonus"
+                   (> erotus 0) "sanktio")
+          lupaussanktio (when (= tyyppi "sanktio") (* 0.0018 tarjouksen-tavoitehinta erotus))
+          lupausbonus (when (= tyyppi "bonus") (* 0.008 tarjouksen-tavoitehinta (* -1 erotus)))
           ;; Valitaan lupauspäätös, joissa tyyppi täsmää
           lupauspaatos (first (filter
                                 (fn [paatos]
@@ -72,7 +76,10 @@
 
           lupauspaatos (-> lupauspaatos
                            (assoc :tyyppi tyyppi)
-                           (assoc :tavoitehinta tarjouksen-tavoitehinta)
+                           (assoc :lupaussanktio lupaussanktio)
+                           (assoc :lupausbonus lupausbonus)
+                           (assoc :tavoitehinta tavoitehinta)
+                           (assoc :tarjous_tavoitehinta tarjouksen-tavoitehinta)
                            (assoc :luvatut_pisteet luvatut-pisteet)
                            (assoc :toteutuneet_pisteet toteutuneet-pisteet))
           ;; Poista kaikki lupauspäätökset listasta

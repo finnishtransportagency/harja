@@ -31,12 +31,13 @@
 
 ;; Testaa kaikki uuden tyyppiset päätökset
 
-(defn lupauspaatos [urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet toteutuneet-pisteet lupausbonus
+(defn lupauspaatos [urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet lupausbonus
                     lupaussanktio erilliskustannus-id sanktio-id luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
    :tyyppi tyyppi
    :tavoitehinta tavoitehinta
+   :tarjous_tavoitehinta tarjous-tavoitehinta
    :luvatut_pisteet luvatut-pisteet
    :toteutuneet_pisteet toteutuneet-pisteet
    :lupausbonus lupausbonus
@@ -95,9 +96,10 @@
    :kulu_id kulu-id
    :luoja luoja})
 
-(defn testaa-lupauspaatostiedot [paatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet toteutuneet-pisteet
+(defn testaa-lupauspaatostiedot [paatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                                  lupausbonus lupaussanktio erilliskustannus-id sanktio-id luoja]
   (is (= tavoitehinta (:tavoitehinta paatos)))
+  (is (= tarjous-tavoitehinta (:tarjous-tavoitehinta paatos)))
   (is (= luoja (:luoja paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
   (is (= tyyppi (:tyyppi paatos)))
@@ -167,17 +169,18 @@
         hoitokauden-alkuvuosi 2021
         tyyppi "bonus"
         tavoitehinta 5M
+        tarjous-tavoitehinta 5M
         luvatut-pisteet 5
         toteutuneet-pisteet 10
         lupausbonus 100M
         lupaussanktio nil
         erilliskustannus-id 1
         sanktio-id 1
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet toteutuneet-pisteet
+        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                        lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
 
         vastaus (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)]
-    (testaa-lupauspaatostiedot vastaus urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet toteutuneet-pisteet
+    (testaa-lupauspaatostiedot vastaus urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
       lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)))
 
 (deftest rajapinta-tee-lupauksetpaatos-bonus-onnistuu-test
@@ -186,13 +189,14 @@
         hoitokauden-alkuvuosi 2021
         tyyppi "bonus"
         tavoitehinta 5M
+        tarjous-tavoitehinta 5M
         luvatut-pisteet 5
         toteutuneet-pisteet 10
         lupausbonus 1500M
         lupaussanktio nil
         erilliskustannus-id nil
         sanktio-id nil
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet toteutuneet-pisteet
+        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                        lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
 
         tallennettu-paatos (try
@@ -222,15 +226,16 @@
   (let [urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
-        tyyppi "sakko"
+        tyyppi "sanktio"
         tavoitehinta 5M
+        tarjous-tavoitehinta 5M
         luvatut-pisteet 50
         toteutuneet-pisteet 10
         lupausbonus nil
         lupaussanktio 1500M
         erilliskustannus-id nil
         sanktio-id nil
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet toteutuneet-pisteet
+        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                        lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
 
         tallennettu-paatos (try
@@ -263,21 +268,22 @@
         hoitokauden-alkuvuosi 2021
         tyyppi "bonus"
         tavoitehinta 5M
+        tarjous-tavoitehinta 5M
         luvatut-pisteet 5
         toteutuneet-pisteet 10
         lupausbonus 100M
         lupaussanktio nil
         erilliskustannus-id 1
         sanktio-id 1
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet
+        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet
                        toteutuneet-pisteet lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
 
         _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)
         ;; Määrittele haettavat päätökset - Luetaan vain lupauspäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Lupaukset" :tyyppi "bonus" :jarjestys 1}]
         vastaus (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi)]
-    (testaa-lupauspaatostiedot (first vastaus) urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet toteutuneet-pisteet
-      lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)))
+    (testaa-lupauspaatostiedot (first vastaus) urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta
+      luvatut-pisteet toteutuneet-pisteet lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)))
 
 ;; Poistetaan lupauspaatos
 (deftest kysely-lupausbonus-poisto-onnistuu-test
@@ -287,13 +293,14 @@
         hoitokauden-alkuvuosi 2021
         tyyppi "bonus"
         tavoitehinta 5M
+        tarjous-tavoitehinta 5M
         luvatut-pisteet 5
         toteutuneet-pisteet 10
         lupausbonus 100M
         lupaussanktio nil
         erilliskustannus-id nil
         sanktio-id nil
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet
+        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet
                        toteutuneet-pisteet lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
 
         _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)
@@ -310,15 +317,16 @@
   (let [urakkaid (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
-        tyyppi "sakko"
+        tyyppi "sanktio"
         tavoitehinta 5M
+        tarjous-tavoitehinta 5M
         luvatut-pisteet 50
         toteutuneet-pisteet 10
         lupausbonus nil
         lupaussanktio 1500M
         erilliskustannus-id nil
         sanktio-id nil
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta luvatut-pisteet toteutuneet-pisteet
+        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                        lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
 
         rajapinta-lupauspaatos (try

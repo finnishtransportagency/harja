@@ -35,7 +35,7 @@
     nil))
 
 (defn tallenna-lupaussanktio [db paatos kayttaja]
-  (when (= "sakko" (:tyyppi paatos))
+  (when (= "sanktio" (:tyyppi paatos))
     (let [urakka-id (:urakkaid paatos)
           urakka (first (q-urakat/hae-urakka db urakka-id))
           toimenpideinstanssi-id (valikatselmus-q/hae-urakan-bonuksen-toimenpideinstanssi-id db urakka-id)

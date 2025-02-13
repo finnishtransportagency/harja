@@ -12,6 +12,7 @@ CREATE TABLE paatos_lupaus
     hoitokauden_alkuvuosi INTEGER        NOT NULL,
     tyyppi                VARCHAR(255)   NOT NULL, -- bonus, sanktio, taytetty
     tavoitehinta          NUMERIC(10, 2) NOT NULL,
+    tarjous_tavoitehinta  NUMERIC(10, 2) NOT NULL,
     luvatut_pisteet       INTEGER        NOT NULL,
     toteutuneet_pisteet   INTEGER        NOT NULL,
     lupausbonus           NUMERIC(10, 2),
@@ -74,7 +75,7 @@ CREATE TABLE paatos_tavoitehinta_alitus
     tavoitehinta             NUMERIC(10, 2) NOT NULL,
     toteutuneet_kustannukset NUMERIC(10, 2) NOT NULL,
     alituksen_maara          NUMERIC(10, 2),
-    siirron_maara            NUMERIC(10, 2), -- Jos siirretään seuraavalle vuodelle niin tähän se summa. Viimeisenä vuotena ei voida enää siirtää
+    siirron_maara            NUMERIC(10, 2),          -- Jos siirretään seuraavalle vuodelle niin tähän se summa. Viimeisenä vuotena ei voida enää siirtää
     tavoitepalkkio           NUMERIC(10, 2),
     kulu_id                  INTEGER,
     luotu                    TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,

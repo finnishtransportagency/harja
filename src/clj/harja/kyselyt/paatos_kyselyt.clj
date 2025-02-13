@@ -1,10 +1,6 @@
 (ns harja.kyselyt.paatos-kyselyt
-  (:require [specql.core :refer [fetch update! insert! upsert! columns]]
-            [jeesql.core :refer [defqueries]]
-            [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]
-            [harja.domain.urakka :as urakka]
-            [harja.pvm :as pvm]))
+  (:require [jeesql.core :refer [defqueries]]
+            [slingshot.slingshot :refer [throw+]]))
 
 (defqueries "harja/kyselyt/paatos_kyselyt.sql"
   {:positional? true})
@@ -14,6 +10,9 @@
   tee-tavoitehinnan-alitus-paatos<! poista-tavoitehinnan-alitus-paatos<! hae-tavoitehinnnan-alitus-paatokset hae-tavoitehinnan-alituspaatos
   tee-tavoitehinnan-ylitys-paatos<! hae-tavoitehinnan-ylityspaatos hae-tavoitehinnnan-ylitys-paatokset poista-tavoitehinnan-ylitys-paatos<!
   tee-kattohinta-paatos<! hae-kattohinta-paatos poista-kattohinta-paatos<!)
+
+(defn heita-virhe [viesti] (throw+ {:type "Error"
+                                    :virheet {:koodi "ERROR" :viesti viesti}}))
 
 ;; Haetaan päätöskoneen listauksen mukaiset päätökset tietokannasta
 (defn hae-paatokset
@@ -41,6 +40,7 @@
   :tyyppi <bonus|sakko|ei-bonus-ei-sakko>
   :urakkaid <urakka-id>
   :tavoitehinta <tavoitehinta>
+  :tarjous_tavoitehinta <tavoitehinta>
   :luvatut_pisteet <pisteet>
   :toteutuneet_pisteet <pisteet>
   :lupausbonus <eurot>
@@ -50,8 +50,25 @@
   :luoja <kuka>}"
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
-  ;;TODO: Tee validaatio
-  (tee-lupauspaatos<! db paatos))
+  (let [validaatio #{}
+        ;; Validoi perustietojen pakollisuus
+        validaatio (if (and (:hoitovuoden_alkuvuosi paatos) (:tyyppi paatos) (:urakkaid paatos) (:tavoitehinta paatos)
+                            (:tarjous_tavoitehinta paatos) (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos)
+                            (:luoja paatos))
+                     (conj validaatio "Puutteelliset lupauspäätöstiedot.")
+                     validaatio)
+        ;; Tarkista sakot
+        validaatio (if (and (= "sanktio" (:tyyppi paatos)) (or (nil? (:lupaussanktio paatos)) (nil? (:sanktio_id paatos))))
+                     (conj validaatio "Lupauspäätökseltä puuttuu sanktion määrä. ")
+                     validaatio)
+        ;; Tarkista bonus
+        validaatio (if (and (= "bonus" (:tyyppi paatos)) (or (nil? (:lupausbonus paatos)) (nil? (:erilliskustannus_id paatos))))
+                     (conj validaatio "Lupauspäätökseltä puuttuu bonuksen määrä.")
+                     validaatio)]
+
+    (if (seq validaatio)
+      (heita-virhe (str "Lupauspäätöksessä virheitäs: " (clojure.string/join ", " validaatio)))
+      (tee-lupauspaatos<! db paatos))))
 
 (defn poista-lupauspaatos [db urakkaid kayttajaid paatosid]
   (let [;; Varmistetaan ensin, että lupaus löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
