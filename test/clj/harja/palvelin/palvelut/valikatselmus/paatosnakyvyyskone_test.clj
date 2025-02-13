@@ -139,13 +139,13 @@
 (deftest valmistele-lupauspaatokset-test
   (let [paatokset [{:nimi "Lupaukset" :tyyppi "bonus" :jarjestys 1}
                    {:nimi "Lupaukset" :tyyppi "sakko" :jarjestys 2}
-                   {:nimi "Lupaukset" :tyyppi "ei-bonus-ei-sakko" :jarjestys 3}]
+                   {:nimi "Lupaukset" :tyyppi "taytetty" :jarjestys 3}]
         toteutuneet-pisteet 10
         luvatut-pisteet 10
         tarjous-tavoitehinta 100
         paatokset-ei-kumpikaan (kone/valmistele-lupauspaatokset paatokset toteutuneet-pisteet luvatut-pisteet tarjous-tavoitehinta)
         _ (is (= 1 (count paatokset-ei-kumpikaan)))
-        _ (is (= "ei-bonus-ei-sakko" (:tyyppi (first paatokset-ei-kumpikaan))))
+        _ (is (= "taytetty" (:tyyppi (first paatokset-ei-kumpikaan))))
 
         toteutuneet-pisteet 10
         luvatut-pisteet 15
