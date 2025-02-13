@@ -14,14 +14,14 @@ WHERE id = :id;
 
 -- name: hae-lupauspaatokset
 -- Hae lupauspäätökset
-SELECT *
+SELECT 'Lupaukset' as nimi, *
 FROM paatos_lupaus
 WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
   AND poistettu = FALSE;
 
 -- name: hae-lupauspaatos
-SELECT *
+SELECT 'Lupaukset' as nimi, *
 FROM paatos_lupaus
 WHERE id = :paatos-id
   AND poistettu = FALSE;
@@ -41,7 +41,7 @@ WHERE id = :id;
 
 -- name: hae-tavoitehinnan-muutos-paatokset
 -- Hae tavoitehinnan muutos päätökset
-SELECT *
+SELECT 'Tavoitehinnan muutokset' as nimi, *
 FROM paatos_tavoitehinnan_muutos
 WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
@@ -49,7 +49,7 @@ WHERE urakkaid = :urakkaid
 
 -- name: hae-tavoitehinnan-muutospaatos
 -- Hae tavoitehinnan muutos
-SELECT *
+SELECT 'Tavoitehinnan muutokset' as nimi, *
 FROM paatos_tavoitehinnan_muutos
 WHERE id = :paatos-id
   AND poistettu = FALSE;
@@ -72,14 +72,14 @@ WHERE id = :id;
 
 -- name: hae-tavoitehinnnan-ylitys-paatokset
 -- Hae tavoitehinnan ylitys päätökset
-SELECT *
+SELECT 'Tavoitehinnan ylitys' as nimi, *
 FROM paatos_tavoitehinta_ylitys
 WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
   AND poistettu = FALSE;
 
 -- name: hae-tavoitehinnan-ylityspaatos
-SELECT *
+SELECT 'Tavoitehinnan ylitys' as nimi, *
 FROM paatos_tavoitehinta_ylitys
 WHERE id = :paatos-id
   AND poistettu = FALSE;
@@ -100,14 +100,14 @@ WHERE id = :id;
 
 -- name: hae-tavoitehinnnan-alitus-paatokset
 -- Hae tavoitehinnan alitus päätökset
-SELECT *
+SELECT 'Tavoitehinnan alitus' as nimi, *
 FROM paatos_tavoitehinta_alitus
 WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
   AND poistettu = FALSE;
 
 -- name: hae-tavoitehinnan-alituspaatos
-SELECT *
+SELECT 'Tavoitehinnan alitus' as nimi, *
 FROM paatos_tavoitehinta_alitus
 WHERE id = :paatos-id
   AND poistettu = FALSE;
@@ -128,7 +128,7 @@ WHERE id = :id;
 
 -- name: hae-kattohinta-paatokset
 -- Hae kattohinta päätökset
-SELECT *
+SELECT 'Kattohinnan ylitys' as nimi, *
 FROM paatos_kattohinta
 WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
@@ -136,7 +136,7 @@ WHERE urakkaid = :urakkaid
 
 -- name: hae-kattohinta-paatos
 -- Hae kattohinta päätös
-SELECT *
+SELECT 'Kattohinnan ylitys' as nimi, *
 FROM paatos_kattohinta
 WHERE id = :paatos-id
   AND poistettu = FALSE;
@@ -155,7 +155,7 @@ WHERE id = :id;
 
 -- name: hae-hoitokauden-lopun-hinta-paatokset
 -- Hae hoitokauden lopun hintapäätökset
-SELECT *
+SELECT 'Hoitovuoden lopun tavoite- ja kattohinta' as nimi, *
 FROM paatos_hoitokauden_lopun_hinta
 WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
@@ -178,7 +178,7 @@ WHERE id = :id;
 
 -- name: hae-hoitokauden-indeksikorjaus-paatokset
 -- Hae hoitokauden indeksikorjauspäätökset
-SELECT *
+SELECT 'Hoitovuoden lopun indeksikorjaus' as nimi, *
 FROM paatos_hoitokauden_indeksikorjaus
 WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
@@ -200,7 +200,7 @@ WHERE id = :id;
 
 -- name: hae-hoidonjohtopalkkiopaatokset
 -- Hae hoidonjohtopalkkiopäätökset
-SELECT *
+SELECT 'Hoidonjohtopalkkion muutos' as nimi, *
 FROM paatos_hoidonjohtopalkkio
 WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
