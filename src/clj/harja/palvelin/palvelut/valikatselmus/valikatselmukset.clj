@@ -363,8 +363,8 @@
         lupaustiedot (if vanha-urakka?
                        (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db lupaus-parametrit)
                        (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db lupaus-parametrit))
-        luvatut-pisteet (get-in lupaustiedot [:lupaustiedot :lupaus-sitoutuminen :pisteet])
-        toteutuneet-pisteet (get-in lupaustiedot [:lupaustiedot :yhteenveto :pisteet :toteuma])
+        luvatut-pisteet (get-in lupaustiedot [:lupaus-sitoutuminen :pisteet])
+        toteutuneet-pisteet (get-in lupaustiedot [:yhteenveto :pisteet :toteuma])
 
 
         ;paatokset (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakkaid hoitovuosi)
