@@ -275,17 +275,25 @@
           hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi tiedot)
           _ (tarkista-valikatselmusten-urakkatyyppi urakka :paatos)
           paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)
+          paatoksen-tyyppi (cond
+                             (= ::valikatselmus/kattohinnan-ylitys paatoksen-tyyppi) :kattohinnan-ylitys
+                             (= ::valikatselmus/tavoitehihinnan-ylitys paatoksen-tyyppi) :tavoitehinnan-ylitys
+                             (= ::valikatselmus/tavoitehihinnan-alitus paatoksen-tyyppi) :tavoitehinnan-alitus
+                             :else paatoksen-tyyppi)
           tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           erilliskustannus_id (paatos-apurit/tallenna-lupausbonus db tiedot kayttaja)
           sanktio_id (paatos-apurit/tallenna-lupaussanktio db tiedot kayttaja)
-          kulu_id (paatos-apurit/tallenna-kulu db tiedot kayttaja paatoksen-tyyppi)]
+          kulun-summa (if (= :tavoitehinnan-ylitys paatoksen-tyyppi
+                             (::valikatselmus/urakoitsijan-maksu tiedot)
+                             (::valikatselmus/tilaajan-maksu tiedot)))
+          kulu_id (paatos-apurit/tallenna-kulu db tiedot kayttaja paatoksen-tyyppi kulun-summa)]
       (case paatoksen-tyyppi
-        ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot tavoitehinta kattohinta)
-        ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
-        ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
+        :tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot tavoitehinta kattohinta)
+        :kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
+        :tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
         ::valikatselmus/lupausbonus (paatos-apurit/tarkista-lupausbonus db kayttaja tiedot)
         ::valikatselmus/lupaussanktio (paatos-apurit/tarkista-lupaussanktio db kayttaja tiedot))
       (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi erilliskustannus_id sanktio_id kulu_id)))))
@@ -311,12 +319,41 @@
         vastaus))
     (heita-virhe "Päätöksen id puuttuu!")))
 
+(defn hae-paatokset [db urakkaid kuluva-hoitovuosi budjettitavoite
+                     toteutuneet-pisteet luvatut-pisteet toteutuneet-kustannukset]
+  (let [;; Kootaan päätöksiä varten tarvittavat tiedot
+        urakan-tiedot (first (q-urakat/hae-urakka db urakkaid))
+        urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+        urakan-loppuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden vuosi käytännössä
+        mhu+urakka? (= "mhu+" (:sopimustyyppi urakan-tiedot))
+        mhu-tyyppi (paatoskone/urakan-hoitotyyppi mhu+urakka?)
+        tavoitehinta (:tavoitehinta-oikaistu budjettitavoite)
+        kattohinta (:kattohinta-oikaistu budjettitavoite)
+        tarjouksen-tavoitehinta (:tarjouksen-tavoitehinta budjettitavoite)
+
+        mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi kuluva-hoitovuosi)
+
+        ;; Valmistellaan päätökset ui:ta varten
+        mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta)
+        mahdolliset-paatokset (paatoskone/valimistele-tavoitehinnan-alituspaatos mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta toteutuneet-kustannukset)
+        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-ylityspaatos mahdolliset-paatokset urakan-alkuvuosi
+                                urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kattohinta toteutuneet-kustannukset mhu-tyyppi)
+        mahdolliset-paatokset (paatoskone/valmistele-kattohinnan-paatokset mahdolliset-paatokset kattohinta toteutuneet-kustannukset)
+
+        ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
+        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)
+
+        ;; Yhdistä päätökset listaksi. Tietokannasta haetut päätökset ovat tärkeydeltään tärkeämpiä, kuin päätöskoneelta saadut
+        paatokset (paatoskone/yhdista-mapit mahdolliset-paatokset tietokanta-paatokset)]
+    paatokset))
+
 (defn hae-valikatselmuksen-tiedot-hoitovuodelle [db user {:keys [urakkaid hoitovuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakkaid)
   (let [urakan-tiedot (first (q-urakat/hae-urakka db urakkaid))
         vanha-urakka? (lupaus-domain/urakka-19-20? urakan-tiedot)
         hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)
         hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitovuosi))
+
         ;; 2019/2020 vuosille haetaan erilaiset lupausitiedot
         lupaus-parametrit {:urakka-id urakkaid
                            :valittu-hoitokausi [hoitokauden-alkupvm
@@ -325,7 +362,11 @@
         lupaustiedot (if vanha-urakka?
                        (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db lupaus-parametrit)
                        (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db lupaus-parametrit))
-        paatokset (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakkaid hoitovuosi)
+        luvatut-pisteet (get-in lupaustiedot [:lupaustiedot :lupaus-sitoutuminen :pisteet])
+        toteutuneet-pisteet (get-in lupaustiedot [:lupaustiedot :yhteenveto :pisteet :toteuma])
+
+
+        ;paatokset (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakkaid hoitovuosi)
         tavoitehinnan-muutokset (valikatselmus-q/hae-oikaisut db {::urakka/id urakkaid})
         ;; UI haluaa tavoitehinnan muutokset tietyssä formaatissa. Formatoidaan ne tässä, eikä ui:lla, kuten ennen
         ;; Data on muodossa {vuosi [{data} {data}]}
@@ -354,7 +395,10 @@
         ;; Kustannusten mukana ei tule tarvittavalla tasolla erotettuna sanktioita. Joten haetaan ne erikseen
         sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakkaid
                                                    :alkupvm hoitokauden-alkupvm
-                                                   :loppupvm hoitokauden-loppupvm})]
+                                                   :loppupvm hoitokauden-loppupvm})
+        toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])
+        paatokset (hae-paatokset db urakkaid hoitovuosi (first budjettitavoite) toteutuneet-pisteet luvatut-pisteet toteutuneet-kustannukset)]
+
     {:lupaustiedot (dissoc lupaustiedot :lupausryhmat :lahtotiedot)
      :paatokset paatokset
      :tavoitehinnan-muutokset tavoitehinnan-muutokset

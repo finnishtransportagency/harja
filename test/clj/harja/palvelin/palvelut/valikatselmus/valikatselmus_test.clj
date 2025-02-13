@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.kulut.valikatselmus-test
+(ns harja.palvelin.palvelut.valikatselmus.valikatselmus-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
@@ -1126,3 +1126,31 @@
           vastaus (valikatselmukset/tarkista-maksun-maara-alituksessa tiedot urakka tavoitehinta hoitokauden-alkuvuosi)]
       ;; Saadaan nil vastaus, kun urakoitsijan maksu on hyväksytty 3% tavoitehinnasta tai pienempi
       (is (= (nil? vastaus))))))
+
+(deftest hae-valikatselmuksen-tiedot-hoitovuodelle-test-onnistuu
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        hoitokauden-alkuvuosi 2019
+        useri (kayttaja urakka-id)
+        vastaus (try
+                  (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) useri
+                    {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi})
+                  (catch Exception e e))
+        _ (println "vastaus: " vastaus)]
+    (is (not= (count vastaus) 0))
+    (is (not (nil? (:paatokset vastaus))) "Päätökset pitäisi löytyä")
+    (is (not (nil? (:sanktiot vastaus))) "Sanktiot pitäisi löytyä")
+    (is (not (nil? (:bonukset vastaus))) "Bonukset pitäisi löytyä")))
+
+(deftest hae-valikatselmuksen-tiedot-hoitovuodelle-test-onnistuu2
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        hoitokauden-alkuvuosi 2021
+        useri (kayttaja urakka-id)
+        vastaus (try
+                  (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) useri
+                    {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi})
+                  (catch Exception e e))
+        _ (println "vastaus: " vastaus)]
+    (is (not= (count vastaus) 0))
+    (is (not (nil? (:paatokset vastaus))) "Päätökset pitäisi löytyä")
+    (is (not (nil? (:sanktiot vastaus))) "Sanktiot pitäisi löytyä")
+    (is (not (nil? (:bonukset vastaus))) "Bonukset pitäisi löytyä")))
