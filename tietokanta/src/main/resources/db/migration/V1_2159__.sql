@@ -47,14 +47,14 @@ ALTER TABLE kan_kohteenosa ALTER COLUMN sijainti TYPE geometry(Point, 3067) USIN
 
 
 -- Tehdään uusi triggeri & procci, tätä tuunattu vähän uudelleen   
--- Kutsutaan kun kan_sulku tulee päivityksiä 
+-- Kutsutaan kun kan_sulku tulee päivityksiä, kohdekokonaisuuden tekoa ei voida enää suorittaa koska aineisto ei sitä palauta 
 CREATE OR REPLACE FUNCTION lisaa_tai_paivita_kanavasulku_kohdetietoihin()
   RETURNS TRIGGER AS $$
 DECLARE
-  integraatiokayttaja INTEGER;
-  kohteen_osa         INTEGER;
   kohde               INTEGER;
+  kohteen_osa         INTEGER;
   kohdekokonaisuus    INTEGER;
+  integraatiokayttaja INTEGER;
   oletuskayttotapa       TEXT;
 BEGIN
   integraatiokayttaja := (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
@@ -63,30 +63,38 @@ BEGIN
   kohteen_osa := (SELECT id FROM kan_kohteenosa WHERE lahdetunnus = new."kanavanro" AND tyyppi = 'sulku');
   kohde := (SELECT "kohde-id" FROM kan_kohteenosa WHERE lahdetunnus = new."kanavanro" AND tyyppi = 'sulku');
 
-  -- Jos kohdetta ei löydy tunnuksella, katso löytyykö nimellä
+  -- Jos kohdetta ei löydy tunnuksella, etsi nimellä
   IF (kohde ISNULL) THEN
     kohde := (SELECT id FROM kan_kohde WHERE nimi = new."nimi");
-    RAISE NOTICE 'Kohdetta ei löytynyt tunnuksella, nimi: % kohde: %', new."nimi", kohde;
+    RAISE NOTICE 'Kohdetta ei löytynyt tunnuksella, etsitään nimellä: % - tulos: %', new."nimi", kohde;
   END IF;
 
-  -- Kohdetta ei löytynyt nimelläkään, katso löytyykö läheltä kohdetta (200 metriä) 
+  -- Kohdetta ei löytynyt nimelläkään, etsi läheltä (200 metriä) 
   IF (kohde ISNULL) THEN
     kohde := (SELECT id FROM kan_kohde WHERE ST_DWithin(new.geometria, sijainti, 200) LIMIT 1);
-    RAISE NOTICE 'Kohdetta ei löytynyt nimelläkään, etsitään alueelta: %', kohde;
+    RAISE NOTICE 'Kohdetta ei löytynyt nimelläkään, etsitään alueelta - tulos: %', kohde;
   END IF;
 
-  -- Kohdetta ei löytynyt, ei  voida tehdä linkitystä
-  -- kan_sulku taulun pohjalle tulee uusi sulku, mutta sitä ei pystytty täsmentämään kohteeseen 
+  -- Kohdetta ei löytynyt, kokonaisuutta ei ole olemassa, tehdään uusi 
+  -- Uusi kokonaisuus sekä kohde tehdään saadun sulun nimellä, koska aineistosta ei palaudu enää kohdekokonaisuutta, tämä on OK 
   IF (kohde ISNULL) THEN
-    RAISE NOTICE 'Linkitystä ei löytynyt';
-    RETURN new;
-  END IF;
+    RAISE NOTICE 'Linkitystä ei löytynyt, tehdään uusi kokonaisuus';
 
-  UPDATE kan_kohde SET 
-    nimi = new."nimi", 
-    muokattu = current_timestamp, 
-    muokkaaja = integraatiokayttaja
-  WHERE id = kohde;
+    -- Uusi kokonaisuus 
+    INSERT INTO kan_kohdekokonaisuus (nimi, luotu, luoja)
+    VALUES (new."nimi", current_timestamp, integraatiokayttaja);
+    kohdekokonaisuus := (SELECT id
+                         FROM kan_kohdekokonaisuus
+                         WHERE nimi = new."nimi");
+    
+    -- Uusi kohde (kohteen sijainti on osien arvioitu keskipiste, tulee itsestään -> paivita_osien_kohteiden_geometriat)
+    INSERT INTO kan_kohde ("kohdekokonaisuus-id", nimi, luotu, luoja, poistettu)
+    VALUES (kohdekokonaisuus, new."nimi", current_timestamp, integraatiokayttaja, new."poistettu");
+    kohde := (SELECT id
+              FROM kan_kohde
+              WHERE nimi = new."nimi");
+  END IF;
+  
 
   -- Käyttötapa, eli 'palvelumuoto'
   IF (new."kayttotapa" = 'Itsepalvelu') THEN oletuskayttotapa = 'itse';
@@ -95,8 +103,7 @@ BEGIN
   ELSE oletuskayttotapa = 'muu';
   END IF;
 
-  -- Päivitä / tee uusi kohteenosa
-  --   (sulku = kohteen osa. Tälle on vaan erillinen taulu)  
+  -- Päivitä / tee uusi kohteenosa (sulku/silta = kohteen osa, tälle on vaan erillinen taulu)  
   IF (kohteen_osa ISNULL) THEN
     RAISE NOTICE 'Insert, kohde id: % kanavanro: %', kohde, new."kanavanro";
 
@@ -128,6 +135,7 @@ BEGIN
       "kohde-id" = kohde, 
       oletuspalvelumuoto = oletuskayttotapa :: LIIKENNETAPAHTUMA_PALVELUMUOTO, 
       sijainti = ST_Centroid(new."geometria") :: GEOMETRY,
+      lahdetunnus = new."kanavanro",
       muokattu = current_timestamp, 
       poistettu = new."poistettu", 
       muokkaaja = integraatiokayttaja, 

@@ -52,19 +52,10 @@
 (defn vie-kanavasulut-kantaan [db shapefile]
   (if shapefile
     (do
-      ; (log/debug (str "Tuodaan kanavasulut kantaan tiedostosta " shapefile))
-      (println "\n Ajetaan sulut.. " shapefile)
+      (log/debug (str "Tuodaan kanavasulut kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
         (merkitse-kanavasulut-poistetuksi db) ;; poistetut kanavat ovat poistuneet aineistosta
-        (let [data (shapefile/tuo shapefile)
-              count (count data)
-              
-        ]
-          (doseq [kanavasulku data]
-          (dorun
-            ; (println "\n sulku: " kanavasulku "  total: " count)
-            (vie-kanavasulku-entry db kanavasulku)
-            #_ (doseq [x kanavasulku]
-              (println "x: " (first x) " - " (second x)))))))
+        (doseq [kanavasulku (shapefile/tuo shapefile)]
+          (vie-kanavasulku-entry db kanavasulku)))
       (log/debug "Kanavasulkujen tuonti kantaan valmis."))
     (log/debug "Kanavasulkujen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))

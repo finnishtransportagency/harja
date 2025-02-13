@@ -7,40 +7,34 @@
 (t/use-fixtures :each (ht/laajenna-integraatiojarjestelmafixturea "jvh"))
 
 (def referenssi-kanavasulku-shapefilesta
-  {
-   :numero 6666
-   :aluenro 216737
-   :nimi "Iskrovka (Särkijärvi)"
-   :alue_ty "Sulku"
-   :kiinnit "Liikkuvat pollarit"
-   :portti_ty "Salpaus + Nosto/Lasku"
-   :kaytto_ty "Kaukokäyttö"
-   :sulku_lev 1.1
-   :sulku_pit 1.2
-   :alus_lev 12.06
-   :alus_pit 82.05
-   :alus_syv 4.04
-   :alus_kor 24.05
+  {:numero 6666
+   :id 216737
+   :nimi "Juankoski"
+   :kanavaalue "Sulku"
+   :kiinnittym "Liikkuvat pollarit"
+   :porttiseli "Salpaus + Nosto/Lasku"
+   :kayttoseli "Kaukokäyttö"
+   :sulkuleve0 1.1
+   :sulkulevey 1.2
+   :alusleveys 12.06
+   :aluspituus 82.05
+   :alussyvyys 4.04
+   :aluskorkeu 24.05
    :sulkuja 1
-   :putousk_1 1.1
-   :putousk_2 11.38
-   :ala_ver_1 "9,82"
-   :ala_ver_2 "10"
-   :yla_ver_1 "21,28"
-   :yla_ver_2 "21,28"
+   :putouskork 1.1
+   :putouskor0 11.38
    :vesisto "Vuoksen vesistö"
-   :kanavakok "Saimaan kanava"
-   :kanava_pit 85
-   :kanava_lev 13.02
+   :kanavapitu 85
+   :kanavaleve 13.02
    :mista "Brusnitchnoe"
    :mihin "Mal. Cvetotchnoe"
    :omistaja "Liikennevirasto"
-   :the_geom "POLYGON((594378.7923042110633105 6745379.7973106112331152, 594416.31681462517008185 6745289.93295709136873484, 594404.13800845539662987 6745285.05637172050774097, 594366.80162501567974687 6745374.78863043710589409, 594378.7923042110633105 6745379.7973106112331152))"})
+   :the_geom "MULTIPOLYGON (((594392.7239020942 6745281.275919718, 594423.7049784237 6745294.499646643, 594431.0724755075 6745280.3314706115, 594398.5801220272 6745267.296652856, 594392.7239020942 6745281.275919718)))"})
 
 (def referenssi-kanavasulku-tietokannasta
   {:kanavanro 6666
    :aluenro 216737
-   :nimi "Iskrovka (Särkijärvi)"
+   :nimi "Juankoski"
    :aluetyyppi "Sulku"
    :kiinnitys "Liikkuvat pollarit"
    :porttityyppi "Salpaus + Nosto/Lasku"
@@ -67,21 +61,20 @@
 
   ;; Uusi kanava
   (kanavasulku-tuonti/vie-kanavasulku-entry (:db ht/jarjestelma) referenssi-kanavasulku-shapefilesta)
-  (let [tallentunut-kanava (first (q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666}))]
+  (let [tallentunut-kanava (first (q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666}))
+
+        _ (println "\n tall: " tallentunut-kanava)]
     (ht/tarkista-map-arvot referenssi-kanavasulku-tietokannasta tallentunut-kanava))
   (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohteenosa where lahdetunnus = 6666;")) 1))
   (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666);")) 1))
   (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohdekokonaisuus where id = (select \"kohdekokonaisuus-id\" from kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666));")) 1))
 
   ;; Päivitetty kanava
-  (let [paivitetty-kanava (assoc referenssi-kanavasulku-shapefilesta :nimi "Iskrovka" :kaytto_ty "Itsepalvelu" :kanavakok "Saimaa")
-        paivitetty-kanava-tietokannasta  (assoc referenssi-kanavasulku-tietokannasta :nimi "Iskrovka" :kayttotapa "Itsepalvelu")]
+  (let [paivitetty-kanava (assoc referenssi-kanavasulku-shapefilesta :nimi "Juankoski" :kayttoseli "Itsepalvelu")
+        paivitetty-kanava-tietokannasta  (assoc referenssi-kanavasulku-tietokannasta :nimi "Juankoski" :kayttotapa "Itsepalvelu")]
     (kanavasulku-tuonti/vie-kanavasulku-entry (:db ht/jarjestelma) paivitetty-kanava)
-    (ht/tarkista-map-arvot paivitetty-kanava-tietokannasta (first (q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666})) ))
+    (ht/tarkista-map-arvot paivitetty-kanava-tietokannasta (first (q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666}))))
   (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohteenosa where lahdetunnus = 6666;")) 1))
   (t/is (= (ffirst(ht/q "SELECT oletuspalvelumuoto FROM kan_kohteenosa where lahdetunnus = 6666;")) "itse"))
-  (t/is (= (ffirst(ht/q "SELECT nimi FROM kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666);")) "Iskrovka"))
-  (t/is (= (ffirst(ht/q "SELECT nimi FROM kan_kohdekokonaisuus where id = (select \"kohdekokonaisuus-id\" from kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666));")) "Saimaa")))
-
-
-
+  (t/is (= (ffirst(ht/q "SELECT nimi FROM kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666);")) "Juankoski"))
+  (t/is (= (ffirst(ht/q "SELECT nimi FROM kan_kohdekokonaisuus where id = (select \"kohdekokonaisuus-id\" from kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666));")) "Kuopio - Syväri reitti")))
