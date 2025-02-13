@@ -1,4 +1,5 @@
-(ns harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone)
+(ns harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone
+  (:require [clojure.string :as str]))
 
 (def paatostyypit
   [{:nimi "Lupaukset" :tyyppi "bonus" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 1}
@@ -183,3 +184,6 @@
       (fn [paatos]
         (= (:nimi paatos) "Kattohinnan ylitys"))
       paatokset)))
+
+(defn nimi->avain [nimi]
+  (keyword (str/lower-case (str/replace nimi #" " "-"))))

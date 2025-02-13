@@ -397,7 +397,11 @@
                                                    :alkupvm hoitokauden-alkupvm
                                                    :loppupvm hoitokauden-loppupvm})
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])
-        paatokset (hae-paatokset db urakkaid hoitovuosi (first budjettitavoite) toteutuneet-pisteet luvatut-pisteet toteutuneet-kustannukset)]
+        paatokset (hae-paatokset db urakkaid hoitovuosi (first budjettitavoite) toteutuneet-pisteet luvatut-pisteet toteutuneet-kustannukset)
+        ;; Wrapataan paatoksen omien avainten alle, jotta käyttöliittymässä on mahdollista näyttää ne oikein
+        paatokset (reduce (fn [v paatos]
+                            (conj v {(paatoskone/nimi->avain (:nimi paatos)) paatos}))
+                    [] paatokset)]
 
     {:lupaustiedot (dissoc lupaustiedot :lupausryhmat :lahtotiedot)
      :paatokset paatokset
