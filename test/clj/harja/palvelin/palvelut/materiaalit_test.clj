@@ -402,8 +402,8 @@
     (let [rivi (first (filter #(= 1 (:rivinumero %))
                               tulos))]
       (is (= 1 (:rivinumero rivi)))
-      (is (= 4 (:lukumaara rivi)))
-      (is (=marginaalissa? 19.54M (:maara rivi) 0.5))
+      (is (= 2 (:lukumaara rivi)))
+      (is (= 10M (:maara rivi)))
       (is (= {:id 1 :nimi "Talvisuolaliuos NaCl"} (:materiaali rivi))))))
 
 (deftest hae-suolatoteumien-haku
