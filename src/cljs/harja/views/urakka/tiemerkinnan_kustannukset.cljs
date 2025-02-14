@@ -39,4 +39,5 @@
 
          (if-let [raportti @raportin-tiedot-atom]
            [muodosta-html (assoc-in raportti [1 :tunniste] :tiemerkinnan-kustannusyhteenveto)]
-           [yleiset/ajax-loader "Raporttia suoritetaan..."])]))))
+           [:div.ajax-loader-valistys
+            [yleiset/ajax-loader "Raporttia suoritetaan..."]])]))))

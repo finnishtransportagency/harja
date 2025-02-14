@@ -63,6 +63,7 @@
                                    {:id "reikapaikkaus-tyomenetelma-9", :tyomenetelma "Jyrsintäkorjaukset (HJYR/TJYR)", :kustannustyyppi nil, :kokonaiskustannus 34520.0M, :selite ""}
                                    {:id "reikapaikkaus-tyomenetelma-10", :tyomenetelma "Kannukaatosaumaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
                                    {:id "reikapaikkaus-tyomenetelma-15", :tyomenetelma "Käsin tehtävät paikkaukset pikapaikkausmassalla", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id "paikkauskohde-5", :tyomenetelma "Konetiivistetty reikävaluasfalttipaikkaus (REPA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
                                    {:id "reikapaikkaus-tyomenetelma-5", :tyomenetelma "Konetiivistetty reikävaluasfalttipaikkaus (REPA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
                                    {:id "reikapaikkaus-tyomenetelma-4", :tyomenetelma "KT-valuasfalttipaikkaus (KTVA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
                                    {:id "reikapaikkaus-tyomenetelma-19", :tyomenetelma "Massapintaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
@@ -81,17 +82,14 @@
                             :urakka-id urakka-id} :hae-paikkaus-kustannukset)]
 
     (is (= (:kustannukset vastaus) odotettu-vastaus-hk-2023))
-    (is (= (-> (:kustannukset vastaus) count) 25))))
+    (is (= (-> (:kustannukset vastaus) count) 26))))
 
 
 (deftest tallenna-yllapito-kustannus-toimii
   (let [vuosi 2024
-        vastaus-maara-ennen 25
         urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
-
         vastaus-ennen (tee-kutsu {:vuosi vuosi
                                   :urakka-id urakka-id} :hae-paikkaus-kustannukset)
-
         odotettu-vastaus {:id "reikapaikkaus-tyomenetelma-16", :tyomenetelma "AB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
 
         _ (tee-kutsu {:urakka-id urakka-id
@@ -107,7 +105,5 @@
                                         :urakka-id urakka-id} :hae-paikkaus-kustannukset)]
 
     (is (= (nth (:kustannukset vastaus-ennen) 4) odotettu-vastaus))
-    (is (= (count (:kustannukset vastaus-ennen)) vastaus-maara-ennen))
-
     (is (= (nth (:kustannukset vastaus-tallennettu) 4) odotettu-tallennus))
-    (is (= (count (:kustannukset vastaus-tallennettu)) (+ vastaus-maara-ennen 1)))))
+    (is (= (count (:kustannukset vastaus-tallennettu)) (+ (count (:kustannukset vastaus-ennen)) 1)))))

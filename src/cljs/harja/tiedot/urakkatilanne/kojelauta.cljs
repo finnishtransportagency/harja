@@ -73,7 +73,7 @@
         epaonnistuneet-lkm (reduce + 0 (map :epaonnistuneet_lahetetyt urakat))
         epaonnistuneet-yhteenveto (when-not (empty? urakat) [:span.epaonnistuneet_lahetetyt
                                                              [yleiset/tietoja {:class "body-text"}
-                                                              "Epäonnistuneet: " (str epaonnistuneet-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina epaonnistuneet-lkm kohteiden-lukumaara) 0) ")")]])]
+                                                              "Epäonnis\u00ADtuneet: " (str epaonnistuneet-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina epaonnistuneet-lkm kohteiden-lukumaara) 0) ")")]])]
     epaonnistuneet-yhteenveto))
 
 (defn valmiit-ei-lahetetty-yhteenveto
@@ -89,10 +89,10 @@
   [urakat]
   (let [kohteiden-lukumaara (reduce + 0 (map :yllapitokohteiden_lkm urakat))
         aloittamatta-lkm (reduce + 0 (map :aloittamatta urakat))
-        aloittamatta-yheenveto (when-not (empty? urakat) [:span.aloittamatta
-                                                          [yleiset/tietoja {:class "body-text"}
-                                                           "Aloittamatta: " (str aloittamatta-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina aloittamatta-lkm kohteiden-lukumaara) 0) ")")]])]
-    aloittamatta-yheenveto))
+        aloittamatta-yhteenveto (when-not (empty? urakat) [:span.aloittamatta
+                                                           [yleiset/tietoja {:class "body-text"}
+                                                            "Aloittamatta: " (str aloittamatta-lkm " (" (fmt/prosentti-opt (math/osuus-prosentteina aloittamatta-lkm kohteiden-lukumaara) 0) ")")]])]
+    aloittamatta-yhteenveto))
 
 (defn poikkeusten-yhteenveto
   [urakat]

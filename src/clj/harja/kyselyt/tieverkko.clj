@@ -300,7 +300,7 @@
                                                             alkuosa (:pituus alkuosan-tiedot)))
                                tieosoitteen-virheet)
         tieosoitteen-virheet (if (nil? alkuosan-tiedot)
-                               (conj tieosoitteen-virheet (format "Tiellä %s ei ole tieosaa %s. " tienumero (if-not alkuosa "alkuosa" "loppuosa")))
+                               (conj tieosoitteen-virheet (format "Tielle %s ei löydy tieosaa: %s. " tienumero (if-not alkuosa "alkuosa" "loppuosa")))
                                tieosoitteen-virheet)
         tieosoitteen-virheet (if (and
                                    (not (nil? loppuosan-tiedot))
@@ -312,7 +312,7 @@
         tieosoitteen-virheet (if (and
                                    (not (nil? alkuosan-tiedot))
                                    (nil? loppuosan-tiedot))
-                               (conj tieosoitteen-virheet (format "Tiellä %s ei ole tieosaa %s. " tienumero (if-not loppuosa "loppuosa" "alkuosa")))
+                               (conj tieosoitteen-virheet (format "Tielle %s ei löydy tieosaa: %s. " tienumero (if-not loppuosa "loppuosa" "alkuosa")))
                                tieosoitteen-virheet)
         onko-tr-yhtenainen? (when (and tie-olemassa? osat-annettu?)
                               (= osien-lukumaara

@@ -67,27 +67,27 @@
        {:nimi :kalusto-otsikko
         :tyyppi :komponentti
         :komponentti (fn [_]
-                       [:div "Voit syöttää kahdet kalustot:"])}
+                       [:div "Voit syöttää kolmea eri kalustoa:"])}
        {:nimi :kalusto-otsikko2
         :tyyppi :komponentti
         :komponentti (fn [_]
                        [:div ""])}
-       {:nimi :kalustotyyppi
-        :otsikko "Kaluston tyyppi (1)"
-        :tyyppi :string
-        :pakollinen? true}
-       {:nimi :kalusto-lkm
-        :otsikko "Kaluston määrä (1)"
+       {:nimi :tr_maara
+        :otsikko "TR"
         :tyyppi :numero
         :pakollinen? true}
-       {:nimi :kalustotyyppi2
-        :otsikko "Kaluston tyyppi (2)"
-        :tyyppi :string
-        :pakollinen? true}
-       {:nimi :kalusto-lkm2
-        :otsikko "Kaluston määrä (2)"
+       {:nimi :ka_maara
+        :otsikko "KA"
         :tyyppi :numero
         :pakollinen? true}
+       {:nimi :kup_maara
+        :otsikko "KUP"
+        :tyyppi :numero
+        :pakollinen? true}
+       {:nimi :kalusto-otsikko3
+        :tyyppi :komponentti
+        :komponentti (fn [_]
+                       [:div ""])}
        {:nimi :tierekisteri-otsikko
         :tyyppi :komponentti
         :komponentti (fn [_]

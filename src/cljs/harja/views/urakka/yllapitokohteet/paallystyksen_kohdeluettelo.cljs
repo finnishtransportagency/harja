@@ -54,8 +54,7 @@
               {:toiminto (fn [kohde]
                            (siirtymat/avaa-paallystysilmoitus! {:paallystyskohde-id (:yllapitokohde-id kohde)
                                                                 :paallystysilmoitus-id (get-in kohde [:yllapitokohde :paallystysilmoitus-id])
-                                                                :kohteen-urakka-id (get-in kohde [:yllapitokohde :urakka-id])
-                                                                :valittu-urakka-id (:id @nav/valittu-urakka)}))
+                                                                :kohteen-urakka-id (get-in kohde [:yllapitokohde :urakka-id])}))
                :teksti "Avaa päällystysilmoitus"}}))
          ;; TUCK Lisäykset
          (e! (paallystys/->MuutaTila [:kohdeluettelossa?] true))

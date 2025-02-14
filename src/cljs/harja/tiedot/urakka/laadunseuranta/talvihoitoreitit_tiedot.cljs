@@ -4,7 +4,7 @@
             [reagent.core :as r]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.navigaatio :as nav]
-            [harja.ui.kartta.ikonit :refer [pinni-ikoni]]
+            [harja.geo :as geo]
             [harja.ui.viesti :as viesti]
             [taoensso.timbre :as log])
   (:require-macros
@@ -25,7 +25,7 @@
                             @valitut-kohteet-atom)
           talvihoitoreitit (keep (fn [reitti] (when (contains? valitut-kohteet (:id reitti)) reitti)) @karttataso-talvihoitoreitit)
           sijainnit (map (fn [rivi] (map :sijainti (:reitit rivi))) talvihoitoreitit)
-          extentit (harja.geo/extent-monelle (flatten sijainnit))
+          extentit (geo/extent-monelle (flatten sijainnit))
           map-reitit (into [] (flatten (mapv (fn [reitti]
                                                (mapv (fn [r]
                                                        (when (:sijainti r)
@@ -35,7 +35,7 @@
                                                                         :stroke {:width 5
                                                                                  :color (:varikoodi reitti)}}
                                                                   (:sijainti r))
-                                                          :extent (harja.geo/extent (:sijainti r))
+                                                          :extent (geo/extent (:sijainti r))
                                                           :tyyppi-kartalla :talvihoitoreitit}))
                                                  (:reitit reitti)))
                                          talvihoitoreitit)))]
@@ -90,6 +90,10 @@
 ;; Manipuloi kartalla näytettäviä reittejä atomin kautta
 (defrecord PoistaValittuKohdeKartalta [id])
 (defrecord LisaaValittuKohdeKartalle [id])
+(defrecord KeskitaTalvihoitoreitti [id reitit])
+(defrecord PoistaTalvihoitoreitti [ulkoinenid])
+(defrecord PoistaTalvihoitoreittiOnnistui [vastaus])
+(defrecord PoistaTalvihoitoreittiEpaonnistui [vastaus])
 
 ;; Listan käsittely
 (defrecord AvaaTalvihoitoreitti [avain])
@@ -148,7 +152,7 @@
                             #{}
                             @valitut-kohteet-atom)
           valitut-talvihoitoreitit (keep (fn [reitti] (when (contains? valitut-kohteet (:id reitti)) reitti)) @karttataso-talvihoitoreitit)
-          alue (harja.geo/extent-monelle (map :sijainti valitut-talvihoitoreitit))]
+          alue (geo/extent-monelle (map :sijainti valitut-talvihoitoreitit))]
       (reset! nav/kartan-extent alue)
       app))
 
@@ -159,9 +163,35 @@
                             #{}
                             @valitut-kohteet-atom)
           valitut-talvihoitoreitit (keep (fn [reitti] (when (contains? valitut-kohteet (:id reitti)) reitti)) @karttataso-talvihoitoreitit)
-          alue (harja.geo/extent-monelle (map :sijainti valitut-talvihoitoreitit))]
+          alue (geo/extent-monelle (map :sijainti valitut-talvihoitoreitit))]
       (reset! nav/kartan-extent alue)
       app))
+
+  KeskitaTalvihoitoreitti
+  (process-event [{:keys [id reitit]} app]
+    (let [alue (geo/extent-monelle (map :sijainti reitit))
+          _ (reset! nav/kartan-extent alue)]
+      app))
+
+  PoistaTalvihoitoreitti
+  (process-event [{:keys [ulkoinenid]} app]
+    (let []
+      (tuck-apurit/post! :poista-talvihoitoreitti
+        {:ulkoinenid ulkoinenid
+         :urakka-id (:id @nav/valittu-urakka)}
+        {:onnistui ->PoistaTalvihoitoreittiOnnistui
+         :epaonnistui ->PoistaTalvihoitoreittiEpaonnistui})
+      (assoc app :poisto-kaynnissa? true)))
+
+  PoistaTalvihoitoreittiOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Talvihoitoreitti poistettu onnistuneesti!" :onnistui)
+    (hae-talvihoitoreitit (assoc app :poisto-kaynnissa? false)))
+
+  PoistaTalvihoitoreittiEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Talvihoitoreitin poisto ei onnistunut!" :varoitus)
+    (hae-talvihoitoreitit (assoc app :poisto-kaynnissa? false)))
 
   TiedostoLadattu
   (process-event [{:keys [vastaus]} app]

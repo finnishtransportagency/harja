@@ -8,8 +8,18 @@
 (defn hae-tierekisteriosoite [db {alku-x :x alku-y :y} {loppu-x :x loppu-y :y}]
   (let [threshold 250]
     (try
-      (if (and alku-x alku-y loppu-x loppu-y)
-        (tieverkko/hae-tr-osoite-valille-ehka db alku-x alku-y loppu-x loppu-y threshold)
+      (if (and alku-x alku-y loppu-x loppu-y
+            ;; jos alkupiste ja loppupiste ovat samat, käsiteltävä pistemäisenä
+            (not (and (= alku-x loppu-x) (= alku-y loppu-y))))
+        (let [tr-osoite (tieverkko/hae-tr-osoite-valille-ehka db alku-x alku-y loppu-x loppu-y threshold)]
+          ;; hanskataan tässä harvinainen tapaus, jossa x ja y ovat ihan hivenen erisuuret, mutta käytännössä kyse
+          ;; on samasta pisteestä, eli geometriaksi palautuu pistemäinen TR-osoite, mutta viiva-funktio ei saa geometriaa
+          ;; laskettua, niin käytetään pistemäisen geometrian laskentaa
+          (if (and
+                (= (:aosa tr-osoite) (:losa tr-osoite))
+                (= (:aet tr-osoite) (:let tr-osoite)))
+            (tieverkko/hae-tr-osoite-ehka db alku-x alku-y threshold)
+            tr-osoite))
         (when (and alku-x alku-y)
           (tieverkko/hae-tr-osoite-ehka db alku-x alku-y threshold)))
       (catch PSQLException e

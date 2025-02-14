@@ -1,6 +1,7 @@
 (ns harja.ui.grid.perus
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [harja.loki :refer [log tarkkaile! logt] :refer-macros [mittaa-aika]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje vihje] :as y]
             [harja.ui.ikonit :as ikonit]
@@ -44,7 +45,7 @@
     (r/create-class
      {:display-name "Perus-gridin-muokkauselementti"
       :component-did-mount (fn [this]
-                             (reset! this-node (r/dom-node this))
+                             (reset! this-node (rdom/dom-node this))
                              (.addEventListener js/window EventType/RESIZE virhelaatikon-max-koon-asetus)
                              (virhelaatikon-max-koon-asetus nil))
       :component-will-unmount (fn [this]
@@ -226,129 +227,133 @@
                            mahdollista-rivin-valinta? rivin-infolaatikko solun-luokka infolaatikon-tila-muuttui
                            data esta-tiivis-grid? piilota-border? avattavat-rivit isanta-rivin-id] :as rivin-data}
                    skeema rivi index]
-  [:tr {:class (str luokka 
-                (when piilota-border? " valiotsikko ")
-                (when (= id @valittu-rivi)
-                  " rivi-valittu ")
-                ;; Avattavia rivejä ei näytetä, mikäli niitä ei ole avattu. Eli rivit on olemassa,
-                ;; mutta ne piilotetaan taulukon eheyden säilyttämiseksi.
-                (when (and isanta-rivin-id (not= isanta-rivin-id (avattavat-rivit-auki? ohjaus isanta-rivin-id)))
-                  " piilota ")
-                (when isanta-rivin-id
-                  " avattava-rivi "))
-        :on-click #(kasittele-rivin-klikkaus
-                     {:rivi-klikattu rivi-klikattu
-                      :rivi-valinta-peruttu rivi-valinta-peruttu
-                      :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
-                      :valittu-rivi valittu-rivi
-                      :id id
-                      :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
-                      :rivin-infolaatikko rivin-infolaatikko
-                      :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
-                      :rivi rivi})}
+  (let [rivin-klikkaus #(kasittele-rivin-klikkaus
+                          {:rivi-klikattu rivi-klikattu
+                           :rivi-valinta-peruttu rivi-valinta-peruttu
+                           :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
+                           :valittu-rivi valittu-rivi
+                           :id id
+                           :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
+                           :rivin-infolaatikko rivin-infolaatikko
+                           :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
+                           :rivi rivi})]
+    [:tr {:class (str luokka
+                   (when piilota-border? " valiotsikko ")
+                   (when (= id @valittu-rivi)
+                     " rivi-valittu ")
+                   ;; Avattavia rivejä ei näytetä, mikäli niitä ei ole avattu. Eli rivit on olemassa,
+                   ;; mutta ne piilotetaan taulukon eheyden säilyttämiseksi.
+                   (when (and isanta-rivin-id (not= isanta-rivin-id (avattavat-rivit-auki? ohjaus isanta-rivin-id)))
+                     " piilota ")
+                   (when isanta-rivin-id
+                     " avattava-rivi "))
+          :tabIndex (when rivi-klikattu "0")
+          :on-key-down #(when (and rivi-klikattu (dom/enter-nappain? %))
+                          (rivin-klikkaus))
+          :on-click rivin-klikkaus}
 
-   (doall (map-indexed
-            (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti komponentti-args
-                           solu-klikattu solun-luokka huomio
-                           pakota-rivitys? reunus luokka solun-tooltip]}]
-              (let [kentan-skeema (get skeema i)
-                    haettu-arvo (if hae
-                                  (hae rivi)
-                                  (get rivi nimi))
-                    solun-tooltip? (and solun-tooltip (solun-tooltip rivi))
-                    tooltip-params {:tooltip-disabloitu? (when-not solun-tooltip? true)}
-                    tooltip-suunta-fn (fn [rivi] (:suunta (solun-tooltip rivi)))
-                    tooltip-params (if (and solun-tooltip? (tooltip-suunta-fn rivi))
-                                     (assoc tooltip-params :suunta (tooltip-suunta-fn rivi))
-                                     tooltip-params)]
-                (cond
-                  (and (= :avattava-rivi tyyppi) (not isanta-rivin-id))
-                  ^{:key (str "avattava-rivi-tila" id)}
-                  [avattavat-rivi-tila ohjaus avattavat-rivit id (y/luokat "vetolaatikon-tila"
-                                                                   (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
+     (doall (map-indexed
+              (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti komponentti-args
+                             solu-klikattu solun-luokka huomio
+                             pakota-rivitys? reunus luokka solun-tooltip]}]
+                (let [kentan-skeema (get skeema i)
+                      haettu-arvo (if hae
+                                    (hae rivi)
+                                    (get rivi nimi))
+                      solun-tooltip? (and solun-tooltip (solun-tooltip rivi))
+                      tooltip-params {:tooltip-disabloitu? (when-not solun-tooltip? true)}
+                      tooltip-suunta-fn (fn [rivi] (:suunta (solun-tooltip rivi)))
+                      tooltip-params (if (and solun-tooltip? (tooltip-suunta-fn rivi))
+                                       (assoc tooltip-params :suunta (tooltip-suunta-fn rivi))
+                                       tooltip-params)]
+                  (cond
+                    (and (= :avattava-rivi tyyppi) (not isanta-rivin-id))
+                    ^{:key (str "avattava-rivi-tila" id)}
+                    [avattavat-rivi-tila ohjaus avattavat-rivit id (y/luokat "vetolaatikon-tila"
+                                                                     (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
 
-                  (= :vetolaatikon-tila tyyppi)
-                  ^{:key (str "vetolaatikontila" id)}
-                  [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
-                                                                      (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
-                  :else
-                  ^{:key (str i nimi)}
-                  ;; Solu
-                  [:td {:on-click (when solu-klikattu
-                                    #(do
-                                       (.preventDefault %)
-                                       (.stopPropagation %)
-                                       (solu-klikattu rivi)))
-                        :col-span (if-let [leveys (get (:colspan rivi) nimi)]
-                                    leveys
-                                    1)
-                        :class (y/luokat
-                                 (y/tasaus-luokka tasaa)
-                                 (when pakota-rivitys? "grid-pakota-rivitys")
-                                 (when solu-klikattu "klikattava")
-                                 (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?)
-                                 (case reunus
-                                   :ei "grid-reunus-ei"
-                                   :vasen "grid-reunus-vasen"
-                                   :oikea "grid-reunus-oikea"
-                                   nil)
-                                 (when solun-luokka
-                                   (solun-luokka haettu-arvo rivi))
-                                 (if (fn? luokka)
-                                   (luokka rivi)
-                                   luokka))}
-                   ;; Solun sisältö
-                   [yleiset/tooltip tooltip-params
-                    [:div (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
-                    ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
-                    ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
-                    ;; mutta HTML:n säännöt kieltävät div-elementit suoraan tr:n lapsena
-                     (when (and
-                             (= id @valittu-rivi)
-                             (= (inc i) (count skeema))
-                             rivin-infolaatikko
-                             @infolaatikko-nakyvissa?)
-                       [rivin-infolaatikko* rivin-infolaatikko rivi data])
-                     (cond
-                       (= tyyppi :komponentti) (apply komponentti rivi {:index index
-                                                                        :muokataan? false}
-                                                 komponentti-args)
-                       (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index index
-                                                                                       :muokataan? false}]
-                                                              komponentti-args))
-                       :else
-                       (if fmt
-                         (fmt haettu-arvo)
-                         [nayta-arvo kentan-skeema (vain-luku-atomina haettu-arvo)]))
-                     (when huomio
-                       (when-let [huomion-tiedot (huomio rivi)]
-                         (let [ikoni (case (:tyyppi huomion-tiedot)
-                                       :varoitus (ui-ikonit/livicon-warning-sign)
-                                       :info (ui-ikonit/livicon-info-circle)
-                                       (ui-ikonit/livicon-info))
-                               teksti (:teksti huomion-tiedot)]
-                           (when teksti
-                             [yleiset/tooltip {} [:span {:style {:margin-left "3px"}
-                                                         :class (str "grid-huomio-"
-                                                                  (name (:tyyppi huomion-tiedot)))}
-                                                  ikoni]
-                              teksti]))))]
-                    (when solun-tooltip
-                      (when-let [solun-tooltip-tiedot (solun-tooltip rivi)]
-                        (let [teksti (:teksti solun-tooltip-tiedot)
-                              tooltip-tyyppi (:tooltip-tyyppi solun-tooltip-tiedot)
-                              tooltip-komponentti (:tooltip-komponentti solun-tooltip-tiedot)]
-                          (cond
-                            (= tooltip-tyyppi :komponentti) tooltip-komponentti
-                            :else
-                            (or teksti "-")))))]])))
-            (if (:colspan rivi)
-              (filter #(contains? (:colspan rivi) (:nimi %)) skeema)
-              skeema)))
-   (when (or nayta-toimintosarake?
+                    (= :vetolaatikon-tila tyyppi)
+                    ^{:key (str "vetolaatikontila" id)}
+                    [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
+                                                                (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
+                    :else
+                    ^{:key (str i nimi)}
+                    ;; Solu
+                    [:td {:on-click (when solu-klikattu
+                                      #(do
+                                         (.preventDefault %)
+                                         (.stopPropagation %)
+                                         (solu-klikattu rivi)))
+                          :col-span (if-let [leveys (get (:colspan rivi) nimi)]
+                                      leveys
+                                      1)
+                          :class (y/luokat
+                                   (y/tasaus-luokka tasaa)
+                                   (when pakota-rivitys? "grid-pakota-rivitys")
+                                   (when solu-klikattu "klikattava")
+                                   (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?)
+                                   (case reunus
+                                     :ei "grid-reunus-ei"
+                                     :vasen "grid-reunus-vasen"
+                                     :oikea "grid-reunus-oikea"
+                                     nil)
+                                   (when solun-luokka
+                                     (solun-luokka haettu-arvo rivi))
+                                   (if (fn? luokka)
+                                     (luokka rivi)
+                                     luokka))}
+                     ;; Solun sisältö
+                     [yleiset/tooltip tooltip-params
+                      [:div (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
+                       ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
+                       ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
+                       ;; mutta HTML:n säännöt kieltävät div-elementit suoraan tr:n lapsena
+                       (when (and
+                               (= id @valittu-rivi)
+                               (= (inc i) (count skeema))
+                               rivin-infolaatikko
+                               @infolaatikko-nakyvissa?)
+                         [rivin-infolaatikko* rivin-infolaatikko rivi data])
+                       (cond
+                         (= tyyppi :komponentti) (apply komponentti rivi {:index index
+                                                                          :muokataan? false}
+                                                   komponentti-args)
+                         (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index index
+                                                                                         :muokataan? false}]
+                                                                komponentti-args))
+                         :else
+                         (if fmt
+                           (fmt haettu-arvo)
+                           [nayta-arvo kentan-skeema (vain-luku-atomina haettu-arvo)]))
+                       (when huomio
+                         (when-let [huomion-tiedot (huomio rivi)]
+                           (let [ikoni (case (:tyyppi huomion-tiedot)
+                                         :varoitus (ui-ikonit/livicon-warning-sign)
+                                         :info (ui-ikonit/livicon-info-circle)
+                                         (ui-ikonit/livicon-info))
+                                 teksti (:teksti huomion-tiedot)]
+                             (when teksti
+                               [yleiset/tooltip {} [:span {:style {:margin-left "3px"}
+                                                           :class (str "grid-huomio-"
+                                                                    (name (:tyyppi huomion-tiedot)))}
+                                                    ikoni]
+                                teksti]))))]
+                      (when solun-tooltip
+                        (when-let [solun-tooltip-tiedot (solun-tooltip rivi)]
+                          (let [teksti (:teksti solun-tooltip-tiedot)
+                                tooltip-tyyppi (:tooltip-tyyppi solun-tooltip-tiedot)
+                                tooltip-komponentti (:tooltip-komponentti solun-tooltip-tiedot)]
+                            (cond
+                              (= tooltip-tyyppi :komponentti) tooltip-komponentti
+                              :else
+                              (or teksti "-")))))]])))
+              (if (:colspan rivi)
+                (filter #(contains? (:colspan rivi) (:nimi %)) skeema)
+                skeema)))
+     (when (or nayta-toimintosarake?
              (and (not piilota-toiminnot?)
-                  tallenna))
-     [:th.toiminnot {:width "40px"} " "])])
+               tallenna))
+       [:th.toiminnot {:width "40px"} " "])]))
 
 
 (def renderoi-rivia-kerralla 100)
@@ -549,13 +554,14 @@
                            (y/tasaus-luokka tasaa)
                            (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))
                   :width (or leveys "5%")
+                  :tabIndex (when otsikkorivi-klikattu "0")
+                  :on-key-down #(when (and otsikkorivi-klikattu (dom/enter-nappain? %)) (otsikkorivi-klikattu s-opts))
                   :on-click (when otsikkorivi-klikattu #(otsikkorivi-klikattu s-opts))}
              (if otsikko-komp
                [otsikko-komp]
                (if-not sarake-sort
                  [:div otsikko]
                  [:div.ilmoitukset-sort
-                  ;;TODO: Muuta span.klikattava buttoniksi jossakin vaiheessa.
                   [:span.klikattava {:on-click (:fn sarake-sort)}
                    otsikko " " (sort-ikoni (:suunta sarake-sort)) " "]]))]) skeema)
         (when (or nayta-toimintosarake?
@@ -587,7 +593,7 @@
         aseta-leijuvan-otsikkorivin-sarakkeet! (fn [this & _]
                                                  (when @taulukon-ref-atom
                                                    (aseta-leijuvan-otsikkorivin-sarakkeet!
-                                                     (r/dom-node this)
+                                                     (rdom/dom-node this)
                                                      @taulukon-ref-atom
                                                      taulukon-leveys
                                                      @taulukon-scroll
@@ -1186,18 +1192,18 @@
         kiinnita-otsikkorivi? (atom false) ;; Jos true, otsikkorivi naulataan kiinni selaimen yläreunaan scrollatessa
         kiinnitetyn-otsikkorivin-leveys (atom 0)
         maarita-kiinnitetyn-otsikkorivin-leveys (fn [this]
-                                                  (reset! kiinnitetyn-otsikkorivin-leveys (dom/elementin-leveys (r/dom-node this))))
+                                                  (reset! kiinnitetyn-otsikkorivin-leveys (dom/elementin-leveys (rdom/dom-node this))))
         maarita-rendattavien-rivien-maara (fn [this]
                                             ;; Kasvatetaan max. rendattavien rivien määrää jos viewportissa on tilaa
-                                            (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
+                                            (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (rdom/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))
         kasittele-otsikkorivin-kiinnitys (fn [this]
                                            (if (and
                                                  (empty? @vetolaatikot-auki) ;; Jottei naulattu otsikkorivi peitä sisältöä
-                                                 (> (dom/elementin-korkeus (r/dom-node this)) @dom/korkeus)
-                                                 (< (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)) -20)
-                                                 (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
+                                                 (> (dom/elementin-korkeus (rdom/dom-node this)) @dom/korkeus)
+                                                 (< (dom/elementin-etaisyys-viewportin-ylareunaan (rdom/dom-node this)) -20)
+                                                 (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (rdom/dom-node this))))
                                              (reset! kiinnita-otsikkorivi? true)
                                              (reset! kiinnita-otsikkorivi? false)))
         kasittele-scroll-event (fn [this _]
@@ -1238,7 +1244,7 @@
 
        :component-did-mount
        (fn [this _]
-         (swap! gridin-tietoja assoc :grid-node (r/dom-node this))
+         (swap! gridin-tietoja assoc :grid-node (rdom/dom-node this))
          (maarita-kiinnitetyn-otsikkorivin-leveys this)
          (maarita-rendattavien-rivien-maara this))
 

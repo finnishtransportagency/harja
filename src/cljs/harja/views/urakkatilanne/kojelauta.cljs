@@ -7,6 +7,7 @@
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
+            [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
             [reagent.core :as r]
             [tuck.core :refer [tuck]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -92,19 +93,19 @@
     [:span.avoimet-poikkeamat
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry laatupoikkeamiin"]
-      [:a.klikattava {:href "#"
-                      :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                    :taso2 :laadunseuranta
-                                                                                                    :taso3 :laatupoikkeamat})}
+      [:a.klikattava.alleviivaa {:href "#"
+                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                               :taso2 :laadunseuranta
+                                                                                                               :taso3 :laatupoikkeamat})}
        (if (> avoimet_laatupoikkeamat 0)
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly (str "Avoimia laatupoikkeamia: " avoimet_laatupoikkeamat))})
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia laatupoikkeamia")}))]]
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry turvallisuuspoikkeamiin"]
-      [:a.klikattava {:href "#"
-                      :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                    :taso2 :turvallisuuspoikkeamat
-                                                                                                    :taso3 nil})}
+      [:a.klikattava.alleviivaa {:href "#"
+                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                               :taso2 :turvallisuuspoikkeamat
+                                                                                                               :taso3 nil})}
        (if (> avoimet_turvallisuuspoikkeamat 0)
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly (str "Avoimia turvallisuuspoikkeamia: " avoimet_turvallisuuspoikkeamat))})
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia turvallisuuspoikkeamia")}))]]]))
@@ -114,8 +115,8 @@
   (let [{:keys [lupaus_tavoitepisteet hoitokauden_alkuvuosi]} rivi]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry lupausnäkymään"]
-     [:a.klikattava {:href "#"
-                     :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
+     [:a.klikattava.alleviivaa {:href "#"
+                                :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
       [:div.lupauspisteet
        (if (nil? lupaus_tavoitepisteet)
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Ei tavoitepistemäärää")})
@@ -134,10 +135,10 @@
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannusten seurantaan"]
-     [:a.klikattava {:href "#"
-                     :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                   :taso2 :laskutus
-                                                                                                   :taso3 :kustannusten-seuranta})}
+     [:a.klikattava.alleviivaa {:href "#"
+                                :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                              :taso2 :laskutus
+                                                                                                              :taso3 :kustannusten-seuranta})}
       [:div.tavoitehintapaatos
        (if (nil? tavoitehintapaatos)
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
@@ -169,10 +170,10 @@
         {:keys [aloittamattomia vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannussuunnitelmaan"]
-     [:a.klikattava {:href "#"
-                     :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                   :taso2 :suunnittelu
-                                                                                                   :taso3 :kustannussuunnitelma})}
+     [:a.klikattava.alleviivaa {:href "#"
+                                :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+                                                                                                              :taso2 :suunnittelu
+                                                                                                              :taso3 :kustannussuunnitelma})}
       (cond
         (= "aloittamatta" suunnitelman_tila)
         (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Aloittamatta")})
@@ -192,7 +193,22 @@
 
 (def urakoiden-maara-per-sivu 20)
 
-(defn taulukko-paallystysurakat [e!  {:keys [urakat haku-kaynnissa?]}]
+(defn virheelliset-tila-sarake
+  [rivi]
+  (for [kohde (:virheelliset_kohteet rivi)]
+    ^{:key (:id kohde)}
+    [yleiset/wrap-if true
+     [yleiset/tooltip {} :%
+      [:div
+       [:p "Siirry päällystys\u00ADilmoitukseen."]
+       (when (:lahetysvirhe kohde)
+         [:p "Virhe: " (:lahetysvirhe kohde)])]]
+     [yleiset/linkki (pot-yhteinen/paallystyskohteen-fmt kohde)
+      #(siirtymat/avaa-paallystysilmoitus! {:paallystyskohde-id (:id kohde)
+                                            :kohteen-urakka-id (:id rivi)})
+      {:block? true}]]))
+
+(defn taulukko-paallystysurakat [e! {:keys [urakat haku-kaynnissa?]}]
   [grid/grid
    {:otsikko (str "")
     :tyhja (if haku-kaynnissa?
@@ -208,13 +224,14 @@
                              aloittamatta (tiedot/aloittamatta-yhteenveto urakat)]
                          (when-not (empty? urakat)
                            [{:teksti "Yhteensä" :luokka "lihavoitu"}
-                            {:teksti (str (count urakat) " kpl urakoita") :luokka "lihavoitu"}
+                            {:teksti (str (count urakat) " urak\u00ADkaa") :luokka "lihavoitu"}
                             {:teksti yhteenveto :luokka "lihavoitu"}
+                            {:teksti aloittamatta :luokka "lihavoitu"}
+                            {:teksti valmiit-ei-lahetetty :luokka "lihavoitu"}
                             {:teksti valmiit-kohteet :luokka "lihavoitu"}
                             {:teksti lahetetty :luokka "lihavoitu"}
-                            {:teksti valmiit-ei-lahetetty :luokka "lihavoitu"}
                             {:teksti epaonnistuneet-lahetetty :luokka "lihavoitu"}
-                            {:teksti aloittamatta :luokka "lihavoitu"}])))}
+                            {:teksti ""}])))}
    [{:otsikko "Urakka"
      :tyyppi :string
      :nimi :nimi
@@ -230,6 +247,16 @@
      :nimi :yllapitokohteiden_lkm :leveys 4
      :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea}
+    {:otsikko "Aloittamatta"
+     :muokattava? (constantly false)
+     :nimi :aloittamatta :leveys 6
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
+    {:otsikko "Valmiit, ei vielä lähetetty"
+     :muokattava? (constantly false)
+     :nimi :valmiit_ei_lahetetty :leveys 6
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     :tasaa :oikea}
     {:otsikko "Valmis/hyväksytty"
      :muokattava? (constantly false)
      :nimi :valmis_hyvaksytty :leveys 6
@@ -240,21 +267,16 @@
      :nimi :lahetetty_onnistuneesti :leveys 6
      :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea}
-    {:otsikko "Valmiit, ei vielä lähetetty"
-     :muokattava? (constantly false)
-     :nimi :valmiit_ei_lahetetty :leveys 6
-     :tyyppi :positiivinen-numero :kokonaisluku? true
-     :tasaa :oikea}
-    {:otsikko "Epäonnistuneet YHA-lähetykset"
+    {:otsikko "Epäonnistu\u00ADneet YHA-lähetykset"
      :muokattava? (constantly false)
      :nimi :epaonnistuneet_lahetetyt :leveys 6
      :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea}
-    {:otsikko "Aloittamatta"
+    {:otsikko "Kohteet, joissa lähetys\u00ADvirhe"
      :muokattava? (constantly false)
-     :nimi :aloittamatta :leveys 6
-     :tyyppi :positiivinen-numero :kokonaisluku? true
-     :tasaa :oikea}]
+     :nimi :virheelliset_kohteet :leveys 6
+     :tyyppi :komponentti
+     :komponentti (fn [rivi] (virheelliset-tila-sarake rivi))}]
    urakat])
 
 (defn taulukko-hoitourakat [e! {:keys [urakat haku-kaynnissa?]}]
@@ -340,7 +362,7 @@
        Tässä vaiheessa osio näkyy vain pääkäyttäjille sekä ELY:jen pääkäyttäjille ja urakanvalvojille.
        Myöhemmin laajennamme mahdollisesti tiedon näkyvyyttä myös urakoitsijoille heidän omien urakoidensa osalta. Jos löydät tiedoista virheitä tai sinulla
        on muita toiveita tämän osion kehittämiseksi, voit "
-   [:a {:href (palaute-tiedot/mailto-kehitystiimi)} "laittaa meille viestiä osoitteeseen harjapalaute@solita.fi"]])
+   [:a.klikattava.alleviivaa {:href (palaute-tiedot/mailto-kehitystiimi)} "laittaa meille viestiä osoitteeseen harjapalaute@solita.fi"]])
 
 (defn kojelauta* [e! app]
   (komp/luo

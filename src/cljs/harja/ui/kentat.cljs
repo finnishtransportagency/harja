@@ -1,6 +1,7 @@
 (ns harja.ui.kentat
   "UI-input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
   (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
             [reagent.ratom :as ratom]
             [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
@@ -270,7 +271,7 @@
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
 ;; pituus-max oletusarvo on 256, koska se on toteuman lisätiedon tietokantasarakkeissa
 (defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus on-blur lomake?
-                                     disabled? pituus-max toiminta-f]} data]
+                                     disabled? pituus-max toiminta-f aputeksti]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
                       1
@@ -296,14 +297,15 @@
       (when (= koko-rivit :auto)
         {:component-did-update
          (fn [this _]
-           (let [n (-> this r/dom-node
+           (let [n (-> this rdom/dom-node
                        (.getElementsByTagName "textarea")
                        (aget 0))
                  erotus (- (.-scrollHeight n) (.-clientHeight n))]
              (when (> erotus 1) ;; IE11 näyttää aluksi 24 vs 25
                (swap! rivit + (/ erotus 19)))))})
 
-      (fn [{:keys [nimi koko on-focus on-blur lomake? disabled?]} data]
+      (fn [{:keys [nimi koko on-focus on-blur lomake? disabled?
+                   aputeksti]} data]
         [:span.kentta-text
          [:textarea {:value @data
                      :on-change #(muuta! data %)
@@ -316,6 +318,7 @@
                                     lomake? (str "form-control ")
                                     disabled? (str "disabled"))
                      :placeholder placeholder}]
+         (when aputeksti [:div aputeksti])
          ;; näytetään laskuri kun merkkejä on jäljellä alle 25%
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
@@ -874,7 +877,7 @@
   ([{:keys [alasveto-luokka valinta-nayta valinta-arvo tasaa linkki-fn linkki-icon
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
-            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
+            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id pitka-teksti?
             pakollinen? tarkenne muokattu? valitse-oletus? data-cy]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
@@ -925,6 +928,7 @@
                 :pakollinen? pakollinen?
                 :vayla-tyyli? vayla-tyyli?
                 :elementin-id elementin-id
+                :pitka-teksti? pitka-teksti?
                 :tarkenne tarkenne
                 :data-cy (or data-cy (str "valinta-" elementin-id))}]
      (if-not (and linkki-fn nykyinen-arvo linkki-icon)
@@ -948,7 +952,7 @@
      (fn [{:keys [alasveto-luokka valinta-nayta valinta-arvo data-cy
                   valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
                   jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
-                  nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id]} data data-muokkaus-fn]
+                  nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id pitka-teksti?]} data data-muokkaus-fn]
        (assert (not (satisfies? IDeref data)) "Jos käytät tee-kentta 3 aritylla, data ei saa olla derefable. Tämä sen takia, ettei React turhaan renderöi elementtiä")
        (assert (fn? data-muokkaus-fn) "Data-muokkaus-fn pitäisi olla funktio, joka muuttaa näytettävää dataa jotenkin")
        (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
@@ -971,6 +975,7 @@
                                :disabled disabled?
                                :data-cy data-cy
                                :vayla-tyyli? vayla-tyyli?
+                               :pitka-teksti? pitka-teksti?
                                :elementin-id elementin-id}
           valinnat])))))
 
