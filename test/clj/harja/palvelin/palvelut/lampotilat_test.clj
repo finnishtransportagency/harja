@@ -36,8 +36,8 @@
 
 
 (def +urakoiden-lampotilat-1971-2000+ (slurp "test/resurssit/ilmatieteenlaitos/urakoiden-lampotilat-1971-2000.xml"))
-(def +urakoiden-lampotilat-1981-2010 (slurp "test/resurssit/ilmatieteenlaitos/urakoiden-lampotilat-1981-2010.xml"))
-(def +urakoiden-lampotilat-1991-2020 (slurp "test/resurssit/ilmatieteenlaitos/urakoiden-lampotilat-1991-2020.xml"))
+(def +urakoiden-lampotilat-1981-2010+ (slurp "test/resurssit/ilmatieteenlaitos/urakoiden-lampotilat-1981-2010.xml"))
+(def +urakoiden-lampotilat-1991-2020+ (slurp "test/resurssit/ilmatieteenlaitos/urakoiden-lampotilat-1991-2020.xml"))
 
 
 (deftest hae-teiden-hoitourakoiden-lampotilat-ilmatieteenlaitokselta
@@ -55,11 +55,11 @@
                           :headers {:content-type "text/xml"}}
 
                          {:url (str +ilmatieteenlaitos-url+ "/tieindeksi2") :method :post :query-params {:season "2024-2025", :climatology "1981-2010", :newversion 1}}
-                         {:body (str/replace +urakoiden-lampotilat-1981-2010 "<alueurakkanumero>" alueurakkanumero)
+                         {:body (str/replace +urakoiden-lampotilat-1981-2010+ "<alueurakkanumero>" alueurakkanumero)
                           :headers {:content-type "text/xml"}}
 
                          {:url (str +ilmatieteenlaitos-url+ "/tieindeksi2") :method :post :query-params {:season "2024-2025", :climatology "1991-2020", :newversion 1}}
-                         {:body (str/replace +urakoiden-lampotilat-1991-2020 "<alueurakkanumero>" alueurakkanumero)
+                         {:body (str/replace +urakoiden-lampotilat-1991-2020+ "<alueurakkanumero>" alueurakkanumero)
                           :headers {:content-type "text/xml"}}]
           (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                           :hae-lampotilat-ilmatieteenlaitokselta +kayttaja-jvh+
@@ -77,11 +77,11 @@
                           :headers {:content-type "text/xml"}}
 
                          {:url (str +ilmatieteenlaitos-url+ "/tieindeksi2") :method :post :query-params {:season "2024-2025", :climatology "1981-2010", :newversion 1}}
-                         {:body (str/replace +urakoiden-lampotilat-1981-2010 "<alueurakkanumero>" alueurakkanumero)
+                         {:body (str/replace +urakoiden-lampotilat-1981-2010+ "<alueurakkanumero>" alueurakkanumero)
                           :headers {:content-type "text/xml"}}
 
                          {:url (str +ilmatieteenlaitos-url+ "/tieindeksi2") :method :post :query-params {:season "2024-2025", :climatology "1991-2020", :newversion 1}}
-                         {:body (str/replace +urakoiden-lampotilat-1991-2020 "<alueurakkanumero>" alueurakkanumero)
+                         {:body (str/replace +urakoiden-lampotilat-1991-2020+ "<alueurakkanumero>" alueurakkanumero)
                           :headers {:content-type "text/xml"}}]
           (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                           :hae-lampotilat-ilmatieteenlaitokselta +kayttaja-jvh+
