@@ -96,6 +96,14 @@
 (defmethod validoi-saanto :vakiohuomautus [_ _ data _ _ & [viesti]]
   viesti)
 
+(def select-values (comp vals select-keys))
+
+(defmethod validoi-saanto :validoi-summa-on-100 [_ _ _ rivi _ optiot & [viesti]]
+  (let [arvot (select-values rivi optiot)
+        summa (reduce + arvot)]
+    (when-not (= summa 100)
+      (or viesti "Yhteenlasketun summan on oltava 100"))))
+
 (defmethod validoi-saanto :validi-tr [_ _ data rivi _ & [viesti reittipolku]]
   (let [osoite (tr/normalisoi data)]
     (when

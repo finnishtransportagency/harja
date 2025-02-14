@@ -83,6 +83,7 @@
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
+    [harja.palvelin.palvelut.kustannusten-kirjaus :as tiemerkinnan-kustannus-kirjaukset]
     [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
     [harja.palvelin.palvelut.lampotilat :as lampotilat]
     [harja.palvelin.palvelut.maksuerat :as maksuerat]
@@ -501,6 +502,9 @@
       :siltatarkastukset (component/using
                            (siltatarkastukset/->Siltatarkastukset)
                            [:http-palvelin :db])
+      :tiemerkinnan-kustannuskirjaukset (component/using
+                        (tiemerkinnan-kustannus-kirjaukset/->TiemerkinnanKustannusKirjaukset)
+                        [:http-palvelin :db])
       :lampotilat (component/using
                     (lampotilat/->Lampotilat
                       (:lampotilat-url (:ilmatieteenlaitos asetukset))
