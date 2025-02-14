@@ -82,7 +82,7 @@
        :elementin-id (str "luokka-" uusi-id)}
       {:otsikko "Perustelu"
        :nimi ::valikatselmus/selite
-       :tyyppi :text
+       :tyyppi :text ;;:string
        :koko [:auto 3]
        :validoi [[:ei-tyhja "Täytä arvo"]]
        :leveys 3
