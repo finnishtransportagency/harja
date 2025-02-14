@@ -52,7 +52,6 @@
                             :paatos "Urakan päätöksiä"
                             :tavoitehinnan-oikaisu "Tavoitehinnan oikaisuja")
         urakka-aktiivinen? (pvm/valissa? (pvm/nyt) (:alkupvm urakka) (:loppupvm urakka))
-        sallittu-aikavali (oikaisujen-sallittu-aikavali valittu-hoitokausi)
         sallitussa-aikavalissa? (sallitussa-aikavalissa? valittu-hoitokausi nykyhetki)
         jvh? (roolit/jvh? kayttaja)
 
@@ -274,7 +273,8 @@
       (valikatselmus-q/poista-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi kayttaja)
       (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))))
 
-(defn hae-kattohintojen-oikaisut [db _kayttaja tiedot]
+(defn hae-kattohintojen-oikaisut [db kayttaja tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (::urakka/id tiedot))
   (let [urakka-id (::urakka/id tiedot)]
     (assert (number? urakka-id) "Virhe urakan ID:ssä.")
     (valikatselmus-q/hae-kattohinnan-oikaisut db tiedot)))
