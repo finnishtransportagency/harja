@@ -403,7 +403,6 @@
                               tulos))]
       (is (= 1 (:rivinumero rivi)))
       (is (= 4 (:lukumaara rivi)))
-      (println "TULOS " tulos)
       (is (=marginaalissa? 19.54M (:maara rivi) 0.5))
       (is (= {:id 1 :nimi "Talvisuolaliuos NaCl"} (:materiaali rivi))))))
 
