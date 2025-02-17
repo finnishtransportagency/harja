@@ -15,54 +15,55 @@
 
 (defn yhteenvetolaatikko [e! app]
   (let [urakkatyyppi "MHU" ;; Myöhemmin voi olla myös MHU+
-        paatokset (get-in app [:valikatselmuksen-tiedot :paatokset])
-        valikatselmuksen-tiedot (:valikatselmuksen-tiedot app)
+        paatokset (get-in app [:yhteenveto :paatokset])
+        yhteenvedon-tiedot (:yhteenveto app)
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero (-> @tila/yleiset :urakka :alkupvm) valittu-hoitokauden-alkuvuosi)
 
         ;; Toteutuneet kustannukset
-        hankintakustannukset (or (get-in valikatselmuksen-tiedot [:kustannukset :hankintakustannukset-toteutunut]) 0)
-        erillishankinnat (or (get-in valikatselmuksen-tiedot [:kustannukset :erillishankinnat-toteutunut]) 0)
-        johto-ja-hallintokorvaus (or (get-in valikatselmuksen-tiedot [:kustannukset :johto-ja-hallintokorvaus-toteutunut]) 0)
-        hoidonjohtopalkkio (or (get-in valikatselmuksen-tiedot [:kustannukset :hoidonjohdonpalkkio-toteutunut]) 0)
-        toteuma-yht (get-in valikatselmuksen-tiedot [:kustannukset-yhteensa :yht-toteutunut-summa])
+        hankintakustannukset (or (get-in yhteenvedon-tiedot [:kustannukset :hankintakustannukset-toteutunut]) 0)
+        erillishankinnat (or (get-in yhteenvedon-tiedot [:kustannukset :erillishankinnat-toteutunut]) 0)
+        johto-ja-hallintokorvaus (or (get-in yhteenvedon-tiedot [:kustannukset :johto-ja-hallintokorvaus-toteutunut]) 0)
+        hoidonjohtopalkkio (or (get-in yhteenvedon-tiedot [:kustannukset :hoidonjohdonpalkkio-toteutunut]) 0)
+        toteuma-yht (get-in yhteenvedon-tiedot [:kustannukset-yhteensa :yht-toteutunut-summa])
 
         ;; Urakoitsijan saatavat
         lupausbonus (or (:toteutunut_summa (first (filter #(when (= "lupausbonus" (:maksutyyppi %))
-                                                             %) (get-in valikatselmuksen-tiedot [:kustannukset :bonukset :tehtavat])))) 0)
+                                                             %) (get-in yhteenvedon-tiedot [:kustannukset :bonukset :tehtavat])))) 0)
         asiakastyytyvaisyysbonus (apply + (map (fn [bonus]
                                                  (if (= (:tyyppi bonus) "asiakastyytyvaisyysbonus")
                                                    (:rahasumma bonus)
                                                    0))
-                                            (:bonukset valikatselmuksen-tiedot)))
+                                            (:bonukset yhteenvedon-tiedot)))
         muut-bonukset (apply + (map (fn [bonus]
                                       (if (not (contains? #{"asiakastyytyvaisyysbonus" "lupausbonus"} (:tyyppi bonus)))
                                         (:rahasumma bonus)
                                         0))
-                                 (:bonukset valikatselmuksen-tiedot)))
-        tavoitepalkkio (or (get-in valikatselmuksen-tiedot [:kustannukset :tavoitepalkkio :toimenpide-toteutunut-summa]) 0)
+                                 (:bonukset yhteenvedon-tiedot)))
+        tavoitepalkkio (or (get-in yhteenvedon-tiedot [:kustannukset :tavoitepalkkio :toimenpide-toteutunut-summa]) 0)
 
         ;; Tilaajan saatavat
         lupaussanktio (or
                         (and
-                          (get-in valikatselmuksen-tiedot [:lupaustiedot :yhteenveto :valikatselmus-tehty-urakalle?])
-                          (get-in valikatselmuksen-tiedot [:lupaustiedot :yhteenveto :bonus-tai-sanktio :sanktio])) 0)
+                          (get-in yhteenvedon-tiedot [:lupaustiedot :yhteenveto :valikatselmus-tehty-urakalle?])
+                          (get-in yhteenvedon-tiedot [:lupaustiedot :yhteenveto :bonus-tai-sanktio :sanktio])) 0)
         ;; Tilaajalle sanktio on positiivinen luku
         lupaussanktio (if (zero? lupaussanktio) lupaussanktio (- lupaussanktio))
         muut-sanktiot (apply + (map (fn [a]
                                       (if (not (contains? #{"lupaussanktio" "arvonvahennyssanktio"} (:sakkoryhma a)))
                                         (+ (:maara a) (:indeksikorjaus a))
                                         0))
-                                 (:sanktiot valikatselmuksen-tiedot)))
+                                 (:sanktiot yhteenvedon-tiedot)))
         arvonvahennykset (apply + (map (fn [a]
                                          (if (= (:sakkoryhma a) "arvonvahennyssanktio")
                                            (+ (:maara a) (:indeksikorjaus a))
                                            0))
-                                    (:sanktiot valikatselmuksen-tiedot)))
-        totutuneet-kustannukset (or (get-in app [:valikatselmuksen-tiedot :kustannukset-yhteensa :yht-toteutunut-summa]) 0)
-        oikaistu-tavoitehinta (t-yhteiset/hoitokauden-oikaistu-tavoitehinta valittu-hoitovuosi-nro (:valikatselmuksen-tiedot app))
-        oikaistu-kattohinta (t-yhteiset/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro (:valikatselmuksen-tiedot app))
+                                    (:sanktiot yhteenvedon-tiedot)))
+        totutuneet-kustannukset (or (get-in app [:yhteenveto :kustannukset-yhteensa :yht-toteutunut-summa]) 0)
+        oikaistu-tavoitehinta (t-yhteiset/hoitokauden-oikaistu-tavoitehinta valittu-hoitovuosi-nro (:yhteenveto app))
+        _ (js/console.log "oikaistu-tavoitehinta: " (pr-str oikaistu-tavoitehinta))
+        oikaistu-kattohinta (t-yhteiset/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro (:yhteenveto app))
         ;; Tavoitehinnan ylitys otetaan huomioon vasta, kun päätös on tehty
         tavoitehinnan-ylityspaatos (some #(when (= (str (:harja.domain.kulut.valikatselmus/tyyppi %)) "tavoitehinnan-ylitys")
                                             true)
@@ -93,7 +94,7 @@
         ;; Siirrot
         filtteroi-paatos-fn (fn [paatoksen-tyyppi]
                               (first (filter #(and (= (::valikatselmus/hoitokauden-alkuvuosi %) valittu-hoitokauden-alkuvuosi)
-                                                (= (::valikatselmus/tyyppi %) (name paatoksen-tyyppi))) (:paatokset valikatselmuksen-tiedot))))
+                                                (= (::valikatselmus/tyyppi %) (name paatoksen-tyyppi))) (:paatokset app))))
         kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)
         siirto-seuraavan-vuoden-hankintakustannuksiin (if (::valikatselmus/siirto kattohinnan-ylitys-paatos)
                                                         (::valikatselmus/siirto kattohinnan-ylitys-paatos)

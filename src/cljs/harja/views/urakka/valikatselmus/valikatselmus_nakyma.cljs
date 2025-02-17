@@ -621,9 +621,9 @@
            [lupaukset/lupauspaatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
            (= (ffirst paatos) :tavoitehinnan-muutokset)
            [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset (:tavoitehinnan-muutokset app)]
-           (= (ffirst paatos) :tavoitehinta-ylitys) [hintapaatokset/tavoitehinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-           (= (ffirst paatos) :tavoitehinta-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-           (= (ffirst paatos) :kattohinta-ylitys) [hintapaatokset/kattohinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+           (= (ffirst paatos) :tavoitehinnan-ylitys) [hintapaatokset/tavoitehinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+           (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+           (= (ffirst paatos) :kattohinnan-ylitys) [hintapaatokset/kattohinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
            :else nil)))]))
 
 (defn- varmista-hoitokauden-alkuvuosi [valittu-hoitokausi]
@@ -670,7 +670,7 @@
            [:div {:style {:padding-top "20px"}}
             [yleiset/ajax-loader "Haetaan välikatselmuksen tietoja..."]]
            [:div.valikatselmus-container
-            #_ [debug/debug app]
+            [debug/debug app]
             [:div.col-xs-12.col-md-7
 
              [valikatselmus-otsikko-ja-tiedot e! app]

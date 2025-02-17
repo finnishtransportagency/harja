@@ -137,19 +137,18 @@
 
 (defn tavoitehinnan-muutokset [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset tavoitehinnan-muutokset]
   (let [paatos-avain :tavoitehinnan-muutokset
-        paatos-id (:paatos-id paatos)
-        paatos-tehty? (:paatos-id paatos)
+        paatos-tehty? (boolean (:id paatos))
+        on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         tavoitehinnan-muutokset (get tavoitehinnan-muutokset hoitokauden-alkuvuosi)
         kattohinta (:kattohinta paatos)
         tavoitehinta (:tavoitehinta paatos)
         hoitokauden-oikaisut-atom (atom tavoitehinnan-muutokset)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         poikkeusvuosi? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi) ;;TODO:  Korjaa
-        on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
-        paatoksen-tiedot {:paatos-id paatos-id
-                          :urakkaid (-> @tila/yleiset :urakka :id)
-                          :paatostyyppi "1a" ;;TODO: Näitä vaihtoehtoja on kolme
-                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}
+
+        paatoksen-tiedot (merge
+                           paatos
+                           {:urakkaid (-> @tila/yleiset :urakka :id)})
         ;; Kattohintaa voi muokata 19/20 alkavat urakat
         kattohinnan-oikaisu-mahdollinen? (and
                                            (seq tavoitehinnan-muutokset)
@@ -182,4 +181,4 @@
         ;; Päätöksenteko napit
         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
          #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
-         #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos (:paatos-id paatoksen-tiedot)))]])]))
+         #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]])]))
