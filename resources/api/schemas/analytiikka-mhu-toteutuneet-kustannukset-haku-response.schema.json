@@ -293,7 +293,7 @@
                 "muutoskategoria": {
                   "type": "string",
                   "required": true,
-                  "description": "Tavoitehinnan muutoksen luokittelu. Arvot 28.1.2024 (muutoksiin on syytä varautua): Alleviivatun fontin vaikutus tavoitehintaan, Bonukset ja sanktiot, Hoitoluokkamuutokset, Liikennejärjestelyt, Materiaalit, Muut, Tehtävämuutokset, Tiestömuutokset, Tiestömuutos, Työmäärämuutokset, Yleiset Liikennejärjestelyt."
+                  "description": "Tavoitehinnan muutoksen luokittelu. Arvot 28.1.2024 (muutoksiin on syytä varautua): Alleviivatun fontin vaikutus tavoitehintaan, Bonukset ja sanktiot, Hoitoluokkamuutokset, Liikennejärjestelyt, Materiaalit, Muut, Tehtävämuutokset, Tiestömuutokset, Työmäärämuutokset, Yleiset Liikennejärjestelyt."
                 },
                 "muutoksen-selite": {
                   "type": "string",

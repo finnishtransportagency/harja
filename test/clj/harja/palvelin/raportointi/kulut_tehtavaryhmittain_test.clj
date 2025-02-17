@@ -68,7 +68,7 @@
      (list "T2 - Vahinkojen korjaukset, Liikenneympäristön hoito" 0 0)
      (list "T2 - Vahinkojen korjaukset, Soratiet" 0 0)
      (list "T3 - Tilaajan rahavaraus" 0 0)
-     (list "T4 - Digitalisaatio ja innovaatiot" 0 0)
+     (list "T4" 0 0)
      (list "U - Kaiteet, aidat ja kivetykset" 0 0)
      (list "V - Vesakonraivaukset ja puun poisto" 333.33M 0)
      (list "W - Erillishankinnat" 344.20M 294.20M)
