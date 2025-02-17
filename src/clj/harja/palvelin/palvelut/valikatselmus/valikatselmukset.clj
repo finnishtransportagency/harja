@@ -403,8 +403,10 @@
         ;; Wrapataan paatoksen omien avainten alle, jotta käyttöliittymässä on mahdollista näyttää ne oikein
         paatokset (reduce (fn [v paatos]
                             ;; Täydennä viimeiset pakolliset tiedot
-                            (let [paatos (merge paatos {:urakkaid urakkaid
-                                                        :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)})]
+                            (let [paatos (merge
+                                           (dissoc paatos :nakyvyys_alkaen :hoitotyyppi)
+                                           {:urakkaid urakkaid
+                                                        :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)})]
                               (conj v {(paatoskone/nimi->avain (:nimi paatos)) paatos})))
 
                     [] paatokset)]
@@ -439,7 +441,7 @@
         ]
     {:paatokset [{:lupaukset {:id nil
                               :urakkaid urakkaid
-                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                               :tyyppi "bonus"
                               :tavoitehinta tarjouksen-tavoitehinta
                               :luvatut_pisteet 90
@@ -448,7 +450,7 @@
                               :lupaussanktio nil}}
                  {:lupaukset {:id 6
                               :urakkaid urakkaid
-                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                               :tyyppi "bonus"
                               :tavoitehinta tarjouksen-tavoitehinta
                               :luvatut_pisteet 90
@@ -457,7 +459,7 @@
                               :lupaussanktio nil}}
                  {:lupaukset {:id 5
                               :urakkaid urakkaid
-                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                               :tyyppi "sanktio"
                               :tavoitehinta tarjouksen-tavoitehinta
                               :luvatut_pisteet 98
@@ -466,7 +468,7 @@
                               :lupaussanktio 100}}
                  {:lupaukset {:id nil
                               :urakkaid urakkaid
-                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                               :tyyppi "sanktio"
                               :tavoitehinta tarjouksen-tavoitehinta
                               :luvatut_pisteet 98
@@ -475,7 +477,7 @@
                               :lupaussanktio 100}}
                  {:lupaukset {:id 4
                               :urakkaid urakkaid
-                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                               :tyyppi "taytetty"
                               :tavoitehinta tarjouksen-tavoitehinta
                               :luvatut_pisteet 98
@@ -484,7 +486,7 @@
                               :lupaussanktio nil}}
                  {:lupaukset {:id nil
                               :urakkaid urakkaid
-                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                               :tyyppi "taytetty"
                               :tavoitehinta nil
                               :luvatut_pisteet 98
@@ -493,7 +495,7 @@
                               :lupaussanktio nil}}
                  {:lupaukset {:id nil
                               :urakkaid urakkaid
-                              :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                              :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                               :tavoitehinta tarjouksen-tavoitehinta
                               :luvatut_pisteet 98
                               :toteutuneet_pisteet nil
@@ -502,17 +504,17 @@
 
                  {:tavoitehinnan-muutokset {:id nil
                                             :urakkaid urakkaid
-                                            :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                            :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                                             :versio 1
                                             :tavoitehinta 100000}}
                  {:tavoitehinnan-muutokset {:id 1
                                             :urakkaid urakkaid
-                                            :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                            :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                                             :versio 1
                                             :tavoitehinta 100000}}
                  {:tavoitehinta-ylitys {:id nil
                                         :urakkaid urakkaid
-                                        :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                        :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                                         :versio 1
                                         :tavoitehinta 100000
                                         :toteutuneet_kustannukset 123123
@@ -523,7 +525,7 @@
                                         :urakoitsija_maksaa (* 0.3 24999)}}
                  {:tavoitehinta-ylitys {:id 1
                                         :urakkaid urakkaid
-                                        :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                        :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                                         :versio 2
                                         :tavoitehinta 100000
                                         :toteutuneet_kustannukset 123123
@@ -534,7 +536,7 @@
                                         :urakoitsija_maksaa (* 0.5 24999)}}
                  {:tavoitehinta-ylitys {:id 1
                                         :urakkaid urakkaid
-                                        :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                        :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                                         :versio 2
                                         :tavoitehinta 100000
                                         :toteutuneet_kustannukset 123123
@@ -545,7 +547,7 @@
                                         :urakoitsija_maksaa (* 0.75 24999)}}
                  {:tavoitehinta-alitus {:id nil
                                         :urakkaid urakkaid
-                                        :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                        :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                                         :versio 1
                                         :tavoitehinta 123123
                                         :toteutuneet_kustannukset 100000
@@ -555,7 +557,7 @@
                                         :tavoitepalkkio (* 0.3 23123)}}
                  {:tavoitehinta-alitus {:id 1
                                         :urakkaid urakkaid
-                                        :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                        :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                                         :versio 2
                                         :tavoitehinta 123123
                                         :toteutuneet_kustannukset 100000
@@ -565,7 +567,7 @@
                                         :tavoitepalkkio (* 0.75 23123)}}
                  {:kattohinta-ylitys {:id nil
                                       :urakkaid urakkaid
-                                      :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                      :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                                       :toteutuneet_kustannukset 2342343
                                       :kattohinta 23423423
                                       :ylityksen_maara 23423
@@ -574,7 +576,7 @@
                                       :siirra? true}}
                  {:kattohinta-ylitys {:id 1
                                       :urakkaid urakkaid
-                                      :hoitovuoden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
+                                      :hoitokauden_alkuvuosi (pvm/vuosi hoitokauden-alkupvm)
                                       :toteutuneet_kustannukset 2342343
                                       :kattohinta 23423423
                                       :ylityksen_maara 23423
@@ -589,33 +591,35 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
   (log/info "palvelu :: tee-lupauspaatos :: paatos" (pr-str paatos))
   (jdbc/with-db-transaction [db db]
-                            (let [validaatio #{}
-                                  urakka-id (:urakkaid paatos)
-                                  urakka (first (q-urakat/hae-urakka db urakka-id))
-                                  hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
-                                  ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
-                                  tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
-                                                                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-                                  ;; Summissa saattaa olla pyöristyseroja, joten vertaillaan vain kokonaislukuja
-                                  validaatio (if-not (= (int tavoitehinta) (int (:tavoitehinta paatos)))
-                                               (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
-                                               validaatio)
-                                  ;; Jos ollaan tekemässä lupauspäätöstä, josta tulee bonusta
-                                  erilliskustannus_id (when (and (= "bonus" (:tyyppi paatos)) (:lupausbonus paatos))
-                                                        (paatos-apurit/tallenna-lupausbonus db paatos kayttaja))
-                                  ;; Tai jos tulee sakkoja, niin tehdään sanktio
-                                  sanktio_id (when (and (= "sanktio" (:tyyppi paatos)) (:lupaussanktio paatos))
-                                               (paatos-apurit/tallenna-lupaussanktio db paatos kayttaja))
-                                  paatos (-> paatos
-                                             (assoc :erilliskustannus_id erilliskustannus_id)
-                                             (assoc :sanktio_id sanktio_id))]
-                              (if (seq validaatio)
-                                (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
-                                (paatos-kyselyt/tee-lupauspaatos db {:urakkaid paatos} paatos)))))
+    (let [validaatio #{}
+          urakka-id (:urakkaid paatos)
+          urakka (first (q-urakat/hae-urakka db urakka-id))
+          hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
+          ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
+          tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
+                                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          validaatio (if-not (= (int tavoitehinta) (int (:tavoitehinta paatos)))
+                       (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
+                       validaatio)
+          ;; Jos ollaan tekemässä lupauspäätöstä, josta tulee bonusta
+          erilliskustannus_id (when (and "bonus" (:tyyppi paatos) (:lupausbonus paatos))
+                                (paatos-apurit/tallenna-lupausbonus db paatos kayttaja))
+          ;; Tai jos tulee sakkoja, niin tehdään sanktio
+          sanktio_id (when (and "sakko" (:tyyppi paatos) (:lupaussanktio paatos))
+                       (paatos-apurit/tallenna-lupaussanktio db paatos kayttaja))
+          paatos (-> paatos
+                   (assoc :erilliskustannus_id erilliskustannus_id)
+                   (assoc :sanktio_id sanktio_id))
+          _ (if (seq validaatio)
+              (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
+              (paatos-kyselyt/tee-lupauspaatos db {:urakkaid paatos} paatos))]
+      ;; Palautetaan koko välikatselmus
+      (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
 (defn poista-lupauspaatos [db kayttaja paatos]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
   (log/debug "poista-lupauspaatos :: paatos" (pr-str paatos))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
+
   ;; Wrapataan transactioniin, jotta voidaan poistaa myös lupausbonukset ja -sanktiot
   (jdbc/with-db-transaction [db db]
     (let [paatos-tietokannasta (first (paatos-kyselyt/hae-lupauspaatos db {:paatos-id (:id paatos)}))
@@ -628,8 +632,8 @@
               (laadunseuranta-palvelu/poista-suorasanktio db kayttaja {:id (:sanktio_id paatos-tietokannasta)
                                                                        :urakka-id (:urakkaid paatos-tietokannasta)}))
           _ (paatos-kyselyt/poista-lupauspaatos db (:urakkaid paatos-tietokannasta) (:id kayttaja) (:id paatos-tietokannasta))]
-      ;; Palautetaan poistetun päätöksen id
-      (:id paatos-tietokannasta))))
+      ;; Palautetaan koko välikatselmus
+      (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
 (defn tee-tavoitehinnan-muutospaatos [db kayttaja paatos]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
@@ -643,22 +647,28 @@
           ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
           tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          validaatio (if-not (= tavoitehinta (:tavoitehinta paatos))
+          validaatio (if-not (= (int tavoitehinta) (int (:tavoitehinta paatos)))
                        (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
                        validaatio)
           kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          validaatio (if-not (= kattohinta (:kattohinta paatos))
+          validaatio (if-not (= (int kattohinta) (int (:kattohinta paatos)))
                        (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa. Suunniteltu kattohinta:" kattohinta " €. Päätöksen mukainen kattohinta: " (:kattohinta paatos) " €"))
-                       validaatio)]
-      (if (seq validaatio)
-        (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
-        (paatos-kyselyt/tee-tavoitehinnan-muutospaatos db urakka-id paatos)))))
+                       validaatio)
+          _ (if (seq validaatio)
+              (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
+              (paatos-kyselyt/tee-tavoitehinnan-muutospaatos db urakka-id paatos))]
+
+      ;; Hae välikatselmuksen tiedot
+      (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
 (defn poista-tavoitehinnan-muutospaatos [db kayttaja paatos]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
   (log/debug "poista-tavoitehinnan-muutospaatos :: paatos" (pr-str paatos))
-  (paatos-kyselyt/poista-tavoitehinnan-muutospaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos)))
+  (let [vastaus (paatos-kyselyt/poista-tavoitehinnan-muutospaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
+
+    ;; Hae välikatselmuksen tiedot
+    (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)})))
 
 (defn tee-tavoitehinnan-alituspaatos [db kayttaja paatos]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))

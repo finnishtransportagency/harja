@@ -93,7 +93,7 @@
                (filter #(not= (:nimi %) "Lupaukset") paatokset)
                {:nimi "Lupaukset" :virhe "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty." :jarjestys 1}))))
 
-(defn valimistele-tavoitehinnan-muutospaatos [paatokset urakan-alkuvuosi kattohinta tavoitehinta kuluva-hoitovuosi]
+(defn valimistele-tavoitehinnan-muutospaatos [paatokset urakan-alkuvuosi tavoitehinta kattohinta kuluva-hoitovuosi]
   ;; Ota mukaan oikea tavoitehinnan muutospäätös, jos ehdot täyttyvät
   (if (and kattohinta tavoitehinta)
     (let [;; Versio 1a on käytössä urakoille, jotka ovat alkaneet 21 tai jälkeen. 1a:ssa kattohintaa ei syötetä käsin

@@ -36,7 +36,7 @@
 
 (defn tee-lupauspaatos
   "Lupauspäätöksen mäppi:
-  {:hoitovuoden_alkuvuosi <vuosi>
+  {:hoitokauden_alkuvuosi <vuosi>
   :tyyppi <bonus|sakko|ei-bonus-ei-sakko>
   :urakkaid <urakka-id>
   :tavoitehinta <tavoitehinta>
@@ -52,11 +52,12 @@
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:hoitovuoden_alkuvuosi paatos) (:tyyppi paatos) (:urakkaid paatos) (:tavoitehinta paatos)
+        _ (println "kyselyt -- tee-lupauspaatos: paatos" (pr-str paatos))
+        validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:tyyppi paatos) (:urakkaid paatos) (:tavoitehinta paatos)
                             (:tarjous_tavoitehinta paatos) (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos)
                             (:luoja paatos))
-                     (conj validaatio "Puutteelliset lupauspäätöstiedot.")
-                     validaatio)
+                     validaatio
+                     (conj validaatio "Puutteelliset lupauspäätöstiedot."))
         ;; Tarkista sakot
         validaatio (if (and (= "sanktio" (:tyyppi paatos)) (or (nil? (:lupaussanktio paatos)) (nil? (:sanktio_id paatos))))
                      (conj validaatio "Lupauspäätökseltä puuttuu sanktion määrä. ")
@@ -67,7 +68,7 @@
                      validaatio)]
 
     (if (seq validaatio)
-      (heita-virhe (str "Lupauspäätöksessä virheitäs: " (clojure.string/join ", " validaatio)))
+      (heita-virhe (str "Lupauspäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
       (tee-lupauspaatos<! db paatos))))
 
 (defn poista-lupauspaatos [db urakkaid kayttajaid paatosid]
@@ -82,7 +83,7 @@
 
 (defn tee-tavoitehinnan-muutospaatos
   "Tavoitehinnan muutospäätös mäppi:
-  {:hoitovuoden_alkuvuosi <vuosi>
+  {:hoitokauden_alkuvuosi <vuosi>
   :urakkaid <urakka-id>
   :versio <versio>
   :tavoitehinta <tavoitehinta>
@@ -91,7 +92,18 @@
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   ;;TODO: Tee validaatio
-  (tee-tavoitehinnan-muutos-paatos<! db paatos))
+
+  (let [validaatio #{}
+        ;; Validoi perustietojen pakollisuus
+        _ (println "kyselyt -- tee-tavoitehinnan-muutospaatos: paatos" (pr-str paatos))
+        validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:urakkaid paatos) (:versio paatos) (:tavoitehinta paatos)
+                           (:kattohinta paatos) (:luoja paatos))
+                     validaatio
+                     (conj validaatio "Puutteelliset tavoitehinnan muutospäätöstiedot."))]
+
+    (if (seq validaatio)
+      (heita-virhe (str "Tavoitehinnan muutospäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
+      (tee-tavoitehinnan-muutos-paatos<! db paatos))))
 
 (defn poista-tavoitehinnan-muutospaatos [db urakkaid kayttajaid paatosid]
   (let [;; Varmistetaan ensin, että lupaus löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
@@ -106,7 +118,7 @@
 (defn tee-tavoitehinnan-alituspaatos
   "Tavoitehinnan alityspäätöksen mäppi:
   {:urakkaid <urakka-id>
-  :hoitovuoden_alkuvuosi <vuosi>
+  :hoitokauden_alkuvuosi <vuosi>
   :versio <versio>
   :tavoitehinta <tavoitehinta>
   :toteutuneet_kustannukset <eurot>
