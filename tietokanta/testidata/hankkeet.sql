@@ -14,6 +14,9 @@ INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid)
 VALUES ('Pirkanmaan tiemerkinnän palvelusopimus 2013-2018', '2013-01-01', '2018-12-31', '667');
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid)
 VALUES ('Kempeleen valaistusurakka', '2007-10-01', '2012-09-30', '668');
+INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid)
+VALUES ('Raahen MHU 2023-2028', '2023-10-01', '2028-09-30', 'raaMHU1');
+
 
 -- Liitetään urakat niihin
 
@@ -67,3 +70,8 @@ SET hanke = (SELECT id
              FROM hanke
              WHERE sampoid = 'lapMHU1')
 WHERE tyyppi = 'teiden-hoito' AND nimi LIKE 'Lapin MHU%';
+UPDATE urakka
+   SET hanke = (SELECT id
+                  FROM hanke
+                 WHERE sampoid = 'lapMHU1')
+ WHERE tyyppi = 'teiden-hoito' AND nimi LIKE 'Raahen MHU%';
