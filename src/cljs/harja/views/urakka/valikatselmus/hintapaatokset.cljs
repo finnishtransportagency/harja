@@ -121,7 +121,6 @@
 
 (defn kattohinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
   (let [paatos-avain :kattohinta-ylitys
-        _ (println "ui :: kattohinnan-ylitys :: paatos: " (pr-str paatos))
         paatos-tehty? (or (:id paatos) false)
         siirra? (:siirra? paatos)
         paatoksen-tiedot {:id (:id paatos)

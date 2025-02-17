@@ -62,7 +62,6 @@
                                     (:sanktiot yhteenvedon-tiedot)))
         totutuneet-kustannukset (or (get-in app [:yhteenveto :kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         oikaistu-tavoitehinta (t-yhteiset/hoitokauden-oikaistu-tavoitehinta valittu-hoitovuosi-nro (:yhteenveto app))
-        _ (js/console.log "oikaistu-tavoitehinta: " (pr-str oikaistu-tavoitehinta))
         oikaistu-kattohinta (t-yhteiset/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro (:yhteenveto app))
         ;; Tavoitehinnan ylitys otetaan huomioon vasta, kun päätös on tehty
         tavoitehinnan-ylityspaatos (some #(when (= (str (:harja.domain.kulut.valikatselmus/tyyppi %)) "tavoitehinnan-ylitys")

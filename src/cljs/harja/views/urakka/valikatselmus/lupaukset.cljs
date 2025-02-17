@@ -21,8 +21,7 @@
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
 (defn lupauspaatos [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-  (let [_ (js/console.log "lupauspaatos")
-        paatos-avain :lupaukset
+  (let [paatos-avain :lupaukset
         tyyppi (:tyyppi paatos)
         paatos-tehty? (or (not (nil? (:id paatos))) false)
         alitetut-pisteet (- (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos))
