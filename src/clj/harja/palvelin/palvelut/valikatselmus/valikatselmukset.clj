@@ -322,7 +322,7 @@
 (defn hae-paatokset [db urakkaid kuluva-hoitovuosi budjettitavoite
                      toteutuneet-pisteet luvatut-pisteet toteutuneet-kustannukset]
   (let [;; Kootaan päätöksiä varten tarvittavat tiedot
-        urakan-tiedot (first (q-urakat/hae-urakka db urakkaid))
+        urakan-tiedot (first (q-urakat/hae-urakkan-tiedot db urakkaid))
         urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
         urakan-loppuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden vuosi käytännössä
         mhu+urakka? (= "mhu+" (:sopimustyyppi urakan-tiedot))

@@ -417,6 +417,25 @@ FROM urakka u
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
 WHERE u.id = :id;
 
+-- name: hae-urakkan-tiedot
+-- Hakee urakan laajemmat tiedot id:llä
+SELECT
+    u.id,
+    u.nimi,
+    u.tyyppi,
+    u.alkupvm,
+    u.loppupvm,
+    u.indeksi,
+    u.takuu_loppupvm,
+    u.sopimustyyppi,
+    u.sampoid,
+    u.urakkanro AS alueurakkanumero,
+    org.nimi    AS urakoitsija_nimi,
+    org.ytunnus AS urakoitsija_ytunnus
+FROM urakka u
+         LEFT JOIN organisaatio org ON u.urakoitsija = org.id
+WHERE u.id = :id;
+
 -- name: hae-urakoiden-organisaatiotiedot
 -- Hakee joukolle urakoita urakan ja hallintayksikön nimet ja id:t
 -- Palauttaa teiden-hoito-urakan hoitourakkana (MHU).
