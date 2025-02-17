@@ -67,11 +67,14 @@
         tavoitehinnan-ylityspaatos (some #(when (= (str (:harja.domain.kulut.valikatselmus/tyyppi %)) "tavoitehinnan-ylitys")
                                             true)
                                      paatokset)
-        tavoitehinnan-ylitys (if tavoitehinnan-ylityspaatos
-                               (if (> totutuneet-kustannukset oikaistu-kattohinta)
-                                 (- oikaistu-kattohinta oikaistu-tavoitehinta)
-                                 (- totutuneet-kustannukset oikaistu-tavoitehinta))
+        tavoitehinnan-ylitys (if (> totutuneet-kustannukset oikaistu-kattohinta)
+                               (- oikaistu-kattohinta oikaistu-tavoitehinta)
+                               (- totutuneet-kustannukset oikaistu-tavoitehinta))
+
+        tavoitehinnan-alitus (if (< totutuneet-kustannukset oikaistu-tavoitehinta)
+                               (- oikaistu-tavoitehinta totutuneet-kustannukset)
                                0)
+
         tavoitehinnan-ylitysprosentti (aseta-tavoitehinnan-ylitysprosentti urakkatyyppi valittu-hoitokauden-alkuvuosi urakan-alkuvuosi)
         tilaajan-osuus-tavoitehinnan-ylitys (if tavoitehinnan-ylityspaatos
                                               (* (/ (:urakoitsija tavoitehinnan-ylitysprosentti) 100) tavoitehinnan-ylitys)
@@ -84,10 +87,8 @@
         kattohinnan-ylityspaatos (some #(when (= (str (:harja.domain.kulut.valikatselmus/tyyppi %)) "kattohinnan-ylitys")
                                             true)
                                      paatokset)
-        kattohinnan-ylitys (if kattohinnan-ylityspaatos
-                             (if (> totutuneet-kustannukset oikaistu-kattohinta)
-                               (- totutuneet-kustannukset oikaistu-kattohinta)
-                               0)
+        kattohinnan-ylitys (if (> totutuneet-kustannukset oikaistu-kattohinta)
+                             (- totutuneet-kustannukset oikaistu-kattohinta)
                              0)
 
         ;; Siirrot
@@ -121,20 +122,24 @@
      [:div.rivi [:span.bold "Toteutuma yhteensä"]
       [:span (fmt/euro-opt toteuma-yht)]]
      ;; Ei näytetä tavoitehinnan ylitystä, mikäli ei ole ylitystä
-     (if (> tavoitehinnan-ylitys 0)
+     (when (> tavoitehinnan-ylitys 0)
        [:div.rivi [:span.bold {:class (when (and tavoitehinnan-ylitys (> tavoitehinnan-ylitys 0))
                                         "negatiivinen-numero")} "Tavoitehinnan ylitys"]
         [:span.bold {:class (when (and tavoitehinnan-ylitys (> tavoitehinnan-ylitys 0))
                               "negatiivinen-numero")} (fmt/euro-opt tavoitehinnan-ylitys)]]
-       ;; Näytetään tavoitehinnan-alitusrivi mikäli ylitystä ei ole
-       [:div.rivi [:span.bold {:class (when (and tavoitehinnan-ylitys (> 0 tavoitehinnan-ylitys))
+       )
+       ;; Näytetään tavoitehinnan-alitusrivi mikäli alitus on olemassa
+     (when (> tavoitehinnan-alitus 0)
+       [:div.rivi [:span.bold {:class (when (and tavoitehinnan-alitus (< 0 tavoitehinnan-alitus))
                                         "positiivinen-numero")} "Tavoitehinnan alitus"]
-        [:span.bold {:class (when (and tavoitehinnan-ylitys (> 0 tavoitehinnan-ylitys))
-                              "positiivinen-numero")} (fmt/euro-opt (* -1 tavoitehinnan-ylitys))]])
-     [:div.rivi [:span.bold {:class (when (and kattohinnan-ylitys (> kattohinnan-ylitys 0))
-                                      "negatiivinen-numero")} "Kattohinnan ylitys"]
-      [:span.bold {:class (when (and kattohinnan-ylitys (> kattohinnan-ylitys 0))
-                            "negatiivinen-numero")} (fmt/euro-opt kattohinnan-ylitys)]]
+        [:span.bold {:class (when (and tavoitehinnan-alitus (< 0 tavoitehinnan-alitus))
+                              "positiivinen-numero")} (fmt/euro-opt tavoitehinnan-alitus)]])
+     ;; Näytetään kattohinnna ylitysrivi, mikäli kattohinnan ylitys on olemassa
+     (when (> kattohinnan-ylitys 0)
+       [:div.rivi [:span.bold {:class (when (and kattohinnan-ylitys (> kattohinnan-ylitys 0))
+                                        "negatiivinen-numero")} "Kattohinnan ylitys"]
+        [:span.bold {:class (when (and kattohinnan-ylitys (> kattohinnan-ylitys 0))
+                              "negatiivinen-numero")} (fmt/euro-opt kattohinnan-ylitys)]])
 
      [:h3 [:span "Urakoitsijan saatavat"]]
      [:div.rivi [:span "Lupausbonus"]

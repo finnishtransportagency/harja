@@ -200,7 +200,7 @@
                                (apply + (map ::valikatselmus/summa tavoitehinnan-oikaisut))
                                0)]
     [grid/muokkaus-grid
-     {:otsikko "Tavoitehinnan oikaisut"
+     {:otsikko "Tavoitehinnan muutokset"
       :tyhja "Ei oikaisuja"
       :voi-kumota? false
       :voi-muokata? voi-muokata?
