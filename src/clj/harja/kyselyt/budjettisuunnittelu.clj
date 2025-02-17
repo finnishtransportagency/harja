@@ -6,7 +6,7 @@
 (defqueries "harja/kyselyt/budjettisuunnittelu.sql"
   {:positional? false})
 
-(declare lisaa-suunnitelmalle-tila)
+(declare lisaa-suunnitelmalle-tila hae-budjettitavoite)
 
 (defn redusoi-suunnitelutilat
   [tilat tila]

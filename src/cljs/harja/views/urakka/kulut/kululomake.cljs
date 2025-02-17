@@ -110,6 +110,7 @@
                                      :muokattu? true
                                      :pakollinen? true
                                      :valinta (:tehtavaryhma kohdistus)
+                                     :skrollattava? true
                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtavaryhma)
                                      :format-fn :tehtavaryhma
                                      :valitse-fn #(do

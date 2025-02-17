@@ -21,22 +21,11 @@
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
 (defn lupauspaatos [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-  (let [_ (js/console.log "lupauspaatos")
-        paatos-avain :lupaukset
+  (let [paatos-avain :lupaukset
         tyyppi (:tyyppi paatos)
-        paatos-tehty? (or (not (nil? (:paatos-id paatos))) false)
+        paatos-tehty? (or (not (nil? (:id paatos))) false)
         alitetut-pisteet (- (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos))
         ylitetyt-pisteet (- (:toteutuneet_pisteet paatos) (:luvatut_pisteet paatos))
-        paatoksen-tiedot {:paatos-id (:paatos-id paatos)
-                          :urakkaid (-> @tila/yleiset :urakka :id)
-                          :tyyppi tyyppi
-                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                          :luvatut_pisteet (:luvatut_pisteet paatos)
-                          :toteutuneet_pisteet (:toteutuneet_pisteet paatos)
-                          :lupausbonus (:lupausbonus paatos)
-                          :lupaussanktio (:lupaussanktio paatos)
-                          :tavoitehinta (:tavoitehinta paatos)}
-
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         avaa-tai-sulje-haitari (fn [event]
                                  (when (dom/enter-nappain? event)
@@ -58,7 +47,7 @@
             [:div (:luvatut_pisteet paatos)]]
            [:div.flex-row {:style {:margin-bottom "3px"}}
             [:div "Tulos"]
-            [:div alitetut-pisteet]]])
+            [:div (if (= "bonus" tyyppi) (str "+" ylitetyt-pisteet) (str "-" alitetut-pisteet))]]])
 
         [:div.lupaukset-linkki
          [harja.ui.yleiset/linkki "Siirry lupauksiin"
@@ -66,32 +55,32 @@
           {:luokka "klikattava alleviivaa"}]]
 
         ;; Laskentoja ei näytetä, mikäli tarjouksen tavoitehinta puuttuu
-        (if (:tavoitehinta paatos)
+        (if (:tarjous_tavoitehinta paatos)
           [:div
            [:div
             (cond
-              (= :sanktio tyyppi)
+              (= "sanktio" tyyppi)
               [:div
                [:p "Luvatun yhteispistemäärän alittaminen johtaa kutakin alittuvaa pistetä kohden 0,18%
            sanktioon kyseisen hoitokauden tarjouksen mukaisesta tavoitehinnasta."]
-               [:p.paatos-laskelma (str "Lupaussanktio = " alitetut-pisteet " * 0,0018 * " (:tavoitehinta paatos) " = " ) [:strong (str (:lupaussanktio paatos) " €")]]]
-              (= :bonus tyyppi)
+               [:p.paatos-laskelma (str "Lupaussanktio = " alitetut-pisteet " * 0,0018 * " (:tarjous_tavoitehinta paatos) " = " ) [:strong (fmt/euro-opt (:lupaussanktio paatos))]]]
+              (= "bonus" tyyppi)
               ^{:key (str "lupaus-" (gensym))}
               [:div
                [:p "Luvatun yhteispistemäärän ylittäminen kutakin ylittävää pistettä kohden tuottaa 0,08%
            bonuksen kyseisen hoitokauden tarjouksen mukaisesta tavoitehinnasta."]
-               [:p.paatos-laskelma (str "Lupausbonus = " ylitetyt-pisteet " * 0,008% * " (:tavoitehinta paatos) " = " ) [:strong (str (:lupausbonus paatos) " €")]]]
+               [:p.paatos-laskelma (str "Lupausbonus = " ylitetyt-pisteet " * 0,008 * " (:tarjous_tavoitehinta paatos) " = " ) [:strong (fmt/euro-opt (:lupausbonus paatos))]]]
               :else
               [:div ""])]
 
            [:div
             (cond
-              (= :bonus tyyppi)
+              (= "bonus" tyyppi)
               [:<>
                [:div
                 [:div "Lupausbonus:"]
                 [:div {:style {:font-size "20px"}} [:strong (fmt/euro-opt (:lupausbonus paatos))]]]]
-              (= :sanktio tyyppi)
+              (= "sanktio" tyyppi)
               [:<>
                [:div
                 [:div "Lupaussanktio:"]
@@ -107,13 +96,11 @@
 
 
         ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös
-        (if (not (:paatos-id paatos))
+        (if (not (:id paatos))
           [:div.paatos-toiminto
            (if on-oikeudet?
              [napit/yleinen-ensisijainen "Tallenna päätös"
-              #(e! (valikatselmus-tiedot/->TallennaPaatos
-                     ;; Lupaus-päätös tallennetaan aina uutena tai poistetaan - ei muokata
-                     (dissoc paatoksen-tiedot ::valikatselmus/paatoksen-id)))
+              #(e! (valikatselmus-tiedot/->TallennaLupausPaatos paatos))
               {:ikoni [ikonit/harja-icon-status-selected]
                :disabled (or (not (:tavoitehinta paatos)) (> 1 (:toteutuneet_pisteet paatos)) tallennus-kesken? (not voi-muokata?))}]
              (if (:lupaussanktio paatos)
@@ -124,7 +111,7 @@
            (if on-oikeudet?
              [napit/yleinen-toissijainen
               "Peru päätös"
-              #(e! (valikatselmus-tiedot/->PoistaLupausPaatos (:paatos-id paatos)))
+              #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos))
               {:ikoni [ikonit/harja-icon-action-undo]
                :disabled (or (not (:tavoitehinta paatos)) tallennus-kesken? (not voi-muokata?))}]
              (if (:lupaussanktio paatos)

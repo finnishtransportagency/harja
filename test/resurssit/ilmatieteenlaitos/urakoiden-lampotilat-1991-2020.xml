@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<tieindeksi xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:noNamespaceSchemaLocation="https://tieindeksi.weatherproof.fi/tieindeksi2/tulokset_uusi.xsd">
+    <urakka id="<alueurakkanumero>" kohde="Raahe_Ylivieska">
+        <jakso kausi="2023-2024">
+            <keskilampotila>-8.6</keskilampotila>
+            <ilmastollinen_keskiarvo>-6.1</ilmastollinen_keskiarvo>
+            <keskilampotilan_ilm_ka_erotus>-2.5</keskilampotilan_ilm_ka_erotus>
+            <ilmastollinen_alaraja>-12.1</ilmastollinen_alaraja>
+            <ilmastollinen_ylaraja>-1.2</ilmastollinen_ylaraja>
+        </jakso>
+    </urakka>
+</tieindeksi>

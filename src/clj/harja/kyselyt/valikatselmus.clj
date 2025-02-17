@@ -9,7 +9,8 @@
 (defqueries "harja/kyselyt/valikatselmus.sql"
             {:positional? true})
 
-(declare hae-urakan-hintapaatokset hintapaatos-tehty?)
+(declare hae-urakan-hintapaatokset hintapaatos-tehty? hae-urakan-bonuksen-toimenpideinstanssi-id
+  hae-oikaistu-tavoitehinta hae-oikaistu-kattohinta hae-paatos hae-bonukset hae-sanktiot)
 
 ;; Tavoitehinnan oikaisut
 
@@ -22,9 +23,7 @@
   (group-by ::valikatselmus/hoitokauden-alkuvuosi
             (fetch db ::valikatselmus/tavoitehinnan-oikaisu
                    (columns ::valikatselmus/tavoitehinnan-oikaisu)
-                   {::urakka/id id ::muokkaustiedot/poistettu? false}
-              {:specql.core/order-by ::valikatselmus/oikaisun-id
-               :specql.core/order-direction :asc})))
+                   {::urakka/id id ::muokkaustiedot/poistettu? false})))
 
 (defn hae-oikaisut-hoitovuodelle [db urakka-id hoitokauden-alkuvuosi]
   (fetch db ::valikatselmus/tavoitehinnan-oikaisu

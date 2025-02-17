@@ -490,6 +490,7 @@ WHERE s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND s.poistettu IS NOT TRUE
 GROUP BY s.tyyppi, s.indeksi, s.sakkoryhma
 -- Urakan päätös-taulusta haetaan toteutumiin edellisen vuoden siirrot.
+-- TODO Kirjoita tämä uusiksi, kunhan saadaan uudet päätöstaulut valmiiksi
 UNION ALL
 SELECT 0                                          AS budjetoitu_summa,
        0                                          AS budjetoitu_summa_indeksikorjattu,
