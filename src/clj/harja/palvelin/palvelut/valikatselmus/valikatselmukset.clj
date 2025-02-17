@@ -236,8 +236,7 @@
       (valikatselmus-q/poista-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi kayttaja)
       (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))))
 
-(defn hae-kattohintojen-oikaisut [db kayttaja tiedot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (::urakka/id tiedot))
+(defn hae-kattohintojen-oikaisut [db _kayttaja tiedot]
   (let [urakka-id (::urakka/id tiedot)]
     (assert (number? urakka-id) "Virhe urakan ID:ssä.")
     (valikatselmus-q/hae-kattohinnan-oikaisut db tiedot)))
@@ -258,6 +257,7 @@
                  ::muokkaustiedot/muokattu (when (::muokkaustiedot/luotu tiedot)
                                              (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt)))}))
 
+;;TODO: Tätä kutsutaan kustannusten seuranannassa. Tämä palauttaa vanhat datat. Korjaa
 (defn hae-urakan-paatokset [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-valikatselmus
     kayttaja
@@ -389,6 +389,8 @@
         ;; Formatoidaan kustannukset ui:ta varten
         kustannukset-jarjestettyna (kustannusten-seuranta/jarjesta-tehtavat kustannukset)
         budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakkaid})
+
+        _ (println "hae-valikatselmuksen-tiedot-hoitovuodelle :: budjettitavoite :" budjettitavoite)
 
         ;; Kustannusten mukana ei tule tarvittavalla tasolla erotettuna bonuksia. Joten haetaan ne erikseen
         bonukset (valikatselmus-q/hae-bonukset db {:urakka-id urakkaid

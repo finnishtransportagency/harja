@@ -139,6 +139,8 @@
   (let [paatos-avain :tavoitehinnan-muutokset
         paatos-tehty? (boolean (:id paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
+        paatos-tehty? (boolean (:id paatos))
+        on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         tavoitehinnan-muutokset (get tavoitehinnan-muutokset hoitokauden-alkuvuosi)
         kattohinta (:kattohinta paatos)
         tavoitehinta (:tavoitehinta paatos)

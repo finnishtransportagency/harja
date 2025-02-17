@@ -51,10 +51,8 @@ SELECT up."hoitokauden-alkuvuosi"
 SELECT tpi.id AS id
 FROM toimenpideinstanssi tpi
          JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-         JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-     maksuera m
+         JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id
 WHERE tpi.urakka = :urakka-id
-  AND m.toimenpideinstanssi = tpi.id
   AND tpk2.koodi = '23150'
 limit 1;
 

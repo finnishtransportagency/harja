@@ -3,6 +3,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo]))
 
+(declare hae-sanktiotyypin-tiedot-koodilla hae-sanktio)
+
 (defn muunna-urakan-sanktio
   "Muuntaa hae-urakan-sanktiot rivien tyypit"
   [rivi]
