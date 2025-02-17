@@ -61,9 +61,7 @@
 
   ;; Uusi kanava
   (kanavasulku-tuonti/vie-kanavasulku-entry (:db ht/jarjestelma) referenssi-kanavasulku-shapefilesta)
-  (let [tallentunut-kanava (first (q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666}))
-
-        _ (println "\n tall: " tallentunut-kanava)]
+  (let [tallentunut-kanava (first (q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666}))]
     (ht/tarkista-map-arvot referenssi-kanavasulku-tietokannasta tallentunut-kanava))
   (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohteenosa where lahdetunnus = 6666;")) 1))
   (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666);")) 1))
