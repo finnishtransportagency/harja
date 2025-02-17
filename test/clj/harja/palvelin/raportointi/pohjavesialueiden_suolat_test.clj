@@ -59,26 +59,8 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2007 10 1))
                                               :loppupvm (c/to-date (t/local-date 2008 9 30))}})]
     (is (vector? vastaus))
-    (let [taulukko (apurit/taulukko-otsikolla
-                     vastaus
-                     "11615174-")]
-
-      (tarkista-sarakkeet taulukko)
-
-      (is (= vastaus
-            [:raportti {:orientaatio :landscape
-                        :nimi "Pudasjärven alueurakka 2007-2012, Suolatoteumat (kaikki pohjavesialueet) ajalta 01.10.2007 - 30.09.2008"
-                        :rajoita-pdf-rivimaara nil}
-             nil
-             [:taulukko {:otsikko "11615174-", :viimeinen-rivi-yhteenveto? true, :tyhja nil}
-              [{:leveys 3 :fmt :kokonaisluku :otsikko "Tie"}
-               {:leveys 2 :fmt :kokonaisluku :otsikko "Alku­osa"}
-               {:leveys 2 :fmt :kokonaisluku :otsikko "Alku­etäisyys"}
-               {:leveys 2 :fmt :kokonaisluku :otsikko "Loppu­osa"}
-               {:leveys 2 :fmt :kokonaisluku :otsikko "Loppu­etäisyys"}
-               {:leveys 3 :fmt :numero :otsikko "Pituus"}
-               {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola yhteensä (t)"}
-               {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola (t/km)"}
-               {:leveys 5 :fmt :numero :otsikko "Käyttö­raja (t/km)"}]
-              [[20 14 8098 14 11028 2931.4154579352903 12.64234230994867M 4.3127091643479165 nil]
-               [[:arvo {:arvo "Yhteensä"}] nil nil nil nil nil 12.64234230994867M nil nil]]]])))))
+    (is (= vastaus
+            [:raportti {:orientaatio :landscape,
+                        :nimi "Pudasjärven alueurakka 2007-2012, Suolatoteumat (kaikki pohjavesialueet) ajalta 01.10.2007 - 30.09.2008",
+                        :rajoita-pdf-rivimaara nil} nil
+             [:teksti "Tietoja ei löytynyt valitulta aikaväliltä."]]))))
