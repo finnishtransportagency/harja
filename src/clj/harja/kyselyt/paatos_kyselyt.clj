@@ -6,10 +6,10 @@
   {:positional? true})
 
 (declare tee-lupauspaatos<! poista-lupauspaatos<! hae-lupauspaatokset hae-lupauspaatos
-  tee-tavoitehinnan-muutos-paatos<! hae-tavoitehinnan-muutospaatos poista-tavoitehinnan-muutos-paatos<!
+         hae-tavoitehinnan-muutos-paatokset tee-tavoitehinnan-muutos-paatos<! hae-tavoitehinnan-muutospaatos poista-tavoitehinnan-muutos-paatos<!
   tee-tavoitehinnan-alitus-paatos<! poista-tavoitehinnan-alitus-paatos<! hae-tavoitehinnnan-alitus-paatokset hae-tavoitehinnan-alituspaatos
   tee-tavoitehinnan-ylitys-paatos<! hae-tavoitehinnan-ylityspaatos hae-tavoitehinnnan-ylitys-paatokset poista-tavoitehinnan-ylitys-paatos<!
-  tee-kattohinta-paatos<! hae-kattohinta-paatos poista-kattohinta-paatos<!)
+         hae-kattohinta-paatokset tee-kattohinta-paatos<! hae-kattohinta-paatos poista-kattohinta-paatos<!)
 
 (defn heita-virhe [viesti] (throw+ {:type "Error"
                                     :virheet {:koodi "ERROR" :viesti viesti}}))
@@ -52,7 +52,6 @@
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        _ (println "kyselyt -- tee-lupauspaatos: paatos" (pr-str paatos))
         validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:tyyppi paatos) (:urakkaid paatos) (:tavoitehinta paatos)
                             (:tarjous_tavoitehinta paatos) (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos)
                             (:luoja paatos))
@@ -95,7 +94,6 @@
 
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        _ (println "kyselyt -- tee-tavoitehinnan-muutospaatos: paatos" (pr-str paatos))
         validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:urakkaid paatos) (:versio paatos) (:tavoitehinta paatos)
                            (:kattohinta paatos) (:luoja paatos))
                      validaatio
@@ -129,8 +127,18 @@
   :luoja <kuka>}"
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
-  ;;TODO: Tee validaatio
-  (tee-tavoitehinnan-alitus-paatos<! db paatos))
+  (let [validaatio #{}
+        ;; Validoi perustietojen pakollisuus
+        validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:urakkaid paatos) (:versio paatos) (:tavoitehinta paatos)
+                            (:toteutuneet_kustannukset paatos) (:alituksen_maara paatos) (:tavoitepalkkio paatos) (:luoja paatos))
+                     validaatio
+                     (conj validaatio "Puutteelliset tavoitehinnan alituspäätöstiedot."))
+        ;; TODO: Tarvitseeko vertailla kulu_id:t ja siirron määrä?
+        ]
+
+    (if (seq validaatio)
+      (heita-virhe (str "Tavoitehinnan alituspäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
+      (tee-tavoitehinnan-alitus-paatos<! db paatos))))
 
 (defn poista-tavoitehinnan-alituspaatos [db urakkaid kayttajaid paatosid]
   (let [;; Varmistetaan ensin, että tavoitehinnan alityspäätös löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
@@ -154,13 +162,34 @@
    :urakoitsijan_prosentti <prosentti>
    :tilaaja_maksaa <eurot>
    :urakoitsija_maksaa <eurot>
-   :siirto <eurot>
+   :siirto <eurot> -- Siirto vielä epäselvä. Ei oteta vielä vastaan.
    :kulu_id <luodun kulun id>
    :luoja <kayttaja>}"
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
-  ;;TODO: Tee validaatio
-  (tee-tavoitehinnan-ylitys-paatos<! db paatos))
+  (let [validaatio #{}
+        ;; Validoi perustietojen pakollisuus
+        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos)  (:versio paatos) (:tavoitehinta paatos)
+                            (:toteutuneet_kustannukset paatos) (:ylityksen_maara paatos) (:tilaajan_prosentti paatos)
+                            (:urakoitsijan_prosentti paatos) (:tilaaja_maksaa paatos) (:urakoitsija_maksaa paatos)
+                            (:urakoitsija_maksaa paatos) (:luoja paatos))
+                     validaatio
+                     (conj validaatio "Puutteelliset tavoitehinnan ylityspäätöstiedot."))
+
+        ;; Tarkista siirto - TODO: Siirrosta puhutaan spekseissä, mutta ui:lla ei ole siihen toimintoa. Jätetään vielä toteuttamatta
+        #_#_ validaatio (if (and (not (nil? (:siirto paatos))) (nil? (:kulu_id paatos)))
+                     (conj validaatio "Tavoitehinnan ylityspäätöksen siirto- tai kulusummassa virhe. ")
+                     validaatio)
+        ;; Tarkista kulu
+        #_#_ validaatio (if (and (not (nil? (:kulu_id paatos))) (nil? (:siirto paatos)))
+                     (conj validaatio "Tavoitehinnan ylityspäätöksen siirto- tai kulusummassa virhe. ")
+                     validaatio)
+
+        ]
+
+    (if (seq validaatio)
+      (heita-virhe (str "Tavoitehinnan muutospäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
+      (tee-tavoitehinnan-ylitys-paatos<! db paatos))))
 
 (defn poista-tavoitehinnan-ylityspaatos [db urakkaid kayttajaid paatosid]
   (let [;; Varmistetaan ensin, että tavoitehinnan ylityspäätös löytyy annetulla id:llä ja että se kuuluu annetulle urakalle

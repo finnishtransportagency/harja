@@ -53,11 +53,9 @@
          pk-paatokset)))
 
 (defn valmistele-lupauspaatokset [paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta]
-  (println "valmistele-lupauspaatokset :: toteutuneet-pisteet: " toteutuneet-pisteet "  luvatut-pisteet: " luvatut-pisteet " tarjouksen-tavoitehinta: "tarjouksen-tavoitehinta)
   ;; Ota mukaan oikea lupauspäätös, jos ehdot täyttyvät
   (if (and toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta tavoitehinta)
     (let [erotus (- luvatut-pisteet toteutuneet-pisteet)
-          _ (println "erotus: " erotus)
           tyyppi (cond
                    (= erotus 0) "taytetty"
                    (< erotus 0) "bonus"
@@ -208,14 +206,17 @@
 
 (defn valmistele-kattohinnan-paatokset [paatokset kattohinta kustannukset]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
-  (if (and kattohinta kustannukset (> (- kustannukset kattohinta) 0))
-    (let [kattohinnan-ylityspaatos (some #(= (:nimi %) "Kattohinnan ylitys") paatokset)
+  (if (and kattohinta kustannukset (> kustannukset kattohinta))
+    (let [kattohinnan-ylityspaatos (first (filter #(= (:nimi %) "Kattohinnan ylitys") paatokset))
           ylityksen-maara (- kustannukset kattohinta)
           ;; Täytetään pakolliset tiedot
           kattohinnan-ylityspaatos (-> kattohinnan-ylityspaatos
                                        (assoc :toteutuneet_kustannukset kustannukset)
                                        (assoc :kattohinta kattohinta)
-                                       (assoc :ylityksen_maara ylityksen-maara))
+                                       (assoc :ylityksen_maara ylityksen-maara)
+                                       (assoc :urakoitsija_maksaa ylityksen-maara)
+                                       (assoc :siirra? false) ;; Päätöksen pohjatietoja asetettaessa siirto on aina defaulttina false. Tietokannasta haettaessa tilanne voi olla eri.
+                                       )
 
           paatokset (remove
                       (fn [paatos]
