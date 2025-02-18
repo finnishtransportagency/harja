@@ -162,14 +162,6 @@ VALUES
   ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Espoo Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
   ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Espoo Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
--- Luodaan Raaseporin urakalle tärkeimmät toimenpideinstanssit
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-VALUES
-    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpide WHERE koodi='23104'), 'Raasepori Talvihoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Raasepori Liikenneympäristön hoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Raasepori Sorateiden hoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-
-
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpide WHERE koodi='23104'), 'Tampere Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Tampere Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Tampere Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
@@ -1862,7 +1854,7 @@ DO $$
 DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP', 'MHU ja HJU Hoidon johto'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301', '23151'];
-  urakat TEXT[] := ARRAY ['Ivalon MHU testiurakka (uusi)', 'Iin MHU 2021-2026', 'Tampereen MHU 2022-2026', 'Raahen MHU 2023-2028'];
+  urakat TEXT[] := ARRAY ['Ivalon MHU testiurakka (uusi)', 'Iin MHU 2021-2026', 'Tampereen MHU 2022-2026', 'Raahen MHU 2023-2028', 'UUD Raasepori  MHU 2021- 2026, P'];
   urakan_nimi TEXT;
   i INTEGER;
 BEGIN
