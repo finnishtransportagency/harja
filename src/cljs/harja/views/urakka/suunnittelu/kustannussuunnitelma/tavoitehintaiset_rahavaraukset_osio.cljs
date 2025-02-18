@@ -43,8 +43,7 @@
 
     [:div
      (when tallennus-kaynnissa?
-       [:div.ajax-loader-valistys-kustannukset
-        [ajax-loader-pieni (str "Tallennetaan tietoja...")]])
+       [ajax-loader-pieni "Tallennetaan tietoja..."])
 
      [grid/muokkaus-grid
       {:id "tavoitehintaiset-rahavaraukset-grid"
