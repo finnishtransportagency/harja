@@ -349,7 +349,7 @@
       [:h3 "Syötä tarjouksen määrät"]
 
       (when tallennetaan?
-        [ajax-loader-pieni "Tallennetaan tietoja..."])
+        [ajax-loader-pieni "Tallennetaan tietoja..." {:luokka "ajax-loader-valistys-kustannukset"}])
 
       [napit/yleinen-ensisijainen "Tallenna" (comp (vieritys/vierita ::top) #(e! (t/->TallennaSopimus true)))
        {:disabled (or tallennetaan? aluetietoja-puuttuu? maaratietoja-puuttuu?)}]]
