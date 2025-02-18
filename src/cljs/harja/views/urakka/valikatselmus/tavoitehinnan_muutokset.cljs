@@ -34,7 +34,12 @@
   (let [virheet (atom {})
         uusi-id (if (empty? (keys @hoitokauden-oikaisut-atom))
                   0
-                  (inc (apply max (keys @hoitokauden-oikaisut-atom))))]
+                  (inc (apply max (keys @hoitokauden-oikaisut-atom))))
+        oikaisut-summa (when @hoitokauden-oikaisut-atom (reduce
+                                                          (fn [yhteensa hoitokauden-oikaisu]
+                                                            (+ yhteensa (get hoitokauden-oikaisu :harja.domain.kulut.valikatselmus/summa)))
+                                                          0
+                                                          (vals @hoitokauden-oikaisut-atom)))]
     [grid/muokkaus-grid
      (merge {:tyhja "Ei muutoksia tavoitehintaan"
              :voi-kumota? false
@@ -61,7 +66,11 @@
                                    (tallenna-oikaisu-fn oikaisu i))))
              :uusi-id uusi-id
              :virheet virheet
-             :nayta-virheikoni? false}
+             :nayta-virheikoni? false
+             :rivi-jalkeen (when @hoitokauden-oikaisut-atom
+                             [{:teksti "Yhteensä" :luokka "yhteensa" }
+                              {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa"}
+                              {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])}
        (when voi-muokata?
          {;; Lisää oikaisunappula taulukon yläpuolella oikealla
           :custom-toiminto {:teksti "Lisää muutos"
@@ -82,7 +91,7 @@
        :elementin-id (str "luokka-" uusi-id)}
       {:otsikko "Perustelu"
        :nimi ::valikatselmus/selite
-       :tyyppi :text ;;:string
+       :tyyppi :text
        :koko [:auto 3]
        :validoi [[:ei-tyhja "Täytä arvo"]]
        :leveys 3
