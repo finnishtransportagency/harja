@@ -18,14 +18,24 @@
     (is (= "MHU" (kone/urakan-hoitotyyppi vaativa-hoitourakka-f)))
     (is (= "MHU+" (kone/urakan-hoitotyyppi vaativa-hoitourakka-t)))))
 
+;; 2023 ei ole MHU+ urakoita käynnissä ja mitään ei löydy
 (deftest mhu+-vuodelle-2023-palautaa-oikein
   (let [mhu-tyyppi "MHU+"
         urakan-alkuvuosi 2023]
-    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2023))))
-    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))
-    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2025))))
-    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2026))))
-    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2027))))))
+    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2023))))
+    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))
+    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2025))))
+    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2026))))
+    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2027))))))
+
+(deftest mhu+-vuodelle-2021-ei-saisi-palauttaa-mitaan-test
+  (let [mhu-tyyppi "MHU+"
+        urakan-alkuvuosi 2021]
+    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2017))))
+    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2018))))
+    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2019))))
+    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2020))))
+    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2021))))))
 
 (deftest mhu+-vuodelle-2024-palautaa-oikein
   (let [mhu-tyyppi "MHU+"
@@ -92,8 +102,8 @@
     (is (= 11 (count urakan-alkuvuosi-2021-paatokset)))
     (is (= 11 (count urakan-alkuvuosi-2022-paatokset)))
     (is (= 11 (count urakan-alkuvuosi-2023-paatokset)))
-    (is (= 16 (count urakan-alkuvuosi-2024-paatokset)))
-    (is (= 16 (count urakan-alkuvuosi-2025-paatokset)))))
+    (is (= 19 (count urakan-alkuvuosi-2024-paatokset)))
+    (is (= 19 (count urakan-alkuvuosi-2025-paatokset)))))
 
 (deftest paatosmaarat-nakyvyys-vuodesta-test
   (let [nakyvyysvuosi-2019-paatokset (kone/mahdolliset-paatokset-nakyvyys-vuodella 2019 kone/paatostyypit)
@@ -108,8 +118,8 @@
     (is (= 9 (count nakyvyysvuosi-2021-paatokset)))
     (is (= 9 (count nakyvyysvuosi-2022-paatokset)))
     (is (= 9 (count nakyvyysvuosi-2023-paatokset)))
-    (is (= 13 (count nakyvyysvuosi-2024-paatokset)))
-    (is (= 16 (count nakyvyysvuosi-2025-paatokset)))))
+    (is (= 16 (count nakyvyysvuosi-2024-paatokset)))
+    (is (= 19 (count nakyvyysvuosi-2025-paatokset)))))
 
 (deftest yhdista-mapit-test
   (let [;; pk viittaa päätöskoneeseen, ja db databaseen
@@ -152,21 +162,24 @@
         toteutuneet-pisteet 10
         luvatut-pisteet 10
         tarjous-tavoitehinta 100
-        paatokset-ei-kumpikaan (kone/valmistele-lupauspaatokset paatokset toteutuneet-pisteet luvatut-pisteet tarjous-tavoitehinta)
+        tavoitehinta 99
+        paatokset-ei-kumpikaan (kone/valmistele-lupauspaatokset paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta)
         _ (is (= 1 (count paatokset-ei-kumpikaan)))
         _ (is (= "taytetty" (:tyyppi (first paatokset-ei-kumpikaan))))
 
         toteutuneet-pisteet 10
         luvatut-pisteet 15
         tarjous-tavoitehinta 100
-        paatokset-bonus (kone/valmistele-lupauspaatokset paatokset toteutuneet-pisteet luvatut-pisteet tarjous-tavoitehinta)
-        _ (is (= 1 (count paatokset-bonus)))
-        _ (is (= "bonus" (:tyyppi (first paatokset-bonus))))
+        tavoitehinta 99
+        paatokset-sanktio (kone/valmistele-lupauspaatokset paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta)
+        _ (is (= 1 (count paatokset-sanktio)))
+        _ (is (= "sanktio" (:tyyppi (first paatokset-sanktio))))
 
         toteutuneet-pisteet 15
         luvatut-pisteet 10
         tarjous-tavoitehinta 100
-        paatokset-sakko (kone/valmistele-lupauspaatokset paatokset toteutuneet-pisteet luvatut-pisteet tarjous-tavoitehinta)
-        _ (is (= 1 (count paatokset-sakko)))
-        _ (is (= "sanktio" (:tyyppi (first paatokset-sakko))))]))
+        tavoitehinta 99
+        paatokset-bonus (kone/valmistele-lupauspaatokset paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta)
+        _ (is (= 1 (count paatokset-bonus)))
+        _ (is (= "bonus" (:tyyppi (first paatokset-bonus))))]))
 
