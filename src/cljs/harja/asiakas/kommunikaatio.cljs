@@ -68,7 +68,7 @@
 
 (defn vaylapilvi-ymparistossa?
   [host]
-  (#{"harjadev.testivaylapilvi.fi" "harjatest.testivaylapilvi.fi" "harja.vaylapilvi.fi"} host))
+  (or (str/ends-with? host ".vaylapilvi.fi") (str/ends-with? host ".testivaylapilvi.fi")))
 
 (def +polku+ (let [host (.-host js/location)]
                (if (or

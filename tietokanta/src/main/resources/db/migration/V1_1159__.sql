@@ -1,12 +1,15 @@
--- Taulu tiemerkintöjen korjauskustannuksille
-CREATE TABLE tiemerkinta_korjauskustannukset (
-    id serial primary key ,
-    urakka integer references urakka (id),
-    kustannusvuosi integer,
-    kustannus decimal(12, 2),
-    -- TODO päivitä muokkaaja
-    -- pk-osuudet kustannusten yhteenlaskettu summa on oltava 100
-    pk1 decimal(3,1),
-    pk2 decimal(3,1),
-    pk3 decimal(3,1)
-);
+--- Poista turhaksi jääneet pot-lahetykseen liittyvät Velho tiedot
+ALTER TABLE yllapitokohde DROP COLUMN IF EXISTS velho_lahetyksen_aika;
+ALTER TABLE yllapitokohde DROP COLUMN IF EXISTS velho_lahetyksen_tila;
+ALTER TABLE yllapitokohde DROP COLUMN IF EXISTS velho_lahetyksen_vastaus;
+
+ALTER TABLE pot2_paallystekerros DROP COLUMN IF EXISTS velho_lahetyksen_aika;
+ALTER TABLE pot2_paallystekerros DROP COLUMN IF EXISTS velho_rivi_lahetyksen_tila;
+ALTER TABLE pot2_paallystekerros DROP COLUMN IF EXISTS velho_lahetyksen_vastaus;
+
+ALTER TABLE pot2_alusta DROP COLUMN IF EXISTS velho_lahetyksen_aika;
+ALTER TABLE pot2_alusta DROP COLUMN IF EXISTS velho_rivi_lahetyksen_tila;
+ALTER TABLE pot2_alusta DROP COLUMN IF EXISTS velho_lahetyksen_vastaus;
+
+DROP TYPE IF EXISTS velho_lahetyksen_tila_tyyppi;
+DROP TYPE IF EXISTS velho_rivi_lahetyksen_tila_tyyppi;

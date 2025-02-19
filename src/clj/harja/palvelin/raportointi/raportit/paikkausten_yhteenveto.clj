@@ -142,7 +142,7 @@
                       0))
               data)))
 
-(defn koosta-muut-kustannukset [db user urakka-id hoitokauden-alkuvuosi alkupvm loppupvm]
+(defn koosta-muut-kustannukset [db user urakka-id alkupvm loppupvm]
   (let [sankiot-ja-bonukset (laadunseuranta-palvelu/hae-urakan-sanktiot-ja-bonukset db user
                               {:urakka-id urakka-id
                                :alku alkupvm
@@ -155,7 +155,8 @@
 
         ;; Paikkauskustannukset
         paikkauskustannukset (hae-kasin-lisatyt-paikkauskustannukset db {:urakkaid urakka-id
-                                                                         :vuosi hoitokauden-alkuvuosi})
+                                                                         :alkuvuosi (pvm/vuosi alkupvm)
+                                                                         :loppuvuosi (pvm/vuosi loppupvm)})
         sakot-ja-bonukset [{:nimi "Bonukset" :toteutunut-hinta bonukset}
                            {:nimi "Sanktiot" :toteutunut-hinta sanktiot}]
         muut-kustannukset (into [] (remove nil? (concat sakot-ja-bonukset
@@ -196,11 +197,8 @@
   (let [tyomenetelmamaarat (hae-maarat-tyomenetelmittain db parametrit)]
     (into [] (sort-by :nimi (remove #(nil? (:yksikko %)) tyomenetelmamaarat)))))
 
-(defn yhteiset-tiedot [db user urakka-id vuosi mpu?]
+(defn yhteiset-tiedot [db user urakka-id alkupvm loppupvm mpu?]
   (let [urakka (first (urakat-q/hae-urakka db urakka-id))
-        alkupvm (pvm/->pvm (str "01.01." vuosi))
-        loppupvm (pvm/->pvm (str "31.12." vuosi))
-        hoitokauden-alkuvuosi vuosi
         raportin-nimi "Paikkausten yhteenveto"
         parametrit {:urakkaid urakka-id
                     :alkupvm alkupvm
@@ -227,8 +225,7 @@
 
         reikapaikkauskustannukset (when mpu? (koosta-reikapaikkauskustannukset db parametrit))
         reikapaikkauskustannukset (into [] (sort-by :nimi (remove #(nil? (:yksikko %)) reikapaikkauskustannukset)))
-        muut-kustannukset (koosta-muut-kustannukset db user urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
-
+        muut-kustannukset (koosta-muut-kustannukset db user urakka-id alkupvm loppupvm)
         muut-kuin-paikkaus-kustannukset (apply + (map (fn [rivi]
                                                         (if-not (= (:nimi rivi) "Yhteensä")
                                                           (:toteutunut-hinta rivi)
@@ -254,7 +251,7 @@
                      :sheet-nimi "Yhteenveto suunnitellut ja toteutuneet"}
           [{:leveys 1 :otsikko "Tilatut paikkauskustannukset"}
            {:leveys 1 :otsikko "Toteutuneet paikkauskustannukset"}
-           {:leveys 1 :otsikko "Muun, kuin paikkaustyön osuus"}]
+           {:leveys 1 :otsikko "Muun, kuin paikkaustyön osuus (vuodelle kohdistuvia)"}]
           [(yhteenveto-rivi-xf {:tilatut tilatut-kustannukset
                                 :toteutuneet toteutuneet-kustannukset
                                 :muut muut-kuin-paikkaus-kustannukset})]]
@@ -317,11 +314,11 @@
     ;; Palautetaan raportti
     raportti))
 
-(defn suorita-ppu [db user {:keys [urakka-id vuosi] :as parametrit}]
-  (log/debug "Paikkausten yhteenvetoraportti PPU :: suorita urakka_id=" urakka-id " vuosi=" vuosi " parametrit=" parametrit)
-  (yhteiset-tiedot db user urakka-id vuosi false))
+(defn suorita-ppu [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
+  (log/debug "Paikkausten yhteenvetoraportti PPU, parametrit=" parametrit)
+  (yhteiset-tiedot db user urakka-id alkupvm loppupvm false))
 
 
-(defn suorita-mpu [db user {:keys [urakka-id vuosi] :as parametrit}]
-  (log/debug "Paikkausten yhteenvetoraportti MPU :: suorita urakka_id=" urakka-id " vuosi=" vuosi " parametrit=" parametrit)
-  (yhteiset-tiedot db user urakka-id vuosi true))
+(defn suorita-mpu [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
+  (log/debug "Paikkausten yhteenvetoraportti MPU, parametrit=" parametrit)
+  (yhteiset-tiedot db user urakka-id alkupvm loppupvm true))
