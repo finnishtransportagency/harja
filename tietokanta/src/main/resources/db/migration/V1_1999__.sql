@@ -119,17 +119,25 @@ CREATE TABLE paatos_hoitokauden_lopun_hinta
     FOREIGN KEY (luoja) REFERENCES kayttaja (id)
 );
 
+CREATE TYPE indeksikorjauskuukausi AS
+(
+    kuukausi    TEXT,
+    indeksiluku NUMERIC(10, 2)
+);
+
 CREATE TABLE paatos_hoitokauden_indeksikorjaus
 (
     id                               SERIAL PRIMARY KEY,
     urakkaid                         INTEGER        NOT NULL,
     hoitokauden_alkuvuosi            INTEGER        NOT NULL,
-    tavoitehinta                     NUMERIC(10, 2) NOT NULL, -- Hoitokauden lopun indeksikorjattu tavoitehinta
-    tavoitehinnan_muutokset          NUMERIC(10, 2) NOT NULL, -- Summa tavoitehinnan muutosten kokonaisuudesta
-    tavoitehinta_ennen               NUMERIC(10, 2) NOT NULL, --Hoitokauden lopun tavoitehinta ennen hoitokauden lopun indeksikorjausta. Eli tavoitehinta + tavoitehinnan muutokset
-    pistelukujen_muutos              INTEGER,
-    indeksikorotuksen_prosentit      INTEGER,
-    hoitokauden_lopun_indeksikorjaus NUMERIC(10, 2),
+    tavoitehinta                     NUMERIC(10, 2) NOT NULL,  -- Hoitokauden lopun indeksikorjattu tavoitehinta
+    tavoitehinnan_muutokset          NUMERIC(10, 2) NOT NULL,  -- Summa tavoitehinnan muutosten kokonaisuudesta
+    tavoitehinta_ennen               NUMERIC(10, 2) NOT NULL,  --Hoitokauden lopun tavoitehinta ennen hoitokauden lopun indeksikorjausta. Eli tavoitehinta + tavoitehinnan muutokset
+    hoitokauden_kuukaudet            indeksikorjauskuukausi[], -- Kuukauden nimi ja kuukauden pisteluku
+    alkuperainen_pisteluku           NUMERIC(10, 1),            -- Edellisen hoitovuoden syyskuun pisteluku. Esim 105.6
+    pistelukujen_muutos              NUMERIC(10, 1),
+    indeksikorotuksen_prosenttiosuus NUMERIC(10, 1),            -- 2% ylittävä osa
+    hoitokauden_lopun_indeksikorjaus NUMERIC(10, 2),           -- Kokonaissumma indeksikorjauksesta
     luotu                            TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     luoja                            INTEGER        NOT NULL,
     poistettu                        BOOLEAN        NOT NULL DEFAULT FALSE,

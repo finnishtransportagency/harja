@@ -37,6 +37,9 @@
 (defn kk-fmt [kk]
   (get +kuukaudet+ (dec kk)))
 
+(defn kk-pitka-fmt [kk]
+  (get +kuukaudet-pitka-muoto+ (dec kk)))
+
 #?(:cljs
    (do
      (defrecord Aika [tunnit minuutit sekunnit])

@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [harja.tyokalut.yleiset :refer [round2]]))
 
 (def paatostyypit
   [{:nimi "Lupaukset" :tyyppi "bonus" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 1}
@@ -115,9 +116,46 @@
       paatokset)
     ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
     (sort-by :jarjestys
-             (conj
-               (filter #(not= (:nimi %) "Lupaukset") paatokset)
-               {:nimi "Lupaukset" :virhe "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty." :jarjestys 1}))))
+      (conj
+        (filter #(not= (:nimi %) "Lupaukset") paatokset)
+        {:nimi "Lupaukset" :virhe "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty." :jarjestys 1}))))
+
+(defn valmistele-indeksikorjauspaatos [paatokset tavoitehinta tavoitehinnan-muutokset
+                                       hoitokauden-indeksikuukaudet alkuperainen-pisteluku]
+  ;; Päätöksistä täytyy löytyä
+  (if (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) paatokset))
+    ;; Ota mukaan oikea indeksikorjauspäätös, jos ehdot täyttyvät
+    (if (and tavoitehinta tavoitehinnan-muutokset hoitokauden-indeksikuukaudet)
+      (let [;; Laske pistelukujen muutos
+            pisteet (apply + (map #(:indeksiluku %) hoitokauden-indeksikuukaudet))
+            piste-keskiarvo (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet)))
+            pistelukujen-muutos (- piste-keskiarvo alkuperainen-pisteluku)
+            indeksikorotuksen-prosenttiosuus (with-precision 4 (round2 1 (* (/ (- piste-keskiarvo alkuperainen-pisteluku) piste-keskiarvo) 100)))
+            muutosten-summa (if (seq tavoitehinnan-muutokset)
+                              (apply + (map #(:summa %) tavoitehinnan-muutokset))
+                              0)
+            tavoitehinta-ennen (- tavoitehinta muutosten-summa)
+            hoitokauden-lopun-indeksikorjaus (* tavoitehinta-ennen (/ indeksikorotuksen-prosenttiosuus 100))
+            ;; Korvataan koneelta saatu päätös tässä valistellulta
+            indeksipaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) paatokset))
+            indeksipaatos (-> indeksipaatos
+                            (assoc :tavoitehinta tavoitehinta)
+                            (assoc :tavoitehinnan_muutokset tavoitehinnan-muutokset)
+                            (assoc :tavoitehinta_ennen tavoitehinta-ennen)
+                            (assoc :hoitokauden_kuukaudet hoitokauden-indeksikuukaudet)
+                            (assoc :alkuperainen_pisteluku alkuperainen-pisteluku)
+                            (assoc :pistelukujen_muutos pistelukujen-muutos)
+                            (assoc :indeksikorotuksen_prosenttiosuus indeksikorotuksen-prosenttiosuus)
+                            (assoc :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus))
+            paatokset (remove (fn [paatos] (= (:nimi paatos) "Hoitovuoden lopun indeksikorjaus")) paatokset)
+            paatokset (sort-by :jarjestys (conj paatokset indeksipaatos))]
+        paatokset)
+      ;; Ehdot eivät täyttyneet, otetaan indeksipäätökset pois listasta ja lisätään virheilmoitus päätökselle
+      (sort-by :jarjestys
+        (conj
+          (filter #(not= (:nimi %) "Hoitovuoden lopun indeksikorjaus") paatokset)
+          {:nimi "Hoitovuoden lopun indeksikorjaus" :virhe "Päätöksen vaatimia tietoja ei löydetty." :jarjestys 6})))
+    paatokset))
 
 (defn valimistele-tavoitehinnan-alituspaatos [paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kustannukset]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa

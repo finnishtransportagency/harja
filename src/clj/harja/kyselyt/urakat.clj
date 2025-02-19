@@ -4,7 +4,7 @@
 (defqueries "harja/kyselyt/urakat.sql"
   {:positional? true})
 
-(declare hae-urakka hae-urakan-tyyppi hae-urakan-sopimukset hae-urakan-sampo-id hae-yksittainen-urakka hae-urakan-ely
+(declare hae-urakka hae-urakkan-tiedot hae-urakan-tyyppi hae-urakan-sopimukset hae-urakan-sampo-id hae-yksittainen-urakka hae-urakan-ely
   hae-urakat-tyypilla-ja-hallintayksikolla urakan-hallintayksikko)
 
 (defn onko-olemassa? [db id]

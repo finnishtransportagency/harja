@@ -161,13 +161,26 @@ WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
   AND poistettu = FALSE;
 
+-- name: tee1-hoitokauden-indeksikorjaus-paatos<!
+-- Tee hoitokauden indeksikorjaus päätös
+INSERT INTO paatos_hoitokauden_indeksikorjaus (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, tavoitehinnan_muutokset,
+                                               tavoitehinta_ennen, hoitokauden_kuukaudet,
+                                               alkuperainen_pisteluku,  pistelukujen_muutos,  indeksikorotuksen_prosenttiosuus,
+                                               hoitokauden_lopun_indeksikorjaus,      luotu,  luoja)
+                                      VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta, :tavoitehinnan_muutokset,
+                                              :tavoitehinta_ennen, :hoitokauden_kuukaudet::indeksikorjauskuukausi[],
+                                              :alkuperainen_pisteluku, :pistelukujen_muutos, :indeksikorotuksen_prosenttiosuus,
+                                              :hoitokauden_lopun_indeksikorjaus,NOW(), :luoja);
+
 -- name: tee-hoitokauden-indeksikorjaus-paatos<!
 -- Tee hoitokauden indeksikorjaus päätös
 INSERT INTO paatos_hoitokauden_indeksikorjaus (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, tavoitehinnan_muutokset,
-                                               tavoitehinta_ennen, pistelukujen_muutos, indeksikorotuksen_prosentit,
-                                               hoitokauden_lopun_indeksikorjaus, luoja, luotu)
+                                               tavoitehinta_ennen, hoitokauden_kuukaudet,
+                                               alkuperainen_pisteluku, pistelukujen_muutos,
+                                               indeksikorotuksen_prosenttiosuus, hoitokauden_lopun_indeksikorjaus, luoja, luotu)
 VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta, :tavoitehinnan_muutokset, :tavoitehinta_ennen,
-        :pistelukujen_muutos, :indeksikorotuksen_prosentit, :hoitokauden_lopun_indeksikorjaus, :luoja, NOW());
+        (SELECT ARRAY[:hoitokauden_kuukaudet]::indeksikorjauskuukausi[]), :alkuperainen_pisteluku,
+        :pistelukujen_muutos, :indeksikorotuksen_prosenttiosuus, :hoitokauden_lopun_indeksikorjaus, :luoja, NOW());
 
 -- name: poista-hoitokauden-indeksikorjaus-paatos<!
 -- Poista hoitokauden indeksikorjaus päätös
@@ -175,6 +188,12 @@ UPDATE paatos_hoitokauden_indeksikorjaus
 SET poistettu = TRUE,
     poistaja  = :poistaja
 WHERE id = :id;
+
+-- name: hae-hoitokauden-indeksikorjaus-paatos
+SELECT 'Hoitovuoden lopun indeksikorjaus' as nimi, *
+FROM paatos_hoitokauden_indeksikorjaus
+WHERE id = :paatos-id
+  AND poistettu = FALSE;
 
 -- name: hae-hoitokauden-indeksikorjaus-paatokset
 -- Hae hoitokauden indeksikorjauspäätökset

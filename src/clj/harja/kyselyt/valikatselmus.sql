@@ -113,3 +113,10 @@ SELECT s.maara,
            JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka-id AND tpi.id = s.toimenpideinstanssi
  WHERE s.poistettu IS NOT TRUE
    AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE;
+
+-- name: hae-tavoitehinnan-muutokset-hoitokaudelle
+select id, "urakka-id", otsikko, selite, summa
+from tavoitehinnan_oikaisu
+where "urakka-id" = :urakkaid
+  and "hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+  and poistettu is not true;
