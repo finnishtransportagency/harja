@@ -36,6 +36,15 @@
     (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2027))))
     (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2028))))))
 
+(deftest mhu-vuodelle-2024-palautaa-oikein
+  (let [mhu-tyyppi "MHU"
+        urakan-alkuvuosi 2024]
+    (is (= 13 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))
+    (is (= 16 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2025))))
+    (is (= 16 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2026))))
+    (is (= 16 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2027))))
+    (is (= 16 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2028))))))
+
 (deftest mhu-vuodelle-2019-palautaa-oikein
   (let [mhu-tyyppi "MHU"
         urakan-alkuvuosi 2019]
