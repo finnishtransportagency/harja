@@ -2,7 +2,7 @@
 -- Hakee kaikki indeksit
 SELECT nimi, vuosi, kuukausi, arvo
   FROM indeksi
-  	ORDER BY nimi, vuosi, kuukausi
+  	ORDER BY nimi, vuosi, kuukausi;
 
 -- name: hae-indeksi
 -- Hakee indeksin nimellä
@@ -74,3 +74,14 @@ SELECT urakka
 
 -- name: hae-urakan-indeksin-perusluku
 SELECT indeksilaskennan_perusluku(:urakka-id::INTEGER) AS perusluku;
+
+-- name: hae-urakan-hoitovuoden-indeksit-kuukausinimilla
+-- Hae indeksi ja nimeä se kuukauden mukaan
+SELECT vuosi, kuukausi, arvo as indeksiluku
+FROM indeksi
+WHERE (
+    (vuosi = :vuosi AND kuukausi between 10 and 12)
+        OR
+    (vuosi - 1 = :vuosi AND kuukausi between 1 and 9))
+  AND nimi = (SELECT indeksi FROM urakka WHERE id = :urakkaid)
+ORDER BY vuosi, kuukausi;
