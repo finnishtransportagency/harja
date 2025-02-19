@@ -1,4 +1,4 @@
--- Taulu tiemerkintöjen korjauskustannuskille
+-- Taulu tiemerkintöjen korjauskustannuksille
 CREATE TABLE tiemerkinta_korjauskustannukset (
     id serial primary key ,
     urakka integer references urakka (id),

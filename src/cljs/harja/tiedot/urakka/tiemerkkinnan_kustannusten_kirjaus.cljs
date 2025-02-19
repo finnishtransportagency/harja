@@ -13,8 +13,13 @@
 
 (defonce kustannusten-kirjaus-valilehti-nakyvissa? (atom false))
 
+(defn tallenna-tiemerkinnan-kustannukset! [urakka-id kustannukset]
+  ;;(println "urakka-id tal" urakka-id " kustannukset: " kustannukset)
+  (k/post! :tallenna-tiemerkinta-kustannuskirjaukset
+    {:urakka urakka-id
+     :kustannukset kustannukset}))
+
 (defn hae-tiemerkinnan-kustannukset [urakka-id urakka]
-  (println "valittu urakka: " urakka)
   (k/post! :hae-tiemerkinta-kustannuskirjaukset urakka-id))
 
 (def tiemerkintaurakan-kustannukset
