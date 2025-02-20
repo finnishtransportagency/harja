@@ -162,7 +162,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- hae tieosoitteelle geometria, joka voi olla piste tai viiva
-CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
+CREATE OR REPLACE FUNCTION tieosoitteelle_geometria(
   tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
   RETURNS SETOF geometry
 AS $$
@@ -199,7 +199,7 @@ BEGIN
    losa_ := tmp_osa;
    let_ := tmp_et;
  END IF;
- FOR g IN SELECT tierekisteriosoitteelle_viiva(tie_, aosa_, aet_, losa_, let_)
+ FOR g IN SELECT tieosoitteelle_geometria(tie_, aosa_, aet_, losa_, let_)
  LOOP
    RETURN NEXT g;
  END LOOP;
