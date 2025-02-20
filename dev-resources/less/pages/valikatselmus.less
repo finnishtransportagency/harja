@@ -245,6 +245,7 @@ div.valikatselmus-yhteenveto {
     padding: 6px 12px;
     margin-top: 0.375rem;
     margin-bottom: 0.375rem;
+    font-weight: 400;
   }
   .lupaukset-linkki {
     flex-grow: 1;
@@ -263,18 +264,45 @@ div.valikatselmus-yhteenveto {
     margin-bottom: 1rem;
   }
   .panel {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
+  }
+  .kattohinta-info {
+    margin-top: 1.5rem;
+    .komponentin-input {
+      width: 196px;
+      border: 1px solid @black-lighter;
+      font-size: 14px;
+      font-weight: 400;
+      text-align: left;
+    }
+    label {
+      margin-top: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: @black-light;
+    }
+    .sisainen-label, .black-lighter {
+      color: @black-light;
+    }
+  }
+  .info-laatikko {
+    font-weight: 400;
+    .infolaatikon-teksti {
+      padding-top: 8px;
+      padding-bottom: 8px;
+      line-height: 24px;
+    }
   }
   .nappi-ensisijainen {
     padding: 7px 12px 7px 8px;
     font-size: 0.875rem;
-    color: #E0EDF9;
+    color: @blue-lighter;
   }
   .nappi-toissijainen {
     padding: 7px 12px 7px 8px;
     font-size: 0.875rem;
-    color: #004D99;
-    border-color: #004D99;
+    color: @blue-dark;
+    border-color: @blue-dark;
   }
   .livi-grid .muokkaustoiminnot .nappi-toissijainen {
     padding: 7px 12px 7px 8px;
@@ -286,7 +314,7 @@ div.valikatselmus-yhteenveto {
     border: 1px solid @white-darker;
   }
   thead {
-    border-bottom: 1px solid #858585;
+    border-bottom: 1px solid @black-lighter;
   }
   .livi-grid {
     table {
@@ -295,7 +323,7 @@ div.valikatselmus-yhteenveto {
       }
       tr.tyhja {
         text-align: left;
-        color: #5C5C5C;
+        color: @harmaa-tumma;
       }
       td {
         vertical-align: middle;
@@ -303,7 +331,7 @@ div.valikatselmus-yhteenveto {
     }
     tr.muokataan {
       td {
-        background-color: #FFFFFF;
+        background-color: @white;
         padding-top: 0.5rem;
         padding-bottom: 0.5rem;
         .livi-alasveto, span input,textarea {
@@ -311,21 +339,39 @@ div.valikatselmus-yhteenveto {
           border-radius: 4px;
           margin: auto;
         }
+        .kentta-text {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
       }
       .alasveto-gridin-kentta .nappi-alasveto{
         height: 36px;
       }
       input {
         height: 36px;
+        text-align: right;
       }
       .livicon-trash {
         font-size: 20px;
         color: @red-default;
       }
+      .numero {
+        input {
+          padding: 0.5rem !important;
+        }
+      }
     }
     textarea {
       padding: 0.5rem 0.5rem;
     }
+  }
+  .livi-grid .sisaltaa-virheen {
+    border-bottom: solid 1px #D6D6D6 !important;
+    input, textarea, button {
+      border: solid 2px #B40A14 !important;
+    }
+
   }
 }
 

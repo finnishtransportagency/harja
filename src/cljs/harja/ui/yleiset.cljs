@@ -850,7 +850,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
            :onnistunut (ikonit/livicon-check)
            :vahva-ilmoitus (ikonit/status-info-inline-svg +vari-black-light+)
            :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
-        [:div {:style {:width "95%" :padding-top "14px" :padding-bottom "14px"}}
+        [:div.infolaatikon-teksti
          [:div {:style {:white-space "pre-line" :color +vari-black-default+}}
           ensisijainen-viesti]
          (when toissijainen-viesti
