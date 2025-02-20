@@ -146,7 +146,7 @@
 
                  ;; -- Front-end tilan hallinta
                  [webjure/tuck "20181204"]
-                 [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck]]
+                 [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck figwheel]]
 
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
