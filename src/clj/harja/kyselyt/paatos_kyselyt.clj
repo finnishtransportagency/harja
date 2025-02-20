@@ -13,7 +13,9 @@
   hae-kattohinta-paatokset tee-kattohinta-paatos<! hae-kattohinta-paatos poista-kattohinta-paatos<!
   tee-hoitokauden-indeksikorjaus-paatos<! hae-hoitokauden-indeksikorjaus-paatos poista-hoitokauden-indeksikorjaus-paatos<! hae-hoitokauden-indeksikorjaus-paatokset
   tee-hoitokauden-lopun-hinta-paatos<! hae-hoitokauden-lopun-hintapaatos poista-hoitokauden-lopun-hinta-paatos<! hae-hoitokauden-lopun-hinta-paatokset
-  hae-hoitokauden-lopun-indeksikorjaus)
+  tee-hoidonjohtopalkkio-paatos<! hae-hoidonjohtopalkkiopaatos poista-hoidonjohtopalkkio-paatos<! hae-hoidonjohtopalkkiopaatokset
+  hae-hoitokauden-lopun-indeksikorjaus
+  hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle)
 
 (defn heita-virhe [viesti] (throw+ {:type "Error"
                                     :virheet {:koodi "ERROR" :viesti viesti}}))

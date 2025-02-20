@@ -91,7 +91,7 @@ WHERE jh."urakka-id" = :urakka-id;
 SELECT id AS "toimenkuva-id",
        toimenkuva
 FROM johto_ja_hallintokorvaus_toimenkuva
-WHERE "urakka-id" = :urakka-id
+WHERE "urakka-id" = :urakka-id;
 
 -- name:lisaa-oma-johto-ja-hallintokorvaus-toimenkuva<!
 INSERT INTO johto_ja_hallintokorvaus_toimenkuva (toimenkuva, "urakka-id")

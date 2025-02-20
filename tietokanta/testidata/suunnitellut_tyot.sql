@@ -1854,7 +1854,8 @@ DO $$
 DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP', 'MHU ja HJU Hoidon johto'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301', '23151'];
-  urakat TEXT[] := ARRAY ['Ivalon MHU testiurakka (uusi)', 'Iin MHU 2021-2026', 'Tampereen MHU 2022-2026', 'Raahen MHU 2023-2028', 'UUD Raasepori  MHU 2021- 2026, P'];
+  urakat TEXT[] := ARRAY ['Ivalon MHU testiurakka (uusi)', 'Iin MHU 2021-2026', 'Tampereen MHU 2022-2026',
+      'Raahen MHU 2023-2028', 'UUD Raasepori  MHU 2021- 2026, P', 'POP MHU Kajaani 2024-2029', 'POP MHU Suomussalmi 2024-2029'];
   urakan_nimi TEXT;
   i INTEGER;
 BEGIN
