@@ -16,7 +16,7 @@
             [clojure.java.jdbc :as jdbc]
             [harja.domain.tierekisteri :as tr-domain])
   (:import (net.postgis.jdbc PGgeometry)
-           (net.postgis.jdbc.geometry LineString MultiLineString Point)))
+           (net.postgis.jdbc.geometry MultiLineString Point)))
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture tietokantakomponentti-fixture))
 
@@ -447,7 +447,7 @@
 
     ;; Ajolle saatiin muodostettua geometria
     (is (instance? PGgeometry (:sijainti tallennettava)))
-    (is (instance? LineString (.getGeometry (:sijainti tallennettava))))))
+    (is (instance? Point (.getGeometry (:sijainti tallennettava))))))
 
 (deftest tarkastus-trvali-jossa-yksi-sijainti
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi (luo-testitietokanta)
@@ -466,7 +466,7 @@
 
     ;; Ajolle saatiin muodostettua geometria
     (is (instance? PGgeometry (:sijainti tallennettava)))
-    (is (instance? LineString (.getGeometry (:sijainti tallennettava))))))
+    (is (instance? Point (.getGeometry (:sijainti tallennettava))))))
 
 (deftest tarkastus-jossa-kaikki-mittaukset-menee-kantaan-oikein
   (let [tarkastusajo-id 666
