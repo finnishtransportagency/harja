@@ -125,8 +125,7 @@
       @tiedot/valinnat
       [:span
        (if haku-kaynnissa?
-         [:div.ajax-loader-valistys
-          [ajax-loader "Haetaan toimenpiteitä"]]
+         [ajax-loader "Haetaan toimenpiteitä"]
          [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet])])))
 
 (defc kokonaishintaiset []

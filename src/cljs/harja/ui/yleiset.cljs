@@ -51,7 +51,7 @@
   ([] (ajax-loader nil))
   ([viesti] (ajax-loader viesti nil))
   ([viesti {:keys [luokka sama-rivi?] :as opts}]
-   [:div {:class (str "ajax-loader " (when (:luokka opts) (:luokka opts)))}
+   [:div {:class (str "ajax-loader-valistys ajax-loader " (when (:luokka opts) (:luokka opts)))}
     [:img {:src "images/ajax-loader.gif"}]
     (when viesti
       (if sama-rivi?
@@ -63,7 +63,7 @@
   ([] (ajax-loader-pieni nil))
   ([viesti] (ajax-loader-pieni viesti nil))
   ([viesti opts]
-   [:div {:class (str "ajax-loader inline-block " (when (:luokka opts) (:luokka opts)))
+   [:div {:class (str "ajax-loader-valistys ajax-loader inline-block " (when (:luokka opts) (:luokka opts)))
           :style (when-let [tyyli (:style opts)]
                    tyyli)}
     [:img {:src "images/ajax-loader.gif" :style {:height 16}}]
