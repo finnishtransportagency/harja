@@ -414,7 +414,7 @@ DECLARE
     losa         INTEGER;
     let          INTEGER;
     loppukohta   tr_osan_kohta;
-    geomertria   GEOMETRY;
+    geometria   GEOMETRY;
 BEGIN
     SELECT a.tie,
            a.osa                                                       as alkuosa,
@@ -446,9 +446,13 @@ BEGIN
         loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
         let := loppukohta.etaisyys;
 
-        geomertria := tieosoitteelle_viiva(r.tie, aosa, aet, losa, let);
-        --RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geomertria;
-        RETURN ROW (r.tie, aosa, aet, losa, let, geomertria);
+        geometria := tieosoitteelle_viiva(r.tie, aosa, aet, losa, let);
+        -- jos saatiin geometriaksi NULL ja todetaan pistemäinen tieosoite, muodostetaan pistegeometria
+        IF geometria IS NULL AND aosa = losa AND aet = let THEN
+            geometria := tierekisteriosoitteelle_piste(r.tie, aosa, aet);
+        END IF;
+        --RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geometria;
+        RETURN ROW (r.tie, aosa, aet, losa, let, geometria);
 
     END IF;
 END;
