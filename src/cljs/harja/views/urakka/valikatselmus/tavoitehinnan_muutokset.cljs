@@ -44,8 +44,7 @@
                                                             0
                                                             (vals @hoitokauden-oikaisut-atom))
                                                           2
-                                                          true))
-        muutettu-kattohinta (atom nil)]
+                                                          true))]
     [:div
      [grid/muokkaus-grid
       (merge {:tyhja "Ei muutoksia tavoitehintaan"
@@ -111,15 +110,7 @@
         :validoi [[:ei-tyhja "Täytä arvo"]]
         :leveys 2
         :elementin-id (str "summa-" uusi-id)}]
-      hoitokauden-oikaisut-atom]
-     (when @hoitokauden-oikaisut-atom
-       [:div.kattohinta-info [yleiset/info-laatikko :vahva-ilmoitus "Jos tavoitehinnan muutosten myötä myös kattohinta muuttuu, syötä muuttunut kattohinta."]
-        [kentat/tee-otsikollinen-kentta {:otsikko "Muuttunut kattohinta"
-                                         :kentta-params {:tyyppi :euro
-                                                         :vayla-tyyli? true
-                                                         :input-luokka "maara-input"}
-                                         :arvo-atom muutettu-kattohinta
-                                         :luokka ""}]])]))
+      hoitokauden-oikaisut-atom]]))
 
 (defn kattohinnan-oikaisu
   "Kattohinnan oikaisua tarvitsevat urkat, jotka ovat alkaneet -19-20 vuosina. Muille kattohinta on 110% tavoitehinnasta."
