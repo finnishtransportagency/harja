@@ -111,7 +111,7 @@ CREATE TABLE paatos_hoitokauden_lopun_hinta
     urakkaid                         INTEGER        NOT NULL,
     hoitokauden_alkuvuosi            INTEGER        NOT NULL,
     tavoitehinta_ennen               NUMERIC(10, 2) NOT NULL,
-    tavoitehinta_jalkeen              NUMERIC(10, 2) NOT NULL,
+    tavoitehinta_jalkeen             NUMERIC(10, 2) NOT NULL,
     tavoitehinnan_muutokset          NUMERIC(10, 2) NOT NULL,
     hoitokauden_lopun_indeksikorjaus NUMERIC(10, 2),
     kattohinta                       NUMERIC(10, 2),
@@ -137,9 +137,9 @@ CREATE TABLE paatos_hoitokauden_indeksikorjaus
     tavoitehinnan_muutokset          NUMERIC(10, 2) NOT NULL,  -- Summa tavoitehinnan muutosten kokonaisuudesta
     tavoitehinta_ennen               NUMERIC(10, 2) NOT NULL,  --Hoitokauden lopun tavoitehinta ennen hoitokauden lopun indeksikorjausta. Eli tavoitehinta + tavoitehinnan muutokset
     hoitokauden_kuukaudet            indeksikorjauskuukausi[], -- Kuukauden nimi ja kuukauden pisteluku
-    alkuperainen_pisteluku           NUMERIC(10, 1),            -- Edellisen hoitovuoden syyskuun pisteluku. Esim 105.6
+    alkuperainen_pisteluku           NUMERIC(10, 1),           -- Edellisen hoitovuoden syyskuun pisteluku. Esim 105.6
     pistelukujen_muutos              NUMERIC(10, 1),
-    indeksikorotuksen_prosenttiosuus NUMERIC(10, 1),            -- 2% ylittävä osa
+    indeksikorotuksen_prosenttiosuus NUMERIC(10, 1),           -- 2% ylittävä osa
     hoitokauden_lopun_indeksikorjaus NUMERIC(10, 2),           -- Kokonaissumma indeksikorjauksesta
     luotu                            TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     luoja                            INTEGER        NOT NULL,
@@ -150,15 +150,18 @@ CREATE TABLE paatos_hoitokauden_indeksikorjaus
 
 CREATE TABLE paatos_hoidonjohtopalkkio
 (
-    id                    SERIAL PRIMARY KEY,
-    urakkaid              INTEGER        NOT NULL,
-    hoitokauden_alkuvuosi INTEGER        NOT NULL,
-    tavoitehinta_ennen    NUMERIC(10, 2) NOT NULL,
-    hoidonjohtopalkkio    NUMERIC(10, 2), -- Tavoitehintaan vaikuttavien hoidonjohtopalkkioiden määrä
-    tavoitehinta_jalkeen  NUMERIC(10, 2) NOT NULL,
-    luotu                 TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    luoja                 INTEGER        NOT NULL,
-    poistettu             BOOLEAN        NOT NULL DEFAULT FALSE,
-    poistaja              INTEGER,
+    id                         SERIAL PRIMARY KEY,
+    urakkaid                   INTEGER        NOT NULL,
+    hoitokauden_alkuvuosi      INTEGER        NOT NULL,
+    tavoitehinta               NUMERIC(10, 2) NOT NULL, -- Hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia
+    tarjouksen_tavoitehinta    NUMERIC(10, 2) NOT NULL, -- Tavoitehinta, joka tulee tarjousdokumenteista eikä esim kustiksesta
+    hoidonjohtopalkkio         NUMERIC(10, 2),          -- Hoitokauden indeksikorjattu hoidonjohtopalkkio
+    muutosprosentti            NUMERIC(10, 1) NOT NULL, -- Kuinka monta prosenttia tavoitehinta on suurempi, kuin tarjouksen_tavoitehinta
+    hoidonjohtopalkkio_muutos NUMERIC(10, 2) NOT NULL, -- Kuinka monta euroa hoidonjohtopalkkion pitää muuttua verrattuna alkuperäiseen suunnitelmaan
+    kulu_id                    INTEGER,                 -- Muuttuneesta hoidonjohtopalkkiosta tehdään kulu
+    luotu                      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    luoja                      INTEGER        NOT NULL,
+    poistettu                  BOOLEAN        NOT NULL DEFAULT FALSE,
+    poistaja                   INTEGER,
     FOREIGN KEY (luoja) REFERENCES kayttaja (id)
 );
