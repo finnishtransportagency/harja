@@ -213,9 +213,8 @@
      (if (or
            liikennetapahtumien-haku-kaynnissa?
            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
-       
-       [:div.ajax-loader-valistys
-        [ajax-loader-pieni (str "Haetaan tietoja...")]]
+
+       [ajax-loader-pieni "Haetaan tietoja..."]
 
        ;; Tiedot ovat ladanneet 
        [lomake/lomake
@@ -642,10 +641,9 @@
          lataa-aloitustiedot
          liikennetapahtumien-haku-kaynnissa?
          liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
-     
-     [:div.ajax-loader-valistys
-      [ajax-loader-pieni "Päivitetään listaa.."]]
-     
+
+     [ajax-loader-pieni "Päivitetään listaa.."]
+
      [grid/grid
       {:otsikko [liikennetapahtumien-yhteenveto app]
        :tunniste (juxt ::lt/id ::lt-alus/id)
