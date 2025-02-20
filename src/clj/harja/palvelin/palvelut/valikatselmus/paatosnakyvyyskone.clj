@@ -296,7 +296,35 @@
         (filter #(not= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") paatokset)
         {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :virhe "Päätöksen vaatimia tietoja ei löydetty." :jarjestys 8}))))
 
+(defn valmistele-hoidonjohtopalkkionmuutospaatos [paatokset tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio]
+  ;; Varmistetaan, että tarvittavat tiedot on olemassa
+  (if (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
+    (let [paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
+          muutosprosentti (* (- (/ tavoitehinta tarjouksen-tavoitehinta) 1) 100)
+          hoidonjohtopalkkio-muutos (* hoidonjohtopalkkio muutosprosentti)
+          ;; Täytetään pakolliset tiedot
+          paatos (-> paatos
+                        (assoc :tavoitehinta tavoitehinta)
+                        (assoc :tarjouksen_tavoitehinta tarjouksen-tavoitehinta)
+                        (assoc :hoidonjohtopalkkio hoidonjohtopalkkio)
+                        (assoc :muutosprosentti muutosprosentti)
+                        (assoc :hoidonjohtopalkkio_muutos hoidonjohtopalkkio-muutos))
+
+          paatokset (remove
+                      (fn [paatos]
+                        (= (:nimi paatos) "Hoidonjohtopalkkion muutos"))
+                      paatokset)
+          paatokset (sort-by :jarjestys (conj paatokset paatos))]
+      paatokset)
+    ;; Jos tarvittavia tietoja ei ole, niin varoitetaan siitä käyttäjää
+    (sort-by :jarjestys
+      (conj
+        (filter #(not= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset)
+        {:nimi "Hoidonjohtopalkkion muutos" :virhe "Päätöksen vaatimia tietoja ei löydetty." :jarjestys 16}))))
+
 (defn nimi->avain [nimi]
   (keyword (str/lower-case (-> nimi
+                             (str/replace #"ö" "o")
+                             (str/replace #"ä" "a")
                              (str/replace #" " "-")
                              (str/replace #"--" "-")))))

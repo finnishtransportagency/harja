@@ -117,7 +117,7 @@
    :luoja luoja})
 
 (defn lopun-hintapaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
-                    tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kayttajaid]
+                         tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kayttajaid]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
    :tavoitehinta_ennen tavoitehinta_ennen
@@ -126,6 +126,18 @@
    :tavoitehinta_jalkeen tavoitehinta_jalkeen
    :kattohinta kattohinta
    :luoja kayttajaid})
+
+(defn hoidojohtopalkkiomuutospaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+                                      muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id luoja]
+  {:urakkaid urakkaid
+   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+   :tavoitehinta tavoitehinta
+   :tarjouksen_tavoitehinta tarjouksen_tavoitehinta
+   :muutosprosentti muutosprosentti
+   :hoidonjohtopalkkio hoidonjohtopalkkio
+   :hoidonjohtopalkkio_muutos hoidonjohtopalkkio_muutos
+   :kulu_id kulu_id
+   :luoja luoja})
 
 
 (defn testaa-lupauspaatostiedot [paatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
@@ -177,7 +189,7 @@
   (is (= urakoitsijan-prosentti (:urakoitsijan_prosentti paatos)))
   (is (= tilaaja-maksaa (:tilaaja_maksaa paatos)))
   (is (= urakoitsija-maksaa (:urakoitsija_maksaa paatos)))
-  #_ (is (= siirto (:siirto paatos)))                       ;; Siirron rooli vähän epäselvä, ei vielä varmisteta
+  #_(is (= siirto (:siirto paatos))) ;; Siirron rooli vähän epäselvä, ei vielä varmisteta
   (is (= kulu-id (:kulu_id paatos)))
   (is (= luoja (:luoja paatos))))
 
@@ -209,7 +221,7 @@
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-lopun-hintapaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
-                    tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kayttajaid]
+                                tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kayttajaid]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
   (is (= tavoitehinta_ennen (:tavoitehinta_ennen paatos)))
@@ -219,6 +231,16 @@
   (is (= (int kattohinta) (int (:kattohinta paatos))))
   (is (= kayttajaid (:luoja paatos))))
 
+(defn testaa-hoidojohtopalkkiomuutospaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+                                             muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos luoja]
+  (is (= urakkaid (:urakkaid paatos)))
+  (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
+  (is (= tavoitehinta (:tavoitehinta paatos)))
+  (is (= tarjouksen_tavoitehinta (:tarjouksen_tavoitehinta paatos)))
+  (is (= muutosprosentti (:muutosprosentti paatos)))
+  (is (= hoidonjohtopalkkio (:hoidonjohtopalkkio paatos)))
+  (is (= hoidonjohtopalkkio_muutos (:hoidonjohtopalkkio_muutos paatos)))
+  (is (= luoja (:luoja paatos))))
 
 ;; Aloitetaan lupauksista
 (deftest kysely-tee-lupauksetpaatos-bonus-onnistuu-test
@@ -639,10 +661,10 @@
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id kayttajaid)
         vastaus (try
-                             (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
-                                           valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
-                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-ylityspaatos +kayttaja-jvh+ paatos))
-                             (catch Exception e e))
+                  (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-ylityspaatos +kayttaja-jvh+ paatos))
+                  (catch Exception e e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :tavoitehinta-ylitys)]
     (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
     (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")))
@@ -811,7 +833,7 @@
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
         tavoitehinta 2000000M
-        hoitokauden-lopun-indeksikorjaus 40000M             ;
+        hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
         tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
         hoitokauden-kuukaudet [["Lokakuu 2021" 112.4] ["Marraskuu 2021" 112.5]
@@ -839,15 +861,15 @@
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
         tavoitehinta 2000000M
-        hoitokauden-lopun-indeksikorjaus 40000M             ;
+        hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
         tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
         hoitokauden-kuukaudet [["Lokakuu 2021" 112.4] ["Marraskuu 2021" 112.5]
-                                ["Joulukuu 2021" 112.6] ["Tammikuu 2022" 112.7]
-                                ["Helmikuu 2022" 112.8] ["Maaliskuu 2022" 112.9]
-                                ["Huhtikuu 2022" 113.0] ["Toukokuu 2022" 113.1]
-                                ["Kesäkuu 2022" 113.2] ["Heinäkuu 2022" 113.3]
-                                ["Elokuu 2022" 113.4] ["Syyskuu 2022" 113.5]]
+                               ["Joulukuu 2021" 112.6] ["Tammikuu 2022" 112.7]
+                               ["Helmikuu 2022" 112.8] ["Maaliskuu 2022" 112.9]
+                               ["Huhtikuu 2022" 113.0] ["Toukokuu 2022" 113.1]
+                               ["Kesäkuu 2022" 113.2] ["Heinäkuu 2022" 113.3]
+                               ["Elokuu 2022" 113.4] ["Syyskuu 2022" 113.5]]
 
         alkuperainen-pisteluku 112.5
         pistelukujen-muutos 5.9
@@ -875,7 +897,7 @@
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
         tavoitehinta 2000000M
-        hoitokauden-lopun-indeksikorjaus 40000M             ;
+        hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
         tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
         hoitokauden-kuukaudet [["Lokakuu 2021" 112.4] ["Marraskuu 2021" 112.5]
@@ -892,10 +914,10 @@
                  hoitokauden-kuukaudet alkuperainen-pisteluku pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         vastaus (try
-                    (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
-                                  valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
-                      (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
-                    (catch Exception e e))
+                  (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
+                  (catch Exception e e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)]
 
     (is (= (bigdec alkuperainen-pisteluku) (:alkuperainen_pisteluku tallennettu-paatos)) "Alkuperainen pisteluku täsmää.")
@@ -907,7 +929,7 @@
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tavoitehinta 2000000M
-        hoitokauden-lopun-indeksikorjaus 40000M             ;
+        hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
         tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
         hoitokauden-kuukaudet [["Lokakuu 2021" 112.4] ["Marraskuu 2021" 112.5]
@@ -924,10 +946,10 @@
                  hoitokauden-kuukaudet alkuperainen-pisteluku pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         vastaus (try
-                       (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
-                                     valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
-                         (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
-                       (catch Exception e e))
+                  (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
+                  (catch Exception e e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)
         poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-indeksikorjauspaatos +kayttaja-jvh+ tallennettu-paatos)
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :hoitovuoden-lopun-indeksikorjaus)]
@@ -991,11 +1013,11 @@
                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kayttajaid)
 
         vastaus (try
-                          (with-redefs [;; Feikataan vastaukset
-                                        valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta_jalkeen)
-                                        valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit] kattohinta)]
-                            (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ paatos))
-                          (catch Exception e e))
+                  (with-redefs [;; Feikataan vastaukset
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta_jalkeen)
+                                valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit] kattohinta)]
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ paatos))
+                  (catch Exception e e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)]
     (testaa-lopun-hintapaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
       tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kayttajaid)))
@@ -1024,4 +1046,99 @@
     (is (= "Hoitovuoden lopun tavoite- ja kattohinta" (:nimi poistettu-paatos)))
     (is (not (nil? (:virhe poistettu-paatos))))))
 
+(deftest kysely-hoidonjohtopalkkion-muutospaatos-lisays-onnistuu-test
+  (let [;; Hae -24 alkava urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        tavoitehinta 2100000M
+        tarjouksen_tavoitehinta 2000000M
+        muutosprosentti (* (- (/ tavoitehinta tarjouksen_tavoitehinta) 1) 100)
+        hoidonjohtopalkkio 40000M
+        hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
+        kulu_id 1
 
+        paatos (hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+                 muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
+
+        vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid paatos)]
+    (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+      muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)))
+
+
+(deftest kysely-hoidonjohtopalkkion-muutospaatos-poisto-onnistuu-test
+  (let [;; Hae -24 alkava urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        tavoitehinta 2100000M
+        tarjouksen_tavoitehinta 2000000M
+        muutosprosentti (* (- (/ tavoitehinta tarjouksen_tavoitehinta) 1) 100)
+        hoidonjohtopalkkio 40000M
+        hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
+        kulu_id 1
+
+        paatos (hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+                 muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
+
+        vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid paatos)
+        _ (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+            muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)
+
+        ;; Poistetaan päätös
+        poistovastaus (paatos-kyselyt/poista-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid kayttajaid (:id vastaus))]
+    (is (= true (:poistettu poistovastaus)))
+    (is (= kayttajaid (:poistaja poistovastaus)))))
+
+(deftest rajapinta-hoidonjohtopalkkion-muutospaatos-lisays-onnistuu-test
+  (let [;; Hae -24 alkava urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        tavoitehinta 2100000M
+        tarjouksen_tavoitehinta 2000000M
+        muutosprosentti (* (- (/ tavoitehinta tarjouksen_tavoitehinta) 1) 100)
+        hoidonjohtopalkkio 40000M
+        hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
+        kulu_id 1
+
+        paatos (hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+                 muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
+
+        vastaus (try
+                  (with-redefs [;; Feikataan vastaukset
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                lupaus-palvelu/maarita-urakan-tavoitehinta (fn [db urakkaid hoitokauden-alkuvuosi] tarjouksen_tavoitehinta)
+                                paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle (fn [db hakuparametrit] {:budjetoitu_summa_indeksikorjattu hoidonjohtopalkkio})]
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ paatos))
+                  (catch Exception e e))
+        _ (println "vastaus:" vastaus)
+        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoidonjohtopalkkion-muutos)
+        _ (println "tallennettu-paatos:" tallennettu-paatos)]
+    (testaa-hoidojohtopalkkiomuutospaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+      muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)))
+
+(deftest rajapinta-hoidonjohtopalkkion-muutospaatos-poisto-onnistuu-test
+  (let [;; Hae -24 alkava urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        tavoitehinta 2100000M
+        tarjouksen_tavoitehinta 2000000M
+        muutosprosentti (* (- (/ tavoitehinta tarjouksen_tavoitehinta) 1) 100)
+        hoidonjohtopalkkio 40000M
+        hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
+        kulu_id 1
+
+        paatos (hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+                 muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
+        ;; Lisätään päätös suoralla kyselyllä
+        uusi-paatos (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid paatos)
+        _ (println "uusi-paatos:" uusi-paatos)
+        ;; Poistetaan päätös rajapinnan kautta
+        poisto-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ uusi-paatos)
+        poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :hoidonjohtopalkkion-muutos)
+        _ (println "poistettu-paatos:" poistettu-paatos)]
+    ;; Päätös on poistettu, joten sitä ei enää löydy
+    (is (= "Hoidonjohtopalkkion muutos" (:nimi poistettu-paatos)))
+    (is (not (nil? (:virhe poistettu-paatos))))))

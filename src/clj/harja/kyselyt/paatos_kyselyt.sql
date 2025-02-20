@@ -214,10 +214,10 @@ WHERE urakkaid = :urakkaid
 
 --name: tee-hoidonjohtopalkkio-paatos<!
 -- Tee hoidonjohtopalkkio päätös
-INSERT INTO paatos_hoidonjohtopalkkio (urakkaid, hoitokauden_alkuvuosi, tavoitehinta_ennen, hoidonjohtopalkkio,
-                                       tavoitehinta_jalkeen, luoja, luotu)
-VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta_ennen, :hoidonjohtopalkkio, :tavoitehinta_jalkeen,
-        :luoja, NOW());
+INSERT INTO paatos_hoidonjohtopalkkio (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, tarjouksen_tavoitehinta, hoidonjohtopalkkio,
+                                       muutosprosentti, hoidonjohtopalkkio_muutos, kulu_id, luoja, luotu)
+VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta, :tarjouksen_tavoitehinta, :hoidonjohtopalkkio,
+        :muutosprosentti, :hoidonjohtopalkkio_muutos, :kulu_id, :luoja, NOW());
 
 --name: poista-hoidonjohtopalkkio-paatos<!
 -- Poista hoidonjohtopalkkio päätös
@@ -234,6 +234,13 @@ WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
   AND poistettu = FALSE;
 
+-- name: hae-hoidonjohtopalkkiopaatos
+-- Hae hoidonjohtopalkkiopäätökset
+SELECT 'Hoidonjohtopalkkion muutos' as nimi, *
+FROM paatos_hoidonjohtopalkkio
+WHERE id = :paatos-id
+  AND poistettu = FALSE;
+
 -- name: hae-hoitokauden-lopun-indeksikorjaus
 -- single?: true
 -- Jos hoitokauden indeksikorjaus on tehty, niin hae se
@@ -242,3 +249,20 @@ FROM paatos_hoitokauden_indeksikorjaus
 WHERE hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
  AND urakkaid = :urakkaid
  AND poistettu = FALSE;
+
+-- name: hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle
+-- single?: true
+SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
+       SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu
+from kustannusarvioitu_tyo kt
+     JOIN sopimus s ON kt.sopimus = s.id AND s.urakka = :urakkaid
+WHERE kt.toimenpideinstanssi = (SELECT tpi.id AS id
+                                FROM toimenpideinstanssi tpi
+                                         JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                                         JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id
+                                WHERE tpi.urakka = :urakkaid
+                                  AND tpk2.koodi = '23150'
+                                limit 1)
+  AND kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'G - Hoidonjohtopalkkio')
+  AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+GROUP BY kt.toimenpideinstanssi, kt.tehtavaryhma;

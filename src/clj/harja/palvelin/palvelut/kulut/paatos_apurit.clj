@@ -106,6 +106,8 @@
                               "55c920e7-5656-4bb0-8437-1999add714a3" ; Tavoitepalkkio
                               (= :kattohinnan-ylitys paatoksen-tyyppi)
                               "be34116b-2264-43e0-8ac8-3762b27a9557"
+                              (= :hoidonjohtopalkkion-muutos paatoksen-tyyppi)
+                              "0ef0b97e-1390-4d6c-bbc4-b30536be8a68" ;; G - Hoidonjohtopalkkio
                               :else nil)
         ;; Haetaan avaimen perusteella tehtäväryhmä
         tehtavaryhma (first (kulut-q/hae-tehtavaryhman-tiedot-tunnisteella db {:tunniste tehtavaryhman-avain}))
@@ -117,6 +119,8 @@
                      "Välikatselmuksessa luotu kulu. Tavoitehinta alitettiin. Urakoitsijalle maksetaan tavoitepalkkiota."
                      (= :kattohinnan-ylitys paatoksen-tyyppi)
                      "Välikatselmuksessa luotu kulu. Kattohinnan ylitys. Urakoitsija maksaa hyvitystä."
+                     (= :hoidonjohtopalkkion-muutos paatoksen-tyyppi)
+                     "Välikatselmuksessa luotu kulu. Hoidonjohtopalkkion muutos. Tilaaja maksaa."
                      :else nil)
         ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle
         laskutuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (:hoitokauden_alkuvuosi paatos)) 9 15))

@@ -332,3 +332,41 @@
             (throw (Exception. "Hoidokauden lopun hintapäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
         vastaus (poista-hoitokauden-lopun-hinta-paatos<! db {:poistaja kayttajaid :id paatosid})]
     vastaus))
+
+(defn tee-hoidonjohtopalkkiomuutospaatos
+  "Hoindojohtopalkkion muutospäätöksen mäppi:
+   {:urakkaid <urakkaid>
+   :hoitokauden_alkuvuosi <hoitokauden-alkuvuosi>
+   :tavoitehinta <eurot>
+   :tarjouksen_tavoitehinta <eurot>
+   :hoidonjohtopalkkio <eurot>
+   :muutosprosentti <prosentti>
+   :hoidonjohtopalkkio_muutos <euro>
+   :kulu_id <id>
+   :luoja <luoja>}"
+  [db urakkaid paatos]
+  ;; Varmistetaan, että tarvittavat tiedot on annettu
+  (println "Tee-hoindonjohtopalkkiomuutospaatos :: paatos" paatos)
+  (let [validaatio #{}
+        ;; Validoi perustietojen pakollisuus
+        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:tavoitehinta paatos)
+                         (:tarjouksen_tavoitehinta paatos) (:hoidonjohtopalkkio paatos) (:muutosprosentti paatos)
+                         (:hoidonjohtopalkkio_muutos paatos) (:kulu_id paatos) (:luoja paatos))
+                     validaatio
+                     (conj validaatio "Puutteelliset hoidonjohtopalkkionmuutospäätöstiedot."))]
+
+    (if (seq validaatio)
+      (heita-virhe (str "Hoitokauden lopun hintapäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
+      (tee-hoidonjohtopalkkio-paatos<! db paatos))))
+
+
+(defn poista-hoidonjohtopalkkiomuutospaatos [db urakkaid kayttajaid paatosid]
+  (let [;; Varmistetaan ensin, että hoitokauden lopun hintapaatos löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
+        paatos (first (hae-hoidonjohtopalkkiopaatos db {:paatos-id paatosid}))
+        _ (when (or
+                  (nil? paatos)
+                  (not= urakkaid (:urakkaid paatos)))
+            ;; Throw exception
+            (throw (Exception. "Hoindonjohtopalkkionmuutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
+        vastaus (poista-hoidonjohtopalkkio-paatos<! db {:poistaja kayttajaid :id paatosid})]
+    vastaus))
