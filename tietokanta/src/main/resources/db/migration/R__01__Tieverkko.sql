@@ -161,17 +161,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- wrapperi rajapinnan pitämiseksi samana
+-- hae tieosoitteelle geometria, joka voi olla piste tai viiva
 CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
   tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
   RETURNS SETOF geometry
 AS $$
-DECLARE
-    piste GEOMETRY;
 BEGIN
   IF aosa_=losa_ AND aet_=let_ THEN
-    piste := tierekisteriosoitteelle_piste(tie_, aosa_, aet_);
-    RETURN NEXT ST_MakeLine(piste, piste);
+    RETURN NEXT tierekisteriosoitteelle_piste(tie_, aosa_, aet_);
   ELSE
     RETURN NEXT tieosoitteelle_viiva(tie_, aosa_, aet_, losa_, let_);
   END IF;
