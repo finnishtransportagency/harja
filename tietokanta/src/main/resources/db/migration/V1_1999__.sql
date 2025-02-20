@@ -107,15 +107,18 @@ CREATE TABLE paatos_kattohinta
 
 CREATE TABLE paatos_hoitokauden_lopun_hinta
 (
-    id                    SERIAL PRIMARY KEY,
-    urakkaid              INTEGER        NOT NULL,
-    hoitokauden_alkuvuosi INTEGER        NOT NULL,
-    tavoitehinta          NUMERIC(10, 2) NOT NULL,
-    kattohinta            NUMERIC(10, 2),
-    luotu                 TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    luoja                 INTEGER        NOT NULL,
-    poistettu             BOOLEAN        NOT NULL DEFAULT FALSE,
-    poistaja              INTEGER,
+    id                               SERIAL PRIMARY KEY,
+    urakkaid                         INTEGER        NOT NULL,
+    hoitokauden_alkuvuosi            INTEGER        NOT NULL,
+    tavoitehinta_ennen               NUMERIC(10, 2) NOT NULL,
+    tavoitehinta_jalkeen              NUMERIC(10, 2) NOT NULL,
+    tavoitehinnan_muutokset          NUMERIC(10, 2) NOT NULL,
+    hoitokauden_lopun_indeksikorjaus NUMERIC(10, 2),
+    kattohinta                       NUMERIC(10, 2),
+    luotu                            TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    luoja                            INTEGER        NOT NULL,
+    poistettu                        BOOLEAN        NOT NULL DEFAULT FALSE,
+    poistaja                         INTEGER,
     FOREIGN KEY (luoja) REFERENCES kayttaja (id)
 );
 

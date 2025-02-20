@@ -143,8 +143,10 @@ WHERE id = :paatos-id
 
 -- name: tee-hoitokauden-lopun-hinta-paatos<!
 -- Tee hoitokauden lopun hinta päätös
-INSERT INTO paatos_hoitokauden_lopun_hinta (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, kattohinta, luoja, luotu)
-VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta, :kattohinta, :luoja, NOW());
+INSERT INTO paatos_hoitokauden_lopun_hinta (urakkaid, hoitokauden_alkuvuosi, tavoitehinta_ennen, tavoitehinta_jalkeen,
+                                            tavoitehinnan_muutokset, hoitokauden_lopun_indeksikorjaus, kattohinta, luoja, luotu)
+VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta_ennen, :tavoitehinta_jalkeen, :tavoitehinnan_muutokset,
+        :hoitokauden_lopun_indeksikorjaus, :kattohinta, :luoja, NOW());
 
 --name: poista-hoitokauden-lopun-hinta-paatos<!
 -- Poista hoitokauden lopun hinta päätös
@@ -159,6 +161,13 @@ SELECT 'Hoitovuoden lopun tavoite- ja kattohinta' as nimi, *
 FROM paatos_hoitokauden_lopun_hinta
 WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+  AND poistettu = FALSE;
+
+-- name: hae-hoitokauden-lopun-hintapaatos
+-- Hae hoitokauden lopun hintapäätökset
+SELECT 'Hoitovuoden lopun tavoite- ja kattohinta' as nimi, *
+FROM paatos_hoitokauden_lopun_hinta
+WHERE id = :paatos-id
   AND poistettu = FALSE;
 
 -- name: tee1-hoitokauden-indeksikorjaus-paatos<!
@@ -224,3 +233,12 @@ FROM paatos_hoidonjohtopalkkio
 WHERE urakkaid = :urakkaid
   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
   AND poistettu = FALSE;
+
+-- name: hae-hoitokauden-lopun-indeksikorjaus
+-- single?: true
+-- Jos hoitokauden indeksikorjaus on tehty, niin hae se
+SELECT hoitokauden_lopun_indeksikorjaus
+FROM paatos_hoitokauden_indeksikorjaus
+WHERE hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+ AND urakkaid = :urakkaid
+ AND poistettu = FALSE;

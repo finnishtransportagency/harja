@@ -265,11 +265,38 @@
                       paatokset)
           paatokset (sort-by :jarjestys (conj paatokset kattohinnan-ylityspaatos))]
       paatokset)
-    ;; Jos tarvittavia tietoja ei ole, niin poistetaan sekä tavoitehinna ylitys, että alitus
+    ;; Jos tarvittavia tietoja ei ole, niin poistetaan kattohinnan ylitys
     (remove
       (fn [paatos]
         (= (:nimi paatos) "Kattohinnan ylitys"))
       paatokset)))
 
+(defn valmistele-hoitokauden-lopun-hintapaatos [paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta]
+  ;; Varmistetaan, että tarvittavat tiedot on olemassa
+  (if (and tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta)
+    (let [hintapaatos (first (filter #(= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") paatokset))
+          tavoitehinta_ennen (- tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus)
+          ;; Täytetään pakolliset tiedot
+          hintapaatos (-> hintapaatos
+                        (assoc :tavoitehinta_ennen tavoitehinta_ennen)
+                        (assoc :tavoitehinta_jalkeen tavoitehinta)
+                        (assoc :tavoitehinnan_muutokset tavoitehinnan-muutokset)
+                        (assoc :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus)
+                        (assoc :kattohinta kattohinta))
+
+          paatokset (remove
+                      (fn [paatos]
+                        (= (:nimi paatos) "Hoitovuoden lopun tavoite- ja kattohinta"))
+                      paatokset)
+          paatokset (sort-by :jarjestys (conj paatokset hintapaatos))]
+      paatokset)
+    ;; Jos tarvittavia tietoja ei ole, niin varoitetaan siitä käyttäjää
+    (sort-by :jarjestys
+      (conj
+        (filter #(not= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") paatokset)
+        {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :virhe "Päätöksen vaatimia tietoja ei löydetty." :jarjestys 8}))))
+
 (defn nimi->avain [nimi]
-  (keyword (str/lower-case (str/replace nimi #" " "-"))))
+  (keyword (str/lower-case (-> nimi
+                             (str/replace #" " "-")
+                             (str/replace #"--" "-")))))
