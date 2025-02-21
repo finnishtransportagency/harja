@@ -443,8 +443,7 @@ BEGIN
         loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
         let := loppukohta.etaisyys;
         geometria := tieosoitteelle_geometria(r.tie, aosa, aet, losa, let);
-
-        RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geometria;
+        -- RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geometria;
         RETURN ROW (r.tie, aosa, aet, losa, let, geometria);
 
     END IF;

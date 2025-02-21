@@ -211,3 +211,23 @@ BEGIN
     RETURN pkluokka_t;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION leikkaavat_pohjavesialueet(tie INTEGER, aosa INTEGER, aet INTEGER,
+                                                      losa INTEGER, let INTEGER) RETURNS SETOF POHJAVESIALUE_RIVI AS
+$$
+
+DECLARE
+    p    RECORD;
+    rivi POHJAVESIALUE_RIVI;
+BEGIN
+    FOR p IN SELECT distinct on (pa.nimi) nimi, pa.tunnus, pa.alue
+               FROM pohjavesialue pa
+              WHERE ST_INTERSECTS(pa.alue,
+                                  (SELECT * FROM
+                                      tieosoitteelle_geometria(tie, aosa, aet, losa, let)))
+        LOOP
+            rivi := (p.nimi, p.tunnus);
+            RETURN NEXT rivi;
+        END LOOP;
+END;
+$$ LANGUAGE plpgsql;
