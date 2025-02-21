@@ -38,7 +38,6 @@ BEGIN
         -- Käsitellään ensin toteuman suoritusajankohdan aikana voimassa olevat rajoitusalueet ja niille osuva suola.
         -- Jos rajoitusalueet ovat päällekkäin, sama suola tulee lasketuksi suolatoteuman reittipisteisiin kahdesti.
         -- Päällekkäisiä rajoituksia ei siis saisi olla voimassa.
-        RAISE NOTICE 'Jepjep.';
         FOR ra IN
             SELECT *
             FROM rajoitusalue alue
@@ -50,21 +49,16 @@ BEGIN
               AND alue.poistettu = FALSE
               AND rajoitus.poistettu = FALSE
             LOOP
-                RAISE NOTICE 'RALUE %', ra.id;
-
                 SELECT st_length(st_intersection(st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria)) /
                        st_length(tieosoitevali.geometria)
                 INTO osuus;
-                RAISE NOTICE 'RALUE-osus %', osuus;
 
                 jaljella_osuutta := jaljella_osuutta - osuus;
-                RAISE NOTICE 'Rajoitusalue %, osuus %', ra.id, osuus;
                 RETURN NEXT ('rajoitusalue', ra.id, osuus)::suolausalueen_osuus;
             END LOOP;
 
         -- Jäljelle jää se osuus, joka ei kuulu rajoitetuille alueille.
         IF (jaljella_osuutta > 0) THEN
-            RAISE NOTICE 'Muu alue, osuus %', jaljella_osuutta;
             RETURN NEXT ('muu', NULL, jaljella_osuutta)::suolausalueen_osuus;
         END IF;
     END IF;
@@ -119,20 +113,17 @@ BEGIN
                             IF edellinen_rp IS DISTINCT FROM NULL THEN
                                 FOR suolausalue IN SELECT tyyppi, rajoitusalue_id, osuus FROM pistevalin_suolausalueet(edellinen_rp.sijainti, rp.sijainti, urakkaid, hoitokauden_alkuvuosi)
                                     LOOP
-                                    RAISE NOTICE 'Hep! ';
                                         -- Lisätään rajoitusalueisiin liittyvät määrät
                                         IF suolausalue.rajoitusalue_id IS DISTINCT FROM NULL AND
                                            suolausalue.tyyppi = 'rajoitusalue' THEN
-                                            RAISE NOTICE 'Löytyi rajoitusaluetta! ';
-                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id)
-                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus, suolausalue.rajoitusalue_id);
+                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id, luotu)
+                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus, suolausalue.rajoitusalue_id, current_timestamp);
                                         END IF;
 
                                         -- Lisätään rajoittamattomien alueiden määrät
                                         IF suolausalue.tyyppi = 'muu' THEN
-                                            RAISE NOTICE 'Löytyi muuta! ';
-                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id)
-                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus,NULL);
+                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id, luotu)
+                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus,NULL, current_timestamp);
                                         END IF;
                                     END LOOP;
                             END IF;
