@@ -27,7 +27,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Yhdistää linestring ja multilinestringit yhdeksi multilinestringiksi
+-- Yhdistää pisteet (point), viivat (linestring) ja multilinestringit yhdeksi multilinestringiksi
 CREATE OR REPLACE FUNCTION yhdista_multilinestring(geometriat GEOMETRY)
   RETURNS GEOMETRY AS $$
 DECLARE
@@ -39,14 +39,18 @@ BEGIN
   tulos := ARRAY[]::GEOMETRY[];
   FOR i IN 1..ST_NumGeometries(geometriat) LOOP
     viiva := ST_GeometryN(geometriat, i);
-    IF ST_GeometryType(viiva) = 'ST_MultiLineString' THEN
-      FOR j IN 1..ST_NumGeometries(viiva) LOOP
-        tulos := tulos || ST_GeometryN(viiva, j);
+        CASE
+        WHEN ST_GeometryType(viiva) = 'ST_MultiLineString' THEN
+            FOR j IN 1..ST_NumGeometries(viiva)
+            LOOP
+                tulos := tulos || ST_GeometryN(viiva, j);
+            END LOOP;
+        WHEN ST_GeometryType(viiva) = 'ST_Point' THEN
+            tulos := tulos || ST_MakeLine(viiva);
+        ELSE
+            tulos := tulos || viiva;
+        END CASE;
       END LOOP;
-    ELSE
-      tulos := tulos || viiva;
-    END IF;
-  END LOOP;
   RETURN ST_Collect(tulos);
 END;
 $$ LANGUAGE plpgsql;
@@ -157,8 +161,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- wrapperi rajapinnan pitämiseksi samana
-CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
+-- hae tieosoitteelle geometria, joka voi olla piste tai viiva
+CREATE OR REPLACE FUNCTION tieosoitteelle_geometria(
   tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
   RETURNS SETOF geometry
 AS $$
@@ -195,7 +199,7 @@ BEGIN
    losa_ := tmp_osa;
    let_ := tmp_et;
  END IF;
- FOR g IN SELECT tierekisteriosoitteelle_viiva(tie_, aosa_, aet_, losa_, let_)
+ FOR g IN SELECT tieosoitteelle_geometria(tie_, aosa_, aet_, losa_, let_)
  LOOP
    RETURN NEXT g;
  END LOOP;
@@ -407,7 +411,7 @@ DECLARE
     losa         INTEGER;
     let          INTEGER;
     loppukohta   tr_osan_kohta;
-    geomertria   GEOMETRY;
+    geometria   GEOMETRY;
 BEGIN
     SELECT a.tie,
            a.osa                                                       as alkuosa,
@@ -438,10 +442,9 @@ BEGIN
         losa := r.loppuosa;
         loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
         let := loppukohta.etaisyys;
-
-        geomertria := tieosoitteelle_viiva(r.tie, aosa, aet, losa, let);
-        --RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geomertria;
-        RETURN ROW (r.tie, aosa, aet, losa, let, geomertria);
+        geometria := tieosoitteelle_geometria(r.tie, aosa, aet, losa, let);
+        -- RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geometria;
+        RETURN ROW (r.tie, aosa, aet, losa, let, geometria);
 
     END IF;
 END;
