@@ -37,14 +37,12 @@
         uusi-id (if (empty? (keys @hoitokauden-oikaisut-atom))
                   0
                   (inc (apply max (keys @hoitokauden-oikaisut-atom))))
-        oikaisut-summa (when @hoitokauden-oikaisut-atom (fmt/desimaaliluku-opt
-                                                          (reduce
-                                                            (fn [yhteensa hoitokauden-oikaisu]
-                                                              (+ yhteensa (get hoitokauden-oikaisu :harja.domain.kulut.valikatselmus/summa)))
-                                                            0
-                                                            (vals @hoitokauden-oikaisut-atom))
-                                                          2
-                                                          true))]
+        oikaisut-summa (when @hoitokauden-oikaisut-atom (fmt/euro-opt false true
+                                                            (reduce
+                                                              (fn [yhteensa hoitokauden-oikaisu]
+                                                                (+ yhteensa (get hoitokauden-oikaisu :harja.domain.kulut.valikatselmus/summa)))
+                                                              0
+                                                              (vals @hoitokauden-oikaisut-atom))))]
     [:div
      [grid/muokkaus-grid
       (merge {:tyhja "Ei muutoksia tavoitehintaan"
@@ -105,6 +103,7 @@
        {:otsikko "Vaikutus € (+/-)"
         :nimi ::valikatselmus/summa
         :tyyppi :euro
+        :nayta-plus true
         :input-luokka "maara-input"
         :desimaalien-maara 2
         :validoi [[:ei-tyhja "Täytä arvo"]]

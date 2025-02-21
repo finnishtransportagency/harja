@@ -479,10 +479,10 @@
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
 
-(defmethod tee-kentta :euro [{:keys [fmt teksti-oikealla] :as kentta} data]
+(defmethod tee-kentta :euro [{:keys [fmt teksti-oikealla nayta-plus] :as kentta} data]
   [tee-kentta (assoc kentta
                 :tyyppi :numero
-                :fmt (or fmt (partial fmt/euro-opt false))
+                :fmt (or fmt (partial fmt/euro-opt false nayta-plus))
                 :salli-whitespace? true
                 :yksikko (or teksti-oikealla "€")
                 :desimaalien-maara 2

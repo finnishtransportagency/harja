@@ -39,8 +39,9 @@
 
 (defn euro
   "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja valinnaisen euromerkin kanssa."
-  ([eur] (euro true eur))
-  ([nayta-euromerkki eur]
+  ([eur] (euro true false eur))
+  ([nayta-euromerkki eur] (euro nayta-euromerkki false eur))
+  ([nayta-euromerkki nayta-plus eur]
    (if (big/big? eur)
      (str (big/fmt-full eur 2)
           (when nayta-euromerkki " \u20AC"))
@@ -52,8 +53,19 @@
           (if (or
                 (or (nil? eur) (and (string? eur) (empty? eur)))
                 (frontin-formatointivirheviestit tulos))
-            (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
-            (if nayta-euromerkki (str tulos " \u20AC") tulos)))
+            (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur)))))
+            (cond
+               (and nayta-euromerkki nayta-plus (< 0 eur))
+               (str "\u002B" tulos " \u20AC")
+
+               (and nayta-euromerkki (not nayta-plus))
+               (str tulos " \u20AC")
+
+               (and (not nayta-euromerkki) nayta-plus (< 0 eur))
+               (str "\u002B" tulos)
+
+               :else
+               tulos))
 
         :clj
         (s/replace (.format
@@ -70,11 +82,12 @@
 
 (defn euro-opt
   "Formatoi euromäärän tai tyhjä, jos nil."
-  ([summa] (euro-opt true summa))
-  ([nayta-euromerkki summa]
+  ([summa] (euro-opt true false summa))
+  ([nayta-euromerkki summa] (euro-opt nayta-euromerkki false summa))
+  ([nayta-euromerkki nayta-plus summa]
    (if (or (nil? summa) (and (string? summa) (empty? summa)))
      ""
-     (euro nayta-euromerkki summa))))
+     (euro nayta-euromerkki nayta-plus summa))))
 
 #?(:clj
    (defn formatoi-arvo-raportille [arvo]
