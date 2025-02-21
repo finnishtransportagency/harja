@@ -75,10 +75,11 @@
                        :port 4005
                        :timeout 120000
                        :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}
- ;; Loput test-dependencyt, joita ei haluta ottaa mukaan dev-profiiliin
- :test {:dependencies [[clj-webdriver "0.7.2"]
-                       [org.seleniumhq.selenium/selenium-java "3.8.1"]
-                       [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]
+ :test {:dependencies [
+                       ;; Selenium + webdriver depsut pois käytöstä, koska niitä ei enää ajeta
+                       #_[clj-webdriver "0.7.2"]
+                       #_[org.seleniumhq.selenium/selenium-java "3.8.1"]
+                       #_[org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]
                        ;; TODO tuosta cljs-react-test riippuvuudesta pitäisi päästä eroon. Testit, jotka
                        ;; käyttää sitä, voi kirjoittaa uusiksi Cypressillä.
                        ;; Jotta frontti testit toimii, pitää säilyttää tuo riippuvuus, jonka takia myös
