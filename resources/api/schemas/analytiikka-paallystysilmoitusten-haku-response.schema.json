@@ -145,6 +145,11 @@
                     "Tasausjyrsintä",
                     "Laatikkojyrsintä",
                     "Reunajyrsintä",
+                    "PAB-B",
+                    "PAB-V",
+                    "UREM-TAS",
+                    "Muu stabilointi",
+                    "Muu RP",
                     "ei tietoa"
                   ]
                 },
@@ -327,6 +332,9 @@
           "type": "string",
           "enum": [
             "BET, Betoni",
+            "Kivi",
+            "Teräs",
+            "Puu",
             "AA, Avoin asfaltti",
             "AB, Asfalttibetoni",
             "EA, Epäjatkuva asfaltti (poistunut)",
@@ -337,6 +345,8 @@
             "PAB-B, Pehmeät asfalttibetonit",
             "PAB-V, Pehmeät asfalttibetonit",
             "PAB-O, Pehmeät asfalttibetonit",
+            "Sirotepintaus",
+            "Soratien pintaus",
             "Ei tietoa",
             "EAB, Asfalttibetoni",
             "ABtiivis",
@@ -456,8 +466,8 @@
         "Bitumiemulsiot, BE-SOP",
         "Bitumiemulsiot, BE-AB",
         "Bitumiemulsiot, BE-PAB",
-        "KF, Kalkkifilleri",
-        "Muu, erikoisbitumi"
+        "Muu erikoisbitumi",
+        "Bitumia korvaava uusiomateriaali"
       ]
     },
     "lisaainetyyppi": {
