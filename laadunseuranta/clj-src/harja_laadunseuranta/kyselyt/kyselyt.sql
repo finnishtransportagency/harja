@@ -177,12 +177,12 @@ SELECT
 FROM vakiohavainto;
 
 -- name: tr-osoitteelle-viiva
-SELECT tierekisteriosoitteelle_viiva AS geom
-FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                   CAST(:tr_alkuosa AS INTEGER),
-                                   CAST(:tr_alkuetaisyys AS INTEGER),
-                                   CAST(:tr_loppuosa AS INTEGER),
-                                   CAST(:tr_loppuetaisyys AS INTEGER));
+SELECT tieosoitteelle_geometria AS geom
+FROM tieosoitteelle_geometria(CAST(:tr_numero AS INTEGER),
+                              CAST(:tr_alkuosa AS INTEGER),
+                              CAST(:tr_alkuetaisyys AS INTEGER),
+                              CAST(:tr_loppuosa AS INTEGER),
+                              CAST(:tr_loppuetaisyys AS INTEGER));
 
 -- name: hae-urakkatyypin-urakat
 -- Hakee urakkatyypin urakat käsivalintaa varten. Mahdollistetaan usealla tyypillä haku,

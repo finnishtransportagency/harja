@@ -363,9 +363,8 @@
             :type        :point}
           (geo/pg->clj (:geometria tr))))))
 
-(deftest kaksi-lahes-samaa-pistetta-muodostaa-point-geometrian
+(deftest kaksi-lahes-samaa-pistetta-sama-alku-ja-loppupiste-muodostaa-pistegeometrian
   ;; tähän sellainen keissi, missä alku- ja loppupiste eroavat ihan vähän, mutta syntyvä TR-osoite on pistemäinen (asoa = losa, aet = let)
-  ;; Aiemmin tässä tapauksessa geometrian laskenta tuotti tulokseksi nil, kun päädyttiin olettamaan vähintään 1m mittaista viivageometriaa
   (let [db (:db jarjestelma)
         tr (sijainnit/hae-tierekisteriosoite db
              {:x 531477.7292081807, :y 6970825.074957885}
@@ -374,10 +373,9 @@
     (is (= (:tie tr) 26010) "Tie")
     (is (= (:aosa tr) 23) "Osa")
     (is (= (:aet tr) 504) "Aet")
-    (is (nil? (:losa tr)) "Losa")
-    (is (nil? (:let tr) ) "Let")
-    (is (= {:coordinates [531477.7400173786
-                          6970825.0755143715]
+    (is (= (:losa tr) 23) "Losa")
+    (is (= (:let tr) 504) "Let")
+    (is (= {:coordinates [531477.7164310892 6970825.533654208]
             :type        :point}
           (geo/pg->clj (:geometria tr))))))
 
