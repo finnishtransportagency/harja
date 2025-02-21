@@ -442,13 +442,9 @@ BEGIN
         losa := r.loppuosa;
         loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
         let := loppukohta.etaisyys;
+        geometria := tieosoitteelle_geometria(r.tie, aosa, aet, losa, let);
 
-        geometria := tieosoitteelle_viiva(r.tie, aosa, aet, losa, let);
-        -- jos saatiin geometriaksi NULL ja todetaan pistemäinen tieosoite, muodostetaan pistegeometria
-        IF geometria IS NULL AND aosa = losa AND aet = let THEN
-            geometria := tierekisteriosoitteelle_piste(r.tie, aosa, aet);
-        END IF;
-        --RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geometria;
+        RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geometria;
         RETURN ROW (r.tie, aosa, aet, losa, let, geometria);
 
     END IF;
