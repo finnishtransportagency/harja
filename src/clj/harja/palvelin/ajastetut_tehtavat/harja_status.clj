@@ -73,18 +73,32 @@
     (fn [_]
       (let [threadpool-size (Long/getLong "clojure.core.async.pool-size")
             ;; https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.State.html
-            ;; Laske kaikki ajossa olevat async-threadit:
+            ;;
+            ;; Logittaa relevantit ajossa olevat async-threadit:
+            ;;
             ;; RUNNABLE
             ;;   A thread executing in the Java virtual machine is in this state.
-            thread-count (->>
-                           (keys (Thread/getAllStackTraces))
-                           (mapv bean)
-                           (filter (fn [t]
-                                     (and
-                                       (str/includes? (:name t) "async-dispatch-")
-                                       (= (:state t) Thread$State/RUNNABLE))))
-                           (count))]
-        (log/info "clojure.async threadpoolin kuormitus (threadit / poolin koko): " thread-count " / " threadpool-size)
+            ;; BLOCKED
+            ;;   A thread that is blocked waiting for a monitor lock is in this state.
+            ;; WAITING
+            ;;   A thread that is waiting indefinitely for another thread to perform a particular action is in this state.
+            ;; 
+            states [:WAITING :RUNNABLE :BLOCKED]
+            thread-maara (fn [tyyppi state]
+                           (->> (keys (Thread/getAllStackTraces))
+                             (mapv bean)
+                             (filter #(and (str/includes? (:name %) tyyppi)
+                                        (= (:state %) (Thread$State/valueOf (name state)))))
+                             (count)))]
+
+        (doseq [state states]
+          (log/info (str
+                      "async-dispatch / poolin koko (" state ") :"
+                      (thread-maara "async-dispatch" state) " / " threadpool-size)))
+        
+        (doseq [state states]
+          (log/info (str
+                      "async-thread-macro määrä (" state ") : " (thread-maara "async-thread-macro" state))))
 
         ;; Tulosta async-threadien tila debuggausta varten
         #_(clojure.pprint/pprint
