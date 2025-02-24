@@ -167,7 +167,6 @@
 
 (defn valimistele-tavoitehinnan-alituspaatos [paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kustannukset]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
-  (println "valimistele-tavoitehinnan-alituspaatos: " tavoitehinta kustannukset)
   (if (and tavoitehinta kustannukset (> tavoitehinta kustannukset))
     (let [tavoitehinnan-alitus (- tavoitehinta kustannukset)
           ;; Poistetaan päätöskokneen tavoitehinna alituspäätös ja muokataan se alla
@@ -211,7 +210,6 @@
 
 (defn valmistele-tavoitehinnan-ylityspaatos [paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kattohinta kustannukset mhu-tyyppi]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
-  (println "valmistele-tavoitehinnan-ylityspaatos :: kattohinta tavoitehinta kustannukset" tavoitehinta kattohinta kustannukset)
   (if (and kattohinta tavoitehinta kustannukset (> kustannukset tavoitehinta))
     (let [;; Ylitys + tavoitehinta ei voi ylittää kattohintaa. Eli maksettavat rahat on aina tavoitehinnan ja
           ;; kattohinnan väliin jääviä summia. Kattohinnan ylittävät summat menee aina urakoitsijan maksettavaksi

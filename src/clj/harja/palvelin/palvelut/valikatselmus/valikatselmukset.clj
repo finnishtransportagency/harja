@@ -422,6 +422,8 @@
         ;; Formatoidaan kustannukset ui:ta varten
         kustannukset-jarjestettyna (kustannusten-seuranta/jarjesta-tehtavat kustannukset)
         budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakkaid})
+        ;; Otetaan käytyn hoitovuoden budjetti
+        budjettitavoite (some #(when (= (:hoitokauden-alkuvuosi %) hoitovuosi) %) budjettitavoite)
 
         ;; Kustannusten mukana ei tule tarvittavalla tasolla erotettuna bonuksia. Joten haetaan ne erikseen
         bonukset (valikatselmus-q/hae-bonukset db {:urakka-id urakkaid
@@ -432,7 +434,7 @@
                                                    :alkupvm hoitokauden-alkupvm
                                                    :loppupvm hoitokauden-loppupvm})
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])
-        paatokset (hae-paatokset db urakkaid hoitovuosi (first budjettitavoite) toteutuneet-pisteet luvatut-pisteet
+        paatokset (hae-paatokset db urakkaid hoitovuosi budjettitavoite toteutuneet-pisteet luvatut-pisteet
                     toteutuneet-kustannukset)
         ;; Wrapataan paatoksen omien avainten alle, jotta käyttöliittymässä on mahdollista näyttää ne oikein
         paatokset (reduce (fn [v paatos]
