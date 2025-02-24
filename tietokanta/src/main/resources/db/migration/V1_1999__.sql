@@ -165,3 +165,16 @@ CREATE TABLE paatos_hoidonjohtopalkkio
     poistaja                   INTEGER,
     FOREIGN KEY (luoja) REFERENCES kayttaja (id)
 );
+
+CREATE TABLE paatos_poytakirjan_raportti
+(
+    id                         SERIAL PRIMARY KEY,
+    urakkaid                   INTEGER        NOT NULL,
+    hoitokauden_alkuvuosi      INTEGER        NOT NULL,
+    tarkistettu               TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Raportit tarkistettu päivämäärä, eli päätöksen luontihetki
+    luotu                      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    luoja                      INTEGER        NOT NULL,
+    poistettu                  BOOLEAN        NOT NULL DEFAULT FALSE,
+    poistaja                   INTEGER,
+    FOREIGN KEY (luoja) REFERENCES kayttaja (id)
+);
