@@ -62,7 +62,7 @@
 (defn lisaa-paatos-virheellisena
   "Jos päätös on mukana päätöslistassa, mutta sille ei ole antaa tarkentavia tietoja, niin lisätään siihen virhe.
   Mikäli päätöstä ei löydy listasta, niin älä lisää mitään."
-  [paatokset nimi lisataan?]
+  [paatokset nimi lisataan? jarjestys]
   (keep identity
     (sort-by :jarjestys
       (if (some #(= (:nimi %) nimi) paatokset)
@@ -70,7 +70,7 @@
           (filter #(not= (:nimi %) nimi) paatokset)
           ;; Jos ehdot eivät täyttyneet, niin päätöstä ei voida lisätä edes virheellisenä
           (when lisataan?
-            {:nimi nimi :virhe "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty." :jarjestys 1}))
+            {:nimi nimi :virhe "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty." :jarjestys jarjestys}))
         paatokset))))
 
 (defn valmistele-lupauspaatokset [paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta]
@@ -107,7 +107,7 @@
           paatokset (sort-by :jarjestys (conj paatokset lupauspaatos))]
       paatokset)
     ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
-    (lisaa-paatos-virheellisena paatokset "Lupaukset" true)))
+    (lisaa-paatos-virheellisena paatokset "Lupaukset" true 1)))
 
 (defn valimistele-tavoitehinnan-muutospaatos [paatokset urakan-alkuvuosi tavoitehinta kattohinta kuluva-hoitovuosi]
   ;; Ota mukaan oikea tavoitehinnan muutospäätös, jos ehdot täyttyvät
@@ -129,7 +129,7 @@
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-muutospaatos))]
       paatokset)
     ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
-   (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" true)))
+   (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" true 4)))
 
 (defn valmistele-indeksikorjauspaatos [paatokset tavoitehinta tavoitehinnan-muutokset
                                        hoitokauden-indeksikuukaudet alkuperainen-pisteluku]
@@ -162,11 +162,12 @@
             paatokset (sort-by :jarjestys (conj paatokset indeksipaatos))]
         paatokset)
       ;; Ehdot eivät täyttyneet, otetaan indeksipäätökset pois listasta ja lisätään virheilmoitus päätökselle
-      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" true))
+      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" true 7))
     paatokset))
 
 (defn valimistele-tavoitehinnan-alituspaatos [paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kustannukset]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
+  (println "valimistele-tavoitehinnan-alituspaatos: " tavoitehinta kustannukset)
   (if (and tavoitehinta kustannukset (> tavoitehinta kustannukset))
     (let [tavoitehinnan-alitus (- tavoitehinta kustannukset)
           ;; Poistetaan päätöskokneen tavoitehinna alituspäätös ja muokataan se alla
@@ -206,10 +207,11 @@
 
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin poistetaan pöötöstyyppi
-    (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus" false)))
+    (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus" false 10)))
 
 (defn valmistele-tavoitehinnan-ylityspaatos [paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kattohinta kustannukset mhu-tyyppi]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
+  (println "valmistele-tavoitehinnan-ylityspaatos :: kattohinta tavoitehinta kustannukset" tavoitehinta kattohinta kustannukset)
   (if (and kattohinta tavoitehinta kustannukset (> kustannukset tavoitehinta))
     (let [;; Ylitys + tavoitehinta ei voi ylittää kattohintaa. Eli maksettavat rahat on aina tavoitehinnan ja
           ;; kattohinnan väliin jääviä summia. Kattohinnan ylittävät summat menee aina urakoitsijan maksettavaksi
@@ -245,7 +247,7 @@
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-ylityspaatos))]
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin poistetaan tavoitehinnan ylitys
-    (lisaa-paatos-virheellisena paatokset "Tavoitehinnan ylitys" false)))
+    (lisaa-paatos-virheellisena paatokset "Tavoitehinnan ylitys" false 12)))
 
 (defn valmistele-kattohinnan-paatokset [paatokset kattohinta kustannukset]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
@@ -268,7 +270,7 @@
           paatokset (sort-by :jarjestys (conj paatokset kattohinnan-ylityspaatos))]
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin poistetaan kattohinnan ylitys
-    (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" false)))
+    (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" false 14)))
 
 (defn valmistele-hoitokauden-lopun-hintapaatos [paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
@@ -290,7 +292,7 @@
           paatokset (sort-by :jarjestys (conj paatokset hintapaatos))]
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin varoitetaan siitä käyttäjää
-    (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" true)))
+    (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" true 8)))
 
 (defn valmistele-hoidonjohtopalkkionmuutospaatos [paatokset tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
@@ -313,7 +315,7 @@
           paatokset (sort-by :jarjestys (conj paatokset paatos))]
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin varoitetaan siitä käyttäjää
-    (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" false)))
+    (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" true 16)))
 
 (defn nimi->avain [nimi]
   (keyword (str/lower-case (-> nimi
