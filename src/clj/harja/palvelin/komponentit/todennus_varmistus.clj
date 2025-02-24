@@ -228,10 +228,10 @@
                                                (fn [_]
                                                  (try
                                                    ;; Cachessa ei ole tietoja, varmistetaan signaturet 
-                                                   (let [_ (when-not kehitysmoodi?
-                                                             (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? public-key-url))]
-                                                     ;; Jos todennus onnistui, palauta tiedot ja jatka kirjautumista 
-                                                     (tunnistetiedot iam-data))
+                                                   (when-not kehitysmoodi?
+                                                     (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? public-key-url))
+                                                   ;; Jos todennus onnistui, palauta tiedot ja jatka kirjautumista 
+                                                   (tunnistetiedot iam-data)
                                                    ;; Todennus epäonnistui
                                                    (catch Exception e
                                                      (if
