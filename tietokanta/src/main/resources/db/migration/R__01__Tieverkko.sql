@@ -38,18 +38,14 @@ DECLARE
 BEGIN
   tulos := ARRAY[]::GEOMETRY[];
   FOR i IN 1..ST_NumGeometries(geometriat) LOOP
-    viiva := ST_GeometryN(geometriat, i);
-        CASE
-        WHEN ST_GeometryType(viiva) = 'ST_MultiLineString' THEN
-            FOR j IN 1..ST_NumGeometries(viiva)
-            LOOP
-                tulos := tulos || ST_GeometryN(viiva, j);
-            END LOOP;
-        WHEN ST_GeometryType(viiva) = 'ST_Point' THEN
-            tulos := tulos || ST_MakeLine(viiva);
-        ELSE
-            tulos := tulos || viiva;
-        END CASE;
+          viiva := ST_GeometryN(geometriat, i);
+          IF ST_GeometryType(viiva) = 'ST_MultiLineString' THEN
+              FOR j IN 1..ST_NumGeometries(viiva) LOOP
+                      tulos := tulos || ST_GeometryN(viiva, j);
+                  END LOOP;
+          ELSE
+              tulos := tulos || viiva;
+          END IF;
       END LOOP;
   RETURN ST_Collect(tulos);
 END;
