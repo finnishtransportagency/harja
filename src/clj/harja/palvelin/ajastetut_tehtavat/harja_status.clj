@@ -84,8 +84,10 @@
             ;;   A thread that is waiting indefinitely for another thread to perform a particular action is in this state.
             ;; 
             states [:WAITING :RUNNABLE :BLOCKED]
+            thread-stack (keys (Thread/getAllStackTraces))
             thread-maara (fn [tyyppi state]
-                           (->> (keys (Thread/getAllStackTraces))
+                           (->> 
+                             thread-stack
                              (mapv bean)
                              (filter #(and (str/includes? (:name %) tyyppi)
                                         (= (:state %) (Thread$State/valueOf (name state)))))
