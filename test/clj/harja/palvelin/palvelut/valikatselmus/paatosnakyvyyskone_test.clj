@@ -22,29 +22,29 @@
 (deftest mhu+-vuodelle-2023-palautaa-oikein
   (let [mhu-tyyppi "MHU+"
         urakan-alkuvuosi 2023]
-    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2023))))
-    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))
-    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2025))))
-    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2026))))
-    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2027))))))
+    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2023))))
+    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))
+    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2025))))
+    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2026))))
+    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2027))))))
 
 (deftest mhu+-vuodelle-2021-ei-saisi-palauttaa-mitaan-test
   (let [mhu-tyyppi "MHU+"
         urakan-alkuvuosi 2021]
     (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2017))))
     (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2018))))
-    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2019))))
-    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2020))))
-    (is (= 0 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2021))))))
+    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2019))))
+    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2020))))
+    (is (= 3 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2021))))))
 
 (deftest mhu+-vuodelle-2024-palautaa-oikein
   (let [mhu-tyyppi "MHU+"
         urakan-alkuvuosi 2024]
-    (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))
-    (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2025))))
-    (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2026))))
-    (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2027))))
-    (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2028))))))
+    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))
+    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2025))))
+    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2026))))
+    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2027))))
+    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2028))))))
 
 (deftest mhu-vuodelle-2024-palautaa-oikein
   (let [mhu-tyyppi "MHU"
@@ -86,8 +86,8 @@
 (deftest paatosmaarat-mhu-tyypilla-test
   (let [mhu-paatokset (kone/mahdolliset-paatokset-tyypilla "MHU" kone/paatostyypit)
         mhu+-paatokset (kone/mahdolliset-paatokset-tyypilla "MHU+" kone/paatostyypit)]
-    (is (= 16 (count mhu-paatokset)))
-    (is (= 8 (count mhu+-paatokset)))))
+    (is (= 19 (count mhu-paatokset)))
+    (is (= 11 (count mhu+-paatokset)))))
 
 (deftest paatosmaarat-hoitokauden-alkuvuosilla-test
   (let [urakan-alkuvuosi-2019-paatokset (kone/mahdolliset-paatokset-urakan-alkuvuodella 2019 kone/paatostyypit)
@@ -103,7 +103,7 @@
     (is (= 11 (count urakan-alkuvuosi-2022-paatokset)))
     (is (= 11 (count urakan-alkuvuosi-2023-paatokset)))
     (is (= 19 (count urakan-alkuvuosi-2024-paatokset)))
-    (is (= 19 (count urakan-alkuvuosi-2025-paatokset)))))
+    (is (= 22 (count urakan-alkuvuosi-2025-paatokset)))))
 
 (deftest paatosmaarat-nakyvyys-vuodesta-test
   (let [nakyvyysvuosi-2019-paatokset (kone/mahdolliset-paatokset-nakyvyys-vuodella 2019 kone/paatostyypit)
@@ -119,7 +119,7 @@
     (is (= 9 (count nakyvyysvuosi-2022-paatokset)))
     (is (= 9 (count nakyvyysvuosi-2023-paatokset)))
     (is (= 17 (count nakyvyysvuosi-2024-paatokset)))
-    (is (= 19 (count nakyvyysvuosi-2025-paatokset)))))
+    (is (= 22 (count nakyvyysvuosi-2025-paatokset)))))
 
 (deftest yhdista-mapit-test
   (let [;; pk viittaa päätöskoneeseen, ja db databaseen
