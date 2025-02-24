@@ -49,7 +49,7 @@
 (deftest mhu-vuodelle-2024-palautaa-oikein
   (let [mhu-tyyppi "MHU"
         urakan-alkuvuosi 2024]
-    (is (= 13 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))
+    (is (= 14 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))
     (is (= 16 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2025))))
     (is (= 16 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2026))))
     (is (= 16 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2027))))
@@ -71,7 +71,7 @@
     (is (= 7 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2021))))
     (is (= 7 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2022))))
     (is (= 7 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2023))))
-    (is (= 7 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))))
+    (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))))
 
 (deftest mhu-vuodelle-2021-palautaa-oikein
   (let [mhu-tyyppi "MHU"
@@ -79,7 +79,7 @@
     (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2021))))
     (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2022))))
     (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2023))))
-    (is (= 8 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))
+    (is (= 9 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2024))))
     (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi 2025))))))
 
 
@@ -118,7 +118,7 @@
     (is (= 9 (count nakyvyysvuosi-2021-paatokset)))
     (is (= 9 (count nakyvyysvuosi-2022-paatokset)))
     (is (= 9 (count nakyvyysvuosi-2023-paatokset)))
-    (is (= 16 (count nakyvyysvuosi-2024-paatokset)))
+    (is (= 17 (count nakyvyysvuosi-2024-paatokset)))
     (is (= 19 (count nakyvyysvuosi-2025-paatokset)))))
 
 (deftest yhdista-mapit-test

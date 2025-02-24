@@ -20,7 +20,7 @@
    {:nimi "Kattohinnan ylitys" :tyyppi nil :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 15}
    {:nimi "Hoidonjohtopalkkion muutos" :tyyppi nil :urakan_alkuvuosi 2020 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 16}
    {:nimi "Hoidonjohtopalkkion muutos" :tyyppi nil :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 17}
-   {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :tyyppi nil :urakan_alkuvuosi 2020 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 18}
+   {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :tyyppi nil :urakan_alkuvuosi 2020 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 18}
    {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :tyyppi nil :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 19}])
 
 (defn urakan-hoitotyyppi
