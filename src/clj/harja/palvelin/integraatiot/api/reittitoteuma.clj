@@ -286,7 +286,7 @@ maksimi-linnuntien-etaisyys 200)
               reittipisteet-tallennettu-chan)
             (async/put! reittipisteet-tallennettu-chan true))))
       
-      ;; Sulje kanava heti jotta järjestelmä ei kaaku
+      ;; Sulje kanava heti jotta järjestelmä ei kiikun kaaku
       (catch Exception e
         (async/close! reittipisteet-tallennettu-chan)
         (throw (Exception. (str "Epäonnistui: " (.getMessage e))))))))
