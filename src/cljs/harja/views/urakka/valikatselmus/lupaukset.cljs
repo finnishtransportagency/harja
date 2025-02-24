@@ -87,12 +87,11 @@
                 [:div {:style {:font-size "20px"}} [:strong (fmt/euro-opt (:lupaussanktio paatos))]]]]
               (= :taytetty tyyppi)
               [:<>
-               [:h2 "Ei bonusta eikä sanktiota"]])]]
-          [:div [yleiset/info-laatikko :vahva-ilmoitus "Päätöstä ei voi tallentaa. Tarjouksen tavoitehinta puuttuu."]])
+               [:h2 "Ei bonusta eikä sanktiota"]])]])
 
-        ;; Laskentoja ei näytetä, mikäli lupauksen toteumia puuttuu
-        (when (> 1 (:toteutuneet_pisteet paatos))
-          [:div [yleiset/info-laatikko :vahva-ilmoitus "Päätöstä ei voi tallentaa. Lupausten toteumia puuttuu."]])
+        ;; Jos päätöksessä on virhe, niin näytetään se
+        (when (:virhe paatos)
+          [:div [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos)]])
 
 
         ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös
