@@ -3,7 +3,7 @@
       "lahettaja": {
           "jarjestelma": "Tietomekka Oy",
           "organisaatio": {
-              "ytunnus": "3007636-4",
+              "ytunnus": "__YTUNNUS__",
               "nimi": "Terranor Oy"
           }
       },
@@ -23,7 +23,7 @@
                   "paattynyt": "2025-02-24T07:03:11Z",
                   "toteumatyyppi": "kokonaishintainen",
                   "suorittaja": {
-                      "ytunnus": "3007636-4",
+                      "ytunnus": "__YTUNNUS__",
                       "nimi": "Terranor Oy"
                   },
                   "tehtavat": [
