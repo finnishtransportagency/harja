@@ -56,6 +56,20 @@
              m1))
          pk-paatokset)))
 
+(defn lisaa-paatos-virheellisena
+  "Jos päätös on mukana päätöslistassa, mutta sille ei ole antaa tarkentavia tietoja, niin lisätään siihen virhe.
+  Mikäli päätöstä ei löydy listasta, niin älä lisää mitään."
+  [paatokset nimi lisataan?]
+  (keep identity
+    (sort-by :jarjestys
+      (if (some #(= (:nimi %) nimi) paatokset)
+        (conj
+          (filter #(not= (:nimi %) nimi) paatokset)
+          ;; Jos ehdot eivät täyttyneet, niin päätöstä ei voida lisätä edes virheellisenä
+          (when lisataan?
+            {:nimi nimi :virhe "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty." :jarjestys 1}))
+        paatokset))))
+
 (defn valmistele-lupauspaatokset [paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta]
   ;; Ota mukaan oikea lupauspäätös, jos ehdot täyttyvät
   (if (and toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta tavoitehinta)
@@ -90,10 +104,7 @@
           paatokset (sort-by :jarjestys (conj paatokset lupauspaatos))]
       paatokset)
     ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
-    (sort-by :jarjestys
-             (conj
-               (filter #(not= (:nimi %) "Lupaukset") paatokset)
-               {:nimi "Lupaukset" :virhe "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty." :jarjestys 1}))))
+    (lisaa-paatos-virheellisena paatokset "Lupaukset" true)))
 
 (defn valimistele-tavoitehinnan-muutospaatos [paatokset urakan-alkuvuosi tavoitehinta kattohinta kuluva-hoitovuosi]
   ;; Ota mukaan oikea tavoitehinnan muutospäätös, jos ehdot täyttyvät
@@ -115,10 +126,7 @@
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-muutospaatos))]
       paatokset)
     ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
-    (sort-by :jarjestys
-      (conj
-        (filter #(not= (:nimi %) "Lupaukset") paatokset)
-        {:nimi "Lupaukset" :virhe "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty." :jarjestys 1}))))
+   (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" true)))
 
 (defn valmistele-indeksikorjauspaatos [paatokset tavoitehinta tavoitehinnan-muutokset
                                        hoitokauden-indeksikuukaudet alkuperainen-pisteluku]
@@ -151,10 +159,7 @@
             paatokset (sort-by :jarjestys (conj paatokset indeksipaatos))]
         paatokset)
       ;; Ehdot eivät täyttyneet, otetaan indeksipäätökset pois listasta ja lisätään virheilmoitus päätökselle
-      (sort-by :jarjestys
-        (conj
-          (filter #(not= (:nimi %) "Hoitovuoden lopun indeksikorjaus") paatokset)
-          {:nimi "Hoitovuoden lopun indeksikorjaus" :virhe "Päätöksen vaatimia tietoja ei löydetty." :jarjestys 6})))
+      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" true))
     paatokset))
 
 (defn valimistele-tavoitehinnan-alituspaatos [paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kustannukset]
@@ -197,11 +202,8 @@
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-alituspaatos))]
 
       paatokset)
-    ;; Jos tarvittavia tietoja ei ole, niin poistetaan sekä tavoitehinnan alitus
-    (remove
-      (fn [paatos]
-        (= (:nimi paatos) "Tavoitehinnan alitus"))
-      paatokset)))
+    ;; Jos tarvittavia tietoja ei ole, niin poistetaan pöötöstyyppi
+    (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus" false)))
 
 (defn valmistele-tavoitehinnan-ylityspaatos [paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kattohinta kustannukset mhu-tyyppi]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
@@ -240,10 +242,7 @@
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-ylityspaatos))]
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin poistetaan tavoitehinnan ylitys
-    (remove
-      (fn [paatos]
-        (= (:nimi paatos) "Tavoitehinnan ylitys"))
-      paatokset)))
+    (lisaa-paatos-virheellisena paatokset "Tavoitehinnan ylitys" false)))
 
 (defn valmistele-kattohinnan-paatokset [paatokset kattohinta kustannukset]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
@@ -266,10 +265,7 @@
           paatokset (sort-by :jarjestys (conj paatokset kattohinnan-ylityspaatos))]
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin poistetaan kattohinnan ylitys
-    (remove
-      (fn [paatos]
-        (= (:nimi paatos) "Kattohinnan ylitys"))
-      paatokset)))
+    (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" false)))
 
 (defn valmistele-hoitokauden-lopun-hintapaatos [paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
@@ -291,10 +287,7 @@
           paatokset (sort-by :jarjestys (conj paatokset hintapaatos))]
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin varoitetaan siitä käyttäjää
-    (sort-by :jarjestys
-      (conj
-        (filter #(not= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") paatokset)
-        {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :virhe "Päätöksen vaatimia tietoja ei löydetty." :jarjestys 8}))))
+    (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" true)))
 
 (defn valmistele-hoidonjohtopalkkionmuutospaatos [paatokset tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
@@ -317,10 +310,7 @@
           paatokset (sort-by :jarjestys (conj paatokset paatos))]
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin varoitetaan siitä käyttäjää
-    (sort-by :jarjestys
-      (conj
-        (filter #(not= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset)
-        {:nimi "Hoidonjohtopalkkion muutos" :virhe "Päätöksen vaatimia tietoja ei löydetty." :jarjestys 16}))))
+    (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" false)))
 
 (defn nimi->avain [nimi]
   (keyword (str/lower-case (-> nimi

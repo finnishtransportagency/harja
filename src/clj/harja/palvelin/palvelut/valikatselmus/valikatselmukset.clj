@@ -954,6 +954,23 @@
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
+(defn tee-poytakirjan-raporttipaatos [db kayttaja paatos]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
+  (log/info "tee-poytakirjan-raporttipaatos :: paatos" (pr-str paatos))
+  (jdbc/with-db-transaction [db db]
+    (paatos-kyselyt/tee-poytakirjan-raporttipaatos db (:urakkaid paatos) paatos)
+    ;; Hae välikatselmuksen tiedot
+    (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)})))
+
+(defn poista-poytakirjan-raporttipaatos [db kayttaja paatos]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
+  (log/debug "poista-poytakirjan-raporttipaatos :: paatos" (pr-str paatos))
+  (jdbc/with-db-transaction [db db]
+    (let [_ (paatos-kyselyt/poista-poytakirjan-raporttipaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
+
+      ;; Hae välikatselmuksen tiedot
+      (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
+
 (defrecord Valikatselmukset []
   component/Lifecycle
   (start [this]
@@ -1054,6 +1071,14 @@
         :poista-hoidonjohtopalkkion-muutospaatos
         (fn [user tiedot]
           (poista-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot)))
+      (julkaise-palvelu (:http-palvelin this)
+        :tee-poytakirjan-raporttipaatos
+        (fn [user tiedot]
+          (tee-poytakirjan-raporttipaatos (:db this) user tiedot)))
+      (julkaise-palvelu (:http-palvelin this)
+        :poista-poytakirjan-raporttipaatos
+        (fn [user tiedot]
+          (poista-poytakirjan-raporttipaatos (:db this) user tiedot)))
       this))
   (stop [this]
     (poista-palvelut (:http-palvelin this)
@@ -1082,5 +1107,7 @@
       :tee-hoitovuoden-lopun-hintapaatos
       :poista-hoitovuoden-lopun-hintapaatos
       :tee-hoidonjohtopalkkion-muutospaatos
-      :poista-hoidonjohtopalkkion-muutospaatos)
+      :poista-hoidonjohtopalkkion-muutospaatos
+      :tee-poytakirjan-raporttipaatos
+      :poista-poytakirjan-raporttipaatos)
     this))

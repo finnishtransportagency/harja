@@ -14,6 +14,7 @@
   tee-hoitokauden-indeksikorjaus-paatos<! hae-hoitokauden-indeksikorjaus-paatos poista-hoitokauden-indeksikorjaus-paatos<! hae-hoitokauden-indeksikorjaus-paatokset
   tee-hoitokauden-lopun-hinta-paatos<! hae-hoitokauden-lopun-hintapaatos poista-hoitokauden-lopun-hinta-paatos<! hae-hoitokauden-lopun-hinta-paatokset
   tee-hoidonjohtopalkkio-paatos<! hae-hoidonjohtopalkkiopaatos poista-hoidonjohtopalkkio-paatos<! hae-hoidonjohtopalkkiopaatokset
+  tee-poytakirjan-raporttipaatos<! hae-poytakirjan-raporttipaatos poista-poytakirjan-raporttipaatos<! hae-poytakirjan-raporttipaatokset
   hae-hoitokauden-lopun-indeksikorjaus
   hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle)
 
@@ -48,8 +49,7 @@
         (= (:nimi paatos) "Tavoitehinnan ylitys") (hae-tavoitehinnnan-ylitys-paatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         (= (:nimi paatos) "Kattohinnan ylitys") (hae-kattohinta-paatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         (= (:nimi paatos) "Hoidonjohtopalkkion muutos") (hae-hoidonjohtopalkkiopaatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
-        ;;TODO: Tätä ei ole vielä määritelty tarpeeksi.
-        (= (:nimi paatos) "Välikatselmuspöytäkirjaan liitettävät raportit") nil))
+        (= (:nimi paatos) "Välikatselmuspöytäkirjaan liitettävät raportit") (hae-poytakirjan-raporttipaatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
     paatokset))
 
 (defn tee-lupauspaatos
@@ -334,7 +334,7 @@
     vastaus))
 
 (defn tee-hoidonjohtopalkkiomuutospaatos
-  "Hoindojohtopalkkion muutospäätöksen mäppi:
+  "Hoidojohtopalkkion muutospäätöksen mäppi:
    {:urakkaid <urakkaid>
    :hoitokauden_alkuvuosi <hoitokauden-alkuvuosi>
    :tavoitehinta <eurot>
@@ -369,4 +369,33 @@
             ;; Throw exception
             (throw (Exception. "Hoindonjohtopalkkionmuutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
         vastaus (poista-hoidonjohtopalkkio-paatos<! db {:poistaja kayttajaid :id paatosid})]
+    vastaus))
+
+(defn tee-poytakirjan-raporttipaatos
+  "Välikatselmuksen pöytäkirjan raporttipäätöksen mäppi:
+   {:urakkaid <urakkaid>
+   :hoitokauden_alkuvuosi <hoitokauden-alkuvuosi>
+   :luoja <luoja>}"
+  [db urakkaid paatos]
+  ;; Varmistetaan, että tarvittavat tiedot on annettu
+  (println "tee-poytakirjan-raporttipaatos :: paatos" paatos)
+  (let [validaatio #{}
+        ;; Validoi perustietojen pakollisuus
+        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:luoja paatos))
+                     validaatio
+                     (conj validaatio "Puutteelliset päätöstiedot."))]
+
+    (if (seq validaatio)
+      (heita-virhe (str "Välikatselmuksen pöytäkirjan raporttipäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
+      (tee-poytakirjan-raporttipaatos<! db paatos))))
+
+(defn poista-poytakirjan-raporttipaatos [db urakkaid kayttajaid paatosid]
+  (let [;; Varmistetaan ensin, että raporttipaatos löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
+        paatos (first (hae-poytakirjan-raporttipaatos db {:paatos-id paatosid}))
+        _ (when (or
+                  (nil? paatos)
+                  (not= urakkaid (:urakkaid paatos)))
+            ;; Throw exception
+            (throw (Exception. "Hoindonjohtopalkkionmuutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
+        vastaus (poista-poytakirjan-raporttipaatos<! db {:poistaja kayttajaid :id paatosid})]
     vastaus))

@@ -241,6 +241,31 @@ FROM paatos_hoidonjohtopalkkio
 WHERE id = :paatos-id
   AND poistettu = FALSE;
 
+--name: tee-poytakirjan-raporttipaatos<!
+-- Tee hoidonjohtopalkkio päätös
+INSERT INTO paatos_poytakirjan_raportti (urakkaid, hoitokauden_alkuvuosi, tarkistettu, luoja, luotu)
+VALUES (:urakkaid, :hoitokauden_alkuvuosi, NOW(), :luoja, NOW());
+
+--name: poista-poytakirjan-raporttipaatos<!
+-- Poista hoidonjohtopalkkio päätös
+UPDATE paatos_poytakirjan_raportti
+SET poistettu = TRUE,
+    poistaja  = :poistaja
+WHERE id = :id;
+
+-- name: hae-poytakirjan-raporttipaatokset
+SELECT 'Välikatselmuspöytäkirjaan liitettävät raportit' as nimi, *
+FROM paatos_poytakirjan_raportti
+WHERE urakkaid = :urakkaid
+  AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+  AND poistettu = FALSE;
+
+-- name: hae-poytakirjan-raporttipaatos
+SELECT 'Välikatselmuspöytäkirjaan liitettävät raportit' as nimi, *
+FROM paatos_poytakirjan_raportti
+WHERE id = :paatos-id
+  AND poistettu = FALSE;
+
 -- name: hae-hoitokauden-lopun-indeksikorjaus
 -- single?: true
 -- Jos hoitokauden indeksikorjaus on tehty, niin hae se

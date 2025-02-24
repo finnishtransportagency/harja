@@ -139,6 +139,11 @@
    :kulu_id kulu_id
    :luoja luoja})
 
+(defn poytakirjan-raporttipaatos [urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid]
+  {:urakkaid urakkaid
+   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+   :tarkistettu tarkistettu
+   :luoja kayttajaid})
 
 (defn testaa-lupauspaatostiedot [paatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                                  lupausbonus lupaussanktio erilliskustannus-id sanktio-id luoja]
@@ -240,6 +245,13 @@
   (is (= muutosprosentti (:muutosprosentti paatos)))
   (is (= hoidonjohtopalkkio (:hoidonjohtopalkkio paatos)))
   (is (= hoidonjohtopalkkio_muutos (:hoidonjohtopalkkio_muutos paatos)))
+  (is (= luoja (:luoja paatos))))
+
+(defn testaa-poytakirjan-raporttipaatos [paatos urakkaid hoitokauden-alkuvuosi tarkistettu luoja]
+  (is (= urakkaid (:urakkaid paatos)))
+  (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
+  ;; Jätetään millisekuntivertailut pois, koska testin ajamisessa menee hetki. Päivän tarkkuus riittää.
+  (is (= (pvm/sql-aika->pvm-str tarkistettu) (pvm/sql-aika->pvm-str (:tarkistettu paatos))))
   (is (= luoja (:luoja paatos))))
 
 ;; Aloitetaan lupauksista
@@ -1112,9 +1124,7 @@
                                 paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle (fn [db hakuparametrit] {:budjetoitu_summa_indeksikorjattu hoidonjohtopalkkio})]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ paatos))
                   (catch Exception e e))
-        _ (println "vastaus:" vastaus)
-        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoidonjohtopalkkion-muutos)
-        _ (println "tallennettu-paatos:" tallennettu-paatos)]
+        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoidonjohtopalkkion-muutos)]
     (testaa-hoidojohtopalkkiomuutospaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
       muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)))
 
@@ -1134,11 +1144,61 @@
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
         ;; Lisätään päätös suoralla kyselyllä
         uusi-paatos (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid paatos)
-        _ (println "uusi-paatos:" uusi-paatos)
         ;; Poistetaan päätös rajapinnan kautta
         poisto-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ uusi-paatos)
-        poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :hoidonjohtopalkkion-muutos)
-        _ (println "poistettu-paatos:" poistettu-paatos)]
+        poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :hoidonjohtopalkkion-muutos)]
     ;; Päätös on poistettu, joten sitä ei enää löydy
     (is (= "Hoidonjohtopalkkion muutos" (:nimi poistettu-paatos)))
     (is (not (nil? (:virhe poistettu-paatos))))))
+
+(deftest kysely-poytakirjan-raportin-lisays-onnistuu-test
+  (let [;; Hae -24 alkava urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        tarkistettu (pvm/nyt)
+        paatos (poytakirjan-raporttipaatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)
+        vastaus (paatos-kyselyt/tee-poytakirjan-raporttipaatos (:db jarjestelma) urakkaid paatos)]
+    (testaa-poytakirjan-raporttipaatos vastaus urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)))
+
+(deftest kysely-poytakirjan-raportin-poisto-onnistuu-test
+  (let [;; Hae -24 alkava urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        tarkistettu (pvm/nyt)
+        paatos (poytakirjan-raporttipaatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)
+        uusi-paatos (paatos-kyselyt/tee-poytakirjan-raporttipaatos (:db jarjestelma) urakkaid paatos)
+        _ (testaa-poytakirjan-raporttipaatos uusi-paatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)
+        ;; Poistetaan päätös
+        poistovastaus (paatos-kyselyt/poista-poytakirjan-raporttipaatos (:db jarjestelma) urakkaid kayttajaid (:id uusi-paatos))]
+    (is (= true (:poistettu poistovastaus)))
+    (is (= kayttajaid (:poistaja poistovastaus)))))
+
+(deftest rajapinta-poytakirjan-raportin-lisays-onnistuu-test
+  (let [;; Hae -24 alkava urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        tarkistettu (pvm/nyt)
+        paatos (poytakirjan-raporttipaatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tee-poytakirjan-raporttipaatos +kayttaja-jvh+ paatos)
+        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :valikatselmuspoytakirjaan-liitettavat-raportit)]
+    (testaa-poytakirjan-raporttipaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)))
+
+(deftest rajapinta-poytakirjan-raportin-poisto-onnistuu-test
+  (let [;; Hae -24 alkava urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        tarkistettu (pvm/nyt)
+
+        paatos (poytakirjan-raporttipaatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tee-poytakirjan-raporttipaatos +kayttaja-jvh+ paatos)
+        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :valikatselmuspoytakirjaan-liitettavat-raportit)
+
+        ;; Poistetaan tallennettu päätös
+        poisto-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-poytakirjan-raporttipaatos +kayttaja-jvh+ tallennettu-paatos)
+        poistettu-paatos(valitse-paatos (:paatokset poisto-vastaus) :valikatselmuspoytakirjaan-liitettavat-raportit)]
+    ;; Poiston jälkeen löytyy vain default tiedot päätöksestä
+    (is (= "Välikatselmuspöytäkirjaan liitettävät raportit" (:nimi poistettu-paatos)))))
