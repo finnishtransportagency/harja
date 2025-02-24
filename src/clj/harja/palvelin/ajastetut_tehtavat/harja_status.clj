@@ -95,12 +95,12 @@
 
         (doseq [state states]
           (log/info (str
-                      "async-dispatch / poolin koko (" state ") :"
+                      "async-dispatch / poolin koko (" state ") : "
                       (thread-maara "async-dispatch" state) " / " threadpool-size)))
         
         (doseq [state states]
           (log/info (str
-                      "async-thread-macro määrä (" state ") : " (thread-maara "async-thread-macro" state))))
+                      "async-thread-macro count (" state ") : " (thread-maara "async-thread-macro" state))))
 
         ;; Tulosta async-threadien tila debuggausta varten
         #_(clojure.pprint/pprint
