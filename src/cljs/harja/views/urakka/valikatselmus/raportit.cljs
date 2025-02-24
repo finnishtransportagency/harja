@@ -8,6 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
             [harja.ui.dom :as dom]
+            [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.pvm :as pvm]
@@ -22,7 +23,6 @@
 (defn raportit [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
   (let [paatos-avain :valikatselmuspoytakirjaan-liitettavat-raportit
         paatos-tehty? (or (:id paatos) false)
-
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         avaa-tai-sulje-haitari (fn [event]
                                  (when (dom/enter-nappain? event)
@@ -34,5 +34,11 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
-         [:p "Tarkista, että seuraavien raporttien luvut ovat oikein ja liitä raportit välikatselmuspöytäkirjaan."]
-         ]])]))
+         [:p "Tarkista, että seuraavien raporttien luvut ovat oikein ja liitä raportit välikatselmuspöytäkirjaan."]]
+        [:div.flex-row [:div "Ympäristöraportti"]]
+        [:div.flex-row [:div "Laskutusyhteenveto"]]
+        [:div.flex-row [:div "Tehtävämääräraportti"]]
+        [:div [yleiset/info-laatikko :vahva-ilmoitus (str "Hoitovuoden raportointi lukitaan 31.12." (inc hoitokauden-alkuvuosi))]]
+        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+         #(e! (valikatselmus-tiedot/->TallennaPoytakirjanRaporttiPaatos paatos))
+         #(e! (valikatselmus-tiedot/->PoistaPoytakirjanRaporttiPaatos paatos))]])]))

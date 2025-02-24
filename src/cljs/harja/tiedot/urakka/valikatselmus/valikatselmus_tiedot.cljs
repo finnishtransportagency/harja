@@ -59,6 +59,8 @@
 (defrecord PoistaTavoitehinnanYlitysPaatos [paatos])
 (defrecord TallennaKattohinnanYlitysPaatos [paatos])
 (defrecord PoistaKattohinnanYlitysPaatos [paatos])
+(defrecord TallennaPoytakirjanRaporttiPaatos [paatos])
+(defrecord PoistaPoytakirjanRaporttiPaatos [paatos])
 
 (defrecord PaivitaKattohinnanSiirtoCheckbox [uusi-arvo])
 (defrecord PaivitaKattohinnanSiirtoMaara [uusi-arvo])
@@ -515,6 +517,22 @@
   PoistaKattohinnanYlitysPaatos
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :poista-kattohinnan-ylityspaatos
+      (assoc paatos :luoja (:id @istunto/kayttaja))
+      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+    (assoc app :tallennus-kesken? true))
+
+  TallennaPoytakirjanRaporttiPaatos
+  (process-event [{paatos :paatos} app]
+    (tuck-apurit/post! :tee-poytakirjan-raporttipaatos
+      (assoc paatos :luoja (:id @istunto/kayttaja))
+      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+    (assoc app :tallennus-kesken? true))
+
+  PoistaPoytakirjanRaporttiPaatos
+  (process-event [{paatos :paatos} app]
+    (tuck-apurit/post! :poista-poytakirjan-raporttipaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
       {:onnistui ->HaeValikatselmuksenTiedotOnnistui
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
