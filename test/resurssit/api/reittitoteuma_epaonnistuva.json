@@ -1,0 +1,89 @@
+{
+  "otsikko": {
+      "lahettaja": {
+          "jarjestelma": "Tietomekka Oy",
+          "organisaatio": {
+              "ytunnus": "3007636-4",
+              "nimi": "Terranor Oy"
+          }
+      },
+      "viestintunniste": {
+          "id": 62711560
+      },
+      "lahetysaika": "2025-02-24T08:49:22Z"
+  },
+  "reittitoteumat": [
+      {
+          "reittitoteuma": {
+              "toteuma": {
+                  "tunniste": {
+                      "id": 86123323
+                  },
+                  "alkanut": "2025-02-24T07:03:04Z",
+                  "paattynyt": "2025-02-24T07:03:11Z",
+                  "toteumatyyppi": "kokonaishintainen",
+                  "suorittaja": {
+                      "ytunnus": "3007636-4",
+                      "nimi": "Terranor Oy"
+                  },
+                  "tehtavat": [
+                      {
+                          "tehtava": {
+                              "id": 1367,
+                              "maara": {
+                                  "yksikko": "jkm",
+                                  "maara": 0.042
+                              }
+                          }
+                      }
+                  ],
+                  "materiaalit": []
+              },
+              "reitti": [
+                  {
+                      "reittipiste": {
+                          "aika": "2025-02-24T07:03:04Z",
+                          "koordinaatit": {
+                              "x": 432415.13100000739,
+                              "y": 6896034.008000019
+                          },
+                          "tehtavat": [
+                              {
+                                  "tehtava": {
+                                      "id": 1367
+                                  }
+                              }
+                          ]
+                      }
+                  },
+                  {
+                      "reittipiste": {
+                          "aika": "2025-02-24T07:03:11Z",
+                          "koordinaatit": {
+                              "x": 432375.66300000704,
+                              "y": 6896044.0150000174
+                          },
+                          "tehtavat": [
+                              {
+                                  "tehtava": {
+                                      "id": 1367,
+                                      "maara": {
+                                          "yksikko": "jkm",
+                                          "maara": 0.042
+                                      }
+                                  }
+                              }
+                          ],
+                          "materiaalit": []
+                      }
+                  }
+              ],
+              "tyokone": {
+                  "id": "27608",
+                  "tunnus": "Terranor Oy",
+                  "tyokonetyyppi": "Huoltoauto"
+              }
+          }
+      }
+  ]
+}
