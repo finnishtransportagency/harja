@@ -129,7 +129,7 @@
         iam-identity (get headerit "x-iam-identity")
 
         
-        _ (log/info (str "Headerit: " iam-data))
+        _ (log/info (str "Headerit: " headerit))
 
         ;; Vahvistetaan että tokenien payloadit ei ole muuttunut matkalla 
         vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data iam-identity true public-key-url)
@@ -138,8 +138,7 @@
         dekoodatut-headerit (update vahvistetut-tunnustiedot "custom:rooli" #(if (konv/onko-json? %)
                                                                                (parsi-json-entraid-roolit %)
                                                                                %))
-        _ (if iam-data
-            (log/info (str "Dekoodattu: " dekoodatut-headerit)))]
+       ]
 
     ;; Mapataan Cognito-headerit vanhan mallisiksi vastaaviksi OAM-headereiksi
     ;; TODO: Siirrytään mahdollisesti myöhemmin käyttämään pelkkiä cognito-headereita
