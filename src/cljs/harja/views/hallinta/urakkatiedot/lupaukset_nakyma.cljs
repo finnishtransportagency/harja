@@ -50,15 +50,14 @@
       
           ;; Urakan valinta
          (if haku-kaynnissa?
-         [:div.ajax-loader-valistys
-            [ajax-loader-pieni (str "Haetaan tietoja...")]]
-         (when (seq kategorian-urakat)
-           [yleiset/pudotusvalikko
-            "Kategorian urakat"
-            {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
-             :valinta valittu-urakka
-             :format-fn #(or (:nimi %) "Valitse urakka")}
-            kategorian-urakat]))
+           [ajax-loader-pieni "Haetaan tietoja..."]
+           (when (seq kategorian-urakat)
+             [yleiset/pudotusvalikko
+              "Kategorian urakat"
+              {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
+               :valinta valittu-urakka
+               :format-fn #(or (:nimi %) "Valitse urakka")}
+              kategorian-urakat]))
 
          ;; Lupaukset taulukko
          (when (seq urakan-lupaukset)

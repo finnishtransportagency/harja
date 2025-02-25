@@ -128,8 +128,7 @@
      (-> tiedot
        (assoc-in [1 :tunniste] raportin-nimi)
        (assoc-in [1 :yhteenvetotyyppi] @valittu-yhteenveto-muoto))]
-    [:div.ajax-loader-valistys
-     [yleiset/ajax-loader "Raporttia suoritetaan..."]]))
+    [yleiset/ajax-loader "Raporttia suoritetaan..."]))
 
 (defn laskutusyhteenveto
   []

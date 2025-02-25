@@ -59,7 +59,7 @@ VALUES (
   215000.0::NUMERIC,                                  -- kustannus
   'm2'::TEXT,                                         -- yksikkö
   81::INT,                                            -- määrä
-  (SELECT tierekisteriosoitteelle_viiva(20, 1, 860, 1, 1020)) -- geometria
+  (SELECT tieosoitteelle_geometria(20, 1, 860, 1, 1020)) -- geometria
 );
 
 
@@ -115,7 +115,7 @@ VALUES (
   25000.0::NUMERIC,                                  -- kustannus
   'jm'::TEXT,                                         -- yksikkö
   66::INT,                                            -- määrä
-  (SELECT tierekisteriosoitteelle_viiva(20, 1, 750, 1, 800)) -- geometria
+  (SELECT tieosoitteelle_geometria(20, 1, 750, 1, 800)) -- geometria
 );
 
 
@@ -171,7 +171,7 @@ VALUES (
   3520.0::NUMERIC,                                    -- kustannus
   'm2'::TEXT,                                         -- yksikkö
   66::INT,                                            -- määrä
-  (SELECT tierekisteriosoitteelle_viiva(20, 1, 480, 1, 700)) -- geometria
+  (SELECT tieosoitteelle_geometria(20, 1, 480, 1, 700)) -- geometria
 );
 
 
@@ -227,7 +227,7 @@ VALUES (
   4500.0::NUMERIC,                                    -- kustannus
   'kpl'::TEXT,                                        -- yksikkö
   66::INT,                                            -- määrä
-  (SELECT tierekisteriosoitteelle_viiva(20, 1, 140, 1, 360)) -- geometria
+  (SELECT tieosoitteelle_geometria(20, 1, 140, 1, 360)) -- geometria
 );
 
 
@@ -283,5 +283,5 @@ VALUES (
   1500.0::NUMERIC,                                    -- kustannus
   'kpl'::TEXT,                                        -- yksikkö
   66::INT,                                            -- määrä
-  (SELECT tierekisteriosoitteelle_viiva(20, 1, 1, 1, 120)) -- geometria
+  (SELECT tieosoitteelle_geometria(20, 1, 1, 1, 120)) -- geometria
 );

@@ -147,9 +147,9 @@
                         :turvalaitteiden-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:turvalaitteet&outputFormat=SHAPE-ZIP"
                         :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
 
-                        :kanavien-shapefile "file://shp/Vesivaylien_kanavat/sulkukanavatPolygon.shp"
-                        :kanavien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=vesivaylatiedot:sulkukanavat&outputFormat=SHAPE-ZIP"
-                        :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/SulkukanavatPolygon.shz"
+                        :kanavien-shapefile "file://shp/Vesivaylien_kanavat/sulkukanavat_uusiPolygon.shp"
+                        :kanavien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=vesivaylatiedot:sulkukanavat_uusi&outputFormat=SHAPE-ZIP"
+                        :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Sulkukanavat_uusiPolygon.shz"
 
                         :tieturvallisuustarkastus-tieverkko-shapefile "file://shp/Tieturvallisuus/tieturvallisuustarkastettavat_tietLine.shp"
                         :tieturvallisuustarkastus-tieverkko-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieturvallisuustarkastettavat_tiet&outputFormat=SHAPE-ZIP"
@@ -162,12 +162,7 @@
  :yha {:url "https://api.testivaylapilvi.fi/yha/rest/"
        :api-key #=(slurp "../.harja/yha-api-key")} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
 
- :velho {:paallystetoteuma-url "https://apiv2stgvelho.testivaylapilvi.fi/toimenpiderekisteri/api/v1/kohde/toimenpiteet/tienrakennetoimenpiteet"
-         :token-url "https://vayla-velho-stg.auth.eu-west-1.amazoncognito.com/oauth2/token"
-         :kayttajatunnus "6o9f1j147qvdvo49nufo0fhufp"
-         :salasana #=(eval (some->
-                               (slurp "../.harja/velho-salasana")
-                               (clojure.string/trim-newline)))#_ #=(slurp "../.harja/velho-salasana")
+ :velho {:token-url "https://vayla-velho-stg.auth.eu-west-1.amazoncognito.com/oauth2/token" 
          :varuste-api-juuri-url "https://apiv2stgvelho.testivaylapilvi.fi"
          :varuste-kayttajatunnus "6o9f1j147qvdvo49nufo0fhufp"
          :varuste-tuonti-suoritusaika nil
@@ -175,8 +170,6 @@
                                        (slurp "../.harja/velho-varuste-salasana")
                                        (clojure.string/trim-newline)))
          :oid-tuonti-suoritusaika nil}
-
- :yha-velho {}
 
  ;; LinkSMS eli Labyrintti
  :labyrintti {:sms-url "https://api.testivaylapilvi.fi/harja/sms/send"

@@ -1,5 +1,5 @@
 INSERT INTO paikkauskohde ("luoja-id", luotu, "ulkoinen-id", nimi, "urakka-id", "yhalahetyksen-tila",
-                           "ilmoitettu-virhe", muokattu, "muokkaaja-id", tarkistettu, "tarkistaja-id", lisatiedot)
+                           "ilmoitettu-virhe", muokattu, "muokkaaja-id", tarkistettu, "tarkistaja-id", lisatiedot, yksikko, "suunniteltu-maara")
 VALUES ((SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'yit-rakennus'
@@ -21,7 +21,9 @@ VALUES ((SELECT id
 (SELECT id
    FROM kayttaja
   WHERE kayttajanimi = 'jvh'
-  LIMIT 1), 'Oulun testipaikkauskohde'),
+  LIMIT 1), 'Oulun testipaikkauskohde',
+        NULL,
+        NULL),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'destia'
@@ -32,6 +34,8 @@ VALUES ((SELECT id
   (SELECT id
     FROM urakka
     WHERE sampoid = '1245142-KAJ2'),
+   NULL,
+   NULL,
    NULL,
    NULL,
    NULL,
@@ -55,6 +59,8 @@ VALUES ((SELECT id
    NULL,
    NULL,
    NULL,
+   NULL,
+   NULL,
    NULL),
    ((SELECT id
        FROM kayttaja
@@ -72,6 +78,8 @@ VALUES ((SELECT id
     NULL,
     NULL,
     NULL,
+    NULL,
+    NULL,
     NULL),
   ((SELECT id
     FROM kayttaja
@@ -83,6 +91,8 @@ VALUES ((SELECT id
    (SELECT id
     FROM urakka
     WHERE sampoid = '1242141-OULU2'),
+   NULL,
+   NULL,
    NULL,
    NULL,
    NULL,
@@ -106,7 +116,9 @@ VALUES ((SELECT id
    NULL,
    NULL,
    NULL,
-   NULL);
+   NULL,
+   't',
+   10);
 
 
 DO $$ DECLARE
@@ -158,64 +170,64 @@ BEGIN
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
                       6661, NOW() + INTERVAL '1 day', NOW() + INTERVAL '10 day',
      ROW (20, 1, 1, 1, 100, NULL) :: TR_OSOITE,
-     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 1, 1, 1, 100)),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tieosoitteelle_geometria(20, 1, 1, 1, 100)),
          130, 15),
 
     (destia_kayttaja, NOW() + TIME '00:01:00', NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
                       6662, NOW() + INTERVAL '5 day', NOW() +
                                                       INTERVAL '15 day', ROW (20, 1, 50, 1, 150, NULL) :: TR_OSOITE,
-     8, 'AB, Asfalttibetoni', 1.4, 3, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 1, 50, 1, 150)),
+     8, 'AB, Asfalttibetoni', 1.4, 3, 5, 'AN7', (SELECT tieosoitteelle_geometria(20, 1, 50, 1, 150)),
      130, 15.385),
 
     (destia_kayttaja, NOW() + TIME '00:02:00', NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
                       6663, NOW() + INTERVAL '10 day', NOW() +
                                                        INTERVAL '20 day', ROW (20, 3, 1, 3, 200, NULL) :: TR_OSOITE,
-     8, 'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 1, 3, 200)),
+     8, 'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7', (SELECT tieosoitteelle_geometria(20, 3, 1, 3, 200)),
     130, 15.385),
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
                       6664, NOW() - INTERVAL '1 day', NOW() +
                                                       INTERVAL '9 day', ROW (20, 1, 50, 1, 150, NULL) :: TR_OSOITE,
-     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 1, 50, 1, 150)),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tieosoitteelle_geometria(20, 1, 50, 1, 150)),
      130, 15.385),
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
                       6665, NOW() - INTERVAL '1 day', NOW() +
                                                       INTERVAL '9 day', ROW (20, 3, 100, 3, 250, NULL) :: TR_OSOITE,
-     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 100, 3, 250)),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tieosoitteelle_geometria(20, 3, 100, 3, 250)),
      130, 15.385),
     (destia_kayttaja, NOW(), NULL, NULL, destia_kayttaja, TRUE, oulun_alueurakan_id, hoito_paikkauskohde_id,
           6666, NOW() - INTERVAL '1 day', NOW() +
                                           INTERVAL '9 day', ROW (20, 3, 100, 3, 250, NULL) :: TR_OSOITE,
-          8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 100, 3, 250)),
+          8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tieosoitteelle_geometria(20, 3, 100, 3, 250)),
      130, 15.385),
     (destia_kayttaja, NOW() + TIME '00:03:00', NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_2_id,
                       133, NOW() + INTERVAL '10 day', NOW() +
                                                       INTERVAL '20 day', ROW (20, 3, 200, 3, 300, NULL) :: TR_OSOITE,
-     8, 'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 200, 3, 300)),
+     8, 'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7', (SELECT tieosoitteelle_geometria(20, 3, 200, 3, 300)),
      130, 15.385),
     -- 22 tien paikkaukset
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
                       221, NOW() - INTERVAL '1 day', NOW() +
                                                      INTERVAL '9 day', ROW (22, 3, 1, 3, 100, NULL) :: TR_OSOITE,
-     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 3, 1, 3, 100)),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tieosoitteelle_geometria(22, 3, 1, 3, 100)),
      130, 15.385),
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
                       222, NOW() - INTERVAL '1 day', NOW() +
                                                      INTERVAL '9 day', ROW (22, 3, 200, 3, 300, NULL) :: TR_OSOITE,
-     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 3, 200, 3, 300)),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tieosoitteelle_geometria(22, 3, 200, 3, 300)),
      130, 15.385),
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
                       223, NOW() - INTERVAL '1 day', NOW() +
                                                      INTERVAL '9 day', ROW (22, 3, 400, 3, 450, NULL) :: TR_OSOITE,
-     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 3, 400, 3, 450)),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tieosoitteelle_geometria(22, 3, 400, 3, 450)),
      130, 15.385),
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
                       224, NOW() - INTERVAL '1 day', NOW() + INTERVAL '9 day', ROW (22, 4, 1, 5, 1, NULL) :: TR_OSOITE,
-     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 4, 1, 5, 1)),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tieosoitteelle_geometria(22, 4, 1, 5, 1)),
      130, 15.385),
  -- Tehdään paikkaus jolle ei ole paikkaustoteumaa
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_3_id,
      225, NOW() - INTERVAL '1 day', NOW() + INTERVAL '9 day', ROW (22, 4, 1, 5, 1, NULL) :: TR_OSOITE,
-     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 4, 1, 5, 1)),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tieosoitteelle_geometria(22, 4, 1, 5, 1)),
      130, 15.385);
   --- Laitetaan iso kasa paikkauksia Muhoksen päällystysurakkaan. Näkee sivutuksen tällä tapaa.
   FOR counter IN 1..250 LOOP
@@ -226,7 +238,7 @@ BEGIN
                               733 + counter, NOW(), NOW() + INTERVAL '20 day',
             ROW (20, 19, (50 + counter), 19, (51 + counter), NULL) :: TR_OSOITE,
             tyomen_urem,  'AB, Asfalttibetoni', 1.2, 23, 0.0276, 1.2, 5, 'AN7',
-            (SELECT tierekisteriosoitteelle_viiva(20, 19, (50 + counter), 19, (51 + counter))));
+            (SELECT tieosoitteelle_geometria(20, 19, (50 + counter), 19, (51 + counter))));
     INSERT INTO paikkauksen_tienkohta ("paikkaus-id", ajorata, reunat, ajourat, ajouravalit, keskisaumat)
     VALUES ((select max(id) from paikkaus), 0,
             (CASE
@@ -454,6 +466,13 @@ SET "paikkauskohteen-tila" = 'valmis',
                        FROM paikkaus p
                        WHERE p."paikkauskohde-id" = pk.id)
 WHERE pk."paikkauskohteen-tila" IS NULL;
+
+INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu, "muokkaaja-id", muokattu, "urakka-id", "yhalahetyksen-tila",
+                           virhe, tarkistettu, "tarkistaja-id", "ilmoitettu-virhe", alkupvm, loppupvm, tilattupvm, tyomenetelma, tierekisteriosoite_laajennettu,
+                           "paikkauskohteen-tila", "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot, "pot?", valmistumispvm, tiemerkintapvm, "toteutunut-hinta",
+                       "tiemerkintaa-tuhoutunut?", takuuaika, "yllapitokohde-id", "yhalahetyksen-aika", pkluokka)
+VALUES  ((SELECT id FROM harja.public.kayttaja WHERE kayttajanimi = 'jvh'), 100, 'Kt66 testipaikkauskohde PK2-alueella', false, '2024-04-18 14:10:22.087000', NULL, '2024-04-18 14:43:50.405000',
+         (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), null, null, null, null, null, '2024-04-22', '2024-04-22', null, 5, '(66,15,0,18,3700,0,,,,)', 'hylatty', 50, 10000, 't', null, false, null, null, null, null, null, null, null, 'Ei tiedossa');
 
 -- Päivitetään paikkauskohdeluokat kaikille paikkauskohteille
 SELECT * FROM paivita_paikkauskohteiden_korjausluokat('1900-01-01'::DATE, '2100-01-01'::DATE);

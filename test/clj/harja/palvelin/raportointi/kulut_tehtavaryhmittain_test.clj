@@ -68,7 +68,7 @@
      (list "T2 - Vahinkojen korjaukset, Liikenneympäristön hoito" 0 0)
      (list "T2 - Vahinkojen korjaukset, Soratiet" 0 0)
      (list "T3 - Tilaajan rahavaraus" 0 0)
-     (list "T4 - Digitalisaatio ja innovaatiot" 0 0)
+     (list "T4" 0 0)
      (list "U - Kaiteet, aidat ja kivetykset" 0 0)
      (list "V - Vesakonraivaukset ja puun poisto" 333.33M 0)
      (list "W - Erillishankinnat" 344.20M 294.20M)
@@ -82,16 +82,12 @@
      (list "Y7 - Valu" 0 0)
      (list "Y8 - Päällysteiden paikkaus, muut työt" 0 0)
      (list "Z - Avo-ojitus, soratiet" 15401.94M 7700.40M)
-     (list "Hoitovuoden päättäminen / Tavoitepalkkio" 1500M 500M)
-     (list "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä" 0 0)
-     (list "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" 0 0)
-     (list "Alataso Lisätyöt" 0 0)
-     ["Yhteensä" 64307.62M 28366.60M]]]
+     ["Yhteensä" 62807.62M 27866.60M]]]
    [:taulukko {:otsikko "Urakkavuoden alusta", :viimeinen-rivi-yhteenveto? true}
     [{:leveys 1, :otsikko ""} {:leveys 1, :otsikko "", :fmt :raha}]
     [["Tavoitehinta: " 250000M]
-     ["Urakkavuoden alusta tav.hintaan kuuluvia: " 64307.62M]
-     ["Jäljellä: " 185692.38M]]]])
+     ["Urakkavuoden alusta tav.hintaan kuuluvia: " 62807.62M]
+     ["Jäljellä: " 187192.38M]]]])
 
 (deftest kulut-tehtavaryhmittain-testi
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

@@ -8,7 +8,9 @@
 (defn hae-tierekisteriosoite [db {alku-x :x alku-y :y} {loppu-x :x loppu-y :y}]
   (let [threshold 250]
     (try
-      (if (and alku-x alku-y loppu-x loppu-y)
+      (if (and alku-x alku-y loppu-x loppu-y
+            ;; jos alkupiste ja loppupiste ovat samat, käsiteltävä pistemäisenä
+            (not (and (= alku-x loppu-x) (= alku-y loppu-y))))
         (tieverkko/hae-tr-osoite-valille-ehka db alku-x alku-y loppu-x loppu-y threshold)
         (when (and alku-x alku-y)
           (tieverkko/hae-tr-osoite-ehka db alku-x alku-y threshold)))

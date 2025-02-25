@@ -65,32 +65,43 @@ ORDER BY rs.jarjestys;
 
 -- name: hae-urakan-kulut-raporttiin-aikavalilla
 -- Annetulla aikavälillä haetaan urakan kaikki kulut tehtäväryhmittäin
-  WITH kohdistukset_ajalla AS (SELECT kk.summa, kk.tehtavaryhma
-                                 FROM kulu_kohdistus kk
-                                          JOIN kulu k ON kk.kulu = k.id
-                                     AND k.urakka = :urakka
-                                     AND k.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-                                WHERE k.id = kk.kulu
-                                  AND kk.poistettu IS NOT TRUE)
-SELECT tr.id          AS "tehtavaryhma",
-       SUM(kohd.summa) AS "summa",
-       tr.jarjestys   AS "jarjestys",
-       tr.nimi        AS "nimi"
-  FROM tehtavaryhma tr
-           LEFT JOIN kohdistukset_ajalla kohd ON tr.id = kohd.tehtavaryhma,
-       urakka u
-  -- Ei ole tarkoituksenmukaista listata tehtäväryhmiä, jotka on poistettu tai jotka eivät ole voimassa, jos niihin ei ole raportoitu kuluja
-  -- Mutta ei myöskään filtteröidä niitä ulos, jos sinne on ehditty raportoida kuluja
- WHERE u.id = :urakka
-   -- Jos ei ole kuluja, niin tehtäväryhmää, joka on poistettu, ei oteta mukaan
-   AND (tr.poistettu = false AND kohd.summa IS NULL OR kohd.summa IS NOT NULL)
-   -- Jos ei ole kuluja, niin tehtävärymän on oltava voimassa
-   AND (kohd.summa IS NULL
-        AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= EXTRACT(YEAR from u.alkupvm)::INTEGER)
-        AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= EXTRACT(YEAR from u.alkupvm)::INTEGER)
-     OR kohd.summa IS NOT NULL)
- GROUP BY tr.nimi, tr.id, tr.jarjestys
- ORDER BY tr.jarjestys;
+WITH kohdistukset_ajalla AS (
+    SELECT kk.summa, kk.tehtavaryhma
+     FROM kulu_kohdistus kk
+     JOIN kulu k ON kk.kulu = k.id
+      AND k.urakka = :urakka
+      AND k.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+    WHERE k.id = kk.kulu
+      AND kk.poistettu IS NOT TRUE
+)   SELECT tr.id      AS "tehtavaryhma",
+        SUM(kohd.summa) AS "summa",
+        tr.jarjestys    AS "jarjestys",
+        tr.nimi         AS "nimi"
+    FROM tehtavaryhma tr
+        LEFT JOIN kohdistukset_ajalla kohd ON tr.id = kohd.tehtavaryhma,
+        urakka u
+    -- Ei ole tarkoituksenmukaista listata tehtäväryhmiä, jotka on poistettu tai jotka eivät ole voimassa, jos niihin ei ole raportoitu kuluja
+    -- Mutta ei myöskään filtteröidä niitä ulos, jos sinne on ehditty raportoida kuluja
+    WHERE u.id = :urakka
+    -- Jos ei ole kuluja, niin tehtäväryhmää, joka on poistettu, ei oteta mukaan
+    AND (tr.poistettu = false AND kohd.summa IS NULL OR kohd.summa IS NOT NULL)
+    AND (tr.yksiloiva_tunniste IS NULL OR tr.yksiloiva_tunniste NOT IN(
+        -- Urakoitsija maksaa alituksesta, ei kuulu raporttiin 
+        'be34116b-2264-43e0-8ac8-3762b27a9557',
+        -- Urakoitsija maksaa ylityksestä, ei kuulu raporttiin 
+        '19907c24-dd26-460f-9cb4-2ed974b891aa',
+        -- Tavoitepalkkio, ei myöskään kuulu raporttiin
+        '55c920e7-5656-4bb0-8437-1999add714a3',
+        -- Alataso,  listätyöt
+        'c7d9be7c-7bea-49a4-bd30-a432041cf6dd')
+    )
+    -- Jos ei ole kuluja, niin tehtävärymän on oltava voimassa
+    AND (kohd.summa IS NULL
+    AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= EXTRACT(YEAR from u.alkupvm)::INTEGER)
+    AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= EXTRACT(YEAR from u.alkupvm)::INTEGER)
+    OR kohd.summa IS NOT NULL)
+GROUP BY tr.nimi, tr.id, tr.jarjestys
+ORDER BY tr.jarjestys;
 
 -- name: hae-liitteet
 -- Haetaan liitteet kululle

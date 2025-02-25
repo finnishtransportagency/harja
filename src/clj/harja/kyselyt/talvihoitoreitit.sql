@@ -7,7 +7,7 @@ INSERT INTO talvihoitoreitti_sijainti (talvihoitoreitti_id, tie, alkuosa,
                                        loppuosa, alkuetaisyys, loppuetaisyys, pituus_m, hoitoluokka, reitti)
 VALUES (:talvihoitoreitti_id, :tie, :alkuosa, :loppuosa, :alkuetaisyys, :loppuetaisyys, :pituus, :hoitoluokka,
         (SELECT *
-           FROM tierekisteriosoitteelle_viiva(:tie::INT, :alkuosa::INT, :alkuetaisyys::INT, :loppuosa::INT,
+           FROM tieosoitteelle_geometria(:tie::INT, :alkuosa::INT, :alkuetaisyys::INT, :loppuosa::INT,
                                               :loppuetaisyys::INT)));
 
 -- name: hae-urakan-talvihoitoreitit
@@ -91,5 +91,5 @@ SELECT trs.id, trs.tie, trs.alkuosa, trs.loppuosa, trs.alkuetaisyys, trs.loppuet
            JOIN talvihoitoreitti tr ON trs.talvihoitoreitti_id = tr.id AND tr.ulkoinen_id != :ulkoinen-id AND tr.poistettu = FALSE
            JOIN urakka u ON tr.urakka_id = u.id AND u.id = :urakka_id
  WHERE ST_Intersects(trs.reitti::geometry, (SELECT *
-                                    FROM tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT,
-                                                                       :let::INT))::geometry);
+                                    FROM tieosoitteelle_geometria(:tie::INT, :aosa::INT, :aet::INT, :losa::INT,
+                                                                  :let::INT))::geometry);
