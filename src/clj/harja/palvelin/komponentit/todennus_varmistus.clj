@@ -71,7 +71,8 @@
       (nil? @cache-atom)
       (public-key-vanhentunut? cache-atom paivitys-intervalli))
     (try
-      (let [response @(http/get api-url {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
+      (let [_ (log/info "Tehdään GET public key kutsu..")
+            response @(http/get api-url {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
                                                    "User-Agent" (if paivita?
                                                                     ;; Koska authentikointi epäonnistui, laita LX tunnus mukaan 
                                                                   (str user-agent-headers " (update public-key/" lx-kayttaja ")")
@@ -248,33 +249,36 @@
    ;; On mahdollista että public avaimet rotatoituu, jolloin signature ei enää täsmää
    (vahvista-jwt-signaturet headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url false))
   ([headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url yrita-uudelleen?]
-   (let [cache-key [accesstoken iam-data]]
-     ;; Todennusta kutsutaan ilman malttia, joten cachella kutsutaan vaan tarvittaessa per käyttäjä
-     (get (swap! kayttaja-varmistettu-cache #(cache/through
-                                               (fn [_]
-                                                 (try
-                                                   ;; Cachessa ei ole tietoja, varmistetaan signaturet 
-                                                   (when-not kehitysmoodi?
-                                                     (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? "https://public-keys.auth.elb.eu-west-1.amazonaws.com/"))
-                                                   ;; Jos todennus onnistui, palauta tiedot ja jatka authentikointia 
-                                                   
-                                                   (log/info "Todennettiin: " 
-                                                     (str (-> iam-data dekoodaa-token :payload :custom:etunimi)  " - " (-> iam-data dekoodaa-token :payload :custom:uid)))
-                                                   (log/info (str "Saatu public key: " public-key-url))
-                                                   (log/info (str "Headerit dekoodattu (test): " headerit))
+   (get (swap! kayttaja-varmistettu-cache #(cache/through
+                                             (fn [iam-data]
 
-                                                   (tunnistetiedot iam-data)
-                                                   ;; Todennus epäonnistui
-                                                   (catch Exception e
-                                                     (if
-                                                       (and
-                                                         (not yrita-uudelleen?)
-                                                         (= (.getMessage e) "Message seems corrupt or manipulated"))
-                                                       ;; Tarkista, onko public key rotatoitunut yrittämällä uudelleen
-                                                       (vahvista-jwt-signaturet headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url true)
-                                                       ;; Public key on ajan tasalla, ja vieläkin tulee virhe, heitetään hälytys logiin 
-                                                       (authentikointi-epaonnistui e iam-data accesstoken)))))
-                                               ;; Tiedot on jo cachessa, palauta ne 
-                                               %
-                                               cache-key))
-       cache-key))))
+                                               (log/info "Cache key: " (-> iam-data dekoodaa-token :payload (dissoc :iss :sub :exp)))
+
+                                               (try
+                                                 ;; Cachessa ei ole tietoja, varmistetaan signaturet 
+                                                 (when-not kehitysmoodi?
+                                                   (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? "https://public-keys.auth.elb.eu-west-1.amazonaws.com/"))
+                                                 ;; Jos todennus onnistui, palauta tiedot ja jatka authentikointia 
+
+
+                                                 (log/info "Todennettiin: "
+                                                   (str (-> iam-data dekoodaa-token :payload :custom:etunimi)  " - " (-> iam-data dekoodaa-token :payload :custom:uid)))
+                                                 (log/info (str "Saatu public key: " public-key-url))
+                                                 (log/info (str "Headerit dekoodattu (test): " headerit))
+
+                                                 (tunnistetiedot iam-data)
+                                                 ;; Todennus epäonnistui
+                                                 (catch Exception e
+                                                   (if
+                                                     (and
+                                                       (not yrita-uudelleen?)
+                                                       (= (.getMessage e) "Message seems corrupt or manipulated"))
+                                                     ;; Tarkista, onko public key rotatoitunut yrittämällä uudelleen
+                                                     (vahvista-jwt-signaturet headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url true)
+                                                     ;; Public key on ajan tasalla, ja vieläkin tulee virhe, heitetään hälytys logiin 
+                                                     (authentikointi-epaonnistui e iam-data accesstoken)))))
+                                             ;; Tiedot on jo cachessa
+                                             %
+                                             ;; Tallenna cache-avain
+                                             (-> iam-data dekoodaa-token :payload (dissoc :iss :sub :exp))))
+     iam-data)))
