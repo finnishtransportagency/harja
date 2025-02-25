@@ -128,6 +128,9 @@
         ;; Tällä voidaan esim invalitoida token, kun käyttäjä kirjautuu ulos, mutta Harjassa ei tuollaista tarvetta kirjoitushetkellä taida olla
         iam-identity (get headerit "x-iam-identity")
 
+        
+        _ (log/info (str "Headerit: " iam-data))
+
         ;; Vahvistetaan että tokenien payloadit ei ole muuttunut matkalla 
         vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data iam-identity true public-key-url)
 
