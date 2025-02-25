@@ -1415,3 +1415,6 @@ SELECT u.urakkanro, u.alue, (SELECT elynumero FROM organisaatio WHERE id=u.halli
 FROM urakka u WHERE u.tyyppi = 'teiden-hoito' AND u.urakkanro IS NOT NULL ON CONFLICT DO NOTHING;
 
 UPDATE urakka SET lyhyt_nimi = 'Oulun lyhyt nimi' WHERE nimi = 'Aktiivinen Oulu Testi';
+
+-- Päivitetään urakka_parametrit
+select aseta_urakka_parametrit();
