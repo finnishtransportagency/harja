@@ -114,7 +114,7 @@
 (defn- pura-cognito-headerit
   "Purkaa AWS Cognitolta palautuneet headerit ja hakee niistä OAM-tiedot.
    Tiedot mapataan vanhan mallisiksi OAM_-headereiksi
-   JWT Signaturen vahvistukset suoritetaan samalla, jonka epäonnistuessa kirjautuminen ei etene"
+   JWT Signaturen vahvistukset suoritetaan samalla, jonka epäonnistuessa authentikointi ei etene"
   [headerit kehitysmoodi? public-key-url]
   (let [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n, kertoo koska token on annettu, ja kenelle
         ;; Mukana myös signature joka vahvistetaan
