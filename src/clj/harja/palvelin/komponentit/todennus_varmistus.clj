@@ -93,17 +93,26 @@
    Mukana on 2 avainta, joten suodatetaan vaan haluttu avain (key identifier)"
   [kid issuer paivita? lx-kayttaja]
   (some #(when (= kid (:kid %)) %)
-    (hae-public-key 
-      paivita? 
-      lx-kayttaja 
-      (str issuer "/.well-known/jwks.json") 
-      false 
-      accesstoken-jwk-cache 
+    (hae-public-key
+      paivita?
+      lx-kayttaja
+      (str issuer "/.well-known/jwks.json")
+      false
+      accesstoken-jwk-cache
       +public-key-cache-paivitys-min+)))
 
 
 (defn- decode-base64-json [s]
   (-> s Base64/decodeBase64 String. (json/read-json)))
+
+
+(defn- encode-64json [s]
+  (->
+    s
+    cheshire/encode
+    (.getBytes "UTF-8")
+    Base64/encodeBase64
+    (String. "UTF-8")))
 
 
 (defn dekoodaa-token
@@ -141,6 +150,20 @@
         ;; Avainten algoritmit, buddy kirjasto haluaa nämä lowercasena
         accesstoken-algoritmi (-> accesstoken-header :alg (str/lower-case) (keyword))
         iam-data-algoritmi (-> iam-data-header :alg (str/lower-case) (keyword))
+
+        ;; -------------------------------
+        ;; TEST: Vaihdettu expiration date
+        ;; Pitäisi tulla message is manipulated 
+        fn-encode (fn [decoded]
+                    (let [{:keys [header payload signature]} decoded]
+                      (str
+                        (encode-64json header) "."
+                        (encode-64json payload) "."
+                        signature)))
+        inject_payload (-> accesstoken dekoodaa-token)
+        new-payload (assoc (:payload inject_payload) :exp "1798652411")
+        injected-token (fn-encode (assoc inject_payload :payload new-payload))
+        ;; ------------------------------------------------------------------------
 
         _ (println "\n accesstoken payload: " accesstoken-header (-> accesstoken dekoodaa-token :payload))
         _ (println "\n accesstoken header: " accesstoken-header (-> accesstoken dekoodaa-token :header))
