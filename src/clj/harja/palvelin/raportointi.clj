@@ -23,7 +23,6 @@
             [harja.domain.raportointi :as raportti-domain]
             [harja.domain.roolit :as roolit]
             [harja.pvm :as pvm]
-            [new-reliquary.core :as nr]
             [hiccup.core :refer [html]]
             [harja.transit :as t]
             [slingshot.slingshot :refer [throw+]]
