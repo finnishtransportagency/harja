@@ -255,11 +255,12 @@
                                                  (try
                                                    ;; Cachessa ei ole tietoja, varmistetaan signaturet 
                                                    (when-not kehitysmoodi?
-                                                     (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? public-key-url))
+                                                     (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? "https://public-keys.auth.elb.eu-west-1.amazonaws.com/"))
                                                    ;; Jos todennus onnistui, palauta tiedot ja jatka authentikointia 
+                                                   
                                                    (log/info "Todennettiin: " 
                                                      (str (-> iam-data dekoodaa-token :payload :custom:etunimi)  " - " (-> iam-data dekoodaa-token :payload :custom:uid)))
-                                                   
+                                                   (log/info (str "Saatu public key: " public-key-url))
                                                    (log/info (str "Headerit dekoodattu (test): " headerit))
 
                                                    (tunnistetiedot iam-data)
@@ -270,7 +271,7 @@
                                                          (not yrita-uudelleen?)
                                                          (= (.getMessage e) "Message seems corrupt or manipulated"))
                                                        ;; Tarkista, onko public key rotatoitunut yrittämällä uudelleen
-                                                       (vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi? public-key-url true)
+                                                       (vahvista-jwt-signaturet headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url true)
                                                        ;; Public key on ajan tasalla, ja vieläkin tulee virhe, heitetään hälytys logiin 
                                                        (authentikointi-epaonnistui e iam-data accesstoken)))))
                                                ;; Tiedot on jo cachessa, palauta ne 
