@@ -129,7 +129,7 @@
    Tokenit mitkä vahvistetaan: x-iam-accesstoken (tokenin metadata), x-iam-data (käyttäjän tiedot&roolit)
    https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html#amazon-cognito-user-pools-using-tokens-manually-inspect"
   [accesstoken iam-data iam-identity paivita? iam-data-public-url]
-  (let [_ (log/log (str "Public key PEM: " iam-data-public-url))
+  (let [
         lx-kayttaja (-> iam-data dekoodaa-token :payload :custom:uid)
         accesstoken-header (-> accesstoken dekoodaa-token :header)
         accesstoken-kid (:kid accesstoken-header)
@@ -242,12 +242,12 @@
       Täällä myös katsotaan tokenin expiration yms, virhe heitetään jos mitään on väärin 
    3. Jos kaikki OK, palautetaan dekoodattu tunnusdata, ja jatketaan authentikointia 
    4. Tuloksena käyttäjän roolitiedot on vahvistettu oikeiksi, eikä mitään ole sorkittu matkalla"
-  ([accesstoken iam-data iam-identity kehitysmoodi? public-key-url]
+  ([headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url]
    ;; yrita-uudelleen? on defaulttina aina false
    ;; Jos authentikointi epäonnistuu, yritetään yhden kerran uudelleen päivittämällä public-avaimet
    ;; On mahdollista että public avaimet rotatoituu, jolloin signature ei enää täsmää
-   (vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi? public-key-url false))
-  ([accesstoken iam-data iam-identity kehitysmoodi? public-key-url yrita-uudelleen?]
+   (vahvista-jwt-signaturet headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url false))
+  ([headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url yrita-uudelleen?]
    (let [cache-key [accesstoken iam-data]]
      ;; Todennusta kutsutaan ilman malttia, joten cachella kutsutaan vaan tarvittaessa per käyttäjä
      (get (swap! kayttaja-varmistettu-cache #(cache/through
@@ -258,7 +258,10 @@
                                                      (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? public-key-url))
                                                    ;; Jos todennus onnistui, palauta tiedot ja jatka authentikointia 
                                                    (log/info "Todennettiin: " 
-                                                     (-> iam-data dekoodaa-token :payload :custom:etunimi)  " - " (-> iam-data dekoodaa-token :payload :custom:uid))
+                                                     (str (-> iam-data dekoodaa-token :payload :custom:etunimi)  " - " (-> iam-data dekoodaa-token :payload :custom:uid)))
+                                                   
+                                                   (log/info (str "Headerit dekoodattu (test): " headerit))
+
                                                    (tunnistetiedot iam-data)
                                                    ;; Todennus epäonnistui
                                                    (catch Exception e
