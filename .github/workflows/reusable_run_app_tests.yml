@@ -57,7 +57,7 @@ on:
         required: false
       integration-tests:
         description: 'Enabloi integration-tests job'
-        default: 'true'
+        default: 'false'
         type: string
         required: false
       e2e-tests:
