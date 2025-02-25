@@ -129,7 +129,8 @@
    Tokenit mitkä vahvistetaan: x-iam-accesstoken (tokenin metadata), x-iam-data (käyttäjän tiedot&roolit)
    https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html#amazon-cognito-user-pools-using-tokens-manually-inspect"
   [accesstoken iam-data iam-identity paivita? iam-data-public-url]
-  (let [lx-kayttaja (-> iam-data dekoodaa-token :payload :custom:uid)
+  (let [_ (log/log (str "Public key PEM: " iam-data-public-url))
+        lx-kayttaja (-> iam-data dekoodaa-token :payload :custom:uid)
         accesstoken-header (-> accesstoken dekoodaa-token :header)
         accesstoken-kid (:kid accesstoken-header)
         accesstoken-issuer (-> accesstoken dekoodaa-token :payload :iss)
@@ -165,15 +166,15 @@
         injected-token (fn-encode (assoc inject_payload :payload new-payload))
         ;; ------------------------------------------------------------------------
 
-        _ (println "\n accesstoken payload: " accesstoken-header (-> accesstoken dekoodaa-token :payload))
-        _ (println "\n accesstoken header: " accesstoken-header (-> accesstoken dekoodaa-token :header))
-        _ (println "\n accesstoken signature: " accesstoken-header (-> accesstoken dekoodaa-token :signature) " \n \n" " ---- \n")
-        _ (println "\n iam-data payload: " (-> iam-data dekoodaa-token :payload))
-        _ (println "\n iam-data header: " (-> iam-data dekoodaa-token :header))
-        _ (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature) " \n \n" " ---- \n")
-        _ (println "\n iam-identity payload: " iam-identity " \n ")
-        _ (println "\n custom uid: " (-> iam-data dekoodaa-token :payload :custom:uid) " \n ")
-        _ (println "\n iam-data-public-url: " iam-data-public-url "\n  algo: " accesstoken-algoritmi)
+        ;_ (println "\n accesstoken payload: " accesstoken-header (-> accesstoken dekoodaa-token :payload))
+        ;_ (println "\n accesstoken header: " accesstoken-header (-> accesstoken dekoodaa-token :header))
+        ;_ (println "\n accesstoken signature: " accesstoken-header (-> accesstoken dekoodaa-token :signature) " \n \n" " ---- \n")
+        ;_ (println "\n iam-data payload: " (-> iam-data dekoodaa-token :payload))
+        ;_ (println "\n iam-data header: " (-> iam-data dekoodaa-token :header))
+        ;_ (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature) " \n \n" " ---- \n")
+        ;_ (println "\n iam-identity payload: " iam-identity " \n ")
+        ;_ (println "\n custom uid: " (-> iam-data dekoodaa-token :payload :custom:uid) " \n ")
+        ;_ (println "\n iam-data-public-url: " iam-data-public-url "\n  algo: " accesstoken-algoritmi)
 
         ;; Verifioi tokenit kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
         ;; Signaturen verifiointi tulee suoraan javalta (java.security.Signature), niitä ei clojurena ole suoraa näkyvillä
@@ -203,16 +204,16 @@
      - Tokenin välittäjä ei jostain syystä täsmää (taas, välittäjälle yhteyttä)"
   [e iam-data accesstoken]
   ;; Laukaisee slack-hälytyksen, nämä halutaan aina tutkia 
-  (log/error (str "[JWT-ERROR] Authentikointi ei onnistunut: " (.getMessage e)))
+  ;(log/error (str "[JWT-ERROR] Authentikointi ei onnistunut: " (.getMessage e)))
 
   ;; Header / tokenin metadata
-  (log/error (str "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :header)))
+  ;(log/error (str "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :header)))
   ;; Tässä on käyttäjän yritetyt roolit yms, jos logeilta löytyy roolissa jotain outoa, tee välittömästi toimenpiteitä 
-  (log/error (str "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :payload)))
+  ;(log/error (str "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :payload)))
 
   ;; Logitetaan vielä accesstoken, koska täällä voi myös jotain olla pielessä 
-  (log/error (str "Accesstoken header: " (-> accesstoken dekoodaa-token :header)))
-  (log/error (str "Accesstoken payload: " (-> accesstoken dekoodaa-token :payload)))
+  ;(log/error (str "Accesstoken header: " (-> accesstoken dekoodaa-token :header)))
+  ;(log/error (str "Accesstoken payload: " (-> accesstoken dekoodaa-token :payload)))
 
   ;; Authentikointi ei mennyt läpi, poista kaikki oikeudet käyttäjältä
   (-> (tunnistetiedot iam-data)
