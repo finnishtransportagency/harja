@@ -327,45 +327,42 @@
                                           :as suorituksen-tiedot}]
     (max-n-samaan-aikaan
      5 ajossa-olevien-raporttien-lkm :raportoinnissa-ruuhkaa
-     (nr/with-newrelic-transaction
-       "Raportin suoritus"
-       (str nimi)
-       #(when-let [suoritettava-raportti (hae-raportti this nimi)]
-         (when-not (= "urakka" konteksti)
-           (when-not (raportti-domain/voi-nahda-laajemman-kontekstin-raportit? kayttaja)
-             (throw+ (roolit/->EiOikeutta (str "Käyttäjällä " (:kayttajanimi kayttaja) " ei ole oikeutta laajennetun kontekstin urakoihin")))))
-         (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
-                                     kayttaja (when (= "urakka" konteksti)
-                                                (:urakka-id suorituksen-tiedot)))          
-          (binding [*raportin-suoritus* this]
-            ;; Tallennetaan loki raportin ajon startista
-            (let [parametrit (assoc parametrit :kasittelija kasittelija)
-                  rajoita-pdf-rivimaara (:rajoita-pdf-rivimaara suoritettava-raportti)
-                  _ (when-not (= nimi :ilmoitukset-raportti)
-                      (log/info "SUORITETAAN RAPORTTI: " nimi " kontekstissa: " konteksti " parametreilla: " parametrit " PDF rajoitus: " rajoita-pdf-rivimaara))
-                  suoritus-id (luo-suoritustieto-raportille
-                               db 
-                               kayttaja 
-                               (assoc suorituksen-tiedot :parametrit parametrit :suoritettava suoritettava-raportti))
-                  raportti ((:suorita suoritettava-raportti)
-                            (if (or (nil? db-replica)
-                                    (tarvitsee-write-tietokannan nimi))
+      (when-let [suoritettava-raportti (hae-raportti this nimi)]
+        (when-not (= "urakka" konteksti)
+          (when-not (raportti-domain/voi-nahda-laajemman-kontekstin-raportit? kayttaja)
+            (throw+ (roolit/->EiOikeutta (str "Käyttäjällä " (:kayttajanimi kayttaja) " ei ole oikeutta laajennetun kontekstin urakoihin")))))
+        (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
+          kayttaja (when (= "urakka" konteksti)
+                     (:urakka-id suorituksen-tiedot)))
+        (binding [*raportin-suoritus* this]
+          ;; Tallennetaan loki raportin ajon startista
+          (let [parametrit (assoc parametrit :kasittelija kasittelija)
+                rajoita-pdf-rivimaara (:rajoita-pdf-rivimaara suoritettava-raportti)
+                _ (when-not (= nimi :ilmoitukset-raportti)
+                    (log/info "SUORITETAAN RAPORTTI: " nimi " kontekstissa: " konteksti " parametreilla: " parametrit " PDF rajoitus: " rajoita-pdf-rivimaara))
+                suoritus-id (luo-suoritustieto-raportille
                               db
-                              db-replica)
-                            kayttaja
-                            (condp = konteksti
-                              "urakka" (assoc parametrit
-                                         :urakka-id (:urakka-id suorituksen-tiedot))
-                              "monta-urakkaa" (assoc parametrit
-                                                :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
-                              "hallintayksikko" (assoc parametrit
-                                                  :hallintayksikko-id
-                                                  (:hallintayksikko-id suorituksen-tiedot))
-                              "koko maa" parametrit))]
-              ;; tallennetaan suorituksen lopetusaika
-              (paivita-suorituksen-valmistumisaika db suoritus-id)
-              ;; Lisää vielä PDF rajoitus suoraa raportin elementteihin, jotta tämä saadaan passattua pdf generointiin
-              (update-in raportti [1] assoc :rajoita-pdf-rivimaara rajoita-pdf-rivimaara))))))))
+                              kayttaja
+                              (assoc suorituksen-tiedot :parametrit parametrit :suoritettava suoritettava-raportti))
+                raportti ((:suorita suoritettava-raportti)
+                          (if (or (nil? db-replica)
+                                (tarvitsee-write-tietokannan nimi))
+                            db
+                            db-replica)
+                          kayttaja
+                          (condp = konteksti
+                            "urakka" (assoc parametrit
+                                       :urakka-id (:urakka-id suorituksen-tiedot))
+                            "monta-urakkaa" (assoc parametrit
+                                              :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
+                            "hallintayksikko" (assoc parametrit
+                                                :hallintayksikko-id
+                                                (:hallintayksikko-id suorituksen-tiedot))
+                            "koko maa" parametrit))]
+            ;; tallennetaan suorituksen lopetusaika
+            (paivita-suorituksen-valmistumisaika db suoritus-id)
+            ;; Lisää vielä PDF rajoitus suoraa raportin elementteihin, jotta tämä saadaan passattua pdf generointiin
+            (update-in raportti [1] assoc :rajoita-pdf-rivimaara rajoita-pdf-rivimaara)))))))
 
 
 (defn luo-raportointi []

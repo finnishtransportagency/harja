@@ -3,7 +3,6 @@
             [org.httpkit.client :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [new-reliquary.core :as nr]
             [harja.fmt :as fmt]
             [clojure.string :as clj-str]
             [harja.pvm :as pvm])
@@ -90,30 +89,22 @@
 (defn laheta-kutsu
   [lokittaja tapahtuma-id url metodi otsikot parametrit
    {:keys [kayttajatunnus salasana response->loki httpkit-asetukset]} lomakedatana? kutsudata]
-  (nr/with-newrelic-transaction
-    "HTTP integraatiopiste"
-    (str ":http-integraatiopiste-" (lokittaja :avain))
-    {:url url
-     :metodi metodi
-     :otsikot otsikot
-     :parametrit parametrit}
-    #(do
-      (log/debug (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s, lomakedatana?: %s"
-                   metodi url metodi (fmt/merkkijonon-alku (str kutsudata) 800) otsikot parametrit lomakedatana?))
+  (log/debug (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s, lomakedatana?: %s"
+               metodi url metodi (fmt/merkkijonon-alku (str kutsudata) 800) otsikot parametrit lomakedatana?))
 
-      (let [sisaltotyyppi (get otsikot " Content-Type ")]
-        (lokittaja :rest-viesti tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))
+  (let [sisaltotyyppi (get otsikot " Content-Type ")]
+    (lokittaja :rest-viesti tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))
 
-        (let [{:keys [status body error headers]}
-              (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
-                              parametrit kayttajatunnus salasana kutsudata
-                              lomakedatana? httpkit-asetukset)
-              lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
+    (let [{:keys [status body error headers]}
+          (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
+            parametrit kayttajatunnus salasana kutsudata
+            lomakedatana? httpkit-asetukset)
+          lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
 
-          (if (or error
-                  (not (= 200 status)))
-            (kasittele-virhe lokittaja lokiviesti tapahtuma-id url (or error body) status)
-            (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers status response->loki)))))))
+      (if (or error
+            (not (= 200 status)))
+        (kasittele-virhe lokittaja lokiviesti tapahtuma-id url (or error body) status)
+        (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers status response->loki)))))
 
 (defprotocol HttpIntegraatiopiste
   (GET
