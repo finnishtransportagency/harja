@@ -178,15 +178,19 @@
    
    'Issuer does mot match' 
      - Tokenin välittäjä ei jostain syystä täsmää (taas, välittäjälle yhteyttä)"
-  [e iam-data]
-  ;; Laukaisee slack-hälytyksen, nämä halutaan aina tutkia TODO ... 
-  (log/error (str
-               "[JWT-ERROR] Authentikointi ei onnistunut (JWT signature): " (.getMessage e)))
-  (log/error (str
-               "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :header)
-               "  -  "
-               ;; Tässä on käyttäjän yritetyt roolit yms, jos logeilta löytyy roolissa jotain outoa, tee välittömästi toimenpiteitä 
-               "Saatu payload (iam-data): " (-> iam-data dekoodaa-token :payload)))
+  [e iam-data accesstoken]
+  ;; Laukaisee slack-hälytyksen, nämä halutaan aina tutkia 
+  (log/error (str "[JWT-ERROR] Authentikointi ei onnistunut: " (.getMessage e)))
+
+  ;; Header / tokenin metadata
+  (log/error (str "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :header)))
+  ;; Tässä on käyttäjän yritetyt roolit yms, jos logeilta löytyy roolissa jotain outoa, tee välittömästi toimenpiteitä 
+  (log/error (str "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :payload)))
+
+  ;; Logitetaan vielä accesstoken, koska täällä voi myös jotain olla pielessä 
+  (log/error (str "Accesstoken header: " (-> accesstoken dekoodaa-token :header)))
+  (log/error (str "Accesstoken payload: " (-> accesstoken dekoodaa-token :payload)))
+
   ;; Authentikointi ei mennyt läpi, poista kaikki oikeudet käyttäjältä
   ;; Tämä uudelleenohjaa "Ei käyttöoikeutta" näkymään 
   ;; TODO ... 
@@ -242,7 +246,7 @@
                                                        ;; Tarkista, onko public key rotatoitunut yrittämällä uudelleen
                                                        (vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi? public-key-url true)
                                                        ;; Public key on ajan tasalla, ja vieläkin tulee virhe, heitetään hälytys logiin 
-                                                       (authentikointi-epaonnistui e iam-data)))))
+                                                       (authentikointi-epaonnistui e iam-data accesstoken)))))
                                                ;; Tiedot on jo cachessa, palauta ne 
                                                %
                                                cache-key))
