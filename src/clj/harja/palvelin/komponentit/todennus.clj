@@ -90,7 +90,11 @@
    ja urakoitsijan-id funktioita."
   [urakan-id urakoitsijan-id roolit oam-groups]
   (let [roolit-ja-linkit (->> (str/split oam-groups #",")
-                              (keep (partial ryhman-rooli-ja-linkki roolit)))]
+                           (keep (partial ryhman-rooli-ja-linkki roolit)))
+        ;; Uudelleenohjaa käyttäjä jos authentikointi epäonnistuu
+        roolit-ja-linkit (if (= oam-groups "failed")
+                           [[{:nimi "failed" :kuvaus "Authentikointi epäonnistui." :osapuoli nil :linkki nil} nil]]
+                           roolit-ja-linkit)]
     {:roolit (yleisroolit roolit-ja-linkit)
      :urakkaroolit (urakkaroolit urakan-id roolit-ja-linkit)
      :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)}))
@@ -128,8 +132,8 @@
         ;; Tällä voidaan esim invalitoida token, kun käyttäjä kirjautuu ulos, mutta Harjassa ei tuollaista tarvetta kirjoitushetkellä taida olla
         iam-identity (get headerit "x-iam-identity")
 
-        
-        _ (log/info (str "Headerit: " headerit))
+
+        ;_ (log/info (str "Headerit: " headerit))
 
         ;; Vahvistetaan että tokenien payloadit ei ole muuttunut matkalla 
         vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data iam-identity true public-key-url)
@@ -137,8 +141,7 @@
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
         dekoodatut-headerit (update vahvistetut-tunnustiedot "custom:rooli" #(if (konv/onko-json? %)
                                                                                (parsi-json-entraid-roolit %)
-                                                                               %))
-       ]
+                                                                               %))]
 
     ;; Mapataan Cognito-headerit vanhan mallisiksi vastaaviksi OAM-headereiksi
     ;; TODO: Siirrytään mahdollisesti myöhemmin käyttämään pelkkiä cognito-headereita

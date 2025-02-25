@@ -263,6 +263,10 @@
            (empty? (:urakkaroolit kayttaja))
            (empty? (:organisaatioroolit kayttaja)))))
 
+(defn authentikointi-epaonnistui? [kayttaja]
+  ;; Tarkoittaa että authentikointi epäonnistui, tästä laukaistaan myös slack häly: JWT-ERROR
+  (boolean (contains? (:roolit kayttaja) "failed")))
+
 (defn kuuntele-oikeusvirheita []
   (t/kuuntele! :ei-oikeutta (fn [tiedot]
                               (viesti/nayta! (:viesti tiedot)
@@ -285,9 +289,16 @@
             [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
             (if (nil? kayttaja)
               [ladataan]
-              (if (ei-kayttooikeutta? kayttaja)
+              (cond
+                (authentikointi-epaonnistui? kayttaja)
+                [:div.ei-kayttooikeutta-wrap
+                 [:img#harja-brand-icon {:src "images/harja_logo_soft.svg"}]
+                 [:div.ei-kayttooikeutta "Authentikointi epäonnistui. Ei käyttöoikeutta Harjaan."]]
+
+                (ei-kayttooikeutta? kayttaja)
                 [:div.ei-kayttooikeutta-wrap
                  [:img#harja-brand-icon {:src "images/harja_logo_soft.svg"}]
                  [:div.ei-kayttooikeutta "Ei käyttöoikeutta Harjaan. Ota yhteys organisaatiosi käyttövaltuusvastaavaan."]]
-                [paasisalto sivu korkeus]))))
+
+                :else [paasisalto sivu korkeus]))))
         [ladataan]))))

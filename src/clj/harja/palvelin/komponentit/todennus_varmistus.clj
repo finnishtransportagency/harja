@@ -192,12 +192,9 @@
   (log/error (str "Accesstoken payload: " (-> accesstoken dekoodaa-token :payload)))
 
   ;; Authentikointi ei mennyt läpi, poista kaikki oikeudet käyttäjältä
-  ;; Tämä uudelleenohjaa "Ei käyttöoikeutta" näkymään 
-  ;; TODO ... 
   (-> (tunnistetiedot iam-data)
-    ;; Extranet_Kayttaja ei anna oikeutta Harjaan
-    ;; Jokin rooli täytyy antaa, muuten tulee todennusvirhe 
-    (assoc "custom:rooli" "Extranet_Kayttaja")))
+    ;; "failed" uudelleenohjaa "Authentikaatio epäonnistui" näkymään
+    (assoc "custom:rooli" "failed")))
 
 
 ;; Pidä käyttäjän tietoja tallessa x ajan, todennusta kutsutaan liian tiheästi muuten 
