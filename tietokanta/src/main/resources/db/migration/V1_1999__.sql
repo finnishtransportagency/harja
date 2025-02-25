@@ -209,7 +209,7 @@ CREATE TABLE urakka_parametrit
     --laskutusrajan_ylitys_kaava                         TEXT,          -- Kaava laskutusrajan sanktion laskemiseen
     --kattohinta_laskukaava                              TEXT,          -- Kaava kattohinnan laskemiseen, onko 10% vai lasketaanko käsin
     --kattohintaylityksen_siirron_maaran_rajoitus        BOOLEAN,       -- Onko kattohintaylityksen siirron määrälle rajoitus
-    tavoitehinnan_ylityksen_tilaajan_maksuprosentti    DECIMAL(4, 2), -- Tavoitehinnan ylityksen maksuprosentti tilaajalle
+    tavoitehinnan_ylityksen_tilaajan_maksuprosentti    DECIMAL(4, 2), -- Tavoitehinnan ylityksen maksuprosentti tilaajalle (kattohintaan asti)
     tavoitepalkkion_maksuprosentti                     DECIMAL(4, 2), -- Tavoitepalkkion maksuprosentti. Voi olla esim 30% tavoitehinnan alituksesta tai 75% alennuksesta
     tavoitepalkkion_maksimi                            DECIMAL(4, 2), -- Tavoitepalkkion maksimi määrä prosentteina
     maaratyt_sanktiot                                  TEXT[],        -- Mitkä sanktiot on määrätty käyttöön
@@ -228,23 +228,24 @@ CREATE TABLE urakka_parametrit
 CREATE OR REPLACE FUNCTION aseta_tai_paivita_urakka_parametrit_urakalle(urakkaid_ INT) RETURNS VOID AS
 $$
 DECLARE
-    urakan_tiedot                                             RECORD;
-    lupauspaatoksen_bonusprosentti_2019_2024                  DECIMAL(10, 2) := 0.13;
-    lupauspaatoksen_bonusprosentti_2025_                      DECIMAL(10, 2) := 0.08;
-    lupauspaatoksen_sanktioprosentti_2019_2024                DECIMAL(10, 2) := 0.33;
-    lupauspaatoksen_sanktioprosentti_2025_                    DECIMAL(10, 2) := 0.18;
-    bonusprosentti                                            DECIMAL(4, 2);
-    sanktioprosentti                                          DECIMAL(4, 2);
-    tavoitepalkkion_maksuprosentti_2019_2024                  DECIMAL(4, 2)  := 30;
-    tavoitepalkkion_maksuprosentti_2025_                      DECIMAL(4, 2)  := 75;
-    tavoitepalkkioprosentti                                   DECIMAL(4, 2);
-    tavoitepalkkionmaxprosentti                               DECIMAL(4, 2)  := 3; -- Tällä hetkellä kaikilla on 3%
-    tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024 DECIMAL(4, 2)  := 70;
-    tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2025_     DECIMAL(4, 2)  := 25;
-    tavoitehinnan_ylityksen_maksuprosentti                    DECIMAL(4, 2);
-    luojaid                                                   INTEGER        := (SELECT id
-                                                                                 FROM kayttaja
-                                                                                 WHERE kayttajanimi = 'Integraatio');
+    urakan_tiedot                                                RECORD;
+    lupauspaatoksen_bonusprosentti_2019_2024                     DECIMAL(10, 2) := 0.13;
+    lupauspaatoksen_bonusprosentti_2025_                         DECIMAL(10, 2) := 0.08;
+    lupauspaatoksen_sanktioprosentti_2019_2024                   DECIMAL(10, 2) := 0.33;
+    lupauspaatoksen_sanktioprosentti_2025_                       DECIMAL(10, 2) := 0.18;
+    bonusprosentti                                               DECIMAL(4, 2);
+    sanktioprosentti                                             DECIMAL(4, 2);
+    tavoitepalkkion_maksuprosentti_2019_2024                     DECIMAL(4, 2)  := 30;
+    tavoitepalkkion_maksuprosentti_2025_                         DECIMAL(4, 2)  := 75;
+    tavoitepalkkioprosentti                                      DECIMAL(4, 2);
+    tavoitepalkkionmaxprosentti                                  DECIMAL(4, 2)  := 3; -- Tällä hetkellä kaikilla on 3%
+    tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024    DECIMAL(4, 2)  := 70;
+    tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2024_vaativa DECIMAL(4, 2)  := 50;
+    tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2025_        DECIMAL(4, 2)  := 25;
+    tavoitehinnan_ylityksen_maksuprosentti                       DECIMAL(4, 2);
+    luojaid                                                      INTEGER        := (SELECT id
+                                                                                    FROM kayttaja
+                                                                                    WHERE kayttajanimi = 'Integraatio');
 BEGIN
     -- Haetaan kaikki urakat ja lisätään niiden perustiedot urakka_parametrit tauluun
     for urakan_tiedot in (SELECT * FROM urakka WHERE id = urakkaid_)
@@ -262,9 +263,14 @@ BEGIN
                                                 THEN tavoitepalkkion_maksuprosentti_2019_2024
                                             ELSE tavoitepalkkion_maksuprosentti_2025_ END);
             tavoitehinnan_ylityksen_maksuprosentti := (CASE
-                                                           WHEN urakan_tiedot.alkupvm < '2024-10-02'
+                                                           WHEN urakan_tiedot.alkupvm < '2024-10-02' AND urakan_tiedot.sopimustyyppi != 'mhu+'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024
-                                                           ELSE tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2025_ END);
+                                                           WHEN urakan_tiedot.alkupvm > '2024-10-02' AND urakan_tiedot.sopimustyyppi != 'mhu+'
+                                                               THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2025_
+                                                           WHEN urakan_tiedot.alkupvm > '2024-10-02' AND urakan_tiedot.sopimustyyppi = 'mhu'
+                                                               THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2024_vaativa
+                                                           -- Kaikille muille defaulttina 70%
+                                                           ELSE tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024 END);
 
             -- Tarkistetaan, että löytyykö rivi jo taulusta
             IF EXISTS(SELECT 1 FROM urakka_parametrit WHERE urakkaid = urakan_tiedot.id)

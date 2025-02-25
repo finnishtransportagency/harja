@@ -212,10 +212,11 @@
     ;; Jos tarvittavia tietoja ei ole, niin poistetaan pöötöstyyppi
     (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus" false 10)))
 
-(defn valmistele-tavoitehinnan-ylityspaatos [paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kattohinta kustannukset mhu-tyyppi]
+(defn valmistele-tavoitehinnan-ylityspaatos [db urakkaid paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kattohinta kustannukset mhu-tyyppi]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
   (if (and kattohinta tavoitehinta kustannukset (> kustannukset tavoitehinta))
-    (let [;; Ylitys + tavoitehinta ei voi ylittää kattohintaa. Eli maksettavat rahat on aina tavoitehinnan ja
+    (let [urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
+          ;; Ylitys + tavoitehinta ei voi ylittää kattohintaa. Eli maksettavat rahat on aina tavoitehinnan ja
           ;; kattohinnan väliin jääviä summia. Kattohinnan ylittävät summat menee aina urakoitsijan maksettavaksi
           tavoitehinnan-ylitys (min (- kustannukset tavoitehinta) (- kattohinta tavoitehinta))
           tavoitehinnan-ylityspaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan ylitys")
@@ -230,10 +231,7 @@
                    (and (< urakan-alkuvuosi 2025) (= "MHU" mhu-tyyppi)) "1"
                    (and (= urakan-alkuvuosi 2024) (= "MHU+" mhu-tyyppi)) "2"
                    (>= urakan-alkuvuosi 2025) "3")
-          tilaajan-prosentti (cond
-                               (= versio "1") 70
-                               (= versio "2") 50
-                               (= versio "3") 25)
+          tilaajan-prosentti (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit)
           urakoitsijan-prosentti (- 100 tilaajan-prosentti)
 
           tavoitehinnan-ylityspaatos (-> tavoitehinnan-ylityspaatos
