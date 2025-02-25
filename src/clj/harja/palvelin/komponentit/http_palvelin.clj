@@ -347,10 +347,14 @@
 
 (defn wrap-with-common-wrappers
   "Käärii HTTP-pääkäsittelijän ympärille yleisiä wrappereita."
-  [handler kehitysmoodi roolit-jwt-signature]
-  (-> handler
-    (cookies/wrap-cookies)
-    (wrap-prosessoi-headerit kehitysmoodi (:public-key-url roolit-jwt-signature))))
+  ([handler]
+   (wrap-with-common-wrappers handler true nil))
+  ([handler kehitysmoodi]
+   (wrap-with-common-wrappers handler kehitysmoodi nil))
+  ([handler kehitysmoodi roolit-jwt-signature]
+   (-> handler
+     (cookies/wrap-cookies)
+     (wrap-prosessoi-headerit kehitysmoodi (:public-key-url roolit-jwt-signature)))))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true

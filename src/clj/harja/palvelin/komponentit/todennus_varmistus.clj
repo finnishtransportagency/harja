@@ -223,7 +223,7 @@
    ;; On mahdollista että public avaimet rotatoituu, jolloin signature ei enää täsmää
    (vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi? public-key-url false))
   ([accesstoken iam-data iam-identity kehitysmoodi? public-key-url yrita-uudelleen?]
-   (let [cache-key accesstoken]
+   (let [cache-key [accesstoken iam-data]]
      ;; Todennusta kutsutaan ilman malttia, joten cachella kutsutaan vaan tarvittaessa per käyttäjä
      (get (swap! kayttaja-varmistettu-cache #(cache/through
                                                (fn [_]

@@ -4,6 +4,7 @@
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.domain.oikeudet :as oikeudet]
             [harja.testi :refer :all]
+            [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [clojure.data.json :as json]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
             [com.stuartsierra.component :as component]
@@ -137,7 +138,7 @@
 (deftest cognito-headereiden-purku-oam-ja-entraid
   (let [handler (->
                   (fn [req] req)
-                  (harja.palvelin.komponentit.http-palvelin/wrap-with-common-wrappers))
+                  (http-palvelin/wrap-with-common-wrappers))
         todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % true) 
 
         destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))
@@ -185,7 +186,7 @@
 (deftest cognito-headereiden-purku-harja-api-usernamella
   (let [handler (->
                   (fn [req] req)
-                  (harja.palvelin.komponentit.http-palvelin/wrap-with-common-wrappers))
+                  (http-palvelin/wrap-with-common-wrappers))
         todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % true)]
 
     (testing "Cognito headeri: harja-api-username -headerin arvo löytyy custom:uid-headerin arvon sijaan"
