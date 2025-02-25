@@ -59,11 +59,10 @@
    :kattohinta kattohinta
    :luoja luoja})
 
-(defn tavoitehinnan-alituspaatos [urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+(defn tavoitehinnan-alituspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                                   alituksen-maara siirron-maara tavoitepalkkio kulu-id luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :versio versio
    :tavoitehinta tavoitehinta
    :toteutuneet_kustannukset toteutuneet-kustannukset
    :alituksen_maara alituksen-maara
@@ -168,11 +167,10 @@
   (is (= kattohinta (:kattohinta paatos)))
   (is (= luoja (:luoja paatos))))
 
-(defn testaa-tavoitehinnan-alitus [paatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+(defn testaa-tavoitehinnan-alitus [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                                    alituksen-maara siirron-maara tavoitepalkkio kulu-id luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
-  (is (= versio (:versio paatos)))
   (is (= tavoitehinta (:tavoitehinta paatos)))
   (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset paatos)))
   (is (= alituksen-maara (:alituksen_maara paatos)))
@@ -551,17 +549,16 @@
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tavoitehinta 5M
-        versio "1a"
         toteutuneet-kustannukset 5M
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
         kulu-id 1
-        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakkaid paatos)]
-    (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+    (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
       alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)))
 
 (deftest rajapinta-tavoitehinnan-alitus-lisays-onnistuu-test
@@ -570,13 +567,12 @@
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
         tavoitehinta 5M
-        versio "1a"
         toteutuneet-kustannukset 5M
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
         kulu-id nil
-        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
         vastaus (try
                   (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
@@ -594,13 +590,12 @@
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
         tavoitehinta 5M
-        versio 1
         toteutuneet-kustannukset 5M
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
         kulu-id 1
-        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
         _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakkaid paatos)
 
@@ -620,13 +615,12 @@
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
         tavoitehinta 5M
-        versio "1a"
         toteutuneet-kustannukset 5M
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
         kulu-id nil
-        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
         vastaus (try
                   (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä

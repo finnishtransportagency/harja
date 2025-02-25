@@ -5,7 +5,7 @@
   {:positional? true})
 
 (declare hae-urakka hae-urakkan-tiedot hae-urakan-tyyppi hae-urakan-sopimukset hae-urakan-sampo-id hae-yksittainen-urakka hae-urakan-ely
-  hae-urakat-tyypilla-ja-hallintayksikolla urakan-hallintayksikko)
+  hae-urakat-tyypilla-ja-hallintayksikolla urakan-hallintayksikko hae-urakan-parametrit aseta-tai-paivita_urakkaparametrit)
 
 (defn onko-olemassa? [db id]
   (:exists (first (harja.kyselyt.urakat/onko-olemassa db id))))

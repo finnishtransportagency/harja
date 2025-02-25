@@ -93,11 +93,15 @@
          [:div [:h4 "Tavoitehinnan alitus"]]
          [:div.bold (fmt/euro-opt (:alituksen_maara paatos))]]
         [:div.flex-row
-         [:div "Tavoitepalkkio"]
+         [:div (str "Tavoitepalkkio (" (:tavoitepalkkion_maksuprosentti paatos) "%)")]
          [:div (fmt/euro-opt (:tavoitepalkkio paatos))]]
-        [:div.flex-row
-         [:div "Siirretään seuraavan vuoden hankintakustannuksiin alennukseksi"]
-         [:div (fmt/euro-opt (:siirron_maara paatos))]]
+        [:div.flex-row {:style {:margin-top "-5px"}}
+         [:div.small-text.harmaa "max. 3% hoitovuoden alun indeksikorjatusta tavoitehinnasta."]]
+        ;; Näytetään siirron määrä vain, jos sitä on. Esim viimeisenä vuotena ei siirretä mitään.
+        (when (:siirron_maara paatos)
+          [:div.flex-row
+           [:div "Siirretään seuraavan vuoden hankintakustannuksiin alennukseksi"]
+           [:div (str "-" (fmt/euro-opt (:siirron_maara paatos)))]])
 
         ;; Päätöksenteko napit
         (if (not paatos-tehty?)

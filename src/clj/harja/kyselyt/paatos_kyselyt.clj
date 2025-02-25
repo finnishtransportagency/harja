@@ -1,5 +1,6 @@
 (ns harja.kyselyt.paatos-kyselyt
   (:require [harja.kyselyt.konversio :as konv]
+            [taoensso.timbre :as log]
             [jeesql.core :refer [defqueries]]
             [slingshot.slingshot :refer [throw+]]))
 
@@ -147,7 +148,7 @@
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:urakkaid paatos) (:versio paatos) (:tavoitehinta paatos)
+        validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:urakkaid paatos) (:tavoitehinta paatos)
                             (:toteutuneet_kustannukset paatos) (:alituksen_maara paatos) (:tavoitepalkkio paatos) (:luoja paatos))
                      validaatio
                      (conj validaatio "Puutteelliset tavoitehinnan alituspäätöstiedot."))
@@ -155,7 +156,9 @@
         ]
 
     (if (seq validaatio)
-      (heita-virhe (str "Tavoitehinnan alituspäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
+      (do
+        (log/error "Virheellinen päätös:" paatos)
+        (heita-virhe (str "Tavoitehinnan alituspäätöksessä virheitä: " (clojure.string/join ", " validaatio))))
       (tee-tavoitehinnan-alitus-paatos<! db paatos))))
 
 (defn poista-tavoitehinnan-alituspaatos [db urakkaid kayttajaid paatosid]
@@ -346,7 +349,6 @@
    :luoja <luoja>}"
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
-  (println "Tee-hoindonjohtopalkkiomuutospaatos :: paatos" paatos)
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
         validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:tavoitehinta paatos)
@@ -378,7 +380,6 @@
    :luoja <luoja>}"
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
-  (println "tee-poytakirjan-raporttipaatos :: paatos" paatos)
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
         validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:luoja paatos))

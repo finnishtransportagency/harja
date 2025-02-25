@@ -64,7 +64,9 @@
         urakka-id)
       (do
         (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkanro urakkatyyppi sopimustyyppi
-                    ely-id urakoitsija-id)))))
+                    ely-id urakoitsija-id)))
+    ;; Päivitetään/lisätään urakan parametrit
+    (urakat-q/aseta-tai-paivita_urakkaparametrit db {:urakkaid urakka-id})))
 
 (defn- paivita-yhteyshenkilo [db yhteyshenkilo-sampo-id urakka-id]
   (yhteyshenkilot-q/irrota-sampon-yhteyshenkilot-urakalta! db urakka-id)

@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone
   (:require [clojure.string :as str]
-            [harja.tyokalut.yleiset :refer [round2]]))
+            [harja.tyokalut.yleiset :refer [round2]]
+            [harja.kyselyt.urakat :as urakka-kyselyt]))
 
 (def paatostyypit
   [{:nimi "Lupaukset" :tyyppi "bonus" :versio 1 :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 1}
@@ -73,7 +74,7 @@
             {:nimi nimi :virhe "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty." :jarjestys jarjestys}))
         paatokset))))
 
-(defn valmistele-lupauspaatokset [paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta]
+(defn valmistele-lupauspaatokset [db urakkaid paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta]
   ;; Ota mukaan oikea lupauspäätös, jos ehdot täyttyvät
   (if (and toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta tavoitehinta)
     (let [erotus (- luvatut-pisteet toteutuneet-pisteet)
@@ -81,14 +82,16 @@
                    (= erotus 0) "taytetty"
                    (< erotus 0) "bonus"
                    (> erotus 0) "sanktio")
-          lupaussanktio (when (= tyyppi "sanktio") (* 0.0018 tarjouksen-tavoitehinta erotus))
-          lupausbonus (when (= tyyppi "bonus") (* 0.008 tarjouksen-tavoitehinta (* -1 erotus)))
+          ;; Urakan parametreista lupaussanktion prosentit
+          urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
+          sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit) ;; Jaetaan sadalla, niin saadaan helpompi laskutoimitus
+          bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+          lupaussanktio (when (= tyyppi "sanktio") (* (/ sanktioprosentti 100) tarjouksen-tavoitehinta erotus))
+          lupausbonus (when (= tyyppi "bonus") (* (/ bonusprosentti 100) tarjouksen-tavoitehinta (* -1 erotus)))
           ;; Valitaan lupauspäätös, joissa tyyppi täsmää
           lupauspaatos (first (filter
                                 (fn [paatos]
-                                  (and
-                                    (= (:nimi paatos) "Lupaukset")
-                                    (= (:tyyppi paatos) tyyppi)))
+                                  (and (= (:nimi paatos) "Lupaukset") (= (:tyyppi paatos) tyyppi)))
                                 paatokset))
 
           ;; Korvataan koneelta saatu päätös tässä valistellulta
@@ -100,7 +103,10 @@
                            (assoc :tavoitehinta tavoitehinta)
                            (assoc :tarjous_tavoitehinta tarjouksen-tavoitehinta)
                            (assoc :luvatut_pisteet luvatut-pisteet)
-                           (assoc :toteutuneet_pisteet toteutuneet-pisteet))
+                           (assoc :toteutuneet_pisteet toteutuneet-pisteet)
+                           (assoc :sanktioprosentti sanktioprosentti)
+                           (assoc :bonusprosentti bonusprosentti)
+                         )
           ;; Poista kaikki lupauspäätökset listasta
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Lupaukset")) paatokset)
           ;; Ja lisää muokattu takaisin
@@ -165,43 +171,41 @@
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" true 7))
     paatokset))
 
-(defn valimistele-tavoitehinnan-alituspaatos [paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kustannukset]
+(defn valimistele-tavoitehinnan-alituspaatos [db urakkaid paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kustannukset]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
   (if (and tavoitehinta kustannukset (> tavoitehinta kustannukset))
-    (let [tavoitehinnan-alitus (- tavoitehinta kustannukset)
+    (let [urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
+          tavoitehinnan-alitus (- tavoitehinta kustannukset)
           ;; Poistetaan päätöskokneen tavoitehinna alituspäätös ja muokataan se alla
-          tavoitehinnan-alituspaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan alitus")
-                                                       %) paatokset))
+          tavoitehinnan-alituspaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan alitus") %) paatokset))
           paatokset (remove
                       (fn [paatos]
                         (= (:nimi paatos) "Tavoitehinnan alitus"))
                       paatokset)
 
           ;; Jäljelle jäänyt paatos
-          tavoitehinta-alitus-versio (if (< urakan-alkuvuosi 2025)
-                                       "1"
-                                       "2")
-          tavh-3pros (* 0.03 tavoitehinta)
+
+          ;; (:tavoitepalkkion_maksimi urakan-parametrit) on maksimiprosentti, jota tavoitepalkkiota voidaan maksaa suhteessa tavoitehintaan. Yleisimmin 3%
+          maksimi-tavoitepalkkio (* (/ (:tavoitepalkkion_maksimi urakan-parametrit) 100) tavoitehinta)
+          tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
           ;; Versiossa 1 - Tavoitepalkkio on alituksesta 30%, mutta max 3% tavoitehinnasta - Mutta viimeisenä vuotena maksetaan kaikki eli 100% alituksesta
+          laskennallinen-tavoitepalkkio (* (/ tavoitepalkkion-maksuprosentti 100) tavoitehinnan-alitus)
           tavoitepalkkio (if (= urakan-loppuvuosi kuluva-hoitovuosi)
                            tavoitehinnan-alitus             ;; Viimeisenä vuotena maksetaan kaikki. Muuten 30% tai max 3% , tai versiossa 2 maksetaan 75% alituksesta
-                           (if (= tavoitehinta-alitus-versio "1")
-                             (min tavh-3pros (* 0.3 tavoitehinnan-alitus))
-                             (min tavh-3pros (* 0.75 tavoitehinnan-alitus))))
+                           (min maksimi-tavoitepalkkio laskennallinen-tavoitepalkkio))
           ;; Jos alituksesta maksettava tavoitepalkkio on suurempi, kuin 3% tavoitehinnasta, siirretään ylittävä osuus seuraavan hoitovuden alennukseksi - Paitsi tietenkin viimeisenä vuotena
           siirron-maara (if (= urakan-loppuvuosi kuluva-hoitovuosi)
                           nil                               ;; Viimeisenä vuotena maksetaan kaikki. Eli ei siirretä mitään
-                          (if (= tavoitehinta-alitus-versio "1")
-                            (when (> (* 0.3 tavoitehinnan-alitus) tavh-3pros) (- (* 0.3 tavoitehinnan-alitus) (* 0.03 tavoitehinta)))
-                            (when (> (* 0.75 tavoitehinnan-alitus) tavh-3pros) (- (* 0.75 tavoitehinnan-alitus) (* 0.03 tavoitehinta)))))
+                          (when (> laskennallinen-tavoitepalkkio maksimi-tavoitepalkkio)
+                            (- laskennallinen-tavoitepalkkio maksimi-tavoitepalkkio)))
 
           tavoitehinnan-alituspaatos (-> tavoitehinnan-alituspaatos
-                                         (assoc :versio tavoitehinta-alitus-versio)
                                          (assoc :tavoitehinta tavoitehinta)
                                          (assoc :toteutuneet_kustannukset kustannukset)
                                          (assoc :alituksen_maara tavoitehinnan-alitus)
                                          (assoc :siirron_maara siirron-maara)
-                                         (assoc :tavoitepalkkio tavoitepalkkio))
+                                         (assoc :tavoitepalkkio tavoitepalkkio)
+                                         (assoc :tavoitepalkkion_maksuprosentti tavoitepalkkion-maksuprosentti))
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-alituspaatos))]
 
       paatokset)

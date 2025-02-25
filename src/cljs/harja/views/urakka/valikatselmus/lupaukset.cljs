@@ -61,15 +61,15 @@
             (cond
               (= "sanktio" tyyppi)
               [:div
-               [:p "Luvatun yhteispistemäärän alittaminen johtaa kutakin alittuvaa pistetä kohden 0,18%
-           sanktioon kyseisen hoitokauden tarjouksen mukaisesta tavoitehinnasta."]
-               [:p.paatos-laskelma (str "Lupaussanktio = " alitetut-pisteet " * 0,0018 * " (:tarjous_tavoitehinta paatos) " = " ) [:strong (fmt/euro-opt (:lupaussanktio paatos))]]]
+               [:p (str "Luvatun yhteispistemäärän alittaminen johtaa kutakin alittuvaa pistetä kohden " (:sanktioprosentti paatos) " %
+           sanktioon kyseisen hoitokauden tarjouksen mukaisesta tavoitehinnasta.")]
+               [:p.paatos-laskelma (str "Lupaussanktio = " alitetut-pisteet " * " (/ (:sanktioprosentti paatos) 100) " * " (:tarjous_tavoitehinta paatos) " = " ) [:strong (fmt/euro-opt (:lupaussanktio paatos))]]]
               (= "bonus" tyyppi)
               ^{:key (str "lupaus-" (gensym))}
               [:div
-               [:p "Luvatun yhteispistemäärän ylittäminen kutakin ylittävää pistettä kohden tuottaa 0,08%
-           bonuksen kyseisen hoitokauden tarjouksen mukaisesta tavoitehinnasta."]
-               [:p.paatos-laskelma (str "Lupausbonus = " ylitetyt-pisteet " * 0,008 * " (:tarjous_tavoitehinta paatos) " = " ) [:strong (fmt/euro-opt (:lupausbonus paatos))]]]
+               [:p (str "Luvatun yhteispistemäärän ylittäminen kutakin ylittävää pistettä kohden tuottaa " (:bonusprosentti paatos) " %
+           bonuksen kyseisen hoitokauden tarjouksen mukaisesta tavoitehinnasta.")]
+               [:p.paatos-laskelma (str "Lupausbonus = " ylitetyt-pisteet " * " (/ (:bonusprosentti paatos) 100) " * " (:tarjous_tavoitehinta paatos) " = " ) [:strong (fmt/euro-opt (:lupausbonus paatos))]]]
               :else
               [:div ""])]
 
