@@ -135,7 +135,7 @@
         ;;_ (log/info (str "Headerit: " headerit))
 
         ;; Vahvistetaan että tokenien payloadit ei ole muuttunut matkalla 
-        vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data iam-identity false public-key-url)
+        vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data iam-identity false "https://public-keys.auth.elb.eu-west-1.amazonaws.com/")
 
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
         dekoodatut-headerit (update vahvistetut-tunnustiedot "custom:rooli" #(if (konv/onko-json? %)
