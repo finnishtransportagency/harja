@@ -256,6 +256,8 @@
                                                    (when-not kehitysmoodi?
                                                      (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? public-key-url))
                                                    ;; Jos todennus onnistui, palauta tiedot ja jatka authentikointia 
+                                                   (log/info "Todennettiin: " 
+                                                     (-> iam-data dekoodaa-token :payload :custom:etunimi)  " - " (-> iam-data dekoodaa-token :payload :custom:uid))
                                                    (tunnistetiedot iam-data)
                                                    ;; Todennus epäonnistui
                                                    (catch Exception e
