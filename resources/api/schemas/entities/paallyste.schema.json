@@ -22,7 +22,9 @@
     "EABK, Kantavan kerroksen EAB",
     "EPAB-B, Pehmeät asfalttibetonit",
     "EPAB-V, Pehmeät asfalttibetonit",
-    "komposiittiasfaltti"
+    "komposiittiasfaltti",
+    "teräs",
+    "puu"
   ]
 }
 

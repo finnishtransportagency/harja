@@ -332,9 +332,6 @@
           "type": "string",
           "enum": [
             "BET, Betoni",
-            "Kivi",
-            "Teräs",
-            "Puu",
             "AA, Avoin asfaltti",
             "AB, Asfalttibetoni",
             "EA, Epäjatkuva asfaltti (poistunut)",
@@ -346,7 +343,6 @@
             "PAB-V, Pehmeät asfalttibetonit",
             "PAB-O, Pehmeät asfalttibetonit",
             "Sirotepintaus",
-            "Soratien pintaus",
             "Ei tietoa",
             "EAB, Asfalttibetoni",
             "ABtiivis",
