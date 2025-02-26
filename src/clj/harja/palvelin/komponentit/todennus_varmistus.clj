@@ -152,9 +152,9 @@
 
          ;; Defaulttina false, mutta nämä on arvokkaita testauksessa ja voi jättää tähän
         _ (when kehitysmoodi?
-            (println "\n accesstoken payload: " accesstoken-header (-> accesstoken dekoodaa-token :payload))
-            (println "\n accesstoken header: " accesstoken-header (-> accesstoken dekoodaa-token :header))
-            (println "\n accesstoken signature: " accesstoken-header (-> accesstoken dekoodaa-token :signature))
+            (println "\n accesstoken payload: " (-> accesstoken dekoodaa-token :payload))
+            (println "\n accesstoken header: " (-> accesstoken dekoodaa-token :header))
+            (println "\n accesstoken signature: " (-> accesstoken dekoodaa-token :signature))
             (println "\n iam-data payload: " (-> iam-data dekoodaa-token :payload))
             (println "\n iam-data header: " (-> iam-data dekoodaa-token :header))
             (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature))
