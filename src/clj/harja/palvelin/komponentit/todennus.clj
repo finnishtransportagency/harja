@@ -301,18 +301,21 @@
   (or (and oikeudet (oikeudet kayttaja))
       koka-headerit))
 
-(defn koka->kayttajatiedot [db headerit oikeudet kehitysmoodi? roolit-jwt-signature]
-  (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? (:public-key-url roolit-jwt-signature))
-        oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
-    (try
-      (get (swap! kayttajatiedot-cache-atom #(cache/through
-                                               (fn [oam-tiedot]
-                                                 (varmista-kayttajatiedot db oam-tiedot))
-                                               %
-                                               oam-tiedot))
-        oam-tiedot)
-      (catch Throwable t
-        (log/error t "Käyttäjätietojen varmistuksessa virhe!")))))
+(defn koka->kayttajatiedot
+  ([db headerit oikeudet kehitysmoodi?]
+   (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? nil))
+  ([db headerit oikeudet kehitysmoodi? roolit-jwt-signature]
+   (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? (:public-key-url roolit-jwt-signature))
+         oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
+     (try
+       (get (swap! kayttajatiedot-cache-atom #(cache/through
+                                                (fn [oam-tiedot]
+                                                  (varmista-kayttajatiedot db oam-tiedot))
+                                                %
+                                                oam-tiedot))
+         oam-tiedot)
+       (catch Throwable t
+         (log/error t "Käyttäjätietojen varmistuksessa virhe!"))))))
 
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."

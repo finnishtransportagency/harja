@@ -55,7 +55,8 @@
                  ;; Pattern match kirjasto
                  [org.clojure/core.match "1.1.0"]
 
-                 ;; Authentikaatio / kirjautumisen allekirjoituksen varmistus
+                 ;; Authentikaatio / kirjautumisen allekirjoituksen varmistus 
+                 ;; Täältä tulee java kirjaston kautta jwt signaturen vahvistus, joka tehdään käyttäjän tullessa Harjaan
                  [buddy/buddy-sign "3.5.351"]
 
 
