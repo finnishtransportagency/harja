@@ -130,10 +130,10 @@
 
         ;; Subject ID (sub), eli käyttäjä kenelle JWT on myönnetty, tällä voidaan tunnistaa käyttäjä (mukana myös yllä olevissa tokeneissa)
         ;; Tällä voidaan esim invalitoida token, kun käyttäjä kirjautuu ulos, mutta Harjassa ei tuollaista tarvetta kirjoitushetkellä taida olla
-        iam-identity (get headerit "x-iam-identity")
+        ; iam-identity (get headerit "x-iam-identity")
 
         ;; Vahvistetaan että tokenien payloadit ei ole muuttunut matkalla 
-        vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data iam-identity false public-key-url)
+        vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url)
 
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
         dekoodatut-headerit (update vahvistetut-tunnustiedot "custom:rooli" #(if (konv/onko-json? %)

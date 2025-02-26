@@ -18,7 +18,8 @@
                                             "oam_groups" "Jarjestelmavastaava"
                                             "oam_organization" "Liikennevirasto"}}
  
- ;; JWT tokenin signaturen public key x-iam-data (käyttäjäroolit) 
+ ;; x-iam-data JWT tokenin public key (käyttäjäroolit) 
+ ;; x-iam-accesstokenin avain tulee payloadin mukana, joten sille ei tarvitse muuttujaa 
  :roolit-jwt-signature {:public-key-url #=(eval (harja.tyokalut.env/env "COGNITO_IAMDATA_KEY" nil))}
 
  :tietokanta {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))
