@@ -133,6 +133,7 @@
         ; iam-identity (get headerit "x-iam-identity")
 
         ;; Vahvistetaan että tokenien payloadit ei ole muuttunut matkalla 
+        ;; Jos vikatilassa aivan pakko laittaa pois päältä, kehitysmoodin voi asettaa trueksi tähän  
         vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url)
 
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)

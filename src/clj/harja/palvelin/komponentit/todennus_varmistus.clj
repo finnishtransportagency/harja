@@ -229,12 +229,15 @@
    4. Tuloksena käyttäjän roolitiedot on vahvistettu oikeiksi, eikä mitään ole sorkittu matkalla"
   ([accesstoken iam-data kehitysmoodi? public-key-url]
    ;; Kutsu todennuksen kautta tulee aina tähän 
-   ;; Tarkistetaan signaturet kun vastaanotetaan validi pyyntö
-   (when
-     (and accesstoken iam-data)
-     ;; yrita-uudelleen? defaulttina aina false
-     ;; Jos authentikointi epäonnistuu, yritetään yhden kerran uudelleen päivittämällä public-avaimet
-     (vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url false)))
+   (if kehitysmoodi?
+     ;; Kehitysmoodissa voidaan jatkaa kuten ennenkin
+     (tunnistetiedot iam-data)
+     (when
+       ;; Tarkistetaan signaturet kun vastaanotetaan validi pyyntö
+       (and accesstoken iam-data)
+       ;; yrita-uudelleen? defaulttina aina false
+       ;; Jos authentikointi epäonnistuu, yritetään yhden kerran uudelleen päivittämällä public-avaimet
+       (vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url false))))
   ([accesstoken iam-data kehitysmoodi? public-key-url yrita-uudelleen?]
    (let [cache-key
          ;; Otetaan avaimesta pelkästään käyttäjän tiedot, jotka on suht staattisia, tallenna ne cacheen

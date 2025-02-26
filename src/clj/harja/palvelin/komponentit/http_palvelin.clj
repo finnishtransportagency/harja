@@ -506,15 +506,18 @@
       (fn [kasittelijat]
         (filterv #(not= (:nimi %) nimi) kasittelijat)))))
 
-(defn luo-http-palvelin [asetukset kehitysmoodi roolit-jwt-signature]
-  (->HttpPalvelin
-   asetukset
-   (atom [])
-   (atom [])
-   (atom nil)
-   kehitysmoodi
-   roolit-jwt-signature
-   (metriikka/luo-mittari-ref mittarit-alkuarvo)))
+(defn luo-http-palvelin
+  ([asetukset kehitysmoodi]
+   (luo-http-palvelin asetukset kehitysmoodi nil))
+  ([asetukset kehitysmoodi roolit-jwt-signature]
+   (->HttpPalvelin
+    asetukset
+    (atom [])
+    (atom [])
+    (atom nil)
+    kehitysmoodi
+    roolit-jwt-signature
+    (metriikka/luo-mittari-ref mittarit-alkuarvo))))
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))
