@@ -1,11 +1,6 @@
 -- Päivitetään pot-lomakkeen ja materiaalikirjaston koodistot vastaamaan uutta YHA-skeemaa
 INSERT INTO pot2_mk_massatyyppi (nimi, lyhenne, koodi, jarjestys)
-VALUES ('Kivi', 'Kivi', 2, 19),
-       ('Puu', 'Puu', 4, 20),
-       ('Sirotepintaus', 'SIP', 24, 21),
-       ('Sora', 'Sora', 41, 22),
-       ('Soratien pintaus', 'Sorapint.', 31, 23),
-       ('Teräs', 'Teräs', 3, 24);
+VALUES ('Sirotepintaus', 'SIP', 24, 19);
 
 ALTER TABLE pot2_mk_massatyyppi ADD COLUMN poistettu BOOLEAN DEFAULT FALSE NOT NULL;
 ALTER TABLE pot2_mk_massatyyppi ADD COLUMN muokkaaja INTEGER REFERENCES kayttaja (id) DEFAULT NULL;
