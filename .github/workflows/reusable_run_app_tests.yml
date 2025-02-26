@@ -47,7 +47,7 @@ on:
         required: false
       backend-tests:
         description: 'Enabloi back-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       basic-tests:
@@ -57,7 +57,7 @@ on:
         required: false
       integration-tests:
         description: 'Enabloi integration-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       e2e-tests:
