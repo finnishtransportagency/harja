@@ -71,7 +71,10 @@
       (nil? @cache-atom)
       (public-key-vanhentunut? cache-atom paivitys-intervalli))
     (try
-      (let [_ (log/info "Tehdään GET public key kutsu..")
+      (let [_ (log/info 
+                ;; TODO, logitusta tuotantoon, jotta nähdään cachen toimivuus
+                ;; Poistetaan myöhemmin
+                (str "Tehdään GET JWT public key kutsu, paivita? " paivita? " LX: " lx-kayttaja))
             response @(http/get api-url {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
                                                    "User-Agent" (if paivita?
                                                                     ;; Koska authentikointi epäonnistui, laita LX tunnus mukaan 
@@ -180,7 +183,7 @@
         ;; Verifioi tokenit kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
         ;; Signaturen verifiointi tulee suoraan javalta (java.security.Signature), niitä ei clojurena ole suoraa näkyvillä
         _ (jwt/unsign iam-data iam-data-public-key {:alg iam-data-algoritmi}) ;; Sisältää käyttäjän tietoja & Roolit
-        _ (jwt/unsign accesstoken accesstoken-public-key {:alg accesstoken-algoritmi})])) ;; Sisältää mm. user poolin url, client idt
+        _ (jwt/unsign injected-token accesstoken-public-key {:alg accesstoken-algoritmi})])) ;; Sisältää mm. user poolin url, client idt
 
 
 (defn- authentikointi-epaonnistui
@@ -205,21 +208,26 @@
      - Tokenin välittäjä ei jostain syystä täsmää (taas, välittäjälle yhteyttä)"
   [e iam-data accesstoken]
   ;; Laukaisee slack-hälytyksen, nämä halutaan aina tutkia 
-  ;(log/error (str "[JWT-ERROR] Authentikointi ei onnistunut: " (.getMessage e)))
+  (log/error (str "[JWT-ERROR] Authentikointi ei onnistunut: " (.getMessage e)))
 
   ;; Header / tokenin metadata
-  ;(log/error (str "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :header)))
+  (log/error (str "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :header)))
   ;; Tässä on käyttäjän yritetyt roolit yms, jos logeilta löytyy roolissa jotain outoa, tee välittömästi toimenpiteitä 
-  ;(log/error (str "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :payload)))
+  (log/error (str "Saatu JWT Header (iam-data): " (-> iam-data dekoodaa-token :payload)))
 
   ;; Logitetaan vielä accesstoken, koska täällä voi myös jotain olla pielessä 
-  ;(log/error (str "Accesstoken header: " (-> accesstoken dekoodaa-token :header)))
-  ;(log/error (str "Accesstoken payload: " (-> accesstoken dekoodaa-token :payload)))
+  (log/error (str "Accesstoken header: " (-> accesstoken dekoodaa-token :header)))
+  (log/error (str "Accesstoken payload: " (-> accesstoken dekoodaa-token :payload)))
 
   ;; Authentikointi ei mennyt läpi, poista kaikki oikeudet käyttäjältä
-  (-> (tunnistetiedot iam-data)
-    ;; "failed" uudelleenohjaa "Authentikaatio epäonnistui" näkymään
-    (assoc "custom:rooli" "failed")))
+  ;; TODO.. Ei laiteta tätä vielä päälle tuotantoon
+  ; (-> (tunnistetiedot iam-data)
+  ;     "failed" uudelleenohjaa "Authentikaatio epäonnistui" näkymään
+  ;  (assoc "custom:rooli" "failed"))
+
+  ;; TODO.. 
+  ;; Palauta tunnistetiedot toistaiseksi, ja jatka authentikointia, blokkaa vasta sitten kun todettu toimivaksi
+  (tunnistetiedot iam-data))
 
 
 ;; Pidä käyttäjän tietoja tallessa x ajan, todennusta kutsutaan liian tiheästi muuten 
@@ -243,13 +251,13 @@
       Täällä myös katsotaan tokenin expiration yms, virhe heitetään jos mitään on väärin 
    3. Jos kaikki OK, palautetaan dekoodattu tunnusdata, ja jatketaan authentikointia 
    4. Tuloksena käyttäjän roolitiedot on vahvistettu oikeiksi, eikä mitään ole sorkittu matkalla"
-  ([headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url]
+  ([accesstoken iam-data iam-identity kehitysmoodi? public-key-url]
    ;; yrita-uudelleen? on defaulttina aina false
    ;; Jos authentikointi epäonnistuu, yritetään yhden kerran uudelleen päivittämällä public-avaimet
    ;; On mahdollista että public avaimet rotatoituu, jolloin signature ei enää täsmää
-   (when (and accesstoken iam-data)
-     (vahvista-jwt-signaturet headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url false)))
-  ([headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url yrita-uudelleen?]
+   (when (and accesstoken iam-data public-key-url)
+     (vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi? public-key-url false)))
+  ([accesstoken iam-data iam-identity kehitysmoodi? public-key-url yrita-uudelleen?]
    (let [cache-key 
          ;; Otetaan avaimesta pelkästään käyttäjän tiedot, jotka on suht staattisia  
          (-> iam-data dekoodaa-token :payload (some-> (dissoc :iss :sub :exp)))]
@@ -258,15 +266,11 @@
                                                  (try
                                                    ;; Cachessa ei ole tietoja, varmistetaan signaturet 
                                                    (when-not kehitysmoodi?
-                                                     (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? "https://public-keys.auth.elb.eu-west-1.amazonaws.com/"))
+                                                     (varmista-jwt-tokenit accesstoken iam-data iam-identity yrita-uudelleen? public-key-url))
                                                    ;; Jos todennus onnistui, palauta tiedot ja jatka authentikointia 
-
-                                                   ;; Debug
-                                                   (log/info "Todennettiin: "
+                                                   ;; TODO, logitusta tuotantoon jotta nähdään toimivuus, tämän voi myöhemmin poistaa 
+                                                   (log/info "Todennettiin onnistuneesti (JWT): "
                                                      (str (-> iam-data dekoodaa-token :payload :custom:etunimi)  " - " (-> iam-data dekoodaa-token :payload :custom:uid)))
-                                                   (log/info (str "Saatu public key: " public-key-url))
-                                                   (log/info (str "Headerit dekoodattu (test): " headerit))
-
                                                    (tunnistetiedot iam-data)
                                                    ;; Todennus epäonnistui
                                                    (catch Exception e
@@ -275,11 +279,11 @@
                                                          (not yrita-uudelleen?)
                                                          (= (.getMessage e) "Message seems corrupt or manipulated"))
                                                        ;; Tarkista, onko public key rotatoitunut yrittämällä uudelleen
-                                                       (vahvista-jwt-signaturet headerit accesstoken iam-data iam-identity kehitysmoodi? public-key-url true)
+                                                       (vahvista-jwt-signaturet accesstoken iam-data iam-identity kehitysmoodi? public-key-url true)
                                                        ;; Public key on ajan tasalla, ja vieläkin tulee virhe, heitetään hälytys logiin 
                                                        (authentikointi-epaonnistui e iam-data accesstoken)))))
                                                ;; Tiedot on jo cachessa
                                                %
-                                               ;; Tallenna cache-avain
+                                               ;; Tallenna cacheen käyttäjän tiedot, pysyvät siellä 15 min
                                                cache-key))
        cache-key))))
