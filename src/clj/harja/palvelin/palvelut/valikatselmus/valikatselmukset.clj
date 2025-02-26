@@ -12,6 +12,7 @@
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.domain.oikeudet :as oikeudet]
     [harja.domain.urakka :as urakka]
+    [harja.kyselyt.konversio :as konversio]
     [harja.kyselyt.urakat :as q-urakat]
     [harja.kyselyt.valikatselmus :as valikatselmus-q]
     [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
@@ -361,9 +362,9 @@
                                                                                                   :hoitokauden_alkuvuosi kuluva-hoitovuosi})
 
         ;; Hoidonjohtopalkkion suunniteltu määrä
-        hoidonjohtopalkkio (:budjetoitu_summa_indeksikorjattu (paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle db {:urakkaid urakkaid
-                                                                                                                                  :alkupvm (pvm/hoitokauden-alkupvm kuluva-hoitovuosi)
-                                                                                                                                  :loppupvm (pvm/hoitokauden-loppupvm (inc kuluva-hoitovuosi))}))
+        hoidonjohtopalkkio (:budjetoitu_summa_indeksikorjattu (first (paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle db {:urakkaid urakkaid
+                                                                                                                                         :alkupvm (pvm/hoitokauden-alkupvm kuluva-hoitovuosi)
+                                                                                                                                         :loppupvm (pvm/hoitokauden-loppupvm (inc kuluva-hoitovuosi))})))
         ;; Valmistellaan päätökset ui:ta varten
         mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet
                                 tavoitehinta tarjouksen-tavoitehinta)
@@ -927,10 +928,9 @@
                        Tarjouksen tavoitehinta:" tarjouksen-tavoitehinta "€. Päätöksen mukainen tarjouksen tavoitehinta: " (:tarjouksen-tavoitehinta paatos) " €"))
                        validaatio)
 
-          hoidonjohtopalkkio (:budjetoitu_summa_indeksikorjattu (paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle db {:urakkaid urakkaid
-                                                                                                                                       :alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
-                                                                                                                                       :loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))}))
-          validaatio (if-not (= (int hoidonjohtopalkkio) (int (:hoidonjohtopalkkio paatos)))
+          hoidonjohtopalkkio (:budjetoitu_summa_indeksikorjattu (first (paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle db {:urakkaid urakkaid
+                                                                                                                                           :alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                                                                                                                                           :loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))})))
           validaatio (if-not (= (konversio/konvertoi->int hoidonjohtopalkkio) (konversio/konvertoi->int (:hoidonjohtopalkkio paatos)))
                        (conj validaatio (str "Hoidonjohtopalkkio ei täsmää suunnitelman kanssa.
                        Suunniteltu hoidonjohtopalkkio:" hoidonjohtopalkkio "€. Päätöksen mukainen hoidonjohtopalkkio: " (:hoidonjohtopalkkio paatos) " €"))

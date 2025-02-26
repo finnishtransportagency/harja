@@ -310,10 +310,11 @@
 
 (defn valmistele-hoidonjohtopalkkionmuutospaatos [paatokset tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
-  (if (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
+  (if (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio (and (> tavoitehinta tarjouksen-tavoitehinta)))
     (let [paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
-          muutosprosentti (* (- (/ tavoitehinta tarjouksen-tavoitehinta) 1) 100)
-          hoidonjohtopalkkio-muutos (* hoidonjohtopalkkio muutosprosentti)
+          tulos (/ tavoitehinta tarjouksen-tavoitehinta)
+          hoidonjohtopalkkio-muutos (* hoidonjohtopalkkio tulos)
+          muutosprosentti (* (- tulos 1) 100)
           ;; Täytetään pakolliset tiedot
           paatos (-> paatos
                         (assoc :tavoitehinta tavoitehinta)

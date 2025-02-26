@@ -276,7 +276,6 @@ WHERE hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
  AND poistettu = FALSE;
 
 -- name: hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle
--- single?: true
 SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu
 from kustannusarvioitu_tyo kt
@@ -288,6 +287,5 @@ WHERE kt.toimenpideinstanssi = (SELECT tpi.id AS id
                                 WHERE tpi.urakka = :urakkaid
                                   AND tpk2.koodi = '23150'
                                 limit 1)
-  AND kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'G - Hoidonjohtopalkkio')
   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
 GROUP BY kt.toimenpideinstanssi, kt.tehtavaryhma;
