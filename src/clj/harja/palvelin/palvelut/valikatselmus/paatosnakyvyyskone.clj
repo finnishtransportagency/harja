@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone
   (:require [clojure.string :as str]
+            [harja.fmt :as fmt]
             [harja.tyokalut.yleiset :refer [round2]]
             [harja.kyselyt.urakat :as urakka-kyselyt]))
 
@@ -58,7 +59,7 @@
            (if-let [m2 (index-map (:nimi m1))]
              m2
              m1))
-         pk-paatokset)))
+      pk-paatokset)))
 
 (defn lisaa-paatos-virheellisena
   "Jos päätös on mukana päätöslistassa, mutta sille ei ole antaa tarkentavia tietoja, niin lisätään siihen virhe.
@@ -97,15 +98,15 @@
           ;; Korvataan koneelta saatu päätös tässä valistellulta
 
           lupauspaatos (-> lupauspaatos
-                           (assoc :tyyppi tyyppi)
-                           (assoc :lupaussanktio lupaussanktio)
-                           (assoc :lupausbonus lupausbonus)
-                           (assoc :tavoitehinta tavoitehinta)
-                           (assoc :tarjous_tavoitehinta tarjouksen-tavoitehinta)
-                           (assoc :luvatut_pisteet luvatut-pisteet)
-                           (assoc :toteutuneet_pisteet toteutuneet-pisteet)
-                           (assoc :sanktioprosentti sanktioprosentti)
-                           (assoc :bonusprosentti bonusprosentti)
+                         (assoc :tyyppi tyyppi)
+                         (assoc :lupaussanktio lupaussanktio)
+                         (assoc :lupausbonus lupausbonus)
+                         (assoc :tavoitehinta tavoitehinta)
+                         (assoc :tarjous_tavoitehinta tarjouksen-tavoitehinta)
+                         (assoc :luvatut_pisteet luvatut-pisteet)
+                         (assoc :toteutuneet_pisteet toteutuneet-pisteet)
+                         (assoc :sanktioprosentti sanktioprosentti)
+                         (assoc :bonusprosentti bonusprosentti)
                          )
           ;; Poista kaikki lupauspäätökset listasta
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Lupaukset")) paatokset)
@@ -126,20 +127,20 @@
                        (> urakan-alkuvuosi 2021)
                        (< urakan-alkuvuosi 2024)
                        (<= kuluva-hoitovuosi 2024)) "1a"
-                                                    "1b")
+                   "1b")
           ;; Korvataan koneelta saatu päätös tässä valistellulta
           tavoitehinnan-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) paatokset))
           tavoitehinnan-muutospaatos (-> tavoitehinnan-muutospaatos
-                                         (assoc :versio versio)
-                                         (assoc :tavoitehinta tavoitehinta)
-                                         (assoc :kattohinta kattohinta))
+                                       (assoc :versio versio)
+                                       (assoc :tavoitehinta tavoitehinta)
+                                       (assoc :kattohinta kattohinta))
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan muutokset")) paatokset)
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-muutospaatos))]
       paatokset)
     ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
-   (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset"
-     "Tavoitehintaa tai kattohintaa ei ole määritelty."
-     true 4)))
+    (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset"
+      "Tavoitehintaa tai kattohintaa ei ole määritelty."
+      true 4)))
 
 (defn valmistele-indeksikorjauspaatos [paatokset tavoitehinta tavoitehinnan-muutokset
                                        hoitokauden-indeksikuukaudet alkuperainen-pisteluku]
@@ -150,24 +151,29 @@
       (let [;; Laske pistelukujen muutos
             pisteet (apply + (map #(:indeksiluku %) hoitokauden-indeksikuukaudet))
             piste-keskiarvo (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet)))
-            pistelukujen-muutos (- piste-keskiarvo alkuperainen-pisteluku)
+            pistelukujen-muutos (round2 1 (- piste-keskiarvo alkuperainen-pisteluku))
+            alkuperaisen-pisteluvun-kuukausi "elokuu 2024"
             indeksikorotuksen-prosenttiosuus (with-precision 4 (round2 1 (* (/ (- piste-keskiarvo alkuperainen-pisteluku) piste-keskiarvo) 100)))
             muutosten-summa (if (seq tavoitehinnan-muutokset)
                               (apply + (map #(:summa %) tavoitehinnan-muutokset))
                               0)
             tavoitehinta-ennen (- tavoitehinta muutosten-summa)
             hoitokauden-lopun-indeksikorjaus (* tavoitehinta-ennen (/ indeksikorotuksen-prosenttiosuus 100))
+            tavoitehinnan-muutos (apply + (map :summa tavoitehinnan-muutokset))
             ;; Korvataan koneelta saatu päätös tässä valistellulta
             indeksipaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) paatokset))
             indeksipaatos (-> indeksipaatos
                             (assoc :tavoitehinta tavoitehinta)
-                            (assoc :tavoitehinnan_muutokset tavoitehinnan-muutokset)
+                            (assoc :tavoitehinnan_muutokset tavoitehinnan-muutos)
                             (assoc :tavoitehinta_ennen tavoitehinta-ennen)
                             (assoc :hoitokauden_kuukaudet hoitokauden-indeksikuukaudet)
+                            (assoc :kuukausien_keskiarvo piste-keskiarvo)
                             (assoc :alkuperainen_pisteluku alkuperainen-pisteluku)
+                            (assoc :alkuperaisen_pisteluvun_kuukausi alkuperaisen-pisteluvun-kuukausi)
                             (assoc :pistelukujen_muutos pistelukujen-muutos)
                             (assoc :indeksikorotuksen_prosenttiosuus indeksikorotuksen-prosenttiosuus)
                             (assoc :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus))
+
             paatokset (remove (fn [paatos] (= (:nimi paatos) "Hoitovuoden lopun indeksikorjaus")) paatokset)
             paatokset (sort-by :jarjestys (conj paatokset indeksipaatos))]
         paatokset)
@@ -197,21 +203,21 @@
           ;; Versiossa 1 - Tavoitepalkkio on alituksesta 30%, mutta max 3% tavoitehinnasta - Mutta viimeisenä vuotena maksetaan kaikki eli 100% alituksesta
           laskennallinen-tavoitepalkkio (* (/ tavoitepalkkion-maksuprosentti 100) tavoitehinnan-alitus)
           tavoitepalkkio (if (= urakan-loppuvuosi kuluva-hoitovuosi)
-                           tavoitehinnan-alitus             ;; Viimeisenä vuotena maksetaan kaikki. Muuten 30% tai max 3% , tai versiossa 2 maksetaan 75% alituksesta
+                           tavoitehinnan-alitus ;; Viimeisenä vuotena maksetaan kaikki. Muuten 30% tai max 3% , tai versiossa 2 maksetaan 75% alituksesta
                            (min maksimi-tavoitepalkkio laskennallinen-tavoitepalkkio))
           ;; Jos alituksesta maksettava tavoitepalkkio on suurempi, kuin 3% tavoitehinnasta, siirretään ylittävä osuus seuraavan hoitovuden alennukseksi - Paitsi tietenkin viimeisenä vuotena
           siirron-maara (if (= urakan-loppuvuosi kuluva-hoitovuosi)
-                          nil                               ;; Viimeisenä vuotena maksetaan kaikki. Eli ei siirretä mitään
+                          nil ;; Viimeisenä vuotena maksetaan kaikki. Eli ei siirretä mitään
                           (when (> laskennallinen-tavoitepalkkio maksimi-tavoitepalkkio)
                             (- laskennallinen-tavoitepalkkio maksimi-tavoitepalkkio)))
 
           tavoitehinnan-alituspaatos (-> tavoitehinnan-alituspaatos
-                                         (assoc :tavoitehinta tavoitehinta)
-                                         (assoc :toteutuneet_kustannukset kustannukset)
-                                         (assoc :alituksen_maara tavoitehinnan-alitus)
-                                         (assoc :siirron_maara siirron-maara)
-                                         (assoc :tavoitepalkkio tavoitepalkkio)
-                                         (assoc :tavoitepalkkion_maksuprosentti tavoitepalkkion-maksuprosentti))
+                                       (assoc :tavoitehinta tavoitehinta)
+                                       (assoc :toteutuneet_kustannukset kustannukset)
+                                       (assoc :alituksen_maara tavoitehinnan-alitus)
+                                       (assoc :siirron_maara siirron-maara)
+                                       (assoc :tavoitepalkkio tavoitepalkkio)
+                                       (assoc :tavoitepalkkion_maksuprosentti tavoitepalkkion-maksuprosentti))
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-alituspaatos))]
 
       paatokset)
@@ -243,15 +249,15 @@
           urakoitsijan-prosentti (- 100 tilaajan-prosentti)
 
           tavoitehinnan-ylityspaatos (-> tavoitehinnan-ylityspaatos
-                                         (assoc :toteutuneet_kustannukset kustannukset)
-                                         (assoc :versio versio)
-                                         (assoc :tavoitehinta tavoitehinta)
-                                         (assoc :toteutuneet_kustannukset kustannukset)
-                                         (assoc :ylityksen_maara tavoitehinnan-ylitys)
-                                         (assoc :tilaajan_prosentti tilaajan-prosentti)
-                                         (assoc :urakoitsijan_prosentti urakoitsijan-prosentti)
-                                         (assoc :tilaaja_maksaa (* (/ tilaajan-prosentti 100) tavoitehinnan-ylitys))
-                                         (assoc :urakoitsija_maksaa (* (/ urakoitsijan-prosentti 100) tavoitehinnan-ylitys)))
+                                       (assoc :toteutuneet_kustannukset kustannukset)
+                                       (assoc :versio versio)
+                                       (assoc :tavoitehinta tavoitehinta)
+                                       (assoc :toteutuneet_kustannukset kustannukset)
+                                       (assoc :ylityksen_maara tavoitehinnan-ylitys)
+                                       (assoc :tilaajan_prosentti tilaajan-prosentti)
+                                       (assoc :urakoitsijan_prosentti urakoitsijan-prosentti)
+                                       (assoc :tilaaja_maksaa (* (/ tilaajan-prosentti 100) tavoitehinnan-ylitys))
+                                       (assoc :urakoitsija_maksaa (* (/ urakoitsijan-prosentti 100) tavoitehinnan-ylitys)))
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-ylityspaatos))]
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin poistetaan tavoitehinnan ylitys
@@ -266,12 +272,12 @@
           ylityksen-maara (- kustannukset kattohinta)
           ;; Täytetään pakolliset tiedot
           kattohinnan-ylityspaatos (-> kattohinnan-ylityspaatos
-                                       (assoc :toteutuneet_kustannukset kustannukset)
-                                       (assoc :kattohinta kattohinta)
-                                       (assoc :ylityksen_maara ylityksen-maara)
-                                       (assoc :urakoitsija_maksaa ylityksen-maara)
-                                       (assoc :siirra? false) ;; Päätöksen pohjatietoja asetettaessa siirto on aina defaulttina false. Tietokannasta haettaessa tilanne voi olla eri.
-                                       )
+                                     (assoc :toteutuneet_kustannukset kustannukset)
+                                     (assoc :kattohinta kattohinta)
+                                     (assoc :ylityksen_maara ylityksen-maara)
+                                     (assoc :urakoitsija_maksaa ylityksen-maara)
+                                     (assoc :siirra? false) ;; Päätöksen pohjatietoja asetettaessa siirto on aina defaulttina false. Tietokannasta haettaessa tilanne voi olla eri.
+                                     )
 
           paatokset (remove
                       (fn [paatos]
@@ -288,12 +294,13 @@
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
   (if (and tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta)
     (let [hintapaatos (first (filter #(= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") paatokset))
-          tavoitehinta_ennen (- tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus)
+          hintamuutos (apply + (map :summa tavoitehinnan-muutokset))
+          tavoitehinta_ennen (- tavoitehinta hintamuutos hoitokauden-lopun-indeksikorjaus)
           ;; Täytetään pakolliset tiedot
           hintapaatos (-> hintapaatos
                         (assoc :tavoitehinta_ennen tavoitehinta_ennen)
                         (assoc :tavoitehinta_jalkeen tavoitehinta)
-                        (assoc :tavoitehinnan_muutokset tavoitehinnan-muutokset)
+                        (assoc :tavoitehinnan_muutokset hintamuutos)
                         (assoc :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus)
                         (assoc :kattohinta kattohinta))
 
@@ -312,16 +319,16 @@
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
   (if (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio (and (> tavoitehinta tarjouksen-tavoitehinta)))
     (let [paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
-          tulos (/ tavoitehinta tarjouksen-tavoitehinta)
+          tulos (with-precision 10 (/ tavoitehinta tarjouksen-tavoitehinta))
           hoidonjohtopalkkio-muutos (* hoidonjohtopalkkio tulos)
           muutosprosentti (* (- tulos 1) 100)
           ;; Täytetään pakolliset tiedot
           paatos (-> paatos
-                        (assoc :tavoitehinta tavoitehinta)
-                        (assoc :tarjouksen_tavoitehinta tarjouksen-tavoitehinta)
-                        (assoc :hoidonjohtopalkkio hoidonjohtopalkkio)
-                        (assoc :muutosprosentti muutosprosentti)
-                        (assoc :hoidonjohtopalkkio_muutos hoidonjohtopalkkio-muutos))
+                   (assoc :tavoitehinta tavoitehinta)
+                   (assoc :tarjouksen_tavoitehinta tarjouksen-tavoitehinta)
+                   (assoc :hoidonjohtopalkkio hoidonjohtopalkkio)
+                   (assoc :muutosprosentti muutosprosentti)
+                   (assoc :hoidonjohtopalkkio_muutos hoidonjohtopalkkio-muutos))
 
           paatokset (remove
                       (fn [paatos]
@@ -330,9 +337,13 @@
           paatokset (sort-by :jarjestys (conj paatokset paatos))]
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin varoitetaan siitä käyttäjää
-    (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos"
-      "Tavoitehintaa, tarjouksen tavoitehintaa tai hoidonjohtopalkkiota ei ole määritelty. Tai tavoitehinta ei ole muuttunut riittävästi."
-      true 16)))
+    (let [virhe #{}
+          virhe (if-not tavoitehinta (conj virhe "Tavoitehintaa ei ole määritelty. ") virhe)
+          virhe (if-not tarjouksen-tavoitehinta (conj virhe "Tarjouksen tavoitehintaa ei ole määritelty. ") virhe)
+          virhe (if-not hoidonjohtopalkkio (conj virhe "Hoidonjohtopalkkiota ei ole määritelty. ") virhe)
+          virhe (if-not (and tavoitehinta tarjouksen-tavoitehinta (> tavoitehinta tarjouksen-tavoitehinta))
+                  (conj virhe "Tavoitehinta ei ole suurempi, kuin tarjouksen tavoitehinta. ") virhe)]
+      (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" (clojure.string/join " " virhe) true 16))))
 
 (defn nimi->avain [nimi]
   (keyword (str/lower-case (-> nimi

@@ -5,6 +5,7 @@
             [harja.pvm :as pvm]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
+            [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.kyselyt.sanktiot :as sanktio-kyselyt]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
@@ -60,7 +61,7 @@
    :luoja luoja})
 
 (defn tavoitehinnan-alituspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                                  alituksen-maara siirron-maara tavoitepalkkio kulu-id luoja]
+                                  alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
    :tavoitehinta tavoitehinta
@@ -68,6 +69,7 @@
    :alituksen_maara alituksen-maara
    :siirron_maara siirron-maara
    :tavoitepalkkio tavoitepalkkio
+   :tavoitepalkkion_maksuprosentti tavoitepalkkion-maksuprosentti
    :kulu_id kulu-id
    :luoja luoja})
 
@@ -101,7 +103,7 @@
    :luoja luoja})
 
 (defn indeksikorjauspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                            hoitokauden-kuukaudet alkuperainen-pisteluku pistelukujen-muutos indeksikorotuksen-prosenttiosuus
+                            hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus
                             hoitokauden-lopun-indeksikorjaus luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
@@ -109,8 +111,10 @@
    :tavoitehinnan_muutokset tavoitehinnan-muutokset
    :tavoitehinta_ennen tavoitehinta-ennen
    :alkuperainen_pisteluku alkuperainen-pisteluku
+   :alkuperaisen_pisteluvun_kuukausi alkuperaisen-pisteluvun-kuukausi
    :pistelukujen_muutos pistelukujen-muutos
    :hoitokauden_kuukaudet hoitokauden-kuukaudet
+   :kuukausien_keskiarvo kuukausien-keskiarvo
    :indeksikorotuksen_prosenttiosuus indeksikorotuksen-prosenttiosuus
    :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus
    :luoja luoja})
@@ -168,7 +172,7 @@
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-tavoitehinnan-alitus [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                                   alituksen-maara siirron-maara tavoitepalkkio kulu-id luoja]
+                                   alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
   (is (= tavoitehinta (:tavoitehinta paatos)))
@@ -177,6 +181,7 @@
   (is (= siirron-maara (:siirron_maara paatos)))
   (is (= tavoitepalkkio (:tavoitepalkkio paatos)))
   (is (= kulu-id (:kulu_id paatos)))
+  (is (= tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti paatos)))
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-tavoitehinnan-ylityspaatos [paatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
@@ -209,7 +214,7 @@
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-indeksikorjauspaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                                   hoitokauden-kuukaudet alkuperainen-pisteluku pistelukujen-muutos indeksikorotuksen-prosenttiosuus
+                                   hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus
                                    hoitokauden-lopun-indeksikorjaus luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
@@ -217,7 +222,9 @@
   (is (= tavoitehinnan-muutokset (:tavoitehinnan_muutokset paatos)))
   (is (= tavoitehinta-ennen (:tavoitehinta_ennen paatos)))
   (is (= hoitokauden-kuukaudet (:hoitokauden_kuukaudet paatos)))
+  (is (= (bigdec kuukausien-keskiarvo) (bigdec (:kuukausien_keskiarvo paatos))))
   (is (= (bigdec alkuperainen-pisteluku) (:alkuperainen_pisteluku paatos)))
+  (is (= alkuperaisen-pisteluvun-kuukausi (:alkuperaisen_pisteluvun_kuukausi paatos)))
   (is (= (bigdec pistelukujen-muutos) (:pistelukujen_muutos paatos)))
   (is (= (bigdec indeksikorotuksen-prosenttiosuus) (:indeksikorotuksen_prosenttiosuus paatos)))
   (is (= hoitokauden-lopun-indeksikorjaus (:hoitokauden_lopun_indeksikorjaus paatos)))
@@ -546,6 +553,8 @@
 (deftest kysely-tavoitehinnan-alitus-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        ;; Haetaan urakan parametrit
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tavoitehinta 5M
@@ -553,17 +562,20 @@
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
+        tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
         kulu-id 1
         paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id kayttajaid)
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakkaid paatos)]
     (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-      alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)))
+      alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id kayttajaid)))
 
 (deftest rajapinta-tavoitehinnan-alitus-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; Haetaan urakan parametrit
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
         tavoitehinta 5M
@@ -571,9 +583,10 @@
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
+        tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
         kulu-id nil
         paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id kayttajaid)
         vastaus (try
                   (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
                                 valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
@@ -587,6 +600,7 @@
 (deftest kysely-tavoitehinnanalitus-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
         tavoitehinta 5M
@@ -594,9 +608,10 @@
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
+        tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
         kulu-id 1
         paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id kayttajaid)
         _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakkaid paatos)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
@@ -612,6 +627,7 @@
 (deftest rajapinta-tavoitehinnan-alitus-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
         tavoitehinta 5M
@@ -619,9 +635,10 @@
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
+        tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
         kulu-id nil
         paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio kulu-id kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id kayttajaid)
         vastaus (try
                   (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
                                 valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
@@ -857,22 +874,32 @@
         hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
         tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
-        hoitokauden-kuukaudet [["Lokakuu 2021" 112.4] ["Marraskuu 2021" 112.5]
-                               ["Joulukuu 2021" 112.6] ["Tammikuu 2022" 112.7]
-                               ["Helmikuu 2022" 112.8] ["Maaliskuu 2022" 112.9]
-                               ["Huhtikuu 2022" 113.0] ["Toukokuu 2022" 113.1]
-                               ["Kesäkuu 2022" 113.2] ["Heinäkuu 2022" 113.3]
-                               ["Elokuu 2022" 113.4] ["Syyskuu 2022" 113.5]]
-
+        hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
+                               {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
+                               {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
+                               {:kuukausi "Tammikuu 2022" :indeksiluku 112.7}
+                               {:kuukausi "Helmikuu 2022" :indeksiluku 112.8}
+                               {:kuukausi "Maaliskuu 2022" :indeksiluku 112.9}
+                               {:kuukausi "Huhtikuu 2022" :indeksiluku 113.0}
+                               {:kuukausi "Toukokuu 2022" :indeksiluku 113.1}
+                               {:kuukausi "Kesäkuu 2022" :indeksiluku 113.2}
+                               {:kuukausi "Heinäkuu 2022" :indeksiluku 113.3}
+                               {:kuukausi "Elokuu 2022" :indeksiluku 113.4}
+                               {:kuukausi "Syyskuu 2022" :indeksiluku 113.5}]
+        kuukausien-keskiarvo (/ (apply + (map :indeksiluku hoitokauden-kuukaudet)) (count hoitokauden-kuukaudet))
         alkuperainen-pisteluku 112.5
+        alkuperaisen-pisteluvun-kuukausi "elokuu 2023"
         pistelukujen-muutos 5.9
         indeksikorotuksen-prosenttiosuus 3.9
         paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                 hoitokauden-kuukaudet alkuperainen-pisteluku pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
+                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) urakkaid paatos)
+        testattavat-indeksikuukaudet (reduce (fn [uusi-vectori kuukausi]
+                                               (conj uusi-vectori [(:kuukausi kuukausi) (:indeksiluku kuukausi)]))
+                                       [] hoitokauden-kuukaudet)]
     (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-      hoitokauden-kuukaudet alkuperainen-pisteluku pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)))
+      testattavat-indeksikuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)))
 
 
 ;; Indeksikorjauksen poisto
@@ -885,22 +912,32 @@
         hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
         tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
-        hoitokauden-kuukaudet [["Lokakuu 2021" 112.4] ["Marraskuu 2021" 112.5]
-                               ["Joulukuu 2021" 112.6] ["Tammikuu 2022" 112.7]
-                               ["Helmikuu 2022" 112.8] ["Maaliskuu 2022" 112.9]
-                               ["Huhtikuu 2022" 113.0] ["Toukokuu 2022" 113.1]
-                               ["Kesäkuu 2022" 113.2] ["Heinäkuu 2022" 113.3]
-                               ["Elokuu 2022" 113.4] ["Syyskuu 2022" 113.5]]
-
+        hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
+                               {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
+                               {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
+                               {:kuukausi "Tammikuu 2022" :indeksiluku 112.7}
+                               {:kuukausi "Helmikuu 2022" :indeksiluku 112.8}
+                               {:kuukausi "Maaliskuu 2022" :indeksiluku 112.9}
+                               {:kuukausi "Huhtikuu 2022" :indeksiluku 113.0}
+                               {:kuukausi "Toukokuu 2022" :indeksiluku 113.1}
+                               {:kuukausi "Kesäkuu 2022" :indeksiluku 113.2}
+                               {:kuukausi "Heinäkuu 2022" :indeksiluku 113.3}
+                               {:kuukausi "Elokuu 2022" :indeksiluku 113.4}
+                               {:kuukausi "Syyskuu 2022" :indeksiluku 113.5}]
+        kuukausien-keskiarvo (/ (apply + (map :indeksiluku hoitokauden-kuukaudet)) (count hoitokauden-kuukaudet))
         alkuperainen-pisteluku 112.5
+        alkuperaisen-pisteluvun-kuukausi "elokuu 2023"
         pistelukujen-muutos 5.9
         indeksikorotuksen-prosenttiosuus 3.9
         paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                 hoitokauden-kuukaudet alkuperainen-pisteluku pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
+                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         vastaus (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) urakkaid paatos)
+        testattavat-indeksikuukaudet (reduce (fn [uusi-vectori kuukausi]
+                                               (conj uusi-vectori [(:kuukausi kuukausi) (:indeksiluku kuukausi)]))
+                                       [] hoitokauden-kuukaudet)
         _ (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-            hoitokauden-kuukaudet alkuperainen-pisteluku pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
+            testattavat-indeksikuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         ;; Määrittele haettavat päätökset - Luetaan vain indeksipäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Hoitovuoden lopun indeksikorjaus" :jarjestys 6}]
@@ -921,18 +958,25 @@
         hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
         tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
-        hoitokauden-kuukaudet [["Lokakuu 2021" 112.4] ["Marraskuu 2021" 112.5]
-                               ["Joulukuu 2021" 112.6] ["Tammikuu 2022" 112.7]
-                               ["Helmikuu 2022" 112.8] ["Maaliskuu 2022" 112.9]
-                               ["Huhtikuu 2022" 113.0] ["Toukokuu 2022" 113.1]
-                               ["Kesäkuu 2022" 113.2] ["Heinäkuu 2022" 113.3]
-                               ["Elokuu 2022" 113.4] ["Syyskuu 2022" 113.5]]
-
+        hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
+                               {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
+                               {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
+                               {:kuukausi "Tammikuu 2022" :indeksiluku 112.7}
+                               {:kuukausi "Helmikuu 2022" :indeksiluku 112.8}
+                               {:kuukausi "Maaliskuu 2022" :indeksiluku 112.9}
+                               {:kuukausi "Huhtikuu 2022" :indeksiluku 113.0}
+                               {:kuukausi "Toukokuu 2022" :indeksiluku 113.1}
+                               {:kuukausi "Kesäkuu 2022" :indeksiluku 113.2}
+                               {:kuukausi "Heinäkuu 2022" :indeksiluku 113.3}
+                               {:kuukausi "Elokuu 2022" :indeksiluku 113.4}
+                               {:kuukausi "Syyskuu 2022" :indeksiluku 113.5}]
+        kuukausien-keskiarvo (/ (apply + (map :indeksiluku hoitokauden-kuukaudet)) (count hoitokauden-kuukaudet))
         alkuperainen-pisteluku 112.5
+        alkuperaisen-pisteluvun-kuukausi "elokuu 2023"
         pistelukujen-muutos 5.9
         indeksikorotuksen-prosenttiosuus 3.9
         paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                 hoitokauden-kuukaudet alkuperainen-pisteluku pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
+                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
@@ -953,24 +997,32 @@
         hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
         tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
-        hoitokauden-kuukaudet [["Lokakuu 2021" 112.4] ["Marraskuu 2021" 112.5]
-                               ["Joulukuu 2021" 112.6] ["Tammikuu 2022" 112.7]
-                               ["Helmikuu 2022" 112.8] ["Maaliskuu 2022" 112.9]
-                               ["Huhtikuu 2022" 113.0] ["Toukokuu 2022" 113.1]
-                               ["Kesäkuu 2022" 113.2] ["Heinäkuu 2022" 113.3]
-                               ["Elokuu 2022" 113.4] ["Syyskuu 2022" 113.5]]
-
+        hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
+                               {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
+                               {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
+                               {:kuukausi "Tammikuu 2022" :indeksiluku 112.7}
+                               {:kuukausi "Helmikuu 2022" :indeksiluku 112.8}
+                               {:kuukausi "Maaliskuu 2022" :indeksiluku 112.9}
+                               {:kuukausi "Huhtikuu 2022" :indeksiluku 113.0}
+                               {:kuukausi "Toukokuu 2022" :indeksiluku 113.1}
+                               {:kuukausi "Kesäkuu 2022" :indeksiluku 113.2}
+                               {:kuukausi "Heinäkuu 2022" :indeksiluku 113.3}
+                               {:kuukausi "Elokuu 2022" :indeksiluku 113.4}
+                               {:kuukausi "Syyskuu 2022" :indeksiluku 113.5}]
+        kuukausien-keskiarvo (/ (apply + (map :indeksiluku hoitokauden-kuukaudet)) (count hoitokauden-kuukaudet))
         alkuperainen-pisteluku 112.5
+        alkuperaisen-pisteluvun-kuukausi "elokuu 2023"
         pistelukujen-muutos 5.9
         indeksikorotuksen-prosenttiosuus 3.9
         paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                 hoitokauden-kuukaudet alkuperainen-pisteluku pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
+                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
                                 valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
-                  (catch Exception e e))
+                  (catch Exception e
+                    (println "ERROR: " e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)
         poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-indeksikorjauspaatos +kayttaja-jvh+ tallennettu-paatos)
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :hoitovuoden-lopun-indeksikorjaus)]
@@ -1037,7 +1089,7 @@
                                 valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta_jalkeen)
                                 valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit] kattohinta)]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ paatos))
-                  (catch Exception e e))
+                  (catch Exception e (println "ERROR:" e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)]
     (testaa-lopun-hintapaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
       tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kayttajaid)))
@@ -1129,9 +1181,10 @@
                   (with-redefs [;; Feikataan vastaukset
                                 valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
                                 lupaus-palvelu/maarita-urakan-tavoitehinta (fn [db urakkaid hoitokauden-alkuvuosi] tarjouksen_tavoitehinta)
-                                paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle (fn [db hakuparametrit] {:budjetoitu_summa_indeksikorjattu hoidonjohtopalkkio})]
+                                paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle (fn [db hakuparametrit] [{:budjetoitu_summa_indeksikorjattu hoidonjohtopalkkio}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ paatos))
-                  (catch Exception e e))
+                  (catch Exception e
+                    (println "ERROR:: e" e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoidonjohtopalkkion-muutos)]
     (testaa-hoidojohtopalkkiomuutospaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
       muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)))

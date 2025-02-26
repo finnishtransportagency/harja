@@ -145,6 +145,8 @@ CREATE TABLE paatos_hoitokauden_indeksikorjaus
     tavoitehinnan_muutokset          NUMERIC(10, 2) NOT NULL,  -- Summa tavoitehinnan muutosten kokonaisuudesta
     tavoitehinta_ennen               NUMERIC(10, 2) NOT NULL,  --Hoitokauden lopun tavoitehinta ennen hoitokauden lopun indeksikorjausta. Eli tavoitehinta + tavoitehinnan muutokset
     hoitokauden_kuukaudet            indeksikorjauskuukausi[], -- Kuukauden nimi ja kuukauden pisteluku
+    kuukausien_keskiarvo             NUMERIC(10, 2),           -- Kuukausien keskiarvo
+    alkuperaisen_pisteluvun_kuukausi TEXT,                     -- Edellisen hoitovuoden elokuu, eli laitetaan muotoon "elokuu 2021"
     alkuperainen_pisteluku           NUMERIC(10, 1),           -- Edellisen hoitovuoden syyskuun pisteluku. Esim 105.6
     pistelukujen_muutos              NUMERIC(10, 1),
     indeksikorotuksen_prosenttiosuus NUMERIC(10, 1),           -- 2% ylittävä osa
@@ -263,13 +265,16 @@ BEGIN
                                                 THEN tavoitepalkkion_maksuprosentti_2019_2024
                                             ELSE tavoitepalkkion_maksuprosentti_2025_ END);
             tavoitehinnan_ylityksen_maksuprosentti := (CASE
-                                                           WHEN urakan_tiedot.alkupvm < '2024-10-02' AND urakan_tiedot.sopimustyyppi != 'mhu+'
+                                                           WHEN urakan_tiedot.alkupvm < '2024-10-02' AND
+                                                                urakan_tiedot.sopimustyyppi != 'mhu+'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024
-                                                           WHEN urakan_tiedot.alkupvm > '2024-10-02' AND urakan_tiedot.sopimustyyppi != 'mhu+'
+                                                           WHEN urakan_tiedot.alkupvm > '2024-10-02' AND
+                                                                urakan_tiedot.sopimustyyppi != 'mhu+'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2025_
-                                                           WHEN urakan_tiedot.alkupvm > '2024-10-02' AND urakan_tiedot.sopimustyyppi = 'mhu'
+                                                           WHEN urakan_tiedot.alkupvm > '2024-10-02' AND
+                                                                urakan_tiedot.sopimustyyppi = 'mhu'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2024_vaativa
-                                                           -- Kaikille muille defaulttina 70%
+                -- Kaikille muille defaulttina 70%
                                                            ELSE tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024 END);
 
             -- Tarkistetaan, että löytyykö rivi jo taulusta

@@ -401,8 +401,6 @@
         luvatut-pisteet (get-in lupaustiedot [:lupaus-sitoutuminen :pisteet])
         toteutuneet-pisteet (get-in lupaustiedot [:yhteenveto :pisteet :toteuma])
 
-
-        ;paatokset (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakkaid hoitovuosi)
         tavoitehinnan-muutokset (valikatselmus-q/hae-oikaisut db {::urakka/id urakkaid})
         ;; UI haluaa tavoitehinnan muutokset tietyssä formaatissa. Formatoidaan ne tässä, eikä ui:lla, kuten ennen
         ;; Data on muodossa {vuosi [{data} {data}]}
@@ -425,7 +423,6 @@
         budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakkaid})
         ;; Otetaan käytyn hoitovuoden budjetti
         budjettitavoite (some #(when (= (:hoitokauden-alkuvuosi %) hoitovuosi) %) budjettitavoite)
-
         ;; Kustannusten mukana ei tule tarvittavalla tasolla erotettuna bonuksia. Joten haetaan ne erikseen
         bonukset (valikatselmus-q/hae-bonukset db {:urakka-id urakkaid
                                                    :alkupvm hoitokauden-alkupvm
@@ -845,6 +842,7 @@
           ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
           tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          _ (println "valikatselmus :: tee-indeksikorjauspaatos :: tavoitehinta" tavoitehinta)
           validaatio (if-not (= (konversio/konvertoi->int tavoitehinta) (konversio/konvertoi->int (:tavoitehinta paatos)))
                        (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
                        validaatio)
@@ -909,7 +907,7 @@
 
 (defn tee-hoidonjohtopalkkion-muutospaatos [db kayttaja paatos]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
-  (log/info "tee-hoidonjohtopalkkion-muutospaatos :: paatos" (pr-str paatos))
+  (log/info "valikatselmus :: tee-hoidonjohtopalkkion-muutospaatos :: paatos" (pr-str paatos))
   (jdbc/with-db-transaction [db db]
     (let [validaatio #{}
           urakkaid (:urakkaid paatos)
@@ -940,7 +938,6 @@
                     (paatos-apurit/tallenna-kulu db paatos kayttaja :hoidonjohtopalkkion-muutos (:hoidonjohtopalkkio_muutos paatos)))
           paatos (assoc paatos :kulu_id kulu_id)
           ;; TODO: Tee lisää validaatiota, jos mahdollista
-
 
           _ (if (seq validaatio)
               (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))

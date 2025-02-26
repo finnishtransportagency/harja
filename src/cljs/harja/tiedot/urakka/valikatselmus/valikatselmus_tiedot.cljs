@@ -63,6 +63,10 @@
 (defrecord PoistaPoytakirjanRaporttiPaatos [paatos])
 (defrecord TallennaHoidonjohtopalkkionMuutospaatos [paatos])
 (defrecord PoistaHoidonjohtopalkkionMuutospaatos [paatos])
+(defrecord TallennaHoitokaudenlopunHintapaatos [paatos])
+(defrecord PoistaHoitokaudenlopunHintapaatos [paatos])
+(defrecord TallennaHoitovuodenlopunIndeksikorjauspaatos [paatos])
+(defrecord PoistaHoitovuodenlopunIndeksikorjauspaatos [paatos])
 
 (defrecord PaivitaKattohinnanSiirtoCheckbox [uusi-arvo])
 (defrecord PaivitaKattohinnanSiirtoMaara [uusi-arvo])
@@ -551,6 +555,38 @@
   PoistaHoidonjohtopalkkionMuutospaatos
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :poista-hoidonjohtopalkkion-muutospaatos
+      (assoc paatos :luoja (:id @istunto/kayttaja))
+      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+    (assoc app :tallennus-kesken? true))
+
+  TallennaHoitokaudenlopunHintapaatos
+  (process-event [{paatos :paatos} app]
+    (tuck-apurit/post! :tee-hoitovuoden-lopun-hintapaatos
+      (assoc paatos :luoja (:id @istunto/kayttaja))
+      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+    (assoc app :tallennus-kesken? true))
+
+  PoistaHoitokaudenlopunHintapaatos
+  (process-event [{paatos :paatos} app]
+    (tuck-apurit/post! :poista-hoitovuoden-lopun-hintapaatos
+      (assoc paatos :luoja (:id @istunto/kayttaja))
+      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+    (assoc app :tallennus-kesken? true))
+
+  TallennaHoitovuodenlopunIndeksikorjauspaatos
+  (process-event [{paatos :paatos} app]
+    (tuck-apurit/post! :tee-indeksikorjauspaatos
+      (assoc paatos :luoja (:id @istunto/kayttaja))
+      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+    (assoc app :tallennus-kesken? true))
+
+  PoistaHoitovuodenlopunIndeksikorjauspaatos
+  (process-event [{paatos :paatos} app]
+    (tuck-apurit/post! :poista-indeksikorjauspaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
       {:onnistui ->HaeValikatselmuksenTiedotOnnistui
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})

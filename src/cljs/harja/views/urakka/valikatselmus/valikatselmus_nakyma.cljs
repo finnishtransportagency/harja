@@ -29,7 +29,8 @@
             [harja.views.urakka.valikatselmus.hintapaatokset :as hintapaatokset]
             [harja.views.urakka.valikatselmus.raportit :as raportit]
             [harja.views.urakka.valikatselmus.hoidonjohtopalkkio :as hoidonjohtopalkkio]
-            [harja.views.urakka.valikatselmus.hoitovuoden-lopun-hinnat :as hoitovuoden-lopun-hinnat])
+            [harja.views.urakka.valikatselmus.hoitovuoden-lopun-hinnat :as hoitovuoden-lopun-hinnat]
+            [harja.views.urakka.valikatselmus.indeksikorjaus :as indeksikorjaus])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn- onko-hoitokausi-tulevaisuudessa? [hoitokausi nykyhetki]
@@ -628,6 +629,7 @@
            (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
            (= (ffirst paatos) :kattohinnan-ylitys) [hintapaatokset/kattohinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
            (= (ffirst paatos) :valikatselmuspoytakirjaan-liitettavat-raportit) [raportit/raportit e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+           (= (ffirst paatos) :hoitovuoden-lopun-indeksikorjaus) [indeksikorjaus/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
            (= (ffirst paatos) :hoidonjohtopalkkion-muutos) [hoidonjohtopalkkio/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
            (= (ffirst paatos) :hoitovuoden-lopun-tavoite-ja-kattohinta) [hoitovuoden-lopun-hinnat/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
            :else nil)))]))

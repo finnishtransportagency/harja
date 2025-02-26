@@ -13,7 +13,6 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
@@ -196,6 +195,9 @@
           [kattohinnan-oikaisu e! kattohinta kattohinta tavoitehinta paatos-tehty?])
 
         ;; Päätöksenteko napit
-        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
-         #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
-         #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]])]))
+        (if-not (:virhe paatos)
+          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
+           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
+           #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]
+          [:div {:style {:padding-bottom "1rem"}}
+           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos)]])])]))

@@ -8,6 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
             [harja.ui.dom :as dom]
+            [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.pvm :as pvm]
@@ -33,6 +34,31 @@
       avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
-        [:div.flex-row
-         [:p "kesken"]
-         ]])]))
+        (if-not (:virhe paatos)
+          [:div
+           [:div
+            [:div.flex-row
+             [:div "Hoitovuoden alun indeksikorjattu tavoitehinta"]
+             [:div [:strong (fmt/euro-opt (:tavoitehinta_ennen paatos))]]]
+            [:div.flex-row
+             [:div "Tavoitehinnan muutokset"]
+             [:div [:strong (fmt/euro-opt (:tavoitehinnan_muutokset paatos))]]]
+            [:hr]
+            [:div.flex-row
+             [:div "Hoitovuoden lopun indeksikorjaus"]
+             [:div [:strong (fmt/euro-opt (:hoitokauden_lopun_indeksikorjaus paatos))]]]
+            [:div.flex-row
+             [:div "Hoitovuoden lopun tavoitehinta"]
+             [:div [:strong (fmt/euro-opt (:tavoitehinta_jalkeen paatos))]]]
+            [:div.flex-row
+             [:div "Hoitovuoden lopun kattohinta"]
+             [:div [:strong (fmt/euro-opt (:kattohinta paatos))]]]]
+           [:div
+            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+             #(e! (valikatselmus-tiedot/->TallennaHoitokaudenlopunHintapaatos paatos))
+             #(e! (valikatselmus-tiedot/->PoistaHoitokaudenlopunHintapaatos paatos))]]]
+
+          [:div {:style {:padding-bottom "1rem"}}
+           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos)]]
+          )
+        ])]))
