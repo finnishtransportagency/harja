@@ -29,7 +29,7 @@
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
      (let [nyt (t/now)
            oletus-komponentit [:todennus (component/using
-                                           (todennus/http-todennus {} nil)
+                                           (todennus/http-todennus {})
                                            [:db])
                                :db (tietokanta/luo-tietokanta testitietokanta)
                                :http-palvelin (component/using

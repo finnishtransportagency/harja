@@ -55,7 +55,7 @@
   (fn tuck-remoting-handler [request]
     (let [konteksti @konteksti-atomi
           client-id (str (UUID/randomUUID))
-          kayttaja (todennus/koka->kayttajatiedot db (:headers request) koka-ohitusoikeudet true)] ;; TODO passaa kehitysmoodi, mikäli ikinä käytetään
+          kayttaja (todennus/koka->kayttajatiedot db (:headers request) koka-ohitusoikeudet true)]
       ;; https://http-kit.github.io/server.html#websocket
       (with-channel request kanava
         (on-close kanava (fn [status]

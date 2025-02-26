@@ -363,6 +363,7 @@
 
 (defn http-todennus
   ([] (http-todennus nil nil))
+  ([oikeudet] (http-todennus oikeudet nil))
   ([oikeudet roolit-jwt-signature]
    (->HttpTodennus oikeudet roolit-jwt-signature)))
 

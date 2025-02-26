@@ -123,7 +123,7 @@
   "Varmistaa authentikoinnin oikellisuuden Cogniton antamista tokeneista
    Tokenit mitkä vahvistetaan: x-iam-accesstoken (tokenin metadata), x-iam-data (käyttäjän tiedot&roolit)
    https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html#amazon-cognito-user-pools-using-tokens-manually-inspect"
-  [accesstoken iam-data paivita? iam-data-public-url]
+  [accesstoken iam-data paivita? iam-data-public-url kehitysmoodi?]
   (let [lx-kayttaja (-> iam-data dekoodaa-token :payload :custom:uid)
         accesstoken-header (-> accesstoken dekoodaa-token :header)
         accesstoken-kid (:kid accesstoken-header)
@@ -131,27 +131,42 @@
         iam-data-header (-> iam-data dekoodaa-token :header)
         iam-data-kid (:kid iam-data-header)
         ;; Hae accesstoken (tokenin metadata väitteet) public avain
-        accesstoken-public-key (hae-ja-suodata-accesstoken-public-key accesstoken-kid accesstoken-issuer paivita? lx-kayttaja)
-        ;; Muunna java muotoon, joka käy javan signature librarylle
+        accesstoken-public-key (if kehitysmoodi?
+                                 (first iam-data-public-url)
+                                 (hae-ja-suodata-accesstoken-public-key accesstoken-kid accesstoken-issuer paivita? lx-kayttaja))
+         ;; Muunna java muotoon, joka käy javan signature librarylle
         accesstoken-public-key (keys/jwk->public-key accesstoken-public-key)
-        ;; Hae iam-data (jossa käyttäjärooli väitteet) public avain, tämä on PEM muodossa 
-        iam-data-public-key (hae-public-key
-                              paivita?
-                              lx-kayttaja
-                              (str iam-data-public-url iam-data-kid)
-                              true
-                              iam-data-pk-cache
-                              +public-key-cache-paivitys-min+)
-        ;; Avainten algoritmit, buddy kirjasto haluaa nämä lowercasena
+         ;; Hae iam-data (jossa käyttäjärooli väitteet) public avain, tämä on PEM muodossa 
+        iam-data-public-key (if kehitysmoodi?
+                              (second iam-data-public-url)
+                              (hae-public-key
+                                paivita?
+                                lx-kayttaja
+                                (str iam-data-public-url iam-data-kid)
+                                true
+                                iam-data-pk-cache
+                                +public-key-cache-paivitys-min+))
+         ;; Avainten algoritmit, buddy kirjasto haluaa nämä lowercasena
         accesstoken-algoritmi (-> accesstoken-header :alg (str/lower-case) (keyword))
         iam-data-algoritmi (-> iam-data-header :alg (str/lower-case) (keyword))
 
-        ;; Verifioi tokenit kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
-        ;; Signaturen verifiointi tulee suoraan javalta (java.security.Signature), niitä ei clojurena ole suoraa näkyvillä
+         ;; Defaulttina false, mutta nämä on arvokkaita testauksessa ja voi jättää tähän
+        _ (when kehitysmoodi?
+            (println "\n accesstoken payload: " accesstoken-header (-> accesstoken dekoodaa-token :payload))
+            (println "\n accesstoken header: " accesstoken-header (-> accesstoken dekoodaa-token :header))
+            (println "\n accesstoken signature: " accesstoken-header (-> accesstoken dekoodaa-token :signature))
+            (println "\n iam-data payload: " (-> iam-data dekoodaa-token :payload))
+            (println "\n iam-data header: " (-> iam-data dekoodaa-token :header))
+            (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature))
+            (println "\n iam-data-public-url: " iam-data-public-url ", algo: " accesstoken-algoritmi "\n"))
+
+         ;; Verifioi tokenit kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
+         ;; Signaturen verifiointi tulee suoraan javalta (java.security.Signature), niitä ei clojurena ole suoraa näkyvillä
         _ (jwt/unsign iam-data iam-data-public-key {:alg iam-data-algoritmi}) ;; Sisältää käyttäjän tietoja & Roolit
         _ (jwt/unsign accesstoken accesstoken-public-key {:alg accesstoken-algoritmi}) ;; Sisältää mm. user poolin url, client idt
         _ (log/info
-            ;; TODO, logitusta tuotantoon jotta nähdään toimivuus, tämän voi myöhemmin poistaa 
+             ;; TODO, logitusta tuotantoon jotta nähdään toimivuus, tämän voi myöhemmin poistaa 
+             ;; Mergetään toistaiseksi näin.
             "Todennettiin onnistuneesti (JWT): "
             (str
               (-> iam-data dekoodaa-token :payload :custom:etunimi)
@@ -179,7 +194,10 @@
      - Subjekti (käyttäjä), kenelle token myönnetty, ei jostain syystä täsmää (välittäjälle yhteyttä)
    
    'Issuer does mot match' 
-     - Tokenin välittäjä ei jostain syystä täsmää (taas, välittäjälle yhteyttä)"
+     - Tokenin välittäjä ei jostain syystä täsmää (taas, välittäjälle yhteyttä)
+   
+   'x-iam-data ei sisältänyt payloadia'
+     - Itse selitteinen, sama homma, välittäjältä pitäisi tulla aina payload"
   [e iam-data accesstoken]
   ;; 'JWT-ERROR' Laukaisee slack-hälytyksen, nämä halutaan tutkia aina 
   (log/error (str "[JWT-ERROR] Authentikointi ei onnistunut: " (.getMessage e)))
@@ -229,15 +247,12 @@
    4. Tuloksena käyttäjän roolitiedot on vahvistettu oikeiksi, eikä mitään ole sorkittu matkalla"
   ([accesstoken iam-data kehitysmoodi? public-key-url]
    ;; Kutsu todennuksen kautta tulee aina tähän 
-   (if kehitysmoodi?
-     ;; Kehitysmoodissa voidaan jatkaa kuten ennenkin
-     (tunnistetiedot iam-data)
-     (when
-       ;; Tarkistetaan signaturet kun vastaanotetaan validi pyyntö
-       (and accesstoken iam-data)
-       ;; yrita-uudelleen? defaulttina aina false
-       ;; Jos authentikointi epäonnistuu, yritetään yhden kerran uudelleen päivittämällä public-avaimet
-       (vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url false))))
+   (when
+     ;; Tarkistetaan signaturet kun vastaanotetaan validi pyyntö
+     (and accesstoken iam-data)
+     ;; yrita-uudelleen? defaulttina aina false
+     ;; Jos authentikointi epäonnistuu, yritetään yhden kerran uudelleen päivittämällä public-avaimet
+     (vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url false)))
   ([accesstoken iam-data kehitysmoodi? public-key-url yrita-uudelleen?]
    (let [cache-key
          ;; Otetaan avaimesta pelkästään käyttäjän tiedot, jotka on suht staattisia, tallenna ne cacheen
@@ -245,17 +260,16 @@
      (get (swap! kayttaja-varmistettu-cache #(cache/through
                                                (fn [_]
                                                  (try
-                                                   (cond
-                                                     ;; Ei tarvetta ajaa kehitysmoodissa 
-                                                     (and (not kehitysmoodi?) public-key-url)
-                                                     (varmista-jwt-tokenit accesstoken iam-data yrita-uudelleen? public-key-url)
+                                                   ;; Payloadia ei ollut tokenissa mukana, jotain on huonosti, laukaisee slack-hälytyksen, ja estää pääsyn
+                                                   (when-not cache-key
+                                                     (throw (Exception. "x-iam-data ei sisältänyt payloadia ollenkaan!")))
 
-                                                     ;; Laukaisee slack-hälytyksen, jos public avainta ei ole olemassa
-                                                     (and (not kehitysmoodi?) (not public-key-url))
+                                                   (if public-key-url
+                                                     (varmista-jwt-tokenit accesstoken iam-data yrita-uudelleen? public-key-url kehitysmoodi?)
+                                                     ;; Laukaisee slack-hälytyksen, mutta päästää käyttäjän sisään, koska authentikointia ei voida tehdä
                                                      (log/error "[JWT-ERROR] Authentikointia ei voida tehdä, public-key-url ei ole asetettu! Aseta public-key-url ympäristömuuttuja."))
 
-                                                   ;; Palauta tiedot ja jatka authentikointia jos onnistui
-                                                   ;; Jatketaan myös, jos toista public keytä ei ole olemassa, ei lukita ketään Harjasta pois sen takia  
+                                                   ;; Palauta tiedot ja jatka authentikointia jos onnistui / public-key muuttuja puuttui 
                                                    (tunnistetiedot iam-data)
 
                                                    ;; Todennus tehtiin ja se epäonnistui
