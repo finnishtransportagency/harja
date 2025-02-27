@@ -132,12 +132,14 @@
         iam-data-kid (:kid iam-data-header)
         ;; Hae accesstoken (tokenin metadata väitteet) public avain
         accesstoken-public-key (if kehitysmoodi?
+                                 ;; Kehitysmoodissa passataan mock avaimet suoraa 
                                  (first iam-data-public-url)
                                  (hae-ja-suodata-accesstoken-public-key accesstoken-kid accesstoken-issuer paivita? lx-kayttaja))
-         ;; Muunna java muotoon, joka käy javan signature librarylle
+        ;; Muunna java muotoon, joka käy javan signature librarylle
         accesstoken-public-key (keys/jwk->public-key accesstoken-public-key)
-         ;; Hae iam-data (jossa käyttäjärooli väitteet) public avain, tämä on PEM muodossa 
+        ;; Hae iam-data (jossa käyttäjärooli väitteet) public avain, tämä on PEM muodossa 
         iam-data-public-key (if kehitysmoodi?
+                              ;; Kehitysmoodissa passataan mock avaimet suoraa 
                               (second iam-data-public-url)
                               (hae-public-key
                                 paivita?
@@ -146,29 +148,30 @@
                                 true
                                 iam-data-pk-cache
                                 +public-key-cache-paivitys-min+))
-         ;; Avainten algoritmit, buddy kirjasto haluaa nämä lowercasena
+        ;; Avainten algoritmit, buddy kirjasto haluaa nämä lowercasena
         accesstoken-algoritmi (-> accesstoken-header :alg (str/lower-case) (keyword))
         iam-data-algoritmi (-> iam-data-header :alg (str/lower-case) (keyword))
 
-         ;; Defaulttina false, mutta nämä on arvokkaita testauksessa ja voi jättää tähän
+        ;; Defaulttina false, mutta nämä on arvokkaita testauksessa ja voi jättää tähän
         _ (when kehitysmoodi?
             (println "\n accesstoken payload: " (-> accesstoken dekoodaa-token :payload))
             (println "\n accesstoken header: " (-> accesstoken dekoodaa-token :header))
             (println "\n accesstoken signature: " (-> accesstoken dekoodaa-token :signature))
             (println "\n accesstoken-algoritmi: " accesstoken-algoritmi)
+            (println "\n accesstoken-public-key: " accesstoken-public-key)
 
             (println "\n iam-data payload: " (-> iam-data dekoodaa-token :payload))
             (println "\n iam-data header: " (-> iam-data dekoodaa-token :header))
             (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature))
-            (println "\n iam-data-algoritmi: " iam-data-algoritmi))
+            (println "\n iam-data-algoritmi: " iam-data-algoritmi)
+            (println "\n iam-data-public-key: " iam-data-public-key))
 
-         ;; Verifioi tokenit kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
-         ;; Signaturen verifiointi tulee suoraan javalta (java.security.Signature), niitä ei clojurena ole suoraa näkyvillä
+        ;; Verifioi tokenit kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
+        ;; Signaturen verifiointi tulee suoraan javalta (java.security.Signature), niitä ei clojurena ole suoraa näkyvillä
         _ (jwt/unsign iam-data iam-data-public-key {:alg iam-data-algoritmi}) ;; Sisältää käyttäjän tietoja & Roolit
-        ; _ (jwt/unsign accesstoken accesstoken-public-key {:alg accesstoken-algoritmi}) ;; Sisältää mm. user poolin url, client idt
-        _ (log/info
-             ;; TODO, logitusta tuotantoon jotta nähdään toimivuus, tämän voi myöhemmin poistaa 
-             ;; Mergetään toistaiseksi näin.
+        _ (jwt/unsign accesstoken accesstoken-public-key {:alg accesstoken-algoritmi}) ;; Sisältää mm. user poolin url, client idt
+        _ (log/info 
+            ;; TODO, logitusta tuotantoon jotta nähdään toimivuus, tämän voi myöhemmin poistaa, mergetään toistaiseksi näin
             "Todennettiin onnistuneesti (JWT): "
             (str
               (-> iam-data dekoodaa-token :payload :custom:etunimi)

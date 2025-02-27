@@ -2,6 +2,8 @@
   (:require [buddy.sign.jwt :as jwt]
             [buddy.core.keys :as keys]
             [cheshire.core :as cheshire]
+            [clj-time.core :as time]
+            [clj-time.coerce :as coerce]
             [clojure.string :as str]
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.domain.oikeudet :as oikeudet]
@@ -35,6 +37,13 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
+(defn- generoi-expiration
+  [minuutit]
+  (-> (time/now) (time/plus (time/minutes minuutit)) (coerce/to-long) (/ 1000) long))
+
+(def mock-expiration (generoi-expiration 1080))
+(def mock-issued-at (-> (time/now) (coerce/to-long) (/ 1000) long))
+
 (def mock-key-identifier "tcSe4a9TGsOM7Gsym0E6UL3")
 (def mock-subject "d5-1cff-4ebb-a857-07e11")
 (def mock-https-issuer "mock-issuer-https-link")
@@ -56,42 +65,42 @@
   ;; JWT accesstoken mock dataa, jossa header, payload, ja signature 
   ;; Signature generoidaan jälkeen, en tiedä vielä miten 
   [{:kid mock-key-identifier, :alg "RS256"} ;; header 
-   
-   {:sub mock-subject, 
+
+   {:sub mock-subject,
     :iss mock-https-issuer,
-    :exp "1740471727", 
-    :username mock-username, 
+    :exp mock-expiration,
+    :username mock-username,
     :scope "openid",
-    :cognito:groups "[region-id_Vayla12cTestOAM]", 
-    :token_use "access", :auth_time "1740460913",
-    :jti mock-jwt-id, 
-    :client_id mock-client-id, 
-    :version "2", 
-    :iat "1740468127"} ;; payload 
+    :cognito:groups "[region-id_Vayla12cTestOAM]",
+    :token_use "access", :auth_time mock-expiration,
+    :jti mock-jwt-id,
+    :client_id mock-client-id,
+    :version "2",
+    :iat mock-issued-at} ;; payload 
    "signature=="])
 
 (def test-iam-data-jwt
   ;; JWT iam-data (käyttäjätiedot & roolit) mock dataa, jossa header, payload, ja signature 
-  [{:typ "JWT", 
+  [{:typ "JWT",
     :kid mock-key-identifier, ;; TODO, voi varmaan poistaa, tämä on RSA accesstokenin identifier, ei tarvi iam datassa 
-    :alg "ES256", 
-    :iss mock-https-issuer, 
-    :client mock-client-id, 
-    :signer mock-signer, 
-    :exp "1740468776"} ;; header 
-   
-   {:email mock-email, 
-    :custom:puhelin mock-puh, 
-    :custom:ytunnus mock-ytunnus, 
-    :sub mock-subject, 
-    :iss mock-https-issuer, 
-    :exp "1740468776", 
-    :username mock-username, 
-    :custom:rooli mock-roolit, 
-    :custom:etunimi mock-etunimi, 
-    :email_verified "false", 
-    :custom:uid mock-uid, 
-    :custom:organisaatio mock-organisaatio, 
+    :alg "ES256",
+    :iss mock-https-issuer,
+    :client mock-client-id,
+    :signer mock-signer,
+    :exp mock-expiration} ;; header 
+
+   {:email mock-email,
+    :custom:puhelin mock-puh,
+    :custom:ytunnus mock-ytunnus,
+    :sub mock-subject,
+    :iss mock-https-issuer,
+    :exp mock-expiration,
+    :username mock-username,
+    :custom:rooli mock-roolit,
+    :custom:etunimi mock-etunimi,
+    :email_verified "false",
+    :custom:uid mock-uid,
+    :custom:organisaatio mock-organisaatio,
     :custom:sukunimi mock-sukunimi} ;; payload 
    "signature=="])
 
@@ -149,94 +158,64 @@
     (.generateKeyPair key-gen)))
 
 
-(defn- encode-64json
-  "Enkoodaa JWT oikeaan web64 muotoon"
-  [s]
-  (-> s
-    cheshire/encode
-    (.getBytes "UTF-8")
-    Base64/encodeBase64
-    (String. "UTF-8")))
+(defn- generoi-jwt-signaturella
+  "Palauttaa JWT:n validilla signaturella käyttämällä mock tokeneja, sekä private avainta"
+  [private-key payload header alg]
+  (jwt/sign payload private-key {:alg alg :header header}))
 
 
-(defn- create-jwt-signature
-  "Generoi signaturen käyttämällä mock datasta tehtyä payloadia, sekä avainta"
-  [private-key data alg]
-  (jwt/sign data private-key {:alg alg}))
-
-
-(defn- generoi-enkoodattu-todennuspyynto
-  "Simuloi oikean tyyppistä todennuspyyntöä Harjaan, 
-   jossa 2 JWT tokenia oikealla signaturella, jotka passataan todennukseen"
-  [x-iam-accesstoken accesstoken-signature
-   x-iam-data iam-data-signature
-   x-iam-identity]
-  (let [encode #(encode-64json %)]
-    {"x-iam-accesstoken" (str
-                           (encode (first x-iam-accesstoken)) "." ;; header 
-                           (encode (second x-iam-accesstoken)) "." ;; payload 
-                           accesstoken-signature)
-
-     "x-iam-data" (str
-                    (encode (first x-iam-data)) "." ;; header 
-                    (encode (second x-iam-data)) "." ;; payload 
-                    iam-data-signature)
-
-     "x-iam-identity" x-iam-identity}))
-
-
-(deftest mock-testi-1234
+(deftest testaa-mock-jwt-todennuspyyntoa
   (let [ec-key-pair (generate-ec-key-pair)
         ec-private-key (.getPrivate ec-key-pair)
         ec-public-key (.getPublic ec-key-pair)
 
-        _ (_log_ (str "EC priv: " ec-private-key))
-        _ (_log_ (str "EC pub: " ec-public-key))
-        _ (_log_ (str "EC formatted: " (public-key-to-pem ec-public-key)))
+        _ (_log_ (str "EC key priv: " ec-private-key))
+        _ (_log_ (str "EC key pub: " ec-public-key))
 
         ;; Tässä on simuloituna iam-data public avain, joka saadaan Cognitolta PEM muodossa
         ;; Tämä kyllä muunnetaan takaisin todennuksessa java muotoon, mutta testi kertoo jos todennus hajoaa 
         ec-public-key-PEM (public-key-to-pem ec-public-key)
         ec-public-key-PEM (jwt-varmistus/parsi-PEM-public-key ec-public-key-PEM)
 
-        _ (_log_ (str "EC JAVA: " ec-public-key-PEM))
+        _ (_log_ (str "EC key JAVA: " ec-public-key-PEM))
 
         ;; Accesstokenin RSA avaimet 
         rsa-key-pair (generate-rsa-key-pair)
         rsa-private-key (.getPrivate rsa-key-pair)
         rsa-public-key (.getPublic rsa-key-pair)
 
-        _ (_log_ (str "RSA priv: " rsa-private-key))
-        _ (_log_ (str "RSA pub: " rsa-public-key))
-
         ;; Nämäkin pitää kiikutella oikeaan jwks muotoon, jollai Cognito niitä tarjoaa  
         rsa-jwks (rsa-public-key-to-jwks rsa-public-key mock-key-identifier)
         _ (_log_ (str "RSA rsa-jwks: " rsa-jwks))
-        
-        ;; Allekirjoita payloadit, ehkä vaatii vielä rassausta...
-        accesstoken-signature (create-jwt-signature rsa-private-key (second test-accesstoken-jwt) :rs256)
-        iam-data-signature (create-jwt-signature ec-private-key (second test-iam-data-jwt) :es256)
 
-        todennuspyynto (generoi-enkoodattu-todennuspyynto
-                         test-accesstoken-jwt accesstoken-signature
-                         test-iam-data-jwt iam-data-signature
-                         mock-subject)
+        accesstoken-payload (second test-accesstoken-jwt)
+        accesstoken-header (first test-accesstoken-jwt)
+        iam-data-payload (second test-iam-data-jwt)
+        iam-data-header (first test-iam-data-jwt)
 
+        ;; Allekirjoita payloadit, palauttaa kokonaisen JWT:n - header.payload.sig
+        x-iam-accesstoken (generoi-jwt-signaturella rsa-private-key accesstoken-payload accesstoken-header :rs256)
+        x-iam-data (generoi-jwt-signaturella ec-private-key iam-data-payload iam-data-header :es256)
+
+        _ (_log_ (str "mock-expiration: " mock-expiration " issued at: " mock-issued-at))
+
+        ;; Tässä on viimein oikeanlainen todennuspyyntö
+        todennuspyynto {"x-iam-accesstoken" x-iam-accesstoken
+                        "x-iam-data" x-iam-data
+                        "x-iam-identity" mock-subject}
         handler (->
                   (fn [req] req)
                   (http-palvelin/wrap-with-common-wrappers
                     true
                     {:public-key-url [rsa-jwks ec-public-key-PEM]}))
-
+        ;; Passataan kehitysmoodi true, jotta todennus tajuaa tämän olevan testi, eikä tee GET kutsuja 
+        ;; Todennus parsii kehitysmoodissa public avaimet yllä olevassa vectorissa 
         todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % true)]
 
-    (testing "test"
+    (testing "Käyttäjä pääsee Harjaan"
       (let [req (todenna (handler {:headers todennuspyynto}))
 
-            ;_ (println "\n sig: " accesstoken-signature " \n jwt: " todennuspyynto " \n ")
-            ;req nil
-            ;_ (println "\n req: " req)
-            ]
+            _ (println "\n req: " req)]
 
        ;(is (= (get-in req [:kayttaja :kayttajanimi]) "ddd"))
         ))))
