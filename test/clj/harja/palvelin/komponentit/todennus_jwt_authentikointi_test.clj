@@ -164,11 +164,10 @@
   (jwt/sign payload private-key {:alg alg :header header}))
 
 
-(deftest testaa-mock-jwt-todennuspyyntoa
+(deftest testaa-mock-cognito-jwt-todennuspyyntoa
   (let [ec-key-pair (generate-ec-key-pair)
         ec-private-key (.getPrivate ec-key-pair)
         ec-public-key (.getPublic ec-key-pair)
-
         _ (_log_ (str "EC key priv: " ec-private-key))
         _ (_log_ (str "EC key pub: " ec-public-key))
 
@@ -176,7 +175,6 @@
         ;; Tämä kyllä muunnetaan takaisin todennuksessa java muotoon, mutta testi kertoo jos todennus hajoaa 
         ec-public-key-PEM (public-key-to-pem ec-public-key)
         ec-public-key-PEM (jwt-varmistus/parsi-PEM-public-key ec-public-key-PEM)
-
         _ (_log_ (str "EC key JAVA: " ec-public-key-PEM))
 
         ;; Accesstokenin RSA avaimet 
@@ -196,7 +194,6 @@
         ;; Allekirjoita payloadit, palauttaa kokonaisen JWT:n - header.payload.sig
         x-iam-accesstoken (generoi-jwt-signaturella rsa-private-key accesstoken-payload accesstoken-header :rs256)
         x-iam-data (generoi-jwt-signaturella ec-private-key iam-data-payload iam-data-header :es256)
-
         _ (_log_ (str "mock-expiration: " mock-expiration " issued at: " mock-issued-at))
 
         ;; Tässä on viimein oikeanlainen todennuspyyntö
@@ -209,13 +206,40 @@
                     true
                     {:public-key-url [rsa-jwks ec-public-key-PEM]}))
         ;; Passataan kehitysmoodi true, jotta todennus tajuaa tämän olevan testi, eikä tee GET kutsuja 
-        ;; Todennus parsii kehitysmoodissa public avaimet yllä olevassa vectorissa 
+        ;; Todennus parsii kehitysmoodissa public avaimet yllä olevasta vectorissa 
         todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % true)]
 
-    (testing "Käyttäjä pääsee Harjaan"
+    (testing "Käyttäjä pääsee Harjaan Cognito JWT authentikoinnin läpi"
       (let [req (todenna (handler {:headers todennuspyynto}))
+            odotetut-roolit (try
+                              (todennus/yleisroolit
+                                (->> (str/split mock-roolit #",")
+                                  (keep (partial todennus/ryhman-rooli-ja-linkki oikeudet/roolit))))
+                              (catch Exception e
+                                (log/error (str "Odotettuja rooleja ei saatu, tarkista mock-roolit: " (.getMessage e)))
+                                nil))
 
-            _ (println "\n req: " req)]
+            ;; Nämä tiedot pitäisi palautua, jos ei palaudu, jotain on vialla, eikä käyttäjä päässyt Harjaan 
+            _ (is (= (get-in req [:kayttaja :sukunimi]) mock-sukunimi))
+            _ (is (= (get-in req [:kayttaja :etunimi]) mock-etunimi))
+            _ (is (= (get-in req [:kayttaja :kayttajanimi]) mock-uid))
+            _ (is (= (get-in req [:kayttaja :sahkoposti]) mock-email))
+            _ (is (= (get-in req [:kayttaja :puhelin]) mock-puh))
+            _ (is (= (get-in req [:kayttaja :roolit]) odotetut-roolit))
 
-       ;(is (= (get-in req [:kayttaja :kayttajanimi]) "ddd"))
-        ))))
+            _ (is (= (get-in req [:headers "sub"]) mock-subject))
+            _ (is (= (get-in req [:headers "exp"]) mock-expiration))
+            _ (is (= (get-in req [:headers "iss"]) mock-https-issuer))
+            _ (is (= (get-in req [:headers "username"]) mock-username))
+            _ (is (= (get-in req [:headers "oam_groups"]) mock-roolit))
+            _ (is (= (get-in req [:headers "oam_remote_user"]) mock-uid))
+            _ (is (= (get-in req [:headers "oam_user_last_name"]) mock-sukunimi))
+            _ (is (= (get-in req [:headers "oam_organization"]) mock-organisaatio))
+            _ (is (= (get-in req [:headers "oam_user_mail"]) mock-email))
+            _ (is (= (get-in req [:headers "oam_user_first_name"]) mock-etunimi))
+            _ (is (= (get-in req [:headers "oam_user_companyid"]) mock-ytunnus))
+
+            ;; JWT tokenit
+            _ (is (= (get-in req [:headers "x-iam-accesstoken"]) x-iam-accesstoken))
+            _ (is (= (get-in req [:headers "x-iam-data"]) x-iam-data))
+            _ (is (= (get-in req [:headers "x-iam-identity"]) mock-subject))]))))

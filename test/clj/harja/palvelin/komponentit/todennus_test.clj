@@ -133,12 +133,14 @@
                     Base64/encodeBase64
                     (String. "UTF-8")) [(first x-iam-data) (second x-iam-data)])
         jwt (str (str/join "." jwt) "." (nth x-iam-data 2))]
-    {"x-iam-data" jwt}))
+    {;; Vaaditaan että molemmat tokenit on aina Cognito kutsussa mukana
+     "x-iam-data" jwt 
+     "x-iam-accesstoken" jwt}))
 
 (deftest cognito-headereiden-purku-oam-ja-entraid
   (let [handler (->
                   (fn [req] req)
-                  (http-palvelin/wrap-with-common-wrappers))
+                  (http-palvelin/wrap-with-common-wrappers true))
         todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % true) 
 
         destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))

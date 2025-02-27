@@ -113,9 +113,9 @@
 (defn dekoodaa-token
   "Dekoodaa enkoodatut headerit, ja palauttaa tiedot json stringinä"
   [token]
-  (let [[header payload signature] (str/split token #"\.")]
-    {:header  (decode-base64-json header)
-     :payload (decode-base64-json payload)
+  (let [[header payload signature] (if (> (count token) 2) (str/split token #"\.") [nil nil nil])]
+    {:header  (some-> header decode-base64-json)
+     :payload (some-> payload decode-base64-json)
      :signature signature}))
 
 
@@ -202,7 +202,11 @@
      - Tokenin välittäjä ei jostain syystä täsmää (taas, välittäjälle yhteyttä)
    
    'x-iam-data ei sisältänyt payloadia'
-     - Itse selitteinen, sama homma, välittäjältä pitäisi tulla aina payload"
+     - Itse selitteinen, sama homma, välittäjältä pitäisi tulla aina payload
+       Todennusta on voitu yrittää manuaalisesti kutsua väärin
+   
+   'JWT Token puuttui kokonaan'
+     - Jompi kumpi token puuttui kokonaan, kutsu on korruptoitunut, tai todennusta yritetty manuaalisesti kutsua väärin"
   [e iam-data accesstoken]
   ;; 'JWT-ERROR' Laukaisee slack-hälytyksen, nämä halutaan tutkia aina 
   (log/error (str "[JWT-ERROR] Authentikointi ei onnistunut: " (.getMessage e)))
@@ -252,12 +256,14 @@
    4. Tuloksena käyttäjän roolitiedot on vahvistettu oikeiksi, eikä mitään ole sorkittu matkalla"
   ([accesstoken iam-data kehitysmoodi? public-key-url]
    ;; Kutsu todennuksen kautta tulee aina tähän 
-   (when
+   (if
      ;; Tarkistetaan signaturet kun vastaanotetaan validi pyyntö
      (and accesstoken iam-data)
      ;; yrita-uudelleen? defaulttina aina false
-     ;; Jos authentikointi epäonnistuu, yritetään yhden kerran uudelleen päivittämällä public-avaimet
-     (vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url false)))
+     (vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url false)
+     ;; Näin ei pitäisi käydä, olemassaolo tarkistetaan todenna-pyynto 
+     ;; Jos tänne päätyy nillinä token, jotain on huonosti. Laukaisee slack-hälytyksen.
+     (authentikointi-epaonnistui (Exception. "JWT Token puuttui kokonaan! Molemmat x-iam-accesstoken sekä x-iam-data vaaditaan!") iam-data accesstoken)))
   ([accesstoken iam-data kehitysmoodi? public-key-url yrita-uudelleen?]
    (let [cache-key
          ;; Otetaan avaimesta pelkästään käyttäjän tiedot, jotka on suht staattisia, tallenna ne cacheen
