@@ -4,6 +4,7 @@
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
+            [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
             [harja.tiedot.urakka.urakka :as tila]))
 
 ;;TODO: Kunhan yhteenvetolaatikko kirjoitetaan uusiksi, niin siirrä tämä ja kaikki mahdollinen muu logiikka backendiin
@@ -14,11 +15,8 @@
      :tilaaja 70}))
 
 (defn yhteenvetolaatikko [e! app]
-  (let [urakkatyyppi "MHU" ;; Myöhemmin voi olla myös MHU+
-        paatokset (get-in app [:yhteenveto :paatokset])
+  (let [paatokset (get-in app [:paatokset])
         yhteenvedon-tiedot (:yhteenveto app)
-        valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
 
         ;; Toteutuneet kustannukset
         hankintakustannukset (or (get-in yhteenvedon-tiedot [:kustannukset :hankintakustannukset-toteutunut]) 0)
@@ -62,48 +60,22 @@
                                            (+ (:maara a) (:indeksikorjaus a))
                                            0))
                                     (:sanktiot yhteenvedon-tiedot)))
-        totutuneet-kustannukset (or (get-in app [:yhteenveto :kustannukset-yhteensa :yht-toteutunut-summa]) 0)
+        ;; Alitukset ja ylitykset
         oikaistu-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-oikaistu])
         oikaistu-kattohinta (get-in yhteenvedon-tiedot [:budjettitavoite :kattohinta-oikaistu])
-        ;; Tavoitehinnan ylitys otetaan huomioon vasta, kun päätös on tehty
-        tavoitehinnan-ylityspaatos (some #(when (= (str (:harja.domain.kulut.valikatselmus/tyyppi %)) "tavoitehinnan-ylitys")
-                                            true)
-                                     paatokset)
-        tavoitehinnan-ylitys (if (> totutuneet-kustannukset oikaistu-kattohinta)
-                               (- oikaistu-kattohinta oikaistu-tavoitehinta)
-                               (- totutuneet-kustannukset oikaistu-tavoitehinta))
+        tavoitehinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-ylitys)
+        tavoitehinnan-alituspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-alitus)
+        tavoitehinnan-ylitys (or (:ylityksen_maara tavoitehinnan-ylityspaatos) 0)
+        tavoitehinnan-alitus (or (:alituksen_maara tavoitehinnan-alituspaatos) 0)
 
-        tavoitehinnan-alitus (if (< totutuneet-kustannukset oikaistu-tavoitehinta)
-                               (- oikaistu-tavoitehinta totutuneet-kustannukset)
-                               0)
-
-        tavoitehinnan-ylitysprosentti (aseta-tavoitehinnan-ylitysprosentti urakkatyyppi valittu-hoitokauden-alkuvuosi urakan-alkuvuosi)
-        tilaajan-osuus-tavoitehinnan-ylitys (if tavoitehinnan-ylityspaatos
-                                              (* (/ (:urakoitsija tavoitehinnan-ylitysprosentti) 100) tavoitehinnan-ylitys)
-                                              0)
-        urakoitsijan-osuus-tavoitehinnan-ylitys (if tavoitehinnan-ylityspaatos
-                                                  (* (/ (:tilaaja tavoitehinnan-ylitysprosentti) 100) tavoitehinnan-ylitys)
-                                                  0)
-
-        ;; Kattohinnan ylitys otetaan huomioon vasta, kun päätös on tehty
-        kattohinnan-ylityspaatos (some #(when (= (str (:harja.domain.kulut.valikatselmus/tyyppi %)) "kattohinnan-ylitys")
-                                          true)
-                                   paatokset)
-        kattohinnan-ylitys (if (> totutuneet-kustannukset oikaistu-kattohinta)
-                             (- totutuneet-kustannukset oikaistu-kattohinta)
-                             0)
-
-        ;; Siirrot
-        filtteroi-paatos-fn (fn [paatoksen-tyyppi]
-                              (first (filter #(and (= (::valikatselmus/hoitokauden-alkuvuosi %) valittu-hoitokauden-alkuvuosi)
-                                                (= (::valikatselmus/tyyppi %) (name paatoksen-tyyppi))) (:paatokset app))))
-        kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)
-        siirto-seuraavan-vuoden-hankintakustannuksiin (if (::valikatselmus/siirto kattohinnan-ylitys-paatos)
-                                                        (::valikatselmus/siirto kattohinnan-ylitys-paatos)
-                                                        0)
-        ;; Urakoitsijan hyvitysosuus voi olla nolla, vaikka on kattohinnan ylitystä, koska se voidaan siirtää
-        ;; kokonaisuudessaan seuraavalle vuodelle.
-        urakoitsijan-hyvitysosuus (- kattohinnan-ylitys siirto-seuraavan-vuoden-hankintakustannuksiin)]
+        tilaajan-tavoitehinnan-ylitysprosentti (:tilaajan_prosentti tavoitehinnan-ylityspaatos)
+        urakoitsijan-tavoitehinnan-ylitysprosentti (:urakoitsijan_prosentti tavoitehinnan-ylityspaatos)
+        tilaajan-osuus-tavoitehinnan-ylitys (or (:urakoitsija_maksaa tavoitehinnan-ylityspaatos) 0)
+        urakoitsijan-osuus-tavoitehinnan-ylitys (or (:tilaaja_maksaa tavoitehinnan-ylityspaatos) 0)
+        kattohinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :kattohinnan-ylitys)
+        kattohinnan-ylitys (or (:ylityksen_maara kattohinnan-ylityspaatos) 0)
+        siirto-seuraavan-vuoden-hankintakustannuksiin (or (:siirrettava_maara kattohinnan-ylityspaatos) 0)
+        urakoitsijan-hyvitysosuus (or (:urakoitsija_maksaa kattohinnan-ylityspaatos) 0)]
     [:div.valikatselmus-yhteenveto.elevation-2
      [:h2 [:span "Yhteenveto"]]
      [:div.rivi [:span.bold "Hoitokauden lopun tavoitehinta"]
@@ -124,17 +96,17 @@
      [:div.rivi [:span.bold "Toteutuma yhteensä"]
       [:span (fmt/euro-opt toteuma-yht)]]
      ;; Ei näytetä tavoitehinnan ylitystä, mikäli ei ole ylitystä
-     (when (> tavoitehinnan-ylitys 0)
-       [:div.rivi [:span.bold {:class (when (and tavoitehinnan-ylitys (> tavoitehinnan-ylitys 0))
+     (when tavoitehinnan-ylityspaatos
+       [:div.rivi [:span.bold {:class (when (> tavoitehinnan-ylitys 0)
                                         "negatiivinen-numero")} "Tavoitehinnan ylitys"]
-        [:span.bold {:class (when (and tavoitehinnan-ylitys (> tavoitehinnan-ylitys 0))
+        [:span.bold {:class (when (> tavoitehinnan-ylitys 0)
                               "negatiivinen-numero")} (fmt/euro-opt tavoitehinnan-ylitys)]]
        )
      ;; Näytetään tavoitehinnan-alitusrivi mikäli alitus on olemassa
-     (when (> tavoitehinnan-alitus 0)
-       [:div.rivi [:span.bold {:class (when (and tavoitehinnan-alitus (< 0 tavoitehinnan-alitus))
+     (when tavoitehinnan-alituspaatos
+       [:div.rivi [:span.bold {:class (when (< 0 tavoitehinnan-alitus)
                                         "positiivinen-numero")} "Tavoitehinnan alitus"]
-        [:span.bold {:class (when (and tavoitehinnan-alitus (< 0 tavoitehinnan-alitus))
+        [:span.bold {:class (when (< 0 tavoitehinnan-alitus)
                               "positiivinen-numero")} (fmt/euro-opt tavoitehinnan-alitus)]])
      ;; Näytetään kattohinnna ylitysrivi, mikäli kattohinnan ylitys on olemassa
      (when (> kattohinnan-ylitys 0)
@@ -153,8 +125,8 @@
      [:div.rivi [:span "Tavoitepalkkio"]
       [:span (fmt/euro-opt tavoitepalkkio)]]
      (when tavoitehinnan-ylityspaatos
-       [:div.rivi [:span "Tavoitehinnan ylitys " (when (> (:tilaaja tavoitehinnan-ylitysprosentti) 0)
-                                                   (str "(" (:tilaaja tavoitehinnan-ylitysprosentti) "%)"))]
+       [:div.rivi [:span "Tavoitehinnan ylitys " (when (> tilaajan-tavoitehinnan-ylitysprosentti 0)
+                                                   (str "(" tilaajan-tavoitehinnan-ylitysprosentti "%)"))]
         [:span (if (> urakoitsijan-osuus-tavoitehinnan-ylitys 0)
                  (fmt/euro-opt urakoitsijan-osuus-tavoitehinnan-ylitys)
                  (fmt/euro-opt 0))]])
@@ -167,8 +139,8 @@
      [:div.rivi [:span "Arvonvähennykset"]
       [:span (fmt/euro-opt arvonvahennykset)]]
      (when tavoitehinnan-ylityspaatos
-       [:div.rivi [:span "Tavoitehinnan ylitys " (when (> (:urakoitsija tavoitehinnan-ylitysprosentti) 0)
-                                                   (str "(" (:urakoitsija tavoitehinnan-ylitysprosentti) "%)"))]
+       [:div.rivi [:span "Tavoitehinnan ylitys " (when (> urakoitsijan-tavoitehinnan-ylitysprosentti 0)
+                                                   (str "(" urakoitsijan-tavoitehinnan-ylitysprosentti "%)"))]
         [:span (if (> tavoitehinnan-ylitys 0)
                  (fmt/euro-opt tilaajan-osuus-tavoitehinnan-ylitys)
                  (fmt/euro-opt 0))]])

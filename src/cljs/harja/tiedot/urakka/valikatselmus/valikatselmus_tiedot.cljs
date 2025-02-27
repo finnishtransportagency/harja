@@ -596,3 +596,6 @@
 
 
 (defn avaa-tai-sulje-haitari [avain])
+
+(defn ota-paatos [paatokset avain]
+  (first (vals (first (filter #(= (ffirst %) avain) paatokset)))))
