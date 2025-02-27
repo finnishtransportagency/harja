@@ -26,7 +26,9 @@
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         avaa-tai-sulje-haitari (fn [event]
                                  (when (dom/enter-nappain? event)
-                                   (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
+                                   (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))
+        urakkatiedot (-> @tila/yleiset :urakka)
+        _ (js/console.log "urakkatiedot: " (pr-str urakkatiedot))]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-border
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Raportit" paatos-tehty? paatos-avain avatut-paatokset
@@ -35,9 +37,15 @@
        [:div
         [:div.flex-row
          [:p "Tarkista, että seuraavien raporttien luvut ovat oikein ja liitä raportit välikatselmuspöytäkirjaan."]]
-        [:div.flex-row [:div "Ympäristöraportti"]]
-        [:div.flex-row [:div "Laskutusyhteenveto"]]
-        [:div.flex-row [:div "Tehtävämääräraportti"]]
+        [:div.flex-row [harja.ui.yleiset/linkki "Ympäristöraportti"
+                        #(siirtymat/avaa-raportti :ymparistoraportti (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
+                        {:luokka "klikattava alleviivaa"}]]
+        [:div.flex-row [harja.ui.yleiset/linkki "Laskutusyhteenveto"
+                        #(siirtymat/avaa-raportti :laskutusyhteenveto-tyomaa (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
+                        {:luokka "klikattava alleviivaa"}]]
+        [:div.flex-row [harja.ui.yleiset/linkki "Tehtävämääräraportti"
+                        #(siirtymat/avaa-raportti :tehtavamaarat (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
+                        {:luokka "klikattava alleviivaa"}]]
         [:div [yleiset/info-laatikko :vahva-ilmoitus (str "Hoitovuoden raportointi lukitaan 31.12." (inc hoitokauden-alkuvuosi))]]
         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
          #(e! (valikatselmus-tiedot/->TallennaPoytakirjanRaporttiPaatos paatos))

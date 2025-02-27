@@ -240,3 +240,12 @@
       (nav/salli-url-paivitys!)
       (when (and app-state app-state-atom)
         (swap! app-state-atom merge app-state)))))
+
+(defn avaa-raportti [raporttiavain hallintayksikko-id urakka-id hoitokauden-alkuvuosi]
+  (go
+    (do
+      ;; Kokeile asettaa ensin raportti
+      (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
+      (nav/aseta-valittu-valilehti! :sivu :raportit)
+      (nav/aseta-valittu-valilehti! :raportit raporttiavain)
+      (nav/salli-url-paivitys!))))
