@@ -27,7 +27,7 @@ on:
         required: false
       build-harja:
         description: 'Buildataanko harja kevyesti ("light") vai täysi build ("full") tai ei ollenkaan "false"'
-        default: 'light'
+        default: 'full'
         type: string
         required: false
       scan-docker-image:
@@ -47,22 +47,22 @@ on:
         required: false
       backend-tests:
         description: 'Enabloi back-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       basic-tests:
         description: 'Enabloi basic-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       integration-tests:
         description: 'Enabloi integration-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       e2e-tests:
         description: 'Enabloi e2e-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
 
