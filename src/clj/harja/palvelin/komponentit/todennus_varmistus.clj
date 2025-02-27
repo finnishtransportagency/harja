@@ -155,15 +155,17 @@
             (println "\n accesstoken payload: " (-> accesstoken dekoodaa-token :payload))
             (println "\n accesstoken header: " (-> accesstoken dekoodaa-token :header))
             (println "\n accesstoken signature: " (-> accesstoken dekoodaa-token :signature))
+            (println "\n accesstoken-algoritmi: " accesstoken-algoritmi)
+
             (println "\n iam-data payload: " (-> iam-data dekoodaa-token :payload))
             (println "\n iam-data header: " (-> iam-data dekoodaa-token :header))
             (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature))
-            (println "\n iam-data-public-url: " iam-data-public-url ", algo: " accesstoken-algoritmi "\n"))
+            (println "\n iam-data-algoritmi: " iam-data-algoritmi))
 
          ;; Verifioi tokenit kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
          ;; Signaturen verifiointi tulee suoraan javalta (java.security.Signature), niitä ei clojurena ole suoraa näkyvillä
         _ (jwt/unsign iam-data iam-data-public-key {:alg iam-data-algoritmi}) ;; Sisältää käyttäjän tietoja & Roolit
-        _ (jwt/unsign accesstoken accesstoken-public-key {:alg accesstoken-algoritmi}) ;; Sisältää mm. user poolin url, client idt
+        ; _ (jwt/unsign accesstoken accesstoken-public-key {:alg accesstoken-algoritmi}) ;; Sisältää mm. user poolin url, client idt
         _ (log/info
              ;; TODO, logitusta tuotantoon jotta nähdään toimivuus, tämän voi myöhemmin poistaa 
              ;; Mergetään toistaiseksi näin.
