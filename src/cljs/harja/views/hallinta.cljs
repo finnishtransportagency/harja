@@ -31,6 +31,7 @@
             [harja.views.hallinta.urakkatiedot.paallystysilmoitukset-nakyma :as paallystysilmoitukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
+            [harja.views.hallinta.urakkatiedot.urakkaparametrit :as urakkaparametrit]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -122,7 +123,14 @@
     :urakkahenkilot
     (when (oikeudet/hallinta-urakkahenkilot)
       ^{:key "urakkahenkilot"}
-      [urakkahenkilot/urakkahenkilot])]
+      [urakkahenkilot/urakkahenkilot])
+
+    "Urakoiden parametrit"
+    :urakkaparametrit
+    ;; TODO: Varmista oikeiat oikeudet
+    (when (oikeudet/hallinta-urakkahenkilot)
+      ^{:key "urakkahenkilot"}
+      [urakkaparametrit/urakkaparametrit])]
 
    "Seuranta"
    :hallinta-seuranta
