@@ -120,7 +120,8 @@
    Tiedot mapataan vanhan mallisiksi OAM_-headereiksi
    JWT Signaturen vahvistukset suoritetaan samalla, jonka epäonnistuessa authentikointi ei etene"
   [headerit kehitysmoodi? public-key-url]
-  (let [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n, kertoo koska token on annettu, ja kenelle
+  (let [tee-jwt-signaturen-varmistus? true
+        ;; Sisältää mm. Cogniton user poolin url:n ja app client id:n, kertoo koska token on annettu, ja kenelle
         ;; Mukana myös signature joka vahvistetaan
         accesstoken (get headerit "x-iam-accesstoken")
 
@@ -132,9 +133,10 @@
         ;; Tällä voidaan esim invalitoida token, kun käyttäjä kirjautuu ulos, mutta Harjassa ei tuollaista tarvetta kirjoitushetkellä taida olla
         ; iam-identity (get headerit "x-iam-identity")
 
-        ;; Vahvistetaan että tokenien payloadit ei ole muuttunut matkalla 
-        ;; Jos vikatilassa aivan pakko laittaa pois päältä, kehitysmoodin voi asettaa trueksi tähän  
-        vahvistetut-tunnustiedot (varmistus/vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url)
+        ;; Vahvistetaan että tokenien payloadit on eheät
+        vahvistetut-tunnustiedot (if tee-jwt-signaturen-varmistus?
+                                   (varmistus/vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url)
+                                   (varmistus/tunnistetiedot iam-data))
 
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
         dekoodatut-headerit (update vahvistetut-tunnustiedot "custom:rooli" #(if (konv/onko-json? %)

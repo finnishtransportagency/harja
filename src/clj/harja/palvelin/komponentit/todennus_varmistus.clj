@@ -26,7 +26,7 @@
 (def user-agent-headers "HARJA/0.0.1-SNAPSHOT (JWT signature/harja.palaute@solita.fi)")
 
 
-(defn- tunnistetiedot
+(defn tunnistetiedot
   "Palauttaa dekoodatut tunnistetiedot käyttäjästä, sisältää roolit yms (x-iam-data)
    Tämä palautetaan silloin kun käyttäjän todennus onnistui, ja jatketaan authentikointia"
   [iam-data]
@@ -50,7 +50,7 @@
     (.generatePublic key-factory key-spec)))
 
 
-(defn- public-key-vanhentunut?
+(defn public-key-vanhentunut?
   "Hakee uuden public keyn, jos sitä ei ole haettu vähään aikaan
    Cognitolla on ominaisuus rotatoida public avaimia 
    Tämä tehdään myös sen yhteydessä, jos käyttäjän todennus epäonnistuu (eli avain mahdollisesti rotatoitunut)"
@@ -87,7 +87,14 @@
             _ (reset! cache-atom {:key response :fetched-at (System/currentTimeMillis)})]
         response)
       (catch Exception e
-        (log/error (str "Failed to refresh public key cache: " (.getMessage e) " PEM?: " PEM?))))
+        ;; Jotain meni pieleen, ei haluta että näin käy (kriittinen osa). Laukaistaan slack-hälytys.
+        (log/error (str
+                     "[JWT-ERROR] Public avaimen päivitys epäonnistui: " (.getMessage e)
+                     " PEM?: " PEM?
+                     " käyttäjä: " lx-kayttaja
+                     " intervalli: " paivitys-intervalli
+                     " URL: " api-url
+                     " cache-atom: " @cache-atom))))
     ;; Public avaimet on ajan tasalla, palauta tallennettu arvo 
     (-> @cache-atom :key)))
 
@@ -152,8 +159,8 @@
         accesstoken-algoritmi (-> accesstoken-header :alg (str/lower-case) (keyword))
         iam-data-algoritmi (-> iam-data-header :alg (str/lower-case) (keyword))
 
-        ;; Defaulttina false, mutta nämä on arvokkaita testauksessa ja voi jättää tähän
-        _ (when kehitysmoodi?
+        ;; Nämä on arvokkaita testauksessa ja voi jättää toistaiseksi tähän
+        #_ #_ _ (when kehitysmoodi?
             (println "\n accesstoken payload: " (-> accesstoken dekoodaa-token :payload))
             (println "\n accesstoken header: " (-> accesstoken dekoodaa-token :header))
             (println "\n accesstoken signature: " (-> accesstoken dekoodaa-token :signature))
@@ -206,8 +213,19 @@
        Todennusta on voitu yrittää manuaalisesti kutsua väärin
    
    'JWT Token puuttui kokonaan'
-     - Jompi kumpi token puuttui kokonaan, kutsu on korruptoitunut, tai todennusta yritetty manuaalisesti kutsua väärin"
+     - Jompi kumpi token puuttui kokonaan, kutsu on korruptoitunut, tai todennusta yritetty manuaalisesti kutsua väärin
+   
+   'Public avaimen päivitys epäonnistui'
+     - Public avaimen GET kutsussa meni jotain pieleen, logille heitetty virhe
+       Ei voida päästää Harjaan, koska jos payloadista ottaa esim issuerin pois, tämä triggeröityy
+       Välittäjälle yhteyttä"
+
   [e iam-data accesstoken]
+  
+  ;; TILANNE, joka ei johdu käyttäjistä, jos varmistus pitää ottaa pois päältä:
+  ;;    1. Vaihda tämä false -> tee-jwt-signaturen-varmistus?
+  ;;    2. Build and Deploy
+
   ;; 'JWT-ERROR' Laukaisee slack-hälytyksen, nämä halutaan tutkia aina 
   (log/error (str "[JWT-ERROR] Authentikointi ei onnistunut: " (.getMessage e)))
 
