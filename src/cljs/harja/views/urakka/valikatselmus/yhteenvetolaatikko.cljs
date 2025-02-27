@@ -43,7 +43,9 @@
                                         (:rahasumma bonus)
                                         0))
                                  (:bonukset yhteenvedon-tiedot)))
+        ;; Tavoitepalkkio tulee negatiivisena lukuna, joten käännetään se ympäri tähän yhteenvetolaatikkoon
         tavoitepalkkio (or (get-in yhteenvedon-tiedot [:kustannukset :tavoitepalkkio :toimenpide-toteutunut-summa]) 0)
+        tavoitepalkkio (if (zero? tavoitepalkkio) tavoitepalkkio (* tavoitepalkkio -1))
 
         ;; Tilaajan saatavat
         lupaussanktio (or
@@ -80,13 +82,13 @@
                                               (* (/ (:urakoitsija tavoitehinnan-ylitysprosentti) 100) tavoitehinnan-ylitys)
                                               0)
         urakoitsijan-osuus-tavoitehinnan-ylitys (if tavoitehinnan-ylityspaatos
-                                              (* (/ (:tilaaja tavoitehinnan-ylitysprosentti) 100) tavoitehinnan-ylitys)
-                                              0)
+                                                  (* (/ (:tilaaja tavoitehinnan-ylitysprosentti) 100) tavoitehinnan-ylitys)
+                                                  0)
 
         ;; Kattohinnan ylitys otetaan huomioon vasta, kun päätös on tehty
         kattohinnan-ylityspaatos (some #(when (= (str (:harja.domain.kulut.valikatselmus/tyyppi %)) "kattohinnan-ylitys")
-                                            true)
-                                     paatokset)
+                                          true)
+                                   paatokset)
         kattohinnan-ylitys (if (> totutuneet-kustannukset oikaistu-kattohinta)
                              (- totutuneet-kustannukset oikaistu-kattohinta)
                              0)
@@ -128,7 +130,7 @@
         [:span.bold {:class (when (and tavoitehinnan-ylitys (> tavoitehinnan-ylitys 0))
                               "negatiivinen-numero")} (fmt/euro-opt tavoitehinnan-ylitys)]]
        )
-       ;; Näytetään tavoitehinnan-alitusrivi mikäli alitus on olemassa
+     ;; Näytetään tavoitehinnan-alitusrivi mikäli alitus on olemassa
      (when (> tavoitehinnan-alitus 0)
        [:div.rivi [:span.bold {:class (when (and tavoitehinnan-alitus (< 0 tavoitehinnan-alitus))
                                         "positiivinen-numero")} "Tavoitehinnan alitus"]
@@ -171,10 +173,10 @@
                  (fmt/euro-opt tilaajan-osuus-tavoitehinnan-ylitys)
                  (fmt/euro-opt 0))]])
      (when kattohinnan-ylityspaatos
-      [:div.rivi [:span "Kattohinnan ylitys"]
-       [:span (if (> urakoitsijan-hyvitysosuus 0)
-                (fmt/euro-opt urakoitsijan-hyvitysosuus)
-                (fmt/euro-opt 0))]])
+       [:div.rivi [:span "Kattohinnan ylitys"]
+        [:span (if (> urakoitsijan-hyvitysosuus 0)
+                 (fmt/euro-opt urakoitsijan-hyvitysosuus)
+                 (fmt/euro-opt 0))]])
 
      [:h3 [:span "Siirrot"]]
      [:div.rivi [:span "Siirto seuraavan vuoden hankintakustannuksiin"]
