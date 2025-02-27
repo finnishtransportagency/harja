@@ -592,6 +592,12 @@
       urakka-id
       (throw (Exception. (format "Annetulla nimellä: '%s'  ei löydy urakkaa!!" nimi))))))
 
+(defn hae-urakan-id-sampo-idlla [sampoid]
+  (ffirst (q (str "SELECT id FROM urakka WHERE sampoid = '" sampoid "';"))))
+
+(defn hae-urakoitsijan-id-ytunnuksella [ytunnus]
+  (ffirst (q (str "SELECT id FROM organisaatio WHERE tyyppi = 'urakoitsija' AND ytunnus = '" ytunnus "';"))))
+
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
   ([nimi kayttaja]

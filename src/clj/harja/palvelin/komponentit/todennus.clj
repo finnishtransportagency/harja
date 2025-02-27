@@ -20,7 +20,7 @@
 
 (def todennusvirhe {:virhe :todennusvirhe})
 
-(defn ryhman-rooli-ja-linkki
+(defn- ryhman-rooli-ja-linkki
   "Etsii annetulle OAM ryhmälle roolin. Ryhmä voi olla suoraan roolin nimi
    tai linkitetyssä roolissa muotoa <linkitetty id>_<roolin nimi>. Palauttaa
    roolin tiedot ja linkitetyn id:n vektorissa, jos rooli ei ole linkitetty id on nil."
@@ -37,7 +37,7 @@
               [rooli (str/trim (first (str/split ryhma #"_")))]))
           roolit)))
 
-(defn yleisroolit [roolit-ja-linkit]
+(defn- yleisroolit [roolit-ja-linkit]
   (into #{}
         ;; Haetaan kaikki roolit, joilla ei ole linkkiä
         (comp (map first)

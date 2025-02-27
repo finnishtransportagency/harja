@@ -59,7 +59,7 @@
 (def mock-uid "LX123")
 (def mock-organisaatio "Meitsin organisaatio")
 (def mock-sukunimi "Pasatronic")
-(def mock-roolit "Extranet_Kayttaja,all_ex_users,ext_kayttajat,Jarjestelmavastaava")
+(def mock-roolit "Extranet_Kayttaja,all_ex_users,ext_kayttajat,1242141-OULU2_vastuuhenkilo,Jarjestelmavastaava,4242523-AES4_vastuuhenkilo,MHU-TESTI-LAP-ROV_Laadunvalvoja")
 
 (def test-accesstoken-jwt
   ;; JWT accesstoken mock dataa, jossa header, payload, ja signature 
@@ -82,8 +82,8 @@
 (def test-iam-data-jwt
   ;; JWT iam-data (käyttäjätiedot & roolit) mock dataa, jossa header, payload, ja signature 
   [{:typ "JWT",
-    :kid mock-key-identifier, ;; TODO, voi varmaan poistaa, tämä on RSA accesstokenin identifier, ei tarvi iam datassa 
     :alg "ES256",
+    ;; Iam datalla ei tarvi tähän key identifieriä, public key haetaan hieman erillä lailla 
     :iss mock-https-issuer,
     :client mock-client-id,
     :signer mock-signer,
@@ -112,7 +112,7 @@
 
 (defn- public-key-to-pem
   "Muunna ec iam-data public avain PEM muotoon
-   Simuloi miten se saadaan Cognitolta tuotannossa"
+   Tämä simuloi miten se saadaan Cognitolta tuotannossa"
   [public-key]
   (let [sw (StringWriter.)
         pw (JcaPEMWriter. sw)]
@@ -124,7 +124,7 @@
 
 (defn- rsa-public-key-to-jwks
   "Muunna RSA avain vielä jwks muotoon (json web key set)
-   Simuloi miten se saadaan Cognitolta tuotannossa"
+   Tämä simuloi miten se saadaan Cognitolta tuotannossa"
   [rsa-public-key key-id]
   (let [modulus (.getModulus rsa-public-key)
         exponent (.getPublicExponent rsa-public-key)]
@@ -164,7 +164,32 @@
   (jwt/sign payload private-key {:alg alg :header header}))
 
 
-(deftest testaa-mock-cognito-jwt-todennuspyyntoa
+(defn- tarkista-cognito-todennus-perustiedot [vastaus x-iam-accesstoken x-iam-data]
+  ;; Nämä tiedot pitäisi palautua, jos ei palaudu, jotain on todennuksessa vialla
+  (is (= (get-in vastaus [:kayttaja :sukunimi]) mock-sukunimi))
+  (is (= (get-in vastaus [:kayttaja :etunimi]) mock-etunimi))
+  (is (= (get-in vastaus [:kayttaja :kayttajanimi]) mock-uid))
+  (is (= (get-in vastaus [:kayttaja :sahkoposti]) mock-email))
+  (is (= (get-in vastaus [:kayttaja :puhelin]) mock-puh))
+
+  (is (= (get-in vastaus [:headers "sub"]) mock-subject))
+  (is (= (get-in vastaus [:headers "exp"]) mock-expiration))
+  (is (= (get-in vastaus [:headers "iss"]) mock-https-issuer))
+  (is (= (get-in vastaus [:headers "username"]) mock-username))
+  (is (= (get-in vastaus [:headers "oam_remote_user"]) mock-uid))
+  (is (= (get-in vastaus [:headers "oam_user_last_name"]) mock-sukunimi))
+  (is (= (get-in vastaus [:headers "oam_organization"]) mock-organisaatio))
+  (is (= (get-in vastaus [:headers "oam_user_mail"]) mock-email))
+  (is (= (get-in vastaus [:headers "oam_user_first_name"]) mock-etunimi))
+  (is (= (get-in vastaus [:headers "oam_user_companyid"]) mock-ytunnus))
+
+  ;; JWT tokenit
+  (is (= (get-in vastaus [:headers "x-iam-accesstoken"]) x-iam-accesstoken))
+  (is (= (get-in vastaus [:headers "x-iam-data"]) x-iam-data))
+  (is (= (get-in vastaus [:headers "x-iam-identity"]) mock-subject)))
+
+
+(deftest testaa-mock-cognito-jwt-todennuspyyntoja
   (let [ec-key-pair (generate-ec-key-pair)
         ec-private-key (.getPrivate ec-key-pair)
         ec-public-key (.getPublic ec-key-pair)
@@ -199,47 +224,80 @@
         ;; Tässä on viimein oikeanlainen todennuspyyntö
         todennuspyynto {"x-iam-accesstoken" x-iam-accesstoken
                         "x-iam-data" x-iam-data
-                        "x-iam-identity" mock-subject}
-        handler (->
-                  (fn [req] req)
-                  (http-palvelin/wrap-with-common-wrappers
-                    true
-                    {:public-key-url [rsa-jwks ec-public-key-PEM]}))
-        ;; Passataan kehitysmoodi true, jotta todennus tajuaa tämän olevan testi, eikä tee GET kutsuja 
-        ;; Todennus parsii kehitysmoodissa public avaimet yllä olevasta vectorissa 
-        todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % true)]
+                        "x-iam-identity" mock-subject}]
 
     (testing "Käyttäjä pääsee Harjaan Cognito JWT authentikoinnin läpi"
-      (let [req (todenna (handler {:headers todennuspyynto}))
-            odotetut-roolit (try
-                              (todennus/yleisroolit
-                                (->> (str/split mock-roolit #",")
-                                  (keep (partial todennus/ryhman-rooli-ja-linkki oikeudet/roolit))))
-                              (catch Exception e
-                                (log/error (str "Odotettuja rooleja ei saatu, tarkista mock-roolit: " (.getMessage e)))
-                                nil))
+      (let [handler (->
+                      (fn [req] req)
+                      (http-palvelin/wrap-with-common-wrappers
+                        true
+                        {:public-key-url [rsa-jwks ec-public-key-PEM]}))
+            ;; Passataan kehitysmoodi true, jotta todennus tajuaa tämän olevan testi, eikä tee GET kutsuja 
+            ;; Todennus parsii kehitysmoodissa public avaimet yllä olevasta vectorissa 
+            todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % true)
 
-            ;; Nämä tiedot pitäisi palautua, jos ei palaudu, jotain on vialla, eikä käyttäjä päässyt Harjaan 
-            _ (is (= (get-in req [:kayttaja :sukunimi]) mock-sukunimi))
-            _ (is (= (get-in req [:kayttaja :etunimi]) mock-etunimi))
-            _ (is (= (get-in req [:kayttaja :kayttajanimi]) mock-uid))
-            _ (is (= (get-in req [:kayttaja :sahkoposti]) mock-email))
-            _ (is (= (get-in req [:kayttaja :puhelin]) mock-puh))
-            _ (is (= (get-in req [:kayttaja :roolit]) odotetut-roolit))
+            vastaus (todenna (handler {:headers todennuspyynto}))
+            odotetut-roolit (todennus/kayttajan-roolit
+                              (partial hae-urakan-id-sampo-idlla)
+                              (partial hae-urakoitsijan-id-ytunnuksella)
+                              oikeudet/roolit
+                              mock-roolit)
+            odotetut-harja-roolit (:roolit odotetut-roolit)
+            odotetut-urakka-roolit (:urakkaroolit odotetut-roolit)
+            mock-roolit-set (set (str/split mock-roolit #","))
+            sisaltaa-roolin? (fn [role]
+                               (some #(str/includes? % role) mock-roolit-set))
+            vastaus-roolit (get-in vastaus [:kayttaja :roolit])
+            vastaus-urakkaroolit (get-in vastaus [:kayttaja :urakkaroolit])]
 
-            _ (is (= (get-in req [:headers "sub"]) mock-subject))
-            _ (is (= (get-in req [:headers "exp"]) mock-expiration))
-            _ (is (= (get-in req [:headers "iss"]) mock-https-issuer))
-            _ (is (= (get-in req [:headers "username"]) mock-username))
-            _ (is (= (get-in req [:headers "oam_groups"]) mock-roolit))
-            _ (is (= (get-in req [:headers "oam_remote_user"]) mock-uid))
-            _ (is (= (get-in req [:headers "oam_user_last_name"]) mock-sukunimi))
-            _ (is (= (get-in req [:headers "oam_organization"]) mock-organisaatio))
-            _ (is (= (get-in req [:headers "oam_user_mail"]) mock-email))
-            _ (is (= (get-in req [:headers "oam_user_first_name"]) mock-etunimi))
-            _ (is (= (get-in req [:headers "oam_user_companyid"]) mock-ytunnus))
+        ;; Vastaahan roolit odotettuja rooleja 
+        (is (= vastaus-roolit odotetut-harja-roolit))
+        (is (= vastaus-urakkaroolit odotetut-urakka-roolit))
 
-            ;; JWT tokenit
-            _ (is (= (get-in req [:headers "x-iam-accesstoken"]) x-iam-accesstoken))
-            _ (is (= (get-in req [:headers "x-iam-data"]) x-iam-data))
-            _ (is (= (get-in req [:headers "x-iam-identity"]) mock-subject))]))))
+        ;; Katsotaan että cognito parsinta palauttaa kaikki roolit
+        ;; Tarkista että vastauksen harja-rooli löytyy passatuista rooleista 
+        (is (every? mock-roolit-set vastaus-roolit) "Vastaus sisältää lähetetyt roolit")
+
+        ;; Tarkista että vastauksen urakkaroolit löytyy passatuista rooleista 
+        ;;   {4 #{"vastuuhenkilo"} .. }    <- vastuuhenkilo löytyy mock-rooli sisältä 
+        ;;
+        ;; urakka id voisi myös tarkistaa, mutta lienee tarpeeksi hyvä tämä laiska check
+        (is (every? sisaltaa-roolin? (set (mapcat second vastaus-urakkaroolit))) "Vastaus sisältää lähetetyt urakkaroolit")
+
+        ;; Roolit vastaa annettuja rooleja 
+        (is (= (get-in vastaus [:headers "oam_groups"]) mock-roolit))
+
+        ;; Perustiedot täsmää
+        (tarkista-cognito-todennus-perustiedot vastaus x-iam-accesstoken x-iam-data)))
+
+
+    (testing "Käyttäjältä estetään pääsy Harjaan onnistuneesti"
+      (let [;; Laukaisee GET kutsun, mutta koska mock-https-issuer, public-key-url 
+            ;; eivät sisällä validia linkkiä, kutsu ei mene mihinkään
+            ;;   Pitäisi johtaa virheeseen, ja estää pääsy
+            kehitysmoodi? false
+            handler (->
+                      (fn [req] req)
+                      (http-palvelin/wrap-with-common-wrappers
+                        kehitysmoodi?
+                        {:public-key-url "string"}))
+            todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % kehitysmoodi?)
+            vastaus (todenna (handler {:headers todennuspyynto}))
+            odotetut-roolit (todennus/kayttajan-roolit
+                              (partial hae-urakan-id-sampo-idlla)
+                              (partial hae-urakoitsijan-id-ytunnuksella)
+                              oikeudet/roolit
+                              mock-roolit)
+            odotetut-harja-roolit (:roolit odotetut-roolit)
+            odotetut-urakka-roolit (:urakkaroolit odotetut-roolit)]
+
+        ;; failed tarkoittaa että käyttäjä ohjattiin "Ei käyttöoikeutta Harjaan"
+        (is (= (get-in vastaus [:headers "oam_groups"]) "failed"))
+        (is (= (get-in vastaus [:kayttaja :roolit]) #{"failed"}))
+
+        ;; Roolien ei pitäisi täsmätä
+        (is (not= (get-in vastaus [:kayttaja :roolit]) odotetut-harja-roolit))
+        (is (not= (get-in vastaus [:kayttaja :urakkaroolit]) odotetut-urakka-roolit))
+
+        ;; Muiden perustietojen  pitäisi silti olla OK 
+        (tarkista-cognito-todennus-perustiedot vastaus x-iam-accesstoken x-iam-data)))))
