@@ -75,7 +75,9 @@
         kattohinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :kattohinnan-ylitys)
         kattohinnan-ylitys (or (:ylityksen_maara kattohinnan-ylityspaatos) 0)
         siirto-seuraavan-vuoden-hankintakustannuksiin (or (:siirrettava_maara kattohinnan-ylityspaatos) 0)
-        urakoitsijan-hyvitysosuus (or (:urakoitsija_maksaa kattohinnan-ylityspaatos) 0)]
+        urakoitsijan-hyvitysosuus (or (:urakoitsija_maksaa kattohinnan-ylityspaatos) 0)
+        hoidonjohtopalkkiopaatos (valikatselmus-tiedot/ota-paatos paatokset :hoidonjohtopalkkion-muutos)
+        hoidonjohtopalkkion-muutos (or (:hoidonjohtopalkkio_muutos hoidonjohtopalkkiopaatos) 0)]
     [:div.valikatselmus-yhteenveto.elevation-2
      [:h2 [:span "Yhteenveto"]]
      [:div.rivi [:span.bold "Hoitokauden lopun tavoitehinta"]
@@ -130,7 +132,10 @@
         [:span (if (> urakoitsijan-osuus-tavoitehinnan-ylitys 0)
                  (fmt/euro-opt urakoitsijan-osuus-tavoitehinnan-ylitys)
                  (fmt/euro-opt 0))]])
+     [:div.rivi [:span "Hoidonjohtopalkkion muutos"]
+      [:span (fmt/euro-opt hoidonjohtopalkkion-muutos)]]
 
+; TILAAJAN SAATAVAT
      [:h3 [:span "Tilaajan saatavat"]]
      [:div.rivi [:span "Lupaussanktio"]
       [:span (fmt/euro-opt lupaussanktio)]]
@@ -149,6 +154,9 @@
         [:span (if (> urakoitsijan-hyvitysosuus 0)
                  (fmt/euro-opt urakoitsijan-hyvitysosuus)
                  (fmt/euro-opt 0))]])
+
+     [:div.rivi [:span "Hoidonjohtopalkkion muutos"]
+      [:span (fmt/euro-opt hoidonjohtopalkkion-muutos)]]
 
      [:h3 [:span "Siirrot"]]
      [:div.rivi [:span "Siirto seuraavan vuoden hankintakustannuksiin"]
