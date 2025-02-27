@@ -330,11 +330,14 @@
         "Lupauksella 4 on joustovara 1, joten ennusteen mukaan pitäisi olla nolla pistettä, kun on annettu kaksi kieltävää vastausta.")))
 
 (deftest urakan-lupauspisteiden-tallennus-toimii-insert
-  (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
             :tallenna-luvatut-pisteet +kayttaja-jvh+
             {:pisteet 67
              :id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
-             :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id})
+             :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+             :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                  #inst "2022-09-30T20:59:59.000-00:00"]})
+        _ (println "vastaus: " vastaus)
         lupaustiedot (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                                               :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                                                    #inst "2022-09-30T20:59:59.000-00:00"]})
@@ -346,7 +349,9 @@
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
             :tallenna-luvatut-pisteet +kayttaja-jvh+
             {:pisteet 67
-             :urakka-id urakka-id})
+             :urakka-id urakka-id
+             :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                  #inst "2022-09-30T20:59:59.000-00:00"]})
         sitoutuminen-1 (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                                                      #inst "2022-09-30T20:59:59.000-00:00"]})
@@ -354,14 +359,18 @@
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
             :tallenna-luvatut-pisteet +kayttaja-jvh+
             {:pisteet nil
-             :urakka-id urakka-id})
+             :urakka-id urakka-id
+             :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                  #inst "2022-09-30T20:59:59.000-00:00"]})
         sitoutuminen-2 (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                                                      #inst "2022-09-30T20:59:59.000-00:00"]})
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
             :tallenna-luvatut-pisteet +kayttaja-jvh+
             {:pisteet 55
-             :urakka-id urakka-id})
+             :urakka-id urakka-id
+             :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                  #inst "2022-09-30T20:59:59.000-00:00"]})
         sitoumusrivien-maara-2 (ffirst (q (format "SELECT count(*) FROM lupaus_sitoutuminen WHERE \"urakka-id\" = %s;" urakka-id)))
         sitoutuminen-3 (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
@@ -380,7 +389,9 @@
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
             :tallenna-luvatut-pisteet +kayttaja-jvh+
             {:pisteet 67
-             :urakka-id urakka-id})
+             :urakka-id urakka-id
+             :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                  #inst "2022-09-30T20:59:59.000-00:00"]})
         sitoutuminen-ennen-poistoa (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                             :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                                                                  #inst "2022-09-30T20:59:59.000-00:00"]})
@@ -403,10 +414,12 @@
                                                          :tallenna-luvatut-pisteet +kayttaja-jvh+
                                                          {:id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
                                                           :pisteet 167
-                                                          :urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")})))]))
+                                                          :urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+                                                          :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                                               #inst "2022-09-30T20:59:59.000-00:00"]})))]))
 
 (deftest urakan-lupauspisteita-ei-saa-muokata-valikatselmuksen-jalkeen
-  (with-redefs [lupaus-palvelu/valikatselmus-tehty-urakalle? (constantly true)]
+  (with-redefs [lupaus-palvelu/valikatselmus-tehty-urakalle? (constantly true) 2021]
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
                                                 {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)

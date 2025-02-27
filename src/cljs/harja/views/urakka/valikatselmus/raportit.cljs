@@ -27,8 +27,7 @@
         avaa-tai-sulje-haitari (fn [event]
                                  (when (dom/enter-nappain? event)
                                    (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))
-        urakkatiedot (-> @tila/yleiset :urakka)
-        _ (js/console.log "urakkatiedot: " (pr-str urakkatiedot))]
+        urakkatiedot (-> @tila/yleiset :urakka)]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-border
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Raportit" paatos-tehty? paatos-avain avatut-paatokset

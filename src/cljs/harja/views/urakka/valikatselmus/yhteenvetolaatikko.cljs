@@ -19,7 +19,6 @@
         yhteenvedon-tiedot (:yhteenveto app)
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
-        valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero (-> @tila/yleiset :urakka :alkupvm) valittu-hoitokauden-alkuvuosi)
 
         ;; Toteutuneet kustannukset
         hankintakustannukset (or (get-in yhteenvedon-tiedot [:kustannukset :hankintakustannukset-toteutunut]) 0)
@@ -29,8 +28,11 @@
         toteuma-yht (get-in yhteenvedon-tiedot [:kustannukset-yhteensa :yht-toteutunut-summa])
 
         ;; Urakoitsijan saatavat
-        lupausbonus (or (:toteutunut_summa (first (filter #(when (= "lupausbonus" (:maksutyyppi %))
-                                                             %) (get-in yhteenvedon-tiedot [:kustannukset :bonukset :tehtavat])))) 0)
+        lupausbonus (or (and
+                          (get-in yhteenvedon-tiedot [:lupaustiedot :yhteenveto :valikatselmus-tehty-urakalle?])
+                          (:toteutunut_summa (first (filter #(when (= "lupausbonus" (:maksutyyppi %))
+                                                               %) (get-in yhteenvedon-tiedot [:kustannukset :bonukset :tehtavat]))))) 0)
+
         asiakastyytyvaisyysbonus (apply + (map (fn [bonus]
                                                  (if (= (:tyyppi bonus) "asiakastyytyvaisyysbonus")
                                                    (:rahasumma bonus)
@@ -48,8 +50,6 @@
                         (and
                           (get-in yhteenvedon-tiedot [:lupaustiedot :yhteenveto :valikatselmus-tehty-urakalle?])
                           (get-in yhteenvedon-tiedot [:lupaustiedot :yhteenveto :bonus-tai-sanktio :sanktio])) 0)
-        ;; Tilaajalle sanktio on positiivinen luku
-        lupaussanktio (if (zero? lupaussanktio) lupaussanktio (- lupaussanktio))
         muut-sanktiot (apply + (map (fn [a]
                                       (if (not (contains? #{"lupaussanktio" "arvonvahennyssanktio"} (:sakkoryhma a)))
                                         (+ (:maara a) (:indeksikorjaus a))

@@ -408,12 +408,12 @@
        boolean))
 
 (defn paatos->bonus-tai-sanktio
-  [{tyyppi :harja.domain.kulut.valikatselmus/tyyppi
-    tilaajan-maksu :harja.domain.kulut.valikatselmus/tilaajan-maksu
-    urakoitsijan-maksu :harja.domain.kulut.valikatselmus/urakoitsijan-maksu}]
+  [{tyyppi :tyyppi
+    tilaajan-maksu :lupausbonus
+    urakoitsijan-maksu :lupaussanktio}]
   (case tyyppi
-    "lupausbonus" {:bonus tilaajan-maksu}
-    "lupaussanktio" {:sanktio urakoitsijan-maksu}
+    "bonus" {:bonus tilaajan-maksu}
+    "sanktio" {:sanktio urakoitsijan-maksu}
     nil))
 
 (defn urakan-paatokset->lupauspaatos [urakan-paatokset]

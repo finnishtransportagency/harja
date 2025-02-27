@@ -8,3 +8,5 @@
   (update lupaus :kirjaus-kkt konv/pgarray->vector))
 
 (defqueries "harja/kyselyt/lupaus_kyselyt.sql")
+
+(declare hae-urakan-lupaustiedot hae-lupaus-vaihtoehdot)
