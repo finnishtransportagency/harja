@@ -135,7 +135,7 @@
 
 
 (defn- atomi-sisaltaa-stringin? [atom string]
-  (some #(str/includes? (str %) string) @atom))
+  (boolean (some #(str/includes? (str %) string) @atom)))
 
 
 (defn- public-key-to-pem
@@ -415,6 +415,7 @@
         x-iam-accesstoken (get todennuspyynto "x-iam-accesstoken")]
 
     (testing "Varmistusta ei tehdä, koska varmistus poissa päältä"
+      (nollaa-todennuksen-cache)
       (let [public-key "olemassa"
             kehitysmoodi? false
             todennus-varmistus-paalla? false
