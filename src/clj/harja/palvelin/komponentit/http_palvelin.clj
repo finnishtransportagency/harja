@@ -339,10 +339,10 @@
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
   Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään
   muiden headereiden joukkoon."
-  [handler kehitysmoodi public-key-url]
+  [handler kehitysmoodi todennus-varmistus]
   (fn [req]
     (->
-      (assoc req :headers (todennus/prosessoi-kayttaja-headerit (:headers req) kehitysmoodi public-key-url))
+      (assoc req :headers (todennus/prosessoi-kayttaja-headerit (:headers req) kehitysmoodi todennus-varmistus))
       (handler))))
 
 (defn wrap-with-common-wrappers
@@ -354,7 +354,7 @@
   ([handler kehitysmoodi todennus-varmistus]
    (-> handler
      (cookies/wrap-cookies)
-     (wrap-prosessoi-headerit kehitysmoodi (:public-key-url todennus-varmistus)))))
+     (wrap-prosessoi-headerit kehitysmoodi todennus-varmistus))))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true

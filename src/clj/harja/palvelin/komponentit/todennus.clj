@@ -119,9 +119,8 @@
   "Purkaa AWS Cognitolta palautuneet headerit ja hakee niistä OAM-tiedot.
    Tiedot mapataan vanhan mallisiksi OAM_-headereiksi
    JWT Signaturen vahvistukset suoritetaan samalla, jonka epäonnistuessa authentikointi ei etene"
-  [headerit kehitysmoodi? public-key-url]
-  (let [tee-jwt-signaturen-varmistus? true
-        ;; Sisältää mm. Cogniton user poolin url:n ja app client id:n, kertoo koska token on annettu, ja kenelle
+  [headerit kehitysmoodi? {:keys [public-key-url todennus-varmistus-paalla?]}]
+  (let [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n, kertoo koska token on annettu, ja kenelle
         ;; Mukana myös signature joka vahvistetaan
         accesstoken (get headerit "x-iam-accesstoken")
 
@@ -132,9 +131,9 @@
         ;; Subject ID (sub), eli käyttäjä kenelle JWT on myönnetty, tällä voidaan tunnistaa käyttäjä (mukana myös yllä olevissa tokeneissa)
         ;; Tällä voidaan esim invalitoida token, kun käyttäjä kirjautuu ulos, mutta Harjassa ei tuollaista tarvetta kirjoitushetkellä taida olla
         ; iam-identity (get headerit "x-iam-identity")
-
+        
         ;; Vahvistetaan että tokenien payloadit on eheät
-        vahvistetut-tunnustiedot (if tee-jwt-signaturen-varmistus?
+        vahvistetut-tunnustiedot (if todennus-varmistus-paalla?
                                    (varmistus/vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url)
                                    (varmistus/tunnistetiedot iam-data))
 
@@ -192,10 +191,10 @@
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
    Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään 
    muiden headereiden joukkoon."
-  [headerit kehitysmoodi? public-key-url]
+  [headerit kehitysmoodi? todennus-varmistus]
   (if (empty? (koka-headerit headerit))
     (->
-      (merge headerit (pura-cognito-headerit headerit kehitysmoodi? public-key-url))
+      (merge headerit (pura-cognito-headerit headerit kehitysmoodi? todennus-varmistus))
       (prosessoi-apikayttaja-header))
     headerit))
 
@@ -307,7 +306,7 @@
   ([db headerit oikeudet kehitysmoodi?]
    (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? nil))
   ([db headerit oikeudet kehitysmoodi? todennus-varmistus]
-   (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? (:public-key-url todennus-varmistus))
+   (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? todennus-varmistus)
          oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
      (try
        (get (swap! kayttajatiedot-cache-atom #(cache/through

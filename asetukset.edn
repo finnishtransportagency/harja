@@ -21,13 +21,13 @@
  ;; 
  ;; Käytetään authentikointiin kun käyttäjä tulee Harjaan
  ;; 
- todennus-varmistus {;; x-iam-data tokenin public key (käyttäjäroolit) 
-                     ;; x-iam-accesstoken avain tulee payloadin mukana, sille ei tarvitse muuttujaa erikseen 
-                     :public-key-url #=(eval (harja.tyokalut.env/env "COGNITO_IAMDATA_KEY" nil))
+ :todennus-varmistus {;; x-iam-data tokenin public key (käyttäjäroolit) 
+                      ;; x-iam-accesstoken avain tulee payloadin mukana, sille ei tarvitse muuttujaa erikseen 
+                      :public-key-url #=(eval (harja.tyokalut.env/env "COGNITO_IAMDATA_KEY" nil))
 
-                     ;; Onko todennuksen token authentikointi päällä? 
-                     ;; Voi ongelma tilanteessa laittaa false, jos esim. käyttäjät ei pääse Harjaan ilman hyvää syytä 
-                     :todennus-varmistus-paalla? #=(eval (harja.tyokalut.env/env "TODENNUS_VARMISTUS_PAALLA" false))}
+                      ;; Onko Cognito todennuksen token authentikointi päällä? 
+                      ;; Voi ongelma tilanteessa laittaa false, jos esim. käyttäjät ei pääse Harjaan ilman hyvää syytä 
+                      :todennus-varmistus-paalla? #=(eval (harja.tyokalut.env/env "TODENNUS_VARMISTUS_PAALLA" false))}
 
 
  :tietokanta {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))

@@ -62,41 +62,47 @@
   "Tekee GET kutsun joka hakee public avaimen Cognitolta (x-iam-accesstoken & x-iam-data)
    Jos avain on jo cachessa, palautetaan tallennettu arvo
    Jos avaimet rotatoituu cachen aikana, ne päivitetään automaattisesti"
-  [paivita? lx-kayttaja api-url PEM? cache-atom paivitys-intervalli]
-  (if
-    ;; Jos public avainta ei ole päivitetty x minuuttiin, päivitetään se
-    ;; Tällainen cachetus vielä, koska yksi backend, monta käyttäjää, Cognito ei rotatoi public avaimia kovin tiheään 
-    (or
-      paivita? ;; Tämä on true jos käyttäjä ei päässyt sisälle, yritetään yhden kerran uudelleen
-      (nil? @cache-atom)
-      (public-key-vanhentunut? cache-atom paivitys-intervalli))
-    (try
-      (let [_ (log/info
-                ;; TODO, logitusta tuotantoon, jotta nähdään cachen toimivuus
-                ;; Poistetaan myöhemmin
-                (str "Tehdään GET JWT public key kutsu, paivita? " paivita? " LX: " lx-kayttaja))
-            response @(http/get api-url {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
-                                                   "User-Agent" (if paivita?
+  ([paivita? lx-kayttaja api-url PEM? cache-atom paivitys-intervalli]
+   (hae-public-key paivita? lx-kayttaja api-url PEM? cache-atom paivitys-intervalli false))
+  ([paivita? lx-kayttaja api-url PEM? cache-atom paivitys-intervalli kehitysmoodi?]
+   (if
+     ;; Jos public avainta ei ole päivitetty x minuuttiin, päivitetään se
+     ;; Tällainen cachetus vielä, koska yksi backend, monta käyttäjää, Cognito ei rotatoi public avaimia kovin tiheään 
+     (or
+       paivita? ;; Tämä on true jos käyttäjä ei päässyt sisälle, yritetään yhden kerran uudelleen
+       (nil? @cache-atom)
+       (public-key-vanhentunut? cache-atom paivitys-intervalli))
+     (try
+       (let [_ (log/info
+                 ;; TODO, logitusta tuotantoon, jotta nähdään cachen toimivuus
+                 ;; Poistetaan myöhemmin
+                 (str "Tehdään GET JWT public key kutsu, paivita? " paivita? " LX: " lx-kayttaja))
+
+             response @(http/get api-url {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
+                                                    "User-Agent" (if paivita?
                                                                     ;; Koska authentikointi epäonnistui, laita LX tunnus mukaan 
-                                                                  (str user-agent-headers " (update public-key/" lx-kayttaja ")")
-                                                                  user-agent-headers)
-                                                   "Content-Type" "application/json"}})
-            response (if PEM?
-                       (-> response :body (slurp) (parsi-PEM-public-key))
-                       (-> response :body (json/read-json) :keys))
-            _ (reset! cache-atom {:key response :fetched-at (System/currentTimeMillis)})]
-        response)
-      (catch Exception e
-        ;; Jotain meni pieleen, ei haluta että näin käy (kriittinen osa). Laukaistaan slack-hälytys.
-        (log/error (str
-                     "[JWT-ERROR] Public avaimen päivitys epäonnistui: " (.getMessage e)
-                     " PEM?: " PEM?
-                     " käyttäjä: " lx-kayttaja
-                     " intervalli: " paivitys-intervalli
-                     " URL: " api-url
-                     " cache-atom: " @cache-atom))))
-    ;; Public avaimet on ajan tasalla, palauta tallennettu arvo 
-    (-> @cache-atom :key)))
+                                                                   (str user-agent-headers " (update public-key/" lx-kayttaja ")")
+                                                                   user-agent-headers)
+                                                    "Content-Type" "application/json"}})
+
+             response (when-not kehitysmoodi?
+                        (if PEM?
+                          (-> response :body (slurp) (parsi-PEM-public-key))
+                          (-> response :body (json/read-json) :keys)))
+
+             _ (reset! cache-atom {:key response :fetched-at (System/currentTimeMillis)})]
+         response)
+       (catch Exception e
+         ;; Jotain meni pieleen, ei haluta että näin käy (kriittinen osa). Laukaistaan slack-hälytys.
+         (log/error (str
+                      "[JWT-ERROR] Public avaimen päivitys epäonnistui: " (.getMessage e)
+                      " PEM?: " PEM?
+                      " käyttäjä: " lx-kayttaja
+                      " intervalli: " paivitys-intervalli
+                      " URL: " api-url
+                      " cache-atom: " @cache-atom))))
+     ;; Public avaimet on ajan tasalla, palauta tallennettu arvo 
+     (-> @cache-atom :key))))
 
 
 (defn hae-ja-suodata-accesstoken-public-key
@@ -130,7 +136,7 @@
   "Varmistaa authentikoinnin oikellisuuden Cogniton antamista tokeneista
    Tokenit mitkä vahvistetaan: x-iam-accesstoken (tokenin metadata), x-iam-data (käyttäjän tiedot&roolit)
    https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html#amazon-cognito-user-pools-using-tokens-manually-inspect"
-  [accesstoken iam-data paivita? iam-data-public-url kehitysmoodi?]
+  [accesstoken iam-data paivita? public-key-url kehitysmoodi?]
   (let [lx-kayttaja (-> iam-data dekoodaa-token :payload :custom:uid)
         accesstoken-header (-> accesstoken dekoodaa-token :header)
         accesstoken-kid (:kid accesstoken-header)
@@ -139,19 +145,21 @@
         iam-data-kid (:kid iam-data-header)
         ;; Hae accesstoken (tokenin metadata väitteet) public avain
         accesstoken-public-key (if kehitysmoodi?
-                                 ;; Kehitysmoodissa passataan mock avaimet suoraa 
-                                 (first iam-data-public-url)
+                                 ;; Kehitysmoodissa passataan mock avaimet suoraa, eikä tehdä GET kutsuja 
+                                 (first public-key-url)
+                                 ;; Tuotantoympäristössä, haetaan oikea avain GET kutsulla
                                  (hae-ja-suodata-accesstoken-public-key accesstoken-kid accesstoken-issuer paivita? lx-kayttaja))
         ;; Muunna java muotoon, joka käy javan signature librarylle
         accesstoken-public-key (keys/jwk->public-key accesstoken-public-key)
         ;; Hae iam-data (jossa käyttäjärooli väitteet) public avain, tämä on PEM muodossa 
         iam-data-public-key (if kehitysmoodi?
-                              ;; Kehitysmoodissa passataan mock avaimet suoraa 
-                              (second iam-data-public-url)
+                              ;; Kehitysmoodissa passataan mock avaimet suoraa, eikä tehdä GET kutsuja 
+                              (second public-key-url)
+                              ;; Tuotantoympäristössä, haetaan oikea avain GET kutsulla
                               (hae-public-key
                                 paivita?
                                 lx-kayttaja
-                                (str iam-data-public-url iam-data-kid)
+                                (str public-key-url iam-data-kid)
                                 true
                                 iam-data-pk-cache
                                 +public-key-cache-paivitys-min+))

@@ -1,6 +1,7 @@
 (ns harja.palvelin.komponentit.todennus-jwt-authentikointi-test
   "Todennuksen JWT signaturen testit (Ei tee GET kutsuja ulos)
-   Simuloi kuinka Tuotannossa saadaan tokenit, varmistaen niiden signaturen käyttäjän tullessa Harjaan"
+   Simuloi kuinka Tuotannossa saadaan tokenit, varmistaen niiden signaturen käyttäjän tullessa Harjaan
+   Testaa todennuksen varmistuksen kaikki komponentit"
   (:require [buddy.sign.jwt :as jwt]
             [clojure.core.cache :as cache]
             [clj-time.core :as time]
