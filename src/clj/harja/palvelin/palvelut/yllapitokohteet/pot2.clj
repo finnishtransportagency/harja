@@ -116,7 +116,7 @@
   (oikeudet/ei-oikeustarkistusta!)
   (let [massatyypit (fetch db ::pot2-domain/pot2-mk-massatyyppi
                                (specql/columns ::pot2-domain/pot2-mk-massatyyppi)
-                               {} {::specql/order-by ::pot2-domain/jarjestys})
+                               {::pot2-domain/poistettu? false} {::specql/order-by ::pot2-domain/jarjestys})
         mursketyypit (fetch db ::pot2-domain/pot2-mk-mursketyyppi
                            (specql/columns ::pot2-domain/pot2-mk-mursketyyppi)
                            {} {::specql/order-by ::pot2-domain/koodi})
