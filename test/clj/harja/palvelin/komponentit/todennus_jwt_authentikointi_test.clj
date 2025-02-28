@@ -11,6 +11,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
+            [cheshire.core :as cheshire]
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [harja.palvelin.komponentit.todennus-varmistus :as jwt-varmistus]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
@@ -126,10 +127,15 @@
 (defn- nollaa-todennuksen-cache
   "Jokaisessa testissä halutaan nollata todennuksen cache, kun käytetään samoja mock tietoja"
   []
+  (reset! timbre-log-historia [])
   (reset! jwt-varmistus/iam-data-pk-cache nil)
   (reset! jwt-varmistus/accesstoken-jwk-cache nil)
   (reset! todennus/kayttajatiedot-cache-atom (cache/ttl-cache-factory {} :ttl (* 15 60 1000)))
   (reset! jwt-varmistus/kayttaja-varmistettu-cache (cache/ttl-cache-factory {} :ttl (* 15 60 1000))))
+
+
+(defn- atomi-sisaltaa-stringin? [atom string]
+  (some #(str/includes? (str %) string) @atom))
 
 
 (defn- public-key-to-pem
@@ -211,20 +217,20 @@
   (is (= (get-in vastaus [:headers "x-iam-identity"]) mock-subject)))
 
 
-(defn- palauta-cognito-todennuspyynto-vastaus [kehitysmoodi? public-key todennuspyynto]
+(defn- palauta-cognito-todennuspyynto-vastaus [kehitysmoodi? public-key todennus-varmistus-paalla? todennuspyynto]
   (let [kehitysmoodi? kehitysmoodi?
         handler (->
                   (fn [req] req)
                   (http-palvelin/wrap-with-common-wrappers
                     kehitysmoodi?
-                    {:public-key-url public-key}))
+                    {:public-key-url public-key :todennus-varmistus-paalla? todennus-varmistus-paalla?}))
         todenna #(todennus/todenna-pyynto (:todennus jarjestelma) % kehitysmoodi?)]
     (todenna (handler {:headers todennuspyynto}))))
 
 
 (defn- initialisoi-cognito-jwt-todennuspyynto
   "Generoi private & public avaimet, ja kirjoittaa tokeneille validin signaturen
-   Palauttaa validin todennuspyynnön Cognito muodossa"
+   Palauttaa validin todennuspyynnön payloadin Cognito muodossa"
   ([] (initialisoi-cognito-jwt-todennuspyynto false))
   ([debug?]
    (nollaa-todennuksen-cache)
@@ -278,9 +284,10 @@
         x-iam-accesstoken (get todennuspyynto "x-iam-accesstoken")
 
         kehitysmoodi? true
+        todennus-varmistus-paalla? true
         public-key [accesstoken-public-key iam-data-public-key]
         ;; Tekee pyynnön Harjan todennukseen 
-        vastaus (palauta-cognito-todennuspyynto-vastaus kehitysmoodi? public-key todennuspyynto)
+        vastaus (palauta-cognito-todennuspyynto-vastaus kehitysmoodi? public-key todennus-varmistus-paalla? todennuspyynto)
 
         odotetut-harja-roolit (:roolit odotetut-roolit)
         odotetut-urakka-roolit (:urakkaroolit odotetut-roolit)
@@ -288,10 +295,10 @@
         sisaltaa-roolin? (fn [role]
                            (some #(str/includes? % role) mock-roolit-set))
         vastaus-roolit (get-in vastaus [:kayttaja :roolit])
-        vastaus-urakkaroolit (get-in vastaus [:kayttaja :urakkaroolit])
-        vastaus-log (nth @timbre-log-historia (- (count @timbre-log-historia) 3))]
+        vastaus-urakkaroolit (get-in vastaus [:kayttaja :urakkaroolit])]
 
-    (is (str/includes? vastaus-log "Todennettiin onnistuneesti"))
+
+    (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennettiin onnistuneesti")))
 
     ;; Vastaahan roolit odotettuja rooleja 
     (is (= vastaus-roolit odotetut-harja-roolit))
@@ -318,30 +325,61 @@
 ;; Tämä päälle vasta sitten kun väännetään käyttäjien esto päälle 
 ;; Aluksi mergetään ilman, joten tämä testi ei  tule menemään läpi vielä  
 #_(deftest cognito-esta-harjaan-paasy-test
-    (let [initialisoidut-tiedot (initialisoi-cognito-jwt-todennuspyynto)
-          todennuspyynto (-> initialisoidut-tiedot :todennuspyynto)
-          x-iam-data (get todennuspyynto "x-iam-data")
-          x-iam-accesstoken (get todennuspyynto "x-iam-accesstoken")
+  (let [initialisoidut-tiedot (initialisoi-cognito-jwt-todennuspyynto)
+        todennuspyynto (-> initialisoidut-tiedot :todennuspyynto)
+        x-iam-data (get todennuspyynto "x-iam-data")
+        x-iam-accesstoken (get todennuspyynto "x-iam-accesstoken")
+        iam-data-public-key (-> initialisoidut-tiedot :iam-data-public-key)
+        accesstoken-public-key (-> initialisoidut-tiedot :accesstoken-public-key)]
 
-        ;; kehitysmoodi? false Laukaisee GET kutsun, 
-        ;; mutta koska mock-https-issuer, public-key-url eivät sisällä validia linkkiä, kutsu ei mene mihinkään
-        ;;    Pitäisi johtaa virheeseen, ja estää pääsy
-          kehitysmoodi? false
-          public-key "string"
-          vastaus (palauta-cognito-todennuspyynto-vastaus kehitysmoodi? public-key todennuspyynto)
-          odotetut-harja-roolit (:roolit odotetut-roolit)
-          odotetut-urakka-roolit (:urakkaroolit odotetut-roolit)]
 
-    ;; failed tarkoittaa että käyttäjä ohjattiin "Ei käyttöoikeutta Harjaan"
-      (is (= (get-in vastaus [:headers "oam_groups"]) "failed") "Käyttäjältä estetään pääsy")
-      (is (= (get-in vastaus [:kayttaja :roolit]) #{"failed"}) "Käyttäjältä estetään pääsy")
+    (testing "Pääsy Harjaan estetään, public key url on väärin"
+      (nollaa-todennuksen-cache)
+      (let [;; kehitysmoodi? false Laukaisee GET kutsun, 
+            ;; mutta koska mock-https-issuer, public-key-url eivät sisällä validia linkkiä, kutsu ei mene mihinkään
+            ;;    Pitäisi johtaa virheeseen, ja estää pääsy
+            kehitysmoodi? false
+            todennus-varmistus-paalla? true
+            public-key "string"
+            vastaus (palauta-cognito-todennuspyynto-vastaus kehitysmoodi? public-key todennus-varmistus-paalla? todennuspyynto)
+            odotetut-harja-roolit (:roolit odotetut-roolit)
+            odotetut-urakka-roolit (:urakkaroolit odotetut-roolit)]
 
-    ;; Roolien ei pitäisi täsmätä
-      (is (not= (get-in vastaus [:kayttaja :roolit]) odotetut-harja-roolit) "Käyttäjällä ei ole harja rooleja")
-      (is (not= (get-in vastaus [:kayttaja :urakkaroolit]) odotetut-urakka-roolit) "Käyttäjällä ei ole harja rooleja")
+        ;; failed tarkoittaa että käyttäjä ohjattiin "Ei käyttöoikeutta Harjaan"
+        (is (= (get-in vastaus [:headers "oam_groups"]) "failed") "Käyttäjältä estetään pääsy")
+        (is (= (get-in vastaus [:kayttaja :roolit]) #{"failed"}) "Käyttäjältä estetään pääsy")
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Public avaimen päivitys epäonnistui: No matching clause")) "Odotettu virhe tapahtuu")
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointi ei onnistunut: No method in multimethod")) "Odotettu virhe tapahtuu")
 
-    ;; Muiden perustietojen  pitäisi silti olla OK 
-      (tarkista-cognito-todennus-perustiedot vastaus x-iam-accesstoken x-iam-data)))
+        ;; Roolien ei pitäisi täsmätä
+        (is (not= (get-in vastaus [:kayttaja :roolit]) odotetut-harja-roolit) "Käyttäjällä ei ole harja rooleja")
+        (is (not= (get-in vastaus [:kayttaja :urakkaroolit]) odotetut-urakka-roolit) "Käyttäjällä ei ole harja rooleja")
+
+        ;; Muiden perustietojen  pitäisi silti olla OK 
+        (tarkista-cognito-todennus-perustiedot vastaus x-iam-accesstoken x-iam-data)))
+
+
+    (testing "Pääsy Harjaan estetään, signature ei täsmää"
+      (nollaa-todennuksen-cache)
+      (let [kehitysmoodi? true
+            public-key [accesstoken-public-key iam-data-public-key]
+
+            ;; Injectaa tokeniin eri expiration date
+            fn-encode (fn [s]
+                        (-> s cheshire/encode  (.getBytes "UTF-8")
+                          Base64/encodeBase64 (String. "UTF-8")))
+            fake-jwt (fn [decoded]
+                       (let [{:keys [header payload signature]} decoded]
+                         (str (fn-encode header) "." (fn-encode payload) "." signature)))
+            inject_payload (-> x-iam-accesstoken (jwt-varmistus/dekoodaa-token))
+            new-payload (assoc (:payload inject_payload) :exp "1798652411")
+            injected-token (fake-jwt (assoc inject_payload :payload new-payload))
+
+            ;; Tee kutsu muokatulla tokenilla, pitäisi epäonnistua, ja tulla rooliksi failed
+            vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet injected-token x-iam-data kehitysmoodi? public-key)]
+
+        (is (= (get vahvistetut-tunnustiedot "custom:rooli") "failed") "Käyttö Harjaan estetään")
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointi ei onnistunut: Message seems corrupt or manipulated")) "Odotettu virhe tapahtuu")))))
 
 
 (deftest ei-public-avainta-asetettu-paasta-kayttaja-harjaan-test
@@ -351,15 +389,14 @@
         todennuspyynto (-> initialisoidut-tiedot :todennuspyynto)
         x-iam-data (get todennuspyynto "x-iam-data")
         x-iam-accesstoken (get todennuspyynto "x-iam-accesstoken")
-        kehitysmoodi? false
         public-key nil
-        vastaus (palauta-cognito-todennuspyynto-vastaus kehitysmoodi? public-key todennuspyynto)
+        kehitysmoodi? false
+        todennus-varmistus-paalla? true
+        vastaus (palauta-cognito-todennuspyynto-vastaus kehitysmoodi? public-key todennus-varmistus-paalla? todennuspyynto)
         odotetut-harja-roolit (:roolit odotetut-roolit)
-        odotetut-urakka-roolit (:urakkaroolit odotetut-roolit)
-        virhe (nth @timbre-log-historia (- (count @timbre-log-historia) 3))]
+        odotetut-urakka-roolit (:urakkaroolit odotetut-roolit)]
 
-    ;; Odotettu virhe tapahtui
-    (is (str/includes? virhe "[JWT-ERROR] Authentikointia ei voida tehdä, public-key-url ei ole asetettu"))
+    (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointia ei voida tehdä, public-key-url ei ole asetettu")))
 
     ;; Ei pitäisi olla failed tilassa 
     (is (not= (get-in vastaus [:headers "oam_groups"]) "failed") "Käyttäjän pitäisi päästä Harjaan (critical)")
@@ -371,6 +408,32 @@
     (tarkista-cognito-todennus-perustiedot vastaus x-iam-accesstoken x-iam-data)))
 
 
+(deftest kutsutaanko-jwt-varmistus-test
+  (let [initialisoidut-tiedot (initialisoi-cognito-jwt-todennuspyynto)
+        todennuspyynto (-> initialisoidut-tiedot :todennuspyynto)
+        x-iam-data (get todennuspyynto "x-iam-data")
+        x-iam-accesstoken (get todennuspyynto "x-iam-accesstoken")]
+
+    (testing "Varmistusta ei tehdä, koska varmistus poissa päältä"
+      (let [public-key "olemassa"
+            kehitysmoodi? false
+            todennus-varmistus-paalla? false
+            vastaus (palauta-cognito-todennuspyynto-vastaus kehitysmoodi? public-key todennus-varmistus-paalla? todennuspyynto)
+            odotetut-harja-roolit (:roolit odotetut-roolit)
+            odotetut-urakka-roolit (:urakkaroolit odotetut-roolit)]
+
+        (is (false? (atomi-sisaltaa-stringin? timbre-log-historia "Todennettiin onnistuneesti")) "Todennusta ei tehdä")
+
+        ;; Ei pitäisi olla failed tilassa 
+        (is (not= (get-in vastaus [:headers "oam_groups"]) "failed") "Käyttäjän pitäisi päästä Harjaan (critical)")
+        (is (not= (get-in vastaus [:kayttaja :roolit]) #{"failed"}) "Käyttäjän pitäisi päästä Harjaan (critical)")
+
+        ;; Roolit pitäisi olla OK, ja käyttäjän pitäisi päästä Harjaan 
+        (is (= (get-in vastaus [:kayttaja :roolit]) odotetut-harja-roolit) "Käyttäjän roolit saatiin (critical)")
+        (is (= (get-in vastaus [:kayttaja :urakkaroolit]) odotetut-urakka-roolit) "Käyttäjän urakkaroolit saatiin (critical)")
+        (tarkista-cognito-todennus-perustiedot vastaus x-iam-accesstoken x-iam-data)))))
+
+
 (deftest varmista-authentikoinnin-toiminnallisuus
   (let [initialisoidut-tiedot (initialisoi-cognito-jwt-todennuspyynto)
         todennuspyynto (-> initialisoidut-tiedot :todennuspyynto)
@@ -379,6 +442,7 @@
         x-iam-data (get todennuspyynto "x-iam-data")
         x-iam-accesstoken (get todennuspyynto "x-iam-accesstoken")
         tunnistetiedot-muunnettuna (jwt-varmistus/tunnistetiedot x-iam-data)]
+
 
     (testing "Authentikaation cache asetettu"
       (is (> jwt-varmistus/+public-key-cache-paivitys-min+ 0))
@@ -393,17 +457,46 @@
         (is (= ec-public-key ec-public-key-PEM-converted))))
 
 
-    (testing "Public avainten päivitys toimii (CRITICAL)"
-      (let [avaimen-tunniste (gensym)
-            ajan-tasalla (atom {:key avaimen-tunniste :fetched-at (System/currentTimeMillis)})
+    (testing "Public avainten päivitys toimii, GET kutsu tehdään (CRITICAL)"
+      (nollaa-todennuksen-cache)
+      (let [PEM? true
+            paivita? true
+            kehitysmoodi? true
+            avaimen-tunniste (gensym)
+            paivitys-intervalli-min 15
             menneisyydessa-minuuttia 200
+            ajan-tasalla (atom {:key avaimen-tunniste :fetched-at (System/currentTimeMillis)})
             vanhentunut (atom {:key avaimen-tunniste :fetched-at (- (System/currentTimeMillis) (* menneisyydessa-minuuttia 60 1000))})
             haettu-ennen (-> @vanhentunut :fetched-at)
+
+            ;; GET kutsu ei mene mihinkään ulos, käytetään mock linkkiä, mutta simuloidaan sitä, että se kuitenkin tehdään
+            _ (jwt-varmistus/hae-public-key paivita? mock-uid mock-https-issuer PEM? vanhentunut paivitys-intervalli-min kehitysmoodi?)
+            haettu-jalkeen (-> @vanhentunut :fetched-at)]
+
+        ;; Kumpikaan ei pitäisi olla vanhentunut, koska vanhentunut päivitettiin
+        (is (false? (jwt-varmistus/public-key-vanhentunut? vanhentunut jwt-varmistus/+public-key-cache-paivitys-min+)))
+        (is (false? (jwt-varmistus/public-key-vanhentunut? ajan-tasalla jwt-varmistus/+public-key-cache-paivitys-min+)))
+
+        ;; Kutsu tehtiin ja timestamp päivitettiin
+        (is (not= haettu-ennen haettu-jalkeen) "Timestamp ei täsmää")
+        (is (> haettu-jalkeen haettu-ennen) "GET kutsu tehtiin ja atom päivitettiin")))
+
+
+    (testing "Public avain invlid link virhe test"
+      (nollaa-todennuksen-cache)
+      (let [PEM? true
+            paivita? true
+            kehitysmoodi? false
+            avaimen-tunniste (gensym)
             paivitys-intervalli-min 15
+            menneisyydessa-minuuttia 200
+            ajan-tasalla (atom {:key avaimen-tunniste :fetched-at (System/currentTimeMillis)})
+            vanhentunut (atom {:key avaimen-tunniste :fetched-at (- (System/currentTimeMillis) (* menneisyydessa-minuuttia 60 1000))})
+            haettu-ennen (-> @vanhentunut :fetched-at)
+
             ;; Koska pem avainta ei ole, on odotettavissa että kutsu epäonnistuu,  mutta yritettiin kuitenkin tehdä 
-            _ (jwt-varmistus/hae-public-key true mock-uid mock-https-issuer true vanhentunut paivitys-intervalli-min)
-            haettu-jalkeen (-> @vanhentunut :fetched-at)
-            virhe (last @timbre-log-historia)]
+            _ (jwt-varmistus/hae-public-key paivita? mock-uid mock-https-issuer PEM? vanhentunut paivitys-intervalli-min kehitysmoodi?)
+            haettu-jalkeen (-> @vanhentunut :fetched-at)]
 
         ;; Tarkista että cachen päivitysfunktio toimii, vanhentunut pitäisi palauttaa true 
         (is (true? (jwt-varmistus/public-key-vanhentunut? vanhentunut jwt-varmistus/+public-key-cache-paivitys-min+)))
@@ -413,7 +506,7 @@
         ;; Fetched pitäisi olla saman arvoinen luku tässä tapauksessa 
         (is (= haettu-ennen haettu-jalkeen))
         ;; Vahvista että virhe tapahtui
-        (is (str/includes? virhe "[JWT-ERROR] Public avaimen päivitys epäonnistui"))))
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Public avaimen päivitys epäonnistui")))))
 
 
     (testing "Tokenin dekoodaus toimii (CRITICAL)"
@@ -454,46 +547,39 @@
       (is (= (get tunnistetiedot-muunnettuna "email_verified") "false")))
 
 
-    (testing "Pääsyä ei estetä, public avain puuttuu (suora kutsu)"
+    (testing "Pääsyä ei estetä, public avain puuttuu (suora kutsu) (CRITICAL)"
       (nollaa-todennuksen-cache)
       (let [kehitysmoodi? false
             public-key-url nil
-            vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet x-iam-accesstoken x-iam-data kehitysmoodi? public-key-url)
-            virhe (last @timbre-log-historia)]
+            vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet x-iam-accesstoken x-iam-data kehitysmoodi? public-key-url)]
         (is (= (get vahvistetut-tunnustiedot "custom:rooli") mock-roolit))
-        (is (str/includes? virhe "[JWT-ERROR] Authentikointia ei voida tehdä"))))
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointia ei voida tehdä")))))
 
 
-    (testing "Authentikointi toimii (suora kutsu)"
+    (testing "Authentikointi toimii (suora kutsu) (CRITICAL)"
       (nollaa-todennuksen-cache)
       (let [kehitysmoodi? true
             public-key [accesstoken-public-key iam-data-public-key]
-            vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet x-iam-accesstoken x-iam-data kehitysmoodi? public-key)
-            virhe (last @timbre-log-historia)]
+            vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet x-iam-accesstoken x-iam-data kehitysmoodi? public-key)]
         (is (= (get vahvistetut-tunnustiedot "custom:rooli") mock-roolit))
-        (is (str/includes? virhe "Todennettiin onnistuneesti"))))
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennettiin onnistuneesti")))))
+
+    
+    ;; TODO , blokkaus ei ole vielä käytössä
+    ;; Enabloi vasta sitten kun on
+    #_(testing "Authentikointi estää pääsyn (suora kutsu), accesstoken puuttuu (CRITICAL)"
+      (nollaa-todennuksen-cache)
+      (let [kehitysmoodi? true
+            public-key [accesstoken-public-key iam-data-public-key]
+            vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet nil x-iam-data kehitysmoodi? public-key)]
+        (is (= (get vahvistetut-tunnustiedot "custom:rooli") "failed"))
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointi ei onnistunut: JWT Token puuttui kokonaan")))))
 
 
-    ;; TODO 
-    ;; Tämä päälle vasta sitten kun väännetään käyttäjien esto päälle 
-    ;; Aluksi mergetään ilman, joten tämä testi ei  tule menemään läpi vielä  
-    #_(testing "Pääsy Harjaan estetään, signature ei täsmää"
-        (nollaa-todennuksen-cache)
-        (let [kehitysmoodi? true
-              public-key [accesstoken-public-key iam-data-public-key]
-            ;; Injectaa tokeniin eri expiration date
-              fn-encode (fn [s]
-                          (-> s cheshire/encode  (.getBytes "UTF-8")
-                            Base64/encodeBase64 (String. "UTF-8")))
-              fake-jwt (fn [decoded]
-                         (let [{:keys [header payload signature]} decoded]
-                           (str (fn-encode header) "." (fn-encode payload) "." signature)))
-              inject_payload (-> x-iam-accesstoken (jwt-varmistus/dekoodaa-token))
-              new-payload (assoc (:payload inject_payload) :exp "1798652411")
-              injected-token (fake-jwt (assoc inject_payload :payload new-payload))
-
-            ;; Tee kutsu muokatulla tokenilla, pitäisi epäonnistua, ja tulla rooliksi failed
-              vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet injected-token x-iam-data kehitysmoodi? public-key)]
-          (is (= (get vahvistetut-tunnustiedot "custom:rooli") "failed"))))
-    ;;
-    ))
+    #_(testing "Authentikointi estää pääsyn (suora kutsu), iam-data puuttuu (CRITICAL)"
+      (nollaa-todennuksen-cache)
+      (let [kehitysmoodi? true
+            public-key [accesstoken-public-key iam-data-public-key]
+            vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet x-iam-accesstoken nil kehitysmoodi? public-key)]
+        (is (= (get vahvistetut-tunnustiedot "custom:rooli") "failed"))
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointi ei onnistunut: JWT Token puuttui kokonaan")))))))

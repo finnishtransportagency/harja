@@ -233,7 +233,8 @@
      - Todennusta on voitu yrittää manuaalisesti kutsua invalid tokenilla
    
    'Public avaimen päivitys epäonnistui'
-     - Public avaimen GET kutsussa meni jotain pieleen, katso logeja, 
+     - Public avaimen GET kutsussa meni jotain pieleen, katso logeja 
+     - Public avain ympäristömuuttuja voi sisältää väärän tai invalidin linkin
      - Mahdollisesti välittäjälle yhteyttä, jos heidän päässä vika (GET kutsut tehdään Cognitoon)
      - Ei voida päästää Harjaan, koska jos hyökkääjä ottaa payloadista esim issuerin pois, virhe triggeröityy"
 
@@ -259,9 +260,8 @@
   ;; Authentikointi ei mennyt läpi, poista kaikki oikeudet käyttäjältä
   ;; TODO.. Ei laiteta blokkausta vielä päälle tuotantoon, mergetään toistaiseksi näin.
   ;;
-  ; (-> (tunnistetiedot iam-data)
-  ;     "failed" uudelleenohjaa "Authentikaatio epäonnistui" näkymään
-  ;  (assoc "custom:rooli" "failed"))
+  ; "failed" uudelleenohjaa "Authentikaatio epäonnistui" näkymään
+  ; (-> (tunnistetiedot iam-data) (assoc "custom:rooli" "failed")) 
 
   ;; TODO.. 
   ;; Palauta tunnistetiedot toistaiseksi, ja jatka todennusta normaalisti, vaikka virhe tapahtui
