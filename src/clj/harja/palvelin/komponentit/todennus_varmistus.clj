@@ -132,15 +132,6 @@
      :signature signature}))
 
 
-(defn- encode-64json [s]
-  (->
-    s
-    cheshire/encode
-    (.getBytes "UTF-8")
-    Base64/encodeBase64
-    (String. "UTF-8")))
-
-
 (defn varmista-jwt-tokenit
   "Varmistaa authentikoinnin oikellisuuden Cogniton antamista tokeneista
    Tokenit mitkä vahvistetaan: x-iam-accesstoken (tokenin metadata), x-iam-data (käyttäjän tiedot&roolit)
@@ -189,25 +180,11 @@
             (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature))
             (println "\n iam-data-algoritmi: " iam-data-algoritmi)
             (println "\n iam-data-public-key: " iam-data-public-key))
-        
-        ;; -------------------------------
-        ;; TEST: Vaihdettu expiration date
-        ;; Pitäisi tulla message is manipulated 
-        fn-encode (fn [decoded]
-                    (let [{:keys [header payload signature]} decoded]
-                      (str
-                        (encode-64json header) "."
-                        (encode-64json payload) "."
-                        signature)))
-        inject_payload (-> accesstoken dekoodaa-token)
-        new-payload (assoc (:payload inject_payload) :exp "1798652411")
-        injected-token (fn-encode (assoc inject_payload :payload new-payload)) 
-        ;; ------------------------------------------------------------------------
 
         ;; Verifioi tokenit kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
         ;; Signaturen verifiointi tulee suoraan javalta (java.security.Signature), niitä ei clojurena ole suoraa näkyvillä
         _ (jwt/unsign iam-data iam-data-public-key {:alg iam-data-algoritmi}) ;; Sisältää käyttäjän tietoja & Roolit
-        _ (jwt/unsign injected-token accesstoken-public-key {:alg accesstoken-algoritmi}) ;; Sisältää mm. user poolin url, client idt
+        _ (jwt/unsign accesstoken accesstoken-public-key {:alg accesstoken-algoritmi}) ;; Sisältää mm. user poolin url, client idt
         _ (log/info 
             ;; TODO, logitusta tuotantoon jotta nähdään toimivuus, tämän voi myöhemmin poistaa, mergetään toistaiseksi näin
             "Todennettiin onnistuneesti (JWT): "
