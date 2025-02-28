@@ -306,8 +306,8 @@
 (defn koka->kayttajatiedot
   ([db headerit oikeudet kehitysmoodi?]
    (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? nil))
-  ([db headerit oikeudet kehitysmoodi? roolit-jwt-signature]
-   (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? (:public-key-url roolit-jwt-signature))
+  ([db headerit oikeudet kehitysmoodi? todennus-varmistus]
+   (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? (:public-key-url todennus-varmistus))
          oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
      (try
        (get (swap! kayttajatiedot-cache-atom #(cache/through
@@ -326,7 +326,7 @@
      req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
 (defrecord HttpTodennus 
-  [oikeudet roolit-jwt-signature]
+  [oikeudet todennus-varmistus]
   component/Lifecycle
   (start [this]
     (log/info "Todennetaan HTTP käyttäjä KOKA headereista.")
@@ -342,7 +342,7 @@
         (do
           (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan: " headerit))
           (throw+ todennusvirhe))
-        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? roolit-jwt-signature)] 
+        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? todennus-varmistus)] 
           (assoc req :kayttaja kayttajatiedot)
           (do
             (log/warn (str
@@ -366,8 +366,8 @@
 (defn http-todennus
   ([] (http-todennus nil nil))
   ([oikeudet] (http-todennus oikeudet nil))
-  ([oikeudet roolit-jwt-signature]
-   (->HttpTodennus oikeudet roolit-jwt-signature)))
+  ([oikeudet todennus-varmistus]
+   (->HttpTodennus oikeudet todennus-varmistus)))
 
 (defn feikki-http-todennus [kayttaja]
   (->FeikkiHttpTodennus kayttaja))

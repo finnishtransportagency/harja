@@ -187,17 +187,25 @@
 
 
 (defn- authentikointi-epaonnistui
-  "Käsitellään virhe, ohjaa käyttäjän 'Ei käyttöoikeutta Harjaan.'- näkymään
-   - Yleensä johtuu järjestelmävirheestä, joko Cognitossa, tai muualla
-   - On mahdollista, että payloadia sorkittu (vaatii toimenpiteitä), tutki mitä logeissa lukee 
+  "Käsitellään virhe, ohjaa 'Ei käyttöoikeutta' näkymään
+   
+   - Pääsääntöisesti olemassa kirjautumistietojen eheyden tarkistukseen 
+   - Virheet johtuvat yleensä järjestelmävirheestä, joko Cognitossa, tai muualla järjestelmissä
+   - Hyvin epätodennäköistä, mutta mahdollista, että payloadia sorkittu ja tehty hyökkäysyritys -> tutki mitä logeissa lukee 
+
+   - Tokenit kulkee AWS(Välittäjä) backendistä Harja backendiin, se että niitä pääsee sorkkimaan, pitää mennä monta asiaa pieleen 
+   - JWT ei taida Harjassa olla frontissa ikinä näkyvillä, ei edes enkoodattuna, liikkuvat frontissa luultavasti encrypted AWS session cookiena
+     (? fact check ?)  
    
    Mahdollisia syitä:
+
    'Message seems manipulated': 
      - Public avain voi olla väärin vaikka yritettiin hakea uusi (Ota Harjan kirjautumisen välittäjälle yhteyttä)
+     - Voi olla että kirjautumisen välittäjän Cognito juntturassa, katso mitä logissa lukee 
    
    'Token is expired'
-     - Token mennyt vanhaksi, kestää yleensä noin 10 min, tätä ei pitäisi näkyä (välittäjälle yhteyttä)
-     - Käyttäjän kirjautuminen on cachessa ainakin vartin, jonka jälkeen todennuksen pitäisi päivittää uusi token
+     - Token mennyt vanhaksi, tätä ei pitäisi ikinä näkyä (välittäjälle yhteyttä)
+     - Käyttäjän kirjautuminen on Harjan cachessa ainakin vartin, jonka jälkeen Cogniton pitäisi antaa uusi token automaattisesti
    
    'Audience does not match'
      - Audience, eli järjestelmän tunnus mille token annettu, ei jostain syystä täsmää (välittäjälle yhteyttä)
@@ -209,22 +217,19 @@
      - Tokenin välittäjä ei jostain syystä täsmää (taas, välittäjälle yhteyttä)
    
    'x-iam-data ei sisältänyt payloadia'
-     - Itse selitteinen, sama homma, välittäjältä pitäisi tulla aina payload
-       Todennusta on voitu yrittää manuaalisesti kutsua väärin
+     - Itse selitteinen, ei pitäisi näkyä ikinä, välittäjältä pitäisi tulla aina payload, ole heille yhteydessä
+     - Todennusta on voitu yrittää manuaalisesti kutsua invalid tokenilla
    
    'JWT Token puuttui kokonaan'
-     - Jompi kumpi token puuttui kokonaan, kutsu on korruptoitunut, tai todennusta yritetty manuaalisesti kutsua väärin
+     - Logeissa lukee kumpi token puuttuu, kutsu mahdollisesti korruptoitunut 
+     - Todennusta on voitu yrittää manuaalisesti kutsua invalid tokenilla
    
    'Public avaimen päivitys epäonnistui'
-     - Public avaimen GET kutsussa meni jotain pieleen, logille heitetty virhe
-       Ei voida päästää Harjaan, koska jos payloadista ottaa esim issuerin pois, tämä triggeröityy
-       Välittäjälle yhteyttä"
+     - Public avaimen GET kutsussa meni jotain pieleen, katso logeja, 
+     - Mahdollisesti välittäjälle yhteyttä, jos heidän päässä vika (GET kutsut tehdään Cognitoon)
+     - Ei voida päästää Harjaan, koska jos hyökkääjä ottaa payloadista esim issuerin pois, virhe triggeröityy"
 
   [e iam-data accesstoken]
-  
-  ;; TILANNE, joka ei johdu käyttäjistä, jos varmistus pitää ottaa pois päältä:
-  ;;    1. Vaihda tämä false -> tee-jwt-signaturen-varmistus?
-  ;;    2. Build and Deploy
 
   ;; 'JWT-ERROR' Laukaisee slack-hälytyksen, nämä halutaan tutkia aina 
   (log/error (str "[JWT-ERROR] Authentikointi ei onnistunut: " (.getMessage e)))
@@ -238,16 +243,21 @@
   (log/error (str "Accesstoken header: " (-> accesstoken dekoodaa-token :header)))
   (log/error (str "Accesstoken payload: " (-> accesstoken dekoodaa-token :payload)))
 
+  ;; Tämä näkyy slack-hälytyksen mukana suorana ohjeena, kun menet hälytyksen cloudwatch linkkiin  
+  ;; Halutaan suora ohjeistus sekä toiminnallisuus saada varmistus nopeasti kiinni 
+  ;; Kun varmistuksen laittaa kiinni, käyttäjät todennetaan normaalisti Harjaan, mutta ilman tokenin varmistusta 
+  (log/error "HÄTÄ FIX: Jos käyttäjät jää ilman hyvää syytä ulos, aseta TODENNUS_VARMISTUS_PAALLA false -> depoly configs [infra]")
+
   ;; Authentikointi ei mennyt läpi, poista kaikki oikeudet käyttäjältä
-  ;; TODO.. Ei laiteta tätä vielä päälle tuotantoon, mergetään toistaiseksi näin.
+  ;; TODO.. Ei laiteta blokkausta vielä päälle tuotantoon, mergetään toistaiseksi näin.
   ;;
   ; (-> (tunnistetiedot iam-data)
   ;     "failed" uudelleenohjaa "Authentikaatio epäonnistui" näkymään
   ;  (assoc "custom:rooli" "failed"))
 
   ;; TODO.. 
-  ;; Palauta tunnistetiedot toistaiseksi, ja jatka authentikointia normaalisti, vaikka virhe tapahtui
-  ;; Blokkaa vasta sitten kun todettu tuotannossa toimivaksi
+  ;; Palauta tunnistetiedot toistaiseksi, ja jatka todennusta normaalisti, vaikka virhe tapahtui
+  ;; Blokkaus päälle vasta sitten kun tämä on todettu tuotannossa toimivaksi
   (tunnistetiedot iam-data))
 
 

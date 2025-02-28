@@ -214,7 +214,8 @@
   (log/info "Asetettiin clojure.async thread-poolin koko: " (Long/getLong "clojure.core.async.pool-size")))
 
 (defn luo-jarjestelma [asetukset]
-  (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi roolit-jwt-signature sahke-headerit]} asetukset]
+  (let [{:keys [tietokanta tietokanta-replica http-palvelin 
+                kehitysmoodi todennus-varmistus sahke-headerit]} asetukset]
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
       :db (tietokanta/luo-tietokanta (assoc tietokanta
@@ -231,10 +232,10 @@
                     kehitysmoodi)
 
       :todennus (component/using
-                  (todennus/http-todennus sahke-headerit roolit-jwt-signature)
+                  (todennus/http-todennus sahke-headerit todennus-varmistus)
                   [:db])
       :http-palvelin (component/using
-                       (http-palvelin/luo-http-palvelin http-palvelin kehitysmoodi roolit-jwt-signature)
+                       (http-palvelin/luo-http-palvelin http-palvelin kehitysmoodi todennus-varmistus)
                        [:todennus :metriikka :db])
       ;; FIXME: Tuck-remoting otettu toistaiseksi pois testikäytöstä kokonaan, koska se ei toimi kunnolla
       #_#_:tuck-remoting (component/using

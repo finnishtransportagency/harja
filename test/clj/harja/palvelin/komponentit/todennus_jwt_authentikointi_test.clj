@@ -1,4 +1,6 @@
 (ns harja.palvelin.komponentit.todennus-jwt-authentikointi-test
+  "Todennuksen JWT signaturen testit (Ei tee GET kutsuja ulos)
+   Simuloi kuinka Tuotannossa saadaan tokenit, varmistaen niiden signaturen käyttäjän tullessa Harjaan"
   (:require [buddy.sign.jwt :as jwt]
             [clojure.core.cache :as cache]
             [clj-time.core :as time]
@@ -25,7 +27,6 @@
   {:appenders
    {:memory {:enabled? true
              :fn (fn [{:keys [msg_]}]
-                   ;; Tallenna viimeiset logitukset atomiin 
                    (swap! timbre-log-historia conj (force msg_)))}}})
 
 (defn jarjestelma-fixture [testit]
@@ -391,7 +392,7 @@
         (is (= ec-public-key ec-public-key-PEM-converted))))
 
 
-    (testing "Public avainten päivitys toimii, päästä käyttäjä sisään GET epäonnistuessa (CRITICAL)"
+    (testing "Public avainten päivitys toimii (CRITICAL)"
       (let [avaimen-tunniste (gensym)
             ajan-tasalla (atom {:key avaimen-tunniste :fetched-at (System/currentTimeMillis)})
             menneisyydessa-minuuttia 200

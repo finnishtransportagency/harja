@@ -351,10 +351,10 @@
    (wrap-with-common-wrappers handler true nil))
   ([handler kehitysmoodi]
    (wrap-with-common-wrappers handler kehitysmoodi nil))
-  ([handler kehitysmoodi roolit-jwt-signature]
+  ([handler kehitysmoodi todennus-varmistus]
    (-> handler
      (cookies/wrap-cookies)
-     (wrap-prosessoi-headerit kehitysmoodi (:public-key-url roolit-jwt-signature)))))
+     (wrap-prosessoi-headerit kehitysmoodi (:public-key-url todennus-varmistus)))))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true
@@ -369,7 +369,7 @@
       kutsu)))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
-                         http-server kehitysmoodi roolit-jwt-signature mittarit]
+                         http-server kehitysmoodi todennus-varmistus mittarit]
   component/Lifecycle
   (start [{metriikka :metriikka db :db :as this}]
     (when metriikka
@@ -434,7 +434,7 @@
                       :aktiiviset_pyynnot dec
                       :pyyntoja_palveltu inc))))
                       kehitysmoodi
-                      roolit-jwt-signature)
+                      todennus-varmistus)
 
             {:port portti
              :thread (or (:threads asetukset) 8)
@@ -509,14 +509,14 @@
 (defn luo-http-palvelin
   ([asetukset kehitysmoodi]
    (luo-http-palvelin asetukset kehitysmoodi nil))
-  ([asetukset kehitysmoodi roolit-jwt-signature]
+  ([asetukset kehitysmoodi todennus-varmistus]
    (->HttpPalvelin
     asetukset
     (atom [])
     (atom [])
     (atom nil)
     kehitysmoodi
-    roolit-jwt-signature
+    todennus-varmistus
     (metriikka/luo-mittari-ref mittarit-alkuarvo))))
 
 (defn julkaise-reitti
