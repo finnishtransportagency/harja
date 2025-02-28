@@ -229,8 +229,7 @@
      - Todennusta on voitu yrittää manuaalisesti kutsua invalid tokenilla
    
    'JWT Token puuttui kokonaan'
-     - Logeissa lukee kumpi token puuttuu, kutsu mahdollisesti korruptoitunut 
-     - Todennusta on voitu yrittää manuaalisesti kutsua invalid tokenilla
+     - Todennusta on yritetty manuaalisesti kutsua invalid tokenilla
    
    'Public avaimen päivitys epäonnistui'
      - Public avaimen GET kutsussa meni jotain pieleen, katso logeja 
@@ -297,8 +296,6 @@
      (and accesstoken iam-data)
      ;; yrita-uudelleen? defaulttina aina false
      (vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url false)
-     ;; Näin ei pitäisi käydä, olemassaolo tarkistetaan todenna-pyynto 
-     ;; Jos tänne päätyy nillinä token, jotain on huonosti. Laukaisee slack-hälytyksen.
      (authentikointi-epaonnistui (Exception. "JWT Token puuttui kokonaan! Molemmat x-iam-accesstoken sekä x-iam-data vaaditaan!") iam-data accesstoken)))
   ([accesstoken iam-data kehitysmoodi? public-key-url yrita-uudelleen?]
    (let [cache-key
