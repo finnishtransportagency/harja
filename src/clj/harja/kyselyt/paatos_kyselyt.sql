@@ -56,10 +56,10 @@ WHERE id = :paatos-id
 
 -- name: tee-tavoitehinnan-ylitys-paatos<!
 -- Tee tavoitehinnan ylitys päätös
-INSERT INTO paatos_tavoitehinta_ylitys (urakkaid, hoitokauden_alkuvuosi, versio, tavoitehinta, toteutuneet_kustannukset,
+INSERT INTO paatos_tavoitehinta_ylitys (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, toteutuneet_kustannukset,
                                         ylityksen_maara, tilaajan_prosentti, urakoitsijan_prosentti, tilaaja_maksaa,
                                         urakoitsija_maksaa, kulu_id, luoja, luotu)
-VALUES (:urakkaid, :hoitokauden_alkuvuosi, :versio, :tavoitehinta, :toteutuneet_kustannukset, :ylityksen_maara,
+VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta, :toteutuneet_kustannukset, :ylityksen_maara,
         :tilaajan_prosentti, :urakoitsijan_prosentti, :tilaaja_maksaa, :urakoitsija_maksaa, :kulu_id, :luoja,
         NOW());
 

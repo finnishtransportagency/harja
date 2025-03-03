@@ -73,12 +73,11 @@
    :kulu_id kulu-id
    :luoja luoja})
 
-(defn tavoitehinnan-ylityspaatos [urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+(defn tavoitehinnan-ylityspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                                   ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                                   urakoitsija-maksaa siirto kulu-id luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :versio versio
    :tavoitehinta tavoitehinta
    :toteutuneet_kustannukset toteutuneet-kustannukset
    :ylityksen_maara ylityksen-maara
@@ -184,17 +183,16 @@
   (is (= tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti paatos)))
   (is (= luoja (:luoja paatos))))
 
-(defn testaa-tavoitehinnan-ylityspaatos [paatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+(defn testaa-tavoitehinnan-ylityspaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                                          ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                                          urakoitsija-maksaa siirto kulu-id luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
-  (is (= versio (:versio paatos)))
   (is (= tavoitehinta (:tavoitehinta paatos)))
   (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset paatos)))
   (is (= ylityksen-maara (:ylityksen_maara paatos)))
-  (is (= tilaajan-prosentti (:tilaajan_prosentti paatos)))
-  (is (= urakoitsijan-prosentti (:urakoitsijan_prosentti paatos)))
+  (is (= (bigint tilaajan-prosentti) (bigint (:tilaajan_prosentti paatos))))
+  (is (= (bigint urakoitsijan-prosentti) (bigint (:urakoitsijan_prosentti paatos))))
   (is (= tilaaja-maksaa (:tilaaja_maksaa paatos)))
   (is (= urakoitsija-maksaa (:urakoitsija_maksaa paatos)))
   #_(is (= siirto (:siirto paatos))) ;; Siirron rooli vähän epäselvä, ei vielä varmisteta
@@ -659,42 +657,42 @@
 (deftest kysely-tavoitehinnan-ylitys-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        versio "A"
         tavoitehinta 5M
         toteutuneet-kustannukset 5M
         ylityksen-maara 10M
-        tilaajan-prosentti 30 ;; Versio A 30/70, B 50/50, V 25/75
-        urakoitsijan-prosentti 70
+        tilaajan-prosentti (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit)
+        urakoitsijan-prosentti (- 100 (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit))
         tilaaja-maksaa 150M
         urakoitsija-maksaa 50M
         siirto 50M
         kulu-id 1
-        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id kayttajaid)
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
-    (testaa-tavoitehinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+    (testaa-tavoitehinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
       ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa urakoitsija-maksaa siirto kulu-id kayttajaid)))
 
 (deftest rajapinta-tavoitehinnan-ylitys-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        versio "A"
         tavoitehinta 5M
         toteutuneet-kustannukset 5M
         ylityksen-maara 10M
-        tilaajan-prosentti 30 ;; Versio A 30/70, B 50/50, V 25/75
-        urakoitsijan-prosentti 70
+        tilaajan-prosentti (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit)
+        urakoitsijan-prosentti (- 100 (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit))
         tilaaja-maksaa 150M
         urakoitsija-maksaa 50M
         siirto 50M
         kulu-id nil
-        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id kayttajaid)
         vastaus (try
@@ -710,19 +708,19 @@
 (deftest kysely-tavoitehinnan-ylityspaatoksen-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        versio "A"
         tavoitehinta 5M
         toteutuneet-kustannukset 5M
         ylityksen-maara 10M
-        tilaajan-prosentti 30 ;; Versio A 30/70, B 50/50, V 25/75
-        urakoitsijan-prosentti 70
+        tilaajan-prosentti (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit)
+        urakoitsijan-prosentti (- 100 (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit))
         tilaaja-maksaa 150M
         urakoitsija-maksaa 50M
         siirto 50M
         kulu-id 1
-        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id kayttajaid)
         _ (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)
@@ -740,19 +738,19 @@
 (deftest rajapinta-tavoitehinnan-ylityspaatoksen-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        versio "A"
         tavoitehinta 5M
         toteutuneet-kustannukset 5M
         ylityksen-maara 10M
-        tilaajan-prosentti 30 ;; Versio A 30/70, B 50/50, V 25/75
-        urakoitsijan-prosentti 70
+        tilaajan-prosentti (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit)
+        urakoitsijan-prosentti (- 100 (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit))
         tilaaja-maksaa 150M
         urakoitsija-maksaa 50M
         siirto 50M
         kulu-id nil
-        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta toteutuneet-kustannukset
+        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id kayttajaid)
         ;; Ei odoteta vastausta, koska ehdot ei täyty

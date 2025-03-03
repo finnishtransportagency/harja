@@ -52,7 +52,6 @@ CREATE TABLE paatos_tavoitehinta_ylitys
     id                       SERIAL PRIMARY KEY,
     urakkaid                 INTEGER        NOT NULL,
     hoitokauden_alkuvuosi    INTEGER        NOT NULL,
-    versio                   VARCHAR(255)   NOT NULL, -- 1/2/3
     tavoitehinta             NUMERIC(10, 2) NOT NULL,
     toteutuneet_kustannukset NUMERIC(10, 2) NOT NULL,
     ylityksen_maara          NUMERIC(10, 2),

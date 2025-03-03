@@ -179,7 +179,6 @@
   "Tavoitehinnan ylityspäätöksen mäppi:
   {:urakkaid <urakkaid>
    :hoitokauden_alkuvuosi <hoitokauden-alkuvuosi>
-   :versio <versio>
    :tavoitehinta <eurot>
    :toteutuneet_kustannukset <eurot>
    :ylityksen_maara <eurot>
@@ -194,7 +193,7 @@
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos)  (:versio paatos) (:tavoitehinta paatos)
+        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:tavoitehinta paatos)
                             (:toteutuneet_kustannukset paatos) (:ylityksen_maara paatos) (:tilaajan_prosentti paatos)
                             (:urakoitsijan_prosentti paatos) (:tilaaja_maksaa paatos) (:urakoitsija_maksaa paatos)
                             (:urakoitsija_maksaa paatos) (:luoja paatos))
