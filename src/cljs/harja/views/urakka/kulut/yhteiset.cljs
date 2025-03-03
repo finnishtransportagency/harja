@@ -117,11 +117,11 @@
           [:<>
            (when (pos? (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys-paatos))
              [:div.rivi-sisempi
-              [:span "Urakoitsija maksaa " (fmt/euro-opt (:urakoitsija tavoitehhinnan-ylitys-prosentit)) "%"]
+              [:span "Urakoitsija maksaa " (fmt/euro-opt false (:urakoitsija tavoitehhinnan-ylitys-prosentit)) "%"]
               [:span (fmt/euro-opt (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys-paatos))]])
            (when (pos? (::valikatselmus/tilaajan-maksu tavoitehinnan-ylitys-paatos))
              [:div.rivi-sisempi
-              [:span "Tilaaja maksaa " (fmt/euro-opt (:tilaaja tavoitehhinnan-ylitys-prosentit)) "%"]
+              [:span "Tilaaja maksaa " (fmt/euro-opt false (:tilaaja tavoitehhinnan-ylitys-prosentit)) "%"]
               [:span (fmt/euro-opt (::valikatselmus/tilaajan-maksu tavoitehinnan-ylitys-paatos))]])])])
 
      (when kattohinta-ylitetty?
@@ -134,7 +134,7 @@
           [:<>
            (when (pos? (::valikatselmus/urakoitsijan-maksu kattohinnan-ylitys-paatos))
              [:div.rivi-sisempi
-              [:span "Urakoitsija maksaa " (fmt/euro-opt (:urakoitsija kattohinnan-ylitys-prosentit)) "%"]
+              [:span "Urakoitsija maksaa " (fmt/euro-opt false (:urakoitsija kattohinnan-ylitys-prosentit)) "%"]
               [:span (fmt/euro-opt (::valikatselmus/urakoitsijan-maksu kattohinnan-ylitys-paatos))]])
            (when (pos? (::valikatselmus/siirto kattohinnan-ylitys-paatos))
              [:div.rivi-sisempi
