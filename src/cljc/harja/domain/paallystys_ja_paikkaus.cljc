@@ -6,6 +6,8 @@
   "Kaikki päällystetyypit POT-lomake Excelistä"
   [{:nimi "Betoni" :lyhenne "BET" :koodi 1 :api-arvo "betoni"}
    {:nimi "Kivi" :lyhenne "KIVI" :koodi 2 :api-arvo "kivi"}
+   {:nimi "Teräs" :lyhenne "TERÄS" :koodi 3 :api-arvo "teräs"}
+   {:nimi "Puu" :lyhenne "PUU" :koodi 4 :api-arvo "puu"}
    {:nimi "Avoin asfaltti" :lyhenne "AA" :koodi 11 :api-arvo "avoin asfaltti"}
    {:nimi "Asfalttibetoni" :lyhenne "AB" :koodi 12 :api-arvo "asfalttibetoni"}
    {:nimi "Epäjatkuva asfaltti" :lyhenne "EA" :koodi 13 :api-arvo "epäjatkuva asfaltti"}
@@ -18,7 +20,13 @@
    {:nimi "Pehmeä asfalttibetoni" :lyhenne "PAB-O" :koodi 23 :api-arvo "pehmeä asfalttibetoni (o)"}
    {:nimi "Sirotepintaus" :lyhenne "SIP" :koodi 24 :api-arvo "sirotepintaus"}
    {:nimi "Soratien pintaus" :lyhenne "SOP" :koodi 31 :api-arvo "soratien pintaus"}
-   {:nimi "Sora" :lyhenne "SORA" :koodi 41 :api-arvo "sora"}])
+   {:nimi "Sora" :lyhenne "SORA" :koodi 41 :api-arvo "sora"}
+   {:nimi "EAB, asfalttibetoni" :lyhenne "EAB" :koodi 566 :api-arvo "EAB, asfalttibetoni"}
+   {:nimi "AB tiivis" :lyhenne "AB-tiivis" :koodi 567 :api-arvo "AB tiivis"}
+   {:nimi "EABK, Kantavan kerroksen EAB" :lyhenne "EABK" :koodi 568 :api-arvo "EABK, Kantavan kerroksen EAB"}
+   {:nimi "EPAB-B, Pehmeät asfalttibetonit" :lyhenne "EABK" :koodi 569 :api-arvo "EPAB-B, Pehmeät asfalttibetonit"}
+   {:nimi "EPAB-V, Pehmeät asfalttibetonit" :lyhenne "EABK" :koodi 570 :api-arvo "EPAB-V, Pehmeät asfalttibetonit"}
+   {:nimi "Komposiittiasfaltti" :lyhenne "EABK" :koodi 570 :api-arvo "komposiittiasfaltti"}])
 
 (def +paallystetyypit-ja-nil+
   (conj +paallystetyypit+ {:nimi "Ei päällystetyyppiä" :lyhenne "Ei päällystetyyppiä" :koodi nil :api-arvo nil}))
