@@ -135,7 +135,6 @@
         ;; Vahvistetaan että tokenien payloadit on eheät
         vahvistetut-tunnustiedot (if (and 
                                        iam-data
-                                       accesstoken
                                        todennus-varmistus-paalla?)
                                    (varmistus/vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url)
                                    (varmistus/tunnistetiedot iam-data))
