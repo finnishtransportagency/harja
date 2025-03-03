@@ -32,8 +32,7 @@
                              (tiedot/voi-tallentaa? lomake-valinnat))]
 
         (if tallennus-kaynnissa?
-          [:div.ajax-loader-valistys
-           [ajax-loader-pieni "Haetaan tietoja..."]]
+          [ajax-loader-pieni "Haetaan tietoja..."]
 
           [:div.kustannukset
            ;; Lomake
@@ -42,7 +41,7 @@
 
            ;; Pääotsikko
            [:h2.header-yhteiset "Kustannukset"]
-[debug/debug app]
+           [debug/debug app]
            [:div.kalenterivalinta
             ;; Vuosi valinta
             [valinnat/vuosi

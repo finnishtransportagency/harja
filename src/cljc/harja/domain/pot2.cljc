@@ -232,7 +232,8 @@
 
   ["pot2_paallystekerros" ::pot2-paallystekerros]
   ["pot2_alusta" ::pot2-alusta]
-  ["pot2_mk_massatyyppi" ::pot2-mk-massatyyppi]
+  ["pot2_mk_massatyyppi" ::pot2-mk-massatyyppi
+   {"poistettu" ::poistettu?}]
   ["pot2_mk_mursketyyppi" ::pot2-mk-mursketyyppi]
   ["pot2_mk_runkoainetyyppi" ::pot2-mk-runkoainetyyppi]
   ["pot2_mk_sideainetyyppi" ::pot2-mk-sideainetyyppi]

@@ -47,8 +47,7 @@
 
          ;; Jos haku tai tallennus käynnissä, näytä hyrrä
          (if (or tallennus-kesken? haku-kaynnissa?)
-           [:div.ajax-loader-valistys
-            [ajax-loader-pieni (str "Haetaan tietoja...")]]
+           [ajax-loader-pieni "Haetaan tietoja..."]
 
            [grid/grid
             {:tyhja "Ei rahavarauksia."

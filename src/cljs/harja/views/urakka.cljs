@@ -316,5 +316,4 @@
          ^{:key "valikatselmus"}
          [valikatselmus-nakyma/valikatselmus ur])]
 
-      [:div.ajax-loader-valistys
-       [ajax-loader "Ladataan urakan tietoja..."]])))
+      [ajax-loader "Ladataan urakan tietoja..."])))
