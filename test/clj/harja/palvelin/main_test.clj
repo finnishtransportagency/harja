@@ -165,6 +165,7 @@
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
     :paallystysilmoitukset-hallinta
+    :tiemerkinnan-kustannuskirjaukset
     :urakkatilanne
     :api-talvihoitoreitit
     :talvihoitoreitit
