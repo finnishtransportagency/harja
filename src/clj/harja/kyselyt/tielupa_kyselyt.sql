@@ -54,7 +54,7 @@ WHERE (:hakija-nimi::TEXT IS NULL OR upper(tl."hakija-nimi") ilike upper(:hakija
                       CASE
                           WHEN (s.tie IS NOT NULL AND s.aosa IS NOT NULL AND s.aet IS NOT NULL AND s.losa IS NOT NULL AND s.let IS NOT NULL)
                               THEN ST_UNION(ARRAY(SELECT *
-                                    FROM tierekisteriosoitteelle_viiva(
+                                    FROM tieosoitteelle_geometria(
                                             CAST(s.tie AS INTEGER),
                                             CAST(s.aosa AS INTEGER),
                                             CAST(s.aet AS INTEGER),

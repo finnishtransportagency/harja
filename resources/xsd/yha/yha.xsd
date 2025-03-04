@@ -552,7 +552,7 @@
                         <xs:enumeration value="4">
                             <xs:annotation>
                                 <xs:documentation>
-                                    Masuunikuomajauhe
+                                    Masuunikuonajauhe
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:enumeration>
@@ -735,6 +735,20 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
+            <xs:enumeration value="3">
+                <xs:annotation>
+                    <xs:documentation>
+                        teräs
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="4">
+                <xs:annotation>
+                    <xs:documentation>
+                        puu
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
             <xs:enumeration value="11">
                 <xs:annotation>
                     <xs:documentation>
@@ -826,10 +840,45 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
-            <xs:enumeration value="99">
+            <xs:enumeration value="566">
                 <xs:annotation>
                     <xs:documentation>
-                        ei tietoa
+                        EAB, asfalttibetoni
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="567">
+                <xs:annotation>
+                    <xs:documentation>
+                        AB tiivis
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="568">
+                <xs:annotation>
+                    <xs:documentation>
+                        EABK, Kantavan kerroksen EAB
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="569">
+                <xs:annotation>
+                    <xs:documentation>
+                        EPAB-B, Pehmeät asfalttibetonit
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="570">
+                <xs:annotation>
+                    <xs:documentation>
+                        EPAB-V, Pehmeät asfalttibetonit
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="571">
+                <xs:annotation>
+                    <xs:documentation>
+                        komposiittiasfaltti
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
@@ -978,11 +1027,6 @@
                     <xs:documentation>vauriopaikkaus</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
-            <xs:enumeration value="99">
-                <xs:annotation>
-                    <xs:documentation>ei tietoa</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
         </xs:restriction>
     </xs:simpleType>
 
@@ -1083,9 +1127,29 @@
                     <xs:documentation>Reunajyrsintä</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
-            <xs:enumeration value="99">
+            <xs:enumeration value="50">
                 <xs:annotation>
-                    <xs:documentation>ei tietoa</xs:documentation>
+                    <xs:documentation>PAB-B</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="51">
+                <xs:annotation>
+                    <xs:documentation>PAB-V</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="52">
+                <xs:annotation>
+                    <xs:documentation>UREM-TAS</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="53">
+                <xs:annotation>
+                    <xs:documentation>Muu stabilointi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="54">
+                <xs:annotation>
+                    <xs:documentation>Muu RP</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
         </xs:restriction>
@@ -1318,12 +1382,12 @@
             </xs:enumeration>
             <xs:enumeration value="26">
                 <xs:annotation>
-                    <xs:documentation>KF, Kalkkifilleri</xs:documentation>
+                    <xs:documentation>Muu erikoisbitumi</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
-            <xs:enumeration value="99">
+            <xs:enumeration value="27">
                 <xs:annotation>
-                    <xs:documentation>Ei tietoa</xs:documentation>
+                    <xs:documentation>Bitumia korvaava uusiomateriaali</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
         </xs:restriction>
@@ -1491,10 +1555,10 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
-            <xs:enumeration value="99">
+            <xs:enumeration value="24">
                 <xs:annotation>
                     <xs:documentation>
-                        Ei tietoa
+                        SIP, Sirotepintaus
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>

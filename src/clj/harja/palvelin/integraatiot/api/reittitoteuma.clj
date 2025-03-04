@@ -259,7 +259,7 @@ maksimi-linnuntien-etaisyys 200)
         (loop [tallennettujen-maara 0]
           (if (= tallennettujen-maara reittitoteumien-maara)
             (paivita-materiaalicachet! db urakka-id data)
-            (let [ [v _] (async/alts!! [reittipisteet-tallennettu-chan (async/timeout reittipisteet-timeout)])]
+            (let [[v _] (async/alts!! [reittipisteet-tallennettu-chan (async/timeout reittipisteet-timeout)])]
               (log/debug (format "Reittipisteet tallennettu! %s/%s" (inc tallennettujen-maara) reittitoteumien-maara))
               (cond
                 (true? v) (recur (inc tallennettujen-maara))
@@ -269,21 +269,27 @@ maksimi-linnuntien-etaisyys 200)
                              (format "Reittitoteumien tallennuksen seuranta lopetettu. %s/%s reittitoteumaa tallennettu."
                                tallennettujen-maara reittitoteumien-maara))
                 ;; Kanavasta palautuu nil, jos timeout on mennyt umpeen
-                :else (log/error "Reittipisteiden tallennuksessa kestänyt yli 10 minuuttia!")))))))
+                :else (log/error "Reittipisteiden tallennus antoi virheen, tai kestänyt yli 10 minuuttia. Kanava suljettu.")))))))
 
-    (when (:reittitoteuma data)
-      (let [jsonhash (konversio/string->md5 (pr-str (:reittitoteuma data)))]
-        (if (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in data [:reittitoteuma :toteuma :tunniste :id]))
-          (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma data) jsonhash
-            reittipisteet-tallennettu-chan)
-          (async/put! reittipisteet-tallennettu-chan true))))
+    (try
+      (when (:reittitoteuma data)
+        (let [jsonhash (konversio/string->md5 (pr-str (:reittitoteuma data)))]
+          (if (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in data [:reittitoteuma :toteuma :tunniste :id]))
+            (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma data) jsonhash
+              reittipisteet-tallennettu-chan)
+            (async/put! reittipisteet-tallennettu-chan true))))
 
-    (doseq [toteuma (:reittitoteumat data)]
-      (let [jsonhash (konversio/string->md5 (pr-str toteuma))]
-        (if (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in toteuma [:reittitoteuma :toteuma :tunniste :id]))
-          (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma toteuma) jsonhash
-            reittipisteet-tallennettu-chan)
-          (async/put! reittipisteet-tallennettu-chan true))))))
+      (doseq [toteuma (:reittitoteumat data)]
+        (let [jsonhash (konversio/string->md5 (pr-str toteuma))]
+          (if (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in toteuma [:reittitoteuma :toteuma :tunniste :id]))
+            (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma toteuma) jsonhash
+              reittipisteet-tallennettu-chan)
+            (async/put! reittipisteet-tallennettu-chan true))))
+      
+      ;; Sulje kanava heti jotta järjestelmä ei kiikun kaaku
+      (catch Exception e
+        (async/close! reittipisteet-tallennettu-chan)
+        (throw (Exception. (str "Epäonnistui: " (.getMessage e))))))))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]

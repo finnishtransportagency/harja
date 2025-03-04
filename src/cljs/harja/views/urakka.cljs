@@ -29,6 +29,7 @@
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
             [harja.views.kanavat.urakka.liikenne :as liikenne]
+            [harja.views.urakka.valikatselmus.valikatselmus-nakyma :as valikatselmus-nakyma]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
@@ -137,7 +138,10 @@
                        (oikeudet/urakat-paikkaukset id)
                        (= tyyppi :paallystys)
                        (= :mpu sopimustyyppi))
-    
+
+    :valikatselmus (and
+                     (oikeudet/urakat-kulut id) ;; TODO: Tarkista oikeudet. Ennen oli kulujen alla. Tarvitaanko nyt oma osio?
+                     (= tyyppi :teiden-hoito))
     :kustannukset (and
                     (oikeudet/urakat-paikkaukset id)
                     (= tyyppi :paallystys)
@@ -167,7 +171,8 @@
                                       (= :maarien-toteumat (nav/valittu-valilehti :toteumat))
                                       (= :suola (nav/valittu-valilehti :suunnittelu))
                                       (= :tehtavat (nav/valittu-valilehti :suunnittelu))
-                                      (= :pohjavesialueiden-suola (nav/valittu-valilehti :toteumat)))
+                                      (= :pohjavesialueiden-suola (nav/valittu-valilehti :toteumat))
+                                      (= :valikatselmus valittu-valilehti))
                             (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
                               (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
                             (when (or (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
@@ -314,7 +319,12 @@
        :paikkaukset-hoito
        (when (valilehti-mahdollinen? :paikkaukset-hoito ur)
          ^{:key "paikkaukset"}
-         [paikkaukset/paikkaukset ur])]
+         [paikkaukset/paikkaukset ur])
 
-      [:div.ajax-loader-valistys
-       [ajax-loader "Ladataan urakan tietoja..."]])))
+       "Välikatselmus"
+       :valikatselmus
+       (when (valilehti-mahdollinen? :valikatselmus ur)
+         ^{:key "valikatselmus"}
+         [valikatselmus-nakyma/valikatselmus ur])]
+
+      [ajax-loader "Ladataan urakan tietoja..."])))
