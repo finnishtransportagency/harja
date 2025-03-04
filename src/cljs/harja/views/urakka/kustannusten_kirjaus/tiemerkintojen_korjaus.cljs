@@ -1,44 +1,37 @@
 (ns harja.views.urakka.kustannusten-kirjaus.tiemerkintojen-korjaus
   (:require
+    [harja.tiedot.urakka.urakka :as tila]
     [harja.ui.komponentti :as komp]
     [harja.ui.grid :as grid]
     [harja.fmt :as fmt]
-    [harja.pvm :as pvm]
-    [cljs.core.async :refer [<!]]
-    [harja.tiedot.urakka.tiemerkkinnan-kustannusten-kirjaus :as tiedot])
-  (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+    [harja.tiedot.urakka.urakka :as tila]
+    [harja.tyokalut.tuck :as tuck-apurit]
+    [harja.ui.debug :as debug]
+    [tuck.core :refer [tuck]]
+    [harja.tiedot.urakka.tiemerkkinnan-kustannusten-kirjaus :as tiedot]))
 
-(defn reverse-range [start end]
-  (range start (dec end) -1))
-
-(defn tiemerkintojen-korjaus [urakka tiemerkintojen-kustannukset]
-  (println "urakka asd: " (:id urakka))
-  (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
-        urakan-loppuvuosi (pvm/vuosi (:loppupvm urakka))
-        alusta-tyhjat (mapv (fn [n m] {:id m :urakka (:id urakka) :kustannusvuosi n :kustannus 0.00 :pk1 0 :pk2 0 :pk3 0})
-                        (range urakan-alkuvuosi urakan-loppuvuosi) (reverse-range -1 (- urakan-alkuvuosi urakan-loppuvuosi)))
-        filteroi-vuodet (mapv #(:kustannusvuosi %) tiemerkintojen-kustannukset)
-        filteroidut-tyhjat-rivit (filter #(not (contains? (set filteroi-vuodet) (:kustannusvuosi %))) alusta-tyhjat)
-        paivitetyt-rivit (concat filteroidut-tyhjat-rivit tiemerkintojen-kustannukset)]
+(defn tiemerkintojen-korjaus* [e! app optiot]
+  (let [urakka (:urakka @tila/yleiset)]
     (komp/luo
       (komp/lippu tiedot/kustannusten-kirjaus-valilehti-nakyvissa?)
-      (fn []
+      (komp/sisaan #(e! (tiedot/->HaeKustannukset urakka)))
+      (fn [e! {:keys [kustannukset haku-kaynnissa?] :as app}]
         [:div
          [:h1 "Tiemerkintöjen korjaus"]
          [grid/grid
           {:otsikko "Kustannukset vuosittain "
-           :tyhja "Ei kustannuksia."
+           :tyhja "Ei kustannuksia"
+           :tunniste :kustannusvuosi
            :voi-lisata? false
            :voi-poistaa? (constantly false)
-           :rivi-jalkeen-fn (fn [urakat]
-                              [{:teksti "Yhteensä" :luokka "lihavoitu"}
-                               {:teksti "kustannukset" :luokka "lihavoitu" :tasaa :oikea}
-                               {:teksti "prosentti1" :luokka "lihavoitu" :tasaa :oikea}
-                               {:teksti "prosentti2" :luokka "lihavoitu" :tasaa :oikea}
-                               {:teksti "prosentti3" :luokka "lihavoitu" :tasaa :oikea}])
-           ;;TODO Tarkista oikeus muokata
-           :tallenna #(go (let [vastaus (<! (tiedot/tallenna-tiemerkinnan-kustannukset! (:id urakka) %))]))}
+           :rivi-jalkeen-fn (fn [kustannukset]
+                              (let [kustannus-summa (tiedot/kustannusten-summa kustannukset)]
+                                [{:teksti "Yhteensä" :luokka "lihavoitu"}
+                                 {:teksti (fmt/euro-opt kustannus-summa) :luokka "lihavoitu" :tasaa :oikea}
+                                 {:teksti ""}
+                                 {:teksti ""}
+                                 {:teksti ""}]))
+           :tallenna #(tuck-apurit/e-kanavalla! e! tiedot/->TallennaKustannukset % urakka)}
           [{:otsikko "Urakkavuosi" :nimi :kustannusvuosi
             :tyyppi :positiivinen-numero :kokonaisluku? true
             :muokattava? (constantly false)
@@ -47,15 +40,18 @@
             :tyyppi :positiivinen-numero :fmt fmt/euro-opt
             :leveys 3 :tasaa :oikea}
            {:otsikko "Pk 1-osuus" :nimi :pk1
-            :tyyppi :positiivinen-numero
-            ;;:validoi [[:validoi-summa-on-100 [:pk1 :pk2 :pk3] "Pk-osuus prosenttien yhteenlasketun summan on oltava 100"]])
+            :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt fmt/prosentti
+            :validoi [[:validoi-summa-on-100 [:pk1 :pk2 :pk3] "Pk-osuus prosenttien yhteenlasketun summan on oltava 100"]]
             :leveys 3 :tasaa :oikea}
            {:otsikko "Pk 2-osuus" :nimi :pk2
-            :tyyppi :positiivinen-numero
-            ;;:validoi [[:validoi-summa-on-100 [:pk1 :pk2 :pk3] "Pk-osuus prosenttien yhteenlasketun summan on oltava 100"]]
-              :leveys 3 :tasaa :oikea}
+            :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt fmt/prosentti
+            :validoi [[:validoi-summa-on-100 [:pk1 :pk2 :pk3] "Pk-osuus prosenttien yhteenlasketun summan on oltava 100"]]
+            :leveys 3 :tasaa :oikea}
            {:otsikko "Pk 3-osuus" :nimi :pk3
-            :tyyppi :positiivinen-numero
-              ;;:validoi [[:validoi-summa-on-100 [:pk1 :pk2 :pk3] "Pk-osuus prosenttien yhteenlasketun summan on oltava 100"]]
-              :leveys 3 :tasaa :oikea}]
-          paivitetyt-rivit]]))))
+            :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt fmt/prosentti
+            :validoi [[:validoi-summa-on-100 [:pk1 :pk2 :pk3] "Pk-osuus prosenttien yhteenlasketun summan on oltava 100"]]
+            :leveys 3 :tasaa :oikea}]
+          kustannukset]]))))
+
+(defn tiemerkintojen-korjaus []
+  [tuck tila/tiemerkinta-kustannukset tiemerkintojen-korjaus*])
