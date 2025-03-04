@@ -347,7 +347,7 @@
          (paaryhman-rivitys e! app "Muut kulut" :muukulu-tavoitehintainen muukulut-tavoitehintainen rivit-paaryhmittain false)
          ;; Näytetään tavoitehinnanoikaisut vain, jos niitä on oikeasti lisätty ja käytetty
          (when (> (count (get-in rivit-paaryhmittain [:tavoitehinnanoikaisu :tehtavat])) 0)
-           (paaryhman-rivitys e! app "Tavoitehinnan oikaisut" :tavoitehinnanoikaisu tavoitehinnanoikaisut rivit-paaryhmittain true))
+           (paaryhman-rivitys e! app "Tavoitehinnan muutokset" :tavoitehinnanoikaisu tavoitehinnanoikaisut rivit-paaryhmittain true))
          ;; Siirto rivi
          (when siirtoa-viime-vuodelta?
            [:tr.bottom-border.tummennettu

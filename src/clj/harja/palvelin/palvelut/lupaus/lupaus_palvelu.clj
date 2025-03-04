@@ -151,6 +151,7 @@
         tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
         luvatut-pisteet-puuttuu? (not (:pisteet lupaus-sitoutuminen))
         tallennettu-paatos (hae-lupauspaatos db urakka-id (pvm/vuosi hk-alkupvm))
+        valikatselmus-tehty? (valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)
         tallennettu-bonus-tai-sanktio (some-> tallennettu-paatos lupaus-domain/paatos->bonus-tai-sanktio)
         bonus-tai-sanktio (or
                             tallennettu-bonus-tai-sanktio
@@ -198,7 +199,7 @@
                   :odottaa-kannanottoa odottaa-kannanottoa
                   :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa
                   :odottaa-urakoitsijan-kannanottoa? odottaa-urakoitsijan-kannanottoa?
-                  :valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id hoitokauden-alkuvuosi)
+                  :valikatselmus-tehty-urakalle? valikatselmus-tehty?
                   :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
                   :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}}))
 

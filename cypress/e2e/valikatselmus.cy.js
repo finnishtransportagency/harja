@@ -6,7 +6,7 @@ function siivoaKanta() {
     console.log("Siivotaan kanta!");
     let komento = 'psql -h localhost -U harja harja -c ' + "\"DELETE FROM tavoitehinnan_oikaisu tavo WHERE tavo.\\\"hoitokauden-alkuvuosi\\\" = 2022 AND tavo.\\\"urakka-id\\\" = (SELECT id FROM urakka WHERE nimi = 'Iin MHU 2021-2026');\"";
     console.log("Komento:", komento);
-    // Tyhjennetään tavoitehinnan oikaisut ennen testiä
+    // Tyhjennetään tavoitehinnan muutokset ennen testiä
     cy.terminaaliKomento().then((terminaaliKomento) => {
         // Poista kiinteähintaiset työt
         cy.exec(terminaaliKomento + komento)
@@ -58,7 +58,7 @@ describe('Välikatselmus aukeaa', () => {
         cy.contains('Välikatselmuksen päätökset')
         cy.contains('Iin MHU 2021-2026')
         cy.contains('2. hoitovuosi (01.10.2022 - 30.09.2023')
-        cy.contains('Tavoitehinnan oikaisut')
+        cy.contains('Tavoitehinnan muutokset')
         cy.contains('Yhteenveto')
 
         // Lisätään yksi tavoitehinnan oikaisu
