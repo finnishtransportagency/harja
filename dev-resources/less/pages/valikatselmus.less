@@ -144,3 +144,70 @@
     margin-right: @valistys-16;
   }
 }
+
+/* Välikatselmussivun yhteenvetolaatikko */
+div.valikatselmus-yhteenveto {
+
+  .yhteenveto-container & {
+    position: sticky;
+    top: @valistys-32;
+  }
+
+  max-width: 532px;
+  margin-top: @valistys-32;
+  border: 1px solid @harmaa-vaalea;
+  box-sizing: border-box;
+  padding: @valistys-16;
+
+  .valikatselmus {
+    padding: @valistys-16;
+    background: @blue-lighter;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: @valistys-16;
+
+    .nappi-ensisijainen {
+      margin-right: 0;
+    }
+
+    &-tehty {
+      margin-top: @valistys-32
+    }
+  }
+
+  .rivi-yhteiset() {
+    font-size: 14px;
+    line-height: 20px;
+    display: flex;
+    justify-content: space-between;
+
+    span {
+      margin: 0.5rem 0 0.5rem 0;
+    }
+
+    span.luku {
+      margin: 0.5rem 0 0.5rem 0;
+      min-width: 100px;
+      text-align: right;
+    }
+  }
+
+  .rivi {
+    .rivi-yhteiset();
+
+    &-sisempi {
+      .rivi-yhteiset();
+      padding-left: @valistys-32;
+      color: @black-light;
+    }
+  }
+
+  .negatiivinen-numero {
+    color: @red-dark;
+  }
+  .positiivinen-numero {
+    font-weight: bold;
+    color: @green-dark;
+  }
+}
