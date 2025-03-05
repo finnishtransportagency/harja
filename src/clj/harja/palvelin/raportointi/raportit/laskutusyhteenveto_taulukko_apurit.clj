@@ -96,7 +96,8 @@
                     (= "Toteutuneet" otsikko)
                     [(toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset yhteensä" :kaikki-yhteensa-laskutettu :kaikki-yhteensa-laskutetaan true nil "vahvistamaton")
                      (toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset, jotka kuuluvat tavoitehintaan" :kaikki-tavoitehintaiset-laskutettu :kaikki-tavoitehintaiset-laskutetaan true nil nil)
-
+                     (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
+                       (toteutuneet-rivi data kyseessa-kk-vali? "Siirretyt kulut edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta :hk_valikatselmus_siirrot_ed_vuodelta true "red" nil))
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)]
 
