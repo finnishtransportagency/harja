@@ -1157,12 +1157,11 @@
         vastaus (try
                   (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) useri
                     {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi})
-                  (catch Exception e e))
-        _ (println "vastaus: " vastaus)]
+                  (catch Exception e e))]
     (is (not= (count vastaus) 0))
     (is (not (nil? (:paatokset vastaus))) "Päätökset pitäisi löytyä")
-    (is (not (nil? (:sanktiot vastaus))) "Sanktiot pitäisi löytyä")
-    (is (not (nil? (:bonukset vastaus))) "Bonukset pitäisi löytyä")))
+    (is (not (nil? (get-in vastaus [:yhteenveto :sanktiot]))) "Sanktiot pitäisi löytyä")
+    (is (not (nil? (get-in vastaus [:yhteenveto :bonukset]))) "Bonukset pitäisi löytyä")))
 
 (deftest hae-valikatselmuksen-tiedot-hoitovuodelle-test-onnistuu2
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
@@ -1171,9 +1170,8 @@
         vastaus (try
                   (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) useri
                     {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi})
-                  (catch Exception e e))
-        _ (println "vastaus: " vastaus)]
+                  (catch Exception e e))]
     (is (not= (count vastaus) 0))
     (is (not (nil? (:paatokset vastaus))) "Päätökset pitäisi löytyä")
-    (is (not (nil? (:sanktiot vastaus))) "Sanktiot pitäisi löytyä")
-    (is (not (nil? (:bonukset vastaus))) "Bonukset pitäisi löytyä")))
+    (is (not (nil? (get-in vastaus [:yhteenveto :sanktiot]))) "Sanktiot pitäisi löytyä")
+    (is (not (nil? (get-in vastaus [:yhteenveto :bonukset]))) "Bonukset pitäisi löytyä")))

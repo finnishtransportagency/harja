@@ -716,18 +716,26 @@ UNION ALL
   (let [;; Voit huomata, että kustannukset haetaan vuodelle 20 ja siirto laitetaan vuodelle 19. Siirto vaikuttaa siis
         ;; tulevaisuuteen ja näin tulee toimia.
         hoitokauden-alkuvuosi 2020
-        siirto-summa 1000M
-        urakoitsijan-maksu -1000M
+        tavoitehinta 2M
+        toteutuneet_kustannukset 3M
+        alituksen_maara 3M
+        siirron_maara 4M
+        tavoitepalkkio 5M
+        tavoitepalkkion_maksuprosentti 3
+        kulu_id nil
+
         ;; Lisätään suoraan tietokantaa tavoitehinnan alituksen siirto, eli päätös
-        _ (u (format "INSERT INTO urakka_paatos
-                  (\"urakka-id\", luotu, \"luoja-id\", \"muokkaaja-id\", tyyppi, siirto, \"tilaajan-maksu\",
-                  \"urakoitsijan-maksu\", \"hoitokauden-alkuvuosi\" ) VALUES
-                  (%s, NOW(), %s, %s, 'tavoitehinnan-alitus'::paatoksen_tyyppi, '%s', 0, '%s', 2019 );"
-               (:urakka oulumhu-parametrit) (:id +kayttaja-jvh+) (:id +kayttaja-jvh+) siirto-summa urakoitsijan-maksu))
+        _ (u (format "INSERT INTO paatos_tavoitehinta_alitus
+                  (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, toteutuneet_kustannukset, alituksen_maara, siirron_maara,
+                  tavoitepalkkio, tavoitepalkkion_maksuprosentti, kulu_id, luotu, luoja) VALUES
+                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s );"
+               (:urakka oulumhu-parametrit) (- hoitokauden-alkuvuosi 1) tavoitehinta toteutuneet_kustannukset alituksen_maara siirron_maara
+               tavoitepalkkio tavoitepalkkion_maksuprosentti kulu_id (:id +kayttaja-jvh+)))
+
         vastaus (hae-kustannukset (merge oulumhu-parametrit {:hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
         siirrot (filter #(when (= "siirto" (:paaryhma %)) true) vastaus)
         siirtojen-summa (apply + (map :toteutunut_summa siirrot))]
-    (is (= siirtojen-summa siirto-summa))))
+    (is (= siirtojen-summa siirron_maara))))
 
 ;; Testataan, että backendistä voidaan kutsua excelin luontia ja excel ladataan.
 ;; Excelin sisältöä ei valitoida
