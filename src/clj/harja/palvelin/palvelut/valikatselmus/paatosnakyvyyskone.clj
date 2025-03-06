@@ -317,7 +317,9 @@
 
 (defn valmistele-hoidonjohtopalkkionmuutospaatos [paatokset tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
-  (if (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio (and (> tavoitehinta tarjouksen-tavoitehinta)))
+  (if (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio (and (> tavoitehinta tarjouksen-tavoitehinta))
+        ;; Varmistetaan möys, että päätös on olemassa
+        (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset)))
     (let [paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
           tulos (with-precision 10 (/ tavoitehinta tarjouksen-tavoitehinta))
           hoidonjohtopalkkio-muutos (* hoidonjohtopalkkio tulos)

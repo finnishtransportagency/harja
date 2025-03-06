@@ -8,3 +8,5 @@
 (defqueries "harja/kyselyt/kustannusten_seuranta.sql"
             {:positional? true})
 
+(declare listaa-kustannukset-paaryhmittain)
+
