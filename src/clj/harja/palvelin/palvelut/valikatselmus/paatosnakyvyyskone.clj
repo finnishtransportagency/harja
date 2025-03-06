@@ -143,7 +143,7 @@
       true 4)))
 
 (defn valmistele-indeksikorjauspaatos [paatokset tavoitehinta tavoitehinnan-muutokset
-                                       hoitokauden-indeksikuukaudet alkuperainen-pisteluku]
+                                       hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi]
   ;; Päätöksistä täytyy löytyä
   (if (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) paatokset))
     ;; Ota mukaan oikea indeksikorjauspäätös, jos ehdot täyttyvät
@@ -152,8 +152,10 @@
             pisteet (apply + (map #(:indeksiluku %) hoitokauden-indeksikuukaudet))
             piste-keskiarvo (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet)))
             pistelukujen-muutos (round2 1 (- piste-keskiarvo alkuperainen-pisteluku))
-            alkuperaisen-pisteluvun-kuukausi "elokuu 2024"
-            indeksikorotuksen-prosenttiosuus (with-precision 4 (round2 1 (* (/ (- piste-keskiarvo alkuperainen-pisteluku) piste-keskiarvo) 100)))
+            alkuperaisen-pisteluvun-kuukausi (str "elo-/syyskuu " (- hoitokauden-alkuvuosi 1))
+            muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- piste-keskiarvo alkuperainen-pisteluku) piste-keskiarvo) 100)))
+            ;; Prosenttiosuus otetaan laskentaan mukaan vain 2% ylittävältä osalta
+            indeksikorotuksen-prosenttiosuus (if (> muutos-prosentteina 2) (- muutos-prosentteina 2) 0)
             muutosten-summa (if (seq tavoitehinnan-muutokset)
                               (apply + (map #(:summa %) tavoitehinnan-muutokset))
                               0)

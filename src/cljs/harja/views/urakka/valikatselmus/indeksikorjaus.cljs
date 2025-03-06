@@ -29,7 +29,7 @@
      [:strong " suurempi kuin 2,0 %"] ", korjataan hoitovuoven lopun tavoitehintaa 2,0 %:n ylittävällä %-osuudella. Prosenttiosuus lasketaan 0,1 %:n tarkkuudella."]]
    [:div.flex-row
     [:div [:strong "Pisteluku, johon keskiarvoa verrataan (" (:alkuperaisen_pisteluvun_kuukausi paatos) ")"]]
-    [:div [:strong (fmt/euro-opt (:tavoitehinta paatos))]]]
+    [:div [:strong (:alkuperainen_pisteluku paatos)]]]
    [:div.flex-row
     [:div [:strong "Pistelukujen keskiarvon laskenta"]]]
    (for* [kuukausi (:hoitokauden_kuukaudet paatos)]
@@ -40,6 +40,12 @@
      [yleiset/info-laatikko :vahva-ilmoitus "Kaikkien kuukausien indeksiarvoja ei ole vielä syötetty!"])
    [:div.flex-row
     [:div [:strong "Keskiarvo"]]
+    [:div [:strong (fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1)]]]
+   [:div.flex-row [:div [:strong "Indeksikorjauksen prosenttiosuuden laskenta"]]]
+   [:div.flex-row [:div (str "Pistelukujen muutos 0,1 % tarkkuudella ("(fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1)" -
+   "(:alkuperainen_pisteluku paatos)") / "(fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1)" * 100")]]
+   [:div.flex-row
+    [:div [:strong "2,0 % ylittävä osuus"]]
     [:div [:strong (fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1)]]]])
 
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]

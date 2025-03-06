@@ -369,7 +369,7 @@
         mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet
                                 tavoitehinta tarjouksen-tavoitehinta)
         mahdolliset-paatokset (paatoskone/valimistele-tavoitehinnan-muutospaatos mahdolliset-paatokset urakan-alkuvuosi tavoitehinta kattohinta kuluva-hoitovuosi)
-        mahdolliset-paatokset (paatoskone/valmistele-indeksikorjauspaatos mahdolliset-paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-indeksikuukaudet alkuperainen-pisteluku)
+        mahdolliset-paatokset (paatoskone/valmistele-indeksikorjauspaatos mahdolliset-paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-indeksikuukaudet alkuperainen-pisteluku kuluva-hoitovuosi)
         mahdolliset-paatokset (paatoskone/valmistele-hoitokauden-lopun-hintapaatos mahdolliset-paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta)
         mahdolliset-paatokset (paatoskone/valimistele-tavoitehinnan-alituspaatos db urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta toteutuneet-kustannukset)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-ylityspaatos db urakkaid mahdolliset-paatokset urakan-alkuvuosi
