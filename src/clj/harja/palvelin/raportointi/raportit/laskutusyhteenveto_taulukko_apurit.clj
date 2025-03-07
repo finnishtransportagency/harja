@@ -21,7 +21,7 @@
                              :fmt :raha
                              :lihavoi? lihavoi?}]))))
 
-
+;; NOTE: Tätä käytetään pääasiassa työmaakokouksen laskutusyhteenvedossa
 (defn valitaulukko
   "Työmaakokous välitaulukko ilman tyylejä"
   [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali?]}]
@@ -46,7 +46,7 @@
                        (valitaulukko-rivi data false "Tavoitehinnan siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true "red" nil))
 
                      (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
-                       (valitaulukko-rivi data false "Siirretyt kulut edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta :hk_valikatselmus_siirrot_ed_vuodelta true "red" nil))
+                       (valitaulukko-rivi data false "Siirretyt kulut edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true "red" nil))
 
                      (when (yhteiset/raha-arvo-olemassa? (:budjettia_jaljella data))
                        (valitaulukko-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil))
@@ -84,20 +84,20 @@
                          :lihavoi? lihavoi?}]
 
     (when kyseessa-kk-vali?
-      (let [arvo (or (avain_yht tp-rivi) (yhteiset/summa-fmt nil))]
+      (let [arvo (or (get tp-rivi avain_yht) (yhteiset/summa-fmt nil))]
         [:varillinen-teksti {:kustomi-tyyli tyyli :arvo arvo :fmt :raha :lihavoi? lihavoi?}]))))
 
-
+;; NOTE: Tätä käytetään pääasiassa tuotekohtaisessa laskutusyteenvedossa
 (defn toteutuneet-valitaulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
                                          kyseessa-kk-vali?]}]
   (let [rivit (into []
                 (remove nil?
                   (cond
                     (= "Toteutuneet" otsikko)
-                    [(toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset yhteensä" :kaikki-yhteensa-laskutettu :kaikki-yhteensa-laskutetaan true nil "vahvistamaton")
+                    [(when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
+                       (toteutuneet-rivi data kyseessa-kk-vali? "Siirretyt kulut edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true "red" nil))
+                     (toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset yhteensä" :kaikki-yhteensa-laskutettu :kaikki-yhteensa-laskutetaan true nil "vahvistamaton")
                      (toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset, jotka kuuluvat tavoitehintaan" :kaikki-tavoitehintaiset-laskutettu :kaikki-tavoitehintaiset-laskutetaan true nil nil)
-                     (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
-                       (toteutuneet-rivi data kyseessa-kk-vali? "Siirretyt kulut edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta :hk_valikatselmus_siirrot_ed_vuodelta true "red" nil))
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)]
 

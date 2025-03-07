@@ -41,11 +41,17 @@
         kaikki-tavoitehintaiset-laskutetaan (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutetaan %)))
                                                              (:tavoitehintaiset_laskutetaan %)
                                                              0) tiedot))]
-    {:kaikki-tavoitehintaiset-laskutettu kaikki-tavoitehintaiset-laskutettu
+    { :hk_valikatselmus_siirrot_ed_vuodelta valikatselmus-siirrot-ed-vuodelta
+     ;; Lisätään välikatselmuksen kulujen siirrot laskutettuihin kuluihin (Lisätään hoitokauden alusta lähtien kokonaissuummaan)
+     ;; Hoitokauden alusta
+     :kaikki-tavoitehintaiset-laskutettu (+ kaikki-tavoitehintaiset-laskutettu valikatselmus-siirrot-ed-vuodelta)
+     ;; Kk-välin laskutus
      :kaikki-tavoitehintaiset-laskutetaan kaikki-tavoitehintaiset-laskutetaan
-     :kaikki-yhteensa-laskutettu kaikki-yhteensa-laskutettu
+
+     ;; Hoitokauden alusta
+     :kaikki-yhteensa-laskutettu (+ kaikki-yhteensa-laskutettu valikatselmus-siirrot-ed-vuodelta)
+     ;; KK-välin laskutus
      :kaikki-yhteensa-laskutetaan kaikki-yhteensa-laskutetaan
-     :hk_valikatselmus_siirrot_ed_vuodelta valikatselmus-siirrot-ed-vuodelta
      :nimi "Kaikki toteutuneet kustannukset"}))
 
 
@@ -207,7 +213,8 @@
 
         hoitokausi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm (first urakat)) alkupvm)
         urakka-tavoite (first (filter #(= (:hoitokausi %) hoitokausi) (budjetti-q/hae-budjettitavoite db {:urakka urakka-id})))
-        valikatselmus-siirrot-ed-vuodelta (budjetti-q/hae-valikatselmus-siirrot-ed-vuodelta db {:urakka urakka-id :alkupvm alkupvm})
+        hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)
+        valikatselmus-siirrot-ed-vuodelta (budjetti-q/hae-valikatselmus-siirrot-ed-vuodelta db {:urakka urakka-id :alkupvm (first hoitokausi)})
 
         urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
                                       :urakka-nimi (:nimi %)
