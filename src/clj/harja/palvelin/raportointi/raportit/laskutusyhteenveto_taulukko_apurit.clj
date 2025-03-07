@@ -30,6 +30,8 @@
                   (cond
                     (= "Toteutuneet" otsikko)
                     [(valitaulukko-rivi data false "Hankinnat ja hoidonjohto yhteensä" :hankinnat_ja_hoidon_hk_yht :hankinnat_ja_hoidon_val_yht true nil "vahvistamaton")
+                     (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
+                       (valitaulukko-rivi data false "Siirretyt kulut edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true "red" nil))
                      (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton")
 
                      ;; Nätetään arvot vain jos on olemassa
@@ -44,9 +46,6 @@
 
                      (when (yhteiset/raha-arvo-olemassa? (:hk_tavhintsiirto_ed_vuodelta data))
                        (valitaulukko-rivi data false "Tavoitehinnan siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true "red" nil))
-
-                     (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
-                       (valitaulukko-rivi data false "Siirretyt kulut edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true "red" nil))
 
                      (when (yhteiset/raha-arvo-olemassa? (:budjettia_jaljella data))
                        (valitaulukko-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil))

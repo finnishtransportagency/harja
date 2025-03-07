@@ -244,9 +244,9 @@ DECLARE
     tavoitehinta_on_oikaistu              BOOLEAN;
     -- Tavoitehinnan lisäys/vähennys edelliseltä vuodelta
     -- NOTE: Tallennetaanko missään enää arvoja tavoitehinta_siirretty kolumniin taulussa urakka_tavoite?
-    hk_tavhintsiirto_ed_vuodelta          NUMERIC,
+    hk_tavhintsiirto_ed_vuodelta          NUMERIC;
     -- Valikatselmuksesta siirretyt kulut edelliseltä vuodelta
-    hk_valikatselmus_siirrot_ed_vuodelta  NUMERIC,
+    hk_valikatselmus_siirrot_ed_vuodelta  NUMERIC;
     budjettia_jaljella                    NUMERIC;
     urakan_tiedot                         RECORD;
 
@@ -1065,7 +1065,10 @@ BEGIN
 
     -- Tavoitehintaiset Yhteensä-  arvot,  nämä on tekohetkellä aivan samat,
     -- mutta tehty kuitenkin, jos jatkossa tämän taulukon alle tulee lisää rivejä, niitä voi tähän niputtaa
-    muut_kulut_hoitokausi_yht := muut_kulut_hoitokausi;
+    muut_kulut_hoitokausi_yht := muut_kulut_hoitokausi
+        -- Otetaan mukaan muihin tavoitehintaisiin kuluihin myös kulujen siirrot edelliselta vuodelta
+        -- Käsitellään siirrot kuitenkin omana rivinään laskutusyhteenvedossa, jotta ne erottuvat selkeästi muista kuluista
+        + hk_valikatselmus_siirrot_ed_vuodelta;
     muut_kulut_val_aika_yht := muut_kulut_val_aika;
 
     -- Ei tavoitehintaiset yhteensä-  arvot lasketaan bonusten ja sanktioiden jälkeen alempana
@@ -1108,7 +1111,7 @@ BEGIN
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
-    budjettia_jaljella := budjettia_jaljella + (hk_tavhintsiirto_ed_vuodelta + hoitokauden_tavoitehinta) - hk_valikatselmus_siirrot_ed_vuodelta - tavhin_hoitokausi_yht;
+    budjettia_jaljella := budjettia_jaljella + (hk_tavhintsiirto_ed_vuodelta + hoitokauden_tavoitehinta) - tavhin_hoitokausi_yht;
 
     ---------------------------------------------
     ---- Muut toteutuneet kustannukset  ---------
