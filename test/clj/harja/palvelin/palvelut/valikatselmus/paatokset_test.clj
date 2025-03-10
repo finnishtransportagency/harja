@@ -9,6 +9,7 @@
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.kyselyt.sanktiot :as sanktio-kyselyt]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
+            [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
 
@@ -38,7 +39,7 @@
 ;; Testaa kaikki uuden tyyppiset päätökset
 
 (defn lupauspaatos [urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet lupausbonus
-                    lupaussanktio erilliskustannus-id sanktio-id luoja]
+                    lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
    :tyyppi tyyppi
@@ -48,6 +49,10 @@
    :toteutuneet_pisteet toteutuneet-pisteet
    :lupausbonus lupausbonus
    :lupaussanktio lupaussanktio
+   :bonusprosentti bonusprosentti
+   :sanktioprosentti sanktioprosentti
+   :indeksi indeksi
+   :indeksikorotus indeksikorotus
    :erilliskustannus_id erilliskustannus-id
    :sanktio_id sanktio-id
    :luoja luoja})
@@ -148,7 +153,7 @@
    :luoja kayttajaid})
 
 (defn testaa-lupauspaatostiedot [paatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
-                                 lupausbonus lupaussanktio erilliskustannus-id sanktio-id luoja]
+                                 lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id luoja]
   (is (= tavoitehinta (:tavoitehinta paatos)))
   (is (= tarjous-tavoitehinta (:tarjous_tavoitehinta paatos)))
   (is (= luoja (:luoja paatos)))
@@ -158,6 +163,10 @@
   (is (= toteutuneet-pisteet (:toteutuneet_pisteet paatos)))
   (is (= lupausbonus (:lupausbonus paatos)))
   (is (= lupaussanktio (:lupaussanktio paatos)))
+  (is (= bonusprosentti (:bonusprosentti paatos)))
+  (is (= sanktioprosentti (:sanktioprosentti paatos)))
+  (is (= indeksi (:indeksi paatos)))
+  (is (= indeksikorotus (:indeksikorotus paatos)))
   (is (= erilliskustannus-id (:erilliskustannus_id paatos)))
   (is (= sanktio-id (:sanktio_id paatos)))
   (is (= urakkaid (:urakkaid paatos))))
@@ -257,30 +266,80 @@
   (is (= (pvm/sql-aika->pvm-str tarkistettu) (pvm/sql-aika->pvm-str (:tarkistettu paatos))))
   (is (= luoja (:luoja paatos))))
 
+;; Lasketaan indeksikorotus lupaukselle, se pätee sekä bonukselle, että sanktiolle jos on päteäkseen
+(defn laske-indeksikorotus-lupaukselle [db urakkaid paatos-pvm indeksi summa sanktio?]
+  (let [indeksikorotus-parametrit {:pvm paatos-pvm
+                                   :indeksi indeksi
+                                   :maara summa
+                                   :urakka-id urakkaid
+                                   :sanktiolaji (if sanktio? "lupaussanktio" nil)}
+        ;; Taustalla ajetaan tämmönen: SELECT korotus FROM sanktion_indeksikorotus(:pvm::DATE, :indeksi,:maara::NUMERIC, :urakka-id::INTEGER, :sanktiolaji::sanktiolaji);
+        indeksikorotus (:korotus (first (lupaus-kyselyt/hae-indeksikorotus-summalle db indeksikorotus-parametrit)))]
+    indeksikorotus))
+
 ;; Aloitetaan lupauksista
 (deftest kysely-tee-lupauksetpaatos-bonus-onnistuu-test
-  (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
-        kayttajaid (:id +kayttaja-jvh+)
-        hoitokauden-alkuvuosi 2024
-        tyyppi "bonus"
-        tavoitehinta 5M
-        tarjous-tavoitehinta 5M
-        luvatut-pisteet 5
-        toteutuneet-pisteet 10
-        lupausbonus 100M
-        lupaussanktio nil
-        erilliskustannus-id 1
-        sanktio-id 1
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
-                       lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
+  (testing "2024 vuoden urakalle onnistuu"
+    (let [;; Hae vaativa mhu urakka
+          paatos-pvm (pvm/->pvm "12.05.2024")
+          urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+          urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+          indeksi (:indeksi urakan-tiedot)
+          urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+          kayttajaid (:id +kayttaja-jvh+)
+          hoitokauden-alkuvuosi 2024
+          tyyppi "bonus"
+          tavoitehinta 5M
+          tarjous-tavoitehinta 5M
+          luvatut-pisteet 5
+          toteutuneet-pisteet 10
+          lupausbonus 100M
+          indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
+          lupaussanktio nil
+          bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+          sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
+          erilliskustannus-id 1
+          sanktio-id 1
+          lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
+                         lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)]
-    (testaa-lupauspaatostiedot vastaus urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
-      lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)))
+          vastaus (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)]
+      (testaa-lupauspaatostiedot vastaus urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
+        lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)))
+  (testing "2020 vuoden urakalle onnistuu"
+    (let [paatos-pvm (pvm/->pvm "12.05.2020")
+          urakkaid (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+          urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+          urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+          indeksi (:indeksi urakan-tiedot)
+          kayttajaid (:id +kayttaja-jvh+)
+          hoitokauden-alkuvuosi 2020
+          tyyppi "bonus"
+          tavoitehinta 150000M
+          tarjous-tavoitehinta 5M
+          luvatut-pisteet 5
+          toteutuneet-pisteet 10
+          lupausbonus 100M
+          indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
+          _ (is (> indeksikorotus 0) "Indeksikorotus ei voi olla nolla tai nil 2020 alkavalla urakalla.")
+          lupaussanktio nil
+          bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+          sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
+          erilliskustannus-id 1
+          sanktio-id 1
+          lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
+                         lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
+
+          vastaus (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)]
+      (testaa-lupauspaatostiedot vastaus urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
+        lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid))))
 
 (deftest rajapinta-tee-lupauksetpaatos-bonus-onnistuu-test
-  (let [urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+  (let [paatos-pvm (pvm/->pvm "12.05.2024")
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        indeksi (:indeksi urakan-tiedot)
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tyyppi "bonus"
@@ -289,11 +348,14 @@
         luvatut-pisteet 5
         toteutuneet-pisteet 10
         lupausbonus 1500M
+        indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
         lupaussanktio nil
+        bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+        sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         erilliskustannus-id nil
         sanktio-id nil
         lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
-                       lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
+                       lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
         vastaus (try
                   (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
@@ -320,7 +382,11 @@
     (is (= lupausbonus (:rahasumma erilliskustannus-bonus)))))
 
 (deftest rajapinta-tee-lupauksetpaatos-sanktio-onnistuu-test
-  (let [urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+  (let [paatos-pvm (pvm/->pvm "12.05.2024")
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        indeksi (:indeksi urakan-tiedot)
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tyyppi "sanktio"
@@ -330,10 +396,13 @@
         toteutuneet-pisteet 10
         lupausbonus nil
         lupaussanktio 1500M
+        indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupaussanktio true)
+        bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+        sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         erilliskustannus-id nil
         sanktio-id nil
         lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
-                       lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
+                       lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
         vastaus (try
                   (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
@@ -361,8 +430,11 @@
 
 ;; Haetaan lupauspaatos
 (deftest kysely-lupausbonus-haku-onnistuu-test
-  (let [;; Hae vaativa mhu urakka
+  (let [paatos-pvm (pvm/->pvm "12.05.2024")
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        indeksi (:indeksi urakan-tiedot)
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tyyppi "bonus"
@@ -371,23 +443,29 @@
         luvatut-pisteet 5
         toteutuneet-pisteet 10
         lupausbonus 100M
+        indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
         lupaussanktio nil
+        bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+        sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         erilliskustannus-id 1
         sanktio-id 1
         lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet
-                       toteutuneet-pisteet lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
+                       toteutuneet-pisteet lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
         _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)
         ;; Määrittele haettavat päätökset - Luetaan vain lupauspäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Lupaukset" :tyyppi "bonus" :jarjestys 1}]
         vastaus (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi)]
     (testaa-lupauspaatostiedot (first vastaus) urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta
-      luvatut-pisteet toteutuneet-pisteet lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)))
+      luvatut-pisteet toteutuneet-pisteet lupausbonus lupaussanktio bonusprosentti sanktioprosentti  indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)))
 
 ;; Poistetaan lupauspaatos
 (deftest kysely-lupausbonus-poisto-onnistuu-test
-  (let [;; Hae vaativa mhu urakka
+  (let [paatos-pvm (pvm/->pvm "12.05.2024")
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        indeksi (:indeksi urakan-tiedot)
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tyyppi "bonus"
@@ -396,11 +474,14 @@
         luvatut-pisteet 5
         toteutuneet-pisteet 10
         lupausbonus 100M
+        indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
         lupaussanktio nil
+        bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+        sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         erilliskustannus-id 1
         sanktio-id nil
         lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet
-                       toteutuneet-pisteet lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
+                       toteutuneet-pisteet lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
         _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)
         ;; Määrittele haettavat päätökset - Luetaan vain lupauspäätös, kun se on ainoa, mikä tässä testissä on luotu
@@ -413,7 +494,11 @@
     (is (nil? (first v)))))
 
 (deftest rajapinta-poista-lupauksetpaatos-sanktio-onnistuu-test
-  (let [urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+  (let [paatos-pvm (pvm/->pvm "12.05.2024")
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        indeksi (:indeksi urakan-tiedot)
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tyyppi "sanktio"
@@ -423,10 +508,13 @@
         toteutuneet-pisteet 10
         lupausbonus nil
         lupaussanktio 1500M
+        indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupaussanktio true)
+        bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+        sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         erilliskustannus-id nil
         sanktio-id nil
         lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
-                       lupausbonus lupaussanktio erilliskustannus-id sanktio-id kayttajaid)
+                       lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
         vastaus (try
                   (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))

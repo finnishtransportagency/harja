@@ -1,8 +1,10 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone
   (:require [clojure.string :as str]
             [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :refer [round2]]
-            [harja.kyselyt.urakat :as urakka-kyselyt]))
+            [harja.kyselyt.urakat :as urakka-kyselyt]
+            [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]))
 
 (def paatostyypit
   [{:nimi "Lupaukset" :tyyppi "bonus" :versio 1 :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 1}
@@ -75,7 +77,17 @@
             {:nimi nimi :virhe virhe :jarjestys jarjestys}))
         paatokset))))
 
-(defn valmistele-lupauspaatokset [db urakkaid paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta]
+(defn laske-indeksikorotus-lupaukselle [db urakkaid paatos-pvm indeksi summa sanktio?]
+  (let [indeksikorotus-parametrit {:pvm paatos-pvm
+                                   :indeksi indeksi
+                                   :maara summa
+                                   :urakka-id urakkaid
+                                   :sanktiolaji (if sanktio? "lupaussanktio" nil)}
+        ;; Taustalla ajetaan tämmönen: SELECT korotus FROM sanktion_indeksikorotus(:pvm::DATE, :indeksi,:maara::NUMERIC, :urakka-id::INTEGER, :sanktiolaji::sanktiolaji);
+        indeksikorotus (:korotus (first (lupaus-kyselyt/hae-indeksikorotus-summalle db indeksikorotus-parametrit)))]
+    indeksikorotus))
+
+(defn valmistele-lupauspaatokset [db urakkaid paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta indeksi]
   ;; Ota mukaan oikea lupauspäätös, jos ehdot täyttyvät
   (if (and toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta tavoitehinta)
     (let [erotus (- luvatut-pisteet toteutuneet-pisteet)
@@ -94,9 +106,16 @@
                                 (fn [paatos]
                                   (and (= (:nimi paatos) "Lupaukset") (= (:tyyppi paatos) tyyppi)))
                                 paatokset))
+          indeksikorotus (cond
+                           (and (= tyyppi "bonus") (:indeksi_kaytossa_bonuksella urakan-parametrit))
+                           (laske-indeksikorotus-lupaukselle db urakkaid (pvm/nyt) indeksi lupausbonus false)
+
+                           (and (= tyyppi "sanktio") (:indeksi_kaytossa_sanktiolla urakan-parametrit))
+                           (laske-indeksikorotus-lupaukselle db urakkaid (pvm/nyt) indeksi lupaussanktio false)
+
+                           :else nil)
 
           ;; Korvataan koneelta saatu päätös tässä valistellulta
-
           lupauspaatos (-> lupauspaatos
                          (assoc :tyyppi tyyppi)
                          (assoc :lupaussanktio lupaussanktio)
@@ -107,7 +126,8 @@
                          (assoc :toteutuneet_pisteet toteutuneet-pisteet)
                          (assoc :sanktioprosentti sanktioprosentti)
                          (assoc :bonusprosentti bonusprosentti)
-                         )
+                         (assoc :indeksi indeksi)
+                         (assoc :indeksikorotus indeksikorotus))
           ;; Poista kaikki lupauspäätökset listasta
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Lupaukset")) paatokset)
           ;; Ja lisää muokattu takaisin

@@ -79,12 +79,16 @@
               [:<>
                [:div
                 [:div "Lupausbonus:"]
-                [:div {:style {:font-size "20px"}} [:strong (fmt/euro-opt (:lupausbonus paatos))]]]]
+                [:div {:style {:font-size "20px"}} [:strong (fmt/euro-opt (:lupausbonus paatos))]
+                 (when (not (nil? (:indeksikorotus paatos)))
+                   (str " (+ indeksi  " (fmt/euro-opt (:indeksikorotus paatos)) " )"))]]]
               (= "sanktio" tyyppi)
               [:<>
                [:div
                 [:div "Lupaussanktio:"]
-                [:div {:style {:font-size "20px"}} [:strong (fmt/euro-opt (:lupaussanktio paatos))]]]]
+                [:div [:strong {:style {:font-size "20px"}} (fmt/euro-opt (:lupaussanktio paatos))]
+                 (when (not (nil? (:indeksikorotus paatos)))
+                   (str " (+ indeksi  " (fmt/euro-opt (:indeksikorotus paatos)) " )"))]]]
               (= :taytetty tyyppi)
               [:<>
                [:h2 "Ei bonusta eikä sanktiota"]])]])

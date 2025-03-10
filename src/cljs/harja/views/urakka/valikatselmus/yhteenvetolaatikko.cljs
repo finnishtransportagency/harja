@@ -14,6 +14,13 @@
     {:urakoitsija 30
      :tilaaja 70}))
 
+(defn arvo-paatoksesta
+  "Monet euromääräiset arvot päätöksestä kannattaa hakea vasta, kun päätös on tehty. Ja toisaalta päätöksissä voi olla myös tietoja,
+  jotka voidaan näyttää, vaikka päätöstä ei ole vielä tehty. Eli verrataan tietokanta id:tä siihen, että onko päätös tehty."
+  [paatos avain]
+  (when (:id paatos)
+    (get paatos avain)))
+
 (defn yhteenvetolaatikko [e! app]
   (let [paatokset (get-in app [:paatokset])
         yhteenvedon-tiedot (:yhteenveto app)
@@ -26,10 +33,8 @@
         toteuma-yht (get-in yhteenvedon-tiedot [:kustannukset-yhteensa :yht-toteutunut-summa])
 
         ;; Urakoitsijan saatavat
-        lupausbonus (or (and
-                          (get-in yhteenvedon-tiedot [:lupaustiedot :yhteenveto :valikatselmus-tehty-urakalle?])
-                          (:toteutunut_summa (first (filter #(when (= "lupausbonus" (:maksutyyppi %))
-                                                               %) (get-in yhteenvedon-tiedot [:kustannukset :bonukset :tehtavat]))))) 0)
+        lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
+        lupausbonus (or (arvo-paatoksesta lupauspaatos :lupausbonus) 0)
 
         asiakastyytyvaisyysbonus (apply + (map (fn [bonus]
                                                  (if (= (:tyyppi bonus) "asiakastyytyvaisyysbonus")
@@ -41,15 +46,9 @@
                                         (:rahasumma bonus)
                                         0))
                                  (:bonukset yhteenvedon-tiedot)))
-        ;; Tavoitepalkkio tulee negatiivisena lukuna, joten käännetään se ympäri tähän yhteenvetolaatikkoon
-        tavoitepalkkio (or (get-in yhteenvedon-tiedot [:kustannukset :tavoitepalkkio :toimenpide-toteutunut-summa]) 0)
-        tavoitepalkkio (if (zero? tavoitepalkkio) tavoitepalkkio (* tavoitepalkkio -1))
 
         ;; Tilaajan saatavat
-        lupaussanktio (or
-                        (and
-                          (get-in yhteenvedon-tiedot [:lupaustiedot :yhteenveto :valikatselmus-tehty-urakalle?])
-                          (get-in yhteenvedon-tiedot [:lupaustiedot :yhteenveto :bonus-tai-sanktio :sanktio])) 0)
+        lupaussanktio (or (arvo-paatoksesta lupauspaatos :lupaussanktio) 0)
         muut-sanktiot (apply + (map (fn [a]
                                       (if (not (contains? #{"lupaussanktio" "arvonvahennyssanktio"} (:sakkoryhma a)))
                                         (+ (:maara a) (:indeksikorjaus a))

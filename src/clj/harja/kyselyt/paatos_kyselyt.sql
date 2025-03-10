@@ -1,9 +1,9 @@
 -- name: tee-lupauspaatos<!
 -- Tee lupauspäätös
 INSERT INTO paatos_lupaus (urakkaid, hoitokauden_alkuvuosi, tyyppi, tavoitehinta, tarjous_tavoitehinta, luvatut_pisteet,
-                           toteutuneet_pisteet, lupausbonus, lupaussanktio, erilliskustannus_id, sanktio_id, luoja, luotu)
+                           toteutuneet_pisteet, lupausbonus, lupaussanktio, bonusprosentti, sanktioprosentti, indeksi, indeksikorotus, erilliskustannus_id, sanktio_id, luoja, luotu)
 VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tyyppi, :tavoitehinta, :tarjous_tavoitehinta, :luvatut_pisteet,
-        :toteutuneet_pisteet, :lupausbonus, :lupaussanktio, :erilliskustannus_id, :sanktio_id, :luoja, NOW());
+        :toteutuneet_pisteet, :lupausbonus, :lupaussanktio, :bonusprosentti, :sanktioprosentti, :indeksi, :indeksikorotus, :erilliskustannus_id, :sanktio_id, :luoja, NOW());
 
 -- name: poista-lupauspaatos<!
 -- Poista lupauspäätös

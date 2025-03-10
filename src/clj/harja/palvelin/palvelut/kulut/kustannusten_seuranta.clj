@@ -18,8 +18,7 @@
     (throw+ {:type virheet/+sisainen-kasittelyvirhe+
              :virheet [{:koodi 400
                         :viesti "Tuntematon hoitokauden-alkuvuosi."}]})
-    (let [_ (log/info "hae-urakan-kustannusten-seuranta-paaryhmittain :: tiedot " (pr-str tiedot))
-          res (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain db {:urakka urakka-id
+    (let [res (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain db {:urakka urakka-id
                                                                              :alkupvm alkupvm
                                                                              :loppupvm loppupvm
                                                                              :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})]

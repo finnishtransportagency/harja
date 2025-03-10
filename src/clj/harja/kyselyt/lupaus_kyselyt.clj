@@ -9,4 +9,4 @@
 
 (defqueries "harja/kyselyt/lupaus_kyselyt.sql")
 
-(declare hae-urakan-lupaustiedot hae-lupaus-vaihtoehdot)
+(declare hae-urakan-lupaustiedot hae-lupaus-vaihtoehdot hae-indeksikorotus-summalle)

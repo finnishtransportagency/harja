@@ -64,6 +64,10 @@
   :toteutuneet_pisteet <pisteet>
   :lupausbonus <eurot>
   :lupaussanktio <eurot>
+  :bonusprosentti <prosentti>
+  :sanktioprosentti <prosentti>
+  :indeksi <esim. MAKU 2015>
+  :indeksikorotus <eurot>
   :erilliskustannus_id <luodun bonuksen id>
   :sanktio_id <luodun sanktion id>
   :luoja <kuka>}"
@@ -72,8 +76,8 @@
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
         validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:tyyppi paatos) (:urakkaid paatos) (:tavoitehinta paatos)
-                            (:tarjous_tavoitehinta paatos) (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos)
-                            (:luoja paatos))
+                         (:tarjous_tavoitehinta paatos) (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos)
+                         (:bonusprosentti paatos) (:sanktioprosentti paatos) (:luoja paatos))
                      validaatio
                      (conj validaatio "Puutteelliset lupauspäätöstiedot."))
         ;; Tarkista sakot
@@ -84,9 +88,10 @@
         validaatio (if (and (= "bonus" (:tyyppi paatos)) (or (nil? (:lupausbonus paatos)) (nil? (:erilliskustannus_id paatos))))
                      (conj validaatio "Lupauspäätökseltä puuttuu bonuksen määrä.")
                      validaatio)]
-
     (if (seq validaatio)
-      (heita-virhe (str "Lupauspäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
+      (do
+        (log/error "Virheellinen lupauspäätös :: päätös:" (str (into (sorted-map) paatos)))
+        (heita-virhe (str "Lupauspäätöksessä virheitä: " (clojure.string/join ", " validaatio))))
       (tee-lupauspaatos<! db paatos))))
 
 (defn poista-lupauspaatos [db urakkaid kayttajaid paatosid]

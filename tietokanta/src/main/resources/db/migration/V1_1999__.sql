@@ -19,6 +19,8 @@ CREATE TABLE paatos_lupaus
     lupaussanktio         NUMERIC(10, 2),
     bonusprosentti        NUMERIC(4, 2),
     sanktioprosentti      NUMERIC(4, 2),
+    indeksi               TEXT,
+    indeksikorotus        NUMERIC(10, 2),
     erilliskustannus_id   INTEGER,
     sanktio_id            INTEGER,
     luotu                 TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -198,6 +200,8 @@ CREATE TABLE urakka_parametrit
 (
     id                                                  SERIAL PRIMARY KEY,
     urakkaid                                            INTEGER   NOT NULL,
+    indeksi_kaytossa_sanktiolla                         BOOLEAN,       -- Onko indeksikorjaus käytössä sanktioilla. -19/20 alkavilla urakoilla käytössä, muilla ei
+    indeksi_kaytossa_bonuksella                         BOOLEAN,       -- Onko indeksikorjaus käytössä bonuksella. -19/20 alkavilla urakoilla käytössä asiakastyytyväisyysbonuksella, muilla ei
     --toimenkuvat                                        TEXT[],        -- Sopimusvastaava, Vastuunalainen työnjohtaja, Päätöiminen apulainen (talvikausi) jne.
     --hoitokauden_alun_indeksin_kaava                    TEXT,          -- Indeksikorjauksen kaava hoitokauden alussa
     --hoitokauden_lopun_indeksikorjaus_kaytossa          BOOLEAN,       -- Onko hoitokauden lopun indeksikorjaus käytössä
@@ -249,9 +253,10 @@ DECLARE
     luojaid                                                      INTEGER        := (SELECT id
                                                                                     FROM kayttaja
                                                                                     WHERE kayttajanimi = 'Integraatio');
+    indeksi_kaytossa                                             BOOLEAN;
 BEGIN
-    -- Haetaan kaikki urakat ja lisätään niiden perustiedot urakka_parametrit tauluun
-    for urakan_tiedot in (SELECT * FROM urakka WHERE id = urakkaid_)
+    -- Haetaan kaikki MHU-urakat ja lisätään niiden perustiedot urakka_parametrit tauluun
+    for urakan_tiedot in (SELECT * FROM urakka WHERE id = urakkaid_ and tyyppi IN ('teiden-hoito'))
         LOOP
             bonusprosentti := (CASE
                                    WHEN urakan_tiedot.alkupvm < '2024-10-02'
@@ -275,14 +280,20 @@ BEGIN
                                                            WHEN urakan_tiedot.alkupvm > '2024-10-02' AND
                                                                 urakan_tiedot.sopimustyyppi = 'mhu'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2024_vaativa
-                                                            -- Kaikille muille defaulttina 70%
+                -- Kaikille muille defaulttina 70%
                                                            ELSE tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024 END);
+            -- Jos indeksi on käytössä sanktiolla, niin se on myös käytössä bonuksella
+            indeksi_kaytossa := (CASE
+                                     WHEN urakan_tiedot.alkupvm < '2020-10-02' THEN TRUE
+                                     ELSE FALSE END);
 
             -- Tarkistetaan, että löytyykö rivi jo taulusta
             IF EXISTS(SELECT 1 FROM urakka_parametrit WHERE urakkaid = urakan_tiedot.id)
             THEN
                 UPDATE urakka_parametrit
-                SET lupauspaatoksen_bonusprosentti                      = bonusprosentti,
+                SET indeksi_kaytossa_sanktiolla                         = indeksi_kaytossa,
+                    indeksi_kaytossa_bonuksella                         = indeksi_kaytossa,
+                    lupauspaatoksen_bonusprosentti                      = bonusprosentti,
                     lupauspaatoksen_sanktioprosentti                    = sanktioprosentti,
                     tavoitepalkkion_maksuprosentti                      = tavoitepalkkioprosentti,
                     tavoitepalkkion_maksimi                             = tavoitepalkkionmaxprosentti,
@@ -293,12 +304,13 @@ BEGIN
                 WHERE urakkaid = urakan_tiedot.id;
             ELSE
                 -- Jos ei löydy, niin lisätään
-                INSERT INTO urakka_parametrit (urakkaid, lupauspaatoksen_bonusprosentti,
+                INSERT INTO urakka_parametrit (urakkaid, indeksi_kaytossa_sanktiolla, indeksi_kaytossa_bonuksella,
+                                               lupauspaatoksen_bonusprosentti,
                                                lupauspaatoksen_sanktioprosentti, tavoitepalkkion_maksuprosentti,
                                                tavoitepalkkion_maksimi,
                                                tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti,
                                                tavoitehinnan_ylityksen_tilaajan_maksuprosentti, luoja, luotu)
-                VALUES (urakan_tiedot.id, bonusprosentti, sanktioprosentti,
+                VALUES (urakan_tiedot.id, indeksi_kaytossa, indeksi_kaytossa, bonusprosentti, sanktioprosentti,
                         tavoitepalkkioprosentti, tavoitepalkkionmaxprosentti,
                         (100 - tavoitehinnan_ylityksen_maksuprosentti), tavoitehinnan_ylityksen_maksuprosentti, luojaid,
                         NOW());
@@ -382,6 +394,7 @@ DECLARE
     toteutuneet_kustannukset_urakalle NUMERIC(12, 2);
     alituksen_maara_urakalle          NUMERIC(10, 2);
     tavoitehinnan_ylitys              NUMERIC(10, 2);
+    indeksikorotus                    RECORD;
 BEGIN
 
     FOR paatos in (SELECT * from urakka_paatos)
@@ -390,6 +403,9 @@ BEGIN
             -- Tulostetaan päätöksen tiedot
             -- HAetaan urakan parametrit
             SELECT * FROM urakka_parametrit WHERE urakkaid = paatos."urakka-id" into urakka_parametrit;
+
+            -- Haetaan urakan alku ja loppupvm
+            SELECT alkupvm, loppupvm, indeksi FROM urakka WHERE id = paatos."urakka-id" into urakan_tiedot;
 
             -- Monesko hoitokausi
             SELECT *
