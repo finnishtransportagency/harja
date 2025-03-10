@@ -784,7 +784,7 @@ FROM (SELECT u.id                                                    as id,
                       ST_Distance84(vua.alue, st_makepoint(:x, :y)),
                       ST_Distance84(pua.alue, st_makepoint(:x, :y))) AS etaisyys
       FROM urakka u
-               LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
+               LEFT JOIN urakoiden_alueet ua ON u.id = ua.id AND ua.tyyppi NOT IN ('vesivayla-kanavien-hoito')
                LEFT JOIN valaistusurakka vua ON vua.valaistusurakkanro = u.urakkanro
                LEFT JOIN paallystyspalvelusopimus pua ON pua.paallystyspalvelusopimusnro = u.urakkanro
                JOIN organisaatio org ON u.urakoitsija = org.id
@@ -977,7 +977,7 @@ SELECT
       org.ytunnus AS urakoitsija_ytunnus,
       ST_Distance84(au.alue, st_makepoint(:x, :y)) AS etaisyys 
 FROM urakka u
-      LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
+      LEFT JOIN urakoiden_alueet ua ON u.id = ua.id AND ua.tyyppi NOT IN ('vesivayla-kanavien-hoito')
       JOIN organisaatio org ON u.urakoitsija = org.id
       JOIN alueurakka au ON au.alueurakkanro = u.urakkanro AND u.tyyppi IN ('hoito', 'teiden-hoito')
 WHERE u.alkupvm + interval '12 hour' <= current_timestamp
