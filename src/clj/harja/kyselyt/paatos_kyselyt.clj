@@ -143,22 +143,24 @@
   "Tavoitehinnan alityspäätöksen mäppi:
   {:urakkaid <urakka-id>
   :hoitokauden_alkuvuosi <vuosi>
-  :versio <versio>
-  :tavoitehinta <tavoitehinta>
+  :hoitokauden_alun_tavoitehinta <eurot>
+  :hoitokauden_lopun_tavoitehinta <eurot>
   :toteutuneet_kustannukset <eurot>
   :alituksen_maara <eurot>
   :siirron_maara <eurot>
   :tavoitepalkkio <eurot>
   :tavoitepalkkion_maksuprosentti <prosentti>
+  :viimeinen_hoitokausi <boolean>
   :kulu_id <luodun kulun id>
   :luoja <kuka>}"
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:urakkaid paatos) (:tavoitehinta paatos)
-                            (:toteutuneet_kustannukset paatos) (:alituksen_maara paatos) (:tavoitepalkkio paatos)
-                         (:tavoitepalkkion_maksuprosentti paatos) (:luoja paatos))
+        validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:urakkaid paatos) (:hoitokauden_alun_tavoitehinta paatos)
+                         (:hoitokauden_lopun_tavoitehinta paatos) (:toteutuneet_kustannukset paatos)
+                         (:alituksen_maara paatos) (:tavoitepalkkio paatos) (:tavoitepalkkion_maksuprosentti paatos)
+                         (not (nil? (:viimeinen_hoitokausi paatos))) (:luoja paatos))
                      validaatio
                      (conj validaatio "Puutteelliset tavoitehinnan alituspäätöstiedot."))
         ;; TODO: Tarvitseeko vertailla kulu_id:t ja siirron määrä?
@@ -193,6 +195,7 @@
    :urakoitsija_maksaa <eurot>
    :siirto <eurot> -- Siirto vielä epäselvä. Ei oteta vielä vastaan.
    :kulu_id <luodun kulun id>
+   :viimeinen_hoitokausi <boolean>
    :luoja <kayttaja>}"
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
@@ -201,7 +204,7 @@
         validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:tavoitehinta paatos)
                             (:toteutuneet_kustannukset paatos) (:ylityksen_maara paatos) (:tilaajan_prosentti paatos)
                             (:urakoitsijan_prosentti paatos) (:tilaaja_maksaa paatos) (:urakoitsija_maksaa paatos)
-                            (:urakoitsija_maksaa paatos) (:luoja paatos))
+                            (:urakoitsija_maksaa paatos) (not (nil? (:viimeinen_hoitokausi paatos))) (:luoja paatos))
                      validaatio
                      (conj validaatio "Puutteelliset tavoitehinnan ylityspäätöstiedot."))
 
@@ -240,11 +243,22 @@
    :urakoitsija_maksaa <eurot>
    :siirrettava_maara <eurot>
    :kulu_id <luodun kulun id>
+   :viimeinen_hoitokausi <boolean>
    :luoja <kayttaja>}"
   [db urakkaid paatos]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
-  ;;TODO: Tee validaatio
-  (tee-kattohinta-paatos<! db paatos))
+  (let [validaatio #{}
+        ;; Validoi perustietojen pakollisuus
+        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:kattohinta paatos)
+                         (:toteutuneet_kustannukset paatos) (:ylityksen_maara paatos) (:urakoitsija_maksaa paatos)
+                         (:kulu_id paatos) (:siirrettava_maara paatos) (not (nil? (:viimeinen_hoitokausi paatos))) (:luoja paatos))
+                     validaatio
+                     (conj validaatio "Puutteelliset kattohinnan ylityspäätöstiedot."))]
+    (if (seq validaatio)
+      (do
+        (log/error "Puutteellinen kattohinnan ylityspäätös:" paatos)
+        (heita-virhe (str "Kattohinnan muutospäätöksessä virheitä: " (clojure.string/join ", " validaatio))))
+      (tee-kattohinta-paatos<! db paatos))))
 
 (defn poista-kattohinnan-ylityspaatos [db urakkaid kayttajaid paatosid]
   (let [;; Varmistetaan ensin, että tavoitehinnan ylityspäätös löytyy annetulla id:llä ja että se kuuluu annetulle urakalle

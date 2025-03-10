@@ -34,8 +34,8 @@
     [:div [:strong "Pistelukujen keskiarvon laskenta"]]]
    (for* [kuukausi (:hoitokauden_kuukaudet paatos)]
      [:div.flex-row
-      [:div (first kuukausi)]
-      [:div [:strong (fmt/desimaaliluku-opt (second kuukausi) 1)]]])
+      [:div (:kuukausi kuukausi)]
+      [:div [:strong (fmt/desimaaliluku-opt (:indeksiluku kuukausi) 1)]]])
    (when (not= 12 (count (:hoitokauden_kuukaudet paatos)))
      [yleiset/info-laatikko :vahva-ilmoitus "Kaikkien kuukausien indeksiarvoja ei ole vielä syötetty!"])
    [:div.flex-row

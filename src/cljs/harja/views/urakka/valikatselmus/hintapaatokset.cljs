@@ -8,6 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
             [harja.ui.dom :as dom]
+            [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.pvm :as pvm]
@@ -22,18 +23,6 @@
 (defn tavoitehinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
   (let [paatos-avain :tavoitehinta-ylitys
         paatos-tehty? (or (:id paatos) false)
-        paatoksen-tiedot {:id (:id paatos)
-                          :urakkaid (-> @tila/yleiset :urakka :id)
-                          :versio (:versio paatos)
-                          :paatostyyppi paatos-avain
-                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                          :tavoitehinta (:tavoitehinta paatos)
-                          :toteutuneet_kustannukset (:toteutuneet_kustannukset paatos)
-                          :ylityksen_maara (:ylityksen_maara paatos)
-                          :tilaajan_prosentti (:tilaajan_prosentti paatos)
-                          :urakoitsijan_prosentti (:urakoitsijan_prosentti paatos)
-                          :tilaaja_maksaa (:tilaaja_maksaa paatos)
-                          :urakoitsija_maksaa (:urakoitsija_maksaa paatos)}
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         avaa-tai-sulje-haitari (fn [event]
                                  (when (dom/enter-nappain? event)
@@ -59,7 +48,7 @@
          [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
           (when on-oikeudet?
             [napit/yleinen-ensisijainen "Tallenna päätös"
-             #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanYlitysPaatos paatoksen-tiedot))
+             #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanYlitysPaatos paatos))
              {:disabled (or
                           tallennus-kesken?
                           (not voi-muokata?))}])]
@@ -103,25 +92,29 @@
            [:div "Siirretään seuraavan vuoden hankintakustannuksiin alennukseksi"]
            [:div (str "-" (fmt/euro-opt (:siirron_maara paatos)))]])
 
-        ;; Päätöksenteko napit
-        (if (not paatos-tehty?)
-          [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
-           (when on-oikeudet?
-             [napit/yleinen-ensisijainen "Tallenna päätös"
-              #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanAlitusPaatos paatoksen-tiedot))
-              {:disabled (or
-                           tallennus-kesken?
-                           (not voi-muokata?))}])]
-          [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
-           (when on-oikeudet?
-             [napit/nappi
-              "Kumoa päätös"
-              #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanAlitusPaatos paatoksen-tiedot))
-              {:luokka "nappi-toissijainen napiton-nappi"
-               :ikoni [ikonit/harja-icon-action-undo]
-               :disabled (or
-                           tallennus-kesken?
-                           (not voi-muokata?))}])])])]))
+        ;; Päätöksenteko napit tai mahdollinen virhe
+        (if (:virhe paatos)
+          [:div {:style {:padding-bottom "1rem"}}
+           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos)]]
+
+          (if (not paatos-tehty?)
+            [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
+             (when on-oikeudet?
+               [napit/yleinen-ensisijainen "Tallenna päätös"
+                #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanAlitusPaatos paatoksen-tiedot))
+                {:disabled (or
+                             tallennus-kesken?
+                             (not voi-muokata?))}])]
+            [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
+             (when on-oikeudet?
+               [napit/nappi
+                "Kumoa päätös"
+                #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanAlitusPaatos paatoksen-tiedot))
+                {:luokka "nappi-toissijainen napiton-nappi"
+                 :ikoni [ikonit/harja-icon-action-undo]
+                 :disabled (or
+                             tallennus-kesken?
+                             (not voi-muokata?))}])]))])]))
 
 (defn kattohinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
   (let [paatos-avain :kattohinta-ylitys

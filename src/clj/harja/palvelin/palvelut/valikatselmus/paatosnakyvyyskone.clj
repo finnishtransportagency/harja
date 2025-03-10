@@ -205,11 +205,12 @@
         true 7))
     paatokset))
 
-(defn valimistele-tavoitehinnan-alituspaatos [db urakkaid paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kustannukset]
+(defn valimistele-tavoitehinnan-alituspaatos [db urakkaid paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi
+                                              hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta kustannukset]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
-  (if (and tavoitehinta kustannukset (> tavoitehinta kustannukset))
+  (if (and hoitokauden-alun-tavoitehinta kustannukset (> hoitokauden-alun-tavoitehinta kustannukset))
     (let [urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
-          tavoitehinnan-alitus (- tavoitehinta kustannukset)
+          tavoitehinnan-alitus (- hoitokauden-alun-tavoitehinta kustannukset)
           ;; Poistetaan päätöskokneen tavoitehinna alituspäätös ja muokataan se alla
           tavoitehinnan-alituspaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan alitus") %) paatokset))
           paatokset (remove
@@ -219,8 +220,8 @@
 
           ;; Jäljelle jäänyt paatos
 
-          ;; (:tavoitepalkkion_maksimi urakan-parametrit) on maksimiprosentti, jota tavoitepalkkiota voidaan maksaa suhteessa tavoitehintaan. Yleisimmin 3%
-          maksimi-tavoitepalkkio (* (/ (:tavoitepalkkion_maksimi urakan-parametrit) 100) tavoitehinta)
+          ;; (:tavoitepalkkion_maksimi urakan-parametrit) on maksimiprosentti, jota tavoitepalkkiota voidaan maksaa suhteessa hoitokauden alun indeksikorjattuun tavoitehintaan. Yleisimmin 3%
+          maksimi-tavoitepalkkio (* (/ (:tavoitepalkkion_maksimi urakan-parametrit) 100) hoitokauden-alun-tavoitehinta)
           tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
           ;; Versiossa 1 - Tavoitepalkkio on alituksesta 30%, mutta max 3% tavoitehinnasta - Mutta viimeisenä vuotena maksetaan kaikki eli 100% alituksesta
           laskennallinen-tavoitepalkkio (* (/ tavoitepalkkion-maksuprosentti 100) tavoitehinnan-alitus)
@@ -232,20 +233,22 @@
                           nil ;; Viimeisenä vuotena maksetaan kaikki. Eli ei siirretä mitään
                           (when (> laskennallinen-tavoitepalkkio maksimi-tavoitepalkkio)
                             (- laskennallinen-tavoitepalkkio maksimi-tavoitepalkkio)))
-
+          viimeinen-hoitokausi? (boolean (= kuluva-hoitovuosi urakan-loppuvuosi))
           tavoitehinnan-alituspaatos (-> tavoitehinnan-alituspaatos
-                                       (assoc :tavoitehinta tavoitehinta)
+                                       (assoc :hoitokauden_alun_tavoitehinta hoitokauden-alun-tavoitehinta)
+                                       (assoc :hoitokauden_lopun_tavoitehinta hoitokauden-lopun-tavoitehinta)
                                        (assoc :toteutuneet_kustannukset kustannukset)
                                        (assoc :alituksen_maara tavoitehinnan-alitus)
                                        (assoc :siirron_maara siirron-maara)
                                        (assoc :tavoitepalkkio tavoitepalkkio)
-                                       (assoc :tavoitepalkkion_maksuprosentti tavoitepalkkion-maksuprosentti))
+                                       (assoc :tavoitepalkkion_maksuprosentti tavoitepalkkion-maksuprosentti)
+                                       (assoc :viimeinen_hoitokausi viimeinen-hoitokausi?))
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-alituspaatos))]
 
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin poistetaan pöötöstyyppi
     (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus"
-      "Tavoitehintaa tai toteutuneita kustannuksia ei ole määritelty."
+      "Hoitokauden alun indeksikorjattua tavoitehintaa tai toteutuneita kustannuksia ei ole määritelty."
       false 10)))
 
 (defn valmistele-tavoitehinnan-ylityspaatos [db urakkaid paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kattohinta kustannukset mhu-tyyppi]
@@ -263,23 +266,20 @@
                       paatokset)
 
           ;; Jäljelle jäänyt paatos
-          versio (cond
-                   (and (< urakan-alkuvuosi 2025) (= "MHU" mhu-tyyppi)) "1"
-                   (and (= urakan-alkuvuosi 2024) (= "MHU+" mhu-tyyppi)) "2"
-                   (>= urakan-alkuvuosi 2025) "3")
           tilaajan-prosentti (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit)
           urakoitsijan-prosentti (- 100 tilaajan-prosentti)
-
+          viimeinen-hoitokausi? (boolean (= kuluva-hoitovuosi urakan-loppuvuosi))
           tavoitehinnan-ylityspaatos (-> tavoitehinnan-ylityspaatos
+                                       (assoc :urakkaid urakkaid)
                                        (assoc :toteutuneet_kustannukset kustannukset)
-                                       (assoc :versio versio)
                                        (assoc :tavoitehinta tavoitehinta)
                                        (assoc :toteutuneet_kustannukset kustannukset)
                                        (assoc :ylityksen_maara tavoitehinnan-ylitys)
                                        (assoc :tilaajan_prosentti tilaajan-prosentti)
                                        (assoc :urakoitsijan_prosentti urakoitsijan-prosentti)
                                        (assoc :tilaaja_maksaa (* (/ tilaajan-prosentti 100) tavoitehinnan-ylitys))
-                                       (assoc :urakoitsija_maksaa (* (/ urakoitsijan-prosentti 100) tavoitehinnan-ylitys)))
+                                       (assoc :urakoitsija_maksaa (* (/ urakoitsijan-prosentti 100) tavoitehinnan-ylitys))
+                                       (assoc :viimeinen_hoitokausi viimeinen-hoitokausi?))
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-ylityspaatos))]
       paatokset)
     ;; Jos tarvittavia tietoja ei ole, niin poistetaan tavoitehinnan ylitys
@@ -287,11 +287,12 @@
       "Tavoitehintaa, kattohintaa tai toteutuneita kustannuksia ei ole määritelty."
       false 12)))
 
-(defn valmistele-kattohinnan-paatokset [paatokset kattohinta kustannukset]
+(defn valmistele-kattohinnan-paatokset [paatokset kattohinta kustannukset kuluva-hoitovuosi urakan-loppuvuosi]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
   (if (and kattohinta kustannukset (> kustannukset kattohinta))
     (let [kattohinnan-ylityspaatos (first (filter #(= (:nimi %) "Kattohinnan ylitys") paatokset))
           ylityksen-maara (- kustannukset kattohinta)
+          viimeinen-hoitokausi? (boolean (= kuluva-hoitovuosi urakan-loppuvuosi))
           ;; Täytetään pakolliset tiedot
           kattohinnan-ylityspaatos (-> kattohinnan-ylityspaatos
                                      (assoc :toteutuneet_kustannukset kustannukset)
@@ -299,6 +300,7 @@
                                      (assoc :ylityksen_maara ylityksen-maara)
                                      (assoc :urakoitsija_maksaa ylityksen-maara)
                                      (assoc :siirra? false) ;; Päätöksen pohjatietoja asetettaessa siirto on aina defaulttina false. Tietokannasta haettaessa tilanne voi olla eri.
+                                     (assoc :viimeinen_hoitokausi viimeinen-hoitokausi?)
                                      )
 
           paatokset (remove

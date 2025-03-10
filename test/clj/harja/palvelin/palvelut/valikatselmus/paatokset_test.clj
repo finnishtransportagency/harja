@@ -65,22 +65,25 @@
    :kattohinta kattohinta
    :luoja luoja})
 
-(defn tavoitehinnan-alituspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                                  alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id luoja]
+(defn tavoitehinnan-alituspaatos [urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                                  alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id
+                                  viimeinen_hoitokausi luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :tavoitehinta tavoitehinta
+   :hoitokauden_alun_tavoitehinta hoitokauden-alun-tavoitehinta
+   :hoitokauden_lopun_tavoitehinta hoitokauden-lopun-tavoitehinta
    :toteutuneet_kustannukset toteutuneet-kustannukset
    :alituksen_maara alituksen-maara
    :siirron_maara siirron-maara
    :tavoitepalkkio tavoitepalkkio
    :tavoitepalkkion_maksuprosentti tavoitepalkkion-maksuprosentti
    :kulu_id kulu-id
+   :viimeinen_hoitokausi viimeinen_hoitokausi
    :luoja luoja})
 
 (defn tavoitehinnan-ylityspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                                   ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
-                                  urakoitsija-maksaa siirto kulu-id luoja]
+                                  urakoitsija-maksaa siirto kulu-id viimeinen_hoitokausi luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
    :tavoitehinta tavoitehinta
@@ -92,10 +95,11 @@
    :urakoitsija_maksaa urakoitsija-maksaa
    :siirto siirto
    :kulu_id kulu-id
+   :viimeinen_hoitokausi viimeinen_hoitokausi
    :luoja luoja})
 
 (defn kattohinnan-ylityspaatos [urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                                ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id luoja]
+                                ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
    :kattohinta kattohinta
@@ -104,6 +108,7 @@
    :urakoitsija_maksaa urakoitsija-maksaa
    :siirrettava_maara siirrettava-maara
    :kulu_id kulu-id
+   :viimeinen_hoitokausi viimeinen_hoitokausi
    :luoja luoja})
 
 (defn indeksikorjauspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
@@ -179,22 +184,25 @@
   (is (= kattohinta (:kattohinta paatos)))
   (is (= luoja (:luoja paatos))))
 
-(defn testaa-tavoitehinnan-alitus [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                                   alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id luoja]
+(defn testaa-tavoitehinnan-alitus [paatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                                   alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id
+                                   viimeinen_hoitokausi luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
-  (is (= tavoitehinta (:tavoitehinta paatos)))
+  (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta paatos)))
+  (is (= hoitokauden-lopun-tavoitehinta (:hoitokauden_lopun_tavoitehinta paatos)))
   (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset paatos)))
   (is (= alituksen-maara (:alituksen_maara paatos)))
   (is (= siirron-maara (:siirron_maara paatos)))
   (is (= tavoitepalkkio (:tavoitepalkkio paatos)))
   (is (= kulu-id (:kulu_id paatos)))
   (is (= tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti paatos)))
+  (is (= viimeinen_hoitokausi (:viimeinen_hoitokausi paatos)))
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-tavoitehinnan-ylityspaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                                          ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
-                                         urakoitsija-maksaa siirto kulu-id luoja]
+                                         urakoitsija-maksaa siirto kulu-id viimeinen_hoitokausi luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
   (is (= tavoitehinta (:tavoitehinta paatos)))
@@ -206,10 +214,11 @@
   (is (= urakoitsija-maksaa (:urakoitsija_maksaa paatos)))
   #_(is (= siirto (:siirto paatos))) ;; Siirron rooli vähän epäselvä, ei vielä varmisteta
   (is (= kulu-id (:kulu_id paatos)))
+  (is (= viimeinen_hoitokausi (:viimeinen_hoitokausi paatos)))
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-kattohinnan-ylityspaatos [paatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                                       ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id luoja]
+                                       ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
   (is (= kattohinta (:kattohinta paatos)))
@@ -218,6 +227,7 @@
   (is (= urakoitsija-maksaa (:urakoitsija_maksaa paatos)))
   (is (= siirrettava-maara (:siirrettava_maara paatos)))
   (is (= kulu-id (:kulu_id paatos)))
+  (is (= viimeinen_hoitokausi (:viimeinen_hoitokausi paatos)))
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-indeksikorjauspaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
@@ -637,67 +647,78 @@
 
 ;; Testaa tavoitehinnan alituspäätöksen lisäsy
 (deftest kysely-tavoitehinnan-alitus-lisays-onnistuu-test
-  (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+  (let [hoitokauden-alkuvuosi 2024
+        urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; Hae urakan hoitokauden alun tavoitehinta
+        hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        hoitokauden-lopun-tavoitehinta (valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         ;; Haetaan urakan parametrit
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
-        hoitokauden-alkuvuosi 2024
-        tavoitehinta 5M
         toteutuneet-kustannukset 5M
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
         tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
         kulu-id 1
-        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id kayttajaid)
+        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakkaid paatos)]
-    (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-      alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id kayttajaid)))
+    (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+      alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)))
 
 (deftest rajapinta-tavoitehinnan-alitus-lisays-onnistuu-test
-  (let [;; Hae vaativa mhu urakka
+  (let [hoitokauden-alkuvuosi 2021
         urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; Hae urakan hoitokauden alun tavoitehinta
+        hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta
+                                        (:db jarjestelma) {:urakka-id urakkaid
+                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        hoitokauden-lopun-tavoitehinta (valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         ;; Haetaan urakan parametrit
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
-        hoitokauden-alkuvuosi 2021
-        tavoitehinta 5M
         toteutuneet-kustannukset 5M
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
         tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
         kulu-id nil
-        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id kayttajaid)
+        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
         vastaus (try
                   (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                                valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hoitokauden-alun-tavoitehinta)
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] hoitokauden-lopun-tavoitehinta)]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-alituspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :tavoitehinnan-alitus)]
-    (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
+    (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta tallennettu-paatos)) "Hoitokauden alun tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen.")
     (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")))
 
 ;; Poistetaan tavoitehinnan alituspäätös
 (deftest kysely-tavoitehinnanalitus-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
+        hoitokauden-alkuvuosi 2021
         urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        ;; Hae urakan hoitokauden alun tavoitehinta
+        hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta
+                                        (:db jarjestelma) {:urakka-id urakkaid
+                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        hoitokauden-lopun-tavoitehinta (valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+
         kayttajaid (:id +kayttaja-jvh+)
-        hoitokauden-alkuvuosi 2021
-        tavoitehinta 5M
+
         toteutuneet-kustannukset 5M
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
         tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
         kulu-id 1
-        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id kayttajaid)
+        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
         _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakkaid paatos)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
@@ -716,25 +737,28 @@
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
-        tavoitehinta 5M
+        hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        hoitokauden-lopun-tavoitehinta (valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         toteutuneet-kustannukset 5M
         alituksen-maara 10M
         siirron-maara 100M
         tavoitepalkkio 150M
         tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
         kulu-id nil
-        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id kayttajaid)
+        paatos (tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
         vastaus (try
                   (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                                valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hoitokauden-alun-tavoitehinta)
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] hoitokauden-lopun-tavoitehinta)]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-alituspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :tavoitehinnan-alitus)
         ;; Poistetaan juuri lisätty päätös.
         poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-tavoitehinnan-alituspaatos +kayttaja-jvh+ tallennettu-paatos)
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :tavoitehinnan-alitus)]
-    (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
+    (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta tallennettu-paatos)) "Hoitokauden alun tavoitehinta on sama päätöksen tekemisen jälkeen")
+    (is (= hoitokauden-lopun-tavoitehinta (:hoitokauden_lopun_tavoitehinta tallennettu-paatos)) "Hoitokauden lopun tavoitehinta on sama päätöksen tekemisen jälkeen")
     (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")
     ;; Päätöksen poistaminen aiheuttaa default päätöksen palauttamisen
     (is (nil? (:luotu poistettu-paatos)))
@@ -759,11 +783,11 @@
         kulu-id 1
         paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
-                 urakoitsija-maksaa siirto kulu-id kayttajaid)
+                 urakoitsija-maksaa siirto kulu-id false kayttajaid)
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
     (testaa-tavoitehinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-      ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa urakoitsija-maksaa siirto kulu-id kayttajaid)))
+      ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa urakoitsija-maksaa siirto kulu-id false kayttajaid)))
 
 (deftest rajapinta-tavoitehinnan-ylitys-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
@@ -782,7 +806,7 @@
         kulu-id nil
         paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
-                 urakoitsija-maksaa siirto kulu-id kayttajaid)
+                 urakoitsija-maksaa siirto kulu-id false kayttajaid)
         vastaus (try
                   (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
                                 valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
@@ -810,7 +834,7 @@
         kulu-id 1
         paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
-                 urakoitsija-maksaa siirto kulu-id kayttajaid)
+                 urakoitsija-maksaa siirto kulu-id false kayttajaid)
         _ (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
@@ -840,7 +864,7 @@
         kulu-id nil
         paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
-                 urakoitsija-maksaa siirto kulu-id kayttajaid)
+                 urakoitsija-maksaa siirto kulu-id false kayttajaid)
         ;; Ei odoteta vastausta, koska ehdot ei täyty
         _ (try
             (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
@@ -873,11 +897,11 @@
         siirrettava-maara 50M
         kulu-id 1
         paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id kayttajaid)
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false kayttajaid)
 
         vastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
     (testaa-kattohinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-      ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id kayttajaid)))
+      ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false kayttajaid)))
 
 (deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
@@ -891,7 +915,7 @@
         siirrettava-maara 50M
         kulu-id nil
         paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id kayttajaid)
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false kayttajaid)
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
@@ -914,9 +938,9 @@
         ylityksen-maara 10M
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
-        kulu-id nil
+        kulu-id 1
         paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id kayttajaid)
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false kayttajaid)
         _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
@@ -939,9 +963,9 @@
         ylityksen-maara 10M
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
-        kulu-id nil
+        kulu-id 1
         paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id kayttajaid)
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false kayttajaid)
         tallennettu-paatos (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)
         poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-kattohinnan-ylityspaatos +kayttaja-jvh+ tallennettu-paatos)
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :kattohinnan-ylitys)]

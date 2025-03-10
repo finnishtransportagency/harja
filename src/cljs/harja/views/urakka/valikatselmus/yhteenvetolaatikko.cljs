@@ -66,17 +66,19 @@
         tavoitehinnan-alituspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-alitus)
         tavoitehinnan-ylitys (or (:ylityksen_maara tavoitehinnan-ylityspaatos) 0)
         tavoitehinnan-alitus (or (:alituksen_maara tavoitehinnan-alituspaatos) 0)
+        tavoitepalkkio (or (arvo-paatoksesta tavoitehinnan-alituspaatos :tavoitehinta) 0)
+        seuraavan-vuoden-hankintakustannusten-alennus (or (arvo-paatoksesta tavoitehinnan-alituspaatos :siirron_maara) 0)
 
         tilaajan-tavoitehinnan-ylitysprosentti (:tilaajan_prosentti tavoitehinnan-ylityspaatos)
         urakoitsijan-tavoitehinnan-ylitysprosentti (:urakoitsijan_prosentti tavoitehinnan-ylityspaatos)
-        tilaajan-osuus-tavoitehinnan-ylitys (or (:urakoitsija_maksaa tavoitehinnan-ylityspaatos) 0)
-        urakoitsijan-osuus-tavoitehinnan-ylitys (or (:tilaaja_maksaa tavoitehinnan-ylityspaatos) 0)
+        tilaajan-osuus-tavoitehinnan-ylitys (or (arvo-paatoksesta tavoitehinnan-ylityspaatos :urakoitsija_maksaa) 0)
+        urakoitsijan-osuus-tavoitehinnan-ylitys (or (arvo-paatoksesta tavoitehinnan-ylityspaatos :tilaaja_maksaa) 0)
         kattohinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :kattohinnan-ylitys)
-        kattohinnan-ylitys (or (:ylityksen_maara kattohinnan-ylityspaatos) 0)
-        siirto-seuraavan-vuoden-hankintakustannuksiin (or (:siirrettava_maara kattohinnan-ylityspaatos) 0)
-        urakoitsijan-hyvitysosuus (or (:urakoitsija_maksaa kattohinnan-ylityspaatos) 0)
+        kattohinnan-ylitys (or (arvo-paatoksesta kattohinnan-ylityspaatos :ylityksen_maara) 0)
+        siirto-seuraavan-vuoden-hankintakustannuksiin (or (arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara) 0)
+        urakoitsijan-hyvitysosuus (or (arvo-paatoksesta kattohinnan-ylityspaatos :urakoitsija_maksaa) 0)
         hoidonjohtopalkkiopaatos (valikatselmus-tiedot/ota-paatos paatokset :hoidonjohtopalkkion-muutos)
-        hoidonjohtopalkkion-muutos (or (:hoidonjohtopalkkio_muutos hoidonjohtopalkkiopaatos) 0)]
+        hoidonjohtopalkkion-muutos (or (arvo-paatoksesta hoidonjohtopalkkiopaatos :hoidonjohtopalkkio_muutos) 0)]
     [:div.valikatselmus-yhteenveto.elevation-2
      [:h2 [:span "Yhteenveto"]]
      [:div.rivi [:span.bold "Hoitokauden lopun tavoitehinta"]
@@ -159,4 +161,6 @@
 
      [:h3 [:span "Siirrot"]]
      [:div.rivi [:span "Siirto seuraavan vuoden hankintakustannuksiin"]
-      [:span (fmt/euro-opt siirto-seuraavan-vuoden-hankintakustannuksiin)]]]))
+      [:span (fmt/euro-opt siirto-seuraavan-vuoden-hankintakustannuksiin)]]
+     [:div.rivi [:span "Siirto seuraavan vuoden hankintakustannuksiin alennukseksi"]
+      [:span (fmt/euro-opt seuraavan-vuoden-hankintakustannusten-alennus)]]]))

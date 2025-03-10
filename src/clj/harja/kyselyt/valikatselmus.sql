@@ -10,6 +10,15 @@ FROM urakka_tavoite ut
 WHERE ut.urakka = :urakka-id
   AND EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = :hoitokauden-alkuvuosi;
 
+-- name: hae-hoitokauden-alun-indeksikorjattu-tavoitehinta
+-- single?: true
+-- Käytetään esimerkiksi tavoitepalkkion laskemisessa
+SELECT ut.tavoitehinta_indeksikorjattu as tavoitehinta
+  FROM urakka_tavoite ut
+         JOIN urakka u ON ut.urakka = u.id
+ WHERE ut.urakka = :urakka-id
+   AND EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = :hoitokauden-alkuvuosi;
+
 
 -- name: hae-oikaistu-kattohinta
 -- single?: true

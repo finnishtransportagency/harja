@@ -58,9 +58,9 @@ WHERE id = :paatos-id
 -- Tee tavoitehinnan ylitys päätös
 INSERT INTO paatos_tavoitehinta_ylitys (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, toteutuneet_kustannukset,
                                         ylityksen_maara, tilaajan_prosentti, urakoitsijan_prosentti, tilaaja_maksaa,
-                                        urakoitsija_maksaa, kulu_id, luoja, luotu)
+                                        urakoitsija_maksaa, kulu_id, viimeinen_hoitokausi, luoja, luotu)
 VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta, :toteutuneet_kustannukset, :ylityksen_maara,
-        :tilaajan_prosentti, :urakoitsijan_prosentti, :tilaaja_maksaa, :urakoitsija_maksaa, :kulu_id, :luoja,
+        :tilaajan_prosentti, :urakoitsijan_prosentti, :tilaaja_maksaa, :urakoitsija_maksaa, :kulu_id, :viimeinen_hoitokausi, :luoja,
         NOW());
 
 -- name: poista-tavoitehinnan-ylitys-paatos<!
@@ -86,10 +86,11 @@ WHERE id = :paatos-id
 
 -- name: tee-tavoitehinnan-alitus-paatos<!
 -- Tee tavoitehinnan alitus päätös
-INSERT INTO paatos_tavoitehinta_alitus (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, toteutuneet_kustannukset,
-                                        alituksen_maara, siirron_maara, tavoitepalkkio, kulu_id, tavoitepalkkion_maksuprosentti, luoja, luotu)
-VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta, :toteutuneet_kustannukset, :alituksen_maara,
-        :siirron_maara, :tavoitepalkkio, :kulu_id, :tavoitepalkkion_maksuprosentti, :luoja, NOW());
+INSERT INTO paatos_tavoitehinta_alitus (urakkaid, hoitokauden_alkuvuosi, hoitokauden_alun_tavoitehinta, hoitokauden_lopun_tavoitehinta, toteutuneet_kustannukset,
+                                        alituksen_maara, siirron_maara, tavoitepalkkio, kulu_id, tavoitepalkkion_maksuprosentti,
+                                        viimeinen_hoitokausi, luoja, luotu)
+VALUES (:urakkaid, :hoitokauden_alkuvuosi, :hoitokauden_alun_tavoitehinta, :hoitokauden_lopun_tavoitehinta, :toteutuneet_kustannukset, :alituksen_maara,
+        :siirron_maara, :tavoitepalkkio, :kulu_id, :tavoitepalkkion_maksuprosentti, :viimeinen_hoitokausi, :luoja, NOW());
 
 -- name: poista-tavoitehinnan-alitus-paatos<!
 -- Poista tavoitehinnan alitus päätös
@@ -115,9 +116,9 @@ WHERE id = :paatos-id
 -- name: tee-kattohinta-paatos<!
 -- Tee kattohinta päätös
 INSERT INTO paatos_kattohinta (urakkaid, hoitokauden_alkuvuosi, kattohinta, toteutuneet_kustannukset, ylityksen_maara,
-                               urakoitsija_maksaa, siirrettava_maara, kulu_id, luoja, luotu)
+                               urakoitsija_maksaa, siirrettava_maara, kulu_id, viimeinen_hoitokausi, luoja, luotu)
 VALUES (:urakkaid, :hoitokauden_alkuvuosi, :kattohinta, :toteutuneet_kustannukset, :ylityksen_maara,
-        :urakoitsija_maksaa, :siirrettava_maara, :kulu_id, :luoja, NOW());
+        :urakoitsija_maksaa, :siirrettava_maara, :kulu_id, :viimeinen_hoitokausi, :luoja, NOW());
 
 -- name: poista-kattohinta-paatos<!
 -- Poista kattohinta päätös
