@@ -31,7 +31,8 @@
                     (= "Toteutuneet" otsikko)
                     [(valitaulukko-rivi data false "Hankinnat ja hoidonjohto yhteensä" :hankinnat_ja_hoidon_hk_yht :hankinnat_ja_hoidon_val_yht true nil "vahvistamaton")
                      (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
-                       (valitaulukko-rivi data false "Siirretyt kulut edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true "red" nil))
+                       (let [siirto-pos? (pos? (:hk_valikatselmus_siirrot_ed_vuodelta data))]
+                         (valitaulukko-rivi data false "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true (when siirto-pos? "red") nil)))
                      (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton")
 
                      ;; Nätetään arvot vain jos on olemassa
@@ -41,7 +42,7 @@
                                                        ;; Jos tavoitehintaa on oikaistu, näytä se Tavoitehinta (oikaistu) 
                                                        (if (:tavoitehinta_on_oikaistu data) 
                                                                             "(oikaistu)" 
-                                                                            "(indeksikorjattu)")) 
+                                                                            "(indeksikorjattu)"))
                          :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil))
 
                      (when (yhteiset/raha-arvo-olemassa? (:hk_tavhintsiirto_ed_vuodelta data))
@@ -93,9 +94,10 @@
                 (remove nil?
                   (cond
                     (= "Toteutuneet" otsikko)
-                    [(when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
-                       (toteutuneet-rivi data kyseessa-kk-vali? "Siirretyt kulut edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true "red" nil))
-                     (toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset yhteensä" :kaikki-yhteensa-laskutettu :kaikki-yhteensa-laskutetaan true nil "vahvistamaton")
+                    [(toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset yhteensä" :kaikki-yhteensa-laskutettu :kaikki-yhteensa-laskutetaan true nil "vahvistamaton")
+                     (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
+                       (let [siirto-pos? (pos? (:hk_valikatselmus_siirrot_ed_vuodelta data))]
+                         (toteutuneet-rivi data kyseessa-kk-vali? "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true (when siirto-pos? "red") nil)))
                      (toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset, jotka kuuluvat tavoitehintaan" :kaikki-tavoitehintaiset-laskutettu :kaikki-tavoitehintaiset-laskutetaan true nil nil)
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)]
