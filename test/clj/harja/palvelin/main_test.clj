@@ -168,7 +168,8 @@
     :urakkatilanne
     :api-talvihoitoreitit
     :talvihoitoreitit
-    :tieosoitteet-hallinta})
+    :tieosoitteet-hallinta
+    :ajastukset-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -252,7 +253,8 @@
     :lupaukset-hallinta
     :paallystysilmoitukset-hallinta
     :urakkatilanne
-    :tieosoitteet-hallinta})
+    :tieosoitteet-hallinta
+    :ajastukset-hallinta})
 
 (def hidas-ok-status #{:itmf})
 
