@@ -12,7 +12,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.kulut.kustannusten-seuranta-excel :as kustannusten-seuranta-excel]))
 
-(defn- hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
+(defn hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
   (if (nil? hoitokauden-alkuvuosi)
     (throw+ {:type virheet/+sisainen-kasittelyvirhe+
