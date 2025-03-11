@@ -292,17 +292,23 @@
     (is (= (* 4 summa) (:hankinnat_hoitokausi_yht purettu)))
     (is (= (* 4 summa) (:hankinnat_val_aika_yht purettu)))))
 
-;; TODO: Testaa kulujen siirto edelliseltä vuodelta
 (deftest tavoitehinta-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
         aikavali_loppupvm "2020-09-30"
+        kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         tav_hinta 100000M
+        ;; Lisää siirretty tavoitehinta "edelliseltä vuodelta"
         _ (u (format "update urakka_tavoite
                          set tavoitehinta_siirretty_indeksikorjattu = %s
                        where hoitokausi = 1 AND urakka = %s" tav_hinta urakka-id))
+
+        siirto-ed-vuodelta 60000.0M
+        ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta"
+        _ (i (format "INSERT INTO urakka_paatos (\"hoitokauden-alkuvuosi\", \"urakka-id\", \"hinnan-erotus\", \"urakoitsijan-maksu\", \"tilaajan-maksu\", siirto, tyyppi, \"lupaus-luvatut-pisteet\", \"lupaus-toteutuneet-pisteet\", \"lupaus-tavoitehinta\", muokattu, \"muokkaaja-id\", \"luoja-id\", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id)
+        VALUES (2018, %s, null, 39395.784199999995, 0, %s, 'kattohinnan-ylitys', null, null, null, null, null, %s, '2019-11-01 10:12:11.886000', false, null, null, 51);" urakka-id siirto-ed-vuodelta kayttaja-id))
 
         hoitokauden_tavoitehinta (ffirst (q (format "SELECT COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0) as tavoitehinta
                                     from urakka_tavoite ut
@@ -328,16 +334,20 @@
                   purettu-hoitokausi
                   (map vector rahavaraukset-nimet rahavaraukset-val-aika))
 
+        ;; Tavoitehintaan kuuluvat kustannukset yhteensä
         tavhin_hoitokausi_yht (+ (:talvihoito_hoitokausi_yht purettu) (:lyh_hoitokausi_yht purettu)
                                  (:sora_hoitokausi_yht purettu) (:paallyste_hoitokausi_yht purettu)
                                  (:yllapito_hoitokausi_yht purettu) (:korvausinv_hoitokausi_yht purettu)
                                  (:johtojahallinto_hoitokausi_yht purettu) (:erillishankinnat_hoitokausi_yht purettu)
                                  (:hjpalkkio_hoitokausi_yht purettu) (:akilliset_hoitotyot_hk purettu)
-                                 (:vahinkojen_korjaukset_hk purettu))
+                                 (:vahinkojen_korjaukset_hk purettu) (:muut_kulut_hoitokausi_yht purettu))
         budjettia_jaljella (- (+ (:hk_tavhintsiirto_ed_vuodelta purettu) (:hoitokauden_tavoitehinta purettu))
                               (:tavhin_hoitokausi_yht purettu))]
 
     (is (= tav_hinta (:hk_tavhintsiirto_ed_vuodelta purettu)))
+    (is (= siirto-ed-vuodelta (:hk_valikatselmus_siirrot_ed_vuodelta purettu)))
+    ;; Tarkastetaan, että siirto mukana muiden kulujen yhteissummassa
+    (is (= (+ siirto-ed-vuodelta (:muut_kulut_hoitokausi purettu)) (:muut_kulut_hoitokausi_yht purettu)))
     (is (= tavhin_hoitokausi_yht (:tavhin_hoitokausi_yht purettu)))
     (is (= budjettia_jaljella (:budjettia_jaljella purettu)))
     (is (= hoitokauden_tavoitehinta (:hoitokauden_tavoitehinta purettu)))))
