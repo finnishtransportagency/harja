@@ -31,8 +31,7 @@
                     (= "Toteutuneet" otsikko)
                     [(valitaulukko-rivi data false "Hankinnat ja hoidonjohto yhteensä" :hankinnat_ja_hoidon_hk_yht :hankinnat_ja_hoidon_val_yht true nil "vahvistamaton")
                      (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
-                       (let [siirto-pos? (pos? (:hk_valikatselmus_siirrot_ed_vuodelta data))]
-                         (valitaulukko-rivi data false "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true (when siirto-pos? "red") nil)))
+                       (valitaulukko-rivi data false "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true nil nil))
                      (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton")
 
                      ;; Nätetään arvot vain jos on olemassa
@@ -46,7 +45,7 @@
                          :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil))
 
                      (when (yhteiset/raha-arvo-olemassa? (:hk_tavhintsiirto_ed_vuodelta data))
-                       (valitaulukko-rivi data false "Tavoitehinnan siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true "red" nil))
+                       (valitaulukko-rivi data false "Tavoitehinnan siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true nil nil))
 
                      (when (yhteiset/raha-arvo-olemassa? (:budjettia_jaljella data))
                        (valitaulukko-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil))
@@ -96,8 +95,7 @@
                     (= "Toteutuneet" otsikko)
                     [(toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset yhteensä" :kaikki-yhteensa-laskutettu :kaikki-yhteensa-laskutetaan true nil "vahvistamaton")
                      (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
-                       (let [siirto-pos? (pos? (:hk_valikatselmus_siirrot_ed_vuodelta data))]
-                         (toteutuneet-rivi data kyseessa-kk-vali? "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true (when siirto-pos? "red") nil)))
+                       (toteutuneet-rivi data kyseessa-kk-vali? "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true nil nil))
                      (toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset, jotka kuuluvat tavoitehintaan" :kaikki-tavoitehintaiset-laskutettu :kaikki-tavoitehintaiset-laskutetaan true nil nil)
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)]

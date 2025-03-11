@@ -363,7 +363,7 @@
            (paaryhman-rivitys e! app "Tavoitehinnan oikaisut" :tavoitehinnanoikaisu tavoitehinnanoikaisut rivit-paaryhmittain true))
          ;; Siirto rivi
          (when siirtoa-viime-vuodelta?
-           [:tr.bottom-border.tummennettu
+           [:tr.bottom-border
             [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
             [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
             [:td {:style {:width (:tehtava leveydet)
@@ -373,13 +373,13 @@
             [:td.numero {:style {:width (:suunniteltu leveydet)}}]
             [:td.numero {:style {:width (:indeksikorjattu leveydet)}}]
             ;; Näytetään plusmerkkinen siirto punaisena, siksi positiivinen->negatiivinen
-            [:td.numero {:class (if siirto-negatiivinen? "numero" "negatiivinen-numero")
+            [:td.numero {:class "numero"
                          :style {:width (:toteuma leveydet)}} (str (when-not siirto-negatiivinen? "+ ") (fmt->big (get-in rivit-paaryhmittain [:siirto :siirto-toteutunut])))]
             [:td {:style {:width (:erotus leveydet)}}]
             [:td {:style {:width (:prosentti leveydet)}}]])
 
          ; Näytä yhteensä rivi
-         [:tr.bottom-border
+         [:tr.bottom-border.sininen-tausta
           [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
           [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
           [:td {:style {:width (:tehtava leveydet)
