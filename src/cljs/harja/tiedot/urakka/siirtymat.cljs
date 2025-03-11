@@ -176,14 +176,17 @@
 
 (defn avaa-valikatselmus
   "Anna valittu-hoitokausi muodossa [#inst '2018-10-01' #inst '2019-09-30']"
-  [valittu-hoitokausi]
+  [hallintayksikko-id urakka-id valittu-hoitokausi]
   (go
     (let [app-state {:valikatselmus-auki? true
                      :hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
                      :valittu-hoitokausi valittu-hoitokausi}]
       (do
-        ;; Aseta oikea välilehti, välikatselmuksella ei ole vielä erillistä sivua, kun välilehden alla on vain yksi tabi.
+        (nav/esta-url-paivitys!)
+        (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
+        (nav/aseta-valittu-valilehti! :sivu :urakat)
         (nav/aseta-valittu-valilehti! :urakat :valikatselmus)
+        (nav/salli-url-paivitys!)
         (swap! urakka-tila/kustannusten-seuranta merge app-state)))))
 
 (defn avaa-lupaukset [hoitokauden-alkuvuosi]

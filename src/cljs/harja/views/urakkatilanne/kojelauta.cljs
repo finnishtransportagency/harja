@@ -134,11 +134,9 @@
                                            (> (pvm/nyt)
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
-     [yleiset/tooltip {} :% "Siirry kustannusten seurantaan"]
+     [yleiset/tooltip {} :% "Siirry välikatselmukseen2"]
      [:a.klikattava.alleviivaa {:href "#"
-                                :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
-                                                                                                              :taso2 :laskutus
-                                                                                                              :taso3 :kustannusten-seuranta})}
+                                :on-click #(siirtymat/avaa-valikatselmus (:ely_id rivi) (:id rivi) [(pvm/hoitokauden-alkupvm (:hoitokauden_alkuvuosi rivi)) (pvm/hoitokauden-loppupvm (inc (:hoitokauden_alkuvuosi rivi)))])}
       [:div.tavoitehintapaatos
        (if (and (nil? tavoitehintaalituspaatos) (nil? tavoitehintaylityspaatos))
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
