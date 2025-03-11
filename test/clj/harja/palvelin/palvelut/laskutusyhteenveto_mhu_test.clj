@@ -128,6 +128,8 @@
 
       (is (= talvihoidon-tavoitehinta (:tavoitehintaiset_laskutettu talvihoito))))))
 
+;; TODO: Testaa kulujen siirto edelliseltä vuodelta ja budjettia jäljellä
+
 (deftest mhu-laskutusyhteenvedon-sanktiot-joissa-indeksikorotus
   (testing "mhu-laskutusyhteenvedon-sanktiot-joissa-indeksikorotus"
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
