@@ -119,7 +119,7 @@
   [urakat]
   (let [kaikkien-urakoiden-lkm (count urakat)
         urakat-joissa-pisteet-syotetty (count (filter (fn [rivi]
-                                                        (integer? (:lupaus_tavoitepisteet rivi)))
+                                                        (and (:toteutuneet_pisteet rivi) (:luvatut_pisteet rivi)))
                                                 urakat))
         urakat-joista-tieto-puuttuu (- kaikkien-urakoiden-lkm urakat-joissa-pisteet-syotetty)
         lupauspisteiden-yhteenveto (when-not (empty? urakat)
@@ -134,14 +134,15 @@
   [urakat]
   (let [kaikkien-urakoiden-lkm (count urakat)
         urakat-joissa-tavoitehintapaatos (count (filter (fn [rivi]
-                                                          (some? (:tavoitehintapaatos rivi))) urakat))
-        urakat-joissa-jokin-lupauspaatos-tehtyna (count (keep (fn [rivi]
-                                                                (seq (:lupauspaatokset rivi))) urakat))
+                                                          (some? (or (:tavoitehintaalituspaatos rivi) (:tavoitehintaylityspaatos rivi)))) urakat))
+        urakat-joissa-jokin-lupauspaatos-tehtyna (count (filter (fn [rivi]
+                                                                  (some? (:lupauspaatos rivi))) urakat))
         urakat-joissa-ei-paatoksia (count (filter (fn [rivi]
                                                     (and
-                                                      (nil? (:tavoitehintapaatos rivi))
+                                                      (nil? (:tavoitehintaalituspaatos rivi))
+                                                      (nil? (:tavoitehintaylityspaatos rivi))
                                                       (nil? (:kattohintapaatos rivi))
-                                                      (nil? (:lupauspaatokset rivi)))) urakat))
+                                                      (nil? (:lupauspaatos rivi)))) urakat))
         valikatselmusten-yhteenveto (when-not (empty? urakat)
                                       [:span.valikatselmustiedot
                                        [yleiset/tietoja {:class "body-text"}

@@ -7,25 +7,43 @@ SELECT u.id,
        urakan_kustannussuunnitelman_tila(u.id::INTEGER,
                                          monesko_hoitokausi(u.alkupvm, u.loppupvm,
                                                             :hoitokauden_alkuvuosi::INTEGER))       AS ks_tila,
-       (SELECT tyyppi::TEXT
-          FROM urakka_paatos up
-         WHERE up."urakka-id" = u.id
-           AND up."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-           AND up.poistettu IS FALSE
-           AND up.tyyppi IN ('tavoitehinnan-ylitys', 'tavoitehinnan-alitus') LIMIT 1) AS tavoitehintapaatos,
-       (SELECT tyyppi::TEXT
-          FROM urakka_paatos up
-         WHERE up."urakka-id" = u.id
-           AND up."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-           AND up.poistettu IS FALSE
-           AND up.tyyppi IN ('kattohinnan-ylitys') LIMIT 1) AS kattohintapaatos,
-       (SELECT ARRAY_AGG(DISTINCT (tyyppi::TEXT))
-         FROM urakka_paatos up
-         WHERE up."urakka-id" = u.id
-           AND up."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-           AND up.poistettu IS FALSE
-           AND up.tyyppi IN ('lupausbonus', 'lupaussanktio')) AS lupauspaatokset,
-       sit.pisteet AS lupaus_tavoitepisteet,
+       (SELECT 'tavoitehinnan-alitus' as tyyppi
+        FROM paatos_tavoitehinta_alitus p
+        WHERE p.urakkaid = u.id
+          AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+          AND p.poistettu IS FALSE
+          LIMIT 1) AS tavoitehintaalituspaatos,
+       (SELECT 'tavoitehinnan-ylitus' as tyyppi
+        FROM paatos_tavoitehinta_ylitys p
+        WHERE p.urakkaid = u.id
+          AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+          AND p.poistettu IS FALSE
+        LIMIT 1) AS tavoitehintaylityspaatos,
+       (SELECT 'kattohinnan-ylitys' as tyyppi
+        FROM paatos_kattohinta p
+        WHERE p.urakkaid = u.id
+          AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+          AND p.poistettu IS FALSE
+        LIMIT 1) AS kattohintapaatos,
+       (SELECT tyyppi::TEXT as tyyppi
+         FROM paatos_lupaus p
+         WHERE p.urakkaid = u.id
+           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+           AND p.poistettu IS FALSE
+           AND p.tyyppi IN ('bonus', 'sanktio')) AS lupauspaatos,
+       (SELECT p.luvatut_pisteet
+        FROM paatos_lupaus p
+        WHERE p.urakkaid = u.id
+          AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+          AND p.poistettu IS FALSE
+          AND p.tyyppi IN ('bonus', 'sanktio')) AS luvatut_pisteet,
+       (SELECT p.toteutuneet_pisteet
+        FROM paatos_lupaus p
+        WHERE p.urakkaid = u.id
+          AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+          AND p.poistettu IS FALSE
+          AND p.tyyppi IN ('bonus', 'sanktio')) AS toteutuneet_pisteet,
+
        (SELECT count(*) FROM laatupoikkeama lp WHERE lp.urakka = u.id AND lp.paatos IS NULL AND lp.poistettu IS FALSE AND
            lp.aika BETWEEN make_date(:hoitokauden_alkuvuosi::INTEGER, 10, 1) AND
                make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30) + interval '23 hours 59 minutes 59 seconds') AS avoimet_laatupoikkeamat,
@@ -35,9 +53,6 @@ SELECT u.id,
                make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30) + interval '23 hours 59 minutes 59 seconds') AS avoimet_turvallisuuspoikkeamat
   FROM urakka u
            JOIN organisaatio o ON u.hallintayksikko = o.id
-           LEFT JOIN lupaus_sitoutuminen sit ON
-      -- varmistetaan tasan yksi rivi MAX-funktion avulla
-      sit.id = (SELECT MAX(id) FROM lupaus_sitoutuminen ls WHERE ls."urakka-id" = u.id AND ls.pisteet IS NOT NULL AND ls.poistettu IS FALSE)
  WHERE
      u.tyyppi = 'teiden-hoito' AND
      u.urakkanro IS NOT NULL AND -- testiurakat pois

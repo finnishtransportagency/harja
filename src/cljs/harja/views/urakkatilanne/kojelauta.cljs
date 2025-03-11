@@ -112,19 +112,19 @@
 
 (defn lupauspisteet-sarake
   [rivi]
-  (let [{:keys [lupaus_tavoitepisteet hoitokauden_alkuvuosi]} rivi]
+  (let [{:keys [luvatut_pisteet toteutuneet_pisteet hoitokauden_alkuvuosi]} rivi]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry lupausnäkymään"]
      [:a.klikattava.alleviivaa {:href "#"
                                 :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
       [:div.lupauspisteet
-       (if (nil? lupaus_tavoitepisteet)
+       (if (or (nil? luvatut_pisteet) (nil? toteutuneet_pisteet))
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Ei tavoitepistemäärää")})
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ok")}))]]]))
 
 (defn valikatselmus-sarake
   [rivi]
-  (let [{:keys [urakan_alkuvuosi tavoitehintapaatos kattohintapaatos lupauspaatokset hoitokauden_alkuvuosi]} rivi
+  (let [{:keys [urakan_alkuvuosi tavoitehintaalituspaatos tavoitehintaylityspaatos kattohintapaatos lupauspaatos hoitokauden_alkuvuosi]} rivi
         edellisen-hoitokauden-alkuvuosi (- (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt)))) 1)
         ;; 15.11. on takaraja, milloin edellisen hoitokauden välikatselmus pitää olla tehtynä (edellinen --> kuluva hk -1)
         valikatselmuksen-takaraja-ohi? (or
@@ -140,11 +140,11 @@
                                                                                                               :taso2 :laskutus
                                                                                                               :taso3 :kustannusten-seuranta})}
       [:div.tavoitehintapaatos
-       (if (nil? tavoitehintapaatos)
+       (if (and (nil? tavoitehintaalituspaatos) (nil? tavoitehintaylityspaatos))
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
            {:fmt-fn (constantly "Ei tavoitehinta\u00ADpäätöstä")})
          (yleiset/tila-indikaattori "valmis"
-           {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi tavoitehintapaatos))}))]
+           {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi (or tavoitehintaalituspaatos tavoitehintaylityspaatos)))}))]
       ;; ennen vuotta 2021 alkaneissa urakoissa kattohintapäätös ei ollut kytköksissä tavoitehintapäätökseen, niin näytetään tämä tieto vain silloin
       ;; 2021 ja jälkeen riittää kertoa onko tavoitehintapäätös tehty
       [:div.kattohintapaatos
@@ -156,13 +156,12 @@
              {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi kattohintapaatos))})))]
 
       [:div.lupauspaatokset
-       (if (nil? lupauspaatokset)
+       (if (nil? lupauspaatos)
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
            {:fmt-fn (constantly "Ei lupaus\u00ADpäätöksiä")})
-         (for* [lp lupauspaatokset]
-           [:span
-            (yleiset/tila-indikaattori "valmis"
-              {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi lp))})]))]]]))
+         [:span
+          (yleiset/tila-indikaattori "valmis"
+            {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi lupauspaatos))})])]]]))
 
 (defn kustannussuunitelman-tila-sarake
   [rivi]
