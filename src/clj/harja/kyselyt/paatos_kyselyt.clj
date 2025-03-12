@@ -2,7 +2,9 @@
   (:require [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [jeesql.core :refer [defqueries]]
-            [slingshot.slingshot :refer [throw+]]))
+            [slingshot.slingshot :refer [throw+]]
+            [clojure.spec.alpha :as s]
+            [harja.domain.valikatselmus :as valikatselmus-domain]))
 
 (defqueries "harja/kyselyt/paatos_kyselyt.sql"
   {:positional? true})
@@ -75,9 +77,10 @@
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:tyyppi paatos) (:urakkaid paatos) (:tavoitehinta paatos)
-                         (:tarjous_tavoitehinta paatos) (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos)
-                         (:bonusprosentti paatos) (:sanktioprosentti paatos) (:luoja paatos))
+        valid (s/valid? ::valikatselmus-domain/lupauspaatos paatos)
+        _ (when-not valid
+            (log/error (s/explain-str ::valikatselmus-domain/tavoitehinnan-muutospaatos paatos)))
+        validaatio (if valid
                      validaatio
                      (conj validaatio "Puutteelliset lupauspäätöstiedot."))
         ;; Tarkista sakot
@@ -108,7 +111,7 @@
   "Tavoitehinnan muutospäätös mäppi:
   {:hoitokauden_alkuvuosi <vuosi>
   :urakkaid <urakka-id>
-  :versio <versio>
+  :muokkaa_kattohinta <versio>
   :tavoitehinta <tavoitehinta>
   :kattohinta <tavoitehinta>
   :luoja <kuka>}"
@@ -118,14 +121,16 @@
 
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:urakkaid paatos) (:versio paatos) (:tavoitehinta paatos)
-                           (:kattohinta paatos) (:luoja paatos))
+        valid (s/valid? ::valikatselmus-domain/tavoitehinnan-muutospaatos paatos)
+        _ (when-not valid
+            (log/error (s/explain-str ::valikatselmus-domain/tavoitehinnan-muutospaatos paatos)))
+        validaatio (if valid
                      validaatio
                      (conj validaatio "Puutteelliset tavoitehinnan muutospäätöstiedot."))]
 
     (if (seq validaatio)
       (do
-        (log/error "Virheellinen päätös:" paatos)
+        (log/error "Virheellinen tavoitehinnan muutospäätös:" paatos)
         (heita-virhe (str "Tavoitehinnan muutospäätöksessä virheitä: " (clojure.string/join ", " validaatio))))
       (tee-tavoitehinnan-muutos-paatos<! db paatos))))
 
@@ -157,10 +162,10 @@
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:hoitokauden_alkuvuosi paatos) (:urakkaid paatos) (:hoitokauden_alun_tavoitehinta paatos)
-                         (:hoitokauden_lopun_tavoitehinta paatos) (:toteutuneet_kustannukset paatos)
-                         (:alituksen_maara paatos) (:tavoitepalkkio paatos) (:tavoitepalkkion_maksuprosentti paatos)
-                         (not (nil? (:viimeinen_hoitokausi paatos))) (:luoja paatos))
+        valid (s/valid? ::valikatselmus-domain/tavoitehinnan-alituspaatos paatos)
+        _ (when-not valid
+            (log/error (s/explain-str ::valikatselmus-domain/tavoitehinnan-alituspaatos paatos)))
+        validaatio (if valid
                      validaatio
                      (conj validaatio "Puutteelliset tavoitehinnan alituspäätöstiedot."))
         ;; TODO: Tarvitseeko vertailla kulu_id:t ja siirron määrä?
@@ -201,12 +206,10 @@
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:tavoitehinta paatos)
-                            (:toteutuneet_kustannukset paatos) (:ylityksen_maara paatos) (:tilaajan_prosentti paatos)
-                            (:urakoitsijan_prosentti paatos) (:tilaaja_maksaa paatos) (:urakoitsija_maksaa paatos)
-                            (:urakoitsija_maksaa paatos) (not (nil? (:viimeinen_hoitokausi paatos))) (:luoja paatos))
-                     validaatio
-                     (conj validaatio "Puutteelliset tavoitehinnan ylityspäätöstiedot."))
+        valid (s/valid? ::valikatselmus-domain/tavoitehinnan-ylityspaatos paatos)
+        _ (when-not valid
+            (log/error (s/explain-str ::valikatselmus-domain/tavoitehinnan-ylityspaatos paatos)))
+        validaatio (if valid validaatio (conj validaatio "Puutteelliset tavoitehinnan ylityspäätöstiedot."))
 
         ;; Tarkista siirto - TODO: Siirrosta puhutaan spekseissä, mutta ui:lla ei ole siihen toimintoa. Jätetään vielä toteuttamatta
         #_#_ validaatio (if (and (not (nil? (:siirto paatos))) (nil? (:kulu_id paatos)))
@@ -242,6 +245,8 @@
    :ylityksen_maara <eurot>
    :urakoitsija_maksaa <eurot>
    :siirrettava_maara <eurot>
+   :maksimi_siirrettava_maara <eurot>
+   :siirtorajoitus_prosentti <prosentti>
    :kulu_id <luodun kulun id>
    :viimeinen_hoitokausi <boolean>
    :luoja <kayttaja>}"
@@ -249,9 +254,10 @@
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:kattohinta paatos)
-                         (:toteutuneet_kustannukset paatos) (:ylityksen_maara paatos) (:urakoitsija_maksaa paatos)
-                         (:kulu_id paatos) (:siirrettava_maara paatos) (not (nil? (:viimeinen_hoitokausi paatos))) (:luoja paatos))
+        valid (s/valid? ::valikatselmus-domain/kattohinnan-ylityspaatos paatos)
+        _ (when-not valid
+            (log/error (s/explain-str ::valikatselmus-domain/kattohinnan-ylityspaatos paatos)))
+        validaatio (if valid
                      validaatio
                      (conj validaatio "Puutteelliset kattohinnan ylityspäätöstiedot."))]
     (if (seq validaatio)
@@ -289,10 +295,10 @@
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:tavoitehinta paatos)
-                         (:tavoitehinnan_muutokset paatos) (:tavoitehinta_ennen paatos)
-                         (:alkuperainen_pisteluku paatos) (:alkuperaisen_pisteluvun_kuukausi paatos) (:pistelukujen_muutos paatos)
-                         (:hoitokauden_kuukaudet paatos) (:kuukausien_keskiarvo paatos) (:indeksikorotuksen_prosenttiosuus paatos) (:luoja paatos))
+        valid (s/valid? ::valikatselmus-domain/indeksikorjauspaatos paatos)
+        _ (when-not valid
+            (log/error (s/explain-str ::valikatselmus-domain/indeksikorjauspaatos paatos)))
+        validaatio (if valid
                      validaatio
                      (conj validaatio "Puutteelliset indeksikorjauspäätöstiedot."))
         ;; Tarkista hoitokauden kuukausien määrä
@@ -343,13 +349,10 @@
   (log/debug "tee-hoitokauden-lopun-hintapaatos :: paatos" (pr-str paatos))
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:tavoitehinta_ennen paatos)
-                         (:tavoitehinta_jalkeen paatos) (:tavoitehinnan_muutokset paatos)
-                         (:hoitokauden_lopun_indeksikorjaus paatos) (:kattohinta paatos) (:luoja paatos))
-                     validaatio
-                     (conj validaatio "Puutteelliset indeksikorjauspäätöstiedot."))
-        _ (log/debug "tee-hoitokauden-lopun-hintapaatos :: validaatio" (pr-str validaatio))
-        ]
+        valid (s/valid? ::valikatselmus-domain/hoitokauden-lopun-hintapaatos paatos)
+        _ (when-not valid
+            (log/error (s/explain-str ::valikatselmus-domain/hoitokauden-lopun-hintapaatos paatos)))
+        validaatio (if valid validaatio (conj validaatio "Puutteelliset indeksikorjauspäätöstiedot."))]
 
     (if (seq validaatio)
       (heita-virhe (str "Hoitokauden lopun hintapäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
@@ -381,11 +384,10 @@
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:tavoitehinta paatos)
-                         (:tarjouksen_tavoitehinta paatos) (:hoidonjohtopalkkio paatos) (:muutosprosentti paatos)
-                         (:hoidonjohtopalkkio_muutos paatos) (:kulu_id paatos) (:luoja paatos))
-                     validaatio
-                     (conj validaatio "Puutteelliset hoidonjohtopalkkionmuutospäätöstiedot."))]
+        valid (s/valid? ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos paatos)
+        _ (when-not valid
+            (log/error (s/explain-str ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos paatos)))
+        validaatio (if valid validaatio (conj validaatio "Puutteelliset hoidonjohtopalkkionmuutospäätöstiedot."))]
 
     (if (seq validaatio)
       (heita-virhe (str "Hoitokauden lopun hintapäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
@@ -412,12 +414,15 @@
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   (let [validaatio #{}
         ;; Validoi perustietojen pakollisuus
-        validaatio (if (and (:urakkaid paatos) (:hoitokauden_alkuvuosi paatos) (:luoja paatos))
-                     validaatio
-                     (conj validaatio "Puutteelliset päätöstiedot."))]
+        valid (s/valid? ::valikatselmus-domain/raporttipaatos paatos)
+        _ (when-not valid
+            (log/error (s/explain-str ::valikatselmus-domain/raporttipaatos paatos)))
+        validaatio (if valid validaatio (conj validaatio "Puutteelliset päätöstiedot."))]
 
     (if (seq validaatio)
-      (heita-virhe (str "Välikatselmuksen pöytäkirjan raporttipäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
+      (do
+        (log/error "Puutteellinen kattohinnan raporttipaatos:" paatos)
+        (heita-virhe (str "Välikatselmuksen pöytäkirjan raporttipäätöksessä virheitä: " (clojure.string/join ", " validaatio))))
       (tee-poytakirjan-raporttipaatos<! db paatos))))
 
 (defn poista-poytakirjan-raporttipaatos [db urakkaid kayttajaid paatosid]

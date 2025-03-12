@@ -159,8 +159,7 @@
         kattohinta (:kattohinta paatos)
         tavoitehinta (:tavoitehinta paatos)
         hoitokauden-oikaisut-atom (atom tavoitehinnan-muutokset)
-        urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
-        poikkeusvuosi? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi) ;;TODO:  Korjaa
+        poikkeusvuosi? (:muokkaa_kattohinta paatos)
 
         paatoksen-tiedot (merge
                            paatos
@@ -192,7 +191,7 @@
            [:span "Tavoitehintaan liittyvä päätös on tallennettu. Jos aiot tehdä  uusia tavoitehinnan muutoksia, kumoa päätös ensin."]])
 
         (when kattohinnan-oikaisu-mahdollinen?
-          [kattohinnan-oikaisu e! kattohinta kattohinta tavoitehinta paatos-tehty?])
+          [kattohinnan-oikaisu e! kattohinta tavoitehinta paatos-tehty?])
 
         ;; Päätöksenteko napit
         (if-not (:virhe paatos)

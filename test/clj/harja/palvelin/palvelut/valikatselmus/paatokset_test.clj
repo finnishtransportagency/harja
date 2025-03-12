@@ -57,10 +57,10 @@
    :sanktio_id sanktio-id
    :luoja luoja})
 
-(defn tavoitehinnan-muutospaatos [urakkaid hoitokauden-alkuvuosi versio tavoitehinta kattohinta luoja]
+(defn tavoitehinnan-muutospaatos [urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :versio versio
+   :muokkaa_kattohinta muokkaa-kattohinta
    :tavoitehinta tavoitehinta
    :kattohinta kattohinta
    :luoja luoja})
@@ -99,7 +99,8 @@
    :luoja luoja})
 
 (defn kattohinnan-ylityspaatos [urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                                ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi luoja]
+                                ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi
+                                maksimi-siirrettava-maara siirtorajoitus-prosentti luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
    :kattohinta kattohinta
@@ -109,6 +110,8 @@
    :siirrettava_maara siirrettava-maara
    :kulu_id kulu-id
    :viimeinen_hoitokausi viimeinen_hoitokausi
+   :maksimi_siirrettava_maara maksimi-siirrettava-maara
+   :siirtorajoitus_prosentti siirtorajoitus-prosentti
    :luoja luoja})
 
 (defn indeksikorjauspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
@@ -176,10 +179,10 @@
   (is (= sanktio-id (:sanktio_id paatos)))
   (is (= urakkaid (:urakkaid paatos))))
 
-(defn testaa-tavoitehinnan-muutospaatos [paatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta kattohinta luoja]
+(defn testaa-tavoitehinnan-muutospaatos [paatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
-  (is (= versio (:versio paatos)))
+  (is (= muokkaa-kattohinta (:muokkaa_kattohinta paatos)))
   (is (= tavoitehinta (:tavoitehinta paatos)))
   (is (= kattohinta (:kattohinta paatos)))
   (is (= luoja (:luoja paatos))))
@@ -218,7 +221,8 @@
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-kattohinnan-ylityspaatos [paatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                                       ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi luoja]
+                                       ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi
+                                       maksimi-siirrettava-maara siirtorajoitus-prosentti luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
   (is (= kattohinta (:kattohinta paatos)))
@@ -228,6 +232,8 @@
   (is (= siirrettava-maara (:siirrettava_maara paatos)))
   (is (= kulu-id (:kulu_id paatos)))
   (is (= viimeinen_hoitokausi (:viimeinen_hoitokausi paatos)))
+  (is (= maksimi-siirrettava-maara (:maksimi_siirrettava_maara paatos)))
+  (is (= siirtorajoitus-prosentti (:siirtorajoitus_prosentti paatos)))
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-indeksikorjauspaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
@@ -366,7 +372,6 @@
         sanktio-id nil
         lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                        lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
-
         vastaus (try
                   (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
                                 ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
@@ -558,28 +563,48 @@
     (is (= "Lupaukset" (:nimi poistettu-paatos)))))
 
 ;; Testaa tavoitehinnan muutospäätöksen lisäys
-(deftest kysely-tavoitehinnan-muutos-lisays-onnistuu-test
+(deftest kysely-tavoitehinnan-muutos-lisays-onnistuu-2024-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        versio "1a"
+        muokkaa-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit)
         tavoitehinta 5M
         kattohinta 5M
-        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta kattohinta kayttajaid)
+        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos)]
-    (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi versio tavoitehinta kattohinta kayttajaid)))
+    (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
+    ;; -124 alkavalla urakalla pitää olla kattohinta 10% tavoitehinnasta
+    (is (= false (:muokkaa_kattohinta vastaus)))))
+
+(deftest kysely-tavoitehinnan-muutos-lisays-onnistuu-2019-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2020
+        muokkaa-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit)
+        tavoitehinta 5M
+        kattohinta 5M
+        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
+
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos)]
+    (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
+    ;; -19 alkavalla urakalla pitää olla kattohinta käsin muokattavana
+    (is (= true (:muokkaa_kattohinta vastaus)))))
 
 (deftest rajapinta-tavoitehinnan-muutos-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        versio "1a"
+        muokkaa-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit)
         tavoitehinta 5M
         kattohinta 5M
-        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta kattohinta kayttajaid)
+        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
         ;; Tarvitaanko feikattuja kyselyitä?
         vastaus (try
                   (with-redefs [
@@ -600,10 +625,10 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        versio 1
+        muokkaa-kattohinta false
         tavoitehinta 5M
         kattohinta 5M
-        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta kattohinta kayttajaid)
+        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
         _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
@@ -621,10 +646,10 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        versio "1a"
+        muokkaa-kattohinta false
         tavoitehinta 5M
         kattohinta 5M
-        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi versio tavoitehinta kattohinta kayttajaid)
+        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
         vastaus (try
                   (with-redefs [
                                 ;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
@@ -888,6 +913,7 @@
 (deftest kysely-kattohinnan-ylitys-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         kattohinta 5M
@@ -895,17 +921,21 @@
         ylityksen-maara 10M
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        viimeinen_hoitokausi false
         kulu-id 1
         paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false kayttajaid)
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
 
         vastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
     (testaa-kattohinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-      ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false kayttajaid)))
+      ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)))
 
-(deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-test
+(deftest kysely-kattohinnan-ylitys-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         kattohinta 5M
@@ -913,9 +943,36 @@
         ylityksen-maara 10M
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        viimeinen_hoitokausi false
+        kulu-id 1
+        paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
+
+        vastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
+    (testaa-kattohinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+      ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
+
+    ;; -25 alkavalla urakalla siirtorajoitusprosentti pitää olla kolme
+    (is (= 0.03M (:siirtorajoitus_prosentti vastaus)))))
+
+(deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2024-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        kattohinta 5M
+        toteutuneet-kustannukset 5M
+        ylityksen-maara 10M
+        urakoitsija-maksaa 50M
+        siirrettava-maara 50M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         kulu-id nil
         paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false kayttajaid)
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
@@ -927,10 +984,10 @@
     ;; Koska ehdot eivät täyty, niin kattohinnan ylityspäätöksen default päätöstä ei voida palauttaa
     (is (nil? tallennettu-paatos))))
 
-;; Kattohinnan ylitys - Poisto
-(deftest kysely-kattohinnan-ylityspaatoksen-poisto-onnistuu-test
+(deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2025-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         kattohinta 5M
@@ -938,9 +995,48 @@
         ylityksen-maara 10M
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        kulu-id nil
+        paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
+
+        vastaus (try
+                  (with-redefs [;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
+                                valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit]
+                                                                                kattohinta)]
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-kattohinnan-ylityspaatos +kayttaja-jvh+ paatos))
+                  (catch Exception e e))
+
+        ;; Haetaan päätös suoraan tietokannasta - koska kattohinnan ylitykselle ei ehdot täyty. Tämä johtuu siitä, että
+        ;; Kittilän urakalta puuttuu toteumia ja suunnitelmia
+        db-paatos (first (paatos-kyselyt/hae-kattohinta-paatokset (:db jarjestelma) {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi :urakkaid urakkaid}))]
+
+    (is (= 0.03M (:siirtorajoitus_prosentti db-paatos)))
+    (is (= false (:viimeinen_hoitokausi db-paatos)))
+    (is (= urakoitsija-maksaa (:urakoitsija_maksaa db-paatos)))
+    (is (= kattohinta (:kattohinta db-paatos)))
+    (is (= "Kattohinnan ylitys" (:nimi db-paatos)))
+    (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi db-paatos)))))
+
+;; Kattohinnan ylitys - Poisto
+(deftest kysely-kattohinnan-ylityspaatoksen-poisto-onnistuu-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        kattohinta 5M
+        toteutuneet-kustannukset 5M
+        ylityksen-maara 10M
+        urakoitsija-maksaa 50M
+        siirrettava-maara 50M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         kulu-id 1
         paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false kayttajaid)
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara
+                 siirtorajoitus-prosentti kayttajaid)
         _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
@@ -956,6 +1052,7 @@
 (deftest rajapinta-kattohinnan-ylityspaatoksen-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         kattohinta 5M
@@ -963,9 +1060,12 @@
         ylityksen-maara 10M
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         kulu-id 1
         paatos (kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false kayttajaid)
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara
+                 siirtorajoitus-prosentti kayttajaid)
         tallennettu-paatos (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)
         poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-kattohinnan-ylityspaatos +kayttaja-jvh+ tallennettu-paatos)
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :kattohinnan-ylitys)]
