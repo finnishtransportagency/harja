@@ -75,6 +75,7 @@
     [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
     [harja.palvelin.palvelut.hallinta.lupaukset-palvelu :as lupaukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.ajastukset-palvelu :as ajastukset-hallinta]
     [harja.palvelin.palvelut.hallinta.paallystysilmoitukset-hallinta-palvelu :as paallystysilmoitukset-hallinta]
     [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
@@ -93,7 +94,6 @@
     [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-palvelu :as talvihoitoreitit]
     [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
     [harja.palvelin.palvelut.yha :as yha]
-    [harja.palvelin.palvelut.yha-velho :as yha-velho]
     [harja.palvelin.palvelut.digiroad :as digiroad]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
@@ -113,7 +113,7 @@
     [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
-    [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
+    [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
     [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
     [harja.palvelin.palvelut.yllapitokohteet.kustannukset-palvelu :as kustannukset-palvelu]
     [harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelu]
@@ -210,7 +210,9 @@
 
   ;; Aseta clojure.async thread-poolin koko (default 8)
   ;; Asetetaan koko tässä, jotta hallitsemme thread-poolin kokoa itse Harjan tarpeiden mukaan.
-  (System/setProperty "clojure.core.async.pool-size" (str (or koko 8))))
+  (System/setProperty "clojure.core.async.pool-size" (str (or koko 8)))
+
+  (log/info "Asetettiin clojure.async thread-poolin koko: " (Long/getLong "clojure.core.async.pool-size")))
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
@@ -565,10 +567,6 @@
              (yha/->Yha)
              [:http-palvelin :db :yha-integraatio :vkm])
 
-      :yha-velho (component/using
-                   (yha-velho/->YhaVelho (select-keys asetukset [:kehitysmoodi]))
-                   [:http-palvelin :db  :yha-integraatio :velho-integraatio])
-
       :varustetoteuma-ulkoiset (component/using
                                  (varuste-ulkoiset/->VarusteVelho)
                                  [:http-palvelin :db :velho-integraatio :excel-vienti])
@@ -835,6 +833,11 @@
       :lupaukset-hallinta
       (component/using
         (lupaukset-hallinta/->LupauksetHallinta)
+        [:http-palvelin :db])
+
+      :ajastukset-hallinta
+      (component/using
+        (ajastukset-hallinta/->AjastuksetHallinta)
         [:http-palvelin :db])
       
       :paallystysilmoitukset-hallinta

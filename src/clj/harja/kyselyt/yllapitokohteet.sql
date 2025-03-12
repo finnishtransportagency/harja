@@ -69,19 +69,6 @@ WHERE
   ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
--- name: hae-yha-velho-lahetyksen-tila
-SELECT id as "kohde-id",
-       lahetys_onnistunut as "lahetys-onnistunut",
-       lahetysaika,
-       lahetetty,
-       lahetysvirhe,
-       velho_lahetyksen_aika as "velho-lahetyksen-aika",
-       velho_lahetyksen_tila as "velho-lahetyksen-tila",
-       velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus"
-FROM yllapitokohde
-WHERE id = :kohde-id;
-
-
 -- name: hae-urakkaan-liittyvat-tiemerkintakohteet
 -- Hakee ylläpitokohteet, joihin on merkitty suorittajaksi kyseinen urakka
 SELECT ypk.id
@@ -532,27 +519,6 @@ VALUES (:yllapitokohde,
                                           CAST(:tr_loppuetaisyys AS INTEGER),
                                           CAST(:tr_ajorata AS INTEGER))));
 
--- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
--- Luo uuden yllapitokohdeosan
-INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, ulkoinen_id, sijainti)
-VALUES (:yllapitokohde,
-        :nimi,
-        :tr_numero,
-        :tr_alkuosa,
-        :tr_alkuetaisyys,
-        :tr_loppuosa,
-        :tr_loppuetaisyys,
-        :tr_ajorata,
-        :tr_kaista,
-        :ulkoinen-id,
-        (SELECT tierekisteriosoitteelle_viiva AS geom
-         FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                            CAST(:tr_alkuosa AS INTEGER),
-                                            CAST(:tr_alkuetaisyys AS INTEGER),
-                                            CAST(:tr_loppuosa AS INTEGER),
-                                            CAST(:tr_loppuetaisyys AS INTEGER))));
-
 -- name: paivita-yllapitokohdeosa<!
 -- Päivittää yllapitokohdeosan
 UPDATE yllapitokohdeosa
@@ -584,31 +550,6 @@ WHERE id = :id
       AND yllapitokohde IN (SELECT id
                             FROM yllapitokohde
                             WHERE urakka = :urakka);
-
--- name: paivita-yllapitokohdeosa-pot2<!
--- Päivittää yllapitokohdeosan
-UPDATE yllapitokohdeosa
-SET
-    nimi             = :nimi,
-    tr_numero        = :tr_numero,
-    tr_alkuosa       = :tr_alkuosa,
-    tr_alkuetaisyys  = :tr_alkuetaisyys,
-    tr_loppuosa      = :tr_loppuosa,
-    tr_loppuetaisyys = :tr_loppuetaisyys,
-    tr_ajorata       = :tr_ajorata,
-    tr_kaista        = :tr_kaista,
-    muokattu         = NOW(),
-    sijainti         = (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
-                        FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
-                                                               CAST(:tr_alkuosa AS INTEGER),
-                                                               CAST(:tr_alkuetaisyys AS INTEGER),
-                                                               CAST(:tr_loppuosa AS INTEGER),
-                                                               CAST(:tr_loppuetaisyys AS INTEGER),
-                                                               CAST(:tr_ajorata AS INTEGER)))
-WHERE id = :id
-  AND yllapitokohde IN (SELECT id
-                        FROM yllapitokohde
-                        WHERE urakka = :urakka);
 
 -- name: poista-yllapitokohdeosa!
 -- Poistaa ylläpitokohdeosan
@@ -1074,12 +1015,6 @@ UPDATE yllapitokohde
 SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut, lahetysvirhe = :lahetysvirhe, lahettaja = :lahettaja
 WHERE id = :kohdeid;
 
--- name: merkitse-kohteen-lahetystiedot-velhoon!
-UPDATE yllapitokohde
-SET velho_lahetyksen_aika = :aikaleima,
-    velho_lahetyksen_tila = :tila :: velho_lahetyksen_tila_tyyppi,
-    velho_lahetyksen_vastaus = :lahetysvastaus
-WHERE id = :kohdeid;
 
 -- name: onko-olemassa-urakalla?
 -- single?: true

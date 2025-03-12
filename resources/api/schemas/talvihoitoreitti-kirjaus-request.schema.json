@@ -15,7 +15,7 @@
     },
     "kalustot": {
       "type": "object",
-      "description": "Reitin hoitamisessa käytettävän kaluston määrä tyypeittäin. TR = Traktori, KUP = Kuorma-auton perävaunu, KA = Kuorma-auto.",
+      "description": "Reitin hoitamisessa käytettävän kaluston määrä tyypeittäin. TR = Traktori, KUP = Kuppi-kuormaajat, KA = Kuorma-auto.",
       "required": true,
       "properties": {
         "tr_maara": {

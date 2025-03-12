@@ -449,7 +449,7 @@
                  (:paallystekerros-toimenpiteet vastaus))))
 
 
-    (is (= (count (:massatyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_massatyyppi"))))
+    (is (= (count (:massatyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_massatyyppi WHERE poistettu IS FALSE"))))
     (is (= (count (:mursketyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_mursketyyppi"))))
     (is (= (count (:runkoainetyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_runkoainetyyppi"))))
     (is (= (count (:sideainetyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_sideainetyyppi"))))

@@ -55,13 +55,17 @@
     "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi
     "poistettu" ::muokkaustiedot/poistettu?}])
 
+;; näiden kahden vuoden aikana alkaneilla MHU-urakoilla oli tavoitehinnan oikaisu
+;; tyyppiä "Alleviivatun fontin vaikutus tavoitehintaan"
+(def alkuvuodet-jolloin-alleviivattuja #{2019 2020})
+
 (defn luokat [urakka]
-  (if (#{2019 2020} (pvm/vuosi (:alkupvm urakka)))
-    #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
-      "Liikennejärjestelyt" "Alleviivatun fontin vaikutus tavoitehintaan"
-      "Materiaalit" "Muut"}
-    #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
-      "Liikennejärjestelyt" "Materiaalit" "Muut"}))
+  (let [yhteiset ["Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
+                  "Liikennejärjestelyt" "Materiaalit" "Muut"]]
+    (sort
+      (if (alkuvuodet-jolloin-alleviivattuja (pvm/vuosi (:alkupvm urakka)))
+        (conj yhteiset "Alleviivatun fontin vaikutus tavoitehintaan")
+        yhteiset))))
 
 (def +tavoitepalkkio-kerroin+ 0.3)
 (def +urakoitsijan-osuus-ylityksesta+ 0.3)

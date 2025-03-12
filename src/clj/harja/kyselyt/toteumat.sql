@@ -1135,19 +1135,19 @@ FROM tierekisteriosoitteelle_piste(:tie :: INTEGER,
 
 -- name: varustetoteuman-viiva-sijainti
 SELECT sijainti
-FROM tierekisteriosoitteelle_viiva(:tie :: INTEGER,
-                                   :aosa :: INTEGER,
-                                   :aet :: INTEGER,
-                                   :losa :: INTEGER,
-                                   :let :: INTEGER) AS sijainti;
+FROM tieosoitteelle_geometria(:tie :: INTEGER,
+                              :aosa :: INTEGER,
+                              :aet :: INTEGER,
+                              :losa :: INTEGER,
+                              :let :: INTEGER) AS sijainti;
 
 -- name: varustetoteuman-toimenpiteelle-sijainti
 SELECT sijainti
-FROM tierekisteriosoitteelle_viiva(:tie :: INTEGER,
-                                   :aosa :: INTEGER,
-                                   :aet :: INTEGER,
-                                   :losa :: INTEGER,
-                                   :let :: INTEGER) AS sijainti;
+FROM tieosoitteelle_geometria(:tie :: INTEGER,
+                              :aosa :: INTEGER,
+                              :aet :: INTEGER,
+                              :losa :: INTEGER,
+                              :let :: INTEGER) AS sijainti;
 
 -- name: paivita-toteuman-reitti!
 UPDATE toteuma

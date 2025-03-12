@@ -192,6 +192,29 @@ jobs:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           service: ${{ vars.ECS_SERVICE_NAME }}
 
+      # Merkitse lopuksi vanha task definition inaktiiviseksi
+      # Inaktiivinen task definition ei enää ole käytössä, mutta sitä ei poisteta.
+      # Sellaiset voi poistaa erikseen toisaalla esimerkiksi CLI-työkalulla.
+
+      # TODO: Tämä step otettu väliaikaisesti pois käytöstä 12.02.2025.
+      #       Fargate service deploymentille tulee ongelmia, jos vanha task definition on inaktiivinen.
+      #       Mietitään ratkaisu infran deploymentin puolella, jonka jälkeen tämä step voidaan ottaa takaisin käyttöön.
+      #       CDK issue: https://github.com/aws/aws-cdk/issues/29662
+#      - name: Deregister old task definition
+#        env:
+#          ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
+#        run: |
+#          # Neljä revisionia vanhempi task definition merkitään inaktiiviseksi
+#          OLD_REVISION=$(($(cat harja-task-definition.json | jq .revision) - 4))
+#
+#          if [[ "$OLD_REVISION" -lt 1 ]]; then
+#            echo "Ei poistettavaa vanhempaa task definitionia."
+#            exit 0
+#          fi
+#
+#          # Derekisteröi vanha task definition ja ohjaa task definition output dev/nulliin
+#          aws ecs deregister-task-definition --task-definition $ECS_TASK_DEFINITION_NAME:$OLD_REVISION 1> /dev/null
+
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack

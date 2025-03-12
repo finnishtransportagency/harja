@@ -99,7 +99,7 @@
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset #_:tuck-remoting #_:ilmoitukset-ws-palvelu
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
@@ -168,7 +168,8 @@
     :urakkatilanne
     :api-talvihoitoreitit
     :talvihoitoreitit
-    :tieosoitteet-hallinta})
+    :tieosoitteet-hallinta
+    :ajastukset-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -183,7 +184,7 @@
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset #_:tuck-remoting #_:ilmoitukset-ws-palvelu
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
@@ -252,7 +253,8 @@
     :lupaukset-hallinta
     :paallystysilmoitukset-hallinta
     :urakkatilanne
-    :tieosoitteet-hallinta})
+    :tieosoitteet-hallinta
+    :ajastukset-hallinta})
 
 (def hidas-ok-status #{:itmf})
 
