@@ -80,7 +80,7 @@
             oikeus-vahvistaa? (ks-yhteiset/oikeus-vahvistaa-osio?
                                 @istunto/kayttaja
                                 (some-> @tila/yleiset :urakka :id))
-            valikatselmus-linkki [yleiset/linkki "Välikatselmus" #(siirtymat/avaa-valikatselmus
+            valikatselmus-linkki [yleiset/linkki "Välikatselmus" #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
                                                                     (nth (urakka/hoito-tai-sopimuskaudet @nav/valittu-urakka)
                                                                       (dec hoitovuosi-nro)))
                                   {:stop-propagation true}]]

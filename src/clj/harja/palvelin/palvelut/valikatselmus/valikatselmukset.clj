@@ -12,6 +12,7 @@
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.domain.oikeudet :as oikeudet]
     [harja.domain.urakka :as urakka]
+    [harja.domain.valikatselmus :as valikatselmus-domain]
     [harja.kyselyt.konversio :as konversio]
     [harja.kyselyt.urakat :as q-urakat]
     [harja.kyselyt.valikatselmus :as valikatselmus-q]
@@ -339,6 +340,7 @@
                      toteutuneet-pisteet luvatut-pisteet toteutuneet-kustannukset]
   (let [;; Kootaan päätöksiä varten tarvittavat tiedot
         urakan-tiedot (first (q-urakat/hae-urakkan-tiedot db urakkaid))
+        urakan-parametrit (first (q-urakat/hae-urakan-parametrit db {:urakkaid urakkaid}))
         indeksi (:indeksi urakan-tiedot)
         urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
         urakan-loppuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden alkuvuosi käytännössä
@@ -348,6 +350,7 @@
         hoitokauden-alun-tavoitehinta (valikatselmus-q/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta db {:urakka-id urakkaid :hoitokauden-alkuvuosi kuluva-hoitovuosi})
         kattohinta (:kattohinta-oikaistu budjettitavoite)
         tarjouksen-tavoitehinta (:tarjous-tavoitehinta budjettitavoite)
+        muokkaa-kattohinta? (:muokkaa_kattohinta_kasin urakan-parametrit)
 
         ;; Haetaan indeksikorjauksen vaatimat tavoitehinnan muutokset
         tavoitehinnan-muutokset (valikatselmus-q/hae-tavoitehinnan-muutokset-hoitokaudelle db {:urakkaid urakkaid
@@ -369,12 +372,12 @@
                                                                                                                                          :loppupvm (pvm/hoitokauden-loppupvm (inc kuluva-hoitovuosi))})))
         ;; Valmistellaan päätökset ui:ta varten
         mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta indeksi)
-        mahdolliset-paatokset (paatoskone/valimistele-tavoitehinnan-muutospaatos mahdolliset-paatokset urakan-alkuvuosi tavoitehinta kattohinta kuluva-hoitovuosi)
+        mahdolliset-paatokset (paatoskone/valimistele-tavoitehinnan-muutospaatos mahdolliset-paatokset urakan-alkuvuosi tavoitehinta kattohinta muokkaa-kattohinta? kuluva-hoitovuosi)
         mahdolliset-paatokset (paatoskone/valmistele-indeksikorjauspaatos mahdolliset-paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-indeksikuukaudet alkuperainen-pisteluku kuluva-hoitovuosi)
         mahdolliset-paatokset (paatoskone/valmistele-hoitokauden-lopun-hintapaatos mahdolliset-paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta)
         mahdolliset-paatokset (paatoskone/valimistele-tavoitehinnan-alituspaatos db urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi hoitokauden-alun-tavoitehinta tavoitehinta toteutuneet-kustannukset)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-ylityspaatos db urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kattohinta toteutuneet-kustannukset mhu-tyyppi)
-        mahdolliset-paatokset (paatoskone/valmistele-kattohinnan-paatokset mahdolliset-paatokset kattohinta toteutuneet-kustannukset kuluva-hoitovuosi urakan-loppuvuosi)
+        mahdolliset-paatokset (paatoskone/valmistele-kattohinnan-paatokset db urakkaid mahdolliset-paatokset kattohinta toteutuneet-kustannukset kuluva-hoitovuosi urakan-loppuvuosi)
         mahdolliset-paatokset (paatoskone/valmistele-hoidonjohtopalkkionmuutospaatos mahdolliset-paatokset tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
 
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
@@ -636,9 +639,10 @@
   (jdbc/with-db-transaction [db db]
     (let [validaatio #{}
           urakka-id (:urakkaid paatos)
-          urakka (first (q-urakat/hae-urakka db urakka-id))
+          urakan-parametrit (first (q-urakat/hae-urakan-parametrit db urakka-id))
+          _ (println "urakan-parametrit" urakan-parametrit)
+
           hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
-          versio (:versio paatos)
           ;; Verrataan tietokannan kattohintaa saatuun kattohintaan
           kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
@@ -646,7 +650,11 @@
                        (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa. Suunniteltu kattohinta:" kattohinta " €. Päätöksen mukainen kattohinta: " (:kattohinta paatos) " €"))
                        validaatio)
 
-          ;; TODO: Tee lisää validaatiota. Siirto ei saa olla suurempi, kuin ylitys
+          ;; Validoi siirto
+          _ (if (and (:siirtorajoitus_prosentti urakan-parametrit) (> (:siirrettava_maara paatos) (:maksimi_siirrettava_maara paatos)))
+                (conj validaatio (str "Siirron rajoitus ylitetty. Maksimi siirto voi olla " (:siirtorajoitus_prosentti urakan-parametrit) " kattohinnasta."))
+              validaatio)
+
           ;; Jos validointi on kunnossa, niin luodaan kattohinnan ylityskulu - jonka maksaa urakoitsija
           kulu_id (when-not (seq validaatio)
                     (paatos-apurit/tallenna-kulu db paatos kayttaja :kattohinnan-ylitys (:urakoitsija_maksaa paatos)))
@@ -849,75 +857,93 @@
       (julkaise-palvelu (:http-palvelin this)
         :tee-lupauspaatos
         (fn [user tiedot]
-          (tee-lupauspaatos (:db this) user tiedot)))
+          (tee-lupauspaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/lupauspaatos})
       (julkaise-palvelu (:http-palvelin this)
         :poista-lupauspaatos
         (fn [user tiedot]
-          (poista-lupauspaatos (:db this) user tiedot)))
+          (poista-lupauspaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/lupauspaatos})
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-muutospaatos
         (fn [user tiedot]
-          (tee-tavoitehinnan-muutospaatos (:db this) user tiedot)))
+          (tee-tavoitehinnan-muutospaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-muutospaatos
         (fn [user tiedot]
-          (poista-tavoitehinnan-muutospaatos (:db this) user tiedot)))
+          (poista-tavoitehinnan-muutospaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-alituspaatos
         (fn [user tiedot]
-          (tee-tavoitehinnan-alituspaatos (:db this) user tiedot)))
+          (tee-tavoitehinnan-alituspaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-alituspaatos
         (fn [user tiedot]
-          (poista-tavoitehinnan-alituspaatos (:db this) user tiedot)))
+          (poista-tavoitehinnan-alituspaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-ylityspaatos
         (fn [user tiedot]
-          (tee-tavoitehinnan-ylityspaatos (:db this) user tiedot)))
+          (tee-tavoitehinnan-ylityspaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-ylityspaatos})
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-ylityspaatos
         (fn [user tiedot]
-          (poista-tavoitehinnan-ylityspaatos (:db this) user tiedot)))
+          (poista-tavoitehinnan-ylityspaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-ylityspaatos})
       (julkaise-palvelu (:http-palvelin this)
         :tee-kattohinnan-ylityspaatos
         (fn [user tiedot]
-          (tee-kattohinnan-ylityspaatos (:db this) user tiedot)))
+          (tee-kattohinnan-ylityspaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
       (julkaise-palvelu (:http-palvelin this)
         :poista-kattohinnan-ylityspaatos
         (fn [user tiedot]
-          (poista-kattohinnan-ylityspaatos (:db this) user tiedot)))
+          (poista-kattohinnan-ylityspaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
       (julkaise-palvelu (:http-palvelin this)
         :tee-indeksikorjauspaatos
         (fn [user tiedot]
-          (tee-indeksikorjauspaatos (:db this) user tiedot)))
+          (tee-indeksikorjauspaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
       (julkaise-palvelu (:http-palvelin this)
         :poista-indeksikorjauspaatos
         (fn [user tiedot]
-          (poista-indeksikorjauspaatos (:db this) user tiedot)))
+          (poista-indeksikorjauspaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
       (julkaise-palvelu (:http-palvelin this)
         :tee-hoitovuoden-lopun-hintapaatos
         (fn [user tiedot]
-          (tee-hoitovuoden-lopun-hintapaatos (:db this) user tiedot)))
+          (tee-hoitovuoden-lopun-hintapaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
       (julkaise-palvelu (:http-palvelin this)
         :poista-hoitovuoden-lopun-hintapaatos
         (fn [user tiedot]
-          (poista-hoitovuoden-lopun-hintapaatos (:db this) user tiedot)))
+          (poista-hoitovuoden-lopun-hintapaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
       (julkaise-palvelu (:http-palvelin this)
         :tee-hoidonjohtopalkkion-muutospaatos
         (fn [user tiedot]
-          (tee-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot)))
+          (tee-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
       (julkaise-palvelu (:http-palvelin this)
         :poista-hoidonjohtopalkkion-muutospaatos
         (fn [user tiedot]
-          (poista-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot)))
+          (poista-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
       (julkaise-palvelu (:http-palvelin this)
         :tee-poytakirjan-raporttipaatos
         (fn [user tiedot]
-          (tee-poytakirjan-raporttipaatos (:db this) user tiedot)))
+          (tee-poytakirjan-raporttipaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/raporttipaatos})
       (julkaise-palvelu (:http-palvelin this)
         :poista-poytakirjan-raporttipaatos
         (fn [user tiedot]
-          (poista-poytakirjan-raporttipaatos (:db this) user tiedot)))
+          (poista-poytakirjan-raporttipaatos (:db this) user tiedot))
+        {:kysely-spec ::valikatselmus-domain/raporttipaatos})
       this))
   (stop [this]
     (poista-palvelut (:http-palvelin this)

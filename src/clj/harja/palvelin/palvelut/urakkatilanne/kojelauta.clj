@@ -37,8 +37,7 @@
                      (comp
                        (fn [ks-tilat]
                          (update ks-tilat :ks_tila konv/jsonb->clojuremap))
-                       #(liita-indeksikertoimet db kayttaja %)
-                       #(muunna-paatos % :lupauspaatokset))
+                       #(liita-indeksikertoimet db kayttaja %))
                      (q/hae-hoidon-urakat-kojelautaan db params)))
 
                  (= urakkatyyppi :paallystys)

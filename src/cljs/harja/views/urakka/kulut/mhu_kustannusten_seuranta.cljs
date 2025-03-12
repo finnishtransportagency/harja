@@ -496,9 +496,9 @@
          [:div.filtteri {:style {:padding-top "25px"}}
           (if valikatselmus-tekematta?
             [yleiset/linkki "Tee välikatselmus"
-             #(siirtymat/avaa-valikatselmus hoitokausi-vec)]
+             #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec)]
             [yleiset/linkki "Avaa välikatselmus"
-             #(siirtymat/avaa-valikatselmus hoitokausi-vec)])]]]
+             #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec)])]]]
 
        (if (:haku-kaynnissa? app)
          [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]

@@ -74,7 +74,7 @@
         tilaajan-osuus-tavoitehinnan-ylitys (or (arvo-paatoksesta tavoitehinnan-ylityspaatos :urakoitsija_maksaa) 0)
         urakoitsijan-osuus-tavoitehinnan-ylitys (or (arvo-paatoksesta tavoitehinnan-ylityspaatos :tilaaja_maksaa) 0)
         kattohinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :kattohinnan-ylitys)
-        kattohinnan-ylitys (or (arvo-paatoksesta kattohinnan-ylityspaatos :ylityksen_maara) 0)
+        kattohinnan-ylitys (or (:ylityksen_maara kattohinnan-ylityspaatos) 0)
         siirto-seuraavan-vuoden-hankintakustannuksiin (or (arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara) 0)
         urakoitsijan-hyvitysosuus (or (arvo-paatoksesta kattohinnan-ylityspaatos :urakoitsija_maksaa) 0)
         hoidonjohtopalkkiopaatos (valikatselmus-tiedot/ota-paatos paatokset :hoidonjohtopalkkion-muutos)

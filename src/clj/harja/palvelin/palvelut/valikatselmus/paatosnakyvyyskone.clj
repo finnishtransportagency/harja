@@ -7,15 +7,15 @@
             [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]))
 
 (def paatostyypit
-  [{:nimi "Lupaukset" :tyyppi "bonus" :versio 1 :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 1}
-   {:nimi "Lupaukset" :tyyppi "sanktio" :versio 1 :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 2}
-   {:nimi "Lupaukset" :tyyppi "taytetty" :versio 1 :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 3}
-   {:nimi "Lupaukset" :tyyppi "bonus" :versio 2 :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 1}
-   {:nimi "Lupaukset" :tyyppi "sanktio" :versio 2 :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 2}
-   {:nimi "Lupaukset" :tyyppi "taytetty" :versio 2 :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 3}
-   {:nimi "Tavoitehinnan muutokset" :versio "1a" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 4}
-   {:nimi "Tavoitehinnan muutokset" :versio "1b" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2021 :hoitotyyppi #{"MHU"} :jarjestys 5}
-   {:nimi "Tavoitehinnan muutokset" :versio "1b" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 6}
+  [{:nimi "Lupaukset" :tyyppi "bonus" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 1}
+   {:nimi "Lupaukset" :tyyppi "sanktio" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 2}
+   {:nimi "Lupaukset" :tyyppi "taytetty" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 3}
+   {:nimi "Lupaukset" :tyyppi "bonus" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 1}
+   {:nimi "Lupaukset" :tyyppi "sanktio" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 2}
+   {:nimi "Lupaukset" :tyyppi "taytetty" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 3}
+   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 4}
+   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2021 :hoitotyyppi #{"MHU"} :jarjestys 5}
+   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 6}
    {:nimi "Hoitovuoden lopun indeksikorjaus" :tyyppi nil :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 7}
    {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "A" :urakan_alkuvuosi 2020 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 8}
    {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 9}
@@ -138,22 +138,15 @@
       "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty."
       true 1)))
 
-(defn valimistele-tavoitehinnan-muutospaatos [paatokset urakan-alkuvuosi tavoitehinta kattohinta kuluva-hoitovuosi]
+(defn valimistele-tavoitehinnan-muutospaatos [paatokset urakan-alkuvuosi tavoitehinta kattohinta muokkaa-kattohinta? kuluva-hoitovuosi]
   ;; Ota mukaan oikea tavoitehinnan muutospäätös, jos ehdot täyttyvät
   (if (and kattohinta tavoitehinta)
-    (let [;; Versio 1a on käytössä urakoille, jotka ovat alkaneet 21 tai jälkeen. 1a:ssa kattohintaa ei syötetä käsin
-          ;; versio 1b on käytössä 19-20 alkaville urakoille -- 1b:ssä kattohinta syötetään käsin.
-          versio (if (and
-                       (> urakan-alkuvuosi 2021)
-                       (< urakan-alkuvuosi 2024)
-                       (<= kuluva-hoitovuosi 2024)) "1a"
-                   "1b")
-          ;; Korvataan koneelta saatu päätös tässä valistellulta
+    (let [;; Korvataan koneelta saatu päätös tässä valistellulta
           tavoitehinnan-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) paatokset))
           tavoitehinnan-muutospaatos (-> tavoitehinnan-muutospaatos
-                                       (assoc :versio versio)
                                        (assoc :tavoitehinta tavoitehinta)
-                                       (assoc :kattohinta kattohinta))
+                                       (assoc :kattohinta kattohinta)
+                                       (assoc :muokkaa_kattohinta muokkaa-kattohinta?))
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan muutokset")) paatokset)
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-muutospaatos))]
       paatokset)
@@ -287,12 +280,17 @@
       "Tavoitehintaa, kattohintaa tai toteutuneita kustannuksia ei ole määritelty."
       false 12)))
 
-(defn valmistele-kattohinnan-paatokset [paatokset kattohinta kustannukset kuluva-hoitovuosi urakan-loppuvuosi]
+(defn valmistele-kattohinnan-paatokset [db urakkaid paatokset kattohinta kustannukset kuluva-hoitovuosi urakan-loppuvuosi]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
   (if (and kattohinta kustannukset (> kustannukset kattohinta))
-    (let [kattohinnan-ylityspaatos (first (filter #(= (:nimi %) "Kattohinnan ylitys") paatokset))
+    (let [urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
+          kattohinnan-ylityspaatos (first (filter #(= (:nimi %) "Kattohinnan ylitys") paatokset))
           ylityksen-maara (- kustannukset kattohinta)
           viimeinen-hoitokausi? (boolean (= kuluva-hoitovuosi urakan-loppuvuosi))
+          siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+          max-siirrettava-maara (if siirtorajoitus-prosentti
+                                  (* siirtorajoitus-prosentti kattohinta) ;; Jos rajoitus on käytössä, niin siirretään max annetun prosentin verran)
+                                  ylityksen-maara)
           ;; Täytetään pakolliset tiedot
           kattohinnan-ylityspaatos (-> kattohinnan-ylityspaatos
                                      (assoc :toteutuneet_kustannukset kustannukset)
@@ -301,7 +299,8 @@
                                      (assoc :urakoitsija_maksaa ylityksen-maara)
                                      (assoc :siirra? false) ;; Päätöksen pohjatietoja asetettaessa siirto on aina defaulttina false. Tietokannasta haettaessa tilanne voi olla eri.
                                      (assoc :viimeinen_hoitokausi viimeinen-hoitokausi?)
-                                     )
+                                     (assoc :maksimi_siirrettava_maara max-siirrettava-maara)
+                                     (assoc :siirtorajoitus_prosentti siirtorajoitus-prosentti))
 
           paatokset (remove
                       (fn [paatos]

@@ -28,9 +28,8 @@ WHERE id = :paatos-id
 
 -- name: tee-tavoitehinnan-muutos-paatos<!
 -- Tee tavoitehinnan muutos päätös
-INSERT INTO paatos_tavoitehinnan_muutos (urakkaid, hoitokauden_alkuvuosi, versio, tavoitehinta, kattohinta, luoja,
-                                         luotu)
-VALUES (:urakkaid, :hoitokauden_alkuvuosi, :versio, :tavoitehinta, :kattohinta, :luoja, NOW());
+INSERT INTO paatos_tavoitehinnan_muutos (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, kattohinta, muokkaa_kattohinta, luoja, luotu)
+VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta, :kattohinta, :muokkaa_kattohinta, :luoja, NOW());
 
 -- name: poista-tavoitehinnan-muutos-paatos<!
 -- Poista tavoitehinnan muutos päätös
@@ -116,9 +115,11 @@ WHERE id = :paatos-id
 -- name: tee-kattohinta-paatos<!
 -- Tee kattohinta päätös
 INSERT INTO paatos_kattohinta (urakkaid, hoitokauden_alkuvuosi, kattohinta, toteutuneet_kustannukset, ylityksen_maara,
-                               urakoitsija_maksaa, siirrettava_maara, kulu_id, viimeinen_hoitokausi, luoja, luotu)
+                               urakoitsija_maksaa, siirrettava_maara, kulu_id, viimeinen_hoitokausi,
+                               maksimi_siirrettava_maara, siirtorajoitus_prosentti, luoja, luotu)
 VALUES (:urakkaid, :hoitokauden_alkuvuosi, :kattohinta, :toteutuneet_kustannukset, :ylityksen_maara,
-        :urakoitsija_maksaa, :siirrettava_maara, :kulu_id, :viimeinen_hoitokausi, :luoja, NOW());
+        :urakoitsija_maksaa, :siirrettava_maara, :kulu_id, :viimeinen_hoitokausi,
+        :maksimi_siirrettava_maara, :siirtorajoitus_prosentti, :luoja, NOW());
 
 -- name: poista-kattohinta-paatos<!
 -- Poista kattohinta päätös

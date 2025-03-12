@@ -305,10 +305,10 @@
          (when (and tavoitehinta (> tavoitehinta 0))
            (case ennusteen-tila
              :katselmoitu-toteuma
-             [napit/muokkaa "Muokkaa" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app)) {:luokka "napiton-nappi" :paksu? true}]
+             [napit/muokkaa "Muokkaa" #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) (:valittu-hoitokausi app)) {:luokka "napiton-nappi" :paksu? true}]
 
              :alustava-toteuma
-             [napit/yleinen-ensisijainen "Välikatselmus" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app))]
+             [napit/yleinen-ensisijainen "Välikatselmus" #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) (:valittu-hoitokausi app))]
 
              nil))]
         (when (and summa tavoitehinta (> tavoitehinta 0) (not tavoite-taytetty?))
