@@ -1,6 +1,7 @@
 (ns harja.domain.yleiset
   "Yleisiä skeemaentiteettejä."
-  (:require [schema.core :as s]
+  (:require #?(:clj [schema.core :as s :include-macros true]
+               :cljs [schema.core :as s :include-macros true])
             [clojure.string :as str]))
 
 (def Osapuoli (s/enum :tilaaja :urakoitsija :konsultti))

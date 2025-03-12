@@ -1,13 +1,12 @@
 (ns harja.palvelin.asetukset
   "Yleinen Harja-palvelimen konfigurointi. Esimerkkinä käytetty Antti Virtasen clj-weba."
   (:require [harja.tyokalut.env :as env]
-            [schema.core :as s]
+            [schema.core :as s :include-macros true]
             [clojure.string :as str]
             [meta-merge.core :refer [meta-merge]]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
-            [harja.palvelin.lokitus.slack :as slack]
-            [taoensso.timbre.appenders.postal :refer [postal-appender]]))
+            [harja.palvelin.lokitus.slack :as slack]))
 
 
 (def Tietokanta {:palvelin s/Str
