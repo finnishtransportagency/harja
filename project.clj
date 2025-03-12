@@ -74,7 +74,7 @@
                  [org.geotools/gt-swing "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
-                 [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
+                 [org.clojure/data.zip "1.1.0"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
 
                  ;; -- Kirjasto mappien avainten nimiavaruuksien käsittelyyn
                  [namespacefy "0.5.0"]
