@@ -1,0 +1,36 @@
+(ns harja.palvelin.palvelut.hallinta.ajastukset-palvelu
+  (:require [com.stuartsierra.component :as component]
+            [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioidut-toteumat]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.pvm :as pvm]
+            [clj-time.coerce :as c]
+            [taoensso.timbre :as log]))
+
+
+(defn- aja-kustannusarviot-toteumiksi
+  "Kustannusarvioitu_tyo tauluun tallennetaan budjetoidut kustannukset. Niistä osa generoituu kuukauden vaihteessa
+  aina toteutuneeksi kustannukseksi. Tämä prosessi pyörii joka yö. Jos ei malteta odottaa, että yöllinen ajo
+  tapahtuu, niin tätä kutsumalla sama prosessi voidaan käynnistää heti (esim gc ympäristöissä tai lokaalitestauksessa"
+  [db kayttaja]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-toteumatyokalu kayttaja)
+  (log/debug "aja-kustannusarviot-toteumiksi käynnistetty!")
+  (let [;; ajopäivän täytyy olla aina kuukauden ensimmäinen, joten otetaan ensi kuun ensimmäinen päivä defaultiksi
+        nyt (pvm/nyt)
+        kuukauden-viimeinen (pvm/kuukauden-viimeinen-paiva (pvm/nyt))
+        kuukauden-ensimmainen (pvm/ajan-muokkaus kuukauden-viimeinen true 1 :paiva)
+        sql-kuukauden-ensimmainen (c/to-sql-time kuukauden-ensimmainen)]
+    (kustannusarvioidut-toteumat/siirra-kustannukset db sql-kuukauden-ensimmainen)))
+
+(defrecord AjastuksetHallinta []
+  component/Lifecycle
+  (start [{:keys [http-palvelin db] :as this}]
+    (julkaise-palvelu http-palvelin :aja-kustannusarviot-toteumiksi
+      (fn [kayttaja _tiedot]
+        (aja-kustannusarviot-toteumiksi db kayttaja)))
+
+    this)
+  (stop [{:keys [http-palvelin] :as this}]
+    (poista-palvelut http-palvelin
+      :aja-kustannusarviot-toteumiksi)
+    this))
