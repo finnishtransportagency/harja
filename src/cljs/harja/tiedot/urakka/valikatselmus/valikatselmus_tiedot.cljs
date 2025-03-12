@@ -440,13 +440,12 @@
   PaivitaKattohinnanSiirtoMaara
   (process-event [{uusi-arvo :uusi-arvo} app]
     (let [paatos (first (filter #(= (ffirst %) :kattohinnan-ylitys) (:paatokset app)))
-          urakoitsija-maksaa (get-in paatos [:kattohinnan-ylitys :urakoitsija_maksaa])
+          kattohinnan-ylityksen-maara (get-in paatos [:kattohinnan-ylitys :ylityksen_maara])
           paatos (-> paatos
                    ;; Merkitään saatu siirtomäärä
                    (assoc-in [:kattohinnan-ylitys :siirrettava_maara] uusi-arvo)
-                   ;; Vähennetään urakoitsijan maksamasta summasta siirrettävä summa
-                   (assoc-in [:kattohinnan-ylitys :urakoitsija_maksaa] (- urakoitsija-maksaa uusi-arvo))
-                   )]
+                   ;; Vähennetään kattohinnan ylityksen määrästä siirrettävä summa
+                   (assoc-in [:kattohinnan-ylitys :urakoitsija_maksaa] (- kattohinnan-ylityksen-maara uusi-arvo)))]
       (update app :paatokset (fn [paatokset]
                                (map #(if (= (ffirst %) :kattohinnan-ylitys)
                                        paatos

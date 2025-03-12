@@ -8,6 +8,7 @@
      [numero alaraja ylaraja desimaalien-max-maara]
      #?(:cljs
         (let [numero (str/replace numero "," ".")
+              numero (* numero 1)                           ;; poistetaan numerosta mahdolliset etunollat
               desimaalit (when numero
                            (count (second (str/split numero #"\."))))]
           (and

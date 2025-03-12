@@ -1856,7 +1856,7 @@
         [:span.loppuetaisyys loppuetaisyys]])]))
 
 (defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit
-                                       otsikon-luokka otsikon-tag data-muokkaus-fn]}]
+                                       otsikon-luokka otsikon-tag data-muokkaus-fn alaotsikko alaotsikon-luokka]}]
   [:span {:class (or luokka "label-ja-kentta")
           :style tyylit}
    [(or otsikon-tag :label) {:class (or otsikon-luokka "kentan-otsikko")} otsikko]
@@ -1864,7 +1864,9 @@
     (if data-muokkaus-fn
       ;; mahdollista 3-arity, joka paremmin Tuck-yhteensopiva. Siihen data-parametri ei saa olla atomi.
       [tee-kentta kentta-params arvo-atom data-muokkaus-fn]
-      [tee-kentta kentta-params arvo-atom])]])
+      [tee-kentta kentta-params arvo-atom])]
+   (when (and alaotsikko alaotsikon-luokka)
+     [:label {:class alaotsikon-luokka} alaotsikko])])
 
 (defn tee-otsikko-ja-kentat [{:keys [otsikko luokka kentat otsikon-luokka]}]
   [:span {:class (or luokka "label-ja-kentta")}

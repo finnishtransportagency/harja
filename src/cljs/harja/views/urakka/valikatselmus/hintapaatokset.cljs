@@ -1,5 +1,6 @@
 (ns harja.views.urakka.valikatselmus.hintapaatokset
-  (:require [reagent.core :as r :refer [atom]]
+  (:require [clojure.string :as str]
+            [reagent.core :as r :refer [atom]]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.domain.urakka :as urakka]
@@ -18,6 +19,7 @@
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
             [harja.tiedot.urakka.kulut.yhteiset :as kulut-yhteiset]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
+            [harja.validointi :as validointi]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
 (defn tavoitehinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
@@ -131,7 +133,9 @@
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         avaa-tai-sulje-haitari (fn [event]
                                  (when (dom/enter-nappain? event)
-                                   (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
+                                   (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))
+        siirrettava (atom (if (:siirrettava_maara paatos) (:siirrettava_maara paatos) 0))
+        korkeintaan-3-pros? (when (<= 2025 (:urakan_alkuvuosi paatos)) true)]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-border
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Kattohinnan ylitys" paatos-tehty? paatos-avain avatut-paatokset
@@ -139,56 +143,75 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
-         [:div [:h4 "Kattohinnan ylitys"]]
-         [:div.bold (fmt/euro-opt (:ylityksen_maara paatos))]]
-        [:div.flex-row
-         [:div [kentat/tee-kentta
-                {:tyyppi :checkbox
-                 :disabled? (or paatos-tehty? false)
-                 :teksti "Aseta siirrettävä määrä (€)"
-                 :vayla-tyyli? true
-                 :nayta-rivina? true
-                 :iso-clickalue? true}
-                (r/wrap
-                  siirra?
-                  (fn [uusi-arvo]
-                    (e! (valikatselmus-tiedot/->PaivitaKattohinnanSiirtoCheckbox uusi-arvo))))]]
-         [:div.harmaa-tausta
-          (when siirra?
+         [:div [:h3 "Kattohinnan ylitys"]]
+         [:div.otsikko_lukema (fmt/euro-opt false (:ylityksen_maara paatos))]]
+        (when (not (:viimeinen_hoitokausi paatos))
+          [:div.harmaa-tausta
+           [:div.flex-row
+            [:div
+             (when (and siirra? (not korkeintaan-3-pros?)) {:class "checkbox-block"})
+             [kentat/tee-kentta
+              {:tyyppi :checkbox
+               :disabled? (or paatos-tehty? false)
+               :teksti "Aseta siirrettävä määrä (€)"
+               :vayla-tyyli? true
+               :nayta-rivina? true
+               :iso-clickalue? true}
+              (r/wrap
+                siirra?
+                (fn [uusi-arvo]
+                  (e! (valikatselmus-tiedot/->PaivitaKattohinnanSiirtoCheckbox uusi-arvo))))]]
+            [:div.siirrettavan-maaran-input (when (and siirra? korkeintaan-3-pros?) {:style {:margin-bottom "8px"}})
+             (when siirra?
+               [kentat/tee-otsikollinen-kentta {:otsikko "Siirrettävä määrä (€)"
+                                                :otsikon-luokka "caption"
+                                                :luokka ""
+                                                :alaotsikko (when korkeintaan-3-pros? (str "Max. " (fmt/euro-opt false (* 0.03 (:kattohinta paatos))) "*"))
+                                                :alaotsikon-luokka "caption sub-caption"
+                                                :kentta-params {:tyyppi :euro
+                                                                :teksti-oikealla ""
+                                                                :desimaalien-maara 2
+                                                                :piilota-yksikko-otsikossa? true
+                                                                :nimi :siirto
+                                                                :veda-oikealle? true
+                                                                :pakollinen? true
+                                                                :vayla-tyyli? true
+                                                                :elementin-id "kattohinta-ylitys-siirto"
+                                                                :vaadi-ei-negatiivinen? true
+                                                                :validoi-kentta-fn (fn [numero] (validointi/validoi-numero numero 0
+                                                                                                  (if korkeintaan-3-pros?
+                                                                                                    (js/parseFloat (str/replace (fmt/desimaaliluku (* 0.03 (:kattohinta paatos)) 2 2 false) "," "."))
+                                                                                                    (:ylityksen_maara paatos))
+                                                                                                  2))
+                                                                :on-blur #(e! (valikatselmus-tiedot/->PaivitaKattohinnanSiirtoMaara @siirrettava))
+                                                                :disabled? (or paatos-tehty? false)}
+                                                :arvo-atom siirrettava}])]]
+           (when (and siirra? korkeintaan-3-pros?)
+             [:div.selite
+              [:p (str "*Enintään 3% laskettuna hoitovuoden lopun kattohinnasta.")]])])
 
-            [kentat/tee-kentta {:tyyppi :numero
-                                :disabled? (or paatos-tehty? false)
-                                :elementin-id "kattohinta-ylitys-siirto"
-                                ;;TODO: Korjaa nämä. Focuksen kanssa ongelmia
-                                #_#_:on-key-down #(when (or (= 13 (-> % .-keyCode)) (= 13 (-> % .-which)))
-                                                (valikatselmus-tiedot/->PaivitaKattohinnanSiirtoMaara %))
-                                #_#_:on-blur #(e! (valikatselmus-tiedot/->PaivitaKattohinnanSiirtoMaara %))}
-             (r/wrap
-               (:siirrettava_maara paatos)
-               (fn [uusi-arvo]
-                 (js/console.log "Ei tehdä mitään, uusi arvo" (pr-str uusi-arvo))
-                 (e! (valikatselmus-tiedot/->PaivitaKattohinnanSiirtoMaara uusi-arvo))))])]]
-        [:div.flex-row
+        [:div.flex-row.summa_rivi
          [:div "Urakoitsija maksaa"]
-         [:div (fmt/euro-opt (:urakoitsija_maksaa paatos))]]
+         [:div.rivi_lukema (fmt/euro-opt false (:urakoitsija_maksaa paatos))]]
         (when (and (:siirrettava_maara paatos) (> (:siirrettava_maara paatos) 0))
-          [:div.flex-row
+          [:div.flex-row.summa_rivi_alin
            [:div "Siirrettävä määrä"]
-           [:div (fmt/euro-opt (:siirrettava_maara paatos))]])
+           [:div.rivi_lukema (fmt/euro-opt false (:siirrettava_maara paatos))]])
 
         ;; Päätöksenteko napit - TODO: Tsekkaappa, että voisko nämä kaikki napit komponentisoida, kun tekevät kuitenkin kaikissa päätöksissä ihan sammaa asiaa.
         (if (not paatos-tehty?)
-          [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
+          [:div.paatos-napit
            (when on-oikeudet?
              [napit/yleinen-ensisijainen "Tallenna päätös"
               #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatoksen-tiedot))
-              {:disabled (or
+              {:ikoni [ikonit/harja-icon-status-selected]
+               :disabled (or
                            tallennus-kesken?
                            (not voi-muokata?))}])]
-          [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
+          [:div.paatos-napit
            (when on-oikeudet?
              [napit/nappi
-              "Kumoa päätös"
+              "Peru päätös"
               #(e! (valikatselmus-tiedot/->PoistaKattohinnanYlitysPaatos paatos))
               {:luokka "nappi-toissijainen napiton-nappi"
                :ikoni [ikonit/harja-icon-action-undo]
