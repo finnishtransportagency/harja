@@ -91,7 +91,7 @@
          :lisatyo_lyh_val_aika_yht (nth raportti 34)
          :lisatyo_sora_hoitokausi_yht (nth raportti 35)
          :lisatyo_sora_val_aika_yht (nth raportti 36)
-         :lisatyo_paallyste_hoitokausi_yht (nth raportti 36)
+         :lisatyo_paallyste_hoitokausi_yht (nth raportti 37)
          :lisatyo_paallyste_val_aika_yht (nth raportti 38)
          :lisatyo_yllapito_hoitokausi_yht (nth raportti 39)
          :lisatyo_yllapito_val_aika_yht (nth raportti 40)
