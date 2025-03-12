@@ -21,7 +21,7 @@
                              :fmt :raha
                              :lihavoi? lihavoi?}]))))
 
-
+;; NOTE: Tätä käytetään pääasiassa työmaakokouksen laskutusyhteenvedossa
 (defn valitaulukko
   "Työmaakokous välitaulukko ilman tyylejä"
   [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali?]}]
@@ -30,6 +30,8 @@
                   (cond
                     (= "Toteutuneet" otsikko)
                     [(valitaulukko-rivi data false "Hankinnat ja hoidonjohto yhteensä" :hankinnat_ja_hoidon_hk_yht :hankinnat_ja_hoidon_val_yht true nil "vahvistamaton")
+                     (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
+                       (valitaulukko-rivi data false "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true nil nil))
                      (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton")
 
                      ;; Nätetään arvot vain jos on olemassa
@@ -39,11 +41,8 @@
                                                        ;; Jos tavoitehintaa on oikaistu, näytä se Tavoitehinta (oikaistu) 
                                                        (if (:tavoitehinta_on_oikaistu data) 
                                                                             "(oikaistu)" 
-                                                                            "(indeksikorjattu)")) 
+                                                                            "(indeksikorjattu)"))
                          :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil))
-
-                     (when (yhteiset/raha-arvo-olemassa? (:hk_tavhintsiirto_ed_vuodelta data))
-                       (valitaulukko-rivi data false "Siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true "red" nil))
 
                      (when (yhteiset/raha-arvo-olemassa? (:budjettia_jaljella data))
                        (valitaulukko-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil))
@@ -81,10 +80,10 @@
                          :lihavoi? lihavoi?}]
 
     (when kyseessa-kk-vali?
-      (let [arvo (or (avain_yht tp-rivi) (yhteiset/summa-fmt nil))]
+      (let [arvo (or (get tp-rivi avain_yht) (yhteiset/summa-fmt nil))]
         [:varillinen-teksti {:kustomi-tyyli tyyli :arvo arvo :fmt :raha :lihavoi? lihavoi?}]))))
 
-
+;; NOTE: Tätä käytetään pääasiassa tuotekohtaisessa laskutusyteenvedossa
 (defn toteutuneet-valitaulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
                                          kyseessa-kk-vali?]}]
   (let [rivit (into []
@@ -92,8 +91,9 @@
                   (cond
                     (= "Toteutuneet" otsikko)
                     [(toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset yhteensä" :kaikki-yhteensa-laskutettu :kaikki-yhteensa-laskutetaan true nil "vahvistamaton")
+                     (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
+                       (toteutuneet-rivi data kyseessa-kk-vali? "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true nil nil))
                      (toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset, jotka kuuluvat tavoitehintaan" :kaikki-tavoitehintaiset-laskutettu :kaikki-tavoitehintaiset-laskutetaan true nil nil)
-
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)]
 
