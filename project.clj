@@ -140,13 +140,9 @@
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.19.0"]
 
-                 ;; Performance metriikat
-                 ;; TODO: Pilvisiirtymän jälkeen poistetaan tämä riippuvuus
-                 [yleisradio/new-reliquary "1.1.0"]
-
                  ;; -- Front-end tilan hallinta
                  [webjure/tuck "20181204"]
-                 [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck]]
+                 [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck figwheel]]
 
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
