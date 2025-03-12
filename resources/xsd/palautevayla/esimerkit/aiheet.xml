@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<subjects>
+<subjects xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <subject>
         <active>1</active>
         <name>Aihe 1</name>
@@ -9,7 +9,6 @@
         <tloik>0</tloik>
         <palautevayla>1</palautevayla>
         <mobiilisovellus>0</mobiilisovellus>
-        <channel>2</channel>
     </subject>
     <subject>
         <active>1</active>
@@ -20,7 +19,8 @@
         <tloik>1</tloik>
         <palautevayla>1</palautevayla>
         <mobiilisovellus>0</mobiilisovellus>
-        <channel>null</channel>
+        <havainnot>1</havainnot>
+        <channel xsi:nil="true"/>
     </subject>
     <subject>
         <active>0</active>
@@ -31,6 +31,7 @@
         <tloik>1</tloik>
         <palautevayla>1</palautevayla>
         <mobiilisovellus>0</mobiilisovellus>
+        <havainnot>2</havainnot>
         <channel>1</channel>
     </subject>
 </subjects>
