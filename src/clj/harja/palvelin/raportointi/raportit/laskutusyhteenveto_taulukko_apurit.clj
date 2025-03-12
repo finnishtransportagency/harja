@@ -44,9 +44,6 @@
                                                                             "(indeksikorjattu)"))
                          :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil))
 
-                     (when (yhteiset/raha-arvo-olemassa? (:hk_tavhintsiirto_ed_vuodelta data))
-                       (valitaulukko-rivi data false "Tavoitehinnan siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true nil nil))
-
                      (when (yhteiset/raha-arvo-olemassa? (:budjettia_jaljella data))
                        (valitaulukko-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil))
 

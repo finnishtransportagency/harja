@@ -37,9 +37,6 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     tavhin_val_aika_yht                   NUMERIC,
     hoitokauden_tavoitehinta              NUMERIC,
     tavoitehinta_on_oikaistu              BOOLEAN,
-    -- Tavoitehinnan lisäys/vähennys edelliseltä vuodelta
-    -- NOTE: Tallennetaanko missään enää arvoja tavoitehinta_siirretty kolumniin taulussa urakka_tavoite?
-    hk_tavhintsiirto_ed_vuodelta          NUMERIC,
     -- Valikatselmuksesta siirretyt kulut edelliseltä vuodelta
     hk_valikatselmus_siirrot_ed_vuodelta  NUMERIC,
     budjettia_jaljella                    NUMERIC,
@@ -242,9 +239,6 @@ DECLARE
     hoitokauden_vuosi                     NUMERIC; -- Käytetään kun loopataan valitut hoitovuodet aikavälistä
     hoitokauden_tavoitehinta              NUMERIC;
     tavoitehinta_on_oikaistu              BOOLEAN;
-    -- Tavoitehinnan lisäys/vähennys edelliseltä vuodelta
-    -- NOTE: Tallennetaanko missään enää arvoja tavoitehinta_siirretty kolumniin taulussa urakka_tavoite?
-    hk_tavhintsiirto_ed_vuodelta          NUMERIC;
     -- Valikatselmuksesta siirretyt kulut edelliseltä vuodelta
     hk_valikatselmus_siirrot_ed_vuodelta  NUMERIC;
     budjettia_jaljella                    NUMERIC;
@@ -349,18 +343,6 @@ BEGIN
 
     RAISE NOTICE '***TOTAL hoitokauden_tavoitehinta: %', hoitokauden_tavoitehinta;
     -------------------------
-
-    -- Tavoitehintaan liittyvät siirrot edelliseltä vuodelta. Nämä ovat olleet ilmeisesti lisäyksiä tai vähennyksiä tavoitehintaan.
-    -- NOTE: Harjan koodista ei näytä löytyvän enää paikkaa, missä "tavoitehinta_siirretty" arvoa asetettaisiin.
-    --       Tämä voi olla turha operaatio, jos tavoitehinta_siirretty arvoa ei enää käytetä mihinkään.
-    hk_tavhintsiirto_ed_vuodelta := 0.0;
-    hk_tavhintsiirto_ed_vuodelta := hk_tavhintsiirto_ed_vuodelta +
-        ( SELECT COALESCE(ut.tavoitehinta_siirretty_indeksikorjattu, ut.tavoitehinta_siirretty, 0) AS siirretty
-           FROM urakka_tavoite ut
-          WHERE ut.hoitokausi = hoitokauden_nro
-            AND ut.urakka = ur);
-            
-    RAISE NOTICE '*** hk_tavhintsiirto_ed_vuodelta: % ', hk_tavhintsiirto_ed_vuodelta;
 
     -- Välikatselmuksesta voi siirtyä seuravaalle vuodelle maksettavia kuluja Kattohinnan ylityksestä tai kulujen vähennyksiä
     -- Tavoitehinnan alittamisesta.
@@ -1111,7 +1093,7 @@ BEGIN
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
-    budjettia_jaljella := budjettia_jaljella + (hk_tavhintsiirto_ed_vuodelta + hoitokauden_tavoitehinta) - tavhin_hoitokausi_yht;
+    budjettia_jaljella := budjettia_jaljella + hoitokauden_tavoitehinta - tavhin_hoitokausi_yht;
 
     ---------------------------------------------
     ---- Muut toteutuneet kustannukset  ---------
@@ -1364,7 +1346,6 @@ BEGIN
         -- Tavoitehinnan muodostus
               hoitokauden_tavoitehinta, 
               tavoitehinta_on_oikaistu,
-              hk_tavhintsiirto_ed_vuodelta,
               hk_valikatselmus_siirrot_ed_vuodelta,
               budjettia_jaljella,
         -- Lisätyöt
