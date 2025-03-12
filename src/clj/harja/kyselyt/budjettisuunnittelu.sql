@@ -60,9 +60,11 @@ ORDER BY ut.hoitokausi;
 -- single?: true
 SELECT COALESCE(SUM(up.siirto), 0)
   FROM urakka_paatos up
-           LEFT JOIN urakka u ON up."urakka-id" = u.id
+           JOIN urakka u ON up."urakka-id" = u.id
  WHERE up."urakka-id" = :urakka
    AND up."hoitokauden-alkuvuosi" = (EXTRACT(YEAR FROM :alkupvm::DATE) - 1)
+   -- Ainoastaan kattohinnan ylityksestä tai tavoitehinnan alituksesta voi tulla siirtoja
+   AND up.tyyppi in ('kattohinnan-ylitys', 'tavoitehinnan-alitus')
    AND up.siirto != 0
    AND up.poistettu = FALSE;
 
