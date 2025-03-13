@@ -121,18 +121,20 @@ CREATE TABLE paatos_kattohinta
 
 CREATE TABLE paatos_hoitokauden_lopun_hinta
 (
-    id                               SERIAL PRIMARY KEY,
-    urakkaid                         INTEGER        NOT NULL,
-    hoitokauden_alkuvuosi            INTEGER        NOT NULL,
-    tavoitehinta_ennen               NUMERIC(12, 2) NOT NULL,
-    tavoitehinta_jalkeen             NUMERIC(12, 2) NOT NULL,
-    tavoitehinnan_muutokset          NUMERIC(10, 2) NOT NULL,
-    hoitokauden_lopun_indeksikorjaus NUMERIC(10, 2),
-    kattohinta                       NUMERIC(10, 2),
-    luotu                            TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    luoja                            INTEGER        NOT NULL,
-    poistettu                        BOOLEAN        NOT NULL DEFAULT FALSE,
-    poistaja                         INTEGER,
+    id                                       SERIAL PRIMARY KEY,
+    urakkaid                                 INTEGER        NOT NULL,
+    hoitokauden_alkuvuosi                    INTEGER        NOT NULL,
+    tavoitehinta_ennen                       NUMERIC(12, 2) NOT NULL,
+    tavoitehinta_jalkeen                     NUMERIC(12, 2) NOT NULL,
+    tavoitehinnan_muutokset                  NUMERIC(10, 2) NOT NULL,
+    hoitokauden_lopun_indeksikorjaus         NUMERIC(10, 2),
+    kattohinta                               NUMERIC(10, 2),
+    kattohintakerroin                        NUMERIC(4, 2),
+    lisaa_tavoitehintaan_lopunindeksikorjaus BOOLEAN,
+    luotu                                    TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    luoja                                    INTEGER        NOT NULL,
+    poistettu                                BOOLEAN        NOT NULL DEFAULT FALSE,
+    poistaja                                 INTEGER,
     FOREIGN KEY (luoja) REFERENCES kayttaja (id),
     FOREIGN KEY (urakkaid) REFERENCES urakka (id)
 );
@@ -220,6 +222,8 @@ CREATE TABLE urakka_parametrit
     --laskutusraja_kaytossa                              BOOLEAN,       -- Onko laskutusraja käytössä
     --laskutusrajan_ylitys_kaava                         TEXT,          -- Kaava laskutusrajan sanktion laskemiseen
     --kattohinta_laskukaava                              TEXT,          -- Kaava kattohinnan laskemiseen, onko 10% vai lasketaanko käsin
+    lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus BOOLEAN, -- -24 alkaen hoitovuoden lopun tavoitehintaan lisätään myös hiotovuoden lopun indeksikorjaus
+    hoitokauden_lopun_kattohinta_kerroin                DECIMAL(4, 2), -- Kaava kattohinnan laskemiseen, voi olla 1.1 tai 1.2 kertaa hoitovuoden lopun tavoitehinta, joka sekin lasketaan eri tavalla eri vuosina
     muokkaa_kattohinta_kasin                            BOOLEAN,       -- -19/20 alkavilla urakoilla kattohinta annetaan käsin, muilla 10% tavoitehinnasta
     kattohintaylityksen_siirron_prosenttirajoitus       DECIMAL(4, 2), -- Esim 0.03 (prosenttia) vuonna -25 alkavilla urakoilla
     tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti INTEGER,       -- Kuinka monta prosenttia urakoitsija maksaa ylityksen kustannuksista
@@ -263,6 +267,8 @@ DECLARE
     indeksi_kaytossa                                             BOOLEAN;
     kattohintaylityksen_siirron_prosenttirajoitus                DECIMAL(4, 2);
     muokkaa_kattohinta_kasin                                     BOOLEAN;
+    hoitokauden_lopun_kattohinta_kerroin                         DECIMAL(4, 2);
+    lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus          BOOLEAN;
 BEGIN
     -- Haetaan kaikki MHU-urakat ja lisätään niiden perustiedot urakka_parametrit tauluun
     for urakan_tiedot in (SELECT * FROM urakka WHERE id = urakkaid_ and tyyppi IN ('teiden-hoito'))
@@ -295,15 +301,25 @@ BEGIN
             indeksi_kaytossa := (CASE
                                      WHEN urakan_tiedot.alkupvm < '2020-10-02' THEN TRUE
                                      ELSE FALSE END);
-            muokkaa_kattohinta_kasin  := (CASE
-                                              WHEN urakan_tiedot.alkupvm < '2020-10-02' THEN TRUE
-                                              ELSE FALSE END);
+
+            muokkaa_kattohinta_kasin := (CASE
+                                             WHEN urakan_tiedot.alkupvm < '2020-10-02' THEN TRUE
+                                             ELSE FALSE END);
 
             -- -25 vuodesta alkaen kattohintaylityksen siirron määrälle rajoitus on voimassa
             kattohintaylityksen_siirron_prosenttirajoitus := (CASE
                                                                   WHEN urakan_tiedot.alkupvm < '2024-10-02'
                                                                       THEN NULL
                                                                   ELSE 0.03 END);
+
+            hoitokauden_lopun_kattohinta_kerroin := (CASE
+                                                         WHEN urakan_tiedot.alkupvm < '2024-10-02' THEN 1.1
+                                                         ELSE 1.2 END);
+
+            lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus := (CASE
+                                                                        WHEN urakan_tiedot.alkupvm < '2023-10-02'
+                                                                            THEN TRUE
+                                                                        ELSE FALSE END);
 
             -- Tarkistetaan, että löytyykö rivi jo taulusta
             IF EXISTS(SELECT 1 FROM urakka_parametrit WHERE urakkaid = urakan_tiedot.id)
@@ -319,6 +335,8 @@ BEGIN
                     tavoitehinnan_ylityksen_tilaajan_maksuprosentti     = tavoitehinnan_ylityksen_maksuprosentti,
                     kattohintaylityksen_siirron_prosenttirajoitus       = kattohintaylityksen_siirron_prosenttirajoitus,
                     muokkaa_kattohinta_kasin                            = muokkaa_kattohinta_kasin,
+                    hoitokauden_lopun_kattohinta_kerroin                = hoitokauden_lopun_kattohinta_kerroin,
+                    lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus = lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus,
                     muokattu                                            = NOW(),
                     muokkaaja                                           = luojaid
                 WHERE urakkaid = urakan_tiedot.id;
@@ -331,12 +349,15 @@ BEGIN
                                                tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti,
                                                tavoitehinnan_ylityksen_tilaajan_maksuprosentti,
                                                kattohintaylityksen_siirron_prosenttirajoitus,
-                                               muokkaa_kattohinta_kasin, luoja, luotu)
+                                               muokkaa_kattohinta_kasin,
+                                               hoitokauden_lopun_kattohinta_kerroin,
+                                               lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus, luoja, luotu)
                 VALUES (urakan_tiedot.id, indeksi_kaytossa, indeksi_kaytossa, bonusprosentti, sanktioprosentti,
                         tavoitepalkkioprosentti, tavoitepalkkionmaxprosentti,
                         (100 - tavoitehinnan_ylityksen_maksuprosentti), tavoitehinnan_ylityksen_maksuprosentti,
                         kattohintaylityksen_siirron_prosenttirajoitus, muokkaa_kattohinta_kasin,
-                        luojaid, NOW());
+                        hoitokauden_lopun_kattohinta_kerroin,
+                        lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus, luojaid, NOW());
             END IF;
         end LOOP;
 END
@@ -473,7 +494,7 @@ BEGIN
             INTO urakan_hinnat;
 
             toteutuneet_kustannukset_urakalle :=
-                    laske_toteutuneet_kustannukset(paatos."urakka-id", paatos."hoitokauden-alkuvuosi");
+                laske_toteutuneet_kustannukset(paatos."urakka-id", paatos."hoitokauden-alkuvuosi");
 
             RAISE NOTICE 'Hoitokauden alkuvuosi: %, Hoitokauden alun tavoitehinta: %, Hoitokauden lopun tavoitehinta: %s, kattohinta: %, tarjous_tavoitehinta: %, hoitokauden_jarjestysluku: %',
                 urakan_hinnat.hoitokauden_alkuvuosi, urakan_hinnat.hoitokauden_alun_tavoitehinta, urakan_hinnat.tavoitehinta, urakan_hinnat.kattohinta, urakan_hinnat.tarjous_tavoitehinta, hoitokauden_jarjestysluku;
@@ -533,7 +554,7 @@ BEGIN
                 WHEN 'tavoitehinnan-alitus'
                     THEN RAISE NOTICE 'tavoitehinnan-alitus tiedot: %', paatos;
                          alituksen_maara_urakalle :=
-                                 urakan_hinnat.tavoitehinta - toteutuneet_kustannukset_urakalle;
+                             urakan_hinnat.tavoitehinta - toteutuneet_kustannukset_urakalle;
                          INSERT INTO paatos_tavoitehinta_alitus (urakkaid,
                                                                  hoitokauden_alkuvuosi,
                                                                  hoitokauden_alun_tavoitehinta,
@@ -563,12 +584,12 @@ BEGIN
                          IF urakan_hinnat.kattohinta >= toteutuneet_kustannukset_urakalle THEN
                              -- Jos toteutuneet kustannukset ovat pienemmät kuin kattohinta, niin tavoitehinnan ylitys lasketaan toteutuneista kustannuksista
                              tavoitehinnan_ylitys :=
-                                     (toteutuneet_kustannukset_urakalle - urakan_hinnat.tavoitehinta);
+                                 (toteutuneet_kustannukset_urakalle - urakan_hinnat.tavoitehinta);
                              RAISE NOTICE 'tavoitehinnan-ylitys :: kattohinta suurempi kuin toteuma :: Toteutuneet kustannukset: %, kattohinta: %, tavoitehinnan_ylitys: %', toteutuneet_kustannukset_urakalle, urakan_hinnat.kattohinta, tavoitehinnan_ylitys;
                          ELSE
                              -- Kun toteutuneet kustannukset ylittävät myös kattohinnan, niin tavoitehinnan ylitys lasketaan kattohinnan ja tavoitehinnan välistä
                              tavoitehinnan_ylitys :=
-                                     (urakan_hinnat.kattohinta - urakan_hinnat.tavoitehinta);
+                                 (urakan_hinnat.kattohinta - urakan_hinnat.tavoitehinta);
                              RAISE NOTICE 'tavoitehinnan-ylitys tiedot :: toteuma alle kattohinnan  :: Toteutuneet kustannukset: %, kattohinta: %, tavoitehinnan_ylitys: %', toteutuneet_kustannukset_urakalle, urakan_hinnat.kattohinta, tavoitehinnan_ylitys;
 
                          end if;
@@ -600,7 +621,7 @@ BEGIN
                                                           urakka_parametrit.kattohintaylityksen_siirron_prosenttirajoitus;
                          ELSE
                              maksimi_siirrettava_maara :=
-                                     (toteutuneet_kustannukset_urakalle - urakan_hinnat.kattohinta);
+                                 (toteutuneet_kustannukset_urakalle - urakan_hinnat.kattohinta);
                          END IF;
 
                          INSERT INTO paatos_kattohinta (urakkaid, hoitokauden_alkuvuosi,

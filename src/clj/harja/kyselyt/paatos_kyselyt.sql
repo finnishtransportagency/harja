@@ -146,9 +146,11 @@ WHERE id = :paatos-id
 -- name: tee-hoitokauden-lopun-hinta-paatos<!
 -- Tee hoitokauden lopun hinta päätös
 INSERT INTO paatos_hoitokauden_lopun_hinta (urakkaid, hoitokauden_alkuvuosi, tavoitehinta_ennen, tavoitehinta_jalkeen,
-                                            tavoitehinnan_muutokset, hoitokauden_lopun_indeksikorjaus, kattohinta, luoja, luotu)
+                                            tavoitehinnan_muutokset, hoitokauden_lopun_indeksikorjaus, kattohinta,
+                                            kattohintakerroin, lisaa_tavoitehintaan_lopunindeksikorjaus, luoja, luotu)
 VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta_ennen, :tavoitehinta_jalkeen, :tavoitehinnan_muutokset,
-        :hoitokauden_lopun_indeksikorjaus, :kattohinta, :luoja, NOW());
+        :hoitokauden_lopun_indeksikorjaus, :kattohinta, :kattohintakerroin, :lisaa_tavoitehintaan_lopunindeksikorjaus,
+        :luoja, NOW());
 
 --name: poista-hoitokauden-lopun-hinta-paatos<!
 -- Poista hoitokauden lopun hinta päätös
