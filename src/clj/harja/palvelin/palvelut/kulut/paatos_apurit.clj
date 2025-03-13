@@ -119,7 +119,9 @@
                      "Välikatselmuksessa luotu kulu. Tavoitehinta alitettiin. Urakoitsijalle maksetaan tavoitepalkkiota."
                      (= :kattohinnan-ylitys paatoksen-tyyppi)
                      "Välikatselmuksessa luotu kulu. Kattohinnan ylitys. Urakoitsija maksaa hyvitystä."
-                     (= :hoidonjohtopalkkion-muutos paatoksen-tyyppi)
+                     (and (= :hoidonjohtopalkkion-muutos paatoksen-tyyppi) (>= kokonaissumma 0))
+                     "Välikatselmuksessa luotu kulu. Hoidonjohtopalkkion muutos. Urakoitsija maksaa."
+                     (and (= :hoidonjohtopalkkion-muutos paatoksen-tyyppi) (< kokonaissumma 0))
                      "Välikatselmuksessa luotu kulu. Hoidonjohtopalkkion muutos. Tilaaja maksaa."
                      :else nil)
         ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle

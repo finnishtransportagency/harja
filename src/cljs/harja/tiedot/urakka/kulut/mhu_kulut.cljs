@@ -72,12 +72,14 @@
 (def vuoden-paatoksen-kulun-tyypit
   {:tavoitepalkkio "Tavoitepalkkio"
    :tavoitehinnan-ylitys "Urakoitsija maksaa tavoitehinnan ylityksestä"
-   :kattohinnan-ylitys "Urakoitsija maksaa tavoite- ja kattohinnan ylityksestä"})
+   :kattohinnan-ylitys "Urakoitsija maksaa tavoite- ja kattohinnan ylityksestä"
+   :hoidonjohtopalkkion-muutos "Hoidonjohtopalkkion muutos"})
 
 (def vuoden-paatoksen-tehtavaryhmien-nimet
   {:tavoitepalkkio "Hoitovuoden päättäminen / Tavoitepalkkio"
    :tavoitehinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
-   :kattohinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"})
+   :kattohinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"
+   :hoidonjohtopalkkion-muutos "G - Hoidonjohtopalkkio"})
 
 (defn avain->tehtavaryhma [tehtavaryhmat avain]
   (first (filter #(= (:tehtavaryhma %) (get vuoden-paatoksen-tehtavaryhmien-nimet avain)) tehtavaryhmat)))

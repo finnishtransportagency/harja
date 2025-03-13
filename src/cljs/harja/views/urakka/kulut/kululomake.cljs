@@ -248,7 +248,7 @@
 (defn- hoitovuodenpaatos-kohdistus [e! lomake kohdistus nro]
   (let [lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)
         hoitovuoden-paatostyyppi (r/atom (:hoitovuoden-paatostyyppi kohdistus))
-        _ (js/console.log "hoitovuodenpaatos-kohdistus :: hoitovuoden-paatostyyppi" (pr-str hoitovuoden-paatostyyppi) )]
+        _ (js/console.log "hoitovuodenpaatos-kohdistus :: hoitovuoden-paatostyyppi" (pr-str @hoitovuoden-paatostyyppi) )]
     [:div.row
      [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
       [:div.label-ja-alasveto {:style {:width "320px"}}

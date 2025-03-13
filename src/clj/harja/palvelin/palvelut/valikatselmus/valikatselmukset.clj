@@ -786,7 +786,10 @@
                        validaatio)
           ;; Luodaan päätöksen mukainen kulu, jos hoitovuoden lopun tavoitehinta poikkeaa yli 5% tarjouksen tavoitehinnasta.
           kulu_id (when-not (and (seq validaatio) (> (:muutosprosentti paatos) 5))
-                    (paatos-apurit/tallenna-kulu db paatos kayttaja :hoidonjohtopalkkion-muutos (:hoidonjohtopalkkio_muutos paatos)))
+                    (paatos-apurit/tallenna-kulu db paatos kayttaja :hoidonjohtopalkkion-muutos
+                      ;; Osassa päätöksistä summat on ristiriidassa kulujen summien kanssa. Joten ne muokataan aina kululle eri päin.
+                      ;; Tehdään se hoidonjohtopalkiolle tässä, niin se menee kululle oikein
+                      (* -1 (:hoidonjohtopalkkio_muutos paatos))))
           paatos (assoc paatos :kulu_id kulu_id)
           ;; TODO: Tee lisää validaatiota, jos mahdollista
 
@@ -800,7 +803,11 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
   (log/debug "poista-hoidonjohtopalkkion-muutospaatos :: paatos" (pr-str paatos))
   (jdbc/with-db-transaction [db db]
-    (let [_ (paatos-kyselyt/poista-hoidonjohtopalkkiomuutospaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
+    (let [;; Jos päätöksellä on kulu, niin poisteatan se samalla
+          _ (when (:kulu_id paatos)
+              (kulut-palvelu/poista-kulu-tietokannasta db kayttaja
+                {:urakka-id (:urakkaid paatos) :id (:kulu_id paatos)}))
+          _ (paatos-kyselyt/poista-hoidonjohtopalkkiomuutospaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
 
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))

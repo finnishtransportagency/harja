@@ -371,7 +371,9 @@
         (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset)))
     (let [paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
           tulos (with-precision 10 (/ tavoitehinta tarjouksen-tavoitehinta))
-          hoidonjohtopalkkio-muutos (* hoidonjohtopalkkio tulos)
+          hoidonjohtopalkkio-muutos (if (>= tulos 1)
+                                      (* hoidonjohtopalkkio tulos)
+                                      (* (* hoidonjohtopalkkio tulos) -1)) ;; Käännetään luku negatiiviseksi
           muutosprosentti (* (- tulos 1) 100)
           ;; Täytetään pakolliset tiedot
           paatos (-> paatos
