@@ -9,12 +9,46 @@
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
             [harja.transit :as transit]
+            [harja.ui.napit :as napit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
+            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.tierekisteri :as tr-domain]))
+
+
+(defn- raporttiviennit [valinnat]
+  [:div.flex-oikealla
+   [:div.lataus-nappi
+
+    ;; Excel
+    [:form {:style {:margin-left "auto"}
+            :target "_blank" :method "POST"
+                   ; :action TODO
+            }
+     [:input {:type "hidden" :name "parametrit"
+              :value (transit/clj->transit {:tr (:tr valinnat)
+                                            :aikavali (:aikavali valinnat)
+                                            :urakka-id @nav/valittu-urakka-id})}]
+     [:button {:type "submit"
+               :class #{"nappi-toissijainen"}}
+      [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna Excel"]]]
+
+
+    ;; Pdf 
+    [:form {:style {:margin-left "auto"}
+            :target "_blank" :method "POST"
+                       ; :action TODO
+            }
+     [:input {:type "hidden" :name "parametrit"
+              :value (transit/clj->transit {:tr (:tr valinnat)
+                                            :aikavali (:aikavali valinnat)
+                                            :urakka-id @nav/valittu-urakka-id})}]
+     [:button {:type "submit"
+               :class #{"nappi-toissijainen"}}
+      [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna PDF"]]]]])
 
 
 (defn muut-kustannukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
@@ -25,6 +59,16 @@
         ] 
 
     [:div.tiemerkinnat-muut-kustannukset
+     
+     [:h2 "Muut kustannukset"]
+
+     [napit/uusi "Lisää uusi" 
+      #(e! (println "fn"))
+      {:disabled false ;; TODO .. 
+       }]
+     
+     (raporttiviennit valinnat)
+
      ;; Muokkauspaneeli
      (when muokataan
        ;; TODO 
@@ -33,22 +77,8 @@
      [:div.tiemerkinnat-muut-kustannukset-listaus
       ;; Suodattimet
       ;; TODO 
-      [:div.taulukko-header.header-yhteiset
+      [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
 
-       ;; Oikealla puolella olevat raporttinapit 
-       [:div.flex-oikealla
-        [:div.lataus-nappi
-         [:form {:style {:margin-left "auto"}
-                 :target "_blank" :method "POST"
-                 ; :action TODO
-                 }
-          [:input {:type "hidden" :name "parametrit"
-                   :value (transit/clj->transit {:tr (:tr valinnat)
-                                                 :aikavali (:aikavali valinnat)
-                                                 :urakka-id @nav/valittu-urakka-id})}]
-          [:button {:type "submit"
-                    :class #{"nappi-toissijainen"}}
-           [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna Excel"]]]]]]
 
       ;; Grid
       [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
@@ -83,6 +113,20 @@
          :leveys 0.55}
 
         {:otsikko "Selite"
+         :tyyppi :Tyyppi
+         :komponentti (fn [arvo _]
+                        [:span "test"])
+         :luokka "text-nowrap"
+         :leveys 0.55}
+
+        {:otsikko "Pk-luokka"
+         :tyyppi :Tyyppi
+         :komponentti (fn [arvo _]
+                        [:span "test"])
+         :luokka "text-nowrap"
+         :leveys 0.55}
+
+        {:otsikko "Kustannus"
          :tyyppi :Tyyppi
          :komponentti (fn [arvo _]
                         [:span "test"])
