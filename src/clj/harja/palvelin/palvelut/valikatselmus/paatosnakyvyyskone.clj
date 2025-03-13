@@ -366,7 +366,7 @@
 
 (defn valmistele-hoidonjohtopalkkionmuutospaatos [paatokset tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
-  (if (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio (and (> tavoitehinta tarjouksen-tavoitehinta))
+  (if (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio
         ;; Varmistetaan möys, että päätös on olemassa
         (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset)))
     (let [paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
@@ -391,9 +391,7 @@
     (let [virhe #{}
           virhe (if-not tavoitehinta (conj virhe "Tavoitehintaa ei ole määritelty. ") virhe)
           virhe (if-not tarjouksen-tavoitehinta (conj virhe "Tarjouksen tavoitehintaa ei ole määritelty. ") virhe)
-          virhe (if-not hoidonjohtopalkkio (conj virhe "Hoidonjohtopalkkiota ei ole määritelty. ") virhe)
-          virhe (if-not (and tavoitehinta tarjouksen-tavoitehinta (> tavoitehinta tarjouksen-tavoitehinta))
-                  (conj virhe "Tavoitehinta ei ole suurempi, kuin tarjouksen tavoitehinta. ") virhe)]
+          virhe (if-not hoidonjohtopalkkio (conj virhe "Hoidonjohtopalkkiota ei ole määritelty. ") virhe)]
       (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" (clojure.string/join " " virhe) true 8))))
 
 (defn nimi->avain [nimi]
