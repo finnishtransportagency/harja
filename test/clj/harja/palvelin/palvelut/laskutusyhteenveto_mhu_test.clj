@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.laskutusyhteenveto-mhu-test
   (:require [clojure.test :refer :all]
+            [clojure.zip :as zip]
             [harja.kyselyt.urakat :as urakat-q]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -18,6 +19,26 @@
             [harja.palvelin.palvelut.kulut.kulut :as kulu-palvelu]
             [harja.testi :as testi]))
 
+
+(defn raportti-zip
+  "Palauta zipper raportin raakadatalle"
+  ;; Ei täydellinen. Raportin raakadata ei sisällä aivan säännönmukaista rakennetta, joten branchit eivät välttämättä aina ole sitä mitä halutaan
+  [raportti-root]
+  (zip/zipper
+    vector?
+    ;; Hae lapset
+    #(drop 1 %)
+    ;; Tee uusi noodi
+    #(into [] (concat (take 1 %1) %2))
+    raportti-root))
+
+(defn etsi-raportin-rivi
+  [zipped-raportti rivi-data]
+  (loop [curr zipped-raportti]
+    (cond
+      (zip/end? curr) nil
+      (-> curr zip/node (= rivi-data)) (-> curr zip/node)
+      :else (recur (zip/next curr)))))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -127,6 +148,35 @@
                                      (:hj_palkkio_laskutettu talvihoito))]
 
       (is (= talvihoidon-tavoitehinta (:tavoitehintaiset_laskutettu talvihoito))))))
+
+(deftest varmista-kustannusten-siirrot
+  (let [kayttaja-id (:id +kayttaja-jvh+)
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        siirto-ed-vuodelta 60000.0M
+        ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta"
+        _ (i (format "INSERT INTO urakka_paatos (\"hoitokauden-alkuvuosi\", \"urakka-id\", \"hinnan-erotus\", \"urakoitsijan-maksu\", \"tilaajan-maksu\", siirto, tyyppi, \"lupaus-luvatut-pisteet\", \"lupaus-toteutuneet-pisteet\", \"lupaus-tavoitehinta\", muokattu, \"muokkaaja-id\", \"luoja-id\", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id)
+        VALUES (2019, %s, null, 39395.784199999995, 0, %s, 'kattohinnan-ylitys', null, null, null, null, null, %s, '2019-11-01 10:12:11.886000', false, null, null, 51);" urakka-id siirto-ed-vuodelta kayttaja-id))
+
+        hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+        parametrit {:urakkatyyppi "teiden-hoito"
+                    :alkupvm (pvm/->pvm "1.10.2020")
+                    :loppupvm (pvm/->pvm "30.9.2021")
+                    :urakka-id urakka-id
+                    :hallintayksikko-id hallintayksikko-id}
+        raportti (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit)]
+
+    ;; Etsi "Siirto edelliseltä vuodelta" -rivin data raportin raakadatasta
+    (let [z-raportti (raportti-zip raportti)
+          siirto-rivi [[:varillinen-teksti {:arvo ""}]
+                       [:varillinen-teksti
+                        {:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}]
+                       [:varillinen-teksti
+                        {:itsepaisesti-maaritelty-oma-vari nil,
+                         :arvo siirto-ed-vuodelta,
+                         :fmt :raha,
+                         :lihavoi? true}]]]
+      ;; Etsii koko raportin hiccupista lehden, josta löytyy siirto-riviin liittyvä data
+      (is (= siirto-rivi (etsi-raportin-rivi z-raportti siirto-rivi))))))
 
 (deftest mhu-laskutusyhteenvedon-sanktiot-joissa-indeksikorotus
   (testing "mhu-laskutusyhteenvedon-sanktiot-joissa-indeksikorotus"
