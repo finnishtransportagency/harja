@@ -424,3 +424,37 @@
              :samat-maarat-vuosittain? false
              :hoitovuosi 2021
              :maara nil})))))
+
+
+(deftest hae-tehtavaryhman-tehtavat-urakalle-testi
+  (testing "Tehtäväryhmän tehtävien haku onnistuu"
+    (let [tehtavaryhmat (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :tehtavaryhmat-ja-toimenpiteet
+                          +kayttaja-jvh+
+                          {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})
+                      ;; Otetaan ensimmäinen tehtäväryhmä testausta varten
+          tehtavaryhma-id (:tehtavaryhma-id (first tehtavaryhmat))
+          tehtavat (kutsu-palvelua (:http-palvelin jarjestelma)
+                     :hae-tehtavaryhman-tehtavat-urakalle
+                     +kayttaja-jvh+
+                     {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                      :tehtavaryhma-id tehtavaryhma-id}) 
+          db-tehtavien-lkm (ffirst (q (str "SELECT count(*) FROM tehtava t
+                                                        WHERE t.tehtavaryhma = " tehtavaryhma-id "
+                                                        AND t.pakollinen_uudessa_kulussa is true
+                                                        AND t.\"mhu-tehtava?\" is true
+                                                        AND t.poistettu is not true 
+                                                        AND t.piilota is not true;")))]
+
+      (is (vector? tehtavat) "Palauttaa vektorin tehtäviä")
+      (is (= (count tehtavat) db-tehtavien-lkm) "Palauttaa oikean määrän tehtäviä")
+      (is (every? #(contains? % :id) tehtavat) "Jokaisella tehtävällä on id")
+      (is (every? #(contains? % :nimi) tehtavat) "Jokaisella tehtävällä on nimi")
+      (is (every? #(true? (:pakollinen-uudessa-kulussa %)) tehtavat) "Jokaisella palautetulla tehtävällä pakollinen_uudessa_kulussa on true")))
+
+  (testing "Virheellinen urakka-id heittää poikkeuksen"
+    (is (thrown? IllegalArgumentException
+          (kutsu-palvelua (:http-palvelin jarjestelma)
+            :hae-tehtavaryhman-tehtavat-urakalle
+            +kayttaja-jvh+
+            {:tehtavaryhma-id 1})) "Urakka-id:n puuttuminen aiheuttaa poikkeuksen")))
