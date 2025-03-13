@@ -127,7 +127,7 @@
                                  (when (dom/enter-nappain? event)
                                    (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))
         siirrettava (atom (if (:siirrettava_maara paatos) (:siirrettava_maara paatos) 0))
-        korkeintaan-3-pros? (when (<= 2025 (:urakan_alkuvuosi paatos)) true)]
+        siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-border
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Kattohinnan ylitys" paatos-tehty? paatos-avain avatut-paatokset
@@ -141,7 +141,7 @@
           [:div.harmaa-tausta
            [:div.flex-row
             [:div
-             (when (and siirra? (not korkeintaan-3-pros?)) {:class "checkbox-block"})
+             (when (and siirra? (not siirtorajoitus?)) {:class "checkbox-block"})
              [kentat/tee-kentta
               {:tyyppi :checkbox
                :disabled? (or paatos-tehty? false)
@@ -153,12 +153,12 @@
                 siirra?
                 (fn [uusi-arvo]
                   (e! (valikatselmus-tiedot/->PaivitaKattohinnanSiirtoCheckbox uusi-arvo))))]]
-            [:div.siirrettavan-maaran-input (when (and siirra? korkeintaan-3-pros?) {:style {:margin-bottom "8px"}})
+            [:div.siirrettavan-maaran-input (when (and siirra? siirtorajoitus?) {:style {:margin-bottom "8px"}})
              (when siirra?
                [kentat/tee-otsikollinen-kentta {:otsikko "Siirrettävä määrä (€)"
                                                 :otsikon-luokka "caption"
                                                 :luokka ""
-                                                :alaotsikko (when korkeintaan-3-pros? (str "Max. " (fmt/euro-opt false (* 0.03 (:kattohinta paatos))) "*"))
+                                                :alaotsikko (when siirtorajoitus? (str "Max. " (fmt/euro-opt false (:maksimi_siirrettava_maara paatos)) "*"))
                                                 :alaotsikon-luokka "caption sub-caption"
                                                 :kentta-params {:tyyppi :euro
                                                                 :teksti-oikealla ""
@@ -171,14 +171,14 @@
                                                                 :elementin-id "kattohinta-ylitys-siirto"
                                                                 :vaadi-ei-negatiivinen? true
                                                                 :validoi-kentta-fn (fn [numero] (validointi/validoi-numero numero 0
-                                                                                                  (if korkeintaan-3-pros?
-                                                                                                    (js/parseFloat (str/replace (fmt/desimaaliluku (* 0.03 (:kattohinta paatos)) 2 2 false) "," "."))
+                                                                                                  (if siirtorajoitus?
+                                                                                                    (js/parseFloat (str/replace (fmt/desimaaliluku (:maksimi_siirrettava_maara paatos) 2 2 false) "," "."))
                                                                                                     (:ylityksen_maara paatos))
                                                                                                   2))
                                                                 :on-blur #(e! (valikatselmus-tiedot/->PaivitaKattohinnanSiirtoMaara @siirrettava))
                                                                 :disabled? (or paatos-tehty? false)}
                                                 :arvo-atom siirrettava}])]]
-           (when (and siirra? korkeintaan-3-pros?)
+           (when (and siirra? siirtorajoitus?)
              [:div.selite
               [:p (str "*Enintään 3% laskettuna hoitovuoden lopun kattohinnasta.")]])])
 

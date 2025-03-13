@@ -26,7 +26,7 @@
   [:div
    [:div.flex-row
     [:p "Hoitovuoden päätyttyä lasketaan hoitovuotta edeltävän syyskuun ja hoitovuoden elokuun välisten kuukausien indeksin pistelukujen keskiarvo. Näin laskettua keskiarvoa verrataan hoitovuotta edeltävän elokuun indeksin pistelukuun. Mikäli muutos (ylitys/alitus) on"
-     [:strong " suurempi kuin 2,0 %"] ", korjataan hoitovuoven lopun tavoitehintaa 2,0 %:n ylittävällä %-osuudella. Prosenttiosuus lasketaan 0,1 %:n tarkkuudella."]]
+     [:strong " suurempi kuin 2,0 %"] ", korjataan hoitovuoden lopun tavoitehintaa 2,0 %:n ylittävällä %-osuudella. Prosenttiosuus lasketaan 0,1 %:n tarkkuudella."]]
    [:div.flex-row
     [:div [:strong "Pisteluku, johon keskiarvoa verrataan (" (:alkuperaisen_pisteluvun_kuukausi paatos) ")"]]
     [:div [:strong (:alkuperainen_pisteluku paatos)]]]
@@ -86,7 +86,7 @@
                       [laskenta-modaali paatos]))]]
            [:div.flex-row
             [:div "Hoitovuoden lopun indeksikorjaus"]
-            [:div [:strong (fmt/euro-opt false (:hoitokauden_lopun_indeksikorjaus paatos)) "%"]]]
+            [:div [:strong (fmt/euro-opt false (:hoitokauden_lopun_indeksikorjaus paatos)) "€"]]]
 
            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
             #(e! (valikatselmus-tiedot/->TallennaHoitovuodenlopunIndeksikorjauspaatos paatos))
