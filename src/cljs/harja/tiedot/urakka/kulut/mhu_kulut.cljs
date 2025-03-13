@@ -18,7 +18,8 @@
 (defrecord TavoitehintaanKuuluminen [tavoitehinta nro])
 (defrecord ValitseRahavarausKohdistukselle [rahavaraus nro])
 (defrecord ValitseToimenpideKohdistukselle [toimenpide nro])
-(defrecord LisatyonLisatieto [lisatieto nro])
+(defrecord ValitseTehtavaKohdistukselle [tehtava nro]) 
+(defrecord KohdistuksenLisatieto [lisatieto nro])
 (defrecord KohdistuksenSumma [summa nro])
 (defrecord KoontilaskunKuukausi [arvo])
 (defrecord ValitseErapaiva [erapaiva])
@@ -43,6 +44,7 @@
 (defrecord LiitteenPoistoOnnistui [tulos parametrit])
 
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
+(defrecord HaeUrakanTehtavaryhmanTehtavat [urakka tehtavaryhma nro])
 (defrecord HaeUrakanKulut [hakuparametrit])
 (defrecord HaeUrakanToimenpiteet [hakuparametrit])
 (defrecord OnkoLaskunNumeroKaytossa [laskun-numero])
@@ -52,6 +54,7 @@
 (defrecord TarkistusOnnistui [tulos parametrit])
 (defrecord TallennusOnnistui [tulos parametrit])
 (defrecord ToimenpidehakuOnnistui [tulos])
+(defrecord HaeUrakanTehtavaryhmanTehtavatOnnistui [tulos parametrit])
 (defrecord KuluhakuOnnistui [tulos])
 
 (defrecord LataaLiite [id])
@@ -365,8 +368,12 @@
                 (assoc-in [:lomake :kohdistukset nro :toimenpide] toimenpide)
                 (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi toimenpide)))]
       app))
+  
+  ValitseTehtavaKohdistukselle
+  (process-event [{tehtava :tehtava nro :nro} app]
+    (assoc-in app [:lomake :kohdistukset nro :tehtava] tehtava))
 
-  LisatyonLisatieto
+  KohdistuksenLisatieto
   (process-event [{lisatieto :lisatieto nro :nro} app]
     (assoc-in app [:lomake :kohdistukset nro :lisatyon-lisatieto] lisatieto))
 
@@ -571,6 +578,35 @@
        :paasta-virhe-lapi? true})
     (update-in app [:parametrit :haetaan] inc))
 
+  HaeUrakanTehtavaryhmanTehtavat
+  (process-event
+    [{:keys [urakka tehtavaryhma nro]} app]
+    (tuck-apurit/post! :hae-tehtavaryhman-tehtavat-urakalle
+      {:urakka-id (:id urakka)
+       :tehtavaryhma-id (:id tehtavaryhma)}
+      {:onnistui           ->HaeUrakanTehtavaryhmanTehtavatOnnistui
+       :onnistui-parametrit [{:nro nro}]
+       :epaonnistui        ->KutsuEpaonnistui
+       :epaonnistui-parametrit [{:viesti "Tehtävien haku epäonnistui"}]
+       :paasta-virhe-lapi? true})
+       (-> app (assoc-in [:lomake :kohdistukset nro :tehtavaryhman-tehtavat] nil)
+               (assoc-in [:lomake :kohdistukset nro :tehtava] nil)
+               (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] true)))
+
+
+  HaeUrakanTehtavaryhmanTehtavatOnnistui
+   (process-event [{tulos :tulos {:keys [nro]} :parametrit} app]
+    (let
+      [lomake (:lomake app)
+       lomake (-> lomake
+                (with-meta (tila/kulun-validointi-meta lomake)))
+       app (-> app
+             (assoc :lomake lomake)
+             (assoc-in [:lomake :kohdistukset nro :tehtavaryhman-tehtavat] tulos)
+             (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] false))]
+      app))
+  
+  
   KuluHaettuLomakkeelle
   (process-event [{kulu :kulu} app]
     (-> app
