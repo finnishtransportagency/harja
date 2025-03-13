@@ -154,6 +154,7 @@
                          :summa (:kokonaissumma kulu)
                          :toimenpideinstanssi toimenpideinstanssi-id
                          :tehtavaryhma (:id tehtavaryhma)
+                         :tehtava-id nil
                          :maksueratyyppi "kokonaishintainen"
                          :alkupvm laskutuspvm
                          :loppupvm laskutuspvm
