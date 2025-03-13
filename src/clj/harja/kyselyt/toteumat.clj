@@ -29,7 +29,7 @@
   (upsert! db ::rp/toteuman-reittipisteet
            toteuman-reittipisteet))
 
-(defn poista-reittipiste-toteuma-idlla! [db toteuma-id]
+(defn poista-toteuman-reittipisteet-toteuma-idlla! [db toteuma-id]
   (delete! db ::rp/toteuman-reittipisteet
            {::rp/toteuma-id toteuma-id}))
 

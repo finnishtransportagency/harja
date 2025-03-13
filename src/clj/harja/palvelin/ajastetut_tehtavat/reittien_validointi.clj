@@ -9,7 +9,7 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastus]
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri]
             [harja.kyselyt.toteumat :as toteumat-q]
-            [harja.palvelin.palvelut.toteumat :refer [paivita-toteuman-reitti]]
+            [harja.palvelin.palvelut.toteumat :refer [paivita-toteuman-reittigeometria]]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.tyokalut.lukot :as lukko]
@@ -31,7 +31,7 @@
          (jdbc/with-db-transaction
            [db db]
            (doseq [{:keys [id]} toteumat]
-             (reittitoteuma/paivita-toteuman-reitti db id etaisyys)))
+                  (reittitoteuma/paivita-toteuman-reittigeometria db id etaisyys)))
          (when-not (<= maksimi-etaisyys etaisyys)
            (recur (+ etaisyys 200))))))))
 
@@ -49,7 +49,7 @@
          (doseq [tiedot toteumat]
            (let [reitti (tierekisteri/hae-tr-viiva db tiedot)]
              (when-not (:virhe reitti)
-               (paivita-toteuman-reitti db (:id tiedot) (first reitti))))))))))
+               (paivita-toteuman-reittigeometria db (:id tiedot) (first reitti))))))))))
 
 (defn tee-toteumien-reittien-tarkistustehtava
   [{:keys [db]} paivittainen-aika]

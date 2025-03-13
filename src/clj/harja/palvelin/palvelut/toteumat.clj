@@ -183,15 +183,15 @@
   (doseq [tehtava (:tehtavat toteuma)]
     (kasittele-toteumatehtava c user toteuma tehtava)))
 
-(defn paivita-toteuman-reitti [db id reitti]
+(defn paivita-toteuman-reittigeometria [db id reitti]
   (when reitti
-    (toteumat-q/paivita-toteuman-reitti! db {:id     id
+    (toteumat-q/paivita-toteuman-reittigeometria<! db {:id     id
                                              :reitti (geometriaksi reitti)})))
 
 (defn- paivita-toteuma [c user toteuma]
   (toteumat-q/paivita-toteuma<! c (assoc (toteuman-parametrit toteuma user)
                                     :id (:toteuma-id toteuma)))
-  (paivita-toteuman-reitti c (:toteuma-id toteuma) (:reitti toteuma))
+  (paivita-toteuman-reittigeometria c (:toteuma-id toteuma) (:reitti toteuma))
   (kasittele-toteuman-tehtavat c user toteuma)
   (:toteuma-id toteuma))
 
@@ -685,7 +685,7 @@
                                                       :id            (get-in toteuma [:toteuma :id])
                                                       :urakka        (:urakka-id toteuma)})
           id (:id paivitetty)]
-      (paivita-toteuman-reitti c (get-in toteuma [:toteuma :id]) (:reitti toteuma))
+      (paivita-toteuman-reittigeometria c (get-in toteuma [:toteuma :id]) (:reitti toteuma))
       (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
                                                  :tehtava-id (get-in toteuma [:tehtava :id])))
       id)))
@@ -782,7 +782,7 @@
                                                                                  :loppuetaisyys (:loppuetaisyys tr-osoite)
                                                                                  :id            (:id t)
                                                                                  :urakka        urakka-id})
-                                                (paivita-toteuman-reitti c (:id t) reitti-viiva)
+                                                (paivita-toteuman-reittigeometria c (:id t) reitti-viiva)
                                                 t))
                                             ;; Jos id:tä ei ole tai se on negatiivinen, halutaan luoda uusi toteuma
                                             ;; Tässä tapauksessa palautetaan kyselyn luoma toteuma

@@ -93,7 +93,7 @@ maksimi-linnuntien-etaisyys 200)
          (keep #(valin-geometria % maksimi-etaisyys) p)
          (yhdista-viivat p))))
 
-(defn luo-reitti-geometria [db reitti nopeusrajoitus]
+(defn luo-toteuman-reittigeometria [db reitti nopeusrajoitus]
   (let [reitti (->> reitti
                     (sort-by (comp :aika :reittipiste))
                     (map piste)
@@ -104,9 +104,9 @@ maksimi-linnuntien-etaisyys 200)
           geo/clj->pg
           geo/geometry))))
 
-(defn paivita-toteuman-reitti
-  "REPL testausta ja ajastettua tehtävää varten, laskee annetun toteuman reitin uudelleen reittipisteistä."
-  ([db toteuma-id] (paivita-toteuman-reitti db toteuma-id maksimi-linnuntien-etaisyys))
+(defn paivita-toteuman-reittigeometria
+  "REPL testausta ja ajastettua tehtävää varten, laskee annetun toteuman reittigeometrian uudelleen reittipisteistä."
+  ([db toteuma-id] (paivita-toteuman-reittigeometria db toteuma-id maksimi-linnuntien-etaisyys))
   ([db toteuma-id maksimi-etaisyys]
    (let [reitti (->> toteuma-id
                      (toteumat-q/hae-toteuman-reittipisteet db)
@@ -119,17 +119,17 @@ maksimi-linnuntien-etaisyys 200)
                          geo/geometry))]
      (if geometria
        (do
-         (log/debug "Tallennetaan reitti toteumalle " toteuma-id)
-         (toteumat-q/paivita-toteuman-reitti! db {:reitti geometria
+         (log/debug "Tallennetaan reittigeometria toteumalle " toteuma-id)
+         (toteumat-q/paivita-toteuman-reittigeometria<! db {:reitti geometria
                                                   :id toteuma-id}))
 
-       (log/debug "Reittiä ei saatu kasattua toteumalle " toteuma-id)))))
+       (log/debug "Reittigeometriaa ei saatu muodostettua toteumalle " toteuma-id)))))
 
 (defn tee-onnistunut-vastaus []
   (tee-kirjausvastauksen-body {:ilmoitukset "Reittitoteuma kirjattu onnistuneesti"}))
 
-(defn luo-reitti [db reitti toteuma-id]
-  (log/debug "Luodaan uusi reittipiste")
+(defn luo-toteuman-reittipisteet [db reitti toteuma-id]
+  (log/debug "Luodaan toteumalle uudet reittipisteet")
   (toteumat-q/tallenna-toteuman-reittipisteet!
    db
     {::rp/toteuma-id toteuma-id
@@ -151,10 +151,10 @@ maksimi-linnuntien-etaisyys 200)
                                    first :id)
             ::rp/maara (some-> (get-in m [:maara :maara]) bigdec)})))}))
 
-(defn poista-toteuman-reitti [db toteuma-id]
+(defn poista-toteuman-reittipisteet [db toteuma-id]
   (log/debug "Poistetaan reittipisteet")
   ;; Poistetaan reittipistedata: pisteet, tehtävät ja materiaalit
-  (toteumat-q/poista-reittipiste-toteuma-idlla! db toteuma-id))
+  (toteumat-q/poista-toteuman-reittipisteet-toteuma-idlla! db toteuma-id))
 
 (defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja {:keys [reitti toteuma tyokone]} jsonhash
                                           reittipisteet-tallennettu-chan]
@@ -168,7 +168,7 @@ maksimi-linnuntien-etaisyys 200)
                          (apply min
                            (map #(toimenpidekoodit-q/hae-tehtavan-nopeusrajoitus db (get-in % [:tehtava :id]))
                              (:tehtavat toteuma))))
-        toteuman-reitti (async/thread (luo-reitti-geometria db-replica reitti nopeusrajoitus))
+        toteuman-reitti (async/thread (luo-toteuman-reittigeometria db-replica reitti nopeusrajoitus))
         toteuma-id (jdbc/with-db-transaction [db db]
                      (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)
                            _ (toteumat-q/lisaa-toteumalle-jsonhash! db {:id toteuma-id :hash jsonhash})]
@@ -177,23 +177,24 @@ maksimi-linnuntien-etaisyys 200)
                        (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id urakka-id)
                        (log/debug "Aloitetaan toteuman materiaalien tallennus")
                        (api-toteuma/tallenna-materiaalit db kirjaaja toteuma toteuma-id urakka-id)
-                       (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
-                       (poista-toteuman-reitti db toteuma-id)
-                       (log/debug "Liitetään toteuman reitti")
+                       (log/debug "Aloitetaan toteuman vanhojen reittipisteiden poistaminen")
+                       (poista-toteuman-reittipisteet db toteuma-id)
+                       (log/debug "Liitetään toteumaan reittigeometria")
                        (let [reitti (async/<!! toteuman-reitti)]
                          (when (= reitti +yhdistamis-virhe+)
                            (log/warn (format "Reittitoteuman reitin geometriaa ei saatu luotua. Kirjaaja oli %s, ja toteuman aikaleimat olivat %s %s"
                                        kirjaaja
                                        (pr-str (:alkanut toteuma))
                                        (pr-str (:paattynyt toteuma)))))
-                         (api-toteuma/paivita-toteuman-reitti db toteuma-id (if (= reitti +yhdistamis-virhe+) nil reitti)))
+                         (api-toteuma/paivita-toteuman-reittigeometria db toteuma-id (if (= reitti +yhdistamis-virhe+) nil reitti)))
                        toteuma-id))]
     ;; Tehdään reittipisteet asynkronisesti, sillä niiden käsittelyssä voi kestää kauan.
     ;; Talvisuolauksen osalta pisteille tehdään työlästä laskentaa kun päätellään rajoitusalueelle kohdistumista.
-    (log/debug "Aloitetaan reitin tallennus")
+    ;; Toteuman reittipisteet ovat toteuman reittigeometrian pisteet tehtävä, materiaali, hoitoluokkatiedoilla ja ajankohdallarikastettuna.
+    (log/debug "Aloitetaan toteuman reittipisteiden tallennus")
     (async/thread
       (try
-        (luo-reitti db reitti toteuma-id)
+        (luo-toteuman-reittipisteet db reitti toteuma-id)
         (async/put! reittipisteet-tallennettu-chan true)
         (catch Throwable t
           (log/error t "Reittitoteuman reittipisteiden tallennus epäonnistui")
