@@ -75,7 +75,9 @@
         urakoitsijan-osuus-tavoitehinnan-ylitys (or (arvo-paatoksesta tavoitehinnan-ylityspaatos :tilaaja_maksaa) 0)
         kattohinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :kattohinnan-ylitys)
         kattohinnan-ylitys (or (:ylityksen_maara kattohinnan-ylityspaatos) 0)
-        siirto-seuraavan-vuoden-hankintakustannuksiin (or (arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara) 0)
+        ;; Niputetaan siirrot yhdelle riville
+        siirto-seuraavan-vuoden-hankintakustannuksiin (- (or (arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara) 0)
+                                                        seuraavan-vuoden-hankintakustannusten-alennus)
         urakoitsijan-hyvitysosuus (or (arvo-paatoksesta kattohinnan-ylityspaatos :urakoitsija_maksaa) 0)
         hoidonjohtopalkkiopaatos (valikatselmus-tiedot/ota-paatos paatokset :hoidonjohtopalkkion-muutos)
         hoidonjohtopalkkion-muutos (or (arvo-paatoksesta hoidonjohtopalkkiopaatos :hoidonjohtopalkkio_muutos) 0)]
@@ -161,6 +163,4 @@
 
      [:h3 [:span "Siirrot"]]
      [:div.rivi [:span "Siirto seuraavan vuoden hankintakustannuksiin"]
-      [:span (fmt/euro-opt siirto-seuraavan-vuoden-hankintakustannuksiin)]]
-     [:div.rivi [:span "Siirto seuraavan vuoden hankintakustannuksiin alennukseksi"]
-      [:span (fmt/euro-opt seuraavan-vuoden-hankintakustannusten-alennus)]]]))
+      [:span (fmt/euro-opt siirto-seuraavan-vuoden-hankintakustannuksiin)]]]))
