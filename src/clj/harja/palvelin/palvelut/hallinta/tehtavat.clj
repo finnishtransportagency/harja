@@ -25,7 +25,8 @@
    :f14 :raportoi-tehtava?,
    :f15 :materiaaliluokka_id,
    :f16 :materiaalikoodi_id,
-   :f17 :aluetieto})
+   :f17 :aluetieto,
+   :f18 :pakollinen_uudessa_kulussa})
 
 (defn hae-mhu-tehtavaryhmaotsikot [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
@@ -35,11 +36,11 @@
                                     (tehtavaryhmat-kyselyt/hae-mhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat db)))
         otsikot-ja-ryhmat (reduce (fn [vastaus elementti]
                                     (let [tehtavaryhmat (->> (second elementti)
-                                                          (map (fn [data]
+                                                          (mapv (fn [data]
                                                                  (-> data
                                                                    (update :tehtavat konversio/jsonb->clojuremap))))
 
-                                                          (map #(update % :tehtavat
+                                                          (mapv #(update % :tehtavat
                                                                   (fn [rivit]
                                                                     (keep
                                                                       (fn [r]
@@ -75,6 +76,23 @@
     (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
 
 
+(defn tallenna-tehtavat [db kayttaja tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
+  (log/debug "tallenna-tehtavat :: tiedot:" (pr-str tiedot))
+  (doseq [tehtava (:muokatut-tehtavat tiedot)
+          :let [;; Tarkista, että tehtava on olemassa
+                _ (prn "Tehtävä" tehtava)
+                tehtavadb (tehtavaryhmat-kyselyt/hae-tehtava db (:id (:id tehtava)))
+                _ (if (nil? tehtavadb)
+                  ;; Varoita käyttäjää tuntemattomasta tehtävästä
+                    (throw (SecurityException. (str "Tehtävää " (:id tehtava) " ei ole olemassa.")))
+                  ;; Tehtävä löytyy, joten tallennetaan muutokset
+                    (tehtavaryhmat-kyselyt/paivita-tehtava! db tehtava))]]
+
+    ;; Palauta kaikki tehtäväryhmäotsikot ja niihin liittyvät tehtävät - uudistukset tulevat samalla
+    (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+
+
 (defrecord TehtavatHallinta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -87,10 +105,14 @@
     (julkaise-palvelu http-palvelin :hallinta-tallenna-tehtavaryhmat
       (fn [kayttaja tiedot]
         (tallenna-tehtavaryhmat db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hallinta-tallenna-tehtavat
+      (fn [kayttaja tiedot]
+        (tallenna-tehtavat db kayttaja tiedot)))
     this)
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-mhu-tehtavaryhmaotsikot
       :hae-suoritettavat-tehtavat
-      :hallinta-tallenna-tehtavaryhmat)
+      :hallinta-tallenna-tehtavaryhmat
+      :hallinta-tallenna-tehtavat)
     this))
