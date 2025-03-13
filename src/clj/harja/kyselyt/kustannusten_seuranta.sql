@@ -489,12 +489,12 @@ FROM sanktio s
 WHERE s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND s.poistettu IS NOT TRUE
 GROUP BY s.tyyppi, s.indeksi, s.sakkoryhma
--- paatos_tavoitehinta_alitus -taulusta haetaan siirrot seuraavalle vuodelle - eli, kun tavoitepalkkio ylittää 3%, niin sen ylimenevä osuus siirretään seuraavalle vuodelle
+-- paatos_tavoitehinta_alitus -taulusta haetaan siirrot seuraavalle vuodelle - eli, kun tavoitepalkkio ylittää 3%, niin sen ylimenevä osuus siirretään seuraavalle vuodelle toteutuman alennukseksi
 -- Näitä ei tosin ole tuotannossa yhtään. Mutta ovat mahdollisia
 UNION ALL
 SELECT 0                                          AS budjetoitu_summa,
        0                                          AS budjetoitu_summa_indeksikorjattu,
-       coalesce(pta.siirron_maara, 0)             AS toteutunut_summa,
+       coalesce(pta.siirron_maara * -1, 0)        AS toteutunut_summa, -- Käännetään tavoitinnan alitukset negatiiviseksi siirroksi toteutumiin
        'siirto'                                   AS maksutyyppi,
        'siirto'                                   AS toimenpideryhma,
        'Kustannusten siirto edelliseltä vuodelta' AS tehtava_nimi,

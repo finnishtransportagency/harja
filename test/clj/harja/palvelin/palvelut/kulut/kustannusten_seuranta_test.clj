@@ -716,7 +716,8 @@ UNION ALL
   (let [;; Voit huomata, että kustannukset haetaan vuodelle 20 ja siirto laitetaan vuodelle 19. Siirto vaikuttaa siis
         ;; tulevaisuuteen ja näin tulee toimia.
         hoitokauden-alkuvuosi 2020
-        tavoitehinta 2M
+        hoitokauden-alun-tavoitehinta 2M
+        hoitokauden-lopun-tavoitehinta 2M
         toteutuneet_kustannukset 3M
         alituksen_maara 3M
         siirron_maara 4M
@@ -726,16 +727,17 @@ UNION ALL
 
         ;; Lisätään suoraan tietokantaa tavoitehinnan alituksen siirto, eli päätös
         _ (u (format "INSERT INTO paatos_tavoitehinta_alitus
-                  (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, toteutuneet_kustannukset, alituksen_maara, siirron_maara,
+                  (urakkaid, hoitokauden_alkuvuosi, hoitokauden_alun_tavoitehinta, hoitokauden_lopun_tavoitehinta, toteutuneet_kustannukset, alituksen_maara, siirron_maara,
                   tavoitepalkkio, tavoitepalkkion_maksuprosentti, kulu_id, luotu, luoja) VALUES
-                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s );"
-               (:urakka oulumhu-parametrit) (- hoitokauden-alkuvuosi 1) tavoitehinta toteutuneet_kustannukset alituksen_maara siirron_maara
+                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s );"
+               (:urakka oulumhu-parametrit) (- hoitokauden-alkuvuosi 1) hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet_kustannukset alituksen_maara siirron_maara
                tavoitepalkkio tavoitepalkkion_maksuprosentti kulu_id (:id +kayttaja-jvh+)))
 
         vastaus (hae-kustannukset (merge oulumhu-parametrit {:hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
         siirrot (filter #(when (= "siirto" (:paaryhma %)) true) vastaus)
         siirtojen-summa (apply + (map :toteutunut_summa siirrot))]
-    (is (= siirtojen-summa siirron_maara))))
+    ;; Kustannusten seurannan kautta haettaessa siirtosumma näytetään negatiivisena, koska se pienentää toteutumia
+    (is (= (* -1 siirtojen-summa) siirron_maara))))
 
 ;; Testataan, että backendistä voidaan kutsua excelin luontia ja excel ladataan.
 ;; Excelin sisältöä ei valitoida
