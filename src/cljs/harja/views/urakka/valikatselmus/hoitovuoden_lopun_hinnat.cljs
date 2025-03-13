@@ -43,10 +43,13 @@
             [:div.flex-row
              [:div "Tavoitehinnan muutokset"]
              [:div [:strong (fmt/euro-opt (:tavoitehinnan_muutokset paatos))]]]
+            ;; Jos urakalle on asetettu parametriksi, että tavoitehintaan vaikuttaa myös hoitovuoden lopun indeksikorjaukset
+            (when (:lisaa_tavoitehintaan_lopunindeksikorjaus paatos)
+              [:div.flex-row
+               [:div "Hoitovuoden lopun indeksikorjaus"]
+               [:div [:strong (fmt/euro-opt (:hoitokauden_lopun_indeksikorjaus paatos))]]])
             [:hr]
-            [:div.flex-row
-             [:div "Hoitovuoden lopun indeksikorjaus"]
-             [:div [:strong (fmt/euro-opt (:hoitokauden_lopun_indeksikorjaus paatos))]]]
+
             [:div.flex-row
              [:div "Hoitovuoden lopun tavoitehinta"]
              [:div [:strong (fmt/euro-opt (:tavoitehinta_jalkeen paatos))]]]
