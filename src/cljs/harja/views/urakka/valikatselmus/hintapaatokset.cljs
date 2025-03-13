@@ -122,14 +122,6 @@
   (let [paatos-avain :kattohinta-ylitys
         paatos-tehty? (or (:id paatos) false)
         siirra? (:siirra? paatos)
-        paatoksen-tiedot {:id (:id paatos)
-                          :urakkaid (-> @tila/yleiset :urakka :id)
-                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                          :kattohinta (:kattohinta paatos)
-                          :toteutuneet_kustannukset (:toteutuneet_kustannukset paatos)
-                          :ylityksen_maara (:ylityksen_maara paatos)
-                          :siirrettava_maara (:siirrettava_maara paatos)
-                          :urakoitsija_maksaa (:urakoitsija_maksaa paatos)}
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         avaa-tai-sulje-haitari (fn [event]
                                  (when (dom/enter-nappain? event)
@@ -203,7 +195,7 @@
           [:div.paatos-napit
            (when on-oikeudet?
              [napit/yleinen-ensisijainen "Tallenna päätös"
-              #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatoksen-tiedot))
+              #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos))
               {:ikoni [ikonit/harja-icon-status-selected]
                :disabled (or
                            tallennus-kesken?

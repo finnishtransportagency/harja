@@ -221,7 +221,7 @@
         true 3))
     paatokset))
 
-(defn valimistele-tavoitehinnan-alituspaatos [db urakkaid paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi
+(defn valimistele-tavoitehinnan-alituspaatos [db urakkaid paatokset urakan-loppuvuosi kuluva-hoitovuosi
                                               hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta kustannukset]
   ;; Varmistetaan, että tarvittavat tiedot on olemassa
   (if (and hoitokauden-alun-tavoitehinta kustannukset (> hoitokauden-alun-tavoitehinta kustannukset))
@@ -314,8 +314,11 @@
           max-siirrettava-maara (if siirtorajoitus-prosentti
                                   (* siirtorajoitus-prosentti kattohinta) ;; Jos rajoitus on käytössä, niin siirretään max annetun prosentin verran)
                                   ylityksen-maara)
+          ;; Varmisteatan, että maksimi määrä ei koskaan ylitä ylityksen määrää
+          max-siirrettava-maara (min max-siirrettava-maara ylityksen-maara)
           ;; Täytetään pakolliset tiedot
           kattohinnan-ylityspaatos (-> kattohinnan-ylityspaatos
+                                     (assoc :urakkaid urakkaid)
                                      (assoc :toteutuneet_kustannukset kustannukset)
                                      (assoc :kattohinta kattohinta)
                                      (assoc :ylityksen_maara ylityksen-maara)
@@ -323,7 +326,9 @@
                                      (assoc :siirra? false) ;; Päätöksen pohjatietoja asetettaessa siirto on aina defaulttina false. Tietokannasta haettaessa tilanne voi olla eri.
                                      (assoc :viimeinen_hoitokausi viimeinen-hoitokausi?)
                                      (assoc :maksimi_siirrettava_maara max-siirrettava-maara)
-                                     (assoc :siirtorajoitus_prosentti siirtorajoitus-prosentti))
+                                     (assoc :siirtorajoitus_prosentti siirtorajoitus-prosentti)
+                                     (assoc :siirrettava_maara 0) ;; Aseta defaulttina nollaksi
+                                     )
 
           paatokset (remove
                       (fn [paatos]

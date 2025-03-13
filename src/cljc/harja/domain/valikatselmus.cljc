@@ -68,9 +68,9 @@
                                     :opt-un [::kulu_id]))
 (s/def ::tavoitehinnan-ylityspaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::tavoitehinta
                                                      ::toteutuneet_kustannukset ::ylityksen_maara ::tilaajan_prosentti
-                                                     ::urakoitsijan_prosentti ::tilaaja_maksaa ::urakoitsija_maksaa ::siirto ::viimeinen_hoitokausi
+                                                     ::urakoitsijan_prosentti ::tilaaja_maksaa ::urakoitsija_maksaa ::viimeinen_hoitokausi
                                                      ::luoja]
-                                      :opt-un [::kulu_id]))
+                                      :opt-un [::kulu_id ::siirto]))
 
 (s/def ::indeksikorjauspaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::tavoitehinta ::tavoitehinnan_muutokset ::tavoitehinta_ennen
                                                ::hoitokauden_kuukaudet ::kuukausien_keskiarvo ::alkuperaisen_pisteluvun_kuukausi
