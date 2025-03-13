@@ -9,14 +9,17 @@
  :pedantic-warn {:pedantic? :warn}
 
  :dev {:dependencies [
-                      ;; Tarvitaan CLJS käännöksessä (dev, prod)
+                      [com.bhauman/rebel-readline-cljs "0.1.4"]
+                      [cider/piggieback "0.5.2"]
+
+                      ;; Figwheeliä tarvitaan CLJS käännöksessä (dev, prod)
                       [com.bhauman/figwheel-main "0.2.18"]
                       [prismatic/dommy "1.1.0"]
                       [org.clojure/test.check "0.9.0"]
-                      [org.apache.pdfbox/pdfbox "2.0.30"]
                       [data-frisk-reagent "0.4.5"]
-                      [cider/piggieback "0.5.2"]
-                      [com.bhauman/rebel-readline-cljs "0.1.4"]
+
+                      ;; -- PDF-testaukseen --
+                      [org.apache.pdfbox/pdfbox "2.0.30"]
 
                       ;; -- Testien ajamista varten (replillä ja ilman) --
                       ;; Fake-HTTP testaukseen
@@ -75,10 +78,12 @@
                        :port 4005
                        :timeout 120000
                        :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}
- ;; Loput test-dependencyt, joita ei haluta ottaa mukaan dev-profiiliin
- :test {:dependencies [[clj-webdriver "0.7.2"]
-                       [org.seleniumhq.selenium/selenium-java "3.8.1"]
-                       [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]
+ ;; Test-dependencyt, joita ei tarvita dev-profiilissa
+ :test {:dependencies [
+                       ;; Selenium + webdriver depsut pois käytöstä, koska niitä ei enää ajeta
+                       #_[clj-webdriver "0.7.2"]
+                       #_[org.seleniumhq.selenium/selenium-java "3.8.1"]
+                       #_[org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]
                        ;; TODO tuosta cljs-react-test riippuvuudesta pitäisi päästä eroon. Testit, jotka
                        ;; käyttää sitä, voi kirjoittaa uusiksi Cypressillä.
                        ;; Jotta frontti testit toimii, pitää säilyttää tuo riippuvuus, jonka takia myös
