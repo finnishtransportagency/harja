@@ -158,9 +158,11 @@
 (defn hae-kulut-kohdistuksineen
   "Helpottaa REPL-käyttöä, niin siksi tämä eriytetty (ei tarvi keksiä useria)"
   [db hakuehdot]
-  (let [kulukohdistukset (group-by :id (q/hae-urakan-kulut-kohdistuksineen db {:urakka   (:urakka-id hakuehdot)
-                                                                               :alkupvm  (:alkupvm hakuehdot)
-                                                                               :loppupvm (:loppupvm hakuehdot)}))
+  (let [kulukohdistukset (group-by :id (into []
+                                         (map konv/alaviiva->rakenne)
+                                         (q/hae-urakan-kulut-kohdistuksineen db {:urakka   (:urakka-id hakuehdot)
+                                                                                 :alkupvm  (:alkupvm hakuehdot)
+                                                                                 :loppupvm (:loppupvm hakuehdot)})))
         kulukohdistukset (kasittele-kohdistukset db kulukohdistukset)
         kulukohdistukset (ryhmittele-urakan-kulut kulukohdistukset)
         kulukohdistukset (muodosta-naytettava-rakenne kulukohdistukset)]
@@ -228,11 +230,13 @@
   "Luo uuden kohdistuksen kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan kulun viitteen ja rivinumeron perusteella."
   [db user urakka-id kulu-id kohdistus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
-  (let [kulu_kohdistus {:id (:kohdistus-id kohdistus)
+  (let [_ (prn "tehtava-id" (:id (:tehtava kohdistus)))
+        kulu_kohdistus {:id (:kohdistus-id kohdistus)
                         :summa (:summa kohdistus)
                         :toimenpideinstanssi (:toimenpideinstanssi kohdistus)
                         :tehtavaryhma (:tehtavaryhma kohdistus)
-                        :maksueratyyppi (kohdistuksen-maksueratyyppi db (:tehtavaryhma kohdistus) (:tehtava kohdistus) (:lisatyo? kohdistus))
+                        :tehtava-id (:id (:tehtava kohdistus))
+                        :maksueratyyppi (kohdistuksen-maksueratyyppi db (:tehtavaryhma kohdistus) (:id (:tehtava kohdistus)) (:lisatyo? kohdistus))
                         :kayttaja (:id user)
                         :lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)
                         :rahavarausid (when (:rahavaraus kohdistus) (:id (:rahavaraus kohdistus)))
