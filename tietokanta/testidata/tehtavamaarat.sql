@@ -179,3 +179,8 @@ WHERE nimi = 'Sorastus';
 -- Korjataan sorastuksen yksikkö
 UPDATE tehtava SET yksikko = 'tonni', suunnitteluyksikko = 'tonni'
 WHERE nimi = 'Sorastus';
+
+-- 
+UPDATE tehtava SET pakollinen_uudessa_kulussa = true WHERE nimi IN (
+  'Portaiden talvihoito'
+);
