@@ -1125,4 +1125,4 @@
           hoitokauden-alkuvuosi 2024
           vastaus (valikatselmukset/tarkista-maksun-maara-alituksessa tiedot urakka tavoitehinta hoitokauden-alkuvuosi)]
       ;; Saadaan nil vastaus, kun urakoitsijan maksu on hyväksytty 3% tavoitehinnasta tai pienempi
-      (is (= (nil? vastaus))))))
+      (is (= true (nil? vastaus))))))
