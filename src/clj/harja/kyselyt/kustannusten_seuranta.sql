@@ -332,10 +332,11 @@ SELECT 0                          AS budjetoitu_summa,
        CASE
            WHEN tr.nimi = 'W - Erillishankinnat' THEN 'erillishankinnat'
            WHEN tr.nimi = 'J - Johto- ja hallintokorvaus' THEN 'johto-ja-hallintokorvaus'
-           WHEN tr.nimi = 'G - Hoidonjohtopalkkio' THEN 'hoidonjohdonpalkkio'
+           WHEN tr.nimi = 'G - Hoidonjohtopalkkio' AND lk.tavoitehintainen IS TRUE THEN 'hoidonjohdonpalkkio'
            WHEN lk.tehtavaryhma IS NULL AND lk.tyyppi::TEXT = 'lisatyo' THEN 'lisatyo'
            WHEN (lk.tyyppi::TEXT = 'muukulu' AND lk.tavoitehintainen IS TRUE) THEN 'muukulu-tavoitehintainen'
            WHEN (lk.tyyppi::TEXT = 'muukulu' AND lk.tavoitehintainen IS FALSE) THEN 'muukulu-eitavoitehintainen'
+           WHEN (lk.tyyppi::TEXT = 'paatos' AND lk.tavoitehintainen IS FALSE) THEN 'muukulu-eitavoitehintainen'
            WHEN tr.yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3' THEN 'tavoitepalkkio'
            WHEN tr.yksiloiva_tunniste = '19907c24-dd26-460f-9cb4-2ed974b891aa' THEN 'tavoitehinnan-ylitys'
            WHEN tr.yksiloiva_tunniste = 'be34116b-2264-43e0-8ac8-3762b27a9557' THEN 'kattohinnan-ylitys'
