@@ -126,6 +126,25 @@ FROM tehtavaryhma tr
    AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= :urakka-voimassaolo-alkuvuosi::INTEGER)
  order by tr.jarjestys;
 
+-- name: tehtavaryhman-tehtavat-urakalle
+SELECT
+  tpk.id,
+  tpk.nimi,
+  tpk.jarjestys,
+  tpk.emo,
+  tpk.pakollinen_uudessa_kulussa as "pakollinen-uudessa-kulussa",
+  tpi.id  as "toimenpideinstanssi"
+FROM tehtava tpk
+	JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk.emo and tpi.urakka = :urakka-id
+WHERE
+  tpk.tehtavaryhma = :tehtavaryhma-id
+  AND tpk.pakollinen_uudessa_kulussa IS TRUE
+  AND tpk."mhu-tehtava?" IS TRUE
+  AND tpk.piilota IS NOT true
+  AND tpk.poistettu IS NOT true
+ORDER BY tpk.nimi;
+
+
 -- name: hae-sopimuksen-tehtavamaarat-urakalle
 select st.maara                    as "sopimuksen-tehtavamaara",
        st.tehtava                  as "tehtava",
