@@ -51,7 +51,9 @@
              [:div "Hoitovuoden lopun tavoitehinta"]
              [:div [:strong (fmt/euro-opt (:tavoitehinta_jalkeen paatos))]]]
             [:div.flex-row
-             [:div "Hoitovuoden lopun kattohinta"]
+             [:div
+              [:div "Hoitovuoden lopun kattohinta"]
+              [:div.small-text.harmaa (str (:kattohintakerroin paatos) " x hoitovuoden lopun tavoitehinta")]]
              [:div [:strong (fmt/euro-opt (:kattohinta paatos))]]]]
            [:div
             [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?

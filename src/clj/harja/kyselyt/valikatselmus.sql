@@ -19,6 +19,19 @@ SELECT ut.tavoitehinta_indeksikorjattu as tavoitehinta
  WHERE ut.urakka = :urakka-id
    AND EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = :hoitokauden-alkuvuosi;
 
+-- name: hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta
+-- single?: true
+-- Käytetään hoidonjohtopalkkion muutoksen laskemisessa
+SELECT ut.tavoitehinta + COALESCE(t.summa, 0) as tavoitehinta
+FROM urakka_tavoite ut
+         JOIN urakka u ON ut.urakka = u.id
+         LEFT JOIN (SELECT SUM(t.summa) AS summa, t."urakka-id", t."hoitokauden-alkuvuosi"
+                    FROM tavoitehinnan_oikaisu t
+                    WHERE NOT t.poistettu
+                    GROUP BY t."urakka-id", t."hoitokauden-alkuvuosi") t ON (ut.urakka = t."urakka-id" AND t."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi)
+WHERE ut.urakka = :urakka-id
+  AND EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = :hoitokauden-alkuvuosi;
+
 
 -- name: hae-oikaistu-kattohinta
 -- single?: true

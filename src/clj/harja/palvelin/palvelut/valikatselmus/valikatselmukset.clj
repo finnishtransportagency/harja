@@ -348,15 +348,18 @@
         mhu-tyyppi (paatoskone/urakan-hoitotyyppi mhu+urakka?)
         tavoitehinta (:tavoitehinta-oikaistu budjettitavoite)
         hoitokauden-alun-tavoitehinta (valikatselmus-q/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta db {:urakka-id urakkaid :hoitokauden-alkuvuosi kuluva-hoitovuosi})
+        hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (valikatselmus-q/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta db {:urakka-id urakkaid :hoitokauden-alkuvuosi kuluva-hoitovuosi})
         kattohinta (:kattohinta-oikaistu budjettitavoite)
         tarjouksen-tavoitehinta (:tarjous-tavoitehinta budjettitavoite)
         muokkaa-kattohinta? (:muokkaa_kattohinta_kasin urakan-parametrit)
+        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+        lisaa-hoitokauden-lopun-indeksikorjaus (:lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus urakan-parametrit)
 
         ;; Haetaan indeksikorjauksen vaatimat tavoitehinnan muutokset
         tavoitehinnan-muutokset (valikatselmus-q/hae-tavoitehinnan-muutokset-hoitokaudelle db {:urakkaid urakkaid
                                                                                                :hoitokauden_alkuvuosi kuluva-hoitovuosi})
 
-        mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi kuluva-hoitovuosi)
+        mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
 
         ;; Edellisen hoitovuoden syyskuun pisteluku
         alkuperainen-pisteluku (:arvo (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakkaid (dec kuluva-hoitovuosi) 9))
@@ -374,11 +377,11 @@
         mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta indeksi)
         mahdolliset-paatokset (paatoskone/valimistele-tavoitehinnan-muutospaatos mahdolliset-paatokset urakan-alkuvuosi tavoitehinta kattohinta muokkaa-kattohinta? kuluva-hoitovuosi)
         mahdolliset-paatokset (paatoskone/valmistele-indeksikorjauspaatos mahdolliset-paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-indeksikuukaudet alkuperainen-pisteluku kuluva-hoitovuosi)
-        mahdolliset-paatokset (paatoskone/valmistele-hoitokauden-lopun-hintapaatos mahdolliset-paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta)
+        mahdolliset-paatokset (paatoskone/valmistele-hoitokauden-lopun-hintapaatos mahdolliset-paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus)
         mahdolliset-paatokset (paatoskone/valimistele-tavoitehinnan-alituspaatos db urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi hoitokauden-alun-tavoitehinta tavoitehinta toteutuneet-kustannukset)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-ylityspaatos db urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi tavoitehinta kattohinta toteutuneet-kustannukset mhu-tyyppi)
         mahdolliset-paatokset (paatoskone/valmistele-kattohinnan-paatokset db urakkaid mahdolliset-paatokset kattohinta toteutuneet-kustannukset kuluva-hoitovuosi urakan-loppuvuosi)
-        mahdolliset-paatokset (paatoskone/valmistele-hoidonjohtopalkkionmuutospaatos mahdolliset-paatokset tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
+        mahdolliset-paatokset (paatoskone/valmistele-hoidonjohtopalkkionmuutospaatos mahdolliset-paatokset hoitokauden-lopun-indeksikorjaamaton-tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
 
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)

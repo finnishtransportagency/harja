@@ -44,7 +44,9 @@
 (s/def ::tilaaja_maksaa number?)
 (s/def ::hoidonjohtopalkkio number?)
 (s/def ::hoidonjohtopalkkio_muutos number?)
+(s/def ::kattohintakerroin number?)
 (s/def ::tarkistettu #(inst? %))
+(s/def ::lisaa_tavoitehintaan_lopunindeksikorjaus boolean?)
 
 
 (s/def ::lupauspaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::tyyppi ::urakkaid ::tavoitehinta ::tarjous_tavoitehinta
@@ -76,10 +78,12 @@
                                                ::hoitokauden_lopun_indeksikorjaus ::luoja]))
 
 (s/def ::hoitokauden-lopun-hintapaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::tavoitehinta_ennen ::tavoitehinta_jalkeen
-                                                        ::tavoitehinnan_muutokset ::hoitokauden_lopun_indeksikorjaus ::kattohinta ::luoja]))
+                                                        ::tavoitehinnan_muutokset ::hoitokauden_lopun_indeksikorjaus ::kattohinta ::kattohintakerroin
+                                                        ::lisaa_tavoitehintaan_lopunindeksikorjaus ::luoja]))
 
 (s/def ::hoidonjohtopalkkiomuutospaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::tavoitehinta ::tarjouksen_tavoitehinta
                                                          ::hoidonjohtopalkkio ::muutosprosentti ::hoidonjohtopalkkio_muutos ::luoja]
                                           :opt-un [::kulu_id]))
 
-(s/def ::raporttipaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::tarkistettu ::luoja]))
+(s/def ::raporttipaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::luoja]
+                          :opt-un [::tarkistettu]))
