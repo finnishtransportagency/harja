@@ -318,8 +318,8 @@ BEGIN
 
             lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus := (CASE
                                                                         WHEN urakan_tiedot.alkupvm < '2023-10-02'
-                                                                            THEN TRUE
-                                                                        ELSE FALSE END);
+                                                                            THEN FALSE
+                                                                        ELSE TRUE END);
 
             -- Tarkistetaan, että löytyykö rivi jo taulusta
             IF EXISTS(SELECT 1 FROM urakka_parametrit WHERE urakkaid = urakan_tiedot.id)
