@@ -34,7 +34,7 @@ BEGIN
 
     SELECT * FROM yrita_tierekisteriosoite_pisteille2(piste1_::geometry, piste2_::geometry, 1) INTO tieosoitevali;
 
-    IF tieosoitevali IS DISTINCT FROM NULL THEN
+    IF (tieosoitevali IS DISTINCT FROM NULL AND st_length(tieosoitevali.geometria) > 0)THEN
         -- Käsitellään ensin toteuman suoritusajankohdan aikana voimassa olevat rajoitusalueet ja niille osuva suola.
         -- Jos rajoitusalueet ovat päällekkäin, sama suola tulee lasketuksi suolatoteuman reittipisteisiin kahdesti.
         -- Päällekkäisiä rajoituksia ei siis saisi olla voimassa.
