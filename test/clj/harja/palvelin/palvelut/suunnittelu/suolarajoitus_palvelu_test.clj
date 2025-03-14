@@ -1130,3 +1130,63 @@
     (let [uusi-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 3}
           vanha-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}]
       (is (true? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue))))))
+
+(deftest rajoitusalueen-paivamaarahaku
+  ;; Luodaan sellaisia suolatoteumien reittipisteitä, jotka laitetaan osumaan rajoitusalueelle kanta-inserteillä
+  ;; Tämä riittää validoimaan :hae-suolatoteumat-rajoitusalueittain palvelun oikeaa toimintaa
+  ;; Näissä löytyi tuotannossa bugeja, että jos haettiin yhdelle päivälle, ei noussut mitään (koska :loppupvm castattiin dateksi eli sai kellon ajan 00:00:00)
+  (let [urakka-id (t/hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        sopimus-id (t/hae-sopimus-id-nimella "MHU Oulu sopimus")
+        kayttaja (:id t/+kayttaja-jvh+)
+        rajoitusalue-id (ffirst (t/q (format "SELECT id FROM rajoitusalue WHERE urakka_id = %s AND (tierekisteriosoite).tie = 25" urakka-id)))
+        ;; Kuun eka päivä
+        toteuma-kuun-eka-paiva (t/i (format "INSERT INTO toteuma (id, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, poistettu, luoja, ulkoinen_id, tyyppi, lahde, tyokonetyyppi, tyokonetunniste, tyokoneen_lisatieto, json_hash)
+  VALUES (87511053, %s, %s, '2025-02-01 05:16:47.452737', '2025-02-01 04:52:01.000000', '2025-02-01 04:59:56.000000', e'3370400-4\n  ;', 'YIT Road Oy', false, %s, 86267045, 'kokonaishintainen', 'harja-api', 'Kuorma-auto', '25037', 'Kuljetus Matti Meikäläinen Oy', '32408336c59637797186ecf0d9736115');"
+                                       urakka-id sopimus-id kayttaja))
+        suolatoteuma-kuun-eka-paiva (t/i (format "INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id)
+        VALUES (87511053, '2025-02-01 04:59:56.000000', '(391820.3489612654,7064728.222190264)', 7, 1.0, %s);" rajoitusalue-id))
+
+        ;; kuun keskellä
+        toteuma-kuun-kuun-keskella (t/i (format "INSERT INTO toteuma (id, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, poistettu, luoja, ulkoinen_id, tyyppi, lahde, tyokonetyyppi, tyokonetunniste, tyokoneen_lisatieto, json_hash)
+  VALUES (87511054, %s, %s, '2025-02-11 05:16:47.452737', '2025-02-11 04:52:01.000000', '2025-02-01 04:59:56.000000', e'3370400-4\n  ;', 'YIT Road Oy', false, %s, 86267046, 'kokonaishintainen', 'harja-api', 'Kuorma-auto', '25037', 'Kuljetus Matti Meikäläinen Oy', '32408336c59637797186ecf0d9736115');"
+                                      urakka-id sopimus-id kayttaja))
+        suolatoteuma-kuun-keskella (t/i (format "INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id)
+        VALUES (87511054, '2025-02-11 04:59:56.000000', '(391820.3489612654,7064728.222190264)', 7, 1.0, %s);" rajoitusalue-id))
+
+        toteuma-kuun-viim-paiva (t/i (format "INSERT INTO toteuma (id, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, poistettu, luoja, ulkoinen_id, tyyppi, lahde, tyokonetyyppi, tyokonetunniste, tyokoneen_lisatieto, json_hash)
+  VALUES (87511055, %s, %s, '2025-02-28 05:16:47.452737', '2025-02-28 04:52:01.000000', '2025-02-28 04:59:56.000000', e'3370400-4\n  ;', 'YIT Road Oy', false, %s, 86267047, 'kokonaishintainen', 'harja-api', 'Kuorma-auto', '25037', 'Kuljetus Matti Meikäläinen Oy', '32408336c59637797186ecf0d9736115');"
+                                      urakka-id sopimus-id kayttaja))
+        suolatoteuma-kuun-viim-paiva (t/i (format "INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id)
+        VALUES (87511055, '2025-02-28 04:59:56.000000', '(391820.3489612654,7064728.222190264)', 7, 1.0, %s);" rajoitusalue-id))
+        vastaus-eka-paiva (first
+                            (t/kutsu-palvelua
+                              (:http-palvelin t/jarjestelma)
+                              :hae-suolatoteumat-rajoitusalueittain
+                              t/+kayttaja-jvh+
+                              {:hoitokauden-alkuvuosi 2024
+                               :alkupvm #inst "2025-01-31T22:00:00.000000000-00:00"
+                               :loppupvm #inst "2025-02-01T21:59:59.000000000-00:00"
+                               :urakka-id urakka-id}))
+        vastaus-viim-paiva (first
+                             (t/kutsu-palvelua
+                               (:http-palvelin t/jarjestelma)
+                               :hae-suolatoteumat-rajoitusalueittain
+                               t/+kayttaja-jvh+
+                               {:hoitokauden-alkuvuosi 2024
+                                :alkupvm #inst "2025-02-27T22:00:00.000000000-00:00"
+                                :loppupvm #inst "2025-02-28T21:59:59.000000000-00:00"
+                                :urakka-id urakka-id}))
+        vastaus-koko-helmikuu (first
+                                (t/kutsu-palvelua
+                                  (:http-palvelin t/jarjestelma)
+                                  :hae-suolatoteumat-rajoitusalueittain
+                                  t/+kayttaja-jvh+
+                                  {:hoitokauden-alkuvuosi 2024
+                                   :alkupvm #inst "2025-01-31T22:00:00.000000000-00:00"
+                                   :loppupvm #inst "2025-02-28T21:59:59.000000000-00:00"
+                                   :urakka-id urakka-id}))]
+    (t/u (str "DELETE FROM suolatoteuma_reittipiste WHERE toteuma IN (87511053, 87511054, 87511055);"))
+    (t/u (str "DELETE FROM toteuma WHERE id IN (87511053, 87511054, 87511055);"))
+    (is (= (:suolatoteumat vastaus-eka-paiva) 1.0) "Ensimmäisenä päivänä 1.0")
+    (is (= (:suolatoteumat vastaus-viim-paiva) 1.0) "Viimeisenä päivänä 1.0")
+    (is (= (:suolatoteumat vastaus-koko-helmikuu) 3.0) "Koko helmikuu 3.0")))

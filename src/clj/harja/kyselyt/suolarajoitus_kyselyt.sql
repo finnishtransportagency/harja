@@ -82,14 +82,14 @@ WITH suola AS (
      FROM suolatoteuma_reittipiste AS rp
               JOIN toteuma tot ON (tot.id = rp.toteuma AND tot.poistettu = false and
                                    -- Otetaan toteumiin laajempi aikamääre, koska toteuma voi alkaa edellisenä päivänä
-                                   tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm::DATE)
+                                   tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm)
               JOIN materiaalikoodi mk ON rp.materiaalikoodi = mk.id,
           rajoitusalue ra
      WHERE tot.urakka = :urakka-id
        AND ra.poistettu = FALSE
        AND ra.urakka_id = :urakka-id
        AND rp.rajoitusalue_id = ra.id
-       AND rp.aika BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+       AND rp.aika BETWEEN :alkupvm AND :loppupvm
      GROUP BY tot.urakka, ra.id, mk.materiaalityyppi
 )
 SELECT ra.id                                                               AS rajoitusalue_id,
