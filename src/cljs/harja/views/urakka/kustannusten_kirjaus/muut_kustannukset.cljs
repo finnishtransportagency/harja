@@ -61,16 +61,18 @@
         voi-tallentaa? true]
 
     [:div.tiemerkinta-muut-kustannukset
-     
+
      ;; Header, raporttiviennit
      [:div.header
-      [:h3 "Muut kustannukset"]
+      [:h1.header-yhteiset "Muut kustannukset"]
       (raporttiviennit valinnat)]
 
      ;; Urakkavuosi, lisää uusi
      [:div.suodattimet
-      [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-      [napit/uusi "Lisää uusi" #(e! (println "fn")) {:disabled false}]]
+      [:div
+       [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
+      [:div
+       [napit/uusi "Lisää uusi" #(e! (println "fn")) {:disabled false}]]]
 
      ;; Muokkauspaneeli
      (when muokataan)

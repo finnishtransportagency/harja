@@ -2,6 +2,8 @@
 
 .tiemerkinta-muut-kustannukset 
 {
+    padding: @valistys-16 0;
+
     .header {
         display: flex;
         margin: auto;
@@ -21,9 +23,16 @@
     .suodattimet {
         display: flex;
         justify-content: space-between;
+        margin-top: @valistys-12;
+
+        /* Lisää uusi */ 
+        :nth-child(2) {
+            align-content: center;
+        }
     }
 
+    /* Grid */
     .muut-kustannukset-listaus {
-        padding: @valistys-16 @valistys-24;
+        
     }
 }
