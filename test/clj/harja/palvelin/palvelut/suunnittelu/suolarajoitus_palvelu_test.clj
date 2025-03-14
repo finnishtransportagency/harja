@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.pvm :as pvm]
             [harja.testi :as t]
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [com.stuartsierra.component :as component]
@@ -1176,6 +1177,18 @@
                                 :alkupvm #inst "2025-02-27T22:00:00.000000000-00:00"
                                 :loppupvm #inst "2025-02-28T21:59:59.000000000-00:00"
                                 :urakka-id urakka-id}))
+        summatiedot-viim-paiva (first
+                             (t/kutsu-palvelua
+                               (:http-palvelin t/jarjestelma)
+                               :hae-rajoitusalueen-summatiedot
+                               t/+kayttaja-jvh+
+                               {:rajoitusalue-id rajoitusalue-id
+                                :alkupvm #inst "2025-02-27T22:00:00.000000000-00:00"
+                                :loppupvm #inst "2025-02-28T21:59:59.000000000-00:00"
+                                :urakka-id urakka-id}))
+        odotetut-summatiedot {:materiaali_id 7, :formiaattilukumaara nil,
+                              :suolamaara 1.0M, :formiaattimaara nil, :suolalukumaara 1, :koneellinen? false,
+                              :lukumaara 1, :maara 1.0M, :materiaali-nimi "Talvisuola, rakeinen NaCl"}
         vastaus-koko-helmikuu (first
                                 (t/kutsu-palvelua
                                   (:http-palvelin t/jarjestelma)
@@ -1189,4 +1202,11 @@
     (t/u (str "DELETE FROM toteuma WHERE id IN (87511053, 87511054, 87511055);"))
     (is (= (:suolatoteumat vastaus-eka-paiva) 1.0) "Ensimmäisenä päivänä 1.0")
     (is (= (:suolatoteumat vastaus-viim-paiva) 1.0) "Viimeisenä päivänä 1.0")
+    (is (= odotetut-summatiedot
+          (select-keys summatiedot-viim-paiva #{:materiaali_id :formiaattimaara :formiaattilukumaara :suolamaara
+                                                :suolalukumaara :koneellinen? :lukumaara :maara :materiaali-nimi}))
+                                                "Odotetut summatiedot")
+    (is (= (pvm/pvm (:pvm summatiedot-viim-paiva)) "28.02.2025"))
     (is (= (:suolatoteumat vastaus-koko-helmikuu) 3.0) "Koko helmikuu 3.0")))
+
+

@@ -141,8 +141,8 @@ FROM toteuma tot
      JOIN kayttaja k ON tot.luoja = k.id
 WHERE tot.poistettu = FALSE
   AND tot.urakka = :urakka-id
-  AND tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm::DATE
-  AND sr.aika BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND tot.alkanut BETWEEN (:alkupvm::DATE - INTERVAL '1 day')::TIMESTAMP AND :loppupvm
+  AND sr.aika BETWEEN :alkupvm AND :loppupvm
   AND sr.materiaalikoodi = mk.id
 GROUP BY pvm, sr.materiaalikoodi, mk.nimi, k.jarjestelma
 UNION
@@ -160,8 +160,8 @@ FROM toteuma tot
      JOIN kayttaja k ON tot.luoja = k.id
 WHERE tot.poistettu = FALSE
   AND tot.urakka = :urakka-id
-  AND tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm::DATE
-  AND sr.aika BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND tot.alkanut BETWEEN (:alkupvm::DATE - INTERVAL '1 day')::TIMESTAMP AND :loppupvm
+  AND sr.aika BETWEEN :alkupvm AND :loppupvm
   AND sr.materiaalikoodi = mk.id
 GROUP BY pvm, sr.materiaalikoodi, mk.nimi, k.jarjestelma
 ORDER BY pvm ASC, "materiaali-nimi" ASC;
