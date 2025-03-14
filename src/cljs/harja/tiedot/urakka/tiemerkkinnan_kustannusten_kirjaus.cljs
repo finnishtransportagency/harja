@@ -2,7 +2,6 @@
   (:require [harja.ui.viesti :as viesti]
             [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
-            [harja.ui.yleiset :as yleiset]
             [harja.tyokalut.tuck :as tuck-apurit]))
 
 (defonce kustannusten-kirjaus-valilehti-nakyvissa? (atom false))
@@ -14,6 +13,8 @@
 (defrecord HaeKustannukset [urakka])
 (defrecord HaeKustannuksetOnnistui [vastaus])
 (defrecord HaeKustannuksetEpaonnistui [vastaus])
+
+(defrecord MuokkaaOsuutta [arvo rivi])
 
 (defrecord TallennaKustannukset [tiedot urakka])
 (defrecord TallennaKustannuksetOnnistui [vastaus app])
@@ -33,6 +34,16 @@
     (assoc app
       :haku-kaynnissa? false
       :kustannukset vastaus))
+
+  MuokkaaOsuutta
+  (process-event [{arvo :arvo rivi :rivi} app]
+    (println "vastaus: " arvo " arvo: " app " rivi: " rivi)
+    (js/console.warn "Osuus muokattu" (pr-str arvo))
+    (let [rivit (map #(if (= (:kustannusvuosi %) (:kustannusvuosi rivi))
+                        (assoc % :pk1 arvo)
+                        %)
+                  (:kustannukset app))]
+      (assoc app :kustannukset rivit)))
 
   HaeKustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]

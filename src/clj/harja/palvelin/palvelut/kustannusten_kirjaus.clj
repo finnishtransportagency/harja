@@ -7,18 +7,19 @@
             [harja.pvm :as pvm]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
-(defn default-kustannuslista [urakka-id alkuvuosi loppuvuosi]
+(defn default-kustannuslista
   "Palauttaa oletus nolla-arvot vuosille, joille ei ole merkitty kustannuksia
-  urakan alkamisvuoden ja loppumisvuoden perusteella."
+   urakan alkamisvuoden ja loppumisvuoden perusteella."
+  [urakka-id alkuvuosi loppuvuosi]
   (for [x (range alkuvuosi (+ 1 loppuvuosi))]
     (assoc {} :urakka urakka-id :kustannusvuosi x :kustannus 0 :pk1 0 :pk2 0 :pk3 0)))
 
-(defn filter-by-values [data values]
+(defn filteroi-arvoilla [data values]
   (filterv #(not (some (set values) (vals %))) data))
 
 (defn tee-valmis-kustannuslista [vastaus default-lista]
   (let [filteroi-vuodet (into [] (map :kustannusvuosi vastaus))
-        filteroitu-lista (filter-by-values default-lista filteroi-vuodet)]
+        filteroitu-lista (filteroi-arvoilla default-lista filteroi-vuodet)]
     (sort-by :kustannusvuosi (concat vastaus filteroitu-lista))))
 
 (defn hae-tiemerkinta-kustannuskirjaukset
@@ -30,19 +31,28 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan user urakka-id)
     (let [vastaus (into []
                     (map konv/alaviiva->rakenne)
-                    (q/hae-tiemerkinta-kustannuskirjaus db urakka-id))]
+                    (q/hae-tiemerkinta-kustannuskirjaukset db urakka-id))]
       (tee-valmis-kustannuslista vastaus default-lista))))
+
+(defn hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
+  [db user {:keys [urakka-id kustannusvuosi] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan user urakka-id)
+  (let [vastaus (q/hae-tiemerkinta-kustannuskirjaus-kustannusvuodella db {:urakka urakka-id :kustannusvuosi kustannusvuosi})]
+    vastaus))
 
 (defn tallenna-tiemerkinta-kustannuskirjaukset
   [db user tiedot]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinnan user)
-  (println "tiedot: " (:tiedot tiedot))
-  (doseq [tieto (:tiedot tiedot)]
-    (assert (= 100.0 (float (reduce + (map #(get tieto % 0) [:pk1 :pk2 :pk3]))))) "PK-osuuksien summa on oltava 100")
-  (doseq [tieto (:tiedot tiedot)]
-    (q/tallenna-tiemerkinta-kustannuskirjaus db
-      (assoc tieto :luoja (:id user) :muokkaaja (:id user) :muokattu (pvm/nyt))))
-  tiedot)
+  (let [urakka-id (get-in tiedot [:urakka :id])]
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinnan user)
+    (doseq [tieto (:tiedot tiedot)]
+      (assert (= 100.0 (float (reduce + (map #(get tieto % 0) [:pk1 :pk2 :pk3]))))) "PK-osuuksien summa on oltava 100")
+    (doseq [tieto (:tiedot tiedot)]
+      (if (empty? (hae-tiemerkinta-kustannuskirjaus-kustannusvuodella db user {:urakka-id urakka-id :kustannusvuosi (:kustannusvuosi tieto)}))
+          (q/lisaa-tiemerkinta-kustannuskirjaus! db
+            (assoc tieto :luoja (:id user) :muokkaaja (:id user) :muokattu (pvm/nyt)))
+          (q/paivita-tiemerkinta-kustannuskirjaus! db
+            (assoc tieto :muokkaaja (:id user) :muokattu (pvm/nyt)))))
+    tiedot))
 
 
 (defrecord TiemerkinnanKustannusKirjaukset []
@@ -54,6 +64,11 @@
         (hae-tiemerkinta-kustannuskirjaukset (:db this) kayttaja urakka)))
 
     (julkaise-palvelu (:http-palvelin this)
+      :hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
+      (fn [kayttaja tiedot]
+        (hae-tiemerkinta-kustannuskirjaus-kustannusvuodella (:db this) kayttaja tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
       :tallenna-tiemerkinta-kustannuskirjaus
       (fn [kayttaja tiedot]
         (tallenna-tiemerkinta-kustannuskirjaukset (:db this) kayttaja tiedot)))
@@ -62,6 +77,7 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
       :hae-tiemerkinta-kustannuskirjaus
+      :hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
       :tallenna-tiemerkinta-kustannuskirjaus)
     this))
 

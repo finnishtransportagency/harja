@@ -96,10 +96,10 @@
 (defmethod validoi-saanto :vakiohuomautus [_ _ data _ _ & [viesti]]
   viesti)
 
-(def select-values (comp vals select-keys))
+(def valitse-arvot (comp vals select-keys))
 
 (defmethod validoi-saanto :validoi-summa-on-100 [_ _ _ rivi _ optiot & [viesti]]
-  (let [arvot (select-values rivi optiot)
+  (let [arvot (valitse-arvot rivi optiot)
         summa (reduce + arvot)]
     (when (and (not (= summa 100)) (> (:kustannus rivi) 0))
       (or viesti "Yhteenlasketun summan on oltava 100"))))
@@ -305,7 +305,9 @@
 
 (defn validoi-rivi
   [taulukko rivi skeema rivi-validointi]
-  (let [rivi-virheet-sarakkeille (mapv (fn [{saanto :fn sarakkeet :sarakkeet}]
+  (let [
+        _ (println "validoi params: " taulukko rivi skeema rivi-validointi)
+        rivi-virheet-sarakkeille (mapv (fn [{saanto :fn sarakkeet :sarakkeet}]
                                          (let [tulos (saanto rivi taulukko)]
                                            (reduce-kv (fn [m k v]
                                                         (assoc m k (v tulos)))
@@ -395,6 +397,7 @@
                        (keep (fn [[index rivi]]
                                (let [kenttien-virheet (validoi-rivin-kentat gridin-tiedot rivi skeema tyyppi)
                                      rivin-virheet (when rivivalidointi
+
                                                      (validoi-rivi gridin-tiedot rivi skeema rivivalidointi))
                                      virheet (liita-rivitason-virheet rivin-virheet kenttien-virheet)]
                                  (when-not (empty? virheet)
