@@ -18,6 +18,9 @@
             "type": "integer",
             "multipleOf": 1
           },
+          "urakka": {
+            "type": "integer"
+          },
           "poistettu": {
             "type": "boolean"
           },
@@ -112,6 +115,10 @@
           "massamenekki": {
             "type": ["number", "null"],
             "description": "Yksikkö: kg/m2."
+          },
+          "kustannus": {
+            "type": ["number", "null"],
+            "description": "Yksikkö: euro."
           }
         }
       }

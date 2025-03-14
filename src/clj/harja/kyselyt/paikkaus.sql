@@ -570,6 +570,7 @@ WHERE luotu BETWEEN :alku AND :loppu
 -- name: hae-paikkaukset-analytiikalle
 SELECT p.id,
        p."paikkauskohde-id",
+       p."urakka-id"               AS urakka,
        p.poistettu,
        tm.nimi                     AS paikkaustyomenetelma,
        (p.tierekisteriosoite).tie  AS tierekisteriosoitevali_tienumero,
@@ -590,7 +591,8 @@ SELECT p.id,
        p."pinta-ala",
        p.juoksumetri,
        p.kpl,
-       p.massamenekki
+       p.massamenekki,
+       p.kustannus
 FROM paikkaus p
          LEFT JOIN paikkauksen_tienkohta ptk ON p.id = ptk."paikkaus-id"
          LEFT JOIN paikkauskohde_tyomenetelma tm ON p.tyomenetelma = tm.id
