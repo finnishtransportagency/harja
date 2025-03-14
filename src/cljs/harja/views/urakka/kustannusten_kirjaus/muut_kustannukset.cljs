@@ -20,10 +20,11 @@
 
 
 (defn- raporttiviennit [valinnat]
-  [:div.flex-oikealla
-   [:div.lataus-nappi
+
+   [:div.raporttiviennit
 
     ;; Excel
+    ^{:key "raporttixls"}
     [:form {:style {:margin-left "auto"}
             :target "_blank" :method "POST"
                    ; :action TODO
@@ -38,6 +39,7 @@
 
 
     ;; Pdf 
+    ^{:key "raporttipdf"}
     [:form {:style {:margin-left "auto"}
             :target "_blank" :method "POST"
                        ; :action TODO
@@ -48,39 +50,33 @@
                                             :urakka-id @nav/valittu-urakka-id})}]
      [:button {:type "submit"
                :class #{"nappi-toissijainen"}}
-      [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna PDF"]]]]])
+      [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna PDF"]]]])
 
 
 (defn muut-kustannukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
                                             haku-kaynnissa? kustannukset] :as app}]
   (let [alkuaika (:alkuaika valittu-rivi)
-        voi-kirjoittaa? true ;; TODO 
-        voi-tallentaa? true ;; TODO 
-        ] 
+        ;; TODO 
+        voi-kirjoittaa? true
+        voi-tallentaa? true]
 
-    [:div.tiemerkinnat-muut-kustannukset
+    [:div.tiemerkinta-muut-kustannukset
      
-     [:h2 "Muut kustannukset"]
+     ;; Header, raporttiviennit
+     [:div.header
+      [:h3 "Muut kustannukset"]
+      (raporttiviennit valinnat)]
 
-     [napit/uusi "Lisää uusi" 
-      #(e! (println "fn"))
-      {:disabled false ;; TODO .. 
-       }]
-     
-     (raporttiviennit valinnat)
+     ;; Urakkavuosi, lisää uusi
+     [:div.suodattimet
+      [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
+      [napit/uusi "Lisää uusi" #(e! (println "fn")) {:disabled false}]]
 
      ;; Muokkauspaneeli
-     (when muokataan
-       ;; TODO 
-       )
+     (when muokataan)
 
-     [:div.tiemerkinnat-muut-kustannukset-listaus
-      ;; Suodattimet
-      ;; TODO 
-      [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-
-
-      ;; Grid
+     ;; Grid
+     [:div.muut-kustannukset-listaus
       [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
                            [ajax-loader-pieni "Haku käynnissä..."]
                            "Valitulle aikavälille ei löytynyt mitään.")
@@ -146,9 +142,7 @@
          (e! (tiedot/->HaeTiedot))))
 
     ;; Näytä listaus
-    (fn [e! app]
-      [:div
-       [muut-kustannukset-listaus e! app]])))
+    (fn [e! app] [muut-kustannukset-listaus e! app])))
 
 
 (defn muut-kustannukset []
