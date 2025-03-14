@@ -66,11 +66,13 @@
      [:div.header
       [:h1.header-yhteiset "Muut kustannukset"]
       (raporttiviennit valinnat)]
-
-     ;; Urakkavuosi, lisää uusi
+     
+     ;; Suodattimet
      [:div.suodattimet
+      ;; Urakkavuosi 
       [:div
        [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
+      ;; Lisää uusi 
       [:div
        [napit/uusi "Lisää uusi" #(e! (println "fn")) {:disabled false}]]]
 
