@@ -114,7 +114,6 @@
       {:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.6}
       {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1.5}
       {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet
-       ;:luokka "sarake-pohjavesialueet" -- Otetaan toistaiseksi pois, koska taulukon kolumnien määrä on muuttunut, niin tilaa tarvitaan enemmän muille
        :tyyppi :komponentti
        :komponentti (fn [{:keys [pohjavesialueet]}]
                       (if (seq pohjavesialueet)
@@ -152,7 +151,7 @@
                                                         (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi)))))))
     (fn [e! app]
       [:div.pohjavesialueiden-suola
-       [:h2 "Pohjavesialueiden suolatoteumat"]
+       [:h2 "Rajoitusalueiden suolatoteumat"]
 
        ;; Aikavälivalinta ja muut kontrollit
        [:div.taulukon-kontrollit

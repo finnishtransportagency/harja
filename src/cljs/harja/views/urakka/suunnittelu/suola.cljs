@@ -589,10 +589,10 @@
                [yleiset/ajax-loader "Ladataan..."])])]
 
          ;; Pohjavesialueiden rajoitusalueiden taulukko ym.
-         [:div.pohjavesialueiden-suolarajoitukset
+         [:div.rajoitusalueiden-suolarajoitukset
           [:div.header
            [:h3 {:class "pull-left"}
-            "Pohjavesialueiden suolarajoitukset"]
+            "Rajoitusalueiden suolarajoitukset"]
            [napit/uusi "Lisää rajoitusalue"
             #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli true {:kopioidaan-tuleville-vuosille? true}))
             {:luokka "pull-right"
