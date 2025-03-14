@@ -789,7 +789,7 @@
                     (paatos-apurit/tallenna-kulu db paatos kayttaja :hoidonjohtopalkkion-muutos
                       ;; Osassa päätöksistä summat on ristiriidassa kulujen summien kanssa. Joten ne muokataan aina kululle eri päin.
                       ;; Tehdään se hoidonjohtopalkiolle tässä, niin se menee kululle oikein
-                      (* -1 (:hoidonjohtopalkkio_muutos paatos))))
+                      (* -1 (:hoidonjohtopalkkio_muutos paatos)) false))
           paatos (assoc paatos :kulu_id kulu_id)
           ;; TODO: Tee lisää validaatiota, jos mahdollista
 
