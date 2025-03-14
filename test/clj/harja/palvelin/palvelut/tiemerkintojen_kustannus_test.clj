@@ -39,22 +39,22 @@
                          :pk2 15.0M
                          :pk3 60.0M})
         haku-ennen (kutsu-palvelua
-                       (:http-palvelin jarjestelma)
-                       :hae-tiemerkinta-kustannuskirjaus +kayttaja-jvh+
-                       {:urakka urakka})
-
-
+                     (:http-palvelin jarjestelma)
+                     :hae-tiemerkinta-kustannuskirjaus +kayttaja-jvh+
+                     {:urakka urakka})
+        ;;Konversion namespace
+        _ (println "hake-ennen " haku-ennen)
         kustannus-ennen (filter #(= (:kustannusvuosi %) kustannusvuosi) haku-ennen)
 
         ;;lisää uuden kustannuksen
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-              :tallenna-tiemerkinta-kustannuskirjaus +kayttaja-jvh+
-              {:urakka urakka :tiedot params})
+            :tallenna-tiemerkinta-kustannuskirjaus +kayttaja-jvh+
+            {:urakka urakka :tiedot params})
 
         tallennuksen-jalkeen (kutsu-palvelua
-                       (:http-palvelin jarjestelma)
-                       :hae-tiemerkinta-kustannuskirjaus +kayttaja-jvh+
-                       {:urakka urakka})
+                               (:http-palvelin jarjestelma)
+                               :hae-tiemerkinta-kustannuskirjaus +kayttaja-jvh+
+                               {:urakka urakka})
         kustannust (into {} (filter #(= (:kustannusvuosi %) kustannusvuosi) tallennuksen-jalkeen))
         _ (is (= (:urakka kustannust) urakka-id))
         _ (is (= (int (:kustannus kustannust)) kustannus-tallennus))

@@ -30,14 +30,18 @@
         default-lista (default-kustannuslista urakka-id urakan-alkuvuosi urakan-loppuvuosi)]
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan user urakka-id)
     (let [vastaus (into []
-                    (map konv/alaviiva->rakenne)
-                    (q/hae-tiemerkinta-kustannuskirjaukset db urakka-id))]
+                    (map #(konv/decimal->double % :kustannus :pk1 :pk2 :pk3)
+                      (q/hae-tiemerkinta-kustannuskirjaukset db urakka-id)))]
       (tee-valmis-kustannuslista vastaus default-lista))))
+
+
 
 (defn hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
   [db user {:keys [urakka-id kustannusvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan user urakka-id)
-  (let [vastaus (q/hae-tiemerkinta-kustannuskirjaus-kustannusvuodella db {:urakka urakka-id :kustannusvuosi kustannusvuosi})]
+  (let [vastaus (into [] (map #(konv/decimal->double % :kustannus :pk1 :pk2 :pk3)
+                           (q/hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
+                             db {:urakka urakka-id :kustannusvuosi kustannusvuosi})))]
     vastaus))
 
 (defn tallenna-tiemerkinta-kustannuskirjaukset
@@ -48,10 +52,10 @@
       (assert (= 100.0 (float (reduce + (map #(get tieto % 0) [:pk1 :pk2 :pk3]))))) "PK-osuuksien summa on oltava 100")
     (doseq [tieto (:tiedot tiedot)]
       (if (empty? (hae-tiemerkinta-kustannuskirjaus-kustannusvuodella db user {:urakka-id urakka-id :kustannusvuosi (:kustannusvuosi tieto)}))
-          (q/lisaa-tiemerkinta-kustannuskirjaus! db
-            (assoc tieto :luoja (:id user) :muokkaaja (:id user) :muokattu (pvm/nyt)))
-          (q/paivita-tiemerkinta-kustannuskirjaus! db
-            (assoc tieto :muokkaaja (:id user) :muokattu (pvm/nyt)))))
+        (q/lisaa-tiemerkinta-kustannuskirjaus! db
+          (assoc tieto :luoja (:id user) :muokkaaja (:id user) :muokattu (pvm/nyt)))
+        (q/paivita-tiemerkinta-kustannuskirjaus! db
+          (assoc tieto :muokkaaja (:id user) :muokattu (pvm/nyt)))))
     tiedot))
 
 

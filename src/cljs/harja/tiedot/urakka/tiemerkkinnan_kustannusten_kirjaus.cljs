@@ -6,15 +6,22 @@
 
 (defonce kustannusten-kirjaus-valilehti-nakyvissa? (atom false))
 
-(defn kustannusten-summa [kustannukset]
-  (let [summa (reduce + 0 (map :kustannus kustannukset))]
+(defn kustannusten-summa [rivit avain]
+  (let [summa (reduce + 0 (map avain rivit))]
     summa))
+
+(defn pk-osuus-totaalista [rivit avain]
+  (reduce + (map (fn [rivi]
+                   (* (:kustannus rivi) (/ (avain rivi) 100)))
+              rivit)))
+
+(defn prosenttiosuus-kustannuksesta
+  [kustannus p-osuus]
+  (* (/ p-osuus 100) kustannus))
 
 (defrecord HaeKustannukset [urakka])
 (defrecord HaeKustannuksetOnnistui [vastaus])
 (defrecord HaeKustannuksetEpaonnistui [vastaus])
-
-(defrecord MuokkaaOsuutta [arvo rivi])
 
 (defrecord TallennaKustannukset [tiedot urakka])
 (defrecord TallennaKustannuksetOnnistui [vastaus app])
@@ -34,16 +41,6 @@
     (assoc app
       :haku-kaynnissa? false
       :kustannukset vastaus))
-
-  MuokkaaOsuutta
-  (process-event [{arvo :arvo rivi :rivi} app]
-    (println "vastaus: " arvo " arvo: " app " rivi: " rivi)
-    (js/console.warn "Osuus muokattu" (pr-str arvo))
-    (let [rivit (map #(if (= (:kustannusvuosi %) (:kustannusvuosi rivi))
-                        (assoc % :pk1 arvo)
-                        %)
-                  (:kustannukset app))]
-      (assoc app :kustannukset rivit)))
 
   HaeKustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
