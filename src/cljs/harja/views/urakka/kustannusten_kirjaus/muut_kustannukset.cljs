@@ -6,6 +6,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
             [harja.transit :as transit]
@@ -66,7 +67,7 @@
      [:div.header
       [:h1.header-yhteiset "Muut kustannukset"]
       (raporttiviennit valinnat)]
-     
+
      ;; Suodattimet
      [:div.suodattimet
       ;; Urakkavuosi 
@@ -92,49 +93,39 @@
                   ; TODO :rivi-klikattu #(e! (tiedot/-> modal... %))
                   }
 
-       [{:otsikko "Päivämäärä"
-         :tyyppi :pvm
-         :nimi :alkuaika
+       [{:otsikko-komp (fn [_ _]
+                         [:div.pvm "Päivämäärä"
+                          [:div [ikonit/action-sort-descending]]])
+         :tyyppi :komponentti
+         :komponentti (fn [arvo _] (str (pvm/pvm (:pvm arvo))))
+         :luokka "semibold text-nowrap"
+         :leveys 0.2}
+
+        {:otsikko "Tyyppi"
+         :tyyppi :string
+         :nimi :tyyppi
          :luokka "text-nowrap"
          :leveys 0.2}
 
-        {:otsikko "Sijainti"
-         :tyyppi :Tyyppi
-         :komponentti (fn [arvo _]
-                        [:span "test"])
-         :luokka "text-nowrap"
-         :leveys 0.55}
-
-        {:otsikko "Tyyppi"
-         :tyyppi :Tyyppi
-         :komponentti (fn [arvo _]
-                        [:span "test"])
-         :luokka "text-nowrap"
-         :leveys 0.55}
-
         {:otsikko "Selite"
-         :tyyppi :Tyyppi
-         :komponentti (fn [arvo _]
-                        [:span "test"])
+         :tyyppi :string
+         :nimi :selite
          :luokka "text-nowrap"
-         :leveys 0.55}
+         :leveys 0.2}
 
         {:otsikko "Pk-luokka"
-         :tyyppi :Tyyppi
-         :komponentti (fn [arvo _]
-                        [:span "test"])
+         :tyyppi :numero
+         :nimi :luokka
          :luokka "text-nowrap"
-         :leveys 0.55}
+         :leveys 0.2}
 
         {:otsikko "Kustannus"
-         :tyyppi :Tyyppi
-         :komponentti (fn [arvo _]
-                        [:span "test"])
+         :tyyppi :euro
+         :tasaa :oikea
+         :nimi :kustannus
          :luokka "text-nowrap"
-         :leveys 0.55}]
-       []
-       ;; 
-       ]]]))
+         :leveys 0.1}]
+       rivit]]]))
 
 
 (defn muut-kustannukset* [e! _app]

@@ -25,12 +25,11 @@
 (defrecord HaeTiedotEpaonnistui [vastaus])
 
 
-(defn hae-tietoja
-  ""
+(defn hae-muut-kustannukset
   [{:keys [valinnat] :as app}]
-  (tuck-apurit/post! app :hae-123
-    {:tr (:tr valinnat)
-     :aikavali (:aikavali valinnat)
+  ;; TODO 
+  (tuck-apurit/post! app :hae-tiemerkinta-muut-kustannukset
+    {:aikavali (:aikavali valinnat)
      :urakka-id @nav/valittu-urakka-id}
     {:onnistui ->HaeTiedotOnnistui
      :epaonnistui ->HaeTiedotEpaonnistui}))
@@ -45,7 +44,7 @@
 (extend-protocol tuck/Event
   HaeTiedot
   (process-event [_ app]
-    ; (hae-tietoja app)
+    (hae-muut-kustannukset app)
     (assoc app :haku-kaynnissa? true))
 
   HaeTiedotOnnistui

@@ -59,6 +59,13 @@
     tiedot))
 
 
+(defn hae-tiemerkinta-muut-kustannukset
+  [db user {:keys [urakka-id] :as tiedot}]
+  ;; TODO 
+  (oikeudet/ei-oikeustarkistusta!)
+  (q/hae-tiemerkinta-muut-kustannukset db))
+
+
 (defrecord TiemerkinnanKustannusKirjaukset []
   component/Lifecycle
   (start [this]
@@ -76,13 +83,20 @@
       :tallenna-tiemerkinta-kustannuskirjaus
       (fn [kayttaja tiedot]
         (tallenna-tiemerkinta-kustannuskirjaukset (:db this) kayttaja tiedot)))
+
+    ;; Muut kustannukset 
+    (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-muut-kustannukset
+      (fn [kayttaja tiedot] (hae-tiemerkinta-muut-kustannukset (:db this) kayttaja tiedot)))
     this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
       :hae-tiemerkinta-kustannuskirjaus
       :hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
-      :tallenna-tiemerkinta-kustannuskirjaus)
+      :tallenna-tiemerkinta-kustannuskirjaus
+
+      ;; Muut kustannukset
+      :hae-tiemerkinta-muut-kustannukset)
     this))
 
 
