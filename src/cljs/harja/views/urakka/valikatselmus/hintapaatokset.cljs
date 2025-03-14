@@ -186,13 +186,13 @@
          [:div "Urakoitsija maksaa"]
          [:div.rivi_lukema (fmt/euro-opt false (:urakoitsija_maksaa paatos))]]
         (when (and (:siirrettava_maara paatos) (> (:siirrettava_maara paatos) 0))
-          [:div.flex-row.summa_rivi_alin
+          [:div.flex-row.summa_rivi
            [:div "Siirrettävä määrä"]
            [:div.rivi_lukema (fmt/euro-opt false (:siirrettava_maara paatos))]])
 
         ;; Päätöksenteko napit - TODO: Tsekkaappa, että voisko nämä kaikki napit komponentisoida, kun tekevät kuitenkin kaikissa päätöksissä ihan sammaa asiaa.
         (if (not paatos-tehty?)
-          [:div.paatos-napit
+          [:div.paatos-toiminto
            (when on-oikeudet?
              [napit/yleinen-ensisijainen "Tallenna päätös"
               #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos))
@@ -200,7 +200,7 @@
                :disabled (or
                            tallennus-kesken?
                            (not voi-muokata?))}])]
-          [:div.paatos-napit
+          [:div.paatos-toiminto
            (when on-oikeudet?
              [napit/nappi
               "Peru päätös"

@@ -62,7 +62,7 @@
                                      (.focus @edellinen-fokusoitu-elementti)))
                                  (dom/tee-fokus-ansa modal-ref)))
        :reagent-render
-       (fn [{:keys [otsikko otsikon-alle-komp otsikko-tyyli footer nakyvissa? luokka
+       (fn [{:keys [otsikko otsikon-alle-komp otsikko-tyyli otsikko-muotoilut footer nakyvissa? luokka
                     leveys content-tyyli body-tyyli modal-luokka sulje-fn sulje-ruksista-fn]} sisalto]
          (let [sulje!  #(do
                           (.stopPropagation %)
@@ -92,7 +92,8 @@
                    [ikonit/sulje-ruksi sulje-ruksista! {:style {:margin 0}}]
                    [:h2.modal-title {:id "modal-otsikko"
                                      :class (when (= otsikko-tyyli :virhe)
-                                              "modal-otsikko-virhe")}
+                                              "modal-otsikko-virhe")
+                                     :style otsikko-muotoilut}
                     otsikko]
                    (when otsikon-alle-komp
                      [otsikon-alle-komp])])
@@ -107,11 +108,12 @@
   (let [optiot-ja-sisalto @modal-sisalto]
     [modal-container* optiot-ja-sisalto (:sisalto optiot-ja-sisalto)]))
 
-(defn nayta! [{:keys [sulje otsikko otsikon-alle-komp sulje-ruksista-fn sulje-fn otsikko-tyyli
+(defn nayta! [{:keys [sulje otsikko otsikon-alle-komp sulje-ruksista-fn sulje-fn otsikko-tyyli otsikko-muotoilut
                       footer luokka leveys content-tyyli body-tyyli modal-luokka modaalin-fokus-elementti]} sisalto] 
   (reset! modal-sisalto {:otsikko otsikko
                          :otsikon-alle-komp otsikon-alle-komp
                          :otsikko-tyyli otsikko-tyyli
+                         :otsikko-muotoilut otsikko-muotoilut
                          :footer footer
                          :sisalto sisalto
                          :luokka luokka

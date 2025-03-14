@@ -360,6 +360,9 @@ div.valikatselmus-yhteenveto {
     margin-top: @valistys-4;
     margin-bottom: @valistys-12;
   }
+  .ennen-painiketta {
+    margin-bottom: 0;
+  }
   .otsikko_lukema {
     font-size: 20px;
     font-weight: 700;
@@ -367,29 +370,37 @@ div.valikatselmus-yhteenveto {
   }
   .summa_rivi {
     line-height: 24px;
-    margin-top: @valistys-4;
-    margin-bottom: @valistys-4;
+    padding-top: @valistys-4;
+    padding-bottom: @valistys-4;
+  }
+  .summa_rivi_ylin {
+    line-height: 24px;
+    padding-bottom: @valistys-4;
   }
   .summa_rivi_alin {
     line-height: 24px;
     margin-top: @valistys-4;
     margin-bottom: @valistys-8;
   }
+  .linkki_rivi {
+    line-height: 24px;
+    padding-top: 3px;
+    padding-bottom: @valistys-4;
+  }
   .rivi_lukema {
     font-size: 14px;
     font-weight: 700;
     line-height: 24px;
   }
-  .paatos-napit {
-    flex-grow: 1;
-    padding-top: @valistys-16;
-    padding-bottom: @valistys-16;
+  hr {
+    margin: 0 0 4px 0;
+    border-top: 1px solid @white-darker;
   }
 }
 
 .harmaa-tausta {
   background-color: @white-dark;
-  margin-bottom: @valistys-12;
+  margin-bottom: @valistys-8;
   padding-right: @valistys-16;
   padding-left: 2px;
   table {
@@ -437,4 +448,27 @@ div.valikatselmus-yhteenveto {
     margin-left: @valistys-16;
     padding-bottom: @valistys-12;
   }
+}
+.laskenta-rivi {
+  line-height: 24px;
+  margin-bottom: @valistys-16;
+}
+.laskenta-rivi-korkeampi {
+  margin-bottom: @valistys-8;
+  line-height: 24px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.kuukausi-rivi {
+  line-height: 24px;
+  margin-bottom: @valistys-8;
+}
+.hr-tiivis {
+  margin: @valistys-8 0;
+}
+.hr-korkea {
+  margin: @valistys-16 0;
+}
+.laskenta-avattuna {
+  line-height: 24px;
 }
