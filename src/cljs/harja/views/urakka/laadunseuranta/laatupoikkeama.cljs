@@ -367,12 +367,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                                               :default :hoito)))
                                              (not (lomake/voi-tallentaa-ja-muokattu? sisalto)))}]))}
 
-               [{:otsikko "Päivämäärä ja aika"
+               [{:otsikko "Havaittu"
                  :pakollinen? true
                  :muokattava? (constantly muokattava?)
                  :tyyppi :pvm-aika
                  :nimi :aika
-                 :validoi [[:ei-tyhja "Anna laatupoikkeaman päivämäärä ja aika"]]
+                 :validoi [[:ei-tyhja "Anna laatupoikkeaman havainnon päivämäärä ja aika"]]
                  :huomauta [[:urakan-aikana-ja-hoitokaudella]]
                  :palstoja 1}
 

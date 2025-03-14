@@ -2,14 +2,22 @@
   (:require [harja.ui.viesti :as viesti]
             [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
-            [harja.ui.yleiset :as yleiset]
             [harja.tyokalut.tuck :as tuck-apurit]))
 
 (defonce kustannusten-kirjaus-valilehti-nakyvissa? (atom false))
 
-(defn kustannusten-summa [kustannukset]
-  (let [summa (reduce + 0 (map :kustannus kustannukset))]
+(defn kustannusten-summa [rivit avain]
+  (let [summa (reduce + 0 (map avain rivit))]
     summa))
+
+(defn pk-osuus-totaalista [rivit avain]
+  (reduce + (map (fn [rivi]
+                   (* (:kustannus rivi) (/ (avain rivi) 100)))
+              rivit)))
+
+(defn prosenttiosuus-kustannuksesta
+  [kustannus p-osuus]
+  (* (/ p-osuus 100) kustannus))
 
 (defrecord HaeKustannukset [urakka])
 (defrecord HaeKustannuksetOnnistui [vastaus])

@@ -9,9 +9,9 @@
     [harja.views.urakka.kustannusten-kirjaus.muut-kustannukset :as muut-kustannukset]
     [harja.tiedot.navigaatio :as nav]))
 
-(defn kustannusten-kirjaus [ur]
+(defn kustannusten-kirjaus []
   (komp/luo
-    (fn [{:keys [id] :as ur}]
+    (fn []
       [:span.kustannusten-kirjaus
        [bs/tabs {:style :tabs :classes "tabs-tabs2"
                  :active (nav/valittu-valilehti-atom :kustannusten-kirjaus)}
