@@ -349,12 +349,20 @@ BEGIN
     -- Tässä summataan siirretyt kulut yhteen ja ne otetaan huomioon jäljelläolevassa budjetissa alempana
     hk_valikatselmus_siirrot_ed_vuodelta := 0.0;
     hk_valikatselmus_siirrot_ed_vuodelta := hk_valikatselmus_siirrot_ed_vuodelta +
-                                            (SELECT COALESCE(SUM(up.siirto), 0)
-                                               FROM urakka_paatos up
-                                              WHERE up."urakka-id" = ur
-                                                AND up."hoitokauden-alkuvuosi" = (hk_alkuvuosi - 1)
-                                                AND up.siirto != 0
-                                                AND up.poistettu = FALSE);
+    (SELECT COALESCE(SUM(x.siirto), 0)
+    FROM (SELECT COALESCE(SUM(pta.siirron_maara) * -1, 0) as siirto
+          FROM paatos_tavoitehinta_alitus pta
+          WHERE pta.urakkaid = ur
+            AND pta.hoitokauden_alkuvuosi = (hk_alkuvuosi - 1)::INTEGER -- Haetaan edellisen vuoden päätöksestä
+            AND pta.siirron_maara != 0
+            AND pta.poistettu = FALSE
+          UNION ALL
+          SELECT COALESCE(SUM(pk.siirrettava_maara), 0) as siirto
+          FROM paatos_kattohinta pk
+          WHERE pk.urakkaid = ur
+            AND pk.hoitokauden_alkuvuosi = (hk_alkuvuosi - 1)::INTEGER -- Haetaan edellisen vuoden päätöksestä
+            AND pk.siirrettava_maara != 0
+            AND pk.poistettu = FALSE) as x);
 
     RAISE NOTICE '*** hk_valikatselmus_siirrot_ed_vuodelta: % ', hk_valikatselmus_siirrot_ed_vuodelta;
 

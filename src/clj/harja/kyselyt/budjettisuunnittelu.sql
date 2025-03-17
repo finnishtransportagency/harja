@@ -58,15 +58,20 @@ ORDER BY ut.hoitokausi;
 
 -- name: hae-valikatselmus-siirrot-ed-vuodelta
 -- single?: true
-SELECT COALESCE(SUM(up.siirto), 0)
-  FROM urakka_paatos up
-           JOIN urakka u ON up."urakka-id" = u.id
- WHERE up."urakka-id" = :urakka
-   AND up."hoitokauden-alkuvuosi" = (EXTRACT(YEAR FROM :alkupvm::DATE) - 1)
-   -- Ainoastaan kattohinnan ylityksestä tai tavoitehinnan alituksesta voi tulla siirtoja
-   AND up.tyyppi in ('kattohinnan-ylitys', 'tavoitehinnan-alitus')
-   AND up.siirto != 0
-   AND up.poistettu = FALSE;
+(SELECT COALESCE(SUM(x.siirto), 0)
+ FROM (SELECT COALESCE(SUM(pta.siirron_maara) * -1, 0) as siirto
+       FROM paatos_tavoitehinta_alitus pta
+       WHERE pta.urakkaid = :urakka
+         AND pta.hoitokauden_alkuvuosi = (EXTRACT(YEAR FROM :alkupvm::DATE) - 1) -- Haetaan edellisen vuoden päätöksestä
+         AND pta.siirron_maara != 0
+         AND pta.poistettu = FALSE
+       UNION ALL
+       SELECT COALESCE(SUM(pk.siirrettava_maara), 0) as siirto
+       FROM paatos_kattohinta pk
+       WHERE pk.urakkaid = :urakka
+         AND pk.hoitokauden_alkuvuosi = (EXTRACT(YEAR FROM :alkupvm::DATE) - 1) -- Haetaan edellisen vuoden päätöksestä
+         AND pk.siirrettava_maara != 0
+         AND pk.poistettu = FALSE) as x);
 
 -- name:hae-johto-ja-hallintokorvaukset
 SELECT jh.tunnit,

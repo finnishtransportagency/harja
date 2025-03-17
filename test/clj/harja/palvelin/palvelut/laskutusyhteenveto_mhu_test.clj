@@ -1,7 +1,9 @@
 (ns harja.palvelin.palvelut.laskutusyhteenveto-mhu-test
   (:require [clojure.test :refer :all]
             [clojure.zip :as zip]
+            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.valikatselmus :as valikatselmus-q]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen :as laskutusyhteenveto]
@@ -17,6 +19,7 @@
             [harja.pvm :as pvm]
             [harja.domain.kulut :as domain-kulut]
             [harja.palvelin.palvelut.kulut.kulut :as kulu-palvelu]
+            [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
             [harja.testi :as testi]))
 
 
@@ -152,31 +155,81 @@
 (deftest varmista-kustannusten-siirrot
   (let [kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        siirto-ed-vuodelta 60000.0M
-        ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta"
-        _ (i (format "INSERT INTO urakka_paatos (\"hoitokauden-alkuvuosi\", \"urakka-id\", \"hinnan-erotus\", \"urakoitsijan-maksu\", \"tilaajan-maksu\", siirto, tyyppi, \"lupaus-luvatut-pisteet\", \"lupaus-toteutuneet-pisteet\", \"lupaus-tavoitehinta\", muokattu, \"muokkaaja-id\", \"luoja-id\", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id)
-        VALUES (2019, %s, null, 39395.784199999995, 0, %s, 'kattohinnan-ylitys', null, null, null, null, null, %s, '2019-11-01 10:12:11.886000', false, null, null, 51);" urakka-id siirto-ed-vuodelta kayttaja-id))
+        urakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        hoitokauden-alkuvuosi 2019 ;; Päätös tehdään edelliselle vuodelle
+        hoitokauden-alun-tavoitehinta (valikatselmus-q/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (:db jarjestelma) {:urakka-id urakka-id :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        hoitokauden-lopun-tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakka-id :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+    (testing "Tavoitehinnan alituksen siirto"
+      (let [toteutuneet-kustannukset (- hoitokauden-alun-tavoitehinta 10000)
+            alituksen-maara (- hoitokauden-alun-tavoitehinta toteutuneet-kustannukset)
+            siirto-ed-vuodelta 60000.0M
+            tavoitepalkkio 10000.0M
+            tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+            kulu-id 1
+            viimeinen_hoitokausi false
+            ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta" tekemällä tavoitehinnan alituspäätös
+            paatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                     alituksen-maara siirto-ed-vuodelta tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id
+                     viimeinen_hoitokausi kayttaja-id)
+            paatosvastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakka-id paatos)
+            hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+            parametrit {:urakkatyyppi "teiden-hoito"
+                        :alkupvm (pvm/->pvm (str "1.10." (inc hoitokauden-alkuvuosi)))
+                        :loppupvm (pvm/->pvm (str "30.9." (+ 2 hoitokauden-alkuvuosi)))
+                        :urakka-id urakka-id
+                        :hallintayksikko-id hallintayksikko-id}
+            raportti (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit)]
 
-        hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-        parametrit {:urakkatyyppi "teiden-hoito"
-                    :alkupvm (pvm/->pvm "1.10.2020")
-                    :loppupvm (pvm/->pvm "30.9.2021")
-                    :urakka-id urakka-id
-                    :hallintayksikko-id hallintayksikko-id}
-        raportti (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit)]
+        ;; Etsi "Siirto edelliseltä vuodelta" -rivin data raportin raakadatasta
+        (let [z-raportti (raportti-zip raportti)
+              siirto-rivi [[:varillinen-teksti {:arvo ""}]
+                           [:varillinen-teksti
+                            {:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}]
+                           [:varillinen-teksti
+                            {:itsepaisesti-maaritelty-oma-vari nil,
+                             :arvo (* -1 siirto-ed-vuodelta), ;; Käännetään negatiiviseksi, koska siirto pienentää toteumia, mutta on kannassa positiivisena
+                             :fmt :raha,
+                             :lihavoi? true}]]]
+          ;; Etsii koko raportin hiccupista lehden, josta löytyy siirto-riviin liittyvä data
+          (is (= siirto-rivi (etsi-raportin-rivi z-raportti siirto-rivi)))
+          ;; Siivotaan kanta
+          (paatos-kyselyt/poista-tavoitehinnan-alituspaatos (:db jarjestelma) urakka-id kayttaja-id (:id paatosvastaus)))))
+    (testing "Kattohinnan ylityksen siirto"
+      (let [kattohinta 100000M
+            toteutuneet-kustannukset (+ kattohinta 10000M)
+            ylityksen-maara (- toteutuneet-kustannukset kattohinta)
+            urakoitsija-maksaa ylityksen-maara
+            siirrettava-maara ylityksen-maara
+            maksimi-siirrettava-maara ylityksen-maara
+            siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+            tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+            kulu-id 1
+            viimeinen_hoitokausi false
+            ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta" tekemällä tavoitehinnan alituspäätös
+            paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                     ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi
+                     maksimi-siirrettava-maara siirtorajoitus-prosentti kayttaja-id)
+            paatosvastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakka-id paatos)
+            hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+            parametrit {:urakkatyyppi "teiden-hoito"
+                        :alkupvm (pvm/->pvm (str "1.10." (inc hoitokauden-alkuvuosi)))
+                        :loppupvm (pvm/->pvm (str "30.9." (+ 2 hoitokauden-alkuvuosi)))
+                        :urakka-id urakka-id
+                        :hallintayksikko-id hallintayksikko-id}
+            raportti (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit)]
 
-    ;; Etsi "Siirto edelliseltä vuodelta" -rivin data raportin raakadatasta
-    (let [z-raportti (raportti-zip raportti)
-          siirto-rivi [[:varillinen-teksti {:arvo ""}]
-                       [:varillinen-teksti
-                        {:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}]
-                       [:varillinen-teksti
-                        {:itsepaisesti-maaritelty-oma-vari nil,
-                         :arvo siirto-ed-vuodelta,
-                         :fmt :raha,
-                         :lihavoi? true}]]]
-      ;; Etsii koko raportin hiccupista lehden, josta löytyy siirto-riviin liittyvä data
-      (is (= siirto-rivi (etsi-raportin-rivi z-raportti siirto-rivi))))))
+        ;; Etsi "Siirto edelliseltä vuodelta" -rivin data raportin raakadatasta
+        (let [z-raportti (raportti-zip raportti)
+              siirto-rivi [[:varillinen-teksti {:arvo ""}]
+                           [:varillinen-teksti
+                            {:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}]
+                           [:varillinen-teksti
+                            {:itsepaisesti-maaritelty-oma-vari nil,
+                             :arvo siirrettava-maara,
+                             :fmt :raha,
+                             :lihavoi? true}]]]
+          ;; Etsii koko raportin hiccupista lehden, josta löytyy siirto-riviin liittyvä data
+          (is (= siirto-rivi (etsi-raportin-rivi z-raportti siirto-rivi))))))))
 
 (deftest mhu-laskutusyhteenvedon-sanktiot-joissa-indeksikorotus
   (testing "mhu-laskutusyhteenvedon-sanktiot-joissa-indeksikorotus"
@@ -650,7 +703,6 @@
           haetut-tiedot-oulu-paallyste (first (filter #(= (:tuotekoodi %) "20100") haetut-tiedot-oulu-ilman-tpita))
           haetut-tiedot-oulu-mhu-yllapito (first (filter #(= (:tuotekoodi %) "20190") haetut-tiedot-oulu-ilman-tpita))
           haetut-tiedot-oulu-mhu-korvausinvestointi (first (filter #(= (:tuotekoodi %) "14300") haetut-tiedot-oulu-ilman-tpita))
-          _ (println "haetut-tiedot-oulu-mhu-korvausinvestointi; " (pr-str haetut-tiedot-oulu-mhu-korvausinvestointi))
           haetut-tiedot-oulu-mhu-ja-hoidon-johto (first (filter #(= (:tuotekoodi %) "23150") haetut-tiedot-oulu-ilman-tpita))
           ;; Kommentoin nämä pois, koska oletettavasti jotain vielä muuttuu, niin ei hajoa testit ihan heti.
           ;_ (log/debug "haetut-tiedot-oulu-talvihoito")

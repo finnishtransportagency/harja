@@ -53,20 +53,40 @@ WHERE ut.urakka = :urakka-id
 -- name: hintapaatos-tehty?
 -- single?: true
 SELECT EXISTS(
-    SELECT up.id as id
-      FROM urakka_paatos up
-     WHERE up.poistettu = FALSE
-       AND up."hoitokauden-alkuvuosi" in (:vuodet)
-       AND up."urakka-id" = :urakka-id
-       AND up.tyyppi IN ('tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus'));
+           SELECT pta.id
+           FROM paatos_tavoitehinta_alitus pta
+           WHERE pta.urakkaid = :urakka-id
+             AND pta.poistettu = FALSE
+             AND pta.hoitokauden_alkuvuosi in (:vuodet)
+           UNION ALL
+           SELECT pty.id
+           FROM paatos_tavoitehinta_ylitys pty
+           WHERE pty.urakkaid = :urakka-id
+             AND pty.poistettu = FALSE
+             AND pty.hoitokauden_alkuvuosi in (:vuodet)
+           UNION ALL
+           SELECT pk.id
+           FROM paatos_kattohinta pk
+           WHERE pk.urakkaid = :urakka-id
+             AND pk.poistettu = FALSE
+             AND pk.hoitokauden_alkuvuosi in (:vuodet));
 
 -- name: hae-urakan-hintapaatokset
 -- Haetaan vuosittain tulevat välikatselmukset ja niille tieto, että onko päätöstä/välikatselmusta tehty
-SELECT up."hoitokauden-alkuvuosi"
-  FROM urakka_paatos up
- WHERE up.poistettu = FALSE
-   AND up."urakka-id" = :urakka-id
-   AND up.tyyppi IN ('tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus');
+SELECT pta.hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi"
+FROM paatos_tavoitehinta_alitus pta
+WHERE pta.urakkaid = :urakka-id
+AND pta.poistettu = FALSE
+UNION ALL
+SELECT pty.hoitokauden_alkuvuosi  as "hoitokauden-alkuvuosi"
+FROM paatos_tavoitehinta_ylitys pty
+WHERE pty.urakkaid = :urakka-id
+  AND pty.poistettu = FALSE
+UNION ALL
+SELECT pk.hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi"
+FROM paatos_kattohinta pk
+WHERE pk.urakkaid = :urakka-id
+  AND pk.poistettu = FALSE;
 
 -- name: hae-urakan-bonuksen-toimenpideinstanssi-id
 -- single?: true
