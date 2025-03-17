@@ -23,16 +23,27 @@
 (defrecord HaeTiedot [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
+(defrecord AvaaKustannusModal [rivi])
+(defrecord HaeTyypit [])
+(defrecord HaeTyypitOnnistui [vastaus])
+(defrecord HaeTyypitEpaonnistui [vastaus])
+(defrecord MuokkaaRivia [rivi])
 
 
 (defn hae-muut-kustannukset
   [{:keys [valinnat] :as app}]
-  ;; TODO 
   (tuck-apurit/post! app :hae-tiemerkinta-muut-kustannukset
     {:aikavali (:aikavali valinnat)
      :urakka-id @nav/valittu-urakka-id}
     {:onnistui ->HaeTiedotOnnistui
      :epaonnistui ->HaeTiedotEpaonnistui}))
+
+
+(defn- hae-kustannustyypit [app]
+  (tuck-apurit/post! app :hae-tiemerkinta-kustannustyypit
+    {:urakka-id @nav/valittu-urakka-id}
+    {:onnistui ->HaeTyypitOnnistui
+     :epaonnistui ->HaeTyypitEpaonnistui}))
 
 
 (defn voi-tallentaa?
@@ -57,4 +68,32 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
-    (assoc app :haku-kaynnissa? false)))
+    (assoc app :haku-kaynnissa? false))
+  
+  HaeTyypit
+  (process-event [_ app]
+    (hae-kustannustyypit app)
+    (assoc app :haku-kaynnissa? true))
+  
+  HaeTyypitOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app
+      :tyypit vastaus
+      :haku-kaynnissa? false))
+  
+  HaeTyypitEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (println "epa: " vastaus)
+    (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (assoc app :haku-kaynnissa? false))
+  
+  MuokkaaRivia
+  (process-event [{rivi :rivi} app]
+    (update app :valittu-rivi merge rivi))
+
+  AvaaKustannusModal
+  (process-event [{rivi :rivi} app]
+    (-> app
+      (assoc :muokataan true)
+      (assoc :valittu-rivi rivi))))

@@ -5,7 +5,10 @@
             [harja.asiakas.kommunikaatio :as komm]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka.urakka :as tila]
+            [reagent.core :as r]
             [harja.fmt :as fmt]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.kentat :as kentat]
             [harja.pvm :as pvm]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
@@ -54,8 +57,67 @@
       [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna PDF"]]]])
 
 
+(defn- kustannus-muokkauspaneeli [e! voi-kirjoittaa? voi-tallentaa? valittu-rivi  alkuaika tyypit]
+  [:div.overlay-oikealla
+   [lomake/lomake
+    {:ei-borderia? true
+     :voi-muokata? voi-kirjoittaa?
+     :tarkkaile-ulkopuolisia-muutoksia? true
+     :muokkaa! #(e! (tiedot/->MuokkaaRivia %))
+     :header [:div.col-md-12
+              [:h2.header-yhteiset "Lisää uusi kustannus"]
+              [:hr]]
+     :footer [:<>
+              [:hr]
+              [:div.muokkaus-modal-napit
+               ;; Tallenna
+               [napit/tallenna "Tallenna muutokset" #(println "test1") {:disabled (not voi-tallentaa?)}]
+               ;; Sulje 
+               [napit/yleinen-toissijainen "Sulje" #(println "test12")]]]}
+    
+    ;; Pvm 
+    [(lomake/rivi
+       {:otsikko "Päivämäärä"
+        :pakollinen? true
+        :tyyppi :komponentti
+        :komponentti (fn []
+                       [:span
+                        [kentat/tee-kentta {:tyyppi :pvm :vayla-tyyli? true}
+                         (r/wrap
+                           alkuaika
+                           #(println "test5"))]])})
+
+     ;; Tyyppi
+     (lomake/ryhma
+       {:otsikko "Tyyppi"
+        :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-ryhma-otsikko"}
+       ;; Alasveto
+       (lomake/rivi
+         {:otsikko "Tyyppi"
+          :pakollinen? true
+          :rivi-luokka "lomakeryhman-rivi-tausta"
+          :validoi [[:ei-tyhja "Valitse tyyppi"]]
+          :nimi :tyyppi
+          :tyyppi :valinta
+          :valinnat (map :tyyppi tyypit)
+          ::lomake/col-luokka "leveys-kokonainen"}))
+
+     ;; Summa
+     (lomake/rivi
+       {:otsikko "Summa"
+        :pakollinen? true
+        :rivi-luokka "lomakeryhman-rivi-tausta"
+        :nimi :kustannus
+        :tyyppi :euro
+        :teksti-oikealla "EUR"
+        :vayla-tyyli? true
+        :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
+        ::lomake/col-luokka "maara-valinnat"})]
+    valittu-rivi]])
+
+
 (defn muut-kustannukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
-                                            haku-kaynnissa? kustannukset] :as app}]
+                                            haku-kaynnissa? kustannukset tyypit] :as app}]
   (let [alkuaika (:alkuaika valittu-rivi)
         ;; TODO 
         voi-kirjoittaa? true
@@ -78,20 +140,20 @@
        [napit/uusi "Lisää uusi" #(e! (println "fn")) {:disabled false}]]]
 
      ;; Muokkauspaneeli
-     (when muokataan)
+     (when muokataan
+       (kustannus-muokkauspaneeli e! voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit))
 
      ;; Grid
      [:div.muut-kustannukset-listaus
       [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
                            [ajax-loader-pieni "Haku käynnissä..."]
                            "Valitulle aikavälille ei löytynyt mitään.")
-                  ; :tunniste :id
+                  :tunniste :id
                   :sivuta grid/vakiosivutus
                   :voi-kumota? false
                   :piilota-toiminnot? true
-                  ; :mahdollista-rivin-valinta? true
-                  ; TODO :rivi-klikattu #(e! (tiedot/-> modal... %))
-                  }
+                  :mahdollista-rivin-valinta? true
+                  :rivi-klikattu #(e! (tiedot/->AvaaKustannusModal %))}
 
        [{:otsikko-komp (fn [_ _]
                          [:div.pvm "Päivämäärä"
@@ -134,6 +196,7 @@
     (komp/sisaan
       #(do
          (println "hae tiedot")
+         (e! (tiedot/->HaeTyypit))
          (e! (tiedot/->HaeTiedot))))
 
     ;; Näytä listaus

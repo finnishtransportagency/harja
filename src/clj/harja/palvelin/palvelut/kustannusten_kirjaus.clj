@@ -60,11 +60,17 @@
 
 
 (defn hae-tiemerkinta-muut-kustannukset
-  [db user {:keys [urakka-id] :as tiedot}]
+  [db kayttaja {:keys [urakka-id]}]
   ;; TODO 
-  (oikeudet/ei-oikeustarkistusta!)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
   (q/hae-tiemerkinta-muut-kustannukset db))
 
+(defn hae-tiemerkinta-kustannustyypit
+  [db kayttaja {:keys [urakka-id]}]
+  ;; TODO 
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
+  (println "v: " (q/hae-tiemerkinta-kustannustyypit db))
+  (q/hae-tiemerkinta-kustannustyypit db))
 
 (defrecord TiemerkinnanKustannusKirjaukset []
   component/Lifecycle
@@ -87,6 +93,9 @@
     ;; Muut kustannukset 
     (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-muut-kustannukset
       (fn [kayttaja tiedot] (hae-tiemerkinta-muut-kustannukset (:db this) kayttaja tiedot)))
+    
+    (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-kustannustyypit
+      (fn [kayttaja tiedot] (hae-tiemerkinta-kustannustyypit (:db this) kayttaja tiedot)))
     this)
 
   (stop [this]
@@ -96,7 +105,6 @@
       :tallenna-tiemerkinta-kustannuskirjaus
 
       ;; Muut kustannukset
-      :hae-tiemerkinta-muut-kustannukset)
+      :hae-tiemerkinta-muut-kustannukset
+      :hae-tiemerkinta-kustannustyypit)
     this))
-
-

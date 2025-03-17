@@ -64,9 +64,12 @@ RETURNING urakka;
 -- Testidataa gridiin, TODO ..
 SELECT    u.id, 
 		  u.luotu AS pvm,
-          'Lisätyö' AS tyyppi,
+          'arvonmuutos' AS tyyppi,
           'Selite, test' AS selite,
           '3' AS luokka,
           (SELECT CAST('5000.99' AS FLOAT)) AS kustannus
 FROM      urakka u 
 ORDER BY  u.luotu DESC LIMIT 10;
+
+-- name: hae-tiemerkinta-kustannustyypit
+SELECT unnest(enum_range(NULL::yllapito_muu_toteuma_tyyppi)) AS tyyppi;
