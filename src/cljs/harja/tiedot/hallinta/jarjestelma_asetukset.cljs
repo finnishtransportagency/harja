@@ -28,6 +28,12 @@
 (defrecord HaeGeometriapaivitykset [])
 (defrecord HaeGeometriapaivityksetOnnistui [vastaus])
 (defrecord HaeGeometriapaivityksetEpaonnistui [vastaus])
+(defrecord ToggleValikatselmusValidoinnit [validoinnit])
+(defrecord ToggleValikatselmusValidoinnitOnnistui [vastaus])
+(defrecord ToggleValikatselmusValidoinnitEpaonnistui [vastaus])
+(defrecord HaeJarjestelmanAsetukset [])
+(defrecord HaeJarjestelmanAsetuksetOnnistui [vastaus])
+(defrecord HaeJarjestelmanAsetuksetEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -107,4 +113,43 @@
   Geometria-ainestojenTallennusEpaonnistui
   (process-event [_ app]
     (viesti/nayta! [:span "Virhe geometria-aineistojen tallentamisessa!"] :danger)
-    (assoc app :tallennus-kaynnissa? false)))
+    (assoc app :tallennus-kaynnissa? false))
+
+  ToggleValikatselmusValidoinnit
+  (process-event [{validoinnit :validoinnit} app]
+    (if-not (:tallennus-kaynnissa? app)
+      (do (tuck-apurit/post! :toggle-valikatselmus-validoinnit
+            {:validointi validoinnit}
+            {:onnistui ->ToggleValikatselmusValidoinnitOnnistui
+             :epaonnistui ->ToggleValikatselmusValidoinnitEpaonnistui})
+        (assoc app :tallennus-kaynnissa? true))
+      app))
+
+  ToggleValikatselmusValidoinnitOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (-> app
+      (assoc-in [:asetukset :valikatselmus-validointi] vastaus)
+      (assoc :tallennus-kaynnissa? false)))
+
+  ToggleValikatselmusValidoinnitEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! [:span "Virhe validoinnin muutoksessa!"] :danger)
+    (assoc app :tallennus-kaynnissa? false))
+
+  HaeJarjestelmanAsetukset
+  (process-event [_ app]
+    (tuck-apurit/get! :hae-jarjestelma-asetukset
+      {:onnistui ->HaeJarjestelmanAsetuksetOnnistui
+       :epaonnistui ->HaeJarjestelmanAsetuksetEpaonnistui})
+    app)
+
+  HaeJarjestelmanAsetuksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [validoinnit (:validatselmus_validoinnit_kaytossa vastaus)]
+      (-> app
+        (assoc-in [:asetukset :valikatselmus-validointi] (keyword (str validoinnit))))))
+
+  HaeJarjestelmanAsetuksetEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! [:span "Virhe järjestelmän asetusten haussa!"] :danger)
+    app))

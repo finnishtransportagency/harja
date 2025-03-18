@@ -242,6 +242,19 @@ CREATE TABLE urakka_parametrit
     FOREIGN KEY (urakkaid) REFERENCES urakka (id)
 );
 
+-- Mahdollistetaan järjestelmäasetusten asettaminen.
+-- Saman tyyppinen ajatus kuin urakan parametreissa, mutta nämä asetukset vaikuttavat koko järjestelmään
+CREATE TABLE jarjestelman_asetukset
+(
+    id                                 SERIAL PRIMARY KEY,
+    validatselmus_validoinnit_kaytossa BOOLEAN   DEFAULT TRUE, -- Tämä asetetaan hallinnasta
+    muokattu                           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    muokkaaja                          INTEGER,
+    FOREIGN KEY (muokkaaja) REFERENCES kayttaja (id)
+);
+INSERT INTO jarjestelman_asetukset (validatselmus_validoinnit_kaytossa) VALUES (TRUE);
+
+
 -- Pyritään täyttämään taulu mahdollisimman hyvin alkuun ja hallintapaneelista sitten loput
 CREATE OR REPLACE FUNCTION aseta_tai_paivita_urakka_parametrit_urakalle(urakkaid_ INT) RETURNS VOID AS
 $$
