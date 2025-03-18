@@ -248,6 +248,7 @@ CREATE TABLE jarjestelman_asetukset
 (
     id                                 SERIAL PRIMARY KEY,
     validatselmus_validoinnit_kaytossa BOOLEAN   DEFAULT TRUE, -- Tämä asetetaan hallinnasta
+    -- Lisää kulujen luomiselle ja lupausten luomiselle omat vivut, jotka voi ottaa pois päältä
     muokattu                           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     muokkaaja                          INTEGER,
     FOREIGN KEY (muokkaaja) REFERENCES kayttaja (id)
