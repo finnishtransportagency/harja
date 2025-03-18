@@ -36,14 +36,14 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
-         [:div [:h4 "Tavoitehinnan ylitys"]]
-         [:div.bold (fmt/euro-opt (:ylityksen_maara paatos))]]
-       [:div.flex-row
+         [:div [:h3 "Tavoitehinnan ylitys"]]
+         [:div.otsikko_lukema (fmt/euro-opt false (:ylityksen_maara paatos))]]
+       [:div.flex-row.summa_rivi_ylin
         [:div (str "Tilaaja maksaa (" (:tilaajan_prosentti paatos) "%)")]
-        [:div (fmt/euro-opt (:tilaaja_maksaa paatos))]]
-       [:div.flex-row
+        [:div.rivi_lukema (fmt/euro-opt false (:tilaaja_maksaa paatos))]]
+       [:div.flex-row.summa_rivi_alin
         [:div (str "Urakoitsija maksaa (" (:urakoitsijan_prosentti paatos) "%)")]
-        [:div (fmt/euro-opt (:urakoitsija_maksaa paatos))]]
+        [:div.rivi_lukema (fmt/euro-opt false (:urakoitsija_maksaa paatos))]]
 
        ;; Päätöksenteko napit
        (if (not paatos-tehty?)
@@ -51,13 +51,14 @@
           (when on-oikeudet?
             [napit/yleinen-ensisijainen "Tallenna päätös"
              #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanYlitysPaatos paatos))
-             {:disabled (or
+             {:ikoni [ikonit/harja-icon-status-selected]
+              :disabled (or
                           tallennus-kesken?
                           (not voi-muokata?))}])]
          [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
           (when on-oikeudet?
             [napit/nappi
-             "Kumoa päätös"
+             "Peru päätös"
              #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos))
              {:luokka "nappi-toissijainen napiton-nappi"
               :ikoni [ikonit/harja-icon-action-undo]
@@ -81,18 +82,18 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
-         [:div [:h4 "Tavoitehinnan alitus"]]
-         [:div.bold (fmt/euro-opt (:alituksen_maara paatos))]]
-        [:div.flex-row
+         [:div [:h3 "Tavoitehinnan alitus"]]
+         [:div.otsikko_lukema (fmt/euro-opt false (:alituksen_maara paatos))]]
+        [:div.flex-row.summa_rivi_ylin
          [:div (str "Tavoitepalkkio (" (:tavoitepalkkion_maksuprosentti paatos) "%)")]
-         [:div (fmt/euro-opt (:tavoitepalkkio paatos))]]
-        [:div.flex-row {:style {:margin-top "-5px"}}
-         [:div.small-text.harmaa "max. 3% hoitovuoden alun indeksikorjatusta tavoitehinnasta."]]
+         [:div.rivi_lukema (fmt/euro-opt false (:tavoitepalkkio paatos))]]
+        [:div.flex-row.summa_rivi {:style {:margin-top "-5px"}}
+         [:div.small-text.lisays.harmaa "max. 3% hoitovuoden alun indeksikorjatusta tavoitehinnasta."]]
         ;; Näytetään siirron määrä vain, jos sitä on. Esim viimeisenä vuotena ei siirretä mitään.
         (when (:siirron_maara paatos)
-          [:div.flex-row
+          [:div.flex-row.summa_rivi_alin
            [:div "Siirretään seuraavan vuoden hankintakustannuksiin alennukseksi"]
-           [:div (str "-" (fmt/euro-opt (:siirron_maara paatos)))]])
+           [:div.rivi_lukema (str "-" (fmt/euro-opt false(:siirron_maara paatos)))]])
 
         ;; Päätöksenteko napit tai mahdollinen virhe
         (if (:virhe paatos)
@@ -104,13 +105,14 @@
              (when on-oikeudet?
                [napit/yleinen-ensisijainen "Tallenna päätös"
                 #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanAlitusPaatos paatoksen-tiedot))
-                {:disabled (or
+                {:ikoni [ikonit/harja-icon-status-selected]
+                 :disabled (or
                              tallennus-kesken?
                              (not voi-muokata?))}])]
             [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
              (when on-oikeudet?
                [napit/nappi
-                "Kumoa päätös"
+                "Peru päätös"
                 #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanAlitusPaatos paatoksen-tiedot))
                 {:luokka "nappi-toissijainen napiton-nappi"
                  :ikoni [ikonit/harja-icon-action-undo]
