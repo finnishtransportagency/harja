@@ -37,27 +37,27 @@
         (if-not (:virhe paatos)
           [:div
            [:div
-            [:div.flex-row
+            [:div.flex-row.summa_rivi_ylin
              [:div "Hoitovuoden alun indeksikorjattu tavoitehinta"]
-             [:div [:strong (fmt/euro-opt (:tavoitehinta_ennen paatos))]]]
-            [:div.flex-row
+             [:div [:strong (fmt/euro-opt false (:tavoitehinta_ennen paatos))]]]
+            [:div.flex-row.summa_rivi
              [:div "Tavoitehinnan muutokset"]
-             [:div [:strong (fmt/euro-opt (:tavoitehinnan_muutokset paatos))]]]
+             [:div [:strong (fmt/euro-opt false true (:tavoitehinnan_muutokset paatos))]]]
             ;; Jos urakalle on asetettu parametriksi, että tavoitehintaan vaikuttaa myös hoitovuoden lopun indeksikorjaukset
             (when (:lisaa_tavoitehintaan_lopunindeksikorjaus paatos)
-              [:div.flex-row
+              [:div.flex-row.summa_rivi_alin
                [:div "Hoitovuoden lopun indeksikorjaus"]
-               [:div [:strong (fmt/euro-opt (:hoitokauden_lopun_indeksikorjaus paatos))]]])
-            [:hr]
+               [:div [:strong (fmt/euro-opt false (:hoitokauden_lopun_indeksikorjaus paatos))]]])
+            [:hr.hr-tiivis]
 
             [:div.flex-row
-             [:div "Hoitovuoden lopun tavoitehinta"]
-             [:div [:strong (fmt/euro-opt (:tavoitehinta_jalkeen paatos))]]]
+             [:h3.ennen-painiketta "Hoitovuoden lopun tavoitehinta"]
+             [:div.otsikko_lukema (fmt/euro-opt false (:tavoitehinta_jalkeen paatos))]]
             [:div.flex-row
              [:div
-              [:div "Hoitovuoden lopun kattohinta"]
-              [:div.small-text.harmaa (str (:kattohintakerroin paatos) " x hoitovuoden lopun tavoitehinta")]]
-             [:div [:strong (fmt/euro-opt (:kattohinta paatos))]]]]
+              [:h3.alempi-otsikko "Hoitovuoden lopun kattohinta"]
+              [:div.small-text (str (:kattohintakerroin paatos) " x hoitovuoden lopun tavoitehinta")]]
+             [:div.otsikko_lukema (fmt/euro-opt false (:kattohinta paatos))]]]
            [:div
             [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
              #(e! (valikatselmus-tiedot/->TallennaHoitokaudenlopunHintapaatos paatos))
