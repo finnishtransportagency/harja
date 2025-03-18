@@ -28,6 +28,7 @@
 (defrecord HaeTyypitOnnistui [vastaus])
 (defrecord HaeTyypitEpaonnistui [vastaus])
 (defrecord MuokkaaRivia [rivi])
+(defrecord SuljeMuokkaus [])
 
 
 (defn hae-muut-kustannukset
@@ -55,6 +56,7 @@
 (extend-protocol tuck/Event
   HaeTiedot
   (process-event [_ app]
+    (hae-kustannustyypit app)
     (hae-muut-kustannukset app)
     (assoc app :haku-kaynnissa? true))
 
@@ -96,4 +98,8 @@
   (process-event [{rivi :rivi} app]
     (-> app
       (assoc :muokataan true)
-      (assoc :valittu-rivi rivi))))
+      (assoc :valittu-rivi rivi)))
+  
+  SuljeMuokkaus
+  (process-event [_ app]
+    (assoc app :muokataan false)))

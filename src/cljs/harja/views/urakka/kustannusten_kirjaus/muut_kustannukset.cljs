@@ -1,6 +1,7 @@
 (ns harja.views.urakka.kustannusten-kirjaus.muut-kustannukset
-  "Tiemerkintöjen muut kustannukset välilehti näkymä"
+  "Tiemerkintöjen muut kustannukset välilehti"
   (:require [harja.views.urakka.kustannusten-kirjaus.muut-kustannukset-tiedot :as tiedot]
+            [harja.views.urakka.kustannusten-kirjaus.apurit :as apurit]
             [tuck.core :refer [tuck]]
             [harja.asiakas.kommunikaatio :as komm]
             [harja.domain.oikeudet :as oikeudet]
@@ -23,40 +24,6 @@
             [harja.domain.tierekisteri :as tr-domain]))
 
 
-(defn- raporttiviennit [valinnat]
-
-   [:div.raporttiviennit
-
-    ;; Excel
-    ^{:key "raporttixls"}
-    [:form {:style {:margin-left "auto"}
-            :target "_blank" :method "POST"
-                   ; :action TODO
-            }
-     [:input {:type "hidden" :name "parametrit"
-              :value (transit/clj->transit {:tr (:tr valinnat)
-                                            :aikavali (:aikavali valinnat)
-                                            :urakka-id @nav/valittu-urakka-id})}]
-     [:button {:type "submit"
-               :class #{"nappi-toissijainen"}}
-      [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna Excel"]]]
-
-
-    ;; Pdf 
-    ^{:key "raporttipdf"}
-    [:form {:style {:margin-left "auto"}
-            :target "_blank" :method "POST"
-                       ; :action TODO
-            }
-     [:input {:type "hidden" :name "parametrit"
-              :value (transit/clj->transit {:tr (:tr valinnat)
-                                            :aikavali (:aikavali valinnat)
-                                            :urakka-id @nav/valittu-urakka-id})}]
-     [:button {:type "submit"
-               :class #{"nappi-toissijainen"}}
-      [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna PDF"]]]])
-
-
 (defn- kustannus-muokkauspaneeli [e! voi-kirjoittaa? voi-tallentaa? valittu-rivi  alkuaika tyypit]
   [:div.overlay-oikealla
    [lomake/lomake
@@ -73,7 +40,7 @@
                ;; Tallenna
                [napit/tallenna "Tallenna muutokset" #(println "test1") {:disabled (not voi-tallentaa?)}]
                ;; Sulje 
-               [napit/yleinen-toissijainen "Sulje" #(println "test12")]]]}
+               [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus))]]]}
     
     ;; Pvm 
     [(lomake/rivi
@@ -118,33 +85,18 @@
 
 (defn muut-kustannukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
                                             haku-kaynnissa? kustannukset tyypit] :as app}]
+
   (let [alkuaika (:alkuaika valittu-rivi)
         ;; TODO 
         voi-kirjoittaa? true
-        voi-tallentaa? true]
+        voi-tallentaa? true
+        muokkauspaneeli (kustannus-muokkauspaneeli e! voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)]
 
-    [:div.tiemerkinta-muut-kustannukset
-
-     ;; Header, raporttiviennit
-     [:div.header
-      [:h1.header-yhteiset "Muut kustannukset"]
-      (raporttiviennit valinnat)]
-
-     ;; Suodattimet
-     [:div.suodattimet
-      ;; Urakkavuosi 
-      [:div
-       [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
-      ;; Lisää uusi 
-      [:div
-       [napit/uusi "Lisää uusi" #(e! (println "fn")) {:disabled false}]]]
-
-     ;; Muokkauspaneeli
-     (when muokataan
-       (kustannus-muokkauspaneeli e! voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit))
-
-     ;; Grid
-     [:div.muut-kustannukset-listaus
+    (apurit/nakyma-body
+      e! app
+      rivit valinnat muokataan valittu-rivi
+      haku-kaynnissa? kustannukset tyypit "Muut kustannukset" muokkauspaneeli
+      ;; Grid
       [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
                            [ajax-loader-pieni "Haku käynnissä..."]
                            "Valitulle aikavälille ei löytynyt mitään.")
@@ -187,7 +139,7 @@
          :nimi :kustannus
          :luokka "text-nowrap"
          :leveys 0.1}]
-       rivit]]]))
+       rivit])))
 
 
 (defn muut-kustannukset* [e! _app]
@@ -195,11 +147,8 @@
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan
       #(do
-         (println "hae tiedot")
-         (e! (tiedot/->HaeTyypit))
          (e! (tiedot/->HaeTiedot))))
 
-    ;; Näytä listaus
     (fn [e! app] [muut-kustannukset-listaus e! app])))
 
 

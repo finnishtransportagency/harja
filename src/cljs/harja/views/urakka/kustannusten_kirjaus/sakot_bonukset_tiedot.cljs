@@ -25,6 +25,7 @@
 (defrecord HaeTiedotEpaonnistui [vastaus])
 (defrecord AvaaModal [rivi])
 (defrecord MuokkaaRivia [rivi])
+(defrecord SuljeMuokkaus [])
 
 
 (defn hae-tiedot
@@ -63,4 +64,8 @@
   (process-event [{rivi :rivi} app]
     (-> app
       (assoc :muokataan true)
-      (assoc :valittu-rivi rivi))))
+      (assoc :valittu-rivi rivi)))
+  
+  SuljeMuokkaus
+  (process-event [_ app]
+    (assoc app :muokataan false)))
