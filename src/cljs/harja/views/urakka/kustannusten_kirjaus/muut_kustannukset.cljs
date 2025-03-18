@@ -95,7 +95,7 @@
     (apurit/nakyma-body
       e! app
       rivit valinnat muokataan valittu-rivi
-      haku-kaynnissa? kustannukset tyypit "Muut kustannukset" muokkauspaneeli
+      haku-kaynnissa? kustannukset tyypit "Muut kustannukset" muokkauspaneeli nil
       ;; Grid
       [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
                            [ajax-loader-pieni "Haku käynnissä..."]
@@ -148,7 +148,6 @@
     (komp/sisaan
       #(do
          (e! (tiedot/->HaeTiedot))))
-
     (fn [e! app] [muut-kustannukset-listaus e! app])))
 
 

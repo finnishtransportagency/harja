@@ -84,18 +84,26 @@
 
 
 (defn sakot-bonukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
-                                         haku-kaynnissa? kustannukset tyypit] :as app}]
+                                         haku-kaynnissa? kustannukset tyypit valittu-laji] :as app}]
 
   (let [alkuaika (:alkuaika valittu-rivi)
         ;; TODO 
         voi-kirjoittaa? true
         voi-tallentaa? true
-        muokkauspaneeli (kustannus-muokkauspaneeli e! voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)]
+        muokkauspaneeli (kustannus-muokkauspaneeli e! voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)
+        laji-suodatin [kentat/tee-kentta {:tyyppi :radio-group
+                                          :space-valissa? true
+                                          :vaihtoehdot [:kaikki :sakko :bonus]
+                                          :vayla-tyyli? true
+                                          :nayta-rivina? true
+                                          :valitse-fn #(e! (tiedot/->ValitseLaji %))
+                                          :vaihtoehto-nayta tiedot/laji-valinnat}
+                       (atom valittu-laji)]]
 
     (apurit/nakyma-body
       e! app
       rivit valinnat muokataan valittu-rivi
-      haku-kaynnissa? kustannukset tyypit "Sakot ja bonukset" muokkauspaneeli
+      haku-kaynnissa? kustannukset tyypit "Sakot ja bonukset" muokkauspaneeli laji-suodatin
       ;; Grid
       [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
                            [ajax-loader-pieni "Haku käynnissä..."]

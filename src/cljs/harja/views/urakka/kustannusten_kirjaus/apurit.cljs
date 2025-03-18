@@ -67,7 +67,7 @@
   Välilehdet lähes täysin samannäköisiä, tehty molemmille yhteinen komponentti"
   [e! app
    rivit valinnat muokataan valittu-rivi
-   haku-kaynnissa? kustannukset tyypit otsikko muokkauspaneeli grid]
+   haku-kaynnissa? kustannukset tyypit otsikko muokkauspaneeli laji-suodatin grid]
 
   (let [alkuaika (:alkuaika valittu-rivi)
         ;; TODO 
@@ -77,18 +77,22 @@
     ;; Body 
     [:div.tiemerkinta-muut-kustannukset
 
-     ;; Header, raporttiviennit
+     ;; Otsikko / header, raporttiviennit
      [:div.header
       [:h1.header-yhteiset otsikko]
       (raporttiviennit valinnat)]
 
      ;; Suodattimet
      [:div.suodattimet
-      
+
       ;; Urakkavuosi 
       [:div
        [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
       
+      ;; Laji
+      [:div.laji (when laji-suodatin "Laji")
+       [:div.kentta (when laji-suodatin laji-suodatin)]]
+
       ;; Lisää uusi 
       [:div
        [napit/uusi "Lisää uusi" #(e! (println "fn")) {:disabled false}]]]

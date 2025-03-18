@@ -13,10 +13,16 @@
 (defonce tila (atom {:rivit nil
                      :muokataan false
                      :valittu-rivi nil
+                     :valittu-laji :kaikki
                      :haku-kaynnissa? false
                      :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))}}))
 
 (def nakymassa? (atom false))
+
+(defonce laji-valinnat
+  {:kaikki "Kaikki"
+   :sakko "Sakko"
+   :bonus "Bonus"})
 
 
 ;; Tuck 
@@ -26,6 +32,7 @@
 (defrecord AvaaModal [rivi])
 (defrecord MuokkaaRivia [rivi])
 (defrecord SuljeMuokkaus [])
+(defrecord ValitseLaji [rivi])
 
 
 (defn hae-tiedot
@@ -65,7 +72,11 @@
     (-> app
       (assoc :muokataan true)
       (assoc :valittu-rivi rivi)))
-  
+
   SuljeMuokkaus
   (process-event [_ app]
-    (assoc app :muokataan false)))
+    (assoc app :muokataan false))
+
+  ValitseLaji
+  (process-event [{rivi :rivi} app]
+    (assoc app :valittu-laji rivi)))

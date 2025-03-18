@@ -2,6 +2,7 @@
 
 .tiemerkinta-muut-kustannukset 
 {
+    /* TODO uudelleennimeä tiedosto, ja classit */
     padding: @valistys-16 0;
 
     .header {
@@ -26,9 +27,22 @@
         justify-content: space-between;
         margin-top: @valistys-12;
 
+        .laji {
+            color: @black-light;
+            font-weight: bold;
+            font-weight: normal;
+            margin-top: @valistys-4;
+            margin-left: @valistys-16;
+
+            .kentta {
+                margin-top: -@valistys-14
+            }
+        }
+
         /* Lisää uusi */ 
-        :nth-child(2) {
+        :nth-child(3) {
             align-content: center;
+            margin-left: auto;
         }
     }
 
