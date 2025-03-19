@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kustannusten-kirjaus.apurit
+(ns harja.views.urakka.kustannusten-kirjaus.yhteiset
   "Tiemerkintöjen kustannusten kirjaus apufunktiot"
   (:require [tuck.core :refer [tuck]]
             [harja.asiakas.kommunikaatio :as komm]
@@ -65,10 +65,10 @@
 (defn nakyma-body
   "Muut kustannukset, Sakot ja bonukset 
   Välilehdet lähes täysin samannäköisiä, tehty molemmille yhteinen komponentti"
-  [otsikko 
+  [otsikko
    e! app
    rivit valinnat muokataan valittu-rivi
-   haku-kaynnissa? kustannukset tyypit muokkauspaneeli laji-suodatin grid]
+   haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid laji-suodatin]
 
   (let [alkuaika (:alkuaika valittu-rivi)
         ;; TODO 
@@ -89,7 +89,7 @@
       ;; Urakkavuosi 
       [:div
        [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
-      
+
       ;; Laji
       [:div.laji (when laji-suodatin "Laji")
        [:div.kentta (when laji-suodatin laji-suodatin)]]

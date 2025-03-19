@@ -25,7 +25,6 @@
    :bonus "Bonus"})
 
 
-;; Tuck 
 (defrecord HaeTiedot [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])

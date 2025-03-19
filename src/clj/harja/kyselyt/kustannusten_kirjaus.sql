@@ -66,7 +66,7 @@ SELECT    u.id,
 		  u.luotu AS pvm,
           'arvonmuutos' AS tyyppi,
           'Selite, test' AS selite,
-          '3' AS luokka,
+          3 AS luokka,
           (SELECT CAST('5000.99' AS FLOAT)) AS kustannus
 FROM      urakka u 
 ORDER BY  u.luotu DESC LIMIT 10;

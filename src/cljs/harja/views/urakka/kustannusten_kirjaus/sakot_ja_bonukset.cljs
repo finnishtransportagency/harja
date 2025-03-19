@@ -1,7 +1,7 @@
 (ns harja.views.urakka.kustannusten-kirjaus.sakot-ja-bonukset
   "Tiemerkintöjen sakot ja bonukset välilehti"
   (:require [harja.views.urakka.kustannusten-kirjaus.sakot-bonukset-tiedot :as tiedot]
-            [harja.views.urakka.kustannusten-kirjaus.apurit :as apurit]
+            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
             [tuck.core :refer [tuck]]
             [harja.asiakas.kommunikaatio :as komm]
             [harja.domain.oikeudet :as oikeudet]
@@ -83,6 +83,60 @@
     valittu-rivi]])
 
 
+(defn- sakot-bonukset-grid [e! rivit]
+  [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
+                       [ajax-loader-pieni "Haku käynnissä..."]
+                       "Valitulle aikavälille ei löytynyt mitään.")
+              :tunniste :id
+              :sivuta grid/vakiosivutus
+              :voi-kumota? false
+              :piilota-toiminnot? true
+              :mahdollista-rivin-valinta? true
+              :rivi-klikattu #(e! (tiedot/->AvaaModal %))}
+
+               ;; TODO 
+   [{:otsikko-komp (fn [_ _]
+                     [:div.pvm "Päivämäärä"
+                      [:div [ikonit/action-sort-descending]]])
+     :tyyppi :komponentti
+     :komponentti (fn [arvo _] (str (pvm/pvm (:pvm arvo))))
+     :luokka "semibold text-nowrap"
+     :leveys 0.2}
+
+    {:otsikko "Laji"
+     :tyyppi :string
+     :nimi :tyyppi
+     :luokka "text-nowrap"
+     :leveys 0.2}
+
+    {:otsikko "Kohde"
+     :tyyppi :string
+     :nimi :selite
+     :luokka "text-nowrap"
+     :leveys 0.2}
+
+    {:otsikko "Selite"
+     :tyyppi :string
+     :nimi :selite
+     :luokka "text-nowrap"
+     :leveys 0.2}
+
+    {:otsikko "Määrä"
+     :tyyppi :euro
+     :tasaa :oikea
+     :nimi :kustannus
+     :luokka "text-nowrap"
+     :leveys 0.1}
+
+    {:otsikko "Liite"
+     :tyyppi :euro
+     :tasaa :oikea
+     :nimi :kustannus
+     :luokka "text-nowrap"
+     :leveys 0.1}]
+   rivit])
+
+
 (defn sakot-bonukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
                                          haku-kaynnissa? kustannukset tyypit valittu-laji] :as app}]
 
@@ -91,6 +145,7 @@
         voi-kirjoittaa? true
         voi-tallentaa? true
         muokkauspaneeli (kustannus-muokkauspaneeli e! voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)
+        grid (sakot-bonukset-grid e! rivit)
         laji-suodatin [kentat/tee-kentta {:tyyppi :radio-group
                                           :space-valissa? true
                                           :vaihtoehdot [:kaikki :sakko :bonus]
@@ -100,62 +155,10 @@
                                           :vaihtoehto-nayta tiedot/laji-valinnat}
                        (atom valittu-laji)]]
 
-    (apurit/nakyma-body "Sakot ja bonukset"
+    (yhteiset/nakyma-body "Sakot ja bonukset"
       e! app
       rivit valinnat muokataan valittu-rivi
-      haku-kaynnissa? kustannukset tyypit muokkauspaneeli laji-suodatin
-      ;; Grid
-      [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
-                           [ajax-loader-pieni "Haku käynnissä..."]
-                           "Valitulle aikavälille ei löytynyt mitään.")
-                  :tunniste :id
-                  :sivuta grid/vakiosivutus
-                  :voi-kumota? false
-                  :piilota-toiminnot? true
-                  :mahdollista-rivin-valinta? true
-                  :rivi-klikattu #(e! (tiedot/->AvaaModal %))}
-
-             ;; TODO 
-       [{:otsikko-komp (fn [_ _]
-                         [:div.pvm "Päivämäärä"
-                          [:div [ikonit/action-sort-descending]]])
-         :tyyppi :komponentti
-         :komponentti (fn [arvo _] (str (pvm/pvm (:pvm arvo))))
-         :luokka "semibold text-nowrap"
-         :leveys 0.2}
-
-        {:otsikko "Laji"
-         :tyyppi :string
-         :nimi :tyyppi
-         :luokka "text-nowrap"
-         :leveys 0.2}
-
-        {:otsikko "Kohde"
-         :tyyppi :string
-         :nimi :selite
-         :luokka "text-nowrap"
-         :leveys 0.2}
-
-        {:otsikko "Selite"
-         :tyyppi :string
-         :nimi :selite
-         :luokka "text-nowrap"
-         :leveys 0.2}
-
-        {:otsikko "Määrä"
-         :tyyppi :euro
-         :tasaa :oikea
-         :nimi :kustannus
-         :luokka "text-nowrap"
-         :leveys 0.1}
-
-        {:otsikko "Liite"
-         :tyyppi :euro
-         :tasaa :oikea
-         :nimi :kustannus
-         :luokka "text-nowrap"
-         :leveys 0.1}]
-       rivit])))
+      haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid laji-suodatin)))
 
 
 (defn sakot-ja-bonukset* [e! _app]

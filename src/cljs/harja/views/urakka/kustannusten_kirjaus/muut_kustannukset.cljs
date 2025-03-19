@@ -1,7 +1,7 @@
 (ns harja.views.urakka.kustannusten-kirjaus.muut-kustannukset
   "Tiemerkintöjen muut kustannukset välilehti"
   (:require [harja.views.urakka.kustannusten-kirjaus.muut-kustannukset-tiedot :as tiedot]
-            [harja.views.urakka.kustannusten-kirjaus.apurit :as apurit]
+            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
             [tuck.core :refer [tuck]]
             [harja.asiakas.kommunikaatio :as komm]
             [harja.domain.oikeudet :as oikeudet]
@@ -24,7 +24,10 @@
             [harja.domain.tierekisteri :as tr-domain]))
 
 
-(defn- kustannus-muokkauspaneeli [e! voi-kirjoittaa? voi-tallentaa? valittu-rivi  alkuaika tyypit]
+(defn- muut-kustannukset-muokkauspaneeli 
+  "Toteumien muokkauspaneeli / rivin klikkaus"
+  [e! {:keys [pk-luokat]} voi-kirjoittaa? voi-tallentaa? valittu-rivi  alkuaika tyypit]
+
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -37,12 +40,9 @@
      :footer [:<>
               [:hr]
               [:div.muokkaus-modal-napit
-               ;; Tallenna
-               [napit/tallenna "Tallenna muutokset" #(println "test1") {:disabled (not voi-tallentaa?)}]
-               ;; Sulje 
-               [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus))]]]}
+               [napit/tallenna "Tallenna" #(println "tallenna") {:disabled (not voi-tallentaa?)}]
+               [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]]}
     
-    ;; Pvm 
     [(lomake/rivi
        {:otsikko "Päivämäärä"
         :pakollinen? true
@@ -54,92 +54,108 @@
                            alkuaika
                            #(println "test5"))]])})
 
-     ;; Tyyppi
-     (lomake/ryhma
+     (lomake/rivi
        {:otsikko "Tyyppi"
-        :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-ryhma-otsikko"}
-       ;; Alasveto
-       (lomake/rivi
-         {:otsikko "Tyyppi"
-          :pakollinen? true
-          :rivi-luokka "lomakeryhman-rivi-tausta"
-          :validoi [[:ei-tyhja "Valitse tyyppi"]]
-          :nimi :tyyppi
-          :tyyppi :valinta
-          :valinnat (map :tyyppi tyypit)
-          ::lomake/col-luokka "leveys-kokonainen"}))
+        :vayla-tyyli? true
+        :pakollinen? true
+        :nimi :tyyppi
+        :tyyppi :valinta
+        :valinnat (map :tyyppi tyypit)
+        :validoi [[:ei-tyhja "Valitse tyyppi"]]})
 
-     ;; Summa
+     (lomake/rivi
+       {:nimi :kustannus-selite
+        :otsikko "Selite"
+        :tyyppi :text
+        :pakollinen? true
+        :piilota-checkbox? true
+        :piilota-dropdown? true
+        :salli-kirjoitus? true
+        :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
+        ::lomake/col-luokka "leveys-kokonainen"})
+
+     (lomake/rivi
+       {:otsikko "PK-luokka"
+        :tyyppi :radio-group
+        :vaihtoehto-arvo :luokka
+        :pakollinen? true
+        :vayla-tyyli? true
+        :vaihtoehdot (keys pk-luokat)
+        :vaihtoehto-nayta pk-luokat
+        :validoi [#(when (nil? %) "Syötä jokin luokka, tai 'Ei PK-luokkaa'")]})
+
      (lomake/rivi
        {:otsikko "Summa"
         :pakollinen? true
-        :rivi-luokka "lomakeryhman-rivi-tausta"
+        :vayla-tyyli? true
         :nimi :kustannus
         :tyyppi :euro
         :teksti-oikealla "EUR"
-        :vayla-tyyli? true
         :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
-        ::lomake/col-luokka "maara-valinnat"})]
+        ::lomake/col-luokka "summa-valinta"})]
     valittu-rivi]])
+
+
+(defn- muut-kustannukset-grid [e! rivit]
+  [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
+                       [ajax-loader-pieni "Haku käynnissä..."]
+                       "Valitulle aikavälille ei löytynyt mitään.")
+              :tunniste :id
+              :sivuta grid/vakiosivutus
+              :voi-kumota? false
+              :piilota-toiminnot? true
+              :mahdollista-rivin-valinta? true
+              :rivi-klikattu #(e! (tiedot/->AvaaKustannusModal %))}
+
+   [{:otsikko-komp (fn [_ _]
+                     [:div.pvm "Päivämäärä"
+                      [:div [ikonit/action-sort-descending]]])
+     :tyyppi :komponentti
+     :komponentti (fn [arvo _] (str (pvm/pvm (:pvm arvo))))
+     :luokka "semibold text-nowrap"
+     :leveys 0.2}
+
+    {:otsikko "Tyyppi"
+     :tyyppi :string
+     :nimi :tyyppi
+     :luokka "text-nowrap"
+     :leveys 0.2}
+
+    {:otsikko "Selite"
+     :tyyppi :string
+     :nimi :selite
+     :luokka "text-nowrap"
+     :leveys 0.2}
+
+    {:otsikko "Pk-luokka"
+     :tyyppi :numero
+     :desimaalien-maara 0
+     :nimi :luokka
+     :luokka "text-nowrap"
+     :leveys 0.2}
+
+    {:otsikko "Kustannus"
+     :tyyppi :euro
+     :tasaa :oikea
+     :nimi :kustannus
+     :luokka "text-nowrap"
+     :leveys 0.1}]
+   rivit])
 
 
 (defn muut-kustannukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
                                             haku-kaynnissa? kustannukset tyypit] :as app}]
-
   (let [alkuaika (:alkuaika valittu-rivi)
         ;; TODO 
         voi-kirjoittaa? true
         voi-tallentaa? true
-        muokkauspaneeli (kustannus-muokkauspaneeli e! voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)]
+        muokkauspaneeli (muut-kustannukset-muokkauspaneeli e! valinnat voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)
+        grid (muut-kustannukset-grid e! rivit)]
 
-    (apurit/nakyma-body "Muut kustannukset"
+    (yhteiset/nakyma-body "Muut kustannukset"
       e! app
       rivit valinnat muokataan valittu-rivi
-      haku-kaynnissa? kustannukset tyypit muokkauspaneeli nil
-      ;; Grid
-      [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
-                           [ajax-loader-pieni "Haku käynnissä..."]
-                           "Valitulle aikavälille ei löytynyt mitään.")
-                  :tunniste :id
-                  :sivuta grid/vakiosivutus
-                  :voi-kumota? false
-                  :piilota-toiminnot? true
-                  :mahdollista-rivin-valinta? true
-                  :rivi-klikattu #(e! (tiedot/->AvaaKustannusModal %))}
-
-       [{:otsikko-komp (fn [_ _]
-                         [:div.pvm "Päivämäärä"
-                          [:div [ikonit/action-sort-descending]]])
-         :tyyppi :komponentti
-         :komponentti (fn [arvo _] (str (pvm/pvm (:pvm arvo))))
-         :luokka "semibold text-nowrap"
-         :leveys 0.2}
-
-        {:otsikko "Tyyppi"
-         :tyyppi :string
-         :nimi :tyyppi
-         :luokka "text-nowrap"
-         :leveys 0.2}
-
-        {:otsikko "Selite"
-         :tyyppi :string
-         :nimi :selite
-         :luokka "text-nowrap"
-         :leveys 0.2}
-
-        {:otsikko "Pk-luokka"
-         :tyyppi :numero
-         :nimi :luokka
-         :luokka "text-nowrap"
-         :leveys 0.2}
-
-        {:otsikko "Kustannus"
-         :tyyppi :euro
-         :tasaa :oikea
-         :nimi :kustannus
-         :luokka "text-nowrap"
-         :leveys 0.1}]
-       rivit])))
+      haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid nil)))
 
 
 (defn muut-kustannukset* [e! _app]

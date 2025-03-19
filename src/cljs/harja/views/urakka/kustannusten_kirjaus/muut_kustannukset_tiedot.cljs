@@ -14,12 +14,15 @@
                      :muokataan false
                      :valittu-rivi nil
                      :haku-kaynnissa? false
-                     :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))}}))
+                     :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))
+                                :pk-luokat {:1 "1"
+                                            :2 "2"
+                                            :3 "3"
+                                            :tyhja "Ei PK-luokkaa"}}}))
 
 (def nakymassa? (atom false))
 
 
-;; Tuck 
 (defrecord HaeTiedot [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
@@ -71,25 +74,25 @@
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))
-  
+
   HaeTyypit
   (process-event [_ app]
     (hae-kustannustyypit app)
     (assoc app :haku-kaynnissa? true))
-  
+
   HaeTyypitOnnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app
       :tyypit vastaus
       :haku-kaynnissa? false))
-  
+
   HaeTyypitEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (println "epa: " vastaus)
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))
-  
+
   MuokkaaRivia
   (process-event [{rivi :rivi} app]
     (update app :valittu-rivi merge rivi))
@@ -99,7 +102,7 @@
     (-> app
       (assoc :muokataan true)
       (assoc :valittu-rivi rivi)))
-  
+
   SuljeMuokkaus
   (process-event [_ app]
     (assoc app :muokataan false)))
