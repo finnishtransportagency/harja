@@ -52,7 +52,8 @@
                         [kentat/tee-kentta {:tyyppi :pvm :vayla-tyyli? true}
                          (r/wrap
                            alkuaika
-                           #(println "test5"))]])})
+                           #(println "test5"))]])
+        ::lomake/col-luokka "col-xs-6"})
 
      (lomake/rivi
        {:otsikko "Tyyppi"
@@ -61,7 +62,8 @@
         :nimi :tyyppi
         :tyyppi :valinta
         :valinnat (map :tyyppi tyypit)
-        :validoi [[:ei-tyhja "Valitse tyyppi"]]})
+        :validoi [[:ei-tyhja "Valitse tyyppi"]]
+        ::lomake/col-luokka "col-xs-6"})
 
      (lomake/rivi
        {:nimi :kustannus-selite
@@ -83,7 +85,7 @@
         :vaihtoehdot (keys pk-luokat)
         :vaihtoehto-nayta pk-luokat
         :validoi [#(when (nil? %) "Syötä jokin luokka, tai 'Ei PK-luokkaa'")]})
-
+     
      (lomake/rivi
        {:otsikko "Summa"
         :pakollinen? true
@@ -92,7 +94,7 @@
         :tyyppi :euro
         :teksti-oikealla "EUR"
         :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
-        ::lomake/col-luokka "summa-valinta"})]
+        ::lomake/col-luokka "col-xs-6 summa-valinta"})]
     valittu-rivi]])
 
 

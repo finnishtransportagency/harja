@@ -15,10 +15,10 @@
                      :valittu-rivi nil
                      :haku-kaynnissa? false
                      :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))
-                                :pk-luokat {:1 "1"
+                                :pk-luokat {:tyhja "Ei PK-luokkaa"
+                                            :1 "1"
                                             :2 "2"
-                                            :3 "3"
-                                            :tyhja "Ei PK-luokkaa"}}}))
+                                            :3 "3"}}}))
 
 (def nakymassa? (atom false))
 
