@@ -100,10 +100,10 @@
                                           :vaihtoehto-nayta tiedot/laji-valinnat}
                        (atom valittu-laji)]]
 
-    (apurit/nakyma-body
+    (apurit/nakyma-body "Sakot ja bonukset"
       e! app
       rivit valinnat muokataan valittu-rivi
-      haku-kaynnissa? kustannukset tyypit "Sakot ja bonukset" muokkauspaneeli laji-suodatin
+      haku-kaynnissa? kustannukset tyypit muokkauspaneeli laji-suodatin
       ;; Grid
       [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
                            [ajax-loader-pieni "Haku käynnissä..."]
@@ -163,10 +163,7 @@
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan
       #(do
-         (println "hae tiedot")
          (e! (tiedot/->HaeTiedot))))
-
-    ;; Näytä listaus
     (fn [e! app] [sakot-bonukset-listaus e! app])))
 
 

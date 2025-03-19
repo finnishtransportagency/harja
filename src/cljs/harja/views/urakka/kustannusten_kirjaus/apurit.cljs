@@ -65,9 +65,10 @@
 (defn nakyma-body
   "Muut kustannukset, Sakot ja bonukset 
   Välilehdet lähes täysin samannäköisiä, tehty molemmille yhteinen komponentti"
-  [e! app
+  [otsikko 
+   e! app
    rivit valinnat muokataan valittu-rivi
-   haku-kaynnissa? kustannukset tyypit otsikko muokkauspaneeli laji-suodatin grid]
+   haku-kaynnissa? kustannukset tyypit muokkauspaneeli laji-suodatin grid]
 
   (let [alkuaika (:alkuaika valittu-rivi)
         ;; TODO 

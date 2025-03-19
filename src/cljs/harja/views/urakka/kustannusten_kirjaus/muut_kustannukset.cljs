@@ -92,10 +92,10 @@
         voi-tallentaa? true
         muokkauspaneeli (kustannus-muokkauspaneeli e! voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)]
 
-    (apurit/nakyma-body
+    (apurit/nakyma-body "Muut kustannukset"
       e! app
       rivit valinnat muokataan valittu-rivi
-      haku-kaynnissa? kustannukset tyypit "Muut kustannukset" muokkauspaneeli nil
+      haku-kaynnissa? kustannukset tyypit muokkauspaneeli nil
       ;; Grid
       [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
                            [ajax-loader-pieni "Haku käynnissä..."]
