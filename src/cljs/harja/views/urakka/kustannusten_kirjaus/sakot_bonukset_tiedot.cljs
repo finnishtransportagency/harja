@@ -15,7 +15,9 @@
                      :valittu-rivi nil
                      :valittu-laji :kaikki
                      :haku-kaynnissa? false
-                     :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))}}))
+                     :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))
+                                :lajit {:sakko "Sakko"
+                                        :bonus "Bonus"}}}))
 
 (def nakymassa? (atom false))
 
