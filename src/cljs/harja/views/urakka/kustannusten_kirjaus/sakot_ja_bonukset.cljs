@@ -124,7 +124,6 @@
      (let [testi-var [{:id 0 :kohde "Kohde 1"} {:id 1 :kohde "Kohde 2"}]
            testi-valinnat (mapv :id testi-var)
            testi-kuvaukset (into {} (map (fn [{:keys [id kohde]}] [id kohde]) testi-valinnat))]
-
        (lomake/rivi
          {:otsikko "Päällystys- tai paikkauskohde"
           :pakollinen? true
