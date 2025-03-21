@@ -700,8 +700,7 @@
            [napit/takaisin "Palaa raporttivalintoihin"
             #(reset! raportit/suoritettu-raportti nil)]
            [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]]
-          [:div.raportin-toiminnot {:style {:float "right"}}
-           [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]
+          [:div.raportin-toiminnot
            [napit/palvelinkutsu-nappi " Tee raportti"
             #(go
                (reset! raportit/suoritettu-raportti :ladataan)
@@ -713,7 +712,8 @@
                  (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
                  (<! (suorita-raportti! suorituksen-parametrit))))
             {:ikoni [ikonit/list]
-             :disabled (not voi-suorittaa?)}]])]]]))
+             :disabled (not voi-suorittaa?)}]
+           [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]])]]]))
 
 (defn hallintayksikko-ja-urakkatyyppi [v-hal v-ur-tyyppi]
   (let [vesivaylien-urakkatyypissa? (= :vesivayla (:arvo v-ur-tyyppi))]
