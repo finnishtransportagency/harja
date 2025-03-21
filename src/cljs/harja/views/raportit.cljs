@@ -589,7 +589,7 @@
          {:type "submit"
           :disabled (not voi-suorittaa?)
           :style {:margin-left "16px"}
-          :class #{"nappi-toissijainen" "pull-right"}
+          :class #{"nappi-toissijainen"}
           :on-click #(aseta-parametrit! id)}
          ikoni " " teksti]])]))
 
@@ -695,24 +695,25 @@
 
      [:div.row
       [:div.col-md-12
-       [:div.raportin-toiminnot
-        (when raportissa?
-          [napit/takaisin "Palaa raporttivalintoihin"
-           #(reset! raportit/suoritettu-raportti nil)])
-        [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]
-        (when-not raportissa?
-          [napit/palvelinkutsu-nappi " Tee raportti"
-           #(go
-             (reset! raportit/suoritettu-raportti :ladataan)
-             (let [suorituksen-parametrit [konteksti
-                                           (:nimi raporttityyppi)
-                                           arvot-nyt
-                                           (:id v-ur)
-                                           (:id v-hal)]]
-               (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
-               (<! (suorita-raportti! suorituksen-parametrit))))
-           {:ikoni [ikonit/list]
-            :disabled (not voi-suorittaa?)}])]]]]))
+        (if raportissa?
+          [:div.raportin-toiminnot
+           [napit/takaisin "Palaa raporttivalintoihin"
+            #(reset! raportit/suoritettu-raportti nil)]
+           [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]]
+          [:div.raportin-toiminnot {:style {:float "right"}}
+           [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]
+           [napit/palvelinkutsu-nappi " Tee raportti"
+            #(go
+               (reset! raportit/suoritettu-raportti :ladataan)
+               (let [suorituksen-parametrit [konteksti
+                                             (:nimi raporttityyppi)
+                                             arvot-nyt
+                                             (:id v-ur)
+                                             (:id v-hal)]]
+                 (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
+                 (<! (suorita-raportti! suorituksen-parametrit))))
+            {:ikoni [ikonit/list]
+             :disabled (not voi-suorittaa?)}]])]]]))
 
 (defn hallintayksikko-ja-urakkatyyppi [v-hal v-ur-tyyppi]
   (let [vesivaylien-urakkatyypissa? (= :vesivayla (:arvo v-ur-tyyppi))]
