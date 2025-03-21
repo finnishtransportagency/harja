@@ -70,12 +70,21 @@
      :luokka "text-nowrap"
      :leveys 0.1}
 
-    {:otsikko "Liite"
-     :tyyppi :euro
-     :tasaa :oikea
-     :nimi :kustannus
-     :luokka "text-nowrap"
-     :leveys 0.1}]
+    (let [liitteet-test [{:koko 55634,
+                          :kohde 1,
+                          :tyyppi "image/png",
+                          :nimi "324222.png",
+                          :id 11,
+                          :virustarkastettu? true,
+                          :oid 50477}]]
+      {:otsikko "Liite"
+       :nimi :liitteet
+       :tyyppi :komponentti
+       :leveys 0.1
+       :komponentti (fn [rivi]
+                      [liitteet/liitteet-ikoneina
+                       liitteet-test
+                       {:siltatarkastusliite? false}])})]
    rivit])
 
 
