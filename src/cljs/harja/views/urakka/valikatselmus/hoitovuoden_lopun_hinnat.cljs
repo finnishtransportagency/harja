@@ -1,26 +1,12 @@
 (ns harja.views.urakka.valikatselmus.hoitovuoden-lopun-hinnat
-  (:require [reagent.core :as r :refer [atom]]
-            [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.domain.lupaus-domain :as lupaus-domain]
-            [harja.domain.urakka :as urakka]
-            [harja.ui.grid :as grid]
-            [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]
-            [harja.ui.dom :as dom]
+  (:require [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
-            [harja.tiedot.urakka.kulut.yhteiset :as kulut-yhteiset]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
-(defn paatos [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+(defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :hoitovuoden-lopun-tavoite-ja-kattohinta
         paatos-tehty? (or (:id paatos) false)
 
@@ -64,6 +50,4 @@
              #(e! (valikatselmus-tiedot/->PoistaHoitokaudenlopunHintapaatos paatos))]]]
 
           [:div {:style {:padding-bottom "1rem"}}
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos)]]
-          )
-        ])]))
+           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]])])]))

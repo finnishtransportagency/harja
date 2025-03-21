@@ -95,7 +95,7 @@
 
         ;; Jos päätöksessä on virhe, niin näytetään se
         (when (:virhe paatos)
-          [:div [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos)]])
+          [:div [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]])
 
 
         ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös

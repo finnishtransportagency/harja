@@ -1,25 +1,12 @@
 (ns harja.views.urakka.valikatselmus.indeksikorjaus
   (:require [clojure.string :as str]
-            [reagent.core :as r :refer [atom]]
-            [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.domain.lupaus-domain :as lupaus-domain]
-            [harja.domain.urakka :as urakka]
-            [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
-            [harja.tiedot.urakka.kulut.yhteiset :as kulut-yhteiset]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
@@ -36,8 +23,8 @@
      [:div.flex-row
       [:p.laskenta-rivi  "Hoitovuoden päätyttyä lasketaan hoitovuotta edeltävän syyskuun ja hoitovuoden elokuun välisten kuukausien indeksin pistelukujen keskiarvo. Näin laskettua keskiarvoa verrataan hoitovuotta edeltävän elokuun indeksin pistelukuun. Mikäli muutos (ylitys/alitus) on"
        [:strong " suurempi kuin 2,0 %"] ", korjataan hoitovuoden lopun tavoitehintaa 2,0 %:n ylittävällä %-osuudella. Prosenttiosuus lasketaan 0,1 %:n tarkkuudella."]]
-     [:div.flex-row.laskenta-rivi
-      [:div [:strong "Pisteluku, johon keskiarvoa verrataan (" (:alkuperaisen_pisteluvun_kuukausi paatos) ")"]]
+     [:div.flex-row.laskenta-rivi.laskenta-rivi-lukema
+      [:div "Pisteluku, johon keskiarvoa verrataan (" (:alkuperaisen_pisteluvun_kuukausi paatos) ")"]
       [:div [:strong (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1)]]]
      [:div.flex-row.laskenta-rivi-korkeampi
       [:div "Pistelukujen keskiarvon laskenta"]]
@@ -46,7 +33,7 @@
         [:div (str/join " " (reverse (str/split (:kuukausi kuukausi) #"\s+")))]
         [:div (fmt/desimaaliluku-opt (:indeksiluku kuukausi) 1)]])
      (when (not= 12 (count (:hoitokauden_kuukaudet paatos)))
-       [yleiset/info-laatikko :vahva-ilmoitus "Kaikkien kuukausien indeksiarvoja ei ole vielä syötetty!"])
+       [yleiset/info-laatikko :vahva-ilmoitus "Kaikkien kuukausien indeksiarvoja ei ole vielä syötetty!" nil nil {:vari "@gray25"}])
      [:hr.hr-tiivis]
      [:div.flex-row.laskenta-rivi
       [:div [:strong "Keskiarvo"]]
@@ -97,6 +84,7 @@
              (fn [] (modal/nayta! {:otsikko "Laskenta"
                                    :otsikko-muotoilut {:font-size "32px"}
                                    :body-tyyli {:margin-bottom "16px"}
+                                   :content-tyyli {:padding-top "24px"}
                                    :footer [napit/sulje #(modal/piilota!)]}
                       [laskenta-modaali paatos]))
              {:style {:text-decoration :underline}}]]
@@ -108,5 +96,5 @@
            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
             #(e! (valikatselmus-tiedot/->TallennaHoitovuodenlopunIndeksikorjauspaatos paatos))
             #(e! (valikatselmus-tiedot/->PoistaHoitovuodenlopunIndeksikorjauspaatos paatos))]]
-          [:div {:style {:padding-bottom "1rem"}}
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos)]])])]))
+          [:div.muokkaustoiminnot
+           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]])])]))

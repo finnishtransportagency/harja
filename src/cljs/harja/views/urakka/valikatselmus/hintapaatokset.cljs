@@ -98,7 +98,7 @@
         ;; Päätöksenteko napit tai mahdollinen virhe
         (if (:virhe paatos)
           [:div {:style {:padding-bottom "1rem"}}
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos)]]
+           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]]
 
           (if (not paatos-tehty?)
             [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}

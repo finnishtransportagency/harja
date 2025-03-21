@@ -198,5 +198,5 @@
           [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
            #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
            #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]
-          [:div {:style {:padding-bottom "1rem"}}
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos)]])])]))
+          [:div.muokkaustoiminnot
+           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]])])]))
