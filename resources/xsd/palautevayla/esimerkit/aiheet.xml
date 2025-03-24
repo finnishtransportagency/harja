@@ -20,7 +20,7 @@
         <palautevayla>1</palautevayla>
         <mobiilisovellus>0</mobiilisovellus>
         <havainnot>1</havainnot>
-        <channel xsi:nil="true"/>
+        <channel>null</channel>
     </subject>
     <subject>
         <active>0</active>
