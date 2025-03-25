@@ -696,7 +696,7 @@
      [:div.row
       [:div.col-md-12
         (if raportissa?
-          [:div.raportin-toiminnot
+          [:div
            [napit/takaisin "Palaa raporttivalintoihin"
             #(reset! raportit/suoritettu-raportti nil)]
            [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]]
