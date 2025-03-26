@@ -70,13 +70,11 @@
      :luokka "text-nowrap"
      :leveys 0.1}
 
-    (let [liitteet-test [{:koko 55634,
+    (let [liitteet-test [{:koko 63765,
                           :kohde 1,
-                          :tyyppi "image/png",
-                          :nimi "324222.png",
-                          :id 11,
-                          :virustarkastettu? true,
-                          :oid 50477}]]
+                          :tyyppi "image/jpeg",
+                          :nimi "Highway_5_Pal.jpg",
+                          :id 11, :virustarkastettu? true, :oid 34094}]]
       {:otsikko "Liite"
        :nimi :liitteet
        :tyyppi :komponentti
@@ -84,13 +82,15 @@
        :komponentti (fn [rivi]
                       [liitteet/liitteet-ikoneina
                        liitteet-test
-                       {:siltatarkastusliite? false}])})]
+                       {:ikoni [:div.nappi-toissijainen
+                                [ikonit/ikoni-ja-teksti (ikonit/link) "Avaa liite"]]
+                        :siltatarkastusliite? false}])})]
    rivit])
 
 
 (defn- sakot-bonukset-muokkauspaneeli
   "Toteumien muokkauspaneeli / rivin klikkaus"
-  [e! {:keys [lajit]} voi-kirjoittaa? voi-tallentaa? valittu-rivi  alkuaika tyypit]
+  [e! {:keys [lajit]} voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit]
 
   [:div.overlay-oikealla
    [lomake/lomake
@@ -182,7 +182,7 @@
         :teksti-oikealla "EUR"
         :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
         ::lomake/col-luokka "col-xs-6 summa-valinta"})
-     
+
      ;; TODO 
      (let [test-atom (atom nil)
            urakka-id 35

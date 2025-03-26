@@ -198,9 +198,9 @@
   Optiot:
   siltatarkastusliite? Boolean, true kun haetaan siltatarkastuksen liitteitä"
   ;; PENDING Olisipa kiva jos ikoni heijastelisi tiedoston tyyppiä :-)
-  [liite optiot]
+  [liite {:keys [ikoni] :as optiot}]
   [:span
-   [liitelinkki liite (ikonit/file) optiot]
+   [liitelinkki liite (or ikoni (ikonit/file)) optiot]
    [:span " "]])
 
 (defn liitteet-ikoneina
