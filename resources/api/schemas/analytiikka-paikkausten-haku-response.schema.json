@@ -19,7 +19,12 @@
             "multipleOf": 1
           },
           "urakka": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Urakan harja-id."
+          },
+          "urakkatunnus": {
+            "type": "string",
+            "description": "Urakan yksilöivä tunniste. Käytössä esim. Sampossa, Velhossa ja geometria-aineistoissa."
           },
           "poistettu": {
             "type": "boolean"
