@@ -571,6 +571,7 @@ WHERE luotu BETWEEN :alku AND :loppu
 SELECT p.id,
        p."paikkauskohde-id",
        p."urakka-id"               AS urakka,
+       u.urakkanro                 AS urakkatunnus,
        p.poistettu,
        tm.nimi                     AS paikkaustyomenetelma,
        (p.tierekisteriosoite).tie  AS tierekisteriosoitevali_tienumero,
@@ -596,6 +597,7 @@ SELECT p.id,
 FROM paikkaus p
          LEFT JOIN paikkauksen_tienkohta ptk ON p.id = ptk."paikkaus-id"
          LEFT JOIN paikkauskohde_tyomenetelma tm ON p.tyomenetelma = tm.id
+         JOIN urakka u ON p."urakka-id" = u.id
 WHERE p.luotu BETWEEN :alku AND :loppu
    OR p.muokattu BETWEEN :alku AND :loppu;
 
