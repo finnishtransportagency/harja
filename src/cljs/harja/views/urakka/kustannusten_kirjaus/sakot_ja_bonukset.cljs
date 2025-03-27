@@ -81,6 +81,7 @@
        :leveys 0.1
        :komponentti (fn [rivi]
                       [liitteet/liitteet-ikoneina
+                       ;;(println "r: " rivi)
                        liitteet-test
                        {:ikoni [:div.nappi-toissijainen
                                 [ikonit/ikoni-ja-teksti (ikonit/link) "Avaa liite"]]
@@ -89,8 +90,8 @@
 
 
 (defn- sakot-bonukset-muokkauspaneeli
-  "Toteumien muokkauspaneeli / rivin klikkaus"
-  [e! {:keys [lajit]} voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit]
+  "Toteumien luonti / muokkaus"
+  [e! {:keys [lajit uusi-liite liitteet] :as valinnat} voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit]
 
   [:div.overlay-oikealla
    [lomake/lomake
@@ -104,7 +105,7 @@
      :footer [:<>
               [:hr]
               [:div.muokkaus-modal-napit
-               [napit/tallenna "Tallenna" #(println "tallenna") {:disabled (not voi-tallentaa?)}]
+               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi %)) {:disabled (not voi-tallentaa?)}]
                [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]]}
 
     [(lomake/rivi
@@ -121,12 +122,12 @@
 
      (lomake/rivi
        {:otsikko "Laji"
-        :tyyppi :radio-group
-        :vaihtoehto-arvo :luokka ;; TODO 
         :pakollinen? true
         :vayla-tyyli? true
-        :vaihtoehdot (keys lajit)
+        :tyyppi :radio-group
+        :vaihtoehto-arvo :laji
         :vaihtoehto-nayta lajit
+        :vaihtoehdot (keys lajit)
         :validoi [#(when (nil? %) "Anna kustannuksen tyyppi")]})
 
      ;; TODO 
@@ -184,21 +185,19 @@
         ::lomake/col-luokka "col-xs-6 summa-valinta"})
 
      ;; TODO 
-     (let [test-atom (atom nil)
-           urakka-id 35
-           liitteet {}
-           uusi-liite {}]
+     (let []
        (lomake/rivi
          {:otsikko "Liitteet"
           :nimi :liitteet
           :tyyppi :komponentti
-          :komponentti (fn [_]
-                         [liitteet/liitteet-ja-lisays urakka-id liitteet
-                          {:uusi-liite-atom (r/wrap uusi-liite
-                                              #(swap! test-atom assoc :uusi-liite %))
+          :komponentti (fn [r]
+                         [liitteet/liitteet-ja-lisays
+                          @nav/valittu-urakka-id
+                          liitteet
+                          {:uusi-liite-atom uusi-liite
                            :uusi-liite-teksti "Lisää liite"
                            :salli-poistaa-lisatty-liite? true
-                           :poista-lisatty-liite-fn #(swap! test-atom dissoc :uusi-liite)
+                           ;:poista-lisatty-liite-fn #(e! (tiedot/->PoistaLiite r))
                            :salli-poistaa-tallennettu-liite? false}])}))]
     valittu-rivi]])
 
@@ -209,19 +208,20 @@
         ;; TODO 
         voi-kirjoittaa? true
         voi-tallentaa? true
-        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)
         grid (sakot-bonukset-grid e! rivit)
-        laji-suodatin [kentat/tee-kentta {:tyyppi :radio-group
-                                          :space-valissa? true
-                                          :vaihtoehdot [:kaikki :sakko :bonus]
-                                          :vayla-tyyli? true
+        lisaa-uusi-fn #(e! (tiedot/->AvaaModal nil))
+        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)
+        laji-suodatin [kentat/tee-kentta {:vayla-tyyli? true
                                           :nayta-rivina? true
-                                          :valitse-fn #(e! (tiedot/->ValitseLaji %))
-                                          :vaihtoehto-nayta tiedot/laji-valinnat}
+                                          :space-valissa? true
+                                          :tyyppi :radio-group
+                                          :vaihtoehdot [:kaikki :sakko :bonus]
+                                          :vaihtoehto-nayta tiedot/laji-valinnat
+                                          :valitse-fn #(e! (tiedot/->ValitseLaji %))}
                        (atom valittu-laji)]]
 
     (yhteiset/nakyma-body "Sakot ja bonukset"
-      e! app
+      e! lisaa-uusi-fn
       rivit valinnat muokataan valittu-rivi
       haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid laji-suodatin)))
 
@@ -229,9 +229,7 @@
 (defn sakot-ja-bonukset* [e! _app]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan
-      #(do
-         (e! (tiedot/->HaeTiedot))))
+    (komp/sisaan #(e! (tiedot/->HaeTiedot)))
     (fn [e! app] [sakot-bonukset-listaus e! app])))
 
 

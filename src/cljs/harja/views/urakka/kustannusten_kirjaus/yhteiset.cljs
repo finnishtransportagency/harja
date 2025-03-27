@@ -65,8 +65,8 @@
 (defn nakyma-body
   "Muut kustannukset, Sakot ja bonukset 
   Välilehdet lähes täysin samannäköisiä, tehty molemmille yhteinen komponentti"
-  [otsikko
-   e! app
+  [otsikko e!
+   lisaa-uusi-fn
    rivit valinnat muokataan valittu-rivi
    haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid laji-suodatin]
 
@@ -96,7 +96,7 @@
 
       ;; Lisää uusi 
       [:div
-       [napit/uusi "Lisää uusi" #(e! (println "fn")) {:disabled false}]]]
+       [napit/uusi "Lisää uusi" lisaa-uusi-fn {:disabled false}]]]
 
      ;; Muokkauspaneeli
      (when muokataan muokkauspaneeli)

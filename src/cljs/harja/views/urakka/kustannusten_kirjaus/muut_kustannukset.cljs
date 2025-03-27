@@ -151,11 +151,12 @@
         ;; TODO 
         voi-kirjoittaa? true
         voi-tallentaa? true
-        muokkauspaneeli (muut-kustannukset-muokkauspaneeli e! valinnat voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)
-        grid (muut-kustannukset-grid e! rivit)]
+        grid (muut-kustannukset-grid e! rivit)
+        lisaa-uusi-fn #(e! (tiedot/->AvaaKustannusModal nil))
+        muokkauspaneeli (muut-kustannukset-muokkauspaneeli e! valinnat voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)]
 
     (yhteiset/nakyma-body "Muut kustannukset"
-      e! app
+      e! lisaa-uusi-fn
       rivit valinnat muokataan valittu-rivi
       haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid nil)))
 
