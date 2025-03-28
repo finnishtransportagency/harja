@@ -1,5 +1,7 @@
 (ns harja.kyselyt.tieverkko
-  (:require [jeesql.core :refer [defqueries]]
+  (:require [clojure.set :as set]
+            [jeesql.core :refer [defqueries]]
+            [harja.domain.tierekisteri :as tr-domain]
             [harja.kyselyt.konversio :as konv]))
 
 (defqueries "harja/kyselyt/tieverkko.sql"
@@ -113,17 +115,14 @@
   "Pätkitään funkkari osiin, jotta se on helpommin testattavissa. Tämä laskee siis
   tien pätkälle pituudet riippuen siitä, miten osan-pituudet listassa on annettu"
   [osan-pituudet kohde]
-  (let [varakohde kohde
-        kohde (if (and (not (nil? (:aosa kohde))) (not (nil? (:losa kohde)))
-                    (or (> (:aosa kohde) (:losa kohde))
-                      (and (= (:aosa kohde) (:losa kohde))
-                        (> (:aet kohde) (:let kohde)))))
-                (-> kohde
-                  (assoc :aosa (:losa varakohde))
-                  (assoc :losa (:aosa varakohde))
-                  (assoc :aet (:let varakohde))
-                  (assoc :let (:aet varakohde)))
-                kohde)]
+  (let [avain-muunnos {:aosa :tr-alkuosa
+                       :aet :tr-alkuetaisyys
+                       :losa :tr-loppuosa
+                       :let :tr-loppuetaisyys}
+        ;; käännetään kohde tarvittaessa oikein päin, avaimia hieman edestakaisin muunnellen
+        kohde-muunnettavaksi (set/rename-keys kohde avain-muunnos)
+        kohde (merge kohde (set/rename-keys (tr-domain/nouseva-jarjestys kohde-muunnettavaksi)
+                             (set/map-invert avain-muunnos)))]
     ;; Pieni validointi kohteen arvoille
     (when (and (not (nil? (:aosa kohde))) (not (nil? (:losa kohde)))
             (<= (:aosa kohde) (:losa kohde)))
