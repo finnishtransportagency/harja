@@ -121,8 +121,8 @@
                        :let :tr-loppuetaisyys}
         ;; käännetään kohde tarvittaessa oikein päin, avaimia hieman edestakaisin muunnellen
         kohde-muunnettavaksi (set/rename-keys kohde avain-muunnos)
-        kohde (merge kohde (set/rename-keys (tr-domain/nouseva-jarjestys kohde-muunnettavaksi)
-                             (set/map-invert avain-muunnos)))]
+        kohde (set/rename-keys (tr-domain/tr-osoite-kasvusuuntaan kohde-muunnettavaksi)
+                (set/map-invert avain-muunnos))]
     ;; Pieni validointi kohteen arvoille
     (when (and (not (nil? (:aosa kohde))) (not (nil? (:losa kohde)))
             (<= (:aosa kohde) (:losa kohde)))

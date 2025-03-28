@@ -261,9 +261,13 @@
 
 (defn tr-osoite-kasvusuuntaan [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tr-osoite}]
   (let [kasvava-osoite {:tr-alkuosa (if (> tr-alkuosa tr-loppuosa) tr-loppuosa tr-alkuosa)
-                        :tr-alkuetaisyys (if (> tr-alkuosa tr-loppuosa) tr-loppuetaisyys tr-alkuetaisyys)
+                        :tr-alkuetaisyys (if (or (> tr-alkuosa tr-loppuosa)
+                                               (and (= tr-alkuosa tr-loppuosa)
+                                                 (< tr-loppuetaisyys tr-alkuetaisyys))) tr-loppuetaisyys tr-alkuetaisyys)
                         :tr-loppuosa (if (> tr-alkuosa tr-loppuosa) tr-alkuosa tr-loppuosa)
-                        :tr-loppuetaisyys (if (> tr-alkuosa tr-loppuosa) tr-alkuetaisyys tr-loppuetaisyys)}]
+                        :tr-loppuetaisyys (if (or (> tr-alkuosa tr-loppuosa)
+                                                (and (= tr-alkuosa tr-loppuosa)
+                                                  (< tr-loppuetaisyys tr-alkuetaisyys))) tr-alkuetaisyys tr-loppuetaisyys)}]
     ;; Palautetaan korjattu tr-osoite. Jos mapissa oli muita avaimia, ne saa jäädä
     (merge tr-osoite kasvava-osoite)))
 
