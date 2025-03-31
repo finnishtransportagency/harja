@@ -41,13 +41,21 @@
           [:div
            [:div.flex-row {:style {:margin-bottom "3px"}}
             [:div "Toteuma"]
-            [:div (:toteutuneet_pisteet paatos)]]
+            [:div.laskenta-rivi-lukema (:toteutuneet_pisteet paatos)]]
            [:div.flex-row {:style {:margin-bottom "3px"}}
             [:div "Luvattu yhteispistemäärä"]
-            [:div (:luvatut_pisteet paatos)]]
+            [:div.laskenta-rivi-lukema (:luvatut_pisteet paatos)]]
            [:div.flex-row {:style {:margin-bottom "3px"}}
             [:div "Tulos"]
-            [:div (if (= "bonus" tyyppi) (str "+" ylitetyt-pisteet) (str "-" alitetut-pisteet))]]])
+            [:div.laskenta-rivi-lukema (cond
+                                         (= "bonus" tyyppi)
+                                         (str "+" ylitetyt-pisteet)
+
+                                         (= (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos))
+                                         (str "0")
+
+                                         :else
+                                         (str "-" alitetut-pisteet))]]])
 
         [:div.lupaukset-linkki
          [harja.ui.yleiset/linkki "Siirry lupauksiin"
@@ -61,15 +69,15 @@
             (cond
               (= "sanktio" tyyppi)
               [:div
-               [:p (str "Luvatun yhteispistemäärän alittaminen johtaa kutakin alittuvaa pistetä kohden " (:sanktioprosentti paatos) " %
-           sanktioon kyseisen hoitokauden tarjouksen mukaisesta tavoitehinnasta.")]
-               [:p.paatos-laskelma (str "Lupaussanktio = " alitetut-pisteet " * " (/ (:sanktioprosentti paatos) 100) " * " (:tarjous_tavoitehinta paatos) " = " ) [:strong (fmt/euro-opt (:lupaussanktio paatos))]]]
+               [:p (str "Luvatun yhteispistemäärän alittaminen johtaa kutakin alittuvaa pistettä kohden " (:sanktioprosentti paatos) " %
+           sanktioon kyseisen hoitovuoden tarjouksen mukaisesta tavoitehinnasta.")]
+               [:p.paatos-laskelma (str "Lupaussanktio = " alitetut-pisteet " * " (/ (:sanktioprosentti paatos) 100) " * " (:tarjous_tavoitehinta paatos) " = " ) [:span.laskenta-rivi-lukema (fmt/euro-opt (:lupaussanktio paatos))]]]
               (= "bonus" tyyppi)
               ^{:key (str "lupaus-" (gensym))}
               [:div
                [:p (str "Luvatun yhteispistemäärän ylittäminen kutakin ylittävää pistettä kohden tuottaa " (:bonusprosentti paatos) " %
-           bonuksen kyseisen hoitokauden tarjouksen mukaisesta tavoitehinnasta.")]
-               [:p.paatos-laskelma (str "Lupausbonus = " ylitetyt-pisteet " * " (/ (:bonusprosentti paatos) 100) " * " (:tarjous_tavoitehinta paatos) " = " ) [:strong (fmt/euro-opt (:lupausbonus paatos))]]]
+           bonuksen kyseisen hoitovuoden tarjouksen mukaisesta tavoitehinnasta.")]
+               [:p.paatos-laskelma (str "Lupausbonus = " ylitetyt-pisteet " * " (/ (:bonusprosentti paatos) 100) " * " (:tarjous_tavoitehinta paatos) " = " ) [:span.laskenta-rivi-lukema (fmt/euro-opt (:lupausbonus paatos))]]]
               :else
               [:div ""])]
 
@@ -79,19 +87,19 @@
               [:<>
                [:div
                 [:div "Lupausbonus:"]
-                [:div {:style {:font-size "20px"}} [:strong (fmt/euro-opt (:lupausbonus paatos))]
+                [:div [:span.otsikko_lukema.laskenta-rivi-lukema (fmt/euro-opt (:lupausbonus paatos))]
                  (when (not (nil? (:indeksikorotus paatos)))
                    (str " (+ indeksi  " (fmt/euro-opt (:indeksikorotus paatos)) " )"))]]]
               (= "sanktio" tyyppi)
               [:<>
                [:div
                 [:div "Lupaussanktio:"]
-                [:div [:strong {:style {:font-size "20px"}} (fmt/euro-opt (:lupaussanktio paatos))]
+                [:div [:span.otsikko_lukema.laskenta-rivi-lukema (fmt/euro-opt (:lupaussanktio paatos))]
                  (when (not (nil? (:indeksikorotus paatos)))
                    (str " (+ indeksi  " (fmt/euro-opt (:indeksikorotus paatos)) " )"))]]]
-              (= :taytetty tyyppi)
+              (= (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos))
               [:<>
-               [:h2 "Ei bonusta eikä sanktiota"]])]])
+               [:h2.bonus-sanktio "Ei bonusta eikä sanktiota"]])]])
 
         ;; Jos päätöksessä on virhe, niin näytetään se
         (when (:virhe paatos)

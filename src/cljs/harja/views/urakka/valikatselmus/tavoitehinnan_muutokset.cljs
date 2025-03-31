@@ -1,8 +1,6 @@
 (ns harja.views.urakka.valikatselmus.tavoitehinnan-muutokset
   (:require [reagent.core :as r :refer [atom]]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.domain.lupaus-domain :as lupaus-domain]
-            [harja.domain.urakka :as urakka]
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
@@ -12,11 +10,7 @@
             [harja.ui.dom :as dom]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.pvm :as pvm]
-            [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
-            [harja.tiedot.urakka.kulut.yhteiset :as kulut-yhteiset]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
 (defn tavoitehinnan-oikaisut-taulukko
@@ -42,7 +36,7 @@
                                                                 (+ yhteensa (get hoitokauden-oikaisu :harja.domain.kulut.valikatselmus/summa)))
                                                               0
                                                               (vals @hoitokauden-oikaisut-atom))))]
-    [:div
+    [:div.tavoitehinnan-muutokset
      [grid/muokkaus-grid
       (merge {:tyhja "Ei muutoksia tavoitehintaan"
               :voi-kumota? false
@@ -151,7 +145,6 @@
 
 (defn tavoitehinnan-muutokset [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset tavoitehinnan-muutokset]
   (let [paatos-avain :tavoitehinnan-muutokset
-        paatos-tehty? (boolean (:id paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         paatos-tehty? (boolean (:id paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
@@ -186,9 +179,8 @@
           :paivita-oikaisu-fn #(e! (valikatselmus-tiedot/->PaivitaTavoitehinnanOikaisut %1 %2))}]
 
         (when (and paatos-tehty? voi-muokata?)
-          [:div.oikaisu-paatos-varoitus
-           [ikonit/harja-icon-status-alert]
-           [:span "Tavoitehintaan liittyvä päätös on tallennettu. Jos aiot tehdä  uusia tavoitehinnan muutoksia, kumoa päätös ensin."]])
+          [:div.valja
+           [yleiset/info-laatikko :vahva-ilmoitus "Tavoitehintaan liittyvä päätös on tallennettu. Jos aiot tehdä  uusia tavoitehinnan muutoksia, kumoa päätös ensin." nil nil {:vari "@gray25"}]])
 
         (when kattohinnan-oikaisu-mahdollinen?
           [kattohinnan-oikaisu e! kattohinta tavoitehinta paatos-tehty?])

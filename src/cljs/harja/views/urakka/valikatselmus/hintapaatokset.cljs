@@ -1,28 +1,18 @@
 (ns harja.views.urakka.valikatselmus.hintapaatokset
   (:require [clojure.string :as str]
             [reagent.core :as r :refer [atom]]
-            [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.domain.lupaus-domain :as lupaus-domain]
-            [harja.domain.urakka :as urakka]
-            [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
-            [harja.tiedot.urakka.kulut.yhteiset :as kulut-yhteiset]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.validointi :as validointi]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
-(defn tavoitehinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+(defn tavoitehinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :tavoitehinta-ylitys
         paatos-tehty? (or (:id paatos) false)
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
@@ -36,7 +26,7 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
-         [:div [:h3 "Tavoitehinnan ylitys"]]
+         [:div [:h3.matala "Tavoitehinnan ylitys"]]
          [:div.otsikko_lukema (fmt/euro-opt false (:ylityksen_maara paatos))]]
        [:div.flex-row.summa_rivi_ylin
         [:div (str "Tilaaja maksaa (" (:tilaajan_prosentti paatos) "%)")]
@@ -47,7 +37,7 @@
 
        ;; Päätöksenteko napit
        (if (not paatos-tehty?)
-         [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
+         [:div.paatos-toiminto
           (when on-oikeudet?
             [napit/yleinen-ensisijainen "Tallenna päätös"
              #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanYlitysPaatos paatos))
@@ -55,18 +45,18 @@
               :disabled (or
                           tallennus-kesken?
                           (not voi-muokata?))}])]
-         [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
+         [:div.paatos-toiminto
           (when on-oikeudet?
             [napit/nappi
              "Peru päätös"
              #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos))
-             {:luokka "nappi-toissijainen napiton-nappi"
+             {:luokka "nappi-toissijainen"
               :ikoni [ikonit/harja-icon-action-undo]
               :disabled (or
                           tallennus-kesken?
                           (not voi-muokata?))}])])])]))
 
-(defn tavoitehinnan-alitus [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+(defn tavoitehinnan-alitus [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :tavoitehinta-alitus
         paatos-tehty? (boolean (:id paatos))
         paatoksen-tiedot (merge paatos
@@ -82,26 +72,26 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
-         [:div [:h3 "Tavoitehinnan alitus"]]
+         [:div [:h3.matala "Tavoitehinnan alitus"]]
          [:div.otsikko_lukema (fmt/euro-opt false (:alituksen_maara paatos))]]
-        [:div.flex-row.summa_rivi_ylin
+        [:div.flex-row
          [:div (str "Tavoitepalkkio (" (:tavoitepalkkion_maksuprosentti paatos) "%)")]
          [:div.rivi_lukema (fmt/euro-opt false (:tavoitepalkkio paatos))]]
-        [:div.flex-row.summa_rivi {:style {:margin-top "-5px"}}
+        [:div.flex-row
          [:div.small-text.lisays.harmaa "max. 3% hoitovuoden alun indeksikorjatusta tavoitehinnasta."]]
         ;; Näytetään siirron määrä vain, jos sitä on. Esim viimeisenä vuotena ei siirretä mitään.
         (when (:siirron_maara paatos)
-          [:div.flex-row.summa_rivi_alin
+          [:div.flex-row.summa_rivi_korkea
            [:div "Siirretään seuraavan vuoden hankintakustannuksiin alennukseksi"]
            [:div.rivi_lukema (str "-" (fmt/euro-opt false(:siirron_maara paatos)))]])
 
         ;; Päätöksenteko napit tai mahdollinen virhe
         (if (:virhe paatos)
-          [:div {:style {:padding-bottom "1rem"}}
+          [:div.muokkaustoiminnot
            [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]]
 
           (if (not paatos-tehty?)
-            [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
+            [:div.paatos-toiminto
              (when on-oikeudet?
                [napit/yleinen-ensisijainen "Tallenna päätös"
                 #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanAlitusPaatos paatoksen-tiedot))
@@ -109,12 +99,12 @@
                  :disabled (or
                              tallennus-kesken?
                              (not voi-muokata?))}])]
-            [:div {:style {:flex-grow 1 :padding-top "1rem" :padding-bottom "1rem"}}
+            [:div.paatos-toiminto
              (when on-oikeudet?
                [napit/nappi
                 "Peru päätös"
                 #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanAlitusPaatos paatoksen-tiedot))
-                {:luokka "nappi-toissijainen napiton-nappi"
+                {:luokka "nappi-toissijainen"
                  :ikoni [ikonit/harja-icon-action-undo]
                  :disabled (or
                              tallennus-kesken?
@@ -137,7 +127,7 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
-         [:div [:h3 "Kattohinnan ylitys"]]
+         [:div [:h3.matala "Kattohinnan ylitys"]]
          [:div.otsikko_lukema (fmt/euro-opt false (:ylityksen_maara paatos))]]
         (when (not (:viimeinen_hoitokausi paatos))
           [:div.harmaa-tausta
@@ -207,7 +197,7 @@
              [napit/nappi
               "Peru päätös"
               #(e! (valikatselmus-tiedot/->PoistaKattohinnanYlitysPaatos paatos))
-              {:luokka "nappi-toissijainen napiton-nappi"
+              {:luokka "nappi-toissijainen"
                :ikoni [ikonit/harja-icon-action-undo]
                :disabled (or
                            tallennus-kesken?

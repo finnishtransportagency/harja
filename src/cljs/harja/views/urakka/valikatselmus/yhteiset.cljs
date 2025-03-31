@@ -52,8 +52,8 @@
     [:div.paatos-toiminto
      (when on-oikeudet?
        [napit/nappi
-        "Kumoa päätös"
+        "Peru päätös"
         poista-paatos-fn
-        {:luokka "nappi-toissijainen napiton-nappi"
+        {:luokka "nappi-toissijainen"
          :ikoni [ikonit/harja-icon-action-undo]
          :disabled (or tallennus-kesken? (not voi-muokata?))}])]))

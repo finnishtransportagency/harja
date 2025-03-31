@@ -224,6 +224,7 @@ div.valikatselmus-yhteenveto {
   background-color: @gray250;
   .paatos-komponentti-otsikko-row {
     display: flex;
+    height: 30px;
     justify-content: left;
     margin-bottom: @valistys-24;
     margin-left: 0;
@@ -238,7 +239,7 @@ div.valikatselmus-yhteenveto {
   .paatos-komponentti-otsikko {
     margin-top: @valistys-6;
     margin-bottom: @valistys-6;
-    font-size: 1.5rem;
+    font-size: 20px;
     font-weight: 600;
   }
   .paatos-badge {
@@ -249,7 +250,7 @@ div.valikatselmus-yhteenveto {
   }
   .lupaukset-linkki {
     flex-grow: 1;
-    padding: @valistys-16 0 @valistys-24 0;
+    padding: @valistys-12 0 @valistys-24 0;
     text-align: left;
   }
   .paatos-laskelma {
@@ -360,6 +361,15 @@ div.valikatselmus-yhteenveto {
     margin-top: @valistys-4;
     margin-bottom: @valistys-12;
   }
+  .matala {
+    margin-top: 0;
+  }
+  h2.bonus-sanktio {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 24px;
+  }
   .alempi-otsikko {
     margin-top: @valistys-8;
     margin-bottom: 0;
@@ -393,7 +403,12 @@ div.valikatselmus-yhteenveto {
   .summa_rivi_alin {
     line-height: 24px;
     padding-top: @valistys-4;
-    padding-bottom: 8px;
+    padding-bottom: @valistys-8;
+  }
+  .summa_rivi_korkea {
+    line-height: 24px;
+    padding-top: @valistys-4;
+    padding-bottom: 0;
   }
   .linkki_rivi {
     line-height: 24px;
@@ -521,4 +536,13 @@ div.valikatselmus-yhteenveto {
 }
 .erillinen {
   margin-bottom: 1.5rem;
+}
+.valja {
+  margin-top: 1.5rem;
+}
+.tavoitehinnan-muutokset {
+  .panel-heading {
+    margin: 0;
+    padding: 0;
+  }
 }

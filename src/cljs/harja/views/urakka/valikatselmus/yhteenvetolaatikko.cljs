@@ -83,9 +83,9 @@
         hoidonjohtopalkkion-muutos (or (arvo-paatoksesta hoidonjohtopalkkiopaatos :hoidonjohtopalkkio_muutos) 0)]
     [:div.valikatselmus-yhteenveto.elevation-2
      [:h2 [:span "Yhteenveto"]]
-     [:div.rivi [:span.bold "Hoitokauden lopun tavoitehinta"]
+     [:div.rivi [:span.bold "Hoitovuoden lopun tavoitehinta"]
       [:span (fmt/euro-opt oikaistu-tavoitehinta)]]
-     [:div.rivi [:span.bold "Hoitokauden lopun kattohinta"]
+     [:div.rivi [:span.bold "Hoitovuoden lopun kattohinta"]
       [:span (fmt/euro-opt oikaistu-kattohinta)]]
 
      [:h3 [:span "Tavoitehintaan kuuluvat toteutuneet kustannukset"]]
