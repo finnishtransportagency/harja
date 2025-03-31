@@ -55,6 +55,7 @@
   [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara]
   [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto]
   [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu]
+  [harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
@@ -103,7 +104,7 @@
     :kuvaus-tarkenne "Laskutusyhteenveto (työmaakokous)"
     :suorita      #'harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa/suorita
     :urakkatyyppi #{:teiden-hoito}}
-   
+
    {:nimi         :tyomaapaivakirja-nakyma
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :kuvaus       "Työmaapäiväkirja"
@@ -386,7 +387,7 @@
     :kuvaus       "Liikennetapahtumat"
     :suorita      #'harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat/suorita
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}
-   
+
    {:nimi         :kanavien-hairiotilanteet
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"urakka"}
@@ -452,7 +453,20 @@
     :kuvaus-tarkenne "Paikkausten yhteenveto MPU"
     :kuvaus       "MPUPaikkaustenyhteenveto"
     :urakkatyyppi #{:paallystys}
-    :sopimustyyppi #{:mpu}}])
+    :sopimustyyppi #{:mpu}}
+
+   ;; TODO .. 
+   {:nimi         :tiemerkinta-sakot-bonukset
+    :konteksti    #{}
+    :kuvaus       "Tiemerkintä - Sakot ja bonukset"
+    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/sakot-ja-bonukset
+    :urakkatyyppi urakka-domain/kanava-urakkatyypit}
+
+   {:nimi         :tiemerkinta-muut-kustannukset
+    :konteksti    #{}
+    :kuvaus       "Tiemerkintä - Muut kustannukset"
+    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/muut-kustannukset
+    :urakkatyyppi urakka-domain/kanava-urakkatyypit}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))

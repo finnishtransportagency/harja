@@ -81,7 +81,9 @@
    ["vastaanottotarkastusraportti" "Vastaanottotarkastusraportti"]
    ["kanavien-muutos-ja-lisatyot" "Kanavien muutos-ja lisätyöt"]
    ["kanavien-laskutusyhteenveto" "Kanavien laskutusyhteenveto"]
-   ["kanavien-liikennetapahtumat" "Kanavien liikennetapahtumat"]])
+   ["kanavien-liikennetapahtumat" "Kanavien liikennetapahtumat"]
+   ["tiemerkinta-sakot-bonukset" "Tiemerkintä - Sakot ja bonukset"]
+   ["tiemerkinta-muut-kustannukset" "Tiemerkintä - Muut kustannukset"]])
 
 (defn raportin-nimi-fmt [vaihtoehdot tunniste]
   (first (keep #(when (= (first %)
