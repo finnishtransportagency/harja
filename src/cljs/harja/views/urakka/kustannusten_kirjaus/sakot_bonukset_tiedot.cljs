@@ -47,7 +47,7 @@
 (defrecord MuokkaaRivia [rivi])
 (defrecord SuljeMuokkaus [])
 (defrecord ValitseLaji [rivi])
-(defrecord TallennaRivi [rivi uusi-liite])
+(defrecord TallennaRivi [rivi])
 (defrecord TallennusOnnistui [vastaus])
 (defrecord TallennusEpaonnistui [vastaus])
 (defrecord UusiLiite [liite])
@@ -67,6 +67,7 @@
 
 
 (defn hae-tiedot
+  ;; TODO suodattimet
   [{:keys [valinnat] :as app}]
   (tuck-apurit/post! app :hae-urakan-sanktiot-ja-bonukset
     {:urakka-id @nav/valittu-urakka-id
@@ -127,28 +128,42 @@
     (println "Liite:: " liite)
     (assoc-in app [:valittu-rivi :laatupoikkeama :uusi-liite] liite))
 
-
-
   TallennaRivi
-  (process-event [{:keys [rivi uusi-liite]} app]
-    (let [;; _ (println "Tall: " rivi " liite:  " uusi-liite " \n \n")
-          ;;nyt (pvm/nyt)
-          ;;default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)
-          
-          _ (println "Rivi : " rivi)
-          _ (println "Rivi id: " (-> rivi :yllapitokohde :id))
-          _ (println "Param: " (assoc
-                                 (:laatupoikkeama rivi)
-                                 :urakka @nav/valittu-urakka-id
-                                 :yllapitokohde (-> rivi :yllapitokohde :id)))]
-      
+  (process-event [{:keys [rivi]} app]
+    (let [yllapitokohde-id (-> rivi :yllapitokohde :id)
+          {:keys [laji id summa indeksi perintapvm toimenpideinstanssi kasittelyaika kasittelytapa lomake-selite laatupoikkeama]} rivi
+          laatupoikkeama (assoc-in laatupoikkeama [:paatos :perustelu] lomake-selite)
+          parametrit (cond
+                       ;; Sakot 
+                       (= laji :yllapidon_sakko)
+                       {:sanktio        (dissoc rivi :laatupoikkeama :yllapitokohde)
+                        :laatupoikkeama (assoc
+                                          laatupoikkeama
+                                          :urakka @nav/valittu-urakka-id
+                                          :yllapitokohde yllapitokohde-id)
+                        :hoitokausi @u/valittu-hoitokausi}
+
+                       ;; Bonukset
+                       (= laji :yllapidon_bonus)
+                       {:sanktio {:id id
+                                  :laji :yllapidon_bonus
+                                  :suorasanktio true
+                                  :summa summa
+                                  :indeksi indeksi
+                                  :perintapvm perintapvm
+                                  :toimenpideinstanssi toimenpideinstanssi}
+                        :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                                         :urakka @nav/valittu-urakka-id
+                                         :yllapitokohde yllapitokohde-id
+                                         :aika kasittelyaika
+                                         :paatos {:paatos "sanktio"
+                                                  :perustelu lomake-selite
+                                                  :kasittelyaika kasittelyaika
+                                                  :kasittelytapa kasittelytapa}}
+                        :hoitokausi @u/valittu-hoitokausi})]
+      ;; ->>
       (tuck-apurit/post! app :tallenna-suorasanktio
-        {:sanktio        (dissoc rivi :laatupoikkeama :yllapitokohde)
-         :laatupoikkeama (assoc
-                           (:laatupoikkeama rivi)
-                           :urakka @nav/valittu-urakka-id
-                           :yllapitokohde (-> rivi :yllapitokohde :id))
-         :hoitokausi @u/valittu-hoitokausi}
+        parametrit
         {:onnistui ->TallennusOnnistui
          :epaonnistui ->TallennusEpaonnistui})
       (assoc app :muokataan false)))
@@ -167,14 +182,15 @@
 
   MuokkaaRivia
   (process-event [{:keys [rivi]} app]
-    (-> app
-      (update :valittu-rivi merge rivi)))
+    (update app :valittu-rivi merge rivi))
 
   AvaaModal
   (process-event [{:keys [rivi]} app]
     (-> app
       (assoc :muokataan true)
-      (assoc :valittu-rivi rivi)))
+      (assoc :valittu-rivi rivi)
+      (assoc-in [:valittu-rivi :lomake-selite]
+        (or (-> rivi :lisatieto) (-> rivi :laatupoikkeama :paatos :perustelu)))))
 
   SuljeMuokkaus
   (process-event [_ app]

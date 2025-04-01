@@ -51,7 +51,7 @@
 
     {:otsikko "Selite"
      :tyyppi :komponentti
-     :komponentti (comp str :perustelu :paatos :laatupoikkeama)
+     :komponentti #(or (:lisatieto %) (-> % :laatupoikkeama :paatos :perustelu))
      :luokka "text-nowrap"
      :leveys 0.15}
 
@@ -77,7 +77,7 @@
 
 (defn- sakot-bonukset-muokkauspaneeli
   "Toteumien luonti / muokkaus"
-  [e! {:keys [lajit] :as valinnat} {:keys [uusi-liite] :as valittu-rivi} kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit]
+  [e! {:keys [lajit] :as valinnat} valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -90,7 +90,7 @@
      :footer [:<>
               [:hr]
               [:div.muokkaus-modal-napit
-               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi uusi-liite)) {:disabled (not voi-tallentaa?)}]
+               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi)) {:disabled (not voi-tallentaa?)}]
                [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]]}
 
     [(lomake/rivi
@@ -127,12 +127,12 @@
 
      (lomake/rivi
        {:otsikko "Selite"
-        :hae #(or (:lisatieto %) (get-in % [:laatupoikkeama :paatos :perustelu]))
+        :nimi :lomake-selite
         :tyyppi :text
         :pakollinen? true
+        :salli-kirjoitus? true
         :piilota-checkbox? true
         :piilota-dropdown? true
-        :salli-kirjoitus? true
         :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
         ::lomake/col-luokka "leveys-kokonainen"})
 
