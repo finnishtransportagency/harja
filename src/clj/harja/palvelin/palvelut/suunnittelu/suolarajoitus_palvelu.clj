@@ -509,34 +509,6 @@
                  alueet)]
     alueet))
 
-(defn siirra-urakan-pohjavesialueet [db user tiedot]
-  (log/debug "siirra-urakan-pohjavesialueet :: tiedot" tiedot)
-
-  (let [urakkaid (:urakkaid tiedot)
-        urakan-pohjavesialueet (:pohjavesialueet tiedot)
-        _ (doseq [pohjavesialue urakan-pohjavesialueet]
-            (let [pohjavesialueen-vuosi (:hoitokauden-alkuvuosi pohjavesialue)
-
-                  tallennettava-suolarajoitus {:hoitokauden-alkuvuosi pohjavesialueen-vuosi
-                                               :kopioidaan-tuleville-vuosille? true
-                                               :urakka_id urakkaid
-                                               :tie (:tie pohjavesialue)
-                                               :aosa (:aosa pohjavesialue)
-                                               :aet (:aet pohjavesialue)
-                                               :losa (:losa pohjavesialue)
-                                               :let (:let pohjavesialue)
-                                               :suolarajoitus (:talvisuolaraja pohjavesialue)
-                                               :formiaatti (if (= 0 (:talvisuolaraja pohjavesialue)) true false)
-                                               :kayttaja_id (:luoja pohjavesialue)}
-                  tr-tiedot (tierekisterin-tiedot db tallennettava-suolarajoitus)
-                  tallennettava-suolarajoitus (-> tallennettava-suolarajoitus
-                                                (assoc :pituus (:pituus tr-tiedot))
-                                                (assoc :ajoratojen_pituus (:ajoratojen_pituus tr-tiedot)))]
-              ;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
-              (tallenna-suolarajoitus db user tallennettava-suolarajoitus)))]
-    (log/info (format "siirra-urakan-pohjavesialueet :: urakkaid %s" urakkaid))
-
-    urakan-pohjavesialueet))
 
 (defn tarkista-onko-suolatoteumia [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user (:urakka-id tiedot))
@@ -563,7 +535,7 @@
 
     ;; Tieosoitteen perusteella lasketaan ajoratojen pituus, reitin pituus sekä päätellään pohjavesialue/alueet
     (julkaise-palvelu (:http-palvelin this)
-      :tierekisterin-tiedot
+      :tieosoitteen-ja-ajoratojen-pituudet
       (fn [user tiedot]
         (hae-tierekisterin-tiedot (:db this) user tiedot)))
 
@@ -608,7 +580,7 @@
       :hae-suolarajoitukset
       :tallenna-suolarajoitus
       :poista-suolarajoitus
-      :tierekisterin-tiedot
+      :tieosoitteen-ja-ajoratojen-pituudet
       :hae-talvisuolan-kayttorajat
       :tallenna-talvisuolan-kayttoraja
       :tallenna-rajoitusalueen-sanktio

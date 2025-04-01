@@ -255,7 +255,7 @@
         tierekisteriosoite {:tie 20 :aosa 4 :aet 0 :losa 4 :let 50}
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tierekisterin-tiedot
+                   :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 50 (:pituus pituudet)))
     (is (= 50 (:ajoratojen_pituus pituudet)))))
@@ -265,7 +265,7 @@
         tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 4 :let 4100}
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tierekisterin-tiedot
+                   :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 100 (:pituus pituudet)))
     (is (= 111 (:ajoratojen_pituus pituudet)))))
@@ -276,7 +276,7 @@
         ;; tie 20, osan 4 pituus on yht: 5752 josta loput 1667m on kahta ajorataa, se vaihtuu kahdeksi ajoradaksi kohdassa 4089
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tierekisterin-tiedot
+                   :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 1752 (:pituus pituudet)))
     (is (= 3415 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
@@ -287,13 +287,13 @@
         tieosoite {:tie 20 :aosa 4 :aet 118 :losa 4 :let 318}
         suolarajoitus (assoc tieosoite :urakka-id urakka-id)
         pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tierekisterin-tiedot
+                   :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)
         ;; kohde tieosoite toisin päin pitää tuottaa samat pituudet
         tieosoite-toisin-pain {:tie 20 :aosa 4 :aet 318 :losa 4 :let 118}
         suolarajoitus-kaannetty (assoc tieosoite-toisin-pain :urakka-id urakka-id)
         pituudet-toisin-pain (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                               :tierekisterin-tiedot
+                               :tieosoitteen-ja-ajoratojen-pituudet
                                t/+kayttaja-jvh+ suolarajoitus-kaannetty)]
     (is (= 200 (:pituus pituudet)) "pituudet")
     (is (= 200 (:pituus pituudet-toisin-pain)) "pituudet")
@@ -310,13 +310,13 @@
         tieosoite {:tie 20 :aosa 4 :aet 5656 :losa 5 :let 100}
         suolarajoitus (assoc tieosoite :urakka-id urakka-id)
         pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tierekisterin-tiedot
+                   :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)
         ;; kohde tieosoite toisin päin pitää tuottaa samat pituudet
         tieosoite-toisin-pain {:tie 20 :aosa 5 :aet 100 :losa 4 :let 5656}
         suolarajoitus-kaannetty (assoc tieosoite-toisin-pain :urakka-id urakka-id)
         pituudet-toisin-pain (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                               :tierekisterin-tiedot
+                               :tieosoitteen-ja-ajoratojen-pituudet
                                t/+kayttaja-jvh+ suolarajoitus-kaannetty)]
     (is (= 200 (:pituus pituudet)) "pituudet")
     (is (= 200 (:pituus pituudet-toisin-pain)) "pituudet")
@@ -329,7 +329,7 @@
         ;; tie 20, osan 4 pituus on yht: 5752 josta loput 1667m on kahta ajorataa, se vaihtuu kahdeksi ajoradaksi kohdassa 4089
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tierekisterin-tiedot
+                   :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 1753 (:pituus pituudet))) ;; Edelliseen testiin verrattuna ollaan lisätty pituutta yhdellä
     (is (= 3424 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
@@ -343,7 +343,7 @@
         ;; tie 25, osan 19 pituus on yht: 7311. Osa 20, koostuu kolmesta ajoradasta joka vaihtuu 1->2 kohdasta:3531 . Sen jälkeen ajoratojen (1,2) pituus: 3965
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tierekisterin-tiedot
+                   :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= (+ (- osan-19-pituus aet) let) (:pituus pituudet)))
     (is (= (+ (- osan-19-pituus aet) let) (:ajoratojen_pituus pituudet)))))
@@ -361,7 +361,7 @@
         ;; tie 12, osan 126 pituus on yht: 6365. Osa 126, koostuu kahdesta ajoradasta 1,2
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                  :tierekisterin-tiedot
+                  :tieosoitteen-ja-ajoratojen-pituudet
                   t/+kayttaja-jvh+ suolarajoitus)]
     (is (= pituus (:pituus vastaus)))
     (is (= ajoradan-pituus (:ajoratojen_pituus vastaus)))))
@@ -372,7 +372,7 @@
         tierekisteriosoite {:tie 12 :aosa 219 :aet 151 :losa 219 :let 1492}
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tierekisterin-tiedot
+                   :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 1341 (:pituus pituudet)))
     (is (= 1341 (:ajoratojen_pituus pituudet)))))
@@ -400,7 +400,7 @@
 
           suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
           pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                     :tierekisterin-tiedot
+                     :tieosoitteen-ja-ajoratojen-pituudet
                      t/+kayttaja-jvh+ suolarajoitus)]
       (is (= 4506 (:pituus pituudet)))
       ;; 20 tiellä osalla 4 on 3 ajorataa, joten pituuden pitäisi olla kolminkertainen
@@ -411,7 +411,7 @@
         tierekisteriosoite {:tie 20 :aosa "makkara" :aet "lenkki" :losa "pihvi" :let "hiiligrilli"}
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tierekisterin-tiedot
+                   :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     ;; Virhe
     (is (= 400 (:status vastaus)))
@@ -446,7 +446,7 @@
         tierekisteriosoite {:tie 20 :aosa 4 :aet 0 :losa 4 :let 6000}
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tierekisterin-tiedot
+                   :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 400 (:status vastaus)))
     (is (= (first (:vastaus vastaus)) "Loppuetäisyys on tieosan 4 ulkopuolella. Tieosa päättyy etäisyyteen 5752. ") "Väärillä tiedoilla ei voi laskea pituutta.")))
@@ -460,7 +460,7 @@
         tierekisteriosoite {:tie 20 :aosa 4 :aet 0 :losa 5 :let 0}
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tierekisterin-tiedot
+                   :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 5752 (:pituus pituudet)))
     (is (= 7423 (:ajoratojen_pituus pituudet)))))
@@ -525,51 +525,51 @@
       (let [tr-sama {:tie 25 :aosa 2 :aet 200 :losa 4 :let 2000}
             suolarajoitus-sama (merge perusrajoitus tr-sama)
             tr-tiedot-sama (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                             :tierekisterin-tiedot
+                             :tieosoitteen-ja-ajoratojen-pituudet
                              t/+kayttaja-jvh+ suolarajoitus-sama)
 
             tr-sama2 {:tie 5 :aosa 115 :aet 200 :losa 115 :let 1623}
             suolarajoitus-sama2 (merge perusrajoitus tr-sama2)
             tr-tiedot-sama2 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                              :tierekisterin-tiedot
+                              :tieosoitteen-ja-ajoratojen-pituudet
                               t/+kayttaja-jvh+ suolarajoitus-sama2)
 
             tr-alku-sama {:tie 25 :aosa 4 :aet 2000 :losa 4 :let 2001}
             suolarajoitus-alku-sama (merge perusrajoitus tr-alku-sama)
             tr-tiedot-alku-sama (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                  :tierekisterin-tiedot
+                                  :tieosoitteen-ja-ajoratojen-pituudet
                                   t/+kayttaja-jvh+ suolarajoitus-alku-sama)
 
             tr-alku-sama2 {:tie 25 :aosa 4 :aet 2000 :losa 5 :let 2001}
             suolarajoitus-alku-sama2 (merge perusrajoitus tr-alku-sama2)
             tr-tiedot-alku-sama2 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                   :tierekisterin-tiedot
+                                   :tieosoitteen-ja-ajoratojen-pituudet
                                    t/+kayttaja-jvh+ suolarajoitus-alku-sama2)
 
             tr-alku-sama3 {:tie 5 :aosa 115 :aet 1623 :losa 116 :let 1}
             suolarajoitus-alku-sama3 (merge perusrajoitus tr-alku-sama3)
             tr-tiedot-alku-sama3 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                   :tierekisterin-tiedot
+                                   :tieosoitteen-ja-ajoratojen-pituudet
                                    t/+kayttaja-jvh+ suolarajoitus-alku-sama3)
 
             tr-alku-sama4 {:tie 5 :aosa 115 :aet 1623 :losa 116 :let 201}
             suolarajoitus-alku-sama4 (merge perusrajoitus tr-alku-sama4)
             tr-tiedot-alku-sama4 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                   :tierekisterin-tiedot
+                                   :tieosoitteen-ja-ajoratojen-pituudet
                                    t/+kayttaja-jvh+ suolarajoitus-alku-sama4)
 
             ;; Varmistaa rajoitus5:sen toiminnan, kun tierekisteriosoitteet on samat
             tr-loppu-eri {:tie 12 :aosa 219 :aet 151 :losa 219 :let 1492}
             suolarajoitus-loppu-eri (merge perusrajoitus tr-loppu-eri)
             tr-tiedot-loppu-eri (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                  :tierekisterin-tiedot
+                                  :tieosoitteen-ja-ajoratojen-pituudet
                                   t/+kayttaja-jvh+ suolarajoitus-loppu-eri)
 
             ;; Tämän tallennus ei saa onnistua, koska rajoitus5 on tälle päällekäinen
             tr-loppu-sama {:tie 12 :aosa 219 :aet 1500 :losa 221 :let 100}
             suolarajoitus-loppu-sama (merge perusrajoitus tr-loppu-sama)
             tr-tiedot-loppu-sama (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                   :tierekisterin-tiedot
+                                   :tieosoitteen-ja-ajoratojen-pituudet
                                    t/+kayttaja-jvh+ suolarajoitus-loppu-sama)]
         (is (= 400 (:status tr-tiedot-sama)) "Tierekisteriosoitteessa on jo rajoitus.")
         (is (= 400 (:status tr-tiedot-sama2)) "Tierekisteriosoitteessa on jo rajoitus.")
@@ -584,7 +584,7 @@
       (let [tr {:tie 25 :aosa 3 :aet 200 :losa 3 :let 2000}
             suolarajoitus (merge perusrajoitus tr)
             tr-tiedot (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                        :tierekisterin-tiedot
+                        :tieosoitteen-ja-ajoratojen-pituudet
                         t/+kayttaja-jvh+ suolarajoitus)]
         (is (= 400 (:status tr-tiedot)) "Tierekisteriosoitteessa on jo rajoitus.")))
 
@@ -592,25 +592,25 @@
       (let [tr-loppu-keskella {:tie 25 :aosa 2 :aet 1 :losa 3 :let 2001}
             suolarajoitus-loppu-keskella (merge perusrajoitus tr-loppu-keskella)
             tr-tiedot-loppu-keskella (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                       :tierekisterin-tiedot
+                                       :tieosoitteen-ja-ajoratojen-pituudet
                                        t/+kayttaja-jvh+ suolarajoitus-loppu-keskella)
 
             tr-loppu-keskella2 {:tie 25 :aosa 3 :aet 1 :losa 3 :let 2001}
             suolarajoitus-loppu-keskella2 (merge perusrajoitus tr-loppu-keskella2)
             tr-tiedot-loppu-keskella2 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                        :tierekisterin-tiedot
+                                        :tieosoitteen-ja-ajoratojen-pituudet
                                         t/+kayttaja-jvh+ suolarajoitus-loppu-keskella2)
 
             tr-loppu-keskella3 {:tie 5 :aosa 115 :aet 1 :losa 115 :let 300}
             suolarajoitus-loppu-keskella3 (merge perusrajoitus tr-loppu-keskella3)
             tr-tiedot-loppu-keskella3 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                        :tierekisterin-tiedot
+                                        :tieosoitteen-ja-ajoratojen-pituudet
                                         t/+kayttaja-jvh+ suolarajoitus-loppu-keskella3)
 
             tr-loppu-keskella4 {:tie 5 :aosa 19 :aet 1 :losa 20 :let 300}
             suolarajoitus-loppu-keskella4 (merge perusrajoitus tr-loppu-keskella4)
             tr-tiedot-loppu-keskella4 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                        :tierekisterin-tiedot
+                                        :tieosoitteen-ja-ajoratojen-pituudet
                                         t/+kayttaja-jvh+ suolarajoitus-loppu-keskella4)]
         (is (= 400 (:status tr-tiedot-loppu-keskella)) "Loppu keskellä, eikä saa tallentaa")
         (is (= 400 (:status tr-tiedot-loppu-keskella2)) "Loppu keskellä, eikä saa tallentaa")
@@ -621,19 +621,19 @@
       (let [tr-alku-keskella {:tie 25 :aosa 3 :aet 1 :losa 7 :let 2001}
             suolarajoitus-alku-keskella (merge perusrajoitus tr-alku-keskella)
             tr-tiedot-alku-keskella (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                      :tierekisterin-tiedot
+                                      :tieosoitteen-ja-ajoratojen-pituudet
                                       t/+kayttaja-jvh+ suolarajoitus-alku-keskella)
 
             tr-alku-keskella2 {:tie 25 :aosa 4 :aet 1 :losa 4 :let 3001}
             suolarajoitus-alku-keskella2 (merge perusrajoitus tr-alku-keskella2)
             tr-tiedot-alku-keskella2 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                       :tierekisterin-tiedot
+                                       :tieosoitteen-ja-ajoratojen-pituudet
                                        t/+kayttaja-jvh+ suolarajoitus-alku-keskella2)
 
             tr-alku-keskella3 {:tie 5 :aosa 115 :aet 300 :losa 115 :let 3001}
             suolarajoitus-alku-keskella3 (merge perusrajoitus tr-alku-keskella3)
             tr-tiedot-alku-keskella3 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                       :tierekisterin-tiedot
+                                       :tieosoitteen-ja-ajoratojen-pituudet
                                        t/+kayttaja-jvh+ suolarajoitus-alku-keskella3)]
         (is (= 400 (:status tr-tiedot-alku-keskella)) "Alku keskellä, eikä saa tallentaa")
         (is (= 400 (:status tr-tiedot-alku-keskella2)) "Alku keskellä, eikä saa tallentaa")
@@ -643,13 +643,13 @@
       (let [tr-ei-lahellakaan {:tie 25 :aosa 11 :aet 1 :losa 11 :let 3011}
             suolarajoitus-ei-lahella (merge perusrajoitus tr-ei-lahellakaan)
             tr-tiedot-ei-lahella (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                   :tierekisterin-tiedot
+                                   :tieosoitteen-ja-ajoratojen-pituudet
                                    t/+kayttaja-jvh+ suolarajoitus-ei-lahella)
 
             tr-ei-lahellakaan2 {:tie 25 :aosa 11 :aet 1 :losa 12 :let 100}
             suolarajoitus-ei-lahella2 (merge perusrajoitus tr-ei-lahellakaan2)
             tr-tiedot-ei-lahella2 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                    :tierekisterin-tiedot
+                                    :tieosoitteen-ja-ajoratojen-pituudet
                                     t/+kayttaja-jvh+ suolarajoitus-ei-lahella2)]
         (is (= {:pituus 3010, :ajoratojen_pituus 3010,
                 :pohjavesialueet '({:nimi "Björknäs", :tunnus "183551"}
@@ -660,13 +660,13 @@
       (let [tr-ymparilla {:tie 25 :aosa 1 :aet 2000 :losa 400 :let 2001}
             suolarajoitus-ymparilla (merge perusrajoitus tr-ymparilla)
             tr-tiedot-ymparilla (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                  :tierekisterin-tiedot
+                                  :tieosoitteen-ja-ajoratojen-pituudet
                                   t/+kayttaja-jvh+ suolarajoitus-ymparilla)
 
             tr-ymparilla2 {:tie 5 :aosa 115 :aet 1 :losa 115 :let 4000}
             suolarajoitus-ymparilla2 (merge perusrajoitus tr-ymparilla2)
             tr-tiedot-ymparilla2 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                                   :tierekisterin-tiedot
+                                   :tieosoitteen-ja-ajoratojen-pituudet
                                    t/+kayttaja-jvh+ suolarajoitus-ymparilla2)]
         (is (= 400 (:status tr-tiedot-ymparilla)) "Olemassa oleva rajoitus osuu tierekisterin sisään")
         (is (= 400 (:status tr-tiedot-ymparilla2)) "Olemassa oleva rajoitus osuu tierekisterin sisään")))
@@ -715,7 +715,7 @@
         tierekisteriosoite {:tie 4 :aosa 101 :aet 8 :losa 101 :let 10}
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id :hoitokauden-alkuvuosi hk-alkuvuosi)
         tierekisterin-tiedot (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                               :tierekisterin-tiedot
+                               :tieosoitteen-ja-ajoratojen-pituudet
                                t/+kayttaja-jvh+ suolarajoitus)
         odotettu-tulos {:pituus 2, :ajoratojen_pituus 4, :pohjavesialueet ()}
 
@@ -799,7 +799,7 @@
 
         suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
         tiedot (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                 :tierekisterin-tiedot
+                 :tieosoitteen-ja-ajoratojen-pituudet
                  t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 183 (:pituus tiedot)))
     ;; 20 tiellä osalla 4 on 3 ajorataa, joten pituuden pitäisi olla kolminkertainen
@@ -1120,33 +1120,6 @@
     (is (= true (:kaytossa aluesanktio-vastaus)))
     (is (= "kokonaismaara" (:tyyppi suolasanktio-vastaus)))
     (is (= "rajoitusalue" (:tyyppi aluesanktio-vastaus)))))
-
-(deftest siirra-pohjavesialue-suolatoteumat-rajoitusalueeksi-onnistuu
-  (let [urakka-id (t/hae-urakan-id-nimella "Espoon alueurakka 2014-2019") ;; Tällä urakalla ei ole olemassa yhtään pohjavesialue rajoitusta vielä
-        hk_alkuvuosi 2014
-        urakan-loppuvuosi 2019
-        urakan-vuodet (range hk_alkuvuosi urakan-loppuvuosi)
-        pohjavesirajoitukset [{:nimi "Kempeleenharju",
-                               :tunnus "11244001",
-                               :talvisuolaraja 6.6M,
-                               :tie 4,
-                               :aosa 364,
-                               :aet 1599,
-                               :losa 364,
-                               :let 4296,
-                               :pituus 2697,
-                               :ajoratojen_pituus 5394,
-                               :hoitokauden-alkuvuosi hk_alkuvuosi,
-                               :urakkaid urakka-id}]
-        _ (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-            :siirra-urakan-pohjavesialueet t/+kayttaja-jvh+ {:urakkaid urakka-id
-                                                             :pohjavesialueet pohjavesirajoitukset})
-        ;; Haetaan rajoitukset jokaiselle urakan vuodelle
-        suolarajoitukset (reduce (fn [rajoitukset vuosi]
-                                   (conj rajoitukset (hae-suolarajoitukset {:hoitokauden-alkuvuosi vuosi :urakka-id urakka-id})))
-                           [] urakan-vuodet)]
-    ;; Jokaiselle tulevalle vuodelle luodaan uusi rajoitus, joten niitä pitää olla yhtä monta kuin lista * vuodet
-    (is (= (* (count pohjavesirajoitukset) (count urakan-vuodet)) (count suolarajoitukset)))))
 
 (deftest tierekisteri-muokattu?-toimii
   (testing "Sama tierekisteri"
