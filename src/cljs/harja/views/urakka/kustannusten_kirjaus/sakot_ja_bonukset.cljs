@@ -5,7 +5,7 @@
             [tuck.core :refer [tuck]]
             [harja.asiakas.kommunikaatio :as komm]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka :as urakka-tiedot]
             [reagent.core :as r]
             [harja.fmt :as fmt]
             [harja.ui.liitteet :as liitteet]
@@ -25,8 +25,8 @@
             [harja.domain.tierekisteri :as tr-domain]))
 
 
-(defn- sakot-bonukset-grid [e! rivit liitteet]
-  [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
+(defn- sakot-bonukset-grid [e! rivit liitteet haku-kaynnissa?]
+  [grid/grid {:tyhja (if haku-kaynnissa?
                        [ajax-loader-pieni "Haku käynnissä..."]
                        "Valitulle aikavälille ei löytynyt mitään.")
               :tunniste :id
@@ -36,7 +36,6 @@
               :mahdollista-rivin-valinta? true
               :rivi-klikattu #(e! (tiedot/->AvaaModal %))}
 
-               ;; TODO 
    [{:otsikko-komp (fn [_ _]
                      [:div.pvm "Päivämäärä"
                       [:div [ikonit/action-sort-descending]]])
@@ -85,8 +84,7 @@
 
 (defn- sakot-bonukset-muokkauspaneeli
   "Toteumien luonti / muokkaus"
-  [e! {:keys [lajit uusi-liite liitteet] :as valinnat} voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit]
-
+  [e! {:keys [lajit uusi-liite] :as valinnat} valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -106,43 +104,37 @@
        {:otsikko "Päivämäärä"
         :pakollinen? true
         :tyyppi :komponentti
-        :komponentti (fn []
+        :komponentti (fn [a]
                        [:span
                         [kentat/tee-kentta {:tyyppi :pvm :vayla-tyyli? true}
                          (r/wrap
-                           alkuaika
+                           (-> a :data :kasittelyaika)
                            #(println "test5"))]])
         ::lomake/col-luokka "col-xs-6"})
 
      (lomake/rivi
        {:otsikko "Laji"
+        :nimi :laji
         :pakollinen? true
         :vayla-tyyli? true
         :tyyppi :radio-group
-        :vaihtoehto-arvo :laji
         :vaihtoehto-nayta lajit
         :vaihtoehdot (keys lajit)
         :validoi [#(when (nil? %) "Anna kustannuksen tyyppi")]})
 
-     ;; TODO 
-     (let [testi-var [{:id 0 :kohde "Kohde 1"} {:id 1 :kohde "Kohde 2"}]
-           testi-valinnat (mapv :id testi-var)
-           testi-kuvaukset (into {} (map (fn [{:keys [id kohde]}] [id kohde]) testi-valinnat))]
-       (lomake/rivi
-         {:otsikko "Päällystys- tai paikkauskohde"
-          :pakollinen? true
-          :validoi [[:ei-tyhja "Valitse kohde"]]
-          :nimi :kohde ;; TODO 
-          :tyyppi :valinta
-          :valinnat (into [nil] testi-valinnat)
-          :valinta-nayta #(if %
-                            (testi-kuvaukset %)
-                            "Yleinen (ei kohdetta)")
-          ::lomake/col-luokka "leveys-kokonainen"}))
+     (lomake/rivi
+       {:otsikko "Päällystys- tai paikkauskohde"
+        :pakollinen? true
+        :validoi [[:ei-tyhja "Valitse kohde"]]
+        :nimi :yllapitokohde
+        :tyyppi :valinta
+        :valinnat (into [] kohteet)
+        :valinta-nayta :nimi
+        ::lomake/col-luokka "leveys-kokonainen"})
 
      (lomake/rivi
-       {:nimi :kustannus-selite ;; TODO 
-        :otsikko "Selite"
+       {:otsikko "Selite"
+        :hae #(or (:lisatieto %) (get-in % [:laatupoikkeama :paatos :perustelu]))
         :tyyppi :text
         :pakollinen? true
         :piilota-checkbox? true
@@ -151,60 +143,57 @@
         :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
         ::lomake/col-luokka "leveys-kokonainen"})
 
-     ;; TODO 
-     (let [testi-var [{:id 0 :kohde "Kohde 1"} {:id 1 :kohde "Kohde 2"}]
-           testi-valinnat (mapv :id testi-var)
-           testi-kuvaukset (into {} (map (fn [{:keys [id kohde]}] [id kohde]) testi-valinnat))]
-
-       (lomake/rivi
-         {:otsikko "Kulun kohdistus"
-          :pakollinen? true
-          :validoi [[:ei-tyhja "Valitse toimenpide"]]
-          :nimi :kohde ;; TODO 
-          :tyyppi :valinta
-          :valinnat (into [nil] testi-valinnat)
-          :valinta-nayta #(if %
-                            (testi-kuvaukset %)
-                            "Valitse toimenpide")
-          ::lomake/col-luokka "leveys-kokonainen"}))
+     (lomake/rivi
+       {:otsikko "Kulun kohdistus"
+        :pakollinen? true
+        :validoi [[:ei-tyhja "Valitse toimenpide"]]
+        :nimi :toimenpideinstanssi
+        :tyyppi :valinta
+        :hae (fn [rivi]
+               (first
+                 (filter #(= (:tpi_id %) (-> rivi :toimenpideinstanssi))
+                   @urakka-tiedot/urakan-toimenpideinstanssit)))
+        :valinnat (into [] @urakka-tiedot/urakan-toimenpideinstanssit)
+        :valinta-nayta #(if %
+                          (:tpi_nimi %)
+                          "Valitse toimenpide")
+        ::lomake/col-luokka "leveys-kokonainen"})
 
      (lomake/rivi
        {:otsikko "Summa"
         :pakollinen? true
         :vayla-tyyli? true
-        :nimi :kustannus
+        :nimi :summa
         :tyyppi :euro
         :teksti-oikealla "EUR"
         :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
         ::lomake/col-luokka "col-xs-6 summa-valinta"})
 
-     ;; TODO 
-     (let []
-       (lomake/rivi
-         {:otsikko "Liitteet"
-          :nimi :liitteet
-          :tyyppi :komponentti
-          :komponentti (fn [r]
-                         [liitteet/liitteet-ja-lisays
-                          @nav/valittu-urakka-id
-                          liitteet
-                          {:uusi-liite-atom uusi-liite
-                           :uusi-liite-teksti "Lisää liite"
-                           :salli-poistaa-lisatty-liite? true
-                           ;:poista-lisatty-liite-fn #(e! (tiedot/->PoistaLiite r))
-                           :salli-poistaa-tallennettu-liite? false}])}))]
+     (lomake/rivi
+       {:otsikko "Liitteet"
+        :nimi :liitteet
+        :tyyppi :komponentti
+        :komponentti (fn [rivi]
+                       [liitteet/liitteet-ja-lisays
+                        @nav/valittu-urakka-id
+                        (vec (filter #(= (:laatupoikkeama %) (-> rivi :data :laatupoikkeama :id)) liitteet))
+                        {:uusi-liite-atom uusi-liite
+                         :uusi-liite-teksti "Lisää liite"
+                         :salli-poistaa-lisatty-liite? true
+                         ;:poista-lisatty-liite-fn #(e! (tiedot/->PoistaLiite r))
+                         :salli-poistaa-tallennettu-liite? false}])})]
     valittu-rivi]])
 
 (defn sakot-bonukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
-                                         haku-kaynnissa? kustannukset tyypit valittu-laji liitteet] :as app}]
+                                         haku-kaynnissa? kustannukset tyypit valittu-laji liitteet kohteet] :as app}]
 
   (let [alkuaika (:alkuaika valittu-rivi)
         ;; TODO 
         voi-kirjoittaa? true
         voi-tallentaa? true
-        grid (sakot-bonukset-grid e! rivit liitteet)
+        grid (sakot-bonukset-grid e! rivit liitteet haku-kaynnissa?)
         lisaa-uusi-fn #(e! (tiedot/->AvaaModal nil))
-        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)
+        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit)
         laji-suodatin [kentat/tee-kentta {:vayla-tyyli? true
                                           :nayta-rivina? true
                                           :space-valissa? true

@@ -13,6 +13,7 @@
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (defonce tila (atom {:rivit nil
+                     :kohteet {}
                      :liitteet {}
                      :muokataan false
                      :valittu-rivi nil
@@ -40,6 +41,8 @@
 (defrecord HaeTiedotEpaonnistui [vastaus])
 (defrecord HaeLiitteetOnnistui [vastaus])
 (defrecord HaeLiitteetEpaonnistui [vastaus])
+(defrecord HaeKohteetOnnistui [vastaus])
+(defrecord HaeKohteetEpaonnistui [vastaus])
 (defrecord AvaaModal [rivi])
 (defrecord MuokkaaRivia [rivi])
 (defrecord SuljeMuokkaus [])
@@ -80,6 +83,13 @@
      :epaonnistui ->HaeLiitteetEpaonnistui}))
 
 
+(defn hae-kohteet [app]
+  (tuck-apurit/post! app :urakan-yllapitokohteet-lomakkeelle
+    {:urakka-id @nav/valittu-urakka-id :sopimus-id (-> @u/valittu-sopimusnumero :sopimus-id)}
+    {:onnistui ->HaeKohteetOnnistui
+     :epaonnistui ->HaeKohteetEpaonnistui}))
+
+
 (extend-protocol tuck/Event
   HaeTiedot
   (process-event [_ app]
@@ -98,9 +108,17 @@
 
   HaeLiitteetOnnistui
   (process-event [{:keys [vastaus]} app]
-    (assoc app :liitteet vastaus))
+    (hae-kohteet (assoc app :liitteet vastaus)))
 
   HaeLiitteetEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (epaonnistui vastaus app))
+
+  HaeKohteetOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc app :kohteet vastaus))
+
+  HaeKohteetEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (epaonnistui vastaus app))
 
@@ -140,7 +158,8 @@
 
   MuokkaaRivia
   (process-event [{:keys [rivi]} app]
-    (update app :valittu-rivi merge rivi))
+    (-> app
+      (update :valittu-rivi merge rivi)))
 
   AvaaModal
   (process-event [{:keys [rivi]} app]
