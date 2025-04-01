@@ -714,9 +714,9 @@
         ;; pisteestä, kuin mihin yllä oleva loppui
         tierekisteriosoite {:tie 4 :aosa 101 :aet 8 :losa 101 :let 10}
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id :hoitokauden-alkuvuosi hk-alkuvuosi)
-        tierekisterin-tiedot (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                               :tieosoitteen-ja-ajoratojen-pituudet
-                               t/+kayttaja-jvh+ suolarajoitus)
+        tieosoitteen-ja-ajoratojen-pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                                              :tieosoitteen-ja-ajoratojen-pituudet
+                                              t/+kayttaja-jvh+ suolarajoitus)
         odotettu-tulos {:pituus 2, :ajoratojen_pituus 4, :pohjavesialueet ()}
 
         ;; Siivotaan kanta
@@ -725,7 +725,7 @@
              :hoitokauden-alkuvuosi hk-alkuvuosi
              :urakka_id urakka-id
              :kopioidaan-tuleville-vuosille? true})]
-    (is (= odotettu-tulos tierekisterin-tiedot) "Tierekisterin-tiedot on hyväksyttäviä")))
+    (is (= odotettu-tulos tieosoitteen-ja-ajoratojen-pituudet) "Tierekisterin-tiedot on hyväksyttäviä")))
 
 (defn hae-rajoitukset-kannasta [urakka-id]
   (t/q-map (str "select ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi, ra.urakka_id as urakka_id
