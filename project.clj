@@ -138,7 +138,7 @@
                  [com.taoensso/truss "1.12.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.19.0"]
+                 [dk.ative/docjure "1.21.0"]
 
                  ;; -- Front-end tilan hallinta
                  [webjure/tuck "20181204"]
