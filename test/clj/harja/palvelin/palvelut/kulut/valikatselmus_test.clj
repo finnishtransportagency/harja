@@ -8,7 +8,7 @@
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.kyselyt.sanktiot :as sanktiot-q]
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
-            [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]

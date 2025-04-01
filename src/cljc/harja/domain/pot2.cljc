@@ -1,7 +1,6 @@
 (ns harja.domain.pot2
   "Ylläpidon päällystysurakoissa käytettävän POT2-lomakkeen skeemat."
-  (:require [schema.core :as schema]
-            [specql.impl.registry]
+  (:require [specql.impl.registry]
             [specql.data-types]
             [harja.domain.muokkaustiedot :as m]
             [harja.fmt :as fmt]
@@ -233,7 +232,8 @@
 
   ["pot2_paallystekerros" ::pot2-paallystekerros]
   ["pot2_alusta" ::pot2-alusta]
-  ["pot2_mk_massatyyppi" ::pot2-mk-massatyyppi]
+  ["pot2_mk_massatyyppi" ::pot2-mk-massatyyppi
+   {"poistettu" ::poistettu?}]
   ["pot2_mk_mursketyyppi" ::pot2-mk-mursketyyppi]
   ["pot2_mk_runkoainetyyppi" ::pot2-mk-runkoainetyyppi]
   ["pot2_mk_sideainetyyppi" ::pot2-mk-sideainetyyppi]

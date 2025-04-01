@@ -14,7 +14,7 @@
     [harja.tyokalut.testidatan-generointi :as testidatan-generointi]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
     [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
-    [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmus-palvelu]))
+    [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]))
 
 (def kayttaja-yit "yit-rakennus")
 (def kayttaja-analytiikka "analytiikka-testeri")

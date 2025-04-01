@@ -30,6 +30,62 @@
   (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
   (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
 
+(deftest tallenna-epaonnistuva-viivageometria
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        y-tunnus (str (gensym))
+        _ (anna-kirjoitusoikeus kayttaja)
+
+        ;; Testataan virheellistä linestring kutsua, kyseinen json palauttaa 
+        ;; MULTILINESTRING((548272.452 7053596.049), ...) jossa on vain 1 piste 
+        kutsu (fn [ytunnus]
+                (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja portti
+                  (-> "test/resurssit/api/reittitoteuma_epaonnistuva.json"
+                    slurp
+                    (.replace "__YTUNNUS__" ytunnus))))
+
+        vastaus (kutsu y-tunnus)
+        ;; Normaalisti kutsun pitäisi onnistua 
+        _ (is (= 200 (:status vastaus)))
+        toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE suorittajan_ytunnus = '" y-tunnus "'")))
+        _ (is (= toteuma-kannassa [86123323 y-tunnus "Terranor Oy"]))
+
+        ;; Muuta yhdista funktiota, jotta yksipisteinen multilinestring osuu ST_MakeLine, josta tulee SQL virhe 
+        ;; ERROR: geometry requires more points
+        _ (u "DROP FUNCTION yhdista_multilinestring(GEOMETRY);")
+        _ (u "CREATE OR REPLACE FUNCTION yhdista_multilinestring(geometriat GEOMETRY)
+                    RETURNS GEOMETRY AS $$
+                    DECLARE
+                      i INTEGER;
+                      j INTEGER;
+                      viiva GEOMETRY;
+                      tulos GEOMETRY[];
+                    BEGIN
+                      tulos := ARRAY[]::GEOMETRY[];
+                      FOR i IN 1..ST_NumGeometries(geometriat) LOOP
+                        viiva := ST_GeometryN(geometriat, i);
+                        CASE
+                          WHEN ST_GeometryType(viiva) = 'ST_MultiLineString' THEN
+                            FOR j IN 1..ST_NumGeometries(viiva) LOOP
+                              tulos := tulos || ST_GeometryN(viiva, j);
+                            END LOOP;
+                          WHEN ST_GeometryType(viiva) = 'ST_Point' THEN
+                            tulos := tulos || ST_MakeLine(viiva);
+                          ELSE
+                            tulos := tulos || viiva;
+                        END CASE;
+                      END LOOP;
+                      RETURN ST_Collect(tulos);
+                    END;
+                    $$ LANGUAGE plpgsql;")
+
+        y-tunnus (str (gensym))
+        vastaus (kutsu y-tunnus)
+        ;; Viallisella pisteyhdistelyllä palautuu sisäinen sql virhe
+        _ (is (= 500 (:status vastaus)))
+        _ (is (=
+               (-> vastaus :body (json/read-json) first)
+               [:virheet [{:virhe {:koodi "sisainen-kasittelyvirhe", :viesti "Sisäinen käsittelyvirhe"}}]]))]))
+
 (deftest ^:perf yksittainen-kirjaus-ei-kesta-liian-kauan
   (let [sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja)]

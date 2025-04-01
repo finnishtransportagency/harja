@@ -17,11 +17,11 @@
   (rivi
     [:varillinen-teksti {:arvo (str valiotsikko)
                          :lihavoi? lihavoi?}]
-    [:varillinen-teksti {:arvo (or (avain_hoitokausi data) (yhteiset/summa-fmt nil))
+    [:varillinen-teksti {:arvo (or (get data avain_hoitokausi) (yhteiset/summa-fmt nil))
                          :fmt :raha
                          :lihavoi? lihavoi?}]
     (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or (avain_yht data) (yhteiset/summa-fmt nil))
+      [:varillinen-teksti {:arvo (or (get data avain_yht) (yhteiset/summa-fmt nil))
                            :fmt :raha
                            :lihavoi? lihavoi?}])))
 
@@ -108,8 +108,10 @@
                     ;; Tavoitehintaan vaikuttavat
                     (and
                       tavoitehintainen?
-                      (= "" otsikko))
+                      (= "Muut tavoitehintaan vaikuttavat kulut" otsikko))
                     [(taulukko-rivi data kyseessa-kk-vali? "Muut tavoitehintaan vaikuttavat kulut" :muut_kulut_hoitokausi :muut_kulut_val_aika false)
+                     ;; Välikatselmuksesta siirretyt kulut edelliseltä hoitovuodelta. Otetaan mukaan osana tavoitehintaisia kuluja.
+                     (taulukko-rivi data kyseessa-kk-vali? "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :muut_kulut_hoitokausi_yht :muut_kulut_val_aika_yht true)]
                     
                     ;; Ei- tavoitehintaiset 
@@ -253,7 +255,7 @@
                 :kyseessa-kk-vali? kyseessa-kk-vali?})
 
      (taulukko {:data rivitiedot
-                :otsikko ""
+                :otsikko "Muut tavoitehintaan vaikuttavat kulut"
                 :laskutettu-teksti laskutettu-teksti
                 :laskutetaan-teksti laskutetaan-teksti
                 :kyseessa-kk-vali? kyseessa-kk-vali?

@@ -29,7 +29,6 @@
 
             [slingshot.slingshot :refer [try+ throw+]]
 
-            [new-reliquary.core :as nr]
             [clojure.core.async :as async])
   (:import (java.text SimpleDateFormat)
            (java.io ByteArrayInputStream ByteArrayOutputStream)
@@ -458,13 +457,8 @@
           ar (tyokalut/arityt palvelu-fn)
           transaktio-fn (if (get optiot :trace true)
                           (fn [& args]
-                            (nr/with-newrelic-transaction
-                              (or (:kategoria optiot) "Backend palvelut")
-                              (str nimi)
-                              {}
-                              #(do
-                                 ;; (println "palvelu-fn" palvelu-fn args)
-                                 (apply palvelu-fn args))))
+                            ;; (println "palvelu-fn" palvelu-fn args)
+                            (apply palvelu-fn args))
                           palvelu-fn)]
       (if (:ring-kasittelija? optiot)
         (swap! sessiottomat-kasittelijat conj {:nimi nimi

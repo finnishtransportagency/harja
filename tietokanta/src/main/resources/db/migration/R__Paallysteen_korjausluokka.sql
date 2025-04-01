@@ -24,8 +24,8 @@ BEGIN
                    AND (tierekisteriosoite_laajennettu).aet IS NOT NULL
                    AND (tierekisteriosoite_laajennettu).let IS NOT NULL
                    THEN
-                   (SELECT tierekisteriosoitteelle_viiva AS geometria
-                      FROM tierekisteriosoitteelle_viiva(
+                   (SELECT tieosoitteelle_geometria AS geometria
+                      FROM tieosoitteelle_geometria(
                           CAST((tierekisteriosoite_laajennettu).tie AS INTEGER),
                           CAST((tierekisteriosoite_laajennettu).aosa AS INTEGER),
                           CAST((tierekisteriosoite_laajennettu).aet AS INTEGER),

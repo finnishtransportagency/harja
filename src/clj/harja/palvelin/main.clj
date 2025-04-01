@@ -75,6 +75,7 @@
     [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
     [harja.palvelin.palvelut.hallinta.lupaukset-palvelu :as lupaukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.ajastukset-palvelu :as ajastukset-hallinta]
     [harja.palvelin.palvelut.hallinta.paallystysilmoitukset-hallinta-palvelu :as paallystysilmoitukset-hallinta]
     [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
@@ -112,7 +113,7 @@
     [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
-    [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
+    [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
     [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
     [harja.palvelin.palvelut.yllapitokohteet.kustannukset-palvelu :as kustannukset-palvelu]
     [harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelu]
@@ -832,6 +833,11 @@
       :lupaukset-hallinta
       (component/using
         (lupaukset-hallinta/->LupauksetHallinta)
+        [:http-palvelin :db])
+
+      :ajastukset-hallinta
+      (component/using
+        (ajastukset-hallinta/->AjastuksetHallinta)
         [:http-palvelin :db])
       
       :paallystysilmoitukset-hallinta

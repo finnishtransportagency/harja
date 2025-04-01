@@ -88,7 +88,7 @@ VALUES (
   :kustannus::NUMERIC, -- kustannus
   :yksikko::TEXT, -- "reikapaikkaus-yksikko"
   :maara::INT, -- maara
-  (SELECT tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT)) -- sijainti geometria
+  (SELECT tieosoitteelle_geometria(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT)) -- sijainti geometria
 );
 
 
@@ -103,7 +103,7 @@ UPDATE paikkaus SET
   kustannus               = :kustannus::NUMERIC,
   "reikapaikkaus-yksikko" = :yksikko::TEXT, 
   maara                   = :maara::INT,
-  sijainti                = (SELECT tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT)),
+  sijainti                = (SELECT tieosoitteelle_geometria(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT)),
   poistettu               = FALSE -- Jos tuodaan jo poistettu rivi, merkataan se ei-poistetuksi 
 WHERE "urakka-id" = :urakka-id AND "ulkoinen-id" = :ulkoinen-id;
 
