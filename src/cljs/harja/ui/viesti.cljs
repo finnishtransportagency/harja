@@ -86,7 +86,9 @@
                     (swap! toast-viesti-sisalto assoc :nakyvissa? false))))))
 
         ^{:key "viesti"}
-        [:div {:class (str "toast-viesti-container " (or keskella-luokka ""))}
+        [:div {:class (if (< 70 (count viesti))
+                        (str "toast-viesti-container container-leveampi" (or keskella-luokka ""))
+                        (str "toast-viesti-container " (or keskella-luokka "")))}
          [:div {:on-click #(swap! toast-viesti-sisalto assoc :nakyvissa? false)
                 :class (when luokka (+toast-viesti-luokat+ luokka))}
           (when ikoni [:span ikoni])
