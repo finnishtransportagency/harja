@@ -5,6 +5,7 @@
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
+            [harja.palvelin.palvelut.tierekisteri-haku :as tieosoite-haku]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
             [taoensso.timbre :as log]
@@ -117,9 +118,14 @@
                                     (:let (first paallekaiset)))))
 
             ;; Pilkotaan tierekisteri osiin tien osien mukaan
-            tie-osien-pituudet (tieverkko-kyselyt/hae-osien-pituudet db {:tie (:tie suolarajoitus)
-                                                                         :aosa (:aosa suolarajoitus)
-                                                                         :losa (:losa suolarajoitus)})
+            tie-osien-pituudet (map
+                                 (fn [osan-pituustiedot]
+                                   {:osa (:tr-osa osan-pituustiedot)
+                                    :pituus (get-in osan-pituustiedot [:pituudet :pituus])})
+                                 (tieosoite-haku/hae-osien-tiedot db {:tr-numero (:tie suolarajoitus)
+                                                                      :tr-alkuosa (:aosa suolarajoitus)
+                                                                      :tr-loppuosa (:losa suolarajoitus)}))
+
             pituus (tieverkko-kyselyt/laske-tien-osien-pituudet tie-osien-pituudet suolarajoitus)
             ajoratojen-pituudet (tieverkko-kyselyt/hae-ajoratojen-pituudet db {:tie (:tie suolarajoitus)
                                                                                :aosa (:aosa suolarajoitus)

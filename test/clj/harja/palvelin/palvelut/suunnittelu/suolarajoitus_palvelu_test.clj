@@ -281,6 +281,48 @@
     (is (= 1752 (:pituus pituudet)))
     (is (= 3415 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
 
+(deftest laske-ajoratapituus-oikein
+  (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; valitaan siten, että 100m kaksiajorataista, ja 100m yksiajorataista, total ajoratakm 300. ks tr_tiedot taulu
+        tieosoite {:tie 20 :aosa 4 :aet 118 :losa 4 :let 318}
+        suolarajoitus (assoc tieosoite :urakka-id urakka-id)
+        pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                   :tierekisterin-tiedot
+                   t/+kayttaja-jvh+ suolarajoitus)
+        ;; kohde tieosoite toisin päin pitää tuottaa samat pituudet
+        tieosoite-toisin-pain {:tie 20 :aosa 4 :aet 318 :losa 4 :let 118}
+        suolarajoitus-kaannetty (assoc tieosoite-toisin-pain :urakka-id urakka-id)
+        pituudet-toisin-pain (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                               :tierekisterin-tiedot
+                               t/+kayttaja-jvh+ suolarajoitus-kaannetty)]
+    (is (= 200 (:pituus pituudet)) "pituudet")
+    (is (= 200 (:pituus pituudet-toisin-pain)) "pituudet")
+    (is (= 300 (:ajoratojen_pituus pituudet)) "ajoratojen pituudet")
+    (is (= 300 (:ajoratojen_pituus pituudet-toisin-pain))) "ajoratojen pituudet"))
+
+(deftest laske-ajoratapituus-oikein-kaksi-osaa
+  (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; valitaan siten, että 100m kaksiajorataista, ja 100m yksiajorataista, total ajoratakm 300. ks tr_tiedot taulu
+
+        ;; tässä tapauksessa otetaan 100m yksiajorataista molemmista tieosista, joten pituus on 200m
+        ;; {"pituus": 1514, "tr-kaista": 11, "tr-ajorata": 0, "tr-alkuetaisyys": 4242}, (loppupaalu 5756)
+        ;; {"pituus": 3985, "tr-kaista": 11, "tr-ajorata": 0, "tr-alkuetaisyys": 0}
+        tieosoite {:tie 20 :aosa 4 :aet 5656 :losa 5 :let 100}
+        suolarajoitus (assoc tieosoite :urakka-id urakka-id)
+        pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                   :tierekisterin-tiedot
+                   t/+kayttaja-jvh+ suolarajoitus)
+        ;; kohde tieosoite toisin päin pitää tuottaa samat pituudet
+        tieosoite-toisin-pain {:tie 20 :aosa 5 :aet 100 :losa 4 :let 5656}
+        suolarajoitus-kaannetty (assoc tieosoite-toisin-pain :urakka-id urakka-id)
+        pituudet-toisin-pain (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                               :tierekisterin-tiedot
+                               t/+kayttaja-jvh+ suolarajoitus-kaannetty)]
+    (is (= 200 (:pituus pituudet)) "pituudet")
+    (is (= 200 (:pituus pituudet-toisin-pain)) "pituudet")
+    (is (= 200 (:ajoratojen_pituus pituudet)) "ajoratojen pituudet")
+    (is (= 200 (:ajoratojen_pituus pituudet-toisin-pain))) "ajoratojen pituudet"))
+
 (deftest laske-tierekisteriosoitteelle-pituus4-onnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
         tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 5 :let 1}

@@ -124,7 +124,7 @@
         kohde (set/rename-keys (tr-domain/tr-osoite-kasvusuuntaan kohde-muunnettavaksi)
                 (set/map-invert avain-muunnos))]
     ;; Pieni validointi kohteen arvoille
-    (when (and (not (nil? (:aosa kohde))) (not (nil? (:losa kohde)))
+    (when (and (:aosa kohde) (:losa kohde)
             (<= (:aosa kohde) (:losa kohde)))
       (reduce (fn [k rivi]
                 (let [tulos

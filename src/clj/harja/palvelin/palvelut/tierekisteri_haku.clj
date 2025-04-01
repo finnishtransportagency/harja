@@ -158,6 +158,8 @@
       1))
 
 (defn hae-osien-tiedot
+  "Hae tieosoitteen osien tiedot, kuten kokonaispituus, sekä ajoratakohtainen erottelu.
+  Parametrit sisään muodossa tr-numero tr-alkuosa tr-loppuosa]"
   [db params]
   {:pre (s/valid? ::yllapitokohde/tr-paalupiste params)}
   (tv/hae-trpisteiden-valinen-tieto-yhdistaa db params))

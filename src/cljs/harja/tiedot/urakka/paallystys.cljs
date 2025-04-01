@@ -326,10 +326,6 @@
                    osan-pituudet-teille)]
     (get pituudet (:tr-numero rivi))))
 
-(defn rivin-kohteen-pituus
-  [osien-pituudet rivi]
-  (tr-domain/laske-tien-pituus osien-pituudet rivi))
-
 (defn rivita-virheet
   "Rivittää sisäkkäisessä rakenteessa olevat virheet ihmisen luettavaan muotoon, esim. modaliin"
   [virhe]
