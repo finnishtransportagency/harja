@@ -7,20 +7,23 @@
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.tierekisteri :as tr])
+            [harja.domain.tierekisteri :as tr]
+            [harja.tiedot.raportit :as raporttitiedot])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (defonce tila (atom {:rivit nil
                      :muokataan false
                      :valittu-rivi nil
                      :haku-kaynnissa? false
-                     :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))
+                     :valinnat {:raportti {}
+                                :aikavali (pvm/kuukauden-aikavali (pvm/nyt))
                                 :pk-luokat {:tyhja "Ei PK-luokkaa"
                                             :1 "1"
                                             :2 "2"
                                             :3 "3"}}}))
 
 (def nakymassa? (atom false))
+(defonce ^{:private true} raportti-avain :tiemerkinta-muut-kustannukset)
 
 
 (defrecord HaeTiedot [])
@@ -64,13 +67,16 @@
     (assoc app :haku-kaynnissa? true))
 
   HaeTiedotOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (assoc app
-      :rivit vastaus
-      :haku-kaynnissa? false))
+  (process-event [{:keys [vastaus]} {:keys [valinnat] :as app}]
+    (-> app
+      (assoc :rivit vastaus :haku-kaynnissa? false)
+      (assoc-in [:valinnat :raportti] (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
+                                        {:alkupvm  (-> valinnat :aikavali first)
+                                         :loppupvm (-> valinnat :aikavali second)
+                                         :urakkatyyppi (:arvo @nav/urakkatyyppi)}))))
 
   HaeTiedotEpaonnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{:keys [vastaus]} app]
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))
@@ -81,24 +87,24 @@
     (assoc app :haku-kaynnissa? true))
 
   HaeTyypitOnnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{:keys [vastaus]} app]
     (assoc app
       :tyypit vastaus
       :haku-kaynnissa? false))
 
   HaeTyypitEpaonnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{:keys [vastaus]} app]
     (println "epa: " vastaus)
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))
 
   MuokkaaRivia
-  (process-event [{rivi :rivi} app]
+  (process-event [{:keys [rivi]} app]
     (update app :valittu-rivi merge rivi))
 
   AvaaKustannusModal
-  (process-event [{rivi :rivi} app]
+  (process-event [{:keys [rivi]} app]
     (-> app
       (assoc :muokataan true)
       (assoc :valittu-rivi rivi)))

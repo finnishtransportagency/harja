@@ -13,7 +13,7 @@
   (let [{:keys [alkupvm loppupvm]} parametrit]
 
     [:raportti {:orientaatio :landscape
-                :nimi "TODO"
+                :nimi "TODO sakot, bonukset"
                 :lyhennetty-tiedostonimi true}
      ;;
      ]))
@@ -22,7 +22,7 @@
   (let [{:keys [alkupvm loppupvm]} parametrit]
 
     [:raportti {:orientaatio :landscape
-                :nimi "TODO"
+                :nimi "TODO muut kustannukset"
                 :lyhennetty-tiedostonimi true}
      ;;
      ]))

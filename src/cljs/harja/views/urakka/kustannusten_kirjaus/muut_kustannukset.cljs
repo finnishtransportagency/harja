@@ -26,8 +26,7 @@
 
 (defn- muut-kustannukset-muokkauspaneeli 
   "Toteumien muokkauspaneeli / rivin klikkaus"
-  [e! {:keys [pk-luokat]} voi-kirjoittaa? voi-tallentaa? valittu-rivi  alkuaika tyypit]
-
+  [e! {:keys [pk-luokat]} voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true

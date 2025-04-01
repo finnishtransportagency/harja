@@ -22,39 +22,30 @@
             [harja.domain.tierekisteri :as tr-domain]))
 
 
-(defn raporttiviennit [valinnat]
+(defn raporttiviennit [{:keys [raportti] :as valinnat}]
   [:div.raporttiviennit
    ;;
    ;; Excel
-   ;;
    ^{:key "raporttixls"}
-   [:form {:style {:margin-left "auto"}
-           :target "_blank" :method "POST"
-           ; :action TODO
-           }
+   [:form {:target "_blank" :method "POST"
+           :action (komm/excel-url :raportointi)}
 
     [:input {:type "hidden" :name "parametrit"
-             :value (transit/clj->transit {:tr (:tr valinnat)
-                                           :aikavali (:aikavali valinnat)
-                                           :urakka-id @nav/valittu-urakka-id})}]
+             :value (transit/clj->transit raportti)}]
 
     [:button {:type "submit"
               :class #{"nappi-toissijainen"}}
 
      [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna Excel"]]]
+   
    ;;
    ;; Pdf 
-   ;;
    ^{:key "raporttipdf"}
-   [:form {:style {:margin-left "auto"}
-           :target "_blank" :method "POST"
-           ; :action TODO
-           }
+   [:form {:target "_blank" :method "POST"
+           :action (komm/pdf-url :raportointi)}
 
     [:input {:type "hidden" :name "parametrit"
-             :value (transit/clj->transit {:tr (:tr valinnat)
-                                           :aikavali (:aikavali valinnat)
-                                           :urakka-id @nav/valittu-urakka-id})}]
+             :value (transit/clj->transit raportti)}]
 
     [:button {:type "submit"
               :class #{"nappi-toissijainen"}}

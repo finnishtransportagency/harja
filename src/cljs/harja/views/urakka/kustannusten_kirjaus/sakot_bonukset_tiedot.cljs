@@ -7,7 +7,8 @@
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.tierekisteri :as tr])
+            [harja.domain.tierekisteri :as tr]
+            [harja.tiedot.raportit :as raporttitiedot])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (defonce tila (atom {:rivit nil
@@ -18,10 +19,12 @@
                      :valinnat {:liitteet {}
                                 :uusi-liite {}
                                 :aikavali (pvm/kuukauden-aikavali (pvm/nyt))
+                                :raportti {}
                                 :lajit {:sakko "Sakko"
                                         :bonus "Bonus"}}}))
 
 (def nakymassa? (atom false))
+(defonce ^{:private true} raportti-avain :tiemerkinta-sakot-bonukset)
 
 (defonce laji-valinnat
   {:kaikki "Kaikki"
@@ -59,19 +62,22 @@
     (assoc app :haku-kaynnissa? true))
 
   HaeTiedotOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (assoc app
-      :rivit vastaus
-      :haku-kaynnissa? false))
+  (process-event [{:keys [vastaus]} {:keys [valinnat] :as app}]
+    (-> app
+      (assoc :rivit vastaus :haku-kaynnissa? false)
+      (assoc-in [:valinnat :raportti] (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
+                                        {:alkupvm  (-> valinnat :aikavali first)
+                                         :loppupvm (-> valinnat :aikavali second)
+                                         :urakkatyyppi (:arvo @nav/urakkatyyppi)}))))
 
   HaeTiedotEpaonnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{:keys [vastaus]} app]
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))
 
   TallennaRivi
-  (process-event [{rivi :rivi} app]
+  (process-event [{:keys [rivi]} app]
     (let [{:keys [tunniste tie aosa aet losa
                   alkuaika loppuaika maara kustannus]} rivi
 
@@ -107,17 +113,17 @@
     app)
 
   MuokkaaRivia
-  (process-event [{rivi :rivi} app]
+  (process-event [{:keys [rivi]} app]
     (update app :valittu-rivi merge rivi))
 
   AvaaModal
-  (process-event [{rivi :rivi} app]
+  (process-event [{:keys [rivi]} app]
     (-> app
       (assoc :muokataan true)
       (assoc :valittu-rivi rivi)))
 
   PoistaLiite
-  (process-event [{rivi :rivi} app]
+  (process-event [{:keys [rivi]} app]
     ;;(println "r: " rivi)
     app
     #_(-> app
@@ -129,5 +135,5 @@
     (assoc app :muokataan false))
 
   ValitseLaji
-  (process-event [{rivi :rivi} app]
+  (process-event [{:keys [rivi]} app]
     (assoc app :valittu-laji rivi)))

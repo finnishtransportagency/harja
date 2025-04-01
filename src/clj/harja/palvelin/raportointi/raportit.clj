@@ -457,16 +457,18 @@
 
    ;; TODO .. 
    {:nimi         :tiemerkinta-sakot-bonukset
-    :konteksti    #{}
+    :konteksti    #{"urakka"}
+    :urakkatyyppi #{:tiemerkinta}
     :kuvaus       "Tiemerkintä - Sakot ja bonukset"
-    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/sakot-ja-bonukset
-    :urakkatyyppi urakka-domain/kanava-urakkatyypit}
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/sakot-ja-bonukset}
 
    {:nimi         :tiemerkinta-muut-kustannukset
-    :konteksti    #{}
+    :konteksti    #{"urakka"}
+    :urakkatyyppi #{:tiemerkinta}
     :kuvaus       "Tiemerkintä - Muut kustannukset"
-    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/muut-kustannukset
-    :urakkatyyppi urakka-domain/kanava-urakkatyypit}])
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/muut-kustannukset}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
