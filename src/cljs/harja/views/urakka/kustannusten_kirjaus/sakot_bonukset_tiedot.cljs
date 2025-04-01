@@ -16,9 +16,9 @@
                      :kohteet {}
                      :liitteet {}
                      :muokataan false
-                     :valittu-rivi nil
-                     :valittu-laji :kaikki
                      :haku-kaynnissa? false
+                     :valittu-laji :kaikki
+                     :valittu-rivi {:uusi-liite [{}]}
                      :valinnat {:raportti {}
                                 :aikavali {}
                                 :uusi-liite {}
@@ -47,10 +47,10 @@
 (defrecord MuokkaaRivia [rivi])
 (defrecord SuljeMuokkaus [])
 (defrecord ValitseLaji [rivi])
-(defrecord PoistaLiite [rivi])
-(defrecord TallennaRivi [rivi])
+(defrecord TallennaRivi [rivi uusi-liite])
 (defrecord TallennusOnnistui [vastaus])
 (defrecord TallennusEpaonnistui [vastaus])
+(defrecord UusiLiite [liite])
 
 
 (defn- epaonnistui [vastaus app]
@@ -122,26 +122,35 @@
   (process-event [{:keys [vastaus]} app]
     (epaonnistui vastaus app))
 
+  UusiLiite
+  (process-event [{:keys [liite]} app]
+    (println "Liite:: " liite)
+    (assoc-in app [:valittu-rivi :laatupoikkeama :uusi-liite] liite))
+
+
+
   TallennaRivi
-  (process-event [{:keys [rivi]} app]
-    (let [{:keys [tunniste tie aosa aet losa
-                  alkuaika loppuaika maara kustannus]} rivi
-
-          nyt (pvm/nyt)
-          default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
-      #_(tuck-apurit/post! app :tallenna-suorasanktio
-
-          #_{:sanktio        (dissoc s :laatupoikkeama :yllapitokohde)
-             :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
-                               :yllapitokohde (:id (:yllapitokohde s)))
-             :hoitokausi     @urakka/valittu-hoitokausi}
-
-
-          {:luoja-id (:id @istunto/kayttaja)
-           :urakka-id  @nav/valittu-urakka-id
-           :toteuma rivi}
-          {:onnistui ->TallennusOnnistui
-           :epaonnistui ->TallennusEpaonnistui})
+  (process-event [{:keys [rivi uusi-liite]} app]
+    (let [;; _ (println "Tall: " rivi " liite:  " uusi-liite " \n \n")
+          ;;nyt (pvm/nyt)
+          ;;default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)
+          
+          _ (println "Rivi : " rivi)
+          _ (println "Rivi id: " (-> rivi :yllapitokohde :id))
+          _ (println "Param: " (assoc
+                                 (:laatupoikkeama rivi)
+                                 :urakka @nav/valittu-urakka-id
+                                 :yllapitokohde (-> rivi :yllapitokohde :id)))]
+      
+      (tuck-apurit/post! app :tallenna-suorasanktio
+        {:sanktio        (dissoc rivi :laatupoikkeama :yllapitokohde)
+         :laatupoikkeama (assoc
+                           (:laatupoikkeama rivi)
+                           :urakka @nav/valittu-urakka-id
+                           :yllapitokohde (-> rivi :yllapitokohde :id))
+         :hoitokausi @u/valittu-hoitokausi}
+        {:onnistui ->TallennusOnnistui
+         :epaonnistui ->TallennusEpaonnistui})
       (assoc app :muokataan false)))
 
   TallennusOnnistui
@@ -166,14 +175,6 @@
     (-> app
       (assoc :muokataan true)
       (assoc :valittu-rivi rivi)))
-
-  PoistaLiite
-  (process-event [{:keys [rivi]} app]
-    ;;(println "r: " rivi)
-    app
-    #_(-> app
-        (assoc :muokataan true)
-        (assoc :valittu-rivi rivi)))
 
   SuljeMuokkaus
   (process-event [_ app]

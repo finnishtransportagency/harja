@@ -1,28 +1,20 @@
 (ns harja.views.urakka.kustannusten-kirjaus.sakot-ja-bonukset
   "Tiemerkintöjen sakot ja bonukset välilehti"
-  (:require [harja.views.urakka.kustannusten-kirjaus.sakot-bonukset-tiedot :as tiedot]
-            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
-            [tuck.core :refer [tuck]]
-            [harja.asiakas.kommunikaatio :as komm]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka :as urakka-tiedot]
+  (:require [harja.pvm :as pvm]
             [reagent.core :as r]
-            [harja.fmt :as fmt]
-            [harja.ui.liitteet :as liitteet]
+            [harja.ui.grid :as grid]
+            [tuck.core :refer [tuck]]
+            [harja.ui.napit :as napit]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
             [harja.ui.kentat :as kentat]
-            [harja.pvm :as pvm]
-            [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.transit :as transit]
-            [harja.ui.napit :as napit]
-            [harja.ui.grid :as grid]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.ui.liitteet :as liitteet]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as urakka-tiedot]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
-            [harja.tiedot.istunto :as istunto]
-            [harja.domain.tierekisteri :as tr-domain]))
+            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
+            [harja.views.urakka.kustannusten-kirjaus.sakot-bonukset-tiedot :as tiedot]))
 
 
 (defn- sakot-bonukset-grid [e! rivit liitteet haku-kaynnissa?]
@@ -30,9 +22,9 @@
                        [ajax-loader-pieni "Haku käynnissä..."]
                        "Valitulle aikavälille ei löytynyt mitään.")
               :tunniste :id
-              :sivuta grid/vakiosivutus
               :voi-kumota? false
               :piilota-toiminnot? true
+              :sivuta grid/vakiosivutus
               :mahdollista-rivin-valinta? true
               :rivi-klikattu #(e! (tiedot/->AvaaModal %))}
 
@@ -79,12 +71,13 @@
                        rivin-liite
                        {:ikoni [:div.nappi-toissijainen
                                 [ikonit/ikoni-ja-teksti (ikonit/link) "Avaa liite"]]}]))}]
-   rivit])
+   (->> rivit
+     (sort-by :kasittelyaika) reverse)])
 
 
 (defn- sakot-bonukset-muokkauspaneeli
   "Toteumien luonti / muokkaus"
-  [e! {:keys [lajit uusi-liite] :as valinnat} valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit]
+  [e! {:keys [lajit] :as valinnat} {:keys [uusi-liite] :as valittu-rivi} kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -97,7 +90,7 @@
      :footer [:<>
               [:hr]
               [:div.muokkaus-modal-napit
-               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi %)) {:disabled (not voi-tallentaa?)}]
+               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi uusi-liite)) {:disabled (not voi-tallentaa?)}]
                [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]]}
 
     [(lomake/rivi
@@ -169,19 +162,33 @@
         :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
         ::lomake/col-luokka "col-xs-6 summa-valinta"})
 
-     (lomake/rivi
-       {:otsikko "Liitteet"
-        :nimi :liitteet
-        :tyyppi :komponentti
-        :komponentti (fn [rivi]
-                       [liitteet/liitteet-ja-lisays
-                        @nav/valittu-urakka-id
-                        (vec (filter #(= (:laatupoikkeama %) (-> rivi :data :laatupoikkeama :id)) liitteet))
-                        {:uusi-liite-atom uusi-liite
-                         :uusi-liite-teksti "Lisää liite"
-                         :salli-poistaa-lisatty-liite? true
-                         ;:poista-lisatty-liite-fn #(e! (tiedot/->PoistaLiite r))
-                         :salli-poistaa-tallennettu-liite? false}])})]
+     (let [tyyppi (-> valittu-rivi :laji)
+           poikkeama (-> valittu-rivi :laatupoikkeama :id)
+           rivin-liite (vec (filter #(= (:laatupoikkeama %) poikkeama) liitteet))]
+
+       ;; Sallitaan liitteen lisäys vain sakoille
+       (when (= tyyppi :yllapidon_sakko)
+         (lomake/rivi
+           {:otsikko "Liitteet"
+            :nimi :liitteet
+            :tyyppi :komponentti
+            :komponentti (fn [_rivi]
+                           [liitteet/liitteet-ja-lisays
+                            @nav/valittu-urakka-id
+                            rivin-liite
+                            {:uusi-liite-atom (r/wrap valittu-rivi
+                                                (fn [data]
+                                                  (e! (tiedot/->UusiLiite data))))
+                             :uusi-liite-teksti "Lisää liite"
+                             :salli-poistaa-lisatty-liite? true
+                             :salli-poistaa-tallennettu-liite? true
+                             :poista-tallennettu-liite-fn (fn [liite-id]
+                                                            (liitteet/poista-liite-kannasta
+                                                              {:liite-id liite-id
+                                                               :domain-id poikkeama
+                                                               :domain :laatupoikkeama
+                                                               :urakka-id @nav/valittu-urakka-id
+                                                               :poistettu-fn #(e! (tiedot/->HaeTiedot))}))}])})))]
     valittu-rivi]])
 
 (defn sakot-bonukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
