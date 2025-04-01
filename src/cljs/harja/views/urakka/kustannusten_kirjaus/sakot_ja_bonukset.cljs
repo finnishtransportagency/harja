@@ -77,7 +77,7 @@
 
 (defn- sakot-bonukset-muokkauspaneeli
   "Toteumien luonti / muokkaus"
-  [e! {:keys [lajit] :as valinnat} valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit]
+  [e! {:keys [lajit] :as valinnat} {:keys [kasittelyaika] :as valittu-rivi} kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -97,16 +97,19 @@
        {:otsikko "Päivämäärä"
         :pakollinen? true
         :tyyppi :komponentti
-        :komponentti (fn [a]
+        :komponentti (fn []
                        [:span
                         [kentat/tee-kentta {:tyyppi :pvm :vayla-tyyli? true}
                          (r/wrap
-                           (-> a :data :kasittelyaika)
-                           #(println "test5"))]])
+                           kasittelyaika
+                           #(e! (tiedot/->AsetaToteumanPvm %)))]])
         ::lomake/col-luokka "col-xs-6"})
 
      (lomake/rivi
        {:otsikko "Laji"
+        :valitse-fn #(do
+                      (println "ww: " %)
+                      (e! (tiedot/->UusiSanktio %)))
         :nimi :laji
         :pakollinen? true
         :vayla-tyyli? true
@@ -139,17 +142,20 @@
      (lomake/rivi
        {:otsikko "Kulun kohdistus"
         :pakollinen? true
-        :validoi [[:ei-tyhja "Valitse toimenpide"]]
+        :tyyppi :komponentti
         :nimi :toimenpideinstanssi
-        :tyyppi :valinta
-        :hae (fn [rivi]
-               (first
-                 (filter #(= (:tpi_id %) (-> rivi :toimenpideinstanssi))
-                   @urakka-tiedot/urakan-toimenpideinstanssit)))
-        :valinnat (into [] @urakka-tiedot/urakan-toimenpideinstanssit)
-        :valinta-nayta #(if %
-                          (:tpi_nimi %)
-                          "Valitse toimenpide")
+        :validoi [[:ei-tyhja "Valitse toimenpide"]]
+        :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
+                       (let [toimenpideinstanssit @urakka-tiedot/urakan-toimenpideinstanssit]
+                         [:<>
+                          [yleiset/livi-pudotusvalikko
+                           {:pakollinen? true
+                            :vayla-tyyli? true
+                            :valitse-oletus? true
+                            :format-fn :tpi_nimi
+                            :valinta (first toimenpideinstanssit)
+                            :valitse-fn #(muokkaa-lomaketta (assoc data :toimenpideinstanssi (:tpi_id %)))}
+                           toimenpideinstanssit]]))
         ::lomake/col-luokka "leveys-kokonainen"})
 
      (lomake/rivi

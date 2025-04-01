@@ -1,6 +1,7 @@
 (ns harja.views.urakka.kustannusten-kirjaus.sakot-bonukset-tiedot
   "Tiemerkintöjen sakot ja bonukset - tiedot"
   (:require [reagent.core :refer [atom] :as reagent]
+            [harja.ui.lomake :as lomake]
             [tuck.core :as tuck]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -51,6 +52,8 @@
 (defrecord TallennusOnnistui [vastaus])
 (defrecord TallennusEpaonnistui [vastaus])
 (defrecord UusiLiite [liite])
+(defrecord AsetaToteumanPvm [aika])
+(defrecord UusiSanktio [tyyppi])
 
 
 (defn- epaonnistui [vastaus app]
@@ -128,11 +131,46 @@
     (println "Liite:: " liite)
     (assoc-in app [:valittu-rivi :laatupoikkeama :uusi-liite] liite))
 
+  UusiSanktio
+  (process-event [{:keys [tyyppi]} app]
+    (let [nyt (pvm/nyt)
+          default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)
+
+          uusi-sanktio {:laji tyyppi
+                        :suorasanktio true
+                        :perintapvm default-perintapvm
+                        :toimenpideinstanssi (:tpi_id (first @u/urakan-toimenpideinstanssit))
+                        :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                                         :aika nyt
+                                         :paatos {:paatos "sanktio"
+                                                  :kasittelyaika (get-in app [:valittu-rivi :kasittelyaika])
+                                                  :kasittelytapa :muu
+                                                  :muukasittelytapa "Tiemerkintä"}}}
+
+          uusi-bonus {:laji nil
+                      :aika nyt
+                      :perintapvm default-perintapvm
+                      :kasittelyaika (get-in app [:valittu-rivi :kasittelyaika])
+                      :toimenpideinstanssi (when (= 1 (count @u/urakan-toimenpideinstanssit))
+                                             (:tpi_id (first @u/urakan-toimenpideinstanssit)))
+                      :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                                       :aika nyt}}]
+
+      (cond
+        (= tyyppi :yllapidon_bonus)
+        (update-in app [:valittu-rivi] merge uusi-bonus)
+
+        (= tyyppi :yllapidon_sakko)
+        (update-in app [:valittu-rivi] merge uusi-sanktio))))
+
   TallennaRivi
   (process-event [{:keys [rivi]} app]
-    (let [yllapitokohde-id (-> rivi :yllapitokohde :id)
+    (let [rivi (lomake/ilman-lomaketietoja rivi)
+          yllapitokohde-id (-> rivi :yllapitokohde :id)
+
           {:keys [laji id summa indeksi perintapvm toimenpideinstanssi kasittelyaika kasittelytapa lomake-selite laatupoikkeama]} rivi
           laatupoikkeama (assoc-in laatupoikkeama [:paatos :perustelu] lomake-selite)
+
           parametrit (cond
                        ;; Sakot 
                        (= laji :yllapidon_sakko)
@@ -145,13 +183,14 @@
 
                        ;; Bonukset
                        (= laji :yllapidon_bonus)
-                       {:sanktio {:id id
-                                  :laji :yllapidon_bonus
-                                  :suorasanktio true
-                                  :summa summa
-                                  :indeksi indeksi
-                                  :perintapvm perintapvm
-                                  :toimenpideinstanssi toimenpideinstanssi}
+                       {:sanktio
+                        {:id id
+                         :laji :yllapidon_bonus
+                         :suorasanktio true
+                         :summa summa
+                         :indeksi indeksi
+                         :perintapvm perintapvm
+                         :toimenpideinstanssi toimenpideinstanssi}
                         :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
                                          :urakka @nav/valittu-urakka-id
                                          :yllapitokohde yllapitokohde-id
@@ -159,8 +198,10 @@
                                          :paatos {:paatos "sanktio"
                                                   :perustelu lomake-selite
                                                   :kasittelyaika kasittelyaika
-                                                  :kasittelytapa kasittelytapa}}
+                                                  :kasittelytapa :muu
+                                                  :muukasittelytapa "Tiemerkintä"}}
                         :hoitokausi @u/valittu-hoitokausi})]
+
       ;; ->>
       (tuck-apurit/post! app :tallenna-suorasanktio
         parametrit
@@ -183,6 +224,10 @@
   MuokkaaRivia
   (process-event [{:keys [rivi]} app]
     (update app :valittu-rivi merge rivi))
+
+  AsetaToteumanPvm
+  (process-event [{aika :aika} app]
+    (assoc-in app [:valittu-rivi :kasittelyaika] aika))
 
   AvaaModal
   (process-event [{:keys [rivi]} app]
