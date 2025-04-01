@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot
-  (:require [tuck.core :refer [process-event] :as tuck]
+  (:require [clojure.string :as str]
+            [tuck.core :refer [process-event] :as tuck]
             [taoensso.encore :refer [dissoc-in] :as encore]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.istunto :as istunto]
@@ -216,7 +217,7 @@
     (assoc-in app [:valikatselmuksen-tiedot :kattohinnan-oikaisu :uusi-kattohinta] kattohinta))
 
   TallennaKattohinnanOikaisu
-  (process-event [_ {{uusi-kattohinta :uusi-kattohinta} :kattohinnan-oikaisu :as app}]
+  (process-event [_ {{{uusi-kattohinta :uusi-kattohinta} :kattohinnan-oikaisu} :valikatselmuksen-tiedot :as app}]
     (if uusi-kattohinta
       (let [oikaisu {::urakka/id (-> @tila/yleiset :urakka :id)
                      ::valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -244,7 +245,11 @@
   TallennaKattohinnanOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "TallennaKattohinnanOikaisuEpaonnistui" vastaus)
-    (viesti/nayta-toast! "Kattohinnan oikaisun tallennuksessa tapahtui virhe" :varoitus)
+    (viesti/nayta-toast!
+      (if (str/includes? (str (get-in vastaus [:parse-error :original-text])) "Kattohinnan täytyy olla suurempi kuin tavoitehinta")
+        "Kattohinnan oikaisua ei voitu tallentaa. Kattohinnan tulee olla suurempi kuin tavoitehinta."
+        "Kattohinnan oikaisun tallennuksessa tapahtui virhe")
+      :varoitus)
     app)
 
   PoistaKattohinnanOikaisu

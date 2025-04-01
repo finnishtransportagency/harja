@@ -26,7 +26,12 @@
         yhteenvedon-tiedot (:yhteenveto app)
 
         ;; Toteutuneet kustannukset
-        hankintakustannukset (or (get-in yhteenvedon-tiedot [:kustannukset :hankintakustannukset-toteutunut]) 0)
+        ;; Välikatselmuksessa käytetyt Hankintakustannukset ovat eri asia kuin Kustannusten Seurannan Hankintakustannukset/Suunnitellut Hankinnat.
+        ;; Välikatselmuksessa Hankintakustannuksiin lisätään toteutuneet Rahavaraukset.
+        hankintakustannukset (or
+                               (+ (get-in yhteenvedon-tiedot [:kustannukset :hankintakustannukset-toteutunut])
+                                 (get-in yhteenvedon-tiedot [:kustannukset :rahavaraukset-toteutunut]))
+                               0)
         erillishankinnat (or (get-in yhteenvedon-tiedot [:kustannukset :erillishankinnat-toteutunut]) 0)
         johto-ja-hallintokorvaus (or (get-in yhteenvedon-tiedot [:kustannukset :johto-ja-hallintokorvaus-toteutunut]) 0)
         hoidonjohtopalkkio (or (get-in yhteenvedon-tiedot [:kustannukset :hoidonjohdonpalkkio-toteutunut]) 0)

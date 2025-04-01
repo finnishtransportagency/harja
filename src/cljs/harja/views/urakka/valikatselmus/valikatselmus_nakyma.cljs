@@ -107,11 +107,8 @@
   (let [oikaistu-kattohinta (some->
                               (get-in app [:valikatselmuksen-tiedot :kattohinnan-muutokset (:hoitokauden-alkuvuosi app)])
                               ::valikatselmus/uusi-kattohinta)
-        uusi-kattohinta (get-in app [:valikatselmuksen-tiedot :kattohinnan-muutokset :uusi-kattohinta])
-        tavoitehinta (t-yhteiset/oikaistu-tavoitehinta-valitulle-hoitokaudelle app)
-        uusi-kattohinta-suurempi-kuin-tavoitehinta? (and uusi-kattohinta tavoitehinta (>= uusi-kattohinta tavoitehinta))
-        uusi-kattohinta-validi? uusi-kattohinta-suurempi-kuin-tavoitehinta?
-        muokkaa-painettu? (get-in app [:valikatselmuksen-tiedot :kattohinnan-muutokset :muokkaa-painettu?])
+        uusi-kattohinta (get-in app [:valikatselmuksen-tiedot :kattohinnan-oikaisu :uusi-kattohinta])
+        muokkaa-painettu? (get-in app [:valikatselmuksen-tiedot :kattohinnan-oikaisu :muokkaa-painettu?])
         muokkaustila? (or muokkaa-painettu? (not oikaistu-kattohinta))]
     [:<>
      [:div.oikaisu-paatos-varoitus
@@ -141,7 +138,7 @@
         [napit/tallenna
          "Hyväksy uusi kattohinta"
          #(e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu))
-         {:disabled (not uusi-kattohinta-validi?)}]
+         {:disabled (and (not oikaistu-kattohinta) (not uusi-kattohinta))}]
         [napit/muokkaa
          "Muokkaa"
          #(e! (valikatselmus-tiedot/->KattohinnanMuokkaaPainettu oikaistu-kattohinta))])

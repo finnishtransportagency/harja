@@ -9,6 +9,7 @@
             [harja.tiedot.urakka.kulut.yhteiset :as t]
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.ikonit :as ikonit]
             [harja.pvm :as pvm]
@@ -34,6 +35,8 @@
 (defn yhteenveto-laatikko [e! app data sivu]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero (-> @tila/yleiset :urakka :alkupvm) valittu-hoitokauden-alkuvuosi)
+        hoitokausi-vec [(pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi)
+                        (pvm/hoitokauden-loppupvm (inc valittu-hoitokauden-alkuvuosi))]
         {:keys [tavoitehinta] indeksikorjattu-tavoitehinta? :indeksikorjattu?} (t/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app 0)
         {:keys [kattohinta] indeksikorjattu-kattohinta? :indeksikorjattu?} (or (t/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
         oikaistu-kattohinta (or (t/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro app) 0)
@@ -85,7 +88,7 @@
         "Välikatselmus puuttuu"
         [napit/yleinen-ensisijainen
          "Tee välikatselmus"
-         #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]])
+         #(siirtymat/avaa-valikatselmus hoitokausi-vec)]])
      [:div.rivi 
       [:span (if oikaisuja? 
                (str "Alkuperäinen tavoitehinta " (if indeksikorjattu-tavoitehinta? "(indeksikorjattu)" "(indeksikorjaamaton)"))
@@ -175,7 +178,7 @@
        [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/euro-opt lupaussanktio)]])
      (when (and (not valikatselmus-tekematta?) (not= :valikatselmus sivu))
        [:div.valikatselmus-tehty
-        [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))
+        [napit/yleinen-ensisijainen "Avaa välikatselmus" #(siirtymat/avaa-valikatselmus hoitokausi-vec) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))
 
 (defn tavoitehinnan-oikaisut-taulukko
   "Tavoitehinnan oikaisujen taulukko.
