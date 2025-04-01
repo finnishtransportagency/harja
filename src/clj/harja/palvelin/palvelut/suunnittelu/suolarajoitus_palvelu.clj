@@ -597,22 +597,6 @@
       (fn [user tiedot]
         (hae-rajoitusalueen-paivan-toteumat (:db this) user tiedot)))
 
-    ;; Käytetään lyhyen aikaa hallintapuolelta, jotta rajoitusalueet saadaan muodostettua pohjavesialueiden perusteella
-    (julkaise-palvelu (:http-palvelin this)
-      :hae-pohjavesialueurakat
-      (fn [user tiedot]
-        (hae-pohjavesialueidenurakat (:db this) user tiedot)))
-
-    (julkaise-palvelu (:http-palvelin this)
-      :hae-urakan-siirrettavat-pohjavesialueet
-      (fn [user tiedot]
-        (hae-urakan-siirrettavat-pohjavesialueet (:db this) user tiedot)))
-
-    (julkaise-palvelu (:http-palvelin this)
-      :siirra-urakan-pohjavesialueet
-      (fn [user tiedot]
-        (siirra-urakan-pohjavesialueet (:db this) user tiedot)))
-
     (julkaise-palvelu (:http-palvelin this)
       :tarkista-onko-suolatoteumia
       (fn [user tiedot]
@@ -631,8 +615,5 @@
       :hae-suolatoteumat-rajoitusalueittain
       :hae-rajoitusalueen-summatiedot
       :hae-rajoitusalueen-paivan-toteumat
-      :hae-pohjavesialueurakat
-      :hae-urakan-siirrettavat-pohjavesialueet
-      :siirra-urakan-pohjavesialueet
       :tarkista-onko-suolatoteumia)
     this))
