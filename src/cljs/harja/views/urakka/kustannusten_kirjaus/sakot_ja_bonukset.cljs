@@ -25,7 +25,7 @@
             [harja.domain.tierekisteri :as tr-domain]))
 
 
-(defn- sakot-bonukset-grid [e! rivit]
+(defn- sakot-bonukset-grid [e! rivit liitteet]
   [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
                        [ajax-loader-pieni "Haku käynnissä..."]
                        "Valitulle aikavälille ei löytynyt mitään.")
@@ -41,51 +41,45 @@
                      [:div.pvm "Päivämäärä"
                       [:div [ikonit/action-sort-descending]]])
      :tyyppi :komponentti
-     :komponentti (fn [arvo _] (str (pvm/pvm (:pvm arvo))))
+     :komponentti (comp #(pvm/pvm %) :kasittelyaika)
+
      :luokka "semibold text-nowrap"
-     :leveys 0.2}
+     :leveys 0.15}
 
     {:otsikko "Laji"
-     :tyyppi :string
-     :nimi :tyyppi
+     :tyyppi :komponentti
+     :komponentti (comp #(tiedot/laji-valinnat %) :laji)
      :luokka "text-nowrap"
-     :leveys 0.2}
+     :leveys 0.1}
 
     {:otsikko "Kohde"
-     :tyyppi :string
-     :nimi :selite
+     :tyyppi :komponentti
+     :komponentti (comp str :nimi :yllapitokohde)
      :luokka "text-nowrap"
-     :leveys 0.2}
+     :leveys 0.15}
 
     {:otsikko "Selite"
-     :tyyppi :string
-     :nimi :selite
+     :tyyppi :komponentti
+     :komponentti (comp str :perustelu :paatos :laatupoikkeama)
      :luokka "text-nowrap"
-     :leveys 0.2}
+     :leveys 0.15}
 
     {:otsikko "Määrä"
      :tyyppi :euro
      :tasaa :oikea
-     :nimi :kustannus
+     :nimi :summa
      :luokka "text-nowrap"
      :leveys 0.1}
 
-    (let [liitteet-test [{:koko 63765,
-                          :kohde 1,
-                          :tyyppi "image/jpeg",
-                          :nimi "Highway_5_Pal.jpg",
-                          :id 11, :virustarkastettu? true, :oid 34094}]]
-      {:otsikko "Liite"
-       :nimi :liitteet
-       :tyyppi :komponentti
-       :leveys 0.1
-       :komponentti (fn [rivi]
+    {:otsikko "Liite"
+     :tyyppi :komponentti
+     :leveys 0.1
+     :komponentti (fn [{:keys [laatupoikkeama]}]
+                    (let [rivin-liite (vec (filter #(= (:laatupoikkeama %) (-> laatupoikkeama :id)) liitteet))]
                       [liitteet/liitteet-ikoneina
-                       ;;(println "r: " rivi)
-                       liitteet-test
+                       rivin-liite
                        {:ikoni [:div.nappi-toissijainen
-                                [ikonit/ikoni-ja-teksti (ikonit/link) "Avaa liite"]]
-                        :siltatarkastusliite? false}])})]
+                                [ikonit/ikoni-ja-teksti (ikonit/link) "Avaa liite"]]}]))}]
    rivit])
 
 
@@ -202,20 +196,20 @@
     valittu-rivi]])
 
 (defn sakot-bonukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
-                                         haku-kaynnissa? kustannukset tyypit valittu-laji] :as app}]
+                                         haku-kaynnissa? kustannukset tyypit valittu-laji liitteet] :as app}]
 
   (let [alkuaika (:alkuaika valittu-rivi)
         ;; TODO 
         voi-kirjoittaa? true
         voi-tallentaa? true
-        grid (sakot-bonukset-grid e! rivit)
+        grid (sakot-bonukset-grid e! rivit liitteet)
         lisaa-uusi-fn #(e! (tiedot/->AvaaModal nil))
         muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)
         laji-suodatin [kentat/tee-kentta {:vayla-tyyli? true
                                           :nayta-rivina? true
                                           :space-valissa? true
                                           :tyyppi :radio-group
-                                          :vaihtoehdot [:kaikki :sakko :bonus]
+                                          :vaihtoehdot [:kaikki :yllapidon_sakko :yllapidon_bonus]
                                           :vaihtoehto-nayta tiedot/laji-valinnat
                                           :valitse-fn #(e! (tiedot/->ValitseLaji %))}
                        (atom valittu-laji)]]

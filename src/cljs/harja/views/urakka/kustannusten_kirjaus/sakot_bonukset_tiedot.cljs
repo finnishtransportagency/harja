@@ -8,33 +8,38 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.tierekisteri :as tr]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.raportit :as raporttitiedot])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (defonce tila (atom {:rivit nil
+                     :liitteet {}
                      :muokataan false
                      :valittu-rivi nil
                      :valittu-laji :kaikki
                      :haku-kaynnissa? false
-                     :valinnat {:liitteet {}
+                     :valinnat {:raportti {}
+                                :aikavali {}
                                 :uusi-liite {}
-                                :aikavali (pvm/kuukauden-aikavali (pvm/nyt))
-                                :raportti {}
-                                :lajit {:sakko "Sakko"
-                                        :bonus "Bonus"}}}))
+                                :lajit {:yllapidon_sakko "Sakko"
+                                        :yllapidon_bonus "Bonus"}}}))
 
 (def nakymassa? (atom false))
 (defonce ^{:private true} raportti-avain :tiemerkinta-sakot-bonukset)
 
 (defonce laji-valinnat
   {:kaikki "Kaikki"
-   :sakko "Sakko"
-   :bonus "Bonus"})
+   :yllapidon_sakko "Sakko"
+   :yllapidon_bonus "Bonus"})
+
+
 
 
 (defrecord HaeTiedot [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
+(defrecord HaeLiitteetOnnistui [vastaus])
+(defrecord HaeLiitteetEpaonnistui [vastaus])
 (defrecord AvaaModal [rivi])
 (defrecord MuokkaaRivia [rivi])
 (defrecord SuljeMuokkaus [])
@@ -45,14 +50,34 @@
 (defrecord TallennusEpaonnistui [vastaus])
 
 
+(defn- epaonnistui [vastaus app]
+  (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
+  (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+  (assoc app :haku-kaynnissa? false))
+
+
+(defn- raporttiparametrit []
+  (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
+    {:alkupvm  (-> @u/valittu-aikavali first)
+     :loppupvm (-> @u/valittu-aikavali second)
+     :urakkatyyppi (:arvo @nav/urakkatyyppi)}))
+
+
 (defn hae-tiedot
-    ;; TODO 
   [{:keys [valinnat] :as app}]
-  (tuck-apurit/post! app :hae-tiemerkinta-muut-kustannukset
-    {:aikavali (:aikavali valinnat)
-     :urakka-id @nav/valittu-urakka-id}
+  (tuck-apurit/post! app :hae-urakan-sanktiot-ja-bonukset
+    {:urakka-id @nav/valittu-urakka-id
+     :alku      (-> @u/valittu-aikavali first)
+     :loppu     (-> @u/valittu-aikavali second)}
     {:onnistui ->HaeTiedotOnnistui
      :epaonnistui ->HaeTiedotEpaonnistui}))
+
+
+(defn hae-liitteet [app]
+  (tuck-apurit/post! app :hae-urakan-liitteet
+    {:urakka-id @nav/valittu-urakka-id}
+    {:onnistui ->HaeLiitteetOnnistui
+     :epaonnistui ->HaeLiitteetEpaonnistui}))
 
 
 (extend-protocol tuck/Event
@@ -62,19 +87,22 @@
     (assoc app :haku-kaynnissa? true))
 
   HaeTiedotOnnistui
-  (process-event [{:keys [vastaus]} {:keys [valinnat] :as app}]
-    (-> app
-      (assoc :rivit vastaus :haku-kaynnissa? false)
-      (assoc-in [:valinnat :raportti] (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
-                                        {:alkupvm  (-> valinnat :aikavali first)
-                                         :loppupvm (-> valinnat :aikavali second)
-                                         :urakkatyyppi (:arvo @nav/urakkatyyppi)}))))
+  (process-event [{:keys [vastaus]} app]
+    (hae-liitteet (-> app
+                    (assoc :rivit vastaus :haku-kaynnissa? false)
+                    (assoc-in [:valinnat :raportti] (raporttiparametrit)))))
 
   HaeTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
-    (assoc app :haku-kaynnissa? false))
+    (epaonnistui vastaus app))
+
+  HaeLiitteetOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc app :liitteet vastaus))
+
+  HaeLiitteetEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (epaonnistui vastaus app))
 
   TallennaRivi
   (process-event [{:keys [rivi]} app]
@@ -108,9 +136,7 @@
 
   TallennusEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.warn "Tallennus epäonnistui: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Tallennus epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
+    (epaonnistui vastaus app))
 
   MuokkaaRivia
   (process-event [{:keys [rivi]} app]
