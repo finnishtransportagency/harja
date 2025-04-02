@@ -163,7 +163,7 @@ SELECT EXISTS (
     WHERE skt.urakka = :urakkaid
       AND skt.osio = 'tavoite-ja-kattohinta'::SUUNNITTELU_OSIO
       AND skt.hoitovuosi = :hoitovuosinro
-      AND skt.vahvistettu = true)
+      AND skt.vahvistettu = true);
 
 -- name: lisaa-suunnitelmalle-tila
    INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, luoja, vahvistaja, vahvistettu, vahvistus_pvm)
