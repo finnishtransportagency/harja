@@ -14,8 +14,8 @@
 
 (defonce tila (atom {:rivit nil
                      :muokataan false
-                     :valittu-rivi nil
                      :haku-kaynnissa? false
+                     :valittu-rivi {}
                      :valinnat {:raportti {}
                                 :aikavali (pvm/kuukauden-aikavali (pvm/nyt))}}))
 
@@ -45,6 +45,15 @@
 (defrecord MuokkaaRivia [rivi])
 (defrecord SuljeMuokkaus [])
 (defrecord AsetaToteumanPvm [aika])
+(defrecord TallennaRivi [rivi])
+(defrecord TallennusOnnistui [vastaus])
+(defrecord TallennusEpaonnistui [vastaus])
+
+
+(defn- epaonnistui [vastaus app]
+  (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
+  (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+  (assoc app :haku-kaynnissa? false))
 
 
 (defn hae-tiedot
@@ -112,6 +121,43 @@
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))
 
+  TallennaRivi
+  (process-event [{:keys [rivi]} app]
+    (let [rivi (lomake/ilman-lomaketietoja rivi)
+          {:keys [pvm hinta id selite tyyppi yllapitoluokka]} rivi
+          toteuma {:id id
+                   :pvm pvm
+                   :hinta hinta
+                   :tyyppi tyyppi
+                   :selite selite
+                   :yllapitoluokka yllapitoluokka
+                   :poistettu false}
+
+          parametrit {:urakka-id  @nav/valittu-urakka-id
+                      :sopimus-id (-> @u/valittu-sopimusnumero first)
+                      :toteumat [toteuma]
+                      ;; Ei ole toteuman pvm, vaan näillä haetaan vastaus 
+                      :alkupvm (-> @u/valittu-aikavali first)
+                      :loppupvm (-> @u/valittu-aikavali second)}]
+
+      (tuck-apurit/post! app :tallenna-yllapito-toteumat
+        parametrit
+        {:onnistui ->TallennusOnnistui
+         :epaonnistui ->TallennusEpaonnistui})
+      (assoc app :muokataan false)))
+
+  TallennusOnnistui
+  (process-event [_ {:keys [valittu-rivi rivit] :as app}]
+    (let [valittu-id (:id valittu-rivi)
+          valittu-rivi (some #(when (= (:id %) valittu-id) %) rivit)]
+      (viesti/nayta-toast! "Toteuma tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
+      (hae-tiedot app)
+      (assoc app :valitu-rivi valittu-rivi)))
+
+  TallennusEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (epaonnistui vastaus app))
+
   MuokkaaRivia
   (process-event [{:keys [rivi]} app]
     (update app :valittu-rivi merge rivi))
@@ -124,8 +170,7 @@
   (process-event [{:keys [rivi]} app]
     (-> app
       (assoc :muokataan true)
-      (assoc :valittu-rivi rivi)
-      (assoc-in [:valittu-rivi :lomake-luokka] (-> rivi :yllapitoluokka :lyhyt-nimi keyword))))
+      (assoc :valittu-rivi rivi)))
 
   SuljeMuokkaus
   (process-event [_ app]

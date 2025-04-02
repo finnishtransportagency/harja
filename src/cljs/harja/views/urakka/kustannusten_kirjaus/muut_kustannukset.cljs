@@ -21,7 +21,8 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.tierekisteri :as tr-domain]))
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 
 (defn- muut-kustannukset-muokkauspaneeli
@@ -39,7 +40,7 @@
      :footer [:<>
               [:hr]
               [:div.muokkaus-modal-napit
-               [napit/tallenna "Tallenna" #(println "tallenna") {:disabled (not voi-tallentaa?)}]
+               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi)) {:disabled (not voi-tallentaa?)}]
                [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]]}
 
     [(lomake/rivi
@@ -81,9 +82,9 @@
         :pakollinen? true
         :vayla-tyyli? true
         :tyyppi :radio-group
-        :nimi :lomake-luokka
-        :vaihtoehdot (keys tiedot/mahd-pk-luokat)
-        :vaihtoehto-nayta #(get tiedot/mahd-pk-luokat %)
+        :nimi :yllapitoluokka
+        :vaihtoehto-nayta :nimi
+        :vaihtoehdot yllapitokohteet-domain/paallysteen-korjausluokat
         :validoi [#(when (nil? %) "Syötä jokin luokka, tai 'Ei PK-luokkaa'")]})
 
      (lomake/rivi
