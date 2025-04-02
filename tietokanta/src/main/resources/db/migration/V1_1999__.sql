@@ -540,7 +540,7 @@ BEGIN
                                  urakan_hinnat.tavoitehinta,
                                  urakan_hinnat.tarjous_tavoitehinta, paatos."lupaus-luvatut-pisteet",
                                  paatos."lupaus-toteutuneet-pisteet",
-                                 paatos."urakoitsijan-maksu",
+                                 (paatos."urakoitsijan-maksu" *-1), -- Vanhassa päätöstaulussa on lupaussanktio negatiivisena, joten käännetään se positiiviseksi tässä.
                                  urakka_parametrit.lupauspaatoksen_sanktioprosentti,
                                  urakan_tiedot.indeksi, indeksikorotus,
                                  paatos.sanktio_id, paatos."luoja-id", paatos.luotu, paatos.poistettu);
