@@ -24,7 +24,7 @@
   [e! rivit liitteet haku-kaynnissa?]
   [grid/grid {:tyhja (if haku-kaynnissa?
                        [ajax-loader-pieni "Haku käynnissä..."]
-                       "Valitulle aikavälille ei löytynyt mitään.")
+                       "Aikavälille ei löytynyt tuloksia.")
               :tunniste :id
               :voi-kumota? false
               :piilota-toiminnot? true
@@ -39,13 +39,13 @@
      :komponentti (comp #(pvm/pvm %) :kasittelyaika)
 
      :luokka "semibold text-nowrap"
-     :leveys 0.15}
+     :leveys 0.08}
 
     {:otsikko "Laji"
      :tyyppi :komponentti
      :komponentti (comp #(tiedot/laji-valinnat %) :laji)
      :luokka "text-nowrap"
-     :leveys 0.1}
+     :leveys 0.05}
 
     {:otsikko "Kohde"
      :tyyppi :komponentti
@@ -75,13 +75,16 @@
                        rivin-liite
                        {:ikoni [:div.nappi-toissijainen
                                 [ikonit/ikoni-ja-teksti (ikonit/link) "Avaa liite"]]}]))}]
+   ;; Sorttaa gridi pvm mukaan 
    (->> rivit
      (sort-by :kasittelyaika) reverse)])
 
 
 (defn- sakot-bonukset-muokkauspaneeli
   "Toteumien luonti / muokkaus"
-  [e! {:keys [lajit] :as valinnat} {:keys [kasittelyaika] :as valittu-rivi} kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit]
+  [e! 
+   {:keys [lajit] :as valinnat} 
+   {:keys [kasittelyaika] :as valittu-rivi} kohteet liitteet voi-kirjoittaa? voi-tallentaa?]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -111,9 +114,7 @@
 
      (lomake/rivi
        {:otsikko "Laji"
-        :valitse-fn #(do
-                       (println "ww: " %)
-                       (e! (tiedot/->UusiSanktio %)))
+        :valitse-fn #(e! (tiedot/->UusiSanktio %))
         :nimi :laji
         :pakollinen? true
         :vayla-tyyli? true
@@ -246,7 +247,7 @@
         lisaa-uusi-fn #(e! (tiedot/->AvaaModal nil))
         laji-suodatin (suodattimet-lajit e! valinnat)
         grid (sakot-bonukset-grid e! rivit liitteet haku-kaynnissa?)
-        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit)]
+        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa?)]
 
     (yhteiset/nakyma-body "Sakot ja bonukset"
       e! lisaa-uusi-fn aikavali

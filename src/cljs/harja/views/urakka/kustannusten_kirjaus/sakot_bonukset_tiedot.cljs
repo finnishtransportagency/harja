@@ -11,26 +11,38 @@
             [reagent.core :refer [atom] :as reagent]
             [harja.tiedot.raportit :as raporttitiedot]))
 
-(defonce tila (atom {:rivit nil
-                     :kohteet {}
-                     :liitteet {}
-                     :muokataan false
-                     :haku-kaynnissa? false
-                     :valittu-rivi {:uusi-liite [{}]}
-                     :valinnat {:raportti {}
-                                :aikavali {}
-                                :uusi-liite {}
-                                :valittu-laji :kaikki
-                                :lajit {:yllapidon_sakko "Sakko"
-                                        :yllapidon_bonus "Bonus"}}}))
-
-(def nakymassa? (atom false))
 (defonce ^{:private true} raportti-avain :tiemerkinta-sakot-bonukset)
+(defonce ^{:private true} nollatut-valinnat {:rivit nil
+                                             :kohteet {}
+                                             :liitteet {}
+                                             :muokataan false
+                                             :haku-kaynnissa? false
+                                             :valittu-rivi {:uusi-liite [{}]}
+                                             :valinnat {:raportti {}
+                                                        :uusi-liite {}
+                                                        :lajit {:yllapidon_sakko "Sakko"
+                                                                :yllapidon_bonus "Bonus"}}})
 
-(defonce laji-valinnat
-  {:kaikki "Kaikki"
-   :yllapidon_sakko "Sakko"
-   :yllapidon_bonus "Bonus"})
+(defonce nakymassa? (atom false))
+(defonce tila (atom (assoc-in nollatut-valinnat [:valinnat :valittu-laji] :kaikki)))
+
+(defonce laji-valinnat {:kaikki "Kaikki"
+                        :yllapidon_sakko "Sakko"
+                        :yllapidon_bonus "Bonus"})
+
+
+(defn- nollaa-tuck-tila
+  "Nollaa Tuck-tilan osittain säilyttäen olemassa olevat syvemmän tason arvot.
+   Korvaa arvot, jotka on määritelty `nollatut-valinnat`
+   Käytetään kun suodattimia päivitetään, urakkaa vaihdetaan, yms, jotta tilaan ei jää mitään roikkumaan."
+  [app]
+  (merge-with (fn [app valinta]
+                (if (and
+                      (map? app) (map? valinta))
+                  (merge app valinta)
+                  valinta))
+    app
+    nollatut-valinnat))
 
 
 (defn voi-tallentaa?
@@ -114,9 +126,9 @@
 (extend-protocol tuck/Event
   HaeTiedot
   (process-event [_ app]
-    (println "Haetaan... " (js/Date.))
     (hae-tiedot app)
-    (-> app
+    (-> 
+      (nollaa-tuck-tila app)
       (assoc :haku-kaynnissa? true)
       (assoc-in [:valinnat :aikavali] @u/valittu-aikavali)))
 
