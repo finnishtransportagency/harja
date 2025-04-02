@@ -8,7 +8,20 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko rivi]]))
 
 
-(defonce ^{:private true} raportti-sanktiot-otsikko "Tiemerkintä - Sakot ja bonukset")
+(defonce ^{:private true} raportti-sanktiot-otsikko "Sakot ja bonukset")
+(defonce ^{:private true} raportti-kustannukset-otsikko "Muut kustannukset")
+
+
+(defn- osion-otsikko [otsikko]
+  [:otsikko-heading otsikko {:padding-top "50px"}])
+
+
+(defn- hae-lyhytnimet [db urakkatyyppi urakka-id]
+  (let [urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+        lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi urakkatyyppi :vain-puuttuvat false :urakantila "kaikki"})
+        ;; Tähän voi passata kokoelman urakka-iditä, jos halutaan suorittaa esim. hallintayksikkö kontekstissa 
+        valitut-urakat-nimet (k-raportointi/suodata-urakat lyhytnimet #{urakka-id})]
+    (k-raportointi/kokoa-lyhytnimet valitut-urakat-nimet)))
 
 
 (defn- taulukko [{:keys [gridin-otsikko rivin-tiedot rivit oikealle-tasattavat]}]
@@ -29,11 +42,7 @@
     [:varillinen-teksti {:arvo maara :fmt :raha}]))
 
 
-(defn- osion-otsikko [otsikko]
-  [:otsikko-heading otsikko {:padding-top "50px"}])
-
-
-(defn- koosta-taulukko [data]
+(defn- koosta-sanktiot-taulukko [data]
   (let [tiedot {:rivin-tiedot (rivi
                                 {:otsikko "Käsitelty" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.4 :tyyppi :varillinen-teksti}
                                 {:otsikko "Laji" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.3 :tyyppi :varillinen-teksti}
@@ -53,15 +62,9 @@
        (osion-otsikko raportti-sanktiot-otsikko)])))
 
 
-(defn- hae-lyhytnimet [db urakkatyyppi urakka-id]
-  (let [urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
-        lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi urakkatyyppi :vain-puuttuvat false :urakantila "kaikki"})
-        ;; Tähän voi passata kokoelman urakka-iditä, jos halutaan suorittaa esim. hallintayksikkö kontekstissa 
-        valitut-urakat-nimet (k-raportointi/suodata-urakat lyhytnimet #{urakka-id})]
-    (k-raportointi/kokoa-lyhytnimet valitut-urakat-nimet)))
-
-
-(defn sakot-ja-bonukset [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm] :as _parametrit}]
+(defn sakot-ja-bonukset 
+  "Tiemerkintä sanktiot ja bonukset, raportin suoritusfunktio"
+  [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm] :as _parametrit}]
   (let [lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
         raportin-otsikko (raportin-otsikko lyhytnimet raportti-sanktiot-otsikko alkupvm loppupvm)
 
@@ -89,28 +92,69 @@
     [:raportti {:nimi raportin-otsikko
                 :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
-     (koosta-taulukko rivit)]))
+     (koosta-sanktiot-taulukko rivit)]))
 
 
-(defn muut-kustannukset [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm sopimus] :as parametrit}]
-  (let [_ (println "\n params: " parametrit)
+(defn- kustannukset-rivi [aika tyyppi selite luokka hinta]
+  (rivi
+    [:varillinen-teksti {:arvo aika}]
+    [:varillinen-teksti {:arvo tyyppi}]
+    [:varillinen-teksti {:arvo selite}]
+    [:varillinen-teksti {:arvo luokka}]
+    [:varillinen-teksti {:arvo hinta :fmt :raha}]))
 
 
-        lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
-        ;raportin-otsikko (raportin-otsikko lyhytnimet raportti-sanktiot-otsikko alkupvm loppupvm)
+(defn- koosta-kustannukset-taulukko [data]
+  (let [tiedot {:rivin-tiedot (rivi
+                                {:otsikko "Aika" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.4 :tyyppi :varillinen-teksti}
+                                {:otsikko "Tyyppi" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.3 :tyyppi :varillinen-teksti}
+                                {:otsikko "Selite" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti}
+                                {:otsikko "PK-luokka" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.5 :tyyppi :varillinen-teksti}
+                                {:otsikko "Hinta" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.4 :tyyppi :varillinen-teksti})
+                :rivit (mapv
+                         #(kustannukset-rivi
+                            (pvm/pvm-aika-klo (:aika %))
+                            (:tyyppi %)
+                            (:selite %)
+                            (:luokka %)
+                            (:hinta %))
+                         data)}]
+    (into ()
+      [(taulukko tiedot)
+       (osion-otsikko raportti-kustannukset-otsikko)])))
 
-        vast (yllapito-palvelu/hae-yllapito-toteumat db user
-                              {:urakka  urakka-id
-                               :sopimus sopimus
-                               :alkupvm  alkupvm
-                               :loppupvm loppupvm})
-        
-        
-        _ (println "Vastaus: " vast)
-        ]
 
-    [:raportti {:nimi "TODO....."
+(defn muut-kustannukset 
+  "Tiemerkintä muut kustannukset raportin suoritusfunktio"
+  [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm sopimus _tyypit] :as _parametrit}]
+  (let [lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
+        raportin-otsikko (raportin-otsikko lyhytnimet raportti-kustannukset-otsikko alkupvm loppupvm)
+
+        toteumat (yllapito-palvelu/hae-yllapito-toteumat
+                   db user
+                   {:urakka  urakka-id
+                    :sopimus sopimus
+                    :alkupvm  alkupvm
+                    :loppupvm loppupvm})
+
+        tyyppi-valinnat {:lisatyo "Lisätyö"
+                         :muu "Muu kustannus"
+                         :muutostyo "Muutostyö"
+                         :arvonmuutos "Arvonmuutos"
+                         :indeksi "Indeksitarkistus"
+                         :sopimusalueen-muutos "Sopimusalueen muutos"}
+
+        rivit (mapcat
+                (fn [toteuma]
+                  (let [sarakkeet {:aika (:pvm toteuma)
+                                   :tyyppi (-> toteuma :tyyppi tyyppi-valinnat)
+                                   :selite (-> toteuma :selite)
+                                   :luokka (-> toteuma :yllapitoluokka :nimi)
+                                   :hinta (-> toteuma :hinta)}]
+                    [sarakkeet]))
+                toteumat)]
+
+    [:raportti {:nimi raportin-otsikko
                 :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
-     ;;(koosta-taulukko tapahtumarivit)
-     ]))
+     (koosta-kustannukset-taulukko rivit)]))

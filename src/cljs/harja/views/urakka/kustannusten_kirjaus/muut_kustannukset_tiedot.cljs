@@ -34,7 +34,6 @@
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
 (defrecord AvaaKustannusModal [rivi])
-(defrecord HaeTyypit [])
 (defrecord HaeTyypitOnnistui [vastaus])
 (defrecord HaeTyypitEpaonnistui [vastaus])
 (defrecord MuokkaaRivia [rivi])
@@ -51,12 +50,13 @@
   (assoc app :haku-kaynnissa? false))
 
 
-(defn- raporttiparametrit []
+(defn- raporttiparametrit [tyypit]
   (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
     {:urakkatyyppi (:arvo @nav/urakkatyyppi)
      :alkupvm  (-> @u/valittu-aikavali first)
      :loppupvm (-> @u/valittu-aikavali second)
-     :sopimus (-> @u/valittu-sopimusnumero first)}))
+     :sopimus (-> @u/valittu-sopimusnumero first)
+     :tyypit tyypit}))
 
 
 (defn hae-tiedot
@@ -106,9 +106,7 @@
 
   HaeTiedotOnnistui
   (process-event [{:keys [vastaus]} {:keys [_valinnat] :as app}]
-    (hae-kustannustyypit (-> app
-                           (assoc :rivit vastaus :haku-kaynnissa? false)
-                           (assoc-in [:valinnat :raportti] (raporttiparametrit)))))
+    (hae-kustannustyypit (assoc app :rivit vastaus :haku-kaynnissa? true)))
 
   HaeTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -116,16 +114,11 @@
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))
 
-  HaeTyypit
-  (process-event [_ app]
-    (hae-kustannustyypit app)
-    (assoc app :haku-kaynnissa? true))
-
   HaeTyypitOnnistui
   (process-event [{:keys [vastaus]} app]
-    (assoc app
-      :tyypit vastaus
-      :haku-kaynnissa? false))
+    (-> app
+      (assoc :tyypit vastaus :haku-kaynnissa? false)
+      (assoc-in [:valinnat :raportti] (raporttiparametrit vastaus))))
 
   HaeTyypitEpaonnistui
   (process-event [{:keys [vastaus]} app]
