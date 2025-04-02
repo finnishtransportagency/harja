@@ -630,7 +630,7 @@ BEGIN
                 WHEN 'kattohinnan-ylitys'
                     THEN RAISE NOTICE 'kattohinnan-ylitys tiedot: %', paatos;
 
-                         IF urakka_parametrit.kattohintaylityksen_siirron_maaran_rajoitus IS TRUE THEN
+                         IF urakka_parametrit.kattohintaylityksen_siirron_prosenttirajoitus > 0 THEN
                              maksimi_siirrettava_maara := urakan_hinnat.kattohinta *
                                                           urakka_parametrit.kattohintaylityksen_siirron_prosenttirajoitus;
                          ELSE

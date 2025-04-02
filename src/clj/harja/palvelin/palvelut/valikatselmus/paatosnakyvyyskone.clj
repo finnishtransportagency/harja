@@ -142,6 +142,8 @@
             bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
             lupaussanktio (when (= tyyppi "sanktio") (* (/ sanktioprosentti 100) tarjouksen-tavoitehinta erotus))
             lupausbonus (when (= tyyppi "bonus") (* (/ bonusprosentti 100) tarjouksen-tavoitehinta (* -1 erotus)))
+            ;; Päätöspäivä on käytössä sanktion laskennassa ja siihen asetetaan hoitovuoden päättymispäivä
+            paatospaiva (pvm/->pvm (str "31.10." valittu-hoitovuosi))
             ;; Valitaan lupauspäätös, joissa tyyppi täsmää
             lupauspaatos (first (filter
                                   (fn [paatos]
@@ -149,10 +151,10 @@
                                   paatokset))
             indeksikorotus (cond
                              (and (= tyyppi "bonus") (:indeksi_kaytossa_bonuksella urakan-parametrit))
-                             (laske-indeksikorotus-lupaukselle db urakkaid (pvm/nyt) indeksi lupausbonus false)
+                             (laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupausbonus false)
 
                              (and (= tyyppi "sanktio") (:indeksi_kaytossa_sanktiolla urakan-parametrit))
-                             (laske-indeksikorotus-lupaukselle db urakkaid (pvm/nyt) indeksi lupaussanktio false)
+                             (laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupaussanktio false)
 
                              :else nil)
 
