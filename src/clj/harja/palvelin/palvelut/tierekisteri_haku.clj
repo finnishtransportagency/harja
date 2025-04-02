@@ -170,13 +170,9 @@
 (defn tieosoitteen-ajoratakilometrit
   "Hakee annetun tieosoitteen ajoratakilometrit, siten että kaksiajorataisissa kohdissa lasketaan kilometrit tuplana.
   Hyödyntää ns. kaista-aineistoa taustalla. Tieosoite muodossa :tr-numero, :tr-alkuosa, ..."
-  [db {:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]}]
+  [db {:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tieosoite}]
   (assert (and tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys) "Annettava kaikki tieosoitteen kentät")
-  (let [ajoratakilometrit (tv/tieosoitteen-ajoratakilometrit-kaistaaineistosta db {:tr-numero tr-numero
-                                                                                   :tr-alkuosa tr-alkuosa
-                                                                                   :tr-alkuetaisyys tr-alkuetaisyys
-                                                                                   :tr-loppuosa tr-loppuosa
-                                                                                   :tr-loppuetaisyys tr-loppuetaisyys})]
+  (let [ajoratakilometrit (tv/tieosoitteen-ajoratakilometrit-kaistaaineistosta db (tr-domain/tr-osoite-kasvusuuntaan tieosoite))]
     (when ajoratakilometrit (int ajoratakilometrit))))
 
 (defrecord TierekisteriHaku []

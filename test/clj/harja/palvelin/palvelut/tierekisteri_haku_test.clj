@@ -73,6 +73,9 @@
         ;; kohdassa 0-318 ensimmäiset 218m on kaksirajotaista, loput 1 ajorataista
         ajorata-kilometrit-4-0-218-odotettu (* 2 218) ;; 436
         tulos-osa-4-0-218 (tierekisteri-haku/tieosoitteen-ajoratakilometrit db tieosoite-osa-4-0-218)
+        tieosoite-osa-4-0-218-kaannetty {:tr-numero 20 :tr-alkuosa 4, :tr-alkuetaisyys 218 :tr-loppuosa 4 :tr-loppuetaisyys 0}
+        ;; kohdassa 0-318 ensimmäiset 218m on kaksirajotaista, loput 1 ajorataista
+        tulos-osa-4-0-218-kaannetty (tierekisteri-haku/tieosoitteen-ajoratakilometrit db tieosoite-osa-4-0-218-kaannetty)
 
         tieosoite-osa-4-0-318 {:tr-numero 20 :tr-alkuosa 4, :tr-alkuetaisyys 0 :tr-loppuosa 4 :tr-loppuetaisyys 318}
         ajorata-kilometrit-0-318-odotettu (+ (* 2 218) 100) ;; 536
@@ -102,6 +105,7 @@
         ajorata-kilometrit-osa-4-5-lyhyt-odotettu 7740
         tulos-osa-4-5-lyhyt (tierekisteri-haku/tieosoitteen-ajoratakilometrit db tieosoite-osa-4-5-lyhyt)]
     (is (= ajorata-kilometrit-4-0-218-odotettu tulos-osa-4-0-218))
+    (is (= ajorata-kilometrit-4-0-218-odotettu tulos-osa-4-0-218-kaannetty))
     (is (= ajorata-kilometrit-0-318-odotettu tulos-osa-4-0-318))
     (is (= ajorata-kilometrit-osa-4-lyhyt-odotettu tulos-osa-4-lyhyt))
     (is (= ajorata-kilometrit-4-0-1218-odotettu tulos-osa-4-0-1218))
