@@ -50,7 +50,9 @@
   [{:keys [summa toimenpideinstanssi lomake-selite yllapitokohde laji kasittelyaika] :as valittu-rivi} kohteet]
   (let [kustannus-olemassa? (some? summa)
         pvm-validi? (pvm/pvm? kasittelyaika)
-        selite-olemassa? (some? lomake-selite)
+        selite-olemassa? (and
+                           (some? lomake-selite)
+                           (> (count lomake-selite) 0))
         laji-validi? (contains? (set (keys laji-valinnat)) laji)
         toimenpideinstanssi-olemassa? (some? toimenpideinstanssi)
         kohde-olemassa? (boolean (some #(= (:id yllapitokohde) (:id %)) kohteet))]

@@ -239,8 +239,7 @@
   [e! {:keys [rivit valinnat muokataan valittu-rivi
               haku-kaynnissa? kustannukset tyypit liitteet kohteet] :as app}]
 
-  (let [alkuaika (:alkuaika valittu-rivi)
-        voi-tallentaa? (tiedot/voi-tallentaa? valittu-rivi kohteet)
+  (let [voi-tallentaa? (tiedot/voi-tallentaa? valittu-rivi kohteet)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot @nav/valittu-urakka-id)
 
         aikavali (suodattimet-aikavali e! valinnat)

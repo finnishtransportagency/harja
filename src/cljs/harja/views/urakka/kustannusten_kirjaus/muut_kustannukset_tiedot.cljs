@@ -75,9 +75,21 @@
 
 
 (defn voi-tallentaa?
-  ""
-  [{:keys [kustannus] :as valittu-rivi}]
-  (let [] false))
+  "Validoi toteuman muokkauslomakkeen"
+  [{:keys [pvm hinta selite tyyppi yllapitoluokka] :as valittu-rivi} luokat]
+  (let [pvm-validi? (pvm/pvm? pvm)
+        kustannus-olemassa? (some? hinta)
+        tyyppi-validi? (contains? (set (keys tyyppi-valinnat)) (keyword tyyppi))
+        luokka-olemassa? (boolean (some #(= (:numero yllapitoluokka) (:numero %)) luokat))
+        selite-olemassa? (and
+                           (some? selite)
+                           (> (count selite) 0))]
+    (and
+      pvm-validi?
+      tyyppi-validi?
+      luokka-olemassa?
+      selite-olemassa?
+      kustannus-olemassa?)))
 
 
 (extend-protocol tuck/Event
