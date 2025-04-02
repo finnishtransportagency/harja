@@ -9,8 +9,15 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko rivi]]))
 
 
-(defn sakot-ja-bonukset [db user {:keys [urakkatyyppi parametrit]}]
-  (let [{:keys [alkupvm loppupvm]} parametrit]
+(defn sakot-ja-bonukset [db user {:keys [urakkatyyppi parametrit] :as params}]
+  (let [{:keys [alkupvm loppupvm]} parametrit
+        
+        ;; {:alkupvm #inst "2024-12-31T22:00:00.000-00:00", :loppupvm #inst "2025-12-31T21:59:59.000-00:00", :urakkatyyppi :tiemerkinta, :kasittelija :pdf, :urakka-id 12} 
+        _ (println "\n \n Params: " params)
+        ]
+    
+
+  
 
     [:raportti {:orientaatio :landscape
                 :nimi "TODO sakot, bonukset"

@@ -124,7 +124,7 @@
      [:div.liite
       (if (naytettava-liite? tiedosto)
         [:div
-         [:div
+         [:div.liite-rivi
           [:img.pikkukuva.klikattava {:tabIndex 0
                                       :alt (:nimi tiedosto)
                                       :src (k/pikkukuva-url (:id tiedosto))
