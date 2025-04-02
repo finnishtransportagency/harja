@@ -107,8 +107,11 @@
 
         sata-metria-kahta-ajorataa {:tr-numero 20 :tr-alkuosa 4 :tr-alkuetaisyys 4000 :tr-loppuosa 4 :tr-loppuetaisyys 4100}
         sata-metria-kahta-ajorataa-odotettu 200
-        tulos-sata-metria-kahta-ajorataa-odotettu (tierekisteri-haku/tieosoitteen-ajoratakilometrit db sata-metria-kahta-ajorataa)
-        ]
+        tulos-sata-metria-kahta-ajorataa (tierekisteri-haku/tieosoitteen-ajoratakilometrit db sata-metria-kahta-ajorataa)
+
+        yksi-ajoratainen-kaksi-kaistaa {:tr-numero 20 :tr-alkuosa 33 :tr-alkuetaisyys 0 :tr-loppuosa 33 :tr-loppuetaisyys 8757}
+        yksi-ajoratainen-kaksi-kaistaa-odotettu 8757
+        tulos-yksi-ajoratainen-kaksi-kaistaa (tierekisteri-haku/tieosoitteen-ajoratakilometrit db yksi-ajoratainen-kaksi-kaistaa)]
     (is (= ajorata-kilometrit-4-0-218-odotettu tulos-osa-4-0-218))
     (is (= ajorata-kilometrit-4-0-218-odotettu tulos-osa-4-0-218-kaannetty))
     (is (= ajorata-kilometrit-0-318-odotettu tulos-osa-4-0-318))
@@ -118,4 +121,5 @@
     (is (= ajorata-kilometrit-osa-3-4-odotettu tulos-osa-3-4))
     (is (= ajorata-kilometrit-osa-4-5-odotettu tulos-osa-4-5))
     (is (= ajorata-kilometrit-osa-4-5-lyhyt-odotettu tulos-osa-4-5-lyhyt))
-    (is (= sata-metria-kahta-ajorataa-odotettu tulos-sata-metria-kahta-ajorataa-odotettu))))
+    (is (= sata-metria-kahta-ajorataa-odotettu tulos-sata-metria-kahta-ajorataa))
+    (is (= yksi-ajoratainen-kaksi-kaistaa-odotettu tulos-yksi-ajoratainen-kaksi-kaistaa))))
