@@ -118,9 +118,10 @@
                                     (:let (first paallekaiset)))))
 
             ;; Pilkotaan tierekisteri osiin tien osien mukaan
-            osien-tiedot (tieosoite-haku/hae-osien-tiedot db {:tr-numero (:tie suolarajoitus)
-                                                              :tr-alkuosa (:aosa suolarajoitus)
-                                                              :tr-loppuosa (:losa suolarajoitus)})
+            osien-tiedot (tieosoite-haku/hae-osien-tiedot db (tr-domain/tr-osoite-kasvusuuntaan
+                                                               {:tr-numero (:tie suolarajoitus)
+                                                                :tr-alkuosa (:aosa suolarajoitus)
+                                                                :tr-loppuosa (:losa suolarajoitus)}))
             ;; osien pituudet huomioimatta ajoratojen lukumäärää
             tie-osien-pituudet (into {}
                                  (map
@@ -131,7 +132,8 @@
                                    osien-tiedot))
             pituus (assoc suolarajoitus
                      :pituus
-                     (tr-domain/laske-tien-pituus tie-osien-pituudet (tr-domain/tr-alkuiseksi suolarajoitus)))
+                     (tr-domain/laske-tien-pituus tie-osien-pituudet (tr-domain/tr-osoite-kasvusuuntaan
+                                                                       (tr-domain/tr-alkuiseksi suolarajoitus))))
             ;; lasketaan kyseisen tieosoitteen ajoratakilometrit yhteen. Kaksiajorataisten osuuksien kohdalla kertyy siis tuplana kilometrejä.
 
             ajoratojen-pituus (tieosoite-haku/tieosoitteen-ajoratakilometrit db (tr-domain/tr-alkuiseksi suolarajoitus))

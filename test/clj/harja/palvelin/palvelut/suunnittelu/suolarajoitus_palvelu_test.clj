@@ -258,7 +258,7 @@
                    :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 50 (:pituus pituudet)))
-    (is (= 50 (:ajoratojen_pituus pituudet)))))
+    (is (= 100 (:ajoratojen_pituus pituudet)))))
 
 (deftest laske-tierekisteriosoitteelle-pituus2-onnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -268,7 +268,7 @@
                    :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 100 (:pituus pituudet)))
-    (is (= 111 (:ajoratojen_pituus pituudet)))))
+    (is (= 200 (:ajoratojen_pituus pituudet)))))
 
 (deftest laske-tierekisteriosoitteelle-pituus3-onnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -279,7 +279,7 @@
                    :tieosoitteen-ja-ajoratojen-pituudet
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 1752 (:pituus pituudet)))
-    (is (= 3415 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
+    (is (= 1994 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
 
 (deftest laske-ajoratapituus-oikein
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -355,7 +355,7 @@
         pituus (+ osan-125-pituus osan-126-pituus)
         osan-125-apituus (+ 70 (* 2007 2))
         osan-126-apituus (* 3950 2)
-        ajoradan-pituus (+ osan-125-apituus osan-126-apituus)
+        ajoradan-pituus 12054
         tierekisteriosoite {:tie 12 :aosa 125 :aet 3100 :losa 126 :let 3950}
         ;; tie 12, osan 125 pituus on yht: 5177. Osa 125, koostuu kolmesta ajoradasta joka vaihtuu 0 -> 1+2 kohdasta:3170 . Sen jälkeen ajoratojen (1,2) pituus: 2007
         ;; tie 12, osan 126 pituus on yht: 6365. Osa 126, koostuu kahdesta ajoradasta 1,2
@@ -404,7 +404,7 @@
                      t/+kayttaja-jvh+ suolarajoitus)]
       (is (= 4506 (:pituus pituudet)))
       ;; 20 tiellä osalla 4 on 3 ajorataa, joten pituuden pitäisi olla kolminkertainen
-      (is (= 4926 (:ajoratojen_pituus pituudet)))))
+      (is (= 9012 (:ajoratojen_pituus pituudet)))))
 
 (deftest laske-tierekisteriosoitteelle-pituus-epaonnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")

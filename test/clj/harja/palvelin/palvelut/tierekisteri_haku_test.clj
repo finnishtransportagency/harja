@@ -81,9 +81,9 @@
         ajorata-kilometrit-0-318-odotettu (+ (* 2 218) 100) ;; 536
         tulos-osa-4-0-318 (tierekisteri-haku/tieosoitteen-ajoratakilometrit db tieosoite-osa-4-0-318)
 
-        tieosoite-osa-4-lyhyt {:tr-numero 20 :tr-alkuosa 4, :tr-alkuetaisyys 200 :tr-loppuosa 4 :tr-loppuetaisyys 318}
-        ajorata-kilometrit-osa-4-lyhyt-odotettu 136         ;; 18m ensin 2 ajorataista, 100m yksiajorataista
-        tulos-osa-4-lyhyt (tierekisteri-haku/tieosoitteen-ajoratakilometrit db tieosoite-osa-4-lyhyt)
+        tieosoite-osa-4-200-318 {:tr-numero 20 :tr-alkuosa 4, :tr-alkuetaisyys 200 :tr-loppuosa 4 :tr-loppuetaisyys 318}
+        ajorata-kilometrit-osa-4-200-318 136         ;; 18m ensin 2 ajorataista, 100m yksiajorataista
+        tulos-osa-4-200-318 (tierekisteri-haku/tieosoitteen-ajoratakilometrit db tieosoite-osa-4-200-318)
 
         tieosoite-osa-4-0-1218 {:tr-numero 20 :tr-alkuosa 4, :tr-alkuetaisyys 0 :tr-loppuosa 4 :tr-loppuetaisyys 1218}
         ajorata-kilometrit-4-0-1218-odotettu 1804
@@ -103,13 +103,19 @@
 
         tieosoite-osa-4-5-lyhyt {:tr-numero 20 :tr-alkuosa 4, :tr-alkuetaisyys 0 :tr-loppuosa 5 :tr-loppuetaisyys 317}
         ajorata-kilometrit-osa-4-5-lyhyt-odotettu 7740
-        tulos-osa-4-5-lyhyt (tierekisteri-haku/tieosoitteen-ajoratakilometrit db tieosoite-osa-4-5-lyhyt)]
+        tulos-osa-4-5-lyhyt (tierekisteri-haku/tieosoitteen-ajoratakilometrit db tieosoite-osa-4-5-lyhyt)
+
+        sata-metria-kahta-ajorataa {:tr-numero 20 :tr-alkuosa 4 :tr-alkuetaisyys 4000 :tr-loppuosa 4 :tr-loppuetaisyys 4100}
+        sata-metria-kahta-ajorataa-odotettu 200
+        tulos-sata-metria-kahta-ajorataa-odotettu (tierekisteri-haku/tieosoitteen-ajoratakilometrit db sata-metria-kahta-ajorataa)
+        ]
     (is (= ajorata-kilometrit-4-0-218-odotettu tulos-osa-4-0-218))
     (is (= ajorata-kilometrit-4-0-218-odotettu tulos-osa-4-0-218-kaannetty))
     (is (= ajorata-kilometrit-0-318-odotettu tulos-osa-4-0-318))
-    (is (= ajorata-kilometrit-osa-4-lyhyt-odotettu tulos-osa-4-lyhyt))
+    (is (= ajorata-kilometrit-osa-4-200-318 tulos-osa-4-200-318))
     (is (= ajorata-kilometrit-4-0-1218-odotettu tulos-osa-4-0-1218))
     (is (= ajorata-kilometrit-osa-3-5-odotettu tulos-osa-3-5))
     (is (= ajorata-kilometrit-osa-3-4-odotettu tulos-osa-3-4))
     (is (= ajorata-kilometrit-osa-4-5-odotettu tulos-osa-4-5))
-    (is (= ajorata-kilometrit-osa-4-5-lyhyt-odotettu tulos-osa-4-5-lyhyt))))
+    (is (= ajorata-kilometrit-osa-4-5-lyhyt-odotettu tulos-osa-4-5-lyhyt))
+    (is (= sata-metria-kahta-ajorataa-odotettu tulos-sata-metria-kahta-ajorataa-odotettu))))

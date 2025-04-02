@@ -232,20 +232,9 @@ SELECT SUM(
                    LEAST("tr-loppuetaisyys", :tr-loppuetaisyys) - "tr-alkuetaisyys"
                -- jos loppuosa osoitteessa on suurempi, mutta alkuosa sama
                WHEN (:tr-loppuosa > "tr-osa" AND :tr-alkuosa = "tr-osa") THEN
-                   LEAST("tr-loppuetaisyys") - GREATEST("tr-alkuetaisyys", :tr-alkuetaisyys)
-               -- jos alku- ja loppuosa on sama, ja osoitteen alkuetäisyys on keskellä ajoratatietoa, mutta koko loppuetäisyys sisällä
-               WHEN :tr-alkuosa = "tr-osa" AND :tr-loppuosa = "tr-osa" AND
-                    :tr-alkuetaisyys BETWEEN "tr-alkuetaisyys" AND "tr-loppuetaisyys" AND
-                    "tr-loppuetaisyys" < :tr-loppuetaisyys THEN
-                   "tr-loppuetaisyys" - :tr-alkuetaisyys
-               -- jos alku- ja loppuosa on sama, ja osoitteen loppuetäisyys on keskellä ajoratatietoa, mutta koko alkuetäisyys sisällä
-               WHEN :tr-alkuosa = "tr-osa" AND :tr-loppuosa = "tr-osa" AND
-                    (:tr-loppuetaisyys BETWEEN "tr-alkuetaisyys" AND "tr-loppuetaisyys" AND
-                     :tr-loppuetaisyys <= "tr-loppuetaisyys")
-                   THEN :tr-loppuetaisyys - "tr-alkuetaisyys"
-               -- jos alku- ja loppuosa on sama, mutta alkupiste osan alkua ennen ja loppupiste osan lopun jälkeen
-               WHEN :tr-alkuosa = "tr-osa" AND :tr-loppuosa = "tr-osa" AND
-                    "tr-alkuetaisyys" > :tr-alkuetaisyys AND "tr-loppuetaisyys" < :tr-loppuetaisyys THEN
-                   "tr-loppuetaisyys" - "tr-alkuetaisyys"
+                   "tr-loppuetaisyys" - GREATEST("tr-alkuetaisyys", :tr-alkuetaisyys)
+               -- jos alku- ja loppuosa on sama, saadaan haluttu väli least ja greatest avulla
+               WHEN :tr-alkuosa = "tr-osa" AND :tr-loppuosa = "tr-osa" THEN
+                   LEAST("tr-loppuetaisyys", :tr-loppuetaisyys) - GREATEST("tr-alkuetaisyys", :tr-alkuetaisyys)
                END) AS ajoratakilometrit
   FROM relevantit;
