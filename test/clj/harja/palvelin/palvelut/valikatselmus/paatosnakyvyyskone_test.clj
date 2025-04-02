@@ -1,7 +1,24 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as kone]
-            [harja.testi :refer :all]))
+            [harja.testi :refer :all]
+            [com.stuartsierra.component :as component]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]))
+
+(defn jarjestelma-fixture [testit]
+  (alter-var-root #'jarjestelma
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)))))
+  (testit)
+  (alter-var-root #'jarjestelma component/stop))
+
+(use-fixtures :each (compose-fixtures
+                      jarjestelma-fixture
+                      urakkatieto-fixture))
 
 ;; Varmistetaan, että kone palauttaa jotain
 (deftest palauttaa-jotain
@@ -162,8 +179,8 @@
     (is (= 9 (count nakyvyysvuosi-2021-paatokset)))
     (is (= 9 (count nakyvyysvuosi-2022-paatokset)))
     (is (= 9 (count nakyvyysvuosi-2023-paatokset)))
-    (is (= 17 (count nakyvyysvuosi-2024-paatokset)))
-    (is (= 22 (count nakyvyysvuosi-2025-paatokset)))))
+    (is (= 20 (count nakyvyysvuosi-2024-paatokset)))
+    (is (= 21 (count nakyvyysvuosi-2025-paatokset)))))
 
 (deftest yhdista-mapit-test
   (let [;; pk viittaa päätöskoneeseen, ja db databaseen
@@ -197,11 +214,10 @@
     (is (= "db" (:tyyppi (first yksi-tietokannasta))))
     (is (= "pk" (:tyyppi (last yksi-tietokannasta))))))
 
-
-
 (deftest valmistele-lupauspaatokset-test
-  (let [urakkaid 1
+  (let [urakkaid 36
         indeksi "MAKU 2015"
+        valittu-hoitovuosi 2024
         paatokset [{:nimi "Lupaukset" :tyyppi "bonus" :jarjestys 1}
                    {:nimi "Lupaukset" :tyyppi "sanktio" :jarjestys 2}
                    {:nimi "Lupaukset" :tyyppi "taytetty" :jarjestys 3}]
@@ -209,8 +225,8 @@
         luvatut-pisteet 10
         tarjous-tavoitehinta 100
         tavoitehinta 99
-        paatokset-ei-kumpikaan (kone/valmistele-lupauspaatokset (:db jarjestelma) urakkaid paatokset toteutuneet-pisteet
-                                 luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi)
+        paatokset-ei-kumpikaan (kone/valmistele-lupauspaatokset (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset
+                                 toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi)
         _ (is (= 1 (count paatokset-ei-kumpikaan)))
         _ (is (= "taytetty" (:tyyppi (first paatokset-ei-kumpikaan))))
 
@@ -218,8 +234,8 @@
         luvatut-pisteet 15
         tarjous-tavoitehinta 100
         tavoitehinta 99
-        paatokset-sanktio (kone/valmistele-lupauspaatokset (:db jarjestelma) urakkaid paatokset toteutuneet-pisteet
-                            luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi)
+        paatokset-sanktio (kone/valmistele-lupauspaatokset (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset
+                            toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi)
         _ (is (= 1 (count paatokset-sanktio)))
         _ (is (= "sanktio" (:tyyppi (first paatokset-sanktio))))
 
@@ -227,7 +243,7 @@
         luvatut-pisteet 10
         tarjous-tavoitehinta 100
         tavoitehinta 99
-        paatokset-bonus (kone/valmistele-lupauspaatokset (:db jarjestelma) urakkaid paatokset toteutuneet-pisteet
+        paatokset-bonus (kone/valmistele-lupauspaatokset (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset toteutuneet-pisteet
                           luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi)
         _ (is (= 1 (count paatokset-bonus)))
         _ (is (= "bonus" (:tyyppi (first paatokset-bonus))))]))
