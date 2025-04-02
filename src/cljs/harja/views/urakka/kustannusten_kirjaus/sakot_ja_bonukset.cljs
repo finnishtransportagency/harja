@@ -38,7 +38,7 @@
      :tyyppi :komponentti
      :komponentti (comp #(pvm/pvm %) :kasittelyaika)
 
-     :luokka "semibold text-nowrap"
+     :luokka "caption text-nowrap"
      :leveys 0.08}
 
     {:otsikko "Laji"

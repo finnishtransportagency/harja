@@ -102,7 +102,6 @@
       {:urakka-id @nav/valittu-urakka-id
        :alku      (-> @u/valittu-aikavali first)
        :loppu     (-> @u/valittu-aikavali second)
-
        :hae-sanktiot? (or (= valittu-laji :kaikki) (= valittu-laji :yllapidon_sakko))
        :hae-bonukset? (or (= valittu-laji :kaikki) (= valittu-laji :yllapidon_bonus))}
       {:onnistui ->HaeTiedotOnnistui

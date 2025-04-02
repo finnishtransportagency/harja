@@ -6,8 +6,9 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u]
+            [harja.ui.lomake :as lomake]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.tierekisteri :as tr]
             [harja.tiedot.raportit :as raporttitiedot])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
@@ -16,14 +17,22 @@
                      :valittu-rivi nil
                      :haku-kaynnissa? false
                      :valinnat {:raportti {}
-                                :aikavali (pvm/kuukauden-aikavali (pvm/nyt))
-                                :pk-luokat {:tyhja "Ei PK-luokkaa"
-                                            :1 "1"
-                                            :2 "2"
-                                            :3 "3"}}}))
+                                :aikavali (pvm/kuukauden-aikavali (pvm/nyt))}}))
 
 (def nakymassa? (atom false))
 (defonce ^{:private true} raportti-avain :tiemerkinta-muut-kustannukset)
+
+(defonce mahd-pk-luokat {:- "Ei PK-luokkaa"
+                         :1 "1"
+                         :2 "2"
+                         :3 "3"})
+
+(defonce tyyppi-valinnat {:lisatyo "Lisätyö"
+                          :muu "Muu kustannus"
+                          :muutostyo "Muutostyö"
+                          :arvonmuutos "Arvonmuutos"
+                          :indeksi "Indeksitarkistus"
+                          :sopimusalueen-muutos "Sopimusalueen muutos"})
 
 
 (defrecord HaeTiedot [])
@@ -35,13 +44,16 @@
 (defrecord HaeTyypitEpaonnistui [vastaus])
 (defrecord MuokkaaRivia [rivi])
 (defrecord SuljeMuokkaus [])
+(defrecord AsetaToteumanPvm [aika])
 
 
-(defn hae-muut-kustannukset
+(defn hae-tiedot
   [{:keys [valinnat] :as app}]
-  (tuck-apurit/post! app :hae-tiemerkinta-muut-kustannukset
-    {:aikavali (:aikavali valinnat)
-     :urakka-id @nav/valittu-urakka-id}
+  (tuck-apurit/post! app :hae-yllapito-toteumat
+    {:urakka  @nav/valittu-urakka-id
+     :sopimus (-> @u/valittu-sopimusnumero first)
+     :alkupvm  (-> @u/valittu-aikavali first)
+     :loppupvm (-> @u/valittu-aikavali second)}
     {:onnistui ->HaeTiedotOnnistui
      :epaonnistui ->HaeTiedotEpaonnistui}))
 
@@ -63,13 +75,14 @@
   HaeTiedot
   (process-event [_ app]
     (hae-kustannustyypit app)
-    (hae-muut-kustannukset app)
+    (hae-tiedot app)
     (assoc app :haku-kaynnissa? true))
 
   HaeTiedotOnnistui
   (process-event [{:keys [vastaus]} {:keys [valinnat] :as app}]
     (-> app
       (assoc :rivit vastaus :haku-kaynnissa? false)
+      ;; TODO tee tälle jotain 
       (assoc-in [:valinnat :raportti] (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
                                         {:alkupvm  (-> valinnat :aikavali first)
                                          :loppupvm (-> valinnat :aikavali second)
@@ -103,11 +116,16 @@
   (process-event [{:keys [rivi]} app]
     (update app :valittu-rivi merge rivi))
 
+  AsetaToteumanPvm
+  (process-event [{aika :aika} app]
+    (assoc-in app [:valittu-rivi :pvm] aika))
+
   AvaaKustannusModal
   (process-event [{:keys [rivi]} app]
     (-> app
       (assoc :muokataan true)
-      (assoc :valittu-rivi rivi)))
+      (assoc :valittu-rivi rivi)
+      (assoc-in [:valittu-rivi :lomake-luokka] (-> rivi :yllapitoluokka :lyhyt-nimi keyword))))
 
   SuljeMuokkaus
   (process-event [_ app]
