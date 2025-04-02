@@ -124,64 +124,63 @@
       :else false)))
 
 (defn valmistele-lupauspaatokset [db validoinnit-kaytossa? valittu-hoitovuosi urakkaid paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta indeksi]
-  ;; TODO: Edeltävät vaatimukset päätöksen tallentamiselle:
-  ;; Hoitotovuoden pitää olla päättynyt
-  ;; Hoitovuodelle on syötetty tarjouksen tavoitehinta -- Toteutettu
-  ;; Hoitovuodelle on syötetty kaikkien lupausten toteumat
-  (if (or (not validoinnit-kaytossa?)
-        (and (hoitovuosi-paattynyt? valittu-hoitovuosi)))
-    (if (and toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta tavoitehinta)
-      (let [erotus (- luvatut-pisteet toteutuneet-pisteet)
-            tyyppi (cond
-                     (= erotus 0) "taytetty"
-                     (< erotus 0) "bonus"
-                     (> erotus 0) "sanktio")
-            ;; Urakan parametreista lupaussanktion prosentit
-            urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
-            sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit) ;; Jaetaan sadalla, niin saadaan helpompi laskutoimitus
-            bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
-            lupaussanktio (when (= tyyppi "sanktio") (* (/ sanktioprosentti 100) tarjouksen-tavoitehinta erotus))
-            lupausbonus (when (= tyyppi "bonus") (* (/ bonusprosentti 100) tarjouksen-tavoitehinta (* -1 erotus)))
-            ;; Päätöspäivä on käytössä sanktion laskennassa ja siihen asetetaan hoitovuoden päättymispäivä
-            paatospaiva (pvm/->pvm (str "31.10." valittu-hoitovuosi))
-            ;; Valitaan lupauspäätös, joissa tyyppi täsmää
-            lupauspaatos (first (filter
-                                  (fn [paatos]
-                                    (and (= (:nimi paatos) "Lupaukset") (= (:tyyppi paatos) tyyppi)))
-                                  paatokset))
-            indeksikorotus (cond
-                             (and (= tyyppi "bonus") (:indeksi_kaytossa_bonuksella urakan-parametrit))
-                             (laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupausbonus false)
-
-                             (and (= tyyppi "sanktio") (:indeksi_kaytossa_sanktiolla urakan-parametrit))
-                             (laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupaussanktio false)
-
-                             :else nil)
-
-            ;; Korvataan koneelta saatu päätös tässä valistellulta
-            lupauspaatos (-> lupauspaatos
-                           (assoc :tyyppi tyyppi)
-                           (assoc :lupaussanktio lupaussanktio)
-                           (assoc :lupausbonus lupausbonus)
-                           (assoc :tavoitehinta tavoitehinta)
-                           (assoc :tarjous_tavoitehinta tarjouksen-tavoitehinta)
-                           (assoc :luvatut_pisteet luvatut-pisteet)
-                           (assoc :toteutuneet_pisteet toteutuneet-pisteet)
-                           (assoc :sanktioprosentti sanktioprosentti)
-                           (assoc :bonusprosentti bonusprosentti)
-                           (assoc :indeksi indeksi)
-                           (assoc :indeksikorotus indeksikorotus))
-            ;; Poista kaikki lupauspäätökset listasta
-            paatokset (remove (fn [paatos] (= (:nimi paatos) "Lupaukset")) paatokset)
-            ;; Ja lisää muokattu takaisin
-            paatokset (sort-by :jarjestys (conj paatokset lupauspaatos))]
-        paatokset)
-      ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
-      (lisaa-paatos-virheellisena paatokset "Lupaukset"
-        "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty."
-        true 1))
+  (cond
+    ;; Jos validoinnit on asetuksista laitettu päälle, niin hoitovuoden pitää olla päättynyt
+    (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
     (lisaa-paatos-virheellisena paatokset "Lupaukset"
-      "Hoitovuosi ei ole päättynyt tai Tarjouksen tavoitehinta -päätös on täyttämättä tai kaikkien lupausten toteumat on täyttämättä."
+      "Hoitovuosi ei ole päättynyt tai Tarjouksen tavoitehinta -päätös on täyttämättä tai lupausten toteumissa on
+      vielä osa täyttämättä."
+      true 1)
+    (and toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta tavoitehinta)
+    (let [erotus (- luvatut-pisteet toteutuneet-pisteet)
+          tyyppi (cond
+                   (= erotus 0) "taytetty"
+                   (< erotus 0) "bonus"
+                   (> erotus 0) "sanktio")
+          ;; Urakan parametreista lupaussanktion prosentit
+          urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
+          _ (println "valmistele-lupauspaatokset :: urakan-parametrit" urakan-parametrit)
+          sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit) ;; Jaetaan sadalla, niin saadaan helpompi laskutoimitus
+          bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+          lupaussanktio (when (= tyyppi "sanktio") (* (/ sanktioprosentti 100) tarjouksen-tavoitehinta erotus))
+          lupausbonus (when (= tyyppi "bonus") (* (/ bonusprosentti 100) tarjouksen-tavoitehinta (* -1 erotus)))
+          ;; Päätöspäivä on käytössä sanktion laskennassa ja siihen asetetaan hoitovuoden päättymispäivä
+          paatospaiva (pvm/->pvm (str "31.10." valittu-hoitovuosi))
+          ;; Valitaan lupauspäätös, joissa tyyppi täsmää
+          lupauspaatos (first (filter
+                                (fn [paatos]
+                                  (and (= (:nimi paatos) "Lupaukset") (= (:tyyppi paatos) tyyppi)))
+                                paatokset))
+          indeksikorotus (cond
+                           (and (= tyyppi "bonus") (:indeksi_kaytossa_bonuksella urakan-parametrit))
+                           (laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupausbonus false)
+
+                           (and (= tyyppi "sanktio") (:indeksi_kaytossa_sanktiolla urakan-parametrit))
+                           (laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupaussanktio false)
+
+                           :else nil)
+          ;; Korvataan koneelta saatu päätös tässä valistellulta
+          lupauspaatos (-> lupauspaatos
+                         (assoc :tyyppi tyyppi)
+                         (assoc :lupaussanktio lupaussanktio)
+                         (assoc :lupausbonus lupausbonus)
+                         (assoc :tavoitehinta tavoitehinta)
+                         (assoc :tarjous_tavoitehinta tarjouksen-tavoitehinta)
+                         (assoc :luvatut_pisteet luvatut-pisteet)
+                         (assoc :toteutuneet_pisteet toteutuneet-pisteet)
+                         (assoc :sanktioprosentti sanktioprosentti)
+                         (assoc :bonusprosentti bonusprosentti)
+                         (assoc :indeksi indeksi)
+                         (assoc :indeksikorotus indeksikorotus))
+          ;; Poista kaikki lupauspäätökset listasta
+          paatokset (remove (fn [paatos] (= (:nimi paatos) "Lupaukset")) paatokset)
+          ;; Ja lisää muokattu takaisin
+          paatokset (sort-by :jarjestys (conj paatokset lupauspaatos))]
+      paatokset)
+    ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
+    :else
+    (lisaa-paatos-virheellisena paatokset "Lupaukset"
+      "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty."
       true 1)))
 
 (defn valimistele-tavoitehinnan-muutospaatos [validoinnit-kaytossa? paatokset urakan-alkuvuosi tavoitehinta kattohinta muokkaa-kattohinta? kuluva-hoitovuosi]
