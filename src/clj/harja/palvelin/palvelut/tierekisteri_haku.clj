@@ -167,6 +167,18 @@
 (defn hae-tienumerot-kartalle [db params]
   (tv/hae-tiet-alueella db params))
 
+(defn tieosoitteen-ajoratakilometrit
+  "Hakee annetun tieosoitteen ajoratakilometrit, siten että kaksiajorataisissa kohdissa lasketaan kilometrit tuplana.
+  Hyödyntää ns. kaista-aineistoa taustalla. Tieosoite muodossa :tr-numero, :tr-alkuosa, ..."
+  [db {:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]}]
+  (assert (and tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys) "Annettava kaikki tieosoitteen kentät")
+  (let [ajoratakilometrit (tv/tieosoitteen-ajoratakilometrit-kaistaaineistosta db {:tr-numero tr-numero
+                                                                                   :tr-alkuosa tr-alkuosa
+                                                                                   :tr-alkuetaisyys tr-alkuetaisyys
+                                                                                   :tr-loppuosa tr-loppuosa
+                                                                                   :tr-loppuetaisyys tr-loppuetaisyys})]
+    (when ajoratakilometrit (int ajoratakilometrit))))
+
 (defrecord TierekisteriHaku []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -208,13 +220,14 @@
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
-                     :hae-tr-pisteilla
-                     :hae-tr-pisteella
-                     :hae-tr-viivaksi
-                     :hae-osien-pituudet
-                     :hae-tr-pituudet
-                     :hae-tr-tiedot
-                     :hae-tr-osan-ajoradat
-                     :hae-tr-osan-ajoratojen-geometriat
-                     :hae-tr-gps-koordinaateilla)
+      :hae-tr-pisteilla
+      :hae-tr-pisteella
+      :hae-tr-viivaksi
+      :hae-osien-pituudet
+      :hae-tr-pituudet
+      :hae-tr-tiedot
+      :hae-tr-osan-ajoradat
+      :hae-tr-osan-ajoratojen-geometriat
+      :hae-tr-gps-koordinaateilla
+      :hae-tienumerot-kartalle)
     this))

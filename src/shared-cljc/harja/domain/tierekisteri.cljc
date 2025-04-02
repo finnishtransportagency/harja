@@ -135,6 +135,7 @@
        (on-loppu? tie)))
 
 (defn laske-tien-pituus
+  "Laskee tieosoitteen pituuden, osien pituudet sisään mäppinä muodossa  {1 7041, 2 3827, ... n 2343}"
   ([tie] (laske-tien-pituus {} tie))
   ([osien-pituudet {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tie}]
    (assert (or (map? osien-pituudet)

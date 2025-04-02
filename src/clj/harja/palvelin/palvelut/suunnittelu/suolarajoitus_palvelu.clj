@@ -8,6 +8,7 @@
             [harja.palvelin.palvelut.tierekisteri-haku :as tieosoite-haku]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tierekisteri :as tr-domain]
             [taoensso.timbre :as log]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]))
@@ -117,38 +118,23 @@
                                     (:let (first paallekaiset)))))
 
             ;; Pilkotaan tierekisteri osiin tien osien mukaan
-            tie-osien-pituudet (map
-                                 (fn [osan-pituustiedot]
-                                   {:osa (:tr-osa osan-pituustiedot)
-                                    :pituus (get-in osan-pituustiedot [:pituudet :pituus])})
-                                 (tieosoite-haku/hae-osien-tiedot db {:tr-numero (:tie suolarajoitus)
-                                                                      :tr-alkuosa (:aosa suolarajoitus)
-                                                                      :tr-loppuosa (:losa suolarajoitus)}))
+            osien-tiedot (tieosoite-haku/hae-osien-tiedot db {:tr-numero (:tie suolarajoitus)
+                                                              :tr-alkuosa (:aosa suolarajoitus)
+                                                              :tr-loppuosa (:losa suolarajoitus)})
+            ;; osien pituudet huomioimatta ajoratojen lukumäärää
+            tie-osien-pituudet (into {}
+                                 (map
+                                   (fn [osan-pituustiedot]
+                                     ;; osien pituudet muodossa {1 1242, 2 2334, ...}
+                                     {(:tr-osa osan-pituustiedot)
+                                      (get-in osan-pituustiedot [:pituudet :pituus])})
+                                   osien-tiedot))
+            pituus (assoc suolarajoitus
+                     :pituus
+                     (tr-domain/laske-tien-pituus tie-osien-pituudet (tr-domain/tr-alkuiseksi suolarajoitus)))
+            ;; lasketaan kyseisen tieosoitteen ajoratakilometrit yhteen. Kaksiajorataisten osuuksien kohdalla kertyy siis tuplana kilometrejä.
 
-            pituus (tieverkko-kyselyt/laske-tien-osien-pituudet tie-osien-pituudet suolarajoitus)
-            ajoratojen-pituudet (tieverkko-kyselyt/hae-ajoratojen-pituudet db {:tie (:tie suolarajoitus)
-                                                                               :aosa (:aosa suolarajoitus)
-                                                                               :losa (:losa suolarajoitus)})
-            yhdistetyt-ajoradat (mapv (fn [[osa _]]
-                                        (let [ajoratatiedot {:osa osa ;; Osa talteen
-                                                             :pituus (or (some #(when (and (= (:ajorata %) 0) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) 0) ;; Ensimmäisen ajoradan pituus talteen
-                                                             :ajoratojen-pituus (some #(when (and (= (:ajorata %) 1) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) ;; Oletetaan, että kaikki loput ajoradat ovat saman mittaisia
-                                                             :ajoratojen-maara (count (keep #(when (and (not= (:ajorata %) 0) (= (:osa %) osa)) %) ajoratojen-pituudet)) ;; Määritellään ajoratojen määrä (yleensa ajoratoja on 0,1,2) joten tähän tulisi arvo 2
-                                                             }
-                                              ;; Lasketaan vielä yhteen kokonaispituus, koska siitä pitää päätellä paljon asioita laskennassa
-                                              ajoratojen-kokonaispituus (if (and (:ajoratojen-pituus ajoratatiedot)
-                                                                              (> (:ajoratojen-maara ajoratatiedot) 0))
-                                                                          (* (:ajoratojen-pituus ajoratatiedot) (:ajoratojen-maara ajoratatiedot))
-                                                                          0)
-                                              ajoratatiedot (assoc ajoratatiedot :kokonaispituus (+ (:pituus ajoratatiedot) ajoratojen-kokonaispituus))]
-                                          ajoratatiedot))
-                                  ;; Yhdistaä mahdolliset ajoradata samaan mäppiin
-                                  (group-by :osa ajoratojen-pituudet))
-            ajoratojen-pituus (reduce (fn [summa ajorata]
-                                        (let [pituus (tieverkko-kyselyt/laske-tien-osien-pituudet (conj [] ajorata) suolarajoitus)
-                                              summa (+ summa (:pituus pituus))]
-                                          summa))
-                                0 yhdistetyt-ajoradat)
+            ajoratojen-pituus (tieosoite-haku/tieosoitteen-ajoratakilometrit db (tr-domain/tr-alkuiseksi suolarajoitus))
             ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
             pohjavesialueet (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let]))]
         ;; Palautetaan joko virheet, tai saadut tiedot
