@@ -1,6 +1,7 @@
 (ns harja.views.urakka.kustannusten-kirjaus.sakot-ja-bonukset
   "Tiemerkintöjen sakot ja bonukset välilehti"
   (:require [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [reagent.core :as r]
             [harja.ui.grid :as grid]
             [tuck.core :refer [tuck]]
@@ -30,7 +31,16 @@
               :piilota-toiminnot? true
               :sivuta grid/vakiosivutus
               :mahdollista-rivin-valinta? true
-              :rivi-klikattu #(e! (tiedot/->AvaaModal %))}
+              :rivi-klikattu #(e! (tiedot/->AvaaModal %))
+              :rivi-jalkeen-fn (fn [rivit]
+                                 (let [rivien-maara (count rivit)
+                                       yhteensa-hinta (reduce + (map :summa rivit))]
+                                   [[{:teksti "Yhteensä" :luokka "yhteensa"}
+                                     {:teksti (str rivien-maara " kpl") :luokka "yhteensa"}
+                                     {:luokka "yhteensa"}
+                                     {:luokka "yhteensa"}
+                                     {:teksti (str (fmt/euro-opt false yhteensa-hinta) " €") :tasaa :oikea :luokka "yhteensa"}
+                                     {:luokka "yhteensa"}]]))}
 
    [{:otsikko-komp (fn [_ _]
                      [:div.pvm "Päivämäärä"

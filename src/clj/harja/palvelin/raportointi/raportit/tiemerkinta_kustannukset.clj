@@ -28,7 +28,7 @@
   [:taulukko {:tyhja "Ei Tietoja."
               :otsikko gridin-otsikko
               :piilota-border? false
-              :viimeinen-rivi-yhteenveto? false
+              :viimeinen-rivi-yhteenveto? true
               :oikealle-tasattavat-kentat (or oikealle-tasattavat #{})}
    rivin-tiedot rivit])
 
@@ -42,27 +42,30 @@
     [:varillinen-teksti {:arvo maara :fmt :raha}]))
 
 
-(defn- koosta-sanktiot-taulukko [data]
-  (let [tiedot {:rivin-tiedot (rivi
+(defn- koosta-sanktiot-taulukko [data rivien-maara yhteensa-hinta]
+  (let [yhteenveto (sanktiot-rivi "Yhteensä" (str rivien-maara " kpl") "" "" yhteensa-hinta)
+        tiedot {:rivin-tiedot (rivi
                                 {:otsikko "Käsitelty" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.4 :tyyppi :varillinen-teksti}
                                 {:otsikko "Laji" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.3 :tyyppi :varillinen-teksti}
                                 {:otsikko "Kohde" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.6 :tyyppi :varillinen-teksti}
                                 {:otsikko "Selite" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.8 :tyyppi :varillinen-teksti}
                                 {:otsikko "Määrä" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.4 :tyyppi :varillinen-teksti})
-                :rivit (mapv
-                         #(sanktiot-rivi
-                            (pvm/pvm-aika-klo (:aika %))
-                            (:laji %)
-                            (:kohde %)
-                            (:perustelu %)
-                            (:maara %))
-                         data)}]
+                :rivit (conj
+                         (mapv
+                           #(sanktiot-rivi
+                              (pvm/pvm-aika-klo (:aika %))
+                              (:laji %)
+                              (:kohde %)
+                              (:perustelu %)
+                              (:maara %))
+                           data)
+                         yhteenveto)}]
     (into ()
       [(taulukko tiedot)
        (osion-otsikko raportti-sanktiot-otsikko)])))
 
 
-(defn sakot-ja-bonukset 
+(defn sakot-ja-bonukset
   "Tiemerkintä sanktiot ja bonukset, raportin suoritusfunktio"
   [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm] :as _parametrit}]
   (let [lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
@@ -79,6 +82,9 @@
         laji-fmt {:yllapidon_sakko "Sakko"
                   :yllapidon_bonus "Bonus"}
 
+        rivien-maara (count sankiot-ja-bonukset)
+        yhteensa-hinta (reduce + (map :summa sankiot-ja-bonukset))
+
         rivit (mapcat
                 (fn [tapahtuma]
                   (let [sarakkeet {:aika (:kasittelyaika tapahtuma)
@@ -92,7 +98,7 @@
     [:raportti {:nimi raportin-otsikko
                 :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
-     (koosta-sanktiot-taulukko rivit)]))
+     (koosta-sanktiot-taulukko rivit rivien-maara yhteensa-hinta)]))
 
 
 (defn- kustannukset-rivi [aika tyyppi selite luokka hinta]
@@ -104,27 +110,30 @@
     [:varillinen-teksti {:arvo hinta :fmt :raha}]))
 
 
-(defn- koosta-kustannukset-taulukko [data]
-  (let [tiedot {:rivin-tiedot (rivi
+(defn- koosta-kustannukset-taulukko [data rivien-maara yhteensa-hinta]
+  (let [yhteenveto (kustannukset-rivi "Yhteensä" (str rivien-maara " kpl") "" "" yhteensa-hinta)
+        tiedot {:rivin-tiedot (rivi
                                 {:otsikko "Aika" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.4 :tyyppi :varillinen-teksti}
                                 {:otsikko "Tyyppi" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.3 :tyyppi :varillinen-teksti}
                                 {:otsikko "Selite" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti}
                                 {:otsikko "PK-luokka" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.5 :tyyppi :varillinen-teksti}
                                 {:otsikko "Hinta" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.4 :tyyppi :varillinen-teksti})
-                :rivit (mapv
-                         #(kustannukset-rivi
-                            (pvm/pvm-aika-klo (:aika %))
-                            (:tyyppi %)
-                            (:selite %)
-                            (:luokka %)
-                            (:hinta %))
-                         data)}]
+                :rivit (conj
+                         (mapv
+                           #(kustannukset-rivi
+                              (pvm/pvm-aika-klo (:aika %))
+                              (:tyyppi %)
+                              (:selite %)
+                              (:luokka %)
+                              (:hinta %))
+                           data)
+                         yhteenveto)}]
     (into ()
       [(taulukko tiedot)
        (osion-otsikko raportti-kustannukset-otsikko)])))
 
 
-(defn muut-kustannukset 
+(defn muut-kustannukset
   "Tiemerkintä muut kustannukset raportin suoritusfunktio"
   [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm sopimus _tyypit] :as _parametrit}]
   (let [lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
@@ -144,6 +153,9 @@
                          :indeksi "Indeksitarkistus"
                          :sopimusalueen-muutos "Sopimusalueen muutos"}
 
+        rivien-maara (count toteumat)
+        yhteensa-hinta (reduce + (map :hinta toteumat))
+
         rivit (mapcat
                 (fn [toteuma]
                   (let [sarakkeet {:aika (:pvm toteuma)
@@ -157,4 +169,4 @@
     [:raportti {:nimi raportin-otsikko
                 :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
-     (koosta-kustannukset-taulukko rivit)]))
+     (koosta-kustannukset-taulukko rivit rivien-maara yhteensa-hinta)]))
