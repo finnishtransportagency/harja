@@ -156,6 +156,15 @@ UPDATE urakka_tavoite ut
 -- name: hae-suunnitelman-tilat
 select * from suunnittelu_kustannussuunnitelman_tila skt where skt.urakka = :urakka;
 
+-- name: onko-kustannussuunnitelma-vahvistettu
+SELECT EXISTS (
+    SELECT vahvistettu
+    FROM suunnittelu_kustannussuunnitelman_tila skt
+    WHERE skt.urakka = :urakkaid
+      AND skt.osio = 'tavoite-ja-kattohinta'::SUUNNITTELU_OSIO
+      AND skt.hoitovuosi = :hoitovuosinro
+      AND skt.vahvistettu = true)
+
 -- name: lisaa-suunnitelmalle-tila
    INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, luoja, vahvistaja, vahvistettu, vahvistus_pvm)
    VALUES (:urakka, :osio::SUUNNITTELU_OSIO, :hoitovuosi, :luoja, :vahvistaja, :vahvistettu, :vahvistus_pvm)
