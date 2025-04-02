@@ -1,12 +1,9 @@
 (ns harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset
   "Tiemerkinnän kustannuks raportit"
   (:require [harja.pvm :as pvm]
-            [clojure.string :as str]
-            [clj-time.core :as time]
-            [clj-time.coerce :as coerce]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.raportointi :as k-raportointi]
+            [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-palvelu]
             [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko rivi]]))
 
@@ -56,14 +53,17 @@
        (osion-otsikko raportti-sanktiot-otsikko)])))
 
 
-(defn sakot-ja-bonukset [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm] :as parametrit}]
-  (let [;; Käytetään lyhytnimiä, jos olemassa
-        urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+(defn- hae-lyhytnimet [db urakkatyyppi urakka-id]
+  (let [urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
         lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi urakkatyyppi :vain-puuttuvat false :urakantila "kaikki"})
         ;; Tähän voi passata kokoelman urakka-iditä, jos halutaan suorittaa esim. hallintayksikkö kontekstissa 
-        valitut-urakat-nimet (k-raportointi/suodata-urakat lyhytnimet #{urakka-id})
-        urakoiden-nimet (k-raportointi/kokoa-lyhytnimet valitut-urakat-nimet)
-        raportin-otsikko (raportin-otsikko urakoiden-nimet raportti-sanktiot-otsikko alkupvm loppupvm)
+        valitut-urakat-nimet (k-raportointi/suodata-urakat lyhytnimet #{urakka-id})]
+    (k-raportointi/kokoa-lyhytnimet valitut-urakat-nimet)))
+
+
+(defn sakot-ja-bonukset [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm] :as _parametrit}]
+  (let [lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
+        raportin-otsikko (raportin-otsikko lyhytnimet raportti-sanktiot-otsikko alkupvm loppupvm)
 
         sankiot-ja-bonukset (laadunseuranta-palvelu/hae-urakan-sanktiot-ja-bonukset db user
                               {:alku alkupvm
@@ -92,8 +92,22 @@
      (koosta-taulukko rivit)]))
 
 
-(defn muut-kustannukset [db user {:keys [urakkatyyppi parametrit]}]
-  (let [{:keys [alkupvm loppupvm]} parametrit]
+(defn muut-kustannukset [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm sopimus] :as parametrit}]
+  (let [_ (println "\n params: " parametrit)
+
+
+        lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
+        ;raportin-otsikko (raportin-otsikko lyhytnimet raportti-sanktiot-otsikko alkupvm loppupvm)
+
+        vast (yllapito-palvelu/hae-yllapito-toteumat db user
+                              {:urakka  urakka-id
+                               :sopimus sopimus
+                               :alkupvm  alkupvm
+                               :loppupvm loppupvm})
+        
+        
+        _ (println "Vastaus: " vast)
+        ]
 
     [:raportti {:nimi "TODO....."
                 :orientaatio :landscape

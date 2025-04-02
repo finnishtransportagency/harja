@@ -9,7 +9,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tyokalut.tuck :as tuck-apurit]
             [reagent.core :refer [atom] :as reagent]
-            [harja.tiedot.raportit :as raporttitiedot]))
+            [harja.tiedot.raportit :as raporttitiedot]
+            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
 
 (defonce ^{:private true} raportti-avain :tiemerkinta-sakot-bonukset)
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
@@ -29,20 +30,6 @@
 (defonce laji-valinnat {:kaikki "Kaikki"
                         :yllapidon_sakko "Sakko"
                         :yllapidon_bonus "Bonus"})
-
-
-(defn- nollaa-tuck-tila
-  "Nollaa Tuck-tilan osittain säilyttäen olemassa olevat syvemmän tason arvot.
-   Korvaa arvot, jotka on määritelty `nollatut-valinnat`
-   Käytetään kun suodattimia päivitetään, urakkaa vaihdetaan, yms, jotta tilaan ei jää mitään roikkumaan."
-  [app]
-  (merge-with (fn [app valinta]
-                (if (and
-                      (map? app) (map? valinta))
-                  (merge app valinta)
-                  valinta))
-    app
-    nollatut-valinnat))
 
 
 (defn voi-tallentaa?
@@ -129,7 +116,7 @@
   (process-event [_ app]
     (hae-tiedot app)
     (-> 
-      (nollaa-tuck-tila app)
+      (yhteiset/nollaa-tuck-tila app nollatut-valinnat)
       (assoc :haku-kaynnissa? true)
       (assoc-in [:valinnat :aikavali] @u/valittu-aikavali)))
 

@@ -1,31 +1,26 @@
 (ns harja.views.urakka.kustannusten-kirjaus.muut-kustannukset-tiedot
   "Tiemerkintöjen muut kustannukset välilehti - tiedot"
-  (:require [reagent.core :refer [atom] :as reagent]
-            [tuck.core :as tuck]
-            [harja.ui.viesti :as viesti]
-            [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
-            [harja.ui.lomake :as lomake]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.raportit :as raporttitiedot])
-  (:require-macros [reagent.ratom :refer [reaction]]))
+  (:require  [harja.pvm :as pvm]
+             [tuck.core :as tuck]
+             [harja.tiedot.urakka :as u]
+             [harja.ui.viesti :as viesti]
+             [harja.ui.lomake :as lomake]
+             [harja.tiedot.navigaatio :as nav]
+             [harja.tyokalut.tuck :as tuck-apurit]
+             [reagent.core :refer [atom] :as reagent]
+             [harja.tiedot.raportit :as raporttitiedot]
+             [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
 
-(defonce tila (atom {:rivit nil
-                     :muokataan false
-                     :haku-kaynnissa? false
-                     :valittu-rivi {}
-                     :valinnat {:raportti {}
-                                :aikavali (pvm/kuukauden-aikavali (pvm/nyt))}}))
+(defonce ^{:private true} nollatut-valinnat {:rivit nil
+                                             :valittu-rivi {}
+                                             :muokataan false
+                                             :haku-kaynnissa? false
+                                             :valinnat {:raportti {}
+                                                        :aikavali (pvm/kuukauden-aikavali (pvm/nyt))}})
 
 (def nakymassa? (atom false))
+(defonce tila (atom nollatut-valinnat))
 (defonce ^{:private true} raportti-avain :tiemerkinta-muut-kustannukset)
-
-(defonce mahd-pk-luokat {:- "Ei PK-luokkaa"
-                         :1 "1"
-                         :2 "2"
-                         :3 "3"})
 
 (defonce tyyppi-valinnat {:lisatyo "Lisätyö"
                           :muu "Muu kustannus"
@@ -56,8 +51,16 @@
   (assoc app :haku-kaynnissa? false))
 
 
+(defn- raporttiparametrit []
+  (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
+    {:urakkatyyppi (:arvo @nav/urakkatyyppi)
+     :alkupvm  (-> @u/valittu-aikavali first)
+     :loppupvm (-> @u/valittu-aikavali second)
+     :sopimus (-> @u/valittu-sopimusnumero first)}))
+
+
 (defn hae-tiedot
-  [{:keys [valinnat] :as app}]
+  [{:keys [_valinnat] :as app}]
   (tuck-apurit/post! app :hae-yllapito-toteumat
     {:urakka  @nav/valittu-urakka-id
      :sopimus (-> @u/valittu-sopimusnumero first)
@@ -76,7 +79,7 @@
 
 (defn voi-tallentaa?
   "Validoi toteuman muokkauslomakkeen"
-  [{:keys [pvm hinta selite tyyppi yllapitoluokka] :as valittu-rivi} luokat]
+  [{:keys [pvm hinta selite tyyppi yllapitoluokka] :as _valittu-rivi} luokat]
   (let [pvm-validi? (pvm/pvm? pvm)
         kustannus-olemassa? (some? hinta)
         tyyppi-validi? (contains? (set (keys tyyppi-valinnat)) (keyword tyyppi))
@@ -95,19 +98,17 @@
 (extend-protocol tuck/Event
   HaeTiedot
   (process-event [_ app]
-    (hae-kustannustyypit app)
     (hae-tiedot app)
-    (assoc app :haku-kaynnissa? true))
+    (->
+      (yhteiset/nollaa-tuck-tila app nollatut-valinnat)
+      (assoc :haku-kaynnissa? true)
+      (assoc-in [:valinnat :aikavali] @u/valittu-aikavali)))
 
   HaeTiedotOnnistui
-  (process-event [{:keys [vastaus]} {:keys [valinnat] :as app}]
-    (-> app
-      (assoc :rivit vastaus :haku-kaynnissa? false)
-      ;; TODO tee tälle jotain 
-      (assoc-in [:valinnat :raportti] (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
-                                        {:alkupvm  (-> valinnat :aikavali first)
-                                         :loppupvm (-> valinnat :aikavali second)
-                                         :urakkatyyppi (:arvo @nav/urakkatyyppi)}))))
+  (process-event [{:keys [vastaus]} {:keys [_valinnat] :as app}]
+    (hae-kustannustyypit (-> app
+                           (assoc :rivit vastaus :haku-kaynnissa? false)
+                           (assoc-in [:valinnat :raportti] (raporttiparametrit)))))
 
   HaeTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]

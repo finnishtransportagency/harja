@@ -83,7 +83,7 @@
 (defn- sakot-bonukset-muokkauspaneeli
   "Toteumien luonti / muokkaus"
   [e! 
-   {:keys [lajit] :as valinnat} 
+   {:keys [lajit] :as _valinnat} 
    {:keys [kasittelyaika] :as valittu-rivi} kohteet liitteet voi-kirjoittaa? voi-tallentaa?]
   [:div.overlay-oikealla
    [lomake/lomake
@@ -236,8 +236,8 @@
 
 (defn sakot-bonukset-listaus
   "Luodaan komponentit, ja kutsutaan yhteistä nakyma-body funktiota joka rakentaa näkymän"
-  [e! {:keys [rivit valinnat muokataan valittu-rivi
-              haku-kaynnissa? kustannukset tyypit liitteet kohteet] :as app}]
+  [e! {:keys [rivit valinnat muokataan
+              valittu-rivi haku-kaynnissa? liitteet kohteet] :as _app}]
 
   (let [voi-tallentaa? (tiedot/voi-tallentaa? valittu-rivi kohteet)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot @nav/valittu-urakka-id)
@@ -248,10 +248,7 @@
         grid (sakot-bonukset-grid e! rivit liitteet haku-kaynnissa?)
         muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa?)]
 
-    (yhteiset/nakyma-body "Sakot ja bonukset"
-      e! lisaa-uusi-fn aikavali
-      rivit valinnat muokataan valittu-rivi
-      haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid laji-suodatin)))
+    (yhteiset/nakyma-body "Sakot ja bonukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid laji-suodatin)))
 
 
 (defn sakot-ja-bonukset* [e! _app]

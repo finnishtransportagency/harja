@@ -1,25 +1,24 @@
 (ns harja.views.urakka.kustannusten-kirjaus.yhteiset
   "Tiemerkintöjen kustannusten kirjaus apufunktiot"
-  (:require [tuck.core :refer [tuck]]
-            [harja.asiakas.kommunikaatio :as komm]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka.urakka :as tila]
-            [reagent.core :as r]
-            [harja.fmt :as fmt]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.kentat :as kentat]
-            [harja.pvm :as pvm]
-            [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.transit :as transit]
-            [harja.ui.napit :as napit]
-            [harja.ui.grid :as grid]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.komponentti :as komp]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
-            [harja.tiedot.istunto :as istunto]
-            [harja.domain.tierekisteri :as tr-domain]))
+  (:require
+   [harja.ui.napit :as napit]
+   [harja.transit :as transit]
+   [harja.ui.ikonit :as ikonit]
+   [harja.asiakas.kommunikaatio :as komm]))
+
+
+(defn nollaa-tuck-tila
+  "Nollaa Tuck-tilan osittain säilyttäen olemassa olevat syvemmän tason arvot.
+   Korvaa arvot, jotka on määritelty `nollatut-valinnat`
+   Käytetään kun suodattimia päivitetään, urakkaa vaihdetaan, yms, jotta tilaan ei jää mitään roikkumaan."
+  [app nollatut-valinnat]
+  (merge-with (fn [app valinta]
+                (if (and
+                      (map? app) (map? valinta))
+                  (merge app valinta)
+                  valinta))
+    app
+    nollatut-valinnat))
 
 
 (defn raporttiviennit [{:keys [raportti] :as valinnat}]
@@ -56,40 +55,32 @@
 (defn nakyma-body
   "Muut kustannukset, Sakot ja bonukset 
   Välilehdet lähes täysin samannäköisiä, tehty molemmille yhteinen komponentti"
-  [otsikko e!
-   lisaa-uusi-fn aikavali
-   rivit valinnat muokataan valittu-rivi
-   haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid laji-suodatin]
+  [otsikko lisaa-uusi-fn aikavali
+   valinnat muokataan muokkauspaneeli grid laji-suodatin]
+  ;; Body 
+  [:div.tiemerkinta-muut-kustannukset
 
-  (let [alkuaika (:alkuaika valittu-rivi)
-        ;; TODO 
-        voi-kirjoittaa? true
-        voi-tallentaa? true]
+   ;; Otsikko / header, raporttiviennit
+   [:div.header
+    [:h1.header-yhteiset otsikko]
+    (raporttiviennit valinnat)]
 
-    ;; Body 
-    [:div.tiemerkinta-muut-kustannukset
+   ;; Suodattimet
+   [:div.suodattimet
 
-     ;; Otsikko / header, raporttiviennit
-     [:div.header
-      [:h1.header-yhteiset otsikko]
-      (raporttiviennit valinnat)]
+    ;; Urakkavuosi 
+    aikavali
 
-     ;; Suodattimet
-     [:div.suodattimet
+    ;; Laji
+    [:div.laji (when laji-suodatin "Laji")
+     [:div.kentta (when laji-suodatin laji-suodatin)]]
 
-      ;; Urakkavuosi 
-      aikavali
+     ;; Lisää uusi 
+    [:div
+     [napit/uusi "Lisää uusi" lisaa-uusi-fn {:disabled false}]]]
 
-      ;; Laji
-      [:div.laji (when laji-suodatin "Laji")
-       [:div.kentta (when laji-suodatin laji-suodatin)]]
+   ;; Muokkauspaneeli
+   (when muokataan muokkauspaneeli)
 
-      ;; Lisää uusi 
-      [:div
-       [napit/uusi "Lisää uusi" lisaa-uusi-fn {:disabled false}]]]
-
-     ;; Muokkauspaneeli
-     (when muokataan muokkauspaneeli)
-
-     ;; Grid
-     [:div.muut-kustannukset-listaus grid]]))
+   ;; Grid
+   [:div.muut-kustannukset-listaus grid]])

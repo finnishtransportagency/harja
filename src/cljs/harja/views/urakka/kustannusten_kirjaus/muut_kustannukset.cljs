@@ -1,29 +1,23 @@
 (ns harja.views.urakka.kustannusten-kirjaus.muut-kustannukset
   "Tiemerkintöjen muut kustannukset välilehti"
-  (:require [harja.views.urakka.kustannusten-kirjaus.muut-kustannukset-tiedot :as tiedot]
-            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
-            [tuck.core :refer [tuck]]
-            [harja.asiakas.kommunikaatio :as komm]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka.urakka :as tila]
-            [reagent.core :as r]
-            [harja.fmt :as fmt]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.kentat :as kentat]
-            [harja.pvm :as pvm]
-            [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.transit :as transit]
-            [harja.ui.napit :as napit]
-            [harja.ui.grid :as grid]
-            [harja.ui.ikonit :as ikonit]
-            [harja.tiedot.urakka :as urakka-tiedot]
-            [harja.ui.komponentti :as komp]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
-            [harja.tiedot.istunto :as istunto]
-            [harja.domain.tierekisteri :as tr-domain]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
+  (:require
+   [harja.pvm :as pvm]
+   [reagent.core :as r]
+   [harja.ui.grid :as grid]
+   [tuck.core :refer [tuck]]
+   [harja.ui.napit :as napit]
+   [harja.ui.lomake :as lomake]
+   [harja.ui.kentat :as kentat]
+   [harja.ui.ikonit :as ikonit]
+   [harja.ui.komponentti :as komp]
+   [harja.tiedot.navigaatio :as nav]
+   [harja.domain.oikeudet :as oikeudet]
+   [harja.tiedot.urakka :as urakka-tiedot]
+   [harja.views.urakka.valinnat :as urakka-valinnat]
+   [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+   [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
+   [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
+   [harja.views.urakka.kustannusten-kirjaus.muut-kustannukset-tiedot :as tiedot]))
 
 
 (defn- muut-kustannukset-grid
@@ -174,10 +168,7 @@
         grid (muut-kustannukset-grid e! rivit haku-kaynnissa?)
         muokkauspaneeli (muut-kustannukset-muokkauspaneeli e! valittu-rivi voi-kirjoittaa? voi-tallentaa? tyypit)]
 
-    (yhteiset/nakyma-body "Muut kustannukset"
-      e! lisaa-uusi-fn aikavali
-      rivit valinnat muokataan valittu-rivi
-      haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid nil)))
+    (yhteiset/nakyma-body "Muut kustannukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid nil)))
 
 
 (defn muut-kustannukset* [e! _app]
