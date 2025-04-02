@@ -1,28 +1,26 @@
 (ns harja.views.urakka.kustannusten-kirjaus.sakot-bonukset-tiedot
   "Tiemerkintöjen sakot ja bonukset - tiedot"
-  (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.lomake :as lomake]
-            [tuck.core :as tuck]
-            [harja.ui.viesti :as viesti]
-            [harja.tyokalut.tuck :as tuck-apurit]
+  (:require [tuck.core :as tuck]
             [harja.pvm :as pvm]
+            [harja.tiedot.urakka :as u]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.tierekisteri :as tr]
-            [harja.tiedot.urakka :as u]
-            [harja.tiedot.raportit :as raporttitiedot])
-  (:require-macros [reagent.ratom :refer [reaction]]))
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [reagent.core :refer [atom] :as reagent]
+            [harja.tiedot.raportit :as raporttitiedot]))
 
 (defonce tila (atom {:rivit nil
                      :kohteet {}
                      :liitteet {}
                      :muokataan false
                      :haku-kaynnissa? false
-                     :valittu-laji :kaikki
                      :valittu-rivi {:uusi-liite [{}]}
                      :valinnat {:raportti {}
                                 :aikavali {}
                                 :uusi-liite {}
+                                :valittu-laji :kaikki
                                 :lajit {:yllapidon_sakko "Sakko"
                                         :yllapidon_bonus "Bonus"}}}))
 
@@ -35,6 +33,22 @@
    :yllapidon_bonus "Bonus"})
 
 
+(defn voi-tallentaa?
+  "Validoi toteuman muokkauslomakkeen"
+  [{:keys [summa toimenpideinstanssi lomake-selite yllapitokohde laji kasittelyaika] :as valittu-rivi} kohteet]
+  (let [kustannus-olemassa? (some? summa)
+        pvm-validi? (pvm/pvm? kasittelyaika)
+        selite-olemassa? (some? lomake-selite)
+        laji-validi? (contains? (set (keys laji-valinnat)) laji)
+        toimenpideinstanssi-olemassa? (some? toimenpideinstanssi)
+        kohde-olemassa? (boolean (some #(= (:id yllapitokohde) (:id %)) kohteet))]
+    (and
+      pvm-validi?
+      laji-validi?
+      kohde-olemassa?
+      selite-olemassa?
+      kustannus-olemassa?
+      toimenpideinstanssi-olemassa?)))
 
 
 (defrecord HaeTiedot [])
@@ -70,14 +84,17 @@
 
 
 (defn hae-tiedot
-  ;; TODO suodattimet
   [{:keys [valinnat] :as app}]
-  (tuck-apurit/post! app :hae-urakan-sanktiot-ja-bonukset
-    {:urakka-id @nav/valittu-urakka-id
-     :alku      (-> @u/valittu-aikavali first)
-     :loppu     (-> @u/valittu-aikavali second)}
-    {:onnistui ->HaeTiedotOnnistui
-     :epaonnistui ->HaeTiedotEpaonnistui}))
+  (let [{:keys [valittu-laji]} valinnat]
+    (tuck-apurit/post! app :hae-urakan-sanktiot-ja-bonukset
+      {:urakka-id @nav/valittu-urakka-id
+       :alku      (-> @u/valittu-aikavali first)
+       :loppu     (-> @u/valittu-aikavali second)
+
+       :hae-sanktiot? (or (= valittu-laji :kaikki) (= valittu-laji :yllapidon_sakko))
+       :hae-bonukset? (or (= valittu-laji :kaikki) (= valittu-laji :yllapidon_bonus))}
+      {:onnistui ->HaeTiedotOnnistui
+       :epaonnistui ->HaeTiedotEpaonnistui})))
 
 
 (defn hae-liitteet [app]
@@ -97,8 +114,11 @@
 (extend-protocol tuck/Event
   HaeTiedot
   (process-event [_ app]
+    (println "Haetaan... " (js/Date.))
     (hae-tiedot app)
-    (assoc app :haku-kaynnissa? true))
+    (-> app
+      (assoc :haku-kaynnissa? true)
+      (assoc-in [:valinnat :aikavali] @u/valittu-aikavali)))
 
   HaeTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -128,14 +148,12 @@
 
   UusiLiite
   (process-event [{:keys [liite]} app]
-    (println "Liite:: " liite)
     (assoc-in app [:valittu-rivi :laatupoikkeama :uusi-liite] liite))
 
   UusiSanktio
   (process-event [{:keys [tyyppi]} app]
     (let [nyt (pvm/nyt)
           default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)
-
           uusi-sanktio {:laji tyyppi
                         :suorasanktio true
                         :perintapvm default-perintapvm
@@ -243,4 +261,4 @@
 
   ValitseLaji
   (process-event [{:keys [rivi]} app]
-    (assoc app :valittu-laji rivi)))
+    (assoc-in app [:valinnat :valittu-laji] rivi)))

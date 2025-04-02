@@ -96,6 +96,11 @@
         ::lomake/col-luokka "col-xs-6 summa-valinta"})]
     valittu-rivi]])
 
+    
+(defn- suodattimet-aikavali [e!]
+  [:div {:on-click #(e! (tiedot/->HaeTiedot))}
+   [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]])
+
 
 (defn- muut-kustannukset-grid [e! rivit]
   [grid/grid {:tyhja (if false ; TODO haku-kaynnissa?
@@ -150,12 +155,13 @@
         ;; TODO 
         voi-kirjoittaa? true
         voi-tallentaa? true
+        aikavali (suodattimet-aikavali e!)
         grid (muut-kustannukset-grid e! rivit)
         lisaa-uusi-fn #(e! (tiedot/->AvaaKustannusModal nil))
         muokkauspaneeli (muut-kustannukset-muokkauspaneeli e! valinnat voi-kirjoittaa? voi-tallentaa? valittu-rivi alkuaika tyypit)]
 
     (yhteiset/nakyma-body "Muut kustannukset"
-      e! lisaa-uusi-fn
+      e! lisaa-uusi-fn aikavali
       rivit valinnat muokataan valittu-rivi
       haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid nil)))
 

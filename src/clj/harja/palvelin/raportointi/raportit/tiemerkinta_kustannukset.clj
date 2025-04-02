@@ -66,28 +66,28 @@
         raportin-otsikko (raportin-otsikko urakoiden-nimet raportti-sanktiot-otsikko alkupvm loppupvm)
 
         sankiot-ja-bonukset (laadunseuranta-palvelu/hae-urakan-sanktiot-ja-bonukset db user
-                              {:urakka-id urakka-id
-                               :alku alkupvm
+                              {:alku alkupvm
                                :loppu loppupvm
-                               :vain-yllapitokohteettomat? false
+                               :urakka-id urakka-id
                                :hae-sanktiot? true
-                               :hae-bonukset? true})
+                               :hae-bonukset? true
+                               :vain-yllapitokohteettomat? false})
 
         laji-fmt {:yllapidon_sakko "Sakko"
                   :yllapidon_bonus "Bonus"}
 
         rivit (mapcat
                 (fn [tapahtuma]
-                  (let [yleiset {:aika (:kasittelyaika tapahtuma)
-                                 :kohde (-> tapahtuma :yllapitokohde :nimi)
-                                 :laji (-> tapahtuma :laji laji-fmt)
-                                 :perustelu (or (-> tapahtuma :lisatieto) (-> tapahtuma :laatupoikkeama :paatos :perustelu))
-                                 :maara (-> tapahtuma :summa)}]
-                    [yleiset]))
+                  (let [sarakkeet {:aika (:kasittelyaika tapahtuma)
+                                   :kohde (-> tapahtuma :yllapitokohde :nimi)
+                                   :laji (-> tapahtuma :laji laji-fmt)
+                                   :perustelu (or (-> tapahtuma :lisatieto) (-> tapahtuma :laatupoikkeama :paatos :perustelu))
+                                   :maara (-> tapahtuma :summa)}]
+                    [sarakkeet]))
                 sankiot-ja-bonukset)]
 
-    [:raportti {:orientaatio :landscape
-                :nimi raportin-otsikko
+    [:raportti {:nimi raportin-otsikko
+                :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
      (koosta-taulukko rivit)]))
 
@@ -95,8 +95,8 @@
 (defn muut-kustannukset [db user {:keys [urakkatyyppi parametrit]}]
   (let [{:keys [alkupvm loppupvm]} parametrit]
 
-    [:raportti {:orientaatio :landscape
-                :nimi "TODO....."
+    [:raportti {:nimi "TODO....."
+                :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
      ;;(koosta-taulukko tapahtumarivit)
      ]))

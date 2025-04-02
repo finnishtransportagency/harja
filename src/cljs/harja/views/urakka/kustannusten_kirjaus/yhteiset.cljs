@@ -57,7 +57,7 @@
   "Muut kustannukset, Sakot ja bonukset 
   Välilehdet lähes täysin samannäköisiä, tehty molemmille yhteinen komponentti"
   [otsikko e!
-   lisaa-uusi-fn
+   lisaa-uusi-fn aikavali
    rivit valinnat muokataan valittu-rivi
    haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid laji-suodatin]
 
@@ -78,8 +78,7 @@
      [:div.suodattimet
 
       ;; Urakkavuosi 
-      [:div
-       [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
+      aikavali
 
       ;; Laji
       [:div.laji (when laji-suodatin "Laji")

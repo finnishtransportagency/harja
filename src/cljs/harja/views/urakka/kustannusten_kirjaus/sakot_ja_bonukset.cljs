@@ -11,13 +11,17 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.navigaatio :as nav]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka-tiedot]
+            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
             [harja.views.urakka.kustannusten-kirjaus.sakot-bonukset-tiedot :as tiedot]))
 
 
-(defn- sakot-bonukset-grid [e! rivit liitteet haku-kaynnissa?]
+(defn- sakot-bonukset-grid 
+  "Taulukko"
+  [e! rivit liitteet haku-kaynnissa?]
   [grid/grid {:tyhja (if haku-kaynnissa?
                        [ajax-loader-pieni "Haku käynnissä..."]
                        "Valitulle aikavälille ei löytynyt mitään.")
@@ -108,8 +112,8 @@
      (lomake/rivi
        {:otsikko "Laji"
         :valitse-fn #(do
-                      (println "ww: " %)
-                      (e! (tiedot/->UusiSanktio %)))
+                       (println "ww: " %)
+                       (e! (tiedot/->UusiSanktio %)))
         :nimi :laji
         :pakollinen? true
         :vayla-tyyli? true
@@ -197,27 +201,55 @@
                                                                :poistettu-fn #(e! (tiedot/->HaeTiedot))}))}])})))]
     valittu-rivi]])
 
-(defn sakot-bonukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
-                                         haku-kaynnissa? kustannukset tyypit valittu-laji liitteet kohteet] :as app}]
+
+(defn- suodattimet-aikavali
+  "Urakkavuosi valinta, triggeröi haun"
+  [e! {:keys [aikavali]}]
+  (let [fn-aikavali-muuttunut? (fn [aika]
+                                 (let [alku (-> @urakka-tiedot/valittu-hoitokausi first)
+                                       loppu (-> @urakka-tiedot/valittu-hoitokausi second)
+                                       valinnat-alku (-> aika first)
+                                       valinnat-loppu (-> aika second)]
+                                   (boolean (or
+                                              (not= alku valinnat-alku)
+                                              (not= loppu valinnat-loppu)))))]
+
+    [:div {:on-click #(when (fn-aikavali-muuttunut? aikavali) (e! (tiedot/->HaeTiedot)))}
+     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]))
+
+
+(defn- suodattimet-lajit
+  "Kaikki / Sakko / Bonus, triggeröi haun"
+  [e! {:keys [valittu-laji]}]
+  [kentat/tee-kentta {:vayla-tyyli? true
+                      :nayta-rivina? true
+                      :space-valissa? true
+                      :tyyppi :radio-group
+                      :vaihtoehdot [:kaikki :yllapidon_sakko :yllapidon_bonus]
+                      :vaihtoehto-nayta tiedot/laji-valinnat
+                      :valitse-fn #(do
+                                     (e! (tiedot/->ValitseLaji %))
+                                     (e! (tiedot/->HaeTiedot)))}
+   (atom valittu-laji)])
+
+
+(defn sakot-bonukset-listaus
+  "Luodaan komponentit, ja kutsutaan yhteistä nakyma-body funktiota joka rakentaa näkymän"
+  [e! {:keys [rivit valinnat muokataan valittu-rivi
+              haku-kaynnissa? kustannukset tyypit liitteet kohteet] :as app}]
 
   (let [alkuaika (:alkuaika valittu-rivi)
-        ;; TODO 
-        voi-kirjoittaa? true
-        voi-tallentaa? true
-        grid (sakot-bonukset-grid e! rivit liitteet haku-kaynnissa?)
+        voi-tallentaa? (tiedot/voi-tallentaa? valittu-rivi kohteet)
+        voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot @nav/valittu-urakka-id)
+
+        aikavali (suodattimet-aikavali e! valinnat)
         lisaa-uusi-fn #(e! (tiedot/->AvaaModal nil))
-        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit)
-        laji-suodatin [kentat/tee-kentta {:vayla-tyyli? true
-                                          :nayta-rivina? true
-                                          :space-valissa? true
-                                          :tyyppi :radio-group
-                                          :vaihtoehdot [:kaikki :yllapidon_sakko :yllapidon_bonus]
-                                          :vaihtoehto-nayta tiedot/laji-valinnat
-                                          :valitse-fn #(e! (tiedot/->ValitseLaji %))}
-                       (atom valittu-laji)]]
+        laji-suodatin (suodattimet-lajit e! valinnat)
+        grid (sakot-bonukset-grid e! rivit liitteet haku-kaynnissa?)
+        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa? alkuaika tyypit)]
 
     (yhteiset/nakyma-body "Sakot ja bonukset"
-      e! lisaa-uusi-fn
+      e! lisaa-uusi-fn aikavali
       rivit valinnat muokataan valittu-rivi
       haku-kaynnissa? kustannukset tyypit muokkauspaneeli grid laji-suodatin)))
 
