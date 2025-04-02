@@ -384,6 +384,7 @@
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-ylityspaatos db (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi tavoitehinta kattohinta toteutuneet-kustannukset mhu-tyyppi)
         mahdolliset-paatokset (paatoskone/valmistele-kattohinnan-paatokset db (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) urakkaid mahdolliset-paatokset kattohinta toteutuneet-kustannukset valittu-hoitovuosi urakan-loppuvuosi)
         mahdolliset-paatokset (paatoskone/valmistele-hoidonjohtopalkkionmuutospaatos (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset hoitokauden-lopun-indeksikorjaamaton-tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
+        mahdolliset-paatokset (paatoskone/valmistele-raporttipaatos (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset)
 
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid valittu-hoitovuosi)

@@ -449,6 +449,18 @@
           virhe (if-not tarjouksen-tavoitehinta (conj virhe "Tarjouksen tavoitehintaa ei ole määritelty. ") virhe)
           virhe (if-not hoidonjohtopalkkio (conj virhe "Hoidonjohtopalkkiota ei ole määritelty. ") virhe)]
       (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" (clojure.string/join " " virhe) true 8))))
+(defn valmistele-raporttipaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset]
+  ;; Edeltävät vaatimukset päätöksen tallentamiselle:
+  ;; Hoitotovuoden pitää olla päättynyt
+(println "valmistele-raporttipaatos:" (first (filter #(= (:nimi %) "Välikatselmuspöytäkirjaan liitettävät raportit") paatokset)))
+  (if-not (first (filter #(= (:nimi %) "Välikatselmuspöytäkirjaan liitettävät raportit") paatokset))
+    paatokset ;; Raporttipäätöstä ei ole, joten palautetaan päätökset sellaisenaan
+    (cond
+      (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
+      (lisaa-paatos-virheellisena paatokset "Välikatselmuspöytäkirjaan liitettävät raportit" "Hoitovuosi on vielä kesken." true 9)
+
+      ;; Jos hoitovuosi on päättynyt, niin palautetaan päätöslista ja raporttipäätös sellaisenaan
+      :else paatokset)))
 
 (defn nimi->avain [nimi]
   (keyword (str/lower-case (-> nimi
