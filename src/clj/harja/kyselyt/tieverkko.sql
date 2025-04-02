@@ -222,7 +222,10 @@ ORDER BY tie, osa, alkuetaisyys;
                -- loppupään tarkastelu
                  (:tr-loppuosa > "tr-osa" OR (:tr-loppuosa = "tr-osa" AND  :tr-loppuetaisyys > "tr-alkuetaisyys")) AND
                -- huomioitava vain pääkaistat 11 ja 21, muuten esim. kääntymiskaistoista tulee häiriötä laskentaan
-                 "tr-kaista" IN ('11', '21') ORDER BY "tr-osa", "tr-alkuetaisyys")
+                 (("tr-ajorata" = 0 AND "tr-kaista" = '11') OR
+                  ("tr-ajorata" = 1 AND "tr-kaista" = '11') OR
+                  ("tr-ajorata" = 2 AND "tr-kaista" = '21'))
+             ORDER BY "tr-osa", "tr-alkuetaisyys")
 SELECT SUM(
            CASE
                -- jos ko. osat ovat varmuudella kaikki kokonaisuudessan mukana

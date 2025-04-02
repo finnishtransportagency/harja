@@ -355,7 +355,7 @@
         pituus (+ osan-125-pituus osan-126-pituus)
         osan-125-apituus (+ 70 (* 2007 2))
         osan-126-apituus (* 3950 2)
-        ajoradan-pituus 12054
+        ajoradan-pituus 11984
         tierekisteriosoite {:tie 12 :aosa 125 :aet 3100 :losa 126 :let 3950}
         ;; tie 12, osan 125 pituus on yht: 5177. Osa 125, koostuu kolmesta ajoradasta joka vaihtuu 0 -> 1+2 kohdasta:3170 . Sen jälkeen ajoratojen (1,2) pituus: 2007
         ;; tie 12, osan 126 pituus on yht: 6365. Osa 126, koostuu kahdesta ajoradasta 1,2
@@ -404,7 +404,7 @@
                      t/+kayttaja-jvh+ suolarajoitus)]
       (is (= 4506 (:pituus pituudet)))
       ;; 20 tiellä osalla 4 on 3 ajorataa, joten pituuden pitäisi olla kolminkertainen
-      (is (= 9012 (:ajoratojen_pituus pituudet)))))
+      (is (= 4506 (:ajoratojen_pituus pituudet)))))
 
 (deftest laske-tierekisteriosoitteelle-pituus-epaonnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -573,10 +573,10 @@
                                    t/+kayttaja-jvh+ suolarajoitus-loppu-sama)]
         (is (= 400 (:status tr-tiedot-sama)) "Tierekisteriosoitteessa on jo rajoitus.")
         (is (= 400 (:status tr-tiedot-sama2)) "Tierekisteriosoitteessa on jo rajoitus.")
-        (is (= {:pituus 1, :ajoratojen_pituus 1, :pohjavesialueet ()} tr-tiedot-alku-sama) "Alku sama, mutta saa tallentaa.")
+        (is (= {:pituus 1, :ajoratojen_pituus 2, :pohjavesialueet ()} tr-tiedot-alku-sama) "Alku sama, mutta saa tallentaa.")
         (is (= 5511 (:pituus tr-tiedot-alku-sama2)) "Alku sama, mutta saa tallentaa.")
-        (is (= {:pituus 1, :ajoratojen_pituus 1, :pohjavesialueet ()} tr-tiedot-alku-sama3) "Alku sama, kuin yhden loppu, eli saa tallentaa.")
-        (is (= {:pituus 201, :ajoratojen_pituus 201, :pohjavesialueet ()} tr-tiedot-alku-sama4) "Alku sama, kuin yhden loppu, eli saa tallentaa.")
+        (is (= {:pituus 1, :ajoratojen_pituus 2, :pohjavesialueet ()} tr-tiedot-alku-sama3) "Alku sama, kuin yhden loppu, eli saa tallentaa.")
+        (is (= {:pituus 201, :ajoratojen_pituus 402, :pohjavesialueet ()} tr-tiedot-alku-sama4) "Alku sama, kuin yhden loppu, eli saa tallentaa.")
         (is (= 1341 (:pituus tr-tiedot-loppu-eri)) "Alku myöhemmin, loppuu eri osaan, saa tallentaa.")
         (is (= 400 (:status tr-tiedot-loppu-sama)) "Tierekisteriosoitteessa on jo rajoitus")))
 
