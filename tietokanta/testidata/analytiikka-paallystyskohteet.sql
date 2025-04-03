@@ -476,7 +476,7 @@ INSERT
 INTO paikkaus (luotu, muokattu, "urakka-id", "paikkauskohde-id", "ulkoinen-id", alkuaika, loppuaika,
                tierekisteriosoite, tyomenetelma,
                massatyyppi, leveys, raekoko, kuulamylly, sijainti, massamaara, "pinta-ala", lahde,
-               massamenekki)
+               massamenekki,kustannus)
 SELECT '2023-11-01T12:00:00'::DATE,
        '2023-11-02T13:00:00'::TIMESTAMP,
        urakka.id,
@@ -494,7 +494,8 @@ SELECT '2023-11-01T12:00:00'::DATE,
        6.3,
        140,
        'harja-ui',
-       45
+       45,
+       1234.56
 FROM urakka,
      paikkauskohteet
 WHERE paikkauskohteet."pot?" = FALSE;

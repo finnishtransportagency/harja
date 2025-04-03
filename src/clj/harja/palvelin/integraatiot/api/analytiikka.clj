@@ -858,13 +858,14 @@
   {:f1 :kulukohdistus_kulukohdistus-id
    :f2 :kulukohdistus_rivinumero
    :f3 :kulukohdistus_tyyppi
-   :f4 :kulukohdistus_lisatieto
-   :f5 :kulukohdistus_poistettu
-   :f6 :kulukohdistus_summa
-   :f7 :kulukohdistus_kohdistus_toimenpide
-   :f8 :kulukohdistus_kohdistus_tehtavaryhma
-   :f9 :kulukohdistus_kohdistus_rahavaraus
-   :f10 :kulukohdistus_kohdistus_tehtava})
+   :f4 :kulukohdistus_tavoitehintainen
+   :f5 :kulukohdistus_lisatieto
+   :f6 :kulukohdistus_poistettu
+   :f7 :kulukohdistus_summa
+   :f8 :kulukohdistus_kohdistus_toimenpide
+   :f9 :kulukohdistus_kohdistus_tehtavaryhma
+   :f10 :kulukohdistus_kohdistus_rahavaraus
+   :f11 :kulukohdistus_kohdistus_tehtava})
 
 
 
