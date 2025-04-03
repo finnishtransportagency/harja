@@ -1,18 +1,19 @@
 (ns harja.palvelin.komponentit.todennus-varmistus
   "Authentikoinnin varmistus (JWT Tokenit)"
   (:require [clojure.string :as str]
-            [clojure.core.cache :as cache]
+            [buddy.sign.jwt :as jwt]
+            [taoensso.timbre :as log]
+            [buddy.core.keys :as keys]
             [clojure.data.json :as json]
             [cheshire.core :as cheshire]
             [org.httpkit.client :as http]
-            [buddy.sign.jwt :as jwt]
-            [buddy.core.keys :as keys]
-            [taoensso.timbre :as log])
+            [clojure.core.cache :as cache]
+            [harja.domain.kayttaja :as kayttaja])
   (:import (org.apache.commons.codec.binary Base64)
+           [java.io StringReader]
            [java.security KeyFactory]
            [java.security.spec X509EncodedKeySpec]
-           [org.bouncycastle.util.io.pem PemReader]
-           [java.io StringReader]))
+           [org.bouncycastle.util.io.pem PemReader]))
 
 ;; Accesstokenin public key (jwk=json key set)
 (defonce accesstoken-jwk-cache (atom nil))
@@ -245,7 +246,7 @@
   ;; Header / tokenin metadata
   (log/error (str "Saatu JWT header (iam-data): " (-> iam-data dekoodaa-token :header)))
   ;; Tässä on käyttäjän yritetyt roolit yms, jos logeilta löytyy roolissa jotain outoa, tee välittömästi toimenpiteitä 
-  (log/error (str "Saatu JWT payload (iam-data): " (-> iam-data dekoodaa-token :payload)))
+  (log/error (str "Saatu JWT payload (iam-data): " (kayttaja/kayttaja-ilman-henkilotietoja (-> iam-data dekoodaa-token :payload))))
 
   ;; Logitetaan vielä accesstoken, koska täällä voi myös jotain olla pielessä 
   (log/error (str "Accesstoken header: " (-> accesstoken dekoodaa-token :header)))
