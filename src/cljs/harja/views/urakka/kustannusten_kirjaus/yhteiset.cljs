@@ -54,7 +54,7 @@
 
 (defn nakyma-body
   "Muut kustannukset, Sakot ja bonukset 
-  Välilehdet lähes täysin samannäköisiä, tehty molemmille yhteinen komponentti"
+   Välilehdet samalla leiskalle, joten yhteinen komponentti"
   [otsikko lisaa-uusi-fn aikavali
    valinnat muokataan muokkauspaneeli grid laji-suodatin]
   ;; Body 

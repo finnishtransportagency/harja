@@ -110,9 +110,7 @@
 
   HaeTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
-    (assoc app :haku-kaynnissa? false))
+     (epaonnistui vastaus app))
 
   HaeTyypitOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -122,9 +120,7 @@
 
   HaeTyypitEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
-    (assoc app :haku-kaynnissa? false))
+     (epaonnistui vastaus app))
 
   TallennaRivi
   (process-event [{:keys [rivi]} app]

@@ -25,6 +25,7 @@
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
             [harja.views.urakka.kustannusten-kirjaus :as kustannusten-kirjaus]
+            [harja.views.urakka.kustannusten-yhteenveto.yhteenveto :as kustannusten-yhteenveto]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
@@ -111,6 +112,10 @@
     :kustannusten-kirjaus (and
                             (oikeudet/urakat-paikkaukset id)
                             (= tyyppi :tiemerkinta))
+
+    :kustannusten-yhteenveto (and
+                               (oikeudet/urakat-paikkaukset id)
+                               (= tyyppi :tiemerkinta))
 
     :valitavoitteet (and
                       (oikeudet/urakat-valitavoitteet id)
@@ -285,6 +290,12 @@
        (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
          ^{:key "kustannusten-kirjaus"}
          [kustannusten-kirjaus/kustannusten-kirjaus ur])
+
+       "Kustannusten yhteenveto"
+       :kustannusten-yhteenveto
+       (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
+         ^{:key "kustannusten-yhteenveto"}
+         [kustannusten-yhteenveto/kustannusten-yhteenveto ur])
 
        (if (= (:tyyppi ur) :teiden-hoito)
          "Lupaukset ja tavoitteet"
