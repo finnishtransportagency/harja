@@ -208,3 +208,36 @@ SELECT DISTINCT ON (CONCAT("tr-numero", "tr-osa", "tr-alkuetaisyys")) CONCAT("tr
                                                                       tietyyppi
   FROM tr_osoitteet) as tiet
 ORDER BY tie, osa, alkuetaisyys;
+
+-- name: tieosoitteen-ajoratakilometrit-kaistaaineistosta
+-- single?: true
+-- Haetaan ensin kaikki annetulle tieosoitteelle osuvat relevantit ajoratatiedot, joista myöhemmin summataan
+  WITH relevantit AS
+           (SELECT *
+              FROM tr_osoitteet
+             WHERE "tr-numero" = :tr-numero AND
+                 "tr-osa" BETWEEN :tr-alkuosa AND :tr-loppuosa AND
+               -- alkupään tarkastelu
+                 (:tr-alkuosa < "tr-osa" OR (:tr-alkuosa = "tr-osa" AND :tr-alkuetaisyys < "tr-loppuetaisyys")) AND
+               -- loppupään tarkastelu
+                 (:tr-loppuosa > "tr-osa" OR (:tr-loppuosa = "tr-osa" AND  :tr-loppuetaisyys > "tr-alkuetaisyys")) AND
+               -- huomioitava vain pääkaistat 11 ja 21, muuten esim. kääntymiskaistoista tulee häiriötä laskentaan
+                 (("tr-ajorata" = 0 AND "tr-kaista" = '11') OR
+                  ("tr-ajorata" = 1 AND "tr-kaista" = '11') OR
+                  ("tr-ajorata" = 2 AND "tr-kaista" = '21'))
+             ORDER BY "tr-osa", "tr-alkuetaisyys")
+SELECT SUM(
+           CASE
+               -- jos ko. osat ovat varmuudella kaikki kokonaisuudessan mukana
+               WHEN (:tr-alkuosa < "tr-osa" AND :tr-loppuosa > "tr-osa") THEN "tr-loppuetaisyys" - "tr-alkuetaisyys"
+               -- jos alkuosa osoitteessa on pienempi, mutta loppuosa sama
+               WHEN (:tr-alkuosa < "tr-osa" AND :tr-loppuosa = "tr-osa") THEN
+                   LEAST("tr-loppuetaisyys", :tr-loppuetaisyys) - "tr-alkuetaisyys"
+               -- jos loppuosa osoitteessa on suurempi, mutta alkuosa sama
+               WHEN (:tr-loppuosa > "tr-osa" AND :tr-alkuosa = "tr-osa") THEN
+                   "tr-loppuetaisyys" - GREATEST("tr-alkuetaisyys", :tr-alkuetaisyys)
+               -- jos alku- ja loppuosa on sama, saadaan haluttu väli least ja greatest avulla
+               WHEN :tr-alkuosa = "tr-osa" AND :tr-loppuosa = "tr-osa" THEN
+                   LEAST("tr-loppuetaisyys", :tr-loppuetaisyys) - GREATEST("tr-alkuetaisyys", :tr-alkuetaisyys)
+               END) AS ajoratakilometrit
+  FROM relevantit;
