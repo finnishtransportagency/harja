@@ -94,9 +94,7 @@
 
 (defn- sakot-bonukset-muokkauspaneeli
   "Toteumien luonti / muokkaus"
-  [e! 
-   {:keys [lajit] :as _valinnat} 
-   {:keys [kasittelyaika virheita?] :as valittu-rivi} kohteet liitteet voi-kirjoittaa? voi-tallentaa?]
+  [e! {:keys [kasittelyaika virheita?] :as valittu-rivi} kohteet liitteet voi-kirjoittaa? voi-tallentaa?]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -140,8 +138,8 @@
         :pakollinen? true
         :vayla-tyyli? true
         :tyyppi :radio-group
-        :vaihtoehto-nayta lajit
-        :vaihtoehdot (keys lajit)
+        :vaihtoehto-nayta (dissoc yhteiset/laji-valinnat :kaikki)
+        :vaihtoehdot (keys (dissoc yhteiset/laji-valinnat :kaikki))
         :validoi [#(when (nil? %) "Anna kustannuksen tyyppi")]})
 
      (lomake/rivi
@@ -251,12 +249,12 @@
 
   (let [voi-tallentaa? true ;; Valitoidaan tallennettaessa (saavutettavuus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot @nav/valittu-urakka-id)
-
-        lisaa-uusi-fn #(e! (tiedot/->AvaaModal nil))
+        
         laji-suodatin (suodattimet-lajit e! valinnat)
         grid (sakot-bonukset-grid e! rivit liitteet haku-kaynnissa?)
         aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)))
-        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa?)]
+        lisaa-uusi-fn #(e! (tiedot/->AvaaModal {:yllapitokohde {:nimi tiedot/ei-kohdetta-teksti}}))
+        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa?)]
 
     (yhteiset/nakyma-body "Sakot ja bonukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid laji-suodatin false)))
 

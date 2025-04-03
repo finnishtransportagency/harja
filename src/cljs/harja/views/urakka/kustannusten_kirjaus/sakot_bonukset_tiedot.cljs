@@ -157,7 +157,6 @@
                                                   :muukasittelytapa "Tiemerkintä"}}}
 
           uusi-bonus {:laji nil
-                      :aika nyt
                       :perintapvm default-perintapvm
                       :kasittelyaika (get-in app [:valittu-rivi :kasittelyaika])
                       :toimenpideinstanssi (when (= 1 (count @u/urakan-toimenpideinstanssit))
