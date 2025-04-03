@@ -10,6 +10,14 @@
 (defonce ^{:private true} raportti-yhteenveto-otsikko "Yhteenveto")
 (defonce ^{:private true} raportti-sanktiot-otsikko "Sakot ja bonukset")
 (defonce ^{:private true} raportti-kustannukset-otsikko "Muut kustannukset")
+(defonce tyyppi-valinnat {:lisatyo "Lisätyö"
+                          :muu "Muu kustannus"
+                          :muutostyo "Muutostyö"
+                          :arvonmuutos "Arvonmuutos"
+                          :indeksi "Indeksitarkistus"
+                          :sopimusalueen-muutos "Sopimusalueen muutos"
+                          :yllapidon_sakko "Sakko"
+                          :yllapidon_bonus "Bonus"})
 
 
 (defn- osion-otsikko [otsikko]
@@ -59,7 +67,9 @@
                               (:perustelu %)
                               (:maara %))
                            data)
-                         yhteenveto)}]
+                         yhteenveto)
+                
+                :oikealle-tasattavat #{4}}]
     (into ()
       [(taulukko tiedot)
        (osion-otsikko raportti-sanktiot-otsikko)])))
@@ -79,9 +89,6 @@
                                :hae-bonukset? true
                                :vain-yllapitokohteettomat? false})
 
-        laji-fmt {:yllapidon_sakko "Sakko"
-                  :yllapidon_bonus "Bonus"}
-
         rivien-maara (count sankiot-ja-bonukset)
         yhteensa-hinta (reduce + (map :summa sankiot-ja-bonukset))
 
@@ -89,7 +96,7 @@
                 (fn [tapahtuma]
                   (let [sarakkeet {:aika (:kasittelyaika tapahtuma)
                                    :kohde (-> tapahtuma :yllapitokohde :nimi)
-                                   :laji (-> tapahtuma :laji laji-fmt)
+                                   :laji (-> tapahtuma :laji tyyppi-valinnat)
                                    :perustelu (or (-> tapahtuma :lisatieto) (-> tapahtuma :laatupoikkeama :paatos :perustelu))
                                    :maara (-> tapahtuma :summa)}]
                     [sarakkeet]))
@@ -127,7 +134,9 @@
                               (:luokka %)
                               (:hinta %))
                            data)
-                         yhteenveto)}]
+                         yhteenveto)
+                
+                :oikealle-tasattavat #{4}}]
     (into ()
       [(taulukko tiedot)
        (osion-otsikko raportti-kustannukset-otsikko)])))
@@ -145,13 +154,6 @@
                     :sopimus sopimus
                     :alkupvm  alkupvm
                     :loppupvm loppupvm})
-
-        tyyppi-valinnat {:lisatyo "Lisätyö"
-                         :muu "Muu kustannus"
-                         :muutostyo "Muutostyö"
-                         :arvonmuutos "Arvonmuutos"
-                         :indeksi "Indeksitarkistus"
-                         :sopimusalueen-muutos "Sopimusalueen muutos"}
 
         rivien-maara (count toteumat)
         yhteensa-hinta (reduce + (map :hinta toteumat))
@@ -172,26 +174,45 @@
      (koosta-kustannukset-taulukko rivit rivien-maara yhteensa-hinta)]))
 
 
+(defn- yhteenveto-rivi [tyyppi hinta]
+  (rivi
+    [:varillinen-teksti {:arvo tyyppi}]
+    [:varillinen-teksti {:arvo hinta :fmt :raha}]))
+
+
+(defn- koosta-yhteenveto-taulukko [data yhteensa-hinta]
+  (let [yhteenveto (yhteenveto-rivi "Yhteensä" yhteensa-hinta)
+        tiedot {:rivin-tiedot (rivi
+                                {:otsikko "Kustannuslaji" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti}
+                                {:otsikko "Hinta" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti})
+                :rivit (conj
+                         (mapv
+                           #(yhteenveto-rivi
+                              (:tyyppi %)
+                              (:hinta %))
+                           data)
+                         yhteenveto)
+
+                :oikealle-tasattavat #{1}}]
+    (into ()
+      [(taulukko tiedot)
+       (osion-otsikko raportti-kustannukset-otsikko)])))
+
+
 (defn yhteenveto
   "Tiemerkintä yhteenveto raportin suoritusfunktio"
-  [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm sopimus rivit] :as _parametrit}]
+  [db _user {:keys [urakkatyyppi urakka-id alkupvm loppupvm _sopimus rivit] :as _parametrit}]
   (let [lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
         raportin-otsikko (raportin-otsikko lyhytnimet raportti-yhteenveto-otsikko alkupvm loppupvm)
-
-        tyyppi-valinnat {:lisatyo "Lisätyö"
-                         :muu "Muu kustannus"
-                         :muutostyo "Muutostyö"
-                         :arvonmuutos "Arvonmuutos"
-                         :indeksi "Indeksitarkistus"
-                         :sopimusalueen-muutos "Sopimusalueen muutos"}
-
-        
-
-        _ (println "\n \n rivit: " rivit)]
+        yhteensa-hinta (reduce + (map :hinta rivit))
+        raportti-rivit (mapcat
+                         (fn [toteuma]
+                           (let [sarakkeet {:tyyppi (-> toteuma :tyyppi tyyppi-valinnat)
+                                            :hinta (-> toteuma :hinta)}]
+                             [sarakkeet]))
+                         rivit)]
 
     [:raportti {:nimi raportin-otsikko
                 :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
-     
-     ;;
-     ]))
+     (koosta-yhteenveto-taulukko raportti-rivit yhteensa-hinta)]))
