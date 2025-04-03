@@ -24,6 +24,7 @@
                                                                 :yllapidon_bonus "Bonus"}}})
 
 (defonce nakymassa? (atom false))
+(defonce ei-kohdetta-teksti "Ei liity kohteeseen")
 (defonce tila (atom (assoc-in nollatut-valinnat [:valinnat :valittu-laji] :kaikki)))
 
 (defonce laji-valinnat {:kaikki "Kaikki"
@@ -45,10 +46,12 @@
     (and
       pvm-validi?
       laji-validi?
-      kohde-olemassa?
       selite-olemassa?
       kustannus-olemassa?
-      toimenpideinstanssi-olemassa?)))
+      toimenpideinstanssi-olemassa?
+      (or
+        kohde-olemassa?
+        (-> yllapitokohde :nimi (= ei-kohdetta-teksti))))))
 
 
 (defrecord HaeTiedot [])

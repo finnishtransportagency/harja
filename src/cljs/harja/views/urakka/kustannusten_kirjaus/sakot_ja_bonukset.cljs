@@ -59,7 +59,7 @@
 
     {:otsikko "Kohde"
      :tyyppi :komponentti
-     :komponentti (comp str :nimi :yllapitokohde)
+     :komponentti #(or (-> % :yllapitokohde :nimi) tiedot/ei-kohdetta-teksti)
      :luokka "text-nowrap"
      :leveys 0.15}
 
@@ -138,13 +138,13 @@
 
      (lomake/rivi
        {:otsikko "Päällystys- tai paikkauskohde"
-        :pakollinen? true
-        :validoi [[:ei-tyhja "Valitse kohde"]]
-        :nimi :yllapitokohde
         :tyyppi :valinta
-        :valinnat (into [] kohteet)
-        :valinta-nayta :nimi
-        ::lomake/col-luokka "leveys-kokonainen"})
+        :pakollinen? true
+        :valinta-nayta #(if (:id %) (:nimi %) tiedot/ei-kohdetta-teksti)
+        :nimi :yllapitokohde
+        :validoi [[:ei-tyhja "Valitse kohde"]]
+        ::lomake/col-luokka "leveys-kokonainen"
+        :valinnat (into [{:nimi tiedot/ei-kohdetta-teksti}] kohteet)})
 
      (lomake/rivi
        {:otsikko "Selite"
