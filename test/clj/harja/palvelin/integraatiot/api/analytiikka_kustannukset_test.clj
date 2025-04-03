@@ -107,6 +107,7 @@
     (is (= 2024 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-vuosi])))
     (is (= 8 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-kuukausi])))
     (is (= "2024-08-01T21:00:00Z" (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :laskun-paivamaara])))
+    (is (= true (get-in (first (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulukohdistukset])) [:kulukohdistus :tavoitehintainen])) "Tavoitehintaisuus ei palaudu oikein.")
     (is (= (count kulut-kannasta) (count (get-in encoodattu-body [:toteutuneet-kustannukset :kulut]))))))
 
 
