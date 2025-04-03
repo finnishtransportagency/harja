@@ -349,7 +349,7 @@
         (is (= (get-in vastaus [:headers "oam_groups"]) "failed") "Käyttäjältä estetään pääsy")
         (is (= (get-in vastaus [:kayttaja :roolit]) #{"failed"}) "Käyttäjältä estetään pääsy")
         (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Public avaimen päivitys epäonnistui: No matching clause")) "Odotettu virhe tapahtuu")
-        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointi ei onnistunut: No method in multimethod")) "Odotettu virhe tapahtuu")
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennus ei onnistunut: No method in multimethod")) "Odotettu virhe tapahtuu")
 
         ;; Roolien ei pitäisi täsmätä
         (is (not= (get-in vastaus [:kayttaja :roolit]) odotetut-harja-roolit) "Käyttäjällä ei ole harja rooleja")
@@ -379,12 +379,12 @@
             vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet injected-token x-iam-data kehitysmoodi? public-key)]
 
         (is (= (get vahvistetut-tunnustiedot "custom:rooli") "failed") "Käyttö Harjaan estetään")
-        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointi ei onnistunut: Message seems corrupt or manipulated")) "Odotettu virhe tapahtuu")))))
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennus ei onnistunut: Message seems corrupt or manipulated")) "Odotettu virhe tapahtuu")))))
 
 
 (deftest ei-public-avainta-asetettu-paasta-kayttaja-harjaan-test
   ;; Jos public avainta ei ole asetettu, käyttäjän pitäisi päästä Harjaan
-  ;; (koska authentikaatiota ei voi tällöin suorittaa)
+  ;; (koska todennusta ei voi tällöin suorittaa)
   (let [initialisoidut-tiedot (initialisoi-cognito-jwt-todennuspyynto)
         todennuspyynto (-> initialisoidut-tiedot :todennuspyynto)
         x-iam-data (get todennuspyynto "x-iam-data")
@@ -396,7 +396,7 @@
         odotetut-harja-roolit (:roolit odotetut-roolit)
         odotetut-urakka-roolit (:urakkaroolit odotetut-roolit)]
 
-    (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointia ei voida tehdä, public-key-url ei ole asetettu")))
+    (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennusta ei voida tehdä, public-key-url ei ole asetettu")))
 
     ;; Ei pitäisi olla failed tilassa 
     (is (not= (get-in vastaus [:headers "oam_groups"]) "failed") "Käyttäjän pitäisi päästä Harjaan (critical)")
@@ -445,7 +445,7 @@
         tunnistetiedot-muunnettuna (jwt-varmistus/tunnistetiedot x-iam-data)]
 
 
-    (testing "Authentikaation cache asetettu"
+    (testing "Todennuksen cache asetettu"
       (is (> jwt-varmistus/+public-key-cache-paivitys-min+ 0))
       (is (> jwt-varmistus/+kayttaja-varmistus-cache-min+ 0)))
 
@@ -533,7 +533,7 @@
         (is (some? (:signature dekoodattu-iam-data)))))
 
 
-    (testing "Authentikaation tunnistetiedot palauttaa käyttäjätiedot oikein (CRITICAL)"
+    (testing "Todennuksen tunnistetiedot palauttaa käyttäjätiedot oikein (CRITICAL)"
       (is (= (get tunnistetiedot-muunnettuna "custom:rooli") mock-roolit))
       (is (= (get tunnistetiedot-muunnettuna "custom:sukunimi") mock-sukunimi))
       (is (= (get tunnistetiedot-muunnettuna "username") mock-username))
@@ -554,10 +554,10 @@
             public-key-url nil
             vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet x-iam-accesstoken x-iam-data kehitysmoodi? public-key-url)]
         (is (= (get vahvistetut-tunnustiedot "custom:rooli") mock-roolit))
-        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointia ei voida tehdä")))))
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennusta ei voida tehdä")))))
 
 
-    (testing "Authentikointi toimii (suora kutsu) (CRITICAL)"
+    (testing "Todennus toimii (suora kutsu) (CRITICAL)"
       (nollaa-todennuksen-cache)
       (let [kehitysmoodi? true
             public-key [accesstoken-public-key iam-data-public-key]
@@ -568,19 +568,19 @@
     
     ;; TODO , blokkaus ei ole vielä käytössä
     ;; Enabloi vasta sitten kun on
-    #_(testing "Authentikointi estää pääsyn (suora kutsu), accesstoken puuttuu (CRITICAL)"
+    #_(testing "Todennus estää pääsyn (suora kutsu), accesstoken puuttuu (CRITICAL)"
       (nollaa-todennuksen-cache)
       (let [kehitysmoodi? true
             public-key [accesstoken-public-key iam-data-public-key]
             vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet nil x-iam-data kehitysmoodi? public-key)]
         (is (= (get vahvistetut-tunnustiedot "custom:rooli") "failed"))
-        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointi ei onnistunut: JWT Token puuttui kokonaan")))))
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennus ei onnistunut: JWT Token puuttui kokonaan")))))
 
 
-    #_(testing "Authentikointi estää pääsyn (suora kutsu), iam-data puuttuu (CRITICAL)"
+    #_(testing "Todennus estää pääsyn (suora kutsu), iam-data puuttuu (CRITICAL)"
       (nollaa-todennuksen-cache)
       (let [kehitysmoodi? true
             public-key [accesstoken-public-key iam-data-public-key]
             vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet x-iam-accesstoken nil kehitysmoodi? public-key)]
         (is (= (get vahvistetut-tunnustiedot "custom:rooli") "failed"))
-        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Authentikointi ei onnistunut: JWT Token puuttui kokonaan")))))))
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennus ei onnistunut: JWT Token puuttui kokonaan")))))))

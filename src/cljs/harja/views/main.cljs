@@ -263,8 +263,8 @@
            (empty? (:urakkaroolit kayttaja))
            (empty? (:organisaatioroolit kayttaja)))))
 
-(defn authentikointi-epaonnistui? [kayttaja]
-  ;; Tarkoittaa että authentikointi epäonnistui, tästä laukaistaan myös slack häly: JWT-ERROR
+(defn todennus-varmistus-epaonnistui? [kayttaja]
+  ;; Tarkoittaa että todennus epäonnistui, tästä laukaistaan myös slack häly: JWT-ERROR
   (boolean (contains? (:roolit kayttaja) "failed")))
 
 (defn kuuntele-oikeusvirheita []
@@ -290,10 +290,10 @@
             (if (nil? kayttaja)
               [ladataan]
               (cond
-                (authentikointi-epaonnistui? kayttaja)
+                (todennus-varmistus-epaonnistui? kayttaja)
                 [:div.ei-kayttooikeutta-wrap
                  [:img#harja-brand-icon {:src "images/harja_logo_soft.svg"}]
-                 [:div.ei-kayttooikeutta "Authentikointi epäonnistui. Ei käyttöoikeutta Harjaan."]]
+                 [:div.ei-kayttooikeutta "Todennus epäonnistui. Ei käyttöoikeutta Harjaan."]]
 
                 (ei-kayttooikeutta? kayttaja)
                 [:div.ei-kayttooikeutta-wrap

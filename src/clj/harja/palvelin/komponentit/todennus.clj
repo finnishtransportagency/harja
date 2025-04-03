@@ -91,9 +91,9 @@
   [urakan-id urakoitsijan-id roolit oam-groups]
   (let [roolit-ja-linkit (->> (str/split oam-groups #",")
                            (keep (partial ryhman-rooli-ja-linkki roolit)))
-        ;; Uudelleenohjaa käyttäjä jos authentikointi epäonnistuu
+        ;; Uudelleenohjaa käyttäjä jos todennus epäonnistuu
         roolit-ja-linkit (if (= oam-groups "failed")
-                           [[{:nimi "failed" :kuvaus "Authentikointi epäonnistui." :osapuoli nil :linkki nil} nil]]
+                           [[{:nimi "failed" :kuvaus "Todennus epäonnistui." :osapuoli nil :linkki nil} nil]]
                            roolit-ja-linkit)]
     {:roolit (yleisroolit roolit-ja-linkit)
      :urakkaroolit (urakkaroolit urakan-id roolit-ja-linkit)
@@ -118,7 +118,7 @@
 (defn- pura-cognito-headerit
   "Purkaa AWS Cognitolta palautuneet headerit ja hakee niistä OAM-tiedot.
    Tiedot mapataan vanhan mallisiksi OAM_-headereiksi
-   JWT Signaturen vahvistukset suoritetaan samalla, jonka epäonnistuessa authentikointi ei etene"
+   JWT Signaturen vahvistukset suoritetaan samalla, jonka epäonnistuessa todennus ei etene"
   [headerit kehitysmoodi? {:keys [public-key-url todennus-varmistus-paalla?] :as _todennus-varmistus-asetukset}]
   (let [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n, kertoo koska token on annettu, ja kenelle
         ;; Mukana myös signature joka vahvistetaan

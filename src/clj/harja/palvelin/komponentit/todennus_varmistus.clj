@@ -1,5 +1,5 @@
 (ns harja.palvelin.komponentit.todennus-varmistus
-  "Authentikoinnin varmistus (JWT Tokenit)"
+  "Todennuksen varmistus (JWT Tokenit)"
   (:require [clojure.string :as str]
             [buddy.sign.jwt :as jwt]
             [taoensso.timbre :as log]
@@ -29,7 +29,7 @@
 
 (defn tunnistetiedot
   "Palauttaa dekoodatut tunnistetiedot käyttäjästä, sisältää roolit yms (x-iam-data)
-   Tämä palautetaan silloin kun käyttäjän todennus onnistui, ja jatketaan authentikointia"
+   Tämä palautetaan silloin kun käyttäjän todennus onnistui, ja jatketaan todennusta"
   [iam-data]
   (some-> iam-data
     (str/split #"\.") ;; HEADER.PAYLOAD.SIGNATURE
@@ -81,7 +81,7 @@
 
              response @(http/get api-url {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
                                                     "User-Agent" (if paivita?
-                                                                    ;; Koska authentikointi epäonnistui, laita LX tunnus mukaan 
+                                                                    ;; Koska todennus epäonnistui, laita LX tunnus mukaan 
                                                                    (str user-agent-headers " (update public-key/" lx-kayttaja ")")
                                                                    user-agent-headers)
                                                     "Content-Type" "application/json"}})
@@ -134,7 +134,7 @@
 
 
 (defn varmista-jwt-tokenit
-  "Varmistaa authentikoinnin oikellisuuden Cogniton antamista tokeneista
+  "Varmistaa todennuksen oikellisuuden Cogniton antamista tokeneista
    Tokenit mitkä vahvistetaan: x-iam-accesstoken (tokenin metadata), x-iam-data (käyttäjän tiedot&roolit)
    https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html#amazon-cognito-user-pools-using-tokens-manually-inspect"
   [accesstoken iam-data paivita? public-key-url kehitysmoodi?]
@@ -195,7 +195,7 @@
               (-> iam-data dekoodaa-token :payload :custom:uid)))]))
 
 
-(defn- authentikointi-epaonnistui
+(defn- todennus-varmistus-epaonnistui
   "Käsitellään virhe, ohjaa 'Ei käyttöoikeutta' näkymään
    
    - Pääsääntöisesti olemassa kirjautumistietojen eheyden tarkistukseen 
@@ -241,7 +241,7 @@
   [e iam-data accesstoken]
 
   ;; 'JWT-ERROR' Laukaisee slack-hälytyksen, nämä halutaan tutkia aina 
-  (log/error (str "[JWT-ERROR] Authentikointi ei onnistunut: " (.getMessage e)))
+  (log/error (str "[JWT-ERROR] Todennus ei onnistunut: " (.getMessage e)))
 
   ;; Header / tokenin metadata
   (log/error (str "Saatu JWT header (iam-data): " (-> iam-data dekoodaa-token :header)))
@@ -257,10 +257,10 @@
   ;; Kun varmistuksen laittaa kiinni, käyttäjät todennetaan normaalisti Harjaan, mutta ilman tokenin varmistusta 
   (log/error "HÄTÄ FIX: Jos käyttäjät jää ilman hyvää syytä ulos, aseta TODENNUS_VARMISTUS_PAALLA false -> depoly configs [infra]")
 
-  ;; Authentikointi ei mennyt läpi, poista kaikki oikeudet käyttäjältä
+  ;; Todennus ei mennyt läpi, poista kaikki oikeudet käyttäjältä
   ;; TODO.. Ei laiteta blokkausta vielä päälle tuotantoon, mergetään toistaiseksi näin.
   ;;
-  ; "failed" uudelleenohjaa "Authentikaatio epäonnistui" näkymään
+  ; "failed" uudelleenohjaa "Todennus epäonnistui" näkymään
   ; (-> (tunnistetiedot iam-data) (assoc "custom:rooli" "failed")) 
 
   ;; TODO.. 
@@ -288,7 +288,7 @@
    
    2. Lasketaan odotettu hash, ja verrataan alkuperäiseen signaturen hashiin (jwt/unsign)
       Täällä myös katsotaan tokenin expiration yms, virhe heitetään jos mitään on väärin 
-   3. Jos kaikki OK, palautetaan dekoodattu tunnusdata, ja jatketaan authentikointia 
+   3. Jos kaikki OK, palautetaan dekoodattu tunnusdata, ja jatketaan todennusta 
    4. Tuloksena käyttäjän roolitiedot on vahvistettu oikeiksi, eikä mitään ole sorkittu matkalla"
   ([accesstoken iam-data kehitysmoodi? public-key-url]
    ;; Kutsu todennuksen kautta tulee aina tähän 
@@ -297,7 +297,7 @@
      (and accesstoken iam-data)
      ;; yrita-uudelleen? defaulttina aina false
      (vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url false)
-     (authentikointi-epaonnistui (Exception. "JWT Token puuttui kokonaan! Molemmat x-iam-accesstoken sekä x-iam-data vaaditaan!") iam-data accesstoken)))
+     (todennus-varmistus-epaonnistui (Exception. "JWT Token puuttui kokonaan! Molemmat x-iam-accesstoken sekä x-iam-data vaaditaan!") iam-data accesstoken)))
   ([accesstoken iam-data kehitysmoodi? public-key-url yrita-uudelleen?]
    (let [cache-key
          ;; Otetaan avaimesta pelkästään käyttäjän tiedot, jotka on suht staattisia, tallenna ne cacheen
@@ -311,10 +311,10 @@
 
                                                    (if public-key-url
                                                      (varmista-jwt-tokenit accesstoken iam-data yrita-uudelleen? public-key-url kehitysmoodi?)
-                                                     ;; Laukaisee slack-hälytyksen, mutta päästää käyttäjän sisään, koska authentikointia ei voida tehdä
-                                                     (log/error "[JWT-ERROR] Authentikointia ei voida tehdä, public-key-url ei ole asetettu! Aseta public-key-url ympäristömuuttuja."))
+                                                     ;; Laukaisee slack-hälytyksen, mutta päästää käyttäjän sisään, koska todennusta ei voida tehdä
+                                                     (log/error "[JWT-ERROR] Todennusta ei voida tehdä, public-key-url ei ole asetettu! Aseta public-key-url ympäristömuuttuja."))
 
-                                                   ;; Palauta tiedot ja jatka authentikointia jos onnistui / public-key muuttuja puuttui 
+                                                   ;; Palauta tiedot ja jatka todennusta jos onnistui / public-key muuttuja puuttui 
                                                    (tunnistetiedot iam-data)
 
                                                    ;; Todennus tehtiin ja se epäonnistui
@@ -326,7 +326,7 @@
                                                        ;; Tarkista, onko public key rotatoitunut yrittämällä uudelleen
                                                        (vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url true)
                                                        ;; Public key on ajan tasalla, ja vieläkin tulee virhe, heitetään hälytys logiin 
-                                                       (authentikointi-epaonnistui e iam-data accesstoken)))))
+                                                       (todennus-varmistus-epaonnistui e iam-data accesstoken)))))
                                                ;; Tiedot on jo cachessa
                                                %
                                                ;; Tallenna cacheen käyttäjän tiedot, pysyvät siellä 15 min  ->> +kayttaja-varmistus-cache-min+ 
