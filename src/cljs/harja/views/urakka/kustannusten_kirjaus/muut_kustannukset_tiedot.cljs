@@ -122,7 +122,6 @@
 
   HaeTyypitEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (println "epa: " vastaus)
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))

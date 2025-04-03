@@ -93,12 +93,18 @@
               [:hr]
               [:div.muokkaus-modal-napit
                [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi)) {:disabled (not voi-tallentaa?)}]
-               [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]]}
+               [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]
+               
+              (when (lomake/virheita? valittu-rivi)
+                ;; Virheet on saatavilla (-> valittu-rivi ::lomake/virheet vals), mutta ei tarvi tässä näyttää toistaseen
+                [yleiset/info-laatikko :varoitus "Pakollisia tietoja puuttuu."])]}
 
     [(lomake/rivi
        {:otsikko "Päivämäärä"
+        :nimi :pvm
         :pakollinen? true
         :tyyppi :komponentti
+        :validoi [[:ei-tyhja "Anna päivämäärä"]]
         :komponentti (fn []
                        [:span
                         [kentat/tee-kentta {:tyyppi :pvm :vayla-tyyli? true}
