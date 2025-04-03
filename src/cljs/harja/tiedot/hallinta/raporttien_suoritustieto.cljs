@@ -83,7 +83,8 @@
    ["kanavien-laskutusyhteenveto" "Kanavien laskutusyhteenveto"]
    ["kanavien-liikennetapahtumat" "Kanavien liikennetapahtumat"]
    ["tiemerkinta-sakot-bonukset" "Tiemerkintä - Sakot ja bonukset"]
-   ["tiemerkinta-muut-kustannukset" "Tiemerkintä - Muut kustannukset"]])
+   ["tiemerkinta-muut-kustannukset" "Tiemerkintä - Muut kustannukset"]
+   ["tiemerkinta-kustannukset-yhteenveto" "Tiemerkintä - Yhteenveto"]])
 
 (defn raportin-nimi-fmt [vaihtoehdot tunniste]
   (first (keep #(when (= (first %)

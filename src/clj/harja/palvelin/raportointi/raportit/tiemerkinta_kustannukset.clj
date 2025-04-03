@@ -7,7 +7,7 @@
             [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko rivi]]))
 
-
+(defonce ^{:private true} raportti-yhteenveto-otsikko "Yhteenveto")
 (defonce ^{:private true} raportti-sanktiot-otsikko "Sakot ja bonukset")
 (defonce ^{:private true} raportti-kustannukset-otsikko "Muut kustannukset")
 
@@ -170,3 +170,28 @@
                 :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
      (koosta-kustannukset-taulukko rivit rivien-maara yhteensa-hinta)]))
+
+
+(defn yhteenveto
+  "Tiemerkintä yhteenveto raportin suoritusfunktio"
+  [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm sopimus rivit] :as _parametrit}]
+  (let [lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
+        raportin-otsikko (raportin-otsikko lyhytnimet raportti-yhteenveto-otsikko alkupvm loppupvm)
+
+        tyyppi-valinnat {:lisatyo "Lisätyö"
+                         :muu "Muu kustannus"
+                         :muutostyo "Muutostyö"
+                         :arvonmuutos "Arvonmuutos"
+                         :indeksi "Indeksitarkistus"
+                         :sopimusalueen-muutos "Sopimusalueen muutos"}
+
+        
+
+        _ (println "\n \n rivit: " rivit)]
+
+    [:raportti {:nimi raportin-otsikko
+                :orientaatio :landscape
+                :lyhennetty-tiedostonimi true}
+     
+     ;;
+     ]))

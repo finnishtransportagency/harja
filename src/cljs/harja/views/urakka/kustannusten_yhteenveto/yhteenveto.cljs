@@ -50,7 +50,8 @@
   (let [lisaa-uusi-fn nil
         grid (yhteenveto-grid e! rivit haku-kaynnissa?)
         aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)))]
-    (yhteiset/nakyma-body "Kustannusten yhteenveto" lisaa-uusi-fn aikavali valinnat muokataan nil grid nil)))
+    
+    (yhteiset/nakyma-body "Kustannusten yhteenveto" lisaa-uusi-fn aikavali valinnat muokataan nil grid nil true)))
 
 
 (defn kustannusten-yhteenveto* [e! _app]

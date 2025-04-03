@@ -74,7 +74,7 @@
   "Muut kustannukset, Sakot ja bonukset 
    Välilehdet samalla leiskalle, joten yhteinen komponentti"
   [otsikko lisaa-uusi-fn aikavali
-   valinnat muokataan muokkauspaneeli grid laji-suodatin]
+   valinnat muokataan muokkauspaneeli grid laji-suodatin yhteenveto?]
   ;; Body 
   [:div.tiemerkinta-muut-kustannukset
 
@@ -93,9 +93,10 @@
     [:div.laji (when laji-suodatin "Laji")
      [:div.kentta (when laji-suodatin laji-suodatin)]]
 
-     ;; Lisää uusi 
-    [:div
-     [napit/uusi "Lisää uusi" lisaa-uusi-fn {:disabled false}]]]
+    ;; Lisää uusi 
+    (when-not yhteenveto?
+      [:div
+       [napit/uusi "Lisää uusi" lisaa-uusi-fn {:disabled false}]])]
 
    ;; Muokkauspaneeli
    (when muokataan muokkauspaneeli)

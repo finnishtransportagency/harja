@@ -45,9 +45,10 @@
     vec))
 
 
-(defn- raporttiparametrit [tyypit]
+(defn- raporttiparametrit [rivit]
   (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
-    {:urakkatyyppi (:arvo @nav/urakkatyyppi)
+    {:rivit rivit
+     :urakkatyyppi (:arvo @nav/urakkatyyppi)
      :alkupvm  (-> @u/valittu-aikavali first)
      :loppupvm (-> @u/valittu-aikavali second)
      :sopimus (-> @u/valittu-sopimusnumero first)}))
@@ -95,9 +96,12 @@
 
   HaeSanktiotOnnistui
   (process-event [{:keys [vastaus]} {:keys [_valinnat] :as app}]
-    (-> app
-      (assoc :haku-kaynnissa? false)
-      (update :rivit into (laske-kustannukset-yhteen vastaus :laji :summa))))
+    (let [rivit (-> app 
+                  (update :rivit into (laske-kustannukset-yhteen vastaus :laji :summa)) 
+                  :rivit)]
+     (-> app
+       (assoc :haku-kaynnissa? false :rivit rivit)
+       (assoc-in [:valinnat :raportti] (raporttiparametrit rivit)))))
 
   HaeSanktiotEpaonnistui
   (process-event [{:keys [vastaus]} app]

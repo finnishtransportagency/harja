@@ -468,7 +468,14 @@
     :urakkatyyppi #{:tiemerkinta}
     :kuvaus       "Tiemerkintä - Muut kustannukset"
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/muut-kustannukset}])
+    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/muut-kustannukset}
+
+   {:nimi :tiemerkinta-kustannukset-yhteenveto
+    :konteksti    #{"urakka"}
+    :urakkatyyppi #{:tiemerkinta}
+    :kuvaus       "Tiemerkintä - Yhteenveto"
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/yhteenveto}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
