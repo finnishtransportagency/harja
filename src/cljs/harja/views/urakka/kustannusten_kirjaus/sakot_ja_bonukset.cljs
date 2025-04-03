@@ -104,9 +104,11 @@
      :voi-muokata? voi-kirjoittaa?
      :tarkkaile-ulkopuolisia-muutoksia? true
      :muokkaa! #(e! (tiedot/->MuokkaaRivia %))
-     :header [:div.col-md-12
-              [:h2.header-yhteiset "Lisää uusi sakko tai bonus"]
-              [:hr]]
+     :header (let [muokataan?  (-> valittu-rivi :id some?)
+                   otsikko (if muokataan? "Muokkaa kustannusta" "Lisää uusi sakko tai bonus")]
+               [:div.col-md-12
+                [:h2.header-yhteiset otsikko]
+                [:hr]])
      :footer [:<>
               [:hr]
               [:div.muokkaus-modal-napit

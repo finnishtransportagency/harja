@@ -86,15 +86,17 @@
      :voi-muokata? voi-kirjoittaa?
      :tarkkaile-ulkopuolisia-muutoksia? true
      :muokkaa! #(e! (tiedot/->MuokkaaRivia %))
-     :header [:div.col-md-12
-              [:h2.header-yhteiset "Lisää uusi kustannus"]
-              [:hr]]
+     :header (let [muokataan?  (-> valittu-rivi :id some?)
+                   otsikko (if muokataan? "Muokkaa kustannusta" "Lisää uusi kustannus")]
+               [:div.col-md-12
+                [:h2.header-yhteiset otsikko]
+                [:hr]])
      :footer [:<>
               [:hr]
               [:div.muokkaus-modal-napit
                [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi)) {:disabled (not voi-tallentaa?)}]
                [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]
-               
+
               (when (lomake/virheita? valittu-rivi)
                 ;; Virheet on saatavilla (-> valittu-rivi ::lomake/virheet vals), mutta ei tarvi tässä näyttää toistaseen
                 [yleiset/info-laatikko :varoitus "Pakollisia tietoja puuttuu."])]}
