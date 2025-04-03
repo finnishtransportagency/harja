@@ -288,6 +288,7 @@ ORDER BY k.luotu ASC;
 
 -- name: hae-urakan-liitteet
 SELECT l.id                  AS id,
+	   s.id 				 AS sanktio_id,
        l.tyyppi              AS tyyppi,
        l.koko                AS koko,
        l.nimi                AS nimi,
@@ -297,7 +298,8 @@ SELECT l.id                  AS id,
   FROM liite l
            JOIN laatupoikkeama_liite hl ON l.id = hl.liite
            JOIN laatupoikkeama lp ON hl.laatupoikkeama = lp.id 
- WHERE lp.urakka = :urakka-id
+           JOIN sanktio s ON s.laatupoikkeama = lp.id
+ WHERE lp.urakka = :urakka
  ORDER BY l.luotu ASC;
 
 

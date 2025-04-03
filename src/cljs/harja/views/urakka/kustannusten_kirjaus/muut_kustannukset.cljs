@@ -73,7 +73,7 @@
      :tasaa :oikea
      :nimi :hinta
      :luokka "text-nowrap"
-     :leveys 0.1}]
+     :leveys 0.2}]
    rivit])
 
 
@@ -146,7 +146,8 @@
         :pakollinen? true
         :vayla-tyyli? true
         :teksti-oikealla "EUR"
-        :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
+        :validoi [[:ei-tyhja "Syötä kustannusarvo"]
+                  [:rajattu-numero -999999999 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
         ::lomake/col-luokka "col-xs-6 summa-valinta"})]
     valittu-rivi]])
 

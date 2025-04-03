@@ -16,11 +16,10 @@
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
                                              :kohteet {}
                                              :liitteet {}
+                                             :valittu-rivi {}
                                              :muokataan false
                                              :haku-kaynnissa? false
-                                             :valittu-rivi {:uusi-liite [{}]}
                                              :valinnat {:raportti {}
-                                                        :uusi-liite {}
                                                         :lajit {:yllapidon_sakko "Sakko"
                                                                 :yllapidon_bonus "Bonus"}}})
 
@@ -186,7 +185,7 @@
     (let [rivi (lomake/ilman-lomaketietoja rivi)
           yllapitokohde-id (-> rivi :yllapitokohde :id)
 
-          {:keys [laji id summa indeksi perintapvm toimenpideinstanssi kasittelyaika kasittelytapa lomake-selite laatupoikkeama]} rivi
+          {:keys [laji id summa indeksi perintapvm toimenpideinstanssi kasittelyaika lomake-selite laatupoikkeama]} rivi
           laatupoikkeama (assoc-in laatupoikkeama [:paatos :perustelu] lomake-selite)
 
           parametrit (cond
@@ -213,6 +212,7 @@
                                          :urakka @nav/valittu-urakka-id
                                          :yllapitokohde yllapitokohde-id
                                          :aika kasittelyaika
+                                         :uusi-liite (get-in laatupoikkeama [:uusi-liite])
                                          :paatos {:paatos "sanktio"
                                                   :perustelu lomake-selite
                                                   :kasittelyaika kasittelyaika

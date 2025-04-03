@@ -79,8 +79,11 @@
     {:otsikko "Liite"
      :tyyppi :komponentti
      :leveys 0.1
-     :komponentti (fn [{:keys [laatupoikkeama]}]
-                    (let [rivin-liite (vec (filter #(= (:laatupoikkeama %) (-> laatupoikkeama :id)) liitteet))]
+     :komponentti (fn [{:keys [laatupoikkeama id]}]
+                    (let [liite-linkki (or (-> laatupoikkeama :id) id)
+                          rivin-liite (vec (filter #(or
+                                                      (= (:laatupoikkeama %) liite-linkki)
+                                                      (= (:sanktio_id %) liite-linkki)) liitteet))]
                       [liitteet/liitteet-ikoneina
                        rivin-liite
                        {:ikoni [:div.nappi-toissijainen
@@ -180,36 +183,41 @@
         :nimi :summa
         :tyyppi :euro
         :teksti-oikealla "EUR"
-        :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
+        :validoi [[:ei-tyhja "Syötä kustannusarvo"]
+                  [:rajattu-numero -999999999 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
         ::lomake/col-luokka "col-xs-6 summa-valinta"})
 
-     (let [tyyppi (-> valittu-rivi :laji)
-           poikkeama (-> valittu-rivi :laatupoikkeama :id)
-           rivin-liite (vec (filter #(= (:laatupoikkeama %) poikkeama) liitteet))]
+     (let [liite-linkki (or
+                          ;; Bonuksen liite linkittyy sanktio id:llä
+                          (-> valittu-rivi :laatupoikkeama :id)
+                          (-> valittu-rivi :id))
+           rivin-liite (vec (filter #(or
+                                       (= (:laatupoikkeama %) liite-linkki)
+                                       (= (:sanktio_id %) liite-linkki)) liitteet))
 
-       ;; Sallitaan liitteen lisäys vain sakoille
-       (when (= tyyppi :yllapidon_sakko)
-         (lomake/rivi
-           {:otsikko "Liitteet"
-            :nimi :liitteet
-            :tyyppi :komponentti
-            :komponentti (fn [_rivi]
-                           [liitteet/liitteet-ja-lisays
-                            @nav/valittu-urakka-id
-                            rivin-liite
-                            {:uusi-liite-atom (r/wrap valittu-rivi
-                                                (fn [data]
-                                                  (e! (tiedot/->UusiLiite data))))
-                             :uusi-liite-teksti "Lisää liite"
-                             :salli-poistaa-lisatty-liite? true
-                             :salli-poistaa-tallennettu-liite? true
-                             :poista-tallennettu-liite-fn (fn [liite-id]
-                                                            (liitteet/poista-liite-kannasta
-                                                              {:liite-id liite-id
-                                                               :domain-id poikkeama
-                                                               :domain :laatupoikkeama
-                                                               :urakka-id @nav/valittu-urakka-id
-                                                               :poistettu-fn #(e! (tiedot/->HaeTiedot))}))}])})))]
+           laatupoikkeama-id (-> rivin-liite first :laatupoikkeama)]
+
+       (lomake/rivi
+         {:otsikko "Liitteet"
+          :nimi :liitteet
+          :tyyppi :komponentti
+          :komponentti (fn [_rivi]
+                         [liitteet/liitteet-ja-lisays
+                          @nav/valittu-urakka-id
+                          rivin-liite
+                          {:uusi-liite-atom (r/wrap valittu-rivi
+                                              (fn [data]
+                                                (e! (tiedot/->UusiLiite data))))
+                           :uusi-liite-teksti "Lisää liite"
+                           :salli-poistaa-lisatty-liite? true
+                           :salli-poistaa-tallennettu-liite? true
+                           :poista-tallennettu-liite-fn (fn [liite-id]
+                                                          (liitteet/poista-liite-kannasta
+                                                            {:liite-id liite-id
+                                                             :domain-id laatupoikkeama-id
+                                                             :domain :laatupoikkeama
+                                                             :urakka-id @nav/valittu-urakka-id
+                                                             :poistettu-fn #(e! (tiedot/->HaeTiedot))}))}])}))]
     valittu-rivi]])
 
 
