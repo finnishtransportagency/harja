@@ -51,10 +51,17 @@
 (defn urakan-hoitokausi
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
   (let [vuosi-termi (cond
-                      (#{:hoito :teiden-hoito} (:tyyppi ur)) "Hoitokausi"
+                      (#{:hoito :teiden-hoito} (:tyyppi ur))
+                      "Hoitokausi"
+
+                      (#{:tiemerkinta} (:tyyppi ur))
+                      "Sopimusvuosi"
+
                       (or
                         (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))
-                       #{:paallystys (:tyyppi ur)}) "Urakkavuosi"
+                        #{:paallystys (:tyyppi ur)})
+                      "Urakkavuosi"
+
                       :else "Sopimuskausi") ]
     [:div.label-ja-alasveto.hoitokausi
      [:span.alasvedon-otsikko vuosi-termi]

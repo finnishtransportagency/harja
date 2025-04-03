@@ -23,7 +23,7 @@
     nollatut-valinnat))
 
 
-(defn raporttiviennit [{:keys [raportti] :as valinnat}]
+(defn raporttiviennit [{:keys [raportti] :as _valinnat}]
   [:div.raporttiviennit
    ;;
    ;; Excel
