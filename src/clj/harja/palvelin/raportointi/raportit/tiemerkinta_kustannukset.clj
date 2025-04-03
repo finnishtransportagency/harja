@@ -196,7 +196,7 @@
                 :oikealle-tasattavat #{1}}]
     (into ()
       [(taulukko tiedot)
-       (osion-otsikko raportti-kustannukset-otsikko)])))
+       (osion-otsikko raportti-yhteenveto-otsikko)])))
 
 
 (defn yhteenveto

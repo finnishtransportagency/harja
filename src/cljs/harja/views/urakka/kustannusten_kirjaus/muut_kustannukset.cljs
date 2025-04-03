@@ -57,7 +57,6 @@
     {:otsikko "Selite"
      :tyyppi :string
      :nimi :selite
-     :luokka "text-nowrap"
      :leveys 0.2}
 
     {:otsikko "Pk-luokka"

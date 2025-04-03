@@ -65,7 +65,6 @@
     {:otsikko "Selite"
      :tyyppi :komponentti
      :komponentti #(or (:lisatieto %) (-> % :laatupoikkeama :paatos :perustelu))
-     :luokka "text-nowrap"
      :leveys 0.15}
 
     {:otsikko "Määrä"
@@ -122,7 +121,7 @@
         :pakollinen? true
         :nimi :kasittelyaika
         :tyyppi :komponentti
-        :validoi [[:ei-tyhja "Anna päivämäärä"]]
+        :validoi [#(when (and virheita? (nil? %)) "Anna päivämäärä")]
         :komponentti (fn []
                        [:span
                         [kentat/tee-kentta {:tyyppi :pvm :vayla-tyyli? true}
@@ -140,14 +139,13 @@
         :tyyppi :radio-group
         :vaihtoehto-nayta (dissoc yhteiset/laji-valinnat :kaikki)
         :vaihtoehdot (keys (dissoc yhteiset/laji-valinnat :kaikki))
-        :validoi [#(when (nil? %) "Anna kustannuksen tyyppi")]})
+        :validoi [#(when (and virheita? (nil? %)) "Anna kustannuksen tyyppi")]})
 
      (lomake/rivi
        {:otsikko "Päällystys- tai paikkauskohde"
         :tyyppi :valinta
-        :pakollinen? true
+        :pakollinen? false
         :nimi :yllapitokohde
-        :validoi [[:ei-tyhja "Valitse kohde"]]
         ::lomake/col-luokka "leveys-kokonainen"
         :valinnat (into [{:nimi tiedot/ei-kohdetta-teksti}] kohteet)
         :valinta-nayta #(if (:id %) (:nimi %) tiedot/ei-kohdetta-teksti)})
@@ -160,7 +158,7 @@
         :salli-kirjoitus? true
         :piilota-checkbox? true
         :piilota-dropdown? true
-        :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
+        :validoi [#(when (and virheita? (nil? %)) "Kirjoita kustannuksen selite")]
         ::lomake/col-luokka "leveys-kokonainen"})
 
      (lomake/rivi
@@ -168,7 +166,7 @@
         :pakollinen? true
         :tyyppi :komponentti
         :nimi :toimenpideinstanssi
-        :validoi [[:ei-tyhja "Valitse toimenpide"]]
+        :validoi [#(when (and virheita? (nil? %)) "Valitse toimenpide")]
         :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                        (let [toimenpideinstanssit @urakka-tiedot/urakan-toimenpideinstanssit]
                          [:<>
@@ -189,7 +187,7 @@
         :nimi :summa
         :tyyppi :euro
         :teksti-oikealla "EUR"
-        :validoi [[:ei-tyhja "Syötä kustannusarvo"]
+        :validoi [#(when (and virheita? (nil? %)) "Syötä kustannusarvo")
                   [:rajattu-numero -999999999 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
         ::lomake/col-luokka "col-xs-6 summa-valinta"})
 
