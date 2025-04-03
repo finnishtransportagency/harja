@@ -119,7 +119,7 @@
   "Purkaa AWS Cognitolta palautuneet headerit ja hakee niistä OAM-tiedot.
    Tiedot mapataan vanhan mallisiksi OAM_-headereiksi
    JWT Signaturen vahvistukset suoritetaan samalla, jonka epäonnistuessa authentikointi ei etene"
-  [headerit kehitysmoodi? {:keys [public-key-url todennus-varmistus-paalla?]}]
+  [headerit kehitysmoodi? {:keys [public-key-url todennus-varmistus-paalla?] :as _todennus-varmistus-asetukset}]
   (let [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n, kertoo koska token on annettu, ja kenelle
         ;; Mukana myös signature joka vahvistetaan
         accesstoken (get headerit "x-iam-accesstoken")
@@ -193,10 +193,10 @@
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
    Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään 
    muiden headereiden joukkoon."
-  [headerit kehitysmoodi? todennus-varmistus]
+  [headerit kehitysmoodi? todennus-varmistus-asetukset]
   (if (empty? (koka-headerit headerit))
     (->
-      (merge headerit (pura-cognito-headerit headerit kehitysmoodi? todennus-varmistus))
+      (merge headerit (pura-cognito-headerit headerit kehitysmoodi? todennus-varmistus-asetukset))
       (prosessoi-apikayttaja-header))
     headerit))
 
@@ -307,8 +307,8 @@
 (defn koka->kayttajatiedot
   ([db headerit oikeudet kehitysmoodi?]
    (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? nil))
-  ([db headerit oikeudet kehitysmoodi? todennus-varmistus]
-   (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? todennus-varmistus)
+  ([db headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset]
+   (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? todennus-varmistus-asetukset)
          oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
      (try
        (get (swap! kayttajatiedot-cache-atom #(cache/through
@@ -327,7 +327,7 @@
      req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
 (defrecord HttpTodennus 
-  [oikeudet todennus-varmistus]
+  [oikeudet todennus-varmistus-asetukset]
   component/Lifecycle
   (start [this]
     (log/info "Todennetaan HTTP käyttäjä KOKA headereista.")
@@ -343,7 +343,7 @@
         (do
           (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan: " headerit))
           (throw+ todennusvirhe))
-        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? todennus-varmistus)] 
+        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset)] 
           (assoc req :kayttaja kayttajatiedot)
           (do
             (log/warn (str
