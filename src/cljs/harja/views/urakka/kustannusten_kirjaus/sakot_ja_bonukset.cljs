@@ -158,7 +158,7 @@
         :salli-kirjoitus? true
         :piilota-checkbox? true
         :piilota-dropdown? true
-        :validoi [#(when (and virheita? (nil? %)) "Kirjoita kustannuksen selite")]
+        :validoi [#(when (and virheita? (nil? (seq %))) "Kirjoita kustannuksen selite")]
         ::lomake/col-luokka "leveys-kokonainen"})
 
      (lomake/rivi

@@ -104,7 +104,7 @@
         :nimi :pvm
         :pakollinen? true
         :tyyppi :komponentti
-        :validoi [[:ei-tyhja "Anna päivämäärä"]]
+        :validoi [#(when (and virheita? (nil? %)) "Anna päivämäärä")]
         :komponentti (fn []
                        [:span
                         [kentat/tee-kentta {:tyyppi :pvm :vayla-tyyli? true}
@@ -121,7 +121,7 @@
         :vayla-tyyli? true
         :valinnat (map :tyyppi tyypit)
         :valinta-nayta #(get yhteiset/tyyppi-valinnat (keyword %))
-        :validoi [[:ei-tyhja "Valitse tyyppi"]]
+        :validoi [#(when (and virheita? (nil? %)) "Valitse tyyppi")]
         ::lomake/col-luokka "col-xs-6"})
 
      (lomake/rivi
@@ -132,7 +132,7 @@
         :salli-kirjoitus? true
         :piilota-checkbox? true
         :piilota-dropdown? true
-        :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
+        :validoi [#(when (and virheita? (nil? (seq %))) "Kirjoita kustannuksen selite")]
         ::lomake/col-luokka "leveys-kokonainen"})
 
      (lomake/rivi
@@ -143,7 +143,7 @@
         :nimi :yllapitoluokka
         :vaihtoehto-nayta :nimi
         :vaihtoehdot yllapitokohteet-domain/paallysteen-korjausluokat
-        :validoi [#(when (nil? %) "Syötä jokin luokka, tai 'Ei PK-luokkaa'")]})
+        :validoi [#(when (and virheita? (nil? %)) "Syötä jokin luokka, tai 'Ei PK-luokkaa'")]})
 
      (lomake/rivi
        {:otsikko "Summa"
@@ -152,7 +152,7 @@
         :pakollinen? true
         :vayla-tyyli? true
         :teksti-oikealla "EUR"
-        :validoi [[:ei-tyhja "Syötä kustannusarvo"]
+        :validoi [#(when (and virheita? (nil? %)) "Syötä kustannusarvo")
                   [:rajattu-numero -999999999 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
         ::lomake/col-luokka "col-xs-6 summa-valinta"})]
     valittu-rivi]])
