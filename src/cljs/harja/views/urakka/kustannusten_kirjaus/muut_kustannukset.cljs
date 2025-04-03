@@ -13,8 +13,6 @@
    [harja.ui.komponentti :as komp]
    [harja.tiedot.navigaatio :as nav]
    [harja.domain.oikeudet :as oikeudet]
-   [harja.tiedot.urakka :as urakka-tiedot]
-   [harja.views.urakka.valinnat :as urakka-valinnat]
    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
    [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
    [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
@@ -161,30 +159,14 @@
     valittu-rivi]])
 
 
-(defn- suodattimet-aikavali
-  "Urakkavuosi valinta, triggeröi haun"
-  [e! {:keys [aikavali]}]
-  (let [fn-aikavali-muuttunut? (fn [aika]
-                                 (let [alku (-> @urakka-tiedot/valittu-hoitokausi first)
-                                       loppu (-> @urakka-tiedot/valittu-hoitokausi second)
-                                       valinnat-alku (-> aika first)
-                                       valinnat-loppu (-> aika second)]
-                                   (boolean (or
-                                              (not= alku valinnat-alku)
-                                              (not= loppu valinnat-loppu)))))]
-
-    [:div {:on-click #(when (fn-aikavali-muuttunut? aikavali) (e! (tiedot/->HaeTiedot)))}
-     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]))
-
-
 (defn muut-kustannukset-listaus [e! {:keys [rivit valinnat muokataan 
                                             valittu-rivi haku-kaynnissa? tyypit] :as _app}]
   (let [voi-tallentaa? true ;; Valitoidaan tallennettaessa (saavutettavuus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteutus-muutkustannukset @nav/valittu-urakka-id)
-
-        aikavali (suodattimet-aikavali e! valinnat)
+        
         lisaa-uusi-fn #(e! (tiedot/->AvaaKustannusModal nil))
         grid (muut-kustannukset-grid e! rivit haku-kaynnissa?)
+        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)))
         muokkauspaneeli (muut-kustannukset-muokkauspaneeli e! valittu-rivi voi-kirjoittaa? voi-tallentaa? tyypit)]
 
     (yhteiset/nakyma-body "Muut kustannukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid nil)))

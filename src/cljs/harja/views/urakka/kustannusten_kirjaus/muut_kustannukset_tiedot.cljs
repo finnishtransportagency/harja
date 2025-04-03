@@ -9,8 +9,7 @@
              [harja.tyokalut.tuck :as tuck-apurit]
              [reagent.core :refer [atom] :as reagent]
              [harja.tiedot.raportit :as raporttitiedot]
-             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-             [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
+             [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
                                              :valittu-rivi {}
@@ -100,7 +99,7 @@
   (process-event [_ app]
     (hae-tiedot app)
     (->
-      (yhteiset/nollaa-tuck-tila app nollatut-valinnat)
+      (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
       (assoc :haku-kaynnissa? true)
       (assoc-in [:valinnat :aikavali] @u/valittu-aikavali)))
 

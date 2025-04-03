@@ -4,23 +4,12 @@
    [harja.ui.napit :as napit]
    [harja.transit :as transit]
    [harja.ui.ikonit :as ikonit]
-   [harja.asiakas.kommunikaatio :as komm]))
+   [harja.tiedot.navigaatio :as nav]
+   [harja.asiakas.kommunikaatio :as komm]
+   [harja.tiedot.urakka :as urakka-tiedot]
+   [harja.views.urakka.valinnat :as urakka-valinnat]))
 
 (defonce lomake-validointi-virhe-viesti "Tallennus epäonnistui. Pakollisia tietoja puuttuu.")
-
-
-(defn nollaa-tuck-tila
-  "Nollaa Tuck-tilan osittain säilyttäen olemassa olevat syvemmän tason arvot.
-   Korvaa arvot, jotka on määritelty `nollatut-valinnat`
-   Käytetään kun suodattimia päivitetään, urakkaa vaihdetaan, yms, jotta tilaan ei jää mitään roikkumaan."
-  [app nollatut-valinnat]
-  (merge-with (fn [app valinta]
-                (if (and
-                      (map? app) (map? valinta))
-                  (merge app valinta)
-                  valinta))
-    app
-    nollatut-valinnat))
 
 
 (defn raporttiviennit [{:keys [raportti] :as _valinnat}]
@@ -52,6 +41,22 @@
               :class #{"nappi-toissijainen"}}
 
      [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna PDF"]]]])
+
+
+(defn paivittava-urakkavuosi-suodatin
+  "Urakkavuosi valinta, triggeröi haun"
+  [{:keys [aikavali]} haku-fn]
+  (let [fn-aikavali-muuttunut? (fn [aika]
+                                 (let [alku (-> @urakka-tiedot/valittu-hoitokausi first)
+                                       loppu (-> @urakka-tiedot/valittu-hoitokausi second)
+                                       valinnat-alku (-> aika first)
+                                       valinnat-loppu (-> aika second)]
+                                   (boolean (or
+                                              (not= alku valinnat-alku)
+                                              (not= loppu valinnat-loppu)))))]
+
+    [:div {:on-click #(when (fn-aikavali-muuttunut? aikavali) (haku-fn))}
+     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]))
 
 
 (defn nakyma-body

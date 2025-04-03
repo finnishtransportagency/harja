@@ -14,7 +14,6 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka-tiedot]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
             [harja.views.urakka.kustannusten-kirjaus.sakot-bonukset-tiedot :as tiedot]))
@@ -230,22 +229,6 @@
     valittu-rivi]])
 
 
-(defn- suodattimet-aikavali
-  "Urakkavuosi valinta, triggeröi haun"
-  [e! {:keys [aikavali]}]
-  (let [fn-aikavali-muuttunut? (fn [aika]
-                                 (let [alku (-> @urakka-tiedot/valittu-hoitokausi first)
-                                       loppu (-> @urakka-tiedot/valittu-hoitokausi second)
-                                       valinnat-alku (-> aika first)
-                                       valinnat-loppu (-> aika second)]
-                                   (boolean (or
-                                              (not= alku valinnat-alku)
-                                              (not= loppu valinnat-loppu)))))]
-
-    [:div {:on-click #(when (fn-aikavali-muuttunut? aikavali) (e! (tiedot/->HaeTiedot)))}
-     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]))
-
-
 (defn- suodattimet-lajit
   "Kaikki / Sakko / Bonus, triggeröi haun"
   [e! {:keys [valittu-laji]}]
@@ -269,10 +252,10 @@
   (let [voi-tallentaa? true ;; Valitoidaan tallennettaessa (saavutettavuus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot @nav/valittu-urakka-id)
 
-        aikavali (suodattimet-aikavali e! valinnat)
         lisaa-uusi-fn #(e! (tiedot/->AvaaModal nil))
         laji-suodatin (suodattimet-lajit e! valinnat)
         grid (sakot-bonukset-grid e! rivit liitteet haku-kaynnissa?)
+        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)))
         muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valinnat valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa?)]
 
     (yhteiset/nakyma-body "Sakot ja bonukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid laji-suodatin)))
