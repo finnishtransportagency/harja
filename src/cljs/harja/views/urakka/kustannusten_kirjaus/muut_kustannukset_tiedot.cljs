@@ -9,6 +9,7 @@
              [harja.tyokalut.tuck :as tuck-apurit]
              [reagent.core :refer [atom] :as reagent]
              [harja.tiedot.raportit :as raporttitiedot]
+             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
              [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
 
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
@@ -39,7 +40,7 @@
 (defrecord MuokkaaRivia [rivi])
 (defrecord SuljeMuokkaus [])
 (defrecord AsetaToteumanPvm [aika])
-(defrecord TallennaRivi [rivi])
+(defrecord TallennaRivi [rivi virheita?])
 (defrecord TallennusOnnistui [vastaus])
 (defrecord TallennusEpaonnistui [vastaus])
 
@@ -78,7 +79,6 @@
 
 
 (defn voi-tallentaa?
-  "Validoi toteuman muokkauslomakkeen"
   [{:keys [pvm hinta selite tyyppi yllapitoluokka] :as _valittu-rivi} luokat]
   (let [pvm-validi? (pvm/pvm? pvm)
         kustannus-olemassa? (some? hinta)
@@ -123,29 +123,38 @@
      (epaonnistui vastaus app))
 
   TallennaRivi
-  (process-event [{:keys [rivi]} app]
-    (let [rivi (lomake/ilman-lomaketietoja rivi)
-          {:keys [pvm hinta id selite tyyppi yllapitoluokka]} rivi
-          toteuma {:id id
-                   :pvm pvm
-                   :hinta hinta
-                   :tyyppi tyyppi
-                   :selite selite
-                   :yllapitoluokka yllapitoluokka
-                   :poistettu false}
+  (process-event [{:keys [rivi virheita?]} {:keys [valittu-rivi] :as app}]
 
-          parametrit {:urakka-id  @nav/valittu-urakka-id
-                      :sopimus-id (-> @u/valittu-sopimusnumero first)
-                      :toteumat [toteuma]
-                      ;; Ei ole toteuman pvm, vaan näillä haetaan vastaus 
-                      :alkupvm (-> @u/valittu-aikavali first)
-                      :loppupvm (-> @u/valittu-aikavali second)}]
+    (if (or
+          virheita?
+          (not (voi-tallentaa? valittu-rivi yllapitokohteet-domain/paallysteen-korjausluokat)))
+      (assoc-in app [:valittu-rivi :virheita?] true)
 
-      (tuck-apurit/post! app :tallenna-yllapito-toteumat
-        parametrit
-        {:onnistui ->TallennusOnnistui
-         :epaonnistui ->TallennusEpaonnistui})
-      (assoc app :muokataan false)))
+      (let [rivi (lomake/ilman-lomaketietoja rivi)
+            {:keys [pvm hinta id selite tyyppi yllapitoluokka]} rivi
+            toteuma {:id id
+                     :pvm pvm
+                     :hinta hinta
+                     :tyyppi tyyppi
+                     :selite selite
+                     :yllapitoluokka yllapitoluokka
+                     :poistettu false}
+
+            parametrit {:urakka-id  @nav/valittu-urakka-id
+                        :sopimus-id (-> @u/valittu-sopimusnumero first)
+                        :toteumat [toteuma]
+                        ;; Ei ole toteuman pvm, vaan näillä haetaan vastaus 
+                        :alkupvm (-> @u/valittu-aikavali first)
+                        :loppupvm (-> @u/valittu-aikavali second)}]
+
+        (tuck-apurit/post! app :tallenna-yllapito-toteumat
+          parametrit
+          {:onnistui ->TallennusOnnistui
+           :epaonnistui ->TallennusEpaonnistui})
+
+        (-> app
+          (assoc :muokataan false)
+          (assoc-in [:valittu-rivi :virheita?] false)))))
 
   TallennusOnnistui
   (process-event [_ {:keys [valittu-rivi rivit] :as app}]

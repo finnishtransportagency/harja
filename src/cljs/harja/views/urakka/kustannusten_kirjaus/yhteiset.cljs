@@ -6,6 +6,8 @@
    [harja.ui.ikonit :as ikonit]
    [harja.asiakas.kommunikaatio :as komm]))
 
+(defonce lomake-validointi-virhe-viesti "Tallennus epäonnistui. Pakollisia tietoja puuttuu.")
+
 
 (defn nollaa-tuck-tila
   "Nollaa Tuck-tilan osittain säilyttäen olemassa olevat syvemmän tason arvot.

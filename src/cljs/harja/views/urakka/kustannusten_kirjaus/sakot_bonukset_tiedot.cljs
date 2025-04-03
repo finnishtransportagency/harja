@@ -33,25 +33,20 @@
 
 
 (defn voi-tallentaa?
-  "Validoi toteuman muokkauslomakkeen"
-  [{:keys [summa toimenpideinstanssi lomake-selite yllapitokohde laji kasittelyaika] :as valittu-rivi} kohteet]
+  [{:keys [summa toimenpideinstanssi lomake-selite laji kasittelyaika] :as _valittu-rivi}]
   (let [kustannus-olemassa? (some? summa)
         pvm-validi? (pvm/pvm? kasittelyaika)
         selite-olemassa? (and
                            (some? lomake-selite)
                            (> (count lomake-selite) 0))
         laji-validi? (contains? (set (keys laji-valinnat)) laji)
-        toimenpideinstanssi-olemassa? (some? toimenpideinstanssi)
-        kohde-olemassa? (boolean (some #(= (:id yllapitokohde) (:id %)) kohteet))]
+        toimenpideinstanssi-olemassa? (some? toimenpideinstanssi)]
     (and
       pvm-validi?
       laji-validi?
       selite-olemassa?
       kustannus-olemassa?
-      toimenpideinstanssi-olemassa?
-      (or
-        kohde-olemassa?
-        (-> yllapitokohde :nimi (= ei-kohdetta-teksti))))))
+      toimenpideinstanssi-olemassa?)))
 
 
 (defrecord HaeTiedot [])
@@ -65,7 +60,7 @@
 (defrecord MuokkaaRivia [rivi])
 (defrecord SuljeMuokkaus [])
 (defrecord ValitseLaji [rivi])
-(defrecord TallennaRivi [rivi])
+(defrecord TallennaRivi [rivi virheita?])
 (defrecord TallennusOnnistui [vastaus])
 (defrecord TallennusEpaonnistui [vastaus])
 (defrecord UusiLiite [liite])
@@ -117,7 +112,7 @@
   HaeTiedot
   (process-event [_ app]
     (hae-tiedot app)
-    (-> 
+    (->
       (yhteiset/nollaa-tuck-tila app nollatut-valinnat)
       (assoc :haku-kaynnissa? true)
       (assoc-in [:valinnat :aikavali] @u/valittu-aikavali)))
@@ -184,51 +179,60 @@
         (update-in app [:valittu-rivi] merge uusi-sanktio))))
 
   TallennaRivi
-  (process-event [{:keys [rivi]} app]
-    (let [rivi (lomake/ilman-lomaketietoja rivi)
-          yllapitokohde-id (-> rivi :yllapitokohde :id)
+  (process-event [{:keys [rivi virheita?]} {:keys [valittu-rivi] :as app}]
 
-          {:keys [laji id summa indeksi perintapvm toimenpideinstanssi kasittelyaika lomake-selite laatupoikkeama]} rivi
-          laatupoikkeama (assoc-in laatupoikkeama [:paatos :perustelu] lomake-selite)
+    (if (or
+          virheita?
+          (not (voi-tallentaa? valittu-rivi)))
+      (assoc-in app [:valittu-rivi :virheita?] true)
 
-          parametrit (cond
-                       ;; Sakot 
-                       (= laji :yllapidon_sakko)
-                       {:sanktio        (dissoc rivi :laatupoikkeama :yllapitokohde)
-                        :laatupoikkeama (assoc
-                                          laatupoikkeama
-                                          :urakka @nav/valittu-urakka-id
-                                          :yllapitokohde yllapitokohde-id)
-                        :hoitokausi @u/valittu-hoitokausi}
+      (let [rivi (lomake/ilman-lomaketietoja rivi)
+            {:keys [laji id summa indeksi
+                    perintapvm toimenpideinstanssi
+                    kasittelyaika lomake-selite laatupoikkeama]} rivi
 
-                       ;; Bonukset
-                       (= laji :yllapidon_bonus)
-                       {:sanktio
-                        {:id id
-                         :laji :yllapidon_bonus
-                         :suorasanktio true
-                         :summa summa
-                         :indeksi indeksi
-                         :perintapvm perintapvm
-                         :toimenpideinstanssi toimenpideinstanssi}
-                        :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
-                                         :urakka @nav/valittu-urakka-id
-                                         :yllapitokohde yllapitokohde-id
-                                         :aika kasittelyaika
-                                         :uusi-liite (get-in laatupoikkeama [:uusi-liite])
-                                         :paatos {:paatos "sanktio"
-                                                  :perustelu lomake-selite
-                                                  :kasittelyaika kasittelyaika
-                                                  :kasittelytapa :muu
-                                                  :muukasittelytapa "Tiemerkintä"}}
-                        :hoitokausi @u/valittu-hoitokausi})]
+            yllapitokohde-id (-> rivi :yllapitokohde :id)
+            laatupoikkeama (assoc-in laatupoikkeama [:paatos :perustelu] lomake-selite)
+            parametrit (cond
+                         ;; Sakot 
+                         (= laji :yllapidon_sakko)
+                         {:sanktio        (dissoc rivi :laatupoikkeama :yllapitokohde)
+                          :laatupoikkeama (assoc
+                                            laatupoikkeama
+                                            :urakka @nav/valittu-urakka-id
+                                            :yllapitokohde yllapitokohde-id)
+                          :hoitokausi @u/valittu-hoitokausi}
 
-      ;; ->>
-      (tuck-apurit/post! app :tallenna-suorasanktio
-        parametrit
-        {:onnistui ->TallennusOnnistui
-         :epaonnistui ->TallennusEpaonnistui})
-      (assoc app :muokataan false)))
+                         ;; Bonukset
+                         (= laji :yllapidon_bonus)
+                         {:sanktio
+                          {:id id
+                           :laji :yllapidon_bonus
+                           :suorasanktio true
+                           :summa summa
+                           :indeksi indeksi
+                           :perintapvm perintapvm
+                           :toimenpideinstanssi toimenpideinstanssi}
+                          :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                                           :urakka @nav/valittu-urakka-id
+                                           :yllapitokohde yllapitokohde-id
+                                           :aika kasittelyaika
+                                           :uusi-liite (get-in laatupoikkeama [:uusi-liite])
+                                           :paatos {:paatos "sanktio"
+                                                    :perustelu lomake-selite
+                                                    :kasittelyaika kasittelyaika
+                                                    :kasittelytapa :muu
+                                                    :muukasittelytapa "Tiemerkintä"}}
+                          :hoitokausi @u/valittu-hoitokausi})]
+
+        (tuck-apurit/post! app :tallenna-suorasanktio
+          parametrit
+          {:onnistui ->TallennusOnnistui
+           :epaonnistui ->TallennusEpaonnistui})
+
+        (-> app
+          (assoc :muokataan false)
+          (assoc-in [:valittu-rivi :virheita?] false)))))
 
   TallennusOnnistui
   (process-event [_ {:keys [valittu-rivi rivit] :as app}]

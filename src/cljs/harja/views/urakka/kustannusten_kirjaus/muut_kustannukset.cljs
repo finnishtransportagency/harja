@@ -79,7 +79,7 @@
 
 (defn- muut-kustannukset-muokkauspaneeli
   "Toteumien luonti / muokkaus"
-  [e! {:keys [pvm] :as valittu-rivi} voi-kirjoittaa? voi-tallentaa? tyypit]
+  [e! {:keys [pvm virheita?] :as valittu-rivi} voi-kirjoittaa? voi-tallentaa? tyypit]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -94,12 +94,13 @@
      :footer [:<>
               [:hr]
               [:div.muokkaus-modal-napit
-               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi)) {:disabled (not voi-tallentaa?)}]
+               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi (lomake/virheita? valittu-rivi))) 
+                {:disabled (not voi-tallentaa?)}]
                [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]
 
-              (when (lomake/virheita? valittu-rivi)
+              (when virheita?
                 ;; Virheet on saatavilla (-> valittu-rivi ::lomake/virheet vals), mutta ei tarvi tässä näyttää toistaseen
-                [yleiset/info-laatikko :varoitus "Pakollisia tietoja puuttuu."])]}
+                [yleiset/info-laatikko :varoitus yhteiset/lomake-validointi-virhe-viesti])]}
 
     [(lomake/rivi
        {:otsikko "Päivämäärä"
@@ -176,9 +177,9 @@
      [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]))
 
 
-(defn muut-kustannukset-listaus [e! {:keys [rivit valinnat muokataan valittu-rivi
-                                            haku-kaynnissa? kustannukset tyypit] :as app}]
-  (let [voi-tallentaa? (tiedot/voi-tallentaa? valittu-rivi yllapitokohteet-domain/paallysteen-korjausluokat)
+(defn muut-kustannukset-listaus [e! {:keys [rivit valinnat muokataan 
+                                            valittu-rivi haku-kaynnissa? tyypit] :as _app}]
+  (let [voi-tallentaa? true ;; Valitoidaan tallennettaessa (saavutettavuus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteutus-muutkustannukset @nav/valittu-urakka-id)
 
         aikavali (suodattimet-aikavali e! valinnat)

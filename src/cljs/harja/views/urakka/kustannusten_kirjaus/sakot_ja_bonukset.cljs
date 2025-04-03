@@ -97,7 +97,7 @@
   "Toteumien luonti / muokkaus"
   [e! 
    {:keys [lajit] :as _valinnat} 
-   {:keys [kasittelyaika] :as valittu-rivi} kohteet liitteet voi-kirjoittaa? voi-tallentaa?]
+   {:keys [kasittelyaika virheita?] :as valittu-rivi} kohteet liitteet voi-kirjoittaa? voi-tallentaa?]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -112,12 +112,13 @@
      :footer [:<>
               [:hr]
               [:div.muokkaus-modal-napit
-               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi)) {:disabled (not voi-tallentaa?)}]
+               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi (lomake/virheita? valittu-rivi)))
+                {:disabled (not voi-tallentaa?)}]
                [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]
 
-              (when (lomake/virheita? valittu-rivi)
+              (when virheita?
                 ;; Virheet on saatavilla (-> valittu-rivi ::lomake/virheet vals), mutta ei tarvi tässä näyttää toistaseen
-                [yleiset/info-laatikko :varoitus "Pakollisia tietoja puuttuu."])]}
+                [yleiset/info-laatikko :varoitus yhteiset/lomake-validointi-virhe-viesti])]}
 
     [(lomake/rivi
        {:otsikko "Päivämäärä"
@@ -148,11 +149,11 @@
        {:otsikko "Päällystys- tai paikkauskohde"
         :tyyppi :valinta
         :pakollinen? true
-        :valinta-nayta #(if (:id %) (:nimi %) tiedot/ei-kohdetta-teksti)
         :nimi :yllapitokohde
         :validoi [[:ei-tyhja "Valitse kohde"]]
         ::lomake/col-luokka "leveys-kokonainen"
-        :valinnat (into [{:nimi tiedot/ei-kohdetta-teksti}] kohteet)})
+        :valinnat (into [{:nimi tiedot/ei-kohdetta-teksti}] kohteet)
+        :valinta-nayta #(if (:id %) (:nimi %) tiedot/ei-kohdetta-teksti)})
 
      (lomake/rivi
        {:otsikko "Selite"
@@ -265,7 +266,7 @@
   [e! {:keys [rivit valinnat muokataan
               valittu-rivi haku-kaynnissa? liitteet kohteet] :as _app}]
 
-  (let [voi-tallentaa? (tiedot/voi-tallentaa? valittu-rivi kohteet)
+  (let [voi-tallentaa? true ;; Valitoidaan tallennettaessa (saavutettavuus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot @nav/valittu-urakka-id)
 
         aikavali (suodattimet-aikavali e! valinnat)
