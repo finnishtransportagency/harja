@@ -9,7 +9,8 @@
              [harja.tyokalut.tuck :as tuck-apurit]
              [reagent.core :refer [atom] :as reagent]
              [harja.tiedot.raportit :as raporttitiedot]
-             [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
+             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+             [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
 
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
                                              :valittu-rivi {}
@@ -21,13 +22,6 @@
 (def nakymassa? (atom false))
 (defonce tila (atom nollatut-valinnat))
 (defonce ^{:private true} raportti-avain :tiemerkinta-muut-kustannukset)
-
-(defonce tyyppi-valinnat {:lisatyo "Lisätyö"
-                          :muu "Muu kustannus"
-                          :muutostyo "Muutostyö"
-                          :arvonmuutos "Arvonmuutos"
-                          :indeksi "Indeksitarkistus"
-                          :sopimusalueen-muutos "Sopimusalueen muutos"})
 
 
 (defrecord HaeTiedot [])
@@ -81,7 +75,7 @@
   [{:keys [pvm hinta selite tyyppi yllapitoluokka] :as _valittu-rivi} luokat]
   (let [pvm-validi? (pvm/pvm? pvm)
         kustannus-olemassa? (some? hinta)
-        tyyppi-validi? (contains? (set (keys tyyppi-valinnat)) (keyword tyyppi))
+        tyyppi-validi? (contains? (set (keys yhteiset/tyyppi-valinnat)) (keyword tyyppi))
         luokka-olemassa? (boolean (some #(= (:numero yllapitoluokka) (:numero %)) luokat))
         selite-olemassa? (and
                            (some? selite)

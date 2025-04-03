@@ -52,7 +52,7 @@
 
     {:otsikko "Laji"
      :tyyppi :komponentti
-     :komponentti (comp #(tiedot/laji-valinnat %) :laji)
+     :komponentti (comp #(yhteiset/laji-valinnat %) :laji)
      :luokka "text-nowrap"
      :leveys 0.05}
 
@@ -237,7 +237,7 @@
                       :space-valissa? true
                       :tyyppi :radio-group
                       :vaihtoehdot [:kaikki :yllapidon_sakko :yllapidon_bonus]
-                      :vaihtoehto-nayta tiedot/laji-valinnat
+                      :vaihtoehto-nayta yhteiset/laji-valinnat
                       :valitse-fn #(do
                                      (e! (tiedot/->ValitseLaji %))
                                      (e! (tiedot/->HaeTiedot)))}

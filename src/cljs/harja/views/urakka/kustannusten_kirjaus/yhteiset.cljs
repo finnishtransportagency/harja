@@ -9,6 +9,17 @@
    [harja.tiedot.urakka :as urakka-tiedot]
    [harja.views.urakka.valinnat :as urakka-valinnat]))
 
+(defonce laji-valinnat {:kaikki "Kaikki"
+                        :yllapidon_sakko "Sakko"
+                        :yllapidon_bonus "Bonus"})
+
+(defonce tyyppi-valinnat {:lisatyo "Lisätyö"
+                          :muu "Muu kustannus"
+                          :muutostyo "Muutostyö"
+                          :arvonmuutos "Arvonmuutos"
+                          :indeksi "Indeksitarkistus"
+                          :sopimusalueen-muutos "Sopimusalueen muutos"})
+
 (defonce lomake-validointi-virhe-viesti "Tallennus epäonnistui. Pakollisia tietoja puuttuu.")
 
 

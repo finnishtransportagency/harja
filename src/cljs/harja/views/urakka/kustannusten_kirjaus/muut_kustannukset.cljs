@@ -50,7 +50,7 @@
 
     {:otsikko "Tyyppi"
      :tyyppi :komponentti
-     :komponentti (comp #(tiedot/tyyppi-valinnat %) :tyyppi)
+     :komponentti (comp #(yhteiset/tyyppi-valinnat %) :tyyppi)
      :luokka "text-nowrap"
      :leveys 0.2}
 
@@ -121,7 +121,7 @@
         :pakollinen? true
         :vayla-tyyli? true
         :valinnat (map :tyyppi tyypit)
-        :valinta-nayta #(get tiedot/tyyppi-valinnat (keyword %))
+        :valinta-nayta #(get yhteiset/tyyppi-valinnat (keyword %))
         :validoi [[:ei-tyhja "Valitse tyyppi"]]
         ::lomake/col-luokka "col-xs-6"})
 

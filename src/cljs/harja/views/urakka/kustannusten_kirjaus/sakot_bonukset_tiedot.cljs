@@ -9,7 +9,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tyokalut.tuck :as tuck-apurit]
             [reagent.core :refer [atom] :as reagent]
-            [harja.tiedot.raportit :as raporttitiedot]))
+            [harja.tiedot.raportit :as raporttitiedot]
+            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
 
 (defonce ^{:private true} raportti-avain :tiemerkinta-sakot-bonukset)
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
@@ -18,17 +19,11 @@
                                              :valittu-rivi {}
                                              :muokataan false
                                              :haku-kaynnissa? false
-                                             :valinnat {:raportti {}
-                                                        :lajit {:yllapidon_sakko "Sakko"
-                                                                :yllapidon_bonus "Bonus"}}})
+                                             :valinnat {:raportti {}}})
 
 (defonce nakymassa? (atom false))
 (defonce ei-kohdetta-teksti "Ei liity kohteeseen")
 (defonce tila (atom (assoc-in nollatut-valinnat [:valinnat :valittu-laji] :kaikki)))
-
-(defonce laji-valinnat {:kaikki "Kaikki"
-                        :yllapidon_sakko "Sakko"
-                        :yllapidon_bonus "Bonus"})
 
 
 (defn voi-tallentaa?
@@ -38,7 +33,7 @@
         selite-olemassa? (and
                            (some? lomake-selite)
                            (> (count lomake-selite) 0))
-        laji-validi? (contains? (set (keys laji-valinnat)) laji)
+        laji-validi? (contains? (set (keys yhteiset/laji-valinnat)) laji)
         toimenpideinstanssi-olemassa? (some? toimenpideinstanssi)]
     (and
       pvm-validi?

@@ -24,30 +24,23 @@
               :sivuta grid/vakiosivutus
               :mahdollista-rivin-valinta? false
               :rivi-jalkeen-fn (fn [rivit]
-                                 (let [rivien-maara (count rivit)
-                                       yhteensa-hinta (reduce + (map :hinta rivit))]
+                                 (let [yhteensa-hinta (reduce + (map :hinta rivit))]
                                    [[{:teksti "Yhteensä" :luokka "yhteensa"}
-                                     {:teksti (str rivien-maara " kpl") :luokka "yhteensa"}
                                      {:teksti (str (fmt/euro-opt false yhteensa-hinta) " €") :tasaa :oikea :luokka "yhteensa"}]]))}
 
-   [{:otsikko-komp (fn [_ _]
-                     [:div.pvm "Päivämäärä"
-                      [:div [ikonit/action-sort-descending]]])
+   [{:otsikko "Kustannuslaji"
      :tyyppi :komponentti
-     :komponentti (fn [arvo _] (str (pvm/pvm (:pvm arvo))))
-     :luokka "caption text-nowrap"
-     :leveys 0.2}
-
-    {:otsikko "Kustannuslaji"
-     :tyyppi :string
-     :nimi :selite
+     :komponentti (fn [rivi]
+                    (or
+                      ((:tyyppi rivi) yhteiset/tyyppi-valinnat)
+                      ((:tyyppi rivi) yhteiset/laji-valinnat)))
      :luokka "text-nowrap"
      :leveys 0.2}
 
     {:otsikko "Kustannus"
+     :nimi :hinta
      :tyyppi :euro
      :tasaa :oikea
-     :nimi :hinta
      :luokka "text-nowrap"
      :leveys 0.2}]
    rivit])
