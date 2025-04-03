@@ -39,7 +39,7 @@
         ;; Laske formiaateille ja suolatoteumille menekki per ajoratakilometri
         suolatoteumat (mapv (fn [rivi]
                               (cond-> rivi
-                                true (konv/decimal->double rivi :suolatoteumat :formiaattitoteumat :ajoratojen_pituus)
+                                true (konv/decimal->double rivi :suolatoteumat :suolarajoitus :formiaattitoteumat :ajoratojen_pituus)
                                 (and
                                   (not (nil? (:formiaattitoteumat rivi)))
                                   (not (nil? (:ajoratojen_pituus rivi)))
