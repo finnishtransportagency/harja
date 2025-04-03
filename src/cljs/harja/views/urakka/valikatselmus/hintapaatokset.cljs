@@ -78,12 +78,12 @@
          [:div (str "Tavoitepalkkio (" (:tavoitepalkkion_maksuprosentti paatos) "%)")]
          [:div.rivi_lukema (fmt/euro-opt false (:tavoitepalkkio paatos))]]
         [:div.flex-row
-         [:div.small-text.lisays.harmaa "max. 3% hoitovuoden alun indeksikorjatusta tavoitehinnasta."]]
+         [:div.small-text.lisays.harmaa (str "max. " (:tavoitepalkkion_maksimi_prosentti paatos) "% hoitovuoden alun indeksikorjatusta tavoitehinnasta.")]]
         ;; Näytetään siirron määrä vain, jos sitä on. Esim viimeisenä vuotena ei siirretä mitään.
-        (when (:siirron_maara paatos)
+        (when (and (:siirron_maara paatos)  (not= 0 (:siirron_maara paatos)))
           [:div.flex-row.summa_rivi_korkea
            [:div "Siirretään seuraavan vuoden hankintakustannuksiin alennukseksi"]
-           [:div.rivi_lukema (str "-" (fmt/euro-opt false(:siirron_maara paatos)))]])
+           [:div.rivi_lukema (str "-" (fmt/euro-opt false (:siirron_maara paatos)))]])
 
         ;; Päätöksenteko napit tai mahdollinen virhe
         (if (:virhe paatos)

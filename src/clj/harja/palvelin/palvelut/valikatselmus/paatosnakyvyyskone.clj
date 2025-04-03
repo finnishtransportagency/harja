@@ -291,22 +291,17 @@
       (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not (:id (first (filter #(when (= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") %) paatokset)))))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 5)
 
-      (and hoitokauden-alun-tavoitehinta kustannukset (> hoitokauden-alun-tavoitehinta kustannukset))
+      (and hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta kustannukset (> hoitokauden-lopun-tavoitehinta kustannukset))
       (let [urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
-            tavoitehinnan-alitus (- hoitokauden-alun-tavoitehinta kustannukset)
+            tavoitehinnan-alitus (- hoitokauden-lopun-tavoitehinta kustannukset)
             ;; Poistetaan päätöskokneen tavoitehinna alituspäätös ja muokataan se alla
             tavoitehinnan-alituspaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan alitus") %) paatokset))
-            paatokset (remove
-                        (fn [paatos]
-                          (= (:nimi paatos) "Tavoitehinnan alitus"))
-                        paatokset)
-
-            ;; Jäljelle jäänyt paatos
+            paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan alitus")) paatokset)
 
             ;; (:tavoitepalkkion_maksimi urakan-parametrit) on maksimiprosentti, jota tavoitepalkkiota voidaan maksaa suhteessa hoitokauden alun indeksikorjattuun tavoitehintaan. Yleisimmin 3%
             maksimi-tavoitepalkkio (* (/ (:tavoitepalkkion_maksimi urakan-parametrit) 100) hoitokauden-alun-tavoitehinta)
             tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
-            ;; Versiossa 1 - Tavoitepalkkio on alituksesta 30%, mutta max 3% tavoitehinnasta - Mutta viimeisenä vuotena maksetaan kaikki eli 100% alituksesta
+            ;; Tavoitepalkkio on alituksesta max 3% tavoitehinnasta (prosentti tulee parametritaulusta) - Mutta viimeisenä vuotena maksetaan kaikki eli 100% alituksesta
             laskennallinen-tavoitepalkkio (* (/ tavoitepalkkion-maksuprosentti 100) tavoitehinnan-alitus)
             tavoitepalkkio (if (= urakan-loppuvuosi kuluva-hoitovuosi)
                              tavoitehinnan-alitus ;; Viimeisenä vuotena maksetaan kaikki. Muuten 30% tai max 3% , tai versiossa 2 maksetaan 75% alituksesta
@@ -325,7 +320,8 @@
                                          (assoc :siirron_maara siirron-maara)
                                          (assoc :tavoitepalkkio tavoitepalkkio)
                                          (assoc :tavoitepalkkion_maksuprosentti tavoitepalkkion-maksuprosentti)
-                                         (assoc :viimeinen_hoitokausi viimeinen-hoitokausi?))
+                                         (assoc :viimeinen_hoitokausi viimeinen-hoitokausi?)
+                                         (assoc :tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)))
             paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-alituspaatos))]
         paatokset)
 
