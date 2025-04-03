@@ -457,11 +457,15 @@ DECLARE
     indeksikorotus_alkup              RECORD;
     indeksikorotus                    NUMERIC(10, 2);
     maksimi_siirrettava_maara         NUMERIC(10, 2);
+    hoitokauden_viimeinen_paiva       DATE;
 BEGIN
 
     FOR paatos in (SELECT * from urakka_paatos)
         LOOP
             RAISE NOTICE 'Päätöksen tiedot: %', paatos;
+
+            hoitokauden_viimeinen_paiva := (SELECT TO_DATE(CONCAT((paatos."hoitokauden-alkuvuosi"),'1001'),'YYYYMMDD'));
+
             -- Tulostetaan päätöksen tiedot
             -- HAetaan urakan parametrit
             SELECT * FROM urakka_parametrit WHERE urakkaid = paatos."urakka-id" into urakka_parametrit;
@@ -521,7 +525,7 @@ BEGIN
                     THEN RAISE NOTICE 'sanktio tiedot: %', paatos;
                          IF urakka_parametrit.indeksi_kaytossa_sanktiolla = TRUE THEN
                              SELECT korotus
-                             FROM sanktion_indeksikorotus(paatos.luotu::DATE, urakan_tiedot.indeksi,
+                             FROM sanktion_indeksikorotus(hoitokauden_viimeinen_paiva::DATE, urakan_tiedot.indeksi,
                                                           paatos."urakoitsijan-maksu", paatos."urakka-id",
                                                           'lupaussanktio'::sanktiolaji)
                              INTO indeksikorotus_alkup;
@@ -549,8 +553,8 @@ BEGIN
                     THEN RAISE NOTICE 'bonus tiedot: %', paatos;
                          IF urakka_parametrit.indeksi_kaytossa_bonuksella = TRUE THEN
                              SELECT korotus
-                             FROM sanktion_indeksikorotus(paatos.luotu::DATE, urakan_tiedot.indeksi,
-                                                          paatos."urakoitsijan-maksu", paatos."urakka-id",
+                             FROM sanktion_indeksikorotus(hoitokauden_viimeinen_paiva::DATE, urakan_tiedot.indeksi,
+                                                          paatos."tilaajan-maksu", paatos."urakka-id",
                                                           'lupaussanktio'::sanktiolaji)
                              INTO indeksikorotus_alkup;
                              indeksikorotus := indeksikorotus_alkup.korotus;
