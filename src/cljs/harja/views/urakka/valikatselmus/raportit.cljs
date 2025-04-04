@@ -46,6 +46,8 @@
                         #(siirtymat/avaa-raportti :tehtavamaarat (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
                         {:luokka "klikattava alleviivaa"}]]
         [:div [yleiset/info-laatikko :vahva-ilmoitus (str "Hoitovuoden raportointi lukitaan 31.12." (inc hoitokauden-alkuvuosi)) nil nil {:vari "@gray25"}]]
-        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
-         #(e! (valikatselmus-tiedot/->TallennaPoytakirjanRaporttiPaatos paatos))
-         #(e! (valikatselmus-tiedot/->PoistaPoytakirjanRaporttiPaatos paatos))]])]))
+        (if (:virhe paatos)
+          [:div.muokkaustoiminnot [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]]
+          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+           #(e! (valikatselmus-tiedot/->TallennaPoytakirjanRaporttiPaatos paatos))
+           #(e! (valikatselmus-tiedot/->PoistaPoytakirjanRaporttiPaatos paatos))])])]))

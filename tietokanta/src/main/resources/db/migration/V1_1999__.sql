@@ -454,7 +454,8 @@ DECLARE
     toteutuneet_kustannukset_urakalle NUMERIC(12, 2);
     alituksen_maara_urakalle          NUMERIC(10, 2);
     tavoitehinnan_ylitys              NUMERIC(10, 2);
-    indeksikorotus                    RECORD;
+    indeksikorotus_alkup              RECORD;
+    indeksikorotus                    NUMERIC(10, 2);
     maksimi_siirrettava_maara         NUMERIC(10, 2);
 BEGIN
 
@@ -518,13 +519,16 @@ BEGIN
             CASE paatos.tyyppi
                 WHEN 'lupaussanktio'
                     THEN RAISE NOTICE 'sanktio tiedot: %', paatos;
-
-                         SELECT korotus
-                         FROM sanktion_indeksikorotus(paatos.luotu::DATE, urakan_tiedot.indeksi,
-                                                      paatos."urakoitsijan-maksu", paatos."urakka-id",
-                                                      'lupaussanktio'::sanktiolaji)
-                         INTO indeksikorotus;
-
+                         IF urakka_parametrit.indeksi_kaytossa_sanktiolla = TRUE THEN
+                             SELECT korotus
+                             FROM sanktion_indeksikorotus(paatos.luotu::DATE, urakan_tiedot.indeksi,
+                                                          paatos."urakoitsijan-maksu", paatos."urakka-id",
+                                                          'lupaussanktio'::sanktiolaji)
+                             INTO indeksikorotus_alkup;
+                             indeksikorotus := indeksikorotus_alkup.korotus;
+                         ELSE
+                             indeksikorotus := NULL;
+                         END IF;
                          INSERT INTO paatos_lupaus (urakkaid, hoitokauden_alkuvuosi, tyyppi,
                                                     tavoitehinta,
                                                     tarjous_tavoitehinta,
@@ -536,18 +540,23 @@ BEGIN
                                  urakan_hinnat.tavoitehinta,
                                  urakan_hinnat.tarjous_tavoitehinta, paatos."lupaus-luvatut-pisteet",
                                  paatos."lupaus-toteutuneet-pisteet",
-                                 paatos."urakoitsijan-maksu",
+                                 (paatos."urakoitsijan-maksu" *-1), -- Vanhassa päätöstaulussa on lupaussanktio negatiivisena, joten käännetään se positiiviseksi tässä.
                                  urakka_parametrit.lupauspaatoksen_sanktioprosentti,
-                                 urakan_tiedot.indeksi, indeksikorotus.korotus,
+                                 urakan_tiedot.indeksi, indeksikorotus,
                                  paatos.sanktio_id, paatos."luoja-id", paatos.luotu, paatos.poistettu);
 
                 WHEN 'lupausbonus'
                     THEN RAISE NOTICE 'bonus tiedot: %', paatos;
-                         SELECT korotus
-                         FROM sanktion_indeksikorotus(paatos.luotu::DATE, urakan_tiedot.indeksi,
-                                                      paatos."urakoitsijan-maksu", paatos."urakka-id",
-                                                      'lupaussanktio'::sanktiolaji)
-                         INTO indeksikorotus;
+                         IF urakka_parametrit.indeksi_kaytossa_bonuksella = TRUE THEN
+                             SELECT korotus
+                             FROM sanktion_indeksikorotus(paatos.luotu::DATE, urakan_tiedot.indeksi,
+                                                          paatos."urakoitsijan-maksu", paatos."urakka-id",
+                                                          'lupaussanktio'::sanktiolaji)
+                             INTO indeksikorotus_alkup;
+                             indeksikorotus := indeksikorotus_alkup.korotus;
+                         ELSE
+                             indeksikorotus := NULL;
+                         END IF;
                          INSERT INTO paatos_lupaus (urakkaid, hoitokauden_alkuvuosi, tyyppi,
                                                     tavoitehinta,
                                                     tarjous_tavoitehinta,
@@ -561,7 +570,7 @@ BEGIN
                                  paatos."lupaus-toteutuneet-pisteet",
                                  paatos."tilaajan-maksu",
                                  urakka_parametrit.lupauspaatoksen_bonusprosentti,
-                                 urakan_tiedot.indeksi, indeksikorotus.korotus,
+                                 urakan_tiedot.indeksi, indeksikorotus,
                                  paatos.erilliskustannus_id,
                                  paatos."luoja-id", paatos.luotu, paatos.poistettu);
 
@@ -630,7 +639,7 @@ BEGIN
                 WHEN 'kattohinnan-ylitys'
                     THEN RAISE NOTICE 'kattohinnan-ylitys tiedot: %', paatos;
 
-                         IF urakka_parametrit.kattohintaylityksen_siirron_maaran_rajoitus IS TRUE THEN
+                         IF urakka_parametrit.kattohintaylityksen_siirron_prosenttirajoitus > 0 THEN
                              maksimi_siirrettava_maara := urakan_hinnat.kattohinta *
                                                           urakka_parametrit.kattohintaylityksen_siirron_prosenttirajoitus;
                          ELSE

@@ -1398,7 +1398,7 @@
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaukset
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
                                 lupaus-palvelu/maarita-urakan-tavoitehinta (fn [db urakkaid hoitokauden-alkuvuosi] tarjouksen_tavoitehinta)
                                 paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle (fn [db hakuparametrit] [{:budjetoitu_summa_indeksikorjattu hoidonjohtopalkkio}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ paatos))
