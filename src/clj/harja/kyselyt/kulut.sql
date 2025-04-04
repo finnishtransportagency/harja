@@ -318,6 +318,7 @@ SELECT k.id                        AS "kulu-id",
                                  kk.id, -- AS "kulukohdistus_kulukohdistus-id",
                                  kk.rivi, -- AS "kulukohdistus_rivinumero",
                                  kk.maksueratyyppi, -- AS "kulukohdistus_tyyppi",
+                                 kk.tavoitehintainen, -- AS "kulukohdistus_tavoitehintainen"
                                  kk.lisatyon_lisatieto, -- AS "kulukohdistus_lisatieto",
                                  kk.poistettu, -- AS "kulukohdistus_poistettu",
                                  kk.summa, -- AS "kulukohdistus_summa",

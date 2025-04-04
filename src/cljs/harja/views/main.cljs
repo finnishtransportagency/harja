@@ -243,7 +243,12 @@
                                      ;; Estetään asioiden vuotaminen ulos kartalta kun kartta on avattu
                                      :overflow (if @nav/kartta-nakyvissa?
                                                  "hidden"
-                                                 "visible")}}
+                                                 "visible")
+                                     ;; Jos näkymässä ei ole karttaa, älä piirrä containeria ollenkaan DOMiin
+                                     ;; Sotkee muuten näppäin navigointia (TAB) muissa näkymissä 
+                                     :display (if (and
+                                                    (= @nav/kartan-koko :hidden)
+                                                    (not @nav/kartta-nakyvissa?)) "none" "block")}}
       [kartta/kartta]]]))
 
 (defn varoita-jos-vanha-ie []

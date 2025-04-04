@@ -115,6 +115,7 @@
 (defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
+        hoitokauden-alkuvuosi (pvm/vuosi hk-alkupvm)
         vastaus (into []
                       (lupaus-kyselyt/hae-urakan-lupaustiedot db {:urakka urakka-id
                                                                    :alkupvm hk-alkupvm
@@ -147,6 +148,7 @@
         tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
         luvatut-pisteet-puuttuu? (not (:pisteet lupaus-sitoutuminen))
         tallennettu-paatos (lupauspaatos db urakka-id (pvm/vuosi hk-alkupvm))
+        valikatselmus-tehty? (valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)
         tallennettu-bonus-tai-sanktio (some-> tallennettu-paatos lupaus-domain/paatos->bonus-tai-sanktio)
         bonus-tai-sanktio (or
                             tallennettu-bonus-tai-sanktio
@@ -194,7 +196,7 @@
                   :odottaa-kannanottoa odottaa-kannanottoa
                   :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa
                   :odottaa-urakoitsijan-kannanottoa? odottaa-urakoitsijan-kannanottoa?
-                  :valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id)
+                  :valikatselmus-tehty-urakalle? valikatselmus-tehty?
                   :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
                   :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}}))
 

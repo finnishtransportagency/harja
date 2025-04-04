@@ -96,7 +96,7 @@
        :tyhja (if (nil? poikkeamat)
                 [yleiset/ajax-loader "Laatupoikkeamia ladataan"]
                 "Ei laatupoikkeamia")}
-      [{:otsikko "Päivä\u00ADmäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
+      [{:otsikko "Havaittu" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
        (when (or (= :paallystys nakyma)
                  (= :paikkaus nakyma)
                  (= :tiemerkinta nakyma))

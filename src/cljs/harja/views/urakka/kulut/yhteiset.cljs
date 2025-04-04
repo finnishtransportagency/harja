@@ -9,6 +9,7 @@
             [harja.tiedot.urakka.kulut.yhteiset :as t]
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.ikonit :as ikonit]
             [harja.pvm :as pvm]
@@ -34,6 +35,8 @@
 (defn yhteenveto-laatikko [e! app data sivu]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero (-> @tila/yleiset :urakka :alkupvm) valittu-hoitokauden-alkuvuosi)
+        hoitokausi-vec [(pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi)
+                        (pvm/hoitokauden-loppupvm (inc valittu-hoitokauden-alkuvuosi))]
         {:keys [tavoitehinta] indeksikorjattu-tavoitehinta? :indeksikorjattu?} (t/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app 0)
         {:keys [kattohinta] indeksikorjattu-kattohinta? :indeksikorjattu?} (or (t/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
         oikaistu-kattohinta (or (t/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro app) 0)
@@ -85,7 +88,7 @@
         "Välikatselmus puuttuu"
         [napit/yleinen-ensisijainen
          "Tee välikatselmus"
-         #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]])
+         #(siirtymat/avaa-valikatselmus hoitokausi-vec)]])
      [:div.rivi 
       [:span (if oikaisuja? 
                (str "Alkuperäinen tavoitehinta " (if indeksikorjattu-tavoitehinta? "(indeksikorjattu)" "(indeksikorjaamaton)"))
@@ -117,11 +120,11 @@
           [:<>
            (when (pos? (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys-paatos))
              [:div.rivi-sisempi
-              [:span "Urakoitsija maksaa " (fmt/euro-opt (:urakoitsija tavoitehhinnan-ylitys-prosentit)) "%"]
+              [:span "Urakoitsija maksaa " (fmt/euro-opt false (:urakoitsija tavoitehhinnan-ylitys-prosentit)) "%"]
               [:span (fmt/euro-opt (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys-paatos))]])
            (when (pos? (::valikatselmus/tilaajan-maksu tavoitehinnan-ylitys-paatos))
              [:div.rivi-sisempi
-              [:span "Tilaaja maksaa " (fmt/euro-opt (:tilaaja tavoitehhinnan-ylitys-prosentit)) "%"]
+              [:span "Tilaaja maksaa " (fmt/euro-opt false (:tilaaja tavoitehhinnan-ylitys-prosentit)) "%"]
               [:span (fmt/euro-opt (::valikatselmus/tilaajan-maksu tavoitehinnan-ylitys-paatos))]])])])
 
      (when kattohinta-ylitetty?
@@ -134,7 +137,7 @@
           [:<>
            (when (pos? (::valikatselmus/urakoitsijan-maksu kattohinnan-ylitys-paatos))
              [:div.rivi-sisempi
-              [:span "Urakoitsija maksaa " (fmt/euro-opt (:urakoitsija kattohinnan-ylitys-prosentit)) "%"]
+              [:span "Urakoitsija maksaa " (fmt/euro-opt false (:urakoitsija kattohinnan-ylitys-prosentit)) "%"]
               [:span (fmt/euro-opt (::valikatselmus/urakoitsijan-maksu kattohinnan-ylitys-paatos))]])
            (when (pos? (::valikatselmus/siirto kattohinnan-ylitys-paatos))
              [:div.rivi-sisempi
@@ -175,7 +178,7 @@
        [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/euro-opt lupaussanktio)]])
      (when (and (not valikatselmus-tekematta?) (not= :valikatselmus sivu))
        [:div.valikatselmus-tehty
-        [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))
+        [napit/yleinen-ensisijainen "Avaa välikatselmus" #(siirtymat/avaa-valikatselmus hoitokausi-vec) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))
 
 (defn tavoitehinnan-oikaisut-taulukko
   "Tavoitehinnan oikaisujen taulukko.
@@ -189,13 +192,18 @@
   :tallenna-oikaisu-fn    Funktio, jolla tallennetaan oikaisu, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
   :tallenna-oikaisut-fn   Funktio, jolla päivitetään oikaisut, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
                           Kutsutaan jokaisesta muutoksesta."
-  [hoitokauden-oikaisut-atom {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn]}]
+  [hoitokauden-oikaisut-atom {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn hoitokauden-alkuvuosi]}]
   (let [virheet (atom {})
         uusi-id (if (empty? (keys @hoitokauden-oikaisut-atom))
                   0
-                  (inc (apply max (keys @hoitokauden-oikaisut-atom))))]
+                  (inc (apply max (keys @hoitokauden-oikaisut-atom))))
+        ;; Koostetaan yhteenvetorivi
+        tavoitehinnan-oikaisut (vals @hoitokauden-oikaisut-atom)
+        yhteensa (if (seq? tavoitehinnan-oikaisut)
+                               (apply + (map ::valikatselmus/summa tavoitehinnan-oikaisut))
+                               0)]
     [grid/muokkaus-grid
-     {:otsikko "Tavoitehinnan oikaisut"
+     {:otsikko "Tavoitehinnan muutokset"
       :tyhja "Ei oikaisuja"
       :voi-kumota? false
       :voi-muokata? voi-muokata?
@@ -226,18 +234,25 @@
                           (tallenna-oikaisu-fn oikaisu i))))
       :uusi-id uusi-id
       :virheet virheet
-      :nayta-virheikoni? false}
+      :nayta-virheikoni? false
+      :rivi-jalkeen [{:teksti "Yhteensä" :luokka "yhteensa" :yhteenveto-vayla true}
+                     {:teksti "" :sarakkeita 2 :luokka "yhteensa"}
+                     {:teksti (str (fmt/euro-opt false yhteensa)) :tasaa :oikea :luokka "yhteensa"}
+                     {:teksti "" :sarakkeita 1 :luokka "yhteensa"}]}
      [{:otsikko "Luokka"
        :nimi ::valikatselmus/otsikko
        :tyyppi :valinta
        :valinnat (into [](valikatselmus/luokat @nav/valittu-urakka))
        :validoi [[:ei-tyhja "Valitse arvo"]]
-       :leveys 2}
+       :leveys 2
+       :data-cy (str "luokka-" uusi-id)
+       :elementin-id (str "luokka-" uusi-id)}
       {:otsikko "Selite"
        :nimi ::valikatselmus/selite
        :tyyppi :string
        :validoi [[:ei-tyhja "Täytä arvo"]]
-       :leveys 3}
+       :leveys 3
+       :elementin-id (str "selite-" uusi-id)}
       {:otsikko "Lisäys / Vähennys"
        :nimi :lisays-tai-vahennys
        :tyyppi :valinta
@@ -252,5 +267,6 @@
        :tasaa :oikea
        :fmt #(str (Math/abs %))
        :validoi [[:ei-tyhja "Täytä arvo"]]
-       :leveys 2}]
+       :leveys 2
+       :elementin-id (str "summa-" uusi-id)}]
      hoitokauden-oikaisut-atom]))

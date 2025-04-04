@@ -45,8 +45,7 @@ The following keys are supported in the configuration:
             [:ul.nav {:class style-class}
              (for [[title keyword] tabs]
                ^{:key title}
-               [:li {:role  "presentation"
-                     :class (when (= keyword active-tab-keyword)
+               [:li {:class (when (= keyword active-tab-keyword)
                               "active")}
                 [:a.klikattava (merge
                                  {:tabIndex "0"

@@ -1,7 +1,6 @@
 (ns harja.domain.pot2
   "Ylläpidon päällystysurakoissa käytettävän POT2-lomakkeen skeemat."
-  (:require [schema.core :as schema]
-            [specql.impl.registry]
+  (:require [specql.impl.registry]
             [specql.data-types]
             [harja.domain.muokkaustiedot :as m]
             [harja.fmt :as fmt]
