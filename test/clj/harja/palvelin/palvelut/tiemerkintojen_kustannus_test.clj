@@ -38,13 +38,7 @@
                          :pk1 25.0M
                          :pk2 15.0M
                          :pk3 60.0M})
-        haku-ennen (kutsu-palvelua
-                     (:http-palvelin jarjestelma)
-                     :hae-tiemerkinta-kustannuskirjaus +kayttaja-jvh+
-                     {:urakka urakka})
-        ;;Konversion namespace
-        _ (println "hake-ennen " haku-ennen)
-        kustannus-ennen (filter #(= (:kustannusvuosi %) kustannusvuosi) haku-ennen)
+
 
         ;;lisää uuden kustannuksen
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -55,6 +49,11 @@
                                (:http-palvelin jarjestelma)
                                :hae-tiemerkinta-kustannuskirjaus +kayttaja-jvh+
                                {:urakka urakka})
+
+
+
+
+
         kustannust (into {} (filter #(= (:kustannusvuosi %) kustannusvuosi) tallennuksen-jalkeen))
         _ (is (= (:urakka kustannust) urakka-id))
         _ (is (= (int (:kustannus kustannust)) kustannus-tallennus))
@@ -81,7 +80,7 @@
         params (conj [] {:urakka urakka-id
                          :muokkaaja 3
                          :kustannusvuosi kustannusvuosi
-                         :kustannus 10000
+                         :kustannus kustannus-tallennus
                          :pk1 25.0M
                          :pk2 25.0M
                          :pk3 50.0M})
@@ -120,5 +119,5 @@
                                {:urakka urakka})
 
         kustannus-nollauksen-jalkeen (into {} (filter #(= (:kustannusvuosi %) kustannusvuosi) nollauksen-jalkeen))
-        _ (is (= (int (:kustannus kustannus-nollauksen-jalkeen)) 0))]
+        _ (is (= (bigdec (:kustannus kustannus-nollauksen-jalkeen)) 0.0M))]
   (u (str "DELETE FROM tiemerkinta_korjauskustannus WHERE urakka = 12 AND kustannusvuosi = " kustannusvuosi))))

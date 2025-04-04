@@ -6,11 +6,8 @@
     [harja.fmt :as fmt]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.tyokalut.tuck :as tuck-apurit]
-    [harja.tiedot.urakka.urakka :as tila]
-    [harja.ui.debug :as debug]
     [tuck.core :refer [tuck]]
     [harja.tiedot.urakka.tiemerkkinnan-kustannusten-kirjaus :as tiedot]))
-
 
 (defn tiemerkintojen-korjaus* [e!]
   (let [urakka (:urakka @tila/yleiset)]
@@ -20,7 +17,6 @@
       (fn [e! {:keys [kustannukset] :as app}]
         [:div.livi-grid
          [:h1 "Tiemerkintöjen korjaus"]
-         [debug/debug app]
          [grid/grid
           {:otsikko "Kustannukset vuosittain"
            :tyhja "Ei kustannuksia"
