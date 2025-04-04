@@ -32,6 +32,7 @@
      :tyyppi :komponentti
      :komponentti (fn [rivi]
                     (or
+                      ((:tyyppi rivi) yhteiset/yhteenveto-tyypit)
                       ((:tyyppi rivi) yhteiset/tyyppi-valinnat)
                       ((:tyyppi rivi) yhteiset/laji-valinnat)))
      :luokka "text-nowrap"

@@ -17,7 +17,8 @@
                           :indeksi "Indeksitarkistus"
                           :sopimusalueen-muutos "Sopimusalueen muutos"
                           :yllapidon_sakko "Sakko"
-                          :yllapidon_bonus "Bonus"})
+                          :yllapidon_bonus "Bonus"
+                          :muut-kustannukset "Muut kustannukset"})
 
 
 (defn- osion-otsikko [otsikko]

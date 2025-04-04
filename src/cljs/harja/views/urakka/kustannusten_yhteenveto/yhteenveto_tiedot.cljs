@@ -34,14 +34,24 @@
   (assoc app :haku-kaynnissa? false))
 
 
-(defn- laske-kustannukset-yhteen [data ryhmita-avain summa-avain]
-  (->>
-    data
-    (group-by ryhmita-avain)
-    (map (fn [[tyyppi items]]
-           {:id (gensym)
+(defn laske-kustannukset-yhteen
+  "Palauttaa vektorin mapeista ryhmitettynä:
+   :id        Grid tunniste 
+   :tyyppi    :arvonmuutos`, :yllapidon_sakko, :yllapidon_bonus :muut-kustannukset (kaikki muut kustannukset)
+   :hinta     Summattu hinta"
+  [data ryhmita-avain summa-avain]
+  (->> data
+    (group-by (fn [data]
+                (let [tyyppi (ryhmita-avain data)]
+                  ;; Näytetään nämä erikseen omana rivinään
+                  (if (#{:arvonmuutos :yllapidon_sakko :yllapidon_bonus} tyyppi)
+                    tyyppi
+                    ;; Kaikki muut niputetaan yhteen, nimellä "Muut kustannukset"
+                    :muut-kustannukset))))
+    (map (fn [[tyyppi arvo]]
+           {:id    (gensym)
             :tyyppi tyyppi
-            :hinta (reduce + (map summa-avain items))}))
+            :hinta  (reduce + (map summa-avain arvo))}))
     vec))
 
 
