@@ -204,7 +204,8 @@ SELECT ek.id,
        NULL                                                AS yllapitokohde_nimi,
        NULL                                                AS yllapitokohde_id,
        NULL                                                AS yllapitokohde_yhaid,
-       NULL                                                AS laatupoikkeama_id
+       NULL                                                AS laatupoikkeama_id,
+       u.id                                                AS urakka_id 
 FROM erilliskustannus ek
          JOIN urakka u ON ek.urakka = u.id
 WHERE ek.urakka = :urakka
@@ -242,7 +243,8 @@ SELECT s.id,
        ypk.nimi              AS yllapitokohde_nimi,
        ypk.id                AS yllapitokohde_id,
        ypk.yhaid             AS yllapitokohde_yhaid,
-       lp.id                 AS laatupoikkeama_id
+       lp.id                 AS laatupoikkeama_id,
+       lp.urakka             AS urakka_id
 FROM sanktio s
          JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
          LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id

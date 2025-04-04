@@ -117,7 +117,8 @@
 
   TallennaRivi
   (process-event [{:keys [rivi virheita?]} {:keys [valittu-rivi] :as app}]
-
+    ;; Tämä enabloi lomakkeen validoinnin
+    ;; Saavutettavuusmielessä, näytetään validointi tallennus painalluksen yhteydessä
     (if (or
           virheita?
           (not (voi-tallentaa? valittu-rivi yllapitokohteet-domain/paallysteen-korjausluokat)))
@@ -130,13 +131,12 @@
                      :hinta hinta
                      :tyyppi tyyppi
                      :selite selite
-                     :yllapitoluokka yllapitoluokka
-                     :poistettu false}
+                     :poistettu false
+                     :yllapitoluokka yllapitoluokka}
 
-            parametrit {:urakka-id  @nav/valittu-urakka-id
+            parametrit {:toteumat [toteuma]
+                        :urakka-id  @nav/valittu-urakka-id
                         :sopimus-id (-> @u/valittu-sopimusnumero first)
-                        :toteumat [toteuma]
-                        ;; Ei ole toteuman pvm, vaan näillä haetaan vastaus 
                         :alkupvm (-> @u/valittu-aikavali first)
                         :loppupvm (-> @u/valittu-aikavali second)}]
 
@@ -153,8 +153,8 @@
   (process-event [_ {:keys [valittu-rivi rivit] :as app}]
     (let [valittu-id (:id valittu-rivi)
           valittu-rivi (some #(when (= (:id %) valittu-id) %) rivit)]
-      (viesti/nayta-toast! "Toteuma tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
       (hae-tiedot app)
+      (viesti/nayta-toast! "Toteuma tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
       (assoc app :valitu-rivi valittu-rivi)))
 
   TallennusEpaonnistui

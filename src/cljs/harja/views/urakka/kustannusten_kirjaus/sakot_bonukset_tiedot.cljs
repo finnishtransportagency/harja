@@ -102,6 +102,17 @@
      :epaonnistui ->HaeKohteetEpaonnistui}))
 
 
+(defn- liita-liitteet-toteumille
+  "Lisää liitteen jokaiselle toteumalle
+   Toteuman :id arvo vastaa liitteen :sanktio_id arvoa"
+  [app vastaus]
+  (update app :rivit (fn [rivit]
+                       (mapv (fn [rivi]
+                               (let [sanktion-liitteet (into [] (filter #(= (:sanktio_id %) (:id rivi)) vastaus))]
+                                 (assoc rivi :liitteet sanktion-liitteet)))
+                         rivit))))
+
+
 (extend-protocol tuck/Event
   HaeTiedot
   (process-event [_ app]
@@ -123,13 +134,7 @@
 
   HaeLiitteetOnnistui
   (process-event [{:keys [vastaus]} app]
-    (hae-kohteet (update app :rivit
-                   (fn [rivit]
-                     ;; Lisätään liitteet riveille
-                     (mapv (fn [rivi]
-                             (let [sanktion-liitteet (into [] (filter #(= (:sanktio_id %) (:id rivi)) vastaus))]
-                               (assoc rivi :liitteet sanktion-liitteet)))
-                       rivit)))))
+    (hae-kohteet (liita-liitteet-toteumille app vastaus)))
 
   HaeLiitteetEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -155,21 +160,20 @@
                         :suorasanktio true
                         :perintapvm default-perintapvm
                         :toimenpideinstanssi (:tpi_id (first @u/urakan-toimenpideinstanssit))
-                        :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
-                                         :aika nyt
+                        :laatupoikkeama {:aika nyt
+                                         :tekijanimi @istunto/kayttajan-nimi
                                          :paatos {:paatos "sanktio"
-                                                  :kasittelyaika (get-in app [:valittu-rivi :kasittelyaika])
                                                   :kasittelytapa :muu
-                                                  :muukasittelytapa "Tiemerkintä"}}}
+                                                  :muukasittelytapa "Tiemerkintä"
+                                                  :kasittelyaika (get-in app [:valittu-rivi :kasittelyaika])}}}
 
           uusi-bonus {:laji nil
                       :perintapvm default-perintapvm
                       :kasittelyaika (get-in app [:valittu-rivi :kasittelyaika])
                       :toimenpideinstanssi (when (= 1 (count @u/urakan-toimenpideinstanssit))
                                              (:tpi_id (first @u/urakan-toimenpideinstanssit)))
-                      :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
-                                       :aika nyt}}]
-
+                      :laatupoikkeama {:aika nyt
+                                       :tekijanimi @istunto/kayttajan-nimi}}]
       (cond
         (= tyyppi :yllapidon_bonus)
         (update-in app [:valittu-rivi] merge uusi-bonus)
@@ -179,7 +183,8 @@
 
   TallennaRivi
   (process-event [{:keys [rivi virheita? liitteet]} {:keys [valittu-rivi] :as app}]
-
+    ;; Tämä enabloi lomakkeen validoinnin
+    ;; Saavutettavuusmielessä, näytetään validointi tallennus painalluksen yhteydessä
     (if (or
           virheita?
           (not (voi-tallentaa? valittu-rivi)))
@@ -241,8 +246,8 @@
   (process-event [_ {:keys [valittu-rivi rivit] :as app}]
     (let [valittu-id (:id valittu-rivi)
           valittu-rivi (some #(when (= (:id %) valittu-id) %) rivit)]
-      (viesti/nayta-toast! "Toteuma tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
       (hae-tiedot app)
+      (viesti/nayta-toast! "Toteuma tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
       (assoc app :valitu-rivi valittu-rivi)))
 
   TallennusEpaonnistui
