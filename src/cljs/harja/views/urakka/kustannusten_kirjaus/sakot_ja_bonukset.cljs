@@ -21,7 +21,7 @@
 
 (defn- sakot-bonukset-grid 
   "Taulukko"
-  [e! rivit liitteet haku-kaynnissa?]
+  [e! rivit haku-kaynnissa?]
   [grid/grid {:tyhja (if haku-kaynnissa?
                        [ajax-loader-pieni "Haku käynnissä..."]
                        "Aikavälille ei löytynyt tuloksia.")
@@ -77,15 +77,11 @@
     {:otsikko "Liite"
      :tyyppi :komponentti
      :leveys 0.1
-     :komponentti (fn [{:keys [laatupoikkeama id]}]
-                    (let [liite-linkki (or (-> laatupoikkeama :id) id)
-                          rivin-liite (vec (filter #(or
-                                                      (= (:laatupoikkeama %) liite-linkki)
-                                                      (= (:sanktio_id %) liite-linkki)) liitteet))]
-                      [liitteet/liitteet-ikoneina
-                       rivin-liite
-                       {:ikoni [:div.nappi-toissijainen
-                                [ikonit/ikoni-ja-teksti (ikonit/link) "Avaa liite"]]}]))}]
+     :komponentti (fn [{:keys [liitteet] :as _rivi}]
+                    [liitteet/liitteet-ikoneina
+                     liitteet
+                     {:ikoni [:div.nappi-toissijainen
+                              [ikonit/ikoni-ja-teksti (ikonit/link) "Avaa liite"]]}])}]
    ;; Sorttaa gridi pvm mukaan 
    (->> rivit
      (sort-by :kasittelyaika) reverse)])
@@ -93,7 +89,7 @@
 
 (defn- sakot-bonukset-muokkauspaneeli
   "Toteumien luonti / muokkaus"
-  [e! {:keys [kasittelyaika virheita?] :as valittu-rivi} kohteet liitteet voi-kirjoittaa? voi-tallentaa?]
+  [e! {:keys [kasittelyaika virheita? liitteet uudet-liitteet] :as valittu-rivi} kohteet voi-kirjoittaa? voi-tallentaa?]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -108,7 +104,7 @@
      :footer [:<>
               [:hr]
               [:div.muokkaus-modal-napit
-               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi (lomake/virheita? valittu-rivi)))
+               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi (lomake/virheita? valittu-rivi) liitteet))
                 {:disabled (not voi-tallentaa?)}]
                [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]
 
@@ -191,37 +187,27 @@
                   [:rajattu-numero -999999999 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
         ::lomake/col-luokka "col-xs-6 summa-valinta"})
 
-     (let [liite-linkki (or
-                          ;; Bonuksen liite linkittyy sanktio id:llä
-                          (-> valittu-rivi :laatupoikkeama :id)
-                          (-> valittu-rivi :id))
-           rivin-liite (vec (filter #(or
-                                       (= (:laatupoikkeama %) liite-linkki)
-                                       (= (:sanktio_id %) liite-linkki)) liitteet))
-
-           laatupoikkeama-id (-> rivin-liite first :laatupoikkeama)]
-
-       (lomake/rivi
-         {:otsikko "Liitteet"
-          :nimi :liitteet
-          :tyyppi :komponentti
-          :komponentti (fn [_rivi]
-                         [liitteet/liitteet-ja-lisays
-                          @nav/valittu-urakka-id
-                          rivin-liite
-                          {:uusi-liite-atom (r/wrap valittu-rivi
-                                              (fn [data]
-                                                (e! (tiedot/->UusiLiite data))))
-                           :uusi-liite-teksti "Lisää liite"
-                           :salli-poistaa-lisatty-liite? true
-                           :salli-poistaa-tallennettu-liite? true
-                           :poista-tallennettu-liite-fn (fn [liite-id]
-                                                          (liitteet/poista-liite-kannasta
-                                                            {:liite-id liite-id
-                                                             :domain-id laatupoikkeama-id
-                                                             :domain :laatupoikkeama
-                                                             :urakka-id @nav/valittu-urakka-id
-                                                             :poistettu-fn #(e! (tiedot/->HaeTiedot))}))}])}))]
+     (lomake/rivi
+       {:otsikko "Liitteet"
+        :nimi :liitteet
+        :tyyppi :komponentti
+        :komponentti (fn [_rivi]
+                       [liitteet/liitteet-ja-lisays
+                        @nav/valittu-urakka-id
+                        liitteet
+                        {:uusi-liite-atom (r/wrap
+                                            uudet-liitteet
+                                            (fn [data] (e! (tiedot/->UusiLiite data))))
+                         :uusi-liite-teksti "Lisää liite"
+                         :salli-poistaa-lisatty-liite? true
+                         :salli-poistaa-tallennettu-liite? true
+                         :poista-tallennettu-liite-fn (fn [liite-id]
+                                                        (liitteet/poista-liite-kannasta
+                                                          {:liite-id liite-id
+                                                           :domain-id (-> liitteet first :laatupoikkeama)
+                                                           :domain :laatupoikkeama
+                                                           :urakka-id @nav/valittu-urakka-id
+                                                           :poistettu-fn #(e! (tiedot/->HaeTiedot))}))}])})]
     valittu-rivi]])
 
 
@@ -243,16 +229,16 @@
 (defn sakot-bonukset-listaus
   "Luodaan komponentit, ja kutsutaan yhteistä nakyma-body funktiota joka rakentaa näkymän"
   [e! {:keys [rivit valinnat muokataan
-              valittu-rivi haku-kaynnissa? liitteet kohteet] :as _app}]
+              valittu-rivi haku-kaynnissa? kohteet] :as _app}]
 
   (let [voi-tallentaa? true ;; Valitoidaan tallennettaessa (saavutettavuus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot @nav/valittu-urakka-id)
         
         laji-suodatin (suodattimet-lajit e! valinnat)
-        grid (sakot-bonukset-grid e! rivit liitteet haku-kaynnissa?)
+        grid (sakot-bonukset-grid e! rivit haku-kaynnissa?)
         aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)))
         lisaa-uusi-fn #(e! (tiedot/->AvaaModal {:yllapitokohde {:nimi tiedot/ei-kohdetta-teksti}}))
-        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valittu-rivi kohteet liitteet voi-kirjoittaa? voi-tallentaa?)]
+        muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valittu-rivi kohteet voi-kirjoittaa? voi-tallentaa?)]
 
     (yhteiset/nakyma-body "Sakot ja bonukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid laji-suodatin false)))
 

@@ -54,7 +54,7 @@
 (defrecord MuokkaaRivia [rivi])
 (defrecord SuljeMuokkaus [])
 (defrecord ValitseLaji [rivi])
-(defrecord TallennaRivi [rivi virheita?])
+(defrecord TallennaRivi [rivi virheita? liitteet])
 (defrecord TallennusOnnistui [vastaus])
 (defrecord TallennusEpaonnistui [vastaus])
 (defrecord UusiLiite [liite])
@@ -123,7 +123,13 @@
 
   HaeLiitteetOnnistui
   (process-event [{:keys [vastaus]} app]
-    (hae-kohteet (assoc app :liitteet vastaus)))
+    (hae-kohteet (update app :rivit
+                   (fn [rivit]
+                     ;; Lisätään liitteet riveille
+                     (mapv (fn [rivi]
+                             (let [sanktion-liitteet (into [] (filter #(= (:sanktio_id %) (:id rivi)) vastaus))]
+                               (assoc rivi :liitteet sanktion-liitteet)))
+                       rivit)))))
 
   HaeLiitteetEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -139,7 +145,7 @@
 
   UusiLiite
   (process-event [{:keys [liite]} app]
-    (assoc-in app [:valittu-rivi :laatupoikkeama :uusi-liite] liite))
+    (assoc-in app [:valittu-rivi :uudet-liitteet] [liite]))
 
   UusiSanktio
   (process-event [{:keys [tyyppi]} app]
@@ -172,7 +178,7 @@
         (update-in app [:valittu-rivi] merge uusi-sanktio))))
 
   TallennaRivi
-  (process-event [{:keys [rivi virheita?]} {:keys [valittu-rivi] :as app}]
+  (process-event [{:keys [rivi virheita? liitteet]} {:keys [valittu-rivi] :as app}]
 
     (if (or
           virheita?
@@ -184,6 +190,7 @@
                     perintapvm toimenpideinstanssi
                     kasittelyaika lomake-selite laatupoikkeama]} rivi
 
+            uudet-liitteet (:uudet-liitteet valittu-rivi)
             yllapitokohde-id (-> rivi :yllapitokohde :id)
             laatupoikkeama (assoc-in laatupoikkeama [:paatos :perustelu] lomake-selite)
             parametrit (cond
@@ -193,7 +200,8 @@
                           :laatupoikkeama (assoc
                                             laatupoikkeama
                                             :urakka @nav/valittu-urakka-id
-                                            :yllapitokohde yllapitokohde-id)
+                                            :yllapitokohde yllapitokohde-id
+                                            :uusi-liite uudet-liitteet)
                           :hoitokausi @u/valittu-hoitokausi}
 
                          ;; Bonukset
@@ -205,12 +213,14 @@
                            :summa summa
                            :indeksi indeksi
                            :perintapvm perintapvm
+                           :liitteet liitteet
                            :toimenpideinstanssi toimenpideinstanssi}
-                          :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                          :laatupoikkeama {:id (:id laatupoikkeama)
+                                           :tekijanimi @istunto/kayttajan-nimi
                                            :urakka @nav/valittu-urakka-id
                                            :yllapitokohde yllapitokohde-id
                                            :aika kasittelyaika
-                                           :uusi-liite (get-in laatupoikkeama [:uusi-liite])
+                                           :uusi-liite uudet-liitteet
                                            :paatos {:paatos "sanktio"
                                                     :perustelu lomake-selite
                                                     :kasittelyaika kasittelyaika

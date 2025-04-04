@@ -62,11 +62,11 @@
              :selvitys laatupoikkeamat-q/hae-selvitysta-odottavat-laatupoikkeamat
              :kasitellyt laatupoikkeamat-q/hae-kasitellyt-laatupoikkeamat
              :poikkeamaraportilliset laatupoikkeamat-q/hae-poikkeamaraportilliset-laatupoikkeamat)
-            db
-            {:urakka urakka-id
-             :alku (konv/sql-timestamp alku)
-             :loppu (konv/sql-timestamp loppu)
-             :kayttaja (:id user)})
+           db
+           {:urakka urakka-id
+            :alku (konv/sql-timestamp alku)
+            :loppu (konv/sql-timestamp loppu)
+            :kayttaja (:id user)})
           uniikit (map (fn [[_ vektori]] (first vektori)) (group-by :id tietokannasta-nostetut))
           tulos (into [] yhteiset/laatupoikkeama-xf uniikit)]
       tulos)))
@@ -108,26 +108,26 @@
   (log/info "hae-laatupoikkeaman-tiedot laatupoikkeama-id " laatupoikkeama-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (let [laatupoikkeama (first (into []
-                                    yhteiset/laatupoikkeama-xf
-                                    (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db urakka-id laatupoikkeama-id)))]
+                                yhteiset/laatupoikkeama-xf
+                                (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db urakka-id laatupoikkeama-id)))]
     (when laatupoikkeama
       (assoc laatupoikkeama
         :kommentit (into []
-                         (comp (map konv/alaviiva->rakenne)
-                               (map #(assoc % :tekija (name (:tekija %))))
-                               (map (fn [{:keys [liite] :as kommentti}]
-                                      (if (:id liite)
-                                        kommentti
-                                        (dissoc kommentti :liite)))))
-                         (laatupoikkeamat-q/hae-laatupoikkeaman-kommentit db laatupoikkeama-id))
+                     (comp (map konv/alaviiva->rakenne)
+                       (map #(assoc % :tekija (name (:tekija %))))
+                       (map (fn [{:keys [liite] :as kommentti}]
+                              (if (:id liite)
+                                kommentti
+                                (dissoc kommentti :liite)))))
+                     (laatupoikkeamat-q/hae-laatupoikkeaman-kommentit db laatupoikkeama-id))
         :sanktiot (into []
-                        (comp (map #(konv/array->set % :tyyppi_laji keyword))
-                              (map konv/alaviiva->rakenne)
-                              (map #(konv/string->keyword % :laji :vakiofraasi))
-                              (map #(assoc %
-                                      :sakko? (sanktiot-domain/muu-kuin-muistutus? %)
-                                      :summa (some-> % :summa double))))
-                        (sanktiot/hae-laatupoikkeaman-sanktiot db laatupoikkeama-id))
+                    (comp (map #(konv/array->set % :tyyppi_laji keyword))
+                      (map konv/alaviiva->rakenne)
+                      (map #(konv/string->keyword % :laji :vakiofraasi))
+                      (map #(assoc %
+                              :sakko? (sanktiot-domain/muu-kuin-muistutus? %)
+                              :summa (some-> % :summa double))))
+                    (sanktiot/hae-laatupoikkeaman-sanktiot db laatupoikkeama-id))
         :liitteet (into [] (laatupoikkeamat-q/hae-laatupoikkeaman-liitteet db laatupoikkeama-id))))))
 
 (defn hae-urakan-sanktiot-ja-bonukset
@@ -198,12 +198,12 @@
                                        (keyword sanktiolaji) urakan-alkupvm)
         kaikki-sanktiotyypit (group-by :id (sanktiot/hae-sanktiotyypit db))
         mahdolliset-sanktiotyypit (into #{}
-                                        (map :id (sanktiot/hae-sanktiotyyppi-koodilla
-                                                   db {:koodit lajin-sanktiotyyppien-koodit})))
+                                    (map :id (sanktiot/hae-sanktiotyyppi-koodilla
+                                               db {:koodit lajin-sanktiotyyppien-koodit})))
         sanktiotyyppi (first (kaikki-sanktiotyypit sanktiotyypin-id))]
     (when-not (mahdolliset-sanktiotyypit sanktiotyypin-id)
       (throw (SecurityException. (str "Sanktiolaji: " sanktiolaji " ei mahdollinen sanktiotyypille id: "
-                                      sanktiotyypin-id ", koodi: " (:koodi sanktiotyyppi)))))))
+                                   sanktiotyypin-id ", koodi: " (:koodi sanktiotyyppi)))))))
 
 (defn vaadi-sanktio-kuuluu-urakkaan
   "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
@@ -212,7 +212,7 @@
     (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
       (when-not (= sanktion-urakka urakka-id)
         (throw (SecurityException. (str "Sanktio " sanktio-id " ei kuulu valittuun urakkaan "
-                                        urakka-id " vaan urakkaan " sanktion-urakka)))))))
+                                     urakka-id " vaan urakkaan " sanktion-urakka)))))))
 
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
@@ -235,8 +235,7 @@
                         (when laji
                           (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
         _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot))
-        params {
-                ;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
+        params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
                               (and poistettu (nil? perintapvm))  ;; Jos sanktio on poistettu ja perintäpäivä on nil, niin generoi tämä hetki
@@ -282,28 +281,30 @@
   (when-let [uusi-kommentti (:uusi-kommentti laatupoikkeama)]
     (log/info "UUSI KOMMENTTI LAATUPOIKKEAMAAN: " uusi-kommentti)
     (let [liite (some->> uusi-kommentti
-                         :liite
-                         :id
-                         (liitteet/hae-urakan-liite-id db urakka)
-                         first
-                         :id)
+                  :liite
+                  :id
+                  (liitteet/hae-urakan-liite-id db urakka)
+                  first
+                  :id)
           kommentti (kommentit/luo-kommentti<! db
-                                               (name (:tekija laatupoikkeama))
-                                               (:kommentti uusi-kommentti)
-                                               liite
-                                               (:id user))]
+                      (name (:tekija laatupoikkeama))
+                      (:kommentti uusi-kommentti)
+                      liite
+                      (:id user))]
       ;; Liitä kommentti laatupoikkeamaon
       (laatupoikkeamat-q/liita-kommentti<! db id (:id kommentti)))))
 
 (defn- tallenna-laatupoikkeaman-liitteet [db laatupoikkeama id]
   (when-let [uusi-liite (:uusi-liite laatupoikkeama)]
-    (log/info "UUSI LIITE LAATUPOIKKEAMAAN: " uusi-liite)
-    (laatupoikkeamat-q/liita-liite<! db id (:id uusi-liite))))
+    (let [liitteet (if (sequential? uusi-liite) uusi-liite [uusi-liite])]
+      (doseq [liite liitteet]
+        (log/info "UUSI LIITE LAATUPOIKKEAMAAN: " uusi-liite)
+        (laatupoikkeamat-q/liita-liite<! db id (:id liite))))))
 
 (defn- tallenna-laatupoikkeaman-paatos [{:keys [db urakka user laatupoikkeama id]}]
   ;; Urakanvalvoja voi kirjata päätöksen
   (when (and (:paatos (:paatos laatupoikkeama))
-             (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-laadunseuranta-sanktiot urakka user))
+          (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-laadunseuranta-sanktiot urakka user))
     (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos laatupoikkeama))
     (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
       (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos!
@@ -325,12 +326,12 @@
       (let [osapuoli (roolit/osapuoli user)
             laatupoikkeama-kannassa-ennen-tallennusta
             (first (into []
-                         yhteiset/laatupoikkeama-xf
-                         (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db urakka-id (:id laatupoikkeama))))
+                     yhteiset/laatupoikkeama-xf
+                     (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db urakka-id (:id laatupoikkeama))))
             laatupoikkeama (assoc laatupoikkeama
                              ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
                              :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
-                                                     (:selvitys-pyydetty laatupoikkeama)))]
+                                                  (:selvitys-pyydetty laatupoikkeama)))]
 
         (let [id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama db user laatupoikkeama)]
           (tallenna-laatupoikkeaman-kommentit {:db db :user user :urakka urakka-id
@@ -340,12 +341,12 @@
                                             :laatupoikkeama laatupoikkeama :id id})
 
           (when (and (not (:selvitys-pyydetty laatupoikkeama-kannassa-ennen-tallennusta))
-                     (:selvitys-pyydetty laatupoikkeama))
+                  (:selvitys-pyydetty laatupoikkeama))
             (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email :urakka-id urakka-id
                                                     :sms sms :laatupoikkeama (assoc laatupoikkeama :id id)
                                                     :selvityksen-pyytaja (str (:etunimi user)
-                                                                              " "
-                                                                              (:sukunimi user))}))
+                                                                           " "
+                                                                           (:sukunimi user))}))
 
           (hae-laatupoikkeaman-tiedot db user urakka-id id))))))
 
@@ -354,13 +355,12 @@
   [db user]
   (oikeudet/ei-oikeustarkistusta!)
   (into []
-        (sanktiot/hae-sanktiotyypit db)))
+    (sanktiot/hae-sanktiotyypit db)))
 
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
-  (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
-             ", urakassa " urakka)
+  (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama) ", urakassa " urakka)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
   (when (id-olemassa? (:yllapitokohde laatupoikkeama))
     (yllapitokohteet-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka (:yllapitokohde laatupoikkeama)))
@@ -369,7 +369,7 @@
     ;; koska laatupoikkeamalla voi olla 0...n sanktiota
     (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
           id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
-                                                                                            :poistettu poista-laatupoikkeama?))
+                                                                        :poistettu poista-laatupoikkeama?))
           {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
           _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
               (konv/sql-timestamp kasittelyaika)
@@ -427,8 +427,8 @@
       :tallenna-suorasanktio
       (fn [user tiedot]
         (tallenna-suorasanktio db user (:sanktio tiedot) (:laatupoikkeama tiedot)
-                               (get-in tiedot [:laatupoikkeama :urakka])
-                               (:hoitokausi tiedot)))
+          (get-in tiedot [:laatupoikkeama :urakka])
+          (:hoitokausi tiedot)))
 
       :poista-suorasanktio
       (fn [user tiedot]
@@ -445,7 +445,7 @@
       :hae-sanktiotyypit
       (fn [user]
         (hae-sanktiotyypit db user))
-      
+
       :hae-urakan-liitteet
       (fn [user {:keys [urakka-id]}]
         (hae-urakan-liitteet db user urakka-id))
@@ -453,7 +453,7 @@
       :hae-sanktion-liitteet
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
         (hae-sanktion-liitteet db user urakka-id laatupoikkeama-id))
-      
+
       :hae-bonuksen-liitteet
       (fn [user {:keys [urakka-id bonus-id]}]
         (hae-bonuksen-liitteet db user urakka-id bonus-id)))
