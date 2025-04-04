@@ -1,4 +1,4 @@
-(ns harja.palvelin.komponentit.todennus-jwt-authentikointi-test
+(ns harja.palvelin.komponentit.todennus-jwt-test
   "Todennuksen JWT signaturen testit (Ei tee GET kutsuja ulos)
    Simuloi kuinka Tuotannossa saadaan tokenit, varmistaen niiden signaturen käyttäjän tullessa Harjaan
    Testaa todennuksen varmistuksen kaikki komponentit"
@@ -78,7 +78,7 @@
 
 (def test-accesstoken-jwt
   ;; JWT accesstoken mock dataa, jossa header, payload, ja signature 
-  ;; Signature generoidaan jälkeen, en tiedä vielä miten 
+  ;; Signature generoidaan jälkeen
   [{:kid mock-key-identifier, :alg "RS256"} ;; header 
 
    {:sub mock-subject,
@@ -435,7 +435,7 @@
         (tarkista-cognito-todennus-perustiedot vastaus x-iam-accesstoken x-iam-data)))))
 
 
-(deftest varmista-authentikoinnin-toiminnallisuus
+(deftest varmista-todennuksen-jwt-toiminnallisuus
   (let [initialisoidut-tiedot (initialisoi-cognito-jwt-todennuspyynto)
         todennuspyynto (-> initialisoidut-tiedot :todennuspyynto)
         iam-data-public-key (-> initialisoidut-tiedot :iam-data-public-key)
