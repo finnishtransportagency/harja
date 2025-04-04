@@ -18,7 +18,7 @@
         [:div.livi-grid
          [:h1 "Tiemerkintöjen korjaus"]
          [grid/grid
-          {:otsikko "Kustannukset vuosittain"
+          {:otsikko "Kustannukset vuosittain (sis. indeksimuutokset)"
            :tyhja "Ei kustannuksia"
            :tunniste :kustannusvuosi
            :voi-lisata? false
