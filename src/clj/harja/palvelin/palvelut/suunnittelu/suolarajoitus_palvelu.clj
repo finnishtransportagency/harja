@@ -5,8 +5,10 @@
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
+            [harja.palvelin.palvelut.tierekisteri-haku :as tieosoite-haku]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tierekisteri :as tr-domain]
             [taoensso.timbre :as log]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]))
@@ -85,21 +87,20 @@
                  :validaatioinfot (when-not (empty? validointi-info) validointi-info)}]
     vastaus))
 
-(defn tierekisterin-tiedot [db {:keys [urakka-id hoitokauden-alkuvuosi] :as suolarajoitus}]
-  (log/debug "tierekisterin-tiedot :: suolarajoitus" suolarajoitus)
+(defn tieosoitteen-ja-ajoratojen-pituudet [db {:keys [urakka-id hoitokauden-alkuvuosi] :as suolarajoitus}]
+  (log/debug "tieosoitteen-ja-ajoratojen-pituudet :: suolarajoitus" suolarajoitus)
   (let [validaatiot (tieverkko-kyselyt/tieosoitteen-validointi db
                       (:tie suolarajoitus) (:aosa suolarajoitus) (:aet suolarajoitus) (:losa suolarajoitus) (:let suolarajoitus))]
     (if (:validaatiovirheet validaatiot)
       ; Jos virheitä, palauta virheet
       (do
-        (log/warn "tierekisterin-tiedot :: validaatiovirhe :: suolarajoitus: " suolarajoitus)
+        (log/warn "tieosoitteen-ja-ajoratojen-pituudet :: validaatiovirhe :: suolarajoitus: " suolarajoitus)
         {:validaatiovirheet (:validaatiovirheet validaatiot)
          :validaatioinfot (:validaatioinfot validaatiot)
          :pituus nil
          :ajoratojen_pituus nil})
       ;; Jos ei virheitä, niin laske pituus
-      (let [_ (log/debug "tierekisterin-tiedot :: suolarajoitus: " suolarajoitus)
-            tarkistettava-suolarajoitus {:tie (:tie suolarajoitus)
+      (let [tarkistettava-suolarajoitus {:tie (:tie suolarajoitus)
                                          :aosa (:aosa suolarajoitus)
                                          :aet (:aet suolarajoitus)
                                          :losa (:losa suolarajoitus)
@@ -110,40 +111,32 @@
             paallekaiset (suolarajoitus-kyselyt/onko-tierekisteriosoite-paallekainen db tarkistettava-suolarajoitus)
             validaatiovirheet (when-not (empty? paallekaiset)
                                 (do
-                                  (log/warn "tierekisterin-tiedot :: Löydettiin päällekäiset: " (into [] paallekaiset))
+                                  (log/warn "tieosoitteen-ja-ajoratojen-pituudet :: Löydettiin päällekäiset: " (into [] paallekaiset))
                                   (format "Tierekisteriosoitteessa on jo rajoitus. %s/%s/%s/%s/%s  "
                                     (:tie (first paallekaiset)) (:aosa (first paallekaiset))
                                     (:aet (first paallekaiset)) (:losa (first paallekaiset))
                                     (:let (first paallekaiset)))))
 
             ;; Pilkotaan tierekisteri osiin tien osien mukaan
-            tie-osien-pituudet (tieverkko-kyselyt/hae-osien-pituudet db {:tie (:tie suolarajoitus)
-                                                                         :aosa (:aosa suolarajoitus)
-                                                                         :losa (:losa suolarajoitus)})
-            pituus (tieverkko-kyselyt/laske-tien-osien-pituudet tie-osien-pituudet suolarajoitus)
-            ajoratojen-pituudet (tieverkko-kyselyt/hae-ajoratojen-pituudet db {:tie (:tie suolarajoitus)
-                                                                               :aosa (:aosa suolarajoitus)
-                                                                               :losa (:losa suolarajoitus)})
-            yhdistetyt-ajoradat (mapv (fn [[osa _]]
-                                        (let [ajoratatiedot {:osa osa ;; Osa talteen
-                                                             :pituus (or (some #(when (and (= (:ajorata %) 0) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) 0) ;; Ensimmäisen ajoradan pituus talteen
-                                                             :ajoratojen-pituus (some #(when (and (= (:ajorata %) 1) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) ;; Oletetaan, että kaikki loput ajoradat ovat saman mittaisia
-                                                             :ajoratojen-maara (count (keep #(when (and (not= (:ajorata %) 0) (= (:osa %) osa)) %) ajoratojen-pituudet)) ;; Määritellään ajoratojen määrä (yleensa ajoratoja on 0,1,2) joten tähän tulisi arvo 2
-                                                             }
-                                              ;; Lasketaan vielä yhteen kokonaispituus, koska siitä pitää päätellä paljon asioita laskennassa
-                                              ajoratojen-kokonaispituus (if (and (:ajoratojen-pituus ajoratatiedot)
-                                                                              (> (:ajoratojen-maara ajoratatiedot) 0))
-                                                                          (* (:ajoratojen-pituus ajoratatiedot) (:ajoratojen-maara ajoratatiedot))
-                                                                          0)
-                                              ajoratatiedot (assoc ajoratatiedot :kokonaispituus (+ (:pituus ajoratatiedot) ajoratojen-kokonaispituus))]
-                                          ajoratatiedot))
-                                  ;; Yhdistaä mahdolliset ajoradata samaan mäppiin
-                                  (group-by :osa ajoratojen-pituudet))
-            ajoratojen-pituus (reduce (fn [summa ajorata]
-                                        (let [pituus (tieverkko-kyselyt/laske-tien-osien-pituudet (conj [] ajorata) suolarajoitus)
-                                              summa (+ summa (:pituus pituus))]
-                                          summa))
-                                0 yhdistetyt-ajoradat)
+            osien-tiedot (tieosoite-haku/hae-osien-tiedot db (tr-domain/tr-osoite-kasvusuuntaan
+                                                               {:tr-numero (:tie suolarajoitus)
+                                                                :tr-alkuosa (:aosa suolarajoitus)
+                                                                :tr-loppuosa (:losa suolarajoitus)}))
+            ;; osien pituudet huomioimatta ajoratojen lukumäärää
+            tie-osien-pituudet (into {}
+                                 (map
+                                   (fn [osan-pituustiedot]
+                                     ;; osien pituudet muodossa {1 1242, 2 2334, ...}
+                                     {(:tr-osa osan-pituustiedot)
+                                      (get-in osan-pituustiedot [:pituudet :pituus])})
+                                   osien-tiedot))
+            pituus (assoc suolarajoitus
+                     :pituus
+                     (tr-domain/laske-tien-pituus tie-osien-pituudet (tr-domain/tr-osoite-kasvusuuntaan
+                                                                       (tr-domain/tr-alkuiseksi suolarajoitus))))
+            ;; lasketaan kyseisen tieosoitteen ajoratakilometrit yhteen. Kaksiajorataisten osuuksien kohdalla kertyy siis tuplana kilometrejä.
+
+            ajoratojen-pituus (tieosoite-haku/tieosoitteen-ajoratakilometrit db (tr-domain/tr-alkuiseksi suolarajoitus))
             ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
             pohjavesialueet (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let]))]
         ;; Palautetaan joko virheet, tai saadut tiedot
@@ -158,9 +151,9 @@
              :ajoratojen_pituus ajoratojen-pituus
              :pohjavesialueet pohjavesialueet}))))))
 
-(defn hae-tierekisterin-tiedot [db user {:keys [urakka-id] :as suolarajoitus}]
+(defn hae-tieosoitteen-ja-ajoratojen-pituudet [db user {:keys [urakka-id] :as suolarajoitus}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
-  (let [tr-tiedot (tierekisterin-tiedot db suolarajoitus)]
+  (let [tr-tiedot (tieosoitteen-ja-ajoratojen-pituudet db suolarajoitus)]
     (if (:validaatiovirheet tr-tiedot)
       (transit-vastaus 400 (:validaatiovirheet tr-tiedot))
       tr-tiedot)))
@@ -187,7 +180,7 @@
   [db user suolarajoitus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user (:urakka_id suolarajoitus))
   (log/debug "tallenna-suolarajoitus :: suolarajoitus" suolarajoitus)
-  (let [tr-tiedot (tierekisterin-tiedot db suolarajoitus)]
+  (let [tr-tiedot (tieosoitteen-ja-ajoratojen-pituudet db suolarajoitus)]
     (if (:validaatiovirheet tr-tiedot)
       (do
         (log/warn "tallenna-suolarajoitus :: tr-validointivirheet: " (:validaatiovirheet tr-tiedot))
@@ -496,41 +489,13 @@
   (let [alueet (suolarajoitus-kyselyt/hae-urakan-siirrettavat-pohjavesialueet db {:urakkaid (:urakkaid tiedot)})
         ;; Lisää pituudet alueille
         alueet (map (fn [alue]
-                      (let [tierekisterin-tiedot (tierekisterin-tiedot db alue)]
+                      (let [pituudet (tieosoitteen-ja-ajoratojen-pituudet db alue)]
                         (-> alue
-                          (assoc :ajoratojen_pituus (:ajoratojen_pituus tierekisterin-tiedot))
-                          (assoc :pituus (:pituus tierekisterin-tiedot)))))
+                          (assoc :ajoratojen_pituus (:ajoratojen_pituus pituudet))
+                          (assoc :pituus (:pituus pituudet)))))
                  alueet)]
     alueet))
 
-(defn siirra-urakan-pohjavesialueet [db user tiedot]
-  (log/debug "siirra-urakan-pohjavesialueet :: tiedot" tiedot)
-
-  (let [urakkaid (:urakkaid tiedot)
-        urakan-pohjavesialueet (:pohjavesialueet tiedot)
-        _ (doseq [pohjavesialue urakan-pohjavesialueet]
-            (let [pohjavesialueen-vuosi (:hoitokauden-alkuvuosi pohjavesialue)
-
-                  tallennettava-suolarajoitus {:hoitokauden-alkuvuosi pohjavesialueen-vuosi
-                                               :kopioidaan-tuleville-vuosille? true
-                                               :urakka_id urakkaid
-                                               :tie (:tie pohjavesialue)
-                                               :aosa (:aosa pohjavesialue)
-                                               :aet (:aet pohjavesialue)
-                                               :losa (:losa pohjavesialue)
-                                               :let (:let pohjavesialue)
-                                               :suolarajoitus (:talvisuolaraja pohjavesialue)
-                                               :formiaatti (if (= 0 (:talvisuolaraja pohjavesialue)) true false)
-                                               :kayttaja_id (:luoja pohjavesialue)}
-                  tr-tiedot (tierekisterin-tiedot db tallennettava-suolarajoitus)
-                  tallennettava-suolarajoitus (-> tallennettava-suolarajoitus
-                                                (assoc :pituus (:pituus tr-tiedot))
-                                                (assoc :ajoratojen_pituus (:ajoratojen_pituus tr-tiedot)))]
-              ;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
-              (tallenna-suolarajoitus db user tallennettava-suolarajoitus)))]
-    (log/info (format "siirra-urakan-pohjavesialueet :: urakkaid %s" urakkaid))
-
-    urakan-pohjavesialueet))
 
 (defn tarkista-onko-suolatoteumia [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user (:urakka-id tiedot))
@@ -557,9 +522,9 @@
 
     ;; Tieosoitteen perusteella lasketaan ajoratojen pituus, reitin pituus sekä päätellään pohjavesialue/alueet
     (julkaise-palvelu (:http-palvelin this)
-      :tierekisterin-tiedot
+      :tieosoitteen-ja-ajoratojen-pituudet
       (fn [user tiedot]
-        (hae-tierekisterin-tiedot (:db this) user tiedot)))
+        (hae-tieosoitteen-ja-ajoratojen-pituudet (:db this) user tiedot)))
 
     (julkaise-palvelu (:http-palvelin this)
       :hae-talvisuolan-kayttorajat
@@ -591,22 +556,6 @@
       (fn [user tiedot]
         (hae-rajoitusalueen-paivan-toteumat (:db this) user tiedot)))
 
-    ;; Käytetään lyhyen aikaa hallintapuolelta, jotta rajoitusalueet saadaan muodostettua pohjavesialueiden perusteella
-    (julkaise-palvelu (:http-palvelin this)
-      :hae-pohjavesialueurakat
-      (fn [user tiedot]
-        (hae-pohjavesialueidenurakat (:db this) user tiedot)))
-
-    (julkaise-palvelu (:http-palvelin this)
-      :hae-urakan-siirrettavat-pohjavesialueet
-      (fn [user tiedot]
-        (hae-urakan-siirrettavat-pohjavesialueet (:db this) user tiedot)))
-
-    (julkaise-palvelu (:http-palvelin this)
-      :siirra-urakan-pohjavesialueet
-      (fn [user tiedot]
-        (siirra-urakan-pohjavesialueet (:db this) user tiedot)))
-
     (julkaise-palvelu (:http-palvelin this)
       :tarkista-onko-suolatoteumia
       (fn [user tiedot]
@@ -618,15 +567,12 @@
       :hae-suolarajoitukset
       :tallenna-suolarajoitus
       :poista-suolarajoitus
-      :tierekisterin-tiedot
+      :tieosoitteen-ja-ajoratojen-pituudet
       :hae-talvisuolan-kayttorajat
       :tallenna-talvisuolan-kayttoraja
       :tallenna-rajoitusalueen-sanktio
       :hae-suolatoteumat-rajoitusalueittain
       :hae-rajoitusalueen-summatiedot
       :hae-rajoitusalueen-paivan-toteumat
-      :hae-pohjavesialueurakat
-      :hae-urakan-siirrettavat-pohjavesialueet
-      :siirra-urakan-pohjavesialueet
       :tarkista-onko-suolatoteumia)
     this))
