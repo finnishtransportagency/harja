@@ -136,7 +136,7 @@
             [liitteen-poisto tiedosto poista-liite-fn])]
          (when-not virustarkastettu?
            [:span.virustarkistus (str "Virustarkastus käynnissä. Liitteen voi avata, kun tarkastus on tehty.")])]
-        [:span
+        [:div.liite-rivi
          [:a.liite-linkki
           {:target "_blank" :href (k/liite-url (:id tiedosto))}
           (str nimi (when nayta-koko? (str " (" (sievenna-liitteen-koko koko) ") ")))]
