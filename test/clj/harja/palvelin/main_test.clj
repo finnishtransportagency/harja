@@ -255,6 +255,7 @@
     :paallystysilmoitukset-hallinta
     :urakkatilanne
     :tieosoitteet-hallinta
+    :tiemerkinnan-kustannuskirjaukset
     :ajastukset-hallinta})
 
 (def hidas-ok-status #{:itmf})
