@@ -17,6 +17,7 @@
                           :yllapidon_bonus "Bonus"
                           :arvonmuutos "Arvonmuutos"
                           :indeksi "Indeksitarkistus"
+                          :korjaus "Tiemerkintöjen korjaus"
                           :muut-kustannukset "Muut kustannukset"
                           :sopimusalueen-muutos "Sopimusalueen muutos"})
 

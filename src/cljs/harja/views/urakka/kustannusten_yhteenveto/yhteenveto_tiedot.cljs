@@ -12,6 +12,7 @@
 (defonce ^{:private true} raportti-avain :tiemerkinta-kustannukset-yhteenveto)
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
                                              :muokataan false
+                                             :ladatut-rivit nil
                                              :haku-kaynnissa? false
                                              :valinnat {:raportti {}
                                                         :aikavali (pvm/kuukauden-aikavali (pvm/nyt))}})
@@ -24,6 +25,8 @@
 (defrecord HaeTiedotEpaonnistui [vastaus])
 (defrecord HaeSanktiotOnnistui [vastaus])
 (defrecord HaeSanktiotEpaonnistui [vastaus])
+(defrecord HaeKorjauksetOnnistui [vastaus])
+(defrecord HaeKorjauksetEpaonnistui [vastaus])
 
 
 (defn- epaonnistui [vastaus app]
@@ -34,23 +37,44 @@
 
 (defn laske-kustannukset-yhteen
   "Palauttaa vektorin mapeista ryhmitettynä:
-   :id        Grid tunniste 
-   :tyyppi    :arvonmuutos`, :yllapidon_sakko, :yllapidon_bonus :muut-kustannukset (kaikki muut kustannukset)
-   :hinta     Summattu hinta"
+     :id        Grid tunniste 
+     :tyyppi    :arvonmuutos`, :yllapidon_sakko, :yllapidon_bonus :muut-kustannukset (kaikki muut kustannukset)
+     :hinta     Summattu hinta"
   [data ryhmita-avain summa-avain]
-  (->> data
-    (group-by (fn [data]
-                (let [tyyppi (ryhmita-avain data)]
-                  ;; Näytetään nämä erikseen omana rivinään
-                  (if (#{:arvonmuutos :yllapidon_sakko :yllapidon_bonus} tyyppi)
-                    tyyppi
-                    ;; Kaikki muut niputetaan yhteen, nimellä "Muut kustannukset"
-                    :muut-kustannukset))))
-    (map (fn [[tyyppi arvo]]
-           {:id    (gensym)
-            :tyyppi tyyppi
-            :hinta  (reduce + (map summa-avain arvo))}))
-    vec))
+  (let [ryhma (group-by (fn [rivi]
+                          (let [tyyppi (ryhmita-avain rivi)]
+                            (if (#{:arvonmuutos :yllapidon_sakko :yllapidon_bonus} tyyppi)
+                              tyyppi
+                              :muut-kustannukset)))
+                data)
+
+        kaikki-tyypit [:arvonmuutos :yllapidon_sakko :yllapidon_bonus :muut-kustannukset]]
+
+    (->> kaikki-tyypit
+      (map (fn [tyyppi]
+             (let [rivit (ryhma tyyppi)]
+               {:id     (gensym)
+                :tyyppi tyyppi
+                :hinta  (if (seq rivit) (reduce + (map summa-avain rivit))  0)})))
+      (vec))))
+
+
+(defn suodata-ja-laske-korjaukset-yhteen
+  "Suodattaa korjaus kustannukset vuoden perusteella 
+   Palauttaa vectorin ryhmitettynä:
+     :id        Grid tunniste 
+     :tyyppi    :korjaus
+     :hinta     Summattu hinta"
+  [korjaus-kustannukset [alku loppu]]
+  (let [suodatettu (filter (fn [{vuosi :kustannusvuosi}]
+                             (let [kustannuksen-pvm (pvm/vuoden-eka-pvm vuosi)]
+                               (and
+                                 (not (pvm/ennen? kustannuksen-pvm alku))
+                                 (not (pvm/jalkeen? kustannuksen-pvm loppu)))))
+                     korjaus-kustannukset)]
+    [{:id     (gensym)
+      :tyyppi :korjaus
+      :hinta  (reduce + 0 (map :kustannus suodatettu))}]))
 
 
 (defn- raporttiparametrit [rivit]
@@ -83,11 +107,17 @@
      :epaonnistui ->HaeSanktiotEpaonnistui}))
 
 
+(defn- hae-korjaus-kustannukset [app]
+  (tuck-apurit/post! app :hae-tiemerkinta-kustannuskirjaus
+    {:urakka @nav/valittu-urakka}
+    {:onnistui ->HaeKorjauksetOnnistui
+     :epaonnistui ->HaeKorjauksetEpaonnistui}))
+
+
 (extend-protocol tuck/Event
   HaeTiedot
   (process-event [_ app]
     (hae-yllapito-toteumat app)
-    (hae-sanktiot-ja-bonukset app)
     (->
       (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
       (assoc :haku-kaynnissa? true)
@@ -95,22 +125,34 @@
 
   HaeTiedotOnnistui
   (process-event [{:keys [vastaus]} {:keys [_valinnat] :as app}]
-    (assoc app
-      :rivit (laske-kustannukset-yhteen vastaus :tyyppi :hinta)))
+    (->
+      (hae-sanktiot-ja-bonukset app)
+      (assoc :ladatut-rivit (laske-kustannukset-yhteen vastaus :tyyppi :hinta))))
 
   HaeTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (epaonnistui vastaus app))
 
   HaeSanktiotOnnistui
-  (process-event [{:keys [vastaus]} {:keys [_valinnat] :as app}]
-    (let [rivit (-> app 
-                  (update :rivit into (laske-kustannukset-yhteen vastaus :laji :summa)) 
-                  :rivit)]
-     (-> app
-       (assoc :haku-kaynnissa? false :rivit rivit)
-       (assoc-in [:valinnat :raportti] (raporttiparametrit rivit)))))
+  (process-event [{:keys [vastaus]} {:keys [_valinnat ladatut-rivit] :as app}]
+    (->
+      (hae-korjaus-kustannukset app)
+      (assoc :ladatut-rivit (laske-kustannukset-yhteen (concat vastaus ladatut-rivit) :laji :summa))))
 
   HaeSanktiotEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (epaonnistui vastaus app))
+
+  HaeKorjauksetOnnistui
+  (process-event [{:keys [vastaus]} {:keys [_valinnat ladatut-rivit] :as app}]
+    (-> app
+      (assoc :rivit ladatut-rivit)
+      (update :rivit into (suodata-ja-laske-korjaukset-yhteen (concat vastaus ladatut-rivit) @u/valittu-aikavali))
+      (as-> paivitetty
+        (-> paivitetty
+          (assoc :haku-kaynnissa? false)
+          (assoc-in [:valinnat :raportti] (raporttiparametrit (:rivit paivitetty)))))))
+
+  HaeKorjauksetEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (epaonnistui vastaus app)))

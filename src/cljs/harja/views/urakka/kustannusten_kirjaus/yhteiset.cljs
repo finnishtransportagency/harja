@@ -9,7 +9,8 @@
    [harja.tiedot.urakka :as urakka-tiedot]
    [harja.views.urakka.valinnat :as urakka-valinnat]))
 
-(defonce yhteenveto-tyypit {:muut-kustannukset "Muut kustannukset"})
+(defonce yhteenveto-tyypit {:korjaus "Tiemerkintöjen korjaus"
+                            :muut-kustannukset "Muut kustannukset"})
 
 (defonce laji-valinnat {:kaikki "Kaikki"
                         :yllapidon_sakko "Sakko"
