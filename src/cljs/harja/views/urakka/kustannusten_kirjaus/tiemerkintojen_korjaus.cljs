@@ -1,24 +1,27 @@
 (ns harja.views.urakka.kustannusten-kirjaus.tiemerkintojen-korjaus
   (:require
-    [harja.tiedot.urakka.urakka :as tila]
-    [harja.ui.komponentti :as komp]
-    [harja.ui.grid :as grid]
-    [harja.fmt :as fmt]
-    [harja.tyokalut.tuck :as tuck-apurit]
-    [tuck.core :refer [tuck]]
-    [harja.tiedot.urakka.tiemerkkinnan-kustannusten-kirjaus :as tiedot]))
+   [harja.tiedot.urakka.urakka :as tila]
+   [harja.ui.komponentti :as komp]
+   [harja.ui.grid :as grid]
+   [harja.fmt :as fmt]
+   [harja.tyokalut.tuck :as tuck-apurit]
+   [tuck.core :refer [tuck]]
+   [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
+   [harja.tiedot.urakka.tiemerkkinnan-kustannusten-kirjaus :as tiedot]))
 
 (defn tiemerkintojen-korjaus* [e!]
   (let [urakka (:urakka @tila/yleiset)]
     (komp/luo
       (komp/lippu tiedot/kustannusten-kirjaus-valilehti-nakyvissa?)
       (komp/sisaan #(e! (tiedot/->HaeKustannukset urakka)))
-      (fn [e! {:keys [kustannukset] :as app}]
+      (fn [e! {:keys [kustannukset haku-kaynnissa?] :as _app}]
         [:div.livi-grid.tiemerkinta-kustannusten-kirjaus
          [:h1 "Tiemerkintöjen korjaus"]
          [grid/grid
           {:otsikko "Kustannukset vuosittain (sis. indeksimuutokset)"
-           :tyhja "Ei kustannuksia"
+           :tyhja (if haku-kaynnissa?
+                    [ajax-loader-pieni "Haku käynnissä..."]
+                    "Aikavälille ei löytynyt tuloksia.")
            :tunniste :kustannusvuosi
            :voi-lisata? false
            :voi-poistaa? (constantly false)

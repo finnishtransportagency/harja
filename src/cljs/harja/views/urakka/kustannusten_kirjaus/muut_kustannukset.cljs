@@ -13,6 +13,7 @@
    [harja.ui.komponentti :as komp]
    [harja.tiedot.navigaatio :as nav]
    [harja.domain.oikeudet :as oikeudet]
+   [harja.tiedot.urakka.urakka :as urakka-tiedot]
    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
    [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
    [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]

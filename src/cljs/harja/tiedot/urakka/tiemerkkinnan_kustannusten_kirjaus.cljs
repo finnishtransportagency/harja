@@ -6,6 +6,9 @@
 
 (defonce kustannusten-kirjaus-valilehti-nakyvissa? (atom false))
 
+(defonce ^{:private true} nollatut-valinnat {:kustannukset nil
+                                             :haku-kaynnissa? false})
+
 (defn kustannusten-summa [rivit avain]
   (let [summa (reduce + 0 (map avain rivit))]
     summa))
@@ -27,14 +30,24 @@
 (defrecord TallennaKustannuksetOnnistui [vastaus app])
 (defrecord TallennaKustannuksetEpaonnistui [vastaus])
 
+(defn- hae-tiedot [urakka]
+  (tuck-apurit/post! :hae-tiemerkinta-kustannuskirjaus
+    {:urakka (get urakka :urakka)}
+    {:onnistui ->HaeKustannuksetOnnistui
+     :epaonnistui ->HaeKustannuksetEpaonnistui}))
+
+(defn- epaonnistui [vastaus app]
+  (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
+  (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+  (assoc app :haku-kaynnissa? false))
+
 (extend-protocol tuck/Event
   HaeKustannukset
   (process-event [urakka app]
-    (tuck-apurit/post! :hae-tiemerkinta-kustannuskirjaus
-      {:urakka (get urakka :urakka)}
-      {:onnistui ->HaeKustannuksetOnnistui
-       :epaonnistui ->HaeKustannuksetEpaonnistui})
-    (assoc app :haku-kaynnissa? true))
+    (hae-tiedot urakka)
+    (->
+      (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
+      (assoc :haku-kaynnissa? true)))
 
   HaeKustannuksetOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -44,11 +57,7 @@
 
   HaeKustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.warn "TallennaKustannusEpaonnistui" (pr-str vastaus))
-    (viesti/nayta-toast! (str "HaeKustannuksetEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
-    (assoc app
-      :kustannukset []
-      :haku-kaynnissa? false))
+    (epaonnistui vastaus app))
 
   TallennaKustannukset
   (process-event [{tiedot :tiedot urakka :urakka} app]
@@ -58,15 +67,17 @@
                                        (dissoc m :id))
                                   tiedot))}
       {:onnistui ->TallennaKustannuksetOnnistui
-       :epaonnistui ->TallennaKustannuksetEpaonnistui}))
+       :epaonnistui ->TallennaKustannuksetEpaonnistui})
+    (assoc app :haku-kaynnissa? true))
 
   TallennaKustannuksetOnnistui
   (process-event [{vastaus :vastaus} app]
     ((tuck/current-send-function) (->HaeKustannukset (:urakka vastaus)))
-    (assoc app :kustannukset (:tiedot vastaus) :tallennus-kaynnissa? false :tallennus-onnistui? true))
+    (viesti/nayta-toast! "Kustannukset tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
+    (assoc app
+      :haku-kaynnissa? false
+      :kustannukset (:tiedot vastaus)))
 
   TallennaKustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.warn "TallennaKustannuksetEpaonnistui" vastaus)
-    (viesti/nayta-toast! "Kustannuksen tallennuksessa tapahtui virhe" :varoitus)
-    app))
+    (epaonnistui vastaus app)))
