@@ -297,7 +297,6 @@
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :kulu-kohdistuksineen uusi-kulu})
-        _ (println "tallennettu-kulu: " (pr-str tallennettu-kulu))
         tallennettu-id (:id tallennettu-kulu)
         paivitetty-kulu
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
