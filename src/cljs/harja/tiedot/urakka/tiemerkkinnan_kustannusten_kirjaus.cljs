@@ -68,14 +68,13 @@
                                   tiedot))}
       {:onnistui ->TallennaKustannuksetOnnistui
        :epaonnistui ->TallennaKustannuksetEpaonnistui})
-    (assoc app :haku-kaynnissa? true))
+    (assoc app :haku-kaynnissa? true :kustannukset []))
 
   TallennaKustannuksetOnnistui
   (process-event [{vastaus :vastaus} app]
     ((tuck/current-send-function) (->HaeKustannukset (:urakka vastaus)))
     (viesti/nayta-toast! "Kustannukset tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
     (assoc app
-      :haku-kaynnissa? false
       :kustannukset (:tiedot vastaus)))
 
   TallennaKustannuksetEpaonnistui

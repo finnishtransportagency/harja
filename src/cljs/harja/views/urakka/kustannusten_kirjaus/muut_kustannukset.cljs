@@ -163,8 +163,9 @@
                                             valittu-rivi haku-kaynnissa? tyypit] :as _app}]
   (let [voi-tallentaa? true ;; Valitoidaan tallennettaessa (saavutettavuus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteutus-muutkustannukset @nav/valittu-urakka-id)
-        
-        lisaa-uusi-fn #(e! (tiedot/->AvaaKustannusModal nil))
+
+        lisaa-uusi-fn #(e! (tiedot/->AvaaKustannusModal {:yllapitoluokka (first (filter
+                                                                                  (fn [d] (= "-" (:lyhyt-nimi d))) yllapitokohteet-domain/paallysteen-korjausluokat))}))
         grid (muut-kustannukset-grid e! rivit haku-kaynnissa?)
         aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)))
         muokkauspaneeli (muut-kustannukset-muokkauspaneeli e! valittu-rivi voi-kirjoittaa? voi-tallentaa? tyypit)]

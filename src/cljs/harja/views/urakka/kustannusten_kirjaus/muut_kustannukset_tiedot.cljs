@@ -43,13 +43,14 @@
   (assoc app :haku-kaynnissa? false))
 
 
-(defn- raporttiparametrit [tyypit]
+(defn- raporttiparametrit [tyypit rivit]
   (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
-    {:urakkatyyppi (:arvo @nav/urakkatyyppi)
+    {:rivit rivit
+     :tyypit tyypit
+     :urakkatyyppi (:arvo @nav/urakkatyyppi)
      :alkupvm  (-> @u/valittu-aikavali first)
      :loppupvm (-> @u/valittu-aikavali second)
-     :sopimus (-> @u/valittu-sopimusnumero first)
-     :tyypit tyypit}))
+     :sopimus (-> @u/valittu-sopimusnumero first)}))
 
 
 (defn hae-tiedot
@@ -108,7 +109,7 @@
   (process-event [{:keys [vastaus]} app]
     (-> app
       (assoc :tyypit vastaus :haku-kaynnissa? false)
-      (assoc-in [:valinnat :raportti] (raporttiparametrit vastaus))))
+      (assoc-in [:valinnat :raportti] (raporttiparametrit vastaus (:rivit app)))))
 
   HaeTyypitEpaonnistui
   (process-event [{:keys [vastaus]} app]

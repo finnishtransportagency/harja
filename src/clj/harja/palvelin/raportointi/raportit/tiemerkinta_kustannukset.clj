@@ -3,29 +3,32 @@
   (:require [harja.pvm :as pvm]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.kanavat.raportointi :as k-raportointi]
-            [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-palvelu]
-            [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko rivi]]))
 
+(defonce ^{:private true} ei-kohdetta-teksti "Ei liity kohteeseen")
 (defonce ^{:private true} raportti-yhteenveto-otsikko "Yhteenveto")
 (defonce ^{:private true} raportti-sanktiot-otsikko "Sakot ja bonukset")
 (defonce ^{:private true} raportti-kustannukset-otsikko "Muut kustannukset")
-(defonce tyyppi-valinnat {:lisatyo "Lisätyö"
+(defonce tyyppi-valinnat {:kaikki "Kaikki"
+                          :lisatyo "Lisätyö"
                           :muu "Muu kustannus"
                           :muutostyo "Muutostyö"
-                          :arvonmuutos "Arvonmuutos"
-                          :indeksi "Indeksitarkistus"
-                          :sopimusalueen-muutos "Sopimusalueen muutos"
                           :yllapidon_sakko "Sakko"
                           :yllapidon_bonus "Bonus"
-                          :muut-kustannukset "Muut kustannukset"})
+                          :arvonmuutos "Arvonmuutos"
+                          :indeksi "Indeksitarkistus"
+                          :muut-kustannukset "Muut kustannukset"
+                          :sopimusalueen-muutos "Sopimusalueen muutos"})
 
 
 (defn- osion-otsikko [otsikko]
   [:otsikko-heading otsikko {:padding-top "50px"}])
 
 
-(defn- hae-lyhytnimet [db urakkatyyppi urakka-id]
+(defn- hae-lyhytnimet 
+  "Palauttaa valittujen urakoiden lyhytnimet
+   Fallback urakan pitkä nimi"
+  [db urakkatyyppi urakka-id]
   (let [urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
         lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi urakkatyyppi :vain-puuttuvat false :urakantila "kaikki"})
         ;; Tähän voi passata kokoelman urakka-iditä, jos halutaan suorittaa esim. hallintayksikkö kontekstissa 
@@ -51,7 +54,7 @@
     [:varillinen-teksti {:arvo maara :fmt :raha}]))
 
 
-(defn- koosta-sanktiot-taulukko [data rivien-maara yhteensa-hinta]
+(defn- koosta-sanktiot-taulukko [data rivien-maara yhteensa-hinta laji]
   (let [yhteenveto (sanktiot-rivi "Yhteensä" (str rivien-maara " kpl") "" "" yhteensa-hinta)
         tiedot {:rivin-tiedot (rivi
                                 {:otsikko "Käsitelty" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.4 :tyyppi :varillinen-teksti}
@@ -64,7 +67,7 @@
                            #(sanktiot-rivi
                               (pvm/pvm-aika-klo (:aika %))
                               (:laji %)
-                              (:kohde %)
+                              (or (:kohde %) ei-kohdetta-teksti)
                               (:perustelu %)
                               (:maara %))
                            data)
@@ -73,40 +76,34 @@
                 :oikealle-tasattavat #{4}}]
     (into ()
       [(taulukko tiedot)
-       (osion-otsikko raportti-sanktiot-otsikko)])))
+       (osion-otsikko (str raportti-sanktiot-otsikko " - Näytetään: (" laji ")"))])))
 
 
+; ---------------------------- ;
+;     Sanktiot ja bonukset 
+; ---------------------------- ;
 (defn sakot-ja-bonukset
   "Tiemerkintä sanktiot ja bonukset, raportin suoritusfunktio"
-  [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm] :as _parametrit}]
-  (let [lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
+  [db _user {:keys [urakkatyyppi urakka-id alkupvm loppupvm rivit laji] :as _parametrit}]
+  (let [laji (laji tyyppi-valinnat)
+        lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
         raportin-otsikko (raportin-otsikko lyhytnimet raportti-sanktiot-otsikko alkupvm loppupvm)
-
-        sankiot-ja-bonukset (laadunseuranta-palvelu/hae-urakan-sanktiot-ja-bonukset db user
-                              {:alku alkupvm
-                               :loppu loppupvm
-                               :urakka-id urakka-id
-                               :hae-sanktiot? true
-                               :hae-bonukset? true
-                               :vain-yllapitokohteettomat? false})
-
-        rivien-maara (count sankiot-ja-bonukset)
-        yhteensa-hinta (reduce + (map :summa sankiot-ja-bonukset))
-
-        rivit (mapcat
-                (fn [tapahtuma]
-                  (let [sarakkeet {:aika (:kasittelyaika tapahtuma)
-                                   :kohde (-> tapahtuma :yllapitokohde :nimi)
-                                   :laji (-> tapahtuma :laji tyyppi-valinnat)
-                                   :perustelu (or (-> tapahtuma :lisatieto) (-> tapahtuma :laatupoikkeama :paatos :perustelu))
-                                   :maara (-> tapahtuma :summa)}]
-                    [sarakkeet]))
-                sankiot-ja-bonukset)]
+        rivien-maara (count rivit)
+        yhteensa-hinta (reduce + (map :summa rivit))
+        raportti-rivit (mapcat
+                         (fn [tapahtuma]
+                           (let [sarakkeet {:aika (:kasittelyaika tapahtuma)
+                                            :kohde (-> tapahtuma :yllapitokohde :nimi)
+                                            :laji (-> tapahtuma :laji tyyppi-valinnat)
+                                            :perustelu (or (-> tapahtuma :lisatieto) (-> tapahtuma :laatupoikkeama :paatos :perustelu))
+                                            :maara (-> tapahtuma :summa)}]
+                             [sarakkeet]))
+                         rivit)]
 
     [:raportti {:nimi raportin-otsikko
                 :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
-     (koosta-sanktiot-taulukko rivit rivien-maara yhteensa-hinta)]))
+     (koosta-sanktiot-taulukko raportti-rivit rivien-maara yhteensa-hinta laji)]))
 
 
 (defn- kustannukset-rivi [aika tyyppi selite luokka hinta]
@@ -143,36 +140,30 @@
        (osion-otsikko raportti-kustannukset-otsikko)])))
 
 
+; ---------------------------- ;
+;      Muut kustannukset 
+; ---------------------------- ;
 (defn muut-kustannukset
   "Tiemerkintä muut kustannukset raportin suoritusfunktio"
-  [db user {:keys [urakkatyyppi urakka-id alkupvm loppupvm sopimus _tyypit] :as _parametrit}]
+  [db _user {:keys [urakkatyyppi urakka-id alkupvm loppupvm _sopimus _tyypit rivit] :as _parametrit}]
   (let [lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
         raportin-otsikko (raportin-otsikko lyhytnimet raportti-kustannukset-otsikko alkupvm loppupvm)
-
-        toteumat (yllapito-palvelu/hae-yllapito-toteumat
-                   db user
-                   {:urakka  urakka-id
-                    :sopimus sopimus
-                    :alkupvm  alkupvm
-                    :loppupvm loppupvm})
-
-        rivien-maara (count toteumat)
-        yhteensa-hinta (reduce + (map :hinta toteumat))
-
-        rivit (mapcat
-                (fn [toteuma]
-                  (let [sarakkeet {:aika (:pvm toteuma)
-                                   :tyyppi (-> toteuma :tyyppi tyyppi-valinnat)
-                                   :selite (-> toteuma :selite)
-                                   :luokka (-> toteuma :yllapitoluokka :nimi)
-                                   :hinta (-> toteuma :hinta)}]
-                    [sarakkeet]))
-                toteumat)]
+        rivien-maara (count rivit)
+        yhteensa-hinta (reduce + (map :hinta rivit))
+        raportin-rivit (mapcat
+                         (fn [toteuma]
+                           (let [sarakkeet {:aika (:pvm toteuma)
+                                            :tyyppi (-> toteuma :tyyppi tyyppi-valinnat)
+                                            :selite (-> toteuma :selite)
+                                            :luokka (-> toteuma :yllapitoluokka :nimi)
+                                            :hinta (-> toteuma :hinta)}]
+                             [sarakkeet]))
+                         rivit)]
 
     [:raportti {:nimi raportin-otsikko
                 :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
-     (koosta-kustannukset-taulukko rivit rivien-maara yhteensa-hinta)]))
+     (koosta-kustannukset-taulukko raportin-rivit rivien-maara yhteensa-hinta)]))
 
 
 (defn- yhteenveto-rivi [tyyppi hinta]
@@ -200,6 +191,9 @@
        (osion-otsikko raportti-yhteenveto-otsikko)])))
 
 
+; ---------------------------- ;
+;         Yhteenveto 
+; ---------------------------- ;
 (defn yhteenveto
   "Tiemerkintä yhteenveto raportin suoritusfunktio"
   [db _user {:keys [urakkatyyppi urakka-id alkupvm loppupvm _sopimus rivit] :as _parametrit}]

@@ -67,9 +67,11 @@
   (assoc app :haku-kaynnissa? false))
 
 
-(defn- raporttiparametrit []
+(defn- raporttiparametrit [rivit laji]
   (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
-    {:alkupvm  (-> @u/valittu-aikavali first)
+    {:laji laji
+     :rivit rivit
+     :alkupvm  (-> @u/valittu-aikavali first)
      :loppupvm (-> @u/valittu-aikavali second)
      :urakkatyyppi (:arvo @nav/urakkatyyppi)}))
 
@@ -125,7 +127,7 @@
   (process-event [{:keys [vastaus]} app]
     (hae-liitteet (-> app
                     (assoc :rivit vastaus :haku-kaynnissa? false)
-                    (assoc-in [:valinnat :raportti] (raporttiparametrit)))))
+                    (assoc-in [:valinnat :raportti] (raporttiparametrit vastaus (get-in app [:valinnat :valittu-laji]))))))
 
   HaeTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
