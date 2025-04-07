@@ -156,10 +156,8 @@
   UusiSanktio
   (process-event [{:keys [tyyppi]} app]
     (let [nyt (pvm/nyt)
-          default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)
           uusi-sanktio {:laji tyyppi
                         :suorasanktio true
-                        :perintapvm default-perintapvm
                         :toimenpideinstanssi (:tpi_id (first @u/urakan-toimenpideinstanssit))
                         :laatupoikkeama {:aika nyt
                                          :tekijanimi @istunto/kayttajan-nimi
@@ -169,7 +167,6 @@
                                                   :kasittelyaika (get-in app [:valittu-rivi :kasittelyaika])}}}
 
           uusi-bonus {:laji nil
-                      :perintapvm default-perintapvm
                       :kasittelyaika (get-in app [:valittu-rivi :kasittelyaika])
                       :toimenpideinstanssi (when (= 1 (count @u/urakan-toimenpideinstanssit))
                                              (:tpi_id (first @u/urakan-toimenpideinstanssit)))
@@ -192,8 +189,7 @@
       (assoc-in app [:valittu-rivi :virheita?] true)
 
       (let [rivi (lomake/ilman-lomaketietoja rivi)
-            {:keys [laji id summa indeksi
-                    perintapvm toimenpideinstanssi
+            {:keys [laji id summa indeksi toimenpideinstanssi
                     kasittelyaika lomake-selite laatupoikkeama]} rivi
 
             uudet-liitteet (:uudet-liitteet valittu-rivi)
@@ -201,11 +197,15 @@
             laatupoikkeama (-> laatupoikkeama
                              (assoc-in [:paatos :perustelu] lomake-selite)
                              (assoc-in [:paatos :kasittelyaika] kasittelyaika))
+            
+            sanktio (-> rivi 
+                      (assoc :perintapvm kasittelyaika)
+                      (dissoc :laatupoikkeama :yllapitokohde ))
 
             parametrit (cond
                          ;; Sakot 
                          (= laji :yllapidon_sakko)
-                         {:sanktio        (dissoc rivi :laatupoikkeama :yllapitokohde)
+                         {:sanktio        sanktio
                           :laatupoikkeama (assoc
                                             laatupoikkeama
                                             :urakka @nav/valittu-urakka-id
@@ -221,7 +221,7 @@
                            :suorasanktio true
                            :summa summa
                            :indeksi indeksi
-                           :perintapvm perintapvm
+                           :perintapvm kasittelyaika
                            :liitteet liitteet
                            :toimenpideinstanssi toimenpideinstanssi}
                           :laatupoikkeama {:id (:id laatupoikkeama)
