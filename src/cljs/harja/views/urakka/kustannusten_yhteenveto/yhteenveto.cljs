@@ -7,6 +7,7 @@
    [tuck.core :refer [tuck]]
    [harja.ui.ikonit :as ikonit]
    [harja.ui.komponentti :as komp]
+   [harja.tiedot.urakka.urakka :as urakka-tila]
    [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
    [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
    [harja.views.urakka.kustannusten-yhteenveto.yhteenveto-tiedot :as tiedot]))
@@ -64,4 +65,4 @@
 
 
 (defn kustannusten-yhteenveto []
-  [tuck tiedot/tila kustannusten-yhteenveto*])
+  [tuck urakka-tila/tiemerkinta-yhteenveto kustannusten-yhteenveto*])

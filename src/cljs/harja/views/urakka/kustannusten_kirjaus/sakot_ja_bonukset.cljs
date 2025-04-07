@@ -14,6 +14,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka-tiedot]
+            [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
             [harja.views.urakka.kustannusten-kirjaus.sakot-bonukset-tiedot :as tiedot]))
@@ -246,9 +247,11 @@
 (defn sakot-ja-bonukset* [e! _app]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan #(e! (tiedot/->HaeTiedot)))
+    (komp/sisaan #(do 
+                    (e! (tiedot/->ValitseLaji :kaikki))
+                    (e! (tiedot/->HaeTiedot))))
     (fn [e! app] [sakot-bonukset-listaus e! app])))
 
 
 (defn sakot-ja-bonukset []
-  [tuck tiedot/tila sakot-ja-bonukset*])
+  [tuck urakka-tila/tiemerkinta-sanktiot-ja-bonukset sakot-ja-bonukset*])

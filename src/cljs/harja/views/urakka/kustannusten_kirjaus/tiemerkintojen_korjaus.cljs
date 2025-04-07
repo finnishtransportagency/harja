@@ -75,4 +75,4 @@
           kustannukset]]))))
 
 (defn tiemerkintojen-korjaus []
-  [tuck tila/tiemerkinta-kustannukset tiemerkintojen-korjaus*])
+  [tuck tila/tiemerkinta-korjaukset tiemerkintojen-korjaus*])

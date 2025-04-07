@@ -9,7 +9,7 @@
              [reagent.core :refer [atom] :as reagent]
              [harja.tiedot.raportit :as raporttitiedot]))
 
-
+(defonce ^{:private true} raportti-avain :tiemerkinta-kustannukset-yhteenveto)
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
                                              :muokataan false
                                              :haku-kaynnissa? false
@@ -17,8 +17,6 @@
                                                         :aikavali (pvm/kuukauden-aikavali (pvm/nyt))}})
 
 (def nakymassa? (atom false))
-(defonce tila (atom nollatut-valinnat))
-(defonce ^{:private true} raportti-avain :tiemerkinta-kustannukset-yhteenveto)
 
 
 (defrecord HaeTiedot [])

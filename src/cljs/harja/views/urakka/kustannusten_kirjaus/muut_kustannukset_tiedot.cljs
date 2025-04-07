@@ -12,6 +12,7 @@
              [harja.domain.yllapitokohde :as yllapitokohteet-domain]
              [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
 
+(defonce ^{:private true} raportti-avain :tiemerkinta-muut-kustannukset)
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
                                              :valittu-rivi {}
                                              :muokataan false
@@ -20,8 +21,6 @@
                                                         :aikavali (pvm/kuukauden-aikavali (pvm/nyt))}})
 
 (def nakymassa? (atom false))
-(defonce tila (atom nollatut-valinnat))
-(defonce ^{:private true} raportti-avain :tiemerkinta-muut-kustannukset)
 
 
 (defrecord HaeTiedot [])

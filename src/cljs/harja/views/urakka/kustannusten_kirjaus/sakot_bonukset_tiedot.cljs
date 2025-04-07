@@ -23,7 +23,6 @@
 
 (defonce nakymassa? (atom false))
 (defonce ei-kohdetta-teksti "Ei liity kohteeseen")
-(defonce tila (atom (assoc-in nollatut-valinnat [:valinnat :valittu-laji] :kaikki)))
 
 
 (defn voi-tallentaa?
@@ -197,7 +196,10 @@
 
             uudet-liitteet (:uudet-liitteet valittu-rivi)
             yllapitokohde-id (-> rivi :yllapitokohde :id)
-            laatupoikkeama (assoc-in laatupoikkeama [:paatos :perustelu] lomake-selite)
+            laatupoikkeama (-> laatupoikkeama
+                             (assoc-in [:paatos :perustelu] lomake-selite)
+                             (assoc-in [:paatos :kasittelyaika] kasittelyaika))
+
             parametrit (cond
                          ;; Sakot 
                          (= laji :yllapidon_sakko)
