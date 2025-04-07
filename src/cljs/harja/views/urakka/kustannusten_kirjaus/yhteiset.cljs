@@ -78,7 +78,7 @@
   [otsikko lisaa-uusi-fn aikavali
    valinnat muokataan muokkauspaneeli grid laji-suodatin yhteenveto?]
   ;; Body 
-  [:div.tiemerkinta-muut-kustannukset
+  [:div.tiemerkinta-kustannusten-kirjaus
 
    ;; Otsikko / header, raporttiviennit
    [:div.header

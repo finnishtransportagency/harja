@@ -17,8 +17,7 @@
 
         "Tiemerkintöjen korjaus"
         :tiemerkintojen-korjaus
-        [:div "In-progress"]
-        ;[tiemerkintojen-korjaus/tiemerkintojen-korjaus]
+        [tiemerkintojen-korjaus/tiemerkintojen-korjaus]
 
         "Uusien päällysteiden merkinnät"
         :uusien-pallysteiden-merkinnat

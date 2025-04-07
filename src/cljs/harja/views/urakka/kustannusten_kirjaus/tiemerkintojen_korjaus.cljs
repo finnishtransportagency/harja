@@ -14,7 +14,7 @@
       (komp/lippu tiedot/kustannusten-kirjaus-valilehti-nakyvissa?)
       (komp/sisaan #(e! (tiedot/->HaeKustannukset urakka)))
       (fn [e! {:keys [kustannukset] :as app}]
-        [:div.livi-grid
+        [:div.livi-grid.tiemerkinta-kustannusten-kirjaus
          [:h1 "Tiemerkintöjen korjaus"]
          [grid/grid
           {:otsikko "Kustannukset vuosittain (sis. indeksimuutokset)"
