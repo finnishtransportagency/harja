@@ -52,14 +52,13 @@
 
   TallennaKustannukset
   (process-event [{tiedot :tiedot urakka :urakka} app]
-    (let [payload {:urakka urakka :tiedot (into []
-                                            (map (fn [m]
-                                                   (dissoc m :id))
-                                              tiedot))}]
-      (tuck-apurit/post! :tallenna-tiemerkinta-kustannuskirjaus
-        payload
-        {:onnistui ->TallennaKustannuksetOnnistui
-         :epaonnistui ->TallennaKustannuksetEpaonnistui})))
+    (tuck-apurit/post! :tallenna-tiemerkinta-kustannuskirjaus
+      {:urakka urakka :tiedot (into []
+                                (map (fn [m]
+                                       (dissoc m :id))
+                                  tiedot))}
+      {:onnistui ->TallennaKustannuksetOnnistui
+       :epaonnistui ->TallennaKustannuksetEpaonnistui}))
 
   TallennaKustannuksetOnnistui
   (process-event [{vastaus :vastaus} app]

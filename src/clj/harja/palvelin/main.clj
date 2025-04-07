@@ -216,7 +216,8 @@
   (log/info "Asetettiin clojure.async thread-poolin koko: " (Long/getLong "clojure.core.async.pool-size")))
 
 (defn luo-jarjestelma [asetukset]
-  (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
+  (let [{:keys [tietokanta tietokanta-replica http-palvelin 
+                kehitysmoodi todennus-varmistus sahke-headerit]} asetukset]
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
       :db (tietokanta/luo-tietokanta (assoc tietokanta
@@ -233,21 +234,20 @@
                     kehitysmoodi)
 
       :todennus (component/using
-                  (todennus/http-todennus (:sahke-headerit asetukset))
+                  (todennus/http-todennus sahke-headerit todennus-varmistus)
                   [:db])
       :http-palvelin (component/using
-                       (http-palvelin/luo-http-palvelin http-palvelin
-                         kehitysmoodi)
+                       (http-palvelin/luo-http-palvelin http-palvelin kehitysmoodi todennus-varmistus)
                        [:todennus :metriikka :db])
       ;; FIXME: Tuck-remoting otettu toistaiseksi pois testikäytöstä kokonaan, koska se ei toimi kunnolla
       #_#_:tuck-remoting (component/using
-                       (tuck-remoting/luo-tuck-remoting (:sahke-headerit asetukset))
-                       [:http-palvelin :db])
+                           (tuck-remoting/luo-tuck-remoting (:sahke-headerit asetukset))
+                           [:http-palvelin :db])
 
       ;; Tuck-remoting palvelu ilmoitusten välittämiseen WebSocketin yli
       #_#_:ilmoitukset-ws-palvelu (component/using
-                                (ilmoitukset-ws/luo-ilmoitukset-ws)
-                                [:tuck-remoting :db])
+                                    (ilmoitukset-ws/luo-ilmoitukset-ws)
+                                    [:tuck-remoting :db])
 
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
@@ -549,8 +549,8 @@
                           [:http-palvelin :db :excel-vienti])
 
       :kustannukset (component/using
-                          (kustannukset-palvelu/->Kustannukset)
-                          [:http-palvelin :db])
+                      (kustannukset-palvelu/->Kustannukset)
+                      [:http-palvelin :db])
 
       :tyomaapaivakirja (component/using
                           (tyomaapaivakirja-palvelu/->Tyomaapaivakirja (:kehitysmoodi asetukset))
@@ -833,7 +833,7 @@
       (component/using
         (tarjoushinnat-hallinta/->TarjoushinnatHallinta)
         [:http-palvelin :db])
-      
+
       :lupaukset-hallinta
       (component/using
         (lupaukset-hallinta/->LupauksetHallinta)

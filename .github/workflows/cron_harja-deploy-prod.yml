@@ -19,9 +19,11 @@ on:
         default: false
         required: false
   # Ajastettu käynnistys
-  # Ajetaan deployment joka arkipäivä klo 7 (Huom, GitHub actions on UTC-aikavyöhykkeessä)
+  # Ajetaan deployment joka arkipäivä klo 7
+  # GitHub actions on UTC-aikavyöhykkeessä, joten erilliset säännöt karkeasti kesä- ja talviaikaan
   schedule:
-    - cron: '0 5 * * 1-5'
+    - cron: '0 5 * 11-12,1-3 1-5'
+    - cron: '0 4 * 4-10 1-5'
 
 # Aseta least-privilege default permissionit workflowille
 # Jos jokin job tarvitsee enemmän oikeuksia, ne pitää erikseen määritellä job-kohtaisesti

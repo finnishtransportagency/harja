@@ -4,7 +4,10 @@
             [harja.kyselyt.kustannusten-kirjaus :as q]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
+            [taoensso.timbre :as log]
+            [slingshot.slingshot :refer [throw+]]
             [harja.pvm :as pvm]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
 (defn default-kustannuslista
@@ -44,12 +47,26 @@
                              db {:urakka urakka-id :kustannusvuosi kustannusvuosi})))]
     vastaus))
 
+
+(defn validoi-rivi [rivi]
+  (let [summa (->> [:pk1 :pk2 :pk3]
+                (map #(get rivi % 0))
+                (reduce +)
+                float)]
+    (when-not (= 100.0 summa)
+      (log/error "PK-osuuksien summan on oltava 100, saatiin:" summa)
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                          :viesti "PK-osuuksien summan on oltava 100"}]}))))
+
+
 (defn tallenna-tiemerkinta-kustannuskirjaukset
   [db user tiedot]
   (let [urakka-id (get-in tiedot [:urakka :id])]
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinnan user)
     (doseq [tieto (:tiedot tiedot)]
-      (assert (= 100.0 (float (reduce + (map #(get tieto % 0) [:pk1 :pk2 :pk3]))))) "PK-osuuksien summa on oltava 100")
+      (when (< 0.0M (bigdec (:kustannus tieto)))
+        (validoi-rivi tieto)))
     (doseq [tieto (:tiedot tiedot)]
       (if (empty? (hae-tiemerkinta-kustannuskirjaus-kustannusvuodella db user {:urakka-id urakka-id :kustannusvuosi (:kustannusvuosi tieto)}))
         (q/lisaa-tiemerkinta-kustannuskirjaus! db

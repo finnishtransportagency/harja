@@ -35,7 +35,10 @@ $$
         FROM ra1
         UNION ALL
         SELECT id, 7.0, FALSE, 2023, _luotu, _kayttaja
-        FROM ra1;
+        FROM ra1
+        UNION ALL
+        SELECT id, 7.0, FALSE, 2024, _luotu, _kayttaja
+          FROM ra1;
 
         -- Pohjavesialue: Jääli
         WITH ra2 AS (
