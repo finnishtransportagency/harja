@@ -14,7 +14,7 @@
                                       (fn [rajoitusalue]
                                         (let [_ (log/debug "Käsittelyssä " @numero "/" (count rajoitusalueet))
                                               _ (reset! numero (inc @numero))
-                                              tiedot (suolarajoitus-palvelu/hae-tierekisterin-tiedot db user rajoitusalue)]
+                                              tiedot (suolarajoitus-palvelu/hae-tieosoitteen-ja-ajoratojen-pituudet db user rajoitusalue)]
                                           (when (or
                                                   (not= (:pituus-kannasta rajoitusalue) (:pituus tiedot))
                                                   (not= (:ajoradan-pituus-kannasta rajoitusalue) (:ajoratojen_pituus tiedot)))
