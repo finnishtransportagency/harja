@@ -210,18 +210,8 @@ CREATE TABLE urakka_parametrit
     urakkaid                                            INTEGER   NOT NULL,
     indeksi_kaytossa_sanktiolla                         BOOLEAN,       -- Onko indeksikorjaus käytössä sanktioilla. -19/20 alkavilla urakoilla käytössä, muilla ei
     indeksi_kaytossa_bonuksella                         BOOLEAN,       -- Onko indeksikorjaus käytössä bonuksella. -19/20 alkavilla urakoilla käytössä asiakastyytyväisyysbonuksella, muilla ei
-    --toimenkuvat                                        TEXT[],        -- Sopimusvastaava, Vastuunalainen työnjohtaja, Päätöiminen apulainen (talvikausi) jne.
-    --hoitokauden_alun_indeksin_kaava                    TEXT,          -- Indeksikorjauksen kaava hoitokauden alussa
-    --hoitokauden_lopun_indeksikorjaus_kaytossa          BOOLEAN,       -- Onko hoitokauden lopun indeksikorjaus käytössä
-    --hoitokauden_lopun_indeksin_kaava                   TEXT,          -- Indeksikorjauksen kaava hoitokauden lopussa
-    --indeksin_kustannukset                              TEXT[],        -- Mitkä kustannukset indeksikorjataan, esim: sanktiot, bonukset, tavoitehinnan muutokset
     lupauspaatoksen_bonusprosentti                      DECIMAL(4, 2), -- Luvatun pistemäärän ylittävää pistettä kohden maksettava bonusprosentti tarjouksen tavoitehinnasta
     lupauspaatoksen_sanktioprosentti                    DECIMAL(4, 2), -- Luvatun pistemäärän alittavaa pistettä kohden maksettava sanktioprosentti tarjouksen tavoitehinnasta
-
-    --hoitokauden_lopun_tavoitehinta_kaava               TEXT,          -- Kaava hoitokauden lopun tavoitehinnan laskemiseen
-    --laskutusraja_kaytossa                              BOOLEAN,       -- Onko laskutusraja käytössä
-    --laskutusrajan_ylitys_kaava                         TEXT,          -- Kaava laskutusrajan sanktion laskemiseen
-    --kattohinta_laskukaava                              TEXT,          -- Kaava kattohinnan laskemiseen, onko 10% vai lasketaanko käsin
     lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus BOOLEAN, -- -24 alkaen hoitovuoden lopun tavoitehintaan lisätään myös hiotovuoden lopun indeksikorjaus
     hoitokauden_lopun_kattohinta_kerroin                DECIMAL(4, 2), -- Kaava kattohinnan laskemiseen, voi olla 1.1 tai 1.2 kertaa hoitovuoden lopun tavoitehinta, joka sekin lasketaan eri tavalla eri vuosina
     muokkaa_kattohinta_kasin                            BOOLEAN,       -- -19/20 alkavilla urakoilla kattohinta annetaan käsin, muilla 10% tavoitehinnasta
@@ -230,9 +220,6 @@ CREATE TABLE urakka_parametrit
     tavoitehinnan_ylityksen_tilaajan_maksuprosentti     DECIMAL(4, 2), -- Tavoitehinnan ylityksen maksuprosentti tilaajalle (kattohintaan asti)
     tavoitepalkkion_maksuprosentti                      DECIMAL(4, 2), -- Tavoitepalkkion maksuprosentti. Voi olla esim 30% tavoitehinnan alituksesta tai 75% alennuksesta
     tavoitepalkkion_maksimi                             DECIMAL(4, 2), -- Tavoitepalkkion maksimi määrä prosentteina
-    --maaratyt_sanktiot                                   TEXT[],        -- Mitkä sanktiot on määrätty käyttöön
-    --maaratyt_bonukset                                   TEXT[],        -- Mitkä bonukset on määrätty käyttöön
-    --sanktion_kaava                                      TEXT,          -- Kaava sanktioiden laskemiseen
     luotu                                               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     muokattu                                            TIMESTAMP          DEFAULT CURRENT_TIMESTAMP,
     luoja                                               INTEGER   NOT NULL,
@@ -241,14 +228,26 @@ CREATE TABLE urakka_parametrit
     FOREIGN KEY (muokkaaja) REFERENCES kayttaja (id),
     FOREIGN KEY (urakkaid) REFERENCES urakka (id)
 );
+COMMENT ON COLUMN urakka_parametrit.indeksi_kaytossa_sanktiolla IS 'Onko indeksikorjaus käytössä sanktioilla. -19/20 alkavilla urakoilla käytössä, muilla ei.';
+COMMENT ON COLUMN urakka_parametrit.indeksi_kaytossa_bonuksella IS 'Onko indeksikorjaus käytössä bonuksella. -19/20 alkavilla urakoilla käytössä asiakastyytyväisyysbonuksella, muilla ei.';
+COMMENT ON COLUMN urakka_parametrit.lupauspaatoksen_bonusprosentti IS 'Luvatun pistemäärän ylittävää pistettä kohden maksettava bonusprosentti tarjouksen tavoitehinnasta.';
+COMMENT ON COLUMN urakka_parametrit.lupauspaatoksen_sanktioprosentti IS 'Luvatun pistemäärän alittavaa pistettä kohden maksettava sanktioprosentti tarjouksen tavoitehinnasta.';
+COMMENT ON COLUMN urakka_parametrit.lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus IS '-24 alkaen hoitovuoden lopun tavoitehintaan lisätään myös hiotovuoden lopun indeksikorjaus.';
+COMMENT ON COLUMN urakka_parametrit.hoitokauden_lopun_kattohinta_kerroin IS 'Kaava kattohinnan laskemiseen, voi olla 1.1 tai 1.2 kertaa hoitovuoden lopun tavoitehinta, joka sekin lasketaan eri tavalla eri vuosina.';
+COMMENT ON COLUMN urakka_parametrit.muokkaa_kattohinta_kasin IS '-19/20 alkavilla urakoilla kattohinta annetaan käsin, muilla 10% tavoitehinnasta.';
+COMMENT ON COLUMN urakka_parametrit.kattohintaylityksen_siirron_prosenttirajoitus IS 'Esim 0.03 (prosenttia) vuonna -25 alkavilla urakoilla.';
+COMMENT ON COLUMN urakka_parametrit.tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti IS 'Kuinka monta prosenttia urakoitsija maksaa ylityksen kustannuksista.';
+COMMENT ON COLUMN urakka_parametrit.tavoitehinnan_ylityksen_tilaajan_maksuprosentti IS 'Tavoitehinnan ylityksen maksuprosentti tilaajalle (kattohintaan asti).';
+COMMENT ON COLUMN urakka_parametrit.tavoitepalkkion_maksuprosentti IS 'Tavoitepalkkion maksuprosentti. Voi olla esim 30% tavoitehinnan alituksesta tai 75% alennuksesta.';
+COMMENT ON COLUMN urakka_parametrit.tavoitepalkkion_maksimi IS 'Tavoitepalkkion maksimi määrä prosentteina. Esim 3';
 
 -- Mahdollistetaan järjestelmäasetusten asettaminen.
 -- Saman tyyppinen ajatus kuin urakan parametreissa, mutta nämä asetukset vaikuttavat koko järjestelmään
+-- Tätä on loogista jatkaa vaikka lisäämällä sama vipu kulujen luomiselle, lupausten luomiselle tai vaikka kustannusten suunnittelun muokkaamiselle.
 CREATE TABLE jarjestelman_asetukset
 (
     id                                 SERIAL PRIMARY KEY,
     validatselmus_validoinnit_kaytossa BOOLEAN   DEFAULT TRUE, -- Tämä asetetaan hallinnasta
-    -- Lisää kulujen luomiselle ja lupausten luomiselle omat vivut, jotka voi ottaa pois päältä
     muokattu                           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     muokkaaja                          INTEGER,
     FOREIGN KEY (muokkaaja) REFERENCES kayttaja (id)
