@@ -13,7 +13,7 @@
   (komp/luo
     (fn []
       [:span.kustannusten-kirjaus
-       [bs/tabs {:style :tabs :classes "tabs-tabs2"
+       [bs/tabs {:style :tabs :classes "tabs-taso2"
                  :active (nav/valittu-valilehti-atom :kustannusten-kirjaus)}
 
         "Tiemerkintöjen korjaus"

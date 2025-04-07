@@ -4,7 +4,6 @@
     [harja.ui.komponentti :as komp]
     [harja.ui.grid :as grid]
     [harja.fmt :as fmt]
-    [harja.tiedot.urakka.urakka :as tila]
     [harja.tyokalut.tuck :as tuck-apurit]
     [tuck.core :refer [tuck]]
     [harja.tiedot.urakka.tiemerkkinnan-kustannusten-kirjaus :as tiedot]))
