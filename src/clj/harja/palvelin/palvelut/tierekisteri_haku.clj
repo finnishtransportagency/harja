@@ -158,12 +158,22 @@
       1))
 
 (defn hae-osien-tiedot
+  "Hae tieosoitteen osien tiedot, kuten kokonaispituus, sekä ajoratakohtainen erottelu.
+  Parametrit sisään muodossa tr-numero tr-alkuosa tr-loppuosa]"
   [db params]
   {:pre (s/valid? ::yllapitokohde/tr-paalupiste params)}
   (tv/hae-trpisteiden-valinen-tieto-yhdistaa db params))
 
 (defn hae-tienumerot-kartalle [db params]
   (tv/hae-tiet-alueella db params))
+
+(defn tieosoitteen-ajoratakilometrit
+  "Hakee annetun tieosoitteen ajoratakilometrit, siten että kaksiajorataisissa kohdissa lasketaan kilometrit tuplana.
+  Hyödyntää ns. kaista-aineistoa taustalla. Tieosoite muodossa :tr-numero, :tr-alkuosa, ..."
+  [db {:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tieosoite}]
+  (assert (and tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys) "Annettava kaikki tieosoitteen kentät")
+  (let [ajoratakilometrit (tv/tieosoitteen-ajoratakilometrit-kaistaaineistosta db (tr-domain/tr-osoite-kasvusuuntaan tieosoite))]
+    (when ajoratakilometrit (int ajoratakilometrit))))
 
 (defrecord TierekisteriHaku []
   component/Lifecycle
@@ -206,13 +216,14 @@
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
-                     :hae-tr-pisteilla
-                     :hae-tr-pisteella
-                     :hae-tr-viivaksi
-                     :hae-osien-pituudet
-                     :hae-tr-pituudet
-                     :hae-tr-tiedot
-                     :hae-tr-osan-ajoradat
-                     :hae-tr-osan-ajoratojen-geometriat
-                     :hae-tr-gps-koordinaateilla)
+      :hae-tr-pisteilla
+      :hae-tr-pisteella
+      :hae-tr-viivaksi
+      :hae-osien-pituudet
+      :hae-tr-pituudet
+      :hae-tr-tiedot
+      :hae-tr-osan-ajoradat
+      :hae-tr-osan-ajoratojen-geometriat
+      :hae-tr-gps-koordinaateilla
+      :hae-tienumerot-kartalle)
     this))
