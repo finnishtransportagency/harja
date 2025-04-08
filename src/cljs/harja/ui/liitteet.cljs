@@ -135,7 +135,7 @@
           (when salli-poisto?
             [liitteen-poisto tiedosto poista-liite-fn])]
          (when-not virustarkastettu?
-           [:span.virustarkistus (str "Virustarkastus käynnissä. Liitteen voi avata, kun tarkastus on tehty.")])]
+           [:div.virustarkistus "Virustarkastus käynnissä. Liitteen voi avata, kun tarkastus on tehty."])]
         [:div.liite-rivi
          [:a.liite-linkki
           {:target "_blank" :href (k/liite-url (:id tiedosto))}

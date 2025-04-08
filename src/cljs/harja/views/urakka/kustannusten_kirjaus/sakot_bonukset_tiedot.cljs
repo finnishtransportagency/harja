@@ -18,6 +18,7 @@
                                              :liitteet {}
                                              :valittu-rivi {}
                                              :muokataan false
+                                             :ladatut-rivit nil
                                              :haku-kaynnissa? true
                                              :valinnat {:raportti {}}})
 
@@ -107,11 +108,11 @@
   "Lisää liitteen jokaiselle toteumalle
    Toteuman :id arvo vastaa liitteen :sanktio_id arvoa"
   [app vastaus]
-  (update app :rivit (fn [rivit]
-                       (mapv (fn [rivi]
-                               (let [sanktion-liitteet (into [] (filter #(= (:sanktio_id %) (:id rivi)) vastaus))]
-                                 (assoc rivi :liitteet sanktion-liitteet)))
-                         rivit))))
+  (update app :ladatut-rivit (fn [rivit]
+                               (mapv (fn [rivi]
+                                       (let [sanktion-liitteet (into [] (filter #(= (:sanktio_id %) (:id rivi)) vastaus))]
+                                         (assoc rivi :liitteet sanktion-liitteet)))
+                                 rivit))))
 
 
 (extend-protocol tuck/Event
@@ -126,7 +127,10 @@
   HaeTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
     (hae-liitteet (-> app
-                    (assoc :rivit vastaus :haku-kaynnissa? false)
+                    ;; Miksi :ladatut-rivit rivit -
+                    ;; Halutaan pitää :rivit vielä tyhjänä, jotta ajax-loader näkyy
+                    ;; Ja näytetään rivit vasta kun kaikki tiedot on ladattu sekä liitteet liitetty
+                    (assoc :ladatut-rivit vastaus)
                     (assoc-in [:valinnat :raportti] (raporttiparametrit vastaus (get-in app [:valinnat :valittu-laji]))))))
 
   HaeTiedotEpaonnistui
@@ -142,8 +146,11 @@
     (epaonnistui vastaus app))
 
   HaeKohteetOnnistui
-  (process-event [{:keys [vastaus]} app]
-    (assoc app :kohteet vastaus))
+  (process-event [{:keys [vastaus]} {:keys [ladatut-rivit] :as app}]
+    (-> app
+      (assoc :kohteet vastaus)
+      (assoc :rivit ladatut-rivit)
+      (assoc :haku-kaynnissa? false)))
 
   HaeKohteetEpaonnistui
   (process-event [{:keys [vastaus]} app]
