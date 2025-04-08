@@ -4,21 +4,17 @@
             [clojure.string :as str]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-            [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.ui.modal :as modal]
             [harja.ui.viesti :as viesti]
             [harja.ui.lomake :as lomake]
             [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :refer [<!]]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as paikkauskohteet-kartalle]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.tierekisteri :as tr-domain])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.domain.tierekisteri :as tr-domain]))
 
 (def lomakkeen-pituuskentat (atom {:pituus nil :tie nil :aosa nil :aet nil :losa nil :let nil}))
 
@@ -163,20 +159,24 @@
     lomake))
 
 (defn hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt hae-aluekohtaiset-paikkauskohteet?] :as app}]
+  ;; Piilottaa kartan kun haku tehdään, kartta on näkymässä hyvä, mutta taulukossa asiat tapahtuu
+  (nav/vaihda-kartan-koko! :S)
+
   (let [alkupvm (pvm/->pvm (str "1.1." valittu-vuosi))
         loppupvm (pvm/->pvm (str "31.12." valittu-vuosi))]
     (tuck-apurit/post! :paikkauskohteet-urakalle
-                       {:urakka-id urakka-id
-                        :tilat (tilat-hakuun valitut-tilat)
-                        :alkupvm alkupvm
-                        :loppupvm loppupvm
-                        :tyomenetelmat valitut-tyomenetelmat
-                        :elyt valitut-elyt
-                        :hae-alueen-kohteet? hae-aluekohtaiset-paikkauskohteet?}
-                       {:onnistui ->HaePaikkauskohteetOnnistui
-                        :epaonnistui ->HaePaikkauskohteetEpaonnistui
-                        :paasta-virhe-lapi? true})
-    (assoc app :haku-kaynnissa? true)))
+      {:urakka-id urakka-id
+       :tilat (tilat-hakuun valitut-tilat)
+       :alkupvm alkupvm
+       :loppupvm loppupvm
+       :tyomenetelmat valitut-tyomenetelmat
+       :elyt valitut-elyt
+       :hae-alueen-kohteet? hae-aluekohtaiset-paikkauskohteet?}
+      {:onnistui ->HaePaikkauskohteetOnnistui
+       :epaonnistui ->HaePaikkauskohteetEpaonnistui
+       :paasta-virhe-lapi? true})
+    ;; Assoccaa paikkauskohteet nil, jotta loader tulee näkyviin (gridin :tyhja arvo)
+    (assoc app :haku-kaynnissa? true :paikkauskohteet nil)))
 
 (defn paikkauskohde-id->nimi [app id]
   (:name (first (filter #(= id (:id %)) (:paikkauskohteet app)))))
@@ -522,28 +522,28 @@
                                                       (harja.geo/extent (:sijainti p))))
                                                   paikkauskohteet)))]
       (do
-        (if (and (not (nil? paikkauskohteet))
-                 (not (empty? paikkauskohteet))
-                 (not (nil? zoomattavat-geot))
-                 (not (empty? zoomattavat-geot)))
+        (if (and
+              (not (nil? paikkauskohteet))
+              (not (empty? paikkauskohteet))
+              (not (nil? zoomattavat-geot))
+              (not (empty? zoomattavat-geot)))
           ;; Jos paikkauskohteita löytyy, resetoi kartta
           (do
             (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
             (reset! paikkauskohteet-kartalle/valitut-kohteet-atom (set (mapv :id paikkauskohteet))))
           ;; Jos paikkauskohteita ei löydy, poistetaan kaikki aiemmat paikkauskohteet kartalta
-          (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet [])
-          )
+          (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet []))
         (-> app
-            (dissoc :haku-kaynnissa?)
-            (assoc :pmr-lomake nil)
-            (assoc :toteumalomake nil)
-            (assoc :paikkauskohteet paikkauskohteet)))))
+          (assoc :pmr-lomake nil)
+          (assoc :toteumalomake nil)
+          (assoc :haku-kaynnissa? false)
+          (assoc :paikkauskohteet paikkauskohteet)))))
 
   HaePaikkauskohteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
       (viesti/nayta-toast! "Paikkauskohteiden haku epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
-      (dissoc app :haku-kaynnissa?)))
+      (assoc app :haku-kaynnissa? false)))
 
   PaivitaLomake
   (process-event [{lomake :lomake} app]
@@ -570,7 +570,7 @@
                                 ->TallennaPaikkauskohdeOnnistui
                                 ->TallennaPaikkauskohdeEpaonnistui
                                 [(not (nil? (:id paikkauskohde)))])
-        app)))
+        (assoc app :haku-kaynnissa? true :paikkauskohteet nil))))
 
   TallennaPaikkauskohdeOnnistui
   (process-event [{muokattu :muokattu paikkauskohde :paikkauskohde} app]
@@ -633,7 +633,7 @@
                                 ->TallennaPaikkauskohdeOnnistui
                                 ->TallennaPaikkauskohdeEpaonnistui
                                 [(not (nil? (:id paikkauskohde)))])
-        app)))
+        (assoc app :haku-kaynnissa? true :paikkauskohteet nil))))
 
   TilaaPaikkauskohdeOnnistui
   (process-event [{vastaus :vastaus} app]
