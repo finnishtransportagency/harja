@@ -50,7 +50,7 @@
                   ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
                   (= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
                   {:otsikko "Valmistuminen"
-                   :leveys 1.7
+                   :leveys 2.5
                    :nimi :loppupvm-arvio}
                   ;; Tilaajalle näytetään ja päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
                   ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
@@ -69,19 +69,38 @@
                           [:span {:style {:color "#646464"}} (pvm/pvm-aika-opt arvo)])}
                   ;; Defaulttina eli esim alueurakoitsijalle ei näytetä koko kenttää
                   :else nil)
-                
+
                 {:otsikko "NRO"
                  :leveys 1.5
                  :nimi :ulkoinen-id}
                 {:otsikko "Nimi"
-                 :leveys 4
+                 :leveys 3.5
                  :nimi :nimi}
                 {:otsikko "Tila"
-                 :leveys 1.7
+                 :leveys 2
                  :nimi :paikkauskohteen-tila
                  :fmt (fn [arvo]
                         [yleiset/tila-indikaattori arvo {:fmt-fn paikkaus/fmt-tila}])
-                 :solun-luokka (fn [arvo _] (str arvo "-bg"))}
+                 :solun-luokka (fn [arvo _]
+                                 (str arvo "-bg"))}
+                
+                ;; Tiemerkinnän tilan indikointi
+                {:otsikko-komp (fn [_ _]
+                                 "Tiemerkinnän tila")
+                 :leveys 3
+                 :nimi :tiemerkinnan-tila
+                 :tyyppi :komponentti
+                 :komponentti (fn [_rivi]
+                                (let [tilat-test [{:nimi "Käsittelemättä" :valittu? false}
+                                                  {:nimi "Ei tehdä" :valittu? false}
+                                                  {:nimi "Tiemerkintä tehty" :valittu? false}]]
+
+                                  [:div.col-xs-2 {:on-click #(.stopPropagation %)}
+                                   [valinnat/checkbox-pudotusvalikko tilat-test (fn [tila valittu?]
+                                                                                  (println "\n tila: " tila " valittu? " valittu?))
+                                    ["tttt" "tttt"]
+                                    {:vayla-tyyli? true :disabled haku-kaynnissa?}]]))}
+
                 {:otsikko "Menetelmä"
                  :leveys 4
                  :nimi :tyomenetelma
