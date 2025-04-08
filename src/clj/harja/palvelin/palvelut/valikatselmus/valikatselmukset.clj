@@ -521,9 +521,7 @@
   (jdbc/with-db-transaction [db db]
     (let [validaatio #{}
           urakka-id (:urakkaid paatos)
-          urakka (first (q-urakat/hae-urakka db urakka-id))
           hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
-          versio (:versio paatos)
           ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
           tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
@@ -537,7 +535,7 @@
                        validaatio)
           _ (if (seq validaatio)
               (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
-              (paatos-kyselyt/tee-tavoitehinnan-muutospaatos db urakka-id paatos))]
+              (paatos-kyselyt/tee-tavoitehinnan-muutospaatos db urakka-id paatos (:id kayttaja)))]
 
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))

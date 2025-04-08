@@ -1,10 +1,12 @@
 (ns harja.kyselyt.paatos-kyselyt
   (:require [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [jeesql.core :refer [defqueries]]
             [slingshot.slingshot :refer [throw+]]
             [clojure.spec.alpha :as s]
-            [harja.domain.valikatselmus :as valikatselmus-domain]))
+            [harja.domain.valikatselmus :as valikatselmus-domain]
+            [harja.kyselyt.urakat :as q-urakat]))
 
 (defqueries "harja/kyselyt/paatos_kyselyt.sql"
   {:positional? true})
@@ -19,7 +21,7 @@
   tee-hoidonjohtopalkkio-paatos<! hae-hoidonjohtopalkkiopaatos poista-hoidonjohtopalkkio-paatos<! hae-hoidonjohtopalkkiopaatokset
   tee-poytakirjan-raporttipaatos<! hae-poytakirjan-raporttipaatos poista-poytakirjan-raporttipaatos<! hae-poytakirjan-raporttipaatokset
   hae-hoitokauden-lopun-indeksikorjaus
-  hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle)
+  hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle paivita-kattohinta<!)
 
 (defn heita-virhe [viesti] (throw+ {:type "Error"
                                     :virheet {:koodi "ERROR" :viesti viesti}}))
@@ -115,11 +117,14 @@
   :tavoitehinta <tavoitehinta>
   :kattohinta <tavoitehinta>
   :luoja <kuka>}"
-  [db urakkaid paatos]
+  [db urakkaid paatos kayttajaid]
   ;; Varmistetaan, että tarvittavat tiedot on annettu
   ;;TODO: Tee validaatio
 
-  (let [validaatio #{}
+  (let [urakan-tiedot (first (q-urakat/hae-urakkan-tiedot db urakkaid))
+        urakan-alkuvuosi (-> urakan-tiedot :alkupvm (pvm/vuosi))
+        hoitovuosinro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/->pvm (str "1.10." (:hoitokauden_alkuvuosi paatos))))
+        validaatio #{}
         ;; Validoi perustietojen pakollisuus
         valid (s/valid? ::valikatselmus-domain/tavoitehinnan-muutospaatos paatos)
         _ (when-not valid
@@ -132,7 +137,16 @@
       (do
         (log/error "Virheellinen tavoitehinnan muutospäätös:" paatos)
         (heita-virhe (str "Tavoitehinnan muutospäätöksessä virheitä: " (clojure.string/join ", " validaatio))))
-      (tee-tavoitehinnan-muutos-paatos<! db paatos))))
+      (do
+        ;; Tallenna uudet tiedot tietokantaan
+        (let [uusi-paatos (tee-tavoitehinnan-muutos-paatos<! db paatos)
+              ;; Jos urakan alkuvuosi on 19/20, niin päivitetään myös kattohinta urakka_tavoite tauluun
+              _ (when (or (= urakan-alkuvuosi 2019) (= urakan-alkuvuosi 2020))
+                  (paivita-kattohinta<! db {:urakkaid urakkaid
+                                            :kattohinta (:kattohinta paatos)
+                                            :hoitovuosinro hoitovuosinro
+                                            :muokkaaja kayttajaid}))]
+          uusi-paatos)))))
 
 (defn poista-tavoitehinnan-muutospaatos [db urakkaid kayttajaid paatosid]
   (let [;; Varmistetaan ensin, että lupaus löytyy annetulla id:llä ja että se kuuluu annetulle urakalle

@@ -499,7 +499,7 @@
         kattohinta 5M
         paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)]
     (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
     ;; -124 alkavalla urakalla pitää olla kattohinta 10% tavoitehinnasta
     (is (= false (:muokkaa_kattohinta vastaus)))))
@@ -515,7 +515,16 @@
         kattohinta 5M
         paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)
+
+        ;; Kun kattohinta on käsin asetettu uusiksi, niin sen täytyy vaikuttaa urakka_tavoite taulun kattohintaan
+        ;; Varmistetaan, että näin on tapahtunut
+        hoitokaudennro 2                                    ;; Oulun urakka alkaa 2019, joten joten 2020 on hoitokauden 2
+        urakkatavoite (first (q-map (format "SELECT * FROM urakka_tavoite
+                                       WHERE urakka = %s
+                                         AND hoitokausi = %s" urakkaid hoitokaudennro)))
+        _ (is (= kattohinta (:kattohinta urakkatavoite)) "Kattohinta on asetettu oikein urakka_tavoite tauluun")
+        _ (is (= kattohinta (:kattohinta_indeksikorjattu urakkatavoite)) "Kattohinta on asetettu oikein urakka_tavoite tauluun")]
     (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
     ;; -19 alkavalla urakalla pitää olla kattohinta käsin muokattavana
     (is (= true (:muokkaa_kattohinta vastaus)))))
@@ -554,7 +563,7 @@
         tavoitehinta 5M
         kattohinta 5M
         paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
-        _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos)
+        _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Tavoitehinnan muutokset" :tyyppi "A" :jarjestys 4}]
