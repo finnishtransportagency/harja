@@ -167,9 +167,7 @@
             (log/error (s/explain-str ::valikatselmus-domain/tavoitehinnan-alituspaatos paatos)))
         validaatio (if valid
                      validaatio
-                     (conj validaatio "Puutteelliset tavoitehinnan alituspäätöstiedot."))
-        ;; TODO: Tarvitseeko vertailla kulu_id:t ja siirron määrä?
-        ]
+                     (conj validaatio "Puutteelliset tavoitehinnan alituspäätöstiedot."))]
 
     (if (seq validaatio)
       (do

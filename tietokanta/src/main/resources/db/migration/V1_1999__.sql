@@ -226,7 +226,7 @@ CREATE TABLE urakka_parametrit
     muokkaaja                                           INTEGER,
     FOREIGN KEY (luoja) REFERENCES kayttaja (id),
     FOREIGN KEY (muokkaaja) REFERENCES kayttaja (id),
-    FOREIGN KEY (urakkaid) REFERENCES urakka (id)
+    FOREIGN KEY (urakkaid) REFERENCES urakka (id) ON DELETE CASCADE
 );
 COMMENT ON COLUMN urakka_parametrit.indeksi_kaytossa_sanktiolla IS 'Onko indeksikorjaus käytössä sanktioilla. -19/20 alkavilla urakoilla käytössä, muilla ei.';
 COMMENT ON COLUMN urakka_parametrit.indeksi_kaytossa_bonuksella IS 'Onko indeksikorjaus käytössä bonuksella. -19/20 alkavilla urakoilla käytössä asiakastyytyväisyysbonuksella, muilla ei.';
