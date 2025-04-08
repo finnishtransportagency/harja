@@ -101,6 +101,8 @@
         :desimaalien-maara 2
         :validoi [[:ei-tyhja "Täytä arvo"]]
         :leveys 2
+        :tasaa :oikea
+        :fmt (partial fmt/euro-opt false true)
         :elementin-id (str "summa-" uusi-id)}]
       hoitokauden-oikaisut-atom]]))
 
