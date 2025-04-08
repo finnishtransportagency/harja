@@ -24,7 +24,7 @@
 
 ;; Kattohinnan oikaisut
 (defrecord KattohinnanOikaisuaMuokattu [kattohinta])
-(defrecord TallennaKattohinnanOikaisu [])
+(defrecord TallennaKattohinnanOikaisu [uusi-kattohinta])
 (defrecord TallennaKattohinnanOikaisuOnnistui [vastaus id])
 (defrecord TallennaKattohinnanOikaisuEpaonnistui [vastaus])
 (defrecord PoistaKattohinnanOikaisu [])
@@ -217,8 +217,8 @@
     (assoc-in app [:valikatselmuksen-tiedot :kattohinnan-oikaisu :uusi-kattohinta] kattohinta))
 
   TallennaKattohinnanOikaisu
-  (process-event [_ {{{uusi-kattohinta :uusi-kattohinta} :kattohinnan-oikaisu} :valikatselmuksen-tiedot :as app}]
-    (if uusi-kattohinta
+  (process-event [{uusi-kattohinta :uusi-kattohinta} app]
+    (when uusi-kattohinta
       (let [oikaisu {::urakka/id (-> @tila/yleiset :urakka :id)
                      ::valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
                      ::valikatselmus/uusi-kattohinta uusi-kattohinta}]
@@ -226,9 +226,7 @@
           oikaisu
           {:onnistui ->TallennaKattohinnanOikaisuOnnistui
            :epaonnistui ->TallennaKattohinnanOikaisuEpaonnistui
-           :paasta-virhe-lapi? true}))
-      ;; Jos kattohinta-kenttä on tyhjä, poista kattohinnan oikaisu
-      (poista-kattohinnan-oikaisu app))
+           :paasta-virhe-lapi? true})))
     app)
 
   TallennaKattohinnanOikaisuOnnistui

@@ -106,42 +106,30 @@
 
 (defn kattohinnan-oikaisu
   "Kattohinnan oikaisua tarvitsevat urkat, jotka ovat alkaneet -19-20 vuosina. Muille kattohinta on 110% tavoitehinnasta."
-  [e! kattohinta tavoitehinta paatos-tehty?]
-  (let [uusi-kattohinta-suurempi-kuin-tavoitehinta? (and kattohinta tavoitehinta (>= kattohinta tavoitehinta))
-        uusi-kattohinta-validi? uusi-kattohinta-suurempi-kuin-tavoitehinta?
-        muokkaustila? (not kattohinta)]
-    [:<>
-     [:div.oikaisu-paatos-varoitus
-      [ikonit/harja-icon-status-alert]
-      [:span "Jos tavoitehinnan oikaisun myötä myös kattohinta muuttuu, syötä uusi oikaistu kattohinta."]]
-     [:div.caption.semibold {:style {:font-size "12px"}} "Oikaistu kattohinta"]
-     [:div.flex-row.alkuun.valistys16
-      (if muokkaustila?
-        [kentat/tee-kentta
-         {:tyyppi :positiivinen-numero
-          :koko 20
-          :vayla-tyyli? true
-          :max-desimaalit 7
-          :kokonaisosan-maara 9
-          :fmt fmt/euro-opt}
-         (r/wrap kattohinta
-           (fn [kattohinta]
-             (e! (valikatselmus-tiedot/->KattohinnanOikaisuaMuokattu kattohinta))))]
-        [:span {:style {:min-width "173px"}}
-         (fmt/euro-opt kattohinta)])
-
-      (if muokkaustila?
-        [napit/tallenna
-         "Hyväksy uusi kattohinta"
-         #(e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu))
-         {:disabled (not uusi-kattohinta-validi?)}]
-        [napit/muokkaa
-         "Muokkaa"
-         #(e! (valikatselmus-tiedot/->KattohinnanMuokkaaPainettu kattohinta))])
-      (when (and muokkaustila? kattohinta)
-        [napit/poista
-         "Poista kattohinnan oikaisu"
-         #(e! (valikatselmus-tiedot/->PoistaKattohinnanOikaisu))])]]))
+  [e! kattohinta paatos-tehty?]
+  (let [uusi-kattohinta (atom (if kattohinta kattohinta 0))]
+    (if (not paatos-tehty?)
+      [:<>
+       [:div.valja
+        [yleiset/info-laatikko :vahva-ilmoitus "Jos tavoitehinnan oikaisun myötä myös kattohinta muuttuu, syötä muuttunut kattohinta." nil nil {:vari "@gray25"}]]
+       [:div.flex-row.alkuun.valistys16
+        [kentat/tee-otsikollinen-kentta {:otsikko "Muuttunut kattohinta"
+                                         :otsikon-luokka "caption-small-strong valja"
+                                         :luokka ""
+                                         :kentta-params {:tyyppi :euro
+                                                         :koko 20
+                                                         :max-desimaalit 7
+                                                         :kokonaisosan-maara 9
+                                                         :fmt fmt/euro-opt
+                                                         :vayla-tyyli? true
+                                                         :input-luokka "kattohinta-muutettu"
+                                                         :on-blur #(when (not (= kattohinta @uusi-kattohinta))
+                                                                    (e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu @uusi-kattohinta)))}
+                                         :arvo-atom uusi-kattohinta}]]]
+      [:<>
+       [:div.small-caption.lihavoitu.valja "Muuttunut kattohinta"]
+       [:div.flex-row.alkuun.valistys16
+        [:span (fmt/euro-opt false kattohinta)]]])))
 
 (defn tavoitehinnan-muutokset [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset tavoitehinnan-muutokset]
   (let [paatos-avain :tavoitehinnan-muutokset
@@ -183,7 +171,7 @@
            [yleiset/info-laatikko :vahva-ilmoitus "Tavoitehintaan liittyvä päätös on tallennettu. Jos aiot tehdä  uusia tavoitehinnan muutoksia, kumoa päätös ensin." nil nil {:vari "@gray25"}]])
 
         (when kattohinnan-oikaisu-mahdollinen?
-          [kattohinnan-oikaisu e! kattohinta tavoitehinta paatos-tehty?])
+          [kattohinnan-oikaisu e! kattohinta paatos-tehty?])
 
         ;; Päätöksenteko napit
         (if-not (:virhe paatos)
