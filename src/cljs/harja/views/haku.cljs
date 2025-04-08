@@ -103,8 +103,7 @@
   [k]
   (modal/nayta! {:otsikko (str (:etunimi k) " " (:sukunimi k))
                  :luokka "yhteystieto"
-                 :footer [:div.display-flex.justify-between
-                          [napit/sulje #(modal/piilota!)]]}
+                 :footer [napit/sulje #(modal/piilota!)]}
     (kayttajan-tiedot k)))
 
 (defn valitse-hakutulos
