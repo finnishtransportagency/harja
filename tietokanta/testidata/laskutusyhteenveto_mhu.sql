@@ -108,6 +108,10 @@ $$
 
         INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, tarjous_tavoitehinta, tavoitehinta_siirretty, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
             VALUES (urakka_id, 1, 250000, 250000, 240000, NULL, 1.1 * 250000, 1.1 * 250000, NOW(), kayttaja_id);
+        INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, tarjous_tavoitehinta, tavoitehinta_siirretty, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
+        VALUES (urakka_id, 2, 250000, 250000, 240000, NULL, 1.1 * 250000, 1.1 * 250000, NOW(), kayttaja_id);
+        INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, tarjous_tavoitehinta, tavoitehinta_siirretty, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
+        VALUES (urakka_id, 3, 250000, 250000, 240000, NULL, 1.1 * 250000, 1.1 * 250000, NOW(), kayttaja_id);
 
 
         -- MHU Hoidonjohto - SANKTIOT: vastuuhenkilön vaihtosanktio (tämän lopullinen summa indeksilaskennan kautta), arvonvähennykset

@@ -10,7 +10,6 @@
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.kyselyt.sanktiot :as sanktio-kyselyt]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
-            [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
 
@@ -39,48 +38,12 @@
 
 ;; Testaa kaikki uuden tyyppiset päätökset
 
-(defn lupauspaatos [urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet lupausbonus
-                    lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id luoja]
-  {:urakkaid urakkaid
-   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :tyyppi tyyppi
-   :tavoitehinta tavoitehinta
-   :tarjous_tavoitehinta tarjous-tavoitehinta
-   :luvatut_pisteet luvatut-pisteet
-   :toteutuneet_pisteet toteutuneet-pisteet
-   :lupausbonus lupausbonus
-   :lupaussanktio lupaussanktio
-   :bonusprosentti bonusprosentti
-   :sanktioprosentti sanktioprosentti
-   :indeksi indeksi
-   :indeksikorotus indeksikorotus
-   :erilliskustannus_id erilliskustannus-id
-   :sanktio_id sanktio-id
-   :luoja luoja})
-
 (defn tavoitehinnan-muutospaatos [urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
    :muokkaa_kattohinta muokkaa-kattohinta
    :tavoitehinta tavoitehinta
    :kattohinta kattohinta
-   :luoja luoja})
-
-(defn tavoitehinnan-ylityspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
-                                  urakoitsija-maksaa siirto kulu-id viimeinen_hoitokausi luoja]
-  {:urakkaid urakkaid
-   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :tavoitehinta tavoitehinta
-   :toteutuneet_kustannukset toteutuneet-kustannukset
-   :ylityksen_maara ylityksen-maara
-   :tilaajan_prosentti tilaajan-prosentti
-   :urakoitsijan_prosentti urakoitsijan-prosentti
-   :tilaaja_maksaa tilaaja-maksaa
-   :urakoitsija_maksaa urakoitsija-maksaa
-   :siirto siirto
-   :kulu_id kulu-id
-   :viimeinen_hoitokausi viimeinen_hoitokausi
    :luoja luoja})
 
 (defn indeksikorjauspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
@@ -255,17 +218,6 @@
   (is (= (pvm/sql-aika->pvm-str tarkistettu) (pvm/sql-aika->pvm-str (:tarkistettu paatos))))
   (is (= luoja (:luoja paatos))))
 
-;; Lasketaan indeksikorotus lupaukselle, se pätee sekä bonukselle, että sanktiolle jos on päteäkseen
-(defn laske-indeksikorotus-lupaukselle [db urakkaid paatos-pvm indeksi summa sanktio?]
-  (let [indeksikorotus-parametrit {:pvm paatos-pvm
-                                   :indeksi indeksi
-                                   :maara summa
-                                   :urakka-id urakkaid
-                                   :sanktiolaji (if sanktio? "lupaussanktio" nil)}
-        ;; Taustalla ajetaan tämmönen: SELECT korotus FROM sanktion_indeksikorotus(:pvm::DATE, :indeksi,:maara::NUMERIC, :urakka-id::INTEGER, :sanktiolaji::sanktiolaji);
-        indeksikorotus (:korotus (first (lupaus-kyselyt/hae-indeksikorotus-summalle db indeksikorotus-parametrit)))]
-    indeksikorotus))
-
 ;; Aloitetaan lupauksista
 (deftest kysely-tee-lupauksetpaatos-bonus-onnistuu-test
   (testing "2024 vuoden urakalle onnistuu"
@@ -283,13 +235,13 @@
           luvatut-pisteet 5
           toteutuneet-pisteet 10
           lupausbonus 100M
-          indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
+          indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
           lupaussanktio nil
           bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
           sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
           erilliskustannus-id 1
           sanktio-id 1
-          lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
+          lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                          lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
           vastaus (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)]
@@ -309,14 +261,14 @@
           luvatut-pisteet 5
           toteutuneet-pisteet 10
           lupausbonus 100M
-          indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
+          indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
           _ (is (> indeksikorotus 0) "Indeksikorotus ei voi olla nolla tai nil 2020 alkavalla urakalla.")
           lupaussanktio nil
           bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
           sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
           erilliskustannus-id 1
           sanktio-id 1
-          lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
+          lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                          lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
           vastaus (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)]
@@ -337,13 +289,13 @@
         luvatut-pisteet 5
         toteutuneet-pisteet 10
         lupausbonus 1500M
-        indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
+        indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
         lupaussanktio nil
         bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
         sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         erilliskustannus-id nil
         sanktio-id nil
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
+        lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                        lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
         vastaus (try
                   (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
@@ -384,12 +336,12 @@
         toteutuneet-pisteet 10
         lupausbonus nil
         lupaussanktio 1500M
-        indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupaussanktio true)
+        indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupaussanktio true)
         bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
         sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         erilliskustannus-id nil
         sanktio-id nil
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
+        lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                        lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
         vastaus (try
@@ -431,13 +383,13 @@
         luvatut-pisteet 5
         toteutuneet-pisteet 10
         lupausbonus 100M
-        indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
+        indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
         lupaussanktio nil
         bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
         sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         erilliskustannus-id 1
         sanktio-id 1
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet
+        lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet
                        toteutuneet-pisteet lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
         _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)
@@ -462,13 +414,13 @@
         luvatut-pisteet 5
         toteutuneet-pisteet 10
         lupausbonus 100M
-        indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
+        indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
         lupaussanktio nil
         bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
         sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         erilliskustannus-id 1
         sanktio-id nil
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet
+        lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet
                        toteutuneet-pisteet lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
         _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)
@@ -496,12 +448,12 @@
         toteutuneet-pisteet 10
         lupausbonus nil
         lupaussanktio 1500M
-        indeksikorotus (laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupaussanktio true)
+        indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupaussanktio true)
         bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
         sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         erilliskustannus-id nil
         sanktio-id nil
-        lupauspaatos (lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
+        lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                        lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
         vastaus (try
@@ -547,7 +499,7 @@
         kattohinta 5M
         paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)]
     (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
     ;; -124 alkavalla urakalla pitää olla kattohinta 10% tavoitehinnasta
     (is (= false (:muokkaa_kattohinta vastaus)))))
@@ -563,7 +515,16 @@
         kattohinta 5M
         paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)
+
+        ;; Kun kattohinta on käsin asetettu uusiksi, niin sen täytyy vaikuttaa urakka_tavoite taulun kattohintaan
+        ;; Varmistetaan, että näin on tapahtunut
+        hoitokaudennro 2                                    ;; Oulun urakka alkaa 2019, joten joten 2020 on hoitokauden 2
+        urakkatavoite (first (q-map (format "SELECT * FROM urakka_tavoite
+                                       WHERE urakka = %s
+                                         AND hoitokausi = %s" urakkaid hoitokaudennro)))
+        _ (is (= kattohinta (:kattohinta urakkatavoite)) "Kattohinta on asetettu oikein urakka_tavoite tauluun")
+        _ (is (= kattohinta (:kattohinta_indeksikorjattu urakkatavoite)) "Kattohinta on asetettu oikein urakka_tavoite tauluun")]
     (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
     ;; -19 alkavalla urakalla pitää olla kattohinta käsin muokattavana
     (is (= true (:muokkaa_kattohinta vastaus)))))
@@ -602,7 +563,7 @@
         tavoitehinta 5M
         kattohinta 5M
         paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
-        _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos)
+        _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Tavoitehinnan muutokset" :tyyppi "A" :jarjestys 4}]
@@ -779,7 +740,7 @@
         urakoitsija-maksaa 50M
         siirto 50M
         kulu-id 1
-        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
+        paatos (paatos-apurit/tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id false kayttajaid)
 
@@ -802,7 +763,7 @@
         urakoitsija-maksaa 50M
         siirto 50M
         kulu-id nil
-        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
+        paatos (paatos-apurit/tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id false kayttajaid)
         vastaus (try
@@ -830,7 +791,7 @@
         urakoitsija-maksaa 50M
         siirto 50M
         kulu-id 1
-        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
+        paatos (paatos-apurit/tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id false kayttajaid)
         _ (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)
@@ -860,7 +821,7 @@
         urakoitsija-maksaa 50M
         siirto 50M
         kulu-id nil
-        paatos (tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
+        paatos (paatos-apurit/tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id false kayttajaid)
         ;; Ei odoteta vastausta, koska ehdot ei täyty
