@@ -24,6 +24,7 @@
             [harja.tiedot.urakka.tiemerkinnan-kustannukset :as tiemerkinnan-kustannukset-tiedot]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
+            [harja.views.urakka.kustannusten-kirjaus :as kustannusten-kirjaus]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
@@ -107,6 +108,10 @@
                         (urakka/vesivaylaurakkatyyppi? tyyppi)
                         (istunto/ominaisuus-kaytossa? :vesivayla)))
 
+    :kustannusten-kirjaus (and
+                            (oikeudet/urakat-paikkaukset id)
+                            (= tyyppi :tiemerkinta))
+
     :valitavoitteet (and
                       (oikeudet/urakat-valitavoitteet id)
                       (not (urakka/kanavaurakka? urakka)))
@@ -126,6 +131,7 @@
                            (istunto/ominaisuus-kaytossa? :vesivayla))
 
     :tiemerkinnan-kustannukset (and
+                                 (k/kehitysymparistossa?)
                                  (oikeudet/urakat-kustannukset id)
                                  (= tyyppi :tiemerkinta))
 
@@ -274,6 +280,12 @@
        (when (valilehti-mahdollinen? :laadunseuranta ur)
          ^{:key "laadunseuranta"}
          [laadunseuranta/laadunseuranta ur])
+
+       "Kustannusten kirjaus"
+       :kustannusten-kirjaus
+       (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
+         ^{:key "kustannusten-kirjaus"}
+         [kustannusten-kirjaus/kustannusten-kirjaus ur])
 
        (if (= (:tyyppi ur) :teiden-hoito)
          "Lupaukset ja tavoitteet"

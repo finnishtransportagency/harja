@@ -1,9 +1,7 @@
 (ns harja.palvelin.palvelut.pois-kytketyt-ominaisuudet-test
-  (:require [harja.palvelin.komponentit.todennus :as todennus]
-            [harja.testi :refer :all]
+  (:require [harja.testi :refer :all]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa? pois-kytketyt-ominaisuudet]]
-            [clojure.test :as t :refer [deftest is use-fixtures testing]]
-            [com.stuartsierra.component :as component]))
+            [clojure.test :as t :refer [is]]))
 
 (t/deftest ominaisuudet-pois-paalta-ennen-asetusten-lukua
   (let [alkup-pko @pois-kytketyt-ominaisuudet]
