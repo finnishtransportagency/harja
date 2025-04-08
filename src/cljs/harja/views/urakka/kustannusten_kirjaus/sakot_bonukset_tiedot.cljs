@@ -198,8 +198,8 @@
 
       ;; Voidaan tehdä tallennus 
       (let [rivi (lomake/ilman-lomaketietoja rivi)
-            {:keys [laji id summa indeksi toimenpideinstanssi
-                    kasittelyaika lomake-selite laatupoikkeama]} rivi
+            {:keys [id summa indeksi toimenpideinstanssi
+                    kasittelyaika lomake-selite laatupoikkeama laji]} rivi
 
             uudet-liitteet (:uudet-liitteet valittu-rivi)
             yllapitokohde-id (-> rivi :yllapitokohde :id)
@@ -215,11 +215,14 @@
                          ;; Sakot 
                          (= laji :yllapidon_sakko)
                          {:sanktio        sanktio
-                          :laatupoikkeama (assoc
-                                            laatupoikkeama
-                                            :urakka @nav/valittu-urakka-id
-                                            :yllapitokohde yllapitokohde-id
-                                            :uusi-liite uudet-liitteet)
+                          :laatupoikkeama (-> laatupoikkeama
+                                            (assoc :urakka @nav/valittu-urakka-id)
+                                            (assoc :yllapitokohde yllapitokohde-id)
+                                            (assoc :uusi-liite uudet-liitteet)
+                                            (assoc-in [:paatos :paatos] "sanktio")
+                                            (assoc-in [:paatos :kasittelytapa] :muu)
+                                            (assoc-in [:paatos :muukasittelytapa] "Tiemerkintä")
+                                            (assoc-in [:paatos :kasittelyaika] (get-in app [:valittu-rivi :kasittelyaika])))
                           :hoitokausi @u/valittu-hoitokausi}
 
                          ;; Bonukset
