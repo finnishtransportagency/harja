@@ -1,5 +1,5 @@
 (ns harja.views.urakka.kustannusten-kirjaus.yhteiset
-  "Tiemerkintöjen kustannusten kirjaus apufunktiot"
+  "Tiemerkintöjen kustannukset yhteiset funktiot/komponentit"
   (:require
    [harja.ui.napit :as napit]
    [harja.transit :as transit]
@@ -26,10 +26,15 @@
 (defonce lomake-validointi-virhe-viesti "Tallennus epäonnistui. Pakollisia tietoja puuttuu.")
 
 
-(defn raporttiviennit [{:keys [raportti] :as _valinnat}]
+(defn raporttiviennit 
+  "Raportteja voi Harjassa tehdä kolmella eri tapaa 
+   Tässä yksi, passataan frontista suoraa raporttimoottorille parametrit
+   Tämä on kyseisiin näkymiin ratkaisuna toimiva.
+   Wrapperin voisi heittää johonkin yleiseen kirjastoon, on käytössä muuallakin Harjassa sama koodi"
+  [{:keys [raportti] :as _valinnat}]
   [:div.raporttiviennit
    ;;
-   ;; Excel
+   ;; Excel raportti
    ^{:key "raporttixls"}
    [:form {:target "_blank" :method "POST"
            :action (komm/excel-url :raportointi)}
@@ -43,7 +48,7 @@
      [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna Excel"]]]
    
    ;;
-   ;; Pdf 
+   ;; Pdf raportti
    ^{:key "raporttipdf"}
    [:form {:target "_blank" :method "POST"
            :action (komm/pdf-url :raportointi)}

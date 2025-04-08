@@ -7,7 +7,7 @@
 (defonce kustannusten-kirjaus-valilehti-nakyvissa? (atom false))
 
 (defonce ^{:private true} nollatut-valinnat {:kustannukset nil
-                                             :haku-kaynnissa? false})
+                                             :haku-kaynnissa? true})
 
 (defn kustannusten-summa [rivit avain]
   (let [summa (reduce + 0 (map avain rivit))]
@@ -74,8 +74,7 @@
   (process-event [{vastaus :vastaus} app]
     ((tuck/current-send-function) (->HaeKustannukset (:urakka vastaus)))
     (viesti/nayta-toast! "Kustannukset tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
-    (assoc app
-      :kustannukset (:tiedot vastaus)))
+    app)
 
   TallennaKustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]

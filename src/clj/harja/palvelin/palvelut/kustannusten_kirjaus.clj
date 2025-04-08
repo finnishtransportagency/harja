@@ -86,7 +86,6 @@
   [db kayttaja {:keys [urakka-id]}]
   ;; TODO 
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
-  (println "v: " (q/hae-tiemerkinta-kustannustyypit db))
   (q/hae-tiemerkinta-kustannustyypit db))
 
 (defrecord TiemerkinnanKustannusKirjaukset []

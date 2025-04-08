@@ -13,7 +13,7 @@
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
                                              :muokataan false
                                              :ladatut-rivit nil
-                                             :haku-kaynnissa? false
+                                             :haku-kaynnissa? true
                                              :valinnat {:raportti {}
                                                         :aikavali (pvm/kuukauden-aikavali (pvm/nyt))}})
 

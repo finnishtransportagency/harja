@@ -16,7 +16,7 @@
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
                                              :valittu-rivi {}
                                              :muokataan false
-                                             :haku-kaynnissa? false
+                                             :haku-kaynnissa? true
                                              :valinnat {:raportti {}
                                                         :aikavali (pvm/kuukauden-aikavali (pvm/nyt))}})
 
@@ -99,7 +99,7 @@
 
   HaeTiedotOnnistui
   (process-event [{:keys [vastaus]} {:keys [_valinnat] :as app}]
-    (hae-kustannustyypit (assoc app :rivit vastaus :haku-kaynnissa? true)))
+    (hae-kustannustyypit (assoc app :rivit vastaus)))
 
   HaeTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -122,8 +122,10 @@
     (if (or
           virheita?
           (not (voi-tallentaa? valittu-rivi yllapitokohteet-domain/paallysteen-korjausluokat)))
+      ;; Jos ei voida tallentaa, kerro käyttäjälle missä virheet
       (assoc-in app [:valittu-rivi :virheita?] true)
-
+      
+      ;; Voidaan tehdä tallennus 
       (let [rivi (lomake/ilman-lomaketietoja rivi)
             {:keys [pvm hinta id selite tyyppi yllapitoluokka]} rivi
             toteuma {:id id
@@ -144,9 +146,11 @@
           parametrit
           {:onnistui ->TallennusOnnistui
            :epaonnistui ->TallennusEpaonnistui})
-
+        
         (-> app
+          (assoc :rivit nil)
           (assoc :muokataan false)
+          (assoc :haku-kaynnissa? true)
           (assoc-in [:valittu-rivi :virheita?] false)))))
 
   TallennusOnnistui

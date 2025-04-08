@@ -18,7 +18,7 @@
                                              :liitteet {}
                                              :valittu-rivi {}
                                              :muokataan false
-                                             :haku-kaynnissa? false
+                                             :haku-kaynnissa? true
                                              :valinnat {:raportti {}}})
 
 (defonce nakymassa? (atom false))
@@ -186,8 +186,10 @@
     (if (or
           virheita?
           (not (voi-tallentaa? valittu-rivi)))
+      ;; Jos ei voida tallentaa, kerro käyttäjälle missä virheet
       (assoc-in app [:valittu-rivi :virheita?] true)
 
+      ;; Voidaan tehdä tallennus 
       (let [rivi (lomake/ilman-lomaketietoja rivi)
             {:keys [laji id summa indeksi toimenpideinstanssi
                     kasittelyaika lomake-selite laatupoikkeama]} rivi
@@ -197,10 +199,10 @@
             laatupoikkeama (-> laatupoikkeama
                              (assoc-in [:paatos :perustelu] lomake-selite)
                              (assoc-in [:paatos :kasittelyaika] kasittelyaika))
-            
-            sanktio (-> rivi 
+
+            sanktio (-> rivi
                       (assoc :perintapvm kasittelyaika)
-                      (dissoc :laatupoikkeama :yllapitokohde ))
+                      (dissoc :laatupoikkeama :yllapitokohde))
 
             parametrit (cond
                          ;; Sakot 
@@ -243,7 +245,9 @@
            :epaonnistui ->TallennusEpaonnistui})
 
         (-> app
+          (assoc :rivit nil)
           (assoc :muokataan false)
+          (assoc :haku-kaynnissa? true)
           (assoc-in [:valittu-rivi :virheita?] false)))))
 
   TallennusOnnistui

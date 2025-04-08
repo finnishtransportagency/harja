@@ -102,16 +102,18 @@
                [:div.col-md-12
                 [:h2.header-yhteiset otsikko]
                 [:hr]])
-     :footer [:<>
-              [:hr]
-              [:div.muokkaus-modal-napit
-               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaRivi valittu-rivi (lomake/virheita? valittu-rivi) liitteet))
-                {:disabled (not voi-tallentaa?)}]
-               [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeMuokkaus))]]
+     
+     :footer (let [peruuta-fn #(e! (tiedot/->SuljeMuokkaus))
+                   tallenna-fn #(e! (tiedot/->TallennaRivi valittu-rivi (lomake/virheita? valittu-rivi) liitteet))]
+               [:<>
+                [:hr]
+                [:div.muokkaus-modal-napit
+                 [napit/tallenna "Tallenna" #(tallenna-fn) {:disabled (not voi-tallentaa?)}]
+                 [napit/yleinen-toissijainen "Peruuta" #(peruuta-fn)]]
 
-              (when virheita?
-                ;; Virheet on saatavilla (-> valittu-rivi ::lomake/virheet vals), mutta ei tarvi tässä näyttää toistaseen
-                [yleiset/info-laatikko :varoitus yhteiset/lomake-validointi-virhe-viesti])]}
+                (when virheita?
+                  ;; Virheet on saatavilla (-> valittu-rivi ::lomake/virheet vals), mutta ei tarvi tässä näyttää toistaseen
+                  [yleiset/info-laatikko :varoitus yhteiset/lomake-validointi-virhe-viesti])])}
 
     [(lomake/rivi
        {:otsikko "Päivämäärä"
