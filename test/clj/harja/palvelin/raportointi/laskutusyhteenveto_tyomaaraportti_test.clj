@@ -11,6 +11,9 @@
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
+            [harja.kyselyt.urakat :as urakka-kyselyt]
+            [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
+            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
@@ -296,13 +299,25 @@
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
         aikavali_loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2018                          ;; Päätös pitää olla edellisenä vuotena, jotta se näkyy siirroissa.
         kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        tav_hinta 100000M
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
         siirto-ed-vuodelta 60000.0M
         ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta"
-        _ (i (format "INSERT INTO urakka_paatos (\"hoitokauden-alkuvuosi\", \"urakka-id\", \"hinnan-erotus\", \"urakoitsijan-maksu\", \"tilaajan-maksu\", siirto, tyyppi, \"lupaus-luvatut-pisteet\", \"lupaus-toteutuneet-pisteet\", \"lupaus-tavoitehinta\", muokattu, \"muokkaaja-id\", \"luoja-id\", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id)
-        VALUES (2018, %s, null, 39395.784199999995, 0, %s, 'kattohinnan-ylitys', null, null, null, null, null, %s, '2019-11-01 10:12:11.886000', false, null, null, 51);" urakka-id siirto-ed-vuodelta kayttaja-id))
+        ;; Tehdään kattohinnan ylitys
+        kattohinta 5M
+        toteutuneet-kustannukset 5M
+        ylityksen-maara 10M
+        urakoitsija-maksaa 50M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        viimeinen_hoitokausi false
+        kulu-id 1
+        paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                 ylityksen-maara urakoitsija-maksaa siirto-ed-vuodelta kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttaja-id)
+
+        _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakka-id paatos)
 
         hoitokauden_tavoitehinta (ffirst (q (format "SELECT COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0) as tavoitehinta
                                     from urakka_tavoite ut
