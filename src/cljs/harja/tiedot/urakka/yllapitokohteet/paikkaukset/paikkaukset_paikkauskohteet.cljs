@@ -177,7 +177,7 @@
        :epaonnistui ->HaePaikkauskohteetEpaonnistui
        :paasta-virhe-lapi? true})
     ;; Assoccaa paikkauskohteet nil, jotta loader tulee näkyviin (gridin :tyhja arvo)
-    (assoc app :haku-kaynnissa? true :paikkauskohteet nil)))
+    (assoc app :haku-kaynnissa? true :paikkauskohteet nil :nayta-vihje? false)))
 
 (defn paikkauskohde-id->nimi [app id]
   (:name (first (filter #(= id (:id %)) (:paikkauskohteet app)))))

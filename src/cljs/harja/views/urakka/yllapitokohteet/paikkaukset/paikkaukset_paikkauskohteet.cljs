@@ -44,7 +44,7 @@
         [:div
          [:p.body-caption "Tiemerkinnän tilan voi asettaa, kun paikkausten tila on “Valmis”."]]]
 
-    [:div.tiemerkinta-vihje-leijuke
+    [:div.tiemerkinta-vihje-leijuke {:style {:display (if nakyvissa? "block" "none")}}
      [leijuke/avattava-ulkoinen-vihje
       {:otsikko ""}
       sisalto
