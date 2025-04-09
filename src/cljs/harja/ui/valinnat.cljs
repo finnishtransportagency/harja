@@ -49,26 +49,29 @@
     urakkatyypit]])
 
 (defn urakan-hoitokausi
-  [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
-  (let [vuosi-termi (cond
-                      (#{:hoito :teiden-hoito} (:tyyppi ur))
-                      "Hoitokausi"
+  ([ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
+   (urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-fn false))
+  ([ur hoitokaudet valittu-hoitokausi-atom valitse-fn disabled?]
+   (let [vuosi-termi (cond
+                       (#{:hoito :teiden-hoito} (:tyyppi ur))
+                       "Hoitokausi"
 
-                      (#{:tiemerkinta} (:tyyppi ur))
-                      "Sopimusvuosi"
+                       (#{:tiemerkinta} (:tyyppi ur))
+                       "Sopimusvuosi"
 
-                      (or
-                        (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))
-                        #{:paallystys (:tyyppi ur)})
-                      "Urakkavuosi"
+                       (or
+                         (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))
+                         #{:paallystys (:tyyppi ur)})
+                       "Urakkavuosi"
 
-                      :else "Sopimuskausi") ]
-    [:div.label-ja-alasveto.hoitokausi
-     [:span.alasvedon-otsikko vuosi-termi]
-     [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
-                           :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % @hoitokaudet vuosi-termi) "Valitse")
-                           :valitse-fn valitse-fn}
-      @hoitokaudet]]))
+                       :else "Sopimuskausi")]
+     [:div.label-ja-alasveto.hoitokausi
+      [:span.alasvedon-otsikko vuosi-termi]
+      [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
+                            :disabled disabled?
+                            :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % @hoitokaudet vuosi-termi) "Valitse")
+                            :valitse-fn valitse-fn}
+       @hoitokaudet]])))
 
 (defn urakan-hoitokausi-tuck
   [valittu-hoitokausi hoitokaudet tuck-event optiot]

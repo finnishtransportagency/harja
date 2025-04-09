@@ -24,6 +24,7 @@
                     "Aikavälille ei löytynyt tuloksia.")
            :tunniste :kustannusvuosi
            :voi-lisata? false
+           :piilota-toiminnot? true
            :voi-poistaa? (constantly false)
            :rivi-jalkeen-fn (fn [kustannukset]
                               (let [kustannus-summa (tiedot/kustannusten-summa kustannukset :kustannus)

@@ -64,7 +64,7 @@
 
 (defn paivittava-urakkavuosi-suodatin
   "Urakkavuosi valinta, triggeröi haun"
-  [{:keys [aikavali]} haku-fn]
+  [{:keys [aikavali]} haku-fn haku-kaynnissa?]
   (let [fn-aikavali-muuttunut? (fn [aika]
                                  (let [alku (-> @urakka-tiedot/valittu-hoitokausi first)
                                        loppu (-> @urakka-tiedot/valittu-hoitokausi second)
@@ -75,7 +75,7 @@
                                               (not= loppu valinnat-loppu)))))]
 
     [:div {:on-click #(when (fn-aikavali-muuttunut? aikavali) (haku-fn))}
-     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]))
+     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka haku-kaynnissa?]]))
 
 
 (defn nakyma-body

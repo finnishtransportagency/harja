@@ -1,11 +1,9 @@
 (ns harja.views.urakka.kustannusten-yhteenveto.yhteenveto
   "Tiemerkintöjen kustannusten yhteenveto välilehti"
   (:require
-   [harja.pvm :as pvm]
    [harja.fmt :as fmt]
    [harja.ui.grid :as grid]
    [tuck.core :refer [tuck]]
-   [harja.ui.ikonit :as ikonit]
    [harja.ui.komponentti :as komp]
    [harja.tiedot.urakka.urakka :as urakka-tila]
    [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
@@ -51,8 +49,8 @@
 (defn yhteenveto-listaus [e! {:keys [rivit valinnat muokataan haku-kaynnissa?] :as _app}]
   (let [lisaa-uusi-fn nil
         grid (yhteenveto-grid e! rivit haku-kaynnissa?)
-        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)))]
-    
+        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)) haku-kaynnissa?)]
+
     (yhteiset/nakyma-body "Kustannusten yhteenveto" lisaa-uusi-fn aikavali valinnat muokataan nil grid nil true)))
 
 

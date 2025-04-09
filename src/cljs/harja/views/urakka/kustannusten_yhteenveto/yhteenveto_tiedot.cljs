@@ -10,6 +10,7 @@
              [harja.tiedot.raportit :as raporttitiedot]))
 
 (defonce ^{:private true} raportti-avain :tiemerkinta-kustannukset-yhteenveto)
+(defonce ^{:private true} kategoriat [:korjaus :arvonmuutos :yllapidon_sakko :yllapidon_bonus :muut-kustannukset])
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
                                              :muokataan false
                                              :ladatut-rivit nil
@@ -21,8 +22,8 @@
 
 
 (defrecord HaeTiedot [])
-(defrecord HaeTiedotOnnistui [vastaus])
-(defrecord HaeTiedotEpaonnistui [vastaus])
+(defrecord HaeMuutOnnistui [vastaus])
+(defrecord HaeMuutEpaonnistui [vastaus])
 (defrecord HaeSanktiotOnnistui [vastaus])
 (defrecord HaeSanktiotEpaonnistui [vastaus])
 (defrecord HaeKorjauksetOnnistui [vastaus])
@@ -35,36 +36,12 @@
   (assoc app :haku-kaynnissa? false))
 
 
-(defn laske-kustannukset-yhteen
-  "Palauttaa vektorin mapeista ryhmitettynä:
-     :id        Grid tunniste 
-     :tyyppi    :arvonmuutos`, :yllapidon_sakko, :yllapidon_bonus :muut-kustannukset (kaikki muut kustannukset)
-     :hinta     Summattu hinta"
-  [data ryhmita-avain summa-avain]
-  (let [ryhma (group-by (fn [rivi]
-                          (let [tyyppi (ryhmita-avain rivi)]
-                            (if (#{:arvonmuutos :yllapidon_sakko :yllapidon_bonus} tyyppi)
-                              tyyppi
-                              :muut-kustannukset)))
-                data)
-
-        kaikki-tyypit [:arvonmuutos :yllapidon_sakko :yllapidon_bonus :muut-kustannukset]]
-
-    (->> kaikki-tyypit
-      (map (fn [tyyppi]
-             (let [rivit (ryhma tyyppi)]
-               {:id     (gensym)
-                :tyyppi tyyppi
-                :hinta  (if (seq rivit) (reduce + (map summa-avain rivit))  0)})))
-      (vec))))
-
-
-(defn suodata-ja-laske-korjaukset-yhteen
+(defn laske-korjaukset-yhteen
   "Suodattaa korjaus kustannukset vuoden perusteella 
    Palauttaa vectorin ryhmitettynä:
-     :id        Grid tunniste 
-     :tyyppi    :korjaus
-     :hinta     Summattu hinta"
+   :id        Grid tunniste 
+   :tyyppi    :korjaus
+   :hinta     Summattu hinta"
   [korjaus-kustannukset [alku loppu]]
   (let [suodatettu (filter (fn [{vuosi :kustannusvuosi}]
                              (let [kustannuksen-pvm (pvm/vuoden-eka-pvm vuosi)]
@@ -77,6 +54,38 @@
       :hinta  (reduce + 0 (map :kustannus suodatettu))}]))
 
 
+(defn sanktiot-ja-muut-yhteen [rivit]
+  (let [s-avain (if (contains? (first rivit) :laji) :laji :tyyppi)
+        m-avain (if (contains? (first rivit) :summa) :summa :hinta)
+        ryhmitetty (group-by
+                     (fn [rivi]
+                       (let [arvo (s-avain rivi)]
+                         (if (#{:arvonmuutos :yllapidon_sakko :yllapidon_bonus} arvo)
+                           arvo
+                           :muut-kustannukset)))
+                     rivit)]
+    ;; Palauta myös nolla arvot
+    (mapv (fn [k]
+            {:tyyppi k
+             :hinta  (reduce + 0 (map m-avain (get ryhmitetty k)))})
+      kategoriat)))
+
+
+(defn summaa-yhteenveto
+  "Laskee eurot yhteen ja palauttaa vectorin ryhmitettynä:
+   :id        Grid tunniste 
+   :tyyppi    Kustannuksen tyyppi
+   :hinta     Summattu hinta"
+  [vec1 vec2]
+  (let [kaikki (concat vec1 vec2)
+        ryhmitetty (group-by :tyyppi kaikki)]
+    (mapv (fn [k]
+            {:id (gensym)
+             :tyyppi k
+             :hinta (reduce + 0 (map :hinta (get ryhmitetty k)))})
+      kategoriat)))
+
+
 (defn- raporttiparametrit [rivit]
   (raporttitiedot/urakkaraportin-parametrit @nav/valittu-urakka-id raportti-avain
     {:rivit rivit
@@ -86,14 +95,14 @@
      :sopimus (-> @u/valittu-sopimusnumero first)}))
 
 
-(defn hae-yllapito-toteumat [{:keys [_valinnat] :as app}]
+(defn hae-muut-kustannukset [{:keys [_valinnat] :as app}]
   (tuck-apurit/post! app :hae-yllapito-toteumat
     {:urakka  @nav/valittu-urakka-id
      :sopimus (-> @u/valittu-sopimusnumero first)
      :alkupvm  (-> @u/valittu-aikavali first)
      :loppupvm (-> @u/valittu-aikavali second)}
-    {:onnistui ->HaeTiedotOnnistui
-     :epaonnistui ->HaeTiedotEpaonnistui}))
+    {:onnistui ->HaeMuutOnnistui
+     :epaonnistui ->HaeMuutEpaonnistui}))
 
 
 (defn hae-sanktiot-ja-bonukset [app]
@@ -117,27 +126,29 @@
 (extend-protocol tuck/Event
   HaeTiedot
   (process-event [_ app]
-    (hae-yllapito-toteumat app)
+    (hae-muut-kustannukset app)
     (->
       (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
-      (assoc :haku-kaynnissa? true)
+      (assoc :haku-kaynnissa? true :rivit nil)
       (assoc-in [:valinnat :aikavali] @u/valittu-aikavali)))
 
-  HaeTiedotOnnistui
+  HaeMuutOnnistui
   (process-event [{:keys [vastaus]} {:keys [_valinnat] :as app}]
     (->
       (hae-sanktiot-ja-bonukset app)
-      (assoc :ladatut-rivit (laske-kustannukset-yhteen vastaus :tyyppi :hinta))))
+      (assoc :ladatut-rivit (sanktiot-ja-muut-yhteen vastaus))))
 
-  HaeTiedotEpaonnistui
+  HaeMuutEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (epaonnistui vastaus app))
 
   HaeSanktiotOnnistui
   (process-event [{:keys [vastaus]} {:keys [_valinnat ladatut-rivit] :as app}]
-    (->
-      (hae-korjaus-kustannukset app)
-      (assoc :ladatut-rivit (laske-kustannukset-yhteen (concat vastaus ladatut-rivit) :laji :summa))))
+    (let [sanktiot (sanktiot-ja-muut-yhteen vastaus)
+          sanktiot-ja-muut-kustannukset (summaa-yhteenveto sanktiot ladatut-rivit)]
+      (->
+        (hae-korjaus-kustannukset app)
+        (assoc :ladatut-rivit sanktiot-ja-muut-kustannukset))))
 
   HaeSanktiotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -145,13 +156,14 @@
 
   HaeKorjauksetOnnistui
   (process-event [{:keys [vastaus]} {:keys [_valinnat ladatut-rivit] :as app}]
-    (-> app
-      (assoc :rivit ladatut-rivit)
-      (update :rivit into (suodata-ja-laske-korjaukset-yhteen (concat vastaus ladatut-rivit) @u/valittu-aikavali))
-      (as-> paivitetty
-        (-> paivitetty
-          (assoc :haku-kaynnissa? false)
-          (assoc-in [:valinnat :raportti] (raporttiparametrit (:rivit paivitetty)))))))
+    (let [korjaukset (laske-korjaukset-yhteen vastaus @u/valittu-aikavali)
+          kaikki-kustannukset (summaa-yhteenveto korjaukset ladatut-rivit)]
+      ;; Sanktiot ja muut kustannukset on nyt "ladatut-rivit sisällä"
+      ;; Nyt on haettu myös korjaukset, joten laske vielä korjaukset yhteen, ja summaa kaikki 
+      (-> app
+        (assoc :rivit kaikki-kustannukset)
+        (assoc-in [:valinnat :raportti] (raporttiparametrit kaikki-kustannukset))
+        (assoc :haku-kaynnissa? false))))
 
   HaeKorjauksetEpaonnistui
   (process-event [{:keys [vastaus]} app]

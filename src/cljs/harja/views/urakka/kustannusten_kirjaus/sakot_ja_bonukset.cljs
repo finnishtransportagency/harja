@@ -216,11 +216,12 @@
 
 (defn- suodattimet-lajit
   "Kaikki / Sakko / Bonus, triggeröi haun"
-  [e! {:keys [valittu-laji]}]
+  [e! {:keys [valittu-laji]} haku-kaynnissa?]
   [kentat/tee-kentta {:vayla-tyyli? true
                       :nayta-rivina? true
                       :space-valissa? true
                       :tyyppi :radio-group
+                      :disabloitu? haku-kaynnissa?
                       :vaihtoehdot [:kaikki :yllapidon_sakko :yllapidon_bonus]
                       :vaihtoehto-nayta yhteiset/laji-valinnat
                       :valitse-fn #(do
@@ -237,9 +238,9 @@
   (let [voi-tallentaa? true ;; Valitoidaan tallennettaessa (saavutettavuus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot @nav/valittu-urakka-id)
         
-        laji-suodatin (suodattimet-lajit e! valinnat)
         grid (sakot-bonukset-grid e! rivit haku-kaynnissa?)
-        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)))
+        laji-suodatin (suodattimet-lajit e! valinnat haku-kaynnissa?)
+        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)) haku-kaynnissa?)
         lisaa-uusi-fn #(e! (tiedot/->AvaaModal {:yllapitokohde {:nimi tiedot/ei-kohdetta-teksti}}))
         muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valittu-rivi kohteet voi-kirjoittaa? voi-tallentaa?)]
 

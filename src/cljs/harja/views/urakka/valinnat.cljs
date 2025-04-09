@@ -40,8 +40,11 @@
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
 
-(defn urakan-hoitokausi [ur]
-  (valinnat/urakan-hoitokausi ur u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!))
+(defn urakan-hoitokausi
+  ([ur]
+   (urakan-hoitokausi ur false))
+  ([ur disabled?]
+   (valinnat/urakan-hoitokausi ur u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi! disabled?)))
 
 (defn hoitokauden-kuukausi []
   [valinnat/hoitokauden-kuukausi
