@@ -5,10 +5,8 @@ WITH urakan_toimenpideinstanssi_23150 AS
          (SELECT tpi.id AS id
           FROM toimenpideinstanssi tpi
                    JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-                   JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-               maksuera m
+                   JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id
           WHERE tpi.urakka = :urakka
-            AND m.toimenpideinstanssi = tpi.id
             AND tpk2.koodi = '23150'
           limit 1)
 -- Haetaan budjetoidut hankintakustannukset ja rahavaraukset kustannusarvioitu_tyo taulusta
