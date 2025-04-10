@@ -16,7 +16,7 @@ UPDATE urakka_tavoite
    AND hoitokausi = :hoitokausi;
 
 
--- name:hae-budjettitavoite
+-- name: hae-budjettitavoite
 WITH tavoitehinnan_oikaisut AS
          (SELECT sum(summa) AS summa, "urakka-id", "hoitokauden-alkuvuosi"
           FROM tavoitehinnan_oikaisu
@@ -39,9 +39,9 @@ SELECT ut.id,
        ut.vahvistaja,
        ut.versio,
        (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0))                               AS "tavoitehinta-oikaistu",
-       COALESCE(ko."uusi-kattohinta", (ut.kattohinta_indeksikorjattu
-           + (COALESCE(t.summa,0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
-           AS "kattohinta-oikaistu",
+       COALESCE(ko."uusi-kattohinta",
+                (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa,0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
+                                                                                              AS "kattohinta-oikaistu",
        (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INTEGER                            AS "hoitokauden-alkuvuosi",
        ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta"
 FROM urakka_tavoite ut
