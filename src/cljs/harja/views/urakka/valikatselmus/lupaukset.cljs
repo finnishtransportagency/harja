@@ -1,22 +1,11 @@
 (ns harja.views.urakka.valikatselmus.lupaukset
-  (:require [reagent.core :as r :refer [atom]]
-            [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.domain.lupaus-domain :as lupaus-domain]
-            [harja.domain.urakka :as urakka]
-            [harja.ui.grid :as grid]
-            [harja.ui.napit :as napit]
+  (:require [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
-            [harja.tiedot.urakka.kulut.yhteiset :as kulut-yhteiset]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
@@ -39,13 +28,13 @@
         ;; Tuloksia ei näytetä mikäli tarjouksen tavoitehinta puuttuu
         (when (and (< 0 (:toteutuneet_pisteet paatos)) (:tavoitehinta paatos))
           [:div
-           [:div.flex-row {:style {:margin-bottom "3px"}}
+           [:div.flex-row.laskenta-avattuna
             [:div "Toteuma"]
             [:div.laskenta-rivi-lukema (:toteutuneet_pisteet paatos)]]
-           [:div.flex-row {:style {:margin-bottom "3px"}}
+           [:div.flex-row.laskenta-avattuna
             [:div "Luvattu yhteispistemäärä"]
             [:div.laskenta-rivi-lukema (:luvatut_pisteet paatos)]]
-           [:div.flex-row {:style {:margin-bottom "3px"}}
+           [:div.flex-row.laskenta-avattuna
             [:div "Tulos"]
             [:div.laskenta-rivi-lukema (cond
                                          (= "bonus" tyyppi)

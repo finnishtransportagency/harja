@@ -3,6 +3,20 @@
 
 .valikatselmus-container {
   margin-top: @valistys-16; // Ei mainita designissa, mutta näyttää paremmalta kuin ei mitään.
+  .summa_rivi {
+    line-height: 24px;
+    padding-top: @valistys-4;
+    padding-bottom: @valistys-4;
+  }
+  .summa_rivi_ylin {
+    line-height: 24px;
+    padding-bottom: @valistys-4;
+  }
+  .summa_rivi_alin {
+    line-height: 24px;
+    padding-top: @valistys-4;
+    padding-bottom: @valistys-8;
+  }
 }
 
 .oikaisut-ja-paatokset {
@@ -205,11 +219,24 @@ div.valikatselmus-yhteenveto {
   }
 
   .negatiivinen-numero {
+    font-weight: bold;
     color: @red-dark;
   }
   .positiivinen-numero {
     font-weight: bold;
     color: @green-dark;
+  }
+  h2 {
+    font-size: 28px;
+    margin-bottom: 32px;
+  }
+  h3 {
+    margin-top: 18px;
+    margin-bottom: 10px;
+  }
+  hr {
+    margin: 4px 0 8px 0;
+    border-top: 1px solid @white-darker;
   }
 }
 
@@ -450,6 +477,10 @@ div.valikatselmus-yhteenveto {
       color: @black-default;
     }
   }
+  .livicon-document-full {
+    color: #0066cc;
+    margin-right: 6px;
+  }
 }
 
 .harmaa-tausta {
@@ -560,4 +591,13 @@ div.valikatselmus-yhteenveto {
 .kattohinta-muutettu {
   border-color: @black-lighter;
   font-size: 14px;
+}
+.ilmoitus {
+  padding-bottom: 1rem;
+}
+.ilmoitus-matala {
+  padding-bottom: @valistys-8;
+}
+.raportti-teksti {
+  margin-bottom: @valistys-8;
 }
