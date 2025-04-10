@@ -252,6 +252,7 @@
                             (assoc :alkuperainen_pisteluku alkuperainen-pisteluku)
                             (assoc :alkuperaisen_pisteluvun_kuukausi alkuperaisen-pisteluvun-kuukausi)
                             (assoc :pistelukujen_muutos pistelukujen-muutos)
+                            (assoc :pistelukujen_muutos_prosentteina muutos-prosentteina)
                             (assoc :indeksikorotuksen_prosenttiosuus indeksikorotuksen-prosenttiosuus)
                             (assoc :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus))
 

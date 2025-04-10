@@ -3,6 +3,7 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
+            [harja.tyokalut.yleiset :refer [round2]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
@@ -47,7 +48,8 @@
    :luoja luoja})
 
 (defn indeksikorjauspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                            hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus
+                            hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
+                            pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus
                             hoitokauden-lopun-indeksikorjaus luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
@@ -57,6 +59,7 @@
    :alkuperainen_pisteluku alkuperainen-pisteluku
    :alkuperaisen_pisteluvun_kuukausi alkuperaisen-pisteluvun-kuukausi
    :pistelukujen_muutos pistelukujen-muutos
+   :pistelukujen_muutos_prosentteina pistelukujen-muutos-prosentteina
    :hoitokauden_kuukaudet hoitokauden-kuukaudet
    :kuukausien_keskiarvo kuukausien-keskiarvo
    :indeksikorotuksen_prosenttiosuus indeksikorotuksen-prosenttiosuus
@@ -171,7 +174,8 @@
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-indeksikorjauspaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                                   hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus
+                                   hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
+                                   pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus
                                    hoitokauden-lopun-indeksikorjaus luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
@@ -183,6 +187,7 @@
   (is (= (bigdec alkuperainen-pisteluku) (:alkuperainen_pisteluku paatos)))
   (is (= alkuperaisen-pisteluvun-kuukausi (:alkuperaisen_pisteluvun_kuukausi paatos)))
   (is (= (bigdec pistelukujen-muutos) (:pistelukujen_muutos paatos)))
+  (is (= (bigdec pistelukujen-muutos-prosentteina) (:pistelukujen_muutos_prosentteina paatos)))
   (is (= (bigdec indeksikorotuksen-prosenttiosuus) (:indeksikorotuksen_prosenttiosuus paatos)))
   (is (= hoitokauden-lopun-indeksikorjaus (:hoitokauden_lopun_indeksikorjaus paatos)))
   (is (= luoja (:luoja paatos))))
@@ -1009,7 +1014,7 @@
     (is (nil? poistettu-paatos))))
 
 ;; Hoitokaudenlopun indeksikorjauksen lisäys
-(deftest kysely-hoikauden-indeksikorjaus-lisays-onnistuu-test
+(deftest kysely-hoitovuoden-indeksikorjaus-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
@@ -1034,20 +1039,23 @@
         alkuperainen-pisteluku 112.5
         alkuperaisen-pisteluvun-kuukausi "elokuu 2023"
         pistelukujen-muutos 5.9
+        pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
         paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
+                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
+                 pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         vastaus (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) urakkaid paatos)
         testattavat-indeksikuukaudet (reduce (fn [uusi-vectori kuukausi]
                                                (conj uusi-vectori [(:kuukausi kuukausi) (:indeksiluku kuukausi)]))
                                        [] hoitokauden-kuukaudet)]
     (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-      testattavat-indeksikuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)))
+      testattavat-indeksikuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
+      pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)))
 
 
 ;; Indeksikorjauksen poisto
-(deftest kysely-hoikauden-indeksikorjaus-poisto-onnistuu-test
+(deftest kysely-hoitovuoden-indeksikorjaus-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
@@ -1072,16 +1080,19 @@
         alkuperainen-pisteluku 112.5
         alkuperaisen-pisteluvun-kuukausi "elokuu 2023"
         pistelukujen-muutos 5.9
+        pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
         paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
+                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
+                 pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         vastaus (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) urakkaid paatos)
         testattavat-indeksikuukaudet (reduce (fn [uusi-vectori kuukausi]
                                                (conj uusi-vectori [(:kuukausi kuukausi) (:indeksiluku kuukausi)]))
                                        [] hoitokauden-kuukaudet)
         _ (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-            testattavat-indeksikuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
+            testattavat-indeksikuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
+            pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         ;; Määrittele haettavat päätökset - Luetaan vain indeksipäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Hoitovuoden lopun indeksikorjaus" :jarjestys 6}]
@@ -1093,7 +1104,7 @@
         v (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi)]
     (is (nil? (first v)))))
 
-(deftest rajapinta-hoikauden-indeksikorjaus-lisays-onnistuu-test
+(deftest rajapinta-hoitovuoden-indeksikorjaus-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
@@ -1118,9 +1129,11 @@
         alkuperainen-pisteluku 112.5
         alkuperaisen-pisteluvun-kuukausi "elokuu 2023"
         pistelukujen-muutos 5.9
+        pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
         paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
+                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
+                 pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
@@ -1132,7 +1145,7 @@
     (is (= (bigdec alkuperainen-pisteluku) (:alkuperainen_pisteluku tallennettu-paatos)) "Alkuperainen pisteluku täsmää.")
     (is (= (bigdec indeksikorotuksen-prosenttiosuus) (:indeksikorotuksen_prosenttiosuus tallennettu-paatos)) "Indeksikorotuksen prosenttiosuus täsmää.")))
 
-(deftest rajapinta-hoikauden-indeksikorjaus-poisto-onnistuu-test
+(deftest rajapinta-hoitovuoden-indeksikorjaus-poisto-onnistuu-test
   (let [;; Hae -24 alkava urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
@@ -1157,9 +1170,11 @@
         alkuperainen-pisteluku 112.5
         alkuperaisen-pisteluvun-kuukausi "elokuu 2023"
         pistelukujen-muutos 5.9
+        pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
         paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi pistelukujen-muutos indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
+                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
+                 pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
@@ -1176,7 +1191,7 @@
     (is (not (nil? (:virhe poistettu-paatos))))))
 
 ;; Hoitokauden lopun hinnat - lisäys
-(deftest kysely-hoikauden-lopun-hintapaatos-lisays-onnistuu-2024-test
+(deftest kysely-hoitovuoden-lopun-hintapaatos-lisays-onnistuu-2024-test
   (let [;; Hae -24 alkava urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
@@ -1198,7 +1213,7 @@
     ;; -24 alkavissa urakoissa kattohintakerroin on 1.1
     (is (= 1.1M (:kattohintakerroin vastaus)))))
 
-(deftest kysely-hoikauden-lopun-hintapaatos-lisays-onnistuu-2025-test
+(deftest kysely-hoitovuoden-lopun-hintapaatos-lisays-onnistuu-2025-test
   (let [;; Hae -24 alkava urakka
         urakkaid (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
@@ -1220,7 +1235,7 @@
     ;; -25 alkavissa urakoissa kattohintakerroin on 1.2
     (is (= 1.20M (:kattohintakerroin vastaus)))))
 
-(deftest kysely-hoikauden-lopun-hintapaatos-poisto-onnistuu-test
+(deftest kysely-hoitovuoden-lopun-hintapaatos-poisto-onnistuu-test
   (let [;; Hae -24 alkava urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
@@ -1245,7 +1260,7 @@
     (is (= true (:poistettu poistovastaus)))
     (is (= kayttajaid (:poistaja poistovastaus)))))
 
-(deftest rajapinta-hoikauden-lopun-hintapaatos-lisays-onnistuu-test
+(deftest rajapinta-hoitovuoden-lopun-hintapaatos-lisays-onnistuu-test
   (let [;; Hae -24 alkava urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
@@ -1271,7 +1286,7 @@
     (testaa-lopun-hintapaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
       tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)))
 
-(deftest rajapinta-hoikauden-lopun-hintapaatos-poisto-onnistuu-test
+(deftest rajapinta-hoitovuoden-lopun-hintapaatos-poisto-onnistuu-test
   (let [;; Hae -24 alkava urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))

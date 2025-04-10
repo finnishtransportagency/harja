@@ -75,7 +75,7 @@
             [:div [:strong (fmt/euro-opt false (:tavoitehinta_ennen paatos))]]]
            [:div.flex-row.summa_rivi
             [:div "Pistelukujen muutos"]
-            [:div [:strong (fmt/euro-opt false (:pistelukujen_muutos paatos)) "%"]]]
+            [:div [:strong (fmt/euro-opt false (:pistelukujen_muutos_prosentteina paatos)) "%"]]]
            [:div.flex-row.summa_rivi
             [:div "Indeksikorjauksen prosenttiosuus (2% ylittävä osa)"]
             [:div [:strong (fmt/euro-opt false (:indeksikorotuksen_prosenttiosuus paatos)) "%"]]]

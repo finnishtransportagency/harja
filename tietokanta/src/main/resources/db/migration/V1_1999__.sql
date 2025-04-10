@@ -158,6 +158,7 @@ CREATE TABLE paatos_hoitokauden_indeksikorjaus
     alkuperaisen_pisteluvun_kuukausi TEXT,                     -- Edellisen hoitovuoden elokuu, eli laitetaan muotoon "elokuu 2021"
     alkuperainen_pisteluku           NUMERIC(10, 1),           -- Edellisen hoitovuoden syyskuun pisteluku. Esim 105.6
     pistelukujen_muutos              NUMERIC(10, 1),
+    pistelukujen_muutos_prosentteina NUMERIC(10, 1),
     indeksikorotuksen_prosenttiosuus NUMERIC(10, 1),           -- 2% ylittävä osa
     hoitokauden_lopun_indeksikorjaus NUMERIC(10, 2),           -- Kokonaissumma indeksikorjauksesta
     luotu                            TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
