@@ -34,17 +34,17 @@
       avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
-        [:div.flex-row
+        [:div.flex-row.raportti-teksti
          [:p "Tarkista, että seuraavien raporttien luvut ovat oikein ja liitä raportit välikatselmuspöytäkirjaan."]]
-        [:div.flex-row [harja.ui.yleiset/linkki "Ympäristöraportti"
-                        #(siirtymat/avaa-raportti :ymparistoraportti (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
-                        {:luokka "klikattava alleviivaa"}]]
-        [:div.flex-row [harja.ui.yleiset/linkki "Laskutusyhteenveto"
-                        #(siirtymat/avaa-raportti :laskutusyhteenveto-tyomaa (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
-                        {:luokka "klikattava alleviivaa"}]]
-        [:div.flex-row [harja.ui.yleiset/linkki "Tehtävämääräraportti"
-                        #(siirtymat/avaa-raportti :tehtavamaarat (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
-                        {:luokka "klikattava alleviivaa"}]]
+        [:div.flex-row.ilmoitus [:div [ikonit/livicon-document-full] [harja.ui.yleiset/linkki "Ympäristöraportti"
+                                                                      #(siirtymat/avaa-raportti :ymparistoraportti (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
+                                                                      {:luokka "klikattava alleviivaa"}]]]
+        [:div.flex-row.ilmoitus [:div [ikonit/livicon-document-full] [harja.ui.yleiset/linkki "Laskutusyhteenveto"
+                                                                      #(siirtymat/avaa-raportti :laskutusyhteenveto-tyomaa (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
+                                                                      {:luokka "klikattava alleviivaa"}]]]
+        [:div.flex-row.ilmoitus-matala [:div [ikonit/livicon-document-full] [harja.ui.yleiset/linkki "Tehtävämääräraportti"
+                                                                             #(siirtymat/avaa-raportti :tehtavamaarat (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
+                                                                             {:luokka "klikattava alleviivaa"}]]]
         [:div [yleiset/info-laatikko :vahva-ilmoitus (str "Hoitovuoden raportointi lukitaan 31.12." (inc hoitokauden-alkuvuosi)) nil nil {:vari "@gray25"}]]
         (if (:virhe paatos)
           [:div.muokkaustoiminnot [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]]

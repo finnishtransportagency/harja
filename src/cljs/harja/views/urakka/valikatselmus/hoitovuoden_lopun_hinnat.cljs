@@ -49,5 +49,5 @@
              #(e! (valikatselmus-tiedot/->TallennaHoitokaudenlopunHintapaatos paatos))
              #(e! (valikatselmus-tiedot/->PoistaHoitokaudenlopunHintapaatos paatos))]]]
 
-          [:div {:style {:padding-bottom "1rem"}}
+          [:div.ilmoitus
            [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]])])]))
