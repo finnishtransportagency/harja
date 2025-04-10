@@ -11,7 +11,8 @@
 
 (declare hae-urakan-hintapaatokset hintapaatos-tehty? hae-urakan-bonuksen-toimenpideinstanssi-id
   hae-oikaistu-tavoitehinta hae-oikaistu-kattohinta hae-paatos hae-bonukset hae-sanktiot hae-tavoitehinnan-muutokset-hoitokaudelle
-  hae-hoitokauden-alun-indeksikorjattu-tavoitehinta hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta)
+  hae-hoitokauden-alun-indeksikorjattu-tavoitehinta hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta
+  poista-tavoitehinnan-muutos!)
 
 ;; Tavoitehinnan oikaisut
 
@@ -49,10 +50,9 @@
                        {::valikatselmus/oikaisun-id (::valikatselmus/oikaisun-id oikaisu)}))]
     paivitetty))
 
-(defn poista-oikaisu [db oikaisu]
-  (update! db ::valikatselmus/tavoitehinnan-oikaisu
-           {::muokkaustiedot/poistettu? true}
-           {::valikatselmus/oikaisun-id (::valikatselmus/oikaisun-id oikaisu)}))
+(defn poista-oikaisu [db oikaisu kayttaja]
+  (poista-tavoitehinnan-muutos! db {:id (::valikatselmus/oikaisun-id oikaisu)
+                                    :muokkaaja-id (:id kayttaja) }))
 
 ;; Kattohinnan oikaisut
 
