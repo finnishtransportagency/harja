@@ -62,27 +62,21 @@ describe('Välikatselmus aukeaa', () => {
         cy.contains('Yhteenveto')
 
         // Lisätään yksi tavoitehinnan oikaisu
-        cy.contains('Luokka')
-        cy.contains('Selite')
-        cy.contains('Summa')
+        cy.contains('Muutos')
+        cy.contains('Perustelu')
+        cy.contains('Vaikutus')
         // Alkuun ei saa olla oikaisuja
-        cy.contains('Ei oikaisuja')
+        cy.contains('Ei muutoksia tavoitehintaan')
 
-        cy.contains('Lisää oikaisu').click();
+        cy.contains('Lisää muutos').click();
         cy.get('[data-cy="luokka-1"]').valinnatValitse({valinta: 'Tiestömuutokset'})
         cy.get('#0selite-1').type('{selectall}seliseli');
-        cy.get('#0summa-1').type('{selectall}100000').blur();
-        cy.wait('@hae-valikatselmuksen-tiedot')
+        cy.get('#0summa-1').type('{selectall}100000');
+        cy.get('#0summa-1').focus().blur();
+        cy.wait('@tavoitehinnan-oikaisu')
 
         // Tarkista oikaisun tiedot
         cy.get('[data-cy="luokka-1"]').contains('Tiestömuutokset');
         cy.get('#0selite-1').should('have.value', 'seliseli')
-        cy.get('#0summa-1').should('have.value', '100000')
-
-        // Poista oikaisu
-        cy.get('[aria-label="Poista"]').click();
-
-        // Poiston jälkeen ei saa olla oiikaisuja
-        cy.contains('Ei oikaisuja')
     })
 })

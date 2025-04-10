@@ -271,7 +271,7 @@
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
 ;; pituus-max oletusarvo on 256, koska se on toteuman lisätiedon tietokantasarakkeissa
 (defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus on-blur lomake?
-                                     disabled? pituus-max toiminta-f aputeksti]} data]
+                                     disabled? pituus-max toiminta-f aputeksti elementin-id]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
                       1
@@ -305,13 +305,14 @@
                (swap! rivit + (/ erotus 19)))))})
 
       (fn [{:keys [nimi koko on-focus on-blur lomake? disabled?
-                   aputeksti]} data]
+                   aputeksti elementin-id]} data]
         [:span.kentta-text
          [:textarea {:value @data
                      :on-change #(muuta! data %)
                      :on-focus on-focus
                      :on-blur on-blur
                      :disabled disabled?
+                     :id (or elementin-id nil)
                      :cols (or koko-sarakkeet 80)
                      :rows @rivit
                      :class (cond-> nil
