@@ -443,9 +443,10 @@
       :else
       (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Kattohintaa tai toteutuneita kustannuksia ei ole määritelty." false 7))))
 
-(defn valmistele-hoitokauden-lopun-hintapaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset tavoitehinta
+(defn valmistele-hoitovuoden-lopun-hintapaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset tavoitehinta
                                                 tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus
-                                                kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus]
+                                                kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus
+                                                tietokanta-paatokset]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; Hoitotovuoden pitää olla päättynyt
   ;; Tavoitehinnan muutokset -päätös on tallennettu
@@ -454,11 +455,11 @@
     (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
     (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Hoitovuosi on vielä kesken." true 4)
 
-    (and validoinnit-kaytossa? (<= 2024 valittu-hoitovuosi) (not (:id (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) paatokset)))))
+    (and validoinnit-kaytossa? (<= 2024 valittu-hoitovuosi) (not (:id (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) tietokanta-paatokset)))))
     (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 4)
 
-    (and (or (= valittu-hoitovuosi 2024) (= valittu-hoitovuosi 2025)) (not (:id (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) paatokset)))))
-    (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 4)
+    (and (or (= valittu-hoitovuosi 2024) (= valittu-hoitovuosi 2025)) (not (:id (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) tietokanta-paatokset)))))
+    (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Hoitovuoden lopun indeksikorjaus -päätös on vielä tekemättä." true 4)
 
     (and tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta)
     (let [hintapaatos (first (filter #(= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") paatokset))

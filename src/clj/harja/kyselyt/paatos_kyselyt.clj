@@ -370,7 +370,7 @@
       (heita-virhe (str "Hoitokauden lopun hintapäätöksessä virheitä: " (clojure.string/join ", " validaatio)))
       (tee-hoitokauden-lopun-hinta-paatos<! db paatos))))
 
-(defn poista-hoitokauden-lopun-hintapaatos [db urakkaid kayttajaid paatosid]
+(defn poista-hoitovuoden-lopun-hintapaatos [db urakkaid kayttajaid paatosid]
   (let [;; Varmistetaan ensin, että hoitokauden lopun hintapaatos löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
         paatos (first (hae-hoitokauden-lopun-hintapaatos db {:paatos-id paatosid}))
         _ (when (or

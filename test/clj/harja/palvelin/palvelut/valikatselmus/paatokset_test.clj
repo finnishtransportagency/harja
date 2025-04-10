@@ -1241,7 +1241,7 @@
             tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
         ;; Poistetaan juuri lisätty päätös.
-        poistovastaus (paatos-kyselyt/poista-hoitokauden-lopun-hintapaatos (:db jarjestelma) urakkaid kayttajaid (:id vastaus))]
+        poistovastaus (paatos-kyselyt/poista-hoitovuoden-lopun-hintapaatos (:db jarjestelma) urakkaid kayttajaid (:id vastaus))]
     (is (= true (:poistettu poistovastaus)))
     (is (= kayttajaid (:poistaja poistovastaus)))))
 

@@ -338,11 +338,14 @@
         hoidonjohtopalkkio (:budjetoitu_summa_indeksikorjattu (first (paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle db {:urakkaid urakkaid
                                                                                                                                          :alkupvm (pvm/hoitokauden-alkupvm valittu-hoitovuosi)
                                                                                                                                          :loppupvm (pvm/hoitokauden-loppupvm (inc valittu-hoitovuosi))})))
+        ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
+        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid valittu-hoitovuosi)
+
         ;; Valmistellaan päätökset ui:ta varten
         mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta indeksi)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-muutospaatos (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) mahdolliset-paatokset tavoitehinta kattohinta muokkaa-kattohinta? valittu-hoitovuosi)
         mahdolliset-paatokset (paatoskone/valmistele-indeksikorjauspaatos (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) mahdolliset-paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-indeksikuukaudet alkuperainen-pisteluku valittu-hoitovuosi)
-        mahdolliset-paatokset (paatoskone/valmistele-hoitokauden-lopun-hintapaatos (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus)
+        mahdolliset-paatokset (paatoskone/valmistele-hoitovuoden-lopun-hintapaatos (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-alituspaatos db (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) urakkaid mahdolliset-paatokset urakan-loppuvuosi valittu-hoitovuosi hoitokauden-alun-tavoitehinta tavoitehinta toteutuneet-kustannukset hoitovuosinro)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-ylityspaatos db (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) urakkaid mahdolliset-paatokset urakan-loppuvuosi valittu-hoitovuosi tavoitehinta kattohinta toteutuneet-kustannukset hoitovuosinro)
         mahdolliset-paatokset (paatoskone/valmistele-kattohinnan-paatokset db (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) urakkaid mahdolliset-paatokset kattohinta toteutuneet-kustannukset valittu-hoitovuosi urakan-loppuvuosi hoitovuosinro)
@@ -350,8 +353,7 @@
         mahdolliset-paatokset (paatoskone/valmistele-hoidonjohtopalkkionmuutospaatos (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset hoitokauden-lopun-indeksikorjaamaton-tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
         mahdolliset-paatokset (paatoskone/valmistele-raporttipaatos (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset)
 
-        ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
-        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid valittu-hoitovuosi)
+
         ;; Yhdistä päätökset listaksi. Tietokannasta haetut päätökset ovat tärkeydeltään tärkeämpiä, kuin päätöskoneelta saadut
         paatokset (paatoskone/yhdista-mapit mahdolliset-paatokset tietokanta-paatokset)]
     paatokset))
@@ -756,7 +758,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
   (log/debug "poista-hoitovuoden-lopun-hintapaatos :: paatos" (pr-str paatos))
   (jdbc/with-db-transaction [db db]
-    (let [_ (paatos-kyselyt/poista-hoitokauden-lopun-hintapaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
+    (let [_ (paatos-kyselyt/poista-hoitovuoden-lopun-hintapaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
 
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
