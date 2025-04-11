@@ -25,17 +25,7 @@
        "Paikka: %s\n\n"
        "Tienumero: %s\n\n"
        "Selitteet: %s.\n\n"
-       "Lisätietoja: %s.\n\n"
-       "Kuittauskoodit:\n"
-       "V%s = vastaanotettu\n"
-       "A%s = aloitettu\n"
-       "K%s = toimenpiteet aloitettu\n"
-       "L%s = lopetettu\n"
-       "T%s = lopetettu toimenpitein\n"
-       "M%s = muutettu\n"
-       "R%s = vastattu\n"
-       "U%s = väärä urakka\n\n"
-       "Vastaa lähettämällä kuittauskoodi sekä kommentti. Esim. A1 Työt aloitettu.\n"))
+       "Lisätietoja: %s.\n\n"))
 
 (def +ilmoitusviesti-aiheella+
   (str "Uusi toimenpidepyyntö %s: %s (viestinumero: %s).\n\n"
@@ -48,17 +38,7 @@
     "Tienumero: %s\n\n"
     "Aihe: %s.\n\n"
     "Tarkenne: %s.\n\n"
-    "Lisätietoja: %s.\n\n"
-    "Kuittauskoodit:\n"
-    "V%s = vastaanotettu\n"
-    "A%s = aloitettu\n"
-    "K%s = toimenpiteet aloitettu\n"
-    "L%s = lopetettu\n"
-    "T%s = lopetettu toimenpitein\n"
-    "M%s = muutettu\n"
-    "R%s = vastattu\n"
-    "U%s = väärä urakka\n\n"
-    "Vastaa lähettämällä kuittauskoodi sekä kommentti. Esim. A1 Työt aloitettu.\n"))
+    "Lisätietoja: %s.\n\n"))
 
 (def +onnistunut-viesti+ "Kuittaus käsiteltiin onnistuneesti. Kiitos!")
 (def +viestinumero-tai-toimenpide-puuttuuviesti+ "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu.")
@@ -200,15 +180,7 @@
             [aihe
              tarkenne]
             [selitteet])
-          [lisatietoja
-           viestinumero
-           viestinumero
-           viestinumero
-           viestinumero
-           viestinumero
-           viestinumero
-           viestinumero
-           viestinumero])))))
+          [lisatietoja])))))
 
 (defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
   (try
