@@ -56,7 +56,7 @@ VALUES
 ('Verkko (muu)', 'Verkko (muu)', 671);
 
 CREATE TYPE kuulamyllyluokka AS ENUM
-    ('AN5', 'AN7', 'AN10', 'AN14', 'AN19', 'AN30', 'Ei kuulamyllyä');
+    ('AN5', 'AN7', 'AN10', 'AN14', 'AN19', 'AN30', 'AN22', 'Ei kuulamyllyä');
 
 CREATE TABLE pot2_massatyyppi (
     koodi   INTEGER PRIMARY KEY,
