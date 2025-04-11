@@ -132,11 +132,11 @@ BEGIN
                    -- loppupään tarkastelu
                      (tr_loppuosa_ > "tr-osa" OR (tr_loppuosa_ = "tr-osa" AND  tr_loppuetaisyys_ > "tr-alkuetaisyys")) AND
                    -- huomioitava vain pääkaistat 11 ja 21, muuten esim. kääntymiskaistoista tulee häiriötä laskentaan
-                     (("tr-ajorata" = 0 AND "tr-kaista" = '11') OR
-                      ("tr-ajorata" = 1 AND "tr-kaista" = '11') OR
-                      ("tr-ajorata" = 2 AND "tr-kaista" = '21') OR
+                     (("tr-ajorata" = 0 AND "tr-kaista" = 11) OR
+                      ("tr-ajorata" = 1 AND "tr-kaista" = 11) OR
+                      ("tr-ajorata" = 2 AND "tr-kaista" = 21) OR
                       -- joitakin kävelyn ja pyöräilyn väyliä on rajoitusalueina, niillä on aina tienumero 70000-80000, ajorata 0 ja kaista 31
-                      ("tr-numero" BETWEEN 70000 AND 80000 AND "tr-ajorata" = 0 AND "tr-kaista" = '31'))
+                      ("tr-numero" BETWEEN 70000 AND 80000 AND "tr-ajorata" = 0 AND "tr-kaista" = 31))
                  ORDER BY "tr-osa", "tr-alkuetaisyys")
     SELECT SUM(
                CASE
@@ -175,8 +175,6 @@ BEGIN
           FROM rajoitusalue
         LOOP
             RAISE NOTICE 'Rajoitusalue: %', rajoitusaluerivi;
-            RAISE NOTICE 'rajoitusalueen: id %', rajoitusaluerivi.id;
-
             SELECT * FROM laske_tieosoitteen_ajoratapituudet(rajoitusaluerivi.tie,
                 rajoitusaluerivi.aosa, rajoitusaluerivi.aet, rajoitusaluerivi.losa, rajoitusaluerivi.let) INTO ajoratapituus;
             RAISE NOTICE 'ajoratapituus %', ajoratapituus;

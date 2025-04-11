@@ -222,11 +222,11 @@ ORDER BY tie, osa, alkuetaisyys;
                -- loppupään tarkastelu
                  (:tr-loppuosa > "tr-osa" OR (:tr-loppuosa = "tr-osa" AND  :tr-loppuetaisyys > "tr-alkuetaisyys")) AND
                -- huomioitava vain pääkaistat 11 ja 21, muuten esim. kääntymiskaistoista tulee häiriötä laskentaan
-                 (("tr-ajorata" = 0 AND "tr-kaista" = '11') OR
-                  ("tr-ajorata" = 1 AND "tr-kaista" = '11') OR
-                  ("tr-ajorata" = 2 AND "tr-kaista" = '21') OR
+                 (("tr-ajorata" = 0 AND "tr-kaista" = 11) OR
+                  ("tr-ajorata" = 1 AND "tr-kaista" = 11) OR
+                  ("tr-ajorata" = 2 AND "tr-kaista" = 21) OR
                      -- joitakin kävelyn ja pyöräilyn väyliä on rajoitusalueina, niillä on aina tienumero 70000-80000, ajorata 0 ja kaista 31
-                  ("tr-numero" BETWEEN 70000 AND 80000 AND "tr-ajorata" = 0 AND "tr-kaista" = '31'))
+                  ("tr-numero" BETWEEN 70000 AND 80000 AND "tr-ajorata" = 0 AND "tr-kaista" = 31))
              ORDER BY "tr-osa", "tr-alkuetaisyys")
 SELECT SUM(
            CASE
