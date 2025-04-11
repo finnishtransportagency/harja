@@ -75,13 +75,10 @@
      jvh? (roolit/jvh? @istunto/kayttaja)]
     [:<>
      [:div.row
-      [:div.col-xs-12.col-md-12
-       [:h1 "Välikatselmuksen päätökset"]]]
-     [:div.row
-      [:div.col-xs-12.col-md-6
-       [:div.caption urakan-nimi]
-       [:div.caption (str (inc (- valittu-hoitokauden-alkuvuosi urakan-alkuvuosi)) ". hoitovuosi (" hoitokausi-str ")")]]
-      [:div.col-xs-12.col-md-6
+      [:div.col-xs-12.col-md-8.sivu-otsikko
+       [:h1 "Välikatselmus"]
+       [:div.urakan_nimi urakan-nimi]]
+      [:div.col-xs-12.col-md-4.hoitovuosi-valikko
        [:div
         [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
         [yleiset/livi-pudotusvalikko {:valinta (pvm/vuosi (first valittu-hoitokausi))
@@ -89,7 +86,7 @@
                                       :data-cy "hoitokausi-valinta"
                                       :valitse-fn #(do (e! (valikatselmus-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                                      (e! (t-yhteiset/->NollaaValikatselmuksenPaatokset)))
-                                      :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet "Hoitovuosi")
+                                      :format-fn #(fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm % hoitokaudet "Hoitovuosi")
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokaudet]]]]
 
