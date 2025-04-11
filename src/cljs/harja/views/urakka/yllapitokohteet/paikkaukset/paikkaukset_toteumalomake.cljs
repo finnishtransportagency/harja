@@ -90,6 +90,7 @@
         levitin? (or (= "AB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
                      (= "PAB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
                      (= "SMA-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat)))]
+    (println "this is it!")
     (if (or urem? levitin?)
       [(lomake/ryhma
          {:otsikko "Määrä"
@@ -145,7 +146,6 @@
                        "AN10" "AN10"
                        "AN14" "AN14"
                        "AN19" "AN19"
-                       "AN22" "AN22"
                        "AN30" "AN30"}
             :pakollinen? true
             :vayla-tyyli? true
