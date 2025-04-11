@@ -130,14 +130,10 @@
                                      {(:tr-osa osan-pituustiedot)
                                       (get-in osan-pituustiedot [:pituudet :pituus])})
                                    osien-tiedot))
-            pituus (assoc suolarajoitus
-                     :pituus
-                     (tr-domain/laske-tien-pituus tie-osien-pituudet (tr-domain/tr-osoite-kasvusuuntaan
-                                                                       (tr-domain/tr-alkuiseksi suolarajoitus))))
+            pituus (tr-domain/laske-tien-pituus tie-osien-pituudet (tr-domain/tr-osoite-kasvusuuntaan
+                                                                     (tr-domain/tr-alkuiseksi suolarajoitus)))
             ;; lasketaan kyseisen tieosoitteen ajoratakilometrit yhteen. Kaksiajorataisten osuuksien kohdalla kertyy siis tuplana kilometrejä.
-
             ajoratojen-pituus (tieosoite-haku/tieosoitteen-ajoratakilometrit db (tr-domain/tr-alkuiseksi suolarajoitus))
-            ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
             pohjavesialueet (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let]))]
         ;; Palautetaan joko virheet, tai saadut tiedot
         (if validaatiovirheet
@@ -147,8 +143,9 @@
            :ajoratojen_pituus nil}
           (merge (when-not (empty? (:validaatioinfot validaatiot))
                    {:validaatioinfot (:validaatioinfot validaatiot)})
-            {:pituus (:pituus pituus)
-             :ajoratojen_pituus ajoratojen-pituus
+            {:pituus pituus
+             ;; on harvinaisia tapauksia, joissa kaistatieto ei mahdollista ajoratakm laskentaa, tällöin fallbackinä pituus
+             :ajoratojen_pituus (or ajoratojen-pituus pituus)
              :pohjavesialueet pohjavesialueet}))))))
 
 (defn hae-tieosoitteen-ja-ajoratojen-pituudet [db user {:keys [urakka-id] :as suolarajoitus}]
