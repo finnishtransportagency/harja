@@ -25,7 +25,7 @@
   :tallenna-oikaisu-fn    Funktio, jolla tallennetaan oikaisu, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
   :tallenna-oikaisut-fn   Funktio, jolla päivitetään oikaisut, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
                           Kutsutaan jokaisesta muutoksesta."
-  [hoitokauden-oikaisut-atom {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn]}]
+  [hoitokauden-oikaisut-atom hoitokauden-alkuvuosi {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn]}]
   (let [virheet (atom {})
         uusi-id (if (empty? (keys @hoitokauden-oikaisut-atom))
                   0
@@ -35,7 +35,20 @@
                                                               (fn [yhteensa hoitokauden-oikaisu]
                                                                 (+ yhteensa (get hoitokauden-oikaisu :harja.domain.kulut.valikatselmus/summa)))
                                                               0
-                                                              (vals @hoitokauden-oikaisut-atom))))]
+                                                              (vals @hoitokauden-oikaisut-atom))))
+        muodosta-yksinkertaistettu-lista (fn [arvot]
+                                           (when (and (not (nil? arvot)) (seq? arvot))
+                                             (reduce (fn [listaus oikaisu]
+                                                       (let [k {:index (count listaus)
+                                                                ::valikatselmus/hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi oikaisu)
+                                                                ::valikatselmus/selite (::valikatselmus/selite oikaisu)
+                                                                ::valikatselmus/summa (::valikatselmus/summa oikaisu)}]
+                                                         (conj listaus k)))
+                                               [] arvot)))
+        oikaisut (muodosta-yksinkertaistettu-lista (vals @hoitokauden-oikaisut-atom))
+        poista-indeksilla (fn [arvot ind]
+                            (filterv #(not= (get % :index) ind) arvot))
+        ]
     [:div.tavoitehinnan-muutokset
      [grid/muokkaus-grid
       (merge {:tyhja "Ei muutoksia tavoitehintaan"
@@ -65,7 +78,7 @@
               :virheet virheet
               :nayta-virheikoni? false
               :rivi-jalkeen (when @hoitokauden-oikaisut-atom
-                              [{:teksti "Yhteensä" :luokka "yhteensa" }
+                              [{:teksti "Yhteensä" :luokka "yhteensa"}
                                {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
                                {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])}
         (when voi-muokata?
@@ -73,7 +86,10 @@
            :custom-toiminto {:teksti "Lisää muutos"
                              :toiminto #(do
                                           (swap! hoitokauden-oikaisut-atom assoc uusi-id
-                                            {:id uusi-id :koskematon true :lisays-tai-vahennys :lisays}))
+                                            {:id uusi-id ;:koskematon true
+                                             ;:lisays-tai-vahennys :lisays
+                                             ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                             }))
                              :keskita-vasemmalle true
                              :keskita-ylos true
                              :opts {:ikoni (ikonit/livicon-plus)
@@ -137,6 +153,7 @@
   (let [paatos-avain :tavoitehinnan-muutokset
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         paatos-tehty? (boolean (:id paatos))
+        hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         tavoitehinnan-muutokset (get tavoitehinnan-muutokset hoitokauden-alkuvuosi)
         kattohinta (:kattohinta paatos)
@@ -162,6 +179,7 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [tavoitehinnan-oikaisut-taulukko hoitokauden-oikaisut-atom
+         hoitokauden-alkuvuosi
          {:voi-muokata? (and voi-muokata? (not paatos-tehty?))
           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
           :poista-oikaisu-fn #(e! (valikatselmus-tiedot/->PoistaOikaisu %1 %2))

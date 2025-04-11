@@ -162,3 +162,10 @@ from tavoitehinnan_oikaisu
 where "urakka-id" = :urakkaid
   and "hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
   and poistettu is not true;
+
+-- name: poista-tavoitehinnan-muutos!
+UPDATE tavoitehinnan_oikaisu
+SET poistettu = true,
+    muokattu  = now(),
+    "muokkaaja-id" = :muokkaaja-id
+WHERE id = :id;
