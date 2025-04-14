@@ -149,7 +149,7 @@
        [:div.flex-row.alkuun.valistys16
         [:span (fmt/euro-opt false kattohinta)]]])))
 
-(defn tavoitehinnan-muutokset [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset tavoitehinnan-muutokset]
+(defn tavoitehinnan-muutokset [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset tavoitehinnan-muutokset]
   (let [paatos-avain :tavoitehinnan-muutokset
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         paatos-tehty? (boolean (:id paatos))

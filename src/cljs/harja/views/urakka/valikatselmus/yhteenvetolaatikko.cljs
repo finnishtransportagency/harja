@@ -86,7 +86,7 @@
         urakoitsijan-hyvitysosuus (or (arvo-paatoksesta kattohinnan-ylityspaatos :urakoitsija_maksaa) 0)
         hoidonjohtopalkkiopaatos (valikatselmus-tiedot/ota-paatos paatokset :hoidonjohtopalkkion-muutos)
         hoidonjohtopalkkion-muutos (or (arvo-paatoksesta hoidonjohtopalkkiopaatos :hoidonjohtopalkkio_muutos) 0)]
-    [:div.valikatselmus-yhteenveto.elevation-2
+    [:div.valikatselmus-yhteenveto
      [:h2 "Yhteenveto"]
      [:div.flex-row.summa_rivi_ylin
       [:span.laskenta-rivi-lukema "Hoitovuoden lopun tavoitehinta"]

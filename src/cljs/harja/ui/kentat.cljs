@@ -389,7 +389,7 @@
                                   :else
                                   +desimaalin-oletus-tarkkuus+)
               desimaaliluku-re-pattern (re-pattern (str
-                                                     "-?\\d{1,"
+                                                     "[+-]?\\d{1,"
                                                      kokonaisosan-maara
                                                      "}((\\.|,)\\d{0,"
                                                      desimaalien-maara

@@ -110,7 +110,7 @@
                              tallennus-kesken?
                              (not voi-muokata?))}])]))])]))
 
-(defn kattohinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+(defn kattohinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :kattohinta-ylitys
         paatos-tehty? (or (:id paatos) false)
         siirra? (:siirra? paatos)

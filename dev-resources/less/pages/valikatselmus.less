@@ -3,6 +3,9 @@
 
 .valikatselmus-container {
   margin-top: @valistys-16; // Ei mainita designissa, mutta näyttää paremmalta kuin ei mitään.
+  h1 {
+    font-size: 28px;
+  }
   .summa_rivi {
     line-height: 24px;
     padding-top: @valistys-4;
@@ -17,6 +20,25 @@
     padding-top: @valistys-4;
     padding-bottom: @valistys-8;
   }
+  .urakan_nimi {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .sivu-otsikko {
+    padding-left: 0;
+  }
+  .hoitovuosi-valikko {
+    margin-top: 32px;
+    padding: 0;
+    .select-default {
+      border-color: @black-lighter;
+    }
+    .alasvedon-otsikko-vayla {
+      font-size: 12px;
+      font-weight: 600;
+      color: @gray25;
+    }
+  }
 }
 
 .oikaisut-ja-paatokset {
@@ -26,11 +48,6 @@
     margin-bottom: @valistys-16;
   }
 }
-
-.valikatselmus-ja-yhteenveto {
-  display: flex;
-}
-
 .yhteenveto-container {
   .yhteenveto {
     min-width: 532px;
@@ -169,8 +186,9 @@ div.valikatselmus-yhteenveto {
   }
 
   max-width: 532px;
-  margin-top: @valistys-32;
+  margin-top: @valistys-16;
   border: 1px solid @harmaa-vaalea;
+  border-radius: 0.5rem;
   box-sizing: border-box;
   padding: @valistys-16;
 
@@ -242,7 +260,7 @@ div.valikatselmus-yhteenveto {
 
 .paatos-komponentti-border {
   border: solid 1px @white-darker;
-  border-radius: 0.25rem;
+  border-radius: 0.5rem;
   padding-top: @valistys-16;
   padding-left: @valistys-24;
   padding-right: @valistys-24;

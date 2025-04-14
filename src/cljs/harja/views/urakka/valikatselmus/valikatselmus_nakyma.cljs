@@ -75,13 +75,10 @@
      jvh? (roolit/jvh? @istunto/kayttaja)]
     [:<>
      [:div.row
-      [:div.col-xs-12.col-md-12
-       [:h1 "Välikatselmuksen päätökset"]]]
-     [:div.row
-      [:div.col-xs-12.col-md-6
-       [:div.caption urakan-nimi]
-       [:div.caption (str (inc (- valittu-hoitokauden-alkuvuosi urakan-alkuvuosi)) ". hoitovuosi (" hoitokausi-str ")")]]
-      [:div.col-xs-12.col-md-6
+      [:div.col-xs-12.col-md-8.sivu-otsikko
+       [:h1 "Välikatselmus"]
+       [:div.urakan_nimi urakan-nimi]]
+      [:div.col-xs-12.col-md-4.hoitovuosi-valikko
        [:div
         [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
         [yleiset/livi-pudotusvalikko {:valinta (pvm/vuosi (first valittu-hoitokausi))
@@ -89,7 +86,7 @@
                                       :data-cy "hoitokausi-valinta"
                                       :valitse-fn #(do (e! (valikatselmus-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                                      (e! (t-yhteiset/->NollaaValikatselmuksenPaatokset)))
-                                      :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet "Hoitovuosi")
+                                      :format-fn #(fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm % hoitokaudet "Hoitovuosi")
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokaudet]]]]
 
@@ -123,14 +120,14 @@
            (= (ffirst paatos) :lupaukset)
            [lupaukset/lupauspaatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
            (= (ffirst paatos) :tavoitehinnan-muutokset)
-           [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset (:tavoitehinnan-muutokset app)]
-           (= (ffirst paatos) :tavoitehinnan-ylitys) [hintapaatokset/tavoitehinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-           (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-           (= (ffirst paatos) :kattohinnan-ylitys) [hintapaatokset/kattohinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+           [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app)]
+           (= (ffirst paatos) :tavoitehinnan-ylitys) [hintapaatokset/tavoitehinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+           (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+           (= (ffirst paatos) :kattohinnan-ylitys) [hintapaatokset/kattohinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
            (= (ffirst paatos) :valikatselmuspoytakirjaan-liitettavat-raportit) [raportit/raportit e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-           (= (ffirst paatos) :hoitovuoden-lopun-indeksikorjaus) [indeksikorjaus/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-           (= (ffirst paatos) :hoidonjohtopalkkion-muutos) [hoidonjohtopalkkio/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-           (= (ffirst paatos) :hoitovuoden-lopun-tavoite-ja-kattohinta) [hoitovuoden-lopun-hinnat/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+           (= (ffirst paatos) :hoitovuoden-lopun-indeksikorjaus) [indeksikorjaus/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+           (= (ffirst paatos) :hoidonjohtopalkkion-muutos) [hoidonjohtopalkkio/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+           (= (ffirst paatos) :hoitovuoden-lopun-tavoite-ja-kattohinta) [hoitovuoden-lopun-hinnat/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
            :else nil)))]))
 
 (defn- varmista-hoitokauden-alkuvuosi [valittu-hoitokausi]
