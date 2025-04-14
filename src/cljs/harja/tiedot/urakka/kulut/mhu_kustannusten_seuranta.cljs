@@ -147,23 +147,6 @@
     (viesti/nayta-toast! "Kattohintojen haku epäonnistui!" :varoitus)
     app)
 
-  HaeUrakanPaatokset
-  (process-event [{urakka :urakka} app]
-    (tuck-apurit/post! :hae-urakan-paatokset
-      {::urakka/id urakka}
-      {:onnistui ->HaeUrakanPaatoksetOnnistui
-       :epaonnistui ->HaeUrakanPaatoksetEpaonnistui})
-    app)
-
-  HaeUrakanPaatoksetOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (assoc app :urakan-paatokset vastaus))
-
-  HaeUrakanPaatoksetEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Urakan päätösten haku epäonnistui!" :varoitus)
-    app)
-
   ;; Monta riviä voi olla avattuna kerrallaan
   AvaaRivi
   (process-event [{avain :avain} app]
