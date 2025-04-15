@@ -71,7 +71,7 @@
         tavoitehinnan-alituspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-alitus)
         tavoitehinnan-ylitys (or (:ylityksen_maara tavoitehinnan-ylityspaatos) 0)
         tavoitehinnan-alitus (or (:alituksen_maara tavoitehinnan-alituspaatos) 0)
-        tavoitepalkkio (or (arvo-paatoksesta tavoitehinnan-alituspaatos :tavoitehinta) 0)
+        tavoitepalkkio (or (arvo-paatoksesta tavoitehinnan-alituspaatos :tavoitepalkkio) 0)
         seuraavan-vuoden-hankintakustannusten-alennus (or (arvo-paatoksesta tavoitehinnan-alituspaatos :siirron_maara) 0)
 
         tilaajan-tavoitehinnan-ylitysprosentti (:tilaajan_prosentti tavoitehinnan-ylityspaatos)

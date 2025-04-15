@@ -33,14 +33,14 @@
 (defrecord HaeKattohintojenOikaisut [urakka])
 (defrecord HaeKattohintojenOikaisutOnnistui [vastaus])
 (defrecord HaeKattohintojenOikaisutEpaonnistui [vastaus])
-(defrecord HaeUrakanPaatokset [urakka])
-(defrecord HaeUrakanPaatoksetOnnistui [vastaus])
-(defrecord HaeUrakanPaatoksetEpaonnistui [vastaus])
 (defrecord AvaaRivi [avain])
 (defrecord ValitseHoitokausi [urakka vuosi])
 (defrecord ValitseKuukausi [urakka kuukausi vuosi])
 (defrecord AvaaValikatselmusLomake [])
 (defrecord SuljeValikatselmusLomake [])
+(defrecord HaeOnkoPaatoksiaTekematta [urakkaid kuluva-hoitovuosi])
+(defrecord HaeOnkoPaatoksiaTekemattaOnnistui [vastaus])
+(defrecord HaeOnkoPaatoksiaTekemattaEpaonnistui [vastaus])
 
 (defn hae-kustannukset [urakka-id hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm]
   (let [alkupvm (if (and
@@ -103,65 +103,25 @@
     (viesti/nayta! "Kattohinnan ja tavoitteen haku epäonnistui!" :danger)
     app)
 
-  HaeTavoitehintojenOikaisut
-  (process-event [{urakka :urakka} app]
-    (tuck-apurit/post! :hae-tavoitehintojen-oikaisut
-      {::urakka/id urakka}
-      {:onnistui ->HaeTavoitehintojenOikaisutOnnistui
-       :epaonnistui ->HaeTavoitehintojenOikaisutEpaonnistui})
+  HaeOnkoPaatoksiaTekematta
+  (process-event [{urakkaid :urakkaid kuluva-hoitovuosi :kuluva-hoitovuosi} app]
+    (js/console.log "HaeOnkoPaatoksiaTekematta")
+    (tuck-apurit/post! :onko-paatoksia-tekematta
+      {:urakkaid urakkaid
+       :kuluva-hoitovuosi kuluva-hoitovuosi}
+      {:onnistui ->HaeOnkoPaatoksiaTekemattaOnnistui
+       :epaonnistui ->HaeOnkoPaatoksiaTekemattaEpaonnistui
+       :paasta-virhe-lapi? true})
     app)
 
-  HaeTavoitehintojenOikaisutOnnistui
+  HaeOnkoPaatoksiaTekemattaOnnistui
   (process-event [{vastaus :vastaus} app]
-    ;; Data on muodossa {vuosi [{data} {data}]}
-    ;; Muutetaan se {vuosi {0 {data}
-    ;;                      1 {data}}}
-    (assoc app :tavoitehinnan-oikaisut
-      ;; Merkitään samalla koskemattomiksi, jotta voidaan välttää turhien päivitysten tekeminen
-      (fmap #(zipmap (range) (map (fn [o] (-> o
-                                            (assoc :koskematon true)
-                                            (assoc :lisays-tai-vahennys (if (neg? (::valikatselmus/summa o))
-                                                                          :vahennys
-                                                                          :lisays)))) %)) vastaus)))
+    (js/console.log "HaeOnkoPaatoksiaTekemattaOnnistui :: vastaus" (pr-str vastaus))
+    (assoc app :onko-paatoksia-tekematta vastaus))
 
-  HaeTavoitehintojenOikaisutEpaonnistui
+  HaeOnkoPaatoksiaTekemattaEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Tavoitehintojen haku epäonnistui!" :varoitus)
-    app)
-
-  HaeKattohintojenOikaisut
-  (process-event [{urakka :urakka} app]
-    (tuck-apurit/post! :hae-kattohintojen-oikaisut
-      {::urakka/id urakka}
-      {:onnistui ->HaeKattohintojenOikaisutOnnistui
-       :epaonnistui ->HaeKattohintojenOikaisutEpaonnistui})
-    ;; Tyhjennä lomake
-    (dissoc app :kattohinnan-oikaisu))
-
-  HaeKattohintojenOikaisutOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (assoc app :kattohintojen-oikaisut vastaus))
-
-  HaeKattohintojenOikaisutEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Kattohintojen haku epäonnistui!" :varoitus)
-    app)
-
-  HaeUrakanPaatokset
-  (process-event [{urakka :urakka} app]
-    (tuck-apurit/post! :hae-urakan-paatokset
-      {::urakka/id urakka}
-      {:onnistui ->HaeUrakanPaatoksetOnnistui
-       :epaonnistui ->HaeUrakanPaatoksetEpaonnistui})
-    app)
-
-  HaeUrakanPaatoksetOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (assoc app :urakan-paatokset vastaus))
-
-  HaeUrakanPaatoksetEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Urakan päätösten haku epäonnistui!" :varoitus)
+    (viesti/nayta! "Päätöksien haku epäonnistui!" :danger)
     app)
 
   ;; Monta riviä voi olla avattuna kerrallaan

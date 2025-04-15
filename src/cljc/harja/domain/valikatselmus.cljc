@@ -35,6 +35,7 @@
 (s/def ::alkuperaisen_pisteluvun_kuukausi string?)
 (s/def ::alkuperainen_pisteluku number?)
 (s/def ::pistelukujen_muutos number?)
+(s/def ::pistelukujen_muutos_prosentteina number?)
 (s/def ::indeksikorotuksen_prosenttiosuus number?)
 (s/def ::hoitokauden_lopun_indeksikorjaus number?)
 (s/def ::hoitokauden_kuukaudet #(not (nil? %)))
@@ -74,7 +75,7 @@
 
 (s/def ::indeksikorjauspaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::tavoitehinta ::tavoitehinnan_muutokset ::tavoitehinta_ennen
                                                ::hoitokauden_kuukaudet ::kuukausien_keskiarvo ::alkuperaisen_pisteluvun_kuukausi
-                                               ::alkuperainen_pisteluku ::pistelukujen_muutos ::indeksikorotuksen_prosenttiosuus
+                                               ::alkuperainen_pisteluku ::pistelukujen_muutos ::pistelukujen_muutos_prosentteina  ::indeksikorotuksen_prosenttiosuus
                                                ::hoitokauden_lopun_indeksikorjaus ::luoja]))
 
 (s/def ::hoitokauden-lopun-hintapaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::tavoitehinta_ennen ::tavoitehinta_jalkeen

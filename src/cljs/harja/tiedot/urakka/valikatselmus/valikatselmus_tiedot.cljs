@@ -79,18 +79,6 @@
 
 (defrecord AvaaPaatos [avain])
 
-(def tyyppi->lomake
-  {::valikatselmus/kattohinnan-ylitys :kattohinnan-ylitys-lomake
-   ::valikatselmus/lupausbonus :lupausbonus-lomake
-   ::valikatselmus/lupaussanktio :lupaussanktio-lomake})
-
-(defn filtteroi-paatos [hoitokauden-alkuvuosi tyyppi paatokset]
-  (first (filter #(and
-                    (or (= (name tyyppi) (::valikatselmus/tyyppi %))
-                      (= (name (keyword tyyppi)) (::valikatselmus/tyyppi %)))
-                    (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi %)))
-           paatokset)))
-
 (defn poista-kattohinnan-oikaisu [app]
   (tuck-apurit/post! app :poista-kattohinnan-oikaisu
     {::urakka/id (-> @tila/yleiset :urakka :id)
