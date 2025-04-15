@@ -69,6 +69,58 @@
    :siirtorajoitus_prosentti siirtorajoitus-prosentti
    :luoja luoja})
 
+(defn tavoitehinnan-muutospaatos [urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta luoja]
+  {:urakkaid urakkaid
+   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+   :muokkaa_kattohinta muokkaa-kattohinta
+   :tavoitehinta tavoitehinta
+   :kattohinta kattohinta
+   :luoja luoja})
+
+(defn indeksikorjauspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+                            hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
+                            pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus
+                            hoitokauden-lopun-indeksikorjaus luoja]
+  {:urakkaid urakkaid
+   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+   :tavoitehinta tavoitehinta
+   :tavoitehinnan_muutokset tavoitehinnan-muutokset
+   :tavoitehinta_ennen tavoitehinta-ennen
+   :alkuperainen_pisteluku alkuperainen-pisteluku
+   :alkuperaisen_pisteluvun_kuukausi alkuperaisen-pisteluvun-kuukausi
+   :pistelukujen_muutos pistelukujen-muutos
+   :pistelukujen_muutos_prosentteina pistelukujen-muutos-prosentteina
+   :hoitokauden_kuukaudet hoitokauden-kuukaudet
+   :kuukausien_keskiarvo kuukausien-keskiarvo
+   :indeksikorotuksen_prosenttiosuus indeksikorotuksen-prosenttiosuus
+   :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus
+   :luoja luoja})
+
+(defn lopun-hintapaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
+                         tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid]
+  {:urakkaid urakkaid
+   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+   :tavoitehinta_ennen tavoitehinta_ennen
+   :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus
+   :tavoitehinnan_muutokset tavoitehinnan_muutokset
+   :tavoitehinta_jalkeen tavoitehinta_jalkeen
+   :kattohinta kattohinta
+   :kattohintakerroin kattohintakerroin
+   :lisaa_tavoitehintaan_lopunindeksikorjaus lisaa-tavoitehintaan-lopunindeksikorjaus
+   :luoja kayttajaid})
+
+(defn hoidojohtopalkkiomuutospaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+                                     muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id luoja]
+  {:urakkaid urakkaid
+   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+   :tavoitehinta tavoitehinta
+   :tarjouksen_tavoitehinta tarjouksen_tavoitehinta
+   :muutosprosentti muutosprosentti
+   :hoidonjohtopalkkio hoidonjohtopalkkio
+   :hoidonjohtopalkkio_muutos hoidonjohtopalkkio_muutos
+   :kulu_id kulu_id
+   :luoja luoja})
+
 ;; Lasketaan indeksikorotus lupaukselle, se pätee sekä bonukselle, että sanktiolle jos on päteäkseen
 (defn laske-indeksikorotus-lupaukselle [db urakkaid paatos-pvm indeksi summa sanktio?]
   (let [indeksikorotus-parametrit {:pvm paatos-pvm

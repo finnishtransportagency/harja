@@ -727,6 +727,30 @@
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
+(defn onko-paatoksia-tekematta
+  "Päätellään onko jokin päätös vielä tekemättä. Esim. raporttipäätös voi olla tekemättä ja tämä palauttaa true."
+  [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet kayttaja urakkaid)
+  (let [urakan-tiedot (first (q-urakat/hae-urakkan-tiedot db urakkaid))
+        urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+        urakan-loppuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden alkuvuosi käytännössä
+        mhu+urakka? (= "mhu+" (:sopimustyyppi urakan-tiedot))
+        mhu-tyyppi (paatoskone/urakan-hoitotyyppi mhu+urakka?)
+        ; Haetaan ensin kaikki mahdolliset päätökset
+        mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
+        ;; Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan. Esim Lupauspäätöksiä saadaan kolme, mutta niiden järjestysnumero on kaikilla 1, joka
+        ;; merkitsee, että ne kuuluvat samaan luokkaan (lupauksiin) ja näin ollen niitä tarvitaan väin yksi.
+        mahdolliset-paatokset (->> mahdolliset-paatokset
+                                (group-by :jarjestys)
+                                (map (fn [[_ paatokset]] (first paatokset)))
+                                (into []))
+
+        ;; Poistetaan mahdollinen raporttipäätös
+        mahdolliset-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) mahdolliset-paatokset)
+        ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
+        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)]
+    (or (= (count mahdolliset-paatokset) (count tietokanta-paatokset)) false)))
+
 (defrecord Valikatselmukset []
   component/Lifecycle
   (start [this]
@@ -748,6 +772,10 @@
         :hae-valikatselmuksen-tiedot-hoitovuodelle
         (fn [user tiedot]
           (hae-valikatselmuksen-tiedot-hoitovuodelle (:db this) user tiedot)))
+      (julkaise-palvelu (:http-palvelin this)
+        :onko-paatoksia-tekematta
+        (fn [user tiedot]
+          (onko-paatoksia-tekematta (:db this) user tiedot)))
       (julkaise-palvelu (:http-palvelin this)
         :tee-lupauspaatos
         (fn [user tiedot]
@@ -846,6 +874,7 @@
       :tallenna-kattohinnan-oikaisu
       :poista-kattohinnan-oikaisu
       :hae-valikatselmuksen-tiedot-hoitovuodelle
+      :onko-paatoksia-tekematta
       :tee-lupauspaatos
       :poista-lupauspaatos
       :tee-tavoitehinnan-muutospaatos

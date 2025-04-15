@@ -39,58 +39,6 @@
 
 ;; Testaa kaikki uuden tyyppiset päätökset
 
-(defn tavoitehinnan-muutospaatos [urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta luoja]
-  {:urakkaid urakkaid
-   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :muokkaa_kattohinta muokkaa-kattohinta
-   :tavoitehinta tavoitehinta
-   :kattohinta kattohinta
-   :luoja luoja})
-
-(defn indeksikorjauspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
-                            hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
-                            pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus
-                            hoitokauden-lopun-indeksikorjaus luoja]
-  {:urakkaid urakkaid
-   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :tavoitehinta tavoitehinta
-   :tavoitehinnan_muutokset tavoitehinnan-muutokset
-   :tavoitehinta_ennen tavoitehinta-ennen
-   :alkuperainen_pisteluku alkuperainen-pisteluku
-   :alkuperaisen_pisteluvun_kuukausi alkuperaisen-pisteluvun-kuukausi
-   :pistelukujen_muutos pistelukujen-muutos
-   :pistelukujen_muutos_prosentteina pistelukujen-muutos-prosentteina
-   :hoitokauden_kuukaudet hoitokauden-kuukaudet
-   :kuukausien_keskiarvo kuukausien-keskiarvo
-   :indeksikorotuksen_prosenttiosuus indeksikorotuksen-prosenttiosuus
-   :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus
-   :luoja luoja})
-
-(defn lopun-hintapaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
-                         tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid]
-  {:urakkaid urakkaid
-   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :tavoitehinta_ennen tavoitehinta_ennen
-   :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus
-   :tavoitehinnan_muutokset tavoitehinnan_muutokset
-   :tavoitehinta_jalkeen tavoitehinta_jalkeen
-   :kattohinta kattohinta
-   :kattohintakerroin kattohintakerroin
-   :lisaa_tavoitehintaan_lopunindeksikorjaus lisaa-tavoitehintaan-lopunindeksikorjaus
-   :luoja kayttajaid})
-
-(defn hoidojohtopalkkiomuutospaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
-                                     muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id luoja]
-  {:urakkaid urakkaid
-   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :tavoitehinta tavoitehinta
-   :tarjouksen_tavoitehinta tarjouksen_tavoitehinta
-   :muutosprosentti muutosprosentti
-   :hoidonjohtopalkkio hoidonjohtopalkkio
-   :hoidonjohtopalkkio_muutos hoidonjohtopalkkio_muutos
-   :kulu_id kulu_id
-   :luoja luoja})
-
 (defn poytakirjan-raporttipaatos [urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
@@ -502,7 +450,7 @@
         muokkaa-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit)
         tavoitehinta 5M
         kattohinta 5M
-        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
+        paatos (paatos-apurit/tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)]
     (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
@@ -518,7 +466,7 @@
         muokkaa-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit)
         tavoitehinta 5M
         kattohinta 5M
-        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
+        paatos (paatos-apurit/tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)
 
@@ -543,7 +491,7 @@
         muokkaa-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit)
         tavoitehinta 5M
         kattohinta 5M
-        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
+        paatos (paatos-apurit/tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
         ;; Tarvitaanko feikattuja kyselyitä?
         vastaus (try
                   (with-redefs [
@@ -567,7 +515,7 @@
         muokkaa-kattohinta false
         tavoitehinta 5M
         kattohinta 5M
-        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
+        paatos (paatos-apurit/tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
         _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
@@ -588,7 +536,7 @@
         muokkaa-kattohinta false
         tavoitehinta 5M
         kattohinta 5M
-        paatos (tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
+        paatos (paatos-apurit/tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
         vastaus (try
                   (with-redefs [
                                 ;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
@@ -896,6 +844,20 @@
     ;; -25 alkavalla urakalla siirtorajoitusprosentti pitää olla kolme
     (is (= 0.03M (:siirtorajoitus_prosentti vastaus)))))
 
+;; Varmista, että viimeisenä vuotena ei voida siirtää kattohinnan ylitystä
+(deftest kattohinnan-ylitys-siirto-viimeisena-vuotena
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        hoitokauden-alkuvuosi 2025
+        vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
+                       :tallenna-urakan-paatos
+                       (kayttaja urakka-id)
+                       {::urakka/id urakka-id
+                        ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                        ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
+                        ::valikatselmus/siirto 20000})
+                  (catch Exception e e))]
+    (is (= "Kattohinnan ylitystä ei voi siirtää ensi vuodelle urakan viimeisenä vuotena" (-> vastaus ex-data :virheet :viesti)))))
+
 (deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2024-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
@@ -1041,7 +1003,7 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
@@ -1082,7 +1044,7 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
@@ -1131,7 +1093,7 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
@@ -1172,7 +1134,7 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
@@ -1204,7 +1166,7 @@
         tavoitehinta_jalkeen (+ tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus tavoitehinnan_muutokset)
         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
         kattohinta (* kattohintakerroin tavoitehinta_jalkeen)
-        paatos (lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
+        paatos (paatos-apurit/lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
         vastaus (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) urakkaid paatos)]
@@ -1226,7 +1188,7 @@
         tavoitehinta_jalkeen (+ tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus tavoitehinnan_muutokset)
         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
         kattohinta (* kattohintakerroin tavoitehinta_jalkeen)
-        paatos (lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
+        paatos (paatos-apurit/lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
         vastaus (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) urakkaid paatos)]
@@ -1248,7 +1210,7 @@
         tavoitehinta_jalkeen (+ tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus tavoitehinnan_muutokset)
         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
         kattohinta (* kattohintakerroin tavoitehinta_jalkeen)
-        paatos (lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
+        paatos (paatos-apurit/lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
         vastaus (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) urakkaid paatos)
@@ -1273,7 +1235,7 @@
         tavoitehinta_jalkeen (+ tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus tavoitehinnan_muutokset)
         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
         kattohinta (* kattohintakerroin tavoitehinta_jalkeen)
-        paatos (lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
+        paatos (paatos-apurit/lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
         vastaus (try
@@ -1299,7 +1261,7 @@
         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
         lisaa-tavoitehintaan-lopunindeksikorjaus (:lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus urakan-parametrit)
         kattohinta (* kattohintakerroin tavoitehinta_jalkeen)
-        paatos (lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
+        paatos (paatos-apurit/lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
         uusi-paatos (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) urakkaid paatos)
@@ -1325,7 +1287,7 @@
         hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
         kulu_id 1
 
-        paatos (hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
         vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid paatos)]
@@ -1345,7 +1307,7 @@
         hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
         kulu_id 1
 
-        paatos (hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
         vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid paatos)
@@ -1369,7 +1331,7 @@
         hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
         kulu_id 1
 
-        paatos (hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
         vastaus (try
@@ -1396,7 +1358,7 @@
         hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
         kulu_id 1
 
-        paatos (hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
         ;; Lisätään päätös suoralla kyselyllä
         uusi-paatos (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid paatos)
