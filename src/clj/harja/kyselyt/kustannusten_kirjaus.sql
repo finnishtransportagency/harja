@@ -1,0 +1,200 @@
+-- name: hae-tiemerkinta-kustannuskirjaukset
+SELECT
+    ukk.id,
+    ukk.urakka,
+    ukk.kustannusvuosi,
+    ukk.kustannus,
+    ukk.pk1,
+    ukk.pk2,
+    ukk.pk3
+    FROM tiemerkinta_korjauskustannus ukk
+WHERE ukk.urakka = :urakka
+ORDER BY ukk.kustannusvuosi ASC;
+
+-- name: hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
+SELECT
+    ukk.id,
+    ukk.urakka,
+    ukk.kustannusvuosi
+    FROM tiemerkinta_korjauskustannus ukk
+WHERE ukk.urakka = :urakka AND ukk.kustannusvuosi = :kustannusvuosi
+ORDER BY ukk.kustannusvuosi ASC;
+
+--name: lisaa-tiemerkinta-kustannuskirjaus!
+INSERT INTO tiemerkinta_korjauskustannus (urakka, luoja, muokattu, muokkaaja, kustannusvuosi, kustannus, pk1, pk2, pk3)
+VALUES (
+           :urakka,
+           :luoja,
+           :muokattu,
+           :muokkaaja,
+           :kustannusvuosi,
+           :kustannus,
+           :pk1,
+           :pk2,
+           :pk3);
+
+--name: paivita-tiemerkinta-kustannuskirjaus!
+UPDATE tiemerkinta_korjauskustannus
+SET
+    muokattu = :muokattu,
+    muokkaaja = :muokkaaja,
+    kustannus = :kustannus,
+    pk1 = :pk1,
+    pk2 = :pk2,
+    pk3 = :pk3
+WHERE urakka = :urakka AND kustannusvuosi = :kustannusvuosi;
+
+--name: tallenna-tiemerkinta-kustannuskirjaus!
+INSERT INTO tiemerkinta_korjauskustannus (urakka, luoja, muokattu, muokkaaja, kustannusvuosi, kustannus, pk1, pk2, pk3)
+VALUES (
+      :urakka,
+      :luoja,
+      :muokattu,
+      :muokkaaja,
+      :kustannusvuosi,
+      :kustannus,
+      :pk1,
+      :pk2,
+      :pk3)
+ ON CONFLICT (urakka, kustannusvuosi)
+ DO UPDATE SET urakka = :urakka, muokattu = :muokattu, muokkaaja = :muokkaaja, kustannusvuosi = :kustannusvuosi, kustannus = :kustannus, pk1 = :pk1, pk2 = :pk2, pk3 = :pk3
+RETURNING urakka;
+
+-- name: hae-tiemerkinta-muut-kustannukset
+-- Testidataa gridiin, TODO ..
+SELECT    u.id, 
+		  u.luotu AS pvm,
+          'Lisätyö' AS tyyppi,
+          'Selite, test' AS selite,
+          '3' AS luokka,
+          (SELECT CAST('5000.99' AS FLOAT)) AS kustannus
+FROM      urakka u 
+ORDER BY  u.luotu DESC LIMIT 10;
+
+-- name: hae-tiemerkinta-kustannustyypit
+SELECT unnest(enum_range(NULL::yllapito_muu_toteuma_tyyppi)) AS tyyppi;
+
+
+-- name: hae-urakan-yllapitokohteiden-kustannukset
+SELECT
+  ypk.id,
+  COALESCE(CAST(ypk.kohdenumero AS TEXT), '-') AS "kohdenumero",
+  ypk.yhaid                                    AS "yha-id",
+  ypk.nimi,
+  ypk.urakka,
+  ypk.tr_numero                                AS tie,
+  ypk.tr_alkuosa                               AS alkuosa,
+  ypk.tr_alkuetaisyys                          AS alkuetaisyys,
+  ypk.tr_loppuosa                              AS loppuosa,
+  ypk.tr_loppuetaisyys                         AS loppuetaisyys,
+  ypk.pkluokka                                 AS "pk-luokka",
+  tyk.linjamerkinnat                           AS "linjamerkinnat",
+  tyk.pienmerkinnat                            AS "pienmerkinnat",
+  tyk.jyrsinnat                                AS "jyrsinnat"
+FROM yllapitokohde ypk
+LEFT JOIN tiemerkinta_yllapitokohteen_kustannus tyk ON ypk.id = tyk.yllapitokohde
+WHERE
+  ypk.suorittava_tiemerkintaurakka = :urakka
+  AND ypk.yllapitokohdetyotyyppi = :yllapitokohdetyotyyppi :: YLLAPITOKOHDETYOTYYPPI
+  AND ypk.vuodet @> ARRAY[:vuosi]::INTEGER[]
+  AND ypk.poistettu IS FALSE
+ORDER BY coalesce(ypk.muokattu,  ypk.luotu) DESC;;
+
+
+-- name: hae-urakan-paikkauskohteiden-kustannukset
+SELECT
+  pk.id,
+  pk."ulkoinen-id"                         AS kohdenumero,
+  pk.nimi,
+  (pk.tierekisteriosoite_laajennettu).tie  AS tie,
+  (pk.tierekisteriosoite_laajennettu).aosa AS alkuosa,
+  (pk.tierekisteriosoite_laajennettu).aet  AS alkuetaisyys,
+  (pk.tierekisteriosoite_laajennettu).losa AS loppuosa,
+  (pk.tierekisteriosoite_laajennettu).let  AS loppuetaisyys,
+  pk.pkluokka                              AS "pk-luokka",
+  tpk.linjamerkinnat                       AS "linjamerkinnat",
+  tpk.pienmerkinnat                        AS "pienmerkinnat",
+  tpk.jyrsinnat                            AS "jyrsinnat"
+FROM paikkauskohde pk
+    LEFT JOIN tiemerkinta_paikkauskohteen_kustannus tpk ON pk.id = tpk.paikkauskohde
+    JOIN urakka u ON u.id = :urakka-id
+    JOIN organisaatio o ON o.id = u.hallintayksikko
+    JOIN urakka pk_urakka ON pk_urakka.id = pk."urakka-id"
+    JOIN organisaatio urakoitsija ON pk_urakka.urakoitsija = urakoitsija.id
+WHERE st_intersects(o.alue,
+                    CASE
+                        WHEN ((pk.tierekisteriosoite_laajennettu).tie IS NOT NULL)
+                            AND ((pk.tierekisteriosoite_laajennettu).aosa IS NOT NULL)
+                            AND ((pk.tierekisteriosoite_laajennettu).losa IS NOT NULL)
+                            AND ((pk.tierekisteriosoite_laajennettu).aet IS NOT NULL)
+                            AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
+                        THEN
+                            (SELECT *
+                             FROM tieosoitteelle_geometria(
+                                     CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
+                                     CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
+                                     CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
+                                     CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
+                                     CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
+                        ELSE NULL
+                        END)
+AND u.id = :urakka-id                        
+AND EXTRACT(YEAR FROM pk.alkupvm) = :vuosi
+AND pk.poistettu = false
+ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;;
+
+-- name: hae-yllapitokustannus
+SELECT
+    ypk.id
+FROM tiemerkinta_yllapitokohteen_kustannus ypk   
+WHERE ypk.yllapitokohde = :yllapitokohde;
+
+--name: lisaa-tiemerkinta-yllapitokohde-kustannuskirjaus!
+INSERT INTO tiemerkinta_yllapitokohteen_kustannus (yllapitokohde, linjamerkinnat, pienmerkinnat, jyrsinnat, muokattu, muokkaaja, luoja)
+VALUES (:id,
+       :linjamerkinnat,
+       :pienmerkinnat,
+       :jyrsinnat,
+       :muokattu,
+       :muokkaaja,
+       :luoja)
+RETURNING id;
+
+--name: paivita-tiemerkinta-yllapitokohde-kustannuskirjaus!
+UPDATE tiemerkinta_yllapitokohteen_kustannus
+SET
+    muokattu = :muokattu,
+    muokkaaja = :muokkaaja,
+    linjamerkinnat = :linjamerkinnat,
+    pienmerkinnat = :pienmerkinnat,
+    jyrsinnat = :jyrsinnat
+WHERE yllapitokohde = :id
+RETURNING id;
+
+-- name: hae-paikkauskustannus
+SELECT
+    tpk.id
+FROM tiemerkinta_paikkauskohteen_kustannus tpk   
+WHERE tpk.paikkauskohde = :paikkauskohde;
+
+--name: lisaa-tiemerkinta-paikkauskohde-kustannuskirjaus!
+INSERT INTO tiemerkinta_paikkauskohteen_kustannus (paikkauskohde, linjamerkinnat, pienmerkinnat, jyrsinnat, muokattu, muokkaaja, luoja)
+VALUES (:id,
+       :linjamerkinnat,
+       :pienmerkinnat,
+       :jyrsinnat,
+       :muokattu,
+       :muokkaaja,
+       :luoja)
+RETURNING id;
+
+--name: paivita-tiemerkinta-paikkauskohde-kustannuskirjaus!
+UPDATE tiemerkinta_paikkauskohteen_kustannus
+SET
+    muokattu = :muokattu,
+    muokkaaja = :muokkaaja,
+    linjamerkinnat = :linjamerkinnat,
+    pienmerkinnat = :pienmerkinnat,
+    jyrsinnat = :jyrsinnat
+WHERE paikkauskohde = :id
+RETURNING id;
