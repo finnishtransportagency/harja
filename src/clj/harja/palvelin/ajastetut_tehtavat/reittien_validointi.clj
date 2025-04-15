@@ -31,7 +31,7 @@
          (jdbc/with-db-transaction
            [db db]
            (doseq [{:keys [id]} toteumat]
-                  (reittitoteuma/paivita-toteuman-reittigeometria db id etaisyys)))
+             (reittitoteuma/paivita-toteuman-reittigeometria db id etaisyys)))
          (when-not (<= maksimi-etaisyys etaisyys)
            (recur (+ etaisyys 200))))))))
 
