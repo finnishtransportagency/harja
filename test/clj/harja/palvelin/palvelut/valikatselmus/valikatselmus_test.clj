@@ -307,7 +307,7 @@
                       (valikatselmukset/onko-paatoksia-tekematta (:db jarjestelma) kayttaja
                         {:urakkaid urakka-id :kuluva-hoitovuosi hoitokauden-alkuvuosi})
                       (catch Exception e e))]
-        (is (= false vastaus))))
+        (is (= true vastaus))))
     (testing "Päätösten lisäämisen jälkeen kaikki pitäisi olla kunnossa"
       (let [;; Lupausbonus
             tyyppi "bonus"
@@ -352,7 +352,7 @@
                       (valikatselmukset/onko-paatoksia-tekematta (:db jarjestelma) kayttaja
                         {:urakkaid urakka-id :kuluva-hoitovuosi hoitokauden-alkuvuosi})
                       (catch Exception e e))]
-        (is (= true vastaus))))))
+        (is (= false vastaus))))))
 
 (deftest onko-paatoksia-tekematta-vuodelle-2024-test
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
@@ -466,4 +466,4 @@
                         (valikatselmukset/onko-paatoksia-tekematta (:db jarjestelma) kayttaja
                           {:urakkaid urakka-id :kuluva-hoitovuosi hoitokauden-alkuvuosi})
                         (catch Exception e e))]
-          (is (= true vastaus)))))))
+          (is (= false vastaus)))))))

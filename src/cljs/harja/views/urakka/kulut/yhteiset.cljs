@@ -64,7 +64,7 @@
         kattohinnan-ylitys-prosentit (paatoksen-maksu-prosentit kattohinnan-ylitys-paatos kattohinnan-ylitys)
         lupausbonus-paatos (filtteroi-paatos-fn :lupausbonus)
         lupaussanktio-paatos (filtteroi-paatos-fn :lupaussanktio)
-        valikatselmus-tekematta? (t/valikatselmus-tekematta? app)
+        valikatselmus-tekematta? (:onko-paatoksia-tekematta app)
         lupausbonus (:toteutunut_summa (first (filter #(when (= "lupausbonus" (:maksutyyppi %))
                                                          %) (get-in data [:bonukset :tehtavat]))))
         bonus-maara (:bonukset-toteutunut data)
@@ -85,9 +85,9 @@
      [:h2 [:span "Yhteenveto"]]
      (when (and valikatselmus-tekematta? (not= :valikatselmus sivu))
        [:div.valikatselmus
-        "Välikatselmus puuttuu"
+        "Välikatselmuksen päätöksiä puuttuu"
         [napit/yleinen-ensisijainen
-         "Tee välikatselmus"
+         "Siirry välikatselmukseen"
          #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec)]])
      [:div.rivi 
       [:span (if oikaisuja? 
@@ -178,4 +178,4 @@
        [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/euro-opt lupaussanktio)]])
      (when (and (not valikatselmus-tekematta?) (not= :valikatselmus sivu))
        [:div.valikatselmus-tehty
-        [napit/yleinen-ensisijainen "Avaa välikatselmus" #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))
+        [napit/yleinen-ensisijainen "Siirry välikatselmukseen" #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))
