@@ -66,12 +66,13 @@ BEGIN
                 jaljella_osuutta := jaljella_osuutta - osuus;
                 RETURN NEXT ('rajoitusalue', ra.id, osuus)::suolausalueen_osuus;
             END LOOP;
-
-        -- Jäljelle jää se osuus, joka ei kuulu rajoitetuille alueille.
-        IF (jaljella_osuutta > 0) THEN
-            RETURN NEXT ('muu', NULL, jaljella_osuutta)::suolausalueen_osuus;
-        END IF;
     END IF;
+
+    -- Jäljelle jää se osuus, joka ei kuulu rajoitetuille alueille. Palautetaan jäljelle jäävä osuus myös silloin, kun tieosoitteella ei ole geometriaa.
+    IF (jaljella_osuutta > 0) THEN
+        RETURN NEXT ('muu', NULL, jaljella_osuutta)::suolausalueen_osuus;
+    END IF;
+
     RETURN;
 END;
 $$ LANGUAGE plpgsql;
