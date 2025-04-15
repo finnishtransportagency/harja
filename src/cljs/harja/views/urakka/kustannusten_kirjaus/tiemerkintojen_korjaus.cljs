@@ -44,7 +44,7 @@
             :tyyppi :positiivinen-numero :kokonaisluku? true
             :leveys 3}
            {:otsikko "Kustannus (EUR)" :nimi :kustannus
-            :tyyppi :positiivinen-numero :fmt fmt/euro-opt
+            :tyyppi :euro
             :leveys 3 :tasaa :oikea}
 
            {:otsikko "Pk 1-%" :nimi :pk1

@@ -177,7 +177,7 @@
   (let [yhteenveto (yhteenveto-rivi "Yhteensä" yhteensa-hinta)
         tiedot {:rivin-tiedot (rivi
                                 {:otsikko "Kustannuslaji" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti}
-                                {:otsikko "Hinta" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti})
+                                {:otsikko "Toteutuneet kustannukset" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti})
                 :rivit (conj
                          (mapv
                            #(yhteenveto-rivi
