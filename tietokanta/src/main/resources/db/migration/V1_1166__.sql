@@ -1,4 +1,4 @@
--- Lisää uudet 
+-- Lisää uudet tiemerkintäkustannus taulut
 CREATE TABLE tiemerkinta_yllapitokohteen_kustannus (
   id serial PRIMARY KEY,
   yllapitokohde INTEGER REFERENCES yllapitokohde (id),
