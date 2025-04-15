@@ -325,6 +325,7 @@
 ;; Nämä summataan tai vähennetään alkuperäisestä tavoitehinnasta.
 (defn tallenna-tavoitehinnan-oikaisu [db kayttaja tiedot]
   (log/debug "tallenna-tavoitehinnan-oikaisu :: tiedot" (pr-str tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet kayttaja (::urakka/id tiedot))
   (let [urakka-id (::urakka/id tiedot)
         urakka (first (q-urakat/hae-urakka db urakka-id))
         hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi tiedot)
@@ -349,6 +350,7 @@
 (defn poista-tavoitehinnan-oikaisu [db kayttaja {::valikatselmus/keys [oikaisun-id] :as tiedot}]
   {:pre [(number? oikaisun-id)]}
   (log/debug "poista-tavoitehinnan-oikaisu :: tiedot" (pr-str tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet kayttaja (::urakka/id tiedot))
   (let [oikaisu (valikatselmus-q/hae-oikaisu db oikaisun-id)
         hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi oikaisu)
         urakka-id (::urakka/id oikaisu)
