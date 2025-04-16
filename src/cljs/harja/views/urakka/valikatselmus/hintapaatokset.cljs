@@ -88,7 +88,7 @@
         ;; Päätöksenteko napit tai mahdollinen virhe
         (if (:virhe paatos)
           [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]]
+           [yleiset/info-laatikko :varoitus (:virhe paatos) nil nil {:sulje-nappi-id (gensym)}]]
 
           (if (not paatos-tehty?)
             [:div.paatos-toiminto

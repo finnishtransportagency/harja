@@ -1,5 +1,6 @@
 (ns harja.views.urakka.valikatselmus.hoitovuoden-lopun-hinnat
   (:require [harja.ui.dom :as dom]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.fmt :as fmt]
@@ -50,4 +51,4 @@
              #(e! (valikatselmus-tiedot/->PoistaHoitokaudenlopunHintapaatos paatos))]]]
 
           [:div.ilmoitus
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]])])]))
+           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))

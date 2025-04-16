@@ -1,5 +1,6 @@
 (ns harja.views.urakka.valikatselmus.indeksikorjaus
   (:require [clojure.string :as str]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
@@ -33,7 +34,7 @@
         [:div (str/join " " (reverse (str/split (:kuukausi kuukausi) #"\s+")))]
         [:div (fmt/desimaaliluku-opt (:indeksiluku kuukausi) 1)]])
      (when (not= 12 (count (:hoitokauden_kuukaudet paatos)))
-       [yleiset/info-laatikko :vahva-ilmoitus "Kaikkien kuukausien indeksiarvoja ei ole vielä syötetty!" nil nil {:vari "@gray25"}])
+       [yleiset/info-laatikko :vahva-ilmoitus "Kaikkien kuukausien indeksiarvoja ei ole vielä syötetty!" nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
      [:hr.hr-tiivis]
      [:div.flex-row.laskenta-rivi
       [:div [:strong "Keskiarvo"]]
@@ -97,4 +98,4 @@
             #(e! (valikatselmus-tiedot/->TallennaHoitovuodenlopunIndeksikorjauspaatos paatos))
             #(e! (valikatselmus-tiedot/->PoistaHoitovuodenlopunIndeksikorjauspaatos paatos))]]
           [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]])])]))
+           [yleiset/info-laatikko :varoitus (:virhe paatos) nil nil {:sulje-nappi-id (gensym)}]])])]))

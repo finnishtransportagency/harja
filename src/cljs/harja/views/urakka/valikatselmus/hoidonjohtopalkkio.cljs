@@ -1,5 +1,6 @@
 (ns harja.views.urakka.valikatselmus.hoidonjohtopalkkio
-  (:require [harja.ui.napit :as napit]
+  (:require [harja.ui.ikonit :as ikonit]
+            [harja.ui.napit :as napit]
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
@@ -67,9 +68,9 @@
                                    :footer [napit/sulje #(modal/piilota!)]}
                       [laskenta-modaali paatos]))
              {:style {:text-decoration :underline}}]]
-           [:div [yleiset/info-laatikko :vahva-ilmoitus (str "Päätöksen tallentaminen luo kulun Harjaan. Kulua ei lasketa tavoitehintaan.") nil nil {:vari "@gray25"}]]
+           [:div [yleiset/info-laatikko :neutraali (str "Päätöksen tallentaminen luo kulun Harjaan. Kulua ei lasketa tavoitehintaan.") nil nil]]
            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
             #(e! (valikatselmus-tiedot/->TallennaHoidonjohtopalkkionMuutospaatos paatos))
             #(e! (valikatselmus-tiedot/->PoistaHoidonjohtopalkkionMuutospaatos paatos))]]
           [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]])])]))
+           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))

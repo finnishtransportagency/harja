@@ -92,11 +92,11 @@
 
      ;; Varoitetaan kaikkia muita paitsi järjestelmävalvojaa, ettei välikatselmusta voida tehdä
      (when (and hoitokausi-tulevaisuudessa? (not jvh?))
-       [:div.valikatselmus-tulevaisuudessa-varoitus {:style {:margin-top "16px"}}
+       [:div.valikatselmus-tulevaisuudessa-varoitus
         [ikonit/harja-icon-status-alert]
         [:span "Hoitovuodelle ei voi tässä vaiheessa tehdä välikatselmusta."]])
      (when (and hoitokausi-menneisyydessa? (not jvh?))
-       [:div.valikatselmus-menneisyydessa-varoitus {:style {:margin-top "16px"}}
+       [:div.valikatselmus-menneisyydessa-varoitus
         [ikonit/harja-icon-status-alert]
         [:span "Hoitovuosi on lukittu vuoden vaihteessa ja välikatselmusta ei voi enää muokata."]])]))
 

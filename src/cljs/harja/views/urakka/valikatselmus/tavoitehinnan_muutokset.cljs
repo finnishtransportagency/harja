@@ -115,7 +115,7 @@
     (if (not paatos-tehty?)
       [:<>
        [:div.valja
-        [yleiset/info-laatikko :vahva-ilmoitus "Jos tavoitehinnan oikaisun myötä myös kattohinta muuttuu, syötä muuttunut kattohinta." nil nil {:vari "@gray25"}]]
+        [yleiset/info-laatikko :neutraali "Jos tavoitehinnan oikaisun myötä myös kattohinta muuttuu, syötä muuttunut kattohinta." nil nil]]
        [:div.flex-row.alkuun.valistys16
         [kentat/tee-otsikollinen-kentta {:otsikko "Muuttunut kattohinta"
                                          :otsikon-luokka "caption-small-strong valja"
@@ -173,7 +173,9 @@
 
         (when (and paatos-tehty? voi-muokata?)
           [:div.valja
-           [yleiset/info-laatikko :vahva-ilmoitus "Tavoitehintaan liittyvä päätös on tallennettu. Jos aiot tehdä  uusia tavoitehinnan muutoksia, kumoa päätös ensin." nil nil {:vari "@gray25"}]])
+           [yleiset/info-laatikko :vahva-ilmoitus
+            "Tavoitehintaan liittyvä päätös on tallennettu. Jos aiot tehdä  uusia tavoitehinnan muutoksia, kumoa päätös ensin."
+            nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
 
         (when kattohinnan-oikaisu-mahdollinen?
           [kattohinnan-oikaisu e! kattohinta paatos-tehty?])
@@ -184,4 +186,4 @@
            #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
            #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]
           [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:vari "@gray25"}]])])]))
+           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))
