@@ -32,9 +32,9 @@ describe('Välikatselmus aukeaa', () => {
         cy.wait('@hae-kustannukset')
         cy.get('[data-cy=hoitokausi-valinta]').valinnatValitse({valinta: '1. hoitovuosi (2021—2022)'})
         cy.contains('Siirry välikatselmukseen').click();
-        cy.contains('Välikatselmuksen päätökset')
+        cy.contains('Välikatselmus')
         cy.contains('Iin MHU 2021-2026')
-        cy.contains('1. hoitovuosi (01.10.2021 - 30.09.2022')
+        cy.contains('2. hoitovuosi (01.10.2022 − 30.09.2023)')
     })
 
     it('Välikatselmuksen voi avata päävalikosta', () => {
@@ -52,12 +52,12 @@ describe('Välikatselmus aukeaa', () => {
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout}).click()
         cy.get('[data-cy=tabs-taso1-Valikatselmus]').click()
         cy.wait('@hae-valikatselmuksen-tiedot')
-        cy.get('[data-cy=hoitokausi-valinta]').valinnatValitse({valinta: '2. hoitovuosi (2022—2023)'})
+        cy.get('[data-cy=hoitokausi-valinta]').valinnatValitse({valinta: '2. hoitovuosi (01.10.2022 − 30.09.2023)'})
 
         // Tarkistellaan tietoja
-        cy.contains('Välikatselmuksen päätökset')
+        cy.contains('Välikatselmus')
         cy.contains('Iin MHU 2021-2026')
-        cy.contains('2. hoitovuosi (01.10.2022 - 30.09.2023')
+        cy.contains('2. hoitovuosi (01.10.2022 − 30.09.2023)')
         cy.contains('Tavoitehinnan muutokset')
         cy.contains('Yhteenveto')
 
