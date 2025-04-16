@@ -1,12 +1,13 @@
 (ns harja.views.urakka.kustannusten-yhteenveto.yhteenveto-tiedot
   "Tiemerkintöjen kustannusten yhteenveto - tiedot"
-  (:require  [harja.pvm :as pvm]
-             [tuck.core :as tuck]
+  (:require  [tuck.core :as tuck]
+             [reagent.core :refer [atom] :as reagent]
+             
+             [harja.pvm :as pvm]
              [harja.tiedot.urakka :as u]
              [harja.ui.viesti :as viesti]
              [harja.tiedot.navigaatio :as nav]
              [harja.tyokalut.tuck :as tuck-apurit]
-             [reagent.core :refer [atom] :as reagent]
              [harja.tiedot.raportit :as raporttitiedot]))
 
 (defonce ^{:private true} raportti-avain :tiemerkinta-kustannukset-yhteenveto)

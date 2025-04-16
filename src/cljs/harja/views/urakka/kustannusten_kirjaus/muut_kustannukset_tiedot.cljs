@@ -1,16 +1,17 @@
 (ns harja.views.urakka.kustannusten-kirjaus.muut-kustannukset-tiedot
   "Tiemerkintöjen muut kustannukset välilehti - tiedot"
-  (:require  [harja.pvm :as pvm]
-             [tuck.core :as tuck]
-             [harja.tiedot.urakka :as u]
-             [harja.ui.viesti :as viesti]
-             [harja.ui.lomake :as lomake]
-             [harja.tiedot.navigaatio :as nav]
-             [harja.tyokalut.tuck :as tuck-apurit]
-             [reagent.core :refer [atom] :as reagent]
-             [harja.tiedot.raportit :as raporttitiedot]
-             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-             [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
+  (:require [tuck.core :as tuck]
+            [reagent.core :refer [atom] :as reagent]
+
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka :as u]
+            [harja.ui.viesti :as viesti]
+            [harja.ui.lomake :as lomake]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.tiedot.raportit :as raporttitiedot]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
 
 (defonce ^{:private true} raportti-avain :tiemerkinta-muut-kustannukset)
 (defonce ^{:private true} nollatut-valinnat {:rivit nil

@@ -1,6 +1,8 @@
 (ns harja.views.urakka.kustannusten-kirjaus.sakot-bonukset-tiedot
   "Tiemerkintöjen sakot ja bonukset - tiedot"
   (:require [tuck.core :as tuck]
+            [reagent.core :refer [atom] :as reagent]
+            
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.ui.lomake :as lomake]
@@ -8,7 +10,6 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [reagent.core :refer [atom] :as reagent]
             [harja.tiedot.raportit :as raporttitiedot]
             [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
 

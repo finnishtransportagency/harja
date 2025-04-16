@@ -1,23 +1,23 @@
 (ns harja.views.urakka.kustannusten-kirjaus.muut-kustannukset
   "Tiemerkintöjen muut kustannukset välilehti"
-  (:require
-   [harja.pvm :as pvm]
-   [harja.fmt :as fmt]
-   [reagent.core :as r]
-   [harja.ui.grid :as grid]
-   [tuck.core :refer [tuck]]
-   [harja.ui.napit :as napit]
-   [harja.ui.lomake :as lomake]
-   [harja.ui.kentat :as kentat]
-   [harja.ui.ikonit :as ikonit]
-   [harja.ui.komponentti :as komp]
-   [harja.tiedot.navigaatio :as nav]
-   [harja.domain.oikeudet :as oikeudet]
-   [harja.tiedot.urakka.urakka :as urakka-tila]
-   [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-   [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
-   [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
-   [harja.views.urakka.kustannusten-kirjaus.muut-kustannukset-tiedot :as tiedot]))
+  (:require [reagent.core :as r]
+            [tuck.core :refer [tuck]]
+
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
+            [harja.ui.grid :as grid]
+            [harja.ui.napit :as napit]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.kentat :as kentat]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.komponentti :as komp]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.urakka.urakka :as urakka-tila]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
+            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
+            [harja.views.urakka.kustannusten-kirjaus.muut-kustannukset-tiedot :as tiedot]))
 
 
 (defn- muut-kustannukset-grid

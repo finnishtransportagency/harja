@@ -1,13 +1,11 @@
 (ns harja.views.urakka.kustannusten-kirjaus.yhteiset
   "Tiemerkintöjen kustannukset yhteiset funktiot/komponentit"
-  (:require
-   [harja.ui.napit :as napit]
-   [harja.transit :as transit]
-   [harja.ui.ikonit :as ikonit]
-   [harja.tiedot.navigaatio :as nav]
-   [harja.asiakas.kommunikaatio :as komm]
-   [harja.tiedot.urakka :as urakka-tiedot]
-   [harja.views.urakka.valinnat :as urakka-valinnat]))
+  (:require [harja.transit :as transit]
+            
+            [harja.ui.napit :as napit]
+            [harja.ui.ikonit :as ikonit]
+            [harja.asiakas.kommunikaatio :as komm]
+            [harja.views.urakka.valinnat :as urakka-valinnat]))
 
 (defonce yhteenveto-tyypit {:korjaus "Tiemerkintöjen korjaus"
                             :muut-kustannukset "Muut kustannukset"})

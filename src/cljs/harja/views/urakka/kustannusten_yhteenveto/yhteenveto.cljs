@@ -1,14 +1,14 @@
 (ns harja.views.urakka.kustannusten-yhteenveto.yhteenveto
   "Tiemerkintöjen kustannusten yhteenveto välilehti"
-  (:require
-   [harja.fmt :as fmt]
-   [harja.ui.grid :as grid]
-   [tuck.core :refer [tuck]]
-   [harja.ui.komponentti :as komp]
-   [harja.tiedot.urakka.urakka :as urakka-tila]
-   [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
-   [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
-   [harja.views.urakka.kustannusten-yhteenveto.yhteenveto-tiedot :as tiedot]))
+  (:require  [tuck.core :refer [tuck]]
+
+             [harja.fmt :as fmt]
+             [harja.ui.grid :as grid]
+             [harja.ui.komponentti :as komp]
+             [harja.tiedot.urakka.urakka :as urakka-tila]
+             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
+             [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
+             [harja.views.urakka.kustannusten-yhteenveto.yhteenveto-tiedot :as tiedot]))
 
 
 (defn- yhteenveto-grid

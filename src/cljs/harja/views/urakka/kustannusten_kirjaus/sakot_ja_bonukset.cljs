@@ -1,10 +1,11 @@
 (ns harja.views.urakka.kustannusten-kirjaus.sakot-ja-bonukset
   "Tiemerkintöjen sakot ja bonukset välilehti"
-  (:require [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
-            [reagent.core :as r]
-            [harja.ui.grid :as grid]
+  (:require [reagent.core :as r]
             [tuck.core :refer [tuck]]
+            
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
+            [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
