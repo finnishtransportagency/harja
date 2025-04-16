@@ -169,9 +169,6 @@ DECLARE
     hankinnat_ja_hoidon_hk_yht            NUMERIC;
     hankinnat_ja_hoidon_val_yht           NUMERIC;
 
-    -- Rahavarausten ID:t
-    kannustin_id                          INT;
-
     -- Tavoitehinnat yhteensä
     tavhin_hoitokausi_yht                 NUMERIC;
     tavhin_val_aika_yht                   NUMERIC;
@@ -446,10 +443,6 @@ BEGIN
     lisatyo_korvausinv_val_aika_yht := 0.0;
     lisatyo_hoidonjohto_hoitokausi_yht := 0.0;
     lisatyo_hoidonjohto_val_aika_yht := 0.0;
-
-    -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta
-    -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
-    SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
 
     FOR rivi IN SELECT
       summa         AS kht_summa, 
