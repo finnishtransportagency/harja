@@ -333,7 +333,7 @@
                                                :loppuetaisyys nil
                                                :id toteuma-id
                                                :urakka urakka-id})
-                (when (:reitti toteuma) (toteumat-q/paivita-toteuman-reitti! db
+                (when (:reitti toteuma) (toteumat-q/paivita-toteuman-reittigeometria<! db
                                                                              {:reitti (geo/geometry (geo/clj->pg (:reitti toteuma)))
                                                                               :id toteuma-id}))
                 (toteumat-q/paivita-toteuma-materiaali!
