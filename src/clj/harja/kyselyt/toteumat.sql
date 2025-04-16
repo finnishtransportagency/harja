@@ -1149,12 +1149,7 @@ FROM tieosoitteelle_geometria(:tie :: INTEGER,
                               :losa :: INTEGER,
                               :let :: INTEGER) AS sijainti;
 
--- name: paivita-toteuman-reitti!
-UPDATE toteuma
-SET reitti = :reitti
-WHERE id = :id;
-
--- name: paivita-toteuman-reitti<!
+-- name: paivita-toteuman-reittigeometria<!
 UPDATE toteuma
 SET reitti = :reitti
 WHERE id = :id;
