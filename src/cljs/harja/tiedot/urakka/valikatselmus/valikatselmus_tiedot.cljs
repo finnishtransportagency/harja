@@ -13,6 +13,18 @@
 
 (def valikatselmus-nakymassa? (atom false))
 
+(defonce tavoitehinnan-muutokset (atom []))
+(defn karsitut-tavoitehinnan-muutokset [muutokset]
+  (when-not (empty? muutokset)
+    (sort-by :index
+      (map-indexed
+        (fn [indeksi muutos]
+          (let [muutos (select-keys muutos [::valikatselmus/otsikko ::valikatselmus/hoitokauden-alkuvuosi ::valikatselmus/selite :kattohinta ::valikatselmus/summa])
+                muutos (assoc muutos :index indeksi)
+                muutos (into (sorted-map) muutos)]
+            muutos))
+        muutokset))))
+
 ;; Oikaisut
 (defrecord TallennaOikaisu [oikaisu id])
 (defrecord TallennaOikaisuOnnistui [vastaus id])
@@ -95,12 +107,17 @@
      :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui}))
 
 (defn kasittele-valikatselmuksen-vastaus [app vastaus]
-  (-> app
-    (assoc :paatokset (:paatokset vastaus))
-    (assoc :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus))
-    (assoc :yhteenveto (:yhteenveto vastaus))
-    (assoc :haku-kaynnissa? false)
-    (assoc :tallennus-kesken? false)))
+  (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
+        vastaus-muutokset (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))
+        muutokset (karsitut-tavoitehinnan-muutokset vastaus-muutokset)]
+
+    (reset! tavoitehinnan-muutokset muutokset)
+    (-> app
+      (assoc :paatokset (:paatokset vastaus))
+      (assoc :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus))
+      (assoc :yhteenveto (:yhteenveto vastaus))
+      (assoc :haku-kaynnissa? false)
+      (assoc :tallennus-kesken? false))))
 
 (extend-protocol tuck/Event
   ;; Tavoitehinnan oikaisut
