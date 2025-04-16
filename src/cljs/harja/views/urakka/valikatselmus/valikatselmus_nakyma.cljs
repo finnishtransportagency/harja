@@ -112,23 +112,36 @@
                               (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
                               (or
                                 poikkeusvuosi?
-                                (not (valikatselmus-yhteiset/onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))]
-    [:div
-     (doall
-       (for* [paatos paatokset]
-         (cond
-           (= (ffirst paatos) :lupaukset)
-           [lupaukset/lupauspaatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-           (= (ffirst paatos) :tavoitehinnan-muutokset)
-           [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app)]
-           (= (ffirst paatos) :tavoitehinnan-ylitys) [hintapaatokset/tavoitehinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
-           (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
-           (= (ffirst paatos) :kattohinnan-ylitys) [hintapaatokset/kattohinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
-           (= (ffirst paatos) :valikatselmuspoytakirjaan-liitettavat-raportit) [raportit/raportit e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-           (= (ffirst paatos) :hoitovuoden-lopun-indeksikorjaus) [indeksikorjaus/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
-           (= (ffirst paatos) :hoidonjohtopalkkion-muutos) [hoidonjohtopalkkio/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
-           (= (ffirst paatos) :hoitovuoden-lopun-tavoite-ja-kattohinta) [hoitovuoden-lopun-hinnat/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
-           :else nil)))]))
+                                (not (valikatselmus-yhteiset/onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))
+        hoitovuosi-kesken? (pvm/valissa? nykyhetki (first valittu-hoitokausi) (second valittu-hoitokausi))]
+    [:<>
+     (if hoitovuosi-kesken?
+       [:<>
+        [:div.hoitovuosi-info
+         [yleiset/info-laatikko :neutraali "Hoitovuosi on kesken."
+          (str "Välikatselmuksen päätökset voi tallentaa 1.10. " (pvm/vuosi (second valittu-hoitokausi))" alkaen. Voit lisätä tavoitehinnan muutoksia myös kesken hoitovuoden.") nil]]
+        [:div
+         (doall
+           (for* [paatos paatokset]
+             (when
+               (= (ffirst paatos) :tavoitehinnan-muutokset)
+               [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app) hoitovuosi-kesken?])))]]
+       [:div
+        (doall
+          (for* [paatos paatokset]
+            (cond
+              (= (ffirst paatos) :lupaukset)
+              [lupaukset/lupauspaatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+              (= (ffirst paatos) :tavoitehinnan-muutokset)
+              [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app) hoitovuosi-kesken?]
+              (= (ffirst paatos) :tavoitehinnan-ylitys) [hintapaatokset/tavoitehinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+              (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+              (= (ffirst paatos) :kattohinnan-ylitys) [hintapaatokset/kattohinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+              (= (ffirst paatos) :valikatselmuspoytakirjaan-liitettavat-raportit) [raportit/raportit e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+              (= (ffirst paatos) :hoitovuoden-lopun-indeksikorjaus) [indeksikorjaus/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+              (= (ffirst paatos) :hoidonjohtopalkkion-muutos) [hoidonjohtopalkkio/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+              (= (ffirst paatos) :hoitovuoden-lopun-tavoite-ja-kattohinta) [hoitovuoden-lopun-hinnat/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+              :else nil)))])]))
 
 (defn- varmista-hoitokauden-alkuvuosi [valittu-hoitokausi]
   (let [hoitokausi-urakkakauden-jalkeen? (when-not (nil? valittu-hoitokausi) (onko-hoitokausi-urakkakauden-jalkeen? valittu-hoitokausi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))))
@@ -171,14 +184,14 @@
                                                 (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi)))])]
         [:div {:id "vayla"}
          (if (:haku-kaynnissa? app)
-           [:div {:style {:padding-top "20px"}}
+           [:div.valikatselmus-haku
             [yleiset/ajax-loader "Haetaan välikatselmuksen tietoja..."]]
            [:div.valikatselmus-container
             [debug/debug app]
             [:div.col-xs-12.col-md-7
 
              [valikatselmus-otsikko-ja-tiedot e! app]
-             [:div {:style {:margin-top "1rem"}}
+             [:div.paatokset
               [paatoskomponentit e! app]]]
             [:div.col-xs-12.col-md-5
              [:div.yhteenveto-container

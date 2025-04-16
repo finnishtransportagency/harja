@@ -149,7 +149,7 @@
        [:div.flex-row.alkuun.valistys16
         [:span (fmt/euro-opt false kattohinta)]]])))
 
-(defn tavoitehinnan-muutokset [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset tavoitehinnan-muutokset]
+(defn tavoitehinnan-muutokset [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset tavoitehinnan-muutokset hoitovuosi-kesken?]
   (let [paatos-avain :tavoitehinnan-muutokset
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         paatos-tehty? (boolean (:id paatos))
@@ -174,8 +174,10 @@
                                    (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
     ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
     [:div.paatos-komponentti-border
-     [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset
-      avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
+     (if hoitovuosi-kesken?
+       [valikatselmus-yhteiset/paatosotsikko "Tavoitehinnan muutokset" paatos-tehty?]
+       [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset
+        avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)])
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [tavoitehinnan-oikaisut-taulukko hoitokauden-oikaisut-atom

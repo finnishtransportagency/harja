@@ -39,6 +39,54 @@
       color: @gray25;
     }
   }
+  .info-laatikko {
+    .infolaatikon-teksti {
+      font-weight: 600;
+      margin: auto;
+      padding: @valistys-12 0;
+      line-height: 1.5rem;
+    }
+    div {
+      padding-left: 8px;
+    }
+  }
+  .info-laatikko > .infolaatikon-ikoni {
+    font-size: 1rem;
+    height: 1.25rem;
+    margin-top: auto;
+    margin-bottom: auto;
+    padding-left: 4px;
+    padding-right: 0;
+    span {
+      font-size: 1.25rem;
+    }
+  }
+  .info-laatikko > .infolaatikon-sulje-ikoni {
+    font-size: 1.25rem;
+    color: @gray92;
+    span {
+      font-weight: 200;
+    }
+  }
+  .info-laatikko.neutraali {
+    border: 0;
+    svg {
+      path {
+        fill: @blue-dark;
+      }
+    }
+  }
+  .info-laatikko.vahva-ilmoitus .infolaatikon-ikoni {
+    span {
+      color: @black-light;
+    }
+  }
+  .info-laatikko.onnistunut {
+    border: 1px solid @green-light;
+  }
+  .hoitovuosi-info {
+    margin: @valistys-16 0;
+  }
 }
 
 .oikaisut-ja-paatokset {
@@ -58,6 +106,9 @@
       min-width: 420px;
     }
   }
+}
+.paatokset {
+  margin-top: @valistys-16;
 }
 
 .paatos {
@@ -471,48 +522,6 @@ div.valikatselmus-yhteenveto {
     margin: 0 0 4px 0;
     border-top: 1px solid @white-darker;
   }
-  .info-laatikko {
-    .infolaatikon-teksti {
-      font-weight: 600;
-      margin: auto;
-      padding-top: @valistys-12;
-      padding-bottom: @valistys-12;
-      line-height: 2rem;
-    }
-  }
-  .info-laatikko > .infolaatikon-ikoni {
-    font-size: 1rem;
-    height: 1.25rem;
-    margin-top: auto;
-    margin-bottom: auto;
-    padding-left: 4px;
-    span {
-      font-size: 1.25rem;
-    }
-  }
-  .info-laatikko > .infolaatikon-sulje-ikoni {
-    font-size: 1.25rem;
-    color: @gray92;
-    span {
-      font-weight: 200;
-    }
-  }
-  .info-laatikko.neutraali {
-    border: 0;
-    svg {
-      path {
-        fill: @blue-dark;
-      }
-    }
-  }
-  .info-laatikko.vahva-ilmoitus .infolaatikon-ikoni {
-    span {
-      color: @black-light;
-    }
-  }
-  .info-laatikko.onnistunut {
-    border: 1px solid @green-light;
-  }
   div {
     .small-caption {
       color: @black-default;
@@ -641,4 +650,7 @@ div.valikatselmus-yhteenveto {
 }
 .raportti-teksti {
   margin-bottom: @valistys-8;
+}
+.valikatselmus-haku {
+  padding-top: 1rem;
 }

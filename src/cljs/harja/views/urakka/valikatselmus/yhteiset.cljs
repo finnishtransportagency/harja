@@ -42,6 +42,14 @@
       [:div.badge.paatetty.paatos-badge "Päätetty"]
       [:div.badge.avoin.paatos-badge "Avoin"])]])
 
+(defn paatosotsikko [otsikko paatos-tehty?]
+  [:div.paatos-komponentti-otsikko-row
+   [:h2.paatos-komponentti-otsikko otsikko]
+   [:div
+    (if paatos-tehty?
+      [:div.badge.paatetty.paatos-badge "Päätetty"]
+      [:div.badge.avoin.paatos-badge "Avoin"])]])
+
 (defn paatosnapit [paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata? tallenna-paatos-fn poista-paatos-fn]
   (if (not paatos-tehty?)
     [:div.paatos-toiminto
