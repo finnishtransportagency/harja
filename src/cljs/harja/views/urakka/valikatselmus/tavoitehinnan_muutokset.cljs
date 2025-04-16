@@ -36,19 +36,8 @@
                                                                 (+ yhteensa (get hoitokauden-oikaisu :harja.domain.kulut.valikatselmus/summa)))
                                                               0
                                                               (vals @hoitokauden-oikaisut-atom))))
-        muodosta-yksinkertaistettu-lista (fn [arvot]
-                                           (when (and (not (nil? arvot)) (seq? arvot))
-                                             (reduce (fn [listaus oikaisu]
-                                                       (let [k {:index (count listaus)
-                                                                ::valikatselmus/hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi oikaisu)
-                                                                ::valikatselmus/selite (::valikatselmus/selite oikaisu)
-                                                                ::valikatselmus/summa (::valikatselmus/summa oikaisu)}]
-                                                         (conj listaus k)))
-                                               [] arvot)))
-        oikaisut (muodosta-yksinkertaistettu-lista (vals @hoitokauden-oikaisut-atom))
-        poista-indeksilla (fn [arvot ind]
-                            (filterv #(not= (get % :index) ind) arvot))
-        ]
+        alkuperaiset-oikaisut @valikatselmus-tiedot/tavoitehinnan-muutokset
+        uudet-simplified (valikatselmus-tiedot/karsitut-tavoitehinnan-muutokset (vals @hoitokauden-oikaisut-atom))]
     [:div.tavoitehinnan-muutokset
      [grid/muokkaus-grid
       (merge {:tyhja "Ei muutoksia tavoitehintaan"
@@ -65,15 +54,12 @@
               :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
               :validoi-uusi-rivi? false
               :on-rivi-blur (fn [oikaisu i]
-                              (tallenna-oikaisu-fn oikaisu i)
-                              #_(when-not (or (seq (get @virheet i))
-                                            (:koskematon (get @hoitokauden-oikaisut-atom i)))
-                                  (let [oikaisu (cond-> oikaisu
-                                                  true (update ::valikatselmus/summa Math/abs)
-
-                                                  (= :vahennys (:lisays-tai-vahennys oikaisu))
-                                                  (update ::valikatselmus/summa -))]
-                                    (tallenna-oikaisu-fn oikaisu i))))
+                              (let [muuttui? (not (or (=
+                                                        (and (>= (dec (count uudet-simplified)) i) (nth uudet-simplified i))
+                                                        (and (>= (dec (count alkuperaiset-oikaisut)) i) (nth alkuperaiset-oikaisut i)))
+                                                    false))]
+                                ;; Jos ei ole muutoksia, niin ei tallenneta mitään
+                                (when muuttui? (tallenna-oikaisu-fn oikaisu i))))
               :uusi-id uusi-id
               :virheet virheet
               :nayta-virheikoni? false
@@ -157,7 +143,6 @@
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         tavoitehinnan-muutokset (get tavoitehinnan-muutokset hoitokauden-alkuvuosi)
         kattohinta (:kattohinta paatos)
-        tavoitehinta (:tavoitehinta paatos)
         hoitokauden-oikaisut-atom (atom tavoitehinnan-muutokset)
         poikkeusvuosi? (:muokkaa_kattohinta paatos)
 

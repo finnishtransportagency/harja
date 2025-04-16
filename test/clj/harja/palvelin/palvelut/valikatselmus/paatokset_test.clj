@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatokset-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.string :as str]
+            [clojure.test :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
@@ -844,20 +845,6 @@
     ;; -25 alkavalla urakalla siirtorajoitusprosentti pitää olla kolme
     (is (= 0.03M (:siirtorajoitus_prosentti vastaus)))))
 
-;; Varmista, että viimeisenä vuotena ei voida siirtää kattohinnan ylitystä
-(deftest kattohinnan-ylitys-siirto-viimeisena-vuotena
-  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-        hoitokauden-alkuvuosi 2025
-        vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
-                       :tallenna-urakan-paatos
-                       (kayttaja urakka-id)
-                       {::urakka/id urakka-id
-                        ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                        ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
-                        ::valikatselmus/siirto 20000})
-                  (catch Exception e e))]
-    (is (= "Kattohinnan ylitystä ei voi siirtää ensi vuodelle urakan viimeisenä vuotena" (-> vastaus ex-data :virheet :viesti)))))
-
 (deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2024-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
@@ -919,6 +906,32 @@
     (is (= kattohinta (:kattohinta db-paatos)))
     (is (= "Kattohinnan ylitys" (:nimi db-paatos)))
     (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi db-paatos)))))
+
+;; Varmista, että viimeisenä vuotena ei voida siirtää kattohinnan ylitystä
+(deftest kattohinnan-ylitys-siirto-viimeisena-vuotena
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2029
+        kattohinta 5M
+        toteutuneet-kustannukset 5M
+        ylityksen-maara 10M
+        urakoitsija-maksaa 50M
+        siirrettava-maara 50M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        kulu-id nil
+        paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
+
+        vastaus (try
+                  (with-redefs [;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
+                                valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit]
+                                                                                kattohinta)]
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-kattohinnan-ylityspaatos +kayttaja-jvh+ paatos))
+                  (catch Exception e e))]
+    (is (str/includes? vastaus  "Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle."))))
 
 ;; Kattohinnan ylitys - Poisto
 (deftest kysely-kattohinnan-ylityspaatoksen-poisto-onnistuu-test
