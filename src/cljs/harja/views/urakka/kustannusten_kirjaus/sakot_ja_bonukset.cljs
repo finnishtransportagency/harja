@@ -240,8 +240,8 @@
         
         grid (sakot-bonukset-grid e! rivit haku-kaynnissa?)
         laji-suodatin (suodattimet-lajit e! valinnat haku-kaynnissa?)
-        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)) haku-kaynnissa?)
         lisaa-uusi-fn #(e! (tiedot/->AvaaModal {:yllapitokohde {:nimi tiedot/ei-kohdetta-teksti}}))
+        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)) haku-kaynnissa?)
         muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valittu-rivi kohteet voi-kirjoittaa? voi-tallentaa?)]
 
     (yhteiset/nakyma-body "Sakot ja bonukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid laji-suodatin false)))

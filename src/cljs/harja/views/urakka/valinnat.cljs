@@ -46,6 +46,21 @@
   ([ur disabled?]
    (valinnat/urakan-hoitokausi ur u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi! disabled?)))
 
+(defn paivittava-urakkavuosi-tuck
+  "Urakkavuosi valinta, triggeröi haun"
+  [aikavali haku-fn haku-kaynnissa?]
+  (let [fn-aikavali-muuttunut? (fn [aika]
+                                 (let [alku (-> @u/valittu-hoitokausi first)
+                                       loppu (-> @u/valittu-hoitokausi second)
+                                       valinnat-alku (-> aika first)
+                                       valinnat-loppu (-> aika second)]
+                                   (boolean (or
+                                              (not= alku valinnat-alku)
+                                              (not= loppu valinnat-loppu)))))]
+
+    [:div {:on-click #(when (fn-aikavali-muuttunut? aikavali) (haku-fn))}
+     [urakan-hoitokausi @nav/valittu-urakka haku-kaynnissa?]]))
+
 (defn hoitokauden-kuukausi []
   [valinnat/hoitokauden-kuukausi
    (pvm/aikavalin-kuukausivalit @u/valittu-hoitokausi)
