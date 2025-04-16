@@ -169,12 +169,7 @@ DECLARE
     hankinnat_ja_hoidon_hk_yht            NUMERIC;
     hankinnat_ja_hoidon_val_yht           NUMERIC;
 
-    --- Äkilliset hoitotyöt ja vahinkojen korjaukset
-    akilliset_ja_vahingot_rivi            RECORD;
-
     -- Rahavarausten ID:t
-    akilliset_id                          INT;
-    vahingot_id                           INT;
     kannustin_id                          INT;
 
     -- Tavoitehinnat yhteensä
@@ -455,10 +450,6 @@ BEGIN
     -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta 
     -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
     SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
-
-    -- Hae rahavaraus id:t äkillisille hoitotöille ja vahingoille, uusi tietomalli korvaa vanhaa koodia jossa haetaan kulu_kohdistus maksuerätyypillä
-    SELECT id INTO akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO vahingot_id FROM rahavaraus WHERE nimi LIKE '%Vahinkojen korjaukset%' ORDER BY id ASC LIMIT 1;
 
     FOR rivi IN SELECT 
       summa         AS kht_summa, 
