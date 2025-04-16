@@ -31,7 +31,7 @@ describe('Välikatselmus aukeaa', () => {
         cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click()
         cy.wait('@hae-kustannukset')
         cy.get('[data-cy=hoitokausi-valinta]').valinnatValitse({valinta: '1. hoitovuosi (2021—2022)'})
-        cy.contains('Tee välikatselmus').click()
+        cy.contains('Siirry välikatselmukseen').click();
         cy.contains('Välikatselmuksen päätökset')
         cy.contains('Iin MHU 2021-2026')
         cy.contains('1. hoitovuosi (01.10.2021 - 30.09.2022')
