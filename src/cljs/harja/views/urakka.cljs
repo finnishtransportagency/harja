@@ -108,10 +108,6 @@
                         (urakka/vesivaylaurakkatyyppi? tyyppi)
                         (istunto/ominaisuus-kaytossa? :vesivayla)))
 
-    :kustannusten-kirjaus (and
-                            (oikeudet/urakat-paikkaukset id)
-                            (= tyyppi :tiemerkinta))
-
     :valitavoitteet (and
                       (oikeudet/urakat-valitavoitteet id)
                       (not (urakka/kanavaurakka? urakka)))
@@ -135,9 +131,6 @@
                                  (oikeudet/urakat-kustannukset id)
                                  (= tyyppi :tiemerkinta))
     
-    :kustannusten-kirjaus (and (oikeudet/urakat-kustannukset id) 
-                            (= tyyppi :tiemerkinta))
-
     :paikkaukset-mpu (and
                        (oikeudet/urakat-paikkaukset id)
                        (= tyyppi :paallystys)
@@ -284,9 +277,9 @@
          ^{:key "laadunseuranta"}
          [laadunseuranta/laadunseuranta ur])
        "Kustannusten kirjaus"
-       :kustannusten-kirjaus
+       :tiemerkinnan-kustannukset
        (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
-         ^{:key "kustannusten-kirjaus"}
+         ^{:key "tiemerkinnan-kustannukset"}
          [kustannusten-kirjaus/kustannusten-kirjaus ur])
        (if (= (:tyyppi ur) :teiden-hoito)
          "Lupaukset ja tavoitteet"
