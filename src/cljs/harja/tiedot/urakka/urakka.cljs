@@ -415,6 +415,8 @@
 (def talvihoitoreitit-default {:haku-kaynnissa? false?
                                :talvihoitoreitit nil})
 
+(def tiemerkinta-kustannukset-default {})
+
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laatupoikkeamat laatupoikkeamat-default
                      :laskutus    laskutus-default
@@ -437,6 +439,7 @@
 (defonce tiemerkinta-sanktiot-ja-bonukset (cursor tila [:tiemerkinta-sanktiot-ja-bonukset]))
 (defonce tiemerkinta-uusien-paallysteiden-merkkinnat (cursor tila [:tiemerkinta-uusien-paallysteiden-merkkinnat]))
 
+(defonce tiemerkinta-kustannukset (cursor tila [:tiemerkinta-kustannukset]))
 (defonce laatupoikkeamat (cursor tila [:laatupoikkeamat]))
 (defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
 (defonce paikkaustoteumat (cursor tila [:paikkaukset :paikkaustoteumat]))

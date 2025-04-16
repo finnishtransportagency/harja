@@ -1,34 +1,16 @@
--- Lisää uudet tiemerkintäkustannus taulut
-CREATE TABLE tiemerkinta_yllapitokohteen_kustannus (
+CREATE TABLE tiemerkinta_korjauskustannus (
   id serial PRIMARY KEY,
-  yllapitokohde INTEGER REFERENCES yllapitokohde (id),
+  urakka INTEGER REFERENCES urakka (id),
   luoja INTEGER REFERENCES kayttaja (id),
   luotu TIMESTAMP NOT NULL DEFAULT NOW(),
   muokattu TIMESTAMP,
   muokkaaja INTEGER REFERENCES kayttaja (id),
-  
-  linjamerkinnat NUMERIC(10, 2),
-  pienmerkinnat NUMERIC(10, 2),
-  jyrsinnat NUMERIC(10, 2)
-);
 
+  kustannusvuosi INTEGER,
+  kustannus NUMERIC,
+  pk1 NUMERIC,
+  pk2 NUMERIC,
+  pk3 NUMERIC);
 
-COMMENT ON TABLE tiemerkinta_yllapitokohteen_kustannus IS
-    E'Tauluun kirjataan tiemerkintaurakoissa paallyskohteisiin liitoksissa olevia kustannuksia.';
-
-CREATE TABLE tiemerkinta_paikkauskohteen_kustannus (
-  id serial PRIMARY KEY,
-  paikkauskohde INTEGER REFERENCES paikkauskohde (id),
-  luoja INTEGER REFERENCES kayttaja (id),
-  luotu TIMESTAMP NOT NULL DEFAULT NOW(),
-  muokattu TIMESTAMP,
-  muokkaaja INTEGER REFERENCES kayttaja (id),
-  
-  linjamerkinnat NUMERIC(10, 2),
-  pienmerkinnat NUMERIC(10, 2),
-  jyrsinnat NUMERIC(10, 2)
-);
-
-
-COMMENT ON TABLE tiemerkinta_yllapitokohteen_kustannus IS
-    E'Tauluun kirjataan tiemerkintaurakoissa paikkauskohteisiin liitoksissa olevia kustannuksia.';
+CREATE UNIQUE INDEX kustannusvuosi_urakka_idx
+    ON tiemerkinta_korjauskustannus(urakka, kustannusvuosi);

@@ -165,6 +165,7 @@
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
     :paallystysilmoitukset-hallinta
+    :tiemerkinnan-kustannuskirjaukset
     :urakkatilanne
     :api-talvihoitoreitit
     :talvihoitoreitit
@@ -254,6 +255,7 @@
     :paallystysilmoitukset-hallinta
     :urakkatilanne
     :tieosoitteet-hallinta
+    :tiemerkinnan-kustannuskirjaukset
     :ajastukset-hallinta})
 
 (def hidas-ok-status #{:itmf})
