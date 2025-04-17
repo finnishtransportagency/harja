@@ -44,33 +44,6 @@ SET
     pk3 = :pk3
 WHERE urakka = :urakka AND kustannusvuosi = :kustannusvuosi;
 
---name: tallenna-tiemerkinta-kustannuskirjaus!
-INSERT INTO tiemerkinta_korjauskustannus (urakka, luoja, muokattu, muokkaaja, kustannusvuosi, kustannus, pk1, pk2, pk3)
-VALUES (
-      :urakka,
-      :luoja,
-      :muokattu,
-      :muokkaaja,
-      :kustannusvuosi,
-      :kustannus,
-      :pk1,
-      :pk2,
-      :pk3)
- ON CONFLICT (urakka, kustannusvuosi)
- DO UPDATE SET urakka = :urakka, muokattu = :muokattu, muokkaaja = :muokkaaja, kustannusvuosi = :kustannusvuosi, kustannus = :kustannus, pk1 = :pk1, pk2 = :pk2, pk3 = :pk3
-RETURNING urakka;
-
--- name: hae-tiemerkinta-muut-kustannukset
--- Testidataa gridiin, TODO ..
-SELECT    u.id, 
-		  u.luotu AS pvm,
-          'Lisätyö' AS tyyppi,
-          'Selite, test' AS selite,
-          '3' AS luokka,
-          (SELECT CAST('5000.99' AS FLOAT)) AS kustannus
-FROM      urakka u 
-ORDER BY  u.luotu DESC LIMIT 10;
-
 -- name: hae-tiemerkinta-kustannustyypit
 SELECT unnest(enum_range(NULL::yllapito_muu_toteuma_tyyppi)) AS tyyppi;
 
