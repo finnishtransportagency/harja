@@ -282,8 +282,7 @@ WHERE kt.toimenpideinstanssi = (SELECT tpi.id AS id
                                 WHERE tpi.urakka = :urakkaid
                                   AND tpk2.koodi = '23150'
                                 limit 1)
-  AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-GROUP BY kt.toimenpideinstanssi, kt.tehtavaryhma;
+  AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE);
 
 -- name: paivita-kattohinta<!
 -- Käytetään, kun 19/20 vuosien urakassa on asetettu uusi kattohinta eli kun tavoitehinta-muutospäätös on tehty
