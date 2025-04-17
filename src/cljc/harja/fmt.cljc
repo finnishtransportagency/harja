@@ -790,3 +790,6 @@
   (-> s
     str/lower-case
     (str/replace #"[\s]+" "-") keyword))
+
+(defn tieosoite-lyhyt-muoto [{:keys [tie alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
+  (str tie "/" alkuosa "/" alkuetaisyys "/" loppuosa "/" loppuetaisyys))
