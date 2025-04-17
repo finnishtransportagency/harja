@@ -13,11 +13,13 @@
    [harja.views.urakka.valinnat :as urakka-valinnat]
    [tuck.core :refer [tuck]]))
 
-(defn uusien-kustannusten-merkinnat-taulukko [e! otsikko kustannukset tallenna-fn taulukon-tyyppi tyhja] 
+(defn uusien-kustannusten-merkinnat-taulukko [e! otsikko kustannukset tallenna-fn taulukon-tyyppi tyhja haku-kaynnissa?] 
   [:div.livi-grid
    [grid/grid
     {:otsikko otsikko
-     :tyhja (or tyhja "Ei kohteita valitulla vuodella.")
+     :tyhja  (if haku-kaynnissa?
+               [yleiset/ajax-loader-pieni "Haku käynnissä..."]
+               (or tyhja "Aikavälille ei löytynyt tuloksia."))
      :voi-lisata? false
      :muokattava? true
      :tunniste :id
@@ -101,11 +103,11 @@
                             {:urakka @nav/valittu-urakka
                              :aikavali @u/valittu-aikavali
                              :valittu-hoitokausi @u/valittu-hoitokausi}))))
-      (fn [e! {:keys [kustannukset paikkaus-kustannukset] :as app}]
+      (fn [e! {:keys [kustannukset paikkaus-kustannukset haku-kaynnissa?] :as app}]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity. 
         [:div.livi-grid
          [:h1 "Uusien päällysteiden tiemerkinnät"] 
-         [debug/debug app] 
+         ;; [debug/debug app] 
          [:div
           [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
          [uusien-kustannusten-merkinnat-taulukko e! 
@@ -113,13 +115,15 @@
           kustannukset 
           tiedot/->TallennaPaallystysKustannukset 
           :paallystys
-          nil]
+          nil
+          haku-kaynnissa?]
          [uusien-kustannusten-merkinnat-taulukko e! 
           "Paikkauskohteiden tiemerkintäkustannukset"
           paikkaus-kustannukset 
           tiedot/->TallennaPaikkausKustannukset 
           :paikkaus
-          "Ei kohteita valitulla vuodella. Paikkauskohteet listataan ja niille voi merkitä kustannuksia jos paikkauksen \"Tiemerkinnän tila\" on \"Tiemerkintä tehty\"."]])))
+          "Ei kohteita valitulla vuodella. Paikkauskohteet listataan kun tiemerkintä on merkitty tehdyksi."
+          haku-kaynnissa?]])))
 
 (defn uusien-paallysteiden-merkinnat []
   [tuck tila/tiemerkinta-uusien-paallysteiden-merkkinnat uusien-kustannusten-merkinnat*])
