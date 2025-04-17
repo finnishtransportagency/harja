@@ -316,7 +316,7 @@
      paikkauskohteet]]))
 
 (defn- filtterit [e! {:keys [haku-kaynnissa?] :as app}]
-  (let [haku-fn (fn [] (e! (t-paikkauskohteet/->HaePaikkauskohteet)))
+  (let [haku-fn (fn [] (e! (t-paikkauskohteet/->HaePaikkauskohteet false)))
         vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
         tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         valitut-tilat (:valitut-tilat app)
@@ -404,7 +404,7 @@
                          (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :M)
-                         (e! (t-paikkauskohteet/->HaePaikkauskohteet)))
+                         (e! (t-paikkauskohteet/->HaePaikkauskohteet true)))
                       #(do
                          (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                          (e! (t-paikkauskohteet/->SuljeLomake))))

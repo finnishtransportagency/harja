@@ -79,7 +79,7 @@
 (defrecord FiltteriValitseTyomenetelma [uusi-menetelma valittu?])
 (defrecord FiltteriValitseEly [uusi-ely valittu?])
 (defrecord TiedostoLadattu [vastaus])
-(defrecord HaePaikkauskohteet [])
+(defrecord HaePaikkauskohteet [nakymaan?])
 (defrecord HaePaikkauskohteetOnnistui [vastaus])
 (defrecord HaePaikkauskohteetEpaonnistui [vastaus])
 (defrecord PaivitaLomake [lomake])
@@ -488,8 +488,25 @@
             (dissoc :excel-virhe))))))
 
   HaePaikkauskohteet
-  (process-event [_ app]
-    (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app))
+  (process-event [{:keys [nakymaan?]} app]
+    (let [urakan-vuodet (pvm/urakan-vuodet
+                          (:alkupvm (-> @tila/tila :yleiset :urakka))
+                          (:loppupvm (-> @tila/tila :yleiset :urakka)))
+
+          viimeinen-vuosi-aikavali (last urakan-vuodet)
+          viimeinen-vuosi (-> viimeinen-vuosi-aikavali (first) (pvm/vuosi))
+          kuluva-vuosi (pvm/vuosi (pvm/nyt))
+
+          vuosi (if (> kuluva-vuosi viimeinen-vuosi)
+                  viimeinen-vuosi
+                  kuluva-vuosi)
+
+          ;; Kun tullaan näkymään, aseta suodattimeen kuluva/viimeinen vuosi 
+          app (if nakymaan?
+                (assoc app :valittu-vuosi vuosi)
+                app)]
+
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
 
   HaePaikkauskohteetOnnistui
   (process-event [{vastaus :vastaus} app]
