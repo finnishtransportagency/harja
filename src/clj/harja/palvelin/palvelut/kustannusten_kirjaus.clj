@@ -78,20 +78,6 @@
           (assoc tieto :muokkaaja (:id user) :muokattu (pvm/nyt)))))
     tiedot))
 
-
-(defn hae-tiemerkinta-muut-kustannukset
-  [db kayttaja {:keys [urakka-id]}]
-  ;; TODO 
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan kayttaja urakka-id)
-  (q/hae-tiemerkinta-muut-kustannukset db))
-
-(defn hae-tiemerkinta-kustannustyypit
-  [db kayttaja {:keys [urakka-id]}]
-  ;; TODO 
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan kayttaja urakka-id)
-  (let [_ (prn "hae-tiemerkinta-kustannustyypit-")]
-    (q/hae-tiemerkinta-kustannustyypit db)))
-
 (defn hae-tiemerkinta-paallystyskohteiden-kustannukset
   [db kayttaja {:keys [urakka-id urakka-alkupvm yllapitokohdetyotyyppi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan kayttaja urakka-id)
@@ -169,12 +155,6 @@
       (fn [kayttaja tiedot]
         (tallenna-tiemerkinta-kustannuskirjaukset (:db this) kayttaja tiedot)))
 
-    ;; Muut kustannukset 
-    (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-muut-kustannukset
-      (fn [kayttaja tiedot] (hae-tiemerkinta-muut-kustannukset (:db this) kayttaja tiedot)))
-
-    (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-kustannustyypit
-      (fn [kayttaja tiedot] (hae-tiemerkinta-kustannustyypit (:db this) kayttaja tiedot)))
     ;; Uudet päällysteet
     (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-paallystyskohteiden-kustannukset
       (fn [kayttaja tiedot] 
@@ -198,10 +178,7 @@
       :hae-tiemerkinta-kustannuskirjaus
       :hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
       :tallenna-tiemerkinta-kustannuskirjaus
-
-      ;; Muut kustannukset
-      :hae-tiemerkinta-muut-kustannukset
-      :hae-tiemerkinta-kustannustyypit
+      
       ;; Uudet päällysteet
       :hae-tiemerkinta-paallystyskohteiden-kustannukset
       :hae-tiemerkinta-paikkausten-kustannukset
