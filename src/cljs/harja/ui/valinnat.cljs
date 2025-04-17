@@ -4,26 +4,56 @@
   (:require [harja.tiedot.navigaatio :as nav]
             [reagent.core :refer [atom] :as r]
             [reagent.dom :as rdom]
+            [harja.transit :as transit]
 
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
-            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.kentat :refer [tee-kentta] :as yleiset]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.fmt :as fmt]
             [clojure.string :as str]
-            [cljs-time.core :as t]
             [goog.events.EventType :as EventType]
             [harja.ui.lomake :as lomake]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.asiakas.kommunikaatio :as komm]
             [harja.ui.dom :as dom]
-            [harja.domain.urakka :as u-domain]
-            [harja.loki :as log]
-            [harja.ui.yleiset :as yleiset])
-  (:require-macros [harja.tyokalut.ui :refer [for*]]
-                   [cljs.core.async.macros :refer [go]]))
+            [harja.domain.urakka :as u-domain])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
+
+(defn raporttiviennit
+  [raporttiparametrit]
+  [:div.raporttiviennit
+   ;;
+   ;; Excel raportti
+   ^{:key "raporttixls"}
+   [:form {:target "_blank" :method "POST"
+           :action (komm/excel-url :raportointi)}
+
+    [:input {:type "hidden" :name "parametrit"
+             :value (transit/clj->transit raporttiparametrit)}]
+
+    [:button {:type "submit"
+              :class #{"nappi-toissijainen"}}
+
+     [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna Excel"]]]
+
+   ;;
+   ;; Pdf raportti
+   ^{:key "raporttipdf"}
+   [:form {:target "_blank" :method "POST"
+           :action (komm/pdf-url :raportointi)}
+
+    [:input {:type "hidden" :name "parametrit"
+             :value (transit/clj->transit raporttiparametrit)}]
+
+    [:button {:type "submit"
+              :class #{"nappi-toissijainen"}}
+
+     [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna PDF"]]]])
 
 (defn urakan-sopimus
   ([ur valittu-sopimusnumero-atom valitse-fn] (urakan-sopimus ur valittu-sopimusnumero-atom valitse-fn {}))

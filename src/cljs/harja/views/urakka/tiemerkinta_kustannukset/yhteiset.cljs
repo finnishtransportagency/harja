@@ -1,10 +1,7 @@
 (ns harja.views.urakka.tiemerkinta-kustannukset.yhteiset
   "Tiemerkintöjen kustannukset yhteiset funktiot/komponentit"
-  (:require [harja.transit :as transit]
-            
-            [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]
-            [harja.asiakas.kommunikaatio :as komm]
+  (:require [harja.ui.napit :as napit]
+            [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]))
 
 (defonce yhteenveto-tyypit {:korjaus "Tiemerkintöjen korjaus"
@@ -24,42 +21,6 @@
 (defonce lomake-validointi-virhe-viesti "Tallennus epäonnistui. Pakollisia tietoja puuttuu.")
 
 
-(defn raporttiviennit 
-  "Raportteja voi Harjassa tehdä kolmella eri tapaa 
-   Tässä yksi, passataan frontista suoraa raporttimoottorille parametrit
-   Tämä on kyseisiin näkymiin ratkaisuna toimiva.
-   Wrapperin voisi heittää johonkin yleiseen kirjastoon, on käytössä muuallakin Harjassa sama koodi"
-  [{:keys [raportti] :as _valinnat}]
-  [:div.raporttiviennit
-   ;;
-   ;; Excel raportti
-   ^{:key "raporttixls"}
-   [:form {:target "_blank" :method "POST"
-           :action (komm/excel-url :raportointi)}
-
-    [:input {:type "hidden" :name "parametrit"
-             :value (transit/clj->transit raportti)}]
-
-    [:button {:type "submit"
-              :class #{"nappi-toissijainen"}}
-
-     [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna Excel"]]]
-   
-   ;;
-   ;; Pdf raportti
-   ^{:key "raporttipdf"}
-   [:form {:target "_blank" :method "POST"
-           :action (komm/pdf-url :raportointi)}
-
-    [:input {:type "hidden" :name "parametrit"
-             :value (transit/clj->transit raportti)}]
-
-    [:button {:type "submit"
-              :class #{"nappi-toissijainen"}}
-
-     [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna PDF"]]]])
-
-
 (defn paivittava-urakkavuosi-suodatin
   "Urakkavuosi valinta, passataan näkymän tuck hakufunktio"
   [{:keys [aikavali]} haku-fn haku-kaynnissa?]
@@ -70,14 +31,15 @@
   "Muut kustannukset, Sakot ja bonukset 
    Välilehdet samalla leiskalle, joten yhteinen komponentti"
   [otsikko lisaa-uusi-fn aikavali
-   valinnat muokataan muokkauspaneeli grid laji-suodatin yhteenveto?]
+   {:keys [raportti] :as _valinnat} 
+   muokataan muokkauspaneeli grid laji-suodatin yhteenveto?]
   ;; Body 
   [:div.tiemerkinta-kustannusten-kirjaus
 
    ;; Otsikko / header, raporttiviennit
    [:div.header
     [:h1.header-yhteiset otsikko]
-    (raporttiviennit valinnat)]
+    (valinnat/raporttiviennit raportti)]
 
    ;; Suodattimet
    [:div.suodattimet
