@@ -4,6 +4,7 @@
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tyokalut.big :as big]
             [harja.fmt :as fmt]
+            [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.tiedot.urakka.kulut.yhteiset :as t]
@@ -83,11 +84,10 @@
                              nil)]
     [:div.yhteenveto.elevation-2
      [:h2 [:span "Yhteenveto"]]
-     (when (and valikatselmus-tekematta? (not= :valikatselmus sivu))
+     (when valikatselmus-tekematta?
        [:div.valikatselmus
         "Välikatselmuksen päätöksiä puuttuu"
-        [napit/yleinen-ensisijainen
-         "Siirry välikatselmukseen"
+        [yleiset/linkki "Siirry välikatselmukseen"
          #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec)]])
      [:div.rivi 
       [:span (if oikaisuja? 
@@ -176,6 +176,7 @@
        [:div.rivi [:span "Lupauksien bonus"] [:span.positiivinen-numero (fmt/euro-opt lupausbonus)]])
      (when lupaussanktio-paatos
        [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/euro-opt lupaussanktio)]])
-     (when (and (not valikatselmus-tekematta?) (not= :valikatselmus sivu))
+     (when-not valikatselmus-tekematta?
        [:div.valikatselmus-tehty
-        [napit/yleinen-ensisijainen "Siirry välikatselmukseen" #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))
+        [yleiset/linkki "Siirry välikatselmukseen"
+         #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec)]])]))

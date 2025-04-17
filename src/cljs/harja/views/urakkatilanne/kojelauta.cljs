@@ -134,7 +134,7 @@
                                            (> (pvm/nyt)
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
-     [yleiset/tooltip {} :% "Siirry välikatselmukseen2"]
+     [yleiset/tooltip {} :% "Siirry välikatselmukseen"]
      [:a.klikattava.alleviivaa {:href "#"
                                 :on-click #(siirtymat/avaa-valikatselmus (:ely_id rivi) (:id rivi) [(pvm/hoitokauden-alkupvm (:hoitokauden_alkuvuosi rivi)) (pvm/hoitokauden-loppupvm (inc (:hoitokauden_alkuvuosi rivi)))])}
       [:div.tavoitehintapaatos
