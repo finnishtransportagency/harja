@@ -61,9 +61,9 @@ SELECT
   ypk.tr_loppuosa                              AS loppuosa,
   ypk.tr_loppuetaisyys                         AS loppuetaisyys,
   ypk.pkluokka                                 AS "pk-luokka",
-  tyk.linjamerkinnat                           AS "linjamerkinnat",
-  tyk.pienmerkinnat                            AS "pienmerkinnat",
-  tyk.jyrsinnat                                AS "jyrsinnat"
+  COALESCE(tyk.linjamerkinnat, 0)              AS "linjamerkinnat",
+  COALESCE(tyk.pienmerkinnat, 0)               AS "pienmerkinnat",
+  COALESCE(tyk.jyrsinnat, 0)                   AS "jyrsinnat"
 FROM yllapitokohde ypk
 LEFT JOIN tiemerkinta_yllapitokohteen_kustannus tyk ON ypk.id = tyk.yllapitokohde
 WHERE
@@ -85,9 +85,9 @@ SELECT
   (pk.tierekisteriosoite_laajennettu).losa AS loppuosa,
   (pk.tierekisteriosoite_laajennettu).let  AS loppuetaisyys,
   pk.pkluokka                              AS "pk-luokka",
-  tpk.linjamerkinnat                       AS "linjamerkinnat",
-  tpk.pienmerkinnat                        AS "pienmerkinnat",
-  tpk.jyrsinnat                            AS "jyrsinnat"
+  COALESCE(tpk.linjamerkinnat, 0)          AS "linjamerkinnat",
+  COALESCE(tpk.pienmerkinnat, 0)           AS "pienmerkinnat",
+  COALESCE(tpk.jyrsinnat, 0)               AS "jyrsinnat"
 FROM paikkauskohde pk
     LEFT JOIN tiemerkinta_paikkauskohteen_kustannus tpk ON pk.id = tpk.paikkauskohde
     JOIN urakka u ON u.id = :urakka-id
