@@ -51,19 +51,19 @@ SELECT unnest(enum_range(NULL::yllapito_muu_toteuma_tyyppi)) AS tyyppi;
 -- name: hae-urakan-yllapitokohteiden-kustannukset
 SELECT
   ypk.id,
-  COALESCE(CAST(ypk.kohdenumero AS TEXT), '-') AS "kohdenumero",
-  ypk.yhaid                                    AS "yha-id",
+  COALESCE(CAST(ypk.kohdenumero AS TEXT), '-')           AS "kohdenumero",
+  ypk.yhaid                                              AS "yha-id",
   ypk.nimi,
   ypk.urakka,
-  ypk.tr_numero                                AS tie,
-  ypk.tr_alkuosa                               AS alkuosa,
-  ypk.tr_alkuetaisyys                          AS alkuetaisyys,
-  ypk.tr_loppuosa                              AS loppuosa,
-  ypk.tr_loppuetaisyys                         AS loppuetaisyys,
-  ypk.pkluokka                                 AS "pk-luokka",
-  COALESCE(tyk.linjamerkinnat, 0)              AS "linjamerkinnat",
-  COALESCE(tyk.pienmerkinnat, 0)               AS "pienmerkinnat",
-  COALESCE(tyk.jyrsinnat, 0)                   AS "jyrsinnat"
+  ypk.tr_numero                                          AS tie,
+  ypk.tr_alkuosa                                         AS alkuosa,
+  ypk.tr_alkuetaisyys                                    AS alkuetaisyys,
+  ypk.tr_loppuosa                                        AS loppuosa,
+  ypk.tr_loppuetaisyys                                   AS loppuetaisyys,
+  COALESCE(CAST(ypk.pkluokka AS TEXT), 'Ei tiedossa')    AS "pk-luokka",
+  COALESCE(tyk.linjamerkinnat, 0)                        AS "linjamerkinnat",
+  COALESCE(tyk.pienmerkinnat, 0)                         AS "pienmerkinnat",
+  COALESCE(tyk.jyrsinnat, 0)                             AS "jyrsinnat"
 FROM yllapitokohde ypk
 LEFT JOIN tiemerkinta_yllapitokohteen_kustannus tyk ON ypk.id = tyk.yllapitokohde
 WHERE
@@ -71,7 +71,7 @@ WHERE
   AND ypk.yllapitokohdetyotyyppi = :yllapitokohdetyotyyppi :: YLLAPITOKOHDETYOTYYPPI
   AND ypk.vuodet @> ARRAY[:vuosi]::INTEGER[]
   AND ypk.poistettu IS FALSE
-ORDER BY coalesce(ypk.muokattu,  ypk.luotu) DESC;;
+ORDER BY coalesce(ypk.muokattu,  ypk.luotu) DESC;
 
 
 -- name: hae-urakan-paikkauskohteiden-kustannukset
@@ -114,7 +114,7 @@ WHERE st_intersects(o.alue,
 AND u.id = :urakka-id                        
 AND EXTRACT(YEAR FROM pk.alkupvm) = :vuosi
 AND pk.poistettu = false
-ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;;
+ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
 
 -- name: hae-yllapitokustannus
 SELECT
