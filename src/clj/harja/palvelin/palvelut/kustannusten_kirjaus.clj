@@ -136,13 +136,6 @@
       {:onnistui false
        :virhe (.getMessage e)})))
 
-
-(defn hae-tiemerkinta-muut-kustannukset
-  [db kayttaja {:keys [urakka-id]}]
-  ;; TODO 
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
-  (q/hae-tiemerkinta-muut-kustannukset db))
-
 (defn hae-tiemerkinta-kustannustyypit
   [db kayttaja {:keys [urakka-id]}]
   ;; TODO 
@@ -183,10 +176,6 @@
     (julkaise-palvelu (:http-palvelin this) :tallenna-tiemerkinta-paikkauskohteiden-kustannukset
       (fn [kayttaja tiedot]
         (tallenna-tiemerkinta-paikkauskohteiden-kustannukset (:db this) kayttaja tiedot)))
-
-    ;; Muut kustannukset 
-    (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-muut-kustannukset
-      (fn [kayttaja tiedot] (hae-tiemerkinta-muut-kustannukset (:db this) kayttaja tiedot)))
     
     (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-kustannustyypit
       (fn [kayttaja tiedot] (hae-tiemerkinta-kustannustyypit (:db this) kayttaja tiedot)))
@@ -197,8 +186,7 @@
       :hae-tiemerkinta-kustannuskirjaus
       :hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
       :tallenna-tiemerkinta-kustannuskirjaus
-      
-      ;; Uudet päällysteet
+      :hae-tiemerkinta-kustannustyypit
       :hae-tiemerkinta-paallystyskohteiden-kustannukset
       :hae-tiemerkinta-paikkausten-kustannukset
       :tallenna-tiemerkinta-yllapitokohteiden-kustannukset

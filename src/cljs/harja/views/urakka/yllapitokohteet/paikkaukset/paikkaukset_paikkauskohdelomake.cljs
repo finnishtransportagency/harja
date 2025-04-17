@@ -27,7 +27,7 @@
 (defn- viesti-tiemerkintaan-modal [e! lomake tiemerkintaurakat tyomenetelmat nakyvissa?]
   (let [voi-lahettaa? (::tila/validi? lomake)]
     [modal/modal
-     {:otsikko (str "Viesti tiemerkintaan")
+     {:otsikko "Viesti tiemerkintään"
       :nakyvissa? nakyvissa?
       :sulje-fn #(e! (t-paikkauskohteet/->SuljeTiemerkintaModal))
       :footer [:div.row

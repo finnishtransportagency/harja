@@ -8,8 +8,8 @@
 
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
-            [harja.ui.kentat :refer [tee-kentta] :as yleiset]
-            [harja.ui.yleiset :refer [livi-pudotusvalikko]]
+            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.yleiset :refer [livi-pudotusvalikko] :as yleiset]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.fmt :as fmt]
             [clojure.string :as str]
