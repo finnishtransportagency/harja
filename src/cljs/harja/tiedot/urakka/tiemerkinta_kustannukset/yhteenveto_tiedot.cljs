@@ -1,8 +1,8 @@
-(ns harja.views.urakka.kustannusten-yhteenveto.yhteenveto-tiedot
+(ns harja.tiedot.urakka.tiemerkinta-kustannukset.yhteenveto-tiedot
   "Tiemerkintöjen kustannusten yhteenveto - tiedot"
   (:require  [tuck.core :as tuck]
              [reagent.core :refer [atom] :as reagent]
-             
+
              [harja.pvm :as pvm]
              [harja.tiedot.urakka :as u]
              [harja.ui.viesti :as viesti]

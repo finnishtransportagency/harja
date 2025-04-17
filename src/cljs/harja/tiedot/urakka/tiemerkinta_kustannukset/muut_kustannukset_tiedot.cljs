@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kustannusten-kirjaus.muut-kustannukset-tiedot
+(ns harja.tiedot.urakka.tiemerkinta-kustannukset.muut-kustannukset-tiedot
   "Tiemerkintöjen muut kustannukset välilehti - tiedot"
   (:require [tuck.core :as tuck]
             [reagent.core :refer [atom] :as reagent]
@@ -11,7 +11,7 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.raportit :as raporttitiedot]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
+            [harja.views.urakka.tiemerkinta-kustannukset.yhteiset :as yhteiset]))
 
 (defonce ^{:private true} raportti-avain :tiemerkinta-muut-kustannukset)
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
@@ -104,7 +104,7 @@
 
   HaeTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
-     (epaonnistui vastaus app))
+    (epaonnistui vastaus app))
 
   HaeTyypitOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -114,7 +114,7 @@
 
   HaeTyypitEpaonnistui
   (process-event [{:keys [vastaus]} app]
-     (epaonnistui vastaus app))
+    (epaonnistui vastaus app))
 
   TallennaRivi
   (process-event [{:keys [rivi virheita?]} {:keys [valittu-rivi] :as app}]
@@ -125,7 +125,7 @@
           (not (voi-tallentaa? valittu-rivi yllapitokohteet-domain/paallysteen-korjausluokat)))
       ;; Jos ei voida tallentaa, kerro käyttäjälle missä virheet
       (assoc-in app [:valittu-rivi :virheita?] true)
-      
+
       ;; Voidaan tehdä tallennus 
       (let [rivi (lomake/ilman-lomaketietoja rivi)
             {:keys [pvm hinta id selite tyyppi yllapitoluokka]} rivi
@@ -147,7 +147,7 @@
           parametrit
           {:onnistui ->TallennusOnnistui
            :epaonnistui ->TallennusEpaonnistui})
-        
+
         (-> app
           (assoc :rivit nil)
           (assoc :muokataan false)

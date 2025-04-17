@@ -1,8 +1,8 @@
-(ns harja.views.urakka.kustannusten-kirjaus.sakot-bonukset-tiedot
+(ns harja.tiedot.urakka.tiemerkinta-kustannukset.sakot-ja-bonukset-tiedot
   "Tiemerkintöjen sakot ja bonukset - tiedot"
   (:require [tuck.core :as tuck]
             [reagent.core :refer [atom] :as reagent]
-            
+
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.ui.lomake :as lomake]
@@ -11,7 +11,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.raportit :as raporttitiedot]
-            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]))
+            [harja.views.urakka.tiemerkinta-kustannukset.yhteiset :as yhteiset]))
 
 (defonce ^{:private true} raportti-avain :tiemerkinta-sakot-bonukset)
 (defonce ^{:private true} nollatut-valinnat {:rivit nil

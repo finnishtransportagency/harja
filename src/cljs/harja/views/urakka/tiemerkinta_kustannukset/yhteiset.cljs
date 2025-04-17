@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kustannusten-kirjaus.yhteiset
+(ns harja.views.urakka.tiemerkinta-kustannukset.yhteiset
   "Tiemerkintöjen kustannukset yhteiset funktiot/komponentit"
   (:require [harja.transit :as transit]
             

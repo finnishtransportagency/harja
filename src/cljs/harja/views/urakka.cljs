@@ -25,7 +25,7 @@
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
             [harja.views.urakka.kustannusten-kirjaus :as kustannusten-kirjaus]
-            [harja.views.urakka.kustannusten-yhteenveto.yhteenveto :as kustannusten-yhteenveto]
+            [harja.views.urakka.tiemerkinta-kustannukset.yhteenveto :as kustannusten-yhteenveto]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]

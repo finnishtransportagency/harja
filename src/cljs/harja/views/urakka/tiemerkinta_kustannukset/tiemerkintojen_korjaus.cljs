@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kustannusten-kirjaus.tiemerkintojen-korjaus
+(ns harja.views.urakka.tiemerkinta-kustannukset.tiemerkintojen-korjaus
   (:require
    [harja.tiedot.urakka.urakka :as tila]
    [harja.ui.komponentti :as komp]

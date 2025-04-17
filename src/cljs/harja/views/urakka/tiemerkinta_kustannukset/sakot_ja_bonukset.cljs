@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kustannusten-kirjaus.sakot-ja-bonukset
+(ns harja.views.urakka.tiemerkinta-kustannukset.sakot-ja-bonukset
   "Tiemerkintöjen sakot ja bonukset välilehti"
   (:require [reagent.core :as r]
             [tuck.core :refer [tuck]]
@@ -17,8 +17,8 @@
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
-            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
-            [harja.views.urakka.kustannusten-kirjaus.sakot-bonukset-tiedot :as tiedot]))
+            [harja.views.urakka.tiemerkinta-kustannukset.yhteiset :as yhteiset]
+            [harja.tiedot.urakka.tiemerkinta-kustannukset.sakot-ja-bonukset-tiedot :as tiedot]))
 
 
 (defn- sakot-bonukset-grid 

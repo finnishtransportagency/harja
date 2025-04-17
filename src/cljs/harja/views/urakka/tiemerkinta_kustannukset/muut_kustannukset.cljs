@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kustannusten-kirjaus.muut-kustannukset
+(ns harja.views.urakka.tiemerkinta-kustannukset.muut-kustannukset
   "Tiemerkintöjen muut kustannukset välilehti"
   (:require [reagent.core :as r]
             [tuck.core :refer [tuck]]
@@ -16,8 +16,8 @@
             [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
-            [harja.views.urakka.kustannusten-kirjaus.yhteiset :as yhteiset]
-            [harja.views.urakka.kustannusten-kirjaus.muut-kustannukset-tiedot :as tiedot]))
+            [harja.views.urakka.tiemerkinta-kustannukset.yhteiset :as yhteiset]
+            [harja.tiedot.urakka.tiemerkinta-kustannukset.muut-kustannukset-tiedot :as tiedot]))
 
 
 (defn- muut-kustannukset-grid
