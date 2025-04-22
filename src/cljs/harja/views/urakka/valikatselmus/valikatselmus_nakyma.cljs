@@ -198,9 +198,4 @@
               [yhteevetolaatikko/yhteenvetolaatikko e! app]]]])]))))
 
 (defn valikatselmus []
-  (let [t tila/kustannusten-seuranta
-        valittu-hoitokausi (:valittu-hoitokausi @t)
-        app @t
-        app (assoc app :valittu-hoitokausi valittu-hoitokausi)
-        _ (reset! t app)]
-    (tuck/tuck t valikatselmus*)))
+  (tuck/tuck tila/valikatselmus valikatselmus*))

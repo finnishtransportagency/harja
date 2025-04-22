@@ -187,7 +187,7 @@
         (nav/aseta-valittu-valilehti! :sivu :urakat)
         (nav/aseta-valittu-valilehti! :urakat :valikatselmus)
         (nav/salli-url-paivitys!)
-        (swap! urakka-tila/kustannusten-seuranta merge app-state)))))
+        (swap! urakka-tila/valikatselmus merge app-state)))))
 
 (defn avaa-lupaukset [hoitokauden-alkuvuosi]
   (go
