@@ -145,7 +145,7 @@
 
   HaeJarjestelmanAsetuksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [validoinnit (:validatselmus_validoinnit_kaytossa vastaus)]
+    (let [validoinnit (:valikatselmus_validoinnit_kaytossa vastaus)]
       (-> app
         (assoc-in [:asetukset :valikatselmus-validointi] (keyword (str validoinnit))))))
 
