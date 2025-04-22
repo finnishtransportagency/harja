@@ -134,6 +134,7 @@
         [:span {:class (when (and kattohinnan-ylitys (> kattohinnan-ylitys 0))
                               "negatiivinen-numero")} (fmt/euro-opt false kattohinnan-ylitys)]])
 
+     ;; URAKOITSIJAN SAATAVAT
      [:h3 "Urakoitsijan saatavat"]
      [:div.flex-row.summa_rivi_ylin
       [:span "Lupausbonus"]
@@ -154,11 +155,15 @@
         [:span (if (> urakoitsijan-osuus-tavoitehinnan-ylitys 0)
                  (fmt/euro-opt false urakoitsijan-osuus-tavoitehinnan-ylitys)
                  (fmt/euro-opt false 0))]])
-     [:div.flex-row.summa_rivi
-      [:span "Hoidonjohtopalkkion muutos"]
-      [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]]
+     ;; Jos hoidonjohtopalkkio on positiivinen, niin se on urakoitsijan saatavia.
+     ;; Jos hoitovuoden lopun tavoitehinta ilman indeksitarkastuksia on enemmmän kuin 5% suurempi kuin tarjouksen tavoitehinta
+     ;; niin hoidonjohtopalkkiota muutetaan. Jos se ei ole muuttunut yli 5%, niin muutos on nolla ja silloin näytetään nollaa.
+     (when (>= hoidonjohtopalkkion-muutos 0)
+       [:div.flex-row.summa_rivi
+        [:span "Hoidonjohtopalkkion muutos"]
+        [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]])
 
-; TILAAJAN SAATAVAT
+     ; TILAAJAN SAATAVAT
      [:h3 "Tilaajan saatavat"]
      [:div.flex-row.summa_rivi_ylin
       [:span "Lupaussanktio"]
@@ -183,9 +188,12 @@
                  (fmt/euro-opt false urakoitsijan-hyvitysosuus)
                  (fmt/euro-opt false 0))]])
 
-     [:div.flex-row.summa_rivi
-      [:span "Hoidonjohtopalkkion muutos"]
-      [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]]
+     ;; Kun hoidonjohtopalkkio on negatiivinen, niin se on tilaajan saatavia
+     (when (< hoidonjohtopalkkion-muutos 0)
+      [:div.flex-row.summa_rivi
+       [:span "Hoidonjohtopalkkion muutos"]
+       [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]])
+
 
      [:h3 "Siirrot"]
      [:div.flex-row.summa_rivi

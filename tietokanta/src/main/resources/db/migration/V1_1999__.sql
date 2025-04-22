@@ -177,7 +177,7 @@ CREATE TABLE paatos_hoidonjohtopalkkio
     tavoitehinta              NUMERIC(12, 2) NOT NULL, -- Hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia
     tarjouksen_tavoitehinta   NUMERIC(12, 2) NOT NULL, -- Tavoitehinta, joka tulee tarjousdokumenteista eikä esim kustiksesta
     hoidonjohtopalkkio        NUMERIC(10, 2),          -- Hoitokauden indeksikorjattu hoidonjohtopalkkio
-    muutosprosentti           NUMERIC(10, 1) NOT NULL, -- Kuinka monta prosenttia tavoitehinta on suurempi, kuin tarjouksen_tavoitehinta
+    muutosprosentti           NUMERIC(10, 2) NOT NULL, -- Kuinka monta prosenttia tavoitehinta on suurempi, kuin tarjouksen_tavoitehinta
     hoidonjohtopalkkio_muutos NUMERIC(10, 2) NOT NULL, -- Kuinka monta euroa hoidonjohtopalkkion pitää muuttua verrattuna alkuperäiseen suunnitelmaan
     kulu_id                   INTEGER,                 -- Muuttuneesta hoidonjohtopalkkiosta tehdään kulu
     luotu                     TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,

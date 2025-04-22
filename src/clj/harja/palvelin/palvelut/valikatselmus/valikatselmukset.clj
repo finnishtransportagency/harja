@@ -225,9 +225,10 @@
                                                                                                   :hoitokauden_alkuvuosi valittu-hoitovuosi})
 
         ;; Hoidonjohtopalkkion suunniteltu määrä
-        hoidonjohtopalkkio (:budjetoitu_summa_indeksikorjattu (first (paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle db {:urakkaid urakkaid
-                                                                                                                                         :alkupvm (pvm/hoitokauden-alkupvm valittu-hoitovuosi)
-                                                                                                                                         :loppupvm (pvm/hoitokauden-loppupvm (inc valittu-hoitovuosi))})))
+        hjpalkkio (paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle db {:urakkaid urakkaid
+                                                                                      :alkupvm (pvm/hoitokauden-alkupvm valittu-hoitovuosi)
+                                                                                      :loppupvm (pvm/hoitokauden-loppupvm (inc valittu-hoitovuosi))})
+        hoidonjohtopalkkio (:budjetoitu_summa_indeksikorjattu (first hjpalkkio))
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid valittu-hoitovuosi)
 
@@ -664,7 +665,6 @@
   (jdbc/with-db-transaction [db db]
     (let [validaatio #{}
           urakkaid (:urakkaid paatos)
-          urakka (first (q-urakat/hae-urakka db urakkaid))
           hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
 
           ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
@@ -688,13 +688,14 @@
                        Suunniteltu hoidonjohtopalkkio:" hoidonjohtopalkkio "€. Päätöksen mukainen hoidonjohtopalkkio: " (:hoidonjohtopalkkio paatos) " €"))
                        validaatio)
           ;; Luodaan päätöksen mukainen kulu, jos hoitovuoden lopun tavoitehinta poikkeaa yli 5% tarjouksen tavoitehinnasta.
-          kulu_id (when-not (and (seq validaatio) (> (:muutosprosentti paatos) 5))
+          kulu_id (when (and (not (seq validaatio)) (> (:muutosprosentti paatos) 5))
                     (paatos-apurit/tallenna-kulu db paatos kayttaja :hoidonjohtopalkkion-muutos
                       ;; Osassa päätöksistä summat on ristiriidassa kulujen summien kanssa. Joten ne muokataan aina kululle eri päin.
                       ;; Tehdään se hoidonjohtopalkiolle tässä, niin se menee kululle oikein
                       (* -1 (:hoidonjohtopalkkio_muutos paatos)) false))
+          
+          ;; Jos muutosprosentti on yli 5%, niin kulu luodaan, muuten kulua ei luoda. Kulu voi olla siis nil
           paatos (assoc paatos :kulu_id kulu_id)
-          ;; TODO: Tee lisää validaatiota, jos mahdollista
 
           _ (if (seq validaatio)
               (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
