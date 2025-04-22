@@ -273,7 +273,7 @@ WHERE hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
 -- name: hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle
 SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu
-from kustannusarvioitu_tyo kt
+FROM kustannusarvioitu_tyo kt
      JOIN sopimus s ON kt.sopimus = s.id AND s.urakka = :urakkaid
 WHERE kt.toimenpideinstanssi = (SELECT tpi.id AS id
                                 FROM toimenpideinstanssi tpi
@@ -282,7 +282,15 @@ WHERE kt.toimenpideinstanssi = (SELECT tpi.id AS id
                                 WHERE tpi.urakka = :urakkaid
                                   AND tpk2.koodi = '23150'
                                 limit 1)
-  AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE);
+  AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND (kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'G - Hoidonjohtopalkkio')
+    OR kt.tehtava = (SELECT id
+                     from tehtava
+                     WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744') -- Hoitourakan työnjohto
+    OR kt.tehtava = (SELECT id
+                     from tehtava
+                     WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8')) -- Hoidonjohtopalkkio;
+group by kt.sopimus;
 
 -- name: paivita-kattohinta<!
 -- Käytetään, kun 19/20 vuosien urakassa on asetettu uusi kattohinta eli kun tavoitehinta-muutospäätös on tehty
