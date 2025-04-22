@@ -248,12 +248,12 @@ COMMENT ON COLUMN urakka_parametrit.tavoitepalkkion_maksimi IS 'Tavoitepalkkion 
 CREATE TABLE jarjestelman_asetukset
 (
     id                                 SERIAL PRIMARY KEY,
-    validatselmus_validoinnit_kaytossa BOOLEAN   DEFAULT TRUE, -- Tämä asetetaan hallinnasta
+    valikatselmus_validoinnit_kaytossa BOOLEAN   DEFAULT TRUE, -- Tämä asetetaan hallinnasta
     muokattu                           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     muokkaaja                          INTEGER,
     FOREIGN KEY (muokkaaja) REFERENCES kayttaja (id)
 );
-INSERT INTO jarjestelman_asetukset (validatselmus_validoinnit_kaytossa) VALUES (TRUE);
+INSERT INTO jarjestelman_asetukset (valikatselmus_validoinnit_kaytossa) VALUES (TRUE);
 
 
 -- Pyritään täyttämään taulu mahdollisimman hyvin alkuun ja hallintapaneelista sitten loput
