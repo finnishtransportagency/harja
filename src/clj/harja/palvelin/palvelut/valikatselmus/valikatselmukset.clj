@@ -259,8 +259,18 @@
         paatokset (paatoskone/yhdista-mapit mahdolliset-paatokset tietokanta-paatokset)]
     paatokset))
 
-(defn hae-valikatselmuksen-tiedot-hoitovuodelle [db user {:keys [urakkaid hoitovuosi] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakkaid)
+(defn hae-kustannukset-jarjestettyna [db kayttaja urakkaid hoitovuosi hoitokauden-alkupvm hoitokauden-loppupvm]
+  (let [kustannukset (kustannusten-seuranta-palvelu/hae-urakan-kustannusten-seuranta-paaryhmittain
+                       db kayttaja {:urakka-id urakkaid
+                                :hoitokauden-alkuvuosi hoitovuosi
+                                :alkupvm hoitokauden-alkupvm
+                                :loppupvm hoitokauden-loppupvm})
+        ;; Formatoidaan kustannukset ui:ta varten
+        kustannukset-jarjestettyna (kustannusten-seuranta/jarjesta-tehtavat kustannukset)]
+    kustannukset-jarjestettyna))
+
+(defn hae-valikatselmuksen-tiedot-hoitovuodelle [db kayttaja {:keys [urakkaid hoitovuosi] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet kayttaja urakkaid)
   (let [urakan-tiedot (first (q-urakat/hae-urakka db urakkaid))
         vanha-urakka? (lupaus-domain/urakka-19-20? urakan-tiedot)
         hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)
@@ -289,13 +299,7 @@
                                                                                                     :lisays)))) %))
                                   tavoitehinnan-muutokset)
         kattohinnan-muutokset (valikatselmus-q/hae-kattohinnan-oikaisut db {::urakka/id urakkaid})
-        kustannukset (kustannusten-seuranta-palvelu/hae-urakan-kustannusten-seuranta-paaryhmittain
-                       db user {:urakka-id urakkaid
-                                :hoitokauden-alkuvuosi hoitovuosi
-                                :alkupvm hoitokauden-alkupvm
-                                :loppupvm hoitokauden-loppupvm})
-        ;; Formatoidaan kustannukset ui:ta varten
-        kustannukset-jarjestettyna (kustannusten-seuranta/jarjesta-tehtavat kustannukset)
+        kustannukset-jarjestettyna (hae-kustannukset-jarjestettyna db kayttaja urakkaid hoitovuosi hoitokauden-alkupvm hoitokauden-loppupvm)
         budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakkaid})
         ;; Otetaan käytyn hoitovuoden budjetti
         budjettitavoite (some #(when (= (:hoitokauden-alkuvuosi %) hoitovuosi) %) budjettitavoite)
@@ -752,6 +756,15 @@
         urakan-loppuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden alkuvuosi käytännössä
         mhu+urakka? (= "mhu+" (:sopimustyyppi urakan-tiedot))
         mhu-tyyppi (paatoskone/urakan-hoitotyyppi mhu+urakka?)
+        ;; Haetaan urakan taloustiedot, jotta tiedetään kuuluuko tavoitehinnan alitus, ylitys ja kattohinta pakettiin
+        kustannukset (hae-kustannukset-jarjestettyna db kayttaja urakkaid kuluva-hoitovuosi
+                       (pvm/hoitokauden-alkupvm kuluva-hoitovuosi) (pvm/hoitokauden-alkupvm kuluva-hoitovuosi))
+        toteutuneet-kustannukset (get-in kustannukset [:yhteensa :yht-toteutunut-summa])
+        budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakkaid})
+        ;; Otetaan käytyn hoitovuoden budjetti
+        budjettitavoite (some #(when (= (:hoitokauden-alkuvuosi %) kuluva-hoitovuosi) %) budjettitavoite)
+        kattohinta (:kattohinta-oikaistu budjettitavoite)
+
         ; Haetaan ensin kaikki mahdolliset päätökset
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
         ;; Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan. Esim Lupauspäätöksiä saadaan kolme, mutta niiden järjestysnumero on kaikilla 1, joka
@@ -760,7 +773,10 @@
                                 (group-by :jarjestys)
                                 (map (fn [[_ paatokset]] (first paatokset)))
                                 (into []))
-
+        ;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
+        mahdolliset-paatokset (if (or (nil? toteutuneet-kustannukset) (nil? kattohinta) (<= toteutuneet-kustannukset kattohinta))
+                                (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) mahdolliset-paatokset)
+                              mahdolliset-paatokset)
         ;; Poistetaan mahdollinen raporttipäätös
         mahdolliset-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) mahdolliset-paatokset)
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
