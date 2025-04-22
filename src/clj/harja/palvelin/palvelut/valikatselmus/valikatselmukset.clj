@@ -192,6 +192,8 @@
 (defn hae-paatokset [db urakkaid valittu-hoitovuosi budjettitavoite
                      toteutuneet-pisteet luvatut-pisteet toteutuneet-kustannukset]
   (let [;; Kootaan päätöksiä varten tarvittavat tiedot
+        nyt-vuosi (pvm/vuosi (pvm/nyt))
+        hoitovuosi-kesken? (pvm/valissa? (pvm/nyt) (pvm/hoitokauden-alkupvm valittu-hoitovuosi) (pvm/hoitokauden-loppupvm (inc valittu-hoitovuosi)))
         urakan-tiedot (first (q-urakat/hae-urakkan-tiedot db urakkaid))
         urakan-parametrit (first (q-urakat/hae-urakan-parametrit db {:urakkaid urakkaid}))
         jarjestelman-asetukset (first (jarjestelma-kyselyt/hae-jarjestelman-asetukset db))
@@ -244,6 +246,14 @@
         mahdolliset-paatokset (paatoskone/valmistele-hoidonjohtopalkkionmuutospaatos (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset hoitokauden-lopun-indeksikorjaamaton-tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
         mahdolliset-paatokset (paatoskone/valmistele-raporttipaatos (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset)
 
+        ;; Keskeneräiselle tai tulevaisuuden hoitovuodelle näytetään vain yksi päätös - Tavoitehinnan muutospäätös.
+        mahdolliset-paatokset (if (and (:validatselmus_validoinnit_kaytossa jarjestelman-asetukset)
+                                    (or (>= valittu-hoitovuosi nyt-vuosi)
+                                      hoitovuosi-kesken?))
+                                ;; Poistetaan kaikki muut päätökset, kuin tavoitehinnan muutospäätös
+                                (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) mahdolliset-paatokset)
+                                ;; Palautetaan kaikki päätökset, jos ei ole hoitovuosi menossa tai jos validoinnit on poissa päältä
+                                mahdolliset-paatokset)
 
         ;; Yhdistä päätökset listaksi. Tietokannasta haetut päätökset ovat tärkeydeltään tärkeämpiä, kuin päätöskoneelta saadut
         paatokset (paatoskone/yhdista-mapit mahdolliset-paatokset tietokanta-paatokset)]
