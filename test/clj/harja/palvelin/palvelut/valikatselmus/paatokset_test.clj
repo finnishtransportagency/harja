@@ -12,6 +12,7 @@
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.kyselyt.sanktiot :as sanktio-kyselyt]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
+            [harja.kyselyt.jarjestelman-tila :as jarjestelma-kyselyt]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
 
@@ -265,7 +266,9 @@
                                                                                                      :odottaa-kannanottoa 0
                                                                                                      :merkitsevat-odottaa-kannanottoa 0}})
                                 ;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos))
                   (catch Exception e e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :lupaukset)
@@ -312,7 +315,10 @@
                                                                                                      :odottaa-kannanottoa 0
                                                                                                      :merkitsevat-odottaa-kannanottoa 0}})
                                 ;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+
+                                ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos))
                   (catch Exception e e))
 
@@ -424,7 +430,9 @@
                                                                                                      :odottaa-kannanottoa 0
                                                                                                      :merkitsevat-odottaa-kannanottoa 0}})
                                 ;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos))
                   (catch Exception e e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :lupaukset)
@@ -432,7 +440,9 @@
         ;; Kun tehdään lupaus päätös, siitä muodostetaan joko lupaussanktio tai lupausbonus, nyt on tehty lupaussanktio
         lupauspaatoksen-sanktio (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-paatos)))
         ;; Poistetaan päätös
-        poisto-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-lupauspaatos +kayttaja-jvh+ tallennettu-paatos)
+        poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                     jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                        (kutsu-palvelua (:http-palvelin jarjestelma) :poista-lupauspaatos +kayttaja-jvh+ tallennettu-paatos))
         poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :lupaukset)
         ;; Päätöksen poistamisen jälkeen enää ei pitäisi löytyä sanktiota
         lupauspaatoksen-poistettu-sanktio (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-paatos)))]
@@ -1112,9 +1122,12 @@
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e e))
+
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)]
 
     (is (= (bigdec alkuperainen-pisteluku) (:alkuperainen_pisteluku tallennettu-paatos)) "Alkuperainen pisteluku täsmää.")
@@ -1153,12 +1166,16 @@
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e
                     (println "ERROR: " e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)
-        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-indeksikorjauspaatos +kayttaja-jvh+ tallennettu-paatos)
+        poistovastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                    jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                        (kutsu-palvelua (:http-palvelin jarjestelma) :poista-indeksikorjauspaatos +kayttaja-jvh+ tallennettu-paatos))
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :hoitovuoden-lopun-indeksikorjaus)]
 
     ;; Päätös on poistettu, joten sitä ei enää löydy
@@ -1254,7 +1271,9 @@
         vastaus (try
                   (with-redefs [;; Feikataan vastaukset
                                 valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta_jalkeen)
-                                valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit] kattohinta)]
+                                valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit] kattohinta)
+                                ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ paatos))
                   (catch Exception e (println "ERROR:" e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)]
@@ -1282,7 +1301,9 @@
             tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
         ;; Poistetaan juuri lisätty päätös rajapinnan kautta
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ uusi-paatos)
+        vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                              jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                 (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ uusi-paatos))
         poistettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)]
     ;; Päätös on poistettu, joten sitä ei enää löydy
     (is (= "Hoitovuoden lopun tavoite- ja kattohinta" (:nimi poistettu-paatos)))
@@ -1351,7 +1372,9 @@
                   (with-redefs [;; Feikataan vastaukset
                                 valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
                                 lupaus-palvelu/maarita-urakan-tavoitehinta (fn [db urakkaid hoitokauden-alkuvuosi] tarjouksen_tavoitehinta)
-                                paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle (fn [db hakuparametrit] [{:budjetoitu_summa_indeksikorjattu hoidonjohtopalkkio}])]
+                                paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle (fn [db hakuparametrit] [{:budjetoitu_summa_indeksikorjattu hoidonjohtopalkkio}])
+                                ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ paatos))
                   (catch Exception e
                     (println "ERROR:: e" e)))
@@ -1376,7 +1399,9 @@
         ;; Lisätään päätös suoralla kyselyllä
         uusi-paatos (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid paatos)
         ;; Poistetaan päätös rajapinnan kautta
-        poisto-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ uusi-paatos)
+        poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                     jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                        (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ uusi-paatos))
         poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :hoidonjohtopalkkion-muutos)]
     ;; Päätös on poistettu, joten sitä ei enää löydy
     (is (= "Hoidonjohtopalkkion muutos" (:nimi poistettu-paatos)))
@@ -1413,7 +1438,9 @@
         hoitokauden-alkuvuosi 2024
         tarkistettu (pvm/nyt)
         paatos (poytakirjan-raporttipaatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tee-poytakirjan-raporttipaatos +kayttaja-jvh+ paatos)
+        vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                              jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                  (kutsu-palvelua (:http-palvelin jarjestelma) :tee-poytakirjan-raporttipaatos +kayttaja-jvh+ paatos))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :valikatselmuspoytakirjaan-liitettavat-raportit)]
     (testaa-poytakirjan-raporttipaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)))
 
@@ -1425,11 +1452,15 @@
         tarkistettu (pvm/nyt)
 
         paatos (poytakirjan-raporttipaatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tee-poytakirjan-raporttipaatos +kayttaja-jvh+ paatos)
+        vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                              jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                 (kutsu-palvelua (:http-palvelin jarjestelma) :tee-poytakirjan-raporttipaatos +kayttaja-jvh+ paatos))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :valikatselmuspoytakirjaan-liitettavat-raportit)
 
         ;; Poistetaan tallennettu päätös
-        poisto-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-poytakirjan-raporttipaatos +kayttaja-jvh+ tallennettu-paatos)
+        poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                     jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                        (kutsu-palvelua (:http-palvelin jarjestelma) :poista-poytakirjan-raporttipaatos +kayttaja-jvh+ tallennettu-paatos))
         poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :valikatselmuspoytakirjaan-liitettavat-raportit)]
     ;; Poiston jälkeen löytyy vain default tiedot päätöksestä
     (is (= "Välikatselmuspöytäkirjaan liitettävät raportit" (:nimi poistettu-paatos)))))

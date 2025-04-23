@@ -59,16 +59,20 @@
            [:div.flex-row
             [:h3.ennen-linkkia "Hoidonjohtopalkkion muutos"]
             [:div.otsikko_lukema (fmt/euro-opt false (:hoidonjohtopalkkio_muutos paatos))]]
-           [:div.flex-row.erillinen
-            [yleiset/linkki "Näytä laskenta"
-             (fn [] (modal/nayta! {:otsikko "Laskenta"
-                                   :otsikko-muotoilut {:font-size "32px"}
-                                   :body-tyyli {:margin-bottom "24px"}
-                                   :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
-                                   :footer [napit/sulje #(modal/piilota!)]}
-                      [laskenta-modaali paatos]))
-             {:style {:text-decoration :underline}}]]
-           [:div [yleiset/info-laatikko :neutraali (str "Päätöksen tallentaminen luo kulun Harjaan. Kulua ei lasketa tavoitehintaan.") nil nil]]
+           (when-not (= 0 (:hoidonjohtopalkkio_muutos paatos))
+             [:div.flex-row.erillinen
+              [yleiset/linkki "Näytä laskenta"
+               (fn [] (modal/nayta! {:otsikko "Laskenta"
+                                     :otsikko-muotoilut {:font-size "32px"}
+                                     :body-tyyli {:margin-bottom "24px"}
+                                     :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
+                                     :footer [napit/sulje #(modal/piilota!)]}
+                        [laskenta-modaali paatos]))
+               {:style {:text-decoration :underline}}]])
+           [:div [yleiset/info-laatikko :neutraali (str
+                                                     (if (= 0 (:hoidonjohtopalkkio_muutos paatos))
+                                                       "Tavoitehinnan muutos on pienempi kuin 5%. Ei muuteta hoidonjohtopalkkiota."
+                                                       "Päätöksen tallentaminen luo kulun Harjaan. Kulua ei lasketa tavoitehintaan.")) nil nil]]
            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
             #(e! (valikatselmus-tiedot/->TallennaHoidonjohtopalkkionMuutospaatos paatos))
             (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaHoidonjohtopalkkionMuutospaatos paatos))

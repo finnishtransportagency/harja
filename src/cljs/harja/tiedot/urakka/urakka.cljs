@@ -415,6 +415,9 @@
 (def talvihoitoreitit-default {:haku-kaynnissa? false?
                                :talvihoitoreitit nil})
 
+(def valikatselmus-default {:haku-kaynnissa? false?
+                            :paatokset nil})
+
 (def tiemerkinta-kustannukset-default {})
 
 (defonce tila (atom {:yleiset     {:urakka {}}
@@ -427,7 +430,8 @@
                      :paikkaukset paikkaus-default-arvot
                      :kustannusten-seuranta kustannusten-seuranta-default-arvot
                      :talvihoitoreitit talvihoitoreitit-default
-                     :tiemerkinta-kustannukset tiemerkinta-kustannukset-default}))
+                     :tiemerkinta-kustannukset tiemerkinta-kustannukset-default
+                     :valikatselmus valikatselmus-default}))
 
 (defonce tiemerkinta-kustannukset (cursor tila [:tiemerkinta-kustannukset]))
 (defonce laatupoikkeamat (cursor tila [:laatupoikkeamat]))
@@ -438,6 +442,7 @@
 (defonce pot2 (atom pot2-default-arvot))
 
 (defonce kustannusten-seuranta (cursor tila [:kustannusten-seuranta :kustannukset]))
+(defonce valikatselmus (cursor tila [:valikatselmus]))
 (defonce maarien-toteumat (cursor tila [:toteumat :maarien-toteumat]))
 (defonce velho-varusteet (cursor tila [:toteumat :velho-varusteet]))
 (defonce toteuma-pohjavesialueiden-suola (cursor tila [:toteumat :pohjavesialueiden-suolatoteumat]))
@@ -454,8 +459,6 @@
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 (defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))
 (defonce suunnittelu-suolarajoitukset (cursor tila [:suunnittelu :suolarajoitukset]))
-
-(defonce tavoitehinnan-oikaisut (cursor tila [:kustannusten-seuranta :kustannukset :tavoitehinnan-oikaisut]))
 
 (defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet nil
                                                              :toteutuneet-maarat nil
