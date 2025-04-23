@@ -1086,8 +1086,9 @@ jatkon."
   ([tila]
    (tila-indikaattori tila {}))
   ([tila {:keys [fmt-fn class-skeema luokka wrapper-luokka]}]
-   [:div {:class wrapper-luokka}
-    [:div {:class (str "circle "
+   [:div {:class (if (= "ei-tiemerkintaa" tila) "caption" wrapper-luokka)}
+    [:div {:class (when-not (= "ei-tiemerkintaa" tila)
+                    (str "circle "
                     (if class-skeema
                       (or (get class-skeema tila)
                         "tila-ehdotettu")
@@ -1097,7 +1098,7 @@ jatkon."
                         (= "valmis" tila) "tila-valmis"
                         (= "hylatty" tila) "tila-hylatty"
                         (= "kesken" tila) "tila-kesken"
-                        :else "tila-ehdotettu")))}]
+                        :else "tila-ehdotettu"))))}]
     [:span (merge {} (when luokka {:class luokka}))
      (if fmt-fn
        (fmt-fn tila)

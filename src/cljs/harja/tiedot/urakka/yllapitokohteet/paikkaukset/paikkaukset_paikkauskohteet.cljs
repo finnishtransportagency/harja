@@ -16,6 +16,11 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.domain.tierekisteri :as tr-domain]))
 
+(defonce tiemerkinta-tila-valinnat {:kasittelematta "Käsittelemättä"
+                                    :ei-tehda "Ei tehdä"
+                                    :valmis "Tiemerkintä tehty"
+                                    :ei-tiemerkintaa "Ei tiemerkintää"})
+
 (def lomakkeen-pituuskentat (atom {:pituus nil :tie nil :aosa nil :aet nil :losa nil :let nil}))
 
 (defn virhe-modal [virhe otsikko]
