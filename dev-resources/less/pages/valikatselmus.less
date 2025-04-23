@@ -370,13 +370,16 @@ div.valikatselmus-yhteenveto {
   .nappi-ensisijainen {
     padding: 7px 12px 7px 8px;
     font-size: 0.875rem;
-    color: @blue-lighter;
   }
   .nappi-toissijainen {
     padding: 7px 12px 7px 8px;
     font-size: 0.875rem;
     color: @blue-dark;
     border-color: @blue-dark;
+    &:hover {
+      color: @white-default;
+      border-color: @sininen5;
+    }
   }
   .livi-grid .muokkaustoiminnot .nappi-toissijainen {
     padding: 7px 12px 7px 8px;
@@ -653,4 +656,21 @@ div.valikatselmus-yhteenveto {
 }
 .valikatselmus-haku {
   padding-top: 1rem;
+}
+.valikatselmus-nappi {
+  line-height: 24px;
+  font-size: 14px;
+  padding: 6px 16px;
+  font-weight: 600;
+  &:hover {
+    line-height: 24px;
+    font-size: 14px;
+    padding: 6px 16px;
+    font-weight: 600;
+    outline-color: @sininen5;
+  }
+}
+.valikatselmus-nappi-sulje {
+  border-color: @blue-dark;
+  color: @blue-dark;
 }

@@ -94,26 +94,11 @@
         (when (:virhe paatos)
           [:div [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
 
-
         ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös
-        (if (not (:id paatos))
-          [:div.paatos-toiminto
-           (if on-oikeudet?
-             [napit/yleinen-ensisijainen "Tallenna päätös"
-              #(e! (valikatselmus-tiedot/->TallennaLupausPaatos paatos))
-              {:ikoni [ikonit/harja-icon-status-selected]
-               :disabled (or (not (:tavoitehinta paatos)) (> 1 (:toteutuneet_pisteet paatos)) tallennus-kesken? (not voi-muokata?))}]
-             (if (:lupaussanktio paatos)
-               [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
-               [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))]
-          ^{:key (str "lupaus-" (gensym))}
-          [:div.paatos-toiminto
-           (if on-oikeudet?
-             [napit/yleinen-toissijainen
-              "Peru päätös"
-              #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos))
-              {:ikoni [ikonit/harja-icon-action-undo]
-               :disabled (or (not (:tavoitehinta paatos)) tallennus-kesken? (not voi-muokata?))}]
-             (if (:lupaussanktio paatos)
-               [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
-               [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])])]))
+        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+         #(e! (valikatselmus-tiedot/->TallennaLupausPaatos paatos))
+         (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos))
+                                                                    :teksti "Automaattisesti kirjattu bonus/sanktio poistetaan."})
+         #(if (:lupaussanktio paatos)
+           [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
+           [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."])]])]))

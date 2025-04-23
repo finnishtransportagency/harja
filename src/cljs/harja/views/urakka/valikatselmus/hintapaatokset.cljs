@@ -36,25 +36,10 @@
         [:div.rivi_lukema (fmt/euro-opt false (:urakoitsija_maksaa paatos))]]
 
        ;; Päätöksenteko napit
-       (if (not paatos-tehty?)
-         [:div.paatos-toiminto
-          (when on-oikeudet?
-            [napit/yleinen-ensisijainen "Tallenna päätös"
-             #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanYlitysPaatos paatos))
-             {:ikoni [ikonit/harja-icon-status-selected]
-              :disabled (or
-                          tallennus-kesken?
-                          (not voi-muokata?))}])]
-         [:div.paatos-toiminto
-          (when on-oikeudet?
-            [napit/nappi
-             "Peru päätös"
-             #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos))
-             {:luokka "nappi-toissijainen"
-              :ikoni [ikonit/harja-icon-action-undo]
-              :disabled (or
-                          tallennus-kesken?
-                          (not voi-muokata?))}])])])]))
+        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+         #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanYlitysPaatos paatos))
+         (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos))
+                                                                    :teksti "Automaattisesti kirjattu tavoitehinnan ylitys -kulu poistetaan."})]])]))
 
 (defn tavoitehinnan-alitus [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :tavoitehinta-alitus
@@ -89,26 +74,10 @@
         (if (:virhe paatos)
           [:div.muokkaustoiminnot
            [yleiset/info-laatikko :varoitus (:virhe paatos) nil nil {:sulje-nappi-id (gensym)}]]
-
-          (if (not paatos-tehty?)
-            [:div.paatos-toiminto
-             (when on-oikeudet?
-               [napit/yleinen-ensisijainen "Tallenna päätös"
-                #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanAlitusPaatos paatoksen-tiedot))
-                {:ikoni [ikonit/harja-icon-status-selected]
-                 :disabled (or
-                             tallennus-kesken?
-                             (not voi-muokata?))}])]
-            [:div.paatos-toiminto
-             (when on-oikeudet?
-               [napit/nappi
-                "Peru päätös"
-                #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanAlitusPaatos paatoksen-tiedot))
-                {:luokka "nappi-toissijainen"
-                 :ikoni [ikonit/harja-icon-action-undo]
-                 :disabled (or
-                             tallennus-kesken?
-                             (not voi-muokata?))}])]))])]))
+          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanAlitusPaatos paatoksen-tiedot))
+           (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanAlitusPaatos paatos))
+                                                                      :teksti "Automaattisesti kirjattu tavoitepalkkio ja siirtosumma poistetaan."})])])]))
 
 (defn kattohinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :kattohinta-ylitys
@@ -182,23 +151,8 @@
            [:div "Siirrettävä määrä"]
            [:div.rivi_lukema (fmt/euro-opt false (:siirrettava_maara paatos))]])
 
-        ;; Päätöksenteko napit - TODO: Tsekkaappa, että voisko nämä kaikki napit komponentisoida, kun tekevät kuitenkin kaikissa päätöksissä ihan sammaa asiaa.
-        (if (not paatos-tehty?)
-          [:div.paatos-toiminto
-           (when on-oikeudet?
-             [napit/yleinen-ensisijainen "Tallenna päätös"
-              #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos))
-              {:ikoni [ikonit/harja-icon-status-selected]
-               :disabled (or
-                           tallennus-kesken?
-                           (not voi-muokata?))}])]
-          [:div.paatos-toiminto
-           (when on-oikeudet?
-             [napit/nappi
-              "Peru päätös"
-              #(e! (valikatselmus-tiedot/->PoistaKattohinnanYlitysPaatos paatos))
-              {:luokka "nappi-toissijainen"
-               :ikoni [ikonit/harja-icon-action-undo]
-               :disabled (or
-                           tallennus-kesken?
-                           (not voi-muokata?))}])])])]))
+        ;; Päätöksenteko napit
+        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+         #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos))
+         (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaKattohinnanYlitysPaatos paatos))
+                                                                    :teksti "Automaattisesti kirjattu kattohinnan ylitys ja siirtosumma poistetaan."})]])]))

@@ -86,7 +86,9 @@
                                    :otsikko-muotoilut {:font-size "32px"}
                                    :body-tyyli {:margin-bottom "16px"}
                                    :content-tyyli {:padding-top "24px"}
-                                   :footer [napit/sulje #(modal/piilota!)]}
+                                   :footer [napit/sulje "Sulje" #(modal/piilota!)
+                                            {:vayla-tyyli? true :luokka "valikatselmus-nappi nappi-toissijainen valikatselmus-nappi-sulje" :ei-ikonia? true}]
+                                   :footer-tyyli {:text-align "left"}}
                       [laskenta-modaali paatos]))
              {:style {:text-decoration :underline}}]]
            [:hr]
@@ -98,4 +100,4 @@
             #(e! (valikatselmus-tiedot/->TallennaHoitovuodenlopunIndeksikorjauspaatos paatos))
             #(e! (valikatselmus-tiedot/->PoistaHoitovuodenlopunIndeksikorjauspaatos paatos))]]
           [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :varoitus (:virhe paatos) nil nil {:sulje-nappi-id (gensym)}]])])]))
+           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))

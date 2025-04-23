@@ -71,6 +71,7 @@
            [:div [yleiset/info-laatikko :neutraali (str "Päätöksen tallentaminen luo kulun Harjaan. Kulua ei lasketa tavoitehintaan.") nil nil]]
            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
             #(e! (valikatselmus-tiedot/->TallennaHoidonjohtopalkkionMuutospaatos paatos))
-            #(e! (valikatselmus-tiedot/->PoistaHoidonjohtopalkkionMuutospaatos paatos))]]
+            (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaHoidonjohtopalkkionMuutospaatos paatos))
+                                                                       :teksti "Automaattisesti kirjattu kulu poistetaan."})]]
           [:div.muokkaustoiminnot
            [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))
