@@ -123,10 +123,10 @@
         kohde-muunnettavaksi (set/rename-keys kohde avain-muunnos)
         kohde (if (and
                      ;; Jos osoitetta ei ole, palautuu nullpointer
-                     (seq (:tr-alkuosa kohde-muunnettavaksi))
-                     (seq (:tr-alkuetaisyys kohde-muunnettavaksi))
-                     (seq (:tr-loppuosa kohde-muunnettavaksi))
-                     (seq (:tr-loppuetaisyys kohde-muunnettavaksi)))
+                     (some? (:tr-alkuosa kohde-muunnettavaksi))
+                     (some? (:tr-alkuetaisyys kohde-muunnettavaksi))
+                     (some? (:tr-loppuosa kohde-muunnettavaksi))
+                     (some? (:tr-loppuetaisyys kohde-muunnettavaksi)))
                  (set/rename-keys
                    (tr-domain/tr-osoite-kasvusuuntaan kohde-muunnettavaksi)
                    (set/map-invert avain-muunnos))
