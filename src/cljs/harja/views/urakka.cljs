@@ -76,6 +76,9 @@
                 (urakka/kanavaurakka? urakka))
 
     :toteutus (and
+                ;; Välilehti piiloon tuotannosta
+                ;; Uusi kustannusten kirjaus korvaa tämän 
+                (k/kehitysymparistossa?)
                 (oikeudet/urakat-toteutus id)
                 (not= sopimustyyppi :kokonaisurakka)
                 (= tyyppi :tiemerkinta))

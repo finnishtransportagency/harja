@@ -114,6 +114,8 @@ WHERE st_intersects(o.alue,
 AND u.id = :urakka-id                        
 AND EXTRACT(YEAR FROM pk.alkupvm) = :vuosi
 AND pk.poistettu = false
+-- Näytetään paikkauskohde vasta kun tiemerkintä on merkattu valmiiksi
+AND pk."tiemerkinnan-tila" = 'valmis'
 ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
 
 -- name: hae-yllapitokustannus
