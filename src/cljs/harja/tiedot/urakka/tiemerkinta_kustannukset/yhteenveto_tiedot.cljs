@@ -11,7 +11,7 @@
              [harja.tiedot.raportit :as raporttitiedot]))
 
 (defonce ^{:private true} raportti-avain :tiemerkinta-kustannukset-yhteenveto)
-(defonce ^{:private true} kategoriat [:korjaus :arvonmuutos :yllapidon_sakko :yllapidon_bonus :muut-kustannukset])
+(defonce ^{:private true} kategoriat [:korjaus :paikkausten-merkinnat :paallysteiden-merkinnat :arvonmuutos :yllapidon_sakko :yllapidon_bonus :muut-kustannukset])
 (defonce ^{:private true} nollatut-valinnat {:rivit nil
                                              :muokataan false
                                              :ladatut-rivit nil
@@ -29,6 +29,10 @@
 (defrecord HaeSanktiotEpaonnistui [vastaus])
 (defrecord HaeKorjauksetOnnistui [vastaus])
 (defrecord HaeKorjauksetEpaonnistui [vastaus])
+(defrecord HaePaikkausOnnistui [vastaus])
+(defrecord HaePaikkausEpaonnistui [vastaus])
+(defrecord HaePaallystysOnnistui [vastaus])
+(defrecord HaePaallystysEpaonnistui [vastaus])
 
 
 (defn- epaonnistui [vastaus app]
@@ -53,6 +57,21 @@
     [{:id     (gensym)
       :tyyppi :korjaus
       :hinta  (reduce + 0 (map :kustannus suodatettu))}]))
+
+
+(defn laske-paallysteiden-merkinnat
+  "Laskee pienmerkinnät, linjamerkinnät ja jyrsinnät yhteen
+   Palauttaa vectorin ryhmitettynä:
+   :id        Grid tunniste 
+   :tyyppi    Kustannuksen tyyppi
+   :hinta     Summattu hinta"
+  [kohteet tyyppi]
+  [{:id     (gensym)
+    :tyyppi tyyppi
+    :hinta  (reduce + 0 (map #(+
+                               (:pienmerkinnat % 0)
+                               (:linjamerkinnat % 0)
+                               (:jyrsinnat % 0)) kohteet))}])
 
 
 (defn sanktiot-ja-muut-yhteen [rivit]
@@ -124,7 +143,24 @@
      :epaonnistui ->HaeKorjauksetEpaonnistui}))
 
 
+(defn- hae-paikkaus-kustannukset [app]
+  (tuck-apurit/post! app :hae-tiemerkinta-paikkausten-kustannukset
+    {:urakka-id (:id @nav/valittu-urakka)
+     :urakka-alkupvm (-> @u/valittu-aikavali first)}
+    {:onnistui ->HaePaikkausOnnistui
+     :epaonnistui ->HaePaikkausEpaonnistui}))
+
+
+(defn- hae-paallystys-kustannukset [app]
+  (tuck-apurit/post! app :hae-tiemerkinta-paallystyskohteiden-kustannukset
+    {:urakka-id (:id @nav/valittu-urakka)
+     :urakka-alkupvm (-> @u/valittu-aikavali first)}
+    {:onnistui ->HaePaallystysOnnistui
+     :epaonnistui ->HaePaallystysEpaonnistui}))
+
+
 (extend-protocol tuck/Event
+  ;; callback # 1
   HaeTiedot
   (process-event [_ app]
     (hae-muut-kustannukset app)
@@ -133,39 +169,74 @@
       (assoc :haku-kaynnissa? true :rivit nil)
       (assoc-in [:valinnat :aikavali] @u/valittu-aikavali)))
 
+
+  ;; callback # 2 
   HaeMuutOnnistui
-  (process-event [{:keys [vastaus]} {:keys [_valinnat] :as app}]
+  (process-event [{:keys [vastaus]} app]
     (->
       (hae-sanktiot-ja-bonukset app)
       (assoc :ladatut-rivit (sanktiot-ja-muut-yhteen vastaus))))
 
-  HaeMuutEpaonnistui
-  (process-event [{:keys [vastaus]} app]
-    (epaonnistui vastaus app))
 
+  ;; callback # 3
   HaeSanktiotOnnistui
-  (process-event [{:keys [vastaus]} {:keys [_valinnat ladatut-rivit] :as app}]
+  (process-event [{:keys [vastaus]} {:keys [ladatut-rivit] :as app}]
     (let [sanktiot (sanktiot-ja-muut-yhteen vastaus)
-          sanktiot-ja-muut-kustannukset (summaa-yhteenveto sanktiot ladatut-rivit)]
+          yhteenveto (summaa-yhteenveto sanktiot ladatut-rivit)]
+      (->
+        (hae-paikkaus-kustannukset app)
+        (assoc :ladatut-rivit yhteenveto))))
+
+
+  ;; callback # 4
+  HaePaikkausOnnistui
+  (process-event [{:keys [vastaus]} {:keys [ladatut-rivit] :as app}]
+    (let [paikkaus-merkinnat (laske-paallysteiden-merkinnat vastaus :paikkausten-merkinnat)
+          yhteenveto (summaa-yhteenveto paikkaus-merkinnat ladatut-rivit)]
+      (->
+        (hae-paallystys-kustannukset app)
+        (assoc :ladatut-rivit yhteenveto))))
+
+
+  ;; callback # 5
+  HaePaallystysOnnistui
+  (process-event [{:keys [vastaus]} {:keys [ladatut-rivit] :as app}]
+    (let [paallystys-merkinnat (laske-paallysteiden-merkinnat vastaus :paallysteiden-merkinnat)
+          yhteenveto (summaa-yhteenveto paallystys-merkinnat ladatut-rivit)]
       (->
         (hae-korjaus-kustannukset app)
-        (assoc :ladatut-rivit sanktiot-ja-muut-kustannukset))))
+        (assoc :ladatut-rivit yhteenveto))))
 
-  HaeSanktiotEpaonnistui
-  (process-event [{:keys [vastaus]} app]
-    (epaonnistui vastaus app))
 
+  ;; viimeinen
   HaeKorjauksetOnnistui
-  (process-event [{:keys [vastaus]} {:keys [_valinnat ladatut-rivit] :as app}]
+  (process-event [{:keys [vastaus]} {:keys [ladatut-rivit] :as app}]
+    ;; Kaikki kustannukset on nyt "ladatut-rivit sisällä"
+    ;; Laske vielä korjaukset yhteen, ja summaa kaikki 
     (let [korjaukset (laske-korjaukset-yhteen vastaus @u/valittu-aikavali)
           kaikki-kustannukset (summaa-yhteenveto korjaukset ladatut-rivit)]
-      ;; Sanktiot ja muut kustannukset on nyt "ladatut-rivit sisällä"
-      ;; Nyt on haettu myös korjaukset, joten laske vielä korjaukset yhteen, ja summaa kaikki 
+      ;; Tee riveistä samalla raporttiparametrit 
       (-> app
         (assoc :rivit kaikki-kustannukset)
         (assoc-in [:valinnat :raportti] (raporttiparametrit kaikki-kustannukset))
         (assoc :haku-kaynnissa? false))))
 
+  HaeSanktiotEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (epaonnistui vastaus app))
+
+  HaeMuutEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (epaonnistui vastaus app))
+
   HaeKorjauksetEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (epaonnistui vastaus app))
+
+  HaePaikkausEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (epaonnistui vastaus app))
+
+  HaePaallystysEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (epaonnistui vastaus app)))

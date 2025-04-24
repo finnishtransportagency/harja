@@ -6,7 +6,7 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko rivi]]))
 
 (defonce ^{:private true} ei-kohdetta-teksti "Ei liity kohteeseen")
-(defonce ^{:private true} raportti-yhteenveto-otsikko "Yhteenveto")
+(defonce ^{:private true} raportti-yhteenveto-otsikko "Toteutuneet kustannukset")
 (defonce ^{:private true} raportti-sanktiot-otsikko "Sakot ja bonukset")
 (defonce ^{:private true} raportti-kustannukset-otsikko "Muut kustannukset")
 (defonce tyyppi-valinnat {:kaikki "Kaikki"
@@ -19,7 +19,9 @@
                           :indeksi "Indeksitarkistus"
                           :korjaus "Tiemerkintöjen korjaus"
                           :muut-kustannukset "Muut kustannukset"
-                          :sopimusalueen-muutos "Sopimusalueen muutos"})
+                          :sopimusalueen-muutos "Sopimusalueen muutos"
+                          :paikkausten-merkinnat "Paikkauskohteiden tiemerkintäkustannukset"
+                          :paallysteiden-merkinnat "Päällystyskohteiden tiemerkintäkustannukset"})
 
 
 (defn- osion-otsikko [otsikko]
@@ -173,7 +175,7 @@
     [:varillinen-teksti {:arvo hinta :fmt :raha}]))
 
 
-(defn- koosta-yhteenveto-taulukko [data yhteensa-hinta]
+(defn- koosta-yhteenveto-taulukko [data yhteensa-hinta alkupvm]
   (let [yhteenveto (yhteenveto-rivi "Yhteensä" yhteensa-hinta)
         tiedot {:rivin-tiedot (rivi
                                 {:otsikko "Kustannuslaji" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti}
@@ -189,7 +191,7 @@
                 :oikealle-tasattavat #{1}}]
     (into ()
       [(taulukko tiedot)
-       (osion-otsikko raportti-yhteenveto-otsikko)])))
+       (osion-otsikko (str raportti-yhteenveto-otsikko " " (pvm/vuosi alkupvm)))])))
 
 
 ; ---------------------------- ;
@@ -211,4 +213,4 @@
     [:raportti {:nimi raportin-otsikko
                 :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
-     (koosta-yhteenveto-taulukko raportti-rivit yhteensa-hinta)]))
+     (koosta-yhteenveto-taulukko raportti-rivit yhteensa-hinta alkupvm)]))

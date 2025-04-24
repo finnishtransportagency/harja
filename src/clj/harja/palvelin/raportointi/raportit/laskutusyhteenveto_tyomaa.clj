@@ -214,7 +214,7 @@
         otsikot ["Hankinnat" "Hoidonjohto"]
         sheet-nimi "Työmaakokous"]
 
-    [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
+    [:raportti {:nimi "Laskutusyhteenveto"
                 :otsikon-koko :keskikoko}
 
      [:otsikko-heading-small (str alueen-nimi)]

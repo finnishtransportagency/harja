@@ -25,9 +25,7 @@
                     konteksti)]
     (if kk-vali?
       (str konteksti ", " nimi " " (pvm/kuukautena-ja-vuonna (l/to-local-date-time alkupvm)))
-      (str konteksti ", " nimi
-           (when (and alkupvm loppupvm)
-             (str " ajalta " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))))))
+      (str konteksti ", " nimi))))
 
 (defn ryhmittele-tulokset-raportin-taulukolle
   "rivit                   ryhmiteltävät rivit
