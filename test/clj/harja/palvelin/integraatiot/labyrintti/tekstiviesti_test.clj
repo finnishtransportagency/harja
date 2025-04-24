@@ -9,10 +9,6 @@
 (def asetukset nil)
 
 (def +testi-sms-url+ "harja.testi.sms")
-(def sanoma "source=+35844555666&text=V2%20Vastaanotto%20Hoidetaan%20homma%21")
-(def sanoma-ilman-numeroa "text=L2%20Lopetus%20Lopetetaan%20koko%20homma%21")
-(def sanoma-ilman-viestia "source=+35844555666")
-
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -22,6 +18,8 @@
                     [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
+
+;; TODO: Testattava vanhan LinkMobilityn ja uuden SMS-integraation lähetystä erikseen
 
 (deftest tekstiviestin-lahetys
   (with-fake-http
@@ -36,12 +34,18 @@
       "Poikkeusta ei heitetty virhe responsesta.")))
 
 
-(deftest vastaanota-tekstiviesti-onnistuu
-  (let [vastaus (api-tyokalut/post-kutsu ["/tekstiviesti/toimenpidekuittaus"] "livi" portti sanoma)]
+
+;; -- Vanhan LinkMobilty SMS-integraation vastaanottotestit --
+(def linkmobility-sanoma "source=+35844555666&text=V2%20Vastaanotto%20Hoidetaan%20homma%21")
+(def linkmobility-sanoma-ilman-numeroa "text=L2%20Lopetus%20Lopetetaan%20koko%20homma%21")
+(def linkmobility-sanoma-ilman-viestia "source=+35844555666")
+
+(deftest linkmobility-vastaanota-tekstiviesti-onnistuu
+  (let [vastaus (api-tyokalut/post-kutsu ["/tekstiviesti/toimenpidekuittaus"] "livi" portti linkmobility-sanoma)]
     (is (= 200 (:status vastaus)))))
-(deftest vastaanota-tekstiviesti-epaonnistuu-puhelinnumero-puuttuu
-  (let [vastaus (api-tyokalut/post-kutsu ["/tekstiviesti/toimenpidekuittaus"] "livi" portti sanoma-ilman-numeroa)]
+(deftest linkmobility-vastaanota-tekstiviesti-epaonnistuu-puhelinnumero-puuttuu
+  (let [vastaus (api-tyokalut/post-kutsu ["/tekstiviesti/toimenpidekuittaus"] "livi" portti linkmobility-sanoma-ilman-numeroa)]
     (is (= 500 (:status vastaus)))))
-(deftest vastaanota-tekstiviesti-epaonnistuu-viesti-puuttuu
-  (let [vastaus (api-tyokalut/post-kutsu ["/tekstiviesti/toimenpidekuittaus"] "livi" portti sanoma-ilman-viestia)]
+(deftest linkmobility-vastaanota-tekstiviesti-epaonnistuu-viesti-puuttuu
+  (let [vastaus (api-tyokalut/post-kutsu ["/tekstiviesti/toimenpidekuittaus"] "livi" portti linkmobility-sanoma-ilman-viestia)]
     (is (= 500 (:status vastaus)))))
