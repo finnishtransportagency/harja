@@ -455,7 +455,6 @@
     :urakkatyyppi #{:paallystys}
     :sopimustyyppi #{:mpu}}
 
-   ;; TODO .. 
    {:nimi         :tiemerkinta-sakot-bonukset
     :konteksti    #{"urakka"}
     :urakkatyyppi #{:tiemerkinta}

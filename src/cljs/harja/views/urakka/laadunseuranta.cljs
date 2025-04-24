@@ -41,6 +41,7 @@
                            (urakka/vesivaylaurakka? urakka)
                            (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)))
     :sanktiot (or (and
+                    ;; Tiemerkinnöillä oma sanktiot ja bonukset kirjaus
                     (not (= :tiemerkinta tyyppi))
                     (not (urakka/vesivaylaurakka? urakka))
                     (oikeudet/urakat-laadunseuranta-sanktiot id))

@@ -138,8 +138,8 @@
 
 (defn hae-tiemerkinta-kustannustyypit
   [db kayttaja {:keys [urakka-id]}]
-  ;; TODO 
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
+  ;; Tämä "urakat-tiemerkinnan" pitäisi korjailla johonkin fiksumpaan 
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan kayttaja urakka-id)
   (q/hae-tiemerkinta-kustannustyypit db))
 
 (defrecord TiemerkinnanKustannusKirjaukset []
