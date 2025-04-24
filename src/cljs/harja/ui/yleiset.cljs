@@ -1095,7 +1095,7 @@ jatkon."
                       (cond
                         (= "tilattu" tila) "tila-tilattu"
                         (= "ehdotettu" tila) "tila-ehdotettu"
-                        (= "valmis" tila) "tila-valmis"
+                        (or (= "valmis" tila) (= "ei-tehda" tila)) "tila-valmis" ;;ei-tehda on tiemerkinnän tila, voi näyttää vihreällä
                         (= "hylatty" tila) "tila-hylatty"
                         (= "kesken" tila) "tila-kesken"
                         :else "tila-ehdotettu"))))}]

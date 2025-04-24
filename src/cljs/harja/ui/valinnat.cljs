@@ -654,6 +654,9 @@
                                                                    (count (filter :valittu? valinnat)))
                                      valintojen-maara (count valinnat)
                                      naytettava-teksti (cond
+                                                         ;; Jos teksti ei ole vectori, näytä vaan se teksti
+                                                         (not (vector? teksti))
+                                                         teksti
                                                          (= valittujen-valintojen-maara valintojen-maara)
                                                          "Kaikki valittu"
                                                          (and

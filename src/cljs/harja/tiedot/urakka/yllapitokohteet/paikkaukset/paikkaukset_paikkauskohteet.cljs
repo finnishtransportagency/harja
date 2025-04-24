@@ -108,6 +108,7 @@
 (defrecord JarjestaPaikkauskohteet [jarjestys])
 (defrecord AsetaToteumatyyppi [uusi-tyyppi])
 (defrecord AvaaVihje [])
+(defrecord AsetaTiemerkinnanTila [tila paikkauskohde])
 
 (defn- tilat-hakuun [tilat]
   (let [sql-tilat {"Kaikki" "kaikki",
@@ -515,7 +516,7 @@
 
   HaePaikkauskohteetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [paikkauskohteet (map (fn [kohde]
+    (let [paikkauskohteet (map (fn [{:keys [tiemerkinnan-tila] :as kohde}]
                                  (-> kohde
                                    (assoc :formatoitu-aikataulu (fmt-aikataulu kohde))
                                    (assoc :formatoitu-sijainti
@@ -524,7 +525,13 @@
                                    (assoc :paivays (or (:muokattu kohde) (:luotu kohde)))
                                    (assoc :toteumatyyppi (cond
                                                            (true? (:pot? kohde)) :pot
-                                                           :else :normaali))))
+                                                           :else :normaali))
+                                   ;; Tiemerkinnän alasvedot 
+                                   (assoc :alasveto-valinnat (mapv (fn [[k v]]
+                                                                     {:nimi v
+                                                                      :arvo k
+                                                                      :valittu? (= k (keyword tiemerkinnan-tila))})
+                                                               tiemerkinta-tila-valinnat))))
                             vastaus)
           ;; Mikäli paikkauskohdelomake (avaimelle :lomake) on auki, pitää sen tiedot päivittää, koska oletettavasti on
           ;; tallennettu uusi toteuma kohteelle. Joten haetaan app-statesta samalla id:llä olevan paikkauskohteen tiedot lomakkeelle
@@ -776,7 +783,17 @@
   AvaaVihje
   (process-event [_ {:keys [nayta-vihje?] :as app}]
     (-> app
-      (assoc :nayta-vihje? (boolean (not nayta-vihje?))))))
+      (assoc :nayta-vihje? (boolean (not nayta-vihje?)))))
+
+  AsetaTiemerkinnanTila
+  (process-event [{:keys [tila paikkauskohde]} app]
+    (let [tiemerkinnan-tila (-> tila :arvo name)]
+      (tallenna-paikkauskohde
+        (assoc paikkauskohde :tiemerkinnan-tila tiemerkinnan-tila)
+        ->TallennaPaikkauskohdeOnnistui
+        ->TallennaPaikkauskohdeEpaonnistui
+        [(not (nil? (:id paikkauskohde)))])
+      (assoc app :haku-kaynnissa? true :paikkauskohteet nil))))
 
 (defn kayttaja-on-urakoitsija? [urakkaroolit]
   (let [urakkaroolit (if (set? urakkaroolit)

@@ -113,26 +113,40 @@
                                   "Tiemerkinnän tila " [yleiset/vihje ""]])
                  :leveys 4
                  :nimi :tiemerkinnan-tila
-                 :tasaa (if (not= urakkatyyppi :paallystys) :vasen :oikea)
+                 ;; Tiemerkinnällä tämä on alasveto, tasaa se vasemmalle
+                 ;; Muilla urakoilla tämä on vaan teksti 
+                 :tasaa (if (not= urakkatyyppi :tiemerkinta) :vasen :oikea)
+                 :solun-luokka (fn [arvo _rivi]
+                                 ;; Korosta "käsittelemättä" sarake paikkaus urakoille
+                                 (when (and 
+                                         (= arvo "kasittelematta")
+                                         (not= urakkatyyppi :tiemerkinta))
+                                   "ehdotettu-bg"))
                  :tyyppi :komponentti
-                 :komponentti (fn [{:keys [tiemerkinnan-tila]}]
-                                ;; Tulee kannasta suoraan, valinnat mäpätään vectoriin 
-                                (let [alasveto-valinnat (mapv (fn [[k v]]
-                                                                {:nimi v
-                                                                 :valittu? (= k (keyword tiemerkinnan-tila))})
-                                                          t-paikkauskohteet/tiemerkinta-tila-valinnat)]
+                 :komponentti (fn [{:keys [tiemerkinnan-tila 
+                                           alasveto-valinnat paikkauskohteen-tila] :as rivi}]
+                                ;;
+                                ;; ==== Jos ei olla tiemerkintä urakassa, näytä vaan tila  ====
+                                (if (not= urakkatyyppi :tiemerkinta)
+                                  [yleiset/tila-indikaattori tiemerkinnan-tila {:fmt-fn #(get t-paikkauskohteet/tiemerkinta-tila-valinnat (keyword %))}]
 
-                                  ;; Jos ei olla tiemerkintä urakassa, näytä vaan tila 
-                                  (if (not= urakkatyyppi :tiemerkinta)
-                                    [yleiset/tila-indikaattori tiemerkinnan-tila {:fmt-fn #(get t-paikkauskohteet/tiemerkinta-tila-valinnat (keyword %))}]
-
-                                    ;; Tiemerkintä urakat voi asettaa tiemerkinnän tilan
-                                    [:div {:on-click #(.stopPropagation %)}
-                                     [valinnat/checkbox-pudotusvalikko alasveto-valinnat (fn [_tila _valittu?]
-                                                                                           ;; Tallennus
-                                                                                           #(do))
-                                      ["tttt" "tttt"]
-                                      {:vayla-tyyli? true :disabled haku-kaynnissa?}]])))}
+                                  ;;
+                                  ;; ==== Tiemerkintä urakat voi asettaa tiemerkinnän tilan ====
+                                  [:div {:on-click #(.stopPropagation %)} ;; Älä avaa lomaketta kun inffonappia painetaan
+                                   [valinnat/checkbox-pudotusvalikko
+                                    
+                                    ;; Alasvedon valinnat, vectorissa, esim   [{:nimi Käsittelemättä, :arvo :kasittelematta, :valittu? false}]
+                                    (remove #(= (:arvo %) :ei-tiemerkintaa) alasveto-valinnat)
+                                    (fn [tila _valittu?]
+                                      (e! (t-paikkauskohteet/->AsetaTiemerkinnanTila tila rivi))) ;; Muokkaa fn 
+                                    (get t-paikkauskohteet/tiemerkinta-tila-valinnat (keyword tiemerkinnan-tila)) ;; Alasvedon teksti
+                                    ;; Komponentin optiot
+                                    {:vayla-tyyli? true :disabled (or
+                                                                    haku-kaynnissa?
+                                                                    ;; Jos tiemerkintää ei tehdä, disabloidaan alasveto
+                                                                    (= tiemerkinnan-tila "ei-tiemerkintaa")
+                                                                    ;; Jos paikkauskohde ei ole valmis, ei voida asettaa tiemerkinnän tilaa vielä 
+                                                                    (not= paikkauskohteen-tila "valmis"))}]]))}
 
                 {:otsikko "Menetelmä"
                  :leveys 4

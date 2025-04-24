@@ -446,6 +446,8 @@
         ;; Kohteen valmistumispäivä kaivellaan pot raportoitavalla vähä eri tavalla
         valmistumispvm (or (and (:pot? kohde) (:pot-valmistumispvm kohde)) (:valmistumispvm kohde) nil)
 
+        tiemerkinnan-tila (:tiemerkinnan-tila kohde)
+
         paikkauskohde (merge
                         {:ulkoinen-id (konversio/konvertoi->int (:ulkoinen-id kohde))
                          :urakka-id (:urakka-id kohde)
@@ -481,6 +483,8 @@
                          :losa (konversio/konvertoi->int (:losa kohde))
                          :let (konversio/konvertoi->int (:let kohde))
                          :ajorata (konversio/konvertoi->int (or (:ajorata kohde) 0))}
+                        (when tiemerkinnan-tila
+                          {:tiemerkinnan-tila tiemerkinnan-tila})
                         (when on-kustannusoikeudet?
                           {:suunniteltu-hinta (bigdec (or (:suunniteltu-hinta kohde) 0))})
                         (when kohde-id
