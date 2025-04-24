@@ -8,6 +8,7 @@
   ;;TODO: Kun #yliheitto, yhdistä tähän lähetystoteutus ja poista vanha sms. Refaktoroi samalla labyrintti-sana historiaan.
   (:require [clojure.string :as string]
             [com.stuartsierra.component :as component]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [taoensso.timbre :as log]
             [compojure.core :refer [POST]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
@@ -16,6 +17,66 @@
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik-komponentti]
             [harja.palvelin.integraatiot.tloik.tekstiviesti :as tloik-sms])
   (:use [slingshot.slingshot :only [throw+]]))
+
+(defprotocol Sms
+  (rekisteroi-kuuntelija! [this kasittely-fn])
+  (laheta [this numero viesti otsikot]))
+
+;; TODO: Parsi uuden SMS-integraation mukainen vastaus
+(defn kasittele-vastaus [body headers]
+  (log/debug (format "SMS-palvelu vastasi: sisältö: %s, otsikot: %s" body headers))
+  (when (and body (.contains (string/lower-case body) "error"))
+    (throw+ {:type :sms-lahetys-epaonnistui
+             :error body}))
+  {:sisalto body :otsikot headers})
+
+;; TODO: Toteuta tuki uudelle SMS-integraatiolle, määrittele sopiva payload
+;; Uusi SMS-lähetys
+(defn laheta-sms [db integraatioloki sms-url apiavain numero viesti otsikot]
+  (if (or (empty? apiavain) (empty? sms-url))
+    (log/warn "Tunnistautumistietoja tai URLia SMS-palveluun ei ole annettu. Viestiä ei voida lähettää.")
+    ;; TODO: Määrittele uusi järjestelmä 'sms' ja integraatiotapahtumat sille
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "sms" "laheta"
+      (fn [konteksti]
+        (let [otsikot (merge
+                        {"Content-Type" "application/x-www-form-urlencoded"
+                         "x-api-key" apiavain}
+                        otsikot)
+              parametrit {"dests" numero
+                          "text" viesti}
+              http-asetukset {:metodi :POST
+                              :url sms-url
+                              :otsikot otsikot
+                              :lomakedatana? true}      ;; Parametrit lähetetään avain-arvo-pareina form-parametreissä
+              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset parametrit)]
+          (kasittele-vastaus body headers))))))
+
+
+;; Vanha SMS-lähetys
+(defn laheta-sms-linkmobility [db integraatioloki sms-url apiavain numero viesti otsikot]
+  (if (or (empty? apiavain) (empty? sms-url))
+    (log/warn "Tunnistautumistietoja tai URLia LinkMobilityn SMS-palveluun (entinen Labyrintti) ei ole annettu. Viestiä ei voida lähettää.")
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "labyrintti" "laheta"
+      (fn [konteksti]
+        (let [otsikot (merge
+                        {"Content-Type" "application/x-www-form-urlencoded"
+                         "x-api-key" apiavain}
+                        otsikot)
+              parametrit {"dests" numero
+                          "text" viesti}
+              http-asetukset {:metodi :POST
+                              :url sms-url
+                              :otsikot otsikot
+                              :lomakedatana? true}      ;; Parametrit lähetetään avain-arvo-pareina form-parametreissä
+              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset parametrit)]
+          (kasittele-vastaus body headers))))))
+
+(defn laheta-sms* [db integraatioloki sms-url apiavain numero viesti otsikot]
+  ;; TODO: Käsittele vanhan ja uuden integraation lähetykset
+  ;; TODO: Hallinnoidaan uuden ja vanhan integraation käyttöönottoa feature-flagilla
+  )
 
 (defn kasittele-epaonnistunut-viestin-kasittely [integraatioloki tapahtuma-id poikkeus]
   (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." poikkeus))
@@ -26,7 +87,8 @@
     tapahtuma-id
     nil))
 
-(defn vastaanota-tekstiviesti [integraatioloki kutsu this asetukset]
+;; TODO: Tekstiviestin vastaanotto poistuu käytöstä.
+(defn vastaanota-tekstiviesti [integraatioloki kutsu this tloik-asetukset]
   (log/info (format "Vastaanotettiin tekstiviesti LinkMobilityn LinkSMS-palvelusta (entinen Labyrintti) : %s" (assoc-in kutsu [:headers "authorization"] "*****")))
   (let [url (:remote-addr kutsu)
         otsikot (:headers kutsu)
@@ -44,7 +106,7 @@
       (when (or (nil? numero) (nil? viesti))
         (throw+ {:type :puhelinnumero-tai-viesti-puuttuu
                  :message (str "numero: " numero ", viesti: " viesti)}))
-      (let [jms-lahettaja (jms/jonolahettaja (tloik-komponentti/tee-lokittaja this "toimenpiteen-lahetys") (:itmf this) (get-in asetukset [:tloik :toimenpideviestijono]))
+      (let [jms-lahettaja (jms/jonolahettaja (tloik-komponentti/tee-lokittaja this "toimenpiteen-lahetys") (:itmf this) (get-in tloik-asetukset [:toimenpideviestijono]))
             vastaukset (tloik-sms/vastaanota-tekstiviestikuittaus jms-lahettaja (:db this) numero viesti)
             vastausdata (if (empty? vastaukset) "" (str "text=" vastaukset))
             vastausviesti (integraatioloki/tee-rest-lokiviesti "ulos" url nil vastausdata nil nil)]
@@ -57,13 +119,50 @@
         (kasittele-epaonnistunut-viestin-kasittely integraatioloki tapahtuma-id e)
         {:status 500}))))
 
-(defrecord Tekstiviesti [asetukset]
+(defrecord Tekstiviesti [sms-asetukset tloik-asetukset kuuntelijat]
   component/Lifecycle
   (start [{http :http-palvelin integraatioloki :integraatioloki itmf :itmf :as this}]
     (julkaise-reitti
       http :vastaanota-tekstiviesti
-      (POST "/tekstiviesti/toimenpidekuittaus" request (vastaanota-tekstiviesti integraatioloki request this asetukset))
+      (POST "/tekstiviesti/toimenpidekuittaus" request (vastaanota-tekstiviesti integraatioloki request this tloik-asetukset))
       true))
+
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :vastaanota-tekstiviesti)
-    this))
+    (reset! kuuntelijat #{})
+    this)
+
+  ;; TODO: Tarvitaanko kuuntelijoita?
+  Sms
+  (rekisteroi-kuuntelija! [this kuuntelija-fn]
+    (swap! kuuntelijat conj kuuntelija-fn)
+    #(swap! kuuntelijat disj kuuntelija-fn))
+
+  ;; TODO: Käsittele vanhan ja uuden integraation lähetykset
+  (laheta [this numero viesti otsikot]
+    (laheta-sms* (:db this)
+      (:integraatioloki this)
+      (:url sms-asetukset)
+      (:apiavain sms-asetukset)
+      numero
+      viesti
+      otsikot)))
+
+;; TODO:
+(defn luo-tekstiviesti-komponentti [sms-asetukset tloik-asetukset]
+  (->Tekstiviesti sms-asetukset tloik-asetukset (atom #{})))
+
+(defrecord FeikkiTekstiviesti []
+  component/Lifecycle
+  (start [this] this)
+  (stop [this] this)
+
+  Sms
+  (rekisteroi-kuuntelija! [this kasittelija]
+    (log/info "Feikki SMS-palvelu EI tue kuuntelijan rekisteröintiä")
+    #(log/info "Poistetaan Feikki SMS-palvelun kuuntelija"))
+  (laheta [this numero viesti otsikot]
+    (log/info "Feikki SMS-palvelu lähettää muka viestin numeroon " numero ": " viesti)))
+
+(defn luo-feikki-tekstiviesti-komponentti []
+  (->FeikkiTekstiviesti))

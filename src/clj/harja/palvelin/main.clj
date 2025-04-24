@@ -328,7 +328,9 @@
 
       ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto. Refaktoroi tänne myös lähetys, kun #yliheitto ok.
       :tekstiviesti (component/using
-                      (tekstiviesti/->Tekstiviesti (select-keys asetukset [:tloik]))
+                      (if kehitysmoodi
+                        (tekstiviesti/luo-feikki-tekstiviesti-komponentti)
+                        (tekstiviesti/luo-tekstiviesti-komponentti (:sms asetukset) (:tloik asetukset)))
                       [:http-palvelin :db :integraatioloki :itmf])
 
       :yha-integraatio (component/using

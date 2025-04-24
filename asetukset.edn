@@ -183,6 +183,10 @@
  :labyrintti {:sms-url "https://api.testivaylapilvi.fi/harja/sms/send"
               :apiavain ""} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
 
+ ;; Uusi SMS-integraatio
+ :sms {:url "https://api.testivaylapilvi.fi/harja/sms/"
+       :apiavain ""}
+
  ;; ClamAV-palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}
 

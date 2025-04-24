@@ -62,6 +62,7 @@
                                          itmf (:toimenpideviestijono jonot))]
     (when-let [labyrintti labyrintti]
       (log/debug "Yhdistetään kuuntelija Labyritin SMS Gatewayhyn")
+      ;; TODO: Kuuntelijan rekiströinti tekstiviesti-palvelun puolelta
       (sms/rekisteroi-kuuntelija! labyrintti
                                   (fn [numero viesti]
                                     (tekstiviesti/vastaanota-tekstiviestikuittaus jms-lahettaja db numero viesti))))))
