@@ -263,7 +263,6 @@ WHERE o.nimi ILIKE :haku
 -- Hakee käyttäjistä ydintiedot tekstihaulla.
 SELECT
   k.id,
-  k.kayttajanimi,
   k.etunimi,
   k.sukunimi,
   k.jarjestelma AS jarjestelmasta,
