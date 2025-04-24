@@ -12,10 +12,7 @@
             [taoensso.timbre :as log]
             [compojure.core :refer [POST]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik-komponentti]
-            [harja.palvelin.integraatiot.tloik.tekstiviesti :as tloik-sms])
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol Sms
@@ -88,7 +85,7 @@
     nil))
 
 ;; TODO: Tekstiviestin vastaanotto poistuu käytöstä.
-(defn vastaanota-tekstiviesti [integraatioloki kutsu this tloik-asetukset]
+(defn vastaanota-tekstiviesti [integraatioloki kutsu kuuntelijat]
   (log/info (format "Vastaanotettiin tekstiviesti LinkMobilityn LinkSMS-palvelusta (entinen Labyrintti) : %s" (assoc-in kutsu [:headers "authorization"] "*****")))
   (let [url (:remote-addr kutsu)
         otsikot (:headers kutsu)
@@ -106,9 +103,8 @@
       (when (or (nil? numero) (nil? viesti))
         (throw+ {:type :puhelinnumero-tai-viesti-puuttuu
                  :message (str "numero: " numero ", viesti: " viesti)}))
-      (let [jms-lahettaja (jms/jonolahettaja (tloik-komponentti/tee-lokittaja this "toimenpiteen-lahetys") (:itmf this) (get-in tloik-asetukset [:toimenpideviestijono]))
-            vastaukset (tloik-sms/vastaanota-tekstiviestikuittaus jms-lahettaja (:db this) numero viesti)
-            vastausdata (if (empty? vastaukset) "" (str "text=" vastaukset))
+      (let [vastaukset (mapv #(% numero viesti) @kuuntelijat)
+            vastausdata (if (empty? vastaukset) "" (str "text=" (string/join ", " vastaukset)))
             vastausviesti (integraatioloki/tee-rest-lokiviesti "ulos" url nil vastausdata nil nil)]
         (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki vastausviesti nil tapahtuma-id nil)
         {:status 200
@@ -119,13 +115,14 @@
         (kasittele-epaonnistunut-viestin-kasittely integraatioloki tapahtuma-id e)
         {:status 500}))))
 
-(defrecord Tekstiviesti [sms-asetukset tloik-asetukset kuuntelijat]
+(defrecord Tekstiviesti [sms-asetukset kuuntelijat]
   component/Lifecycle
-  (start [{http :http-palvelin integraatioloki :integraatioloki itmf :itmf :as this}]
+  (start [{http :http-palvelin integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :vastaanota-tekstiviesti
-      (POST "/tekstiviesti/toimenpidekuittaus" request (vastaanota-tekstiviesti integraatioloki request this tloik-asetukset))
-      true))
+      (POST "/tekstiviesti/toimenpidekuittaus" request (vastaanota-tekstiviesti integraatioloki request kuuntelijat))
+      true)
+    this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :vastaanota-tekstiviesti)
@@ -149,8 +146,8 @@
       otsikot)))
 
 ;; TODO:
-(defn luo-tekstiviesti-komponentti [sms-asetukset tloik-asetukset]
-  (->Tekstiviesti sms-asetukset tloik-asetukset (atom #{})))
+(defn luo-tekstiviesti-komponentti [sms-asetukset]
+  (->Tekstiviesti sms-asetukset (atom #{})))
 
 (defrecord FeikkiTekstiviesti []
   component/Lifecycle

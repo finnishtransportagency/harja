@@ -18,8 +18,7 @@
   (laajenna-integraatiojarjestelmafixturea
     nil
     :tekstiviesti (component/using (tekstiviesti/luo-tekstiviesti-komponentti
-                                     {:url +testi-sms-url+ :apiavain "testiapiavain"}
-                                     nil)
+                                     {:url +testi-sms-url+ :apiavain "testiapiavain"})
                     [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)

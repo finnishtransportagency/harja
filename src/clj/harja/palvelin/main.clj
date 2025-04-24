@@ -312,7 +312,7 @@
                 :db :db
                 :integraatioloki :integraatioloki
                 :api-sahkoposti :api-sahkoposti
-                :labyrintti :labyrintti})
+                :sms :sms})
 
       ;; Didiroad integraatio
       :digiroad-integraatio (component/using
@@ -327,11 +327,11 @@
                     [:http-palvelin :db :integraatioloki])
 
       ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto. Refaktoroi tänne myös lähetys, kun #yliheitto ok.
-      :tekstiviesti (component/using
-                      (if kehitysmoodi
-                        (tekstiviesti/luo-feikki-tekstiviesti-komponentti)
-                        (tekstiviesti/luo-tekstiviesti-komponentti (:sms asetukset) (:tloik asetukset)))
-                      [:http-palvelin :db :integraatioloki :itmf])
+      :sms (component/using
+             (if kehitysmoodi
+               (tekstiviesti/luo-feikki-tekstiviesti-komponentti)
+               (tekstiviesti/luo-tekstiviesti-komponentti (:sms asetukset)))
+             [:http-palvelin :db :integraatioloki])
 
       :yha-integraatio (component/using
                          (yha-integraatio/->Yha (:yha asetukset))
