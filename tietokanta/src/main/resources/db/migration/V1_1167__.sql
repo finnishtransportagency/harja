@@ -14,7 +14,7 @@ CREATE TABLE tiemerkinta_yllapitokohteen_kustannus (
 
 
 COMMENT ON TABLE tiemerkinta_yllapitokohteen_kustannus IS
-    E'Tauluun kirjataan tiemerkintaurakoissa paallyskohteisiin liitoksissa olevia kustannuksia.';
+    E'Tauluun kirjataan tiemerkintaurakoissa paallyskohteisiin liitoksissa olevia kustannuksia. Jokainen rivi linkittyy ylläpitokohteeseen yllapitokohde-sarakkeen kautta. Tietoja käytetään tiemerkintäurakoiden kustannusseurantaan.';
 
 CREATE TABLE tiemerkinta_paikkauskohteen_kustannus (
   id serial PRIMARY KEY,
@@ -30,5 +30,5 @@ CREATE TABLE tiemerkinta_paikkauskohteen_kustannus (
 );
 
 
-COMMENT ON TABLE tiemerkinta_yllapitokohteen_kustannus IS
-    E'Tauluun kirjataan tiemerkintaurakoissa paikkauskohteisiin liitoksissa olevia kustannuksia.';
+COMMENT ON TABLE tiemerkinta_paikkauskohteen_kustannus IS
+    E'Tauluun kirjataan tiemerkintaurakoissa paikkauskohteisiin liitoksissa olevia kustannuksia. Jokainen rivi linkittyy paikkauskohteeseen paikkauskohde-sarakkeen kautta. Tietoja käytetään tiemerkintäurakoiden kustannusseurantaan.';
