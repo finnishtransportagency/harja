@@ -15,8 +15,7 @@
         (when-let [token (velho-yhteiset/hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti
                            (fn [x]
                              (log/error "Virhe velho token haussa" x)))]
-          (let [otsikot {"Content-Type" "application/json"
-                         "Authorization" (str "Bearer " token)}
+          (let [otsikot (velho-yhteiset/velho-otsikot token)
                 kohdeluokka "urakka/maanteiden-hoitourakka"
                 ominaisuudet "ominaisuudet"
                 http-asetukset {:metodi :POST
