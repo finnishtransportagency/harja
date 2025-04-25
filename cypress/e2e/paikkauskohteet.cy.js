@@ -91,7 +91,6 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.server()
         cy.route('POST', '_/paikkauskohteet-urakalle').as('kohteet')
 
-        
         cy.get('.nappi-ensisijainen', { timeout: clickTimeout }).should('not.be.disabled');
         cy.contains('.nappi-ensisijainen', 'Hae kohteita').click({force: true})
         cy.wait('@kohteet', {timeout: clickTimeout})
@@ -108,10 +107,11 @@ describe('Paikkauskohteet latautuu oikein', function () {
     })
 
     it('Lisää uusi levittimellä tehtätävä paikkauskohde', function () {
-        // cy.viewport(1100, 2000)
+        cy.viewport(1100, 2000)
         // siirry paikkauskohteisiin
-        // avaaPaikkauskohteetSuoraan()
+        avaaPaikkauskohteetSuoraan()
         // Avataan paikkauskohdelomake uuden luomista varten
+        cy.get('.nappi-ensisijainen', { timeout: clickTimeout }).should('not.be.disabled');
         cy.get('[data-cy="lisaa-paikkauskohde"]').click();
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
@@ -270,7 +270,7 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.viewport(1100, 2000)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
-
+        cy.get('.nappi-ensisijainen', { timeout: clickTimeout }).should('not.be.disabled');
         // Avataan paikkauskohdelomake uuden luomista varten
         cy.get('[data-cy="lisaa-paikkauskohde"]').click();
         // Varmistetaan, että sivupaneeli aukesi

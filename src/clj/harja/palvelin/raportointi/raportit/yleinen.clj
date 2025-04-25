@@ -287,8 +287,10 @@
       (if lyhennetty?
         (str raportin-nimi)
         (str urakka ", " raportin-nimi))
-      
-      (str/includes? raportin-nimi "ajalta")
+
+      (and
+        raportin-nimi
+        (str/includes? raportin-nimi "ajalta"))
       (str raportin-nimi)
 
       (and (not urakka) raportin-nimi alkupvm (not loppupvm))
