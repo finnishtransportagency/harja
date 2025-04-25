@@ -40,7 +40,7 @@
                                  {:teksti "" :luokka "yhteensa"}
                                  {:teksti (fmt/euro-opt pk3-summa) :luokka "yhteensa"}]))
            :tallenna #(tuck-apurit/e-kanavalla! e! tiedot/->TallennaKustannukset % urakka)}
-          [{:otsikko "Urakkavuosi" :nimi :kustannusvuosi :muokattava? (constantly false)
+          [{:otsikko "Sopimusvuosi" :nimi :kustannusvuosi :muokattava? (constantly false)
             :tyyppi :positiivinen-numero :kokonaisluku? true
             :leveys 3}
            {:otsikko "Kustannus (EUR)" :nimi :kustannus
