@@ -10,29 +10,49 @@
 
 (def +testi-sms-url+ "harja.testi.sms")
 
-(def jarjestelma-fixture
+(def jarjestema-fixture
   (laajenna-integraatiojarjestelmafixturea
     nil
-    :tekstiviesti (component/using (tekstiviesti/luo-tekstiviesti-komponentti
-                                     {:url +testi-sms-url+ :apiavain "testiapiavain"})
-                    [:http-palvelin :db :integraatioloki])))
-
-(use-fixtures :once jarjestelma-fixture)
+    :sms-vanha (component/using (tekstiviesti/luo-tekstiviesti-komponentti
+                                  {:url +testi-sms-url+ :apiavain "testiapiavain"}
+                                  {:sms-url +testi-sms-url+ :apiavain "testiapiavain"})
+                 [:http-palvelin :db :integraatioloki])
+    :sms (component/using (tekstiviesti/luo-tekstiviesti-komponentti
+                            ;; Uusi SMS-integraatio aktiivinen ja korvaa siten vanhan käytössä
+                            {:url +testi-sms-url+ :apiavain "testiapiavain" :aktiivinen? true}
+                            {:sms-url +testi-sms-url+ :apiavain "testiapiavain"})
+           [:http-palvelin :db :integraatioloki])))
 
 ;; TODO: Testattava vanhan LinkMobilityn ja uuden SMS-integraation lähetystä erikseen
 
+(use-fixtures :once jarjestema-fixture)
+
+
+;; -- Testaa uuden SMS-integraation lähetystä --
 (deftest tekstiviestin-lahetys
   (with-fake-http
     [+testi-sms-url+ "ok"]
-    (let [vastaus (tekstiviesti/laheta (:labyrintti jarjestelma) "0987654321" "Testi" {"X-Correlation-ID" 1234567})]
+    (let [vastaus (tekstiviesti/laheta (:sms jarjestelma) "0987654321" "Testi" {"X-Correlation-ID" 1234567})]
       (is (= "ok" (:sisalto vastaus))))))
 
 (deftest tekstiviestin-epaonnistunut-lahetys
   (with-fake-http
     [+testi-sms-url+ "TESTI ERROR 2 1 message failed: Invalid phone number"]
-    (is (thrown? Exception (tekstiviesti/laheta (:labyrintti jarjestelma) "0987654321" "Testi" {"X-Correlation-ID" 1234568}))
+    (is (thrown? Exception (tekstiviesti/laheta (:sms jarjestelma) "0987654321" "Testi" {"X-Correlation-ID" 1234568}))
       "Poikkeusta ei heitetty virhe responsesta.")))
 
+;; -- Vanhan LinkMobility SMS-integraation lähetystestit (Uusi integraatio ei ole aktiivinen) --
+(deftest linkmobility-tekstiviestin-lahetys
+  (with-fake-http
+    [+testi-sms-url+ "ok"]
+    (let [vastaus (tekstiviesti/laheta (:sms-vanha jarjestelma) "0987654321" "Testi" {"X-Correlation-ID" 1234567})]
+      (is (= "ok" (:sisalto vastaus))))))
+
+(deftest linkmobility-tekstiviestin-epaonnistunut-lahetys
+  (with-fake-http
+    [+testi-sms-url+ "TESTI ERROR 2 1 message failed: Invalid phone number"]
+    (is (thrown? Exception (tekstiviesti/laheta (:sms-vanha jarjestelma) "0987654321" "Testi" {"X-Correlation-ID" 1234568}))
+      "Poikkeusta ei heitetty virhe responsesta.")))
 
 
 ;; -- Vanhan LinkMobilty SMS-integraation vastaanottotestit --

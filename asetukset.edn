@@ -185,7 +185,8 @@
 
  ;; Uusi SMS-integraatio
  :sms {:url "https://api.testivaylapilvi.fi/harja/sms/"
-       :apiavain ""}
+       :apiavain ""
+       :aktiivinen? #=(eval (harja.tyokalut.env/env "HARJA_SMS_AKTIIVINEN" true))}
 
  ;; ClamAV-palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}

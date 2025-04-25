@@ -330,7 +330,7 @@
       :sms (component/using
              (if kehitysmoodi
                (tekstiviesti/luo-feikki-tekstiviesti-komponentti)
-               (tekstiviesti/luo-tekstiviesti-komponentti (:sms asetukset)))
+               (tekstiviesti/luo-tekstiviesti-komponentti (:sms asetukset) (:labyrintti asetukset)))
              [:http-palvelin :db :integraatioloki])
 
       :yha-integraatio (component/using

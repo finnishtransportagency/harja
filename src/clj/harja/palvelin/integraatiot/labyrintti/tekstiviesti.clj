@@ -29,28 +29,27 @@
 
 ;; TODO: Toteuta tuki uudelle SMS-integraatiolle, määrittele sopiva payload
 ;; Uusi SMS-lähetys
-(defn laheta-sms [db integraatioloki sms-url apiavain numero viesti otsikot]
-  (if (or (empty? apiavain) (empty? sms-url))
+(defn laheta-sms [db integraatioloki url apiavain numero viesti otsikot]
+  (if (or (empty? apiavain) (empty? url))
     (log/warn "Tunnistautumistietoja tai URLia SMS-palveluun ei ole annettu. Viestiä ei voida lähettää.")
     ;; TODO: Määrittele uusi järjestelmä 'sms' ja integraatiotapahtumat sille
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "sms" "laheta"
       (fn [konteksti]
         (let [otsikot (merge
-                        {"Content-Type" "application/x-www-form-urlencoded"
+                        {"Content-Type" "application/json"
                          "x-api-key" apiavain}
                         otsikot)
-              parametrit {"dests" numero
-                          "text" viesti}
+              payload {"dests" numero
+                       "text" viesti}
               http-asetukset {:metodi :POST
-                              :url sms-url
-                              :otsikot otsikot
-                              :lomakedatana? true}      ;; Parametrit lähetetään avain-arvo-pareina form-parametreissä
-              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset parametrit)]
+                              :url url
+                              :otsikot otsikot}      ;; Parametrit lähetetään avain-arvo-pareina form-parametreissä
+              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset payload)]
           (kasittele-vastaus body headers))))))
 
 
-;; Vanha SMS-lähetys
+;; Vanha LinkMobilityn SMS-lähetys
 (defn laheta-sms-linkmobility [db integraatioloki sms-url apiavain numero viesti otsikot]
   (if (or (empty? apiavain) (empty? sms-url))
     (log/warn "Tunnistautumistietoja tai URLia LinkMobilityn SMS-palveluun (entinen Labyrintti) ei ole annettu. Viestiä ei voida lähettää.")
@@ -70,10 +69,10 @@
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset parametrit)]
           (kasittele-vastaus body headers))))))
 
-(defn laheta-sms* [db integraatioloki sms-url apiavain numero viesti otsikot]
-  ;; TODO: Käsittele vanhan ja uuden integraation lähetykset
-  ;; TODO: Hallinnoidaan uuden ja vanhan integraation käyttöönottoa feature-flagilla
-  )
+(defn laheta-sms* [db integraatioloki uusi-sms? asetukset numero viesti otsikot]
+  (if uusi-sms?
+    (laheta-sms db integraatioloki (:url asetukset) (:apiavain asetukset) numero viesti otsikot)
+    (laheta-sms-linkmobility db integraatioloki (:sms-url asetukset) (:apiavain asetukset) numero viesti otsikot)))
 
 (defn kasittele-epaonnistunut-viestin-kasittely [integraatioloki tapahtuma-id poikkeus]
   (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." poikkeus))
@@ -84,6 +83,8 @@
     tapahtuma-id
     nil))
 
+
+;; Vanha LinkMobility SMS-viestien vastaanotto
 ;; TODO: Tekstiviestin vastaanotto poistuu käytöstä.
 (defn vastaanota-tekstiviesti [integraatioloki kutsu kuuntelijat]
   (log/info (format "Vastaanotettiin tekstiviesti LinkMobilityn LinkSMS-palvelusta (entinen Labyrintti) : %s" (assoc-in kutsu [:headers "authorization"] "*****")))
@@ -115,7 +116,7 @@
         (kasittele-epaonnistunut-viestin-kasittely integraatioloki tapahtuma-id e)
         {:status 500}))))
 
-(defrecord Tekstiviesti [sms-asetukset kuuntelijat]
+(defrecord Tekstiviesti [sms-asetukset vanhat-sms-asetukset kuuntelijat]
   component/Lifecycle
   (start [{http :http-palvelin integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
@@ -135,19 +136,23 @@
     (swap! kuuntelijat conj kuuntelija-fn)
     #(swap! kuuntelijat disj kuuntelija-fn))
 
-  ;; TODO: Käsittele vanhan ja uuden integraation lähetykset
   (laheta [this numero viesti otsikot]
-    (laheta-sms* (:db this)
-      (:integraatioloki this)
-      (:url sms-asetukset)
-      (:apiavain sms-asetukset)
-      numero
-      viesti
-      otsikot)))
+    ;; FIXME: Seuraamme siirtymäajan uuden SMS-integraation käyttöönottoa, jolloin vanha LinkMobilityn integraatio on vielä käytössä.
+    ;;       Kun siirtymäaika on ohi, poistamme vanhan LinkMobilityn integraation käytöstä ja käytämme vain uutta SMS-integraatiota.
+    (let [uusi-sms-aktiivinen? (:aktiivinen? sms-asetukset)
+          asetukset (if uusi-sms-aktiivinen? sms-asetukset vanhat-sms-asetukset)]
+
+      (laheta-sms* (:db this)
+        (:integraatioloki this)
+        uusi-sms-aktiivinen?
+        asetukset
+        numero
+        viesti
+        otsikot))))
 
 ;; TODO:
-(defn luo-tekstiviesti-komponentti [sms-asetukset]
-  (->Tekstiviesti sms-asetukset (atom #{})))
+(defn luo-tekstiviesti-komponentti [sms-asetukset vanhat-sms-asetukset]
+  (->Tekstiviesti sms-asetukset vanhat-sms-asetukset (atom #{})))
 
 (defrecord FeikkiTekstiviesti []
   component/Lifecycle
