@@ -3,7 +3,7 @@
   (:require [harja.domain.palautevayla-domain :as palautevayla]
             [harja.kyselyt.palautevayla :as palautevayla-kyselyt]
             [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.labyrintti.sms :as sms]
+            [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as sms]
             [harja.domain.tieliikenneilmoitukset :as apurit]
             [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
@@ -221,7 +221,7 @@
               aiheet-ja-tarkenteet (when (get-in ilmoitus [:luokittelu :aihe])
                                      (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db))
               viesti (ilmoitus-tekstiviesti ilmoitus viestinumero aiheet-ja-tarkenteet)]
-          (sms/laheta sms puhelinnumero viesti {"X-Correlation-ID" (:ilmoitus-id ilmoitus)})
+          (sms/laheta sms puhelinnumero viesti (:ilmoitus-id ilmoitus) {})
 
           (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
             db

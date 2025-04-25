@@ -13,11 +13,16 @@
             [compojure.core :refer [POST]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
-  (:use [slingshot.slingshot :only [throw+]]))
+  (:use [slingshot.slingshot :only [throw+]])
+  (:import (java.util UUID)))
+
 
 (defprotocol Sms
   (rekisteroi-kuuntelija! [this kasittely-fn])
-  (laheta [this numero viesti otsikot]))
+  (laheta [this numero viesti korrelaatio-id otsikot]))
+
+
+;; -- Uusi SMS-lähetys --
 
 ;; TODO: Parsi uuden SMS-integraation mukainen vastaus
 (defn kasittele-vastaus [body headers]
@@ -27,9 +32,7 @@
              :error body}))
   {:sisalto body :otsikot headers})
 
-;; TODO: Toteuta tuki uudelle SMS-integraatiolle, määrittele sopiva payload
-;; Uusi SMS-lähetys
-(defn laheta-sms [db integraatioloki url apiavain numero viesti otsikot]
+(defn laheta-sms [db integraatioloki url apiavain puhelinnumero viesti korrelaatio-id otsikot]
   (if (or (empty? apiavain) (empty? url))
     (log/warn "Tunnistautumistietoja tai URLia SMS-palveluun ei ole annettu. Viestiä ei voida lähettää.")
     (integraatiotapahtuma/suorita-integraatio
@@ -39,8 +42,10 @@
                         {"Content-Type" "application/json"
                          "x-api-key" apiavain}
                         otsikot)
-              payload {"dests" numero
-                       "text" viesti}
+              payload {"viesti-id" (str (UUID/randomUUID))
+                       "korrelaatio-id" (or korrelaatio-id "")
+                       "vastaanottaja" puhelinnumero
+                       "sisalto" viesti}
               http-asetukset {:metodi :POST
                               :url url
                               :otsikot otsikot}
@@ -48,8 +53,16 @@
           (kasittele-vastaus body headers))))))
 
 
-;; Vanha LinkMobilityn SMS-lähetys
-(defn laheta-sms-linkmobility [db integraatioloki sms-url apiavain numero viesti otsikot]
+;; -- Vanha LinkMobilityn SMS-lähetys --
+
+(defn kasittele-vastaus-linkmobility [body headers]
+  (log/debug (format "SMS-palvelu vastasi: sisältö: %s, otsikot: %s" body headers))
+  (when (and body (.contains (string/lower-case body) "error"))
+    (throw+ {:type :sms-lahetys-epaonnistui
+             :error body}))
+  {:sisalto body :otsikot headers})
+
+(defn laheta-sms-linkmobility [db integraatioloki sms-url apiavain numero viesti korrelaatio-id otsikot]
   (if (or (empty? apiavain) (empty? sms-url))
     (log/warn "Tunnistautumistietoja tai URLia LinkMobilityn SMS-palveluun (entinen Labyrintti) ei ole annettu. Viestiä ei voida lähettää.")
     (integraatiotapahtuma/suorita-integraatio
@@ -63,16 +76,20 @@
                           "text" viesti}
               http-asetukset {:metodi :POST
                               :url sms-url
-                              :otsikot otsikot
+                              :otsikot (merge
+                                         ;; LinkMobilityn SMS-integraatioon on välitetty korrelaatio-id otsikkona
+                                         (when korrelaatio-id
+                                           {"X-Correlation-ID" korrelaatio-id})
+                                         otsikot)
                               ;; Parametrit lähetetään avain-arvo-pareina form-parametreissä
                               :lomakedatana? true}
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset parametrit)]
-          (kasittele-vastaus body headers))))))
+          (kasittele-vastaus-linkmobility body headers))))))
 
-(defn laheta-sms* [db integraatioloki uusi-sms? asetukset numero viesti otsikot]
+(defn laheta-sms* [db integraatioloki uusi-sms? asetukset numero viesti korrelaatio-id otsikot]
   (if uusi-sms?
-    (laheta-sms db integraatioloki (:url asetukset) (:apiavain asetukset) numero viesti otsikot)
-    (laheta-sms-linkmobility db integraatioloki (:sms-url asetukset) (:apiavain asetukset) numero viesti otsikot)))
+    (laheta-sms db integraatioloki (:url asetukset) (:apiavain asetukset) numero viesti korrelaatio-id otsikot)
+    (laheta-sms-linkmobility db integraatioloki (:sms-url asetukset) (:apiavain asetukset) numero viesti korrelaatio-id otsikot)))
 
 
 
@@ -138,7 +155,7 @@
     (swap! kuuntelijat conj kuuntelija-fn)
     #(swap! kuuntelijat disj kuuntelija-fn))
 
-  (laheta [this numero viesti otsikot]
+  (laheta [this numero viesti korrelaatio-id otsikot]
     ;; FIXME: Seuraamme siirtymäajan uuden SMS-integraation käyttöönottoa, jolloin vanha LinkMobilityn integraatio on vielä käytössä.
     ;;       Kun siirtymäaika on ohi, poistamme vanhan LinkMobilityn integraation käytöstä ja käytämme vain uutta SMS-integraatiota.
     (let [uusi-sms-aktiivinen? (:aktiivinen? sms-asetukset)
@@ -150,10 +167,12 @@
         asetukset
         numero
         viesti
+        korrelaatio-id
         otsikot))))
 
 
 (defn luo-tekstiviesti-komponentti [sms-asetukset vanhat-sms-asetukset]
+  ;; TODO: Ota vanhat asetukset pois, kun LinkSMS integraatiosta on päästy kokonaan
   (->Tekstiviesti sms-asetukset vanhat-sms-asetukset (atom #{})))
 
 (defrecord FeikkiTekstiviesti []
@@ -165,7 +184,7 @@
   (rekisteroi-kuuntelija! [this kasittelija]
     (log/info "Feikki SMS-palvelu EI tue kuuntelijan rekisteröintiä")
     #(log/info "Poistetaan Feikki SMS-palvelun kuuntelija"))
-  (laheta [this numero viesti otsikot]
+  (laheta [this numero viesti korrelaatio-id otsikot]
     (log/info "Feikki SMS-palvelu lähettää muka viestin numeroon " numero ": " viesti)))
 
 (defn luo-feikki-tekstiviesti-komponentti []

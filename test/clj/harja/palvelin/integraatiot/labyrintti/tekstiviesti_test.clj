@@ -1,12 +1,16 @@
 (ns harja.palvelin.integraatiot.labyrintti.tekstiviesti-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [cheshire.core :as cheshire]
+            [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
+            [harja.tyokalut.json-validointi :as json]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as tekstiviesti]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]))
 
 (def asetukset nil)
+
+(def +sms-laheta-schema+ "json/tekstiviesti/tekstiviesti-laheta.schema.json")
 
 (def +testi-sms-url+ "harja.testi.sms")
 
@@ -30,28 +34,42 @@
 
 ;; -- Testaa uuden SMS-integraation lähetystä --
 (deftest tekstiviestin-lahetys
-  (with-fake-http
-    [+testi-sms-url+ "ok"]
-    (let [vastaus (tekstiviesti/laheta (:sms jarjestelma) "0987654321" "Testi" {"X-Correlation-ID" 1234567})]
-      (is (= "ok" (:sisalto vastaus))))))
+  (let [lahetetty-payload (atom nil)]
+    (with-fake-http
+      [+testi-sms-url+ (fn [_ opts _]
+                         (reset! lahetetty-payload (:body opts))
+                         ;; TODO: Feikkaa oikea vastaus-payload
+                         "ok")]
+      (let [vastaus (tekstiviesti/laheta (:sms jarjestelma) "0987654321" "Testi" "1234567" {})]
+        (is (nil? (json/validoi +sms-laheta-schema+ (cheshire/encode @lahetetty-payload))))
+        (is (= "ok" (:sisalto vastaus)))))))
 
 (deftest tekstiviestin-epaonnistunut-lahetys
   (with-fake-http
     [+testi-sms-url+ "TESTI ERROR 2 1 message failed: Invalid phone number"]
-    (is (thrown? Exception (tekstiviesti/laheta (:sms jarjestelma) "0987654321" "Testi" {"X-Correlation-ID" 1234568}))
+    (is (thrown? Exception (tekstiviesti/laheta (:sms jarjestelma) "0987654321" "Testi" 1234568 {}))
       "Poikkeusta ei heitetty virhe responsesta.")))
 
 ;; -- Vanhan LinkMobility SMS-integraation lähetystestit (Uusi integraatio ei ole aktiivinen) --
 (deftest linkmobility-tekstiviestin-lahetys
-  (with-fake-http
-    [+testi-sms-url+ "ok"]
-    (let [vastaus (tekstiviesti/laheta (:sms-vanha jarjestelma) "0987654321" "Testi" {"X-Correlation-ID" 1234567})]
-      (is (= "ok" (:sisalto vastaus))))))
+  (let [lahetetty-payload (atom nil)]
+    (with-fake-http
+      [+testi-sms-url+ (fn [_ opts _]
+                         (reset! lahetetty-payload {:parametrit (:form-params opts)
+                                                    :otsikot (:headers opts)})
+                         "ok")]
+      (let [vastaus (tekstiviesti/laheta (:sms-vanha jarjestelma) "0987654321" "Testi" "1234567" {})]
+        (is (= (:parametrit @lahetetty-payload) {"dests" "0987654321"
+                                                 "text" "Testi"}))
+        (is (= (select-keys (:otsikot @lahetetty-payload) ["X-Correlation-ID" "Content-Type"])
+              {"X-Correlation-ID" "1234567"
+               "Content-Type" "application/x-www-form-urlencoded"})
+        (is (= "ok" (:sisalto vastaus))))))))
 
 (deftest linkmobility-tekstiviestin-epaonnistunut-lahetys
   (with-fake-http
     [+testi-sms-url+ "TESTI ERROR 2 1 message failed: Invalid phone number"]
-    (is (thrown? Exception (tekstiviesti/laheta (:sms-vanha jarjestelma) "0987654321" "Testi" {"X-Correlation-ID" 1234568}))
+    (is (thrown? Exception (tekstiviesti/laheta (:sms-vanha jarjestelma) "0987654321" "Testi" "1234568" {}))
       "Poikkeusta ei heitetty virhe responsesta.")))
 
 

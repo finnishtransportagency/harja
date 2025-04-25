@@ -27,6 +27,8 @@
     :sms (component/using
                   (sms/luo-tekstiviesti-komponentti
                     {:url +sms-url+
+                     :apiavain "miu"}
+                    {:sms-url +sms-url+
                      :apiavain "mau"})
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
