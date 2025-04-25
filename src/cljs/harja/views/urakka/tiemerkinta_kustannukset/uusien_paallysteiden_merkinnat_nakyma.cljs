@@ -29,7 +29,7 @@
                        (let [linjamerkinnat-summa (tiedot/kustannusten-summa kustannukset :linjamerkinnat)
                              pienmerkinnat-summa (tiedot/kustannusten-summa kustannukset :pienmerkinnat)
                              jyrsinnat-summa (tiedot/kustannusten-summa kustannukset :jyrsinnat)]
-                         [{:teksti "Yhteensä" :sarakkeita 5 :luokka "yhteensa"}
+                         [{:teksti "Yhteensä" :sarakkeita (if (= taulukon-tyyppi :paallystys) 4 3) :luokka "yhteensa"}
                           {:teksti (fmt/euro-opt linjamerkinnat-summa) :luokka "yhteensa" :tasaa :oikea}
                           {:teksti (fmt/euro-opt pienmerkinnat-summa) :luokka "yhteensa" :tasaa :oikea}
                           {:teksti (fmt/euro-opt jyrsinnat-summa) :luokka "yhteensa" :tasaa :oikea}
