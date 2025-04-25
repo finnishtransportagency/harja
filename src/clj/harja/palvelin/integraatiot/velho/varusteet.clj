@@ -585,7 +585,9 @@
                                                          :yhteinen-key2 [:ominaisuudet :toimenpiteen-kohde]
                                                          :etsittava-avain [:ominaisuudet :toimenpide]
                                                          :asetettava-avain :valimaiset-toimenpiteet})
-                varusteet (mapv (partial varuste-velhosta->harja db) varusteet-valimaisilla-toimenpiteilla)]
+                varusteet (sort-by :alkupvm
+                            #(compare %2 %1)
+                            (mapv (partial varuste-velhosta->harja db) varusteet-valimaisilla-toimenpiteilla))]
             {:urakka-id urakka-id :toteumat varusteet}))))))
 
 (defn hae-varusteen-historia [{:keys [integraatioloki db asetukset]}
