@@ -1,9 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset
-  "Tiemerkinnän kustannuks raportit"
+  "Tiemerkintöjen kustannusten kirjaus raportit"
   (:require [harja.pvm :as pvm]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.domain.kanavat.raportointi :as k-raportointi]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko rivi]]))
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko rivi] :as raportit]))
 
 (defonce ^{:private true} ei-kohdetta-teksti "Ei liity kohteeseen")
 (defonce ^{:private true} raportti-yhteenveto-otsikko "Toteutuneet kustannukset")
@@ -26,17 +24,6 @@
 
 (defn- osion-otsikko [otsikko]
   [:otsikko-heading otsikko {:padding-top "50px"}])
-
-
-(defn- hae-lyhytnimet 
-  "Palauttaa valittujen urakoiden lyhytnimet
-   Fallback urakan pitkä nimi"
-  [db urakkatyyppi urakka-id]
-  (let [urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
-        lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi urakkatyyppi :vain-puuttuvat false :urakantila "kaikki"})
-        ;; Tähän voi passata kokoelman urakka-iditä, jos halutaan suorittaa esim. hallintayksikkö kontekstissa 
-        valitut-urakat-nimet (k-raportointi/suodata-urakat lyhytnimet #{urakka-id})]
-    (k-raportointi/kokoa-lyhytnimet valitut-urakat-nimet)))
 
 
 (defn- taulukko [{:keys [gridin-otsikko rivin-tiedot rivit oikealle-tasattavat]}]
@@ -89,7 +76,7 @@
   "Tiemerkintä sanktiot ja bonukset, raportin suoritusfunktio"
   [db _user {:keys [urakkatyyppi urakka-id alkupvm loppupvm rivit laji] :as _parametrit}]
   (let [laji (laji tyyppi-valinnat)
-        lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
+        lyhytnimet (raportit/hae-urakan-lyhytnimet db urakkatyyppi urakka-id)
         raportin-otsikko (raportin-otsikko lyhytnimet raportti-sanktiot-otsikko alkupvm loppupvm)
         rivien-maara (count rivit)
         yhteensa-hinta (reduce + (map :summa rivit))
@@ -149,7 +136,7 @@
 (defn muut-kustannukset
   "Tiemerkintä muut kustannukset raportin suoritusfunktio"
   [db _user {:keys [urakkatyyppi urakka-id alkupvm loppupvm _sopimus _tyypit rivit] :as _parametrit}]
-  (let [lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
+  (let [lyhytnimet (raportit/hae-urakan-lyhytnimet db urakkatyyppi urakka-id)
         raportin-otsikko (raportin-otsikko lyhytnimet raportti-kustannukset-otsikko alkupvm loppupvm)
         rivien-maara (count rivit)
         yhteensa-hinta (reduce + (map :hinta rivit))
@@ -200,7 +187,7 @@
 (defn yhteenveto
   "Tiemerkintä yhteenveto raportin suoritusfunktio"
   [db _user {:keys [urakkatyyppi urakka-id alkupvm loppupvm _sopimus rivit] :as _parametrit}]
-  (let [lyhytnimet (hae-lyhytnimet db urakkatyyppi urakka-id)
+  (let [lyhytnimet (raportit/hae-urakan-lyhytnimet db urakkatyyppi urakka-id)
         raportin-otsikko (raportin-otsikko lyhytnimet raportti-yhteenveto-otsikko alkupvm loppupvm)
         yhteensa-hinta (reduce + (map :hinta rivit))
         raportti-rivit (mapcat

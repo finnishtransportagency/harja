@@ -11,7 +11,6 @@
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
-            ;; TODO, tämän muut kustannukset voi kokonaan poistaa, kun tiemerkinnät saatu maaliin
             [harja.views.urakka.toteumat.tiemerkinta-muut-kustannukset :as muut-kustannukset]))
 
 
@@ -40,9 +39,8 @@
              tyy-tiedot/paallystysurakan-kohteet
              @u/valittu-urakan-vuosi])
           
-          ;; TODO, muut kustannukset voi kokonaan poistaa, kun tiemerkinnät saatu maaliin
           "Muut kustannukset"
           :muut
-          (when false ; (oikeudet/urakat-toteutus-muutkustannukset id)
+          (when (oikeudet/urakat-toteutus-muutkustannukset id)
             ^{:key "muut-kustannukset"}
             [muut-kustannukset/muut-kustannukset ur])]]))))

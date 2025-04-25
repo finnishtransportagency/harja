@@ -9,12 +9,36 @@
             [jeesql.core :refer [defqueries]]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.fmt :as fmt]
-            [harja.domain.urakka :as urakka]))
+            [harja.domain.urakka :as urakka]
+            [harja.kyselyt.urakat :as urakat-q]))
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
 (def materiaalitoteumien-paivitysinfo
   "Ympäristö- ja materiaaliraporttien laskelmat päivitetään kerran vuorokaudessa raporttien nopeuttamiseksi. Laskenta tehdään öisin, eli uudet arvot näkyvät raportilla seuraavana päivänä. Jos haluat tarkistaa tänään syötettyjä arvoja, voit tehdä sen Toteumat-osion välilehdiltä Suola ja Materiaalit.")
+
+(defn kokoa-lyhytnimet [data]
+  (->> data
+    (map #(or (:lyhyt_nimi %) (:nimi %)))
+    (str/join ", ")))
+
+(defn suodata-urakat [data idt]
+  (filter #(idt (:id %)) data))
+
+(defn hae-urakan-lyhytnimet
+  "Palauttaa valittujen urakoiden lyhytnimet, fallback urakan pitkä nimi
+   
+   Parametrit:
+   - db:            tietokanta yhteyspooli
+   - urakkatyyppi:  esim. :tiemerkinta
+   - urakat:        joko #{...} setti urakka-id:itä tai yksittäinen urakka-id integer"
+  [db urakkatyyppi urakat]
+  (let [_ (assert (or (set? urakat) (integer? urakat)) "Urakat täytyy olla setti #{1 2 3}, tai urakka-id")
+        urakat (if (set? urakat) urakat #{urakat})
+        urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+        lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi urakkatyyppi :vain-puuttuvat false :urakantila "kaikki"})
+        valitut-urakat-nimet (suodata-urakat lyhytnimet urakat)]
+    (kokoa-lyhytnimet valitut-urakat-nimet)))
 
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]

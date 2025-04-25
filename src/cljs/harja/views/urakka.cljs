@@ -76,9 +76,6 @@
                 (urakka/kanavaurakka? urakka))
 
     :toteutus (and
-                ;; Välilehti piiloon tuotannosta
-                ;; Uusi kustannusten kirjaus korvaa tämän 
-                (k/kehitysymparistossa?)
                 (oikeudet/urakat-toteutus id)
                 (not= sopimustyyppi :kokonaisurakka)
                 (= tyyppi :tiemerkinta))
@@ -151,6 +148,7 @@
     :valikatselmus (and
                      (oikeudet/urakat-kulut id) ;; TODO: Tarkista oikeudet. Ennen oli kulujen alla. Tarvitaanko nyt oma osio?
                      (= tyyppi :teiden-hoito))
+    
     :kustannukset (and
                     (oikeudet/urakat-paikkaukset id)
                     (= tyyppi :paallystys)
@@ -247,7 +245,13 @@
 
        "Toteutus"
        :toteutus
-       (when (valilehti-mahdollinen? :toteutus ur)
+       ;; Välilehti piiloon, mahdollisesti poistetaan jatkossa 
+       ;; Uusi "Kustannusten kirjaus" korvaa tämän välilehden kokonaan
+       ;; 
+       ;; Täällä on Kok. hintaiset työt, yks työt, muut kustannukset
+       ;; Kaikki näkymät tehty uudelleen Kustannusten kirjaukseen 
+       (when false
+         ;;(valilehti-mahdollinen? :toteutus ur)
          ^{:key "toteutus"}
          [toteutus/toteutus ur])
 
@@ -288,7 +292,7 @@
        (when (valilehti-mahdollinen? :laadunseuranta ur)
          ^{:key "laadunseuranta"}
          [laadunseuranta/laadunseuranta ur])
-       
+
        "Kustannusten kirjaus"
        :kustannusten-kirjaus
        (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
@@ -323,7 +327,11 @@
 
        "Kustannukset"
        :tiemerkinnan-kustannukset
-       (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
+       ;; Välilehti piiloon, mahdollisesti poistetaan jatkossa 
+       ;; "Kustannusten yhteenveto" korvaa tämän näkymän
+       ;;
+       (when false
+         ; (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
          ^{:key "tiemerkinnan-kustannukset"}
          [tiemerkinnan-kustannukset/kustannukset
           ur
