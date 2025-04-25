@@ -48,7 +48,7 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))}})]
     (is (vector? vastaus))
-    (let [otsikko "Oulun alueurakka 2014-2019, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+    (let [otsikko "Oulun alueurakka 2014-2019, Ilmoitusraportti"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -70,7 +70,7 @@
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
-    (let [otsikko "Pohjois-Pohjanmaa, hoito, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+    (let [otsikko "Pohjois-Pohjanmaa, hoito, Ilmoitusraportti"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -95,7 +95,7 @@
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
-    (let [otsikko "KOKO MAA, hoito, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+    (let [otsikko "KOKO MAA, hoito, Ilmoitusraportti"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -127,7 +127,7 @@
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
     (is (= pylvasgraafin-viimeinen-elementti ["2017/09" []]))
-    (let [otsikko "Pohjois-Pohjanmaa, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
+    (let [otsikko "Pohjois-Pohjanmaa, kaikki urakkatyypit, Ilmoitusraportti"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -154,7 +154,7 @@
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
     (is (= pylvasgraafin-viimeinen-elementti ["2017/09" []]))
-    (let [otsikko "KOKO MAA, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
+    (let [otsikko "KOKO MAA, kaikki urakkatyypit, Ilmoitusraportti"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -192,7 +192,7 @@
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
     (is (= pylvasgraafin-viimeinen-elementti ["2017/09" []]))
-    (let [tyyppilajit-otsikko "KOKO MAA, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
+    (let [tyyppilajit-otsikko "KOKO MAA, kaikki urakkatyypit, Ilmoitusraportti"
           toimenpiteet-otsikko "Ilmoitukset aiheutuneiden toimenpiteiden mukaan"
           tyyppilajit-taulukko (apurit/taulukko-otsikolla vastaus tyyppilajit-otsikko)
           toimenpiteet-taulukko (apurit/taulukko-otsikolla vastaus toimenpiteet-otsikko)]
