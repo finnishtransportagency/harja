@@ -282,19 +282,6 @@
                              [kuntoluokka-komponentti (get-in data [:data :kuntoluokka])]])
              ::lomake/col-luokka "margin-top-16"
              :piilota-label? true}
-            {:tyyppi :komponentti
-             :nimi :ulkoinen-id
-             ::lomake/col-luokka ""
-             :komponentti (fn [_]
-                            [yleiset/tooltip
-                             {}
-                             [napit/yleinen-toissijainen "Katso tarkemmat varustetiedot"
-                              ;; TODO: Linkki velhoon, kunhan velholta saadaan sellainen.
-                              (constantly nil)
-                              {:ikoni [ikonit/harja-icon-navigation-external-link]
-                               :ikoni-oikealle? true
-                               :disabled true}]
-                             "Linkki velhoon ei ole vielä saatavilla."])}
             {:nimi ::spacer :piilota-label? true :tyyppi :komponentti :palstoja 3
              ::lomake/col-luokka "margin-top-32"
              :komponentti (fn [_] [:hr])}
