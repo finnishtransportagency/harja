@@ -22,6 +22,9 @@
     :voi-lisata? false
     :muokattava? true
     :tunniste :id
+    ;; Joillain urakoilla näemmä satoja kohteita 
+    ;; Pidetään sivutus, käyttökokemus muuten tosi surkea
+    :sivuta 10
     :mahdollista-rivin-valinta? false
     :piilota-toiminnot? true
     :voi-poistaa? (constantly false)

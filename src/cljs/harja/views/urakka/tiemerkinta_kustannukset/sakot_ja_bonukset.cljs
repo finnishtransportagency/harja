@@ -30,7 +30,7 @@
               :tunniste :id
               :voi-kumota? false
               :piilota-toiminnot? true
-              :sivuta grid/vakiosivutus
+              :sivuta 25
               :mahdollista-rivin-valinta? true
               :rivi-klikattu #(e! (tiedot/->AvaaModal %))
               :rivi-jalkeen-fn (fn [rivit]
