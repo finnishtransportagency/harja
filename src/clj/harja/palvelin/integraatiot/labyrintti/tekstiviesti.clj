@@ -54,7 +54,6 @@
 
 
 ;; -- Vanha LinkMobilityn SMS-lähetys --
-
 (defn kasittele-vastaus-linkmobility [body headers]
   (log/debug (format "SMS-palvelu vastasi: sisältö: %s, otsikot: %s" body headers))
   (when (and body (.contains (string/lower-case body) "error"))
@@ -92,10 +91,8 @@
     (laheta-sms-linkmobility db integraatioloki (:sms-url asetukset) (:apiavain asetukset) numero viesti korrelaatio-id otsikot)))
 
 
-
-
 ;; Vanha LinkMobility SMS-viestien vastaanotto
-;; TODO: Tekstiviestin vastaanotto poistuu käytöstä. Poista turhat funktiot siirtymäajan jälkeen.
+;; TODO: Tekstiviestin vastaanotto poistuu käytöstä. Poista turhat funktiot siirtymäajan jälkeen. #yliheitto
 
 (defn kasittele-epaonnistunut-viestin-kasittely [integraatioloki tapahtuma-id poikkeus]
   (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." poikkeus))
@@ -136,9 +133,11 @@
         (kasittele-epaonnistunut-viestin-kasittely integraatioloki tapahtuma-id e)
         {:status 500}))))
 
+
 (defrecord Tekstiviesti [sms-asetukset vanhat-sms-asetukset kuuntelijat]
   component/Lifecycle
   (start [{http :http-palvelin integraatioloki :integraatioloki :as this}]
+    ;; TODO: Tekstiviestien vastaanotto poistuu käytöstä. Poista turha toiminnallisuus siirtymäajan jälkeen. #yliheitto
     (julkaise-reitti
       http :vastaanota-tekstiviesti
       (POST "/tekstiviesti/toimenpidekuittaus" request (vastaanota-tekstiviesti integraatioloki request kuuntelijat))
@@ -157,7 +156,7 @@
 
   (laheta [this numero viesti korrelaatio-id otsikot]
     ;; FIXME: Seuraamme siirtymäajan uuden SMS-integraation käyttöönottoa, jolloin vanha LinkMobilityn integraatio on vielä käytössä.
-    ;;       Kun siirtymäaika on ohi, poistamme vanhan LinkMobilityn integraation käytöstä ja käytämme vain uutta SMS-integraatiota.
+    ;;       Kun siirtymäaika on ohi, poistamme vanhan LinkMobilityn integraation käytöstä ja käytämme vain uutta SMS-integraatiota. #yliheitto
     (let [uusi-sms-aktiivinen? (:aktiivinen? sms-asetukset)
           asetukset (if uusi-sms-aktiivinen? sms-asetukset vanhat-sms-asetukset)]
 
@@ -172,7 +171,7 @@
 
 
 (defn luo-tekstiviesti-komponentti [sms-asetukset vanhat-sms-asetukset]
-  ;; TODO: Ota vanhat asetukset pois, kun LinkSMS integraatiosta on päästy kokonaan
+  ;; TODO: Ota vanhat asetukset pois, kun LinkSMS integraatiosta on päästy kokonaan #yliheitto
   (->Tekstiviesti sms-asetukset vanhat-sms-asetukset (atom #{})))
 
 (defrecord FeikkiTekstiviesti []
