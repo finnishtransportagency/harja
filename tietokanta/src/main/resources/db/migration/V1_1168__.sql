@@ -1,7 +1,3 @@
---
--- TIEDOSSA: Uudelleenimetään tiedosto ennen mergeä 
--- 
-
 -- Tiemerkinnän muut kustannukset 
 ALTER TYPE yllapito_muu_toteuma_tyyppi ADD VALUE 'lisatyo';
 ALTER TYPE yllapito_muu_toteuma_tyyppi ADD VALUE 'muutostyo';
