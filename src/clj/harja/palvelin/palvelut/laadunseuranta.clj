@@ -96,9 +96,9 @@
   (into [] (laatupoikkeamat-q/hae-laatupoikkeaman-liitteet db laatupoikkeama-id)))
 
 (defn- hae-urakan-liitteet
-  [db user urakka-id]
+  [db user urakka-id alkupvm loppupvm]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (into [] (laatupoikkeamat-q/hae-urakan-liitteet db urakka-id)))
+  (into [] (laatupoikkeamat-q/hae-urakan-liitteet db urakka-id alkupvm loppupvm)))
 
 (defn hae-laatupoikkeaman-tiedot
   "Hakee yhden laatupoikkeaman kaiken tiedon muokkausnäkymää varten: laatupoikkeaman perustiedot, kommentit ja liitteet, päätös ja sanktiot.
@@ -447,8 +447,8 @@
         (hae-sanktiotyypit db user))
 
       :hae-urakan-liitteet
-      (fn [user {:keys [urakka-id]}]
-        (hae-urakan-liitteet db user urakka-id))
+      (fn [user {:keys [urakka-id alkupvm loppupvm]}]
+        (hae-urakan-liitteet db user urakka-id alkupvm loppupvm))
 
       :hae-sanktion-liitteet
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
