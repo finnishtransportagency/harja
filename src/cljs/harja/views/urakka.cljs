@@ -136,7 +136,6 @@
                            (istunto/ominaisuus-kaytossa? :vesivayla))
 
     :tiemerkinnan-kustannukset (and
-                                 (k/kehitysymparistossa?)
                                  (oikeudet/urakat-kustannukset id)
                                  (= tyyppi :tiemerkinta))
     
