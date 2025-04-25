@@ -85,3 +85,5 @@
 (defn velho-otsikot [token]
   {"Content-Type" "application/json"
    "Authorization" (str "Bearer " token)})
+
+(def hakupalvelu-url "/hakupalvelu/api/v2/haku/kohdeluokat")

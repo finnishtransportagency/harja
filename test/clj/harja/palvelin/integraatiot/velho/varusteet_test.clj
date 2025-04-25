@@ -3,6 +3,7 @@
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
+            [harja.palvelin.integraatiot.velho.yhteiset :as velho-yhteiset]
             [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.testi :refer :all]
@@ -23,7 +24,7 @@
 (def +velho-nimikkeisto-url+ (re-pattern (str +velho-api-juuri+ "/metatietopalvelu/api/v2/metatiedot/kohdeluokka/[^/]+/[^/]+")))
 (def +tienvarsikalusteet-nimikkeisto-url+ (str +velho-api-juuri+ "/metatietopalvelu/api/v2/metatiedot/kohdeluokka/varusteet/tienvarsikalusteet"))
 
-(def +velho-varusteet-hakurajapinta-url+ (re-pattern (str +velho-api-juuri+ "/hakupalvelu/api/v2/haku/kohdeluokat")))
+(def +velho-varusteet-hakurajapinta-url+ (re-pattern (str +velho-api-juuri+ velho-yhteiset/hakupalvelu-url)))
 
 (def +urakan-velho-oid+ "urakan-velho-oid")
 

@@ -20,7 +20,7 @@
                 ominaisuudet "ominaisuudet"
                 http-asetukset {:metodi :POST
                                 :otsikot otsikot
-                                :url (str varuste-api-juuri-url "/hakupalvelu/api/v2/haku/kohdeluokat")}
+                                :url (str varuste-api-juuri-url velho-yhteiset/hakupalvelu-url)}
 
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"
                                      :palautettavat-kentat [[kohdeluokka, ominaisuudet, "nimi"],

@@ -483,7 +483,7 @@
                               +tietolajien-lahteet+)
                 http-asetukset {:metodi :POST
                                 :otsikot otsikot
-                                :url (str varuste-api-juuri-url "/hakupalvelu/api/v2/haku/kohdeluokat")}
+                                :url (str varuste-api-juuri-url velho-yhteiset/hakupalvelu-url)}
                 urakka-velho-oid (q-urakat/hae-urakan-velho-oid db {:id urakka-id})
                 _ (when-not urakka-velho-oid
                     (swap! virheet conj (str "Urakalle ei löytynyt vastaavaa Velho-oidia. Urakan id: " urakka-id))
