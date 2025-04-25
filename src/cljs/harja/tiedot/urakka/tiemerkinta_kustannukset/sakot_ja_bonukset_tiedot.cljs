@@ -92,7 +92,7 @@
 
 
 (defn hae-liitteet [app]
-  (tuck-apurit/post! app :hae-urakan-liitteet
+  (tuck-apurit/post! app :hae-urakan-laatupoikkeama-liitteet
     {:urakka-id @nav/valittu-urakka-id
      :alkupvm  (-> @u/valittu-aikavali first)
      :loppupvm (-> @u/valittu-aikavali second)}

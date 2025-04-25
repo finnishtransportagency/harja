@@ -286,7 +286,7 @@ WHERE k.poistettu IS NOT TRUE
 ORDER BY k.luotu ASC;
 
 
--- name: hae-urakan-liitteet
+-- name: hae-urakan-laatupoikkeama-liitteet
 SELECT l.id                  AS id,
        s.id                  AS sanktio_id,
        l.tyyppi              AS tyyppi,
