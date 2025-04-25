@@ -766,7 +766,7 @@
                        :itmf :itmf
                        :integraatioloki :integraatioloki
                        :api-sahkoposti :api-sahkoposti
-                       :labyrintti :labyrintti})
+                       :sms :sms})
 
       :kanavasiltojen-geometriahaku
       (component/using
