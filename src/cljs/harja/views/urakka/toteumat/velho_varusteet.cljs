@@ -7,6 +7,7 @@
   Harjaan tallennettu varustetoimenpide sisältää Tievelhosta haetun kopion toimenpiteestä ja sen kohteesta rajatuilla tiedoilla.
   Tarkemmat tiedot löytyvät Tievelhosta."
   (:require [clojure.string :as str]
+            [harja.tiedot.urakka :as u]
             [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [harja.asiakas.kommunikaatio :as k]
@@ -56,9 +57,10 @@
 
 (defn suodatuslomake [_e! _app]
   (fn [e! {:keys [valinnat urakka kuntoluokat-nimikkeisto kohdeluokat-nimikkeisto varustetyyppihaku] :as app}]
-    (let [alkupvm (:alkupvm urakka)
-          vuosi (pvm/vuosi alkupvm)
-          hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
+    (let [hoitokausien-alkuvuodet (into []
+                                    (range
+                                      (pvm/vuosi (:alkupvm urakka))
+                                      (pvm/vuosi (:loppupvm urakka))))
           hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
           valittu-toimenpide (:toimenpide valinnat)
           hoitovuoden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
@@ -94,15 +96,11 @@
       [:div
        [debug app {:otsikko "TUCK STATE"}]
        [:div.row.filtterit-container {:style {:height "100px"}}
-        [yleiset/pudotusvalikko "Hoitovuosi"
-         {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-          :valinta hoitokauden-alkuvuosi
-          :vayla-tyyli? true
-          :data-cy "hoitokausi-valinta"
-          :valitse-fn #(e! (v/->ValitseHoitokausi %))
-          :format-fn #(str v/fin-hk-alkupvm % " \u2014 " v/fin-hk-loppupvm (inc %))
-          :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-         hoitokaudet]
+        [valinnat/urakan-hoitokausi-tuck
+         (:hoitokauden-alkuvuosi valinnat)
+         hoitokausien-alkuvuodet
+         #(e! (v/->ValitseHoitokausi %))
+         {:wrapper-luokka "col-md-2 filtteri label-ja-alasveto-grid"}]
         [yleiset/pudotusvalikko "Kuukausi"
          {:wrap-luokka "col-md-1 filtteri varusteet label-ja-alasveto-grid"
           :valinta (:hoitovuoden-kuukausi valinnat)
@@ -309,7 +307,9 @@
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
          (kartta-tasot/taso-paalle! :varusteet-ulkoiset)
-         (e! (v/->ValitseHoitokausi (pvm/vuosi (get-in app [:urakka :alkupvm]))))
+         (e! (v/->ValitseHoitokausi (if (u/urakka-kaynnissa? (:urakka app))
+                                      urakka-tila/kuluva-alkuvuosi
+                                      (pvm/vuosi (get-in app [:urakka :alkupvm])))))
          (e! (v/->HaeNimikkeisto))
          (reset! varusteet-kartalla/varuste-klikattu-fn
            (fn [varuste-kartalla]

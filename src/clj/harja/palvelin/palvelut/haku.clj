@@ -58,7 +58,7 @@
   "Hakee käyttäjän tarkemmat tiedot muokkausnäkymää varten."
   [db user kayttaja-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
-  (kayttajatiedot/hae-kayttaja db kayttaja-id))
+  (dissoc (kayttajatiedot/hae-kayttaja db kayttaja-id) :kayttajanimi))
 
 (defrecord Haku []
   component/Lifecycle

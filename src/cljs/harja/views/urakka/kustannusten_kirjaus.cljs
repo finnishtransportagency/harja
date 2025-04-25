@@ -1,13 +1,13 @@
 (ns harja.views.urakka.kustannusten-kirjaus
   "Tiemerkintäurakan Kustannukset-välilehti"
   (:require
-    [harja.ui.bootstrap :as bs]
-    [harja.ui.komponentti :as komp]
-    [harja.views.urakka.kustannusten-kirjaus.tiemerkintojen-korjaus :as tiemerkintojen-korjaus]
-    [harja.views.urakka.kustannusten-kirjaus.uusien-paallysteiden-merkinnat :as paallysteiden-merkinnat]
-    [harja.views.urakka.kustannusten-kirjaus.sakot-ja-bonukset :as sakot-ja-bonukset]
-    [harja.views.urakka.kustannusten-kirjaus.muut-kustannukset :as muut-kustannukset]
-    [harja.tiedot.navigaatio :as nav]))
+   [harja.ui.bootstrap :as bs]
+   [harja.ui.komponentti :as komp]
+   [harja.views.urakka.kustannusten-kirjaus.tiemerkintojen-korjaus :as tiemerkintojen-korjaus]
+   [harja.views.urakka.kustannusten-kirjaus.uusien-paallysteiden-merkinnat-nakyma :as paallysteiden-merkinnat]
+   [harja.views.urakka.kustannusten-kirjaus.sakot-ja-bonukset :as sakot-ja-bonukset]
+   [harja.views.urakka.kustannusten-kirjaus.muut-kustannukset :as muut-kustannukset]
+   [harja.tiedot.navigaatio :as nav]))
 
 (defn kustannusten-kirjaus []
   (komp/luo
@@ -22,7 +22,7 @@
 
         "Uusien päällysteiden merkinnät"
         :uusien-pallysteiden-merkinnat
-        [paallysteiden-merkinnat/paallysteiden-merkinnat]
+        [paallysteiden-merkinnat/uusien-paallysteiden-merkinnat]
 
         "Sakot ja bonukset"
         :sakot-ja-bonukset
