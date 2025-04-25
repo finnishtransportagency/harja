@@ -4,6 +4,7 @@
    [harja.ui.komponentti :as komp]
    [harja.ui.grid :as grid]
    [harja.fmt :as fmt]
+   [harja.tiedot.urakka :as u]
    [harja.tyokalut.tuck :as tuck-apurit]
    [tuck.core :refer [tuck]]
    [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
@@ -13,7 +14,9 @@
   (let [urakka (:urakka @tila/yleiset)]
     (komp/luo
       (komp/lippu tiedot/kustannusten-kirjaus-valilehti-nakyvissa?)
-      (komp/sisaan #(e! (tiedot/->HaeKustannukset urakka)))
+      (komp/sisaan #(do 
+                      (u/valitse-kuluva-hk!)
+                      (e! (tiedot/->HaeKustannukset urakka))))
       (fn [e! {:keys [kustannukset haku-kaynnissa?] :as _app}]
         [:div.livi-grid.tiemerkinta-kustannusten-kirjaus
          [:h1 "Tiemerkintöjen korjaus"]

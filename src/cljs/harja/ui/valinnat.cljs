@@ -99,7 +99,13 @@
       [:span.alasvedon-otsikko vuosi-termi]
       [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
                             :disabled disabled?
-                            :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % @hoitokaudet vuosi-termi) "Valitse")
+                            :format-fn (fn [aikavali]
+                                         (if aikavali
+                                           (let [sisaltaa-koko-kauden? (and
+                                                                         (= (last aikavali) (-> @hoitokaudet last second))
+                                                                         (= (first aikavali) (ffirst @hoitokaudet)))]
+                                             (fmt/hoitokauden-jarjestysluku-ja-vuodet aikavali @hoitokaudet vuosi-termi sisaltaa-koko-kauden?))
+                                           "Valitse"))
                             :valitse-fn valitse-fn}
        @hoitokaudet]])))
 

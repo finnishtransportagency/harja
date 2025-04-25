@@ -25,8 +25,8 @@
 
 (defn paivittava-urakkavuosi-suodatin
   "Urakkavuosi valinta, passataan näkymän tuck hakufunktio"
-  [{:keys [aikavali]} haku-fn haku-kaynnissa?]
-  (urakka-valinnat/paivittava-urakkavuosi-tuck aikavali haku-fn haku-kaynnissa?))
+  [{:keys [aikavali]} haku-fn haku-kaynnissa? anna-valita-kaikki?]
+  (urakka-valinnat/paivittava-urakkavuosi-tuck aikavali haku-fn haku-kaynnissa? anna-valita-kaikki?))
 
 
 (defn nakyma-body

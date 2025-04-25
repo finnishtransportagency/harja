@@ -96,7 +96,9 @@
     (komp/luo
       (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                       (e! (tiedot/->PaivitaValinnat uusi))))
-      (komp/sisaan #(do (e! (tiedot/->HaePaallystysKustannukset))
+      (komp/sisaan #(do 
+                      (u/valitse-kuluva-hk!)
+                      (e! (tiedot/->HaePaallystysKustannukset))
                       (e! (tiedot/->HaePaikkausKustannukset))
                       (e! (tiedot/->PaivitaValinnat
                             {:urakka @nav/valittu-urakka

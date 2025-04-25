@@ -162,7 +162,7 @@
     [:varillinen-teksti {:arvo hinta :fmt :raha}]))
 
 
-(defn- koosta-yhteenveto-taulukko [data yhteensa-hinta alkupvm]
+(defn- koosta-yhteenveto-taulukko [data yhteensa-hinta alkupvm kaikki?]
   (let [yhteenveto (yhteenveto-rivi "Yhteensä" yhteensa-hinta)
         tiedot {:rivin-tiedot (rivi
                                 {:otsikko "Kustannuslaji" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti}
@@ -178,7 +178,9 @@
                 :oikealle-tasattavat #{1}}]
     (into ()
       [(taulukko tiedot)
-       (osion-otsikko (str raportti-yhteenveto-otsikko " " (pvm/vuosi alkupvm)))])))
+       (osion-otsikko (if kaikki? 
+                        (str raportti-yhteenveto-otsikko " (Kaikki)")
+                        (str raportti-yhteenveto-otsikko " " (pvm/vuosi alkupvm))))])))
 
 
 ; ---------------------------- ;
@@ -186,7 +188,7 @@
 ; ---------------------------- ;
 (defn yhteenveto
   "Tiemerkintä yhteenveto raportin suoritusfunktio"
-  [db _user {:keys [urakkatyyppi urakka-id alkupvm loppupvm _sopimus rivit] :as _parametrit}]
+  [db _user {:keys [urakkatyyppi urakka-id alkupvm loppupvm _sopimus rivit kaikki?] :as _parametrit}]
   (let [lyhytnimet (raportit/hae-urakan-lyhytnimet db urakkatyyppi urakka-id)
         raportin-otsikko (raportin-otsikko lyhytnimet raportti-yhteenveto-otsikko alkupvm loppupvm)
         yhteensa-hinta (reduce + (map :hinta rivit))
@@ -200,4 +202,4 @@
     [:raportti {:nimi raportin-otsikko
                 :orientaatio :landscape
                 :lyhennetty-tiedostonimi true}
-     (koosta-yhteenveto-taulukko raportti-rivit yhteensa-hinta alkupvm)]))
+     (koosta-yhteenveto-taulukko raportti-rivit yhteensa-hinta alkupvm kaikki?)]))

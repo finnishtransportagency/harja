@@ -13,6 +13,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
@@ -168,7 +169,7 @@
                                                                                   (fn [d] (= "-" (:lyhyt-nimi d))) yllapitokohteet-domain/paallysteen-korjausluokat))}))
 
         grid (muut-kustannukset-grid e! rivit haku-kaynnissa?)
-        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)) haku-kaynnissa?)
+        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)) haku-kaynnissa? false)
         muokkauspaneeli (muut-kustannukset-muokkauspaneeli e! valittu-rivi voi-kirjoittaa? voi-tallentaa? tyypit)]
 
     (yhteiset/nakyma-body "Muut kustannukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid nil false)))
@@ -178,7 +179,9 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan
-      #(e! (tiedot/->HaeTiedot)))
+      #(do 
+         (urakka-tiedot/valitse-kuluva-hk!)
+         (e! (tiedot/->HaeTiedot))))
     (fn [e! app] [muut-kustannukset-listaus e! app])))
 
 

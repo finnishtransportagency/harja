@@ -112,7 +112,8 @@
      :urakkatyyppi (:arvo @nav/urakkatyyppi)
      :alkupvm  (-> @u/valittu-aikavali first)
      :loppupvm (-> @u/valittu-aikavali second)
-     :sopimus (-> @u/valittu-sopimusnumero first)}))
+     :sopimus (-> @u/valittu-sopimusnumero first)
+     :kaikki? (u/koko-urakkakausi-valittuna?)}))
 
 
 (defn hae-muut-kustannukset [{:keys [_valinnat] :as app}]

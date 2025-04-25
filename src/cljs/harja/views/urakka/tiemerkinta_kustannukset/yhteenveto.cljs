@@ -17,48 +17,50 @@
 (defn- yhteenveto-grid
   "Taulukko"
   [_e! rivit haku-kaynnissa?]
-  [:<>
-   [:h2 (str 
-          (-> @nav/valittu-urakka :nimi) 
-          ", toteutuneet kustannukset " 
-          (-> @u/valittu-aikavali first (pvm/vuosi)))]
+  (let [valittu-vuosi (-> @u/valittu-aikavali first (pvm/vuosi))
+        vuosi-termi (if (u/koko-urakkakausi-valittuna?) "Kaikki toteutuneet kustannukset" (str "Toteutuneet kustannukset " valittu-vuosi))
+        urakka (-> @nav/valittu-urakka :nimi)]
 
-   [grid/grid {:tyhja (if haku-kaynnissa?
-                        [ajax-loader-pieni "Haku käynnissä..."]
-                        "Aikavälille ei löytynyt tuloksia.")
-               :tunniste :id
-               :voi-kumota? false
-               :piilota-toiminnot? true
-               :sivuta grid/vakiosivutus
-               :mahdollista-rivin-valinta? false
-               :rivi-jalkeen-fn (fn [rivit]
-                                  (let [yhteensa-hinta (reduce + (map :hinta rivit))]
-                                    [[{:teksti "Yhteensä" :luokka "yhteensa"}
-                                      {:teksti (str (fmt/euro-opt false yhteensa-hinta) " €") :tasaa :oikea :luokka "yhteensa"}]]))}
+    [:<>
+     [:h2 urakka]
+     [:h2 vuosi-termi]
 
-    [{:otsikko "Kustannuslaji"
-      :tyyppi :komponentti
-      :komponentti (fn [rivi]
-                     (or
-                       ((:tyyppi rivi) yhteiset/yhteenveto-tyypit)
-                       ((:tyyppi rivi) yhteiset/tyyppi-valinnat)
-                       ((:tyyppi rivi) yhteiset/laji-valinnat)))
-      :luokka "text-nowrap"
-      :leveys 0.2}
+     [grid/grid {:tyhja (if haku-kaynnissa?
+                          [ajax-loader-pieni "Haku käynnissä..."]
+                          "Aikavälille ei löytynyt tuloksia.")
+                 :tunniste :id
+                 :voi-kumota? false
+                 :piilota-toiminnot? true
+                 :sivuta grid/vakiosivutus
+                 :mahdollista-rivin-valinta? false
+                 :rivi-jalkeen-fn (fn [rivit]
+                                    (let [yhteensa-hinta (reduce + (map :hinta rivit))]
+                                      [[{:teksti "Yhteensä" :luokka "yhteensa"}
+                                        {:teksti (str (fmt/euro-opt false yhteensa-hinta) " €") :tasaa :oikea :luokka "yhteensa"}]]))}
 
-     {:otsikko "Kustannus"
-      :nimi :hinta
-      :tyyppi :euro
-      :tasaa :oikea
-      :luokka "text-nowrap"
-      :leveys 0.2}]
-    rivit]])
+      [{:otsikko "Kustannuslaji"
+        :tyyppi :komponentti
+        :komponentti (fn [rivi]
+                       (or
+                         ((:tyyppi rivi) yhteiset/yhteenveto-tyypit)
+                         ((:tyyppi rivi) yhteiset/tyyppi-valinnat)
+                         ((:tyyppi rivi) yhteiset/laji-valinnat)))
+        :luokka "text-nowrap"
+        :leveys 0.2}
+
+       {:otsikko "Kustannus"
+        :nimi :hinta
+        :tyyppi :euro
+        :tasaa :oikea
+        :luokka "text-nowrap"
+        :leveys 0.2}]
+      rivit]]))
 
 
 (defn yhteenveto-listaus [e! {:keys [rivit valinnat muokataan haku-kaynnissa?] :as _app}]
   (let [lisaa-uusi-fn nil
         grid (yhteenveto-grid e! rivit haku-kaynnissa?)
-        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)) haku-kaynnissa?)]
+        aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)) haku-kaynnissa? true)]
 
     (yhteiset/nakyma-body "Kustannusten yhteenveto" lisaa-uusi-fn aikavali valinnat muokataan nil grid nil true)))
 
