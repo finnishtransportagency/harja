@@ -184,9 +184,11 @@
 (defn listaus [e! {:keys [varusteet haku-paalla valinnat] :as app}]
   (let [lkm (count varusteet)]
     [grid/grid
-     {:otsikko (if (>= lkm v/+max-toteumat+)
-                 (str "Varustetoimenpiteet (Liikaa osumia. Näytetään vain " v/+max-toteumat+ " ensimmäistä.)")
-                 (str "Varustetoimenpiteet (" lkm ")"))
+     {:otsikko
+      (str "Varustetoimenpiteet "
+        (if (>= lkm v/+max-toteumat+)
+          (str "(Liikaa osumia. Näytetään vain " v/+max-toteumat+ " ensimmäistä.)")
+          (str "(" lkm ")")))
       :tunniste :ulkoinen-oid
       :luokat ["varuste-taulukko" "margin-top-32"]
       :tyhja (if haku-paalla
@@ -214,7 +216,9 @@
       {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
        :hae v/muodosta-tr-osoite}
       {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3}
-      {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tyyppi :leveys 5}
+      {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tyyppi :leveys 5
+       :hae (fn [rivi] (when-let [varustetyyppi (or (:tyyppi rivi) (:kohdeluokka rivi))]
+                         (when varustetyyppi (str/capitalize varustetyyppi))))}
       {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
       {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
        :komponentti (fn [rivi]
@@ -278,19 +282,6 @@
                              [kuntoluokka-komponentti (get-in data [:data :kuntoluokka])]])
              ::lomake/col-luokka "margin-top-16"
              :piilota-label? true}
-            {:tyyppi :komponentti
-             :nimi :ulkoinen-id
-             ::lomake/col-luokka ""
-             :komponentti (fn [_]
-                            [yleiset/tooltip
-                             {}
-                             [napit/yleinen-toissijainen "Katso tarkemmat varustetiedot"
-                              ;; TODO: Linkki velhoon, kunhan velholta saadaan sellainen.
-                              (constantly nil)
-                              {:ikoni [ikonit/harja-icon-navigation-external-link]
-                               :ikoni-oikealle? true
-                               :disabled true}]
-                             "Linkki velhoon ei ole vielä saatavilla."])}
             {:nimi ::spacer :piilota-label? true :tyyppi :komponentti :palstoja 3
              ::lomake/col-luokka "margin-top-32"
              :komponentti (fn [_] [:hr])}
