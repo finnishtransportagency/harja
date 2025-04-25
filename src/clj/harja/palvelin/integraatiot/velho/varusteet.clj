@@ -252,8 +252,16 @@
         kuntoluokka (get-in varuste [:ominaisuudet
                                      :kunto-ja-vauriotiedot
                                      :yleinen-kuntoluokka])
-        {tyyppi :otsikko kohdeluokka :kohdeluokka} (first (memoized-hae-nimikkeen-tiedot db
-                                                            {:tyyppi-nimi tyyppi}))
+        ;; joskus tarkempi tyyppi on nil, ja nimikkeistö-taulusta ei saada osumaa.
+        ;; Fallbackataan tällöin kohdeluokka suoraan
+        {tyyppi :otsikko kohdeluokka :kohdeluokka} (if (nil? tyyppi)
+                                                     {:tyyppi nil
+                                                      ;; parsittava varusteet/ alku pois...
+                                                      :kohdeluokka (when (string? (:kohdeluokka varuste))
+                                                                     (last (clojure.string/split (:kohdeluokka varuste) #"/")))}
+                                                     (first (memoized-hae-nimikkeen-tiedot db
+                                                              {:tyyppi-nimi tyyppi})))
+
         kuntoluokka (or (:otsikko (first (memoized-hae-nimikkeen-tiedot db
                                            {:tyyppi-nimi kuntoluokka})))
                       "Kuntoluokka puuttuu")]
