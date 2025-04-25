@@ -344,7 +344,7 @@ VALUES (:luoja-id, :ulkoinen-id, :nimi, FALSE, :luotu,
         :alkupvm, :loppupvm, :tilattupvm, :tyomenetelma,
         ROW(:tie, :aosa, :aet, :losa, :let, :ajorata,NULL,NULL,NULL,NULL)::TR_OSOITE_LAAJENNETTU,
         :paikkauskohteen-tila::paikkauskohteen_tila, :suunniteltu-maara, :suunniteltu-hinta, :yksikko, :lisatiedot, :pot?, :valmistumispvm,
-        :tiemerkintapvm, :toteutunut-hinta, :tiemerkintaa-tuhoutunut?, :tiemerkinnan-tila, :takuuaika, :yllapitokohde-id);
+        :tiemerkintapvm, :toteutunut-hinta, :tiemerkintaa-tuhoutunut?, :tiemerkinnan-tila::tiemerkinnan_tila_enum, :takuuaika, :yllapitokohde-id);
 
 -- name: paivita-paikkauskohde!
 UPDATE paikkauskohde
