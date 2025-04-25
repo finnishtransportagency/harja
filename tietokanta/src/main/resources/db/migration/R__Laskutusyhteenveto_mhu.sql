@@ -618,7 +618,6 @@ DECLARE
     rahavaraus_nimet                      TEXT[]    := '{}';
     hoitokausi_yht_array                  NUMERIC[] := '{}';
     val_aika_yht_array                    NUMERIC[] := '{}';
-    kannustin_id                          INT;
 
     -- Rahavaraus yhteensä arvot
     rv_val_aika_yht                       NUMERIC := 0;
@@ -692,15 +691,12 @@ BEGIN
         -------------------  Hankinnat    -------------------------
         -----------------------------------------------------------
 
-        -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta 
-        -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
-        SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
-
         -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut hankinnat työt
         -- Paitsi hoidon johdon hankinnat, jotka on erillishankintoja ja ne on otettu huomioon eri kohdassa
         hankinnat_laskutettu := 0.0;
         hankinnat_laskutetaan := 0.0;
 
+        -- Käsitellään muut toimenpiteet, ei Hoidon johtoa, jolla oma käsittely myöhemmin.
         IF (t.tuotekoodi != '23150') THEN
             FOR hankinnat_i IN 
                 SELECT 
@@ -717,7 +713,7 @@ BEGIN
                   AND lk.poistettu IS NOT TRUE
                   AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                   -- Poistetaan rahavaraukset hankinnoista. Näille oma laari.
-                  AND lk.rahavaraus_id IS NOT NULL
+                  AND lk.rahavaraus_id IS NULL
                   AND lk.tavoitehintainen = TRUE
             LOOP
                 SELECT  hankinnat_i.kht_summa AS summa,
