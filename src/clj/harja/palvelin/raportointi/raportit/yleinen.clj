@@ -42,14 +42,15 @@
 
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
-  (let [kk-vali? (and (and alkupvm loppupvm)
+  (let [kk-vali? (and alkupvm loppupvm
                       (pvm/kyseessa-kk-vali? alkupvm loppupvm))
         konteksti (if (sequential? konteksti)
                     (str/join ", " konteksti)
                     konteksti)]
     (if kk-vali?
       (str konteksti ", " nimi " " (pvm/kuukautena-ja-vuonna (l/to-local-date-time alkupvm)))
-      (str konteksti ", " nimi))))
+      (str konteksti ", " nimi (when (and alkupvm loppupvm)
+                                 (str " ajalta " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))))))
 
 (defn ryhmittele-tulokset-raportin-taulukolle
   "rivit                   ryhmiteltävät rivit
@@ -284,8 +285,11 @@
       (and urakka raportin-nimi alkupvm loppupvm)
       ;; Jos nimessä käytetään urakan lyhytnimiä, ei tarvitse urakkaa mainita erikseen
       (if lyhennetty?
-        (str raportin-nimi ", " (str alkupvm " - " loppupvm))
-        (str urakka ", " raportin-nimi ", " (str alkupvm " - " loppupvm)))
+        (str raportin-nimi)
+        (str urakka ", " raportin-nimi))
+      
+      (str/includes? raportin-nimi "ajalta")
+      (str raportin-nimi)
 
       (and (not urakka) raportin-nimi alkupvm (not loppupvm))
       (str raportin-nimi ", " alkupvm)

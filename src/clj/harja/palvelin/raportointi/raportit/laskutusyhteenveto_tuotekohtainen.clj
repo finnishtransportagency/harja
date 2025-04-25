@@ -266,7 +266,7 @@
                                          rivit))]
                          indeksi))]
 
-    [:raportti {:nimi "Laskutusyhteenveto"
+    [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :keskikoko}
 
      [:otsikko-heading-small (str alueen-nimi)]
