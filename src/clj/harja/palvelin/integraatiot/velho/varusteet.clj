@@ -475,7 +475,7 @@
                               +tietolajien-lahteet+)
                 http-asetukset {:metodi :POST
                                 :otsikot otsikot
-                                :url (str varuste-api-juuri-url "/hakupalvelu/api/v1/haku/kohdeluokat")}
+                                :url (str varuste-api-juuri-url "/hakupalvelu/api/v2/haku/kohdeluokat")}
                 urakka-velho-oid (q-urakat/hae-urakan-velho-oid db {:id urakka-id})
                 _ (when-not urakka-velho-oid
                     (swap! virheet conj (str "Urakalle ei löytynyt vastaavaa Velho-oidia. Urakan id: " urakka-id))
@@ -555,7 +555,8 @@
                                     alkuaika-parametri
                                     loppuaika-parametri)
                 oidit (mapv :oid valimaiset-oidit)
-                valimaiset-toimenpiteet (hae-valimaiset-varuste-toimenpiteet-oideille db oidit http-asetukset konteksti toimenpide)
+                valimaiset-toimenpiteet (when-not (empty? oidit)
+                                          (hae-valimaiset-varuste-toimenpiteet-oideille db oidit http-asetukset konteksti toimenpide))
                 toimenpiteella-suodatetut-valimaiset-oidit (vec (map #(get-in % [:ominaisuudet :toimenpiteen-kohde]) valimaiset-toimenpiteet))
                 varustetoimenpide-parametri (when toimenpide (tee-toimenpide-parametri db toimenpide toimenpiteella-suodatetut-valimaiset-oidit)) 
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"

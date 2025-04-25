@@ -23,7 +23,7 @@
 (def +velho-nimikkeisto-url+ (re-pattern (str +velho-api-juuri+ "/metatietopalvelu/api/v2/metatiedot/kohdeluokka/[^/]+/[^/]+")))
 (def +tienvarsikalusteet-nimikkeisto-url+ (str +velho-api-juuri+ "/metatietopalvelu/api/v2/metatiedot/kohdeluokka/varusteet/tienvarsikalusteet"))
 
-(def +velho-varusteet-hakurajapinta-url+ (re-pattern (str +velho-api-juuri+ "/hakupalvelu/api/v1/haku/kohdeluokat")))
+(def +velho-varusteet-hakurajapinta-url+ (re-pattern (str +velho-api-juuri+ "/hakupalvelu/api/v2/haku/kohdeluokat")))
 
 (def +urakan-velho-oid+ "urakan-velho-oid")
 
