@@ -469,8 +469,7 @@
                            (fn [x]
                              (swap! virheet conj (str "Virhe velho token haussa " x))
                              (log/error "Virhe velho token haussa" x)))]
-          (let [otsikot {"Content-Type" "application/json"
-                         "Authorization" (str "Bearer " token)}
+          (let [otsikot (velho-yhteiset/velho-otsikot token)
                 kohdeluokat (if (and (set? kohdeluokat) (seq kohdeluokat))
                               (filter #(kohdeluokat (:kohdeluokka %)) +tietolajien-lahteet+)
                               +tietolajien-lahteet+)
@@ -603,8 +602,7 @@
                            (fn [x]
                              (swap! virheet conj (str "Virhe velho token haussa " x))
                              (log/error "Virhe velho token haussa" x)))]
-          (let [otsikot {"Content-Type" "application/json"
-                         "Authorization" (str "Bearer " token)}
+          (let [otsikot (velho-yhteiset/velho-otsikot token)
 
                 {:keys [api-versio palvelu]} (first (filter #(= (:kohdeluokka %) kohdeluokka) +tietolajien-lahteet+))
 
@@ -628,8 +626,7 @@
   (when-let [token (hae-token-fn)]
     (try+
       (let [{:keys [varuste-api-juuri-url]} asetukset
-            otsikot {"Content-Type" "application/json"
-                     "Authorization" (str "Bearer " token)}
+            otsikot (velho-yhteiset/velho-otsikot token)
             http-asetukset {:metodi :GET
                             :otsikot otsikot
                             :url (str/join "/"

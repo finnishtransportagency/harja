@@ -81,3 +81,7 @@
                                             {:aika nil :token nil}))))
      ; Palauta token
      (:token (get @velho-tokenit avain)))))
+
+(defn velho-otsikot [token]
+  {"Content-Type" "application/json"
+   "Authorization" (str "Bearer " token)})
