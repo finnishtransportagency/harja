@@ -717,7 +717,7 @@ BEGIN
                   AND lk.poistettu IS NOT TRUE
                   AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                   -- Poistetaan rahavaraukset hankinnoista. Näille oma laari.
-                  AND (tr.yksiloiva_tunniste IS NULL OR(lk.rahavaraus_id IS NULL OR lk.rahavaraus_id != kannustin_id))
+                  AND lk.rahavaraus_id IS NOT NULL
                   AND lk.tavoitehintainen = TRUE
             LOOP
                 SELECT  hankinnat_i.kht_summa AS summa,
@@ -1160,7 +1160,7 @@ BEGIN
                 AND l.urakka = ur
                 AND tpi.id = t.tpi
               -- J - Johto- ja hallintokorvaus huomioidaan myös muukulu-tyyppiseksi kirjattuna laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä, joten karsitaan pois tässä.
-              AND ((tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54') OR tr.yksiloiva_tunniste IS NULL)
+              AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54'
         LOOP
             IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
                 -- Hoitokausi yhteensä
