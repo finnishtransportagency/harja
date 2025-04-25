@@ -64,7 +64,7 @@
         (is (= (select-keys (:otsikot @lahetetty-payload) ["X-Correlation-ID" "Content-Type"])
               {"X-Correlation-ID" "1234567"
                "Content-Type" "application/x-www-form-urlencoded"})
-        (is (= "ok" (:sisalto vastaus))))))))
+          (is (= "ok" (:sisalto vastaus))))))))
 
 (deftest linkmobility-tekstiviestin-epaonnistunut-lahetys
   (with-fake-http

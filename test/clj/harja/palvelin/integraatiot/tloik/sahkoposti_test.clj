@@ -4,7 +4,7 @@
             [taoensso.timbre :as log]
             [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.labyrintti.sms :refer [feikki-labyrintti]]
+            [harja.palvelin.integraatiot.labyrintti.tekstiviesti :refer [luo-feikki-tekstiviesti-komponentti]]
             [harja.jms-test :refer [feikki-jms]]
             [com.stuartsierra.component :as component]
             [harja.integraatio :as integraatio]
@@ -32,7 +32,7 @@
                       (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                        :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                       [:http-palvelin :db :integraatioloki :itmf])
-    :labyrintti (feikki-labyrintti)
+    :sms (luo-feikki-tekstiviesti-komponentti)
     :tloik (component/using
              (luo-tloik-komponentti)
              [:db :itmf :integraatioloki :api-sahkoposti])))

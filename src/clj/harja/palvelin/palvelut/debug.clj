@@ -243,7 +243,7 @@
   (start [{db :db
            ulkoinen-sahkoposti :ulkoinen-sahkoposti
            api-sahkoposti :api-sahkoposti
-           sms :labyrintti
+           sms :sms
            http :http-palvelin :as this}]
     (http/julkaise-palvelut
       http

@@ -524,7 +524,7 @@
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db :fim :api-sahkoposti :labyrintti :pdf-vienti :excel-vienti])
+                        [:http-palvelin :db :fim :api-sahkoposti :sms :pdf-vienti :excel-vienti])
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
@@ -638,7 +638,7 @@
                 :http-palvelin :http-palvelin
                 :ulkoinen-sahkoposti :ulkoinen-sahkoposti
                 :api-sahkoposti :api-sahkoposti
-                :labyrintti :labyrintti})
+                :sms :sms})
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
