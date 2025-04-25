@@ -89,15 +89,28 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('[data-cy=tabs-taso2-Paikkauskohteet]').click()
 
         cy.server()
+        cy.route('POST', '_/paikkauskohteet-urakalle').as('kohteet')
+
+        
+        cy.get('.nappi-ensisijainen', { timeout: clickTimeout }).should('not.be.disabled');
+        cy.contains('.nappi-ensisijainen', 'Hae kohteita').click({force: true})
+        cy.wait('@kohteet', {timeout: clickTimeout})
+
+        cy.get('.nappi-ensisijainen', { timeout: clickTimeout }).should('not.be.disabled');
+        cy.get('[data-cy="paikkauskohde-vuosivalinta"] button').click();
+
         cy.route('POST', '_/paikkauskohteet-urakalle').as('2021-kohteet')
-        cy.contains('.nappi-ensisijainen', 'Hae kohteita', ).click({force: true})
+
+        cy.get('[data-cy="paikkauskohde-vuosivalinta"] li.harja-alasvetolistaitemi', {timeout: 3000}).eq(2).click()
+        cy.contains('.nappi-ensisijainen', 'Hae kohteita').click({force: true})
+        
         cy.wait('@2021-kohteet', {timeout: clickTimeout})
     })
 
     it('Lisää uusi levittimellä tehtätävä paikkauskohde', function () {
-        cy.viewport(1100, 2000)
+        // cy.viewport(1100, 2000)
         // siirry paikkauskohteisiin
-        avaaPaikkauskohteetSuoraan()
+        // avaaPaikkauskohteetSuoraan()
         // Avataan paikkauskohdelomake uuden luomista varten
         cy.get('[data-cy="lisaa-paikkauskohde"]').click();
         // Varmistetaan, että sivupaneeli aukesi

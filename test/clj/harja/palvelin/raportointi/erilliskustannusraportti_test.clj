@@ -54,7 +54,7 @@
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{4
                                                     5}
-                      :otsikko "Oulun alueurakka 2014-2019, Erilliskustannusten raportti"
+                      :otsikko "Oulun alueurakka 2014-2019, Erilliskustannusten raportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Erilliskustannusten raportti"
                       :viimeinen-rivi-yhteenveto? true}
                      '({:leveys 7
@@ -131,7 +131,7 @@
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{4
                                                     5}
-                      :otsikko "Oulun MHU 2019-2024, Erilliskustannusten raportti"
+                      :otsikko "Oulun MHU 2019-2024, Erilliskustannusten raportti ajalta 01.10.2019 - 01.10.2022"
                       :sheet-nimi "Erilliskustannusten raportti"
                       :viimeinen-rivi-yhteenveto? true}
                      '({:leveys 7
@@ -209,7 +209,7 @@
             [:taulukko
              {:oikealle-tasattavat-kentat #{5
                                             6}
-              :otsikko "Pohjois-Pohjanmaa, Erilliskustannusten raportti"
+              :otsikko "Pohjois-Pohjanmaa, Erilliskustannusten raportti ajalta 01.10.2014 - 01.10.2015"
               :sheet-nimi "Erilliskustannusten raportti"
               :viimeinen-rivi-yhteenveto? true}
              '({:leveys 10
@@ -337,7 +337,7 @@
             [:taulukko
              {:oikealle-tasattavat-kentat #{5
                                             6}
-              :otsikko "KOKO MAA, Erilliskustannusten raportti"
+              :otsikko "KOKO MAA, Erilliskustannusten raportti ajalta 01.10.2014 - 01.10.2015"
               :sheet-nimi "Erilliskustannusten raportti"
               :viimeinen-rivi-yhteenveto? true}
              '({:leveys 10

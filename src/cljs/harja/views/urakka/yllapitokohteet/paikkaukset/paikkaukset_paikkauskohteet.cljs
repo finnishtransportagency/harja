@@ -393,8 +393,9 @@
        {:vayla-tyyli? true :disabled haku-kaynnissa?}]]
 
      ;; Vuosivalinnat
-     [:div.col-xs-2
-      [:label {:class "alasvedon-otsikko-vayla" :for "filtteri-vuosi"} "Vuosi"]
+     [:div.col-xs-2 {:data-cy "paikkauskohde-vuosivalinta"}
+      [:label
+       {:class "alasvedon-otsikko-vayla" :for "filtteri-vuosi"} "Vuosi"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-vuosi
                                     :vayla-tyyli? true
                                     :disabled haku-kaynnissa?
