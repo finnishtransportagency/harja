@@ -32,7 +32,6 @@
 (defn laheta-sms [db integraatioloki url apiavain numero viesti otsikot]
   (if (or (empty? apiavain) (empty? url))
     (log/warn "Tunnistautumistietoja tai URLia SMS-palveluun ei ole annettu. Viestiä ei voida lähettää.")
-    ;; TODO: Määrittele uusi järjestelmä 'sms' ja integraatiotapahtumat sille
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "sms" "laheta"
       (fn [konteksti]
@@ -44,7 +43,7 @@
                        "text" viesti}
               http-asetukset {:metodi :POST
                               :url url
-                              :otsikot otsikot}      ;; Parametrit lähetetään avain-arvo-pareina form-parametreissä
+                              :otsikot otsikot}
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset payload)]
           (kasittele-vastaus body headers))))))
 
@@ -65,7 +64,8 @@
               http-asetukset {:metodi :POST
                               :url sms-url
                               :otsikot otsikot
-                              :lomakedatana? true}      ;; Parametrit lähetetään avain-arvo-pareina form-parametreissä
+                              ;; Parametrit lähetetään avain-arvo-pareina form-parametreissä
+                              :lomakedatana? true}
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset parametrit)]
           (kasittele-vastaus body headers))))))
 
@@ -73,6 +73,12 @@
   (if uusi-sms?
     (laheta-sms db integraatioloki (:url asetukset) (:apiavain asetukset) numero viesti otsikot)
     (laheta-sms-linkmobility db integraatioloki (:sms-url asetukset) (:apiavain asetukset) numero viesti otsikot)))
+
+
+
+
+;; Vanha LinkMobility SMS-viestien vastaanotto
+;; TODO: Tekstiviestin vastaanotto poistuu käytöstä. Poista turhat funktiot siirtymäajan jälkeen.
 
 (defn kasittele-epaonnistunut-viestin-kasittely [integraatioloki tapahtuma-id poikkeus]
   (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." poikkeus))
@@ -83,9 +89,6 @@
     tapahtuma-id
     nil))
 
-
-;; Vanha LinkMobility SMS-viestien vastaanotto
-;; TODO: Tekstiviestin vastaanotto poistuu käytöstä.
 (defn vastaanota-tekstiviesti [integraatioloki kutsu kuuntelijat]
   (log/info (format "Vastaanotettiin tekstiviesti LinkMobilityn LinkSMS-palvelusta (entinen Labyrintti) : %s" (assoc-in kutsu [:headers "authorization"] "*****")))
   (let [url (:remote-addr kutsu)
@@ -130,7 +133,6 @@
     (reset! kuuntelijat #{})
     this)
 
-  ;; TODO: Tarvitaanko kuuntelijoita?
   Sms
   (rekisteroi-kuuntelija! [this kuuntelija-fn]
     (swap! kuuntelijat conj kuuntelija-fn)
@@ -150,7 +152,7 @@
         viesti
         otsikot))))
 
-;; TODO:
+
 (defn luo-tekstiviesti-komponentti [sms-asetukset vanhat-sms-asetukset]
   (->Tekstiviesti sms-asetukset vanhat-sms-asetukset (atom #{})))
 
