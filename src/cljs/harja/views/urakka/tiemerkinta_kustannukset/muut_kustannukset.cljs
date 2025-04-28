@@ -172,7 +172,7 @@
         aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)) haku-kaynnissa? false)
         muokkauspaneeli (muut-kustannukset-muokkauspaneeli e! valittu-rivi voi-kirjoittaa? voi-tallentaa? tyypit)]
 
-    (yhteiset/nakyma-body "Muut kustannukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid nil false)))
+    (yhteiset/nakyma-body "Muut kustannukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid haku-kaynnissa? nil false)))
 
 
 (defn muut-kustannukset* [e! _app]

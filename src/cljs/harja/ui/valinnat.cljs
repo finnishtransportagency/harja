@@ -25,7 +25,7 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn raporttiviennit
-  [raporttiparametrit]
+  [raporttiparametrit haku-kaynnissa?]
   [:div.raporttiviennit
    ;;
    ;; Excel raportti
@@ -37,6 +37,7 @@
              :value (transit/clj->transit raporttiparametrit)}]
 
     [:button {:type "submit"
+              :disabled haku-kaynnissa?
               :class #{"nappi-toissijainen"}}
 
      [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna Excel"]]]
@@ -51,6 +52,7 @@
              :value (transit/clj->transit raporttiparametrit)}]
 
     [:button {:type "submit"
+              :disabled haku-kaynnissa?
               :class #{"nappi-toissijainen"}}
 
      [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna PDF"]]]])

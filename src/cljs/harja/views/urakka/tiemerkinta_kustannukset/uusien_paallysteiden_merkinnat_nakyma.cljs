@@ -107,13 +107,13 @@
                             {:urakka @nav/valittu-urakka
                              :aikavali @u/valittu-aikavali
                              :valittu-hoitokausi @u/valittu-hoitokausi}))))
-      (fn [e! {:keys [kustannukset paikkaus-kustannukset haku-kaynnissa?] :as app}]
+      (fn [e! {:keys [kustannukset paikkaus-kustannukset haku-kaynnissa?] :as _app}]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity. 
         [:div.livi-grid.tiemerkinta-kustannusten-kirjaus
          [:h1 "Uusien päällysteiden tiemerkinnät"] 
          ;; [debug/debug app] 
          [:div
-          [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
+          [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka haku-kaynnissa?]]
          [uusien-kustannusten-merkinnat-taulukko e! 
           "Päällystyskohteiden tiemerkintäkustannukset" 
           kustannukset 

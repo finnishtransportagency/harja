@@ -34,14 +34,14 @@
    Välilehdet samalla leiskalle, joten yhteinen komponentti"
   [otsikko lisaa-uusi-fn aikavali
    {:keys [raportti] :as _valinnat} 
-   muokataan muokkauspaneeli grid laji-suodatin yhteenveto?]
+   muokataan muokkauspaneeli grid haku-kaynnissa? laji-suodatin yhteenveto?]
   ;; Body 
   [:div.tiemerkinta-kustannusten-kirjaus
 
    ;; Otsikko / header, raporttiviennit
    [:div.header
     [:h1.header-yhteiset otsikko]
-    (valinnat/raporttiviennit raportti)]
+    (valinnat/raporttiviennit raportti haku-kaynnissa?)]
 
    ;; Suodattimet
    [:div.suodattimet

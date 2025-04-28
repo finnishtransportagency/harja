@@ -62,7 +62,7 @@
         grid (yhteenveto-grid e! rivit haku-kaynnissa?)
         aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)) haku-kaynnissa? true)]
 
-    (yhteiset/nakyma-body "Kustannusten yhteenveto" lisaa-uusi-fn aikavali valinnat muokataan nil grid nil true)))
+    (yhteiset/nakyma-body "Kustannusten yhteenveto" lisaa-uusi-fn aikavali valinnat muokataan nil grid haku-kaynnissa? nil true)))
 
 
 (defn kustannusten-yhteenveto* [e! _app]

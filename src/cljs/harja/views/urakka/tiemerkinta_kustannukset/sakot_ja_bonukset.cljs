@@ -245,7 +245,7 @@
         aikavali (yhteiset/paivittava-urakkavuosi-suodatin valinnat #(e! (tiedot/->HaeTiedot)) haku-kaynnissa? false)
         muokkauspaneeli (sakot-bonukset-muokkauspaneeli e! valittu-rivi kohteet voi-kirjoittaa? voi-tallentaa?)]
 
-    (yhteiset/nakyma-body "Sakot ja bonukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid laji-suodatin false)))
+    (yhteiset/nakyma-body "Sakot ja bonukset" lisaa-uusi-fn aikavali valinnat muokataan muokkauspaneeli grid haku-kaynnissa? laji-suodatin false)))
 
 
 (defn sakot-ja-bonukset* [e! _app]
