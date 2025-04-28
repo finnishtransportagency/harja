@@ -222,22 +222,17 @@
   TallennaKattohinnanOikaisuOnnistui
   (process-event [{vastaus :vastaus} {:keys [hoitokauden-alkuvuosi] :as app}]
     (viesti/nayta-toast! "Kattohinnan oikaisu tallennettu")
-    ;; Haetaan välikatselmuksen tiedot uusiksi
-    (hae-valikatselmuksen-tiedot (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app))
-    (->
-      app
-      (assoc-in [:kattohintojen-oikaisut hoitokauden-alkuvuosi] vastaus)
-      (dissoc-in :kattohinnan-oikaisu)))
+    (kasittele-valikatselmuksen-vastaus app vastaus))
 
   TallennaKattohinnanOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "TallennaKattohinnanOikaisuEpaonnistui" vastaus)
     (viesti/nayta-toast!
-      (if (str/includes? (str (get-in vastaus [:parse-error :original-text])) "Kattohinnan täytyy olla suurempi kuin tavoitehinta")
+      (if (str/includes? (str (get-in vastaus [:parse-error :original-text])) "Kattohinnan täytyy olla suurempi kuin tavoitehinta.")
         "Kattohinnan oikaisua ei voitu tallentaa. Kattohinnan tulee olla suurempi kuin tavoitehinta."
-        "Kattohinnan oikaisun tallennuksessa tapahtui virhe")
+        "Kattohinnan oikaisun tallennuksessa tapahtui virhe.")
       :varoitus)
-    app)
+    (kasittele-valikatselmuksen-vastaus app vastaus))
 
   PoistaKattohinnanOikaisu
   (process-event [_ app]

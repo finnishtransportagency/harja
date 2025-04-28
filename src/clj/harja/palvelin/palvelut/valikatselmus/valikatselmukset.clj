@@ -125,51 +125,6 @@
       (throw+ {:type "Error"
                :virheet {:koodi "ERROR" :viesti "Kattohinnan täytyy olla suurempi kuin tavoitehinta"}}))))
 
-;; Kattohinnan oikaisuja tehdään loppuvuodesta välikatselmuksessa 2019-2020 alkaneille urakoille.
-;; Asetetaan uusi arvo kattohinnalle.
-(defn tallenna-kattohinnan-oikaisu
-  [db kayttaja {urakka-id ::urakka/id
-                hoitokauden-alkuvuosi ::valikatselmus/hoitokauden-alkuvuosi
-                uusi-kattohinta ::valikatselmus/uusi-kattohinta
-                :as tiedot}]
-  {:pre [(number? urakka-id) (pos-int? hoitokauden-alkuvuosi) (number? uusi-kattohinta) (pos? uusi-kattohinta)]}
-  (log/debug "tallenna-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus
-    kayttaja
-    urakka-id)
-  (jdbc/with-db-transaction [db db]
-    (let [urakka (first (q-urakat/hae-urakka db urakka-id))
-          _ (do
-              (tarkista-valikatselmusten-urakkatyyppi urakka :kattohinnan-oikaisu)
-              (tarkista-kattohinta-suurempi-kuin-tavoitehinta db urakka-id hoitokauden-alkuvuosi uusi-kattohinta))
-          vanha-rivi (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi)
-          oikaisu-specql (merge
-                           vanha-rivi
-                           {::urakka/id urakka-id
-                            ::muokkaustiedot/poistettu? false ; Rivi voi olla poistettu aikaisemmin
-                            ::muokkaustiedot/luoja-id (:id kayttaja)
-                            ::muokkaustiedot/muokkaaja-id (:id kayttaja)
-                            ::muokkaustiedot/luotu (pvm/nyt)
-                            ::muokkaustiedot/muokattu (pvm/nyt)
-                            ::valikatselmus/uusi-kattohinta (bigdec uusi-kattohinta)
-                            ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
-
-      (if (::valikatselmus/kattohinnan-oikaisun-id oikaisu-specql)
-        (do (valikatselmus-q/paivita-kattohinnan-oikaisu db oikaisu-specql)
-          (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))
-        (valikatselmus-q/tee-kattohinnan-oikaisu db oikaisu-specql)))))
-
-(defn poista-kattohinnan-oikaisu [db kayttaja {hoitokauden-alkuvuosi ::valikatselmus/hoitokauden-alkuvuosi urakka-id ::urakka/id :as tiedot}]
-  {:pre [(number? urakka-id) (pos-int? hoitokauden-alkuvuosi)]}
-  (log/debug "poista-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus
-    kayttaja
-    urakka-id)
-  (jdbc/with-db-transaction [db db]
-    (let [urakka (first (q-urakat/hae-urakka db urakka-id))
-          _ (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)]
-      (valikatselmus-q/poista-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi kayttaja)
-      (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))))
 
 (defn hae-kattohintojen-oikaisut [db _kayttaja tiedot]
   (let [urakka-id (::urakka/id tiedot)]
@@ -336,6 +291,58 @@
                  ;; TODO: Selvitäppä tämän kohtalo. Näitä tehdään niille 19-20 urakoille, mutta miten nämä on nyt hoidettu?
                  :kattohinnan-muutokset kattohinnan-muutokset}]
     vastaus))
+
+
+;; Kattohinnan oikaisuja tehdään loppuvuodesta välikatselmuksessa 2019-2020 alkaneille urakoille.
+;; Asetetaan uusi arvo kattohinnalle.
+(defn tallenna-kattohinnan-oikaisu
+  [db kayttaja {urakka-id ::urakka/id
+                hoitokauden-alkuvuosi ::valikatselmus/hoitokauden-alkuvuosi
+                uusi-kattohinta ::valikatselmus/uusi-kattohinta
+                :as tiedot}]
+  {:pre [(number? urakka-id) (pos-int? hoitokauden-alkuvuosi) (number? uusi-kattohinta) (pos? uusi-kattohinta)]}
+  (log/debug "tallenna-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus
+    kayttaja
+    urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [urakka (first (q-urakat/hae-urakka db urakka-id))
+          _ (do
+              (tarkista-valikatselmusten-urakkatyyppi urakka :kattohinnan-oikaisu)
+              (tarkista-kattohinta-suurempi-kuin-tavoitehinta db urakka-id hoitokauden-alkuvuosi uusi-kattohinta))
+          vanha-rivi (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi)
+          oikaisu-specql (merge
+                           vanha-rivi
+                           {::urakka/id urakka-id
+                            ::muokkaustiedot/poistettu? false ; Rivi voi olla poistettu aikaisemmin
+                            ::muokkaustiedot/luoja-id (:id kayttaja)
+                            ::muokkaustiedot/muokkaaja-id (:id kayttaja)
+                            ::muokkaustiedot/luotu (pvm/nyt)
+                            ::muokkaustiedot/muokattu (pvm/nyt)
+                            ::valikatselmus/uusi-kattohinta (bigdec uusi-kattohinta)
+                            ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+
+      (if (::valikatselmus/kattohinnan-oikaisun-id oikaisu-specql)
+        (do (valikatselmus-q/paivita-kattohinnan-oikaisu db oikaisu-specql)
+          (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))
+        (valikatselmus-q/tee-kattohinnan-oikaisu db oikaisu-specql))
+
+      ;; Hae välikatselmuksen tiedot
+      (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi}))))
+
+(defn poista-kattohinnan-oikaisu [db kayttaja {hoitokauden-alkuvuosi ::valikatselmus/hoitokauden-alkuvuosi urakka-id ::urakka/id :as tiedot}]
+  {:pre [(number? urakka-id) (pos-int? hoitokauden-alkuvuosi)]}
+  (log/debug "poista-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus
+    kayttaja
+    urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [urakka (first (q-urakat/hae-urakka db urakka-id))
+          _ (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)]
+      (valikatselmus-q/poista-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi kayttaja)
+      (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi)
+      ;; Hae välikatselmuksen tiedot
+      (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi}))))
 
 ;; Tavoitehinnan oikaisuja tehdään loppuvuodesta välikatselmuksessa.
 ;; Nämä summataan tai vähennetään alkuperäisestä tavoitehinnasta.

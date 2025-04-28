@@ -61,6 +61,7 @@
          :luokka "nappi-toissijainen"}]
        [napit/tallenna "Lisää rivi"
         #(do
+           (reset! tallenna-painettu false)
            (swap! hoitokauden-oikaisut-atom assoc uusi-id
              {:id uusi-id
               ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
