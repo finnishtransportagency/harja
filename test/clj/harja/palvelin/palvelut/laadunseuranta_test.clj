@@ -10,7 +10,7 @@
             [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
-            [harja.palvelin.integraatiot.labyrintti.sms-test :refer [+testi-sms-url+]]
+            [harja.palvelin.integraatiot.labyrintti.tekstiviesti-test :refer [+testi-sms-url+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as sms]

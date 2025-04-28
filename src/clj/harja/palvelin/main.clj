@@ -26,7 +26,6 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
     [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad-integraatio]
-    [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
     [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as tekstiviesti]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]

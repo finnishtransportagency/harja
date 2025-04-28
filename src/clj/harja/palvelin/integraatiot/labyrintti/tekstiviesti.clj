@@ -1,11 +1,10 @@
 (ns harja.palvelin.integraatiot.labyrintti.tekstiviesti
-  "Tekstiviestin vastaanotto pilviympäristössä. Nimiavaruudessa *.labyrintti.sms on toteutus tekstiviestien
-  lähetystä varten sekä toteutus tekstiviestien vastaanottoa varten vanhassa ympäristössä. Pilviympäristön
-  vastaanotto on kopio vanhasta, mutta toteutus on erikseen, koska kutsu autentikoidaan pilvitoteutuksessa jo integraatioväylällä.
-  Vanhan toteutuksen kutstuissa on basic auth Harjan päässä ja siksi erilaiset käsittelytä harja-infra-kerroksessa.
-  Harja tekstiviestien lähettämiseen ja vastaanottoon käyttää LinkMobilityn LinkSMS-rajapintaa. Viestit kulkevat Väyläviraston integraatioväylän kautta.
+  "Tekstiviestin vastaanotto ja lähetys pilviympäristössä.
+  Tähän on toistaiseksi integroitu myös vanhan LinkMobility SMS-integraation lähetystoiminnallisuus.
+  LinkMobilityn tulee korvaamaan uusi SMS-integraatio, jonka saa asetuksilla aktiiviseksi. Viestit kulkevat Väyläviraston integraatioväylän kautta.
+  Tekstiviestien vastaanotto tulee myös poistumaan, kun uusi SMS-integraatio otetaan käyttöön.
   Vastaanotto välittää tekstiviestinä lähetetyn toimenpidekuittauksen eteenpäin tloik-integraatiolle (ja sitä kautta T-LOIKiin ja Palauteväylälle)."
-  ;;TODO: Kun #yliheitto, yhdistä tähän lähetystoteutus ja poista vanha sms. Refaktoroi samalla labyrintti-sana historiaan.
+  ;;TODO: Kun #yliheitto, poista vanha LinkSMS toteutus ja tekstiviestien vastaanotto
   (:require [clojure.string :as string]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
