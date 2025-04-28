@@ -38,14 +38,14 @@
                          (reset! lahetetty-payload (:body opts))
                          ;; TODO: Feikkaa oikea vastaus-payload
                          "ok")]
-      (let [vastaus (tekstiviesti/laheta (:sms jarjestelma) "0987654321" "Testi" "1234567" {})]
+      (let [vastaus (sms/laheta (:sms jarjestelma) "0987654321" "Testi" "1234567" {})]
         (is (nil? (json/validoi +sms-laheta-schema+ (cheshire/encode @lahetetty-payload))))
         (is (= "ok" (:sisalto vastaus)))))))
 
 (deftest tekstiviestin-epaonnistunut-lahetys
   (with-fake-http
     [+testi-sms-url+ "TESTI ERROR 2 1 message failed: Invalid phone number"]
-    (is (thrown? Exception (tekstiviesti/laheta (:sms jarjestelma) "0987654321" "Testi" 1234568 {}))
+    (is (thrown? Exception (sms/laheta (:sms jarjestelma) "0987654321" "Testi" 1234568 {}))
       "Poikkeusta ei heitetty virhe responsesta.")))
 
 ;; -- Vanhan LinkMobility SMS-integraation lähetystestit (Uusi integraatio ei ole aktiivinen) --
@@ -56,7 +56,7 @@
                          (reset! lahetetty-payload {:parametrit (:form-params opts)
                                                     :otsikot (:headers opts)})
                          "ok")]
-      (let [vastaus (tekstiviesti/laheta (:sms-vanha jarjestelma) "0987654321" "Testi" "1234567" {})]
+      (let [vastaus (sms/laheta (:sms-vanha jarjestelma) "0987654321" "Testi" "1234567" {})]
         (is (= (:parametrit @lahetetty-payload) {"dests" "0987654321"
                                                  "text" "Testi"}))
         (is (= (select-keys (:otsikot @lahetetty-payload) ["X-Correlation-ID" "Content-Type"])
@@ -67,7 +67,7 @@
 (deftest linkmobility-tekstiviestin-epaonnistunut-lahetys
   (with-fake-http
     [+testi-sms-url+ "TESTI ERROR 2 1 message failed: Invalid phone number"]
-    (is (thrown? Exception (tekstiviesti/laheta (:sms-vanha jarjestelma) "0987654321" "Testi" "1234568" {}))
+    (is (thrown? Exception (sms/laheta (:sms-vanha jarjestelma) "0987654321" "Testi" "1234568" {}))
       "Poikkeusta ei heitetty virhe responsesta.")))
 
 
