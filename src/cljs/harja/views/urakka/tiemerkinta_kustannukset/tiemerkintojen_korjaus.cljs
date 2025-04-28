@@ -51,7 +51,9 @@
             :leveys 3 :tasaa :oikea}
 
            {:otsikko "Pk 1-%" :nimi :pk1
-            :tyyppi :positiivinen-numero :fmt fmt/prosentti
+            :tyyppi :positiivinen-numero
+            :desimaalien-maara 2
+            :yksikko "%"
             :validoi [[:validoi-summa-on-100 [:pk1 :pk2 :pk3] "Pk-osuus prosenttien yhteenlasketun summan on oltava 100"]]
             :leveys 3 :tasaa :oikea}
            {:otsikko "Pk 1-osuus" :nimi :pk1-p-osuus :muokattava? (constantly false)
@@ -60,7 +62,9 @@
             :leveys 3 :tasaa :vasen}
 
            {:otsikko "Pk 2-%" :nimi :pk2
-            :tyyppi :positiivinen-numero :fmt fmt/prosentti
+            :tyyppi :positiivinen-numero
+            :desimaalien-maara 2
+            :yksikko "%"
             :validoi [[:validoi-summa-on-100 [:pk1 :pk2 :pk3] "Pk-osuus prosenttien yhteenlasketun summan on oltava 100"]]
             :leveys 3 :tasaa :oikea}
            {:otsikko "Pk 2-osuus" :nimi :pk2-p-osuus :muokattava? (constantly false)
@@ -69,7 +73,9 @@
             :leveys 3 :tasaa :vasen}
 
            {:otsikko "Pk 3-%" :nimi :pk3
-            :tyyppi :positiivinen-numero :fmt fmt/prosentti
+            :tyyppi :positiivinen-numero
+            :desimaalien-maara 2
+            :yksikko "%"
             :validoi [[:validoi-summa-on-100 [:pk1 :pk2 :pk3] "Pk-osuus prosenttien yhteenlasketun summan on oltava 100"]]
             :leveys 3 :tasaa :oikea}
            {:otsikko "Pk 3-osuus" :nimi :pk3-p-osuus :muokattava? (constantly false)
