@@ -28,7 +28,7 @@
   :tallenna-oikaisu-fn    Funktio, jolla tallennetaan oikaisu, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
   :tallenna-oikaisut-fn   Funktio, jolla päivitetään oikaisut, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
                           Kutsutaan jokaisesta muutoksesta."
-  [e! hoitokauden-oikaisut-atom hoitokauden-alkuvuosi {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn]} tallennus-kesken?]
+  [e! hoitokauden-oikaisut-atom hoitokauden-alkuvuosi {:keys [voi-muokata? poista-oikaisu-fn]} tallennus-kesken?]
   (let [uusi-id (if (empty? (keys @hoitokauden-oikaisut-atom))
                   0
                   (inc (apply max (keys @hoitokauden-oikaisut-atom))))
@@ -59,7 +59,7 @@
            #(reset! tallenna-painettu true))
         {:vayla-tyyli? true
          :luokka "nappi-toissijainen"
-         :disabled (or tallennus-kesken? voi-muokata?)}]
+         :disabled (or tallennus-kesken? (not voi-muokata?))}]
        [napit/tallenna "Lisää rivi"
         #(do
            (reset! tallenna-painettu false)
@@ -69,7 +69,7 @@
         {:vayla-tyyli? true
          :luokka "nappi-toissijainen"
          :ikoni (ikonit/livicon-plus)
-         :disabled (or tallennus-kesken? voi-muokata?)}]]
+         :disabled (or tallennus-kesken? (not voi-muokata?))}]]
       (when (or (and @tallenna-painettu (not (empty? @virheet-atom)))
               (and @tallenna-painettu (not (empty? rivilla-tyhja-elementti))))
         [:div
@@ -156,7 +156,6 @@
 
 (defn tavoitehinnan-muutokset [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset tavoitehinnan-muutokset hoitovuosi-kesken?]
   (let [paatos-avain :tavoitehinnan-muutokset
-        on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         paatos-tehty? (boolean (:id paatos))
         hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
@@ -188,9 +187,7 @@
          hoitokauden-alkuvuosi
          {:voi-muokata? (and voi-muokata? (not paatos-tehty?))
           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-          :poista-oikaisu-fn #(e! (valikatselmus-tiedot/->PoistaOikaisu %1 %2))
-          :tallenna-oikaisu-fn #(e! (valikatselmus-tiedot/->TallennaOikaisu %1 %2))
-          :paivita-oikaisu-fn #(e! (valikatselmus-tiedot/->PaivitaTavoitehinnanOikaisut %1 %2))}
+          :poista-oikaisu-fn #(e! (valikatselmus-tiedot/->PoistaOikaisu %1 %2))}
          tallennus-kesken?]
 
         (when (and paatos-tehty? voi-muokata?)
