@@ -72,7 +72,7 @@
   (if (not paatos-tehty?)
     [:div.paatos-toiminto
      (if on-oikeudet?
-       [napit/yleinen-ensisijainen "Tallenna päätös" tallenna-paatos-fn
+       [napit/yleinen-ensisijainen "Vahvista päätös" tallenna-paatos-fn
         {:ikoni [ikonit/harja-icon-status-selected]
          :disabled (or tallennus-kesken? (not voi-muokata?))}]
        (when ei-oikeuksia-teksti-fn (ei-oikeuksia-teksti-fn)))]

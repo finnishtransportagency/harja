@@ -87,11 +87,11 @@
         hoidonjohtopalkkiopaatos (valikatselmus-tiedot/ota-paatos paatokset :hoidonjohtopalkkion-muutos)
         hoidonjohtopalkkion-muutos (or (arvo-paatoksesta hoidonjohtopalkkiopaatos :hoidonjohtopalkkio_muutos) 0)]
     [:div.valikatselmus-yhteenveto
-     [:h2 "Yhteenveto"]
+     [:h2.yhteenveto "Yhteenveto"]
      [:div.flex-row.summa_rivi_ylin
       [:span.laskenta-rivi-lukema "Hoitovuoden lopun tavoitehinta"]
       [:span.laskenta-rivi-lukema (fmt/euro-opt false oikaistu-tavoitehinta)]]
-     [:div.flex-row.summa_rivi_alin
+     [:div.flex-row.summa_rivi
       [:span.laskenta-rivi-lukema "Hoitovuoden lopun kattohinta"]
       [:span.laskenta-rivi-lukema (fmt/euro-opt false oikaistu-kattohinta)]]
 
@@ -194,8 +194,7 @@
        [:span "Hoidonjohtopalkkion muutos"]
        [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]])
 
-
      [:h3 "Siirrot"]
-     [:div.flex-row.summa_rivi
+     [:div.flex-row
       [:span "Siirto seuraavan vuoden hankintakustannuksiin"]
       [:span (fmt/euro-opt false siirto-seuraavan-vuoden-hankintakustannuksiin)]]]))

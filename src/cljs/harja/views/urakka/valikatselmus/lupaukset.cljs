@@ -34,7 +34,7 @@
            [:div.flex-row.laskenta-avattuna
             [:div "Luvattu yhteispistemäärä"]
             [:div.laskenta-rivi-lukema (:luvatut_pisteet paatos)]]
-           [:div.flex-row.laskenta-avattuna
+           [:div.flex-row.laskenta-avattuna.laskenta-alin
             [:div "Tulos"]
             [:div.laskenta-rivi-lukema (cond
                                          (= "bonus" tyyppi)
@@ -93,7 +93,7 @@
         ;; Jos päätöksessä on virhe, niin näytetään se
         (when (:virhe paatos)
           [:div [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
-
+        [:hr.paatos-hr]
         ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös
         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
          #(e! (valikatselmus-tiedot/->TallennaLupausPaatos paatos))

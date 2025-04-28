@@ -24,18 +24,17 @@
         (if-not (:virhe paatos)
           [:div
            [:div
-            [:div.flex-row.summa_rivi_ylin
+            [:div.flex-row.lista_rivi_korkea
              [:div "Hoitovuoden alun indeksikorjattu tavoitehinta"]
              [:div [:strong (fmt/euro-opt false (:tavoitehinta_ennen paatos))]]]
-            [:div.flex-row.summa_rivi
+            [:div.flex-row.lista_rivi_korkea
              [:div "Tavoitehinnan muutokset"]
              [:div [:strong (fmt/euro-opt false true (:tavoitehinnan_muutokset paatos))]]]
             ;; Jos urakalle on asetettu parametriksi, että tavoitehintaan vaikuttaa myös hoitovuoden lopun indeksikorjaukset
             (when (:lisaa_tavoitehintaan_lopunindeksikorjaus paatos)
-              [:div.flex-row.summa_rivi_alin
+              [:div.flex-row.lista_rivi_korkea
                [:div "Hoitovuoden lopun indeksikorjaus"]
                [:div [:strong (fmt/euro-opt false (:hoitokauden_lopun_indeksikorjaus paatos))]]])
-            [:hr.hr-tiivis]
 
             [:div.flex-row
              [:h3.ennen-painiketta "Hoitovuoden lopun tavoitehinta"]
@@ -45,6 +44,7 @@
               [:h3.alempi-otsikko "Hoitovuoden lopun kattohinta"]
               [:div.small-text (str (:kattohintakerroin paatos) " x hoitovuoden lopun tavoitehinta")]]
              [:div.otsikko_lukema (fmt/euro-opt false (:kattohinta paatos))]]]
+           [:hr.paatos-hr]
            [:div
             [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
              #(e! (valikatselmus-tiedot/->TallennaHoitokaudenlopunHintapaatos paatos))

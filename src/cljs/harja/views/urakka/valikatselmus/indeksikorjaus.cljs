@@ -65,36 +65,36 @@
        [:div
         (if-not (:virhe paatos)
           [:div
-           [:div.flex-row.summa_rivi_ylin
+           [:div.flex-row.lista_rivi
             [:div "Hoitovuoden lopun indeksikorjattu tavoitehinta"]
             [:div [:strong (fmt/euro-opt false (:tavoitehinta paatos))]]]
-           [:div.flex-row.summa_rivi
+           [:div.flex-row.lista_rivi_korkeampi
             [:div "Tavoitehinnan muutokset"]
             [:div [:strong (fmt/euro-opt false true (:tavoitehinnan_muutokset paatos))]]]
-           [:div.flex-row.summa_rivi
+           [:div.flex-row.lista_rivi_korkeampi
             [:div "Hoitovuoden lopun tavoitehinta ennen hoitovuoden lopun indeksikorjausta"]
             [:div [:strong (fmt/euro-opt false (:tavoitehinta_ennen paatos))]]]
-           [:div.flex-row.summa_rivi
+           [:div.flex-row.lista_rivi_korkeampi
             [:div "Pistelukujen muutos"]
             [:div [:strong (fmt/euro-opt false (:pistelukujen_muutos_prosentteina paatos)) "%"]]]
-           [:div.flex-row.summa_rivi
+           [:div.flex-row.lista_rivi_korkeampi
             [:div "Indeksikorjauksen prosenttiosuus (2% ylittävä osa)"]
             [:div [:strong (fmt/euro-opt false (:indeksikorotuksen_prosenttiosuus paatos)) "%"]]]
-           [:div.flex-row.linkki_rivi
+           [:div.flex-row.laskenta-linkki-matalampi
             [yleiset/linkki "Näytä laskenta"
              (fn [] (modal/nayta! {:otsikko "Laskenta"
                                    :otsikko-muotoilut {:font-size "32px"}
                                    :body-tyyli {:margin-bottom "16px"}
-                                   :content-tyyli {:padding-top "24px"}
+                                   :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
                                    :footer [napit/sulje "Sulje" #(modal/piilota!)
                                             {:vayla-tyyli? true :luokka "valikatselmus-nappi nappi-toissijainen valikatselmus-nappi-sulje" :ei-ikonia? true}]
                                    :footer-tyyli {:text-align "left"}}
                       [laskenta-modaali paatos]))
              {:style {:text-decoration :underline}}]]
-           [:hr]
            [:div.flex-row
-            [:h3.ennen-painiketta "Hoitovuoden lopun indeksikorjaus"]
+            [:h3.alempi-otsikko "Hoitovuoden lopun indeksikorjaus"]
             [:div.otsikko_lukema (fmt/euro-opt false (:hoitokauden_lopun_indeksikorjaus paatos))]]
+           [:hr.paatos-hr]
 
            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
             #(e! (valikatselmus-tiedot/->TallennaHoitovuodenlopunIndeksikorjauspaatos paatos))
