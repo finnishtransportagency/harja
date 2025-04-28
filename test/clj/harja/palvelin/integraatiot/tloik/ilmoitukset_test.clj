@@ -199,7 +199,7 @@
                   (fn [db urakka-id] (list {:id 1
                                             :etunimi "Pekka"
                                             :sukunimi "Päivystäjä"
-                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                                            ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                             :matkapuhelin nil
                                             :tyopuhelin nil
                                             :sahkoposti "email.email@example.com"
@@ -287,7 +287,7 @@
                   (fn [db urakka-id] (list {:id 1
                                             :etunimi "Pekka"
                                             :sukunimi "Päivystäjä"
-                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                                            ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                             :matkapuhelin nil
                                             :tyopuhelin nil
                                             :sahkoposti "email.email@example.com"
@@ -343,7 +343,7 @@
                     (list {:id 1
                            :etunimi "Pekka"
                            :sukunimi "Päivystäjä"
-                           ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                           ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                            ;; Jos puhelinnumero annetaan, kaikki toimii kuten pitääkin, eli tekstaria ei lähetetä, mutta errori logitetaan
                            :matkapuhelin nil
                            :tyopuhelin nil
@@ -355,7 +355,7 @@
                       {:id 2
                        :etunimi "Pekka2"
                        :sukunimi "Päivystäjä2"
-                       ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                       ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                        :matkapuhelin nil
                        :tyopuhelin nil
                        :sahkoposti nil ;"Testataan kokonaan puuttuvalla emailosoitteella
@@ -404,7 +404,7 @@
                   (fn [db urakka-id] (list {:id 1
                                             :etunimi "Pekka"
                                             :sukunimi "Päivystäjä"
-                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                                            ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                             :matkapuhelin nil
                                             :tyopuhelin nil
                                             :sahkoposti "email.email@example.com"

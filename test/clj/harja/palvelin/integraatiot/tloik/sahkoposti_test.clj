@@ -170,7 +170,7 @@
        (fn [db urakka-id] (list {:id 1
                                  :etunimi "Pekka"
                                  :sukunimi "Päivystäjä"
-                                 ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                                 ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                  :matkapuhelin nil
                                  :tyopuhelin nil
                                  :sahkoposti paivystajan-email
@@ -183,7 +183,7 @@
        (fn [db urakka-id lahettaja] (list {:id 1
                                            :etunimi "Pekka"
                                            :sukunimi "Päivystäjä"
-                                           ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                                           ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                            :matkapuhelin nil
                                            :tyopuhelin nil
                                            :sahkoposti paivystajan-email

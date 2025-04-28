@@ -318,15 +318,6 @@
                               (digiroad-integraatio/->Digiroad (:digiroad asetukset))
                               [:http-palvelin :db :integraatioloki])
 
-      ;; LinkMobilityn LinkSMS, vanha Harja + pilvi-Harjan sms-lähetys.
-      ;; TODO: Refaktoroi vanha toteutus pois, kun #yliheitto ok.
-      ;;       Tämä palvelu on tarpeeton. Poistetaan koodista kokonaan. Tarvittavat osat integroitu SMS-komponenttiin.
-      ;:labyrintti (component/using
-      ;              (if kehitysmoodi
-      ;                (labyrintti/feikki-labyrintti)
-      ;                (labyrintti/luo-labyrintti (:labyrintti asetukset)))
-      ;              [:http-palvelin :db :integraatioloki])
-
       ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto ja uusi SMS-integraatio
       ;; TODO: Kun #yliheitto ok, poista viittaukset vanhaan integraatioon
       :sms (component/using
