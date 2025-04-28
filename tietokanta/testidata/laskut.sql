@@ -36,6 +36,7 @@ $$
         kayttaja_id              INTEGER;
         urakka_id                INTEGER;
         tinst_talvihoito         INTEGER;
+        tinst_lyh                INTEGER;
         tinst_mhu_hoidon_johto   INTEGER;
         tinst_soratie            INTEGER;
         tinst_paallystys         INTEGER;
@@ -49,17 +50,19 @@ $$
         tehtava_korvaus          INTEGER;
         tehtava_erillishankinnat INTEGER;
         tehtava_mhu_hoidon_johto INTEGER;
+        tehtava_tilaajan_rv      INTEGER;
+        rahavaraus_aidat         INTEGER;
 
     BEGIN
         kayttaja_id := (select id from kayttaja where kayttajanimi = 'Integraatio');
         urakka_id := (select id from urakka where nimi = 'Oulun MHU 2019-2024');
         tinst_talvihoito := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Talvihoito TP');
+        tinst_lyh := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP');
         tinst_soratie := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Soratien hoito TP');
         tinst_paallystys := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Päällystepaikkaukset TP');
         tinst_korvaus := (select id from toimenpideinstanssi where nimi = 'Oulu MHU MHU Korvausinvestointi TP');
         tinst_yllapito := (select id from toimenpideinstanssi where nimi = 'Oulu MHU MHU Ylläpito TP');
         tinst_mhu_hoidon_johto := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP');
-        tehtava_talvihoito := (select id from tehtavaryhma where yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac');
         tehtava_soratie := (select id from tehtavaryhma where yksiloiva_tunniste = 'dc151971-facc-48c4-90c9-e429987206e1');
         tehtava_paikkaus := (select id from tehtavaryhma where yksiloiva_tunniste = 'b1cca2a5-6445-4f49-878d-a95f144cc190');
         tehtava_yllapito := (select id from tehtavaryhma where yksiloiva_tunniste = '82ecc58a-f96c-46f0-9c70-d29bb6cd4266');
@@ -67,6 +70,8 @@ $$
         tehtava_korvaus := (select id from tehtavaryhma where yksiloiva_tunniste = '9bfa48c6-a225-4d56-9275-8b08cf6302c4');
         tehtava_mhu_hoidon_johto := (select id from tehtavaryhma where yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54');
         tehtava_erillishankinnat := (select id from tehtavaryhma where yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c');
+        tehtava_tilaajan_rv := (select id from tehtavaryhma where yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6');
+        rahavaraus_aidat := (select id from rahavaraus where nimi = 'Rahavaraus H - Aidat');
 
 -- Laskut MHU raporttia varten -  Maksettu 15.10.2019 - Laskutuskausi alkaa 1.10
 -- Talvihoito
@@ -74,6 +79,9 @@ INSERT INTO kulu (erapaiva, kokonaissumma, urakka, luotu, luoja, koontilaskun_ku
 VALUES ('2019-10-16', 3000.77, urakka_id, current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
 INSERT INTO kulu (erapaiva, kokonaissumma, urakka, luotu, luoja, koontilaskun_kuukausi)
 VALUES ('2019-10-16', 300.77, urakka_id, current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
+-- Liikenneympäristön hoito
+INSERT INTO kulu (erapaiva, kokonaissumma, urakka, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 1000.00, urakka_id, current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
 -- Soratiet
 INSERT INTO kulu (erapaiva, kokonaissumma, urakka, luotu, luoja, koontilaskun_kuukausi)
 VALUES ('2019-10-16', 4000.77, urakka_id, current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
@@ -104,6 +112,10 @@ INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksu
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, tavoitehintainen, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 300.77 AND erapaiva = '2019-10-16'), 1, tinst_talvihoito,
  tehtava_talvihoito, 'lisatyo'::MAKSUERATYYPPI, 'lisatyo', false, 300.77, current_timestamp, kayttaja_id);
+-- Oulu MHU Liikenneympäristön hoito TP
+INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, rahavaraus_id, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
+((select id from kulu where kokonaissumma = 1000.00 AND erapaiva = '2019-10-16'), 1, tinst_lyh,
+ tehtava_tilaajan_rv, rahavaraus_aidat, 'kokonaishintainen'::MAKSUERATYYPPI, 'rahavaraus', 1000.00, current_timestamp, kayttaja_id);
 -- Soratiet Oulu MHU Soratien hoito TP
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 4000.77 AND erapaiva = '2019-10-16'), 1, tinst_soratie,

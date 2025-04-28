@@ -130,7 +130,7 @@
         paallyste (nth vastaus 4)
         mhu-yllapito (nth vastaus 5)
         mhu-korvausinvestointi (nth vastaus 6)
-        
+
         ;; Talvihoito
         talvihoito-hankinnat (:hankinnat_laskutettu talvihoito)
         talvihoito-lisatyot (:lisatyot_laskutettu talvihoito)
@@ -139,12 +139,13 @@
         talvihoito-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk talvihoito)
         talvihoito-yhteensa (:kaikki_laskutettu talvihoito)
 
-        ;; Liikenneympäristön hoito 
+        ;; Liikenneympäristön hoito
         liikenneymp-hankinnat (:hankinnat_laskutettu liikenneymp-hoito)
         liikenneymp-lisatyot (:lisatyot_laskutettu liikenneymp-hoito)
         liikenneymp-sanktiot (:sakot_laskutettu liikenneymp-hoito)
         liikenneymp-akilliset-hoitotyot (:akilliset_hoitotyot_hk liikenneymp-hoito)
         liikenneymp-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk liikenneymp-hoito)
+        liikenneymp-rahavaraukset (:kaikki_rahavaraukset_hoitokausi_yht liikenneymp-hoito)
         liikenneymp-yhteensa (:kaikki_laskutettu liikenneymp-hoito)
 
         ;; Soratien hoito
@@ -200,7 +201,8 @@
     (is (= liikenneymp-sanktiot -1081.832370M))
     (is (= liikenneymp-akilliset-hoitotyot 4444.44M))
     (is (= liikenneymp-vahinkojen-korjaukset 0.0M))
-    (is (= liikenneymp-yhteensa 6251.487630M))
+    (is (= liikenneymp-rahavaraukset 5444.44M))
+    (is (= liikenneymp-yhteensa 7251.487630M))
 
     ;; Soratien hoito
     (is (= soratien-hankinnat 8000.97M))
