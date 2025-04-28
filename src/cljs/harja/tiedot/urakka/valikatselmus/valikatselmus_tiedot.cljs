@@ -19,14 +19,14 @@
     (sort-by :index
       (map-indexed
         (fn [indeksi muutos]
-          (let [muutos (select-keys muutos [::valikatselmus/otsikko ::valikatselmus/hoitokauden-alkuvuosi ::valikatselmus/selite :kattohinta ::valikatselmus/summa])
-                muutos (assoc muutos :index indeksi)
+          (let [muutos (select-keys muutos [::valikatselmus/otsikko ::valikatselmus/hoitokauden-alkuvuosi ::valikatselmus/selite ::valikatselmus/summa ::valikatselmus/oikaisun-id])
                 muutos (into (sorted-map) muutos)]
             muutos))
         muutokset))))
 
 ;; Oikaisut
 (defrecord TallennaOikaisu [oikaisu id])
+(defrecord TallennaOikaisut [oikaisut hoitokauden-alkuvuosi])
 (defrecord TallennaOikaisuOnnistui [vastaus id])
 (defrecord TallennaOikaisuEpaonnistui [vastaus])
 (defrecord PoistaOikaisu [oikaisu id])
@@ -107,7 +107,7 @@
      :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui}))
 
 (defn kasittele-valikatselmuksen-vastaus [app vastaus]
-  (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
+  (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi vastaus)
         vastaus-muutokset (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))
         muutokset (karsitut-tavoitehinnan-muutokset vastaus-muutokset)]
 
@@ -139,6 +139,25 @@
            :onnistui-parametrit [id]
            :epaonnistui ->TallennaOikaisuEpaonnistui
            :paasta-virhe-lapi? true}))
+      app))
+
+  TallennaOikaisut
+  (process-event [{oikaisut :oikaisut hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
+    (let [oikaisut (map #(merge % {::urakka/id (-> @tila/yleiset :urakka :id)
+                                   ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}) oikaisut)
+          _ (doseq [oikaisu oikaisut]
+              (let [;; Lähetetään oikaisun tallennus serverille vain, jos kaikki tiedot on syötetty
+                    kaikki-tiedot? (and (::valikatselmus/otsikko oikaisu)
+                                     (::valikatselmus/selite oikaisu)
+                                     (::valikatselmus/summa oikaisu)
+                                     (::valikatselmus/hoitokauden-alkuvuosi oikaisu)
+                                     (::urakka/id oikaisu))
+                    _ (when kaikki-tiedot?
+                        (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
+                          oikaisu
+                          {:onnistui ->TallennaOikaisuOnnistui
+                           :epaonnistui ->TallennaOikaisuEpaonnistui
+                           :paasta-virhe-lapi? true}))]))]
       app))
 
   TallennaOikaisuOnnistui

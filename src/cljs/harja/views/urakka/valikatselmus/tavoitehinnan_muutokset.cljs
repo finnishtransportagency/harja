@@ -13,6 +13,8 @@
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
+(defonce virheet-atom (atom {}))
+
 (defn tavoitehinnan-oikaisut-taulukko
   "Tavoitehinnan oikaisujen taulukko.
 
@@ -25,88 +27,90 @@
   :tallenna-oikaisu-fn    Funktio, jolla tallennetaan oikaisu, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
   :tallenna-oikaisut-fn   Funktio, jolla päivitetään oikaisut, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
                           Kutsutaan jokaisesta muutoksesta."
-  [hoitokauden-oikaisut-atom hoitokauden-alkuvuosi {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn]}]
-  (let [virheet (atom {})
-        uusi-id (if (empty? (keys @hoitokauden-oikaisut-atom))
+  [e! hoitokauden-oikaisut-atom hoitokauden-alkuvuosi {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn]}]
+  (let [uusi-id (if (empty? (keys @hoitokauden-oikaisut-atom))
                   0
                   (inc (apply max (keys @hoitokauden-oikaisut-atom))))
         oikaisut-summa (when @hoitokauden-oikaisut-atom (fmt/euro-opt false true
-                                                            (reduce
-                                                              (fn [yhteensa hoitokauden-oikaisu]
-                                                                (+ yhteensa (get hoitokauden-oikaisu :harja.domain.kulut.valikatselmus/summa)))
-                                                              0
-                                                              (vals @hoitokauden-oikaisut-atom))))
+                                                          (reduce
+                                                            (fn [yhteensa hoitokauden-oikaisu]
+                                                              (+ yhteensa (get hoitokauden-oikaisu :harja.domain.kulut.valikatselmus/summa)))
+                                                            0
+                                                            (vals @hoitokauden-oikaisut-atom))))
         alkuperaiset-oikaisut @valikatselmus-tiedot/tavoitehinnan-muutokset
-        uudet-simplified (valikatselmus-tiedot/karsitut-tavoitehinnan-muutokset (vals @hoitokauden-oikaisut-atom))]
+        uudet-simplified (valikatselmus-tiedot/karsitut-tavoitehinnan-muutokset (vals @hoitokauden-oikaisut-atom))
+        muuttui? (not (or (= uudet-simplified alkuperaiset-oikaisut) false))
+        rivilla-tyhja-elementti (filter
+                                  (fn [rivi]
+                                    (or (nil? (::valikatselmus/hoitokauden-alkuvuosi rivi))
+                                      (nil? (::valikatselmus/selite rivi))
+                                      (nil? (::valikatselmus/otsikko rivi))
+                                      (nil? (::valikatselmus/summa rivi))))
+                                  uudet-simplified)]
     [:div.tavoitehinnan-muutokset
-     [grid/muokkaus-grid
-      (merge {:tyhja "Ei muutoksia tavoitehintaan"
-              :voi-kumota? false
-              :voi-muokata? voi-muokata?
-
-              ;; Roskakorinappula rivin päässä
-              :toimintonappi-fn (when voi-muokata?
-                                  (fn [rivi _muokkaa! id]
-                                    [napit/poista ""
-                                     #(do
-                                        (poista-oikaisu-fn rivi id))
-                                     {:luokka "napiton-nappi pelkka-ikoni"}]))
-              :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
-              :validoi-uusi-rivi? false
-              :on-rivi-blur (fn [oikaisu i]
-                              (let [muuttui? (not (or (=
-                                                        (and (>= (dec (count uudet-simplified)) i) (nth uudet-simplified i))
-                                                        (and (>= (dec (count alkuperaiset-oikaisut)) i) (nth alkuperaiset-oikaisut i)))
-                                                    false))]
-                                ;; Jos ei ole muutoksia, niin ei tallenneta mitään
-                                (when muuttui? (tallenna-oikaisu-fn oikaisu i))))
-              :uusi-id uusi-id
-              :virheet virheet
-              :nayta-virheikoni? false
-              :rivi-jalkeen (when @hoitokauden-oikaisut-atom
-                              [{:teksti "Yhteensä" :luokka "yhteensa"}
-                               {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
-                               {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])}
-        (when voi-muokata?
-          {;; Lisää oikaisunappula taulukon yläpuolella oikealla
-           :custom-toiminto {:teksti "Lisää muutos"
-                             :toiminto #(do
-                                          (swap! hoitokauden-oikaisut-atom assoc uusi-id
-                                            {:id uusi-id ;:koskematon true
-                                             ;:lisays-tai-vahennys :lisays
-                                             ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                             }))
-                             :keskita-vasemmalle true
-                             :keskita-ylos true
-                             :opts {:ikoni (ikonit/livicon-plus)
-                                    :luokka "nappi-toissijainen"}}}))
-      [{:otsikko "Muutos"
-        :nimi ::valikatselmus/otsikko
-        :tyyppi :valinta
-        :valinnat (into [] (valikatselmus/luokat @nav/valittu-urakka))
-        :validoi [[:ei-tyhja "Valitse arvo"]]
-        :leveys 2
-        :data-cy (str "luokka-" uusi-id)
-        :elementin-id (str "luokka-" uusi-id)}
-       {:otsikko "Perustelu"
-        :nimi ::valikatselmus/selite
-        :tyyppi :text
-        :koko [:auto 3]
-        :validoi [[:ei-tyhja "Täytä arvo"]]
-        :leveys 3
-        :elementin-id (str "selite-" uusi-id)}
-       {:otsikko "Vaikutus € (+/-)"
-        :nimi ::valikatselmus/summa
-        :tyyppi :euro
-        :nayta-plus true
-        :input-luokka "maara-input"
-        :desimaalien-maara 2
-        :validoi [[:ei-tyhja "Täytä arvo"]]
-        :leveys 2
-        :tasaa :oikea
-        :fmt (partial fmt/euro-opt false true)
-        :elementin-id (str "summa-" uusi-id)}]
-      hoitokauden-oikaisut-atom]]))
+     [:div
+      [:div
+       (when (and muuttui? (empty? @virheet-atom) (empty? rivilla-tyhja-elementti))
+         [napit/tallenna "Tallenna"
+          #(e! (valikatselmus-tiedot/->TallennaOikaisut uudet-simplified hoitokauden-alkuvuosi))
+          {:vayla-tyyli? true
+           :luokka "nappi-toissijainen"}])
+       [napit/tallenna "Lisää rivi"
+        #(do
+           (swap! hoitokauden-oikaisut-atom assoc uusi-id
+             {:id uusi-id
+              ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+        {:vayla-tyyli? true
+         :luokka "nappi-toissijainen"
+         :ikoni (ikonit/livicon-plus)}]]
+      [:div {:style {:padding-top "20px"}}
+       [grid/muokkaus-grid
+        (merge {:tyhja "Ei muutoksia tavoitehintaan"
+                :voi-kumota? false
+                :voi-muokata? voi-muokata?
+                :muutos #(reset! virheet-atom (grid/hae-virheet %))
+                ;; Roskakorinappula rivin päässä
+                :toimintonappi-fn (when voi-muokata?
+                                    (fn [rivi _muokkaa! id]
+                                      [napit/poista ""
+                                       #(do
+                                          (poista-oikaisu-fn rivi id))
+                                       {:luokka "napiton-nappi pelkka-ikoni"}]))
+                :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
+                :validoi-uusi-rivi? false
+                :uusi-id uusi-id
+                :nayta-virheikoni? false
+                :rivi-jalkeen (when @hoitokauden-oikaisut-atom
+                                [{:teksti "Yhteensä" :luokka "yhteensa"}
+                                 {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
+                                 {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])})
+        [{:otsikko "Muutos"
+          :nimi ::valikatselmus/otsikko
+          :tyyppi :valinta
+          :valinnat (into [] (valikatselmus/luokat @nav/valittu-urakka))
+          :validoi [[:ei-tyhja "Valitse arvo"]]
+          :leveys 2
+          :data-cy (str "luokka-" uusi-id)
+          :elementin-id (str "luokka-" uusi-id)}
+         {:otsikko "Perustelu"
+          :nimi ::valikatselmus/selite
+          :tyyppi :text
+          :koko [:auto 3]
+          :validoi [[:ei-tyhja "Täytä arvo"]]
+          :leveys 3
+          :elementin-id (str "selite-" uusi-id)}
+         {:otsikko "Vaikutus € (+/-)"
+          :nimi ::valikatselmus/summa
+          :tyyppi :euro
+          :nayta-plus true
+          :input-luokka "maara-input"
+          :desimaalien-maara 2
+          :validoi [[:ei-tyhja "Täytä arvo"]]
+          :leveys 2
+          :tasaa :oikea
+          :fmt (partial fmt/euro-opt false true)
+          :elementin-id (str "summa-" uusi-id)}]
+        hoitokauden-oikaisut-atom]]]]))
 
 (defn kattohinnan-oikaisu
   "Kattohinnan oikaisua tarvitsevat urkat, jotka ovat alkaneet -19-20 vuosina. Muille kattohinta on 110% tavoitehinnasta."
@@ -128,7 +132,7 @@
                                                          :vayla-tyyli? true
                                                          :input-luokka "kattohinta-muutettu"
                                                          :on-blur #(when (not (= kattohinta @uusi-kattohinta))
-                                                                    (e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu @uusi-kattohinta)))}
+                                                                     (e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu @uusi-kattohinta)))}
                                          :arvo-atom uusi-kattohinta}]]]
       [:<>
        [:div.small-caption.lihavoitu.valja "Muuttunut kattohinta"]
@@ -165,7 +169,7 @@
         avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)])
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
-        [tavoitehinnan-oikaisut-taulukko hoitokauden-oikaisut-atom
+        [tavoitehinnan-oikaisut-taulukko e! hoitokauden-oikaisut-atom
          hoitokauden-alkuvuosi
          {:voi-muokata? (and voi-muokata? (not paatos-tehty?))
           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi

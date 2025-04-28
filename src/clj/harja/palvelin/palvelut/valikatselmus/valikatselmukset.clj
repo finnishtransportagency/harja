@@ -324,7 +324,8 @@
                               (conj v {(paatoskone/nimi->avain (:nimi paatos)) paatos})))
 
                     [] paatokset)
-        vastaus {:yhteenveto {:lupaustiedot (dissoc lupaustiedot :lupausryhmat :lahtotiedot)
+        vastaus {:hoitokauden-alkuvuosi hoitovuosi
+                 :yhteenveto {:lupaustiedot (dissoc lupaustiedot :lupausryhmat :lahtotiedot)
                               :kustannukset-yhteensa (:yhteensa kustannukset-jarjestettyna)
                               :kustannukset (:taulukon-rivit kustannukset-jarjestettyna)
                               :bonukset bonukset
