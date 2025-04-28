@@ -5,7 +5,8 @@
   Tekstiviestien vastaanotto tulee myös poistumaan, kun uusi SMS-integraatio otetaan käyttöön.
   Vastaanotto välittää tekstiviestinä lähetetyn toimenpidekuittauksen eteenpäin tloik-integraatiolle (ja sitä kautta T-LOIKiin ja Palauteväylälle)."
   ;;TODO: Kun #yliheitto, poista vanha LinkSMS toteutus ja tekstiviestien vastaanotto
-  (:require [clojure.string :as string]
+  (:require [cheshire.core :as cheshire]
+            [clojure.string :as string]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [taoensso.timbre :as log]
@@ -26,10 +27,11 @@
 ;; TODO: Parsi uuden SMS-integraation mukainen vastaus
 (defn kasittele-vastaus [body headers]
   (log/debug (format "SMS-palvelu vastasi: sisältö: %s, otsikot: %s" body headers))
-  (when (and body (.contains (string/lower-case body) "error"))
-    (throw+ {:type :sms-lahetys-epaonnistui
-             :error body}))
-  {:sisalto body :otsikot headers})
+
+  ;; Integraatiotapahtuma/laheta käsittelee sisäisesti HTTP statuskoodit ja heittää poikkeuksen, jos statuskoodi ei ole 2xx
+  ;; Käsitellään tässä vain onnistuneet vastausviestit
+  (let [dekoodattu-body (cheshire/decode body true)]
+    {:sisalto dekoodattu-body :otsikot headers}))
 
 (defn laheta-sms [db integraatioloki url apiavain puhelinnumero viesti korrelaatio-id otsikot]
   (if (or (empty? apiavain) (empty? url))
@@ -48,7 +50,8 @@
               http-asetukset {:metodi :POST
                               :url url
                               :otsikot otsikot}
-              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset payload)]
+              {body :body headers :headers status :status}
+              (integraatiotapahtuma/laheta konteksti :http http-asetukset payload)]
           (kasittele-vastaus body headers))))))
 
 

@@ -31,22 +31,80 @@
 
 
 ;; -- Testaa uuden SMS-integraation lähetystä --
-(deftest tekstiviestin-lahetys
-  (let [lahetetty-payload (atom nil)]
+(deftest tekstiviestin-lahetys-ok
+  (let [korrelaatio-id "1234567"
+        lahetetty-payload (atom nil)
+        ;; Feikataan onnistunut vastaus
+        vastaus-payload {:status 200
+                         :body (cheshire/encode {:viesti-id nil
+                                                 :korrelaatio-id korrelaatio-id
+                                                 :tila "OK"
+                                                 :selitys ""})}]
     (with-fake-http
       [+testi-sms-url+ (fn [_ opts _]
                          (reset! lahetetty-payload (:body opts))
-                         ;; TODO: Feikkaa oikea vastaus-payload
-                         "ok")]
-      (let [vastaus (sms/laheta (:sms jarjestelma) "0987654321" "Testi" "1234567" {})]
+                         vastaus-payload)]
+      (let [vastaus (sms/laheta (:sms jarjestelma) "0987654321" "Testi" korrelaatio-id {})]
+        ;; Tarkastetaan, että lähetetty payload on validi
         (is (nil? (json/validoi +sms-laheta-schema+ (cheshire/encode @lahetetty-payload))))
-        (is (= "ok" (:sisalto vastaus)))))))
+        ;; Tarkastetaan, että vastaus on dekoodattu oikein ja sisältää odotetut tiedot
+        (is (= {:korrelaatio-id korrelaatio-id
+                :selitys ""
+                :tila "OK"
+                :viesti-id nil}
+              (:sisalto vastaus)))))))
 
-(deftest tekstiviestin-epaonnistunut-lahetys
-  (with-fake-http
-    [+testi-sms-url+ "TESTI ERROR 2 1 message failed: Invalid phone number"]
-    (is (thrown? Exception (sms/laheta (:sms jarjestelma) "0987654321" "Testi" 1234568 {}))
-      "Poikkeusta ei heitetty virhe responsesta.")))
+;; TODO: Epäonnistuneisiin statuskoodeihin liittyy aikanaan myös uudelleenlähetyslogiikka, joka ei ole vielä toteutettu.
+;;       Uudelleenlähetyslogiikka toteutetaan joskus myöhemmin erikseen.
+
+;; Epävalidi viesti (älä yritä uudelleenlähetystä)
+(deftest tekstiviestin-lahetys-http-status-401
+  (let [korrelaatio-id "1234567"
+        lahetetty-payload (atom nil)
+        vastaus-payload {:status 401
+                         :body (cheshire/encode {:viesti-id nil
+                                                 :korrelaatio-id korrelaatio-id
+                                                 :tila "VIRHE"
+                                                 :selitys "Jokin epävalidin viestin paljastava syy"})}]
+    (with-fake-http
+      [+testi-sms-url+ (fn [_ opts _]
+                         (reset! lahetetty-payload (:body opts))
+                         vastaus-payload)]
+      (is (thrown? Exception (sms/laheta (:sms jarjestelma) "0987654321" "Testi" korrelaatio-id {}))
+        "Poikkeusta ei heitetty virhe-statuskoodista."))))
+
+;; Autentikointivirhe (korjaa autentikointi, yritä vasta sitten uudelleen)
+(deftest tekstiviestin-lahetys-http-status-403
+  (let [korrelaatio-id "1234567"
+        lahetetty-payload (atom nil)
+        vastaus-payload {:status 403
+                         :body (cheshire/encode {:viesti-id nil
+                                                 :korrelaatio-id korrelaatio-id
+                                                 :tila "VIRHE"
+                                                 :selitys "Autentikointivirhe"})}]
+    (with-fake-http
+      [+testi-sms-url+ (fn [_ opts _]
+                         (reset! lahetetty-payload (:body opts))
+                         vastaus-payload)]
+      (is (thrown? Exception (sms/laheta (:sms jarjestelma) "0987654321" "Testi" korrelaatio-id {}))
+        "Poikkeusta ei heitetty virhe-statuskoodista."))))
+
+;; SMS-palvelun ongelma (Harja yrittää uudelleen, odota vähintään minuutti, rajoita uudelleenyrityskertoja)
+(deftest tekstiviestin-lahetys-http-status-500
+  (let [korrelaatio-id "1234567"
+        lahetetty-payload (atom nil)
+        vastaus-payload {:status 500
+                         :body (cheshire/encode {:viesti-id nil
+                                                 :korrelaatio-id korrelaatio-id
+                                                 :tila "VIRHE"
+                                                 :selitys "Server error"})}]
+    (with-fake-http
+      [+testi-sms-url+ (fn [_ opts _]
+                         (reset! lahetetty-payload (:body opts))
+                         vastaus-payload)]
+      (is (thrown? Exception (sms/laheta (:sms jarjestelma) "0987654321" "Testi" korrelaatio-id {}))
+        "Poikkeusta ei heitetty virhe-statuskoodista."))))
+
 
 ;; -- Vanhan LinkMobility SMS-integraation lähetystestit (Uusi integraatio ei ole aktiivinen) --
 (deftest linkmobility-tekstiviestin-lahetys
@@ -57,11 +115,12 @@
                                                     :otsikot (:headers opts)})
                          "ok")]
       (let [vastaus (sms/laheta (:sms-vanha jarjestelma) "0987654321" "Testi" "1234567" {})]
-        (is (= (:parametrit @lahetetty-payload) {"dests" "0987654321"
-                                                 "text" "Testi"}))
-        (is (= (select-keys (:otsikot @lahetetty-payload) ["X-Correlation-ID" "Content-Type"])
-              {"X-Correlation-ID" "1234567"
-               "Content-Type" "application/x-www-form-urlencoded"})
+        (is (= {"dests" "0987654321"
+                "text" "Testi"})
+          (:parametrit @lahetetty-payload))
+        (is (= {"X-Correlation-ID" "1234567"
+                "Content-Type" "application/x-www-form-urlencoded"}
+              (select-keys (:otsikot @lahetetty-payload) ["X-Correlation-ID" "Content-Type"]))
           (is (= "ok" (:sisalto vastaus))))))))
 
 (deftest linkmobility-tekstiviestin-epaonnistunut-lahetys
