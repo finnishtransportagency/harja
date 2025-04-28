@@ -158,7 +158,7 @@
                           {:onnistui ->TallennaOikaisuOnnistui
                            :epaonnistui ->TallennaOikaisuEpaonnistui
                            :paasta-virhe-lapi? true}))]))]
-      app))
+      (assoc app :tallennus-kesken? true)))
 
   TallennaOikaisuOnnistui
   (process-event [{vastaus :vastaus id :id} {:keys [hoitokauden-alkuvuosi tavoitehinnan-oikaisut] :as app}]
@@ -180,9 +180,8 @@
             oikaisu
             {:onnistui ->PoistaOikaisuOnnistui
              :epaonnistui ->PoistaOikaisuEpaonnistui
-             ;:onnistui-parametrit [id]
              :paasta-virhe-lapi? true})
-        app)))
+        (assoc app :tallennus-kesken? true))))
 
   PoistaOikaisuOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -194,7 +193,7 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "PoistaOikaisuEpaonnistui" (pr-str vastaus))
     (viesti/nayta-toast! "Oikaisun poistamisessa tapahtui virhe" :varoitus)
-    app)
+    (kasittele-valikatselmuksen-vastaus app vastaus))
 
   PaivitaTavoitehinnanOikaisut
   (process-event [{hoitokauden-alkuvuosi :hoitokauden-alkuvuosi uusi :uusi} app]
@@ -217,7 +216,7 @@
           {:onnistui ->TallennaKattohinnanOikaisuOnnistui
            :epaonnistui ->TallennaKattohinnanOikaisuEpaonnistui
            :paasta-virhe-lapi? true})))
-    app)
+    (assoc app :tallennus-kesken? true))
 
   TallennaKattohinnanOikaisuOnnistui
   (process-event [{vastaus :vastaus} {:keys [hoitokauden-alkuvuosi] :as app}]

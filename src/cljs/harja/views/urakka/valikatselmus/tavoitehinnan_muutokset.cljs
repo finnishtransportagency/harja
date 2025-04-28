@@ -28,7 +28,7 @@
   :tallenna-oikaisu-fn    Funktio, jolla tallennetaan oikaisu, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
   :tallenna-oikaisut-fn   Funktio, jolla päivitetään oikaisut, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
                           Kutsutaan jokaisesta muutoksesta."
-  [e! hoitokauden-oikaisut-atom hoitokauden-alkuvuosi {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn]}]
+  [e! hoitokauden-oikaisut-atom hoitokauden-alkuvuosi {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn]} tallennus-kesken?]
   (let [uusi-id (if (empty? (keys @hoitokauden-oikaisut-atom))
                   0
                   (inc (apply max (keys @hoitokauden-oikaisut-atom))))
@@ -58,7 +58,8 @@
              (e! (valikatselmus-tiedot/->TallennaOikaisut uudet-simplified hoitokauden-alkuvuosi)))
            #(reset! tallenna-painettu true))
         {:vayla-tyyli? true
-         :luokka "nappi-toissijainen"}]
+         :luokka "nappi-toissijainen"
+         :disabled (or tallennus-kesken? voi-muokata?)}]
        [napit/tallenna "Lisää rivi"
         #(do
            (reset! tallenna-painettu false)
@@ -67,7 +68,8 @@
               ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
         {:vayla-tyyli? true
          :luokka "nappi-toissijainen"
-         :ikoni (ikonit/livicon-plus)}]]
+         :ikoni (ikonit/livicon-plus)
+         :disabled (or tallennus-kesken? voi-muokata?)}]]
       (when (or (and @tallenna-painettu (not (empty? @virheet-atom)))
               (and @tallenna-painettu (not (empty? rivilla-tyhja-elementti))))
         [:div
@@ -188,7 +190,8 @@
           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
           :poista-oikaisu-fn #(e! (valikatselmus-tiedot/->PoistaOikaisu %1 %2))
           :tallenna-oikaisu-fn #(e! (valikatselmus-tiedot/->TallennaOikaisu %1 %2))
-          :paivita-oikaisu-fn #(e! (valikatselmus-tiedot/->PaivitaTavoitehinnanOikaisut %1 %2))}]
+          :paivita-oikaisu-fn #(e! (valikatselmus-tiedot/->PaivitaTavoitehinnanOikaisut %1 %2))}
+         tallennus-kesken?]
 
         (when (and paatos-tehty? voi-muokata?)
           [:div.valja
