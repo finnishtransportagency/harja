@@ -124,7 +124,7 @@
      [:div.liite
       (if (naytettava-liite? tiedosto)
         [:div
-         [:div
+         [:div.liite-rivi
           [:img.pikkukuva.klikattava {:tabIndex 0
                                       :alt (:nimi tiedosto)
                                       :src (k/pikkukuva-url (:id tiedosto))
@@ -135,8 +135,8 @@
           (when salli-poisto?
             [liitteen-poisto tiedosto poista-liite-fn])]
          (when-not virustarkastettu?
-           [:span.virustarkistus (str "Virustarkastus käynnissä. Liitteen voi avata, kun tarkastus on tehty.")])]
-        [:span
+           [:div.virustarkistus "Virustarkastus käynnissä. Liitteen voi avata, kun tarkastus on tehty."])]
+        [:div.liite-rivi
          [:a.liite-linkki
           {:target "_blank" :href (k/liite-url (:id tiedosto))}
           (str nimi (when nayta-koko? (str " (" (sievenna-liitteen-koko koko) ") ")))]
@@ -198,9 +198,9 @@
   Optiot:
   siltatarkastusliite? Boolean, true kun haetaan siltatarkastuksen liitteitä"
   ;; PENDING Olisipa kiva jos ikoni heijastelisi tiedoston tyyppiä :-)
-  [liite optiot]
+  [liite {:keys [ikoni] :as optiot}]
   [:span
-   [liitelinkki liite (ikonit/file) optiot]
+   [liitelinkki liite (or ikoni (ikonit/file)) optiot]
    [:span " "]])
 
 (defn liitteet-ikoneina

@@ -121,8 +121,16 @@
                        :let :tr-loppuetaisyys}
         ;; käännetään kohde tarvittaessa oikein päin, avaimia hieman edestakaisin muunnellen
         kohde-muunnettavaksi (set/rename-keys kohde avain-muunnos)
-        kohde (set/rename-keys (tr-domain/tr-osoite-kasvusuuntaan kohde-muunnettavaksi)
-                (set/map-invert avain-muunnos))]
+        kohde (if (and
+                     ;; Jos osoitetta ei ole, palautuu nullpointer
+                     (some? (:tr-alkuosa kohde-muunnettavaksi))
+                     (some? (:tr-alkuetaisyys kohde-muunnettavaksi))
+                     (some? (:tr-loppuosa kohde-muunnettavaksi))
+                     (some? (:tr-loppuetaisyys kohde-muunnettavaksi)))
+                 (set/rename-keys
+                   (tr-domain/tr-osoite-kasvusuuntaan kohde-muunnettavaksi)
+                   (set/map-invert avain-muunnos))
+                 kohde-muunnettavaksi)]
     ;; Pieni validointi kohteen arvoille
     (when (and (:aosa kohde) (:losa kohde)
             (<= (:aosa kohde) (:losa kohde)))
