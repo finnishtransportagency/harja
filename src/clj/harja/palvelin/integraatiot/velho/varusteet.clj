@@ -252,8 +252,16 @@
         kuntoluokka (get-in varuste [:ominaisuudet
                                      :kunto-ja-vauriotiedot
                                      :yleinen-kuntoluokka])
-        {tyyppi :otsikko kohdeluokka :kohdeluokka} (first (memoized-hae-nimikkeen-tiedot db
-                                                            {:tyyppi-nimi tyyppi}))
+        ;; joskus tarkempi tyyppi on nil, ja nimikkeistö-taulusta ei saada osumaa.
+        ;; Fallbackataan tällöin kohdeluokka suoraan
+        {tyyppi :otsikko kohdeluokka :kohdeluokka} (if (nil? tyyppi)
+                                                     {:tyyppi nil
+                                                      ;; parsittava varusteet/ alku pois...
+                                                      :kohdeluokka (when (string? (:kohdeluokka varuste))
+                                                                     (last (clojure.string/split (:kohdeluokka varuste) #"/")))}
+                                                     (first (memoized-hae-nimikkeen-tiedot db
+                                                              {:tyyppi-nimi tyyppi})))
+
         kuntoluokka (or (:otsikko (first (memoized-hae-nimikkeen-tiedot db
                                            {:tyyppi-nimi kuntoluokka})))
                       "Kuntoluokka puuttuu")]
@@ -469,14 +477,13 @@
                            (fn [x]
                              (swap! virheet conj (str "Virhe velho token haussa " x))
                              (log/error "Virhe velho token haussa" x)))]
-          (let [otsikot {"Content-Type" "application/json"
-                         "Authorization" (str "Bearer " token)}
+          (let [otsikot (velho-yhteiset/velho-otsikot token)
                 kohdeluokat (if (and (set? kohdeluokat) (seq kohdeluokat))
                               (filter #(kohdeluokat (:kohdeluokka %)) +tietolajien-lahteet+)
                               +tietolajien-lahteet+)
                 http-asetukset {:metodi :POST
                                 :otsikot otsikot
-                                :url (str varuste-api-juuri-url "/hakupalvelu/api/v1/haku/kohdeluokat")}
+                                :url (str varuste-api-juuri-url velho-yhteiset/hakupalvelu-url)}
                 urakka-velho-oid (q-urakat/hae-urakan-velho-oid db {:id urakka-id})
                 _ (when-not urakka-velho-oid
                     (swap! virheet conj (str "Urakalle ei löytynyt vastaavaa Velho-oidia. Urakan id: " urakka-id))
@@ -556,7 +563,8 @@
                                     alkuaika-parametri
                                     loppuaika-parametri)
                 oidit (mapv :oid valimaiset-oidit)
-                valimaiset-toimenpiteet (hae-valimaiset-varuste-toimenpiteet-oideille db oidit http-asetukset konteksti toimenpide)
+                valimaiset-toimenpiteet (when-not (empty? oidit)
+                                          (hae-valimaiset-varuste-toimenpiteet-oideille db oidit http-asetukset konteksti toimenpide))
                 toimenpiteella-suodatetut-valimaiset-oidit (vec (map #(get-in % [:ominaisuudet :toimenpiteen-kohde]) valimaiset-toimenpiteet))
                 varustetoimenpide-parametri (when toimenpide (tee-toimenpide-parametri db toimenpide toimenpiteella-suodatetut-valimaiset-oidit)) 
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"
@@ -585,7 +593,9 @@
                                                          :yhteinen-key2 [:ominaisuudet :toimenpiteen-kohde]
                                                          :etsittava-avain [:ominaisuudet :toimenpide]
                                                          :asetettava-avain :valimaiset-toimenpiteet})
-                varusteet (mapv (partial varuste-velhosta->harja db) varusteet-valimaisilla-toimenpiteilla)]
+                varusteet (sort-by :alkupvm
+                            #(compare %2 %1)
+                            (mapv (partial varuste-velhosta->harja db) varusteet-valimaisilla-toimenpiteilla))]
             {:urakka-id urakka-id :toteumat varusteet}))))))
 
 (defn hae-varusteen-historia [{:keys [integraatioloki db asetukset]}
@@ -601,8 +611,7 @@
                            (fn [x]
                              (swap! virheet conj (str "Virhe velho token haussa " x))
                              (log/error "Virhe velho token haussa" x)))]
-          (let [otsikot {"Content-Type" "application/json"
-                         "Authorization" (str "Bearer " token)}
+          (let [otsikot (velho-yhteiset/velho-otsikot token)
 
                 {:keys [api-versio palvelu]} (first (filter #(= (:kohdeluokka %) kohdeluokka) +tietolajien-lahteet+))
 
@@ -626,8 +635,7 @@
   (when-let [token (hae-token-fn)]
     (try+
       (let [{:keys [varuste-api-juuri-url]} asetukset
-            otsikot {"Content-Type" "application/json"
-                     "Authorization" (str "Bearer " token)}
+            otsikot (velho-yhteiset/velho-otsikot token)
             http-asetukset {:metodi :GET
                             :otsikot otsikot
                             :url (str/join "/"

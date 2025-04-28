@@ -561,7 +561,7 @@
                [otsikko-komp]
                (if-not sarake-sort
                  [:div otsikko]
-                 [:div.ilmoitukset-sort
+                 [:div.sort-nuoli
                   [:span.klikattava {:on-click (:fn sarake-sort)}
                    otsikko " " (sort-ikoni (:suunta sarake-sort)) " "]]))]) skeema)
         (when (or nayta-toimintosarake?

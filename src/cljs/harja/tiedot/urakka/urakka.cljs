@@ -353,7 +353,7 @@
                                                                                          ::t/toteuma-tehtava-id nil
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}
-                             :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi nil
+                             :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi kuluva-alkuvuosi
                                                           :hoitovuoden-kuukausi nil
                                                           :kuntoluokat nil
                                                           :varustetyypit nil
