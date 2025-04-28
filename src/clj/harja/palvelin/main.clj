@@ -26,7 +26,7 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
     [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad-integraatio]
-    [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as tekstiviesti]
+    [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as sms]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
@@ -318,19 +318,22 @@
                               (digiroad-integraatio/->Digiroad (:digiroad asetukset))
                               [:http-palvelin :db :integraatioloki])
 
-      ;; LinkMobilityn LinkSMS, vanha Harja + pilvi-Harjan sms-lähetys. Refaktoroi vanha toteutus pois, kun #yliheitto ok.
-      ;; Tämä palvelu on tarpeeton. Poistetaan koodista kokonaan. Tarvittavat osat integroitu SMS-komponenttiin.
+      ;; LinkMobilityn LinkSMS, vanha Harja + pilvi-Harjan sms-lähetys.
+      ;; TODO: Refaktoroi vanha toteutus pois, kun #yliheitto ok.
+      ;;       Tämä palvelu on tarpeeton. Poistetaan koodista kokonaan. Tarvittavat osat integroitu SMS-komponenttiin.
       ;:labyrintti (component/using
       ;              (if kehitysmoodi
       ;                (labyrintti/feikki-labyrintti)
       ;                (labyrintti/luo-labyrintti (:labyrintti asetukset)))
       ;              [:http-palvelin :db :integraatioloki])
 
-      ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto. Refaktoroi tänne myös lähetys, kun #yliheitto ok.
+      ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto ja uusi SMS-integraatio
+      ;; TODO: Kun #yliheitto ok, poista viittaukset vanhaan integraatioon
       :sms (component/using
              (if kehitysmoodi
-               (tekstiviesti/luo-feikki-tekstiviesti-komponentti)
-               (tekstiviesti/luo-tekstiviesti-komponentti (:sms asetukset) (:labyrintti asetukset)))
+               (sms/luo-feikki-tekstiviesti-komponentti)
+               ;; Tuodaan uuden integraation asetukset ":sms" ja vanhan LinkSMS-integraatioon asetukset ":labyrintti"
+               (sms/luo-tekstiviesti-komponentti (:sms asetukset) (:labyrintti asetukset)))
              [:http-palvelin :db :integraatioloki])
 
       :yha-integraatio (component/using

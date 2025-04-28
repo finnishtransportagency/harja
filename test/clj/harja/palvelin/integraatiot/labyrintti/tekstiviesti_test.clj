@@ -5,7 +5,7 @@
             [harja.tyokalut.json-validointi :as json]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as tekstiviesti]
+            [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as sms]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]))
 
 (def asetukset nil)
@@ -17,17 +17,15 @@
 (def jarjestema-fixture
   (laajenna-integraatiojarjestelmafixturea
     nil
-    :sms-vanha (component/using (tekstiviesti/luo-tekstiviesti-komponentti
+    :sms-vanha (component/using (sms/luo-tekstiviesti-komponentti
                                   {:url +testi-sms-url+ :apiavain "testiapiavain"}
                                   {:sms-url +testi-sms-url+ :apiavain "testiapiavain"})
                  [:http-palvelin :db :integraatioloki])
-    :sms (component/using (tekstiviesti/luo-tekstiviesti-komponentti
+    :sms (component/using (sms/luo-tekstiviesti-komponentti
                             ;; Uusi SMS-integraatio aktiivinen ja korvaa siten vanhan käytössä
                             {:url +testi-sms-url+ :apiavain "testiapiavain" :aktiivinen? true}
                             {:sms-url +testi-sms-url+ :apiavain "testiapiavain"})
            [:http-palvelin :db :integraatioloki])))
-
-;; TODO: Testattava vanhan LinkMobilityn ja uuden SMS-integraation lähetystä erikseen
 
 (use-fixtures :once jarjestema-fixture)
 

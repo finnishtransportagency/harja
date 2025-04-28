@@ -20,7 +20,6 @@
                                          :varusteet-ulkoiset
                                          :tierekisterin-varusteet}
  :virustarkistus ^:replace {}
- :labyrintti ^:replace {}
  :sms ^:replace {}
  :yha ^:replace {}
  :velho ^:replace {}}
