@@ -7,6 +7,7 @@
   Harjaan tallennettu varustetoimenpide sisältää Tievelhosta haetun kopion toimenpiteestä ja sen kohteesta rajatuilla tiedoilla.
   Tarkemmat tiedot löytyvät Tievelhosta."
   (:require [clojure.string :as str]
+            [harja.tiedot.urakka :as u]
             [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [harja.asiakas.kommunikaatio :as k]
@@ -56,9 +57,10 @@
 
 (defn suodatuslomake [_e! _app]
   (fn [e! {:keys [valinnat urakka kuntoluokat-nimikkeisto kohdeluokat-nimikkeisto varustetyyppihaku] :as app}]
-    (let [alkupvm (:alkupvm urakka)
-          vuosi (pvm/vuosi alkupvm)
-          hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
+    (let [hoitokausien-alkuvuodet (into []
+                                    (range
+                                      (pvm/vuosi (:alkupvm urakka))
+                                      (pvm/vuosi (:loppupvm urakka))))
           hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
           valittu-toimenpide (:toimenpide valinnat)
           hoitovuoden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
@@ -94,15 +96,11 @@
       [:div
        [debug app {:otsikko "TUCK STATE"}]
        [:div.row.filtterit-container {:style {:height "100px"}}
-        [yleiset/pudotusvalikko "Hoitovuosi"
-         {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-          :valinta hoitokauden-alkuvuosi
-          :vayla-tyyli? true
-          :data-cy "hoitokausi-valinta"
-          :valitse-fn #(e! (v/->ValitseHoitokausi %))
-          :format-fn #(str v/fin-hk-alkupvm % " \u2014 " v/fin-hk-loppupvm (inc %))
-          :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-         hoitokaudet]
+        [valinnat/urakan-hoitokausi-tuck
+         (:hoitokauden-alkuvuosi valinnat)
+         hoitokausien-alkuvuodet
+         #(e! (v/->ValitseHoitokausi %))
+         {:wrapper-luokka "col-md-2 filtteri label-ja-alasveto-grid"}]
         [yleiset/pudotusvalikko "Kuukausi"
          {:wrap-luokka "col-md-1 filtteri varusteet label-ja-alasveto-grid"
           :valinta (:hoitovuoden-kuukausi valinnat)
@@ -186,9 +184,11 @@
 (defn listaus [e! {:keys [varusteet haku-paalla valinnat] :as app}]
   (let [lkm (count varusteet)]
     [grid/grid
-     {:otsikko (if (>= lkm v/+max-toteumat+)
-                 (str "Varustetoimenpiteet (Liikaa osumia. Näytetään vain " v/+max-toteumat+ " ensimmäistä.)")
-                 (str "Varustetoimenpiteet (" lkm ")"))
+     {:otsikko
+      (str "Varustetoimenpiteet "
+        (if (>= lkm v/+max-toteumat+)
+          (str "(Liikaa osumia. Näytetään vain " v/+max-toteumat+ " ensimmäistä.)")
+          (str "(" lkm ")")))
       :tunniste :ulkoinen-oid
       :luokat ["varuste-taulukko" "margin-top-32"]
       :tyhja (if haku-paalla
@@ -216,7 +216,9 @@
       {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
        :hae v/muodosta-tr-osoite}
       {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3}
-      {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tyyppi :leveys 5}
+      {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tyyppi :leveys 5
+       :hae (fn [rivi] (when-let [varustetyyppi (or (:tyyppi rivi) (:kohdeluokka rivi))]
+                         (when varustetyyppi (str/capitalize varustetyyppi))))}
       {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
       {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
        :komponentti (fn [rivi]
@@ -280,19 +282,6 @@
                              [kuntoluokka-komponentti (get-in data [:data :kuntoluokka])]])
              ::lomake/col-luokka "margin-top-16"
              :piilota-label? true}
-            {:tyyppi :komponentti
-             :nimi :ulkoinen-id
-             ::lomake/col-luokka ""
-             :komponentti (fn [_]
-                            [yleiset/tooltip
-                             {}
-                             [napit/yleinen-toissijainen "Katso tarkemmat varustetiedot"
-                              ;; TODO: Linkki velhoon, kunhan velholta saadaan sellainen.
-                              (constantly nil)
-                              {:ikoni [ikonit/harja-icon-navigation-external-link]
-                               :ikoni-oikealle? true
-                               :disabled true}]
-                             "Linkki velhoon ei ole vielä saatavilla."])}
             {:nimi ::spacer :piilota-label? true :tyyppi :komponentti :palstoja 3
              ::lomake/col-luokka "margin-top-32"
              :komponentti (fn [_] [:hr])}
@@ -309,7 +298,9 @@
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
          (kartta-tasot/taso-paalle! :varusteet-ulkoiset)
-         (e! (v/->ValitseHoitokausi (pvm/vuosi (get-in app [:urakka :alkupvm]))))
+         (e! (v/->ValitseHoitokausi (if (u/urakka-kaynnissa? (:urakka app))
+                                      urakka-tila/kuluva-alkuvuosi
+                                      (pvm/vuosi (get-in app [:urakka :alkupvm])))))
          (e! (v/->HaeNimikkeisto))
          (reset! varusteet-kartalla/varuste-klikattu-fn
            (fn [varuste-kartalla]

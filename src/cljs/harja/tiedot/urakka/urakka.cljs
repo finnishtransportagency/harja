@@ -353,7 +353,7 @@
                                                                                          ::t/toteuma-tehtava-id nil
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}
-                             :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi nil
+                             :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi kuluva-alkuvuosi
                                                           :hoitovuoden-kuukausi nil
                                                           :kuntoluokat nil
                                                           :varustetyypit nil
@@ -431,7 +431,18 @@
                      :kustannusten-seuranta kustannusten-seuranta-default-arvot
                      :talvihoitoreitit talvihoitoreitit-default
                      :tiemerkinta-kustannukset tiemerkinta-kustannukset-default
-                     :valikatselmus valikatselmus-default}))
+                     :valikatselmus valikatselmus-default
+                     :tiemerkinta-korjaukset {}
+                     :tiemerkinta-yhteenveto {}
+                     :tiemerkinta-muut-kustannukset {}
+                     :tiemerkinta-sanktiot-ja-bonukset {}
+                     :tiemerkinta-uusien-paallysteiden-merkkinnat {}}))
+
+(defonce tiemerkinta-korjaukset (cursor tila [:tiemerkinta-korjaukset]))
+(defonce tiemerkinta-yhteenveto (cursor tila [:tiemerkinta-yhteenveto]))
+(defonce tiemerkinta-muut-kustannukset (cursor tila [:tiemerkinta-muut-kustannukset]))
+(defonce tiemerkinta-sanktiot-ja-bonukset (cursor tila [:tiemerkinta-sanktiot-ja-bonukset]))
+(defonce tiemerkinta-uusien-paallysteiden-merkkinnat (cursor tila [:tiemerkinta-uusien-paallysteiden-merkkinnat]))
 
 (defonce tiemerkinta-kustannukset (cursor tila [:tiemerkinta-kustannukset]))
 (defonce laatupoikkeamat (cursor tila [:laatupoikkeamat]))
