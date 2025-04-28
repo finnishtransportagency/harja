@@ -14,6 +14,7 @@
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
 (defonce virheet-atom (atom {}))
+(defonce tallenna-painettu (atom false))
 
 (defn tavoitehinnan-oikaisut-taulukko
   "Tavoitehinnan oikaisujen taulukko.
@@ -50,11 +51,14 @@
     [:div.tavoitehinnan-muutokset
      [:div
       [:div
-       (when (and muuttui? (empty? @virheet-atom) (empty? rivilla-tyhja-elementti))
-         [napit/tallenna "Tallenna"
-          #(e! (valikatselmus-tiedot/->TallennaOikaisut uudet-simplified hoitokauden-alkuvuosi))
-          {:vayla-tyyli? true
-           :luokka "nappi-toissijainen"}])
+       [napit/tallenna "Tallenna"
+        (if (and muuttui? (empty? @virheet-atom) (empty? rivilla-tyhja-elementti))
+           #(do
+             (reset! tallenna-painettu false)
+             (e! (valikatselmus-tiedot/->TallennaOikaisut uudet-simplified hoitokauden-alkuvuosi)))
+           #(reset! tallenna-painettu true))
+        {:vayla-tyyli? true
+         :luokka "nappi-toissijainen"}]
        [napit/tallenna "Lisää rivi"
         #(do
            (swap! hoitokauden-oikaisut-atom assoc uusi-id
@@ -63,54 +67,62 @@
         {:vayla-tyyli? true
          :luokka "nappi-toissijainen"
          :ikoni (ikonit/livicon-plus)}]]
-      [:div {:style {:padding-top "20px"}}
-       [grid/muokkaus-grid
-        (merge {:tyhja "Ei muutoksia tavoitehintaan"
-                :voi-kumota? false
-                :voi-muokata? voi-muokata?
-                :muutos #(reset! virheet-atom (grid/hae-virheet %))
-                ;; Roskakorinappula rivin päässä
-                :toimintonappi-fn (when voi-muokata?
-                                    (fn [rivi _muokkaa! id]
-                                      [napit/poista ""
-                                       #(do
-                                          (poista-oikaisu-fn rivi id))
-                                       {:luokka "napiton-nappi pelkka-ikoni"}]))
-                :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
-                :validoi-uusi-rivi? false
-                :uusi-id uusi-id
-                :nayta-virheikoni? false
-                :rivi-jalkeen (when @hoitokauden-oikaisut-atom
-                                [{:teksti "Yhteensä" :luokka "yhteensa"}
-                                 {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
-                                 {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])})
-        [{:otsikko "Muutos"
-          :nimi ::valikatselmus/otsikko
-          :tyyppi :valinta
-          :valinnat (into [] (valikatselmus/luokat @nav/valittu-urakka))
-          :validoi [[:ei-tyhja "Valitse arvo"]]
-          :leveys 2
-          :data-cy (str "luokka-" uusi-id)
-          :elementin-id (str "luokka-" uusi-id)}
-         {:otsikko "Perustelu"
-          :nimi ::valikatselmus/selite
-          :tyyppi :text
-          :koko [:auto 3]
-          :validoi [[:ei-tyhja "Täytä arvo"]]
-          :leveys 3
-          :elementin-id (str "selite-" uusi-id)}
-         {:otsikko "Vaikutus € (+/-)"
-          :nimi ::valikatselmus/summa
-          :tyyppi :euro
-          :nayta-plus true
-          :input-luokka "maara-input"
-          :desimaalien-maara 2
-          :validoi [[:ei-tyhja "Täytä arvo"]]
-          :leveys 2
-          :tasaa :oikea
-          :fmt (partial fmt/euro-opt false true)
-          :elementin-id (str "summa-" uusi-id)}]
-        hoitokauden-oikaisut-atom]]]]))
+      (when (or (and @tallenna-painettu (not (empty? @virheet-atom)))
+              (and @tallenna-painettu (not (empty? rivilla-tyhja-elementti))))
+        [:div
+         [yleiset/info-laatikko :varoitus
+          "Muutoksia ei voitu tallentaa. Tietoja puuttuu."
+          nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
+[:div {:style {:padding-top "20px"}}
+ [grid/muokkaus-grid
+  (merge {:tyhja "Ei muutoksia tavoitehintaan"
+          :voi-kumota? false
+          :voi-muokata? voi-muokata?
+          :muutos #(do
+                     (reset! tallenna-painettu false)
+                     (reset! virheet-atom (grid/hae-virheet %)))
+          ;; Roskakorinappula rivin päässä
+          :toimintonappi-fn (when voi-muokata?
+                              (fn [rivi _muokkaa! id]
+                                [napit/poista ""
+                                 #(do
+                                    (poista-oikaisu-fn rivi id))
+                                 {:luokka "napiton-nappi pelkka-ikoni"}]))
+          :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
+          :validoi-uusi-rivi? false
+          :uusi-id uusi-id
+          :nayta-virheikoni? false
+          :rivi-jalkeen (when @hoitokauden-oikaisut-atom
+                          [{:teksti "Yhteensä" :luokka "yhteensa"}
+                           {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
+                           {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])})
+  [{:otsikko "Muutos"
+    :nimi ::valikatselmus/otsikko
+    :tyyppi :valinta
+    :valinnat (into [] (valikatselmus/luokat @nav/valittu-urakka))
+    :validoi [[:ei-tyhja "Valitse arvo"]]
+    :leveys 2
+    :data-cy (str "luokka-" uusi-id)
+    :elementin-id (str "luokka-" uusi-id)}
+   {:otsikko "Perustelu"
+    :nimi ::valikatselmus/selite
+    :tyyppi :text
+    :koko [:auto 3]
+    :validoi [[:ei-tyhja "Täytä arvo"]]
+    :leveys 3
+    :elementin-id (str "selite-" uusi-id)}
+   {:otsikko "Vaikutus € (+/-)"
+    :nimi ::valikatselmus/summa
+    :tyyppi :euro
+    :nayta-plus true
+    :input-luokka "maara-input"
+    :desimaalien-maara 2
+    :validoi [[:ei-tyhja "Täytä arvo"]]
+    :leveys 2
+    :tasaa :oikea
+    :fmt (partial fmt/euro-opt false true)
+    :elementin-id (str "summa-" uusi-id)}]
+  hoitokauden-oikaisut-atom]] ] ] ) )
 
 (defn kattohinnan-oikaisu
   "Kattohinnan oikaisua tarvitsevat urkat, jotka ovat alkaneet -19-20 vuosina. Muille kattohinta on 110% tavoitehinnasta."
