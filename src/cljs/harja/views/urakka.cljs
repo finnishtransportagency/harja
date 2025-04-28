@@ -114,7 +114,7 @@
                             (= tyyppi :tiemerkinta))
 
     :kustannusten-yhteenveto (and
-                               (oikeudet/urakat-paikkaukset id)
+                               (oikeudet/urakat-kustannukset id)
                                (= tyyppi :tiemerkinta))
 
     :valitavoitteet (and
@@ -300,7 +300,7 @@
 
        "Kustannusten yhteenveto"
        :kustannusten-yhteenveto
-       (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
+       (when (valilehti-mahdollinen? :kustannusten-yhteenveto ur)
          ^{:key "kustannusten-yhteenveto"}
          [kustannusten-yhteenveto/kustannusten-yhteenveto ur])
 
