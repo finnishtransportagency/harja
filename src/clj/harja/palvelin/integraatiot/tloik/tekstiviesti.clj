@@ -3,7 +3,7 @@
   (:require [harja.domain.palautevayla-domain :as palautevayla]
             [harja.kyselyt.palautevayla :as palautevayla-kyselyt]
             [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as sms]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.domain.tieliikenneilmoitukset :as apurit]
             [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]

@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.labyrintti.tekstiviesti
+(ns harja.palvelin.integraatiot.sms.sms-komponentti
   "Tekstiviestin vastaanotto ja lähetys pilviympäristössä.
   Tähän on toistaiseksi integroitu myös vanhan LinkMobility SMS-integraation lähetystoiminnallisuus.
   LinkMobilityn tulee korvaamaan uusi SMS-integraatio, jonka saa asetuksilla aktiiviseksi. Viestit kulkevat Väyläviraston integraatioväylän kautta.

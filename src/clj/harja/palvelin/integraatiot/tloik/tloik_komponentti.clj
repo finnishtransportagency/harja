@@ -18,7 +18,7 @@
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [hiccup.core :refer [html h]]
             [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
-            [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as sms-integraatio]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms-integraatio]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.tloik
              [ilmoitukset :as ilmoitukset]

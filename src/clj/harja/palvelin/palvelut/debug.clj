@@ -17,7 +17,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
-            [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as sms]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.kyselyt.tieturvallisuusverkko :as tieturvallisuusverkko-kyselyt]
             [harja.kyselyt.paallysteen-korjausluokat :as korjausluokka-kyselyt]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieturvallisuusverkko :as tieturvallisuusverkko-tuonti]

@@ -2,7 +2,7 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.palautevayla :as palautevayla-q]
-            [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as sms]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]

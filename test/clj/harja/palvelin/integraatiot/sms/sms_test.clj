@@ -1,11 +1,11 @@
-(ns harja.palvelin.integraatiot.labyrintti.tekstiviesti-test
+(ns harja.palvelin.integraatiot.sms.sms-test
   (:require [cheshire.core :as cheshire]
             [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
             [harja.tyokalut.json-validointi :as json]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as sms]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]))
 
 (def asetukset nil)

@@ -4,7 +4,7 @@
             [taoensso.timbre :as log]
             [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.labyrintti.tekstiviesti :refer [luo-feikki-tekstiviesti-komponentti]]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :refer [luo-feikki-tekstiviesti-komponentti]]
             [harja.jms-test :refer [feikki-jms]]
             [com.stuartsierra.component :as component]
             [harja.integraatio :as integraatio]

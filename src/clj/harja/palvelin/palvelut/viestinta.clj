@@ -10,7 +10,7 @@
             [hiccup.core :refer [html]]
             [harja.validointi :as validointi]
             [harja.palvelin.komponentit.fim :as fim]
-            [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as sms]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
