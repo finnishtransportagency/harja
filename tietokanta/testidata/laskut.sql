@@ -63,6 +63,7 @@ $$
         tinst_korvaus := (select id from toimenpideinstanssi where nimi = 'Oulu MHU MHU Korvausinvestointi TP');
         tinst_yllapito := (select id from toimenpideinstanssi where nimi = 'Oulu MHU MHU Ylläpito TP');
         tinst_mhu_hoidon_johto := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP');
+        tehtava_talvihoito := (select id from tehtavaryhma where yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac');
         tehtava_soratie := (select id from tehtavaryhma where yksiloiva_tunniste = 'dc151971-facc-48c4-90c9-e429987206e1');
         tehtava_paikkaus := (select id from tehtavaryhma where yksiloiva_tunniste = 'b1cca2a5-6445-4f49-878d-a95f144cc190');
         tehtava_yllapito := (select id from tehtavaryhma where yksiloiva_tunniste = '82ecc58a-f96c-46f0-9c70-d29bb6cd4266');
