@@ -479,18 +479,18 @@
     (let [[_ _ _ rivit] rivi] 
       (apply conj kaikki rivit))))
 
-(def odotettu-kulu_kohdistus-id-9
-  {:maksuera-numero 94 :id 9, :tyyppi "lisatyo",
+(def odotettu-kulu_kohdistus-id-10
+  {:maksuera-numero 94 :id 10, :tyyppi "lisatyo",
    :kokonaissumma 400.77M, :erapaiva #inst "2019-10-15T21:00:00.000-00:00",
    :laskun-numero nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi",
    :liitteet [], :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo",
-   :summa 400.77M, :kohdistus-id 12,
+   :summa 400.77M, :kohdistus-id 13,
    :rahavaraus nil
    :toimenpideinstanssi (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'")),
    :tehtavaryhma 15, :lisatieto nil, :rivi 1})
 
-(deftest hae-aikavalilla-kaikki-kulu-kohdistuksineent
-  (testing "hae-aikavalilla-kaikki-kulu-kohdistuksineent"
+(deftest hae-aikavalilla-kaikki-kulu-kohdistuksineen
+  (testing "hae-aikavalilla-kaikki-kulu-kohdistuksineen"
     (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           alkupvm (pvm/->pvm "1.1.2019")
           loppupvm (pvm/->pvm "30.9.2024")
@@ -501,11 +501,11 @@
                                    :alkupvm alkupvm
                                    :loppupvm loppupvm})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 31
-          kulu-id-9 (first (filter #(= 9 (:id %))
+          odotettu-count 32
+          kulu-id-10 (first (filter #(= 10 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
-      (is (= odotettu-kulu_kohdistus-id-9 kulu-id-9)))))
+      (is (= odotettu-kulu_kohdistus-id-10 kulu-id-10)))))
 
 (deftest hae-kaikki-kulu-kohdistuksineent-pvmt-nil
   (testing "hae-kaikki-kulu-kohdistuksineent-pvmt-nil"
@@ -517,11 +517,11 @@
                                    :alkupvm nil
                                    :loppupvm nil})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 31
-          kulu-id-9 (first (filter #(= 9 (:id %))
+          odotettu-count 32
+          kulu-id-10 (first (filter #(= 10 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
-      (is (= odotettu-kulu_kohdistus-id-9 kulu-id-9)))))
+      (is (= odotettu-kulu_kohdistus-id-10 kulu-id-10)))))
 
 (deftest hae-hoitokauden-kulu-kohdistuksineent
   (testing "hae-hoitokauden-kulu-kohdistuksineent"
@@ -535,11 +535,11 @@
                                    :alkupvm hoitokauden-alkupvm
                                    :loppupvm hoitokauden-loppupvm})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 30 ;; yksi kulu on päivätty ennen hoitokauden alkua
-          kulu-id-9 (first (filter #(= 9 (:id %))
+          odotettu-count 31 ;; yksi kulu on päivätty ennen hoitokauden alkua
+          kulu-id-10 (first (filter #(= 10 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
-      (is (= odotettu-kulu_kohdistus-id-9 kulu-id-9)))))
+      (is (= odotettu-kulu_kohdistus-id-10 kulu-id-10)))))
 
 (deftest tallenna-kulu-vaaralla-tehtavaryhmalla
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)

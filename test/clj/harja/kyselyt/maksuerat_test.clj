@@ -78,7 +78,7 @@
                odotettu [{:kokonaishintainen 4150.791430M
                           :tpi_id 48
                           :urakka_id 35}
-                         {:kokonaishintainen 6251.487630M
+                         {:kokonaishintainen 7251.487630M
                           :tpi_id 49
                           :urakka_id 35}
                          {:kokonaishintainen 8801.94M
