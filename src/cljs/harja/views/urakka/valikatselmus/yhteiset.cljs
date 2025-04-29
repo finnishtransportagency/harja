@@ -15,8 +15,8 @@
                                                     :footer [:div
                                                              [napit/yleinen-ensisijainen "Peru päätös" (fn []
                                                                                                          (modal/piilota!)
-                                                                                                         (peru-paatos-fn)) {:vayla-tyyli? true :luokka "valikatselmus-nappi nappi-ensisijainen"}]
-                                                             [napit/yleinen-toissijainen "Peruuta" (fn [] (modal/piilota!)) {:vayla-tyyli? true :luokka "valikatselmus-nappi nappi-toissijainen"}]]
+                                                                                                         (peru-paatos-fn)) {:luokka "valikatselmus-nappi nappi-ensisijainen"}]
+                                                             [napit/yleinen-toissijainen "Peruuta" (fn [] (modal/piilota!)) {:luokka "valikatselmus-nappi nappi-toissijainen"}]]
                                                     :footer-tyyli {:text-align "left"}
                                                     :ruksi-tyyli {:color "#004D99" :font-size "24px"}}
                                        [:div teksti])]
