@@ -503,14 +503,15 @@
       (and validoinnit-kaytossa? (not (:id (first (filter #(when (= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") %) paatokset)))))
       (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 7)
 
-
       (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
       (let [paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
-            tulos (with-precision 10 (/ tavoitehinta tarjouksen-tavoitehinta))
-            hoidonjohtopalkkio-muutos (if (>= tulos 1)
-                                        (- (* hoidonjohtopalkkio tulos) hoidonjohtopalkkio)
-                                        (* (- (* hoidonjohtopalkkio tulos) hoidonjohtopalkkio) -1)) ;; Käännetään luku negatiiviseksi
-            muutosprosentti (* (- tulos 1) 100)
+            ;; Desimaalien tarkkuus on tärkeää. Käyttöliittymässä kuitenkin käytetään pyöristettyjä lukuja. Taustalla lasketaan raakaluvuilla.
+            muutosprosentti-raaka  (.divide (bigdec tavoitehinta) (bigdec tarjouksen-tavoitehinta) 10 BigDecimal/ROUND_HALF_UP)
+            ;tulos (with-precision 15 (/ tavoitehinta tarjouksen-tavoitehinta))
+            hoidonjohtopalkkio-muutos (if (>= muutosprosentti-raaka 1)
+                                        (- (* hoidonjohtopalkkio muutosprosentti-raaka) hoidonjohtopalkkio)
+                                        (* (- (* hoidonjohtopalkkio muutosprosentti-raaka) hoidonjohtopalkkio) -1)) ;; Käännetään luku negatiiviseksi
+            muutosprosentti (round2 1 (* (- muutosprosentti-raaka 1) 100))
             ;; Hoidonjohtopalkkioon tehdään muutos, jos hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia muuttuu enemmän kuin 5%
             ;; tarjouksen mukaiseen tavoitehintaan verrattuna.
             hoidonjohtopalkkio-muutos (if (> muutosprosentti 5)

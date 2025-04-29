@@ -23,7 +23,7 @@
    [:div.flex-row.laskenta-rivi-matalampi
     [:div (str "Muutosprosentti (" (fmt/euro-opt (:tavoitehinta paatos)) " / "
             (fmt/euro-opt (:tarjouksen_tavoitehinta paatos)) " - 1) * 100")]
-    [:div.laskenta-rivi-lukema (fmt/euro-opt false true (:muutosprosentti paatos)) "%"]]
+    [:div.laskenta-rivi-lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
    [:div.flex-row.laskenta-rivi-matalampi
     [:div "Hoitovuoden indeksikorjattu hoidonjohtopalkkio"]
     [:div.laskenta-rivi-lukema (fmt/euro-opt (:hoidonjohtopalkkio paatos))]]
