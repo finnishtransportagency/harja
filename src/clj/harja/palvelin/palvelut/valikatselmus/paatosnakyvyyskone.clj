@@ -468,6 +468,7 @@
           tavoitehinta_ennen (- tavoitehinta hintamuutos hoitokauden-lopun-indeksikorjaus)
           ;; Täytetään pakolliset tiedot
           hintapaatos (-> hintapaatos
+                        (assoc :nimi "Hoitovuoden lopun tavoite- ja kattohinta") ;; Nimi löytyy, jos päätösten alkuvuosia ei kovakoodaten vaihdeta testitarkoituksissa
                         (assoc :tavoitehinta_ennen tavoitehinta_ennen)
                         (assoc :tavoitehinta_jalkeen tavoitehinta)
                         (assoc :tavoitehinnan_muutokset hintamuutos)
