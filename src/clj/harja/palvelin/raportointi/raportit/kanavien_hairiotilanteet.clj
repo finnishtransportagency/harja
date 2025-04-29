@@ -1,9 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.kanavien-hairiotilanteet
   "Häiriötilanne raportti"
   (:require
-   [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi raportin-otsikko]]
-   [harja.domain.kanavat.raportointi :as k-raportointi]
-   [harja.kyselyt.urakat :as urakat-q]))
+   [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi raportin-otsikko]]))
 
 
 (defn suorita [db _ {:keys [rivit parametrit]}]
@@ -12,11 +10,8 @@
         [alkupvm loppupvm] aikavali
         otsikko "Häiriötilanteet"
         urakka-id (:id urakka)
-        lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi "vesivayla-kanavien-hoito" :vain-puuttuvat false :urakantila "kaikki"})
-        ;; Käyttää lyhytnimeä jos olemassa, jos ei -> urakan koko nimi
-        urakan-nimi (k-raportointi/suodata-urakat lyhytnimet  #{urakka-id})
-        urakan-nimi (k-raportointi/kokoa-lyhytnimet urakan-nimi)
-        raportin-otsikko (raportin-otsikko urakan-nimi otsikko alkupvm loppupvm)
+        lyhytnimet (yleinen/hae-urakan-lyhytnimet db :vesivayla-kanavien-hoito urakka-id)
+        raportin-otsikko (raportin-otsikko lyhytnimet otsikko alkupvm loppupvm)
         ;; Sarakkeet normaalisti passataan tähän gridin mukana, mutta koska sarakkeiden otsikon ovat niin pitkiä
         ;; niitä pakko vähän muotoilla, PDF rapsasta tulee muuten ihan mössöä
         sarakkeet (rivi

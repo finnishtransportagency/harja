@@ -166,7 +166,9 @@
   (reset! sanktio-atom rivi)
   ;; TODO: Tässä on jotakin sanktioiden liitteiden hakua valinnan yhteydessä?
   ;;       Pitääkö tunnistaa lisäksi onko bonus valittu ja hakea myös bonuksen liitteet?
-  (if (= :virhe (tiedot/hae-sanktion-liitteet! (get-in rivi [:laatupoikkeama :urakka])
+  (if (= :virhe (tiedot/hae-sanktion-liitteet! (or 
+                                                 (get-in rivi [:laatupoikkeama :urakka]) 
+                                                 (get-in rivi [:urakka :id]))
                                                (get-in rivi [:laatupoikkeama :id])
                                                sanktio-atom))
     (viesti/nayta-toast! "Sanktion liitteiden hakeminen epäonnistui" :warning)
