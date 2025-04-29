@@ -90,8 +90,7 @@
                                    :otsikko-muotoilut {:font-size "32px"}
                                    :body-tyyli {:margin-bottom "16px"}
                                    :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
-                                   :footer [napit/sulje "Sulje" #(modal/piilota!)
-                                            {:vayla-tyyli? true :luokka "valikatselmus-nappi nappi-toissijainen valikatselmus-nappi-sulje" :ei-ikonia? true}]
+                                   :footer [napit/sulje #(modal/piilota!)]
                                    :footer-tyyli {:text-align "left"}}
                       [laskenta-modaali paatos]))
              {:style {:text-decoration :underline}}]]

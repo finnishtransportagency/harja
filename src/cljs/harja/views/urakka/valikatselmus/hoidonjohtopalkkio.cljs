@@ -55,7 +55,7 @@
           [:div
            [:div.flex-row.prosentti_rivi
             [:div "Muutosprosentti"]
-            [:div.rivi_lukema (fmt/euro-opt false true (:muutosprosentti paatos)) "%"]]
+            [:div.rivi_lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
            [:div.flex-row
             [:h3.matala-otsikko "Hoidonjohtopalkkion muutos"]
             [:div.otsikko_lukema (fmt/euro-opt false (:hoidonjohtopalkkio_muutos paatos))]]
@@ -66,8 +66,7 @@
                                      :otsikko-muotoilut {:font-size "32px"}
                                      :body-tyyli {:margin-bottom "24px"}
                                      :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
-                                     :footer [napit/sulje "Sulje" #(modal/piilota!)
-                                              {:vayla-tyyli? true :luokka "valikatselmus-nappi nappi-toissijainen valikatselmus-nappi-sulje" :ei-ikonia? true}]
+                                     :footer [napit/sulje #(modal/piilota!)]
                                      :footer-tyyli {:text-align "left"}}
                         [laskenta-modaali paatos]))
                {:style {:text-decoration :underline}}]])
