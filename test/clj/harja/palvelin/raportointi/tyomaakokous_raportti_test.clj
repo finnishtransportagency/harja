@@ -79,7 +79,7 @@
         sanktioraportin-otsikko (-> (nth raportit 15) second :otsikko)]
     (is (= raportin-nimi "Oulun alueurakka 2014-2019, Työmaakokousraportti lokakuussa 2014"))
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
-    (is (= [["Talvihoito (#68)" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 3500.0M, : fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 3500.0M, :fmt :raha, :tyyli nil}]] ["Soratien hoito (#84)" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 10000.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 10000.0M, :fmt :raha, :tyyli nil}]] ["Toimenpiteet yhteensä" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}]]]
+    (is (= [["Talvihoito (#68)" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 3500.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 3500.0M, :fmt :raha, :tyyli nil}]] ["Soratien hoito (#84)" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 10000.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 10000.0M, :fmt :raha, :tyyli nil}]] ["Toimenpiteet yhteensä" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}]]]
           laskutusyhteenveto-taulukot))
     (is (= "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti, kaikki työtyypit lokakuussa 2014, Toimenpide: kaikki"
            muutos-ja-lisatoiden-raportin-otsikko))
