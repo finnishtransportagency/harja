@@ -28,12 +28,13 @@
         [:div.flex-row
          [:div [:h3.matala "Tavoitehinnan ylitys"]]
          [:div.otsikko_lukema (fmt/euro-opt false (:ylityksen_maara paatos))]]
-       [:div.flex-row.summa_rivi_ylin
+       [:div.flex-row.summa_rivi_valja
         [:div (str "Tilaaja maksaa (" (:tilaajan_prosentti paatos) "%)")]
         [:div.rivi_lukema (fmt/euro-opt false (:tilaaja_maksaa paatos))]]
-       [:div.flex-row.summa_rivi_alin
+       [:div.flex-row.summa_rivi_matala
         [:div (str "Urakoitsija maksaa (" (:urakoitsijan_prosentti paatos) "%)")]
         [:div.rivi_lukema (fmt/euro-opt false (:urakoitsija_maksaa paatos))]]
+        [:hr.paatos-hr]
 
        ;; Päätöksenteko napit
         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
@@ -57,18 +58,19 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
-         [:div [:h3.matala "Tavoitehinnan alitus"]]
+         [:div [:h3.matala-otsikko "Tavoitehinnan alitus"]]
          [:div.otsikko_lukema (fmt/euro-opt false (:alituksen_maara paatos))]]
-        [:div.flex-row
+        [:div.flex-row.lista_rivi_ylin
          [:div (str "Tavoitepalkkio (" (:tavoitepalkkion_maksuprosentti paatos) "%)")]
          [:div.rivi_lukema (fmt/euro-opt false (:tavoitepalkkio paatos))]]
         [:div.flex-row
          [:div.small-text.lisays.harmaa (str "max. " (:tavoitepalkkion_maksimi_prosentti paatos) "% hoitovuoden alun indeksikorjatusta tavoitehinnasta.")]]
         ;; Näytetään siirron määrä vain, jos sitä on. Esim viimeisenä vuotena ei siirretä mitään.
         (when (and (:siirron_maara paatos)  (not= 0 (:siirron_maara paatos)))
-          [:div.flex-row.summa_rivi_korkea
+          [:div.flex-row.lista_rivi_korkea
            [:div "Siirretään seuraavan vuoden hankintakustannuksiin alennukseksi"]
            [:div.rivi_lukema (str "-" (fmt/euro-opt false (:siirron_maara paatos)))]])
+        [:hr.paatos-hr]
 
         ;; Päätöksenteko napit tai mahdollinen virhe
         (if (:virhe paatos)
@@ -98,7 +100,7 @@
         [:div.flex-row
          [:div [:h3.matala "Kattohinnan ylitys"]]
          [:div.otsikko_lukema (fmt/euro-opt false (:ylityksen_maara paatos))]]
-        (when (not (:viimeinen_hoitokausi paatos))
+        (when (and (not paatos-tehty?) (not (:viimeinen_hoitokausi paatos)))
           [:div.harmaa-tausta
            [:div.flex-row
             [:div
@@ -143,13 +145,14 @@
              [:div.selite
               [:p (str "*Enintään 3% laskettuna hoitovuoden lopun kattohinnasta.")]])])
 
-        [:div.flex-row.summa_rivi
+        [:div.flex-row.summa_rivi_korkea
          [:div "Urakoitsija maksaa"]
          [:div.rivi_lukema (fmt/euro-opt false (:urakoitsija_maksaa paatos))]]
         (when (and (:siirrettava_maara paatos) (> (:siirrettava_maara paatos) 0))
-          [:div.flex-row.summa_rivi
-           [:div "Siirrettävä määrä"]
+          [:div.flex-row.summa_rivi_matala
+           [:div "Siirretään seuraavalle hoitovuodelle"]
            [:div.rivi_lukema (fmt/euro-opt false (:siirrettava_maara paatos))]])
+        [:hr.paatos-hr]
 
         ;; Päätöksenteko napit
         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?

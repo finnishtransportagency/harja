@@ -53,14 +53,14 @@
          [:span.laskenta-rivi-lukema " > 5% "] "tarjouksen mukaisen tavoitehintaan verrattuna."]
         (if-not (:virhe paatos)
           [:div
-           [:div.flex-row.summa_rivi_ylin
+           [:div.flex-row.prosentti_rivi
             [:div "Muutosprosentti"]
-            [:div.rivi_lukema (fmt/euro-opt false true (:muutosprosentti paatos)) " %"]]
+            [:div.rivi_lukema (fmt/euro-opt false true (:muutosprosentti paatos)) "%"]]
            [:div.flex-row
-            [:h3.ennen-linkkia "Hoidonjohtopalkkion muutos"]
+            [:h3.matala-otsikko "Hoidonjohtopalkkion muutos"]
             [:div.otsikko_lukema (fmt/euro-opt false (:hoidonjohtopalkkio_muutos paatos))]]
            (when-not (= 0 (:hoidonjohtopalkkio_muutos paatos))
-             [:div.flex-row.erillinen
+             [:div.flex-row.laskenta-linkki
               [yleiset/linkki "Näytä laskenta"
                (fn [] (modal/nayta! {:otsikko "Laskenta"
                                      :otsikko-muotoilut {:font-size "32px"}
@@ -71,6 +71,7 @@
                                      :footer-tyyli {:text-align "left"}}
                         [laskenta-modaali paatos]))
                {:style {:text-decoration :underline}}]])
+           [:hr.paatos-hr-korkeampi]
            [:div [yleiset/info-laatikko :neutraali (str
                                                      (if (= 0 (:hoidonjohtopalkkio_muutos paatos))
                                                        "Tavoitehinnan muutos on pienempi kuin 5%. Ei muuteta hoidonjohtopalkkiota."

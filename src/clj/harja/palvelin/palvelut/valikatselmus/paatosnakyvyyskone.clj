@@ -228,7 +228,7 @@
 
       (and tavoitehinta tavoitehinnan-muutokset hoitokauden-indeksikuukaudet)
       (let [;; Laske pistelukujen muutos
-            pisteet (apply + (map #(:indeksiluku %) hoitokauden-indeksikuukaudet))
+            pisteet (apply + (map #(round2 1 (:indeksiluku %)) hoitokauden-indeksikuukaudet))
             piste-keskiarvo (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet)))
             pistelukujen-muutos (round2 1 (- piste-keskiarvo alkuperainen-pisteluku))
             alkuperaisen-pisteluvun-kuukausi (str "elokuu " hoitokauden-alkuvuosi)

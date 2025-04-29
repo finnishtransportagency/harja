@@ -76,11 +76,11 @@
     [:<>
      [:div.row
       [:div.col-xs-12.col-md-8.sivu-otsikko
-       [:h1 "Välikatselmus"]
+       [:h1.valikatselmus "Välikatselmus"]
        [:div.urakan_nimi urakan-nimi]]
       [:div.col-xs-12.col-md-4.hoitovuosi-valikko
        [:div
-        [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
+        [:span.caption-small-strong.alasveto-label "Hoitovuosi"]
         [yleiset/livi-pudotusvalikko {:valinta (pvm/vuosi (first valittu-hoitokausi))
                                       :vayla-tyyli? true
                                       :data-cy "hoitokausi-valinta"

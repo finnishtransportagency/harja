@@ -50,35 +50,31 @@
                                   uudet-simplified)]
     [:div.tavoitehinnan-muutokset
      [:div
-      [:div
-       [napit/tallenna "Tallenna"
-        (if (and muuttui? (empty? @virheet-atom) (empty? rivilla-tyhja-elementti))
-           #(do
-             (reset! tallenna-painettu false)
-             (e! (valikatselmus-tiedot/->TallennaOikaisut uudet-simplified hoitokauden-alkuvuosi)))
-           #(reset! tallenna-painettu true))
-        {:vayla-tyyli? true
-         :luokka "nappi-toissijainen"
-         :disabled (or tallennus-kesken? (not voi-muokata?))}]
-       [napit/tallenna "Lisää rivi"
+      [:div.painikkeet
+       [napit/yleinen-toissijainen "Lisää rivi"
         #(do
            (reset! tallenna-painettu false)
            (swap! hoitokauden-oikaisut-atom assoc uusi-id
              {:id uusi-id
               ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
-        {:vayla-tyyli? true
-         :luokka "nappi-toissijainen"
-         :ikoni (ikonit/livicon-plus)
-         :disabled (or tallennus-kesken? (not voi-muokata?))}]]
+        {:ikoni (ikonit/livicon-plus)
+         :disabled (or tallennus-kesken? (not voi-muokata?))}]
+       [napit/yleinen-toissijainen "Tallenna muutokset"
+        (if (and muuttui? (empty? @virheet-atom) (empty? rivilla-tyhja-elementti))
+          #(do
+             (reset! tallenna-painettu false)
+             (e! (valikatselmus-tiedot/->TallennaOikaisut uudet-simplified hoitokauden-alkuvuosi)))
+          #(reset! tallenna-painettu true))
+        {:disabled (or tallennus-kesken? (not voi-muokata?))}]]
       (when (or (and @tallenna-painettu (not (empty? @virheet-atom)))
               (and @tallenna-painettu (not (empty? rivilla-tyhja-elementti))))
-        [:div
+        [:div.tallennus-varoitus
          [yleiset/info-laatikko :varoitus
           "Muutoksia ei voitu tallentaa. Tietoja puuttuu."
-          nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
-[:div {:style {:padding-top "20px"}}
- [grid/muokkaus-grid
-  (merge {:tyhja "Ei muutoksia tavoitehintaan"
+          nil nil {:sulje-nappi-id (gensym)}]])
+      [:div
+       [grid/muokkaus-grid
+        (merge {:tyhja "Ei muutoksia tavoitehintaan"
           :voi-kumota? false
           :voi-muokata? voi-muokata?
           :muutos #(do
@@ -99,33 +95,34 @@
                           [{:teksti "Yhteensä" :luokka "yhteensa"}
                            {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
                            {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])})
-  [{:otsikko "Muutos"
-    :nimi ::valikatselmus/otsikko
-    :tyyppi :valinta
-    :valinnat (into [] (valikatselmus/luokat @nav/valittu-urakka))
-    :validoi [[:ei-tyhja "Valitse arvo"]]
-    :leveys 2
-    :data-cy (str "luokka-" uusi-id)
-    :elementin-id (str "luokka-" uusi-id)}
-   {:otsikko "Perustelu"
-    :nimi ::valikatselmus/selite
-    :tyyppi :text
-    :koko [:auto 3]
-    :validoi [[:ei-tyhja "Täytä arvo"]]
-    :leveys 3
-    :elementin-id (str "selite-" uusi-id)}
-   {:otsikko "Vaikutus € (+/-)"
-    :nimi ::valikatselmus/summa
-    :tyyppi :euro
-    :nayta-plus true
-    :input-luokka "maara-input"
-    :desimaalien-maara 2
-    :validoi [[:ei-tyhja "Täytä arvo"]]
-    :leveys 2
-    :tasaa :oikea
-    :fmt (partial fmt/euro-opt false true)
-    :elementin-id (str "summa-" uusi-id)}]
-  hoitokauden-oikaisut-atom]] ] ] ) )
+        [{:otsikko "Muutos"
+          :nimi ::valikatselmus/otsikko
+          :tyyppi :valinta
+          :valinnat (into [] (valikatselmus/luokat @nav/valittu-urakka))
+          :validoi [[:ei-tyhja "Valitse arvo"]]
+          :leveys 2
+          :data-cy (str "luokka-" uusi-id)
+          :elementin-id (str "luokka-" uusi-id)}
+         {:otsikko "Perustelu"
+          :nimi ::valikatselmus/selite
+          :tyyppi :text
+          :koko [:auto 3]
+          :validoi [[:ei-tyhja "Täytä arvo"]]
+          :leveys 3
+          :elementin-id (str "selite-" uusi-id)}
+         {:otsikko "Vaikutus € (+/-)"
+          :nimi ::valikatselmus/summa
+          :tyyppi :euro
+          :nayta-plus true
+          :ei-yksikkoa? true
+          :input-luokka "maara-input"
+          :desimaalien-maara 2
+          :validoi [[:ei-tyhja "Täytä arvo"]]
+          :leveys 2
+          :tasaa :oikea
+          :fmt (partial fmt/euro-opt false true)
+          :elementin-id (str "summa-" uusi-id)}]
+        hoitokauden-oikaisut-atom]]]]))
 
 (defn kattohinnan-oikaisu
   "Kattohinnan oikaisua tarvitsevat urkat, jotka ovat alkaneet -19-20 vuosina. Muille kattohinta on 110% tavoitehinnasta."
@@ -135,9 +132,9 @@
       [:<>
        [:div.valja
         [yleiset/info-laatikko :neutraali "Jos tavoitehinnan oikaisun myötä myös kattohinta muuttuu, syötä muuttunut kattohinta." nil nil]]
-       [:div.flex-row.alkuun.valistys16
+       [:div.flex-row
         [kentat/tee-otsikollinen-kentta {:otsikko "Muuttunut kattohinta"
-                                         :otsikon-luokka "caption-small-strong valja"
+                                         :otsikon-luokka "caption-small-strong"
                                          :luokka ""
                                          :kentta-params {:tyyppi :euro
                                                          :koko 20
@@ -198,6 +195,7 @@
 
         (when kattohinnan-oikaisu-mahdollinen?
           [kattohinnan-oikaisu e! kattohinta paatos-tehty?])
+        [:hr.paatos-hr]
 
         ;; Päätöksenteko napit
         (if-not (:virhe paatos)

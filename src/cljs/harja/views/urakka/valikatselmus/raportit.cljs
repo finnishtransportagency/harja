@@ -34,6 +34,7 @@
       avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
+        [:div [yleiset/info-laatikko :neutraali (str "Hoitovuoden raportointi lukitaan 31.12." (inc hoitokauden-alkuvuosi)) nil nil]]
         [:div.flex-row.raportti-teksti
          [:p "Tarkista, että seuraavien raporttien luvut ovat oikein ja liitä raportit välikatselmuspöytäkirjaan."]]
         [:div.flex-row.ilmoitus [:div [ikonit/livicon-document-full] [harja.ui.yleiset/linkki "Ympäristöraportti"
@@ -45,7 +46,7 @@
         [:div.flex-row.ilmoitus-matala [:div [ikonit/livicon-document-full] [harja.ui.yleiset/linkki "Tehtävämääräraportti"
                                                                              #(siirtymat/avaa-raportti :tehtavamaarat (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
                                                                              {:luokka "klikattava alleviivaa"}]]]
-        [:div [yleiset/info-laatikko :neutraali (str "Hoitovuoden raportointi lukitaan 31.12." (inc hoitokauden-alkuvuosi)) nil nil]]
+        [:hr.paatos-hr-matalin]
         (if (:virhe paatos)
           [:div.muokkaustoiminnot [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]]
           [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
