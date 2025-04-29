@@ -173,8 +173,9 @@
 
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
 
-        ;; Edellisen hoitovuoden syyskuun pisteluku
-        alkuperainen-pisteluku (:arvo (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakkaid (dec valittu-hoitovuosi) 9))
+        ;; Edellisen hoitovuoden syyskuun pisteluku - eli elokuu
+        ;; ;; Vaiha alku vuosi, eli vantaa 2024 . pitää tulla elokuu 2024
+        alkuperainen-pisteluku (:arvo (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakkaid valittu-hoitovuosi 8))
         hoitokauden-indeksikuukaudet (hae-hoitovuoden-indeksiluvut db urakkaid valittu-hoitovuosi)
 
         ;; Hoitokauden lopun indeksikorjaus

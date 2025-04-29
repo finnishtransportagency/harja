@@ -153,9 +153,9 @@
                                   +kayttaja-jvh+
                                   (assoc muokattava-oikaisu ::valikatselmus/summa 50000)))
         vuoden-2021-oikaisut (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))
-        viimeisin-oikaisu (last vuoden-2021-oikaisut)
+        vastauksen-oikaisu (first (filter #(= "Muokattava testioikaisu" (:harja.domain.kulut.valikatselmus/selite %)) vuoden-2021-oikaisut))
         ;; Ajankohtien millisekunnit hieman heittävät tallennuksen yhteydessä, niin trimmataan niitä hieman
-        odotettu-vastaus (-> viimeisin-oikaisu
+        odotettu-vastaus (-> vastauksen-oikaisu
                            (update :harja.domain.muokkaustiedot/muokattu #(pvm/aika-iso8601-ilman-millisekunteja %))
                            (update :harja.domain.muokkaustiedot/luotu #(pvm/aika-iso8601-ilman-millisekunteja %)))
         muokattava-oikaisu (-> muokattava-oikaisu

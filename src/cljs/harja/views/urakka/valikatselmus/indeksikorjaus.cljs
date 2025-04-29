@@ -42,12 +42,14 @@
      [:div.flex-row.laskenta-rivi-korkeampi [:div "Indeksikorjauksen prosenttiosuuden laskenta"]]
      [:div.flex-row.laskenta-avattuna
       [:div (str "Pistelukujen muutos 0,1 % tarkkuudella") [:br]
-       (str "("(fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1)" -"(fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1)") / "(fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1)" * 100")]
-      [:div pistelukujen-muutos " %"]]
-     [:hr.hr-korkea]
-     [:div.flex-row
-      [:div [:strong "2,0 % ylittävä osuus"]]
-      [:div [:strong (fmt/desimaaliluku-opt (- (js/parseFloat (str/replace pistelukujen-muutos "," ".")) 2) 1)  " %"]]]]))
+       [:span "("]
+       (for [k (take (min (count (:hoitokauden_kuukaudet paatos)) 5) (:hoitokauden_kuukaudet paatos))]
+         [:span (fmt/desimaaliluku-opt (:indeksiluku k) 1) " + "])
+       (str " ... / " (count (:hoitokauden_kuukaudet paatos)) ")")
+       (str " / " (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) " * 100")
+
+       ]
+      [:div pistelukujen-muutos " %"]]]))
 
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :hoidonjohtopalkkion-muutos
@@ -66,19 +68,21 @@
         (if-not (:virhe paatos)
           [:div
            [:div.flex-row.summa_rivi_ylin
-            [:div "Hoitovuoden lopun indeksikorjattu tavoitehinta"]
+            [:div "Hoitovuoden alun indeksikorjattu tavoitehinta"]
             [:div [:strong (fmt/euro-opt false (:tavoitehinta paatos))]]]
            [:div.flex-row.summa_rivi
             [:div "Tavoitehinnan muutokset"]
             [:div [:strong (fmt/euro-opt false true (:tavoitehinnan_muutokset paatos))]]]
            [:div.flex-row.summa_rivi
-            [:div "Hoitovuoden lopun tavoitehinta ennen hoitovuoden lopun indeksikorjausta"]
+            [:div "Hoitovuoden lopun tavoitehinta ennen indeksikorjausta"]
             [:div [:strong (fmt/euro-opt false (:tavoitehinta_ennen paatos))]]]
            [:div.flex-row.summa_rivi
             [:div "Pistelukujen muutos"]
             [:div [:strong (fmt/euro-opt false (:pistelukujen_muutos_prosentteina paatos)) "%"]]]
            [:div.flex-row.summa_rivi
-            [:div "Indeksikorjauksen prosenttiosuus (2% ylittävä osa)"]
+            [:div (str "Indeksikorjauksen prosenttiosuus (2% " (if (> 0 (:pistelukujen_muutos_prosentteina paatos))
+                                                                     "alittava"
+                                                                     "ylittävä" ) " osa)")]
             [:div [:strong (fmt/euro-opt false (:indeksikorotuksen_prosenttiosuus paatos)) "%"]]]
            [:div.flex-row.linkki_rivi
             [yleiset/linkki "Näytä laskenta"
