@@ -321,10 +321,7 @@
     (tarkista-cognito-todennus-perustiedot vastaus x-iam-accesstoken x-iam-data)))
 
 
-;; TODO 
-;; Tämä päälle vasta sitten kun väännetään käyttäjien esto päälle 
-;; Aluksi mergetään ilman, joten tämä testi ei  tule menemään läpi vielä  
-#_(deftest cognito-esta-harjaan-paasy-test
+(deftest cognito-esta-harjaan-paasy-test
   (let [initialisoidut-tiedot (initialisoi-cognito-jwt-todennuspyynto)
         todennuspyynto (-> initialisoidut-tiedot :todennuspyynto)
         x-iam-data (get todennuspyynto "x-iam-data")
@@ -352,8 +349,8 @@
         (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennus ei onnistunut: No method in multimethod")) "Odotettu virhe tapahtuu")
 
         ;; Roolien ei pitäisi täsmätä
-        (is (not= (get-in vastaus [:kayttaja :roolit]) odotetut-harja-roolit) "Käyttäjällä ei ole harja rooleja")
-        (is (not= (get-in vastaus [:kayttaja :urakkaroolit]) odotetut-urakka-roolit) "Käyttäjällä ei ole harja rooleja")
+        (is (not= (get-in vastaus [:kayttaja :roolit]) odotetut-harja-roolit) "(CRITICAL): Käyttäjällä ei ole harja rooleja")
+        (is (not= (get-in vastaus [:kayttaja :urakkaroolit]) odotetut-urakka-roolit) "(CRITICAL): Käyttäjällä ei ole harja rooleja")
 
         ;; Muiden perustietojen  pitäisi silti olla OK 
         (tarkista-cognito-todennus-perustiedot vastaus x-iam-accesstoken x-iam-data)))
@@ -379,7 +376,7 @@
             vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet injected-token x-iam-data kehitysmoodi? public-key)]
 
         (is (= (get vahvistetut-tunnustiedot "custom:rooli") "failed") "Käyttö Harjaan estetään")
-        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennus ei onnistunut: Message seems corrupt or manipulated")) "Odotettu virhe tapahtuu")))))
+        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennus ei onnistunut: Message seems corrupt or manipulated")) "(CRITICAL): Odotettu virhe tapahtuu")))))
 
 
 (deftest ei-public-avainta-asetettu-paasta-kayttaja-harjaan-test
@@ -566,9 +563,7 @@
         (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennettiin onnistuneesti")))))
 
     
-    ;; TODO , blokkaus ei ole vielä käytössä
-    ;; Enabloi vasta sitten kun on
-    #_(testing "Todennus estää pääsyn (suora kutsu), accesstoken puuttuu (CRITICAL)"
+    (testing "Todennus estää pääsyn (suora kutsu), accesstoken puuttuu (CRITICAL)"
       (nollaa-todennuksen-cache)
       (let [kehitysmoodi? true
             public-key [accesstoken-public-key iam-data-public-key]
@@ -577,7 +572,7 @@
         (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennus ei onnistunut: JWT Token puuttui kokonaan")))))
 
 
-    #_(testing "Todennus estää pääsyn (suora kutsu), iam-data puuttuu (CRITICAL)"
+    (testing "Todennus estää pääsyn (suora kutsu), iam-data puuttuu (CRITICAL)"
       (nollaa-todennuksen-cache)
       (let [kehitysmoodi? true
             public-key [accesstoken-public-key iam-data-public-key]
