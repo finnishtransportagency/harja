@@ -40,7 +40,7 @@
 
 (defn- epaonnistui [vastaus app]
   (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
-  (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+  (viesti/nayta-toast! "Tietojen haku epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
   (assoc app :haku-kaynnissa? false))
 
 
