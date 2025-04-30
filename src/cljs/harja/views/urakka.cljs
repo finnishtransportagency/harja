@@ -128,8 +128,16 @@
                            (istunto/ominaisuus-kaytossa? :vesivayla))
 
     :tiemerkinnan-kustannukset (and
-                                 (oikeudet/urakat-tiemerkinnankustannukset id)
+                                 (oikeudet/urakat-tiemerkinta-kustannukset id)
                                  (= tyyppi :tiemerkinta))
+    
+    :kustannusten-kirjaus (and
+                            (oikeudet/urakat-tiemerkinta-kustannukset id)
+                            (= tyyppi :tiemerkinta))
+    
+    :kustannusten-yhteenveto (and
+                               (oikeudet/urakat-tiemerkinta-kustannukset id)
+                               (= tyyppi :tiemerkinta))
     
     :paikkaukset-mpu (and
                        (oikeudet/urakat-paikkaukset id)
@@ -286,13 +294,13 @@
 
        "Kustannusten kirjaus"
        :kustannusten-kirjaus
-       (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
+       (when (valilehti-mahdollinen? :kustannusten-kirjaus ur)
          ^{:key "kustannusten-kirjaus"}
          [kustannusten-kirjaus/kustannusten-kirjaus ur])
 
        "Kustannusten yhteenveto"
        :kustannusten-yhteenveto
-       (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
+       (when (valilehti-mahdollinen? :kustannusten-yhteenveto ur)
          ^{:key "kustannusten-yhteenveto"}
          [kustannusten-yhteenveto/kustannusten-yhteenveto ur])
 
