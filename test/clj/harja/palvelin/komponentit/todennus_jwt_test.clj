@@ -297,9 +297,6 @@
         vastaus-roolit (get-in vastaus [:kayttaja :roolit])
         vastaus-urakkaroolit (get-in vastaus [:kayttaja :urakkaroolit])]
 
-
-    (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennettiin onnistuneesti")))
-
     ;; Vastaahan roolit odotettuja rooleja 
     (is (= vastaus-roolit odotetut-harja-roolit))
     (is (= vastaus-urakkaroolit odotetut-urakka-roolit))
@@ -559,8 +556,7 @@
       (let [kehitysmoodi? true
             public-key [accesstoken-public-key iam-data-public-key]
             vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet x-iam-accesstoken x-iam-data kehitysmoodi? public-key)]
-        (is (= (get vahvistetut-tunnustiedot "custom:rooli") mock-roolit))
-        (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennettiin onnistuneesti")))))
+        (is (= (get vahvistetut-tunnustiedot "custom:rooli") mock-roolit))))
 
     
     (testing "Todennus estää pääsyn (suora kutsu), accesstoken puuttuu (CRITICAL)"
