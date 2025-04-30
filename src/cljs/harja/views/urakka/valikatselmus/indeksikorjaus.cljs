@@ -94,7 +94,8 @@
                                    :footer-tyyli {:text-align "left"}}
                       [laskenta-modaali paatos]))
              {:style {:text-decoration :underline}}]]
-           [:div.flex-row
+           [:div.flex-row {:aria-live "polite"}
+            ;;Tämä :aria-live on tässä ruudunlukijaa varten, jotta se jätä tätä linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
             [:h3.alempi-otsikko "Hoitovuoden lopun indeksikorjaus"]
             [:div.otsikko_lukema (fmt/euro-opt false (:hoitokauden_lopun_indeksikorjaus paatos))]]
            [:hr.paatos-hr]
