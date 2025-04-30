@@ -189,8 +189,8 @@
 
         (when (and paatos-tehty? voi-muokata?)
           [:div.valja
-           [yleiset/info-laatikko :vahva-ilmoitus
-            "Tavoitehintaan liittyvä päätös on tallennettu. Jos aiot tehdä  uusia tavoitehinnan muutoksia, kumoa päätös ensin."
+           [yleiset/info-laatikko :neutraali
+            "Tavoitehinnan muutokset on päätetty. Voit tehdä muutoksia perumalla päätöksen."
             nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
 
         (when kattohinnan-oikaisu-mahdollinen?
