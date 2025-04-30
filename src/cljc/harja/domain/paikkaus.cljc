@@ -172,8 +172,7 @@
                    "AN10"
                    "AN14"
                    "AN19"
-                   "AN30"
-                   "AN22"})
+                   "AN30"})
 
 (defn validoi-reunat [reunat]
   (or (nil? reunat) (every? #(or (= 1 %) (= 2 %)) reunat)))
