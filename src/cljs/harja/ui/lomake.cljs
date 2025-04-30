@@ -399,7 +399,11 @@ ja kaikki pakolliset kentät on täytetty"
            piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
-  [:div.form-group {:class (str (or
+  
+  [:div.form-group {:class (str 
+                             ;; Korostaa input/tekstikentän reunat, jos on virhe
+                             (when (some? virheet) "lomake-validointivirhe ")
+                             (or
                                   ;; salli skeeman ylikirjoittaa ns-avaimella
                                   (::col-luokka s)
                                   col-luokka

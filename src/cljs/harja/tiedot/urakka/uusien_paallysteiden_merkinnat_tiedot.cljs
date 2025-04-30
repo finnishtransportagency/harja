@@ -52,9 +52,10 @@
                      valinnat)
           paallyste-haku (tuck/send-async! ->HaePaallystysKustannukset)
           paikkaus-haku (tuck/send-async! ->HaePaikkausKustannukset)]
+      
       (go (paallyste-haku valinnat))
       (go (paikkaus-haku valinnat))
-      (assoc app :valinnat valinnat)))
+      (assoc app :valinnat valinnat :haku-kaynnissa? true :paikkaus-kustannukset [] :kustannukset [])))
   
   HaePaallystysKustannukset
   (process-event [_ app]
