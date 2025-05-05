@@ -6,6 +6,52 @@ CREATE TYPE suolausalueen_osuus AS
     osuus        FLOAT
 );
 
+-- Funktio: Kohdista_suolapiste_ajoradalle
+-- Poistetaan vanha versio. Uudessa viilattu koodia ja täsmennetty nimi muotoon: kohdista_suolapiste_ajoradalle
+DROP FUNCTION IF EXISTS lahin_piste_suolattavalla_tiella(piste point);
+
+-- Kohdista_suolapiste_ajoradalle siirtää ajoradalta sivuun osuneen suolapisteen ajoradalle näissä tapauksissa:
+-- 1. Suolapiste on epätarkkuuden vuoksi kohdstunut käpyväylälle.
+-- Käpyväyliä ei suolata, joten nämä pisteet kuuluvat ajoradalle.
+-- 2. Suolapiste on talvihoitoluokitellulla tiestöllä, mutta sivussa ajoradasta.
+
+-- Toteutukseen jäävät heikkoudet:
+-- 1. Kohdista_suolapiste_ajoradalle ei täsmennä pisteen sijaintia, jos piste on talvihoitoluokittelemattomalla tiestöllä ajoradasta sivussa.
+-- Periaatteessa tällainen täsmennys voitaisiin koodiin lisätä, mutta käytännössä silloin on kysymys kaikkien suolapisteiden
+-- kohdistuksen tarkennuksesta, ja se kuuluisi pikemminkin urakoitsijajärjestelmälle.
+-- Toki myös kaksi täsmennystä, joka Harja tekee, olisi parempi hoitaa urakoitsijajärjestelmässä.
+-- 2. Alkuperäisen pisteen siirtäminen max 25 metriä sen kohdistamiseksi talvihoitoluokitellulle tielle
+-- voi vääristää rajoitusalueiden suolapäättelyä. Ei olisi hyvä täsmentää pisteiden sijaintia Harjassa ollenkaan.
+-- Parempi ratkaisu olisi kohdistaa piste täsmällisesti tieverkolle jo urakoitsijajärjestelmässä.
+
+-- Miksi sitten Harjassa täsmennetään pisteiden sijaintia?
+-- Pisteen käsittely on todettu tässä tarpeelliseksi, koska urakoitsijajärjestelmistä tulee joskus tien sivuun osuneita pisteitä.
+-- On mahdollista että piste on syrjässä ajoradalta, ja se vaikuttaa rajoitusalueen hakuun tai rajoitusalueen suolamäärän laskentaan. Tätä ei voi sallia.
+
+CREATE OR REPLACE FUNCTION kohdista_suolapiste_ajoradalle(piste point)
+    RETURNS POINT AS
+$$
+DECLARE
+    tasmennetty_piste POINT;
+BEGIN
+    -- Haetaan talvihoitoluokitelluilta teiltä pisteet
+    WITH geometriat AS (SELECT hoitoluokka                                                      AS talvihoitoluokka,
+                               st_distance84(geometria, piste::geometry)          AS etaisyys,
+                               st_closestpoint(geometria, piste::geometry)::POINT AS lahin_piste
+                        FROM hoitoluokka
+                        WHERE tietolajitunniste = 'talvihoito'
+                          AND st_dwithin(geometria, piste::geometry, 25)
+                        ORDER BY etaisyys)
+    SELECT lahin_piste FROM geometriat WHERE talvihoitoluokka NOT IN (9,10,11) ORDER BY etaisyys ASC LIMIT 1 INTO tasmennetty_piste;
+
+    IF tasmennetty_piste IS NOT NULL THEN
+        RETURN tasmennetty_piste;
+    ELSE
+        RETURN piste; -- Jos täsmällisempää pistettä ei löytynyt, palautetaan alkuperäinen piste
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Funktiolle välitetään kaksi suolaustoteuman pistettä: alkupiste ja loppupiste, jossa suolankäyttö raportoidaan.
 -- Funktio muodostaa pisteiden perusteella tieosoitevälin ja jakaa sen osiin sen mukaan miten välille osuu suolankäytön rajoitusalueita ja rajoittamatonta aluetta.
 -- Rajoitusalueet ovat urakka- ja hoitovuosikohtaisia.
@@ -21,13 +67,15 @@ DECLARE
     piste1_              POINT;
     piste2_              POINT;
 BEGIN
-    -- Varmistetaan että haetaan piste tielä, jota suolataan. Tällä varmistetaan, ettei saada rajoitusaluetta tien geometriaa,
-    -- jota ei suolata. Tällä varmistetaan, ettei virheellisesti jätetä suolattua rajoitusaluetta merkitsemättä
-    -- vaikka gps-pisteet osuisivat pyörätielle.
-    SELECT lahin_piste_suolattavalla_tiella(piste1) INTO piste1_;
-    SELECT lahin_piste_suolattavalla_tiella(piste2) INTO piste2_;
-    jaljella_osuutta := 1; -- Vähennetään tästä rajoitusalueet
+    -- Täsmennä pisteen sijaintia siltä varalta, että GPS-piste on osunut osuisivat pyörätielle tai rajoitusalueesta sivuun.
+    SELECT kohdista_suolapiste_ajoradalle(piste1) INTO piste1_;
+    SELECT kohdista_suolapiste_ajoradalle(piste2) INTO piste2_;
 
+    jaljella_osuutta := 1; -- Vähennetään kokonaismäärästä rajoitusalueet, loput suolasta on rajoittamattomien alueiden suolaa.
+
+    -- Pisteen ei kuuluisi palautua nullina. Joko se kohdistuu tarkemmin tieverkolle ja siirtyy hieman
+    -- tai saadaan takaisin sama piste. Jos SUOLATOTEUMA_REITTIPISTE-taulusta puuttuu suolapisteitä, jotka ovat
+    -- toteuman TOTEUMAN_REITTIPISTEET-tiedoissa, kyseessä on virhetilanne, joka kannattaa selvittää.
     IF (piste1_ IS NULL OR piste2_ IS NULL) THEN
         RETURN;
     END IF;
