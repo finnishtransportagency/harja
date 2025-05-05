@@ -477,11 +477,12 @@
   [skeema rivinumerot? piilota-toiminnot?]
   [:thead
    [:tr
-    (if rivinumerot? [:th {:width "40px"} " "])
+    (if rivinumerot? [:th {:scope "col" :width "40px"} " "])
     (map-indexed
       (fn [i {:keys [otsikko yksikko leveys nimi tasaa sarake-sort]}]
         ^{:key (str i nimi)}
-        [:th {:width (or leveys "5%")
+        [:th {:scope "col"
+              :width (or leveys "5%")
               :class (y/luokat (y/tasaus-luokka tasaa)
                        (grid-yleiset/tiivis-tyyli skeema))}
          otsikko
@@ -495,7 +496,7 @@
              :ikoni [ikonit/action-sort-descending]}])])
       skeema)
     (when-not piilota-toiminnot?
-      [:th.toiminnot {:width "40px"} " "])]])
+      [:th.toiminnot {:scope "col" :width "40px"} " "])]])
 
 (defn muokkaus-grid
   "Versio gridistä, jossa on vain muokkaustila. Tilan tulee olla muokkauksen vaatimassa {<id> <tiedot>} array mapissa.
