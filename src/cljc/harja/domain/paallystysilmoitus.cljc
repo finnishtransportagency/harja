@@ -83,8 +83,7 @@
    {:nimi "AN10" :koodi 3}
    {:nimi "AN14" :koodi 4}
    {:nimi "AN19" :koodi 5}
-   {:nimi "AN30" :koodi 6}
-   {:nimi "AN22" :koodi 7}])
+   {:nimi "AN30" :koodi 6}])
 
 (def +kyylamyllyt-ja-nil+
   (conj +kuulamyllyt+  {:nimi "Ei tietoa" :koodi 9} {:nimi "Ei kuulamyllyä" :koodi nil}))
