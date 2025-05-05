@@ -917,11 +917,6 @@
                     <xs:documentation>AN30</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
-            <xs:enumeration value="7">
-                <xs:annotation>
-                    <xs:documentation>AN22</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
             <xs:enumeration value="9">
                 <xs:annotation>
                     <xs:documentation>Ei tietoa</xs:documentation>

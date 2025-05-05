@@ -3,7 +3,6 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.palvelut.kustannusten-kirjaus :as tiemerkkarit]))
 
 (defn jarjestelma-fixture [testit]
@@ -21,9 +20,6 @@
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each jarjestelma-fixture)
-
-(defn- tee-kutsu [params kutsu]
-  (kutsu-palvelua (:http-palvelin jarjestelma) kutsu +kayttaja-jvh+ params))
 
 (deftest tallennus-paivitys-toimii
   (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
@@ -266,11 +262,11 @@
 
           ;; Luo paikkauskohde
           paikkauskohde-id (i (format "INSERT INTO paikkauskohde
-                                       (nimi, \"urakka-id\", \"ulkoinen-id\", alkupvm, loppupvm, poistettu)
+                                       (nimi, \"urakka-id\", \"ulkoinen-id\", alkupvm, loppupvm, poistettu, \"tiemerkinnan-tila\")
                                        VALUES
-                                       ('Testipaikkauskohde plim', %s, '%s', '%s', '%s', false)
+                                       ('Testipaikkauskohde plim', %s, '%s', '%s', '%s', false, '%s')
                                        RETURNING id"
-                                urakka-id ulkoinen-id (:alkupvm urakka) (:loppupvm urakka)))
+                                urakka-id ulkoinen-id (:alkupvm urakka) (:loppupvm urakka) "valmis"))
 
           ;; Lisää tieosoite paikkauskohteelle
           _ (i (format "UPDATE paikkauskohde 
@@ -315,11 +311,11 @@
 
           ;; Luo paikkauskohde
           paikkauskohde-id (i (format "INSERT INTO paikkauskohde
-                                       (nimi, \"urakka-id\", \"ulkoinen-id\", alkupvm, loppupvm, poistettu)
+                                       (nimi, \"urakka-id\", \"ulkoinen-id\", alkupvm, loppupvm, poistettu, \"tiemerkinnan-tila\")
                                        VALUES
-                                       ('Testipaikkauskohde tallennus', %s, '%s', '%s', '%s', false)
+                                       ('Testipaikkauskohde tallennus', %s, '%s', '%s', '%s', false, '%s')
                                        RETURNING id"
-                                urakka-id ulkoinen-id (:alkupvm urakka) (:loppupvm urakka)))
+                                urakka-id ulkoinen-id (:alkupvm urakka) (:loppupvm urakka) "valmis"))
 
           ;; Lisää tieosoite paikkauskohteelle
           _ (i (format "UPDATE paikkauskohde 

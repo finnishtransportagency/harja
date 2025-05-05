@@ -38,7 +38,7 @@
              tyy-tiedot/tiemerkinnan-toteumat
              tyy-tiedot/paallystysurakan-kohteet
              @u/valittu-urakan-vuosi])
-
+          
           "Muut kustannukset"
           :muut
           (when (oikeudet/urakat-toteutus-muutkustannukset id)

@@ -34,7 +34,7 @@
         urakan-alkuvuosi (pvm/vuosi (get-in urakka [:urakka :alkupvm]))
         urakan-loppuvuosi (pvm/vuosi (get-in urakka [:urakka :loppupvm]))
         default-lista (default-kustannuslista urakka-id urakan-alkuvuosi urakan-loppuvuosi)]
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan user urakka-id)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset user urakka-id)
     (let [vastaus (into []
                     (map #(konv/decimal->double % :kustannus :pk1 :pk2 :pk3)
                       (q/hae-tiemerkinta-kustannuskirjaukset db urakka-id)))]
@@ -44,7 +44,7 @@
 
 (defn hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
   [db user {:keys [urakka-id kustannusvuosi] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset user urakka-id)
   (let [vastaus (into [] (map #(konv/decimal->double % :kustannus :pk1 :pk2 :pk3)
                            (q/hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
                              db {:urakka urakka-id :kustannusvuosi kustannusvuosi})))]
@@ -66,7 +66,7 @@
 (defn tallenna-tiemerkinta-kustannuskirjaukset
   [db user tiedot]
   (let [urakka-id (get-in tiedot [:urakka :id])]
-    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinnan user)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinta-kustannukset user)
     (doseq [tieto (:tiedot tiedot)]
       (when (< 0.0M (bigdec (:kustannus tieto)))
         (validoi-rivi tieto)))
@@ -80,7 +80,7 @@
 
 (defn hae-tiemerkinta-paallystyskohteiden-kustannukset
   [db kayttaja {:keys [urakka-id urakka-alkupvm yllapitokohdetyotyyppi]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan kayttaja urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
   (let [vuosi (pvm/vuosi urakka-alkupvm)]
     (q/hae-urakan-yllapitokohteiden-kustannukset db {:urakka urakka-id 
                                                      :yllapitokohdetyotyyppi (or yllapitokohdetyotyyppi  "paallystys") 
@@ -88,13 +88,13 @@
 
 (defn hae-tiemerkinta-paikkausten-kustannukset
   [db kayttaja {:keys [urakka-id urakka-alkupvm]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan kayttaja urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
   (let [vuosi (pvm/vuosi urakka-alkupvm)]
     (q/hae-urakan-paikkauskohteiden-kustannukset db {:urakka-id urakka-id :vuosi vuosi})))
 
 (defn tallenna-tiemerkinta-yllapitokohteiden-kustannukset
   [db user {:keys [tiedot]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinnan user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinta-kustannukset user)
   (try
     (jdbc/with-db-transaction [db db]
       (let [tulokset (mapv (fn [tieto]
@@ -116,7 +116,7 @@
 
 (defn tallenna-tiemerkinta-paikkauskohteiden-kustannukset
   [db user {:keys [tiedot]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinnan user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinta-kustannukset user)
   (try
     (jdbc/with-db-transaction [db db]
       (let [tulokset (mapv (fn [tieto]
@@ -136,6 +136,10 @@
       {:onnistui false
        :virhe (.getMessage e)})))
 
+(defn hae-tiemerkinta-kustannustyypit
+  [db kayttaja {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
+  (q/hae-tiemerkinta-kustannustyypit db))
 
 (defrecord TiemerkinnanKustannusKirjaukset []
   component/Lifecycle
@@ -171,6 +175,9 @@
     (julkaise-palvelu (:http-palvelin this) :tallenna-tiemerkinta-paikkauskohteiden-kustannukset
       (fn [kayttaja tiedot]
         (tallenna-tiemerkinta-paikkauskohteiden-kustannukset (:db this) kayttaja tiedot)))
+    
+    (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-kustannustyypit
+      (fn [kayttaja tiedot] (hae-tiemerkinta-kustannustyypit (:db this) kayttaja tiedot)))
     this)
 
   (stop [this]
@@ -178,8 +185,7 @@
       :hae-tiemerkinta-kustannuskirjaus
       :hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
       :tallenna-tiemerkinta-kustannuskirjaus
-      
-      ;; Uudet päällysteet
+      :hae-tiemerkinta-kustannustyypit
       :hae-tiemerkinta-paallystyskohteiden-kustannukset
       :hae-tiemerkinta-paikkausten-kustannukset
       :tallenna-tiemerkinta-yllapitokohteiden-kustannukset

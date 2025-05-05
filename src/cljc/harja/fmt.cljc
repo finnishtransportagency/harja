@@ -489,7 +489,9 @@
   Olettaa saavansa parametrit joko kaikki päivämäärinä tai kaikki vuosina:
   valittu-hk: [pp.kk.vvvv pp.kk.vvvv] TAI vvvv tai järjestysnumero, esim. 2
   hoitovuodet: [[pp.kk.vvvv pp.kk.vvvv]...] TAI [2012 2013 2014 2015 2016] TAI järjestysnumerot, esim. [1 2 3 4 5)"
-  [valittu-hk hoitovuodet vuosi-termi]
+  ([valittu-hk hoitovuodet vuosi-termi]
+   (hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet vuosi-termi false))
+  ([valittu-hk hoitovuodet vuosi-termi sisaltaa-koko-kauden?]
   (assert (or (and (int? valittu-hk) (every? int? hoitovuodet))
               (and (int? valittu-hk) (> valittu-hk 0) (< valittu-hk 10) (every? vector? hoitovuodet))
               (and (vector? valittu-hk) (every? vector? hoitovuodet))) "Kaikkien parametrien on oltava joko numeroita tai pvm:n sisältäviä vektoreita. Myös hoitokauden järjestysluku ja vektori ")
@@ -519,7 +521,9 @@
                     ;; jos alku- ja loppuvuosi ovat samat, ei toisteta samaa vuosilukua
                     (str alkuvuosi (when-not (= alkuvuosi loppuvuosi)
                                      (str "\u2014" loppuvuosi)))))]
-    (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi) " (" (hk-fmt valittu-hk) ")")))
+    (if sisaltaa-koko-kauden? 
+      "Kaikki"
+      (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi) " (" (hk-fmt valittu-hk) ")")))))
 
 (defn hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
   "Näyttää hoitokauden esim 1.10.2022 - 30.9.2023 formaatissa '2. hoitovuosi (1.10.2022 - 30.9.2023)'.
