@@ -94,13 +94,12 @@
         (when (:virhe paatos)
           [:div [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
         [:hr.paatos-hr]
-        (when-not (:virhe paatos)
 
-          ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös
-          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
-           #(e! (valikatselmus-tiedot/->TallennaLupausPaatos paatos))
-           (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos))
-                                                                      :teksti "Automaattisesti kirjattu bonus/sanktio poistetaan."})
-           #(if (:lupaussanktio paatos)
-              [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
-              [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."])])])]))
+        ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös
+        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+         #(e! (valikatselmus-tiedot/->TallennaLupausPaatos paatos))
+         (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos))
+                                                                    :teksti "Automaattisesti kirjattu bonus/sanktio poistetaan."})
+         #(if (:lupaussanktio paatos)
+            [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
+            [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."])]])]))
