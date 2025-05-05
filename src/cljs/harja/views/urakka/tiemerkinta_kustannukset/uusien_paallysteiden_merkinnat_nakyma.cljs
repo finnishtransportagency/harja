@@ -10,6 +10,8 @@
    [harja.ui.grid :as grid]
    [harja.ui.komponentti :as komp]
    [harja.ui.yleiset :as yleiset]
+   [harja.pvm :as pvm]
+   [harja.ui.valinnat :as valinnat]
    [harja.views.urakka.valinnat :as urakka-valinnat]
    [tuck.core :refer [tuck]]))
 
@@ -95,25 +97,24 @@
      :leveys 2}]
    kustannukset])
 
-(defn uusien-kustannusten-merkinnat* [e!] 
+(defn uusien-kustannusten-merkinnat* [e! app] 
     (komp/luo
       (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                       (e! (tiedot/->PaivitaValinnat uusi))))
       (komp/sisaan #(do 
                       (u/valitse-kuluva-hk!)
-                      (e! (tiedot/->HaePaallystysKustannukset))
-                      (e! (tiedot/->HaePaikkausKustannukset))
-                      (e! (tiedot/->PaivitaValinnat
-                            {:urakka @nav/valittu-urakka
-                             :aikavali @u/valittu-aikavali
-                             :valittu-hoitokausi @u/valittu-hoitokausi}))))
-      (fn [e! {:keys [kustannukset paikkaus-kustannukset haku-kaynnissa?] :as _app}]
-        @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity. 
+                      (e! (tiedot/->HoitokausiVaihdettu @nav/valittu-urakka 
+                                                        @u/valittu-hoitokausi)))) 
+      (fn [e! {:keys [kustannukset paikkaus-kustannukset haku-kaynnissa?] :as app}]
         [:div.livi-grid.tiemerkinta-kustannusten-kirjaus
          [:h1 "Uusien päällysteiden tiemerkinnät"] 
-         ;; [debug/debug app] 
-         [:div
-          [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka haku-kaynnissa?]]
+         ;; [debug/debug app]
+         [:div.flex-row.margin-bottom-16
+          [valinnat/urakan-hoitokausi-tuck
+           (:valittu-hoitokausi app)
+           (:urakan-hoitokaudet app)
+          #(e! (tiedot/->HoitokausiVaihdettu @nav/valittu-urakka %))
+          {:wrapper-luokka "label-ja-alasveto hoitokausi"}]]
          [uusien-kustannusten-merkinnat-taulukko e! 
           "Päällystyskohteiden tiemerkintäkustannukset" 
           kustannukset 
