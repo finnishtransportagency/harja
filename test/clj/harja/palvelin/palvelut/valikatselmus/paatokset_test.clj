@@ -882,6 +882,32 @@
     ;; Koska ehdot eivät täyty, niin kattohinnan ylityspäätöksen default päätöstä ei voida palauttaa
     (is (nil? tallennettu-paatos))))
 
+(deftest rajapinta-kattohinnan-ylitys-epaonnistuu-viimeisena-vuotena-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2025
+        kattohinta 5M
+        toteutuneet-kustannukset 6M
+        ylityksen-maara 1M
+        urakoitsija-maksaa 0M
+        siirrettava-maara 1M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        kulu-id nil
+        paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id true maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
+
+        vastaus (try
+                  (with-redefs [;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
+                                valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit]
+                                                                                kattohinta)]
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-kattohinnan-ylityspaatos +kayttaja-jvh+ paatos))
+                  (catch Exception e e))]
+    ;; Koska virheitä, tarkista virhe
+    (is (str/includes? vastaus "Virheellinen päätös: Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle. Poista siirron osuus."))))
+
 (deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2025-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "Kittilän MHU 2025-2030")

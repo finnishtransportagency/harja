@@ -581,8 +581,10 @@
           validaatio (if (and (:siirtorajoitus_prosentti urakan-parametrit) (> (:siirrettava_maara paatos) (:maksimi_siirrettava_maara paatos)))
                 (conj validaatio (str "Siirron rajoitus ylitetty. Maksimi siirto voi olla " (:siirtorajoitus_prosentti urakan-parametrit) " kattohinnasta."))
               validaatio)
-          validaatio (if (= hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)
-              (conj validaatio (str "Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle. Poista siirron osuus."))
+
+          ;; Validoi siirto viimeisenä hoitovuotena
+          validaatio (if (and (= hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi) (> (:siirrettava_maara paatos) 0) )
+                       (conj validaatio (str "Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle. Poista siirron osuus."))
               validaatio)
 
           ;; Jos validointi on kunnossa, niin luodaan kattohinnan ylityskulu - jonka maksaa urakoitsija
