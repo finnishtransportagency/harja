@@ -102,14 +102,16 @@
           :validoi [[:ei-tyhja "Valitse arvo"]]
           :leveys 2
           :data-cy (str "luokka-" uusi-id)
-          :elementin-id (str "luokka-" uusi-id)}
+          :elementin-id (str "luokka-" uusi-id)
+          :aria-label "Muutos"}
          {:otsikko "Perustelu"
           :nimi ::valikatselmus/selite
           :tyyppi :text
           :koko [:auto 3]
           :validoi [[:ei-tyhja "Täytä arvo"]]
           :leveys 3
-          :elementin-id (str "selite-" uusi-id)}
+          :elementin-id (str "selite-" uusi-id)
+          :aria-label "Perustelu"}
          {:otsikko "Vaikutus € (+/-)"
           :nimi ::valikatselmus/summa
           :tyyppi :euro
@@ -121,7 +123,8 @@
           :leveys 2
           :tasaa :oikea
           :fmt (partial fmt/euro-opt false true)
-          :elementin-id (str "summa-" uusi-id)}]
+          :elementin-id (str "summa-" uusi-id)
+          :aria-label "Vaikutus euroina"}]
         hoitokauden-oikaisut-atom]]]]))
 
 (defn kattohinnan-oikaisu
@@ -143,6 +146,7 @@
                                                          :fmt fmt/euro-opt
                                                          :vayla-tyyli? true
                                                          :input-luokka "kattohinta-muutettu"
+                                                         :aria-label "Muuttunut kattohinta"
                                                          :on-blur #(when (not (= kattohinta @uusi-kattohinta))
                                                                      (e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu @uusi-kattohinta)))}
                                          :arvo-atom uusi-kattohinta}]]]

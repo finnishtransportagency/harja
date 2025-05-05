@@ -1013,8 +1013,10 @@
 (defn navigation-left []
   [:img.navigation-left {:src "images/harja-icons/navigation/left.svg" :alt "left"}])
 
-(defn navigation-ympyrassa [suunta]
-  [:button.navigation-ympyrassa
+(defn navigation-ympyrassa [suunta opts]
+  [:button.navigation-ympyrassa (when opts
+                                  (merge {}
+                                     {:aria-label (:aria-label opts)}))
    (case suunta
      :up (navigation-up)
      :right (navigation-right)
