@@ -1004,24 +1004,32 @@
    [:path {:d "M24 24H0V0H24V24ZM2 22H22V2H2V22ZM12 4.5C11.2 4.5 10.5 5.2 10.5 6C10.5 6.8 11.2 7.5 12 7.5C12.8 7.5 13.5 6.8 13.5 6C13.5 5.2 12.8 4.5 12 4.5ZM13 10H11V20H13V10Z"
            :fill (or color "#004D99")}]])
 
-(defn navigation-up []
-  [:img.navigation-up {:src "images/harja-icons/navigation/up.svg" :alt "up"}])
-(defn navigation-right []
-  [:img.navigation-right {:src "images/harja-icons/navigation/right.svg" :alt "right"}])
-(defn navigation-down []
-  [:img.navigation-down {:src "images/harja-icons/navigation/down.svg" :alt "down"}])
-(defn navigation-left []
-  [:img.navigation-left {:src "images/harja-icons/navigation/left.svg" :alt "left"}])
+(defn navigation-up [opts]
+  [:img.navigation-up (merge {:src "images/harja-icons/navigation/up.svg"} (if (:alt opts)
+                                                                             {:alt (:alt opts)}
+                                                                             {:alt "up"}))])
+(defn navigation-right [opts]
+  [:img.navigation-right {:src "images/harja-icons/navigation/right.svg"} (if (:alt opts)
+                                                                            {:alt (:alt opts)}
+                                                                            {:alt "right"})])
+(defn navigation-down [opts]
+  [:img.navigation-down {:src "images/harja-icons/navigation/down.svg"} (if (:alt opts)
+                                                                          {:alt (:alt opts)}
+                                                                          {:alt "down"})])
+(defn navigation-left [opts]
+  [:img.navigation-left {:src "images/harja-icons/navigation/left.svg"} (if (:alt opts)
+                                                                          {:alt (:alt opts)}
+                                                                          {:alt "left"})])
 
 (defn navigation-ympyrassa [suunta opts]
   [:button.navigation-ympyrassa (when opts
                                   (merge {}
                                      {:aria-label (:aria-label opts)}))
    (case suunta
-     :up (navigation-up)
-     :right (navigation-right)
-     :down (navigation-down)
-     :left (navigation-left)
+     :up (navigation-up opts)
+     :right (navigation-right opts)
+     :down (navigation-down opts)
+     :left (navigation-left opts)
 
      nil)])
 

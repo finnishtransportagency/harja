@@ -52,8 +52,8 @@
    [:div.navigation-ikoni {:on-click #(avaa-tai-sulje-haitari-fn %)}
     ;; Kun päätosavainta ei löydy setistä, niin pidetään päätös avattuna (defaulttina kaikki on auki)
     (if (not (contains? avatut-paatokset paatos-avain))
-      [ikonit/navigation-ympyrassa :up {:aria-label "Sulje päätöskomponentti"}]
-      [ikonit/navigation-ympyrassa :down {:aria-label "Avaa päätöskomponentti"}])]
+      [ikonit/navigation-ympyrassa :up {:aria-label "Sulje päätöskomponentti" :alt "Sulje päätöskomponentti"}]
+      [ikonit/navigation-ympyrassa :down {:aria-label "Avaa päätöskomponentti" :alt "Avaa päätöskomponentti"}])]
    [:h2.paatos-komponentti-otsikko otsikko]
    [:div
     (if paatos-tehty?
