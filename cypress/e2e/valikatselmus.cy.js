@@ -68,11 +68,11 @@ describe('Välikatselmus aukeaa', () => {
         // Alkuun ei saa olla oikaisuja
         cy.contains('Ei muutoksia tavoitehintaan')
 
-        cy.contains('Lisää muutos').click();
+        cy.contains('Lisää rivi').click();
         cy.get('[data-cy="luokka-1"]').valinnatValitse({valinta: 'Tiestömuutokset'})
         cy.get('#0selite-1').type('{selectall}seliseli');
         cy.get('#0summa-1').type('{selectall}100000');
-        cy.get('#0summa-1').focus().blur();
+        cy.contains('Tallenna muutokset').click();
         cy.wait('@tavoitehinnan-oikaisu')
 
         // Tarkista oikaisun tiedot
