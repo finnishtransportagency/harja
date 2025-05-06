@@ -177,7 +177,7 @@
                                  (when (dom/enter-nappain? event)
                                    (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
     ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
-    [:div.paatos-komponentti-border
+    [:div.paatos-komponentti-reunuksella
      (if hoitovuosi-kesken?
        [valikatselmus-yhteiset/paatosotsikko "Tavoitehinnan muutokset" paatos-tehty?]
        [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset

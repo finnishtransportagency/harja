@@ -337,7 +337,6 @@
              :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
              :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                   #inst "2022-09-30T20:59:59.000-00:00"]})
-        _ (println "vastaus: " vastaus)
         lupaustiedot (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                                               :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                                                    #inst "2022-09-30T20:59:59.000-00:00"]})
