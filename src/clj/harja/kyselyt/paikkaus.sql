@@ -81,6 +81,7 @@ SELECT pk.id                                       AS id,
        pk."pot?"                                   AS "pot?",
        pk.takuuaika                                AS takuuaika,
        pk."tiemerkintaa-tuhoutunut?"               AS "tiemerkintaa-tuhoutunut?",
+       pk."tiemerkinnan-tila"                      AS "tiemerkinnan-tila",
        o.nimi                                      AS urakoitsija,
        (pk.tierekisteriosoite_laajennettu).tie     AS tie,
        (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
@@ -173,6 +174,7 @@ SELECT pk.id                                       AS id,
        pk.yksikko                                  AS yksikko,
        pk.lisatiedot                               AS lisatiedot,
        pk."pot?"                                   AS "pot?",
+       pk."tiemerkinnan-tila"                      AS "tiemerkinnan-tila",
        o.nimi                                      AS urakoitsija,
        (pk.tierekisteriosoite_laajennettu).tie     AS tie,
        (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
@@ -258,6 +260,7 @@ SELECT pk.id                                       AS id,
        pk.yksikko                                  AS yksikko,
        pk.lisatiedot                               AS lisatiedot,
        pk."pot?"                                   AS "pot?",
+       pk."tiemerkinnan-tila"                      AS "tiemerkinnan-tila",
        urakoitsija.nimi                            AS urakoitsija,
        (pk.tierekisteriosoite_laajennettu).tie     AS tie,
        (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
@@ -335,13 +338,13 @@ INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu,
                            "urakka-id", "yhalahetyksen-tila", virhe, tarkistettu, "tarkistaja-id", "ilmoitettu-virhe",
                            alkupvm, loppupvm, tilattupvm, tyomenetelma, tierekisteriosoite_laajennettu, "paikkauskohteen-tila",
                            "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot, "pot?", valmistumispvm,
-                           tiemerkintapvm, "toteutunut-hinta", "tiemerkintaa-tuhoutunut?", takuuaika, "yllapitokohde-id")
+                           tiemerkintapvm, "toteutunut-hinta", "tiemerkintaa-tuhoutunut?", "tiemerkinnan-tila", takuuaika, "yllapitokohde-id")
 VALUES (:luoja-id, :ulkoinen-id, :nimi, FALSE, :luotu,
         :urakka-id, :yhalahetyksen-tila, :virhe, :tarkistettu, :tarkistaja-id, :ilmoitettu-virhe,
         :alkupvm, :loppupvm, :tilattupvm, :tyomenetelma,
         ROW(:tie, :aosa, :aet, :losa, :let, :ajorata,NULL,NULL,NULL,NULL)::TR_OSOITE_LAAJENNETTU,
         :paikkauskohteen-tila::paikkauskohteen_tila, :suunniteltu-maara, :suunniteltu-hinta, :yksikko, :lisatiedot, :pot?, :valmistumispvm,
-        :tiemerkintapvm, :toteutunut-hinta, :tiemerkintaa-tuhoutunut?, :takuuaika, :yllapitokohde-id);
+        :tiemerkintapvm, :toteutunut-hinta, :tiemerkintaa-tuhoutunut?, :tiemerkinnan-tila::tiemerkinnan_tila_enum, :takuuaika, :yllapitokohde-id);
 
 -- name: paivita-paikkauskohde!
 UPDATE paikkauskohde
@@ -371,6 +374,7 @@ UPDATE paikkauskohde
        tiemerkintapvm                 = :tiemerkintapvm,
        "toteutunut-hinta"             = :toteutunut-hinta,
        "tiemerkintaa-tuhoutunut?"     = :tiemerkintaa-tuhoutunut?,
+       "tiemerkinnan-tila"            = :tiemerkinnan-tila::tiemerkinnan_tila_enum,
        takuuaika                      = :takuuaika,
        "yllapitokohde-id"             = :yllapitokohde-id
  WHERE id = :id;
@@ -570,6 +574,8 @@ WHERE luotu BETWEEN :alku AND :loppu
 -- name: hae-paikkaukset-analytiikalle
 SELECT p.id,
        p."paikkauskohde-id",
+       p."urakka-id"               AS urakka,
+       u.urakkanro                 AS urakkatunnus,
        p.poistettu,
        tm.nimi                     AS paikkaustyomenetelma,
        (p.tierekisteriosoite).tie  AS tierekisteriosoitevali_tienumero,
@@ -590,10 +596,12 @@ SELECT p.id,
        p."pinta-ala",
        p.juoksumetri,
        p.kpl,
-       p.massamenekki
+       p.massamenekki,
+       p.kustannus
 FROM paikkaus p
          LEFT JOIN paikkauksen_tienkohta ptk ON p.id = ptk."paikkaus-id"
          LEFT JOIN paikkauskohde_tyomenetelma tm ON p.tyomenetelma = tm.id
+         JOIN urakka u ON p."urakka-id" = u.id
 WHERE p.luotu BETWEEN :alku AND :loppu
    OR p.muokattu BETWEEN :alku AND :loppu;
 

@@ -133,12 +133,13 @@
      (paivita-toteuma db urakka-id kirjaaja toteuma tyokone)
      (luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone))))
 
-(defn paivita-toteuman-reitti [db toteuma-id reitti]
-  ;; Tuotantoon on lokakuun 2016 alussa toteumia, joilla pitäisi olla reitti, mutta ei ole.
-  ;; Vaikea saada virheestä kiinni, mutta logitetaan tässä, jos tyhjä reitti tallennetan.
-  ;; Pitää huomata, että periaatteessa voimme oikeasti halutakkin tallentaa tyhjän reitin..
+(defn paivita-toteuman-reittigeometria [db toteuma-id reitti]
+  ;; Tyhjän reitin tallentuminen on usein merkki ongelmasta.
+  ;; Koordinaattien perusteella ei ole saatu muodostettua reittiä.
+  ;; Onko GPS ollut liian epätarkka tai pisteiden väli liian suuri ja pisteet esim. eri tienumerolla?
+  ;; Jos toteumaan ei liity reittitietoa, reittigeometriakin jää tietysti tyhjäksi.
   (when-not reitti (log/warn "Toteumalle " toteuma-id " tallennetaan tyhjä reitti!"))
-  (q-toteumat/paivita-toteuman-reitti! db {:id toteuma-id
+  (q-toteumat/paivita-toteuman-reittigeometria<! db {:id toteuma-id
                                            :reitti reitti}))
 
 (defn tallenna-sijainti [db sijainti aika toteuma-id tehtavat materiaalit]

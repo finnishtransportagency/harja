@@ -14,12 +14,12 @@ CREATE OR REPLACE FUNCTION pistevalin_suolausalueet(piste1 POINT, piste2 POINT, 
     RETURNS SETOF suolausalueen_osuus AS
 $$
 DECLARE
-    ra                  rajoitusalue;
-    tieosoitevali       tr_osoite;
-    osuus               FLOAT;
-    jaljella_osuutta    FLOAT;
-    piste1_             POINT;
-    piste2_             POINT;
+    ra                   rajoitusalue;
+    tieosoitevali        tr_osoite;
+    osuus                FLOAT;
+    jaljella_osuutta     FLOAT;
+    piste1_              POINT;
+    piste2_              POINT;
 BEGIN
     -- Varmistetaan että haetaan piste tielä, jota suolataan. Tällä varmistetaan, ettei saada rajoitusaluetta tien geometriaa,
     -- jota ei suolata. Tällä varmistetaan, ettei virheellisesti jätetä suolattua rajoitusaluetta merkitsemättä
@@ -34,7 +34,7 @@ BEGIN
 
     SELECT * FROM yrita_tierekisteriosoite_pisteille2(piste1_::geometry, piste2_::geometry, 1) INTO tieosoitevali;
 
-    IF tieosoitevali IS DISTINCT FROM NULL THEN
+    IF (tieosoitevali IS DISTINCT FROM NULL AND tieosoitevali.geometria IS DISTINCT FROM NULL)THEN
         -- Käsitellään ensin toteuman suoritusajankohdan aikana voimassa olevat rajoitusalueet ja niille osuva suola.
         -- Jos rajoitusalueet ovat päällekkäin, sama suola tulee lasketuksi suolatoteuman reittipisteisiin kahdesti.
         -- Päällekkäisiä rajoituksia ei siis saisi olla voimassa.
@@ -49,19 +49,30 @@ BEGIN
               AND alue.poistettu = FALSE
               AND rajoitus.poistettu = FALSE
             LOOP
-                SELECT st_length(st_intersection(st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria)) /
-                       st_length(tieosoitevali.geometria)
-                INTO osuus;
-
+                IF st_geometrytype(tieosoitevali.geometria) = 'ST_Point' THEN
+                    -- Tievälin ja päällekkäisen osuuden pituus on nolla, jos tienväli on piste - sekin on periaatteessa mahdollista.
+                    -- Jos piste on rajoitusalueella, rajoitusalueen osuus on 1, koska piste on kokonaan rajoitusalueella.
+                    -- Jos piste ei ole rajoitusalueella, osuus on 0.
+                    IF st_intersects(st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria) THEN
+                        osuus := 1;
+                    ELSE
+                        osuus:= 0;
+                    END IF;
+                ELSE
+                    SELECT st_length(st_intersection(st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria)) /
+                           st_length(tieosoitevali.geometria)
+                    INTO osuus;
+                END IF;
                 jaljella_osuutta := jaljella_osuutta - osuus;
                 RETURN NEXT ('rajoitusalue', ra.id, osuus)::suolausalueen_osuus;
             END LOOP;
-
-        -- Jäljelle jää se osuus, joka ei kuulu rajoitetuille alueille.
-        IF (jaljella_osuutta > 0) THEN
-            RETURN NEXT ('muu', NULL, jaljella_osuutta)::suolausalueen_osuus;
-        END IF;
     END IF;
+
+    -- Jäljelle jää se osuus, joka ei kuulu rajoitetuille alueille. Palautetaan jäljelle jäävä osuus myös silloin, kun tieosoitteella ei ole geometriaa.
+    IF (jaljella_osuutta > 0) THEN
+        RETURN NEXT ('muu', NULL, jaljella_osuutta)::suolausalueen_osuus;
+    END IF;
+
     RETURN;
 END;
 $$ LANGUAGE plpgsql;

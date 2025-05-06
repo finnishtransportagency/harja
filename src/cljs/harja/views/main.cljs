@@ -243,7 +243,12 @@
                                      ;; Estetään asioiden vuotaminen ulos kartalta kun kartta on avattu
                                      :overflow (if @nav/kartta-nakyvissa?
                                                  "hidden"
-                                                 "visible")}}
+                                                 "visible")
+                                     ;; Jos näkymässä ei ole karttaa, älä piirrä containeria ollenkaan DOMiin
+                                     ;; Sotkee muuten näppäin navigointia (TAB) muissa näkymissä 
+                                     :display (if (and
+                                                    (= @nav/kartan-koko :hidden)
+                                                    (not @nav/kartta-nakyvissa?)) "none" "block")}}
       [kartta/kartta]]]))
 
 (defn varoita-jos-vanha-ie []
@@ -262,6 +267,10 @@
       (and (empty? (:roolit kayttaja))
            (empty? (:urakkaroolit kayttaja))
            (empty? (:organisaatioroolit kayttaja)))))
+
+(defn todennus-varmistus-epaonnistui? [kayttaja]
+  ;; Tarkoittaa että todennus epäonnistui, tästä laukaistaan myös slack häly: JWT-ERROR
+  (boolean (contains? (:roolit kayttaja) "failed")))
 
 (defn kuuntele-oikeusvirheita []
   (t/kuuntele! :ei-oikeutta (fn [tiedot]
@@ -285,9 +294,16 @@
             [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
             (if (nil? kayttaja)
               [ladataan]
-              (if (ei-kayttooikeutta? kayttaja)
+              (cond
+                (todennus-varmistus-epaonnistui? kayttaja)
+                [:div.ei-kayttooikeutta-wrap
+                 [:img#harja-brand-icon {:src "images/harja_logo_soft.svg"}]
+                 [:div.ei-kayttooikeutta "Todennus epäonnistui. Ei käyttöoikeutta Harjaan."]]
+
+                (ei-kayttooikeutta? kayttaja)
                 [:div.ei-kayttooikeutta-wrap
                  [:img#harja-brand-icon {:src "images/harja_logo_soft.svg"}]
                  [:div.ei-kayttooikeutta "Ei käyttöoikeutta Harjaan. Ota yhteys organisaatiosi käyttövaltuusvastaavaan."]]
-                [paasisalto sivu korkeus]))))
+
+                :else [paasisalto sivu korkeus]))))
         [ladataan]))))

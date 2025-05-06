@@ -181,6 +181,13 @@
             (= (:sopimustyyppi ur) :palvelusopimus)
             (= (:sopimustyyppi ur) :mpu)))))))
 
+(defn- hae-kaynnissa-oleva-hk []
+  (or (first (filter (fn [[alku loppu]]
+                       (pvm/valissa? (pvm/nyt) alku loppu))
+               @valitun-urakan-hoitokaudet))
+    ;; fallback, urakka ei ole käynnissä, valitse ensimmäinen hk
+    (first @valitun-urakan-hoitokaudet)))
+
 (defn paattele-valittu-hoitokausi [hoitokaudet]
   (when-not (empty? hoitokaudet)
     (let [[alku-pvm _] (first hoitokaudet)
@@ -196,12 +203,8 @@
         (last hoitokaudet)
 
         ;; Jos urakka on käynnissä, valitaan hoitokausi, joka on käynnissä
-        :default
-        (or (first (filter (fn [[alku loppu]]
-                             (pvm/valissa? nyt alku loppu))
-                           hoitokaudet))
-            ;; ultimate fallback, jos ei löydy jostain syystä, käytä ensimmäistä
-            (first hoitokaudet))))))
+        :else
+        (hae-kaynnissa-oleva-hk)))))
 
 (defonce valittu-hoitokausi
   (reaction-writable (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
@@ -221,6 +224,21 @@
   (reset! valittu-hoitokausi hk)
   (reset! valittu-aikavali [(first hk) (second hk)])
   (reset! yksikkohintaiset-aikavali [(first hk) (second hk)]))
+
+(defn valitse-kuluva-hk! []
+  (let [valittu-hk (hae-kaynnissa-oleva-hk)]
+    (reset! valittu-hoitokausi valittu-hk)
+    (reset! valittu-aikavali [(first valittu-hk) (second valittu-hk)])
+    (reset! yksikkohintaiset-aikavali [(first valittu-hk) (second valittu-hk)])))
+
+(defn koko-urakkakausi-valittuna? []
+  (boolean
+    (and
+      (= (-> @valittu-aikavali first)
+         (ffirst @valitun-urakan-hoitokaudet))
+      (=
+       (-> @valittu-aikavali last)
+       (-> @valitun-urakan-hoitokaudet last second)))))
 
 (def aseta-kuluva-kk-jos-hoitokaudella? (atom false))
 

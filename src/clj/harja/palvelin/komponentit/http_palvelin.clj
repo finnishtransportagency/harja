@@ -338,18 +338,22 @@
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
   Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään
   muiden headereiden joukkoon."
-  [handler]
+  [handler kehitysmoodi todennus-varmistus]
   (fn [req]
     (->
-      (assoc req :headers (todennus/prosessoi-kayttaja-headerit (:headers req)))
+      (assoc req :headers (todennus/prosessoi-kayttaja-headerit (:headers req) kehitysmoodi todennus-varmistus))
       (handler))))
 
 (defn wrap-with-common-wrappers
   "Käärii HTTP-pääkäsittelijän ympärille yleisiä wrappereita."
-  [handler]
-  (-> handler
-    (cookies/wrap-cookies)
-    (wrap-prosessoi-headerit)))
+  ([handler]
+   (wrap-with-common-wrappers handler true nil))
+  ([handler kehitysmoodi]
+   (wrap-with-common-wrappers handler kehitysmoodi nil))
+  ([handler kehitysmoodi todennus-varmistus]
+   (-> handler
+     (cookies/wrap-cookies)
+     (wrap-prosessoi-headerit kehitysmoodi todennus-varmistus))))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true
@@ -364,8 +368,7 @@
       kutsu)))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
-                         http-server kehitysmoodi
-                         mittarit]
+                         http-server kehitysmoodi todennus-varmistus mittarit]
   component/Lifecycle
   (start [{metriikka :metriikka db :db :as this}]
     (when metriikka
@@ -417,7 +420,10 @@
                                                                  kehitysmoodi
                                                                  anti-csrf-token-secret-key))
                                                          (conj ui-kasittelija))]
-                        (reitita (todennus/todenna-pyynto todennus req) todennettavat-kasittelijat
+                        (reitita (todennus/todenna-pyynto 
+                                   todennus 
+                                   req 
+                                   kehitysmoodi) todennettavat-kasittelijat
                           {:vaadi-oikeustarkistus? true}))))
                   (catch [:virhe :todennusvirhe] _
                     {:status 403 :body "Todennusvirhe"})
@@ -425,7 +431,9 @@
                   (finally
                     (metriikka/muuta! mittarit
                       :aktiiviset_pyynnot dec
-                      :pyyntoja_palveltu inc)))))
+                      :pyyntoja_palveltu inc))))
+                      kehitysmoodi
+                      todennus-varmistus)
 
             {:port portti
              :thread (or (:threads asetukset) 8)
@@ -492,9 +500,18 @@
       (fn [kasittelijat]
         (filterv #(not= (:nimi %) nimi) kasittelijat)))))
 
-(defn luo-http-palvelin [asetukset kehitysmoodi]
-  (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi
-    (metriikka/luo-mittari-ref mittarit-alkuarvo)))
+(defn luo-http-palvelin
+  ([asetukset kehitysmoodi]
+   (luo-http-palvelin asetukset kehitysmoodi nil))
+  ([asetukset kehitysmoodi todennus-varmistus]
+   (->HttpPalvelin
+    asetukset
+    (atom [])
+    (atom [])
+    (atom nil)
+    kehitysmoodi
+    todennus-varmistus
+    (metriikka/luo-mittari-ref mittarit-alkuarvo))))
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))

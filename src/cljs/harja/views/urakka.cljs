@@ -24,6 +24,8 @@
             [harja.tiedot.urakka.tiemerkinnan-kustannukset :as tiemerkinnan-kustannukset-tiedot]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
+            [harja.views.urakka.kustannusten-kirjaus :as kustannusten-kirjaus]
+            [harja.views.urakka.tiemerkinta-kustannukset.yhteenveto :as kustannusten-yhteenveto]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
@@ -126,9 +128,17 @@
                            (istunto/ominaisuus-kaytossa? :vesivayla))
 
     :tiemerkinnan-kustannukset (and
-                                 (oikeudet/urakat-kustannukset id)
+                                 (oikeudet/urakat-tiemerkinta-kustannukset id)
                                  (= tyyppi :tiemerkinta))
-
+    
+    :kustannusten-kirjaus (and
+                            (oikeudet/urakat-tiemerkinta-kustannukset id)
+                            (= tyyppi :tiemerkinta))
+    
+    :kustannusten-yhteenveto (and
+                               (oikeudet/urakat-tiemerkinta-kustannukset id)
+                               (= tyyppi :tiemerkinta))
+    
     :paikkaukset-mpu (and
                        (oikeudet/urakat-paikkaukset id)
                        (= tyyppi :paallystys)
@@ -137,6 +147,7 @@
     :valikatselmus (and
                      (oikeudet/urakat-kulut id) ;; TODO: Tarkista oikeudet. Ennen oli kulujen alla. Tarvitaanko nyt oma osio?
                      (= tyyppi :teiden-hoito))
+    
     :kustannukset (and
                     (oikeudet/urakat-paikkaukset id)
                     (= tyyppi :paallystys)
@@ -233,7 +244,13 @@
 
        "Toteutus"
        :toteutus
-       (when (valilehti-mahdollinen? :toteutus ur)
+       ;; Välilehti piiloon, mahdollisesti poistetaan jatkossa 
+       ;; Uusi "Kustannusten kirjaus" korvaa tämän välilehden kokonaan
+       ;; 
+       ;; Täällä on Kok. hintaiset työt, yks työt, muut kustannukset
+       ;; Kaikki näkymät tehty uudelleen Kustannusten kirjaukseen 
+       (when false
+         ;;(valilehti-mahdollinen? :toteutus ur)
          ^{:key "toteutus"}
          [toteutus/toteutus ur])
 
@@ -275,6 +292,18 @@
          ^{:key "laadunseuranta"}
          [laadunseuranta/laadunseuranta ur])
 
+       "Kustannusten kirjaus"
+       :kustannusten-kirjaus
+       (when (valilehti-mahdollinen? :kustannusten-kirjaus ur)
+         ^{:key "kustannusten-kirjaus"}
+         [kustannusten-kirjaus/kustannusten-kirjaus ur])
+
+       "Kustannusten yhteenveto"
+       :kustannusten-yhteenveto
+       (when (valilehti-mahdollinen? :kustannusten-yhteenveto ur)
+         ^{:key "kustannusten-yhteenveto"}
+         [kustannusten-yhteenveto/kustannusten-yhteenveto ur])
+
        (if (= (:tyyppi ur) :teiden-hoito)
          "Lupaukset ja tavoitteet"
          "Välitavoitteet")
@@ -297,7 +326,11 @@
 
        "Kustannukset"
        :tiemerkinnan-kustannukset
-       (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
+       ;; Välilehti piiloon, mahdollisesti poistetaan jatkossa 
+       ;; "Kustannusten yhteenveto" korvaa tämän näkymän
+       ;;
+       (when false
+         ; (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
          ^{:key "tiemerkinnan-kustannukset"}
          [tiemerkinnan-kustannukset/kustannukset
           ur
