@@ -26,7 +26,7 @@
 (def odotetut-kustannus-rahavaraukset
   '({:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Äkilliset hoitotyöt", :indeksikorjaus-vahvistettu nil, :summa 500M, :nimi "Äkilliset hoitotyöt", :vuosi 2019, :id 1, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu 540.500000M :jarjestys 2}
     {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Vahinkojen korjaukset", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Vahinkojen korjaukset", :vuosi 2019, :id 2, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu nil :jarjestys 3}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus H - Aidat", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Rahavaraus H - Aidat", :vuosi 2019, :id 11, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu nil :jarjestys 8}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Varalaskupaikat", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Varalaskupaikat", :vuosi 2019, :id 11, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu nil :jarjestys 8}
     {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Tilaajan rahavaraus kannustinjärjestelmään", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Tilaajan rahavaraus kannustinjärjestelmään", :vuosi 2019, :id 3, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu nil :jarjestys 11}))
 
 ;; Hae Oulu MHU:n rahavaraukset
