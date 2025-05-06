@@ -1004,34 +1004,50 @@
    [:path {:d "M24 24H0V0H24V24ZM2 22H22V2H2V22ZM12 4.5C11.2 4.5 10.5 5.2 10.5 6C10.5 6.8 11.2 7.5 12 7.5C12.8 7.5 13.5 6.8 13.5 6C13.5 5.2 12.8 4.5 12 4.5ZM13 10H11V20H13V10Z"
            :fill (or color "#004D99")}]])
 
-(defn navigation-up [opts]
-  [:img.navigation-up (merge {:src "images/harja-icons/navigation/up.svg"} (if (:alt opts)
-                                                                             {:alt (:alt opts)}
-                                                                             {:alt "up"}))])
-(defn navigation-right [opts]
-  [:img.navigation-right {:src "images/harja-icons/navigation/right.svg"} (if (:alt opts)
-                                                                            {:alt (:alt opts)}
-                                                                            {:alt "right"})])
-(defn navigation-down [opts]
-  [:img.navigation-down {:src "images/harja-icons/navigation/down.svg"} (if (:alt opts)
-                                                                          {:alt (:alt opts)}
-                                                                          {:alt "down"})])
-(defn navigation-left [opts]
-  [:img.navigation-left {:src "images/harja-icons/navigation/left.svg"} (if (:alt opts)
-                                                                          {:alt (:alt opts)}
-                                                                          {:alt "left"})])
+(defn navigation-up
+  ([] (navigation-up nil))
+  ([opts]
+   [:img.navigation-up (merge {:src "images/harja-icons/navigation/up.svg"}
+                         (if (and opts (:alt opts))
+                           {:alt (:alt opts)}
+                           {:alt "up"}))]))
+(defn navigation-right
+  ([] (navigation-right nil))
+  ([opts]
+   [:img.navigation-right (merge {:src "images/harja-icons/navigation/right.svg"}
+                            (if (and opts (:alt opts))
+                              {:alt (:alt opts)}
+                              {:alt "right"}))]))
 
-(defn navigation-ympyrassa [suunta opts]
-  [:button.navigation-ympyrassa (when opts
-                                  (merge {}
+(defn navigation-down
+  ([] (navigation-down nil))
+  ([opts]
+   [:img.navigation-down (merge {:src "images/harja-icons/navigation/down.svg"}
+                           (if (and opts (:alt opts))
+                             {:alt (:alt opts)}
+                             {:alt "down"}))]))
+
+(defn navigation-left
+  ([] (navigation-left nil))
+  ([opts]
+   [:img.navigation-left (merge {:src "images/harja-icons/navigation/left.svg"}
+                           (if (and opts (:alt opts))
+                             {:alt (:alt opts)}
+                             {:alt "left"}))]))
+
+(defn navigation-ympyrassa
+  ([suunta] (navigation-ympyrassa suunta nil))
+  ([suunta opts]
+   [:button.navigation-ympyrassa (when opts
+                                   (merge {}
                                      {:aria-label (:aria-label opts)}))
-   (case suunta
-     :up (navigation-up opts)
-     :right (navigation-right opts)
-     :down (navigation-down opts)
-     :left (navigation-left opts)
+    (case suunta
+      :up (navigation-up opts)
+      :right (navigation-right opts)
+      :down (navigation-down opts)
+      :left (navigation-left opts)
 
-     nil)])
+      nil)]))
 
 (defn ikoni-ja-teksti [ikoni teksti]
   [:span
