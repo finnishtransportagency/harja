@@ -886,7 +886,7 @@
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id pitka-teksti?
-            pakollinen? tarkenne muokattu? valitse-oletus? data-cy]} data]
+            pakollinen? tarkenne muokattu? valitse-oletus? data-cy aria-label]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
@@ -911,34 +911,37 @@
           valinnat (or valinnat (valinnat-fn rivi))
           valinta (when valinta-arvo
                     (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat))
-          opts {:class (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
-                                 (when (and linkki-fn linkki-icon)
-                                   "linkin-vieressa"))
-                :valinta (if valinta-arvo
-                           valinta
-                           nykyinen-arvo)
-                :valitse-fn #(reset! data
-                                     (if valinta-arvo
-                                       (valinta-arvo %)
-                                       %))
-                :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
-                :nayta-ryhmat nayta-ryhmat
-                :ryhmittely ryhmittely
-                :ryhman-otsikko ryhman-otsikko
-                :virhe? virhe?
-                :on-focus on-focus
-                :on-blur on-blur
-                :format-fn (if (empty? valinnat)
-                             (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
-                             (or (and valinta-nayta #(valinta-nayta % true)) str))
-                :disabled disabled?
-                :muokattu? muokattu?
-                :pakollinen? pakollinen?
-                :vayla-tyyli? vayla-tyyli?
-                :elementin-id elementin-id
-                :pitka-teksti? pitka-teksti?
-                :tarkenne tarkenne
-                :data-cy (or data-cy (str "valinta-" elementin-id))}]
+          opts (merge
+                 {:class (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
+                           (when (and linkki-fn linkki-icon)
+                             "linkin-vieressa"))
+                  :valinta (if valinta-arvo
+                             valinta
+                             nykyinen-arvo)
+                  :valitse-fn #(reset! data
+                                 (if valinta-arvo
+                                   (valinta-arvo %)
+                                   %))
+                  :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
+                  :nayta-ryhmat nayta-ryhmat
+                  :ryhmittely ryhmittely
+                  :ryhman-otsikko ryhman-otsikko
+                  :virhe? virhe?
+                  :on-focus on-focus
+                  :on-blur on-blur
+                  :format-fn (if (empty? valinnat)
+                               (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
+                               (or (and valinta-nayta #(valinta-nayta % true)) str))
+                  :disabled disabled?
+                  :muokattu? muokattu?
+                  :pakollinen? pakollinen?
+                  :vayla-tyyli? vayla-tyyli?
+                  :elementin-id elementin-id
+                  :pitka-teksti? pitka-teksti?
+                  :tarkenne tarkenne
+                  :data-cy (or data-cy (str "valinta-" elementin-id))}
+                 (when aria-label
+                   {:aria-label aria-label}))]
      (if-not (and linkki-fn nykyinen-arvo linkki-icon)
        [livi-pudotusvalikko opts
         valinnat]
@@ -960,31 +963,34 @@
      (fn [{:keys [alasveto-luokka valinta-nayta valinta-arvo data-cy
                   valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
                   jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
-                  nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id pitka-teksti?]} data data-muokkaus-fn]
+                  nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id pitka-teksti? aria-label]} data data-muokkaus-fn]
        (assert (not (satisfies? IDeref data)) "Jos käytät tee-kentta 3 aritylla, data ei saa olla derefable. Tämä sen takia, ettei React turhaan renderöi elementtiä")
        (assert (fn? data-muokkaus-fn) "Data-muokkaus-fn pitäisi olla funktio, joka muuttaa näytettävää dataa jotenkin")
        (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
        (let [valinnat (or valinnat (valinnat-fn rivi))]
-         [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
-                               :valinta (if valinta-arvo
-                                          (some #(when (= (valinta-arvo %) data) %) valinnat)
-                                          data)
-                               :valitse-fn data-muokkaus-fn
-                               :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
-                               :nayta-ryhmat nayta-ryhmat
-                               :ryhmittely ryhmittely
-                               :ryhman-otsikko ryhman-otsikko
-                               :on-focus on-focus
-                               :on-blur on-blur
-                               :virhe? virhe?
-                               :format-fn (if (empty? valinnat)
-                                            (or jos-tyhja-fn jos-tyhja-default-fn)
-                                            (or valinta-nayta str))
-                               :disabled disabled?
-                               :data-cy data-cy
-                               :vayla-tyyli? vayla-tyyli?
-                               :pitka-teksti? pitka-teksti?
-                               :elementin-id elementin-id}
+         [livi-pudotusvalikko (merge {:class (str "alasveto-gridin-kentta " alasveto-luokka)
+                                      :valinta (if valinta-arvo
+                                                 (some #(when (= (valinta-arvo %) data) %) valinnat)
+                                                 data)
+                                      :valitse-fn data-muokkaus-fn
+                                      :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
+                                      :nayta-ryhmat nayta-ryhmat
+                                      :ryhmittely ryhmittely
+                                      :ryhman-otsikko ryhman-otsikko
+                                      :on-focus on-focus
+                                      :on-blur on-blur
+                                      :virhe? virhe?
+                                      :format-fn (if (empty? valinnat)
+                                                   (or jos-tyhja-fn jos-tyhja-default-fn)
+                                                   (or valinta-nayta str))
+                                      :disabled disabled?
+                                      :data-cy data-cy
+                                      :vayla-tyyli? vayla-tyyli?
+                                      :pitka-teksti? pitka-teksti?
+                                      :elementin-id elementin-id
+                                      :aria-label aria-label}
+                                (when aria-label
+                                  {:aria-label aria-label}))
           valinnat])))))
 
 (defn- nayta-arvo-valinta-tai-radio-group
