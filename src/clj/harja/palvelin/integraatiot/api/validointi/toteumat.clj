@@ -35,7 +35,7 @@
                              toteuman-alku
                              toteuman-loppu)}))))))
 
-(defn tarkista-tehtavat [db urakka-id tehtavat hinnoittelu]
+(defn tarkista-tehtavat [db urakka-id tehtavat]
   (doseq [tehtava tehtavat]
     (let [tehtava-apitunnus (get-in tehtava [:tehtava :id])
           vastaus (q-toimenpidekoodi/hae-hinnoittelu db {:urakka urakka-id :apitunnus tehtava-apitunnus} )
