@@ -97,7 +97,7 @@
 ;; TODO: Tekstiviestin vastaanotto poistuu käytöstä. Poista turhat funktiot siirtymäajan jälkeen. #yliheitto
 
 (defn kasittele-epaonnistunut-viestin-kasittely [integraatioloki tapahtuma-id poikkeus]
-  (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." poikkeus))
+  (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus: %s" poikkeus))
   (integraatioloki/kirjaa-epaonnistunut-integraatio
     integraatioloki
     "Tekstiviestin vastaanotossa tapahtui poikkeus"
