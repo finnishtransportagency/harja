@@ -212,6 +212,9 @@ SELECT paivita_pohjavesialueet();
 -- Populoidaan rahavaraukset
 SELECT populoi_rahavaraus_idt();
 
+-- Lisätään urakkakohtaiset rahavaraukset
+\i testidata/rahavaraukset.sql
+
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 select paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('0001-01-01'::DATE,'2100-12-31'::DATE);
 SELECT paivita_raportti_toteutuneet_materiaalit();
