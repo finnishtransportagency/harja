@@ -113,7 +113,7 @@
         parametrit (-> kutsu
                      :body
                      .bytes
-                     (String.)
+                     (String. "UTF-8")
                      codec/form-decode)
         viesti (integraatioloki/tee-rest-lokiviesti "sisään" url nil nil otsikot (str parametrit))
         tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "labyrintti" "vastaanota" nil viesti)
