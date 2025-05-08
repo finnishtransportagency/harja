@@ -136,6 +136,10 @@
 
 ;; Hallintayksikön valinta id:llä (URL parametrista)
 (defonce valittu-hallintayksikko-id (atom nil))
+
+;; Haetaanko urakoita 
+(defonce urakka-haku-kaynnissa? (atom nil))
+
 ;; Atomi, joka sisältää valitun hallintayksikön
 (defonce valittu-hallintayksikko
   (reaction (let [id @valittu-hallintayksikko-id
@@ -150,7 +154,12 @@
 (defonce hallintayksikon-urakkalista
   (reaction<! [yks @valittu-hallintayksikko]
     (when yks
-      (ur/hae-hallintayksikon-urakat yks))))
+      (go
+        (reset! urakka-haku-kaynnissa? true)
+        (let [vastaus (<! (ur/hae-hallintayksikon-urakat yks))]
+          ;; Raportit näkymässä omanlainen loaderi joka tarvitsee jonkin lipun onko haku käynnissä
+          (reset! urakka-haku-kaynnissa? false)
+          vastaus)))))
 
 ;; Atomi, joka sisältää valitun urakan (tai nil)
 ;; Älä resetoi tätä suoraan, vaan urakan vaihtuessa resetoi valittu-urakka-id

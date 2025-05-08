@@ -762,7 +762,7 @@
             konteksti (cond
                         v-ur "urakka"
                         v-hal "hallintayksikko"
-                        :default "koko maa")
+                        :else "koko maa")
             raportissa? (some? @raportit/suoritettu-raportti)
             raporttilista @mahdolliset-raporttityypit
             ladataanko-urakoita? (some (fn [[k v]]
@@ -771,8 +771,8 @@
                                          ;; urakoita ei ole -> urakoita ladataan
                                          (or
                                            (and
-                                             (seq raporttilista)
                                              (seq v-hal)
+                                             (seq raporttilista)
                                              (nil? ensimmainen-urakka-yksikossa))
                                            ;; raporttilista ei ole tyhjänä,
                                            ;; listassa toisen yksikön urakka -> urakoita ladataan
@@ -790,7 +790,7 @@
              "Hallintayksikkö" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
              "Urakka" (cond
                         ;; Latausindikaattori jos urakkahaku on käynnissä
-                        (and v-hal ladataanko-urakoita?)
+                        (and v-hal ladataanko-urakoita? @nav/urakka-haku-kaynnissa?)
                         [ajax-loader-pieni (str "Haetaan tietoja...")]
 
                         ;; Urakoita ei ladata, hy valittuna
@@ -834,7 +834,7 @@
                           [:span "Raportteja haetaan..."]
                           (empty? raporttilista)
                           [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)) v-ur)]
-                          :default
+                          :else
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
                                                 :format-fn #(if % (str
                                                                     ;; Jos urakkaa ei ole valittuna ja suuri konteksti avain olemassa

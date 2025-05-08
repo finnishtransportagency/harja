@@ -415,8 +415,6 @@
 (def talvihoitoreitit-default {:haku-kaynnissa? false?
                                :talvihoitoreitit nil})
 
-(def tiemerkinta-kustannukset-default {})
-
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laatupoikkeamat laatupoikkeamat-default
                      :laskutus    laskutus-default
