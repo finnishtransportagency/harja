@@ -9,6 +9,7 @@
             [clojure.string :as string]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+            [ring.util.codec :as codec]
             [taoensso.timbre :as log]
             [compojure.core :refer [POST]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
@@ -113,7 +114,7 @@
                      :body
                      .bytes
                      (String.)
-                     ring.util.codec/form-decode)
+                     codec/form-decode)
         viesti (integraatioloki/tee-rest-lokiviesti "sisään" url nil nil otsikot (str parametrit))
         tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "labyrintti" "vastaanota" nil viesti)
         numero (get parametrit "source")
