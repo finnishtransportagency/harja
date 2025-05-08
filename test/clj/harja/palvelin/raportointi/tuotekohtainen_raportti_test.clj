@@ -166,7 +166,7 @@
         mhu-yllapito-hankinnat (:hankinnat_laskutettu mhu-yllapito)
         mhu-yllapito-lisatyot (:lisatyot_laskutettu mhu-yllapito)
         mhu-yllapito-sanktiot (:sakot_laskutettu mhu-yllapito)
-        mhu-yllapito-rahavaraus-a (:kaikki_rahavaraukset_hoitokausi_yht mhu-yllapito)
+        mhu-yllapito-rahavaraus (:kaikki_rahavaraukset_hoitokausi_yht mhu-yllapito)
         mhu-yllapito-tilaajan-rahavaraus (:tilaajan_rahavaraus_kannustinjarjestelmaan_hk mhu-yllapito)
         mhu-yllapito-yhteensa (:kaikki_laskutettu mhu-yllapito)
 
@@ -201,8 +201,8 @@
     (is (= liikenneymp-sanktiot -1081.832370M))
     (is (= liikenneymp-akilliset-hoitotyot 4444.44M))
     (is (= liikenneymp-vahinkojen-korjaukset 0.0M))
-    (is (= liikenneymp-rahavaraukset 5444.44M))
-    (is (= liikenneymp-yhteensa 7251.487630M))
+    (is (= liikenneymp-rahavaraukset 4444.44M))
+    (is (= liikenneymp-yhteensa 6251.487630M))
 
     ;; Soratien hoito
     (is (= soratien-hankinnat 8000.97M))
@@ -222,9 +222,9 @@
     (is (= mhu-yllapito-hankinnat 14000.97M))
     (is (= mhu-yllapito-lisatyot 1400.97M))
     (is (= mhu-yllapito-sanktiot 0.0M))
-    (is (= mhu-yllapito-rahavaraus-a 0.0M))
+    (is (= mhu-yllapito-rahavaraus 1000.0M))
     (is (= mhu-yllapito-tilaajan-rahavaraus 0.0M))
-    (is (= mhu-yllapito-yhteensa 15401.94M))
+    (is (= mhu-yllapito-yhteensa 16401.94M))
 
     ;; Mhu hoidon johto
     (is (= mhu-johto-ja-hallintokorvaukset 10.20M))

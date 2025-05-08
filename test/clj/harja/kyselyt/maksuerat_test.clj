@@ -66,19 +66,19 @@
 (deftest hae-urakan-maksueran-summat-mhu-urakalle
          (let [db (:db jarjestelma)
                urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-               ; Talvihoito	23100	45
-               ; Liikenneympäristön hoito	23110	46
-               ; Soratien hoito	23120	47
-               ; MHU ja HJU hoidon johto	23150	48
-               ; Päällyste	20100	49
-               ; MHU Ylläpito	20190	50
-               ; MHU Korvausinvestointi	14300	51
+               ;; 48	Oulu MHU Talvihoito TP
+               ;; 49	Oulu MHU Liikenneympäristön hoito TP
+               ;; 50	Oulu MHU Soratien hoito TP
+               ;; 51	Oulu MHU Hallinnolliset toimenpiteet TP
+               ;; 52	Oulu MHU Päällystepaikkaukset TP
+               ;; 53	Oulu MHU MHU Ylläpito TP
+               ;; 54	Oulu MHU MHU Korvausinvestointi TP
                ;; Nämä summat ikävä kyllä vaihtuu joka kerta, kun indeksit vaihtuu
                ;; Eli voit olettaa päivittäväsi näitä summia aina 1.10. joka vuosi
                odotettu [{:kokonaishintainen 4150.791430M
                           :tpi_id 48
                           :urakka_id 35}
-                         {:kokonaishintainen 7251.487630M
+                         {:kokonaishintainen 6251.487630M
                           :tpi_id 49
                           :urakka_id 35}
                          {:kokonaishintainen 8801.94M
@@ -90,7 +90,7 @@
                          {:kokonaishintainen 11001.94M
                           :tpi_id 52
                           :urakka_id 35}
-                         {:kokonaishintainen 15401.94M
+                         {:kokonaishintainen 16401.94M
                           :tpi_id 53
                           :urakka_id 35}
                          {:kokonaishintainen 13201.94M
