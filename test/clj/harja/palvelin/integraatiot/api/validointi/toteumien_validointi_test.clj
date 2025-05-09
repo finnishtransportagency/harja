@@ -41,9 +41,7 @@
 (deftest tarkiasta-toteuman-tehtavien-tarkistus
          (let [db (:db jarjestelma)]
               (let [tehtavat [{:tehtava {:id 7777666}} {:tehtava {:id 1}}]]
-                   (is (thrown? Exception (validointi/tarkista-tehtavat db @oulun-alueurakan-2005-2010-id tehtavat "kokonaishintainen"))
+                   (is (thrown? Exception (validointi/tarkista-tehtavat db @oulun-alueurakan-2005-2010-id tehtavat))
                        "Poikkeusta ei heitetty, kun yksi toteuman tehtävistä ei ole urakalla"))
-              (is (thrown? Exception (validointi/tarkista-tehtavat db @oulun-alueurakan-2005-2010-id {:tehtava {:id 1370}} "yksikköhintainen"))
-                  "Poikkeusta ei heitetty, kun yritettiin kirjata yksikköhintaiselle toteumalle kokonaishintaisia tehtäviä")
-              (is (thrown? Exception (validointi/tarkista-tehtavat db @oulun-alueurakan-2005-2010-id {:tehtava {:id 1370}} "kokonaishintainen"))
-                  "Poikkeusta ei heitetty, koska urakkaan palautuu vain yksi voimassaoleva tehtävä apitunnuksella 1370.")))
+              (is (thrown? Exception (validointi/tarkista-tehtavat db @oulun-alueurakan-2005-2010-id {:tehtava {}}))
+                  "Poikkeusta ei heitetty, kun yritettiin kirjata toteumalle tyhjää tehtävälistaa")))

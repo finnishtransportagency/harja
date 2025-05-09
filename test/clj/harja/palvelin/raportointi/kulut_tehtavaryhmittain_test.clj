@@ -46,7 +46,7 @@
      (list "E - ELY-rahoitteiset, liikenneympäristön hoito" 0 0)
      (list "E - ELY-rahoitteiset, ylläpito" 0 0)
      (list "F - Muut, liikenneympäristön hoito" 0 0)
-     (list "F - Muut, MHU ylläpito" 0 0)
+     (list "F - Muut, MHU ylläpito" 1000.00M 0)
      (list "G - Hoidonjohtopalkkio" 110.20M 60.20M)
      (list "H - Siltapäällysteet" 0 0)
      (list "I - Sillat ja laiturit" 0 0)
@@ -82,12 +82,12 @@
      (list "Y7 - Valu" 0 0)
      (list "Y8 - Päällysteiden paikkaus, muut työt" 0 0)
      (list "Z - Avo-ojitus, soratiet" 15401.94M 7700.40M)
-     ["Yhteensä" 62807.62M 27866.60M]]]
+     ["Yhteensä" 63807.62M 27866.60M]]]
    [:taulukko {:otsikko "Urakkavuoden alusta", :viimeinen-rivi-yhteenveto? true}
     [{:leveys 1, :otsikko ""} {:leveys 1, :otsikko "", :fmt :raha}]
     [["Tavoitehinta: " 250000M]
-     ["Urakkavuoden alusta tav.hintaan kuuluvia: " 62807.62M]
-     ["Jäljellä: " 187192.38M]]]])
+     ["Urakkavuoden alusta tav.hintaan kuuluvia: " 63807.62M]
+     ["Jäljellä: " 186192.38M]]]])
 
 (deftest kulut-tehtavaryhmittain-testi
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
