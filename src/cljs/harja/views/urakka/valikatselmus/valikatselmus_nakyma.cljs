@@ -51,7 +51,7 @@
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))]
     (< hoitokauden-alkuvuosi urakan-alkuvuosi)))
 
-(defn valikatselmus-otsikko-ja-tiedot [e! app]
+(defn valikatselmus-otsikko-ja-tiedot [e! {:keys [tallennus-kesken?] :as app}]
   (let
     [urakan-nimi (:nimi @nav/valittu-urakka)
      valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -74,6 +74,7 @@
         [:span.caption-small-strong.alasveto-label "Hoitovuosi"]
         [yleiset/livi-pudotusvalikko {:valinta (pvm/vuosi (first valittu-hoitokausi))
                                       :vayla-tyyli? true
+                                      :disabled tallennus-kesken?
                                       :data-cy "hoitokausi-valinta"
                                       :valitse-fn #(do (e! (valikatselmus-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                                      (e! (t-yhteiset/->NollaaValikatselmuksenPaatokset)))
