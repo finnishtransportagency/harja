@@ -59,7 +59,7 @@ jobs:
     steps:
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52
         # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success
         if: ${{ job.status != 'success' || needs.tests.result != 'success' }}
         with:
