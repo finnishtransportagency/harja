@@ -10,10 +10,10 @@
             [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
-            [harja.palvelin.integraatiot.labyrintti.sms-test :refer [+testi-sms-url+]]
+            [harja.palvelin.integraatiot.sms.sms-test :refer [+testi-sms-url+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
-            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [clojure.java.io :as io]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
@@ -62,12 +62,14 @@
                                                                                             :vastausosoite "harja-ala-vastaa@vayla.fi"}
                                                                            :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])
-                        :labyrintti (component/using (labyrintti/->Labyrintti +testi-sms-url+
-                                                                              "testiapiavain" (atom #{}))
-                                                     [:db :integraatioloki :http-palvelin])
+                        :sms (component/using (sms/luo-tekstiviesti-komponentti
+                                                       ;; Uusi SMS-integraatio aktiivinen ja korvaa siten vanhan käytössä
+                                                       {:url +testi-sms-url+ :apiavain "testiapiavain" :aktiivinen? true}
+                                                       {:sms-url +testi-sms-url+ :apiavain "testiapiavain"})
+                                      [:http-palvelin :db :integraatioloki])
                         :laadunseuranta (component/using
                                           (ls/->Laadunseuranta)
-                                          [:http-palvelin :db :fim :api-sahkoposti :labyrintti])))))
+                                          [:http-palvelin :db :fim :api-sahkoposti :sms])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 

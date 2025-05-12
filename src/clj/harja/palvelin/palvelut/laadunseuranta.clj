@@ -408,7 +408,7 @@
 
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti pdf-vienti excel-vienti] :as this}]
+  (start [{:keys [http-palvelin db fim sms api-sahkoposti pdf-vienti excel-vienti] :as this}]
 
     (julkaise-palvelut
       http-palvelin
@@ -422,7 +422,7 @@
         (tallenna-laatupoikkeama
           {:db db :user user :fim fim
            :email api-sahkoposti
-           :sms labyrintti :laatupoikkeama laatupoikkeama}))
+           :sms sms :laatupoikkeama laatupoikkeama}))
 
       :tallenna-suorasanktio
       (fn [user tiedot]
