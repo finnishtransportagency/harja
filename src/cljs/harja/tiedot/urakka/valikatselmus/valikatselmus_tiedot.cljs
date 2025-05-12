@@ -1,19 +1,24 @@
 (ns harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot
   (:require [clojure.string :as str]
-            [tuck.core :refer [process-event] :as tuck]
-            [taoensso.encore :refer [dissoc-in] :as encore]
+            [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.istunto :as istunto]
+            [harja.ui.nakymasiirrin :as siirrin]
             [harja.domain.urakka :as urakka]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.pvm :as pvm]))
 
 (def valikatselmus-nakymassa? (atom false))
 
 (defonce tavoitehinnan-muutokset (atom []))
+
+(defn scrollaa-muutoksiin []
+  ;; Kutsutaan kun käyttäjä tallentaa oikaisua 
+  ;; Gridin elementit menee disabled muotoon, joka muuttaa sivun kokoa
+  (siirrin/siirry-elementin-id "tavhinnan-muutokset" 450))
+
 (defn karsitut-tavoitehinnan-muutokset [muutokset]
   (when-not (empty? muutokset)
     (sort-by :index
@@ -28,6 +33,7 @@
 (defrecord TallennaOikaisu [oikaisu id])
 (defrecord TallennaOikaisut [oikaisut hoitokauden-alkuvuosi])
 (defrecord TallennaOikaisuOnnistui [vastaus id])
+(defrecord TallennaOikaisuOnnistuiToast [vastaus id])
 (defrecord TallennaOikaisuEpaonnistui [vastaus])
 (defrecord PoistaOikaisu [oikaisu id])
 (defrecord PoistaOikaisuOnnistui [vastaus])
@@ -143,25 +149,41 @@
 
   TallennaOikaisut
   (process-event [{oikaisut :oikaisut hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
-    (let [oikaisut (map #(merge % {::urakka/id (-> @tila/yleiset :urakka :id)
-                                   ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}) oikaisut)
-          _ (doseq [oikaisu oikaisut]
-              (let [;; Lähetetään oikaisun tallennus serverille vain, jos kaikki tiedot on syötetty
-                    kaikki-tiedot? (and (::valikatselmus/otsikko oikaisu)
-                                     (::valikatselmus/selite oikaisu)
-                                     (::valikatselmus/summa oikaisu)
-                                     (::valikatselmus/hoitokauden-alkuvuosi oikaisu)
-                                     (::urakka/id oikaisu))
-                    _ (when kaikki-tiedot?
-                        (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
-                          oikaisu
-                          {:onnistui ->TallennaOikaisuOnnistui
-                           :epaonnistui ->TallennaOikaisuEpaonnistui
-                           :paasta-virhe-lapi? true}))]))]
-      (assoc app :tallennus-kesken? true)))
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
+          validit-oikaisut (->> oikaisut
+                             (map #(merge % {::urakka/id urakka-id
+                                             ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+                             ;; Katso että kaikki tiedot syötetty 
+                             (filter #(every? % [::valikatselmus/otsikko
+                                                 ::valikatselmus/selite
+                                                 ::valikatselmus/summa
+                                                 ::valikatselmus/hoitokauden-alkuvuosi
+                                                 ::urakka/id])))
+          ;; Viimeisen oikaisun indeksi, näytetään viimeisenä toast viesti 
+          viimeinen-idx (dec (count validit-oikaisut))]
+
+      (doseq [[idx oikaisu] (map-indexed vector validit-oikaisut)]
+        (scrollaa-muutoksiin)
+        (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
+          oikaisu
+          {:onnistui (if (= idx viimeinen-idx)
+                       ;; Kun viimeinen oikaisu on tallennettu, näytä viesti
+                       ->TallennaOikaisuOnnistuiToast
+                       ;; Tallennus vielä kesken 
+                       ->TallennaOikaisuOnnistui)
+           :epaonnistui ->TallennaOikaisuEpaonnistui
+           :paasta-virhe-lapi? true})))
+
+    (assoc app :tallennus-kesken? true))
 
   TallennaOikaisuOnnistui
-  (process-event [{vastaus :vastaus id :id} {:keys [hoitokauden-alkuvuosi tavoitehinnan-oikaisut] :as app}]
+  (process-event [{:keys [vastaus _id]} {:keys [_hoitokauden-alkuvuosi _tavoitehinnan-oikaisut] :as app}]
+    (->
+      (kasittele-valikatselmuksen-vastaus app vastaus)
+      (assoc :tallennus-kesken? true)))
+
+  TallennaOikaisuOnnistuiToast
+  (process-event [{:keys [vastaus _id]} {:keys [_hoitokauden-alkuvuosi _tavoitehinnan-oikaisut] :as app}]
     (viesti/nayta-toast! "Oikaisu tallennettu")
     (kasittele-valikatselmuksen-vastaus app vastaus))
 
@@ -177,10 +199,10 @@
       (assoc-in app [:tavoitehinnan-muutokset (:hoitokauden-alkuvuosi app) id :poistettu] true)
       (do
         (tuck-apurit/post! app :poista-tavoitehinnan-oikaisu
-            oikaisu
-            {:onnistui ->PoistaOikaisuOnnistui
-             :epaonnistui ->PoistaOikaisuEpaonnistui
-             :paasta-virhe-lapi? true})
+          oikaisu
+          {:onnistui ->PoistaOikaisuOnnistui
+           :epaonnistui ->PoistaOikaisuEpaonnistui
+           :paasta-virhe-lapi? true})
         (assoc app :tallennus-kesken? true))))
 
   PoistaOikaisuOnnistui
@@ -327,13 +349,13 @@
 
   PaivitaKattohinnanSiirtoCheckbox
   (process-event [{uusi-arvo :uusi-arvo} app]
-    (let [paatos (first (filter #(= (ffirst %) :kattohinnan-ylitys) (:paatokset app)) )
+    (let [paatos (first (filter #(= (ffirst %) :kattohinnan-ylitys) (:paatokset app)))
           paatos (assoc-in paatos [:kattohinnan-ylitys :siirra?] uusi-arvo)]
       (update app :paatokset (fn [paatokset]
                                (map #(if (= (ffirst %) :kattohinnan-ylitys)
-                                      paatos
-                                      %)
-                                    paatokset)))))
+                                       paatos
+                                       %)
+                                 paatokset)))))
 
   PaivitaKattohinnanSiirtoMaara
   (process-event [{uusi-arvo :uusi-arvo} app]
@@ -487,9 +509,7 @@
       (assoc paatos :luoja (:id @istunto/kayttaja))
       {:onnistui ->HaeValikatselmuksenTiedotOnnistui
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
-    (assoc app :tallennus-kesken? true))
-
-  )
+    (assoc app :tallennus-kesken? true)))
 
 
 (defn avaa-tai-sulje-haitari [avain])

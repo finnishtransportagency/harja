@@ -1,27 +1,18 @@
 (ns harja.views.urakka.valikatselmus.valikatselmus-nakyma
-  (:require [reagent.core :refer [atom] :as r]
-            [tuck.core :as tuck]
-            [harja.domain.kulut.valikatselmus :as valikatselmus]
+  (:require [tuck.core :as tuck]
             [harja.domain.roolit :as roolit]
-            [harja.domain.urakka :as urakka]
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.napit :as napit]
             [harja.ui.debug :as debug]
             [harja.ui.yleiset :as yleiset]
-            [harja.views.urakka.kulut.yhteiset :as yhteiset]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]
             [harja.views.urakka.valikatselmus.yhteenvetolaatikko :as yhteevetolaatikko]
             [harja.views.urakka.valikatselmus.tavoitehinnan-muutokset :as tavoitehinnan-muutokset]
@@ -182,7 +173,7 @@
         [:div {:id "vayla"}
          (if (:haku-kaynnissa? app)
            [:div.valikatselmus-haku
-            [yleiset/ajax-loader "Haetaan välikatselmuksen tietoja..."]]
+            [yleiset/ajax-loader-pieni "Haetaan välikatselmuksen tietoja..."]]
            [:div.valikatselmus-container
             [debug/debug app]
             [:div.col-xs-12.col-md-7

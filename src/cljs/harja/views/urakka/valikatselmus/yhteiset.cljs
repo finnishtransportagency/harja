@@ -48,7 +48,7 @@
         false)))
 
 (defn paatosotsikko-ja-avaus [e! otsikko paatos-tehty? paatos-avain avatut-paatokset avaa-tai-sulje-haitari-fn avaa-paatos-fn]
-  [:div.paatos-komponentti-otsikko-row {:on-click #(e! avaa-paatos-fn)}
+  [:div.paatos-komponentti-otsikko-row.klikattava {:on-click #(e! avaa-paatos-fn)}
    [:div.navigation-ikoni {:on-click #(avaa-tai-sulje-haitari-fn %)}
     ;; Kun päätosavainta ei löydy setistä, niin pidetään päätös avattuna (defaulttina kaikki on auki)
     (if (not (contains? avatut-paatokset paatos-avain))

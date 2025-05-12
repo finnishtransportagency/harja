@@ -16,6 +16,35 @@
 (defonce virheet-atom (atom {}))
 (defonce tallenna-painettu (atom false))
 
+(defn- rivi-painikkeet [e! uusi-id  muuttui?
+                        uudet-simplified
+                        tallennus-kesken? 
+                        hoitokauden-alkuvuosi 
+                        hoitokauden-oikaisut-atom
+                        voi-muokata? rivilla-tyhja-elementti]
+  [:div.painikkeet
+   [napit/yleinen-toissijainen "Lisää rivi"
+    #(do
+       (reset! tallenna-painettu false)
+       (swap! hoitokauden-oikaisut-atom assoc uusi-id
+         {:id uusi-id
+          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+    {:ikoni (ikonit/livicon-plus)
+     :disabled (or tallennus-kesken? (not voi-muokata?))}]
+
+   [napit/yleinen-toissijainen "Tallenna muutokset"
+    (if (and
+          muuttui?
+          (empty? @virheet-atom)
+          (empty? rivilla-tyhja-elementti))
+      #(do
+         (reset! tallenna-painettu false)
+         (e! (valikatselmus-tiedot/->TallennaOikaisut uudet-simplified hoitokauden-alkuvuosi)))
+      #(do
+         (valikatselmus-tiedot/scrollaa-muutoksiin)
+         (reset! tallenna-painettu true)))
+    {:disabled (or tallennus-kesken? (not voi-muokata?))}]])
+
 (defn tavoitehinnan-oikaisut-taulukko
   "Tavoitehinnan oikaisujen taulukko.
 
@@ -50,22 +79,6 @@
                                   uudet-simplified)]
     [:div.tavoitehinnan-muutokset
      [:div
-      [:div.painikkeet
-       [napit/yleinen-toissijainen "Lisää rivi"
-        #(do
-           (reset! tallenna-painettu false)
-           (swap! hoitokauden-oikaisut-atom assoc uusi-id
-             {:id uusi-id
-              ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
-        {:ikoni (ikonit/livicon-plus)
-         :disabled (or tallennus-kesken? (not voi-muokata?))}]
-       [napit/yleinen-toissijainen "Tallenna muutokset"
-        (if (and muuttui? (empty? @virheet-atom) (empty? rivilla-tyhja-elementti))
-          #(do
-             (reset! tallenna-painettu false)
-             (e! (valikatselmus-tiedot/->TallennaOikaisut uudet-simplified hoitokauden-alkuvuosi)))
-          #(reset! tallenna-painettu true))
-        {:disabled (or tallennus-kesken? (not voi-muokata?))}]]
       (when (or (and @tallenna-painettu (not (empty? @virheet-atom)))
               (and @tallenna-painettu (not (empty? rivilla-tyhja-elementti))))
         [:div.tallennus-varoitus
@@ -75,26 +88,30 @@
       [:div
        [grid/muokkaus-grid
         (merge {:tyhja "Ei muutoksia tavoitehintaan"
-          :voi-kumota? false
-          :voi-muokata? voi-muokata?
-          :muutos #(do
-                     (reset! tallenna-painettu false)
-                     (reset! virheet-atom (grid/hae-virheet %)))
-          ;; Roskakorinappula rivin päässä
-          :toimintonappi-fn (when voi-muokata?
-                              (fn [rivi _muokkaa! id]
-                                [napit/poista ""
-                                 #(do
-                                    (poista-oikaisu-fn rivi id))
-                                 {:luokka "napiton-nappi pelkka-ikoni"}]))
-          :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
-          :validoi-uusi-rivi? false
-          :uusi-id uusi-id
-          :nayta-virheikoni? false
-          :rivi-jalkeen (when @hoitokauden-oikaisut-atom
-                          [{:teksti "Yhteensä" :luokka "yhteensa"}
-                           {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
-                           {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])})
+                :voi-kumota? false
+                :voi-muokata? voi-muokata?
+                ;; Älä anna käyttäjän naputella rivejä kesken tallennuksen 
+                :disabloi-rivi? (constantly tallennus-kesken?)
+                :sisalto-kun-rivi-disabloitu :oletus
+                :muutos #(do
+                           (reset! tallenna-painettu false)
+                           (reset! virheet-atom (grid/hae-virheet %)))
+                ;; Roskakorinappula rivin päässä
+                :toimintonappi-fn (fn [rivi _muokkaa! id]
+                                    (when (and voi-muokata? (not tallennus-kesken?))
+                                      [napit/poista ""
+                                       #(do
+                                          (poista-oikaisu-fn rivi id))
+                                       {:luokka "napiton-nappi pelkka-ikoni"}]))
+                :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
+                :validoi-uusi-rivi? false
+
+                :uusi-id uusi-id
+                :nayta-virheikoni? false
+                :rivi-jalkeen (when @hoitokauden-oikaisut-atom
+                                [{:teksti "Yhteensä" :luokka "yhteensa"}
+                                 {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
+                                 {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])})
         [{:otsikko "Muutos"
           :nimi ::valikatselmus/otsikko
           :tyyppi :valinta
@@ -125,7 +142,16 @@
           :fmt (partial fmt/euro-opt false true)
           :elementin-id (str "summa-" uusi-id)
           :aria-label "Vaikutus euroina"}]
-        hoitokauden-oikaisut-atom]]]]))
+        hoitokauden-oikaisut-atom]]
+      
+      ;; Tallenna / Lisää rivi 
+      ;; Siirretty alas, koska "Vahvista päätös" voidaan sotkea tallenna- napiksi.
+      (rivi-painikkeet e! uusi-id  muuttui?
+        uudet-simplified
+        tallennus-kesken?
+        hoitokauden-alkuvuosi
+        hoitokauden-oikaisut-atom
+        voi-muokata? rivilla-tyhja-elementti)]]))
 
 (defn kattohinnan-oikaisu
   "Kattohinnan oikaisua tarvitsevat urkat, jotka ovat alkaneet -19-20 vuosina. Muille kattohinta on 110% tavoitehinnasta."
@@ -177,11 +203,16 @@
                                  (when (dom/enter-nappain? event)
                                    (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
     ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
-    [:div.paatos-komponentti-reunuksella
+    [:div#tavhinnan-muutokset.paatos-komponentti-reunuksella
+     
      (if hoitovuosi-kesken?
        [valikatselmus-yhteiset/paatosotsikko "Tavoitehinnan muutokset" paatos-tehty?]
        [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset
         avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)])
+     
+     (when tallennus-kesken?
+       [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])
+     
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [tavoitehinnan-oikaisut-taulukko e! hoitokauden-oikaisut-atom
