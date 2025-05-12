@@ -35,7 +35,7 @@
                              toteuman-alku
                              toteuman-loppu)}))))))
 
-(defn tarkista-tehtavat [db urakka-id tehtavat hinnoittelu]
+(defn tarkista-tehtavat [db urakka-id tehtavat]
   (doseq [tehtava tehtavat]
     (let [tehtava-apitunnus (get-in tehtava [:tehtava :id])
           vastaus (q-toimenpidekoodi/hae-hinnoittelu db {:urakka urakka-id :apitunnus tehtava-apitunnus} )
@@ -48,10 +48,4 @@
       (when (or (not hinnoittelut) (empty? hinnoittelut))
         (virheet/heita-viallinen-apikutsu-poikkeus
           {:koodi :virheellinen-tehtava
-           :viesti (format "Tuntematon tehtävä (id: %s)." tehtava-apitunnus)}))
-
-      (when (not-any? #(= % hinnoittelu) hinnoittelut)
-        (virheet/heita-viallinen-apikutsu-poikkeus
-          {:koodi :virheellinen-tehtava
-           :viesti (format "Toteumalla on väärä hinnoittelu. Toteumalle annettiin hinnoittelu: %s, mutta toteumalle kirjatun tehtävän %s hinnoittelut ovat: %s. "
-                           hinnoittelu tehtava-apitunnus hinnoittelut)})))))
+           :viesti (format "Tuntematon tehtävä (id: %s)." tehtava-apitunnus)})))))
