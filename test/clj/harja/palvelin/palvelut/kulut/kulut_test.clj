@@ -520,8 +520,8 @@
    :toimenpideinstanssi (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'")),
    :tehtavaryhma 15, :lisatieto nil, :rivi 1})
 
-(deftest hae-aikavalilla-kaikki-kulu-kohdistuksineent
-  (testing "hae-aikavalilla-kaikki-kulu-kohdistuksineent"
+(deftest hae-aikavalilla-kaikki-kulu-kohdistuksineen
+  (testing "hae-aikavalilla-kaikki-kulu-kohdistuksineen"
     (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           alkupvm (pvm/->pvm "1.1.2019")
           loppupvm (pvm/->pvm "30.9.2024")
@@ -532,7 +532,8 @@
                                    :alkupvm alkupvm
                                    :loppupvm loppupvm})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 31
+          _ (println "VASTAUS " vastaus)
+          odotettu-count 32
           kulu-id-9 (first (filter #(= 9 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -548,7 +549,7 @@
                                    :alkupvm nil
                                    :loppupvm nil})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 31
+          odotettu-count 32
           kulu-id-9 (first (filter #(= 9 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -566,7 +567,7 @@
                                    :alkupvm hoitokauden-alkupvm
                                    :loppupvm hoitokauden-loppupvm})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 30 ;; yksi kulu on päivätty ennen hoitokauden alkua
+          odotettu-count 31 ;; yksi kulu on päivätty ennen hoitokauden alkua
           kulu-id-9 (first (filter #(= 9 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))

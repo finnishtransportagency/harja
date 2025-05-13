@@ -29,7 +29,7 @@
     {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Tilaajan rahavaraus kannustinjärjestelmään", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Tilaajan rahavaraus kannustinjärjestelmään", :vuosi 2019, :id 3, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu nil :jarjestys 11}))
 
 ;; Hae Oulu MHU:n rahavaraukset
-(deftest hae-rahavaraukset-onnistuu-test
+(deftest hae-suunnitellut-rahavaraukset-onnistuu-test
   (let [oulu-mhu (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         suunnitellut-kustannukset (bs/hae-urakan-kustannusarvoidut-tyot (:db jarjestelma) +kayttaja-jvh+ oulu-mhu)
         tavoitehintaiset-rahavaraukset-2019 (filter #(and
@@ -38,7 +38,7 @@
                                               suunnitellut-kustannukset)]
     (is (= odotetut-kustannus-rahavaraukset tavoitehintaiset-rahavaraukset-2019))))
 
-(deftest hae-endpointista-rahavaraukset-onnistuu-test
+(deftest hae-endpointista-suunnitellut-rahavaraukset-onnistuu-test
   (let [oulu-mhu (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :budjetoidut-tyot +kayttaja-jvh+ {:urakka-id oulu-mhu})
         suunnitellut-kustannukset (:kustannusarvioidut-tyot vastaus)

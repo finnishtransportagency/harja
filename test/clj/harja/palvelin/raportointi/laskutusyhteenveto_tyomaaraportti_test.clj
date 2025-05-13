@@ -348,8 +348,8 @@
                                  (:sora_hoitokausi_yht purettu) (:paallyste_hoitokausi_yht purettu)
                                  (:yllapito_hoitokausi_yht purettu) (:korvausinv_hoitokausi_yht purettu)
                                  (:johtojahallinto_hoitokausi_yht purettu) (:erillishankinnat_hoitokausi_yht purettu)
-                                 (:hjpalkkio_hoitokausi_yht purettu) (:akilliset_hoitotyot_hk purettu)
-                                 (:vahinkojen_korjaukset_hk purettu) (:muut_kulut_hoitokausi_yht purettu))
+                                 (:hjpalkkio_hoitokausi_yht purettu) (:kaikki_rahavaraukset_hoitokausi_yht  purettu)
+                                 (:muut_kulut_hoitokausi_yht purettu))
         budjettia_jaljella (- (:hoitokauden_tavoitehinta purettu) (:tavhin_hoitokausi_yht purettu))]
 
     (is (= siirto-ed-vuodelta (:hk_valikatselmus_siirrot_ed_vuodelta purettu)))

@@ -51,14 +51,12 @@
     (toteuman-validointi/tarkista-tehtavat
       db
       urakka-id
-      (get-in data [:pistetoteuma :toteuma :tehtavat])
-      (get-in data [:pistetoteuma :toteuma :toteumatyyppi])))
+      (get-in data [:pistetoteuma :toteuma :tehtavat])))
   (doseq [pistetoteuma (:pistetoteumat data)]
     (toteuman-validointi/tarkista-tehtavat
       db
       urakka-id
-      (get-in pistetoteuma [:pistetoteuma :toteuma :tehtavat])
-      (get-in pistetoteuma [:pistetoteuma :toteuma :toteumatyyppi]))))
+      (get-in pistetoteuma [:pistetoteuma :toteuma :tehtavat]))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
