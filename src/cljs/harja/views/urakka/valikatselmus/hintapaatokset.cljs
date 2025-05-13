@@ -21,8 +21,13 @@
                                    (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
     ^{:key (str "tavoitehinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
+     
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan ylitys" paatos-tehty? paatos-avain avatut-paatokset
       avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
+     
+     (when tallennus-kesken?
+       [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])
+
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
@@ -93,8 +98,13 @@
         siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
+     
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Kattohinnan ylitys" paatos-tehty? paatos-avain avatut-paatokset
       avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
+     
+     (when tallennus-kesken?
+       [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])
+     
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
