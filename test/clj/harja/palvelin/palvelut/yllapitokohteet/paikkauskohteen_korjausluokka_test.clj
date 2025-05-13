@@ -32,6 +32,7 @@
    :alkupvm (pvm/->pvm "01.01.2020")
    :loppupvm (pvm/->pvm "01.02.2020")
    :paikkauskohteen-tila "valmis"
+   :tiemerkinnan-tila "kasittelematta"
    :tie 22
    :aosa 1
    :losa 1

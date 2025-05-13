@@ -145,7 +145,6 @@
                        "AN10" "AN10"
                        "AN14" "AN14"
                        "AN19" "AN19"
-                       "AN22" "AN22"
                        "AN30" "AN30"}
             :pakollinen? true
             :vayla-tyyli? true

@@ -89,7 +89,6 @@
                                                      (valitse-organisaatio org))}
                        (when org-nimi org-nimi)]
       "Org. tyyppi:" (when org-tyyppi (name org-tyyppi))
-      "Käyttäjänimi:" (get k :kayttajanimi)
       "Puhelin:" (get k :puhelin)
       "Sähköposti:" (when email
                       [:a {:href (str "mailto:" email)}

@@ -1,14 +1,17 @@
 (ns harja.palvelin.palvelut.kustannusten-kirjaus
   "Palvelut kustannusten kirjauksille ja hauille"
-  (:require [com.stuartsierra.component :as component]
-            [harja.kyselyt.kustannusten-kirjaus :as q]
-            [harja.kyselyt.konversio :as konv]
-            [harja.domain.oikeudet :as oikeudet]
-            [taoensso.timbre :as log]
-            [slingshot.slingshot :refer [throw+]]
-            [harja.pvm :as pvm]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
+  (:require
+   [clojure.java.jdbc :as jdbc]
+   [com.stuartsierra.component :as component]
+   [harja.domain.oikeudet :as oikeudet]
+   [harja.kyselyt.konversio :as konv]
+   [harja.kyselyt.kustannusten-kirjaus :as q]
+   [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+   [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu
+                                                     poista-palvelut]]
+   [harja.pvm :as pvm]
+   [slingshot.slingshot :refer [throw+]]
+   [taoensso.timbre :as log]))
 
 (defn default-kustannuslista
   "Palauttaa oletus nolla-arvot vuosille, joille ei ole merkitty kustannuksia
@@ -31,7 +34,7 @@
         urakan-alkuvuosi (pvm/vuosi (get-in urakka [:urakka :alkupvm]))
         urakan-loppuvuosi (pvm/vuosi (get-in urakka [:urakka :loppupvm]))
         default-lista (default-kustannuslista urakka-id urakan-alkuvuosi urakan-loppuvuosi)]
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan user urakka-id)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset user urakka-id)
     (let [vastaus (into []
                     (map #(konv/decimal->double % :kustannus :pk1 :pk2 :pk3)
                       (q/hae-tiemerkinta-kustannuskirjaukset db urakka-id)))]
@@ -41,7 +44,7 @@
 
 (defn hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
   [db user {:keys [urakka-id kustannusvuosi] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinnan user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset user urakka-id)
   (let [vastaus (into [] (map #(konv/decimal->double % :kustannus :pk1 :pk2 :pk3)
                            (q/hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
                              db {:urakka urakka-id :kustannusvuosi kustannusvuosi})))]
@@ -63,7 +66,7 @@
 (defn tallenna-tiemerkinta-kustannuskirjaukset
   [db user tiedot]
   (let [urakka-id (get-in tiedot [:urakka :id])]
-    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinnan user)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinta-kustannukset user)
     (doseq [tieto (:tiedot tiedot)]
       (when (< 0.0M (bigdec (:kustannus tieto)))
         (validoi-rivi tieto)))
@@ -75,6 +78,68 @@
           (assoc tieto :muokkaaja (:id user) :muokattu (pvm/nyt)))))
     tiedot))
 
+(defn hae-tiemerkinta-paallystyskohteiden-kustannukset
+  [db kayttaja {:keys [urakka-id urakka-alkupvm yllapitokohdetyotyyppi]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
+  (let [vuosi (pvm/vuosi urakka-alkupvm)]
+    (q/hae-urakan-yllapitokohteiden-kustannukset db {:urakka urakka-id 
+                                                     :yllapitokohdetyotyyppi (or yllapitokohdetyotyyppi  "paallystys") 
+                                                     :vuosi vuosi})))
+
+(defn hae-tiemerkinta-paikkausten-kustannukset
+  [db kayttaja {:keys [urakka-id urakka-alkupvm]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
+  (let [vuosi (pvm/vuosi urakka-alkupvm)]
+    (q/hae-urakan-paikkauskohteiden-kustannukset db {:urakka-id urakka-id :vuosi vuosi})))
+
+(defn tallenna-tiemerkinta-yllapitokohteiden-kustannukset
+  [db user {:keys [tiedot]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinta-kustannukset user)
+  (try
+    (jdbc/with-db-transaction [db db]
+      (let [tulokset (mapv (fn [tieto]
+                             (let [tieto-muokattu (assoc tieto
+                                                    :muokkaaja (:id user)
+                                                    :muokattu (pvm/nyt))]
+                               (if (empty? (q/hae-yllapitokustannus db {:yllapitokohde (:id tieto)}))
+                                 (q/lisaa-tiemerkinta-yllapitokohde-kustannuskirjaus! db
+                                   (assoc tieto-muokattu :luoja (:id user)))
+                                 (q/paivita-tiemerkinta-yllapitokohde-kustannuskirjaus! db
+                                   tieto-muokattu))))
+                       tiedot)]
+        {:onnistui true
+         :paivitetyt tulokset}))
+    (catch Exception e
+      (log/error e "Virhe tallennettaessa yllapitokohteiden kustannuksia")
+      {:onnistui false
+       :virhe (.getMessage e)})))
+
+(defn tallenna-tiemerkinta-paikkauskohteiden-kustannukset
+  [db user {:keys [tiedot]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinta-kustannukset user)
+  (try
+    (jdbc/with-db-transaction [db db]
+      (let [tulokset (mapv (fn [tieto]
+                             (let [tieto-muokattu (assoc tieto
+                                                    :muokkaaja (:id user)
+                                                    :muokattu (pvm/nyt))]
+                               (if (empty? (q/hae-paikkauskustannus db {:paikkauskohde (:id tieto)}))
+                                 (q/lisaa-tiemerkinta-paikkauskohde-kustannuskirjaus! db
+                                   (assoc tieto-muokattu :luoja (:id user)))
+                                 (q/paivita-tiemerkinta-paikkauskohde-kustannuskirjaus! db
+                                   tieto-muokattu))))
+                       tiedot)]
+        {:onnistui true
+         :paivitetyt tulokset}))
+    (catch Exception e
+      (log/error e "Virhe tallennettaessa paikkausten kustannuksia")
+      {:onnistui false
+       :virhe (.getMessage e)})))
+
+(defn hae-tiemerkinta-kustannustyypit
+  [db kayttaja {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
+  (q/hae-tiemerkinta-kustannustyypit db))
 
 (defrecord TiemerkinnanKustannusKirjaukset []
   component/Lifecycle
@@ -93,13 +158,36 @@
       :tallenna-tiemerkinta-kustannuskirjaus
       (fn [kayttaja tiedot]
         (tallenna-tiemerkinta-kustannuskirjaukset (:db this) kayttaja tiedot)))
+
+    ;; Uudet päällysteet
+    (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-paallystyskohteiden-kustannukset
+      (fn [kayttaja tiedot] 
+        (hae-tiemerkinta-paallystyskohteiden-kustannukset (:db this) kayttaja tiedot)))
+    
+    (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-paikkausten-kustannukset
+      (fn [kayttaja tiedot]
+        (hae-tiemerkinta-paikkausten-kustannukset (:db this) kayttaja tiedot)))
+    
+    (julkaise-palvelu (:http-palvelin this) :tallenna-tiemerkinta-yllapitokohteiden-kustannukset
+      (fn [kayttaja tiedot]
+        (tallenna-tiemerkinta-yllapitokohteiden-kustannukset (:db this) kayttaja tiedot)))
+    
+    (julkaise-palvelu (:http-palvelin this) :tallenna-tiemerkinta-paikkauskohteiden-kustannukset
+      (fn [kayttaja tiedot]
+        (tallenna-tiemerkinta-paikkauskohteiden-kustannukset (:db this) kayttaja tiedot)))
+    
+    (julkaise-palvelu (:http-palvelin this) :hae-tiemerkinta-kustannustyypit
+      (fn [kayttaja tiedot] (hae-tiemerkinta-kustannustyypit (:db this) kayttaja tiedot)))
     this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
       :hae-tiemerkinta-kustannuskirjaus
       :hae-tiemerkinta-kustannuskirjaus-kustannusvuodella
-      :tallenna-tiemerkinta-kustannuskirjaus)
+      :tallenna-tiemerkinta-kustannuskirjaus
+      :hae-tiemerkinta-kustannustyypit
+      :hae-tiemerkinta-paallystyskohteiden-kustannukset
+      :hae-tiemerkinta-paikkausten-kustannukset
+      :tallenna-tiemerkinta-yllapitokohteiden-kustannukset
+      :tallenna-tiemerkinta-paikkauskohteiden-kustannukset)
     this))
-
-
