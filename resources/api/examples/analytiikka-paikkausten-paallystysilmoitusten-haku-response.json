@@ -71,6 +71,7 @@
           "pituus": 100
         }
       ],
+      "toteutunutHinta": 0,
       "poistettu": false,
       "yhaLahetyksenTila": "Lähetetty onnistuneesti"
     }
