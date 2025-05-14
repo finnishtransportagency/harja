@@ -90,7 +90,7 @@
                          {:kokonaishintainen 11001.94M
                           :tpi_id 49
                           :urakka_id 35}
-                         {:kokonaishintainen 15401.94M
+                         {:kokonaishintainen 16401.94M
                           :tpi_id 50
                           :urakka_id 35}
                          {:kokonaishintainen 13201.94M
