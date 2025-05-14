@@ -98,13 +98,6 @@ WHERE tpi.urakka = :urakka-id
   AND tpk2.koodi = '23150'
 limit 1;
 
--- name: hae-paatos
-SELECT id, "hoitokauden-alkuvuosi", "urakka-id", "hinnan-erotus", "urakoitsijan-maksu", "tilaajan-maksu",
-       siirto, tyyppi, "lupaus-luvatut-pisteet", "lupaus-toteutuneet-pisteet", "lupaus-tavoitehinta",
-       muokattu, "muokkaaja-id", "luoja-id", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id
-FROM urakka_paatos
-WHERE id = :id;
-
 -- name: hae-urakan-hoitovuosien-paatokset-analytiikalle
 -- Hakee urakan hoitokauden päättyessa suorittamiin välikatselmuksiin liittyvät tiedot palautettavaksi analytiikalle toteutuneiden kustannusten rajapinnan kautta.
 -- Käytetään MH-urakoissa.

@@ -12,8 +12,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.kulut.kustannusten-seuranta-excel :as kustannusten-seuranta-excel]))
 
-(defn hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+(defn hae-urakan-kustannusten-seuranta-paaryhmittain-ilman-validointia [db {:keys [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
   (if (nil? hoitokauden-alkuvuosi)
     (throw+ {:type virheet/+sisainen-kasittelyvirhe+
              :virheet [{:koodi 400
@@ -23,6 +22,10 @@
                                                                              :loppupvm loppupvm
                                                                              :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})]
       res)))
+
+(defn hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+  (hae-urakan-kustannusten-seuranta-paaryhmittain-ilman-validointia db tiedot))
 
 (defrecord KustannustenSeuranta []
   component/Lifecycle

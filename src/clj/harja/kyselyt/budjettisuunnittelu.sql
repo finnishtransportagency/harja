@@ -338,13 +338,8 @@ SELECT u.id                           AS urakka,
        ut.tarjous_tavoitehinta        AS "tarjous-tavoitehinta",
        ut.hoitokausi,
        u.loppupvm < CURRENT_DATE      AS "urakka-paattynyt?",
-       (EXTRACT(YEAR FROM u.loppupvm) - EXTRACT(YEAR FROM u.alkupvm)) + 1   AS urakan_pituus, -- vuosista saadaan yhden liian lyhyt
-       EXISTS(SELECT *
-              FROM urakka_paatos up
-              WHERE up.tyyppi IN ('lupausbonus', 'lupaussanktio')
-                AND up."urakka-id" = ut.urakka
-                AND up."hoitokauden-alkuvuosi" = EXTRACT(YEAR FROM u.alkupvm) + ut.hoitokausi - 1
-                AND up.poistettu = FALSE) AS "on-paatos"
+       u.alkupvm                      as "urakka-alkupvm",
+       (EXTRACT(YEAR FROM u.loppupvm) - EXTRACT(YEAR FROM u.alkupvm)) + 1   AS urakan_pituus -- vuosista saadaan yhden liian lyhyt
 FROM urakka u
      LEFT JOIN urakka_tavoite ut ON ut.urakka = u.id
 WHERE u.tyyppi = 'teiden-hoito'

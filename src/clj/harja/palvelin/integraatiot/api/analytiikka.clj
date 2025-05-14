@@ -1,43 +1,46 @@
 (ns harja.palvelin.integraatiot.api.analytiikka
   "Analytiikkaportaalille endpointit"
   (:require [clojure.set :as set]
-    [com.stuartsierra.component :as component]
-    [clojure.spec.alpha :as s]
-    [clojure.string :as str]
-    [compojure.core :refer [GET]]
-    [compojure.core :refer :all]
-    [compojure.route :refer :all]
-    [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-    [harja.domain.paallystysilmoitus :as paallystysilmoitus]
-    [harja.domain.tierekisteri :as tr-domain]
-    [harja.domain.kulut :as kulut-domain]
-    [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
-    [taoensso.timbre :as log]
-    [harja.pvm :as pvm]
-    [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-    [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu kasittele-get-kutsu]]
-    [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
-    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-    [harja.kyselyt.konversio :as konversio]
-    [harja.kyselyt.toteumat :as toteuma-kyselyt]
-    [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
-    [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]
-    [harja.kyselyt.urakat :as urakat-kyselyt]
-    [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
-    [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
-    [harja.kyselyt.paikkaus :as paikkaus-kyselyt]
-    [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
-    [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
-    [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
-    [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
-    [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
-    [harja.kyselyt.kulut :as kulu-kyselyt]
-    [harja.kyselyt.sanktiot :as sanktio-kyselyt]
-    [harja.kyselyt.erilliskustannus-kyselyt :as bonus-kyselyt]
-    [harja.kyselyt.valikatselmus :as valitavoite-kyselyt]
-    [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
-    [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
-    [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat])
+            [com.stuartsierra.component :as component]
+            [clojure.spec.alpha :as s]
+            [clojure.string :as str]
+            [compojure.core :refer [GET]]
+            [compojure.core :refer :all]
+            [compojure.route :refer :all]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus]
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.kulut :as kulut-domain]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
+            [taoensso.timbre :as log]
+            [harja.pvm :as pvm]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu kasittele-get-kutsu]]
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.toteumat :as toteuma-kyselyt]
+            [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
+            [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
+            [harja.kyselyt.paikkaus :as paikkaus-kyselyt]
+            [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
+            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
+            [harja.kyselyt.kulut :as kulu-kyselyt]
+            [harja.kyselyt.sanktiot :as sanktio-kyselyt]
+            [harja.kyselyt.erilliskustannus-kyselyt :as bonus-kyselyt]
+            [harja.kyselyt.valikatselmus :as valitavoite-kyselyt]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
+            [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
+            [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -873,11 +876,30 @@
   (log/info "Analytiikka API palauta toteutuneet kustannukset urakalle :: parametrit" (pr-str parametrit))
   (let [urakka-id (if (integer? urakka-id) urakka-id (konversio/konvertoi->int urakka-id))
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+        urakan-loppuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden alkuvuosi käytännössä
+        mhu+urakka? (= "mhu+" (:sopimustyyppi urakan-tiedot))
+        mhu-tyyppi (paatoskone/urakan-hoitotyyppi mhu+urakka?)
         kulut (kulu-kyselyt/hae-toteutuneet-kustannukset-analytiikalle db {:urakka-id urakka-id})
         sanktiot (sanktio-kyselyt/hae-urakan-sanktiot-analytiikalle db urakka-id)
         bonukset (bonus-kyselyt/hae-urakan-bonukset-analytiikalle db urakka-id)
         muutokset (valitavoite-kyselyt/hae-urakan-tavoitehintaan-vaikuttavat-muutokset-analytiikalle db urakka-id)
-        paatokset (valitavoite-kyselyt/hae-urakan-hoitovuosien-paatokset-analytiikalle db urakka-id)
+
+        ;; Päätösten hakeminen on hieman monimutkaisempaa, kun vaihtoehtoja on niin paljon riippuen urakkatyypistä, toteutuneista kustannuksista ja hoitaokauden alkuvuodesta
+        ;; Haetaan urakan taloustiedot, jotta tiedetään kuuluuko tavoitehinnan alitus, ylitys ja kattohinta pakettiin
+        hoitovuodet (range urakan-alkuvuosi (inc urakan-loppuvuosi))
+        paatokset (reduce (fn [paatokset kuluva-hoitovuosi]
+                            (let [kustannukset (valikatselmus-palvelu/hae-kustannukset-jarjestettyna db urakka-id kuluva-hoitovuosi
+                                                 (pvm/hoitokauden-alkupvm kuluva-hoitovuosi) (pvm/hoitokauden-alkupvm kuluva-hoitovuosi))
+                                  toteutuneet-kustannukset (get-in kustannukset [:yhteensa :yht-toteutunut-summa])
+                                  budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakka-id})
+                                  ;; Otetaan käytyn hoitovuoden budjetti
+                                  budjettitavoite (some #(when (= (:hoitokauden-alkuvuosi %) kuluva-hoitovuosi) %) budjettitavoite)
+                                  kattohinta (:kattohinta-oikaistu budjettitavoite)
+                                  vuosittaiset-paatokset (valikatselmus-palvelu/hae-urakan-hintoihin-vaikuttavat-tehdyt-paatokset
+                                                           db urakka-id mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi toteutuneet-kustannukset kattohinta)]
+                              (concat paatokset vuosittaiset-paatokset)))
+                    [] hoitovuodet)
         kulut (map (fn [k]
                      (let [k (update k :kulukohdistukset konversio/jsonb->clojuremap)
                            k (update k :kulukohdistukset
@@ -912,11 +934,79 @@
                                   (konversio/alaviiva->rakenne))})
                    bonukset)
         muutokset (map (fn [m]
-                        {:tavoitehinnan-muutos m})
-                   muutokset)
+                         {:tavoitehinnan-muutos m})
+                    muutokset)
+        ;; Päivitä uudet päätöstyypit vanhaan päätöstietomalliin
         paatokset (map (fn [p]
-                         {:hoitovuoden-paatos (-> p
-                                                (konversio/alaviiva->rakenne))})
+                         {:hoitovuoden-paatos {:paatoksen-hoitovuosi (:hoitokauden_alkuvuosi p)
+                                               :paatostyyppi (paatoskone/nimi->avain (:nimi p))
+                                               :poistettu (:poistettu p)
+                                               :paatoksen-tulos {:kokonaismaara (cond
+                                                                                  (and (= "Lupaukset" (:nimi p)) (= "bonus" (:tyyppi p))) (:lupausbonus p)
+                                                                                  (and (= "Lupaukset" (:nimi p)) (= "sanktio" (:tyyppi p))) (:lupaussanktio p)
+                                                                                  (and (= "Lupaukset" (:nimi p)) (= "taytetty" (:tyyppi p))) nil
+                                                                                  (= "Tavoitehinnan muutokset" (:nimi p)) nil
+                                                                                  (= "Hoitovuoden lopun indeksikorjaus" (:nimi p)) (:hoitokauden_lopun_indeksikorjaus p)
+                                                                                  (= "Hoitovuoden lopun tavoite- ja kattohinta" (:nimi p)) nil
+                                                                                  (= "Tavoitehinnan alitus" (:nimi p)) (:alituksen_maara p)
+                                                                                  (= "Tavoitehinnan ylitys" (:nimi p)) (:ylityksen_maara p)
+                                                                                  (= "Kattohinnan ylitys" (:nimi p)) (:ylityksen_maara p)
+                                                                                  (= "Hoidonjohtopalkkion muutos" (:nimi p)) (:hoidonjohtopalkkio_muutos p)
+                                                                                  (= "Välikatselmuspöytäkirjaan liitettävät raportit" (:nimi p)) nil
+                                                                                  :else nil)
+                                                                 :urakoitsija-maksaa (cond
+                                                                                       (and (= "Lupaukset" (:nimi p)) (= "bonus" (:tyyppi p))) nil
+                                                                                       (and (= "Lupaukset" (:nimi p)) (= "sanktio" (:tyyppi p))) (:lupaussanktio p)
+                                                                                       (and (= "Lupaukset" (:nimi p)) (= "taytetty" (:tyyppi p))) nil
+                                                                                       (= "Tavoitehinnan muutokset" (:nimi p)) nil
+                                                                                       ;; Jos hoitokauden lopun indeksikorjaus on negatiivinen, niin urakoitsija maksaa sen itse.
+                                                                                       (and (= "Hoitovuoden lopun indeksikorjaus" (:nimi p)) (neg? (:hoitokauden_lopun_indeksikorjaus p))) (:hoitokauden_lopun_indeksikorjaus p)
+                                                                                       (and (= "Hoitovuoden lopun indeksikorjaus" (:nimi p)) (pos? (:hoitokauden_lopun_indeksikorjaus p))) nil
+                                                                                       (= "Hoitovuoden lopun tavoite- ja kattohinta" (:nimi p)) nil
+                                                                                       (= "Tavoitehinnan alitus" (:nimi p)) (:alituksen_maara p)
+                                                                                       (= "Tavoitehinnan ylitys" (:nimi p)) (:urakoitsija_maksaa p)
+                                                                                       (= "Kattohinnan ylitys" (:nimi p)) (:urakoitsija_maksaa p)
+                                                                                       ;; Jos hoidonjohtopalkkio on negatiivinen, niin urakoitsija maksaa kuluna erotuksen
+                                                                                       (and (= "Hoidonjohtopalkkion muutos" (:nimi p)) (neg? (:hoidonjohtopalkkio_muutos p))) (:hoidonjohtopalkkio_muutos p)
+                                                                                       (and (= "Hoidonjohtopalkkion muutos" (:nimi p)) (pos? (:hoidonjohtopalkkio_muutos p))) nil
+                                                                                       (= "Välikatselmuspöytäkirjaan liitettävät raportit" (:nimi p)) nil
+                                                                                       :else nil)
+                                                                 :tilaaja-maksaa (cond
+                                                                                   (and (= "Lupaukset" (:nimi p)) (= "bonus" (:tyyppi p))) (:lupausbonus p)
+                                                                                   (and (= "Lupaukset" (:nimi p)) (= "sanktio" (:tyyppi p))) nil
+                                                                                   (and (= "Lupaukset" (:nimi p)) (= "taytetty" (:tyyppi p))) nil
+                                                                                   (= "Tavoitehinnan muutokset" (:nimi p)) nil
+                                                                                   ;; Jos hoitokauden lopun indeksikorjaus on negatiivinen, niin tilaajan ei tarvitse maksaa mitään
+                                                                                   (and (= "Hoitovuoden lopun indeksikorjaus" (:nimi p)) (neg? (:hoitokauden_lopun_indeksikorjaus p))) nil
+                                                                                   (and (= "Hoitovuoden lopun indeksikorjaus" (:nimi p)) (pos? (:hoitokauden_lopun_indeksikorjaus p))) (:hoitokauden_lopun_indeksikorjaus p)
+                                                                                   (= "Hoitovuoden lopun tavoite- ja kattohinta" (:nimi p)) nil
+                                                                                   (= "Tavoitehinnan alitus" (:nimi p)) (:tavoitepalkkio p)
+                                                                                   (= "Tavoitehinnan ylitys" (:nimi p)) (:tilaaja_maksaa p)
+                                                                                   (= "Kattohinnan ylitys" (:nimi p)) nil
+                                                                                   ;; Jos hoidonjohtopalkkio on positiivinen, niin tilaaja maksaa
+                                                                                   (and (= "Hoidonjohtopalkkion muutos" (:nimi p)) (neg? (:hoidonjohtopalkkio_muutos p))) nil
+                                                                                   (and (= "Hoidonjohtopalkkion muutos" (:nimi p)) (pos? (:hoidonjohtopalkkio_muutos p))) (:hoidonjohtopalkkio_muutos p)
+                                                                                   (= "Välikatselmuspöytäkirjaan liitettävät raportit" (:nimi p)) nil
+                                                                                   :else nil)
+                                                                 :siirretaan-seuraavalle-hoitovuodelle (cond
+                                                                                                         (= "Tavoitehinnan alitus" (:nimi p)) (:siirron_maara p)
+                                                                                                         (= "Tavoitehinnan ylitys" (:nimi p)) (:siirto p)
+                                                                                                         :else nil)
+                                                                 :tavoitehinta (if (or
+                                                                                     (= "Lupaukset" (:nimi p))
+                                                                                     (= "Tavoitehinnan muutokset" (:nimi p))
+                                                                                     (= "Hoitovuoden lopun indeksikorjaus" (:nimi p))
+                                                                                     (= "Tavoitehinnan ylitys" (:nimi p))
+                                                                                     (= "Hoidonjohtopalkkion muutos" (:nimi p)))
+                                                                                 (:tavoitehinta p)
+                                                                                 nil)
+                                                                 :luvatut-pisteet (if (= "Lupaukset" (:nimi p)) (:luvatut_pisteet p)
+                                                                                    nil)
+                                                                 :toteutuneet-pisteet (if (= "Lupaukset" (:nimi p)) (:toteutuneet_pisteet p)
+                                                                                        nil)}
+                                               :viittaukset-toteutuneisiin-kustannuksiin {:kulu_id (or (:kulu_id p) nil)
+                                                                                          :sanktio-id (or (:sanktio_id p) nil)
+                                                                                          :bonus-id (or (:erilliskustannus_id p) nil)}}})
                     paatokset)]
 
     {:toteutuneet-kustannukset {:urakka urakka-id
