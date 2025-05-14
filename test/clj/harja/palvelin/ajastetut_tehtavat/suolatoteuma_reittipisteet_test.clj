@@ -50,7 +50,7 @@
         _ (is (= urakka-id (:urakka_id (first urakat))))
 
         ;; Kutsu ajastettua tehtävää
-        _ (yleiset-ajastukset/paivita-mahdolliset-suolatoteumat testitietokanta)
+        _ (yleiset-ajastukset/paivita-mahdolliset-suolatoteumat-kuluvalla-hoitokaudella testitietokanta)
         urakat-ajastuksen-jalkeen (suolarajoitus-kyselyt/hae-rajoitusaluetta-muokanneet-urakat testitietokanta)
         _ (is (= 0 (count urakat-ajastuksen-jalkeen)))
 
