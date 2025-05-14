@@ -21,8 +21,13 @@
                                    (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
 
     [:div.paatos-komponentti-reunuksella
+     
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Lupaukset" paatos-tehty? paatos-avain avatut-paatokset
       avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
+     
+     (when tallennus-kesken?
+       [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])
+     
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         ;; Tuloksia ei näytetä mikäli tarjouksen tavoitehinta puuttuu
