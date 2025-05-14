@@ -169,6 +169,8 @@ BEGIN
                 FOREACH m IN ARRAY rp.materiaalit
                     LOOP
                         IF suolamateriaalikoodit @> ARRAY [m.materiaalikoodi] THEN
+                            -- Jos edellinen piste on null, kyseessä on reitin ensimmäinen suolapiste. Pisteväli on tällöin yksi piste.
+                            -- Jos ensimmäisessä pisteessä on raportoitu suolaa, suola on tulkittava käytetyksi kokonaan siinä pisteessä.
                             IF edellinen_rp IS NULL THEN
                                 edellinen_rp.sijainti = rp.sijainti;
                             END IF;
@@ -243,16 +245,17 @@ BEGIN
           AND t.poistettu IS FALSE
 
         LOOP
-        -- Loopataan löydetyt reittipisteet läpi
-        -- Ja jokaiselle löydetylle reittipiste arraylle pyöritetään oma looppi, jossa itse lisääminen suolatoteuma_reittpiste - tauluun tapahtuu
-            edellinen_rp := NULL; -- Nollaa edellinen reittipiste, kun aloitetaan käsittelemään uutta toteumaa.
+            -- Loopataan löydetyt reittipisteet läpi
+            -- Jokaiselle löydetylle reittipiste arraylle pyöritetään oma looppi, jossa itse lisääminen suolatoteuma_reittpiste - tauluun tapahtuu
+            -- Nollaa edellinen reittipiste, kun aloitetaan käsittelemään uutta toteumaa. Ei haluta vertailla eri toteumien pisteitä.
+            edellinen_rp := NULL;
             FOREACH rp IN ARRAY loydetyt_toteuman_reittipisteet.reittipisteet
                 LOOP
                     FOREACH m IN ARRAY rp.materiaalit
                         LOOP
                             IF suolamateriaalikoodit @> ARRAY [m.materiaalikoodi] THEN
-                                -- Jos suolapiste on reitin ensimmäinen ja siihen on raportoitu suolaa, on koko suolamäärä laskettava samaan pisteeseen,
-                                -- joten ensimmäisen pisteen kohdalla edellinen sijainti on sama kuin pisteen sijainti.
+                                -- Jos edellinen piste on null, kyseessä on reitin ensimmäinen suolapiste. Pisteväli on tällöin yksi piste.
+                                -- Jos ensimmäisessä pisteessä on raportoitu suolaa, suola on tulkittava käytetyksi kokonaan siinä pisteessä.
                                 IF edellinen_rp IS NULL THEN
                                     edellinen_rp.sijainti = rp.sijainti;
                                 END IF;
