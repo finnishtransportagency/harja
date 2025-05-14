@@ -10,7 +10,7 @@
             [hiccup.core :refer [html]]
             [harja.validointi :as validointi]
             [harja.palvelin.komponentit.fim :as fim]
-            [harja.palvelin.integraatiot.labyrintti.sms :as sms]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -106,7 +106,7 @@
         (log/warn (format "Urakalle %s ei löydy FIM:stä yhtään henkiöä, jolle lähettää tekstiviesti." urakka-sampoid))
         (doseq [henkilo viestin-saajat]
           (try
-            (sms/laheta sms (:puhelin henkilo) viesti {})
+            (sms/laheta sms (:puhelin henkilo) viesti nil {})
             (catch Exception e
               (log/error (format "Tekstiviestin lähetys FIM-käyttäjälle %s epäonnistui. Virhe: %s"
                                  (pr-str henkilo) (pr-str e))))))))

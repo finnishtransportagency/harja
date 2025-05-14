@@ -36,6 +36,7 @@ Pohjavesialue
 tuotanto/
 tuotanto_test.sh
 .labyrintti-salasana
+.sms-salasana
 .turi-salasana
 .google-static-maps-key
 .hipchat-token

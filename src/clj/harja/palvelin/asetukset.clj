@@ -157,6 +157,9 @@
 
    (s/optional-key :labyrintti) {:sms-url s/Str
                                  :apiavain s/Str}
+   (s/optional-key :sms) {:url s/Str
+                          :apiavain s/Str
+                          :aktiivinen? s/Bool}
 
    (s/optional-key :virustarkistus) {:url s/Str}
    (s/optional-key :tiedostopesula) {:base-url s/Str}
