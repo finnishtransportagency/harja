@@ -798,7 +798,7 @@
         ;; Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan. Esim Lupauspäätöksiä saadaan kolme, mutta niiden järjestysnumero on kaikilla 1, joka
         ;; merkitsee, että ne kuuluvat samaan luokkaan (lupauksiin) ja näin ollen niitä tarvitaan väin yksi.
         mahdolliset-paatokset (->> mahdolliset-paatokset
-                                (group-by :jarjestys)
+                                (group-by :paatostyyppi)
                                 (map (fn [[_ paatokset]] (first paatokset)))
                                 (into []))
         ;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös

@@ -98,27 +98,6 @@ WHERE tpi.urakka = :urakka-id
   AND tpk2.koodi = '23150'
 limit 1;
 
--- name: hae-urakan-hoitovuosien-paatokset-analytiikalle
--- Hakee urakan hoitokauden päättyessa suorittamiin välikatselmuksiin liittyvät tiedot palautettavaksi analytiikalle toteutuneiden kustannusten rajapinnan kautta.
--- Käytetään MH-urakoissa.
-SELECT id                           AS "paatos-id",
-       "hoitokauden-alkuvuosi"      AS "paatoksen-hoitovuosi",
-       tyyppi                       AS "paatostyyppi", -- 'tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus', 'lupausbonus', 'lupaussanktio'
-       "hinnan-erotus"              AS "paatoksen-tulos_kokonaismaara",
-       "urakoitsijan-maksu"         AS "paatoksen-tulos_urakoitsija-maksaa",
-       "tilaajan-maksu"             AS "paatoksen-tulos_tilaaja-maksaa",
-       siirto                       AS "paatoksen-tulos_siirretaan-seuraavalle-hoitovuodelle",
-       "lupaus-tavoitehinta"        AS "paatoksen-tulos_tavoitehinta",
-       "lupaus-luvatut-pisteet"     AS "lupausten-tulos_luvatut-pisteet",
-       "lupaus-toteutuneet-pisteet" AS "lupausten-tulos_toteutuneet-pisteet",
-       kulu_id                      AS "viittaukset-toteutuneisiin-kustannuksiin_kulu-id",
-       sanktio_id                   AS "viittaukset-toteutuneisiin-kustannuksiin_sanktio-id",
-       erilliskustannus_id          AS "viittaukset-toteutuneisiin-kustannuksiin_bonus-id",
-       poistettu                    AS "poistettu"
-FROM urakka_paatos up
-WHERE "urakka-id" = :urakka-id
-ORDER BY "hoitokauden-alkuvuosi", tyyppi;
-
 -- name: hae-urakan-tavoitehintaan-vaikuttavat-muutokset-analytiikalle
 -- Hakee kaikki välikatselmukseen liittyvät tavoitehintaan vaikuttavat muutokset palautettavaksi analytiikalle toteutuneiden kustannusten rajapinnan kautta.
 -- Palauttaa myös poistetuksi merkityt muutokset.

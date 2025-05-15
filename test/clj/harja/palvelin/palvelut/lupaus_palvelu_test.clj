@@ -481,7 +481,7 @@
                  :paatos false
                  :vastaus true
                  :lupaus-vaihtoehto-id nil}]
-    (with-redefs [lupaus-palvelu/valikatselmus-tehty-hoitokaudelle? (constantly true)]
+    (with-redefs [lupaus-palvelu/valikatselmus-tehty-urakalle? (constantly true)]
       (is (thrown? AssertionError (vastaa-lupaukseen vastaus)) "Ei saa vastata välikatselmuksen jälkeen"))
     (is (vastaa-lupaukseen vastaus) "Saa vastata")))
 
@@ -489,7 +489,7 @@
   (let [vastaus {:id 2
                  :vastaus false
                  :lupaus-vaihtoehto-id nil}]
-    (with-redefs [lupaus-palvelu/valikatselmus-tehty-hoitokaudelle? (constantly true)]
+    (with-redefs [lupaus-palvelu/valikatselmus-tehty-urakalle? (constantly true)]
       (is (thrown? AssertionError (vastaa-lupaukseen vastaus)) "Ei saa vastata välikatselmuksen jälkeen"))
     (is (vastaa-lupaukseen vastaus) "Saa vastata")))
 

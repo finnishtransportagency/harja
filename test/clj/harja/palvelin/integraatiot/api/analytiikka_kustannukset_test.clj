@@ -239,8 +239,8 @@
         juuri-luotu-paatos-rajapinnasta (first (filter (fn [k]
                                                          (= (bigdec (get-in k [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa])) tilaaja-maksaa))
                                                  (get-in encoodattu-body [:toteutuneet-kustannukset :hoitovuoden-paatokset])))
-        ;; Siivoa roskat
-        _ (testidatan-kaytto/poista-paatos-idlla (:paatos-id juuri-luotu-paatos-rajapinnasta))]
+        ;; Siivoa roskat - Poistetaan päätös
+        _ (paatos-kyselyt/poista-tavoitehinnan-ylityspaatos (:db jarjestelma) urakka-id kayttajaid (:id db-paatos))]
     (is (= 200 (:status vastaus)))
     (is (= tilaaja-maksaa
           (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")

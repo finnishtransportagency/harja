@@ -90,18 +90,6 @@
 (defn- liita-lupaus-vaihtoehdot [db lupaus]
   (assoc lupaus :vaihtoehdot (lupauksen-vastausvaihtoehdot db lupaus)))
 
-(defn valikatselmus-tehty-hoitokaudelle?
-  "Onko urakalle tehty välikatselmus annetulla hoitokaudella."
-  [db urakka-id hoitokauden-alkuvuosi]
-  {:pre [(number? urakka-id) (number? hoitokauden-alkuvuosi)]}
-  (lupaus-domain/valikatselmus-tehty?
-    (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)))
-
-(defn tallennettu-bonus-tai-sanktio [db urakka-id hoitokauden-alkuvuosi]
-  (->
-    (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)
-    lupaus-domain/urakan-paatokset->bonus-tai-sanktio))
-
 (defn hae-lupauspaatos
   "Haetaan lupaukseen liittyvä päätös hoitokaudelle"
   [db urakka-id hoitokauden-alkuvuosi]
@@ -151,7 +139,7 @@
         tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
         luvatut-pisteet-puuttuu? (not (:pisteet lupaus-sitoutuminen))
         tallennettu-paatos (hae-lupauspaatos db urakka-id (pvm/vuosi hk-alkupvm))
-        valikatselmus-tehty? (valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)
+        valikatselmus-tehty? (valikatselmus-tehty-urakalle? db urakka-id hoitokauden-alkuvuosi)
         tallennettu-bonus-tai-sanktio (some-> tallennettu-paatos lupaus-domain/paatos->bonus-tai-sanktio)
         bonus-tai-sanktio (or
                             tallennettu-bonus-tai-sanktio
@@ -304,8 +292,7 @@
                                                        tiedot)
         _ (assert lupaus-id)
         lupaus (first (lupaus-kyselyt/hae-lupaus db {:id lupaus-id}))]
-    (assert (false? (valikatselmus-tehty-hoitokaudelle?
-                       db urakka-id (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
+    (assert (false? (valikatselmus-tehty-urakalle? db urakka-id (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
             "Vastauksia ei voi enää muuttaa välikatselmuksen jälkeen")
     ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
     ;; ja muun tyyppiselle sallittu "lupaus-vaihtoehto-id".
@@ -444,7 +431,7 @@
                                                                          :urakka-id urakka-id})
          sitoutumistiedot (first (lupaus-kyselyt/hae-sitoutumistiedot db {:urakka-id urakka-id}))
          ;; Kuukausittaisten pisteiden muokkaamisessa vaikuttaa tämän hoitokauden välikatselmus
-         valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
+         valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-urakalle? db urakka-id (pvm/vuosi hk-alkupvm))
          ;; Koko urakkakauden sitoutumispisteisiin vaikuttaa onko urakalle tehty yhtään välitkaselmusta
          valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id vuosi)
          lopulliset-pisteet (lupaus-domain/kokoa-vastauspisteet kayttaja kuukausipisteet urakka-id
