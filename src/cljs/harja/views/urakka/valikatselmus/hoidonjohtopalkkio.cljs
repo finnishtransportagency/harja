@@ -1,7 +1,6 @@
 (ns harja.views.urakka.valikatselmus.hoidonjohtopalkkio
   (:require [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
-            [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.urakka.urakka :as tila]
@@ -12,7 +11,7 @@
 (defn- laskenta-modaali [paatos]
   [:div
    [:div.flex-row
-    [:p.yla_selite_korkea "Hoidonjohtopalkkioon tehdään muutos, jos hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia muuttuu"
+    [:p.yla-selite-korkea "Hoidonjohtopalkkioon tehdään muutos, jos hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia muuttuu"
      [:span.laskenta-rivi-lukema " > 5% "] "tarjouksen mukaisen tavoitehintaan verrattuna."]]
    [:div.flex-row.laskenta-rivi-matalampi
     [:div "Hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia"]
@@ -37,28 +36,25 @@
 
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :hoidonjohtopalkkion-muutos
-        paatos-tehty? (or (:id paatos) false)
+        paatos-tehty? (some? (:id paatos))
 
-        on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
-        avaa-tai-sulje-haitari (fn [event]
-                                 (when (dom/enter-nappain? event)
-                                   (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
+        on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Hoidonjohtopalkkion muutos" paatos-tehty? paatos-avain avatut-paatokset
-      avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
+      (partial valikatselmus-tiedot/avaa-tai-sulje-haitari) (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
-        [:p.yla_selite "Hoidonjohtopalkkioon tehdään muutos, jos hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia muuttuu"
+        [:p.yla-selite "Hoidonjohtopalkkioon tehdään muutos, jos hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia muuttuu"
          [:span.laskenta-rivi-lukema " > 5% "] "tarjouksen mukaisen tavoitehintaan verrattuna."]
         (if-not (:virhe paatos)
           [:div
-           [:div.flex-row.prosentti_rivi
+           [:div.flex-row.prosentti-rivi
             [:div "Muutosprosentti"]
-            [:div.rivi_lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
+            [:div.rivi-lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
            [:div.flex-row
             [:h3.matala-otsikko "Hoidonjohtopalkkion muutos"]
-            [:div.otsikko_lukema (fmt/euro-opt false (:hoidonjohtopalkkio_muutos paatos))]]
+            [:div.otsikko-lukema (fmt/euro-opt false (:hoidonjohtopalkkio_muutos paatos))]]
            (when-not (= 0 (:hoidonjohtopalkkio_muutos paatos))
              [:div.flex-row.laskenta-linkki
               [yleiset/linkki "Näytä laskenta"

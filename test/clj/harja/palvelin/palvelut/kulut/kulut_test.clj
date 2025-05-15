@@ -440,7 +440,7 @@
         paatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
                  alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
 
-        _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakka-id paatos)
+        _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)
 
         muokattu-kulu-eri-hoitokausi (assoc tallennettu-kulu
                                        :erapaiva #inst "2021-09-29T21:00:00.000-00:00"
@@ -474,7 +474,7 @@
         paatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
                  alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
 
-        _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakka-id paatos)
+        _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)
         ;; Ja koitetaan siirtää kulu seuraavalle hoitokaudelle, jolla ei ole välikatselmusta tehtynä
         muokattu-kulu-eri-hoitokausi (assoc tallennettu-kulu
                                        :erapaiva #inst "2022-09-29T21:00:00.000-00:00"

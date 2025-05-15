@@ -417,7 +417,7 @@ FROM urakka u
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
 WHERE u.id = :id;
 
--- name: hae-urakkan-tiedot
+-- name: hae-urakan-tiedot
 -- Hakee urakan laajemmat tiedot id:llä
 SELECT
     u.id,

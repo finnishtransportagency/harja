@@ -145,7 +145,7 @@
                        (= :mpu sopimustyyppi))
 
     :valikatselmus (and
-                     (oikeudet/urakat-kulut-valikatselmus id) ;; TODO: Tarkista oikeudet. Ennen oli kulujen alla. Tarvitaanko nyt oma osio?
+                     (oikeudet/urakat-kulut-valikatselmus id)
                      (= tyyppi :teiden-hoito))
     
     :kustannukset (and

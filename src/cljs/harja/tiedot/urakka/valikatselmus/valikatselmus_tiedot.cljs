@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot
   (:require [clojure.string :as str]
             [tuck.core :as tuck]
+            [harja.ui.dom :as dom]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.nakymasiirrin :as siirrin]
@@ -51,21 +52,11 @@
 (defrecord KattohinnanMuokkaaPainettu [kattohinta])
 
 ;; Päätökset
-(defrecord NollaaPaatoksetJosUrakkaVaihtui [])
-(defrecord PaivitaPaatosLomake [tiedot paatos])
-(defrecord PoistaPaatos [id tyyppi])
-(defrecord PoistaPaatosOnnistui [vastaus tyyppi])
-(defrecord PoistaPaatosEpaonnistui [vastaus])
-(defrecord MuokkaaPaatosta [lomake-avain])
-(defrecord AlustaPaatosLomakkeet [paatokset hoitokauden-alkuvuosi])
-(defrecord PaivitaMaksunTyyppi [tyyppi])
 (defrecord TallennaLupausPaatos [paatos])
 (defrecord PoistaLupausPaatos [paatos])
 (defrecord PoistaLupausPaatosOnnistui [vastaus])
 (defrecord PoistaLupausPaatosEpaonnistui [vastaus])
 (defrecord TallennaTavoitehinnanMuutosPaatos [paatos])
-(defrecord TallennaTavoitehinnanMuutosPaatosOnnistui [vastaus])
-(defrecord TallennaTavoitehinnanMuutosPaatosEpaonnistui [vastaus])
 (defrecord PoistaTavoitehinnanMuutosPaatos [paatos])
 (defrecord PoistaTavoitehinnanMuutosPaatosOnnistui [vastaus])
 (defrecord PoistaTavoitehinnanMuutosPaatosEpaonnistui [vastaus])
@@ -126,6 +117,23 @@
       (assoc :tallennus-kesken? false))))
 
 (extend-protocol tuck/Event
+
+  HaeValikatselmuksenTiedot
+  (process-event [{urakkaid :urakkaid hoitovuosi :hoitovuosi} app]
+    (hae-valikatselmuksen-tiedot urakkaid hoitovuosi)
+    (assoc app :haku-kaynnissa? true))
+
+  HaeValikatselmuksenTiedotOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (kasittele-valikatselmuksen-vastaus app vastaus))
+
+  HaeValikatselmuksenTiedotEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Tapahtui virhe. Tarkista tilanne ja koeta hetken päästä uudelleen." :varoitus)
+    (-> app
+      (assoc :tallennus-kesken? false)
+      (assoc :haku-kaynnissa? false)))
+
   ;; Tavoitehinnan oikaisut
   TallennaOikaisu
   (process-event [{oikaisu :oikaisu id :id} app]
@@ -305,7 +313,9 @@
   PoistaLupausPaatosEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Päätöksen poistossa tapahtui virhe" :varoitus)
-    (kasittele-valikatselmuksen-vastaus app vastaus))
+    (-> app
+      (assoc :haku-kaynnissa? false)
+      (assoc :tallennus-kesken? false)))
 
   ValitseHoitokausi
   (process-event [{urakkaid :urakkaid vuosi :vuosi} app]
@@ -321,26 +331,11 @@
       (hae-valikatselmuksen-tiedot (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app))
       (assoc app :haku-kaynnissa? true)))
 
-  HaeValikatselmuksenTiedot
-  (process-event [{urakkaid :urakkaid hoitovuosi :hoitovuosi} app]
-    (hae-valikatselmuksen-tiedot urakkaid hoitovuosi)
-    (assoc app :haku-kaynnissa? true))
-
-  HaeValikatselmuksenTiedotOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (kasittele-valikatselmuksen-vastaus app vastaus))
-
-  HaeValikatselmuksenTiedotEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Tapahtui virhe. Tarkista tilanne ja koeta hetken päästä uudelleen." :varoitus)
-    (-> app
-      (assoc :tallennus-kesken? false)
-      (assoc :haku-kaynnissa? false)))
-
   ;; Monta paatosta voi olla avattuna kerrallaan
   AvaaPaatos
   (process-event [{avain :avain} app]
-    (let [app (if (nil? (:avatut-paatokset app))
+    (let [_ (js/console.log "AvaaPaatos" avain)
+          app (if (nil? (:avatut-paatokset app))
                 (assoc app :avatut-paatokset #{})
                 app)]
       (if (contains? (:avatut-paatokset app) avain)
@@ -512,7 +507,11 @@
     (assoc app :tallennus-kesken? true)))
 
 
-(defn avaa-tai-sulje-haitari [avain])
+(defn avaa-tai-sulje-haitari [event avain]
+  (when (dom/enter-nappain? event)
+    (tuck/action!
+      (fn [e!]
+        (e! (->AvaaPaatos avain))))))
 
 (defn ota-paatos [paatokset avain]
   (first (vals (first (filter #(= (ffirst %) avain) paatokset)))))

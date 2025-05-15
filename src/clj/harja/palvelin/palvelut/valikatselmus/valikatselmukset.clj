@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.valikatselmus.valikatselmukset
   (:require
     [com.stuartsierra.component :as component]
+    [clojure.string :as string]
     [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
@@ -27,27 +28,10 @@
     [harja.palvelin.palvelut.kulut.paatos-apurit :as paatos-apurit]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]
-    [harja.domain.roolit :as roolit]
     [harja.domain.lupaus-domain :as lupaus-domain]
     [clojure.java.jdbc :as jdbc]
     [harja.tyokalut.yleiset :refer [round2]]
     [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]))
-
-(defn oikaisujen-sallittu-aikavali
-  "Rakennetaan sallittu aikaväli valitun hoitokauden perusteella.
-  Huomaa, että kuukaudet menevät 0-11."
-  [valittu-hoitokausi]
-  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-        sallittu-viimeinen-vuosi (pvm/vuosi (second valittu-hoitokausi))]
-    ;; Kuukausi-indexit on pielessä käytetyssä funktiossa, niin tuo vaikuttaa hassulta
-    {:alkupvm (pvm/luo-pvm hoitokauden-alkuvuosi 8 1)
-     :loppupvm (pvm/luo-pvm sallittu-viimeinen-vuosi 11 31)}))
-
-(defn sallitussa-aikavalissa?
-  "Tarkistaa onko päätöksen tekohetki hoitokauden sisällä tai muutama kuukausi sen yli"
-  [valittu-hoitokausi nykyhetki]
-  (let [sallittu-aikavali (oikaisujen-sallittu-aikavali valittu-hoitokausi)]
-    (pvm/valissa? nykyhetki (:alkupvm sallittu-aikavali) (:loppupvm sallittu-aikavali))))
 
 (defn heita-virhe [viesti] (throw+ {:type "Error"
                                     :virheet {:koodi "ERROR" :viesti viesti}}))
@@ -80,37 +64,12 @@
     (when (pos? urakoitsijan-maksu)
       (heita-virhe "Tavoitehinnan alituksessa urakoitsijan maksun täytyy olla miinusmerkkinen tai nolla"))))
 
-(defn tarkista-tavoitehinnan-ylitys [{::valikatselmus/keys [tilaajan-maksu urakoitsijan-maksu] :as tiedot} tavoitehinta kattohinta]
-  (let [;; ylitys ei saa ylittää tavoitehinnan tiettyä osaa
-        _ (when-not (and (number? tavoitehinta) (number? tilaajan-maksu) (number? urakoitsijan-maksu))
-            (heita-virhe "Tavoitehinnan ylityspäätös vaatii tavoitehinnan, tilaajan-maksun ja urajoitsijan-maksun."))
-        ;; Pyöristetään, koska tilaajan-maksu ja urakoitsijan-maksu tulevat frontilta liukulukuina, joten laskuissa voi tulla virhettä
-        ;; Esim.
-        ;; (+ 18970.6678707 44264.8916983) ;; => 63235.559569000005
-        ylityksen-maksimimaara (round2 8 (- kattohinta tavoitehinta))
-        maksujen-osuus (round2 8 (+ tilaajan-maksu urakoitsijan-maksu))]
-    (do
-      ;; Urakoitsijan maksut ja tilaajan maksut eivät saa ylittää yli 10% tavoitehinnasta, koska muuten maksetaan jo kattohinnan ylityksiä
-      (when (> maksujen-osuus ylityksen-maksimimaara)
-        (heita-virhe "Maksujen osuus suurempi, kuin tavoitehinnan ja kattohinnan erotus."))
-
-      ;; Tarkista siirto
-      (tarkista-ei-siirtoa-tavoitehinnan-ylityksessa tiedot))))
-
-(defn tarkista-kattohinnan-ylitys [tiedot urakka]
-  (tarkista-ei-siirtoa-viimeisena-vuotena tiedot urakka))
-
 (defn tarkista-maksun-maara-alituksessa [tiedot urakka tavoitehinta hoitokauden-alkuvuosi]
   (let [maksu (- (::valikatselmus/urakoitsijan-maksu tiedot))
         viimeinen-hoitokausi? (= (pvm/vuosi (:loppupvm urakka)) (inc hoitokauden-alkuvuosi))
         maksimi-tavoitepalkkio (* valikatselmus/+maksimi-tavoitepalkkio-prosentti+ tavoitehinta)]
     (when (and (not viimeinen-hoitokausi?) (> maksu maksimi-tavoitepalkkio))
       (heita-virhe "Urakoitsijalle maksettava summa ei saa ylittää 3% tavoitehinnasta"))))
-
-(defn tarkista-tavoitehinnan-alitus [tiedot urakka tavoitehinta hoitokauden-alkuvuosi]
-  (do
-    (tarkista-maksun-miinusmerkki-alituksessa tiedot)
-    (tarkista-maksun-maara-alituksessa tiedot urakka tavoitehinta hoitokauden-alkuvuosi)))
 
 (defn oikaistu-tavoitehinta-vuodelle [db urakka-id hoitokauden-alkuvuosi]
   (:tavoitehinta-oikaistu
@@ -124,12 +83,6 @@
     (when-not (>= uusi-kattohinta oikaistu-tavoitehinta)
       (throw+ {:type "Error"
                :virheet {:koodi "ERROR" :viesti "Kattohinnan täytyy olla suurempi kuin tavoitehinta"}}))))
-
-
-(defn hae-kattohintojen-oikaisut [db _kayttaja tiedot]
-  (let [urakka-id (::urakka/id tiedot)]
-    (assert (number? urakka-id) "Virhe urakan ID:ssä.")
-    (valikatselmus-q/hae-kattohinnan-oikaisut db tiedot)))
 
 (defn hae-hoitovuoden-indeksiluvut [db urakkaid hoitovuosi]
   (let [;; Palauttaa indeksit kuukausinumeroilla
@@ -149,7 +102,7 @@
   (let [;; Kootaan päätöksiä varten tarvittavat tiedot
         nyt-vuosi (pvm/vuosi (pvm/nyt))
         hoitovuosi-kesken? (pvm/valissa? (pvm/nyt) (pvm/hoitokauden-alkupvm valittu-hoitovuosi) (pvm/hoitokauden-loppupvm (inc valittu-hoitovuosi)))
-        urakan-tiedot (first (q-urakat/hae-urakkan-tiedot db urakkaid))
+        urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakkaid))
         urakan-parametrit (first (q-urakat/hae-urakan-parametrit db {:urakkaid urakkaid}))
         jarjestelman-asetukset (first (jarjestelma-kyselyt/hae-jarjestelman-asetukset db))
         indeksi (:indeksi urakan-tiedot)
@@ -289,7 +242,6 @@
                               :budjettitavoite budjettitavoite}
                  :paatokset paatokset
                  :tavoitehinnan-muutokset tavoitehinnan-muutokset
-                 ;; TODO: Selvitäppä tämän kohtalo. Näitä tehdään niille 19-20 urakoille, mutta miten nämä on nyt hoidettu?
                  :kattohinnan-muutokset kattohinnan-muutokset}]
     vastaus))
 
@@ -393,7 +345,6 @@
   (jdbc/with-db-transaction [db db]
     (let [validaatio #{}
           urakka-id (:urakkaid paatos)
-          urakka (first (q-urakat/hae-urakka db urakka-id))
           hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
           ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
           tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
@@ -411,8 +362,8 @@
                    (assoc :erilliskustannus_id erilliskustannus_id)
                    (assoc :sanktio_id sanktio_id))
           _ (if (seq validaatio)
-              (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
-              (paatos-kyselyt/tee-lupauspaatos db {:urakkaid paatos} paatos))]
+              (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
+              (paatos-kyselyt/tee-lupauspaatos db paatos))]
       ;; Palautetaan koko välikatselmus
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
@@ -454,8 +405,8 @@
                        (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa. Suunniteltu kattohinta:" kattohinta " €. Päätöksen mukainen kattohinta: " (:kattohinta paatos) " €"))
                        validaatio)
           _ (if (seq validaatio)
-              (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
-              (paatos-kyselyt/tee-tavoitehinnan-muutospaatos db urakka-id paatos (:id kayttaja)))]
+              (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
+              (paatos-kyselyt/tee-tavoitehinnan-muutospaatos db paatos (:id kayttaja)))]
 
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
@@ -463,10 +414,10 @@
 (defn poista-tavoitehinnan-muutospaatos [db kayttaja paatos]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
   (log/debug "poista-tavoitehinnan-muutospaatos :: paatos" (pr-str paatos))
-  (let [vastaus (paatos-kyselyt/poista-tavoitehinnan-muutospaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
-
-    ;; Hae välikatselmuksen tiedot
-    (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)})))
+  ;; Poista päätös
+  (paatos-kyselyt/poista-tavoitehinnan-muutospaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))
+  ;; Hae välikatselmuksen tiedot
+  (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))
 
 (defn tee-tavoitehinnan-alituspaatos [db kayttaja paatos]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
@@ -498,8 +449,8 @@
                       (paatos-apurit/tallenna-kulu db paatos kayttaja :tavoitehinnan-alitus (:alituksen_maara paatos))))
           paatos (assoc paatos :kulu_id kulu_id)
           _ (if (seq validaatio)
-              (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
-              (paatos-kyselyt/tee-tavoitehinnan-alituspaatos db urakka-id paatos))]
+              (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
+              (paatos-kyselyt/tee-tavoitehinnan-alituspaatos db paatos))]
 
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
@@ -524,9 +475,7 @@
   (jdbc/with-db-transaction [db db]
     (let [validaatio #{}
           urakka-id (:urakkaid paatos)
-          urakka (first (q-urakat/hae-urakka db urakka-id))
           hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
-          versio (:versio paatos)
           ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
           tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
@@ -534,15 +483,13 @@
                        (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
                        validaatio)
 
-          ;; TODO: Tee lisää validaatiota. Varmista, että urakoitsijan ja tilaanjan prosentit täsmää versioihin
-
           ;; Jos validointi on kunnossa, niin luodaan tavoitehinnan ylityskulu - jonka maksaa urakoitsija
           kulu_id (when-not (seq validaatio)
                     (paatos-apurit/tallenna-kulu db paatos kayttaja :tavoitehinnan-ylitys (:tilaaja_maksaa paatos)))
           paatos (assoc paatos :kulu_id kulu_id)
           _ (if (seq validaatio)
-              (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
-              (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos db urakka-id paatos))]
+              (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
+              (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos db paatos))]
 
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
@@ -565,7 +512,7 @@
   (jdbc/with-db-transaction [db db]
     (let [validaatio #{}
           urakka-id (:urakkaid paatos)
-          urakan-tiedot (first (q-urakat/hae-urakkan-tiedot db urakka-id))
+          urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakka-id))
           urakan-loppuvuoden-alkuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden alkuvuosi käytännössä
           urakan-parametrit (first (q-urakat/hae-urakan-parametrit db urakka-id))
 
@@ -592,8 +539,8 @@
                     (paatos-apurit/tallenna-kulu db paatos kayttaja :kattohinnan-ylitys (:urakoitsija_maksaa paatos)))
           paatos (assoc paatos :kulu_id kulu_id)
           _ (if (seq validaatio)
-              (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
-              (paatos-kyselyt/tee-kattohinnan-ylityspaatos db urakka-id paatos))]
+              (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
+              (paatos-kyselyt/tee-kattohinnan-ylityspaatos db paatos))]
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
@@ -626,11 +573,9 @@
                        (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
                        validaatio)
 
-          ;; TODO: Tee lisää validaatiota. Varmista vaikka tavoitehinnan muutokset ja pisteiden oikeellisuus
-
           _ (if (seq validaatio)
-              (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
-              (paatos-kyselyt/tee-indeksikorjauspaatos db urakka-id paatos))]
+              (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
+              (paatos-kyselyt/tee-indeksikorjauspaatos db paatos))]
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
@@ -665,8 +610,8 @@
                        validaatio)
 
           _ (if (seq validaatio)
-              (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
-              (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos db urakka-id paatos))]
+              (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
+              (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos db paatos))]
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
@@ -719,8 +664,8 @@
           paatos (assoc paatos :kulu_id kulu_id)
 
           _ (if (seq validaatio)
-              (heita-virhe (str "Virheellinen päätös: " (clojure.string/join ", " validaatio)))
-              (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos db urakkaid paatos))]
+              (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
+              (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos db paatos))]
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
@@ -741,7 +686,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
   (log/info "tee-poytakirjan-raporttipaatos :: paatos" (pr-str paatos))
   (jdbc/with-db-transaction [db db]
-    (paatos-kyselyt/tee-poytakirjan-raporttipaatos db (:urakkaid paatos) paatos)
+    (paatos-kyselyt/tee-poytakirjan-raporttipaatos db paatos)
     ;; Hae välikatselmuksen tiedot
     (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)})))
 
@@ -779,7 +724,7 @@
   "Päätellään onko jokin päätös vielä tekemättä. Esim. raporttipäätös voi olla tekemättä ja tämä palauttaa true."
   [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet kayttaja urakkaid)
-  (let [urakan-tiedot (first (q-urakat/hae-urakkan-tiedot db urakkaid))
+  (let [urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakkaid))
         urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
         urakan-loppuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden alkuvuosi käytännössä
         mhu+urakka? (= "mhu+" (:sopimustyyppi urakan-tiedot))

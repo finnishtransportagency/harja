@@ -1,6 +1,5 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone
   (:require [clojure.string :as str]
-            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :refer [round2]]
             [harja.kyselyt.urakat :as urakka-kyselyt]
@@ -123,6 +122,9 @@
       (and (= nykyvuosi valittu-hoitovuosi) (>= kuukausi 10)) true
       :else false)))
 
+(defn paatos-tallennettu-tietokantaan? [tietokanta-paatokset nimi]
+  (:id (first (filter #(when (= (:nimi %) nimi) %) tietokanta-paatokset))))
+
 (defn valmistele-lupauspaatokset [db validoinnit-kaytossa? valittu-hoitovuosi urakkaid paatokset toteutuneet-pisteet
                                   luvatut-pisteet tavoitehinta tarjouksen-tavoitehinta indeksi]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
@@ -145,7 +147,7 @@
           sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit) ;; Jaetaan sadalla, niin saadaan helpompi laskutoimitus
           bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
           lupaussanktio (when (= tyyppi "sanktio") (* (/ sanktioprosentti 100) tarjouksen-tavoitehinta erotus))
-          lupausbonus (when (= tyyppi "bonus") (* (/ bonusprosentti 100) tarjouksen-tavoitehinta (* -1 erotus)))
+          lupausbonus (when (= tyyppi "bonus") (* (/ bonusprosentti 100) tarjouksen-tavoitehinta (Math/abs ^long erotus)))
           ;; Päätöspäivä on käytössä sanktion laskennassa ja siihen asetetaan hoitovuoden päättymispäivä
           paatospaiva (pvm/->pvm (str "31.10." valittu-hoitovuosi))
           ;; Valitaan lupauspäätös, joissa tyyppi täsmää
@@ -222,7 +224,7 @@
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Hoitovuosi on vielä kesken." true 3)
 
       ;; Jos validoinnit on asetuksista laitettu päälle, niin Tavoitehinnan muutokset -päätös pitää olla tallennettu
-      (and validoinnit-kaytossa? (not (:id (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) tietokanta-paatokset)))))
+      (and validoinnit-kaytossa? (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 3)
 
       (and tavoitehinta tavoitehinnan-muutokset hoitokauden-indeksikuukaudet)
@@ -287,10 +289,12 @@
       (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not (kustannussuunnitelma-vahvistettu? db urakkaid hoitovuosinro)))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus" "Kustannussuunnitelma on vahvistamatta." true 5)
 
-      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not (:id (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) tietokanta-paatokset)))))
+      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
+        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 5)
 
-      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not (:id (first (filter #(when (= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") %) tietokanta-paatokset)))))
+      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
+        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena tietokanta-paatokset "Tavoitehinnan alitus" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 5)
 
       (and hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta kustannukset (> hoitokauden-lopun-tavoitehinta kustannukset))
@@ -348,10 +352,12 @@
       (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not (kustannussuunnitelma-vahvistettu? db urakkaid hoitovuosinro)))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan ylitys" "Kustannussuunnitelma on vahvistamatta." true 6)
 
-      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not (:id (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) tietokanta-paatokset)))))
+      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
+        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan ylitys" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 6)
 
-      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not (:id (first (filter #(when (= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") %) tietokanta-paatokset)))))
+      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
+        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan ylitys" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 6)
 
       (and kattohinta tavoitehinta kustannukset (> kustannukset tavoitehinta))
@@ -401,10 +407,12 @@
       (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not (kustannussuunnitelma-vahvistettu? db urakkaid hoitovuosinro)))
       (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Kustannussuunnitelma on vahvistamatta." true 7)
 
-      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not (:id (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) tietokanta-paatokset)))))
+      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
+        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
       (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 7)
 
-      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not (:id (first (filter #(when (= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") %) tietokanta-paatokset)))))
+      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
+        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 7)
 
       (and kattohinta kustannukset (> kustannukset kattohinta))
@@ -460,10 +468,12 @@
       (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Hoitovuosi on vielä kesken." true 4)
 
-      (and validoinnit-kaytossa? (<= 2024 valittu-hoitovuosi) (not (:id (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) tietokanta-paatokset)))))
+      (and validoinnit-kaytossa? (<= 2024 valittu-hoitovuosi)
+        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 4)
 
-      (and (or (= valittu-hoitovuosi 2024) (= valittu-hoitovuosi 2025)) (not (:id (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) tietokanta-paatokset)))))
+      (and (or (= valittu-hoitovuosi 2024) (= valittu-hoitovuosi 2025))
+        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun indeksikorjaus")))
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Hoitovuoden lopun indeksikorjaus -päätös on vielä tekemättä." true 4)
 
       (and tavoitehinta tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus kattohinta)
@@ -505,7 +515,8 @@
       (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
       (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" "Hoitovuosi on vielä kesken." true 9)
 
-      (and validoinnit-kaytossa? (not (:id (first (filter #(when (= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") %) tietokanta-paatokset)))))
+      (and validoinnit-kaytossa?
+        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 9)
 
       (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
@@ -544,8 +555,7 @@
             virhe (if-not tavoitehinta (conj virhe "Tavoitehintaa ei ole määritelty. ") virhe)
             virhe (if-not tarjouksen-tavoitehinta (conj virhe "Tarjouksen tavoitehintaa ei ole määritelty. ") virhe)
             virhe (if-not hoidonjohtopalkkio (conj virhe "Hoidonjohtopalkkiota ei ole määritelty. ") virhe)]
-        (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" (clojure.string/join " " virhe) true 9)))
-    ))
+        (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" (str/join " " virhe) true 9)))))
 
 (defn valmistele-raporttipaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:

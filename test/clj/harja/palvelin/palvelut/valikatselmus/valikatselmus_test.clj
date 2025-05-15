@@ -325,7 +325,7 @@
             sanktio-id 1
             lupauspaatos (paatos-apurit/lupauspaatos urakka-id hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                            lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id (:id kayttaja))
-            _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakka-id lupauspaatos)
+            _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) lupauspaatos)
 
             ;; Tavoitehinnan alitus
             toteutuneet-kustannukset (- hoitokauden-alun-tavoitehinta 10000)
@@ -339,14 +339,14 @@
             alituspaatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
                      alituksen-maara siirto-ed-vuodelta tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id
                      viimeinen_hoitokausi (:id kayttaja))
-            _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakka-id alituspaatos)
+            _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) alituspaatos)
 
             ;; Tavoitehinnan muutos
             muokkaa-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit)
             tavoitehinta 5M
             kattohinta 5M
             muutospaatos (paatos-apurit/tavoitehinnan-muutospaatos urakka-id hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta (:id kayttaja))
-            _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakka-id muutospaatos (:id kayttaja))
+            _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) muutospaatos (:id kayttaja))
 
             vastaus (try
                       (valikatselmukset/onko-paatoksia-tekematta (:db jarjestelma) kayttaja
@@ -386,7 +386,7 @@
               sanktio-id 1
               lupauspaatos (paatos-apurit/lupauspaatos urakka-id hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                              lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id (:id kayttaja))
-              _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakka-id lupauspaatos)
+              _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) lupauspaatos)
 
               ;; Tavoitehinnan alitus
               toteutuneet-kustannukset (- hoitokauden-alun-tavoitehinta 10000)
@@ -400,14 +400,14 @@
               alituspaatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
                              alituksen-maara siirto-ed-vuodelta tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id
                              viimeinen_hoitokausi (:id kayttaja))
-              _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakka-id alituspaatos)
+              _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) alituspaatos)
 
               ;; Tavoitehinnan muutos
               muokkaa-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit)
               tavoitehinta 5M
               kattohinta 5M
               muutospaatos (paatos-apurit/tavoitehinnan-muutospaatos urakka-id hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta (:id kayttaja))
-              _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakka-id muutospaatos (:id kayttaja))
+              _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) muutospaatos (:id kayttaja))
 
               ;; Indeksikorjauspäätös
               tavoitehinta 2000000M
@@ -435,7 +435,7 @@
               indeksikorjauspaatos (paatos-apurit/indeksikorjauspaatos urakka-id hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
                        hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                        pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus (:id kayttaja))
-              _ (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) urakka-id indeksikorjauspaatos)
+              _ (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) indeksikorjauspaatos)
 
               ;; Hoitovuoden lopun tavoite ja kattohintapäätös
               lisaa-tavoitehintaan-lopunindeksikorjaus (:lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus urakan-parametrit)
@@ -448,7 +448,7 @@
               lopun-hintapaatos (paatos-apurit/lopun-hintapaatos urakka-id hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
                        tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus (:id kayttaja))
 
-              _ (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) urakka-id lopun-hintapaatos)
+              _ (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) lopun-hintapaatos)
 
               ;; Hoidonjohtopalkkion muutos
               tavoitehinta 2100000M    ;; Hoitovuoden lopun tavoihinta ilman indeksikorjausta
@@ -460,7 +460,7 @@
 
               hoidojohtopalkkiomuutospaatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakka-id hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
                        muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id (:id kayttaja))
-              _ (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakka-id hoidojohtopalkkiomuutospaatos)
+              _ (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) hoidojohtopalkkiomuutospaatos)
 
               vastaus (try
                         (valikatselmukset/onko-paatoksia-tekematta (:db jarjestelma) kayttaja

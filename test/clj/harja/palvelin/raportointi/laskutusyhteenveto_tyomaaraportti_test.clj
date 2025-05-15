@@ -317,7 +317,7 @@
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirto-ed-vuodelta kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttaja-id)
 
-        _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakka-id paatos)
+        _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos)
 
         hoitokauden_tavoitehinta (ffirst (q (format "SELECT COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0) as tavoitehinta
                                     from urakka_tavoite ut

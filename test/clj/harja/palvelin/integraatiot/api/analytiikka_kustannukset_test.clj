@@ -231,7 +231,7 @@
         tavoitehinnan-ylitys-paatos (paatos-apurit/tavoitehinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                                       ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                                       urakoitsija-maksaa siirto kulu-id true kayttajaid)
-        db-paatos (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) urakka-id tavoitehinnan-ylitys-paatos)
+        db-paatos (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) tavoitehinnan-ylitys-paatos)
 
         ;; Varmista, että vastauksesta löytyy juuri luotu oikaisu
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)

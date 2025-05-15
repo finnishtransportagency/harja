@@ -68,7 +68,7 @@
      [:div.row
       [:div.col-xs-12.col-md-8.sivu-otsikko
        [:h1.valikatselmus "Välikatselmus"]
-       [:div.urakan_nimi urakan-nimi]]
+       [:div.urakan-nimi urakan-nimi]]
       [:div.col-xs-12.col-md-4.hoitovuosi-valikko
        [:div
         [:span.caption-small-strong.alasveto-label "Hoitovuosi"]

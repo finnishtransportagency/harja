@@ -1,15 +1,12 @@
 (ns harja.views.hallinta.jarjestelma-asetukset
   (:require [harja.ui.komponentti :as komp]
             [tuck.core :refer [tuck]]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallinta.jarjestelma-asetukset :as tiedot]
-            [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
             [harja.pvm :as pvm]
             [harja.domain.geometriaaineistot :as geometria-aineistot]
             [harja.ui.debug :refer [debug]]
-            [harja.loki :refer [log]]
             [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [chan <!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))

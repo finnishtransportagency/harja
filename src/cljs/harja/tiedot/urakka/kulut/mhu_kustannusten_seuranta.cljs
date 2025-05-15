@@ -105,7 +105,6 @@
 
   HaeOnkoPaatoksiaTekematta
   (process-event [{urakkaid :urakkaid kuluva-hoitovuosi :kuluva-hoitovuosi} app]
-    (js/console.log "HaeOnkoPaatoksiaTekematta")
     (tuck-apurit/post! :onko-paatoksia-tekematta
       {:urakkaid urakkaid
        :kuluva-hoitovuosi kuluva-hoitovuosi}
@@ -116,7 +115,6 @@
 
   HaeOnkoPaatoksiaTekemattaOnnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "HaeOnkoPaatoksiaTekemattaOnnistui :: vastaus" (pr-str vastaus))
     (assoc app :onko-paatoksia-tekematta vastaus))
 
   HaeOnkoPaatoksiaTekemattaEpaonnistui

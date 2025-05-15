@@ -1,7 +1,5 @@
 (ns harja.views.urakka.valikatselmus.lupaukset
-  (:require [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.dom :as dom]
+  (:require [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.fmt :as fmt]
@@ -12,18 +10,14 @@
 (defn lupauspaatos [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
   (let [paatos-avain :lupaukset
         tyyppi (:tyyppi paatos)
-        paatos-tehty? (or (not (nil? (:id paatos))) false)
+        paatos-tehty? (some? (:id paatos))
         alitetut-pisteet (- (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos))
         ylitetyt-pisteet (- (:toteutuneet_pisteet paatos) (:luvatut_pisteet paatos))
-        on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
-        avaa-tai-sulje-haitari (fn [event]
-                                 (when (dom/enter-nappain? event)
-                                   (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
+        on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))]
 
     [:div.paatos-komponentti-reunuksella
-     
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Lupaukset" paatos-tehty? paatos-avain avatut-paatokset
-      avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
+      (partial valikatselmus-tiedot/avaa-tai-sulje-haitari) (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
      
      (when tallennus-kesken?
        [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])
@@ -46,7 +40,7 @@
                                          (str "+" ylitetyt-pisteet)
 
                                          (= (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos))
-                                         (str "0")
+                                         "0"
 
                                          :else
                                          (str "-" alitetut-pisteet))]]])
@@ -57,7 +51,7 @@
           {:luokka "klikattava alleviivaa"}]]
 
         ;; Laskentoja ei näytetä, mikäli tarjouksen tavoitehinta puuttuu
-        (if (:tarjous_tavoitehinta paatos)
+        (when (:tarjous_tavoitehinta paatos)
           [:div
            [:div
             (cond
@@ -65,13 +59,19 @@
               [:div
                [:p (str "Luvatun yhteispistemäärän alittaminen johtaa kutakin alittuvaa pistettä kohden " (:sanktioprosentti paatos) " %
            sanktioon kyseisen hoitovuoden tarjouksen mukaisesta tavoitehinnasta.")]
-               [:p.paatos-laskelma (str "Lupaussanktio = " alitetut-pisteet " * " (/ (:sanktioprosentti paatos) 100) " * " (:tarjous_tavoitehinta paatos) " = " ) [:span.laskenta-rivi-lukema (fmt/euro-opt (:lupaussanktio paatos))]]]
+               [:p.paatos-laskelma (str "Lupaussanktio = " alitetut-pisteet
+               " * " (/ (:sanktioprosentti paatos) 100)
+               " * " (:tarjous_tavoitehinta paatos)
+               " = " ) [:span.laskenta-rivi-lukema (fmt/euro-opt (:lupaussanktio paatos))]]]
               (= "bonus" tyyppi)
               ^{:key (str "lupaus-" (gensym))}
               [:div
                [:p (str "Luvatun yhteispistemäärän ylittäminen kutakin ylittävää pistettä kohden tuottaa " (:bonusprosentti paatos) " %
            bonuksen kyseisen hoitovuoden tarjouksen mukaisesta tavoitehinnasta.")]
-               [:p.paatos-laskelma (str "Lupausbonus = " ylitetyt-pisteet " * " (/ (:bonusprosentti paatos) 100) " * " (:tarjous_tavoitehinta paatos) " = " ) [:span.laskenta-rivi-lukema (fmt/euro-opt (:lupausbonus paatos))]]]
+               [:p.paatos-laskelma (str "Lupausbonus = " ylitetyt-pisteet
+               " * " (/ (:bonusprosentti paatos) 100)
+               " * " (:tarjous_tavoitehinta paatos)
+               " = " ) [:span.laskenta-rivi-lukema (fmt/euro-opt (:lupausbonus paatos))]]]
               :else
               [:div ""])]
 
@@ -81,14 +81,14 @@
               [:<>
                [:div
                 [:div "Lupausbonus:"]
-                [:div [:span.otsikko_lukema.laskenta-rivi-lukema (fmt/euro-opt (:lupausbonus paatos))]
+                [:div [:span.otsikko-lukema.laskenta-rivi-lukema (fmt/euro-opt (:lupausbonus paatos))]
                  (when (not (nil? (:indeksikorotus paatos)))
                    (str " (+ indeksi  " (fmt/euro-opt (:indeksikorotus paatos)) " )"))]]]
               (= "sanktio" tyyppi)
               [:<>
                [:div
                 [:div "Lupaussanktio:"]
-                [:div [:span.otsikko_lukema.laskenta-rivi-lukema (fmt/euro-opt (:lupaussanktio paatos))]
+                [:div [:span.otsikko-lukema.laskenta-rivi-lukema (fmt/euro-opt (:lupaussanktio paatos))]
                  (when (not (nil? (:indeksikorotus paatos)))
                    (str " (+ indeksi  " (fmt/euro-opt (:indeksikorotus paatos)) " )"))]]]
               (= (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos))

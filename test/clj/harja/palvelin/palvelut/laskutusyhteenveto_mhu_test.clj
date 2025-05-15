@@ -171,7 +171,7 @@
             paatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
                      alituksen-maara siirto-ed-vuodelta tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id
                      viimeinen_hoitokausi kayttaja-id)
-            paatosvastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakka-id paatos)
+            paatosvastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)
             hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
             parametrit {:urakkatyyppi "teiden-hoito"
                         :alkupvm (pvm/->pvm (str "1.10." (inc hoitokauden-alkuvuosi)))
@@ -209,7 +209,7 @@
             paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                      ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi
                      maksimi-siirrettava-maara siirtorajoitus-prosentti kayttaja-id)
-            paatosvastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakka-id paatos)
+            paatosvastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos)
             hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
             parametrit {:urakkatyyppi "teiden-hoito"
                         :alkupvm (pvm/->pvm (str "1.10." (inc hoitokauden-alkuvuosi)))

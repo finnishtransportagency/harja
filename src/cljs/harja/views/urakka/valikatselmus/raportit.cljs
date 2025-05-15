@@ -1,51 +1,42 @@
 (ns harja.views.urakka.valikatselmus.raportit
-  (:require [reagent.core :as r :refer [atom]]
-            [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.domain.lupaus-domain :as lupaus-domain]
-            [harja.domain.urakka :as urakka]
-            [harja.ui.grid :as grid]
-            [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]
+  (:require [harja.ui.ikonit :as ikonit]
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
-            [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
-            [harja.tiedot.urakka.kulut.yhteiset :as kulut-yhteiset]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
 (defn raportit [e! paatos voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
   (let [paatos-avain :valikatselmuspoytakirjaan-liitettavat-raportit
-        paatos-tehty? (or (:id paatos) false)
+        paatos-tehty? (some? (:id paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
-        avaa-tai-sulje-haitari (fn [event]
-                                 (when (dom/enter-nappain? event)
-                                   (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))
-        urakkatiedot (-> @tila/yleiset :urakka)]
+        urakkatiedot (-> @tila/yleiset :urakka)
+        hallintayksikko-id (get-in urakkatiedot [:hallintayksikko :id])]
+
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Raportit" paatos-tehty? paatos-avain avatut-paatokset
-      avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
+      (partial valikatselmus-tiedot/avaa-tai-sulje-haitari) (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
+
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div [yleiset/info-laatikko :neutraali (str "Hoitovuoden raportointi lukitaan 31.12." (inc hoitokauden-alkuvuosi)) nil nil]]
         [:div.flex-row.raportti-teksti
          [:p "Tarkista, että seuraavien raporttien luvut ovat oikein ja liitä raportit välikatselmuspöytäkirjaan."]]
+
         [:div.flex-row.ilmoitus [:div [ikonit/livicon-document-full] [harja.ui.yleiset/linkki "Ympäristöraportti"
-                                                                      #(siirtymat/avaa-raportti :ymparistoraportti (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
+                                                                      #(siirtymat/avaa-raportti :ymparistoraportti hallintayksikko-id (:id urakkatiedot) hoitokauden-alkuvuosi)
                                                                       {:luokka "klikattava alleviivaa"}]]]
+
         [:div.flex-row.ilmoitus [:div [ikonit/livicon-document-full] [harja.ui.yleiset/linkki "Laskutusyhteenveto"
-                                                                      #(siirtymat/avaa-raportti :laskutusyhteenveto-tyomaa (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
+                                                                      #(siirtymat/avaa-raportti :laskutusyhteenveto-tyomaa hallintayksikko-id (:id urakkatiedot) hoitokauden-alkuvuosi)
                                                                       {:luokka "klikattava alleviivaa"}]]]
+
         [:div.flex-row.ilmoitus-matala [:div [ikonit/livicon-document-full] [harja.ui.yleiset/linkki "Tehtävämääräraportti"
-                                                                             #(siirtymat/avaa-raportti :tehtavamaarat (get-in urakkatiedot [:hallintayksikko :id]) (:id urakkatiedot) hoitokauden-alkuvuosi)
+                                                                             #(siirtymat/avaa-raportti :tehtavamaarat hallintayksikko-id (:id urakkatiedot) hoitokauden-alkuvuosi)
                                                                              {:luokka "klikattava alleviivaa"}]]]
+
         [:hr.paatos-hr-matalin]
         (if (:virhe paatos)
           [:div.muokkaustoiminnot [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]]

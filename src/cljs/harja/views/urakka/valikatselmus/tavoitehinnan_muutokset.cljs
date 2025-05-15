@@ -208,7 +208,7 @@
      (if hoitovuosi-kesken?
        [valikatselmus-yhteiset/paatosotsikko "Tavoitehinnan muutokset" paatos-tehty?]
        [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset
-        avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)])
+        (partial valikatselmus-tiedot/avaa-tai-sulje-haitari)  (valikatselmus-tiedot/->AvaaPaatos paatos-avain)])
      
      (when tallennus-kesken?
        [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])

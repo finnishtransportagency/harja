@@ -52,7 +52,7 @@
         lupauspaatos (paatos-apurit/lupauspaatos urakka-id hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                        lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
-        _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakka-id lupauspaatos)]))
+        _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) lupauspaatos)]))
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2024
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -268,7 +268,7 @@
         tavoitehinnan-ylitys-paatos (paatos-apurit/tavoitehinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id false kayttajaid)
-        _ (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) urakka-id tavoitehinnan-ylitys-paatos)
+        _ (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) tavoitehinnan-ylitys-paatos)
         ;; 2. kattohinnan-ylitys
         hoitokauden-alkuvuosi 2024
         kattohinta 5M
@@ -283,7 +283,7 @@
         kattohinnan-ylitys-paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttaja-id)
 
-        _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakka-id kattohinnan-ylitys-paatos)
+        _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) kattohinnan-ylitys-paatos)
         ;; 3. lupausbonus
         _ (tallenna-lupauspaatos urakka-id)
 

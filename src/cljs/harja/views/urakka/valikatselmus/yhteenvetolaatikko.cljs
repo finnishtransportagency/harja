@@ -1,18 +1,6 @@
 (ns harja.views.urakka.valikatselmus.yhteenvetolaatikko
-  (:require [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.fmt :as fmt]
-            [harja.pvm :as pvm]
-            [harja.tiedot.urakka :as urakka-tiedot]
-            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
-            [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
-            [harja.tiedot.urakka.urakka :as tila]))
-
-;;TODO: Kunhan yhteenvetolaatikko kirjoitetaan uusiksi, niin siirrä tämä ja kaikki mahdollinen muu logiikka backendiin
-(defn- aseta-tavoitehinnan-ylitysprosentti [urakkatyyppi valittu-hoitokauden-alkuvuosi urakan-alkuvuosi]
-  (let [; MHU+ urakoilla on 50/50, ja vuodelle 2025 tulee 25/75. Mutta tässä vaiheessa kaikki on 70/30
-        ]
-    {:urakoitsija 30
-     :tilaaja 70}))
+  (:require [harja.fmt :as fmt]
+            [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]))
 
 (defn arvo-paatoksesta
   "Monet euromääräiset arvot päätöksestä kannattaa hakea vasta, kun päätös on tehty. Ja toisaalta päätöksissä voi olla myös tietoja,
@@ -21,9 +9,8 @@
   (when (:id paatos)
     (get paatos avain)))
 
-(defn yhteenvetolaatikko [e! app]
-  (let [paatokset (get-in app [:paatokset])
-        yhteenvedon-tiedot (:yhteenveto app)
+(defn yhteenvetolaatikko [e! {:keys [paatokset] :as app}]
+  (let [yhteenvedon-tiedot (:yhteenveto app)
 
         ;; Toteutuneet kustannukset
         ;; Välikatselmuksessa käytetyt Hankintakustannukset ovat eri asia kuin Kustannusten Seurannan Hankintakustannukset/Suunnitellut Hankinnat.
@@ -89,70 +76,70 @@
     [:div.valikatselmus-yhteenveto {:aria-live "polite"}
      ;;Tämä :aria-live on tässä ruudunlukijaa varten, jotta se jätä tätä DOM:ssa linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
      [:h2.yhteenveto "Yhteenveto"]
-     [:div.flex-row.summa_rivi_ylin
+     [:div.flex-row.summa-rivi-ylin
       [:span.laskenta-rivi-lukema "Hoitovuoden lopun tavoitehinta"]
       [:span.laskenta-rivi-lukema (fmt/euro-opt false oikaistu-tavoitehinta)]]
-     [:div.flex-row.summa_rivi
+     [:div.flex-row.summa-rivi
       [:span.laskenta-rivi-lukema "Hoitovuoden lopun kattohinta"]
       [:span.laskenta-rivi-lukema (fmt/euro-opt false oikaistu-kattohinta)]]
 
      [:h3 "Tavoitehintaan kuuluvat toteutuneet kustannukset"]
-     [:div.flex-row.summa_rivi_ylin
+     [:div.flex-row.summa-rivi-ylin
       [:span "Hankintakustannukset"]
       [:span (fmt/euro-opt false hankintakustannukset)]]
-     [:div.flex-row.summa_rivi
+     [:div.flex-row.summa-rivi
       [:span "Erillishankinnat"]
       [:span (fmt/euro-opt false erillishankinnat)]]
-     [:div.flex-row.summa_rivi
+     [:div.flex-row.summa-rivi
       [:span "Johto- ja hallintokorvaus"]
       [:span (fmt/euro-opt false johto-ja-hallintokorvaus)]]
-     [:div.flex-row.summa_rivi
+     [:div.flex-row.summa-rivi
       [:span "Hoidonjohtopalkkio"]
       [:span (fmt/euro-opt false hoidonjohtopalkkio)]]
      [:hr]
-     [:div.flex-row.summa_rivi_ylin
+     [:div.flex-row.summa-rivi-ylin
       [:span.laskenta-rivi-lukema "Toteutuma yhteensä"]
       [:span.laskenta-rivi-lukema (fmt/euro-opt false toteuma-yht)]]
      ;; Ei näytetä tavoitehinnan ylitystä, mikäli ei ole ylitystä
      (when tavoitehinnan-ylityspaatos
-       [:div.flex-row.summa_rivi
+       [:div.flex-row.summa-rivi
         [:span {:class (when (> tavoitehinnan-ylitys 0)
-                              "negatiivinen-numero")} "Tavoitehinnan ylitys"]
+                         "negatiivinen-numero")} "Tavoitehinnan ylitys"]
         [:span {:class (when (> tavoitehinnan-ylitys 0)
-                              "negatiivinen-numero")} (fmt/euro-opt false tavoitehinnan-ylitys)]])
+                         "negatiivinen-numero")} (fmt/euro-opt false tavoitehinnan-ylitys)]])
      ;; Näytetään tavoitehinnan-alitusrivi mikäli alitus on olemassa
      (when tavoitehinnan-alituspaatos
-       [:div.flex-row.summa_rivi
+       [:div.flex-row.summa-rivi
         [:span {:class (when (< 0 tavoitehinnan-alitus)
-                              "positiivinen-numero")} "Tavoitehinnan alitus"]
+                         "positiivinen-numero")} "Tavoitehinnan alitus"]
         [:span {:class (when (< 0 tavoitehinnan-alitus)
-                              "positiivinen-numero")} (fmt/euro-opt false tavoitehinnan-alitus)]])
+                         "positiivinen-numero")} (fmt/euro-opt false tavoitehinnan-alitus)]])
      ;; Näytetään kattohinnna ylitysrivi, mikäli kattohinnan ylitys on olemassa
      (when (> kattohinnan-ylitys 0)
-       [:div.flex-row.summa_rivi
+       [:div.flex-row.summa-rivi
         [:span {:class (when (and kattohinnan-ylitys (> kattohinnan-ylitys 0))
-                              "negatiivinen-numero")} "Kattohinnan ylitys"]
+                         "negatiivinen-numero")} "Kattohinnan ylitys"]
         [:span {:class (when (and kattohinnan-ylitys (> kattohinnan-ylitys 0))
-                              "negatiivinen-numero")} (fmt/euro-opt false kattohinnan-ylitys)]])
+                         "negatiivinen-numero")} (fmt/euro-opt false kattohinnan-ylitys)]])
 
      ;; URAKOITSIJAN SAATAVAT
      [:h3 "Urakoitsijan saatavat"]
-     [:div.flex-row.summa_rivi_ylin
+     [:div.flex-row.summa-rivi-ylin
       [:span "Lupausbonus"]
       [:span (fmt/euro-opt false lupausbonus)]]
-     [:div.flex-row.summa_rivi
+     [:div.flex-row.summa-rivi
       [:span "Asiakastyytyväisyysbonus"]
       [:span (fmt/euro-opt false asiakastyytyvaisyysbonus)]]
-     [:div.flex-row.summa_rivi
+     [:div.flex-row.summa-rivi
       [:span "Muut bonukset"]
       [:span (fmt/euro-opt false muut-bonukset)]]
-     [:div.flex-row.summa_rivi
+     [:div.flex-row.summa-rivi
       [:span "Tavoitepalkkio"]
       [:span (fmt/euro-opt false tavoitepalkkio)]]
      (when tavoitehinnan-ylityspaatos
-       [:div.flex-row.summa_rivi
+       [:div.flex-row.summa-rivi
         [:span "Tavoitehinnan ylitys " (when (> tilaajan-tavoitehinnan-ylitysprosentti 0)
-                                                   (str "(" tilaajan-tavoitehinnan-ylitysprosentti "%)"))]
+                                         (str "(" tilaajan-tavoitehinnan-ylitysprosentti "%)"))]
         [:span (if (> urakoitsijan-osuus-tavoitehinnan-ylitys 0)
                  (fmt/euro-opt false urakoitsijan-osuus-tavoitehinnan-ylitys)
                  (fmt/euro-opt false 0))]])
@@ -160,30 +147,30 @@
      ;; Jos hoitovuoden lopun tavoitehinta ilman indeksitarkastuksia on enemmmän kuin 5% suurempi kuin tarjouksen tavoitehinta
      ;; niin hoidonjohtopalkkiota muutetaan. Jos se ei ole muuttunut yli 5%, niin muutos on nolla ja silloin näytetään nollaa.
      (when (>= hoidonjohtopalkkion-muutos 0)
-       [:div.flex-row.summa_rivi
+       [:div.flex-row.summa-rivi
         [:span "Hoidonjohtopalkkion muutos"]
         [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]])
 
      ; TILAAJAN SAATAVAT
      [:h3 "Tilaajan saatavat"]
-     [:div.flex-row.summa_rivi_ylin
+     [:div.flex-row.summa-rivi-ylin
       [:span "Lupaussanktio"]
       [:span (fmt/euro-opt false lupaussanktio)]]
-     [:div.flex-row.summa_rivi
+     [:div.flex-row.summa-rivi
       [:span "Muut sanktiot"]
       [:span (fmt/euro-opt false muut-sanktiot)]]
-     [:div.flex-row.summa_rivi
+     [:div.flex-row.summa-rivi
       [:span "Arvonvähennykset"]
       [:span (fmt/euro-opt false arvonvahennykset)]]
      (when tavoitehinnan-ylityspaatos
-       [:div.flex-row.summa_rivi
+       [:div.flex-row.summa-rivi
         [:span "Tavoitehinnan ylitys " (when (> urakoitsijan-tavoitehinnan-ylitysprosentti 0)
-                                                   (str "(" urakoitsijan-tavoitehinnan-ylitysprosentti "%)"))]
+                                         (str "(" urakoitsijan-tavoitehinnan-ylitysprosentti "%)"))]
         [:span (if (> tavoitehinnan-ylitys 0)
                  (fmt/euro-opt false tilaajan-osuus-tavoitehinnan-ylitys)
                  (fmt/euro-opt false 0))]])
      (when kattohinnan-ylityspaatos
-       [:div.flex-row.summa_rivi
+       [:div.flex-row.summa-rivi
         [:span "Kattohinnan ylitys"]
         [:span (if (> urakoitsijan-hyvitysosuus 0)
                  (fmt/euro-opt false urakoitsijan-hyvitysosuus)
@@ -191,9 +178,9 @@
 
      ;; Kun hoidonjohtopalkkio on negatiivinen, niin se on tilaajan saatavia
      (when (< hoidonjohtopalkkion-muutos 0)
-      [:div.flex-row.summa_rivi
-       [:span "Hoidonjohtopalkkion muutos"]
-       [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]])
+       [:div.flex-row.summa-rivi
+        [:span "Hoidonjohtopalkkion muutos"]
+        [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]])
 
      [:h3 "Siirrot"]
      [:div.flex-row

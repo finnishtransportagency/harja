@@ -199,7 +199,7 @@
           lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                          lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
-          vastaus (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)]
+          vastaus (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) lupauspaatos)]
       (testaa-lupauspaatostiedot vastaus urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
         lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)))
   (testing "2020 vuoden urakalle onnistuu"
@@ -226,7 +226,7 @@
           lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                          lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
-          vastaus (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)]
+          vastaus (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) lupauspaatos)]
       (testaa-lupauspaatostiedot vastaus urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
         lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid))))
 
@@ -352,7 +352,7 @@
         lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet
                        toteutuneet-pisteet lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
-        _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)
+        _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) lupauspaatos)
         ;; Määrittele haettavat päätökset - Luetaan vain lupauspäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Lupaukset" :tyyppi "bonus" :jarjestys 1}]
         vastaus (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi)]
@@ -383,7 +383,7 @@
         lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet
                        toteutuneet-pisteet lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
-        _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) urakkaid lupauspaatos)
+        _ (paatos-kyselyt/tee-lupauspaatos (:db jarjestelma) lupauspaatos)
         ;; Määrittele haettavat päätökset - Luetaan vain lupauspäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Lupaukset" :tyyppi "bonus" :jarjestys 1}]
         lupausbonus-ennen-poistoa (first (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi))
@@ -463,7 +463,7 @@
         kattohinta 5M
         paatos (paatos-apurit/tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)]
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) paatos kayttajaid)]
     (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
     ;; -124 alkavalla urakalla pitää olla kattohinta 10% tavoitehinnasta
     (is (= false (:muokkaa_kattohinta vastaus)))))
@@ -479,7 +479,7 @@
         kattohinta 5M
         paatos (paatos-apurit/tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) paatos kayttajaid)
 
         ;; Kun kattohinta on käsin asetettu uusiksi, niin sen täytyy vaikuttaa urakka_tavoite taulun kattohintaan
         ;; Varmistetaan, että näin on tapahtunut
@@ -527,7 +527,7 @@
         tavoitehinta 5M
         kattohinta 5M
         paatos (paatos-apurit/tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
-        _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) urakkaid paatos kayttajaid)
+        _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) paatos kayttajaid)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Tavoitehinnan muutokset" :tyyppi "A" :jarjestys 4}]
@@ -587,7 +587,7 @@
         paatos (paatos-apurit/tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
                  alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)]
     (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
       alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)))
 
@@ -642,7 +642,7 @@
         kulu-id 1
         paatos (paatos-apurit/tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
                  alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
-        _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) urakkaid paatos)
+        _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Tavoitehinnan alitus" :tyyppi nil :jarjestys 9}]
@@ -708,7 +708,7 @@
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id false kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) paatos)]
     (testaa-tavoitehinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
       ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa urakoitsija-maksaa siirto kulu-id false kayttajaid)))
 
@@ -758,7 +758,7 @@
         paatos (paatos-apurit/tavoitehinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id false kayttajaid)
-        _ (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)
+        _ (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) paatos)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Tavoitehinnan ylitys" :tyyppi "A" :jarjestys 10}]
@@ -826,7 +826,7 @@
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos)]
     (testaa-kattohinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
       ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)))
 
@@ -848,7 +848,7 @@
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos)]
     (testaa-kattohinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
       ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
 
@@ -987,7 +987,7 @@
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara
                  siirtorajoitus-prosentti kayttajaid)
-        _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)
+        _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
         paatokset [{:nimi "Kattohinnan ylitys" :tyyppi "A" :jarjestys 10}]
@@ -1016,7 +1016,7 @@
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara
                  siirtorajoitus-prosentti kayttajaid)
-        tallennettu-paatos (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) urakkaid paatos)
+        tallennettu-paatos (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos)
         poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-kattohinnan-ylityspaatos +kayttaja-jvh+ tallennettu-paatos)
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :kattohinnan-ylitys)]
 
@@ -1056,7 +1056,7 @@
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) urakkaid paatos)
+        vastaus (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) paatos)
         testattavat-indeksikuukaudet (reduce (fn [uusi-vectori kuukausi]
                                                (conj uusi-vectori [(:kuukausi kuukausi) (:indeksiluku kuukausi)]))
                                        [] hoitokauden-kuukaudet)]
@@ -1097,7 +1097,7 @@
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) urakkaid paatos)
+        vastaus (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) paatos)
         testattavat-indeksikuukaudet (reduce (fn [uusi-vectori kuukausi]
                                                (conj uusi-vectori [(:kuukausi kuukausi) (:indeksiluku kuukausi)]))
                                        [] hoitokauden-kuukaudet)
@@ -1225,7 +1225,7 @@
         paatos (paatos-apurit/lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) paatos)]
     (testaa-lopun-hintapaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
       tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
     ;; -24 alkavissa urakoissa kattohintakerroin on 1.1
@@ -1247,7 +1247,7 @@
         paatos (paatos-apurit/lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) paatos)]
     (testaa-lopun-hintapaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
       tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
     ;; -25 alkavissa urakoissa kattohintakerroin on 1.2
@@ -1269,7 +1269,7 @@
         paatos (paatos-apurit/lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) urakkaid paatos)
+        vastaus (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) paatos)
         _ (testaa-lopun-hintapaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
             tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
@@ -1322,7 +1322,7 @@
         paatos (paatos-apurit/lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
-        uusi-paatos (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) urakkaid paatos)
+        uusi-paatos (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) paatos)
         _ (testaa-lopun-hintapaatos uusi-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
             tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
@@ -1350,7 +1350,7 @@
         paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) paatos)]
     (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
       muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)))
 
@@ -1370,7 +1370,7 @@
         paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
-        vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid paatos)
+        vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) paatos)
         _ (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
             muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)
 
@@ -1423,7 +1423,7 @@
         paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
         ;; Lisätään päätös suoralla kyselyllä
-        uusi-paatos (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) urakkaid paatos)
+        uusi-paatos (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) paatos)
         ;; Poistetaan päätös rajapinnan kautta
         poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                      jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
@@ -1440,7 +1440,7 @@
         hoitokauden-alkuvuosi 2024
         tarkistettu (pvm/nyt)
         paatos (poytakirjan-raporttipaatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)
-        vastaus (paatos-kyselyt/tee-poytakirjan-raporttipaatos (:db jarjestelma) urakkaid paatos)]
+        vastaus (paatos-kyselyt/tee-poytakirjan-raporttipaatos (:db jarjestelma) paatos)]
     (testaa-poytakirjan-raporttipaatos vastaus urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)))
 
 (deftest kysely-poytakirjan-raportin-poisto-onnistuu-test
@@ -1450,7 +1450,7 @@
         hoitokauden-alkuvuosi 2024
         tarkistettu (pvm/nyt)
         paatos (poytakirjan-raporttipaatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)
-        uusi-paatos (paatos-kyselyt/tee-poytakirjan-raporttipaatos (:db jarjestelma) urakkaid paatos)
+        uusi-paatos (paatos-kyselyt/tee-poytakirjan-raporttipaatos (:db jarjestelma) paatos)
         _ (testaa-poytakirjan-raporttipaatos uusi-paatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)
         ;; Poistetaan päätös
         poistovastaus (paatos-kyselyt/poista-poytakirjan-raporttipaatos (:db jarjestelma) urakkaid kayttajaid (:id uusi-paatos))]
