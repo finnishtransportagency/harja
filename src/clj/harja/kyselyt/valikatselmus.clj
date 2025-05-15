@@ -100,34 +100,4 @@
     {::urakka/id urakka-id
      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
-;; Päätökset
 
-(defn hae-urakan-paatokset [db {::urakka/keys [id]}]
-  (fetch db ::valikatselmus/urakka-paatos
-         (columns ::valikatselmus/urakka-paatos)
-         {::urakka/id id ::muokkaustiedot/poistettu? false}))
-
-(defn hae-urakan-paatokset-hoitovuodelle [db urakka-id hoitokauden-alkuvuosi]
-  (fetch db ::valikatselmus/urakka-paatos
-         (columns ::valikatselmus/urakka-paatos)
-         {::urakka/id urakka-id
-          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-          ::muokkaustiedot/poistettu? false}))
-
-(defn tee-paatos [db paatos]
-  (upsert! db ::valikatselmus/urakka-paatos paatos))
-
-(defn poista-paatokset [db urakka-id hoitokauden-alkuvuosi kayttaja-id]
-  (update! db ::valikatselmus/urakka-paatos
-           {::muokkaustiedot/poistettu? true
-            ::muokkaustiedot/muokattu (pvm/nyt)
-            ::muokkaustiedot/muokkaaja-id kayttaja-id}
-           {::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-            ::urakka/id urakka-id}))
-
-(defn poista-paatos [db paatos-id kayttaja-id]
-  (update! db ::valikatselmus/urakka-paatos
-           {::muokkaustiedot/poistettu? true
-            ::muokkaustiedot/muokattu (pvm/nyt)
-            ::muokkaustiedot/muokkaaja-id kayttaja-id}
-           {::valikatselmus/paatoksen-id paatos-id}))

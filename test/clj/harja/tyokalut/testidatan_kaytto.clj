@@ -23,6 +23,3 @@
 
 (defn poista-tavoitehinnan-muutos-idlla [tavoitehinnan-muutos-id]
   (u (format "DELETE FROM tavoitehinnan_oikaisu WHERE id = %s;" tavoitehinnan-muutos-id)))
-
-(defn poista-paatos-idlla [paatos-id]
-  (u (format "DELETE FROM urakka_paatos WHERE id = %s;" paatos-id)))

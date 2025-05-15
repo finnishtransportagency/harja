@@ -25,6 +25,7 @@ $$
         osio_                 SUUNNITTELU_OSIO;
         kulun_id_             INT;
         toteuma_              NUMERIC;
+        tavoitehinta           NUMERIC;
     BEGIN
 
         -- Kiinteähintaiset, talvihoito
@@ -174,13 +175,19 @@ $$
                      WHERE toimenpideinstanssi =
                            (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kittilä MHU Talvihoito TP'));
 
-        INSERT INTO urakka_paatos ("hoitokauden-alkuvuosi", "urakka-id", "urakoitsijan-maksu", "tilaajan-maksu", siirto,
-                                   tyyppi, muokattu, "muokkaaja-id", "luoja-id")
-        VALUES (2019, urakka_id_, ((SELECT tavoitehinta_indeksikorjattu
-                                    FROM urakka_tavoite
-                                    WHERE urakka = urakka_id_
-                                      AND hoitokausi = 1) - toteuma_) * -0.3, 0, 0, 'tavoitehinnan-alitus', NOW(),
-                kayttaja_, kayttaja_);
+        -- Lisätään tavoitehinnan alituspäätös
+        tavoitehinta := ((SELECT tavoitehinta_indeksikorjattu
+                          FROM urakka_tavoite
+                          WHERE urakka = urakka_id_
+                            AND hoitokausi = 1) - toteuma_);
+        INSERT INTO paatos_tavoitehinta_alitus (urakkaid, hoitokauden_alkuvuosi, hoitokauden_alun_tavoitehinta,
+                                                hoitokauden_lopun_tavoitehinta, toteutuneet_kustannukset,
+                                                alituksen_maara, siirron_maara, tavoitepalkkio,
+                                                tavoitepalkkion_maksuprosentti, kulu_id, viimeinen_hoitokausi,
+                                                luotu, luoja, poistettu)
+        VALUES (urakka_id_, 2019,tavoitehinta, tavoitehinta,
+                (tavoitehinta * 0.8),  (tavoitehinta * 0.2),0,
+                (tavoitehinta * 0.03),3,null, false,NOW(), kayttaja_,false);
 
     END
 $$;
