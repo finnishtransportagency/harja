@@ -10,6 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.maksuerat :as maksuerat]
             [harja.views.urakka.kulut.kulut :as kohdistetut-kulut]
+            [harja.views.urakka.kulut.laskut :as laskut]
             [harja.domain.oikeudet :as oikeudet])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -45,4 +46,9 @@
           (when mhu-urakka?
             ^{:key "kustannusten-seuranta"}
             [kustannusten-seuranta/kustannusten-seuranta])
-          ]]))))
+          
+          "Laskut"
+          :laskut
+          (when mhu-urakka?
+            ^{:key "laskut"}
+            [laskut/laskut-listaus])]]))))          
