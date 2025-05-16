@@ -13,19 +13,24 @@
    [:div.flex-row
     [:p.yla-selite-korkea "Hoidonjohtopalkkioon tehdään muutos, jos hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia muuttuu"
      [:span.laskenta-rivi-lukema " > 5% "] "tarjouksen mukaisen tavoitehintaan verrattuna."]]
+
    [:div.flex-row.laskenta-rivi-matalampi
     [:div "Hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia"]
     [:div.laskenta-rivi-lukema (fmt/euro-opt (:tavoitehinta paatos))]]
+
    [:div.flex-row.laskenta-rivi-matalampi
     [:div "Tarjouksen mukainen tavoitehinta"]
     [:div.laskenta-rivi-lukema (fmt/euro-opt (:tarjouksen_tavoitehinta paatos))]]
+
    [:div.flex-row.laskenta-rivi-matalampi
     [:div (str "Muutosprosentti (" (fmt/euro-opt (:tavoitehinta paatos)) " / "
             (fmt/euro-opt (:tarjouksen_tavoitehinta paatos)) " - 1) * 100")]
     [:div.laskenta-rivi-lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
+
    [:div.flex-row.laskenta-rivi-matalampi
     [:div "Hoitovuoden indeksikorjattu hoidonjohtopalkkio"]
     [:div.laskenta-rivi-lukema (fmt/euro-opt (:hoidonjohtopalkkio paatos))]]
+
    [:div.row.laskenta-kaava
     [:div.laskenta-rivi-lukema.laskenta-avattuna "Hoidonjohtopalkkion muutos ="]
     [:div.laskenta-rivi-matalampi (str "(" (fmt/euro-opt (:tavoitehinta paatos)) " / "
@@ -47,14 +52,17 @@
        [:div
         [:p.yla-selite "Hoidonjohtopalkkioon tehdään muutos, jos hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia muuttuu"
          [:span.laskenta-rivi-lukema " > 5% "] "tarjouksen mukaisen tavoitehintaan verrattuna."]
+
         (if-not (:virhe paatos)
           [:div
            [:div.flex-row.prosentti-rivi
             [:div "Muutosprosentti"]
             [:div.rivi-lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
+
            [:div.flex-row
             [:h3.matala-otsikko "Hoidonjohtopalkkion muutos"]
             [:div.otsikko-lukema (fmt/euro-opt false (:hoidonjohtopalkkio_muutos paatos))]]
+
            (when-not (= 0 (:hoidonjohtopalkkio_muutos paatos))
              [:div.flex-row.laskenta-linkki
               [yleiset/linkki "Näytä laskenta"
@@ -66,11 +74,14 @@
                                      :footer-tyyli {:text-align "left"}}
                         [laskenta-modaali paatos]))
                {:style {:text-decoration :underline}}]])
+
            [:hr.paatos-hr-korkeampi]
+
            [:div [yleiset/info-laatikko :neutraali (str
                                                      (if (= 0 (:hoidonjohtopalkkio_muutos paatos))
                                                        "Tavoitehinnan muutos on pienempi kuin 5%. Ei muuteta hoidonjohtopalkkiota."
                                                        "Päätöksen tallentaminen luo kulun Harjaan. Kulua ei lasketa tavoitehintaan.")) nil nil]]
+
            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
             #(e! (valikatselmus-tiedot/->TallennaHoidonjohtopalkkionMuutospaatos paatos))
             (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaHoidonjohtopalkkionMuutospaatos paatos))

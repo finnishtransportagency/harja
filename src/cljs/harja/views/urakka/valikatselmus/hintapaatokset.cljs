@@ -88,7 +88,9 @@
         siirra? (:siirra? paatos)
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         siirrettava (atom (if (:siirrettava_maara paatos) (:siirrettava_maara paatos) 0))
-        siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)]
+        siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)
+        maksimi-siirrettava-maara (fmt/desimaaliluku (:maksimi_siirrettava_maara paatos) 2 2 false)
+        muokattu-maksimi-siirrettava-maara (str/replace maksimi-siirrettava-maara "," ".")]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
      
@@ -137,7 +139,7 @@
                                                                 :elementin-id "kattohinta-ylitys-siirto"
                                                                 :vaadi-ei-negatiivinen? true
                                                                 :validoi-kentta-fn (fn [numero]
-                                                                                     (let [siirrettava-maara (js/parseFloat (str/replace (fmt/desimaaliluku (:maksimi_siirrettava_maara paatos) 2 2 false) "," "."))]
+                                                                                     (let [siirrettava-maara (js/parseFloat muokattu-maksimi-siirrettava-maara)]
                                                                                        (validointi/validoi-numero numero 0
                                                                                          (if siirtorajoitus?
                                                                                            siirrettava-maara

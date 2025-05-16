@@ -71,9 +71,7 @@
                [:p.paatos-laskelma (str "Lupausbonus = " ylitetyt-pisteet
                " * " (/ (:bonusprosentti paatos) 100)
                " * " (:tarjous_tavoitehinta paatos)
-               " = " ) [:span.laskenta-rivi-lukema (fmt/euro-opt (:lupausbonus paatos))]]]
-              :else
-              [:div ""])]
+               " = " ) [:span.laskenta-rivi-lukema (fmt/euro-opt (:lupausbonus paatos))]]])]
 
            [:div
             (cond

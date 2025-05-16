@@ -24,30 +24,36 @@
      [:div.flex-row.laskenta-rivi.laskenta-rivi-lukema
       [:div "Pisteluku, johon keskiarvoa verrataan (" (:alkuperaisen_pisteluvun_kuukausi paatos) ")"]
       [:div [:strong (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1)]]]
+
      [:div.flex-row.laskenta-rivi-korkeampi
       [:div "Pistelukujen keskiarvon laskenta"]]
+
      (for* [kuukausi (:hoitokauden_kuukaudet paatos)]
        [:div.flex-row.kuukausi-rivi
         [:div (str/join " " (reverse (str/split (:kuukausi kuukausi) #"\s+")))]
         [:div (fmt/desimaaliluku-opt (:indeksiluku kuukausi) 1)]])
+
      (when (not= 12 (count (:hoitokauden_kuukaudet paatos)))
        [yleiset/info-laatikko :vahva-ilmoitus
        "Kaikkien kuukausien indeksin pistelukua ei ole vielä saatavilla."
         nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
+
      [:hr.hr-tiivis]
+
      [:div.flex-row.laskenta-rivi
       [:div [:strong "Keskiarvo"]]
       [:div [:strong (fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1)]]]
+
      [:div.flex-row.laskenta-rivi-korkeampi [:div "Indeksikorjauksen prosenttiosuuden laskenta"]]
+
      [:div.flex-row.laskenta-avattuna
       [:div (str "Pistelukujen muutos 0,1 % tarkkuudella") [:br]
        [:span "("]
        (for [k (take (min (count (:hoitokauden_kuukaudet paatos)) 5) (:hoitokauden_kuukaudet paatos))]
+         ^{:key (str "indeksiluku-" (gensym))}
          [:span (fmt/desimaaliluku-opt (:indeksiluku k) 1) " + "])
        (str " ... / " (count (:hoitokauden_kuukaudet paatos)) ")")
-       (str " / " (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) " * 100")
-
-       ]
+       (str " / " (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) " * 100")]
       [:div pistelukujen-muutos " %"]]]))
 
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
@@ -66,20 +72,25 @@
            [:div.flex-row.lista-rivi
             [:div "Hoitovuoden alun indeksikorjattu tavoitehinta"]
             [:div [:strong (fmt/euro-opt false (:tavoitehinta paatos))]]]
+
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Tavoitehinnan muutokset"]
             [:div [:strong (fmt/euro-opt false true (:tavoitehinnan_muutokset paatos))]]]
+
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Hoitovuoden lopun tavoitehinta ennen indeksikorjausta"]
             [:div [:strong (fmt/euro-opt false (:tavoitehinta_ennen paatos))]]]
+
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Pistelukujen muutos"]
             [:div [:strong (fmt/euro-opt false (:pistelukujen_muutos_prosentteina paatos)) "%"]]]
+
            [:div.flex-row.summa-rivi
             [:div (str "Indeksikorjauksen prosenttiosuus (2% " (if (> 0 (:pistelukujen_muutos_prosentteina paatos))
                                                                  "alittava"
                                                                  "ylittävä") " osa)")]
             [:div [:strong (fmt/euro-opt false (:indeksikorotuksen_prosenttiosuus paatos)) "%"]]]
+
            [:div.flex-row.laskenta-linkki-matalampi
             [yleiset/linkki "Näytä laskenta"
              (fn [] (modal/nayta! {:otsikko "Laskenta"
@@ -90,6 +101,7 @@
                                    :footer-tyyli {:text-align "left"}}
                       [laskenta-modaali paatos]))
              {:style {:text-decoration :underline}}]]
+
            [:div.flex-row {:aria-live "polite"}
             ;;Tämä :aria-live on tässä ruudunlukijaa varten, jotta se jätä tätä linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
             [:h3.alempi-otsikko "Hoitovuoden lopun indeksikorjaus"]
