@@ -170,7 +170,7 @@
     [harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset :as urakan-lupausmuistutukset]
     [harja.palvelin.ajastetut-tehtavat.yleiset-ajastukset :as yleiset-ajastukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
-    [harja.palvelin.ajastetut-tehtavat.harja-status :as harja-status]
+    [harja.palvelin.ajastetut-tehtavat.harja-status :as harja-status] ;; test
 
 
     ;; Harja mobiili Laadunseuranta
