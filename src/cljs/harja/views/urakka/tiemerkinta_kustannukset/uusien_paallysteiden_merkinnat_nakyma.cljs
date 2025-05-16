@@ -33,11 +33,13 @@
     :rivi-jalkeen-fn (fn [kustannukset]
                        (let [linjamerkinnat-summa (tiedot/kustannusten-summa kustannukset :linjamerkinnat)
                              pienmerkinnat-summa (tiedot/kustannusten-summa kustannukset :pienmerkinnat)
-                             jyrsinnat-summa (tiedot/kustannusten-summa kustannukset :jyrsinnat)]
+                             jyrsinnat-summa (tiedot/kustannusten-summa kustannukset :jyrsinnat)
+                             muut-kustannukset-summa (tiedot/kustannusten-summa kustannukset :muut-kustannukset)]
                          [{:teksti "Yhteensä" :sarakkeita (if (= taulukon-tyyppi :paallystys) 4 3) :luokka "yhteensa"}
                           {:teksti (fmt/euro-opt linjamerkinnat-summa) :luokka "yhteensa" :tasaa :oikea}
                           {:teksti (fmt/euro-opt pienmerkinnat-summa) :luokka "yhteensa" :tasaa :oikea}
                           {:teksti (fmt/euro-opt jyrsinnat-summa) :luokka "yhteensa" :tasaa :oikea}
+                          {:teksti (fmt/euro-opt muut-kustannukset-summa) :luokka "yhteensa" :tasaa :oikea}
                           {:teksti "" :sarakkeita 2 :luokka "yhteensa"}]))
     :tallenna #(tuck-apurit/e-kanavalla! e! tallenna-fn %)}
    [{:otsikko "Kohdenro"
@@ -80,10 +82,16 @@
      :tyyppi :euro
      :tasaa :oikea
      :leveys 2}
+    {:otsikko "Muut kustannukset (EUR)"
+     :nimi :muut-kustannukset
+     :muokattava? (constantly true)
+     :tyyppi :euro
+     :tasaa :oikea
+     :leveys 2}
     {:otsikko "Yhteensä"
      :nimi :yhteensa
      :luokka "yhteensa"
-     :hae (fn [kohde] (tiedot/rivin-kustannusten-summa kohde [:linjamerkinnat :pienmerkinnat :jyrsinnat]))
+     :hae (fn [kohde] (tiedot/rivin-kustannusten-summa kohde [:linjamerkinnat :pienmerkinnat :jyrsinnat :muut-kustannukset]))
      :fmt fmt/euro-opt
      :muokattava? (constantly false)
      :tasaa :oikea
@@ -99,8 +107,6 @@
 
 (defn uusien-kustannusten-merkinnat* [e! app] 
     (komp/luo
-      (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                      (e! (tiedot/->PaivitaValinnat uusi))))
       (komp/sisaan #(do 
                       (u/valitse-kuluva-hk!)
                       (e! (tiedot/->HoitokausiVaihdettu @nav/valittu-urakka 
