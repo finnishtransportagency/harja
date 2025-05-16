@@ -53,6 +53,7 @@
     [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
     [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
     [harja.palvelin.palvelut.kulut.kulut :as kulut]
+    [harja.palvelin.palvelut.kulut.kulut-laskut :as kulut-laskut]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
@@ -407,6 +408,9 @@
       :kulut (component/using
                (kulut/->Kulut)
                [:http-palvelin :db :pdf-vienti :excel-vienti])
+      :kulut-laskut (component/using
+                      (kulut-laskut/->KulutLaskut)
+                      [:http-palvelin :db])
       :toteumat (component/using
                   (toteumat/->Toteumat)
                   [:http-palvelin :db :db-replica :karttakuvat])
