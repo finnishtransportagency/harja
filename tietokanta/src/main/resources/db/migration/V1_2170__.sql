@@ -58,10 +58,16 @@ CREATE TABLE mhu_muutos_liite (
     liite INTEGER REFERENCES liite(id)
 );
 
+CREATE INDEX mhu_muutos_id_versio_idx ON mhu_muutos (id, versio);
+CREATE INDEX mhu_muutos_kustannusvaikutus_idx ON mhu_muutos_kustannusvaikutus (muutos, versio, hoitokauden_alkuvuosi);
+CREATE INDEX mhu_muutos_tehtava_ja_maaraluettelo_idx ON mhu_muutos_tehtava_ja_maaraluettelo (muutos, versio, hoitokauden_alkuvuosi);
+CREATE INDEX mhu_muutos_liite_idx ON mhu_muutos_liite (muutos, versio);
 
--- historiataulujen luonti, pyritään hyödyntämään INHERITS-toimintoa. Tarvittaessa historiatauluihin sallittava
--- duplikaatit primary keyt, tai tehtävä niistä foreign keyt ja historiariveille oma juokseva id
+-- historiataulujen luonti, hyödyntää INHERITS-toimintoa. INHERIT ei peri rajoitteita, joten historiataulussa
+-- voi olla mhu_muutoksia monta riviä samalla id:lla kuten halutaankin
 CREATE TABLE mhu_muutos_historia () INHERITS (mhu_muutos);
+-- varmistetaan että samaa (id, versio)-yhdistelmää on vain yksi
+CREATE UNIQUE INDEX mhu_muutos_historia_id_versio ON mhu_muutos_historia (id, versio);
 CREATE TABLE mhu_muutos_liite_historia () INHERITS (mhu_muutos_liite);
 CREATE TABLE mhu_muutos_kustannusvaikutus_historia () INHERITS (mhu_muutos_kustannusvaikutus);
 CREATE TABLE mhu_muutos_tehtava_ja_maaraluettelo_historia () INHERITS (mhu_muutos_tehtava_ja_maaraluettelo);
@@ -81,21 +87,6 @@ CREATE TRIGGER mhu_muutos_historia_trigger
     BEFORE UPDATE OR DELETE ON mhu_muutos
     FOR EACH ROW
 EXECUTE FUNCTION paivita_mhu_muutos_historia();
-
-
-CREATE FUNCTION paivita_mhu_muutos_liite_historia()
-    RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO mhu_muutos_liite_historia
-    VALUES (OLD.*);
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER mhu_muutos_historia_trigger
-    BEFORE UPDATE OR DELETE ON mhu_muutos_liite
-    FOR EACH ROW
-EXECUTE FUNCTION paivita_mhu_muutos_liite_historia();
 
 
 CREATE FUNCTION paivita_mhu_muutos_kustannusvaikutus_historia()
@@ -126,6 +117,20 @@ CREATE TRIGGER mhu_muutos_tehtava_ja_maaraluettelo_historia_trigger
     BEFORE UPDATE OR DELETE ON mhu_muutos_tehtava_ja_maaraluettelo
     FOR EACH ROW
 EXECUTE FUNCTION paivita_mhu_muutos_tehtava_ja_maaraluettelo_historia();
+
+CREATE FUNCTION paivita_mhu_muutos_liite_historia()
+    RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO mhu_muutos_liite_historia
+    VALUES (OLD.*);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER mhu_muutos_historia_trigger
+    BEFORE UPDATE OR DELETE ON mhu_muutos_liite
+    FOR EACH ROW
+EXECUTE FUNCTION paivita_mhu_muutos_liite_historia();
 
 -- mhu_muutos tietomalliin liittyvät kommentit
 COMMENT ON column mhu_muutos_kustannusvaikutus.summa IS 'Muutoksen kustannusvaikutus euroina.';

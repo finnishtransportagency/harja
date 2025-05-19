@@ -46,7 +46,12 @@ INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitoka
 VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Tämän hoitovuoden määräpoikkeamamuutos'), _tehtava_id_soratien_rummut_600_1000mm,
         ensimmainen_tayden_hkn_alkuvuosi,
         40, -40, 0);
-
+INSERT INTO liite (nimi, tyyppi, lahde, urakka, luotu, luoja)
+VALUES ('rumpu.jpg', 'image/png', 'harja-ui'::lahde,
+        urakka_id, NOW(), (select id from kayttaja where kayttajanimi = 'tero'));
+INSERT INTO mhu_muutos_liite (muutos, liite)
+VALUES ((SELECT id FROM mhu_muutos WHERE nimi = 'Tämän hoitovuoden määräpoikkeamamuutos'),
+        (SELECT id FROM liite WHERE nimi = 'rumpu.jpg'));
 
 FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi LOOP
             -- muutos 1: päällysteiden paikkausta enemmän - kustannusvaikutus
