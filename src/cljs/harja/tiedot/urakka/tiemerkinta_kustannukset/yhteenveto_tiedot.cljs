@@ -23,6 +23,8 @@
 
 
 (defrecord HaeTiedot [])
+(defrecord HaeTiedotOnnistui [vastaus])
+(defrecord HaeTiedotEpaonnistui [vastaus])
 (defrecord HaeMuutOnnistui [vastaus])
 (defrecord HaeMuutEpaonnistui [vastaus])
 (defrecord HaeSanktiotOnnistui [vastaus])
@@ -160,10 +162,50 @@
      :epaonnistui ->HaePaallystysEpaonnistui}))
 
 
+(defn- hae-tiedot [app]
+  (tuck-apurit/post! app :hae-tiemerkinta-yhteenveto
+    
+
+    {:urakan-tiedot @nav/valittu-urakka
+     :valittu-aikavali @u/valittu-aikavali
+     
+     ;;
+     }
+    
+    {:onnistui ->HaeTiedotOnnistui
+     :epaonnistui ->HaeTiedotEpaonnistui}))
+
+
 (extend-protocol tuck/Event
   ;; callback # 1
+  ;; Muut kustannukset
+
   HaeTiedot
   (process-event [_ app]
+    (hae-tiedot app)
+    (->
+      (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
+      (assoc :haku-kaynnissa? true :rivit nil)
+      (assoc-in [:valinnat :aikavali] @u/valittu-aikavali)))
+
+  HaeTiedotOnnistui
+  (process-event [{:keys [vastaus]} app]
+    
+    (println "\n OK-vastaus: " vastaus)
+
+    (-> app
+      
+      (assoc :haku-kaynnissa? false :rivit [])
+      ))
+
+  HaeTiedotEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (epaonnistui vastaus app))
+
+
+  
+
+  #_ (process-event [_ app]
     (hae-muut-kustannukset app)
     (->
       (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
@@ -172,6 +214,7 @@
 
 
   ;; callback # 2 
+  ;; Sanktiot ja bonukset
   HaeMuutOnnistui
   (process-event [{:keys [vastaus]} app]
     (->
@@ -180,6 +223,7 @@
 
 
   ;; callback # 3
+  ;; Uusien päällysteiden tiemerkinnät (paikkaus)
   HaeSanktiotOnnistui
   (process-event [{:keys [vastaus]} {:keys [ladatut-rivit] :as app}]
     (let [sanktiot (sanktiot-ja-muut-yhteen vastaus)
@@ -190,6 +234,7 @@
 
 
   ;; callback # 4
+  ;; Uusien päällysteiden tiemerkinnät (päällystys)
   HaePaikkausOnnistui
   (process-event [{:keys [vastaus]} {:keys [ladatut-rivit] :as app}]
     (let [paikkaus-merkinnat (laske-paallysteiden-merkinnat vastaus :paikkausten-merkinnat)
@@ -200,6 +245,7 @@
 
 
   ;; callback # 5
+  ;; Tiemerkintöjen korjaukset 
   HaePaallystysOnnistui
   (process-event [{:keys [vastaus]} {:keys [ladatut-rivit] :as app}]
     (let [paallystys-merkinnat (laske-paallysteiden-merkinnat vastaus :paallysteiden-merkinnat)
@@ -209,7 +255,7 @@
         (assoc :ladatut-rivit yhteenveto))))
 
 
-  ;; viimeinen
+  ;; Summaa kaikki
   HaeKorjauksetOnnistui
   (process-event [{:keys [vastaus]} {:keys [ladatut-rivit] :as app}]
     ;; Kaikki kustannukset on nyt "ladatut-rivit sisällä"

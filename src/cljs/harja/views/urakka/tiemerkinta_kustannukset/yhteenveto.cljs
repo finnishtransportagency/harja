@@ -36,7 +36,15 @@
                  :rivi-jalkeen-fn (fn [rivit]
                                     (let [yhteensa-hinta (reduce + (map :hinta rivit))]
                                       [[{:teksti "Yhteensä" :luokka "yhteensa"}
-                                        {:teksti (str (fmt/euro-opt false yhteensa-hinta) " €") :tasaa :oikea :luokka "yhteensa"}]]))}
+                                        {:teksti (str (fmt/euro-opt false yhteensa-hinta) " €") :tasaa :oikea :luokka "yhteensa"}
+                                        
+                                        ;; PK 1
+                                        {:teksti (str (fmt/euro-opt false yhteensa-hinta) " €") :tasaa :oikea :luokka "yhteensa"}
+                                        ;; PK 2 
+                                        {:teksti (str (fmt/euro-opt false yhteensa-hinta) " €") :tasaa :oikea :luokka "yhteensa"}
+                                        ;; PK 3
+                                        {:teksti (str (fmt/euro-opt false yhteensa-hinta) " €") :tasaa :oikea :luokka "yhteensa"}
+                                        ]]))}
 
       [{:otsikko "Kustannuslaji"
         :tyyppi :komponentti
@@ -53,7 +61,27 @@
         :tyyppi :euro
         :tasaa :oikea
         :luokka "text-nowrap"
-        :leveys 0.2}]
+        :leveys 0.2}
+        
+       {:otsikko "Pk1-osuus"
+        :nimi :hinta
+        :tyyppi :euro
+        :tasaa :oikea
+        :luokka "text-nowrap"
+        :leveys 0.4}
+       {:otsikko "Pk2-osuus"
+        :nimi :hinta
+        :tyyppi :euro
+        :tasaa :oikea
+        :luokka "text-nowrap"
+        :leveys 0.24}
+       {:otsikko "Pk3-osuus"
+        :nimi :hinta
+        :tyyppi :euro
+        :tasaa :oikea
+        :luokka "text-nowrap"
+        :leveys 0.4}
+       ]
       rivit]]))
 
 
