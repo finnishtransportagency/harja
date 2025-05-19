@@ -18,7 +18,7 @@
              :tyhja (if haku-kaynnissa?
                       [ajax-loader "Laskuja haetaan..."]
                       "Ei laskuja")}
-            [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "40%"}
-             {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "20%"}
-             {:otsikko "Päivämäärä" :nimi :pvm :tyyppi :pvm :leveys "20%"}]
-            []]])))))
+            [{:otsikko "Päivämäärä" :nimi :pvm :tyyppi :pvm :leveys "20%"}
+             {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "40%"}
+             {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "20%"}]
+            laskut]])))))

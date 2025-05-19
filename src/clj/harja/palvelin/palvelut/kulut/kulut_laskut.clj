@@ -5,11 +5,11 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.kulut-laskut :as kyselyt]))
 
-(defn hae-kulut-laskut 
-  [db user ]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user)
+(defn hae-kulut-laskut
+  [db user {:keys [urakkaid] :as _tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakkaid)
   (println "\n \n hae-kulut-laskut")
- #_ (kyselyt/hae-kulut-laskut db))
+  (kyselyt/hae-kulut-laskut db))
 
 (defrecord KulutLaskut []
   component/Lifecycle
@@ -17,8 +17,8 @@
     (let [db (:db this)
           http (:http-palvelin this)]
       (julkaise-palvelu http :hae-kulut-laskut
-        (fn [user]
-          (hae-kulut-laskut db user)))
+        (fn [kayttaja tiedot]
+          (hae-kulut-laskut db kayttaja tiedot)))
       this))
   (stop [this]
     (poista-palvelu (:http-palvelin this)

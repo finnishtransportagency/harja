@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [harja.ui.viesti :as viesti]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
@@ -22,7 +23,7 @@
   HaeLaskut
   (process-event [_ app]
     (tuck-apurit/post! app :hae-kulut-laskut
-      {}
+      {:urakkaid @nav/valittu-urakka-id}
       {:onnistui ->HaeLaskutOnnistui
        :epaonnistui ->HaeLaskutEpaonnistui})
     (assoc app :haku-kaynnissa? true))
@@ -31,7 +32,7 @@
   (process-event [{vastaus :vastaus} app]
     (assoc app
       :laskut vastaus
-      :haku-käynnissä? false))
+      :haku-kaynnissa? false))
   
   HaeLaskutEpaonnistui
   (process-event [{vastaus :vastaus} app]
