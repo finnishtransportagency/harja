@@ -10,21 +10,21 @@
             [harja.pvm :as pvm]))
 
 (deftest urakan-mahdolliset-sanktiolajit
-  (let [alueurakan-lajit-ennen-2023 (sanktio-domain/urakan-sanktiolajit {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)})
-        mhu-lajit-ennen-2023 (sanktio-domain/urakan-sanktiolajit {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)})
-        mhu-lajit-2023-> (sanktio-domain/urakan-sanktiolajit {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2023)})
-        paallystyksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys :alkupvm (pvm/hoitokauden-alkupvm 2019)})
-        paikkauksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus :alkupvm (pvm/hoitokauden-alkupvm 2019)})
-        tiemerkinnan-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta :alkupvm (pvm/hoitokauden-alkupvm 2019)})
-        valaistuksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus :alkupvm (pvm/hoitokauden-alkupvm 2019)})]
+  (let [alueurakan-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :hoito})
+        mhu-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :teiden-hoito})
+        paallystyksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys})
+        paikkauksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus})
+        tiemerkinnan-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta})
+        valaistuksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus})]
 
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
             :testikeskiarvo-sanktio :vaihtosanktio]
-          alueurakan-lajit-ennen-2023 mhu-lajit-ennen-2023)
-      "Hoidon sanktiolajit urakoille ennen 2023")
-    (is (= [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
-          mhu-lajit-2023->)
-      "Hoidon sanktiolajit urakoille 2023 tai sen jälkeen")
+          alueurakan-lajit)
+      "Hoidon sanktiolajit alueurakoille")
+    (is (= [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
+            :testikeskiarvo-sanktio :vaihtosanktio]
+          mhu-lajit)
+      "Hoidon sanktiolajit MH-urakoille")
     (is (= [:yllapidon_sakko :yllapidon_muistutus]
           paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit)
       "Ylläpidon sanktiolajit")))
@@ -66,5 +66,3 @@
 
     (is (= [0] lupaussanktio)
       "Lupaussanktio")))
-
-
