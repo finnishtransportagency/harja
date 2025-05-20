@@ -46,7 +46,7 @@
                          vastaus-payload)]
       (let [vastaus (sms/laheta (:sms jarjestelma) "0987654321" "Testi" korrelaatio-id {})]
         ;; Tarkastetaan, että lähetetty payload on validi
-        (is (nil? (json/validoi +sms-laheta-schema+ (cheshire/encode @lahetetty-payload))))
+        (is (nil? (json/validoi +sms-laheta-schema+ @lahetetty-payload)))
         ;; Tarkastetaan, että vastaus on dekoodattu oikein ja sisältää odotetut tiedot
         (is (= {:korrelaatio-id korrelaatio-id
                 :selitys ""
