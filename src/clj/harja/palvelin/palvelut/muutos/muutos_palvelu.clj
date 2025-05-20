@@ -1,23 +1,25 @@
 (ns harja.palvelin.palvelut.muutos.muutos-palvelu
-  (:require [com.stuartsierra.component :as component]
-            [harja.kyselyt
-             [muutos-kyselyt :as muutos-kyselyt]]
-            [harja.kyselyt.konversio :as konv]
+  (:require [clojure.java.jdbc :as jdbc]
+            [com.stuartsierra.component :as component]
+            [harja.pvm :as pvm]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.java.jdbc :as jdbc]
+            [harja.kyselyt [muutos-kyselyt :as muutos-kyselyt]]
+            [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]))
 
-(defn tallenna-muutos [db {:keys [urakka-id] :as tiedot}]
+(defn tallenna-muutos [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id))
 
 
 
 (defn hae-urakan-muutostiedot
-  [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
+  [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (log/debug "hae-urakan-muutostiedot: " tiedot)
-  (let [vastaus (mapv
+  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+        vastaus (mapv
                   (fn [rivi]
                     (-> rivi
                       (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
@@ -31,10 +33,15 @@
 (defrecord Muutos [asetukset]
   component/Lifecycle
   (start [this]
-    (julkaise-palvelu (:http-palvelin this)
-      :hae-urakan-muutostiedot
-      (fn [user tiedot]
-        (hae-urakan-muutostiedot (:db this) user tiedot)))
+
+    (when (ominaisuus-kaytossa? :mhu-muutokset)
+      (julkaise-palvelu (:http-palvelin this)
+        :hae-urakan-muutostiedot
+        (fn [user tiedot]
+          (hae-urakan-muutostiedot
+            (:db this)
+            user
+            tiedot))))
 
     (julkaise-palvelu (:http-palvelin this)
       :tallenna-muutos

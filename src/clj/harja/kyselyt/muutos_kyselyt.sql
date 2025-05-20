@@ -36,6 +36,7 @@ SELECT m.id,
                                                                  m.versio = tjm.versio AND
                                                                  tjm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi)
            LEFT JOIN mhu_muutos_liite lii ON (m.id = lii.muutos AND m.versio = lii.versio)
- WHERE m.urakka = :urakka
+ WHERE m.urakka = :urakka AND
+       m.voimassa_alkaen <= (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD'))
  GROUP BY m.id, m.versio, m.urakka, m.voimassa_alkaen, m.tyyppi, m.nimi, m.syy, m.kulu_kohdistus, m.luonnos;
 
