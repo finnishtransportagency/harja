@@ -245,6 +245,39 @@
           (luo<! c varahenkilo false))))
     (hae-urakan-vastuuhenkilot db user urakka-id)))
 
+(defn hae-urakan-yhteystiedot [db user urakka-id]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+  (first (q/hae-urakan-yhteystiedot db urakka-id)))
+
+(defn tallenna-urakan-yhteystiedot [db user {:keys [urakka-id matkapuhelin sahkoposti] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+  (jdbc/with-db-transaction [c db]
+    ;; Hae urankan organisaatio
+    (let [urakka (first (uq/hae-urakka c urakka-id))
+          organisaatio-id (get-in urakka [:urakoitsija :id])
+          ;; Tarkista onko urakalla jo "Urakan yhteystiedot" rooli
+          nykyinen-yhteystieto (first (q/hae-urakan-yhteystiedot c urakka-id))]
+      (if nykyinen-yhteystieto
+        ;; Päivitä olemassa olevaa
+        (do
+          (q/paivita-yhteyshenkilo c
+            "Urakka" ""
+            nil matkapuhelin
+            sahkoposti
+            organisaatio-id
+            (:id nykyinen-yhteystieto))
+          (:id nykyinen-yhteystieto))
+        ;; Luo uusi
+        (let [id (:id (q/luo-yhteyshenkilo c
+                        "Urakka" ""
+                        nil matkapuhelin
+                        sahkoposti
+                        organisaatio-id
+                        nil nil nil
+                        (:id user)))]
+          (q/liita-yhteyshenkilo-urakkaan<! c "Urakan yhteystiedot" id urakka-id)
+          id)))))
+
 (defrecord Yhteyshenkilot []
   component/Lifecycle
   (start [this]
@@ -285,7 +318,15 @@
 
       :tallenna-urakan-vastuuhenkilot-roolille
       (fn [user tiedot]
-        (tallenna-urakan-vastuuhenkilot-roolille (:db this) user tiedot)))
+        (tallenna-urakan-vastuuhenkilot-roolille (:db this) user tiedot))
+      
+      :hae-urakan-yhteystiedot
+      (fn [user urakka-id]
+        (hae-urakan-yhteystiedot (:db this) user urakka-id))
+      
+      :tallenna-urakan-yhteystiedot
+      (fn [user tiedot]
+        (tallenna-urakan-yhteystiedot (:db this) user tiedot)))
 
     this)
 
@@ -298,6 +339,7 @@
                      :hae-urakan-kayttajat
                      :hae-urakoiden-kayttajat-rooleissa
                      :hae-urakan-vastuuhenkilot
-                     :tallenna-urakan-vastuuhenkilot-roolille)
+                     :tallenna-urakan-vastuuhenkilot-roolille
+                     :tallenna-urakan-yhteystiedot)
     this))
 
