@@ -18,6 +18,7 @@
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
 
 (defrecord MuokkaaMuutosta [rivi])
+(defrecord ToggleTaulukonNakyvyys [taulukon-avain])
 ;; Vaihda hoitokausi
 (defrecord HoitokausiVaihdettu [urakka hoitokausi])
 
@@ -33,8 +34,7 @@
         uusi-hoitokausi (if (contains? (set hoitokaudet) vanha-hoitokausi)
                           vanha-hoitokausi
                           (u/paattele-valittu-hoitokausi hoitokaudet))]
-    ;; Tyhjennä muu app state kun urakka vaihtuu
-    (-> {}
+    (-> @tila/muutokset
         (assoc :urakan-hoitokaudet hoitokaudet)
         (assoc :valittu-hoitokausi uusi-hoitokausi))))
 
@@ -81,6 +81,11 @@
   MuokkaaMuutosta
   (process-event [{rivi :rivi} app]
     (assoc app :muokattava-muutos rivi))
+
+  ToggleTaulukonNakyvyys
+  (process-event [{taulukon-avain :taulukon-avain} app]
+    (assoc-in app [:taulukko-nakyvissa? taulukon-avain]
+      (not (get-in app [:taulukko-nakyvissa? taulukon-avain]))))
 
   ValitseUrakka
   (process-event [{urakka :urakka} app]

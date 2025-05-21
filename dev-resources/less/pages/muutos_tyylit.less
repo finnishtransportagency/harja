@@ -6,7 +6,31 @@
         }
         margin-bottom: 12px;
     }
-    > h2 {
-        margin-bottom: 20px;
+  .collapsoitava-osio {
+    border: 1px solid @harmaa-vaalea;
+    padding: @valistys-20 @valistys-32;
+  }
+  .otsikkorivi {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    button.navigation-ympyrassa {
+      font-size: @valistys-16;
+      height: @valistys-28;
+      width: @valistys-28;
     }
+    h2 {
+      display: inline-block;
+      margin: 0 0 0 @valistys-24;
+    }
+    .summa {
+      font-size: @valistys-20;
+    }
+  }
+  .toiminnot {
+    margin-top: @valistys-16;
+  }
+  .debug {
+    margin-top: @valistys-48;
+  }
 }
