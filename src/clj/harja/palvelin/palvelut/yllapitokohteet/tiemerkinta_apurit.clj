@@ -33,5 +33,21 @@
                :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
                           :viesti "PK-osuuksien summan on oltava 100"}]}))))
 
+(defn laske-korjaukset-yhteen
+  "TODO .. Suodattaa korjaus kustannukset vuoden perusteella 
+   Palauttaa vectorin ryhmitettynä:
+   :id        Grid tunniste 
+   :tyyppi    :korjaus
+   :hinta     Summattu hinta"
+  [korjaus-kustannukset [alku loppu]]
+  (let [suodatettu (filter (fn [{vuosi :kustannusvuosi}]
+                             (let [kustannuksen-pvm (pvm/vuoden-eka-pvm vuosi)]
+                               (and
+                                 (not (pvm/ennen? kustannuksen-pvm alku))
+                                 (not (pvm/jalkeen? kustannuksen-pvm loppu)))))
+                     korjaus-kustannukset)]
+    [{:id     (gensym)
+      :tyyppi :korjaus
+      :hinta  (reduce + 0 (map :kustannus suodatettu))
 
-
+      :pk1 (reduce + 0 (map :kustannus suodatettu))}]))

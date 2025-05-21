@@ -10,9 +10,8 @@
    [harja.kyselyt.konversio :as konv]
    [harja.kyselyt.kustannusten-kirjaus :as q]
    [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-   
-   [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
    [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
+   [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
    [harja.palvelin.palvelut.yllapitokohteet.tiemerkinta-apurit :as apurit]))
 
 (defn hae-tiemerkinta-kustannuskirjaukset
@@ -119,26 +118,6 @@
 
 
 
-(defn laske-korjaukset-yhteen
-  "Suodattaa korjaus kustannukset vuoden perusteella 
-   Palauttaa vectorin ryhmitettynä:
-   :id        Grid tunniste 
-   :tyyppi    :korjaus
-   :hinta     Summattu hinta"
-  [korjaus-kustannukset [alku loppu]]
-  (let [suodatettu (filter (fn [{vuosi :kustannusvuosi}]
-                             (let [kustannuksen-pvm (pvm/vuoden-eka-pvm vuosi)]
-                               (and
-                                 (not (pvm/ennen? kustannuksen-pvm alku))
-                                 (not (pvm/jalkeen? kustannuksen-pvm loppu)))))
-                     korjaus-kustannukset)]
-    [{:id     (gensym)
-      :tyyppi :korjaus
-      :hinta  (reduce + 0 (map :kustannus suodatettu))
-      
-      :pk1 (reduce + 0 (map :kustannus suodatettu))
-      
-      }]))
 
 
 
@@ -159,7 +138,7 @@
   
   (let [;; Tiemerkintöjen korjaus 
         korjaus-kustannukset (hae-tiemerkinta-kustannuskirjaukset db kayttaja {:urakka urakan-tiedot})
-        korjaus-kustannukset (laske-korjaukset-yhteen korjaus-kustannukset valittu-aikavali)
+        korjaus-kustannukset (apurit/laske-korjaukset-yhteen korjaus-kustannukset valittu-aikavali)
 
         ;; Uusien päällysteiden tiemerkinnät (paikkaus)
         ;paikkaus-kustannukset (hae-tiemerkinta-paikkausten-kustannukset db kayttaja tiedot)
@@ -173,7 +152,7 @@
         ;; Muut kustannukset
         ;muut-kustannukset (yllapito-toteumat/hae-yllapito-toteumat db kayttaja tiedot)
 
-        _ (println "\n \n res: " (laske-korjaukset-yhteen korjaus-kustannukset valittu-aikavali) " \n ")
+        _ (println "\n \n res: " (apurit/laske-korjaukset-yhteen korjaus-kustannukset valittu-aikavali) " \n ")
         ;;
         ]
 
