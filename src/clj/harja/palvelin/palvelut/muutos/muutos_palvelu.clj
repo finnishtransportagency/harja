@@ -13,6 +13,13 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id))
 
 
+(defn tavoitehinnan-muutos [muutokset]
+  (mapv (fn [rivi]
+          (let [total (->> (:kustannusvaikutukset rivi)
+                        (map :summa)
+                        (reduce + 0))]
+            (assoc rivi :tavoitehinnan-muutos total)))
+    muutokset))
 
 (defn hae-urakan-muutostiedot
   [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
@@ -26,9 +33,10 @@
                       (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
                       (update :liitteet #(konv/jsonb->clojuremap %))))
                   (muutos-kyselyt/hae-urakan-hoitovuoden-muutostiedot db {:urakka urakka-id
-                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))]
-    (log/debug "Haetut muutostiedot: " vastaus)
-    vastaus))
+                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+        vastaus-summien-kanssa (tavoitehinnan-muutos vastaus)]
+    (log/debug "Haetut muutostiedot: " vastaus-summien-kanssa)
+    vastaus-summien-kanssa))
 
 (defrecord Muutos [asetukset]
   component/Lifecycle

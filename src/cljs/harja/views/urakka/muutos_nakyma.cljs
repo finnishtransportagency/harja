@@ -1,10 +1,11 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
   (:require [cljs.core.async :refer [<!]]
+            [harja.fmt :as fmt]
             [harja.ui.napit :as napit]
             [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
-            [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.muutos-domain :as muutos-domain]
             [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
@@ -17,6 +18,19 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defn muutoslomake [e! app]
+  [:span.muutoslomake
+   (if (get-in app [:muokattava-muutos :id])
+     "Muokkaa muutosta"
+     "Lisää uusi muutos")
+
+   ;; todo: eri tyyppisten muutosten lomakkeiden toteutus tähän
+   ;; oletettavasti kannattaa toteuttaa lomakkeen harja.ui.lomake avulla
+   ;; siten että niiden sisälle sijoitetaan tarvittaessa taulukkoja :muokkaus-grid, ks. esim views/urakka/toteumat/muut_materiaalit.cljs#L127
+   [:div (pr-str (:muokattava-muutos app))]
+   [napit/peruuta
+    #(e! (muutos-tiedot/->MuokkaaMuutosta nil))]])
+
 
 (defn- kirjatut-muutokset [e! {:keys [muutokset] :as app}]
   [:span.kirjatut.muutokset
@@ -24,19 +38,27 @@
     {:otsikko "Kirjatut muutokset"
      :tunniste :id
      :luokat ["kirjatut-muutokset-grid"]
+     :tyhja "Ei kirjattuja muutoksia."
      :voi-lisata? false :voi-kumota? false
      :voi-poistaa? (constantly false) :voi-muokata? false}
 
     ;; taulukon kentät
-    [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys 15}
+    [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys 15
+      :fmt muutos-domain/tyyppi-fmt}
      {:otsikko "Muutoksen syy" :nimi :syy :tyyppi :string :leveys 35}
      {:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :pvm :leveys 15}
-     {:otsikko "Tavoitehinnan muutos" :nimi :tavoitehinnan-muutos :tyyppi :numero :leveys 15}
+     {:otsikko "Tavoitehinnan muutos" :nimi :tavoitehinnan-muutos :tyyppi :numero
+      :fmt fmt/euro-opt :tasaa :oikea :leveys 15}
      {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 15
       :komponentti (fn [rivi]
                      [napit/muokkaa "Muokkaa"
                       #(e! (muutos-tiedot/->MuokkaaMuutosta rivi))])}]
     muutokset]])
+
+(defn muutoslistaus [e! app]
+  [:span.muutoslistaus
+   ;; Kirjatut muutokset
+   [kirjatut-muutokset e! app]])
 
 (defn muutokset-alempi-valilehti*
   [e! app]
@@ -61,8 +83,9 @@
            (:urakan-hoitokaudet app)
            #(e! (muutos-tiedot/->HoitokausiVaihdettu urakka %))]]
 
-         ;; Kirjatut muutokset
-         [kirjatut-muutokset e! app]
+         (if (:muokattava-muutos app)
+           [muutoslomake e! app]
+           [muutoslistaus e! app])
 
          [debug app]]))))
 
