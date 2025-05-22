@@ -94,7 +94,7 @@
           losa (:losa valinnat)
           leta (:leta valinnat)]
       [:div
-       [debug app {:otsikko "TUCK STATE"}]
+       ;[debug app {:otsikko "TUCK STATE"}]
        [:div.row.filtterit-container {:style {:height "100px"}}
         [valinnat/urakan-hoitokausi-tuck
          (:hoitokauden-alkuvuosi valinnat)
@@ -171,7 +171,7 @@
           :yksi-valittu-teksti (:otsikko (first (:kuntoluokat valinnat)))
           :fmt (comp itse-tai-kaikki :otsikko)}]]
 
-       [:div.row
+       [:div.row.haku-ja-tyhjennys
         [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(e! (v/->HaeVarusteet)) {:luokka "nappi-korkeus-32"
                                                                                          :disabled false
                                                                                          :ikoni (ikonit/livicon-search)}]
@@ -180,51 +180,55 @@
           :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
                       (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]])))
 
+(def infoteksti-poistuneista-varusteista
+  "Harjassa näytetään vain voimassaolevat varusteet. Jos kaipaat tietoa poistetuista varusteista tietyssä urakassa, käänny joko Velhon tai Harja-palautteen puoleen.")
 
 (defn listaus [e! {:keys [varusteet haku-paalla valinnat] :as app}]
   (let [lkm (count varusteet)]
-    [grid/grid
-     {:otsikko
-      (str "Varustetoimenpiteet "
-        (if (>= lkm v/+max-toteumat+)
-          (str "(Liikaa osumia. Näytetään vain " v/+max-toteumat+ " ensimmäistä.)")
-          (str "(" lkm ")")))
-      :tunniste :ulkoinen-oid
-      :luokat ["varuste-taulukko" "margin-top-32"]
-      :tyhja (if haku-paalla
-               [ajax-loader "Haetaan varustetapahtumia..."]
-               "Suorita haku syöttämällä hakuehdot ja klikkaamalla Hae varustetoimenpiteitä.")
-      :rivi-klikattu #(yleiset/fn-viiveella
-                        (fn [] (do
-                                 (e! (v/->AvaaVarusteLomake %))
-                                 (e! (v/->HaeVarusteenHistoria %)))))
-      :otsikkorivi-klikattu (fn [opts]
-                              (e! (v/->JarjestaVarusteet (:nimi opts))))
-      :paneelikomponentit [(fn [] [:span.inline-block
-                                   [:form {:style {:margin-left "auto"}
-                                           :target "_blank" :method "POST"
-                                           :action (k/excel-url :varusteet-ulkoiset-excel)}
-                                    [:input {:type "hidden" :name "parametrit"
-                                             :value (transit/clj->transit (v/hakuparametrit app))}]
-                                    [:button {:type "submit"
-                                              :class #{"nappi-toissijainen nappi-reunaton"}}
-                                     [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Vie exceliin"]]]])]
-      :voi-lisata? false :voi-kumota? false
-      :voi-poistaa? (constantly false) :voi-muokata? true}
-     [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
-       :fmt pvm/pvm-opt}
-      {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
-       :hae v/muodosta-tr-osoite}
-      {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3}
-      {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tyyppi :leveys 5
-       :hae (fn [rivi] (when-let [varustetyyppi (or (:tyyppi rivi) (:kohdeluokka rivi))]
-                         (when varustetyyppi (str/capitalize varustetyyppi))))}
-      {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
-      {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
-       :komponentti (fn [rivi]
-                      [kuntoluokka-komponentti (:kuntoluokka rivi)])}
-      {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
-     varusteet]))
+    [:span
+     [grid/grid
+      {:otsikko
+       (str "Varustetoimenpiteet "
+         (if (>= lkm v/+max-toteumat+)
+           (str "(Liikaa osumia. Näytetään vain " v/+max-toteumat+ " ensimmäistä.)")
+           (str "(" lkm ")")))
+       :tunniste :ulkoinen-oid
+       :luokat ["varuste-taulukko" "margin-top-32"]
+       :tyhja (if haku-paalla
+                [ajax-loader "Haetaan varustetapahtumia..."]
+                "Suorita haku syöttämällä hakuehdot ja klikkaamalla Hae varustetoimenpiteitä.")
+       :rivi-klikattu #(yleiset/fn-viiveella
+                         (fn [] (do
+                                  (e! (v/->AvaaVarusteLomake %))
+                                  (e! (v/->HaeVarusteenHistoria %)))))
+       :otsikkorivi-klikattu (fn [opts]
+                               (e! (v/->JarjestaVarusteet (:nimi opts))))
+       :paneelikomponentit [(fn [] [:span.inline-block
+                                    [:form {:style {:margin-left "auto"}
+                                            :target "_blank" :method "POST"
+                                            :action (k/excel-url :varusteet-ulkoiset-excel)}
+                                     [:input {:type "hidden" :name "parametrit"
+                                              :value (transit/clj->transit (v/hakuparametrit app))}]
+                                     [:button {:type "submit"
+                                               :class #{"nappi-toissijainen nappi-reunaton"}}
+                                      [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Vie exceliin"]]]])]
+       :voi-lisata? false :voi-kumota? false
+       :voi-poistaa? (constantly false) :voi-muokata? true}
+      [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
+        :fmt pvm/pvm-opt}
+       {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
+        :hae v/muodosta-tr-osoite}
+       {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3}
+       {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tyyppi :leveys 5
+        :hae (fn [rivi] (when-let [varustetyyppi (or (:tyyppi rivi) (:kohdeluokka rivi))]
+                          (when varustetyyppi (str/capitalize varustetyyppi))))}
+       {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
+       {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
+        :komponentti (fn [rivi]
+                       [kuntoluokka-komponentti (:kuntoluokka rivi)])}
+       {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
+      varusteet]
+     [yleiset/info-laatikko :neutraali infoteksti-poistuneista-varusteista]]))
 
 (defn listaus-toteumat [_ {:keys [historia-haku-paalla?]} valittu-toteumat]
   (if (and (not historia-haku-paalla?) (nil? valittu-toteumat))
@@ -312,7 +316,7 @@
          (reset! nav/kartan-edellinen-koko nil)
          (reset! varusteet-kartalla/varuste-klikattu-fn (constantly nil))))
     (fn [e! app]
-      [:div
+      [:div.varusteet-nakyma
        (when (:valittu-varuste app)
          [varustelomake-nakyma e! app])
        [suodatuslomake e! app]

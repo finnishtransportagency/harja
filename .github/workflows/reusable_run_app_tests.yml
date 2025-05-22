@@ -515,7 +515,7 @@ jobs:
           echo "Luodaan Harjalle 'salaisuudet' .harja-kansioon"
           mkdir -p ../.harja
           echo aaaa > ../.harja/anti-csrf-token
-          touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,labyrintti-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti-salasana,digiroad-api-key}
+          touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,sms-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti-salasana,digiroad-api-key}
           touch ../.harja/kaista-aineisto.csv
           
           echo "Lisätään downloads oikeudet Cypressille"

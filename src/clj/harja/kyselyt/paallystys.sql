@@ -950,11 +950,11 @@ SELECT ypk.id,
        ypk.tr_loppuosa            AS "tr-loppuosa",
        ypk.tr_loppuetaisyys       AS "tr-loppuetaisyys",
        ypk.karttapaivamaara,
-       (k.sopimuksen_mukaiset_tyot +
-        k.maaramuutokset +
-        k.bitumi_indeksi +
-        k.kaasuindeksi +
-        k.maku_paallysteet)       AS kokonaishinta
+       (COALESCE(k.sopimuksen_mukaiset_tyot, 0) +
+        COALESCE(k.maaramuutokset, 0) +
+        COALESCE(k.bitumi_indeksi, 0) +
+        COALESCE(k.kaasuindeksi, 0) +
+        COALESCE(k.maku_paallysteet, 0)) AS kokonaishinta
 FROM yllapitokohde ypk
          LEFT JOIN yllapitokohteen_kustannukset k ON ypk.id = k.yllapitokohde
 WHERE ypk.luotu BETWEEN :alku AND :loppu
@@ -1011,11 +1011,11 @@ SELECT paallystyskohde,
        ypk.lahetetty,
        ypk.lahetys_onnistunut AS "lahetys-onnistunut",
        takuupvm               AS takuupaivamaara,
-       (k.sopimuksen_mukaiset_tyot +
-        k.maaramuutokset +
-        k.bitumi_indeksi +
-        k.kaasuindeksi +
-        k.maku_paallysteet) AS "toteutunut-hinta",
+       (COALESCE(k.sopimuksen_mukaiset_tyot, 0) +
+        COALESCE(k.maaramuutokset, 0) +
+        COALESCE(k.bitumi_indeksi, 0) +
+        COALESCE(k.kaasuindeksi, 0) +
+        COALESCE(k.maku_paallysteet, 0)) AS "toteutunut-hinta",
        pi.poistettu
 FROM paallystysilmoitus pi
          LEFT JOIN yllapitokohde ypk ON pi.paallystyskohde = ypk.id
