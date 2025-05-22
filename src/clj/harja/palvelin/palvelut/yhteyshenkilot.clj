@@ -339,7 +339,8 @@
                      :hae-urakan-kayttajat
                      :hae-urakoiden-kayttajat-rooleissa
                      :hae-urakan-vastuuhenkilot
-                     :tallenna-urakan-vastuuhenkilot-roolille
+                     :tallenna-urakan-vastuuhenkilot-roolille 
+                     :hae-urakan-yhteystiedot
                      :tallenna-urakan-yhteystiedot)
     this))
 

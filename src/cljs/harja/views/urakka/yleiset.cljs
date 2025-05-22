@@ -483,7 +483,50 @@
                                                   (reset! aikavali-loppu nil))
           {:luokka "nappi-toissijainen"}]]])))))
 
-(defn yleiset-tiedot [paivita-vastuuhenkilot! ur kayttajat vastuuhenkilot]
+(defn- urakan-yleiset-yhteystiedot [ur yhteystiedot]
+  (let [auki? (atom false)]
+    (fn [ur yhteystiedot]
+      (if (not @auki?)
+        [:<>
+         (if yhteystiedot
+           [:span
+            (when (:sahkoposti yhteystiedot)
+              [:span "Sähköposti: " (:sahkoposti yhteystiedot) " "])
+            (when (:matkapuhelin yhteystiedot)
+              [:span "Puhelinnumero: " (:matkapuhelin yhteystiedot)])]
+           [:span "Ei yhteystietoja"])
+         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset  (:id ur)))
+           [napit/muokkaa
+            nil
+            #(swap! auki? not)
+            {:luokka "nappi-reunaton"
+             :aria-label "Muokkaa urakan yleisiä yhteystietoja"}])]
+        (let [sahkoposti (atom (or (:sahkoposti yhteystiedot) ""))
+              matkapuhelin (atom (or (:matkapuhelin yhteystiedot) ""))]
+          [:<>
+           [:span
+            [tee-otsikollinen-kentta {:otsikko "Sähköposti"
+                                      :luokka "label-ja-kentta-yleiset-yhteystiedot"
+                                      :kentta-params {:tyyppi :string
+                                                      :vayla-tyyli? true}
+                                      :arvo-atom sahkoposti}]
+            [tee-otsikollinen-kentta {:otsikko "Puhelinnumero"
+                                      :luokka "label-ja-kentta-yleiset-yhteystiedot"
+                                      :kentta-params {:tyyppi :string
+                                                      :vayla-tyyli? true}
+                                      :arvo-atom matkapuhelin}]]
+           [napit/palvelinkutsu-nappi "Tallenna"
+            #(tiedot/tallenna-urakan-yleiset-yhteystiedot ur @sahkoposti @matkapuhelin)
+            {:kun-onnistuu (fn [vastaus]
+                             (viesti/nayta! "Urakan yleiset yhteystiedot tallennettu" :success)
+                             (reset! auki? false))
+             :virheviesti "Yleisten yhteystietojen tallennus epäonnistui."
+             :nayta-virheviesti? true}]
+           [napit/yleinen-toissijainen "Peruuta" #(reset! auki? false)
+            {:luokka "nappi-toissijainen"}]])))))
+
+(defn yleiset-tiedot [paivita-vastuuhenkilot! ur kayttajat vastuuhenkilot yhteystiedot]
   (let [{:keys [paallystysurakka? paallystysurakka-sidottu?]
          :as yha-tiedot} (yha-tiedot ur)]
     [bs/panel {}
@@ -519,7 +562,8 @@
 
       "Urakoitsija:" (:nimi (:urakoitsija ur))
       "Urakan vastuuhenkilö: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
-                                (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "vastuuhenkilo"]
+                                (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "vastuuhenkilo"]      
+      "Urakan yhteystiedot: " [urakan-yleiset-yhteystiedot ur yhteystiedot]
 
       ;; valaistus, tiemerkintä --> palvelusopimus
       ;; päällystys --> kokonaisurakka
@@ -688,11 +732,14 @@
 (defn yleiset [ur]
   (let [kayttajat (atom nil)
         vastuuhenkilot (atom nil)
+        yhteystiedot (atom nil)
         hae! (fn [urakan-tiedot]
                (reset! kayttajat nil)
                (reset! vastuuhenkilot nil)
+               (reset! yhteystiedot nil)
                (go (reset! kayttajat (<! (tiedot/hae-urakan-kayttajat (:id urakan-tiedot)))))
                (go (reset! vastuuhenkilot (<! (tiedot/hae-urakan-vastuuhenkilot (:id urakan-tiedot)))))
+               (go (reset! yhteystiedot (<! (tiedot/hae-urakan-yleiset-yhteystiedot (:id urakan-tiedot)))))
                (when (= :paallystys (:tyyppi ur))
                  (reset! urakka/paallystysurakan-indeksitiedot nil)
                  (go (reset! urakka/paallystysurakan-indeksitiedot
@@ -704,7 +751,7 @@
                      (nayta-yha-tuontidialogi-tarvittaessa ur)))
       (fn [ur]
         [:div
-         [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
+         [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot @yhteystiedot]
          (when (= :paallystys (:tyyppi ur))
            [paallystys-indeksit/paallystysurakan-indeksit ur])
          [urakkaan-liitetyt-kayttajat @kayttajat]
