@@ -292,7 +292,7 @@
                               :poista-liite-fn poista-liite}]
                             [liitetiedosto liite {:salli-poisto? salli-poistaa-lisatty-liite?
                                                   :poista-liite-fn poista-liite}]))
-            inputin-id "tiedoston-lataus-input"]
+            inputin-id (str "tiedoston-lataus-input-" (gensym))]
         [:span
          ;; Näytä vastikään ladattu liite / liitteet
          (when (and nayta-lisatyt-liitteet? @tiedosto)
@@ -445,7 +445,7 @@
   nappi-luokka              Voidaan tällä hetkellä tehdä napiton-nappi"
   [params-map opts]
   (fn [params-map {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
-    (let [inputin-id "tiedoston-lataus-input"]
+    (let [inputin-id (str "tiedoston-lataus-input-" (gensym))]
       [:span
        [:span.liitekomponentti
         [:button {:class (str "file-upload nappi-toissijainen "
