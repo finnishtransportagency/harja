@@ -44,7 +44,7 @@
         (assoc :valittu-hoitokausi uusi-hoitokausi))))
 
 (defn hae-urakan-muutostiedot
-  "Vuonna 2021 alkaville urakoille haetaan muutostiedot. Sitä vanhemmille ei haeta."
+  "Hakee urakan muutostiedot, eli miten tavoitehinta ja tehtävä- ja määräluettelo ovat muuttuneet alkuperäisiin tietoihin nähden."
   ([app] (hae-urakan-muutostiedot app (:urakka @tila/yleiset)))
   ([app urakka]
    (tuck-apurit/post! :hae-urakan-muutostiedot
