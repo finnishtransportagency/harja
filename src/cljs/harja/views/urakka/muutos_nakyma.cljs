@@ -33,11 +33,11 @@
     #(e! (muutos-tiedot/->MuokkaaMuutosta nil))]])
 
 (defn- kehystetty-avattava-grid
-  "Piirtää yhtenäisesti Muutoksien taulukot collapsoitaviksi"
+  "Piirtää yhtenäisesti Muutoksien taulukot collapsoitaviksi."
+  ;; summan saa piiloon antamalla sille arvon :ei-summaa
   [e! app {:keys [taulukon-avain taulukon-nakyvyys-event
                   otsikko summa toiminnot taulukko] :as tiedot}]
-  (let [taulukon-avain taulukon-avain
-        sisalto-nakyvissa? (get-in app [:taulukko-nakyvissa? taulukon-avain])]
+  (let [sisalto-nakyvissa? (get-in app [:taulukko-nakyvissa? taulukon-avain])]
     [:div.collapsoitava-osio
      [:div.otsikkorivi.klikattava {:on-click taulukon-nakyvyys-event}
       [:span
@@ -45,10 +45,63 @@
                                          :down
                                          :right)]
        [:h2 otsikko]]
-      [:div.summa (fmt/euro-opt summa)]]
+      (when-not (= summa :ei-summaa) [:div.summa (fmt/euro-opt summa)])]
      (when sisalto-nakyvissa?
        [:div.toiminnot [toiminnot e! app]
         [:div.taulukko [taulukko e! app]]])]))
+
+(defn- tavoitehinnan-muutokset [e! {:keys [tavoitehinnan-muutokset] :as app}]
+  [kehystetty-avattava-grid e! app
+   {:taulukon-avain :tavoitehinnan-muutokset
+    :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :tavoitehinnan-muutokset))
+    :otsikko "Tavoitehinnan muutokset"
+    :summa (reduce + 0 (map :tavoitehinnan-muutos tavoitehinnan-muutokset)) ;; todo
+    :toiminnot (fn [e! app]
+                 [::span
+                  [napit/uusi "Lisää muutos" #(e! (muutos-tiedot/->LisaaTavoitehintojenMuutos))]])
+    :taulukko
+    (fn [e! app]
+      [grid/grid
+       {:tunniste :id
+        :luokat ["tavoitehinnan-muutokset-grid"]
+        :tyhja "Ei tavoitehinnan muutoksia."
+        :voi-lisata? false :voi-kumota? false
+        :voi-poistaa? (constantly false) :voi-muokata? true}
+
+       ;; taulukon kentät
+       [{:otsikko "Muutos" :nimi :muutos :tyyppi :string :leveys 15}
+        {:otsikko "Perustelu" :nimi :perustelu :tyyppi :string :leveys 35}
+        {:otsikko "Vaikutus € (+/-)" :nimi :tavoitehinnan-muutos :tyyppi :numero
+         :fmt fmt/euro-opt :tasaa :oikea :leveys 15}]
+       tavoitehinnan-muutokset])}])
+
+(defn- suunniteltujen-maarien-muutokset [e! {:keys [suunniteltujen-maarien-muutokset] :as app}]
+  [kehystetty-avattava-grid e! app
+   {:taulukon-avain :suunniteltujen-maarien-muutokset
+    :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :suunniteltujen-maarien-muutokset))
+    :otsikko "Suunniteltujen määrien muutokset"
+    :summa :ei-summaa
+    :toiminnot (fn [e! app]
+                 [::span
+                  [napit/uusi "Lisää muutos" #(e! (muutos-tiedot/->LisaaSuunniteltujenMaarienMuutos))]])
+    :taulukko
+    (fn [e! app]
+      [grid/grid
+       {:tunniste :id
+        :luokat ["suunniteltujen-maarien-muutokset-grid"]
+        :tyhja "Ei suunniteltujen määrien muutoksia."
+        :voi-lisata? false :voi-kumota? false
+        :voi-poistaa? (constantly false) :voi-muokata? true}
+
+       ;; taulukon kentät
+       [{:otsikko "Muutoksen syy" :nimi :syy :tyyppi :string :leveys 15}
+        {:otsikko "Muutokset" :nimi :muutokset :tyyppi :string :leveys 35}
+        {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 15}
+        {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 10 :tasaa :oikea
+         :komponentti (fn [rivi]
+                        [napit/muokkaa "Muokkaa"
+                         #(e! (muutos-tiedot/->MuokkaaMuutosta rivi))])}]
+       suunniteltujen-maarien-muutokset])}])
 
 
 (def rahavarausten-muutokset-aputeksti
@@ -151,9 +204,17 @@
 
 (defn muutoslistaus [e! app]
   [:span.muutoslistaus
-   [kirjatut-muutokset e! app]
-   [lasketut-muutokset e! app]
-   [rahavarausten-muutokset e! app]])
+   (if (muutos-tiedot/ennen-muutoksien-kayttoonotto? (:valittu-hoitokausi app))
+     ;; Tähän 1.10.2024 tai sitä aiemmiun alkaneiden hoitokausien "legacy" muutostoiminnot
+     [:span.muutostiedot
+      [tavoitehinnan-muutokset e! app]
+      [suunniteltujen-maarien-muutokset e! app]]
+
+     ;; Tähän 1.10.2025 tai sitä myöhemmin alkavien hoitokausien uudet muutostoiminnot
+     [:span.uudet-muutostiedot
+      [kirjatut-muutokset e! app]
+      [lasketut-muutokset e! app]
+      [rahavarausten-muutokset e! app]])])
 
 (defn muutokset-alempi-valilehti*
   [e! app]

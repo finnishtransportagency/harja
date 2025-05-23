@@ -36,12 +36,16 @@
                                                                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
         kirjatut-muutokset (tavoitehinnan-muutos vastaus)]
     (log/debug "Haetut muutostiedot: " kirjatut-muutokset)
-    kirjatut-muutokset
+    ;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
     {:kirjatut-muutokset kirjatut-muutokset
-     ;; TODO: laskennat lasketuille muutoksille
+     ;; TODO: laskennat lasketuille muutoksille jos hoitokausi 2025-2026 tai jälkeen
      :lasketut-muutokset []
-     ;; TODO: laskennat rahavarausten muutoksille
-     :rahavarausten-muutokset []}))
+     ;; TODO: laskennat rahavarausten muutoksille jos hoitokausi 2025-2026 tai jälkeen
+     :rahavarausten-muutokset []
+     ;; TODO: laskennat vanhojen tavoitehintojen muutoksille jos hoitokausi ennen 2025-2026
+     :tavoitehinnan-muutokset []
+     ;; TODO: laskennat vanhojen suunniteltujen määrien muutoksille jos hoitokausi ennen 2025-2026
+     :suunniteltujen-maarien-muutokset []}))
 
 (defrecord Muutos [asetukset]
   component/Lifecycle

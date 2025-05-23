@@ -404,9 +404,13 @@
 (def muutokset-default {:kirjatut-muutokset nil
                         :lasketut-muutokset nil
                         :rahavarausten-muutokset nil
+                        :tavoitehinnan-muutokset nil
+                        :suunniteltujen-maarien-muutokset nil
                         :taulukko-nakyvissa? {:kirjatut-muutokset true
                                               :lasketut-muutokset true
-                                              :rahavarausten-muutokset true}})
+                                              :rahavarausten-muutokset true
+                                              :tavoitehinnan-muutokset true
+                                              :suunniteltujen-maarien-muutokset true}})
 (def laatupoikkeamat-default {:listaus-tyyppi :kaikki
                               :tallennus-kaynnissa? false
                               :hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))

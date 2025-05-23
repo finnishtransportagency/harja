@@ -17,14 +17,17 @@
 (defrecord HaeUrakanMuutostiedotOnnnistui [vastaus])
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
 
+;; Vaihda hoitokausi
+(defrecord HoitokausiVaihdettu [urakka hoitokausi])
 (defrecord MuokkaaMuutosta [rivi])
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
 (defrecord MuokkaaLaskettujenMuutoksienSyita [])
 (defrecord MuokkaaRahavaraustenMuutoksienSyita [])
-;; Vaihda hoitokausi
-(defrecord HoitokausiVaihdettu [urakka hoitokausi])
 
 
+;; aika ennen 2025-2026 hoitovuotta
+(defrecord LisaaTavoitehintojenMuutos [])
+(defrecord LisaaSuunniteltujenMaarienMuutos [])
 ;; Päänäkymä ja listaus
 (defrecord ValitseUrakka [urakka])
 (defrecord NakymastaPoistuttiin [])
@@ -50,6 +53,11 @@
      {:onnistui ->HaeUrakanMuutostiedotOnnnistui
       :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui})))
 
+(def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
+
+(defn ennen-muutoksien-kayttoonotto? [valittu-hoitokausi]
+  (< (pvm/vuosi (first valittu-hoitokausi))
+    muutoksien-kayttoonoton-hoitokauden-alkuvuosi))
 
 (extend-protocol tuck/Event
   HoitokausiVaihdettu
@@ -75,7 +83,9 @@
     (assoc app
       :kirjatut-muutokset (:kirjatut-muutokset vastaus)
       :lasketut-muutokset (:lasketut-muutokset vastaus)
-      :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)))
+      :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
+      :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus)
+      :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)))
 
   HaeUrakanMuutostiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -99,6 +109,14 @@
   MuokkaaRahavaraustenMuutoksienSyita
   (process-event [_ app]
     ;; TODO: aloita rahavarausten muutosten syiden muokkaus taulukossa, ei avata lomaketta
+    app)
+
+
+  LisaaTavoitehintojenMuutos
+  (process-event [_ app]
+    app)
+  LisaaSuunniteltujenMaarienMuutos
+  (process-event [_ app]
     app)
 
   ValitseUrakka
