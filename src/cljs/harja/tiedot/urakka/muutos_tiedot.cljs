@@ -19,6 +19,8 @@
 
 (defrecord MuokkaaMuutosta [rivi])
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
+(defrecord MuokkaaLaskettujenMuutoksienSyita [])
+(defrecord MuokkaaRahavaraustenMuutoksienSyita [])
 ;; Vaihda hoitokausi
 (defrecord HoitokausiVaihdettu [urakka hoitokausi])
 
@@ -70,9 +72,11 @@
 
   HaeUrakanMuutostiedotOnnnistui
   (process-event [{vastaus :vastaus} app]
-    (prn "Jarno HaeUrakanMuutostiedotOnnnistui vastaus: " vastaus)
-    (assoc app :muutokset vastaus))
-  
+    (assoc app
+      :kirjatut-muutokset (:kirjatut-muutokset vastaus)
+      :lasketut-muutokset (:lasketut-muutokset vastaus)
+      :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)))
+
   HaeUrakanMuutostiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Muutostietojen hakeminen epäonnistui!" :varoitus)
@@ -86,6 +90,16 @@
   (process-event [{taulukon-avain :taulukon-avain} app]
     (assoc-in app [:taulukko-nakyvissa? taulukon-avain]
       (not (get-in app [:taulukko-nakyvissa? taulukon-avain]))))
+
+  MuokkaaLaskettujenMuutoksienSyita
+  (process-event [_ app]
+    ;; TODO: aloita laskettujen muutosten syiden muokkaus taulukossa, ei avata lomaketta
+    app)
+
+  MuokkaaRahavaraustenMuutoksienSyita
+  (process-event [_ app]
+    ;; TODO: aloita rahavarausten muutosten syiden muokkaus taulukossa, ei avata lomaketta
+    app)
 
   ValitseUrakka
   (process-event [{urakka :urakka} app]

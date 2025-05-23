@@ -34,9 +34,14 @@
                       (update :liitteet #(konv/jsonb->clojuremap %))))
                   (muutos-kyselyt/hae-urakan-hoitovuoden-muutostiedot db {:urakka urakka-id
                                                                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
-        vastaus-summien-kanssa (tavoitehinnan-muutos vastaus)]
-    (log/debug "Haetut muutostiedot: " vastaus-summien-kanssa)
-    vastaus-summien-kanssa))
+        kirjatut-muutokset (tavoitehinnan-muutos vastaus)]
+    (log/debug "Haetut muutostiedot: " kirjatut-muutokset)
+    kirjatut-muutokset
+    {:kirjatut-muutokset kirjatut-muutokset
+     ;; TODO: laskennat lasketuille muutoksille
+     :lasketut-muutokset []
+     ;; TODO: laskennat rahavarausten muutoksille
+     :rahavarausten-muutokset []}))
 
 (defrecord Muutos [asetukset]
   component/Lifecycle

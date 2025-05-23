@@ -35,8 +35,9 @@
 (defn- kehystetty-avattava-grid
   "Piirtää yhtenäisesti Muutoksien taulukot collapsoitaviksi"
   [e! app {:keys [taulukon-avain taulukon-nakyvyys-event
-                  otsikko summa toiminnot taulukko]}]
-  (let [sisalto-nakyvissa? (get-in app [:taulukko-nakyvissa? taulukon-avain] app)]
+                  otsikko summa toiminnot taulukko] :as tiedot}]
+  (let [taulukon-avain taulukon-avain
+        sisalto-nakyvissa? (get-in app [:taulukko-nakyvissa? taulukon-avain])]
     [:div.collapsoitava-osio
      [:div.otsikkorivi.klikattava {:on-click taulukon-nakyvyys-event}
       [:span
@@ -49,12 +50,81 @@
        [:div.toiminnot [toiminnot e! app]
         [:div.taulukko [taulukko e! app]]])]))
 
-(defn- kirjatut-muutokset [e! {:keys [muutokset] :as app}]
+
+(def rahavarausten-muutokset-aputeksti
+  "Harja laskee rahavarausten tavoitehintamuutokset automaattisesti kustannussuunnitelman ja kulukirjausten perusteella.")
+
+(defn- rahavarausten-muutokset [e! {:keys [rahavarausten-muutokset] :as app}]
+  [kehystetty-avattava-grid e! app
+   {:taulukon-avain :rahavarausten-muutokset
+    :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :rahavarausten-muutokset))
+    :otsikko "Rahavarausten muutokset"
+    :summa (reduce + 0 (map :rahavarausten-muutokset rahavarausten-muutokset)) ;; todo
+    :toiminnot (fn [e! app]
+                 [::span
+                  [:p rahavarausten-muutokset-aputeksti]
+                  ;; Tämä muokkaus mahdollistaa vain syyn lisäämisen
+                  [napit/uusi "Muokkaa" #(e! (muutos-tiedot/->MuokkaaRahavaraustenMuutoksienSyita))]])
+    :taulukko
+    (fn [e! app]
+      [grid/grid
+       {:tunniste :id
+        :luokat ["rahavarausten-muutokset-grid"]
+        :tyhja "Ei rahavarausten muutoksia."
+        :voi-lisata? false :voi-kumota? false
+        :voi-poistaa? (constantly false) :voi-muokata? true}
+
+       ;; taulukon kentät
+       [{:otsikko "Rahavaraus" :nimi :rahavaraus :tyyppi :string :leveys 15}
+        {:otsikko "Muutoksen syy" :nimi :syy :tyyppi :string :leveys 35}
+        {:otsikko "Suunniteltu määrä" :nimi :suunniteltu-maara :tyyppi :numero :leveys 15}
+        {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :tyyppi :numero :leveys 15}
+        {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero
+         :fmt fmt/euro-opt :tasaa :oikea :leveys 15}]
+       rahavarausten-muutokset])}])
+
+(def lasketut-muutokset-aputeksti
+  "Tavoitehintamuutosten laskennassa käytetään Harjan suunniteltuja ja toteutuneita määriä sekä palvelusopimuksen mukaisia kaavoja.")
+
+(defn- lasketut-muutokset [e! {:keys [lasketut-muutokset] :as app}]
+  [kehystetty-avattava-grid e! app
+   {:taulukon-avain :lasketut-muutokset
+    :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :lasketut-muutokset))
+    :otsikko "Tehtävä- ja määräluetteloon perustuvat tavoitehintamuutokset"
+    :summa (reduce + 0 (map :tavoitehinnan-muutos lasketut-muutokset)) ;; todo
+    :toiminnot (fn [e! app]
+                 ;; Tämä muokkaus mahdollistaa vain syyn lisäämisen
+                 [:span
+                  [:p lasketut-muutokset-aputeksti]
+                  [napit/uusi "Muokkaa" #(e! (muutos-tiedot/->MuokkaaLaskettujenMuutoksienSyita))]])
+    :taulukko
+    (fn [e! app]
+      [grid/grid
+       {:tunniste :id
+        :luokat ["lasketut-muutokset-grid"]
+        :tyhja "Ei laskettuja muutoksia."
+        :voi-lisata? false :voi-kumota? false
+        :voi-poistaa? (constantly false) :voi-muokata? true}
+
+       ;; taulukon kentät
+       [{:otsikko "Tehtävä" :nimi :tehtava :tyyppi :string :leveys 15}
+        {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys 15}
+        {:otsikko "Muutoksen syy / lisätieto" :nimi :syy :tyyppi :string :leveys 35}
+        {:otsikko "Suunniteltu määrä" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
+        {:otsikko "Kirjattu määrä" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
+        {:otsikko "Määrämuutos (+/-)" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
+        {:otsikko "Kirjatut kulut (€)" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
+        {:otsikko "Kirjatut kulut (€)" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
+        {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero
+         :fmt fmt/euro-opt :tasaa :oikea :leveys 15}]
+       lasketut-muutokset])}])
+
+(defn- kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :kirjatut-muutokset
     :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :kirjatut-muutokset))
     :otsikko "Kirjatut muutokset"
-    :summa (reduce + 0 (map :tavoitehinnan-muutos muutokset))
+    :summa (reduce + 0 (map :tavoitehinnan-muutos kirjatut-muutokset))
     :toiminnot (fn [e! app]
                  [napit/uusi "Lisää uusi" #(e! (muutos-tiedot/->MuokkaaMuutosta {}))])
     :taulukko
@@ -71,18 +141,19 @@
          :fmt muutos-domain/tyyppi-fmt}
         {:otsikko "Muutoksen syy" :nimi :syy :tyyppi :string :leveys 35}
         {:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :pvm :leveys 15}
-        {:otsikko "Tavoitehinnan muutos" :nimi :tavoitehinnan-muutos :tyyppi :numero
+        {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero
          :fmt fmt/euro-opt :tasaa :oikea :leveys 15}
         {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 10 :tasaa :oikea
          :komponentti (fn [rivi]
                         [napit/muokkaa "Muokkaa"
                          #(e! (muutos-tiedot/->MuokkaaMuutosta rivi))])}]
-       muutokset])}])
+       kirjatut-muutokset])}])
 
 (defn muutoslistaus [e! app]
   [:span.muutoslistaus
-   ;; Kirjatut muutokset
-   [kirjatut-muutokset e! app]])
+   [kirjatut-muutokset e! app]
+   [lasketut-muutokset e! app]
+   [rahavarausten-muutokset e! app]])
 
 (defn muutokset-alempi-valilehti*
   [e! app]

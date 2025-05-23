@@ -401,7 +401,10 @@
 
 (def laskutus-default {:kohdistetut-kulut kulut-default})
 (def lupaukset-default {})
-(def muutokset-default {:taulukko-nakyvissa? {:kirjatut-muutokset true
+(def muutokset-default {:kirjatut-muutokset nil
+                        :lasketut-muutokset nil
+                        :rahavarausten-muutokset nil
+                        :taulukko-nakyvissa? {:kirjatut-muutokset true
                                               :lasketut-muutokset true
                                               :rahavarausten-muutokset true}})
 (def laatupoikkeamat-default {:listaus-tyyppi :kaikki
