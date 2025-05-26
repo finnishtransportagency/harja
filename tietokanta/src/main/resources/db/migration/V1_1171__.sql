@@ -19,7 +19,7 @@ CREATE TABLE tarjous_kustannukset (
     urakka_id INTEGER NOT NULL REFERENCES urakka(id),
     hoitokauden_alkuvuosi INTEGER NOT NULL,
     summa NUMERIC(10, 2) NOT NULL,
-    osio suunnittelu_osio NOT NULL,
+    osio SUUNNITTELU_OSIO NOT NULL,
     tehtava_id INTEGER REFERENCES tehtava(id), -- tehtava.id
     tehtavaryhma_id INTEGER REFERENCES tehtavaryhma(id), -- tehtavaryhma.id
     rahavaraus_id INTEGER REFERENCES rahavaraus(id), -- rahavaraus.id
@@ -35,11 +35,11 @@ CREATE TABLE tarjous_johto_ja_hallintokorvaus (
     urakka_id INTEGER NOT NULL REFERENCES urakka(id),
     hoitokauden_alkuvuosi INTEGER NOT NULL,
     summa NUMERIC(10, 2) NOT NULL,
-    osio suunnittelu_osio NOT NULL,
-    johto_ja_hallintokorvaus_toimenkuva_id INTEGER REFERENCES johto_ja_hallintokorvaus_toimenkuva(id),
+    osio SUUNNITTELU_OSIO NOT NULL,
+    johto_ja_hallintokorvaus_toimenkuva_id INTEGER NOT NULL REFERENCES johto_ja_hallintokorvaus_toimenkuva(id),
     tehtava_id INTEGER REFERENCES tehtava(id),
     tehtavaryhma_id INTEGER REFERENCES tehtavaryhma(id),
-    luoja INTEGER REFERENCES kayttaja (id),
+    luoja INTEGER NOT NULL REFERENCES kayttaja (id),
     luotu TIMESTAMP NOT NULL DEFAULT NOW(),
     muokattu TIMESTAMP,
     muokkaaja INTEGER REFERENCES kayttaja (id)

@@ -4,7 +4,7 @@
 (defqueries "harja/kyselyt/tarjous_kyselyt.sql"
   {:positional? true})
 
-(declare tallenna-tarjous<! tallenna-tarjouskustannus<! tallenna-tarjousjohto-ja-hallintkorvaus<!)
+(declare tallenna-tarjous<! tallenna-tarjouskustannus<! tallenna-tarjouksen-johto-ja-hallintokorvaus<!)
 
 (defn vuodet-tietomallista [malli]
   (reduce (fn [rivit vuosi-rivi]
@@ -90,7 +90,7 @@
                                               (fn [r] (tallenna-tarjouskustannus<! db (assoc r :tarjous_id (:id tietokantatarjous))))
                                               vuosittaiset-kustannukset)
                                toimenkuvat (mapv
-                                              (fn [t] (tallenna-tarjousjohto-ja-hallintkorvaus<! db (assoc t :tarjous_id (:id tietokantatarjous))))
+                                              (fn [t] (tallenna-tarjouksen-johto-ja-hallintokorvaus<! db (assoc t :tarjous_id (:id tietokantatarjous))))
                                              vuosittaiset-toimenkuvat)]
                            {:tarjousid (:id tietokantatarjous)}))
                        vuosittaiset-tarjoushinnat)]
