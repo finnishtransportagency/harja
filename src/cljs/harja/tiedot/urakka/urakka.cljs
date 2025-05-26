@@ -416,7 +416,7 @@
                                :talvihoitoreitit nil})
 
 (def tarjous-kustannussuunnitelma-default {:haku-kaynnissa? false?
-                               :tarjous nil
+                                           :tarjous nil
                                            :kustannussuunnitelma {:hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))}})
 
 (defonce tila (atom {:yleiset     {:urakka {}}
