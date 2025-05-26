@@ -47,8 +47,11 @@
        [:h2 otsikko]]
       (when-not (= summa :ei-summaa) [:div.summa (fmt/euro-opt summa)])]
      (when sisalto-nakyvissa?
-       [:div.toiminnot [toiminnot e! app]
-        [:div.taulukko [taulukko e! app]]])]))
+       [:span
+        [:div.toiminnot
+         [toiminnot e! app]]
+        [:div.taulukko
+         [taulukko e! app]]])]))
 
 (defn- tavoitehinnan-muutokset [e! {:keys [tavoitehinnan-muutokset] :as app}]
   [kehystetty-avattava-grid e! app

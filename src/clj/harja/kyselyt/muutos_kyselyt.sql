@@ -28,14 +28,15 @@ SELECT m.id,
            ELSE json_agg(DISTINCT jsonb_build_object(
                'muutos', lii.muutos,
                'liite', lii.liite)) END  AS liitteet
-  FROM mhu_muutos m
-           LEFT JOIN mhu_muutos_kustannusvaikutus kust ON (m.id = kust.muutos AND
+-- ONLY tarvitaan, jottei kysellä historiatauluista
+  FROM ONLY mhu_muutos m
+           LEFT JOIN ONLY mhu_muutos_kustannusvaikutus kust ON (m.id = kust.muutos AND
                                                            m.versio = kust.versio AND
                                                            kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi)
-           LEFT JOIN mhu_muutos_tehtava_ja_maaraluettelo tjm ON (m.id = tjm.muutos AND
+           LEFT JOIN ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm ON (m.id = tjm.muutos AND
                                                                  m.versio = tjm.versio AND
                                                                  tjm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi)
-           LEFT JOIN mhu_muutos_liite lii ON (m.id = lii.muutos AND m.versio = lii.versio)
+           LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos AND m.versio = lii.versio)
  WHERE m.urakka = :urakka AND
        -- hox: on myös sellaisia muutoksia, jotka ovat voimassa vain meneillään olevan hoitokauden
        -- niiden käsittely puuttuu vielä tästä kyselystä

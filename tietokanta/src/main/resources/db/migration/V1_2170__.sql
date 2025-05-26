@@ -15,6 +15,8 @@ CREATE TYPE MHU_MUUTOSTYYPPI AS ENUM (
 CREATE TABLE mhu_muutos (
     id SERIAL PRIMARY KEY,
     versio INTEGER DEFAULT 1,  -- jokainen tallennus tallentaa täyden version muutoksesta, ml. alitaulut joissa on tietoa
+    -- tähän tieto, millä aika välillä ko. rivi oli validi, olennaista varsinkin kun siirtyy historiaan
+    validi_aikana TSTZRANGE DEFAULT TSTZRANGE(CURRENT_TIMESTAMP, NULL),
     urakka INTEGER REFERENCES urakka(id) NOT NULL,
     voimassa_alkaen DATE,
     tyyppi MHU_MUUTOSTYYPPI,
@@ -79,6 +81,8 @@ CREATE FUNCTION paivita_mhu_muutos_historia()
 BEGIN
     INSERT INTO mhu_muutos_historia
     VALUES (OLD.*);
+    NEW.validi_aikana := TSTZRANGE(LOWER(OLD.validi_aikana), CURRENT_TIMESTAMP);
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
