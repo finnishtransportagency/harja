@@ -35,8 +35,7 @@
          [:div.row
           ;; Jos haku käynnissä, näytä hyrrä
           (if haku-kaynnissa?
-            [:div.ajax-loader-valistys
-             [ajax-loader-pieni (str "Haetaan tietoja...")]]
+            [ajax-loader-pieni "Haetaan tietoja..."]
 
             [grid/grid
              {:tyhja "Ei tieosoitteita."

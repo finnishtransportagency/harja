@@ -56,6 +56,18 @@ FROM urakka_tavoite ut
 WHERE urakka = :urakka
 ORDER BY ut.hoitokausi;
 
+-- name: hae-valikatselmus-siirrot-ed-vuodelta
+-- single?: true
+SELECT COALESCE(SUM(up.siirto), 0)
+  FROM urakka_paatos up
+           JOIN urakka u ON up."urakka-id" = u.id
+ WHERE up."urakka-id" = :urakka
+   AND up."hoitokauden-alkuvuosi" = (EXTRACT(YEAR FROM :alkupvm::DATE) - 1)
+   -- Ainoastaan kattohinnan ylityksestä tai tavoitehinnan alituksesta voi tulla siirtoja
+   AND up.tyyppi in ('kattohinnan-ylitys', 'tavoitehinnan-alitus')
+   AND up.siirto != 0
+   AND up.poistettu = FALSE;
+
 -- name:hae-johto-ja-hallintokorvaukset
 SELECT jh.tunnit,
        jh.tuntipalkka,

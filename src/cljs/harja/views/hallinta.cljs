@@ -20,6 +20,7 @@
             [harja.views.hallinta.tyokalut.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
             [harja.views.hallinta.tyokalut.talvihoitoreitit-tyokalu-nakyma :as talvihoitoreitit-tyokalu-nakyma]
             [harja.views.hallinta.tyokalut.tieosoitteet-nakyma :as tieosoitteet-nakyma]
+            [harja.views.hallinta.tyokalut.ajastukset-nakyma :as ajastukset-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
@@ -217,6 +218,13 @@
             (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
       ^{:key "tieosoitteet"}
       [tieosoitteet-nakyma/tieosoitteet])
+
+    "Ajastukset"
+    :ajastukset
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "ajastukset"}
+      [ajastukset-nakyma/nayta-ajastukset])
 
     "Viestitestaus"
     :viestitestaus

@@ -20,9 +20,11 @@
   (assert (and url vuosi) "Annettava url ja vuosi kun haetaan ilmatieteenlaitokselta lämpötiloja.")
   ;; Ilmatieteenlaitos käyttää :urakka-id -kentässään Harjan :alueurakkanro -kenttää, siksi muunnoksia alla
   (let [hae-urakoiden-lampotilat (fn [url apiavain keskiarvo-alkuvuosi]
-                                   (into {}
-                                         (map (juxt :urakka-id #(dissoc % :urakka-id)))
-                                         (ilmatieteenlaitos/hae-talvikausi db integraatioloki url apiavain vuosi keskiarvo-alkuvuosi)))
+                                   (let [lampotilat (ilmatieteenlaitos/hae-talvikausi db integraatioloki url apiavain vuosi keskiarvo-alkuvuosi)]
+                                     (into {} (map (juxt
+                                                     #(str/replace (:urakka-id %) #"^0+" "")
+                                                     #(dissoc % :urakka-id)))
+                                       lampotilat)))
         hoidon-urakoiden-lampotilat-1971-2000 (hae-urakoiden-lampotilat
                                                 (str/replace url "tieindeksi2" "tieindeksi") apiavain nil)
         hoidon-urakoiden-lampotilat-1981-2010 (hae-urakoiden-lampotilat url apiavain 1981)

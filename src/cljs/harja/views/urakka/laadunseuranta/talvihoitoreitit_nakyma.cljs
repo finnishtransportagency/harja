@@ -156,8 +156,7 @@
    [kartta/kartan-paikka]
 
    (if (:haku-kaynnissa? app)
-     [:div.ajax-loader-valistys
-      [ajax-loader "Ladataan talvihoitoreittejä..."]]
+     [ajax-loader "Ladataan talvihoitoreittejä..."]
 
      [:div.talvihoitoreititys
       [:div.flex-row {:style {:justify-content "space-between"}}
@@ -179,7 +178,7 @@
           :url "lue-talvihoitoreitit-excelista"
           :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
           :tiedosto-ladattu #(e! (tiedot/->TiedostoLadattu %))}]
-        
+
         [yleiset/tiedoston-lataus-linkki
          "Lataa Excel-pohja"
          "/excel/harja_talvihoitoreitit_pohja.xlsx"]]]

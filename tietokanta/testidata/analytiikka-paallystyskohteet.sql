@@ -67,8 +67,8 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     tr_alkuetaisyys,
                     tr_loppuosa,
                     tr_loppuetaisyys,
-                    tierekisteriosoitteelle_viiva(tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa,
-                                                  tr_loppuetaisyys),
+                    tieosoitteelle_geometria(tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa,
+                                             tr_loppuetaisyys),
                     alikohde.id,
                     1,
                     1,
@@ -448,7 +448,7 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     0,
                     20,
                     100,
-                    tierekisteriosoitteelle_viiva(86, 20, 0, 20,
+                    tieosoitteelle_geometria(86, 20, 0, 20,
                                                   100),
                     NULL,
                     1,
@@ -476,7 +476,7 @@ INSERT
 INTO paikkaus (luotu, muokattu, "urakka-id", "paikkauskohde-id", "ulkoinen-id", alkuaika, loppuaika,
                tierekisteriosoite, tyomenetelma,
                massatyyppi, leveys, raekoko, kuulamylly, sijainti, massamaara, "pinta-ala", lahde,
-               massamenekki)
+               massamenekki,kustannus)
 SELECT '2023-11-01T12:00:00'::DATE,
        '2023-11-02T13:00:00'::TIMESTAMP,
        urakka.id,
@@ -490,11 +490,12 @@ SELECT '2023-11-01T12:00:00'::DATE,
        1.4,
        16,
        'AN14',
-       (SELECT tierekisteriosoitteelle_viiva(86, 20, 700, 20, 800)),
+       (SELECT tieosoitteelle_geometria(86, 20, 700, 20, 800)),
        6.3,
        140,
        'harja-ui',
-       45
+       45,
+       1234.56
 FROM urakka,
      paikkauskohteet
 WHERE paikkauskohteet."pot?" = FALSE;

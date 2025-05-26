@@ -91,7 +91,7 @@ SELECT pk.id                                       AS id,
        CASE
            WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
                (SELECT *
-                FROM tierekisteriosoitteelle_viiva(
+                FROM tieosoitteelle_geometria(
                         CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -136,7 +136,7 @@ WHERE pk."urakka-id" = :urakka-id
                                                CASE
                                                         WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL
                                                         THEN  (SELECT *
-                                                                 FROM tierekisteriosoitteelle_viiva(
+                                                                 FROM tieosoitteelle_geometria(
                                                             CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                                                             CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                                                             CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -188,7 +188,7 @@ SELECT pk.id                                       AS id,
                AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
                THEN
                (SELECT *
-                FROM tierekisteriosoitteelle_viiva(
+                FROM tieosoitteelle_geometria(
                         CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -218,7 +218,7 @@ WHERE st_intersects(a.alue,
                    AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
             THEN
                 (SELECT *
-                   FROM tierekisteriosoitteelle_viiva(
+                   FROM tieosoitteelle_geometria(
                      CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                      CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                      CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -273,7 +273,7 @@ SELECT pk.id                                       AS id,
                AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
             THEN
                (SELECT *
-                FROM tierekisteriosoitteelle_viiva(
+                FROM tieosoitteelle_geometria(
                         CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -304,7 +304,7 @@ WHERE st_intersects(o.alue,
                             AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
                         THEN
                             (SELECT *
-                             FROM tierekisteriosoitteelle_viiva(
+                             FROM tieosoitteelle_geometria(
                                      CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                                      CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                                      CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -404,7 +404,7 @@ SELECT pk.id                                       AS id,
        CASE
            WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
                (SELECT *
-                FROM tierekisteriosoitteelle_viiva(
+                FROM tieosoitteelle_geometria(
                         CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -555,7 +555,7 @@ SELECT pk.id,
            WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
                (SELECT ST_ASTEXT(
                            st_simplify(
-                               tierekisteriosoitteelle_viiva(
+                               tieosoitteelle_geometria(
                                    (pk.tierekisteriosoite_laajennettu).tie,
                                    (pk.tierekisteriosoite_laajennettu).aosa,
                                    (pk.tierekisteriosoite_laajennettu).aet,
@@ -570,6 +570,8 @@ WHERE luotu BETWEEN :alku AND :loppu
 -- name: hae-paikkaukset-analytiikalle
 SELECT p.id,
        p."paikkauskohde-id",
+       p."urakka-id"               AS urakka,
+       u.urakkanro                 AS urakkatunnus,
        p.poistettu,
        tm.nimi                     AS paikkaustyomenetelma,
        (p.tierekisteriosoite).tie  AS tierekisteriosoitevali_tienumero,
@@ -590,10 +592,12 @@ SELECT p.id,
        p."pinta-ala",
        p.juoksumetri,
        p.kpl,
-       p.massamenekki
+       p.massamenekki,
+       p.kustannus
 FROM paikkaus p
          LEFT JOIN paikkauksen_tienkohta ptk ON p.id = ptk."paikkaus-id"
          LEFT JOIN paikkauskohde_tyomenetelma tm ON p.tyomenetelma = tm.id
+         JOIN urakka u ON p."urakka-id" = u.id
 WHERE p.luotu BETWEEN :alku AND :loppu
    OR p.muokattu BETWEEN :alku AND :loppu;
 

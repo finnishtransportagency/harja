@@ -1,6 +1,6 @@
 (ns harja.domain.paallystysilmoitus
   "Ylläpidon päällystysurakoissa käytettävän POT-lomakkeen skeemat."
-  (:require [schema.core :as schema]
+  (:require [schema.core :as schema :include-macros true]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [specql.impl.registry]
             [specql.data-types]
