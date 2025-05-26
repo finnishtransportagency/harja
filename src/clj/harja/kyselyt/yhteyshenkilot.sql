@@ -19,8 +19,8 @@ FROM yhteyshenkilo y
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
 WHERE yu.urakka = :urakka AND yu.rooli != 'Urakan yhteystiedot';
 
--- name: hae-urakan-yhteystiedot
--- Hakee urakan yleiset yhteystiedot
+-- name: hae-urakan-yleinen-puh-ja-sposti
+-- Hakee urakan yleinen puhelinnumero ja sähköposti
 SELECT
   y.id,
   y.etunimi,

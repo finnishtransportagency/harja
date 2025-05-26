@@ -483,7 +483,7 @@
                                                   (reset! aikavali-loppu nil))
           {:luokka "nappi-toissijainen"}]]])))))
 
-(defn- urakan-yleiset-yhteystiedot [ur yhteystiedot]
+(defn- urakan-yleinen-puh-ja-sposti [ur yhteystiedot]
   (let [auki? (atom false)]
     (fn [ur yhteystiedot]
       (if (not @auki?)
@@ -517,7 +517,7 @@
                                                       :vayla-tyyli? true}
                                       :arvo-atom matkapuhelin}]]
            [napit/palvelinkutsu-nappi "Tallenna"
-            #(go (let [vastaus (<! (tiedot/tallenna-urakan-yleiset-yhteystiedot 
+            #(go (let [vastaus (<! (tiedot/tallenna-urakan-yleinen-puh-ja-sposti 
                                      ur 
                                      @matkapuhelin 
                                      @sahkoposti 
@@ -572,7 +572,7 @@
       "Urakoitsija:" (:nimi (:urakoitsija ur))
       "Urakan vastuuhenkilö: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
                                 (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "vastuuhenkilo"]      
-      "Urakan yhteystiedot: " [urakan-yleiset-yhteystiedot ur yhteystiedot]
+      "Urakan yhteystiedot: " [urakan-yleinen-puh-ja-sposti ur yhteystiedot]
 
       ;; valaistus, tiemerkintä --> palvelusopimus
       ;; päällystys --> kokonaisurakka
@@ -748,7 +748,7 @@
                (reset! yhteystiedot nil)
                (go (reset! kayttajat (<! (tiedot/hae-urakan-kayttajat (:id urakan-tiedot)))))
                (go (reset! vastuuhenkilot (<! (tiedot/hae-urakan-vastuuhenkilot (:id urakan-tiedot)))))
-               (go (reset! yhteystiedot (<! (tiedot/hae-urakan-yleiset-yhteystiedot (:id urakan-tiedot)))))
+               (go (reset! yhteystiedot (<! (tiedot/hae-urakan-yleinen-puh-ja-sposti (:id urakan-tiedot)))))
                (when (= :paallystys (:tyyppi ur))
                  (reset! urakka/paallystysurakan-indeksitiedot nil)
                  (go (reset! urakka/paallystysurakan-indeksitiedot

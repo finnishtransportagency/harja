@@ -245,15 +245,15 @@
           (luo<! c varahenkilo false))))
     (hae-urakan-vastuuhenkilot db user urakka-id)))
 
-(defn hae-urakan-yhteystiedot [db user urakka-id]
+(defn hae-urakan-yleinen-puh-ja-sposti [db user urakka-id]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
-  (first (q/hae-urakan-yhteystiedot db urakka-id)))
+  (first (q/hae-urakan-yleinen-puh-ja-sposti db urakka-id)))
 
-(defn tallenna-urakan-yhteystiedot [db user {:keys [urakka-id matkapuhelin sahkoposti organisaatio-id] :as tiedot}]
+(defn tallenna-urakan-yleinen-puh-ja-sposti [db user {:keys [urakka-id matkapuhelin sahkoposti organisaatio-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [c db]
     ;; Hae urankan organisaatio
-    (let [nykyinen-yhteystieto (first (q/hae-urakan-yhteystiedot c urakka-id))]
+    (let [nykyinen-yhteystieto (first (q/hae-urakan-yleinen-puh-ja-sposti c urakka-id))]
       (if nykyinen-yhteystieto
         ;; Päivitä olemassa olevaa
         (do
@@ -317,13 +317,13 @@
       (fn [user tiedot]
         (tallenna-urakan-vastuuhenkilot-roolille (:db this) user tiedot))
       
-      :hae-urakan-yhteystiedot
+      :hae-urakan-yleinen-puh-ja-sposti
       (fn [user urakka-id]
-        (hae-urakan-yhteystiedot (:db this) user urakka-id))
+        (hae-urakan-yleinen-puh-ja-sposti (:db this) user urakka-id))
       
-      :tallenna-urakan-yhteystiedot
+      :tallenna-urakan-yleinen-puh-ja-sposti
       (fn [user tiedot]
-        (tallenna-urakan-yhteystiedot (:db this) user tiedot)))
+        (tallenna-urakan-yleinen-puh-ja-sposti (:db this) user tiedot)))
 
     this)
 
@@ -337,7 +337,7 @@
                      :hae-urakoiden-kayttajat-rooleissa
                      :hae-urakan-vastuuhenkilot
                      :tallenna-urakan-vastuuhenkilot-roolille 
-                     :hae-urakan-yhteystiedot
-                     :tallenna-urakan-yhteystiedot)
+                     :hae-urakan-yleinen-puh-ja-sposti
+                     :tallenna-urakan-yleinen-puh-ja-sposti)
     this))
 

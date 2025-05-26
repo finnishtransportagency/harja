@@ -78,11 +78,11 @@
 (defn hae-urakan-yhteyshenkilot [urakka-id]
   (k/post! :hae-urakan-yhteyshenkilot urakka-id))
 
-(defn hae-urakan-yleiset-yhteystiedot [urakka-id]
-  (k/post! :hae-urakan-yhteystiedot urakka-id))
+(defn hae-urakan-yleinen-puh-ja-sposti [urakka-id]
+  (k/post! :hae-urakan-yleinen-puh-ja-sposti urakka-id))
 
-(defn tallenna-urakan-yleiset-yhteystiedot [ur matkapuhelin sahkoposti organisaatio-id]
-  (k/post! :tallenna-urakan-yhteystiedot
+(defn tallenna-urakan-yleinen-puh-ja-sposti [ur matkapuhelin sahkoposti organisaatio-id]
+  (k/post! :tallenna-urakan-yleinen-puh-ja-sposti
     {:urakka-id (:id ur)
      :matkapuhelin matkapuhelin
      :sahkoposti sahkoposti
