@@ -249,20 +249,17 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (first (q/hae-urakan-yhteystiedot db urakka-id)))
 
-(defn tallenna-urakan-yhteystiedot [db user {:keys [urakka-id matkapuhelin sahkoposti] :as tiedot}]
+(defn tallenna-urakan-yhteystiedot [db user {:keys [urakka-id matkapuhelin sahkoposti organisaatio-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [c db]
     ;; Hae urankan organisaatio
-    (let [urakka (first (uq/hae-urakka c urakka-id))
-          organisaatio-id (get-in urakka [:urakoitsija :id])
-          ;; Tarkista onko urakalla jo "Urakan yhteystiedot" rooli
-          nykyinen-yhteystieto (first (q/hae-urakan-yhteystiedot c urakka-id))]
+    (let [nykyinen-yhteystieto (first (q/hae-urakan-yhteystiedot c urakka-id))]
       (if nykyinen-yhteystieto
         ;; Päivitä olemassa olevaa
         (do
           (q/paivita-yhteyshenkilo c
             "Urakka" ""
-            nil matkapuhelin
+            "" matkapuhelin
             sahkoposti
             organisaatio-id
             (:id nykyinen-yhteystieto))
@@ -270,7 +267,7 @@
         ;; Luo uusi
         (let [id (:id (q/luo-yhteyshenkilo c
                         "Urakka" ""
-                        nil matkapuhelin
+                        "" matkapuhelin
                         sahkoposti
                         organisaatio-id
                         nil nil nil

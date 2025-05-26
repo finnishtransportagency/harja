@@ -491,7 +491,7 @@
          (if yhteystiedot
            [:span
             (when (:sahkoposti yhteystiedot)
-              [:span "Sähköposti: " (:sahkoposti yhteystiedot) " "])
+              [:span "Sähköposti: " (:sahkoposti yhteystiedot) ", "])
             (when (:matkapuhelin yhteystiedot)
               [:span "Puhelinnumero: " (:matkapuhelin yhteystiedot)])]
            [:span "Ei yhteystietoja"])
@@ -517,11 +517,20 @@
                                                       :vayla-tyyli? true}
                                       :arvo-atom matkapuhelin}]]
            [napit/palvelinkutsu-nappi "Tallenna"
-            #(tiedot/tallenna-urakan-yleiset-yhteystiedot ur @sahkoposti @matkapuhelin)
-            {:kun-onnistuu (fn [vastaus]
-                             (viesti/nayta! "Urakan yleiset yhteystiedot tallennettu" :success)
-                             (reset! auki? false))
-             :virheviesti "Yleisten yhteystietojen tallennus epäonnistui."
+            #(go (let [vastaus (<! (tiedot/tallenna-urakan-yleiset-yhteystiedot 
+                                     ur 
+                                     @matkapuhelin 
+                                     @sahkoposti 
+                                     (get-in ur [:urakoitsija :id])))]
+                   (if (k/virhe? vastaus)
+                     (viesti/nayta! "Urakan yhteystietojen tallennus epäonnistui" :warning)
+                     (do
+                       (viesti/nayta! "Urakan yhteystiedot tallennettu" :success)
+                       (reset! auki? false)
+                       (nav/paivita-urakan-tiedot! (:id ur)
+                         (fn [u]
+                           (assoc u :yhteystiedot vastaus)))))))
+            {:virheviesti "Urakan yhteystietojen tallennus epäonnistui."
              :nayta-virheviesti? true}]
            [napit/yleinen-toissijainen "Peruuta" #(reset! auki? false)
             {:luokka "nappi-toissijainen"}]])))))

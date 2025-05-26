@@ -81,11 +81,12 @@
 (defn hae-urakan-yleiset-yhteystiedot [urakka-id]
   (k/post! :hae-urakan-yhteystiedot urakka-id))
 
-(defn tallenna-urakan-yleiset-yhteystiedot [ur matkapuhelin sahkoposti]
+(defn tallenna-urakan-yleiset-yhteystiedot [ur matkapuhelin sahkoposti organisaatio-id]
   (k/post! :tallenna-urakan-yhteystiedot
-           {:urakka-id (:id ur)
-            :matkapuhelin matkapuhelin
-            :sahkoposti sahkoposti}))
+    {:urakka-id (:id ur)
+     :matkapuhelin matkapuhelin
+     :sahkoposti sahkoposti
+     :organisaatio-id organisaatio-id}))
 
 (defn tallenna-urakan-alukset [urakka-id urakoitsija-id alukset tulos-atom]
   (go (let [vastaus (<! (k/post! :tallenna-urakoitsijan-alukset {::urakka/id urakka-id
