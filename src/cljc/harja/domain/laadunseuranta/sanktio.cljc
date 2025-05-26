@@ -123,20 +123,14 @@
       (sort-by #(.indexOf (vec lajin-sanktiotyyppien-koodit) (:koodi %))))))
 
 (defn urakan-sanktiolajit
-  "Palauttaa urakalle kuuluvat sanktiolajit Figma-speksin mukaisesti järjestettynä"
-  [{:keys [tyyppi alkupvm] :as urakka}]
+  "Palauttaa urakalle kuuluvat sanktiolajit urakka-tyypin mukaisesti"
+  [{:keys [tyyppi] :as urakka}]
 
   (cond
-    ;; Sanktiolajit MH- ja Alueurakoille, joiden alkuvuosi on yhtäsuuri tai pienempi kuin 2022
-    (and (or (= :teiden-hoito tyyppi) (= :hoito tyyppi)) (<= (pvm/vuosi alkupvm) 2022))
+    ;; MH- tai Alueurakka?
+    (or (= :teiden-hoito tyyppi) (= :hoito tyyppi))
     [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys
      :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
-
-    ;; Sanktiolajit MH-urakoille, joiden alkuvuosi on suurempi tai yhtäsuuri kuin 2023
-    ;; TODO: Speksi varmistettava (Tämä tulee eteen vielä myöhemmin. Sääntö lisätty jo etukäteen tähän tuleville 2023 urakoille.
-    ;;       TODO-kommentti jätetty tulevalle kehittäjälle, joka tähän tulee perehtymään.
-    (and (= :teiden-hoito tyyppi) (>= (pvm/vuosi alkupvm) 2023))
-    [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
 
     ;; Yllapidon urakka?
     (urakka-domain/yllapitourakka? tyyppi)

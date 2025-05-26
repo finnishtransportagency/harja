@@ -55,6 +55,10 @@
                  ;; Pattern match kirjasto
                  [org.clojure/core.match "1.1.0"]
 
+                 ;; Todennus / kirjautumisen allekirjoituksen varmistus 
+                 ;; Täältä tulee java kirjaston kautta jwt signaturen vahvistus, joka tehdään käyttäjän tullessa Harjaan
+                 [buddy/buddy-sign "3.5.351"]
+
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
@@ -164,7 +168,7 @@
 
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
-                         [commons-codec "1.17.1"]]
+                         [commons-codec "1.18.0"]]
 
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 

@@ -18,6 +18,17 @@
                                             "oam_groups" "Jarjestelmavastaava"
                                             "oam_organization" "Liikennevirasto"}}
 
+ ;; Todennuksen JWT asetukset
+ ;; Käytetään todennukseen kun käyttäjä tulee Harjaan
+ :todennus-varmistus {;; x-iam-data tokenin public key (käyttäjäroolit) 
+                      ;; x-iam-accesstoken avain tulee payloadin mukana, sille ei tarvitse muuttujaa erikseen 
+                      :public-key-url #=(eval (harja.tyokalut.env/env "COGNITO_IAMDATA_KEY" nil))
+
+                      ;; Onko Cognito todennuksen token authentikointi päällä? 
+                      ;; Voi ongelma tilanteessa laittaa false, jos esim. käyttäjät ei pääse Harjaan ilman hyvää syytä 
+                      :todennus-varmistus-paalla? #=(eval (harja.tyokalut.env/env "TODENNUS_VARMISTUS_PAALLA" false))}
+
+
  :tietokanta {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))
               :tietokanta "harja"
               :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 5432))
@@ -48,9 +59,9 @@
 
  :itmf
  {:url #=(eval (str "tcp://"
-                   (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
-                   ":"
-                   (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
+                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
+                 ":"
+                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
   :kayttaja (harja.tyokalut.env/env "HARJA_ITMF_BROKER_KAYTTAJA" "admin")
   :salasana (harja.tyokalut.env/env "HARJA_ITMF_BROKER_SALASANA" "admin")
   :tyyppi :activemq
@@ -72,7 +83,7 @@
 
  :ulkoinen-sahkoposti {:vastausosoite "harja-ala-vastaa@vayla.fi"
                      ;; :palvelin "solita-service-1.solita.fi"
-                     }
+                       }
 
  :api-sahkoposti {:suora? false                              ;; Lokaalisti voit lähettää sähköpostit suoraa ilman apia
                   :vastausosoite "harja-ala-vastaa@vayla.fi"
@@ -89,8 +100,8 @@
  :digiroad {:url "https://api.testivaylapilvi.fi/digiroad/externalApi/"
             ;; Testipalvelimen avain projektin salaisuuksien jakamiseen tarkoitetussa paikassa
             :api-key #=(eval (some->
-                                 (slurp "../.harja/digiroad-api-key")
-                                 (clojure.string/trim-newline)))}
+                               (slurp "../.harja/digiroad-api-key")
+                               (clojure.string/trim-newline)))}
 
  :integraatiot {:paivittainen-lokin-puhdistusaika nil}
 
@@ -159,18 +170,24 @@
  :yha {:url "https://api.testivaylapilvi.fi/yha/rest/"
        :api-key #=(slurp "../.harja/yha-api-key")} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
 
- :velho {:token-url "https://vayla-velho-stg.auth.eu-west-1.amazoncognito.com/oauth2/token" 
+ :velho {:token-url "https://vayla-velho-stg.auth.eu-west-1.amazoncognito.com/oauth2/token"
          :varuste-api-juuri-url "https://apiv2stgvelho.testivaylapilvi.fi"
          :varuste-kayttajatunnus "6o9f1j147qvdvo49nufo0fhufp"
          :varuste-tuonti-suoritusaika nil
          :varuste-salasana #=(eval (some->
-                                       (slurp "../.harja/velho-varuste-salasana")
-                                       (clojure.string/trim-newline)))
+                                     (slurp "../.harja/velho-varuste-salasana")
+                                     (clojure.string/trim-newline)))
          :oid-tuonti-suoritusaika nil}
 
- ;; LinkSMS eli Labyrintti
+ ;; LinkSMS eli "Labyrintti", joka on vieläkin vanhempi integraatio (Vanha, poistuva SMS-integraatio)
+ ;; TODO: Kun #yliheitto tapahtunut, poista vanhat asetukset ja tee :sms-integraatiosta pysyvästi aktiivinen
  :labyrintti {:sms-url "https://api.testivaylapilvi.fi/harja/sms/send"
               :apiavain ""} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
+
+ ;; Uusi SMS-integraatio
+ :sms {:url "https://api.testivaylapilvi.fi/harja/sms/"
+       :apiavain ""
+       :aktiivinen? #=(eval (harja.tyokalut.env/env "HARJA_SMS_AKTIIVINEN" true))}
 
  ;; ClamAV-palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}
@@ -202,7 +219,11 @@
                                :reittitarkistukset
                                :tiedostopesula
                                :replica-db
-                               :sampo}
+                               :sampo
+                               ;; Sampoapi, vai apisampo? 
+                               ;; Ei tartte kehitysmoodissa
+                               :sampo-api
+                               :api-sampo}
 
  :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
           :paivittainen-tarkistusaika [12 22 00]

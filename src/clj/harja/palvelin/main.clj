@@ -26,8 +26,7 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
     [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad-integraatio]
-    [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
-    [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as tekstiviesti]
+    [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
@@ -84,6 +83,7 @@
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
+    [harja.palvelin.palvelut.kustannusten-kirjaus :as tiemerkinnan-kustannus-kirjaukset]
     [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
     [harja.palvelin.palvelut.lampotilat :as lampotilat]
     [harja.palvelin.palvelut.maksuerat :as maksuerat]
@@ -215,7 +215,8 @@
   (log/info "Asetettiin clojure.async thread-poolin koko: " (Long/getLong "clojure.core.async.pool-size")))
 
 (defn luo-jarjestelma [asetukset]
-  (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
+  (let [{:keys [tietokanta tietokanta-replica http-palvelin 
+                kehitysmoodi todennus-varmistus sahke-headerit]} asetukset]
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
       :db (tietokanta/luo-tietokanta (assoc tietokanta
@@ -232,21 +233,20 @@
                     kehitysmoodi)
 
       :todennus (component/using
-                  (todennus/http-todennus (:sahke-headerit asetukset))
+                  (todennus/http-todennus sahke-headerit todennus-varmistus)
                   [:db])
       :http-palvelin (component/using
-                       (http-palvelin/luo-http-palvelin http-palvelin
-                         kehitysmoodi)
+                       (http-palvelin/luo-http-palvelin http-palvelin kehitysmoodi todennus-varmistus)
                        [:todennus :metriikka :db])
       ;; FIXME: Tuck-remoting otettu toistaiseksi pois testikäytöstä kokonaan, koska se ei toimi kunnolla
       #_#_:tuck-remoting (component/using
-                       (tuck-remoting/luo-tuck-remoting (:sahke-headerit asetukset))
-                       [:http-palvelin :db])
+                           (tuck-remoting/luo-tuck-remoting (:sahke-headerit asetukset))
+                           [:http-palvelin :db])
 
       ;; Tuck-remoting palvelu ilmoitusten välittämiseen WebSocketin yli
       #_#_:ilmoitukset-ws-palvelu (component/using
-                                (ilmoitukset-ws/luo-ilmoitukset-ws)
-                                [:tuck-remoting :db])
+                                    (ilmoitukset-ws/luo-ilmoitukset-ws)
+                                    [:tuck-remoting :db])
 
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
@@ -311,24 +311,21 @@
                 :db :db
                 :integraatioloki :integraatioloki
                 :api-sahkoposti :api-sahkoposti
-                :labyrintti :labyrintti})
+                :sms :sms})
 
       ;; Didiroad integraatio
       :digiroad-integraatio (component/using
                               (digiroad-integraatio/->Digiroad (:digiroad asetukset))
                               [:http-palvelin :db :integraatioloki])
 
-      ;; LinkMobilityn LinkSMS, vanha Harja + pilvi-Harjan sms-lähetys. Refaktoroi vanha toteutus pois, kun #yliheitto ok.
-      :labyrintti (component/using
-                    (if kehitysmoodi
-                      (labyrintti/feikki-labyrintti)
-                      (labyrintti/luo-labyrintti (:labyrintti asetukset)))
-                    [:http-palvelin :db :integraatioloki])
-
-      ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto. Refaktoroi tänne myös lähetys, kun #yliheitto ok.
-      :tekstiviesti (component/using
-                      (tekstiviesti/->Tekstiviesti (select-keys asetukset [:tloik]))
-                      [:http-palvelin :db :integraatioloki :itmf])
+      ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto ja uusi SMS-integraatio
+      ;; TODO: Kun #yliheitto ok, poista viittaukset vanhaan integraatioon
+      :sms (component/using
+             (if kehitysmoodi
+               (sms/luo-feikki-tekstiviesti-komponentti)
+               ;; Tuodaan uuden integraation asetukset ":sms" ja vanhan LinkSMS-integraatioon asetukset ":labyrintti"
+               (sms/luo-tekstiviesti-komponentti (:sms asetukset) (:labyrintti asetukset)))
+             [:http-palvelin :db :integraatioloki])
 
       :yha-integraatio (component/using
                          (yha-integraatio/->Yha (:yha asetukset))
@@ -503,6 +500,9 @@
       :siltatarkastukset (component/using
                            (siltatarkastukset/->Siltatarkastukset)
                            [:http-palvelin :db])
+      :tiemerkinnan-kustannuskirjaukset (component/using
+                        (tiemerkinnan-kustannus-kirjaukset/->TiemerkinnanKustannusKirjaukset)
+                        [:http-palvelin :db])
       :lampotilat (component/using
                     (lampotilat/->Lampotilat
                       (:lampotilat-url (:ilmatieteenlaitos asetukset))
@@ -518,7 +518,7 @@
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db :fim :api-sahkoposti :labyrintti :pdf-vienti :excel-vienti])
+                        [:http-palvelin :db :fim :api-sahkoposti :sms :pdf-vienti :excel-vienti])
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
@@ -545,8 +545,8 @@
                           [:http-palvelin :db :excel-vienti])
 
       :kustannukset (component/using
-                          (kustannukset-palvelu/->Kustannukset)
-                          [:http-palvelin :db])
+                      (kustannukset-palvelu/->Kustannukset)
+                      [:http-palvelin :db])
 
       :tyomaapaivakirja (component/using
                           (tyomaapaivakirja-palvelu/->Tyomaapaivakirja (:kehitysmoodi asetukset))
@@ -632,7 +632,7 @@
                 :http-palvelin :http-palvelin
                 :ulkoinen-sahkoposti :ulkoinen-sahkoposti
                 :api-sahkoposti :api-sahkoposti
-                :labyrintti :labyrintti})
+                :sms :sms})
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
@@ -760,7 +760,7 @@
                        :itmf :itmf
                        :integraatioloki :integraatioloki
                        :api-sahkoposti :api-sahkoposti
-                       :labyrintti :labyrintti})
+                       :sms :sms})
 
       :kanavasiltojen-geometriahaku
       (component/using
@@ -829,7 +829,7 @@
       (component/using
         (tarjoushinnat-hallinta/->TarjoushinnatHallinta)
         [:http-palvelin :db])
-      
+
       :lupaukset-hallinta
       (component/using
         (lupaukset-hallinta/->LupauksetHallinta)

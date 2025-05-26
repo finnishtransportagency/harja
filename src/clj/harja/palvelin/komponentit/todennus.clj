@@ -2,8 +2,7 @@
   "Tämä namespace määrittelee käyttäjäidentiteetin todentamisen. Käyttäjän todentaminen
    WWW-palvelussa tehdään KOKA ympäristön antamilla header tiedoilla. Tämä komponentti ei tee
    käyttöoikeustarkistuksia, vaan pelkästään hakee käyttäjälle sallitut käyttöoikeudet ja tarkistaa käyttäjän identiteetin."
-  (:require [cheshire.core :as cheshire]
-            [clojure.core.cache :as cache]
+  (:require [clojure.core.cache :as cache]
             [clojure.set :as set]
             [clojure.string :as str]
             [clojure.data.json :as json]
@@ -13,8 +12,9 @@
              [oikeudet :as oikeudet]]
             [harja.kyselyt
              [kayttajat :as q]]
-            [slingshot.slingshot :refer [throw+ try+]]
-            [taoensso.timbre :as log])
+            [slingshot.slingshot :refer [throw+]]
+            [taoensso.timbre :as log]
+            [harja.palvelin.komponentit.todennus-varmistus :as varmistus])
   (:import (org.apache.commons.codec.binary Base64)
            (org.apache.commons.codec.net BCodec)))
 
@@ -90,7 +90,11 @@
    ja urakoitsijan-id funktioita."
   [urakan-id urakoitsijan-id roolit oam-groups]
   (let [roolit-ja-linkit (->> (str/split oam-groups #",")
-                              (keep (partial ryhman-rooli-ja-linkki roolit)))]
+                           (keep (partial ryhman-rooli-ja-linkki roolit)))
+        ;; Uudelleenohjaa käyttäjä jos todennus epäonnistuu
+        roolit-ja-linkit (if (= oam-groups "failed")
+                           [[{:nimi "failed" :kuvaus "Todennus epäonnistui." :osapuoli nil :linkki nil} nil]]
+                           roolit-ja-linkit)]
     {:roolit (yleisroolit roolit-ja-linkit)
      :urakkaroolit (urakkaroolit urakan-id roolit-ja-linkit)
      :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)}))
@@ -112,32 +116,33 @@
     (str/join ",")))
 
 (defn- pura-cognito-headerit
-  "Purkaa AWS Cognitolta palautuneet relevantit headerit ja hakee niistä OAM-tiedot.
-  Tiedot mapataan vanhan mallisiksi OAM_-headereiksi"
-  [headerit]
+  "Purkaa AWS Cognitolta palautuneet headerit ja hakee niistä OAM-tiedot.
+   Tiedot mapataan vanhan mallisiksi OAM_-headereiksi
+   JWT Signaturen vahvistukset suoritetaan samalla, jonka epäonnistuessa todennus ei etene"
+  [headerit kehitysmoodi? {:keys [public-key-url todennus-varmistus-paalla?] :as _todennus-varmistus-asetukset}]
+  (let [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n, kertoo koska token on annettu, ja kenelle
+        ;; Mukana myös signature joka vahvistetaan
+        accesstoken (get headerit "x-iam-accesstoken")
 
-  (let [headerit (select-keys headerit [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n
-                                        "x-iam-accesstoken"
+        ;; Sisältää käyttäjän käyttäjän tietoja, roolit, yhteystiedot, lxtunnus
+        ;; Mukana myös signature joka vahvistetaan 
+        iam-data (get headerit "x-iam-data")
 
-                                        ;; Sisältää käyttäjään liittyviä tietoja, mm. roolit
-                                        "x-iam-data"
+        ;; Subject ID (sub), eli käyttäjä kenelle JWT on myönnetty, tällä voidaan tunnistaa käyttäjä (mukana myös yllä olevissa tokeneissa)
+        ;; Tällä voidaan esim invalitoida token, kun käyttäjä kirjautuu ulos, mutta Harjassa ei tuollaista tarvetta kirjoitushetkellä taida olla
+        ; iam-identity (get headerit "x-iam-identity")
+        
+        ;; Vahvistetaan että tokenien payloadit on eheät
+        vahvistetut-tunnustiedot (if (and 
+                                       iam-data
+                                       todennus-varmistus-paalla?)
+                                   (varmistus/vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url)
+                                   (varmistus/tunnistetiedot iam-data))
 
-                                        ;; Käyttäjän sub-kenttä Cognitossa
-                                        "x-iam-identity"])
-        jwt (some->
-              (get headerit "x-iam-data")
-              ;; Jaetaan kolmeen osaan: header, body, signature
-              (clojure.string/split #"\."))
-        jwt-body (second jwt)
-        dekoodatut-headerit (some->
-                              ^String jwt-body
-                              Base64/decodeBase64
-                              String.
-                              cheshire/decode)
         ;; Käsittele vielä EntraID muodossa olevat roolit (json)
-        dekoodatut-headerit (update dekoodatut-headerit "custom:rooli" #(if (konv/onko-json? %)
-                                                                          (parsi-json-entraid-roolit %)
-                                                                          %))]
+        dekoodatut-headerit (update vahvistetut-tunnustiedot "custom:rooli" #(if (konv/onko-json? %)
+                                                                               (parsi-json-entraid-roolit %)
+                                                                               %))]
 
     ;; Mapataan Cognito-headerit vanhan mallisiksi vastaaviksi OAM-headereiksi
     ;; TODO: Siirrytään mahdollisesti myöhemmin käyttämään pelkkiä cognito-headereita
@@ -156,6 +161,7 @@
          "custom:osasto" "oam_departmentnumber"
          "custom:organisaatio" "oam_organization"
          "custom:ytunnus" "oam_user_companyid"}))))
+
 
 (defn- koka-headerit [headerit]
   (reduce-kv
@@ -187,10 +193,10 @@
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
    Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään 
    muiden headereiden joukkoon."
-  [headerit]
+  [headerit kehitysmoodi? todennus-varmistus-asetukset]
   (if (empty? (koka-headerit headerit))
     (->
-      (merge headerit (pura-cognito-headerit headerit))
+      (merge headerit (pura-cognito-headerit headerit kehitysmoodi? todennus-varmistus-asetukset))
       (prosessoi-apikayttaja-header))
     headerit))
 
@@ -298,26 +304,30 @@
   (or (and oikeudet (oikeudet kayttaja))
       koka-headerit))
 
-(defn koka->kayttajatiedot [db headerit oikeudet]
-  (let [headerit (prosessoi-kayttaja-headerit headerit)
-        oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
-    (try
-      (get (swap! kayttajatiedot-cache-atom #(cache/through
-                                               (fn [oam-tiedot]
-                                                 (varmista-kayttajatiedot db oam-tiedot))
-                                               %
-                                               oam-tiedot))
-        oam-tiedot)
-      (catch Throwable t
-        (log/error t "Käyttäjätietojen varmistuksessa virhe!")))))
+(defn koka->kayttajatiedot
+  ([db headerit oikeudet kehitysmoodi?]
+   (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? nil))
+  ([db headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset]
+   (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? todennus-varmistus-asetukset)
+         oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
+     (try
+       (get (swap! kayttajatiedot-cache-atom #(cache/through
+                                                (fn [oam-tiedot]
+                                                  (varmista-kayttajatiedot db oam-tiedot))
+                                                %
+                                                oam-tiedot))
+         oam-tiedot)
+       (catch Throwable t
+         (log/error t "Käyttäjätietojen varmistuksessa virhe!"))))))
 
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
-  (todenna-pyynto [this req] 
+  (todenna-pyynto [this req kehitysmoodi?] 
     "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden
      req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
-(defrecord HttpTodennus [oikeudet]
+(defrecord HttpTodennus 
+  [oikeudet todennus-varmistus-asetukset]
   component/Lifecycle
   (start [this]
     (log/info "Todennetaan HTTP käyttäjä KOKA headereista.")
@@ -326,14 +336,14 @@
     this)
 
   Todennus
-  (todenna-pyynto [{db :db :as this} req]
+  (todenna-pyynto [{db :db :as this} req kehitysmoodi?]
     (let [headerit (:headers req)
           kayttaja-id (headerit "oam_remote_user")]
       (if (nil? kayttaja-id)
         (do
-          (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan" headerit))
+          (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan: " headerit))
           (throw+ todennusvirhe))
-        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
+        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset)] 
           (assoc req :kayttaja kayttajatiedot)
           (do
             (log/warn (str
@@ -350,14 +360,15 @@
     this)
 
   Todennus
-  (todenna-pyynto [this req]
+  (todenna-pyynto [this req kehitysmoodi?]
     (assoc req
       :kayttaja kayttaja)))
 
 (defn http-todennus
-  ([] (http-todennus nil))
-  ([oikeudet]
-   (->HttpTodennus oikeudet)))
+  ([] (http-todennus nil nil))
+  ([oikeudet] (http-todennus oikeudet nil))
+  ([oikeudet todennus-varmistus]
+   (->HttpTodennus oikeudet todennus-varmistus)))
 
 (defn feikki-http-todennus [kayttaja]
   (->FeikkiHttpTodennus kayttaja))

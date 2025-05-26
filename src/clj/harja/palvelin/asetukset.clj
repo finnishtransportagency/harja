@@ -20,7 +20,8 @@
   "Harja-palvelinasetuksien skeema"
   {(s/optional-key :alusta) s/Keyword
    (s/optional-key :sahke-headerit) {s/Str {s/Str s/Str}}
-
+   (s/optional-key :todennus-varmistus) {:public-key-url s/Str
+                                         :todennus-varmistus-paalla? s/Bool}
    (s/optional-key :clojure-async-thread-poolin-koko) s/Int
 
    :http-palvelin {:portti s/Int
@@ -50,8 +51,7 @@
                                                           (s/optional-key :glog) {(s/optional-key :url) s/Str
                                                                                   (s/optional-key :from) s/Str
                                                                                   (s/optional-key :to) s/Str
-                                                                                  (s/optional-key :q) s/Str
-                                                                                  }
+                                                                                  (s/optional-key :q) s/Str}
                                                           (s/optional-key :jira) [s/Str]}}
 
          (s/optional-key :email) {:taso s/Keyword
@@ -157,6 +157,9 @@
 
    (s/optional-key :labyrintti) {:sms-url s/Str
                                  :apiavain s/Str}
+   (s/optional-key :sms) {:url s/Str
+                          :apiavain s/Str
+                          :aktiivinen? s/Bool}
 
    (s/optional-key :virustarkistus) {:url s/Str}
    (s/optional-key :tiedostopesula) {:base-url s/Str}
