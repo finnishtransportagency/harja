@@ -131,7 +131,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER mhu_muutos_historia_trigger
+CREATE TRIGGER mhu_muutos_liite_historia_trigger
     BEFORE UPDATE OR DELETE ON mhu_muutos_liite
     FOR EACH ROW
 EXECUTE FUNCTION paivita_mhu_muutos_liite_historia();
