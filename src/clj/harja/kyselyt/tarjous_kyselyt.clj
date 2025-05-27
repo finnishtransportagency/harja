@@ -1,10 +1,12 @@
 (ns harja.kyselyt.tarjous-kyselyt
-  (:require [jeesql.core :refer [defqueries]]))
+  (:require [jeesql.core :refer [defqueries]]
+            [harja.kyselyt.konversio :as konversio]))
 
 (defqueries "harja/kyselyt/tarjous_kyselyt.sql"
   {:positional? true})
 
-(declare tallenna-tarjous<! tallenna-tarjouskustannus<! tallenna-tarjouksen-johto-ja-hallintokorvaus<!)
+(declare tallenna-tarjous<! tallenna-tarjouskustannus<! tallenna-tarjouksen-johto-ja-hallintokorvaus<!
+  hae-tarjouksen-tiedot)
 
 (defn vuodet-tietomallista [malli]
   (reduce (fn [rivit vuosi-rivi]
@@ -46,37 +48,37 @@
         johto-ja-hallintokorvausosiot #{"johto-ja-hallintokorvaus"}
         kustannukset-tarjouksesta (filter #(contains? hankinta-osiot (:osio %)) (:tarjous tarjous-tietomalli))
         kustannuksetlistaus (flatten (reduce
-                                 (fn [kaikki rivi]
-                                   (let [uudet-rivit (mapv
-                                                       (fn [r]
-                                                         {:urakka_id urakka-id
-                                                          :hoitokauden_alkuvuosi (:vuosi r)
-                                                          :tehtava_id (:tehtava-id rivi)
-                                                          :tehtavaryhma_id (:tehtavaryhma-id rivi)
-                                                          :rahavaraus_id (:rahavaraus-id rivi)
-                                                          :summa (:summa r)
-                                                          :osio (:osio rivi)
-                                                          :luoja kayttaja-id})
-                                                       (:hoitovuosittaiset-arvot rivi))]
-                                     (conj kaikki uudet-rivit)))
-                                 [] kustannukset-tarjouksesta))
-
-        toimenkuvat-tarjouksesta (filter #(contains? johto-ja-hallintokorvausosiot (:osio %)) (:tarjous tarjous-tietomalli))
-        toimenkuvatlistaus (flatten (reduce
                                        (fn [kaikki rivi]
                                          (let [uudet-rivit (mapv
                                                              (fn [r]
                                                                {:urakka_id urakka-id
                                                                 :hoitokauden_alkuvuosi (:vuosi r)
-                                                                :johto_ja_hallintokorvaus_toimenkuva_id (:toimenkuva-id rivi)
                                                                 :tehtava_id (:tehtava-id rivi)
                                                                 :tehtavaryhma_id (:tehtavaryhma-id rivi)
+                                                                :rahavaraus_id (:rahavaraus-id rivi)
                                                                 :summa (:summa r)
                                                                 :osio (:osio rivi)
                                                                 :luoja kayttaja-id})
                                                              (:hoitovuosittaiset-arvot rivi))]
                                            (conj kaikki uudet-rivit)))
-                                       [] toimenkuvat-tarjouksesta))
+                                       [] kustannukset-tarjouksesta))
+
+        toimenkuvat-tarjouksesta (filter #(contains? johto-ja-hallintokorvausosiot (:osio %)) (:tarjous tarjous-tietomalli))
+        toimenkuvatlistaus (flatten (reduce
+                                      (fn [kaikki rivi]
+                                        (let [uudet-rivit (mapv
+                                                            (fn [r]
+                                                              {:urakka_id urakka-id
+                                                               :hoitokauden_alkuvuosi (:vuosi r)
+                                                               :johto_ja_hallintokorvaus_toimenkuva_id (:toimenkuva-id rivi)
+                                                               :tehtava_id (:tehtava-id rivi)
+                                                               :tehtavaryhma_id (:tehtavaryhma-id rivi)
+                                                               :summa (:summa r)
+                                                               :osio (:osio rivi)
+                                                               :luoja kayttaja-id})
+                                                            (:hoitovuosittaiset-arvot rivi))]
+                                          (conj kaikki uudet-rivit)))
+                                      [] toimenkuvat-tarjouksesta))
 
         ;; Tallennetaan tarjous- ja kattohinnat tarjouksen päätauluun, johon muut tiedot linkitetään
         tallennukset (mapv
@@ -90,8 +92,58 @@
                                               (fn [r] (tallenna-tarjouskustannus<! db (assoc r :tarjous_id (:id tietokantatarjous))))
                                               vuosittaiset-kustannukset)
                                toimenkuvat (mapv
-                                              (fn [t] (tallenna-tarjouksen-johto-ja-hallintokorvaus<! db (assoc t :tarjous_id (:id tietokantatarjous))))
+                                             (fn [t] (tallenna-tarjouksen-johto-ja-hallintokorvaus<! db (assoc t :tarjous_id (:id tietokantatarjous))))
                                              vuosittaiset-toimenkuvat)]
                            {:tarjousid (:id tietokantatarjous)}))
                        vuosittaiset-tarjoushinnat)]
     tallennukset))
+
+(defn hae-tarjouksesta-kustannus-vuodelle [tarjous-rivit nimi]
+  (let [;; Etsitään kustannus, joka vastaa annettua nimeä
+        kustannukset (reduce (fn [kustannukset rivi]
+                               (let [kustannus-rivit (keep #(when (= nimi (:nimi %))
+                                                              (dissoc (merge % {:vuosi (:hoitokauden_alkuvuosi rivi)}) :id :nimi :osio :tehtava_id :tehtavaryhma_id :rahavaraus_id))
+                                                       (:kustannukset rivi))]
+                                 (vec (concat kustannukset kustannus-rivit))))
+                       [] tarjous-rivit)]
+        kustannukset))
+
+(defn hae-tarjous [db urakka-id]
+  (let [tarjous-rivit (hae-tarjouksen-tiedot db {:urakka_id urakka-id})
+        ;; Mäppää tarjouksen tietokantarivit clojure-mapeiksi.
+        tarjous-rivit (mapv
+                        (fn [tarjous]
+                          (-> tarjous
+                            (assoc :kustannukset
+                              (mapv
+                                (fn [k]
+                                  (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :tehtava_id :long :tehtavaryhma_id :long :rahavaraus_id :long))
+                                (konversio/pgarray->vector (:kustannukset tarjous))))
+                            (assoc :toimenkuvat
+                              (mapv
+                                (fn [k]
+                                  (konversio/pgobject->map k :id :long :summa :double :osio :string :johto_ja_hallintokorvaus_toimenkuva_id :long))
+                                (konversio/pgarray->vector (:toimenkuvat tarjous))))
+                            (dissoc :toimenkuvat)))
+                        tarjous-rivit)
+
+        ;; Haetaan kaikki vuosisummat samalle kustannukselle eri riveiltä
+        tarjous-rivit (reduce (fn [uudet-rivit tarjous-rivi]
+                                    (let [kustannuspaikat (:kustannukset tarjous-rivi)
+                                          hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi tarjous-rivi) ;; tälle vuodelle mäpätään nyt kaikki
+                                          rivit-kustannuksista (map (fn [kustannus]
+                                                                      (let [;; haetaan kustannukset tarjouksesta
+                                                                            hoitovuosittaiset-arvot (hae-tarjouksesta-kustannus-vuodelle tarjous-rivit (:nimi kustannus))
+                                                                            #_ (println "hae-tarjouksesta-kustannus-vuodelle :: hoitovuosittaiset-arvot " (pr-str hoitovuosittaiset-arvot))]
+
+                                                                        (-> {:osio (:osio kustannus)
+                                                                             :nimi (:nimi kustannus)
+                                                                             :toimenkuva-id nil
+                                                                             :tehtava-id (:tehtava_id kustannus)
+                                                                             :tehtavaryhma-id (:tehtavaryhma_id kustannus)
+                                                                             :rahavaraus-id (:rahavaraus_id kustannus)
+                                                                             :hoitovuosittaiset-arvot hoitovuosittaiset-arvot})))
+                                                                 kustannuspaikat)]
+                                      (vec (concat uudet-rivit rivit-kustannuksista))))
+                                    [] tarjous-rivit)]
+    {:tarjous tarjous-rivit}))

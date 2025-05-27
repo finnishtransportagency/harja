@@ -52,6 +52,21 @@
                                    {:nimi "Yhteensä tavoitehinta", :osio "yhteensa"
                                     :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 50.00} {:vuosi 2024 :summa 100.00} {:vuosi 2025 :summa 150.00}], :yhteensa 300.00}]})
 
+(defn muodosta-tarjous-rahavarauksista [rahavaraukset vuodet]
+  {:tarjous (mapv
+              (fn [rahavaraus]
+                {:nimi (:nimi rahavaraus)
+                 :osio "tavoitehintaiset-rahavaraukset"
+                 :toimenkuva-id nil
+                 :tehtava-id nil
+                 :tehtavaryhma-id nil
+                 :rahavaraus-id (:id rahavaraus)
+                 :hoitovuosittaiset-arvot (mapv
+                                            (fn [vuosi]
+                                              {:vuosi (:vuosi vuosi) :summa (rand-int 1000)}) ;; Generoidaan satunnaiset summat
+                                            vuodet)})
+              rahavaraukset)})
+
 (deftest tallenna-yksinkertainen-tarjous-tietokantaan-onnistuneesti
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -73,19 +88,7 @@
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
         ;; Vuodet tietomallista
         vuodet (tarjous-kyselyt/vuodet-tietomallista tarjous-tietomalli)
-        tarjous {:tarjous (mapv
-                            (fn [rahavaraus]
-                              {:nimi (:nimi rahavaraus)
-                               :osio "tavoitehintaiset-rahavaraukset"
-                               :toimenkuva-id nil
-                               :tehtava-id nil
-                               :tehtavaryhma-id nil
-                               :rahavaraus-id (:id rahavaraus)
-                               :hoitovuosittaiset-arvot (mapv
-                                                          (fn [vuosi]
-                                                            {:vuosi (:vuosi vuosi) :summa (rand-int 1000)}) ;; Generoidaan satunnaiset summat
-                                                          vuodet)})
-                            rahavaraukset)}
+        tarjous (muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
         vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
         tarjoukset-tietokannasta (q-map "SELECT * from tarjous")
         tietokantarahavaraukset (q-map (format "SELECT * from tarjous_kustannukset
@@ -94,6 +97,25 @@
 
     (is (= (count tarjoukset-tietokannasta) (count vuosittaiset-tarjoushinnat)))
     (is (= (count tietokantarahavaraukset) (* (count vuodet) (count rahavaraukset))) "Tietokannasta löytyy rahavaraukset jokaiselle vuodelle.")))
+
+(deftest tallenna-ja-hae-kustannukset-tarjoukselle-onnistuu
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        kayttaja-id (:id +kayttaja-jvh+)
+        ;; Käytetään kattohintana 1.1 x tavoitehintaa
+        kattohintakerroin 1.1
+
+        ;; Haetaan urakan rahavaraukset
+        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+        ;; Vuodet tietomallista
+        vuodet (tarjous-kyselyt/vuodet-tietomallista tarjous-tietomalli)
+        tarjous (muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        ;; Tallenna tarjous kantaan
+        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        ;; Hae tarjous tietokannasta
+        tarjoukset-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
+
+    (is (= (count tarjoukset-tietokannasta) (* (count vuosittaiset-tarjoushinnat) (count rahavaraukset))))))
 
 (deftest tallenna-hankintoja-tarjoukselle-onnistuu
   (let [db (:db jarjestelma)
