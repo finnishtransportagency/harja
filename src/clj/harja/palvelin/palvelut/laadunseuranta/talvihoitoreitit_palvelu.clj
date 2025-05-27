@@ -10,15 +10,13 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [slingshot.slingshot :refer [throw+ try+]]
             [dk.ative.docjure.spreadsheet :as xls]
-            [harja.domain.roolit :as roolit]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-excel :as t-excel]))
 
 (defn hae-urakan-talvihoitoreitit [db user {:keys [urakka-id]}]
   (log/debug "hae-urakan-talvihoitoreitit ::user" user)
-  ;; Estä muut, kuin järjestelmävastaavat näkemästä talvihoitoreittejä
-  (if (or (roolit/jvh? user) (roolit/ely-urakanvalvoja-urakkaroolissa? user urakka-id))
-    ;;(oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
+  
+  (if (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
     (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
     {:error "Ei käyttöoikeuksia."}))
 
@@ -83,13 +81,10 @@
     (transit-vastaus vastaus)))
 
 (defn vastaanota-excel [db request]
-  (or (roolit/jvh? (:kayttaja request))
-    (roolit/ely-urakanvalvoja-urakkaroolissa? (:kayttaja request) (Integer/parseInt (get (:params request) "urakka-id"))))
-  #_ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys
-    (:kayttaja request)
-    (Integer/parseInt (get (:params request) "urakka-id")))
+  
   (let [urakka-id (Integer/parseInt (get (:params request) "urakka-id"))
-        kayttaja (:kayttaja request)]
+        kayttaja (:kayttaja request)
+        _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys kayttaja urakka-id)]
     ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
     (if (and urakka-id kayttaja)
       (kasittele-excel db urakka-id kayttaja request nil)
@@ -97,8 +92,7 @@
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
 (defn poista-talvihoitoreitti [db user {:keys [urakka-id ulkoinenid]}]
-  (if (or (roolit/jvh? user) (roolit/ely-urakanvalvoja-urakkaroolissa? user urakka-id))
-    ;;(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
+  (if (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
     (let [urakka-id (konv/konvertoi->int urakka-id)
           ;; Varmistetaan, että talvihoitoreitti on olemassa
           tr (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka-id :ulkoinen_id ulkoinenid})

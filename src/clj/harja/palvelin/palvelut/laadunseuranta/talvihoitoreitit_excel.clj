@@ -138,9 +138,7 @@
     reitit))
 
 (defn lataa-talvihoitoreitit-exceliin [db workbook user {:keys [urakka-id]}]
-  ; Käyttöoikeus van Järjestelmävalvojalla ja ELY-urakanvalvojalla ei muilla. Muiden oikeuksia lisätään myöhemmin.
-  (if (or (roolit/jvh? user) (roolit/ely-urakanvalvoja-urakkaroolissa? user urakka-id))
-    #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
+  (if (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
     (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
           urakan-talvihoitoreitit (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
           kaluste-sarakkeet [{:otsikko "Reitin nimi" :lihavoitu? true}
