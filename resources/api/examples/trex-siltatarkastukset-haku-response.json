@@ -1,0 +1,44 @@
+{
+  "siltatarkastukset": [
+    {
+      "harja-id": 1234,
+      "tarkastusaika": "2025-05-25",
+      "tarkastaja": "Malla Mallitarkastaja",
+      "urakka": {
+        "harja-id": 234,
+        "tunnus": "PR00009837",
+        "nimi": "POP Esimerkkiurakka 22-32"
+      }
+    },
+    {
+      "harja-id": 0,
+      "tarkastusaika": "ABCDEFGHIJKLMNO",
+      "tarkastaja": "ABCDEFGHIJKLMNOP",
+      "urakka": {
+        "harja-id": 0,
+        "tunnus": "ABCDEFGHIJKLMNOPQRSTU",
+        "nimi": "ABCDEFGHIJKLMNOPQRSTUVWXYZABC"
+      }
+    },
+    {
+      "harja-id": 0,
+      "tarkastusaika": "ABCDEFGHIJKLMNOPQRSTUVWXYZAB",
+      "tarkastaja": "ABCDEFGHIJKLMNOPQRSTUVWXYZA",
+      "urakka": {
+        "harja-id": 0,
+        "tunnus": "ABCDEFGHIJKLMNOPQRSTU",
+        "nimi": "ABCDEFGHIJK"
+      }
+    },
+    {
+      "harja-id": 0,
+      "tarkastusaika": "ABCDEFG",
+      "tarkastaja": "ABCDEFGHIJKLMNOPQRSTU",
+      "urakka": {
+        "harja-id": 0,
+        "tunnus": "ABCDEFGH",
+        "nimi": "ABCDEFGHI"
+      }
+    }
+  ]
+}
