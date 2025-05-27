@@ -145,7 +145,7 @@
      (when (and (not paikkauskohde-id)
                 (not osoite-sama-kuin-yhasta-tuodessa?))
        [:div {:style {:margin-top "4px"}}
-        [:label.kentan-label "Alkuperäinen suunniteltu TR-osoite:"]
+        [:label.kentan-label "Alkuperäinen suunniteltu tieosoite:"]
         [:div {:style {}}
          (tr/tierekisteriosoite-tekstina yha-tr-osoite)]])]))
 
