@@ -286,6 +286,24 @@ WHERE k.poistettu IS NOT TRUE
 ORDER BY k.luotu ASC;
 
 
+-- name: hae-urakan-laatupoikkeama-liitteet
+SELECT l.id                  AS id,
+       s.id                  AS sanktio_id,
+       l.tyyppi              AS tyyppi,
+       l.koko                AS koko,
+       l.nimi                AS nimi,
+       l.liite_oid           AS oid,
+       l."virustarkastettu?" AS "virustarkastettu?",
+       lp.id                 AS laatupoikkeama
+FROM liite l
+      JOIN laatupoikkeama_liite hl ON l.id = hl.liite
+      JOIN laatupoikkeama lp ON hl.laatupoikkeama = lp.id 
+      JOIN sanktio s ON s.laatupoikkeama = lp.id
+WHERE lp.urakka = :urakka 
+  AND lp.luotu BETWEEN :alkupvm AND :loppupvm
+ORDER BY l.luotu ASC;
+
+
 -- name: hae-laatupoikkeaman-liitteet
 -- Hakee annetun laatupoikkeaman kaikki liitteet
 SELECT l.id                  AS id,

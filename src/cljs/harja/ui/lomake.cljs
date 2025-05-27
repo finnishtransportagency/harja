@@ -4,7 +4,7 @@
             [clojure.spec.alpha :as s]
             [reagent.core :refer [atom] :as r]
             [harja.ui.validointi :as validointi]
-            [harja.ui.yleiset :refer [virheen-ohje]]
+            [harja.ui.yleiset :refer [virheen-ohje] :as yleiset]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo atomina]]
             [harja.loki :refer [log logt tarkkaile!] :as loki]
             [harja.ui.komponentti :as komp]
@@ -399,7 +399,11 @@ ja kaikki pakolliset kentät on täytetty"
            piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
-  [:div.form-group {:class (str (or
+  
+  [:div.form-group {:class (str 
+                             ;; Korostaa input/tekstikentän reunat, jos on virhe
+                             (when (some? virheet) "lomake-validointivirhe ")
+                             (or
                                   ;; salli skeeman ylikirjoittaa ns-avaimella
                                   (::col-luokka s)
                                   col-luokka
@@ -415,11 +419,11 @@ ja kaikki pakolliset kentät on täytetty"
                                   " sisaltaa-varoituksen")
                                 (when-not (empty? huomautukset)
                                   " sisaltaa-huomautuksen"))}
-   [:div {:class (str
+   [:div {:class (yleiset/luokat
                    (when sisallon-leveys?
-                     "sisallon-leveys lomake-kentan-leveys ")
+                     "sisallon-leveys lomake-kentan-leveys")
                    (when kaariva-luokka kaariva-luokka)
-                   (when label-ja-kentta-samalle-riville? "flex-row "))}
+                   (when label-ja-kentta-samalle-riville? "flex-row"))}
     (when-not (or (+piilota-label+ tyyppi)
                   piilota-label?)
       [:label.control-label

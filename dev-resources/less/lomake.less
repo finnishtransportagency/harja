@@ -442,3 +442,14 @@ fieldset.lomake-osa {
 .vihrea-teksti {
   color: @green-default;
 }
+
+.lomake-validointivirhe {
+  /* Korostaa input/tekstikentän reunat, jos on virhe */
+  .kentta-text textarea,
+  input, button, textarea {
+    border-width: 2px;
+    border-style: solid;
+    border-color: @red-default;
+    border-radius: @valistys-4;
+  }
+}

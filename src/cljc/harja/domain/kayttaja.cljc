@@ -49,7 +49,7 @@
 ;;           :sahkoposti sahkoposti
 ;;           :puhelin puhelin
 ;;           :organisaatio (:id organisaatio)}
-(def poistettavat-avaimet #{:etunimi, :sukunimi, :sahkoposti, :puhelin})
+(def poistettavat-avaimet #{:etunimi, :sukunimi, :sahkoposti, :puhelin :custom:etunimi :custom:sukunimi  :email :custom:puhelin :username})
 
 ;; Poistaa henkilötiedot ennen lokitusta.
 (defn kayttaja-ilman-henkilotietoja [kayttaja]

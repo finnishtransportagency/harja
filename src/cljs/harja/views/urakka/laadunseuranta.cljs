@@ -25,36 +25,36 @@
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
     :hairiotilanteet (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                          (urakka/kanavaurakka? urakka)
-                          (oikeudet/urakat-laadunseuranta-hairiotilanteet))
+                       (urakka/kanavaurakka? urakka)
+                       (oikeudet/urakat-laadunseuranta-hairiotilanteet))
 
     :tarkastukset (or (and (oikeudet/urakat-laadunseuranta-tarkastukset id)
-                           (not (urakka/vesivaylaurakka? urakka)))
-                      (and
-                        (istunto/ominaisuus-kaytossa? :vesivayla)
-                        (urakka/vesivaylaurakka? urakka)
-                        (oikeudet/urakat-laadunseuranta-tarkastukset id)))
+                        (not (urakka/vesivaylaurakka? urakka)))
+                    (and
+                      (istunto/ominaisuus-kaytossa? :vesivayla)
+                      (urakka/vesivaylaurakka? urakka)
+                      (oikeudet/urakat-laadunseuranta-tarkastukset id)))
     :laatupoikkeamat (or (and (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)
-                              (not (urakka/vesivaylaurakka? urakka)))
-                         (and
-                           (istunto/ominaisuus-kaytossa? :vesivayla)
-                           (urakka/vesivaylaurakka? urakka)
-                           (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)))
+                           (not (urakka/vesivaylaurakka? urakka)))
+                       (and
+                         (istunto/ominaisuus-kaytossa? :vesivayla)
+                         (urakka/vesivaylaurakka? urakka)
+                         (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)))
     :sanktiot (or (and
+                    ;; Tiemerkinnöillä oma sanktiot ja bonukset kirjaus
+                    (not (= :tiemerkinta tyyppi))
                     (not (urakka/vesivaylaurakka? urakka))
                     (oikeudet/urakat-laadunseuranta-sanktiot id))
-                  (and
-                    (istunto/ominaisuus-kaytossa? :vesivayla)
-                    (urakka/vesivaylaurakka? urakka)
-                    (oikeudet/urakat-laadunseuranta-sanktiot id)))
+                (and
+                  (istunto/ominaisuus-kaytossa? :vesivayla)
+                  (urakka/vesivaylaurakka? urakka)
+                  (oikeudet/urakat-laadunseuranta-sanktiot id)))
     :siltatarkastukset (and (or (= :hoito tyyppi) (= :teiden-hoito tyyppi))
-                            (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
+                         (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
     :mobiilityokalu (not (urakka/vesivaylaurakka? urakka))
     :talvihoitoreititys (and
                           (= :teiden-hoito tyyppi)
-                          #_ (oikeudet/urakat-laadunseuranta-talvihoitoreititys id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
-                          (or (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
-                            (roolit/rooli-urakassa? @istunto/kayttaja roolit/ely-urakanvalvoja id)))))
+                          (oikeudet/urakat-laadunseuranta-talvihoitoreititys id))))
 
 (defn laadunseuranta [_ur]
   (komp/luo

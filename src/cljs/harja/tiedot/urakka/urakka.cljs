@@ -353,7 +353,7 @@
                                                                                          ::t/toteuma-tehtava-id nil
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}
-                             :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi nil
+                             :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi kuluva-alkuvuosi
                                                           :hoitovuoden-kuukausi nil
                                                           :kuntoluokat nil
                                                           :varustetyypit nil
@@ -415,6 +415,10 @@
 (def talvihoitoreitit-default {:haku-kaynnissa? false?
                                :talvihoitoreitit nil})
 
+(def tarjous-kustannussuunnitelma-default {:haku-kaynnissa? false?
+                                           :tarjous nil
+                                           :kustannussuunnitelma {:hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))}})
+
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laatupoikkeamat laatupoikkeamat-default
                      :laskutus    laskutus-default
@@ -424,8 +428,21 @@
                      :toteumat    toteumat-default-arvot
                      :paikkaukset paikkaus-default-arvot
                      :kustannusten-seuranta kustannusten-seuranta-default-arvot
-                     :talvihoitoreitit talvihoitoreitit-default}))
+                     :talvihoitoreitit talvihoitoreitit-default
+                     :tiemerkinta-korjaukset {}
+                     :tiemerkinta-yhteenveto {}
+                     :tiemerkinta-muut-kustannukset {}
+                     :tiemerkinta-sanktiot-ja-bonukset {}
+                     :tiemerkinta-uusien-paallysteiden-merkkinnat {}
+                     :tarjous-kustannussuunnitelma tarjous-kustannussuunnitelma-default}))
 
+(defonce tiemerkinta-korjaukset (cursor tila [:tiemerkinta-korjaukset]))
+(defonce tiemerkinta-yhteenveto (cursor tila [:tiemerkinta-yhteenveto]))
+(defonce tiemerkinta-muut-kustannukset (cursor tila [:tiemerkinta-muut-kustannukset]))
+(defonce tiemerkinta-sanktiot-ja-bonukset (cursor tila [:tiemerkinta-sanktiot-ja-bonukset]))
+(defonce tiemerkinta-uusien-paallysteiden-merkkinnat (cursor tila [:tiemerkinta-uusien-paallysteiden-merkkinnat]))
+
+(defonce tiemerkinta-kustannukset (cursor tila [:tiemerkinta-kustannukset]))
 (defonce laatupoikkeamat (cursor tila [:laatupoikkeamat]))
 (defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
 (defonce paikkaustoteumat (cursor tila [:paikkaukset :paikkaustoteumat]))
@@ -449,6 +466,8 @@
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 (defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))
+(defonce tarjous-kustannussuunnitelma (cursor tila [:tarjous-kustannussuunnitelma]))
+
 (defonce suunnittelu-suolarajoitukset (cursor tila [:suunnittelu :suolarajoitukset]))
 
 (defonce tavoitehinnan-oikaisut (cursor tila [:kustannusten-seuranta :kustannukset :tavoitehinnan-oikaisut]))

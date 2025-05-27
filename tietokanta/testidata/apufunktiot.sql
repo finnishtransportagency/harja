@@ -109,3 +109,85 @@ BEGIN
         END;
     END;
 $$ LANGUAGE plpgsql;
+
+-- Rajoitusalueiden tai muiden tieosoitteiden ajoratakilometrien laskentaan soveltuva funktio
+CREATE OR REPLACE FUNCTION laske_tieosoitteen_ajoratapituudet(tr_numero_ INTEGER,
+                                                              tr_alkuosa_ INTEGER,
+                                                              tr_alkuetaisyys_ INTEGER,
+                                                              tr_loppuosa_ INTEGER,
+                                                              tr_loppuetaisyys_ INTEGER)
+    RETURNS INTEGER AS
+$$
+DECLARE
+    kilometrit INTEGER;
+
+BEGIN
+      WITH relevantit AS
+               (SELECT *
+                  FROM tr_osoitteet
+                 WHERE "tr-numero" = tr_numero_ AND
+                     "tr-osa" BETWEEN tr_alkuosa_ AND tr_loppuosa_ AND
+                   -- alkupään tarkastelu
+                     (tr_alkuosa_ < "tr-osa" OR (tr_alkuosa_ = "tr-osa" AND tr_alkuetaisyys_ < "tr-loppuetaisyys")) AND
+                   -- loppupään tarkastelu
+                     (tr_loppuosa_ > "tr-osa" OR (tr_loppuosa_ = "tr-osa" AND  tr_loppuetaisyys_ > "tr-alkuetaisyys")) AND
+                   -- huomioitava vain pääkaistat 11 ja 21, muuten esim. kääntymiskaistoista tulee häiriötä laskentaan
+                     (("tr-ajorata" = 0 AND "tr-kaista" = 11) OR
+                      ("tr-ajorata" = 1 AND "tr-kaista" = 11) OR
+                      ("tr-ajorata" = 2 AND "tr-kaista" = 21) OR
+                      -- joitakin kävelyn ja pyöräilyn väyliä on rajoitusalueina, niillä on aina tienumero 70000-80000, ajorata 0 ja kaista 31
+                      ("tr-numero" BETWEEN 70000 AND 80000 AND "tr-ajorata" = 0 AND "tr-kaista" = 31))
+                 ORDER BY "tr-osa", "tr-alkuetaisyys")
+    SELECT SUM(
+               CASE
+                   -- jos ko. osat ovat varmuudella kaikki kokonaisuudessan mukana
+                   WHEN (tr_alkuosa_ < "tr-osa" AND tr_loppuosa_ > "tr-osa") THEN "tr-loppuetaisyys" - "tr-alkuetaisyys"
+                   -- jos alkuosa osoitteessa on pienempi, mutta loppuosa sama
+                   WHEN (tr_alkuosa_ < "tr-osa" AND tr_loppuosa_ = "tr-osa") THEN
+                       LEAST("tr-loppuetaisyys", tr_loppuetaisyys_) - "tr-alkuetaisyys"
+                   -- jos loppuosa osoitteessa on suurempi, mutta alkuosa sama
+                   WHEN (tr_loppuosa_ > "tr-osa" AND tr_alkuosa_ = "tr-osa") THEN
+                       "tr-loppuetaisyys" - GREATEST("tr-alkuetaisyys", tr_alkuetaisyys_)
+                   -- jos alku- ja loppuosa on sama, saadaan haluttu väli least ja greatest avulla
+                   WHEN tr_alkuosa_ = "tr-osa" AND tr_loppuosa_ = "tr-osa" THEN
+                       LEAST("tr-loppuetaisyys", tr_loppuetaisyys_) - GREATEST("tr-alkuetaisyys", tr_alkuetaisyys_)
+                   END) AS ajoratakilometrit
+      FROM relevantit INTO kilometrit;
+    RETURN kilometrit;
+END
+$$ LANGUAGE plpgsql;
+
+-- tässä voimakas työkalu, jolla voi kerralla korjata kaikkien rajoitusalueiden ajoratapituudet, käytä harkiten
+CREATE OR REPLACE FUNCTION korjaa_rajoitusalueiden_ajoratapituudet() RETURNS BOOLEAN AS
+$$
+DECLARE
+    rajoitusaluerivi RECORD;
+    ajoratapituus INTEGER;
+BEGIN
+    FOR rajoitusaluerivi IN
+        SELECT id,
+               pituus,
+               (tierekisteriosoite).tie AS tie,
+               (tierekisteriosoite).aosa AS aosa,
+               (tierekisteriosoite).aet AS aet,
+               (tierekisteriosoite).losa AS losa,
+               (tierekisteriosoite).let AS let
+          FROM rajoitusalue
+        LOOP
+            RAISE NOTICE 'Rajoitusalue: %', rajoitusaluerivi;
+            SELECT * FROM laske_tieosoitteen_ajoratapituudet(rajoitusaluerivi.tie,
+                rajoitusaluerivi.aosa, rajoitusaluerivi.aet, rajoitusaluerivi.losa, rajoitusaluerivi.let) INTO ajoratapituus;
+            RAISE NOTICE 'ajoratapituus %', ajoratapituus;
+            -- joissakin harvinaisissa tilanteissa (tienumero 30000-40000 välillä eli rampit) on kaista-aineisto epämääräinen
+            -- tällöin ei voida rakentaa luotettavaa logiikkaa miten ajoratakm lasketaan, mutta kyseessä yksikaistainen ja yksi
+            -- ajoratainen tilanne, joten tällöin käytetään osan pituutta. Tämä tapahtui alle 1% rajoitusalueista.
+            IF ajoratapituus IS NULL THEN
+                ajoratapituus := rajoitusaluerivi.pituus;
+            END IF;
+
+            UPDATE rajoitusalue SET ajoratojen_pituus = ajoratapituus WHERE id = rajoitusaluerivi.id;
+        END LOOP;
+
+    RETURN TRUE;
+END
+$$ LANGUAGE plpgsql;
