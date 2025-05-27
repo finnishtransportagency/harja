@@ -15,10 +15,8 @@
 
 (defn hae-urakan-talvihoitoreitit [db user {:keys [urakka-id]}]
   (log/debug "hae-urakan-talvihoitoreitit ::user" user)
-  
-  (if (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
-    (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
-    {:error "Ei käyttöoikeuksia."}))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
+  (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id))
 
 (defn kasittele-excel [db urakka-id kayttaja req workbook]
   (let [;; Excelistä löytyneille talvihoitoreitteille koostetaan atomeihin statuksia. Päivittyneet omaansa, uudet lisäykset omaansa
@@ -81,7 +79,6 @@
     (transit-vastaus vastaus)))
 
 (defn vastaanota-excel [db request]
-  
   (let [urakka-id (Integer/parseInt (get (:params request) "urakka-id"))
         kayttaja (:kayttaja request)
         _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys kayttaja urakka-id)]
@@ -92,18 +89,16 @@
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
 (defn poista-talvihoitoreitti [db user {:keys [urakka-id ulkoinenid]}]
-  (if (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
-    (let [urakka-id (konv/konvertoi->int urakka-id)
-          ;; Varmistetaan, että talvihoitoreitti on olemassa
-          tr (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka-id :ulkoinen_id ulkoinenid})
-          _ (if tr
-              (talvihoitoreitit-q/poista-talvihoitoreitti! db {:ulkoinen_id ulkoinenid
-                                                               :urakka_id urakka-id})
-              (throw+ {:type "Error"
-                       :virheet [{:koodi "ERROR" :viesti "Ei löydy poistettavaa talvihoitoreittiä. Tarkista tiedot."}]}))]
-      {:onnistui "Talvihoitoreitti poistettu onnistuneesti."})
-    (throw+ {:type "Error"
-             :virheet [{:koodi "ERROR" :viesti "Ei käyttöoikeuksia."}]})))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
+  (let [urakka-id (konv/konvertoi->int urakka-id)
+            ;; Varmistetaan, että talvihoitoreitti on olemassa
+        tr (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka-id :ulkoinen_id ulkoinenid})
+        _ (if tr
+            (talvihoitoreitit-q/poista-talvihoitoreitti! db {:ulkoinen_id ulkoinenid
+                                                             :urakka_id urakka-id})
+            (throw+ {:type "Error"
+                     :virheet [{:koodi "ERROR" :viesti "Ei löydy poistettavaa talvihoitoreittiä. Tarkista tiedot."}]}))]
+    {:onnistui "Talvihoitoreitti poistettu onnistuneesti."}))
 
 (defrecord Talvihoitoreitit []
   component/Lifecycle
