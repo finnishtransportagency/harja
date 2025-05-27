@@ -21,6 +21,13 @@
     "Huoltoaukot ja pysäköintialueet - Ei talvihoitoa" "Ei talvihoitoa"
     excel-hoitoluokka))
 
+(defn oikeus-talvihoitoreitit? [kayttaja urakka-id]
+  (boolean
+    (or
+      (roolit/jvh? kayttaja)
+      (roolit/rooli-urakassa? kayttaja roolit/urakan-vastuuhenkilo urakka-id)
+      (roolit/rooli-urakassa? kayttaja roolit/ely-urakanvalvoja urakka-id))))
+
 (defn- lue-excel-raaka-data [sivu]
   (->> sivu
     xls/row-seq
@@ -139,7 +146,7 @@
 
 (defn lataa-talvihoitoreitit-exceliin [db workbook user {:keys [urakka-id]}]
   ; Käyttöoikeus van Järjestelmävalvojalla ja ELY-urakanvalvojalla ei muilla. Muiden oikeuksia lisätään myöhemmin.
-  (if (or (roolit/jvh? user) (roolit/ely-urakanvalvoja-urakkaroolissa? user urakka-id))
+  (if (oikeus-talvihoitoreitit? user urakka-id)
     #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
     (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
           urakan-talvihoitoreitit (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)
