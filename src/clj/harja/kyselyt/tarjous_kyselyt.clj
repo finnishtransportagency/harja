@@ -98,15 +98,27 @@
                        vuosittaiset-tarjoushinnat)]
     tallennukset))
 
-(defn hae-tarjouksesta-kustannus-vuodelle [tarjous-rivit nimi]
+(defn hae-tarjouksesta-rivit-vuodelle [avain tarjous-rivit nimi]
   (let [;; Etsitään kustannus, joka vastaa annettua nimeä
-        kustannukset (reduce (fn [kustannukset rivi]
-                               (let [kustannus-rivit (keep #(when (= nimi (:nimi %))
-                                                              (dissoc (merge % {:vuosi (:hoitokauden_alkuvuosi rivi)}) :id :nimi :osio :tehtava_id :tehtavaryhma_id :rahavaraus_id))
-                                                       (:kustannukset rivi))]
-                                 (vec (concat kustannukset kustannus-rivit))))
-                       [] tarjous-rivit)]
-        kustannukset))
+        rivit (reduce (fn [r rivi]
+                        (let [r-rivit (keep #(when (= nimi (:nimi %))
+                                               (dissoc (merge % {:vuosi (:hoitokauden_alkuvuosi rivi)})
+                                                 :id :nimi :osio :tehtava_id :tehtavaryhma_id :rahavaraus_id
+                                                 :johto_ja_hallintokorvaus_toimenkuva_id))
+                                        (avain rivi))]
+                          (vec (concat r r-rivit))))
+                [] tarjous-rivit)]
+    rivit))
+
+
+(defn- muodosta-tarjous-rivi [r hoitovuosittaiset-arvot]
+  (-> {:osio (:osio r)
+       :nimi (:nimi r)
+       :toimenkuva-id (:johto_ja_hallintokorvaus_toimenkuva_id r)
+       :tehtava-id (:tehtava_id r)
+       :tehtavaryhma-id (:tehtavaryhma_id r)
+       :rahavaraus-id (:rahavaraus_id r)
+       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}))
 
 (defn hae-tarjous [db urakka-id]
   (let [tarjous-rivit (hae-tarjouksen-tiedot db {:urakka_id urakka-id})
@@ -123,27 +135,9 @@
                               (mapv
                                 (fn [k]
                                   (konversio/pgobject->map k :id :long :summa :double :osio :string :johto_ja_hallintokorvaus_toimenkuva_id :long))
-                                (konversio/pgarray->vector (:toimenkuvat tarjous))))
-                            (dissoc :toimenkuvat)))
+                                (konversio/pgarray->vector (:toimenkuvat tarjous))))))
                         tarjous-rivit)
-
-        ;; Haetaan kaikki vuosisummat samalle kustannukselle eri riveiltä
-        tarjous-rivit (reduce (fn [uudet-rivit tarjous-rivi]
-                                    (let [kustannuspaikat (:kustannukset tarjous-rivi)
-                                          hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi tarjous-rivi) ;; tälle vuodelle mäpätään nyt kaikki
-                                          rivit-kustannuksista (map (fn [kustannus]
-                                                                      (let [;; haetaan kustannukset tarjouksesta
-                                                                            hoitovuosittaiset-arvot (hae-tarjouksesta-kustannus-vuodelle tarjous-rivit (:nimi kustannus))
-                                                                            #_ (println "hae-tarjouksesta-kustannus-vuodelle :: hoitovuosittaiset-arvot " (pr-str hoitovuosittaiset-arvot))]
-
-                                                                        (-> {:osio (:osio kustannus)
-                                                                             :nimi (:nimi kustannus)
-                                                                             :toimenkuva-id nil
-                                                                             :tehtava-id (:tehtava_id kustannus)
-                                                                             :tehtavaryhma-id (:tehtavaryhma_id kustannus)
-                                                                             :rahavaraus-id (:rahavaraus_id kustannus)
-                                                                             :hoitovuosittaiset-arvot hoitovuosittaiset-arvot})))
-                                                                 kustannuspaikat)]
-                                      (vec (concat uudet-rivit rivit-kustannuksista))))
-                                    [] tarjous-rivit)]
-    {:tarjous tarjous-rivit}))
+        ;; Muutetaan ui:lle välitettävään muotoon
+        kustannus-rivit (map #(muodosta-tarjous-rivi % (hae-tarjouksesta-rivit-vuodelle :kustannukset tarjous-rivit (:nimi %))) (:kustannukset (first tarjous-rivit)))
+        toimenkuva-rivit (map #(muodosta-tarjous-rivi % (hae-tarjouksesta-rivit-vuodelle :toimenkuvat tarjous-rivit (:nimi %))) (:toimenkuvat (first tarjous-rivit)))]
+    {:tarjous (vec (concat kustannus-rivit toimenkuva-rivit))}))

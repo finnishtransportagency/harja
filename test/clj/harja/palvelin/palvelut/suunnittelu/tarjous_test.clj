@@ -67,6 +67,21 @@
                                             vuodet)})
               rahavaraukset)})
 
+(defn muodosta-tarjous-toimenkuvista [toimenkuvat vuodet]
+  {:tarjous (mapv
+                  (fn [toimenkuva]
+                    {:nimi (:nimi toimenkuva)
+                     :osio (:osio toimenkuva)
+                     :toimenkuva-id (:toimenkuva-id toimenkuva)
+                     :tehtava-id (:tehtava-id toimenkuva)
+                     :tehtavaryhma-id (:tehtavaryhma-id toimenkuva)
+                     :rahavaraus-id (:rahavaraus-id toimenkuva)
+                     :hoitovuosittaiset-arvot (mapv
+                                                (fn [vuosi]
+                                                  {:vuosi (:vuosi vuosi) :summa (rand-int 1000)}) ;; Generoidaan satunnaiset summat
+                                                vuodet)})
+              toimenkuvat)})
+
 (deftest tallenna-yksinkertainen-tarjous-tietokantaan-onnistuneesti
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -98,7 +113,7 @@
     (is (= (count tarjoukset-tietokannasta) (count vuosittaiset-tarjoushinnat)))
     (is (= (count tietokantarahavaraukset) (* (count vuodet) (count rahavaraukset))) "Tietokannasta löytyy rahavaraukset jokaiselle vuodelle.")))
 
-(deftest tallenna-ja-hae-kustannukset-tarjoukselle-onnistuu
+(deftest tallenna-rahavaraukset-ja-hae-kustannukset-tarjoukselle-onnistuu
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         kayttaja-id (:id +kayttaja-jvh+)
@@ -115,7 +130,36 @@
         ;; Hae tarjous tietokannasta
         tarjoukset-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
 
-    (is (= (count tarjoukset-tietokannasta) (* (count vuosittaiset-tarjoushinnat) (count rahavaraukset))))))
+    (is (= (count tarjoukset-tietokannasta) (count rahavaraukset)))))
+
+(deftest tallenna-laajat-kustannukset-ja-hae-kustannukset-tarjoukselle-onnistuu
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        kayttaja-id (:id +kayttaja-jvh+)
+        ;; Käytetään kattohintana 1.1 x tavoitehintaa
+        kattohintakerroin 1.1
+
+        ;; Haetaan urakan rahavaraukset
+        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+        ;; Vuodet tietomallista
+        vuodet (tarjous-kyselyt/vuodet-tietomallista tarjous-tietomalli)
+        tarjous (muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+
+        ;; Lisätään rahavarausten lisäksi myös muita kustannuksia
+        tarjous (update tarjous :tarjous (fn [rivit]
+                                           (vec (concat rivit
+                                                  [{:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
+                                                    :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
+                                                   {:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                                                    :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
+                                                   {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
+                                                    :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}]))))
+        ;; Tallenna tarjous kantaan
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        ;; Hae tarjous tietokannasta
+        tarjoukset-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
+    ;; Varmistetaan, että tietokannasta löytyy oikea määrä rivejä
+    (is (= (count tarjoukset-tietokannasta) (+ 3 (count rahavaraukset))))))
 
 (deftest tallenna-hankintoja-tarjoukselle-onnistuu
   (let [db (:db jarjestelma)
@@ -170,19 +214,7 @@
 
         ;; Vuodet tietomallista
         vuodet (tarjous-kyselyt/vuodet-tietomallista tarjous-tietomalli)
-        tarjous {:tarjous (mapv
-                            (fn [toimenkuva]
-                              {:nimi (:nimi toimenkuva)
-                               :osio (:osio toimenkuva)
-                               :toimenkuva-id (:toimenkuva-id toimenkuva)
-                               :tehtava-id (:tehtava-id toimenkuva)
-                               :tehtavaryhma-id (:tehtavaryhma-id toimenkuva)
-                               :rahavaraus-id (:rahavaraus-id toimenkuva)
-                               :hoitovuosittaiset-arvot (mapv
-                                                          (fn [vuosi]
-                                                            {:vuosi (:vuosi vuosi) :summa (rand-int 1000)}) ;; Generoidaan satunnaiset summat
-                                                          vuodet)})
-                            johto-ja-hallintokorvaukset)}
+        tarjous (muodosta-tarjous-toimenkuvista johto-ja-hallintokorvaukset vuodet)
 
         vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
         tarjoukset-tietokannasta (q-map "SELECT * from tarjous")
@@ -192,3 +224,26 @@
 
     (is (= (count tarjoukset-tietokannasta) (count vuosittaiset-tarjoushinnat)))
     (is (= (count tietokantajohto-ja-hallintokorvaukset) (* (count vuodet) (count johto-ja-hallintokorvaukset))) "Tietokannasta löytyy johto-ja-hallintokorvaukset jokaiselle vuodelle.")))
+
+(deftest tallenna-ja-hae-johto-ja-hallintokorvaukset-tarjoukselle-onnistuu
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        kayttaja-id (:id +kayttaja-jvh+)
+        ;; Käytetään kattohintana 1.1 x tavoitehintaa
+        kattohintakerroin 1.1
+
+        ;; Muodostetaan johto-ja-hallinto-kustannuksia, joilla voi testata tallennuksia
+        ;; Muodostetaan hankintakustannuksia, joilla voi testata tallennuksia
+        johto-ja-hallintokorvaukset [{:nimi "Valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
+                                     {:nimi "Vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
+                                     {:nimi "Päätoiminen apulainen / työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 4 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}]
+
+
+        ;; Vuodet tietomallista
+        vuodet (tarjous-kyselyt/vuodet-tietomallista tarjous-tietomalli)
+        tarjous (muodosta-tarjous-toimenkuvista johto-ja-hallintokorvaukset vuodet)
+
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        tarjoukset-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
+
+    (is (= (count tarjoukset-tietokannasta) (count johto-ja-hallintokorvaukset)))))
