@@ -54,8 +54,11 @@
     :mobiilityokalu (not (urakka/vesivaylaurakka? urakka))
     :talvihoitoreititys (and
                           (= :teiden-hoito tyyppi)
-                          #_ (oikeudet/urakat-laadunseuranta-talvihoitoreititys id) ;; Lisätään muillekin kuin jvh:lle myöhemmin
-                          (or (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
+                          #_(oikeudet/urakat-laadunseuranta-talvihoitoreititys id) 
+                          ;; Talvihoitoreititykset haluttu tarkoituksella vain ely urakanvalvojalle, sekä vastuuhenkilöille
+                          (or
+                            (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
+                            (roolit/rooli-urakassa? @istunto/kayttaja roolit/urakan-vastuuhenkilo id)
                             (roolit/rooli-urakassa? @istunto/kayttaja roolit/ely-urakanvalvoja id)))))
 
 (defn laadunseuranta [_ur]
