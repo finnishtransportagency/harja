@@ -320,7 +320,7 @@
                :label-ja-kentta-samalle-riville? true
                ::lomake/col-luokka "col-xs-12"}
               (if muokattava?
-                {:tyyppi :reagent-komponentti
+                {:tyyppi :reagent-komponentti :kaariva-luokka "pot-tieosoite-kentta"
                  :otsikko "Tieosoite"
                  :komponentti tr-kentta
                  :komponentti-args [e! (merge paallystysilmoituksen-osa {:optiot {:vayla-tyyli? true}})]

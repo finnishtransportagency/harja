@@ -4,7 +4,7 @@
             [clojure.spec.alpha :as s]
             [reagent.core :refer [atom] :as r]
             [harja.ui.validointi :as validointi]
-            [harja.ui.yleiset :refer [virheen-ohje]]
+            [harja.ui.yleiset :refer [virheen-ohje] :as yleiset]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo atomina]]
             [harja.loki :refer [log logt tarkkaile!] :as loki]
             [harja.ui.komponentti :as komp]
@@ -419,11 +419,11 @@ ja kaikki pakolliset kentät on täytetty"
                                   " sisaltaa-varoituksen")
                                 (when-not (empty? huomautukset)
                                   " sisaltaa-huomautuksen"))}
-   [:div {:class (str
+   [:div {:class (yleiset/luokat
                    (when sisallon-leveys?
-                     "sisallon-leveys lomake-kentan-leveys ")
+                     "sisallon-leveys lomake-kentan-leveys")
                    (when kaariva-luokka kaariva-luokka)
-                   (when label-ja-kentta-samalle-riville? "flex-row "))}
+                   (when label-ja-kentta-samalle-riville? "flex-row"))}
     (when-not (or (+piilota-label+ tyyppi)
                   piilota-label?)
       [:label.control-label
