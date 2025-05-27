@@ -22,7 +22,6 @@
 (def tilaajan-laadunvalvontakonsultti  "tilaajan laadunvalvontakonsultti")
 (def urakoitsijan-paakayttaja          "urakoitsijan paakayttaja")
 (def urakoitsijan-urakan-vastuuhenkilo "urakoitsijan urakan vastuuhenkilo")
-(def urakan-vastuuhenkilo              "urakan vastuuhenkilo")
 (def urakoitsijan-laatuvastaava        "urakoitsijan laatuvastaava")
 
 (def aikataulunakyman-sahkopostiviestinnan-roolit
@@ -38,6 +37,7 @@
 
 (def tilaajan-urakanvalvoja "Tilaajan_Urakanvalvoja")
 (def ely-urakanvalvoja "ELY_Urakanvalvoja")
+(def urakan-vastuuhenkilo "vastuuhenkilo")
 (def ely-paakayttaja "ELY_Paakayttaja")
 
 (def urakoitsijaroolit
