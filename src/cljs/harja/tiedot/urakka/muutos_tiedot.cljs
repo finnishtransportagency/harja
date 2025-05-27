@@ -20,6 +20,8 @@
 ;; Vaihda hoitokausi
 (defrecord HoitokausiVaihdettu [urakka hoitokausi])
 (defrecord MuokkaaMuutosta [rivi])
+(defrecord TallennaMuutos [muutos])
+(defrecord TallennaMuutosEpaonnistui [vastaus])
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
 (defrecord MuokkaaLaskettujenMuutoksienSyita [])
 (defrecord MuokkaaRahavaraustenMuutoksienSyita [])
@@ -95,6 +97,20 @@
   MuokkaaMuutosta
   (process-event [{rivi :rivi} app]
     (assoc app :muokattava-muutos rivi))
+
+  TallennaMuutos
+  (process-event [{muutos :muutos} app]
+    (let [urakka (:urakka @tila/yleiset)]
+      (tuck-apurit/post! :tallenna-muutois
+        {:urakka-id (:id urakka)
+         :muutos muutos}
+        {:onnistui ->HaeUrakanMuutostiedotOnnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
+         :epaonnistui ->TallennaMuutosEpaonnistui})))
+
+  TallennaMuutosEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Muutoksen tallentaminen epäonnistui!" :varoitus)
+    app)
 
   ToggleTaulukonNakyvyys
   (process-event [{taulukon-avain :taulukon-avain} app]

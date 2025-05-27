@@ -659,7 +659,7 @@ ja kaikki pakolliset kentät on täytetty"
                [:div.row header])
              (when sulje-fn [napit/sulje-ruksi sulje-fn])
              (when otsikko
-               [(or otsikko-elementti :h3) {:class "lomake-otsikko"} otsikko])
+               [(or otsikko-elementti :h2) {:class "lomake-otsikko"} otsikko])
              (when otsikko-komp
                [otsikko-komp (assoc validoitu-data ::skeema skeema)])
              (doall
@@ -691,9 +691,9 @@ ja kaikki pakolliset kentät on täytetty"
                        [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
                         (if-let [nappi (get-in otsikko [:optiot :nappi])]
                           [:div.lomake-ryhman-otsikko.napilla
-                           [:h4 (:otsikko otsikko)]
+                           [:h3 (:otsikko otsikko)]
                            nappi]
-                          [:h4.lomake-ryhman-otsikko (:otsikko otsikko)])
+                          [:h3.lomake-ryhman-otsikko (:otsikko otsikko)])
                         rivi-ui]
                        ^{:key (str "rivi-ui-with-meta-" i)}
                        (with-meta rivi-ui {:key (str "rivi-ui-" i)}))))

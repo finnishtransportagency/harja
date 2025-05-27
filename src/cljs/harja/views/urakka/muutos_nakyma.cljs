@@ -3,6 +3,7 @@
   (:require [cljs.core.async :refer [<!]]
             [harja.fmt :as fmt]
             [harja.ui.ikonit :as ui-ikonit]
+            [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
@@ -19,18 +20,62 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn muutoslomake [e! app]
+(defn- muutoslomakkeen-kentat-pysyva
+  "Pysyvän muutoksen lomakekomponentti"
+  [e! app]
+  [{:tyyppi :komponentti
+    :uusi-rivi? true
+    :komponentti (fn [rivi]
+                   [y/info-laatikko :neutraali
+                   "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."])}
+   (lomake/ryhma {:otsikko "Perustiedot"}
+     {:nimi :nimi
+      :otsikko "Nimi"
+      :tyyppi :string
+      :uusi-rivi? true}
+     {:nimi :syy
+      :otsikko "Muutoksen syy"
+      :tyyppi :text
+      :koko [90 6]
+      :aputeksti "Kuvaile muutos mahdollisimman tarkasti."
+      :pituus-max 1000
+      :uusi-rivi? true}) ])
+
+(defn muutoslomake [e! {:keys [muokattava-muutos] :as app}]
   [:span.muutoslomake
-   (if (get-in app [:muokattava-muutos :id])
-     "Muokkaa muutosta"
-     "Lisää uusi muutos")
 
    ;; todo: eri tyyppisten muutosten lomakkeiden toteutus tähän
    ;; oletettavasti kannattaa toteuttaa lomakkeen harja.ui.lomake avulla
    ;; siten että niiden sisälle sijoitetaan tarvittaessa taulukkoja :muokkaus-grid, ks. esim views/urakka/toteumat/muut_materiaalit.cljs#L127
-   [:div (pr-str (:muokattava-muutos app))]
-   [napit/peruuta
-    #(e! (muutos-tiedot/->MuokkaaMuutosta nil))]])
+   [lomake/lomake
+    {:otsikko (if (:id muokattava-muutos)
+                "Muokkaa muutosta"
+                "Lisää uusi muutos")
+     :footer-fn (fn [muutos]
+                  [:span.tallenna-ja-peruuta
+                   [napit/tallenna
+                    #(e! (muutos-tiedot/->TallennaMuutos muutos))]
+                   [napit/peruuta
+                    #(e! (muutos-tiedot/->MuokkaaMuutosta nil))]])}
+    ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
+    (into []
+      (concat
+        [{:otsikko "Tyyppi"
+          :nimi :tyyppi
+          :tyyppi :valinta
+          :vayla-tyyli? true
+          :valinnat muutos-domain/+muutostyypit+
+          :valinta-arvo identity
+          :valinta-nayta muutos-domain/tyyppi-fmt
+          :pakollinen? true
+          :uusi-rivi? true}]
+
+        (case (:tyyppi muokattava-muutos)
+          "pysyva" (muutoslomakkeen-kentat-pysyva e! app)
+
+          ;; tässä kohti default, että jokaiselle aukeaa jotain... poistunee lopulta kun kaikki toteutettu
+          (muutoslomakkeen-kentat-pysyva e! app))))
+    muokattava-muutos]])
 
 (defn- kehystetty-avattava-grid
   "Piirtää yhtenäisesti Muutoksien taulukot collapsoitaviksi."
