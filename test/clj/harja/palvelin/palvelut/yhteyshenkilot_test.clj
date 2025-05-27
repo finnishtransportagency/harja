@@ -17,8 +17,8 @@
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :hae (component/using
-                      (->Yhteyshenkilot)
-                      [:http-palvelin :db])))))
+                 (->Yhteyshenkilot)
+                 [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -28,7 +28,7 @@
 
 (deftest urakan-yhteyshenkiloiden-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-yhteyshenkilot +kayttaja-jvh+ 1)]
+                  :hae-urakan-yhteyshenkilot +kayttaja-jvh+ 1)]
 
     (is (not (nil? vastaus)))
     (is (>= (count vastaus) 1))))
@@ -36,7 +36,7 @@
 (deftest urakan-paivystajien-haku-toimii
   (u "INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (true, false, '2005-10-10','2030-06-06', 1, 1)")
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-paivystajat +kayttaja-jvh+ 1)]
+                  :hae-urakan-paivystajat +kayttaja-jvh+ 1)]
     (log/info "VASTAUS: " vastaus)
     (is (not (nil? vastaus)))
     (is (>= (count vastaus) 1))
@@ -59,11 +59,11 @@
                                   :loppu (pvm/->pvm "1.1.2030")
                                   :organisaatio {:nimi "YIT Rakennus Oy" :id (hae-yit-rakennus-id) :ytunnus "1565583-5"}}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-urakan-paivystajat
-                                +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :paivystajat [uusi-sallittu-paivystaja]
-                                 :poistettu []})
+                  :tallenna-urakan-paivystajat
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :paivystajat [uusi-sallittu-paivystaja]
+                   :poistettu []})
         vastauksen-uusi-paivystaja (first (filter #(= (:sahkoposti %) "uusi.tyyppi@example.org") vastaus))
         vastauksen-vanha-paivystaja (first (filter #(= (:sahkoposti %) "ismoyit@example.org") vastaus))]
     (is (not (nil? vastaus)))
@@ -71,44 +71,44 @@
     (is (pvm/valissa? (pvm/nyt) (:alku vastauksen-uusi-paivystaja) (:loppu vastauksen-uusi-paivystaja)) "Uusi päivystäjä voimassa")
     (is (pvm/valissa? (pvm/nyt) (:alku vastauksen-vanha-paivystaja) (:loppu vastauksen-vanha-paivystaja)) "Vanha päivystäjä voimassa")
     (is (= (select-keys vastauksen-uusi-paivystaja [:organisaatio :vastuuhenkilo :varahenkilo :matkapuhelin :tyopuhelin :id])
-           {:organisaatio  {:id (hae-yit-rakennus-id)
-                            :nimi "YIT Rakennus Oy"
-                            :tyyppi :urakoitsija}
-            :vastuuhenkilo true :varahenkilo false :matkapuhelin "+358234567" :tyopuhelin "+358765432" :id (+ 1 paivystaja-count)}))
-
-    (is (= (select-keys vastauksen-vanha-paivystaja [:organisaatio :vastuuhenkilo :varahenkilo :matkapuhelin :tyopuhelin :id])
-           {:id ismon-paivystys-id
-            :matkapuhelin "0400123456"
-            :organisaatio {:id (hae-yit-rakennus-id)
+          {:organisaatio  {:id (hae-yit-rakennus-id)
                            :nimi "YIT Rakennus Oy"
                            :tyyppi :urakoitsija}
-            :tyopuhelin "000"
-            :varahenkilo true
-            :vastuuhenkilo false}))))
+           :vastuuhenkilo true :varahenkilo false :matkapuhelin "+358234567" :tyopuhelin "+358765432" :id (+ 1 paivystaja-count)}))
+
+    (is (= (select-keys vastauksen-vanha-paivystaja [:organisaatio :vastuuhenkilo :varahenkilo :matkapuhelin :tyopuhelin :id])
+          {:id ismon-paivystys-id
+           :matkapuhelin "0400123456"
+           :organisaatio {:id (hae-yit-rakennus-id)
+                          :nimi "YIT Rakennus Oy"
+                          :tyyppi :urakoitsija}
+           :tyopuhelin "000"
+           :varahenkilo true
+           :vastuuhenkilo false}))))
 
 (deftest uudelle-paivystajalle-ei-saa-asettaa-alkupvmaa-menneisyyteen
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         uusi-kielletty-paivystaja {:sahkoposti "uusi.tyyppi@example.org"
-                                  :etunimi "Uusi"
-                                  :sukunimi "Päivystäjä"
-                                  :id -1
-                                  :matkapuhelin "+358234567"
-                                  :tyopuhelin "+358765432"
-                                  :vastuuhenkilo true
-                                  :alku (pvm/->pvm "1.1.2022")
-                                  :loppu (pvm/->pvm "1.1.2030")
-                                  :organisaatio {:nimi "YIT Rakennus Oy" :id (hae-yit-rakennus-id) :ytunnus "1565583-5"}}
+                                   :etunimi "Uusi"
+                                   :sukunimi "Päivystäjä"
+                                   :id -1
+                                   :matkapuhelin "+358234567"
+                                   :tyopuhelin "+358765432"
+                                   :vastuuhenkilo true
+                                   :alku (pvm/->pvm "1.1.2022")
+                                   :loppu (pvm/->pvm "1.1.2030")
+                                   :organisaatio {:nimi "YIT Rakennus Oy" :id (hae-yit-rakennus-id) :ytunnus "1565583-5"}}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-urakan-paivystajat
-                                +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :paivystajat [uusi-kielletty-paivystaja]
-                                 :poistettu []})]
+                  :tallenna-urakan-paivystajat
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :paivystajat [uusi-kielletty-paivystaja]
+                   :poistettu []})]
     (is (= vastaus
-           {:body "[\"^ \",\"~:virhe\",\"Päivystäjän Uusi Päivystäjä päivystysvuoroa ei saa asettaa alkamaan ennen tätä päivää.\"]"
-            :headers {"Content-Type" "application/transit+json"}
-            :status 400
-            :vastaus {:virhe "Päivystäjän Uusi Päivystäjä päivystysvuoroa ei saa asettaa alkamaan ennen tätä päivää."}}))))
+          {:body "[\"^ \",\"~:virhe\",\"Päivystäjän Uusi Päivystäjä päivystysvuoroa ei saa asettaa alkamaan ennen tätä päivää.\"]"
+           :headers {"Content-Type" "application/transit+json"}
+           :status 400
+           :vastaus {:virhe "Päivystäjän Uusi Päivystäjä päivystysvuoroa ei saa asettaa alkamaan ennen tätä päivää."}}))))
 
 (deftest olemassaolevan-paivystajan-vuoron-alkupvmaa-voi-siirtaa-eteenpain
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -124,25 +124,25 @@
                                             :loppu (pvm/->pvm "1.1.2030")
                                             :organisaatio {:nimi "YIT Rakennus Oy" :id (hae-yit-rakennus-id) :ytunnus "1565583-5"}}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-urakan-paivystajat
-                                +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :paivystajat [olemassaoleva-kielletty-paivystaja]
-                                 :poistettu []})
+                  :tallenna-urakan-paivystajat
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :paivystajat [olemassaoleva-kielletty-paivystaja]
+                   :poistettu []})
         vastauksen-vanha-paivystaja (first (filter #(= (:sahkoposti %) "ismoyit@example.org") vastaus))]
     (is (= (select-keys vastauksen-vanha-paivystaja [:organisaatio :vastuuhenkilo :varahenkilo :matkapuhelin :tyopuhelin :id])
-           {:id ismon-paivystys-id
-            :matkapuhelin "+358234567"
-            :organisaatio {:id 14
-                           :nimi "YIT Rakennus Oy"
-                           :tyyppi :urakoitsija}
-            :tyopuhelin "+358765432"
-            :varahenkilo false
-            :vastuuhenkilo true}))
+          {:id ismon-paivystys-id
+           :matkapuhelin "+358234567"
+           :organisaatio {:id 14
+                          :nimi "YIT Rakennus Oy"
+                          :tyyppi :urakoitsija}
+           :tyopuhelin "+358765432"
+           :varahenkilo false
+           :vastuuhenkilo true}))
     (is (= (pvm/->pvm "1.1.2022")
-           (konv/java-date (:alku vastauksen-vanha-paivystaja))))
+          (konv/java-date (:alku vastauksen-vanha-paivystaja))))
     (is (= (pvm/->pvm "1.1.2030")
-           (konv/java-date (:loppu vastauksen-vanha-paivystaja))))))
+          (konv/java-date (:loppu vastauksen-vanha-paivystaja))))))
 
 (deftest olemassaolevan-paivystan-vuoron-alkupvmaa-ei-saa-siirtaa-taaksepain
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -158,16 +158,16 @@
                                             :loppu (pvm/->pvm "1.1.2030")
                                             :organisaatio {:nimi "YIT Rakennus Oy" :id (hae-yit-rakennus-id) :ytunnus "1565583-5"}}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-urakan-paivystajat
-                                +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :paivystajat [olemassaoleva-kielletty-paivystaja]
-                                 :poistettu []})]
+                  :tallenna-urakan-paivystajat
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :paivystajat [olemassaoleva-kielletty-paivystaja]
+                   :poistettu []})]
     (is (= vastaus
-           {:body "[\"^ \",\"~:virhe\",\"Olemassaolevan päivystäjän Ismo Laitela päivystysvuoron alkua ei saa takautuvasti siirtää kauemmaksi menneisyyteen.\"]"
-            :headers {"Content-Type" "application/transit+json"}
-            :status 400
-            :vastaus {:virhe "Olemassaolevan päivystäjän Ismo Laitela päivystysvuoron alkua ei saa takautuvasti siirtää kauemmaksi menneisyyteen."}}))))
+          {:body "[\"^ \",\"~:virhe\",\"Olemassaolevan päivystäjän Ismo Laitela päivystysvuoron alkua ei saa takautuvasti siirtää kauemmaksi menneisyyteen.\"]"
+           :headers {"Content-Type" "application/transit+json"}
+           :status 400
+           :vastaus {:virhe "Olemassaolevan päivystäjän Ismo Laitela päivystysvuoron alkua ei saa takautuvasti siirtää kauemmaksi menneisyyteen."}}))))
 
 (deftest olemassaolevan-paivystan-vuoron-alkupvmaa-saa-siirtaa-taaksepain-jos-tulevaisuudessa
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -184,20 +184,38 @@
                                             :loppu (pvm/->pvm "1.1.2030")
                                             :organisaatio {:nimi "YIT Rakennus Oy" :id (hae-yit-rakennus-id) :ytunnus "1565583-5"}}
         vastaus (first (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :tallenna-urakan-paivystajat
-                                 +kayttaja-jvh+
-                                 {:urakka-id urakka-id
-                                  :paivystajat [olemassaoleva-kielletty-paivystaja]
-                                  :poistettu []}))]
+                         :tallenna-urakan-paivystajat
+                         +kayttaja-jvh+
+                         {:urakka-id urakka-id
+                          :paivystajat [olemassaoleva-kielletty-paivystaja]
+                          :poistettu []}))]
     (is (=  (select-keys vastaus [:organisaatio :vastuuhenkilo :varahenkilo :matkapuhelin :tyopuhelin :id :etunimi :sukunimi :sahkoposti])
-            {:etunimi "Ismo"
-             :id ismon-paivystys-id
-             :matkapuhelin "+358234567"
-             :organisaatio {:id (hae-yit-rakennus-id)
-                            :nimi "YIT Rakennus Oy"
-                            :tyyppi :urakoitsija}
-             :sahkoposti "ismoyit@example.org"
-             :sukunimi "Laitela"
-             :tyopuhelin "+358765432"
-             :varahenkilo false
-             :vastuuhenkilo true}))))
+          {:etunimi "Ismo"
+           :id ismon-paivystys-id
+           :matkapuhelin "+358234567"
+           :organisaatio {:id (hae-yit-rakennus-id)
+                          :nimi "YIT Rakennus Oy"
+                          :tyyppi :urakoitsija}
+           :sahkoposti "ismoyit@example.org"
+           :sukunimi "Laitela"
+           :tyopuhelin "+358765432"
+           :varahenkilo false
+           :vastuuhenkilo true}))))
+
+(deftest urakan-yleisen-puhelinnumeron-ja-sahkopostin-haku-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-urakan-yleinen-puh-ja-sposti +kayttaja-jvh+ urakka-id)]
+    (is (not (nil? vastaus)))))
+
+(deftest urakan-yleisen-puhelinnumeron-ja-sahkopostin-tallennus-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        kayttaja +kayttaja-jvh+
+        organisaatio-id (hae-organisaatio-id-nimella "YIT Rakennus Oy")
+        yhteystiedot {:urakka-id urakka-id
+                      :matkapuhelin "0507654321"
+                      :sahkoposti "testiurakka@yit.fi"
+                      :organisaatio-id organisaatio-id}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tallenna-urakan-yleinen-puh-ja-sposti kayttaja yhteystiedot)]
+    (is (not (nil? vastaus)))))
