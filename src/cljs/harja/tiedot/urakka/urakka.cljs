@@ -425,6 +425,10 @@
 (def talvihoitoreitit-default {:haku-kaynnissa? false?
                                :talvihoitoreitit nil})
 
+(def tarjous-kustannussuunnitelma-default {:haku-kaynnissa? false?
+                                           :tarjous nil
+                                           :kustannussuunnitelma {:hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))}})
+
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laatupoikkeamat laatupoikkeamat-default
                      :laskutus    laskutus-default
@@ -440,7 +444,8 @@
                      :tiemerkinta-yhteenveto {}
                      :tiemerkinta-muut-kustannukset {}
                      :tiemerkinta-sanktiot-ja-bonukset {}
-                     :tiemerkinta-uusien-paallysteiden-merkkinnat {}}))
+                     :tiemerkinta-uusien-paallysteiden-merkkinnat {}
+                     :tarjous-kustannussuunnitelma tarjous-kustannussuunnitelma-default}))
 
 (defonce tiemerkinta-korjaukset (cursor tila [:tiemerkinta-korjaukset]))
 (defonce tiemerkinta-yhteenveto (cursor tila [:tiemerkinta-yhteenveto]))
@@ -473,6 +478,8 @@
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 (defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))
+(defonce tarjous-kustannussuunnitelma (cursor tila [:tarjous-kustannussuunnitelma]))
+
 (defonce suunnittelu-suolarajoitukset (cursor tila [:suunnittelu :suolarajoitukset]))
 
 (defonce tavoitehinnan-oikaisut (cursor tila [:kustannusten-seuranta :kustannukset :tavoitehinnan-oikaisut]))
