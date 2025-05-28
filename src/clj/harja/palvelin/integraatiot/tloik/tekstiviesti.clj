@@ -16,28 +16,27 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +ilmoitusviesti+
-  (str "Uusi toimenpidepyyntö %s: %s (viestinumero: %s).\n\n"
-       "Tunniste: %s\n\n"
-       "Urakka: %s\n\n"
-       "Yhteydenottopyyntö: %s\n\n"
-       "Ilmoittaja: %s\n\n"
-       "Lähettäjä: %s\n\n"
-       "Paikka: %s\n\n"
-       "Tienumero: %s\n\n"
+  (str "TPP: %s\n\n"
        "Selitteet: %s.\n\n"
+       "%s\n\n" ;;Urakka
+       "Tieosoite: %s\n\n"
+       "Paikka: %s\n\n"
+       "Ilmoittaja: %s\n\n"
+       "Yhteydenotto: %s\n\n"
+       "Lähettäjä: %s\n\n"
        "Lisätietoja: %s.\n\n"))
 
 (def +ilmoitusviesti-aiheella+
-  (str "Uusi toimenpidepyyntö %s: %s (viestinumero: %s).\n\n"
-    "Tunniste: %s\n\n"
-    "Urakka: %s\n\n"
-    "Yhteydenottopyyntö: %s\n\n"
-    "Ilmoittaja: %s\n\n"
-    "Lähettäjä: %s\n\n"
+  (str
+    "TPP: %s\n\n"
+    "%s\n\n" ;;Aihe
+    "%s\n\n" ;;Tarkenne
+    "%s\n\n" ;;Urakka
+    "Tieosoite: %s\n\n"
     "Paikka: %s\n\n"
-    "Tienumero: %s\n\n"
-    "Aihe: %s.\n\n"
-    "Tarkenne: %s.\n\n"
+    "Ilmoittaja: %s\n\n"
+    "Yhteydenotto: %s\n\n"
+    "Lähettäjä: %s\n\n"
     "Lisätietoja: %s.\n\n"))
 
 (def +onnistunut-viesti+ "Kuittaus käsiteltiin onnistuneesti. Kiitos!")
@@ -166,20 +165,17 @@
                       +ilmoitusviesti-aiheella+
                       +ilmoitusviesti+)
         (concat
-          [virka-apupyynto
-           otsikko
-           viestinumero
-           tunniste
+          [tunniste
+           (if aihe?
+             [aihe
+              tarkenne]
+             [selitteet])
            (:urakkanimi ilmoitus)
-           (fmt/totuus (:yhteydenottopyynto ilmoitus))
-           (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
-           (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))
+           tr-osoite
            paikankuvaus
-           tr-osoite]
-          (if aihe?
-            [aihe
-             tarkenne]
-            [selitteet])
+           (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
+           (fmt/totuus (:yhteydenottopyynto ilmoitus))
+           (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]
           [lisatietoja])))))
 
 (defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
@@ -187,7 +183,7 @@
     (if-let [puhelinnumero (or (:matkapuhelin paivystaja) (:tyopuhelin paivystaja))]
       (do
         (log/info (format "Lähetetään ilmoitus (id: %s) tekstiviestillä numeroon: %s"
-                          (:ilmoitus-id ilmoitus) puhelinnumero))
+                    (:ilmoitus-id ilmoitus) puhelinnumero))
         (let [viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti
                              db (:id paivystaja) (:ilmoitus-id ilmoitus) puhelinnumero)
               aiheet-ja-tarkenteet (when (get-in ilmoitus [:luokittelu :aihe])
