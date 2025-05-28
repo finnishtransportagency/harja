@@ -193,6 +193,6 @@
 
   PaivitaLomake
   (process-event [{lomake :lomake} app]
-    (prn "Jarno PaivitaLomake: " lomake)
+    (prn "PaivitaLomake: " lomake)
     (let []
       (assoc app :muokattava-muutos lomake))))
