@@ -9,9 +9,6 @@
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]))
 
-(defn tallenna-muutos [db user {:keys [urakka-id] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id))
-
 
 (defn tavoitehinnan-muutos [muutokset]
   (mapv (fn [rivi]
@@ -46,6 +43,37 @@
      :tavoitehinnan-muutokset []
      ;; TODO: laskennat vanhojen suunniteltujen määrien muutoksille jos hoitokausi ennen 2025-2026
      :suunniteltujen-maarien-muutokset []}))
+
+
+(defn tallenna-muutos [db user {:keys [urakka-id valittu-hoitokausi muutos] :as tiedot}]
+  (log/debug "tallenna-muutos: " tiedot)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (let [kustannusvaikutukset (:kustannusvaikutukset muutos)
+        tehtava-ja-maaramuutokset (:tehtavat_ja_maarat muutos)
+        liitteet (:liitteet muutos)]
+    (jdbc/with-db-transaction [db db]
+      (if (:id muutos)
+        (do
+          (log/debug "Päivitetään muutos: " muutos)
+          (muutos-kyselyt/paivita-muutos! db {:id (:id muutos)}))
+                                             :nimi (:nimi muutos)
+                                             :kuvaus (:kuvaus muutos)
+                                             :voimassa_alkaen (:voimassa_alkaen muutos)
+                                             :tyyppi (:tyyppi muutos)
+                                             :tehtavat_ja_maarat (konv/clojuremap->jsonb tehtava-ja-maaramuutokset)
+                                             :liitteet (konv/clojuremap->jsonb liitteet)})
+        (do
+          (log/debug "Tallennetaan uusi muutos: " muutos)
+          (let [uusi-muutos-id (muutos-kyselyt/tallenna-muutos db muutos)]
+            (doseq [kustannusvaikutus kustannusvaikutukset]
+              (muutos-kyselyt/tallenna-kustannusvaikutus db uusi-muutos-id kustannusvaikutus))
+            (doseq [tehtava-ja-maara tehtava-ja-maaramuutokset]
+              (muutos-kyselyt/tallenna-tehtava-ja-maara db uusi-muutos-id tehtava-ja-maara))
+            (doseq [liite liitteet]
+              (muutos-kyselyt/tallenna-liite db uusi-muutos-id liite)))
+          (hae-urakan-muutostiedot db user {:urakka-id urakka-id})))))))
+                                            :valittu-hoitokausi (:valittu-hoitokausi muutos)})))))))
+
 
 (defrecord Muutos [asetukset]
   component/Lifecycle

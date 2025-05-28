@@ -43,3 +43,15 @@ SELECT m.id,
        m.voimassa_alkaen <= (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD'))
  GROUP BY m.id, m.versio, m.urakka, m.voimassa_alkaen, m.tyyppi, m.nimi, m.syy, m.kulu_kohdistus, m.luonnos;
 
+--name: paivita-muutos!
+UPDATE mhu_muutos
+SET versio = versio + 1,
+    muokattu = NOW(),
+    muokkaaja = :kayttaja,
+    nimi = :nimi,
+    tyyppi = :tyyppi,
+    syy = :syy,
+    kulu_kohdistus = :kulu_kohdistus,
+    luonnos = :luonnos,
+    voimassa_alkaen = :voimassa_alkaen
+ WHERE id = :id;

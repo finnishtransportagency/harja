@@ -15,6 +15,7 @@
             [harja.domain.turvallisuuspoikkeama :as turpo]
             [harja.domain.laadunseuranta.laatupoikkeama :as lp]
             [harja.domain.laadunseuranta.tarkastus :as tarkastus]
+            [harja.domain.muutos-domain :as muutos]
             [harja.domain.toteuma :as toteuma]
             [harja.domain.erilliskustannus :as erilliskustannus]
             [harja.domain.oikeudet :as oikeudet]
@@ -120,7 +121,16 @@
               :domain-taulu-id ::erilliskustannus/id
               :domain-taulu-urakka-id ::erilliskustannus/urakka
               :oikeustarkistus (fn [_ user urakka-id _]
-                                       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id))}})
+                                       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id))}
+
+   :muutokset {:linkkitaulu ::liite-domain/mhu-muutos<->liite
+               :linkkitaulu-domain-id ::liite-domain/muutos-id
+               :linkkitaulu-liite-id ::liite-domain/liite-id
+               :domain-taulu ::muutos/muutos
+               :domain-taulu-id ::muutos/id
+               :domain-taulu-urakka-id ::muutos/urakka
+               :oikeustarkistus (fn [_ user urakka-id _]
+                                  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id))}})
 
 (defn- poista-kommentin-liite-linkitys [db user {:keys [urakka-id domain liite-id domain-id]}]
   ;; Etsitään kommentti, joka kuuluu annettuun domain-asiaan ja jolla on liitteenä liite-id.

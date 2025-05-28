@@ -6,8 +6,9 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.ui.liitteet :as liitteet]
             [harja.ui.viesti :as viesti]
-            [harja.domain.muutos-domain :as muutos-domain])
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -26,6 +27,11 @@
 (defrecord MuokkaaLaskettujenMuutoksienSyita [])
 (defrecord MuokkaaRahavaraustenMuutoksienSyita [])
 
+;; Liitteet
+(defrecord LisaaLiite [liite])
+(defrecord PoistaLisattyLiite [])
+(defrecord PoistaTallennettuLiite [liite-id])
+(defrecord PoistaPoistetutLiitteet [liite-id])
 
 ;; aika ennen 2025-2026 hoitovuotta
 (defrecord LisaaTavoitehintojenMuutos [])
@@ -34,6 +40,7 @@
 (defrecord ValitseUrakka [urakka])
 (defrecord NakymastaPoistuttiin [])
 
+(defrecord PaivitaLomake [lomake])
 
 (defn valitse-urakka [app urakka]
   (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)
@@ -100,9 +107,11 @@
 
   TallennaMuutos
   (process-event [{muutos :muutos} app]
+    (prn "tallenna muutos: " muutos)
     (let [urakka (:urakka @tila/yleiset)]
-      (tuck-apurit/post! :tallenna-muutois
+      (tuck-apurit/post! :tallenna-muutos
         {:urakka-id (:id urakka)
+         :valittu-hoitokausi (:valittu-hoitokausi app)
          :muutos muutos}
         {:onnistui ->HaeUrakanMuutostiedotOnnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
          :epaonnistui ->TallennaMuutosEpaonnistui})))
@@ -127,6 +136,45 @@
     ;; TODO: aloita rahavarausten muutosten syiden muokkaus taulukossa, ei avata lomaketta
     app)
 
+  LisaaLiite
+  (process-event
+    [{liite :liite} app]
+    (prn "LisaaLiite")
+    (-> app
+      (update-in [:muokattava-muutos :liitteet] conj liite)
+      (assoc :uusi-liite liite)))
+
+  PoistaPoistetutLiitteet
+  (process-event
+    [{:keys [liite-id]} app]
+    (prn "PoistaPoistetutLiitteet")
+
+    (let [liitteet (get-in app [:muokattava-muutos :liitteet])]
+      (assoc-in app [:muokattava-muutos :liitteet]
+        (filter (fn [liite]
+                  (not= (:id liite) liite-id))
+          liitteet))))
+
+  PoistaTallennettuLiite
+  (process-event
+    [{:keys [liite-id]} app]
+    (prn "PoistaTallennettuLiite, liite-id: " liite-id)
+    (let [{urakka-id :id} @nav/valittu-urakka
+          e! (tuck/current-send-function)
+          _ (liitteet/poista-liite-kannasta
+              {:urakka-id urakka-id
+               :domain :muutokset
+               :domain-id (get-in app [:muokattava-muutos :id])
+               :liite-id liite-id
+               :poistettu-fn #(e! (->PoistaPoistetutLiitteet liite-id))})]
+      app))
+
+  PoistaLisattyLiite
+  (process-event
+    [_ app]
+    (prn "PoistaLisattyLiite")
+
+    (assoc app :uusi-liite nil))
 
   LisaaTavoitehintojenMuutos
   (process-event [_ app]
@@ -141,4 +189,10 @@
 
   NakymastaPoistuttiin
   (process-event [_ app]
-    app))
+    app)
+
+  PaivitaLomake
+  (process-event [{lomake :lomake} app]
+    (prn "Jarno PaivitaLomake: " lomake)
+    (let []
+      (assoc app :muokattava-muutos lomake))))

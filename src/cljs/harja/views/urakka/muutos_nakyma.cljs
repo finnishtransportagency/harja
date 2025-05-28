@@ -11,6 +11,7 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
+            [harja.ui.liitteet :as liitteet]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as y]
             [harja.loki :refer [log logt]]
@@ -20,26 +21,68 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defn liite-kentta
+  "Lomakkeen liitekenttä, joka näyttää liitteiden listauksen ja mahdollistaa uusien liitteiden lisäämisen."
+  [e! {:keys [uusi-liite muokattava-muutos] :as app}]
+  [{:otsikko "Liite" :nimi :liitteet :kaariva-luokka "muutosliite"
+    :tyyppi :komponentti ::lomake/col-luokka "col-xs-12"
+    :uusi-rivi? true
+    :komponentti (fn [_]
+                   [liitteet/liitteet-ja-lisays
+                    @nav/valittu-urakka-id
+                    (:liitteet muokattava-muutos)
+                    {:uusi-liite-atom (r/wrap uusi-liite
+                                        #(e! (muutos-tiedot/->LisaaLiite %)))
+                     :uusi-liite-teksti "Lisää liite"
+                     :salli-poistaa-lisatty-liite? true
+                     :poista-lisatty-liite-fn #(e! (muutos-tiedot/->PoistaLisattyLiite))
+                     :salli-poistaa-tallennettu-liite? true
+                     :nayta-lisatyt-liitteet? false
+                     :poista-tallennettu-liite-fn #(e! (muutos-tiedot/->PoistaTallennettuLiite %))}])}])
+
+(defn- muutoslomakkeen-kentat-yhteiset
+  "Eri muutostyypeille yhteiset kentät. Voi silti sisältää pienen määrän haaroitusta."
+  [e! {:keys [muokattava-muutos] :as app}]
+  (vec
+    (keep identity
+      (concat
+        [{:otsikko "Tyyppi"
+          :nimi :tyyppi
+          :tyyppi :valinta
+          :vayla-tyyli? true
+          :valinnat muutos-domain/+muutostyypit+
+          :valinta-arvo identity
+          :valinta-nayta muutos-domain/tyyppi-fmt
+          :uusi-rivi? true}
+         (when (= "pysyva" (:tyyppi muokattava-muutos))
+           {:tyyppi :komponentti
+            :uusi-rivi? true
+            :komponentti (fn [rivi]
+                           [y/info-laatikko :neutraali
+                            "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."])})
+         (lomake/ryhma {:otsikko "Perustiedot"}
+           {:nimi :nimi
+            :otsikko "Nimi"
+            :tyyppi :string
+            :uusi-rivi? true
+            :pakollinen? true}
+           {:nimi :syy
+            :otsikko "Muutoksen syy"
+            :tyyppi :text
+            :koko [90 6]
+            :aputeksti "Kuvaile muutos mahdollisimman tarkasti."
+            :pituus-max 1000
+            :uusi-rivi? true
+            :pakollinen? true}
+           {:nimi :voimassa_alkaen :otsikko "Voimassa alkaen"
+            :tyyppi :pvm :uusi-rivi? true
+            :pakollinen? true})]
+        (liite-kentta e! app)))))
+
 (defn- muutoslomakkeen-kentat-pysyva
   "Pysyvän muutoksen lomakekomponentti"
   [e! app]
-  [{:tyyppi :komponentti
-    :uusi-rivi? true
-    :komponentti (fn [rivi]
-                   [y/info-laatikko :neutraali
-                   "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."])}
-   (lomake/ryhma {:otsikko "Perustiedot"}
-     {:nimi :nimi
-      :otsikko "Nimi"
-      :tyyppi :string
-      :uusi-rivi? true}
-     {:nimi :syy
-      :otsikko "Muutoksen syy"
-      :tyyppi :text
-      :koko [90 6]
-      :aputeksti "Kuvaile muutos mahdollisimman tarkasti."
-      :pituus-max 1000
-      :uusi-rivi? true}) ])
+  [])
 
 (defn muutoslomake [e! {:keys [muokattava-muutos] :as app}]
   [:span.muutoslomake
@@ -51,6 +94,7 @@
     {:otsikko (if (:id muokattava-muutos)
                 "Muokkaa muutosta"
                 "Lisää uusi muutos")
+     :muokkaa! #(e! (muutos-tiedot/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
      :footer-fn (fn [muutos]
                   [:span.tallenna-ja-peruuta
                    [napit/tallenna
@@ -60,15 +104,7 @@
     ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
     (into []
       (concat
-        [{:otsikko "Tyyppi"
-          :nimi :tyyppi
-          :tyyppi :valinta
-          :vayla-tyyli? true
-          :valinnat muutos-domain/+muutostyypit+
-          :valinta-arvo identity
-          :valinta-nayta muutos-domain/tyyppi-fmt
-          :pakollinen? true
-          :uusi-rivi? true}]
+        (muutoslomakkeen-kentat-yhteiset e! app)
 
         (case (:tyyppi muokattava-muutos)
           "pysyva" (muutoslomakkeen-kentat-pysyva e! app)
