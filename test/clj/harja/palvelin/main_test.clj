@@ -230,6 +230,7 @@
     :paikkauskohteet
     :valikatselmukset
     :lupaukset
+    :muutokset
     :urakan-lupausmuistutukset
     :api-analytiikka
     :yleiset-ajastukset
