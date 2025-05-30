@@ -94,7 +94,8 @@
       :lasketut-muutokset (:lasketut-muutokset vastaus)
       :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
       :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus)
-      :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)))
+      :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
+      :budjettitavoitteet (:budjettitavoitteet vastaus)))
 
   HaeUrakanMuutostiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]

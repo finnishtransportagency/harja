@@ -1,5 +1,24 @@
 // Muutokset-sivun tyylit
 .muutokset-sivu {
+  .muutosten-vaikutus {
+    margin-top: @valistys-32;
+    .muutosten-vaikutus-container {
+      background: @blue-lighter;
+      padding: @valistys-8 @valistys-16;
+      max-width: 600px;
+      .tietorivi {
+        span.tietokentta {
+          font-weight: normal;
+        }
+        span.tietoarvo {
+          font-weight: bold;
+        }
+        display: flex;
+        justify-content: space-between;
+      }
+    }
+  }
+
   .muutoslomake {
     .form-group {
       max-width: 640px;

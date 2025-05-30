@@ -13,7 +13,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.yleiset :as y]
+            [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log logt]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
@@ -58,7 +58,7 @@
            {:tyyppi :komponentti
             :uusi-rivi? true
             :komponentti (fn [rivi]
-                           [y/info-laatikko :neutraali
+                           [yleiset/info-laatikko :neutraali
                             "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."])})
          (lomake/ryhma {:otsikko "Perustiedot"}
            {:nimi :nimi
@@ -300,6 +300,26 @@
       [lasketut-muutokset e! app]
       [rahavarausten-muutokset e! app]])])
 
+(def +indeksikorjausta-ei-vahvistettu-txt+ "Indeksikorjausta ei saatavilla")
+
+(defn- muutosten-vaikutus
+  "Yhteenveto muutosten vaikutuksista."
+  [e! {:keys [budjettitavoitteet] :as app}]
+  (let [indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu? budjettitavoitteet)]
+    [:div.muutosten-vaikutus
+    [:h2 "Muutosten vaikutus"]
+    [yleiset/tietoja {:class "muutosten-vaikutus-container body-text"
+                      :tietorivi-luokka "padding-8"}
+     "Hoitovuoden alun indeksikorjattu tavoitehinta" (if-not indeksikorjaus-vahvistettu?
+                                                       +indeksikorjausta-ei-vahvistettu-txt+
+                                                       (fmt/euro-opt (:hoitovuoden-alun-indeksikorjattu-tavoitehinta budjettitavoitteet)))
+     "Tavoitehinnan muutokset" (fmt/euro-opt (:muutosten-vaikutus-yhteensa budjettitavoitteet))
+     "Hoitovuoden lopun tavoitehinta" (if-not indeksikorjaus-vahvistettu?
+                                        +indeksikorjausta-ei-vahvistettu-txt+
+                                        (fmt/euro-opt (:hoitovuoden-lopun-tavoitehinta budjettitavoitteet)))]
+     (when-not indeksikorjaus-vahvistettu? [yleiset/vihje "Indeksikorjaus vahvistetaan kustannussuunnitelmassa."])]))
+
+
 (defn muutokset-alempi-valilehti*
   [e! app]
   (let [urakka (:urakka @tila/yleiset)]
@@ -316,17 +336,16 @@
             (e! (muutos-tiedot/->ValitseUrakka urakka)))))
       (fn [e! app]
         [:span.muutokset-sivu
-         [y/vihje "Muutokset-osio on työn alla ja käytettävissä vain testiympäristössä."]
-         [:div.otsikko-ja-hoitokausi
-          [:h1 "Muutokset"]
-          [valinnat/urakan-hoitokausi-tuck (:valittu-hoitokausi app)
-           (:urakan-hoitokaudet app)
-           #(e! (muutos-tiedot/->HoitokausiVaihdettu urakka %))]]
-
          (if (:muokattava-muutos app)
            [muutoslomake e! app]
-           [muutoslistaus e! app])
-
+           [:valinnat-ja-listaus
+            [:h1 "Muutosten hallinta"]
+            [:div.otsikko-ja-hoitokausi
+             [valinnat/urakan-hoitokausi-tuck (:valittu-hoitokausi app)
+              (:urakan-hoitokaudet app)
+              #(e! (muutos-tiedot/->HoitokausiVaihdettu urakka %))]]
+            [muutosten-vaikutus e! app]
+            [muutoslistaus e! app]])
          [debug app]]))))
 
 (defn muutokset-paatason-valilehti [ur]

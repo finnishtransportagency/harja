@@ -5,6 +5,7 @@
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.kyselyt [muutos-kyselyt :as muutos-kyselyt]]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]))
@@ -31,8 +32,11 @@
                       (update :liitteet #(konv/jsonb->clojuremap %))))
                   (muutos-kyselyt/hae-urakan-hoitovuoden-muutostiedot db {:urakka urakka-id
                                                                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
-        kirjatut-muutokset (tavoitehinnan-muutos vastaus)]
-    (log/debug "Haetut muutostiedot: " kirjatut-muutokset)
+        kirjatut-muutokset (tavoitehinnan-muutos vastaus)
+        budjettitavoiteet (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
+        muutosten-vaikutus-yhteensa (reduce + 0 (map :tavoitehinnan-muutos kirjatut-muutokset))]
+    (prn "Haetut muutostiedot: " kirjatut-muutokset)
+    (prn "Haetut budjettitavoitteet : " budjettitavoiteet)
     ;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
     {:kirjatut-muutokset kirjatut-muutokset
      ;; TODO: laskennat lasketuille muutoksille jos hoitokausi 2025-2026 tai jälkeen
@@ -42,7 +46,15 @@
      ;; TODO: laskennat vanhojen tavoitehintojen muutoksille jos hoitokausi ennen 2025-2026
      :tavoitehinnan-muutokset []
      ;; TODO: laskennat vanhojen suunniteltujen määrien muutoksille jos hoitokausi ennen 2025-2026
-     :suunniteltujen-maarien-muutokset []}))
+     :suunniteltujen-maarien-muutokset []
+     :budjettitavoitteet {:indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu budjettitavoiteet)
+                          :hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu budjettitavoiteet)
+                          :muutosten-vaikutus-yhteensa muutosten-vaikutus-yhteensa
+                          :hoitovuoden-lopun-tavoitehinta (when (:tavoitehinta-indeksikorjattu budjettitavoiteet)
+                                                            (+
+                                                              (:tavoitehinta-indeksikorjattu budjettitavoiteet)
+                                                              ;; TODO: tässä huomioitava kaikkien muutosten vaikutus, työversiossa vasta kirjatut muutokset mukana
+                                                              muutosten-vaikutus-yhteensa))}}))
 
 
 (defn tallenna-muutos [db user {:keys [urakka-id valittu-hoitokausi muutos] :as tiedot}]
