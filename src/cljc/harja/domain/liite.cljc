@@ -77,4 +77,7 @@
     "liite" ::liite-id}]
   ["erilliskustannus_liite" ::erilliskustannus<->liite
    {"bonus" ::erilliskustannus-id
+    "liite" ::liite-id}]
+  ["mhu_muutos_liite" ::mhu-muutos<->liite
+   {"muutos" ::mhu-muutos-id
     "liite" ::liite-id}])
