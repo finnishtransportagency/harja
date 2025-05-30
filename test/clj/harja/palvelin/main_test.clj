@@ -140,6 +140,7 @@
     :analytiikan-toteumien-ajastus
     :kustannusten-seuranta
     :komponenttien-tila
+    :muutokset
     :itmf
     :paikkauskohteet
     :valikatselmukset
