@@ -4,6 +4,7 @@
             [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
             [harja.ui.grid :as grid]
+            [harja.ui.grid.protokollat :as grid-protokollat]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as urakka]
@@ -483,57 +484,74 @@
                                                   (reset! aikavali-loppu nil))
           {:luokka "nappi-toissijainen"}]]])))))
 
-(defn- urakan-yleinen-puh-ja-sposti [ur yhteystiedot]
-  (let [auki? (atom false)]
-    (fn [ur yhteystiedot]
+(defn- urakan-yleinen-puh-ja-sposti [ur yhteystiedot]  
+  (let [auki? (atom false)  
+        yhteystiedot-data (atom nil)  
+        grid-ohjaus (grid-protokollat/grid-ohjaus)]
+    (fn [ur yhteystiedot]  
       (if (not @auki?)
-        [:<>
-         (if yhteystiedot
-           [:span
-            (when (:sahkoposti yhteystiedot)
-              [:span "Sähköposti: " (:sahkoposti yhteystiedot) ", "])
-            (when (:matkapuhelin yhteystiedot)
-              [:span "Puhelinnumero: " (:matkapuhelin yhteystiedot)])]
-           [:span "Ei yhteystietoja"])
-         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset  (:id ur)))
-           [napit/muokkaa
-            nil
-            #(swap! auki? not)
-            {:luokka "nappi-reunaton"
-             :aria-label "Muokkaa urakan yleisiä yhteystietoja"}])]
-        (let [sahkoposti (atom (or (:sahkoposti yhteystiedot) ""))
-              matkapuhelin (atom (or (:matkapuhelin yhteystiedot) ""))]
-          [:<>
-           [:span
-            [tee-otsikollinen-kentta {:otsikko "Sähköposti"
-                                      :luokka "label-ja-kentta-yleiset-yhteystiedot"
-                                      :kentta-params {:tyyppi :string
-                                                      :vayla-tyyli? true}
-                                      :arvo-atom sahkoposti}]
-            [tee-otsikollinen-kentta {:otsikko "Puhelinnumero"
-                                      :luokka "label-ja-kentta-yleiset-yhteystiedot"
-                                      :kentta-params {:tyyppi :string
-                                                      :vayla-tyyli? true}
-                                      :arvo-atom matkapuhelin}]]
-           [napit/palvelinkutsu-nappi "Tallenna"
-            #(go (let [vastaus (<! (tiedot/tallenna-urakan-yleinen-puh-ja-sposti 
-                                     ur 
-                                     @matkapuhelin 
-                                     @sahkoposti 
-                                     (get-in ur [:urakoitsija :id])))]
-                   (if (k/virhe? vastaus)
-                     (viesti/nayta! "Urakan yhteystietojen tallennus epäonnistui" :warning)
-                     (do
-                       (viesti/nayta! "Urakan yhteystiedot tallennettu" :success)
-                       (reset! auki? false)
-                       (nav/paivita-urakan-tiedot! (:id ur)
-                         (fn [u]
-                           (assoc u :yhteystiedot vastaus)))))))
-            {:virheviesti "Urakan yhteystietojen tallennus epäonnistui."
-             :nayta-virheviesti? true}]
-           [napit/yleinen-toissijainen "Peruuta" #(reset! auki? false)
-            {:luokka "nappi-toissijainen"}]])))))
+        [:<>  
+         (if yhteystiedot  
+           [:span  
+            (when (:sahkoposti yhteystiedot)  
+              [:span "Sähköposti: " (:sahkoposti yhteystiedot) ", "])  
+            (when (:matkapuhelin yhteystiedot)  
+              [:span "Puhelinnumero: " (:matkapuhelin yhteystiedot)])]  
+           [:span "Ei yhteystietoja"])  
+         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)  
+                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))  
+           [napit/muokkaa  
+            nil  
+            #(do  
+               (reset! yhteystiedot-data {1 (or yhteystiedot {:sahkoposti "" :matkapuhelin ""})})  
+               (swap! auki? not))  
+            {:luokka "nappi-reunaton"  
+             :aria-label "Muokkaa urakan yleisiä yhteystietoja"}])]  
+
+        [grid/muokkaus-grid  
+         {:otsikko "Muokkaa urakan yhteystietoja"  
+          :voi-lisata? false  
+          :voi-poistaa? false  
+          :piilota-toiminnot? true  
+          :muokkauspaneeli? true  
+          :voi-kumota? false  
+          :ohjaus grid-ohjaus
+          :paneelikomponentit [(fn []  
+                                 (let [virheet (grid-protokollat/hae-virheet grid-ohjaus)
+                                       voi-tallentaa? (empty? (apply concat (vals virheet)))]  
+                                   [:div.custom-buttons  
+                                    [napit/tallenna "Tallenna"  
+                                     #(do  
+                                        (grid-protokollat/validoi-grid grid-ohjaus)
+                                        (let [paivitetyt-virheet (grid-protokollat/hae-virheet grid-ohjaus)]  
+                                          (if (empty? (apply concat (vals paivitetyt-virheet)))  
+                                            (go (let [rivi (first (vals (grid-protokollat/hae-muokkaustila grid-ohjaus)))
+                                                      vastaus (<! (tiedot/tallenna-urakan-yleinen-puh-ja-sposti   
+                                                                    ur   
+                                                                    (:matkapuhelin rivi)  
+                                                                    (:sahkoposti rivi)  
+                                                                    (get-in ur [:urakoitsija :id])))]  
+                                                  (if (k/virhe? vastaus)  
+                                                    (viesti/nayta! "Urakan yhteystietojen tallennus epäonnistui" :warning)  
+                                                    (do  
+                                                      (viesti/nayta! "Urakan yhteystiedot tallennettu" :success)  
+                                                      (reset! auki? false)  
+                                                      (nav/paivita-urakan-tiedot! (:id ur)  
+                                                        (fn [u]  
+                                                          (assoc u :yhteystiedot vastaus)))))))  
+                                            (viesti/nayta! "Tarkista syötteet" :warning)))) 
+                                     {:disabled (not voi-tallentaa?)}]  
+                                    [napit/peruuta "Peruuta" #(reset! auki? false)]]))]}  
+         [{:otsikko "Sähköposti"   
+           :nimi :sahkoposti   
+           :tyyppi :email   
+           :leveys 50  
+           :validoi [[:email "Kirjoita sähköpostiosoite loppuun ilman ääkkösiä."]]}  
+          {:otsikko "Puhelinnumero"   
+           :nimi :matkapuhelin   
+           :tyyppi :puhelin   
+           :leveys 50}]  
+         yhteystiedot-data]))))
 
 (defn yleiset-tiedot [paivita-vastuuhenkilot! ur kayttajat vastuuhenkilot yhteystiedot]
   (let [{:keys [paallystysurakka? paallystysurakka-sidottu?]
@@ -752,7 +770,7 @@
                (when (= :paallystys (:tyyppi ur))
                  (reset! urakka/paallystysurakan-indeksitiedot nil)
                  (go (reset! urakka/paallystysurakan-indeksitiedot
-                             (<! (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot)))))))]
+                       (<! (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot)))))))]
     (hae! ur)
     (komp/luo
       (komp/kun-muuttuu hae!)
