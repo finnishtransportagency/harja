@@ -225,7 +225,8 @@
 
       ;; Jos validoinnit on asetuksista laitettu päälle, niin Tavoitehinnan muutokset -päätös pitää olla tallennettu
       (and validoinnit-kaytossa? (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
-      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 3)
+      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Hoitovuoden lopun indeksikorjaus
+      laskentaan automaattisesti, kun tavoitehintamuutokset on vahvistettu." true 3)
 
       (and tavoitehinta tavoitehinnan-muutokset hoitokauden-indeksikuukaudet)
       (let [;; Laske pistelukujen muutos
