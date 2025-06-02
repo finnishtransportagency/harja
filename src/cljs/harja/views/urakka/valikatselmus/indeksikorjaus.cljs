@@ -83,13 +83,13 @@
 
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Pistelukujen muutos"]
-            [:div [:strong (fmt/euro-opt false (:pistelukujen_muutos_prosentteina paatos)) "%"]]]
+            [:div [:strong (fmt/desimaaliluku (:pistelukujen_muutos_prosentteina paatos) 1 false) "%"]]]
 
            [:div.flex-row.summa-rivi
             [:div (str "Indeksikorjauksen prosenttiosuus (2% " (if (> 0 (:pistelukujen_muutos_prosentteina paatos))
                                                                  "alittava"
                                                                  "ylittävä") " osa)")]
-            [:div [:strong (fmt/euro-opt false (:indeksikorotuksen_prosenttiosuus paatos)) "%"]]]
+            [:div [:strong (fmt/desimaaliluku (:indeksikorotuksen_prosenttiosuus paatos) 1 false) "%"]]]
 
            [:div.flex-row.laskenta-linkki-matalampi
             [yleiset/linkki "Näytä laskenta"
@@ -112,4 +112,4 @@
             #(e! (valikatselmus-tiedot/->TallennaHoitovuodenlopunIndeksikorjauspaatos paatos))
             #(e! (valikatselmus-tiedot/->PoistaHoitovuodenlopunIndeksikorjauspaatos paatos))]]
           [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))
+           [yleiset/info-laatikko :neutraali (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))
