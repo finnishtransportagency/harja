@@ -438,8 +438,12 @@
         {:otsikko "Tila" :nimi :tila :otsikkorivi-luokka "tila"
          :leveys ""
          :hae #(let [selite (tilan-selite (:tila %))]
-                 (if (:aiheutti-toimenpiteita %)
+                 (cond
+                   (= :ei-valitetty (:tila %))
+                   nil
+                   (:aiheutti-toimenpiteita %)
                    (str selite " (Toimenpitein)")
+                   :else
                    selite))}
         {:otsikko "Toimenpiteet aloitettu" :nimi :toimenpiteet-aloitettu
          :tyyppi :pvm :fmt pvm/pvm-aika

@@ -1,0 +1,70 @@
+// Muutokset-sivun tyylit
+.muutokset-sivu {
+  .muutosten-vaikutus {
+    margin-top: @valistys-32;
+    .muutosten-vaikutus-container {
+      background: @blue-lighter;
+      padding: @valistys-8 @valistys-16;
+      max-width: 600px;
+      .tietorivi {
+        span.tietokentta {
+          font-weight: normal;
+        }
+        span.tietoarvo {
+          font-weight: bold;
+        }
+        display: flex;
+        justify-content: space-between;
+      }
+    }
+  }
+
+  .muutoslomake {
+    .form-group {
+      max-width: 640px;
+    }
+    .info-laatikko {
+      margin-bottom: @valistys-16;
+    }
+    .pvm-kentta {
+      display: block;
+      max-width: 168px;
+    }
+  }
+    .otsikko-ja-hoitokausi {
+        div.select-default {
+          width: @hoitovuosi-valinnan-leveys;
+        }
+        margin-bottom: 12px;
+    }
+  .collapsoitava-osio {
+    border: 1px solid @harmaa-vaalea;
+    padding: @valistys-20 @valistys-32;
+  }
+  .otsikkorivi {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    button.navigation-ympyrassa {
+      font-size: @valistys-16;
+      height: @valistys-28;
+      width: @valistys-28;
+    }
+    h2 {
+      display: inline-block;
+      margin: 0 0 0 @valistys-24;
+    }
+    .summa {
+      font-size: @valistys-20;
+    }
+  }
+  .toiminnot {
+    margin-top: @valistys-16;
+    button {
+      margin-top: @valistys-8;
+    }
+  }
+  .debug {
+    margin-top: @valistys-48;
+  }
+}

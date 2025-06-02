@@ -44,15 +44,15 @@
                         {"Content-Type" "application/json"
                          "x-api-key" apiavain}
                         otsikot)
-              payload {"viesti-id" (str (UUID/randomUUID))
-                       "korrelaatio-id" (or korrelaatio-id "")
-                       "vastaanottaja" puhelinnumero
-                       "sisalto" viesti}
+              payload {:viesti-id (str (UUID/randomUUID))
+                       :korrelaatio-id (or korrelaatio-id "")
+                       :vastaanottaja puhelinnumero
+                       :sisalto viesti}
               http-asetukset {:metodi :POST
                               :url url
                               :otsikot otsikot}
               {body :body headers :headers status :status}
-              (integraatiotapahtuma/laheta konteksti :http http-asetukset payload)]
+              (integraatiotapahtuma/laheta konteksti :http http-asetukset (cheshire/encode payload))]
           (kasittele-vastaus body headers))))))
 
 

@@ -4,7 +4,7 @@
             [clojure.spec.alpha :as s]
             [reagent.core :refer [atom] :as r]
             [harja.ui.validointi :as validointi]
-            [harja.ui.yleiset :refer [virheen-ohje]]
+            [harja.ui.yleiset :refer [virheen-ohje] :as yleiset]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo atomina]]
             [harja.loki :refer [log logt tarkkaile!] :as loki]
             [harja.ui.komponentti :as komp]
@@ -419,11 +419,11 @@ ja kaikki pakolliset kentät on täytetty"
                                   " sisaltaa-varoituksen")
                                 (when-not (empty? huomautukset)
                                   " sisaltaa-huomautuksen"))}
-   [:div {:class (str
+   [:div {:class (yleiset/luokat
                    (when sisallon-leveys?
-                     "sisallon-leveys lomake-kentan-leveys ")
+                     "sisallon-leveys lomake-kentan-leveys")
                    (when kaariva-luokka kaariva-luokka)
-                   (when label-ja-kentta-samalle-riville? "flex-row "))}
+                   (when label-ja-kentta-samalle-riville? "flex-row"))}
     (when-not (or (+piilota-label+ tyyppi)
                   piilota-label?)
       [:label.control-label
@@ -659,7 +659,7 @@ ja kaikki pakolliset kentät on täytetty"
                [:div.row header])
              (when sulje-fn [napit/sulje-ruksi sulje-fn])
              (when otsikko
-               [(or otsikko-elementti :h3) {:class "lomake-otsikko"} otsikko])
+               [(or otsikko-elementti :h2) {:class "lomake-otsikko"} otsikko])
              (when otsikko-komp
                [otsikko-komp (assoc validoitu-data ::skeema skeema)])
              (doall
@@ -691,9 +691,9 @@ ja kaikki pakolliset kentät on täytetty"
                        [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
                         (if-let [nappi (get-in otsikko [:optiot :nappi])]
                           [:div.lomake-ryhman-otsikko.napilla
-                           [:h4 (:otsikko otsikko)]
+                           [:h3 (:otsikko otsikko)]
                            nappi]
-                          [:h4.lomake-ryhman-otsikko (:otsikko otsikko)])
+                          [:h3.lomake-ryhman-otsikko (:otsikko otsikko)])
                         rivi-ui]
                        ^{:key (str "rivi-ui-with-meta-" i)}
                        (with-meta rivi-ui {:key (str "rivi-ui-" i)}))))

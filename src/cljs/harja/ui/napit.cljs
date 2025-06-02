@@ -371,6 +371,7 @@
                              :ikoni (when-not ei-ikonia? (ikonit/sulje))})]))
 
 (defn tallenna
+  ([toiminto] (tallenna "Tallenna" toiminto {}))
   ([teksti toiminto] (tallenna teksti toiminto {}))
   ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi? data-cy] :as optiot}]
    [nappi teksti toiminto (merge

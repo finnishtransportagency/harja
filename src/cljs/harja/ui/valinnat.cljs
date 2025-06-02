@@ -115,7 +115,7 @@
   [valittu-hoitokausi hoitokaudet tuck-event optiot]
   (let [urakkatyyppi (-> @nav/valittu-urakka :tyyppi)
         vuosi-termi (cond
-                      (#{:hoito :teiden-hoito} urakkatyyppi) "Hoitokausi"
+                      (#{:hoito :teiden-hoito} urakkatyyppi) "Hoitovuosi"
                       (or
                         (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)
                         #{:paallystys urakkatyyppi}) "Urakkavuosi"
