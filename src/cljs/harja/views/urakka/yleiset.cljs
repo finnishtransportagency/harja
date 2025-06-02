@@ -13,15 +13,12 @@
             [harja.tiedot.hallinta.indeksit :as indeksit]
             [harja.tiedot.urakka.yleiset :as tiedot]
             [harja.tiedot.urakka.sopimustiedot :as sopimus]
-            [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka.yhatuonti :as yhatiedot]
             [harja.views.urakka.yhatuonti :as yha]
-            [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
-            [cljs-time.core :as t]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
             [harja.domain.oikeudet :as oikeudet]
@@ -29,7 +26,6 @@
             [harja.ui.kentat :refer [tee-kentta tee-otsikollinen-kentta]]
             [harja.fmt :as fmt]
             [harja.ui.ikonit :as ikonit]
-            [reagent.core :as r]
             [harja.ui.viesti :as viesti]
             [harja.domain.roolit :as roolit]
             [harja.domain.vesivaylat.alus :as alus]
@@ -38,10 +34,7 @@
             [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
             [harja.ui.lomake :as lomake]
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
-            [harja.views.urakka.yleiset.paivystajat :as paivystajat]
-            [harja.domain.urakka :as u-domain]
-            [harja.domain.urakka :as urakka-domain]
-            [taoensso.timbre :as log])
+            [harja.views.urakka.yleiset.paivystajat :as paivystajat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -179,7 +172,7 @@
 (defn- yllapitourakan-sopimustyyppi [ur]
   (when (and (not= :hoito (:tyyppi ur))
              (not= :teiden-hoito (:tyyppi ur))
-             (not (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))))
+             (not (u/vesivaylaurakkatyyppi? (:tyyppi ur))))
     (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
           sopimustyyppi (:sopimustyyppi ur)]
       [yleiset/livi-pudotusvalikko {:class "alasveto-sopimustyyppi"
@@ -484,7 +477,116 @@
                                                   (reset! aikavali-loppu nil))
           {:luokka "nappi-toissijainen"}]]])))))
 
-(defn- urakan-yleinen-puh-ja-sposti [ur yhteystiedot]  
+(defn- muokkaa-urakan-yhteystietoja-lomake [{:keys [urakan_yhteystiedot id] :as _urakka} avaa-toggle-fn voi-muokata?]
+  (let [;; Urakan yhteystiedot tulevat -> hae-hallintayksikon-urakat 
+        urakan_yhteystiedot (first urakan_yhteystiedot)
+        ;; Destruktoi yhteystiedot 
+        {:keys [etunimi matkapuhelin sahkoposti organisaatio]} urakan_yhteystiedot 
+        ;; Palvelinkutsu
+        tallenna-fn (fn [yhteystiedot-atom]
+                      (go
+                        (let [_ (println "Tallennetaan, tiedot: " id " " (:matkapuhelin yhteystiedot-atom) " " (:sahkoposti yhteystiedot-atom) " " (js/parseInt organisaatio))
+                              vastaus (<! (tiedot/tallenna-urakan-yleinen-puh-ja-sposti
+                                            id
+                                            (:matkapuhelin yhteystiedot-atom)
+                                            (:sahkoposti yhteystiedot-atom)
+                                            (js/parseInt organisaatio)))]
+        
+                          (if (k/virhe? vastaus)
+                            (viesti/nayta! "Urakan yhteystietojen tallennus epäonnistui" :warning)
+                            (do
+                              (viesti/nayta! "Urakan yhteystiedot tallennettu" :success)
+                              ;; Sulje muokkaus samalla jos tallennus onnistui 
+                              (avaa-toggle-fn))))))]
+
+    ;; Ei tuck protokollaa, käytetään reagentin with-let 
+    (r/with-let [yhteystiedot (atom {:etunimi etunimi
+                                     :matkapuhelin matkapuhelin
+                                     :sahkoposti sahkoposti})
+                 virheita? (fn []
+                             (or
+                               (nil? (seq (:etunimi @yhteystiedot)))
+                               (nil? (seq (:matkapuhelin @yhteystiedot)))
+                               (nil? (seq (:sahkoposti @yhteystiedot)))))]
+      [lomake/lomake
+       {:ei-borderia? true
+        :tarkkaile-ulkopuolisia-muutoksia? true
+        :muokkaa! (fn [rivi]
+                    (swap! yhteystiedot merge rivi))
+        :header [:div.col-md-12
+                 [:h2.header-yhteiset "Muokkaa urakan yhteystietoja"]
+                 [:hr]]
+        :footer [:<>
+                 [:hr]
+                 ;; Lisää footeriin tallennus ja peruuta napit 
+                 [:div.muokkaus-modal-napit
+                  [napit/tallenna "Tallenna" #(tallenna-fn @yhteystiedot) {:disabled (or
+                                                                                       (virheita?)
+                                                                                       (not voi-muokata?))}]
+                  [napit/yleinen-toissijainen "Peruuta" avaa-toggle-fn]]
+                 
+                 ;; Valinnainen varoituslaatikko, jos tietoja puuttuu 
+                 (when (virheita?)
+                   [yleiset/info-laatikko :varoitus "Pakollisia tietoja puuttuu."])]}
+
+       [(lomake/rivi
+          {:nimi :etunimi
+           :tyyppi :string
+           :otsikko "Etunimi"
+           :pakollinen? true
+           :salli-kirjoitus? true
+           :validoi [#(when (nil? (seq %)) "Syötä etunimi")]
+           ::lomake/col-luokka "col-xs-12"}
+
+          {:nimi :matkapuhelin
+           :tyyppi :string
+           :otsikko "Matkapuhelin"
+           :pakollinen? true
+           :salli-kirjoitus? true
+           :validoi [#(when (nil? (seq %)) "Syötä matkapuhelin")]
+           ::lomake/col-luokka "col-xs-12"}
+
+          {:nimi :sahkoposti
+           :tyyppi :email
+           :otsikko "Sähköposti"
+           :pakollinen? true
+           :salli-kirjoitus? true
+           :validoi [[:email "Kirjoita sähköpostiosoite loppuun ilman ääkkösiä."]]
+           ::lomake/col-luokka "col-xs-12"})]
+       @yhteystiedot])))
+
+(defn- urakan-yleinen-puh-ja-sposti [{:keys [urakan_yhteystiedot id] :as urakka} _yhteystiedot]
+  
+  ;; TODO Viimeisen yhteystiedot parametrin voi poistaa tästä funktiosta, ja sen kutsusta 
+  (println "\n Urakan yhteystiedot:" urakan_yhteystiedot)
+
+  (let [muokataan? (atom false)
+        muokkaa-fn #(swap! muokataan? not)
+        urakan_yhteystiedot (first urakan_yhteystiedot)
+        ;; Formatoi tähän kuinka yhteystiedot näkyy, kun muokkaus ei ole käytössä 
+        yhteystiedot (if urakan_yhteystiedot
+                       (str (:sahkoposti urakan_yhteystiedot) " " (:matkapuhelin urakan_yhteystiedot))
+                       "Ei yhteystietoja")
+        voi-muokata? (and
+                       (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+                       (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset id))]
+    
+    (fn [_urakka]
+      [:span
+       (if @muokataan?
+         ;; Avaa yhteystietojen muokkaus lomake 
+         (muokkaa-urakan-yhteystietoja-lomake urakka muokkaa-fn voi-muokata?)
+         ;; Muokkaus ei ole päällä, näytä yhteystiedot 
+         [:span
+          [:span yhteystiedot]
+          ;; Älä näytä muokkaa nappia, jos ei ole oikeuksia 
+          (when voi-muokata?
+            [napit/muokkaa nil muokkaa-fn {:luokka "nappi-reunaton"
+                                           :aria-label "Muokkaa urakan yhteystietoja"}])])])))
+
+
+
+(defn- urakan-yleinen-puh-ja-sposti-vanha [ur yhteystiedot]  
   (let [auki? (atom false)  
         yhteystiedot-data (atom nil)  
         grid-ohjaus (grid-protokollat/grid-ohjaus)]
@@ -498,7 +600,8 @@
             (when (:matkapuhelin yhteystiedot)  
               [:span "Puhelinnumero: " (:matkapuhelin yhteystiedot)])]  
            [:span "Ei yhteystietoja"])  
-         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)  
+         (when (and 
+                 (roolit/tilaajan-kayttaja? @istunto/kayttaja)  
                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))  
            [napit/muokkaa  
             nil  
@@ -743,11 +846,11 @@
   "Näyttää YHA-tuontidialogin, jos tarvii."
   [urakka]
   (let [yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? urakka)
-        paallystysurakka? (urakka-domain/paallystysurakka? urakka)
+        paallystysurakka? (u/paallystysurakka? urakka)
         paallystysurakka-sidottu? (some? (:yhatiedot urakka))
-        paikkausurakka? (urakka-domain/paikkausurakka? urakka)
+        paikkausurakka? (u/paikkausurakka? urakka)
         sidonta-lukittu? (get-in urakka [:yhatiedot :sidonta-lukittu?])
-        palvelusopimus? (urakka-domain/paallystyksen-palvelusopimus? urakka)]
+        palvelusopimus? (u/paallystyksen-palvelusopimus? urakka)]
     (when (and yha-tuontioikeus?
                paallystysurakka?
                (not paikkausurakka?)
@@ -783,7 +886,7 @@
            [paallystys-indeksit/paallystysurakan-indeksit ur])
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
-         (when (urakka-domain/vesivaylaurakka-ei-kanava? ur)
+         (when (u/vesivaylaurakka-ei-kanava? ur)
            [alukset ur])
          (when (urakka/paivystys-kaytossa? ur)
            [paivystajat/paivystajat ur])

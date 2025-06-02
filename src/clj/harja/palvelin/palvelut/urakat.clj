@@ -122,6 +122,21 @@
                  paasopimus)
                ss)))))
 
+(defn- pura-yhteystiedot
+  [{jdbc-array :urakan_yhteystiedot :as urakka}]
+  (if-not jdbc-array
+    urakka
+    (assoc urakka :urakan_yhteystiedot (mapv (fn [s]
+                                               (let [[id etunimi matkapuhelin sahkoposti organisaatio]
+                                                     ;; Katso: listaa-urakat-hallintayksikolle
+                                                     (str/split s #"\|")]
+                                                 {:id           (Long/parseLong id)
+                                                  :etunimi      etunimi
+                                                  :matkapuhelin matkapuhelin
+                                                  :sahkoposti   sahkoposti
+                                                  :organisaatio organisaatio}))
+                                         (.getArray jdbc-array)))))
+
 (def urakka-xf
   (comp (muunna-pg-tulokset :alue :alueurakan_alue)
 
@@ -148,6 +163,8 @@
         ;; Tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"
         ;;                          :paasopimus 3}
         (map pura-sopimukset)
+
+        (map pura-yhteystiedot)
 
         (map #(assoc % :hallintayksikko {:id      (:hallintayksikko_id %)
                                          :nimi    (:hallintayksikko_nimi %)
