@@ -15,6 +15,7 @@
             [harja.views.urakka.yllapitokohteet.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
             [harja.views.urakka.aikataulu :as aikataulu]
             [harja.views.urakka.lupaus-nakyma :as lupaus-nakyma]
+            [harja.views.urakka.muutos-nakyma :as muutos-nakyma]
             [harja.views.urakka.tiemerkinnan-kustannukset :as tiemerkinnan-kustannukset]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kohdeluettelo :as paikkaukset]
             [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kok-hint-tyot]
@@ -152,6 +153,12 @@
                     (oikeudet/urakat-paikkaukset id)
                     (= tyyppi :paallystys)
                     (or (= :mpu sopimustyyppi) (= :kokonaisurakka sopimustyyppi)))
+
+    :mhu-muutokset (and
+                     (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
+                     ;; Tässä kohti näytetään MHU-muutokset vain muissa kuin tuotantoympäristöissä
+                     (k/kehitysymparistossa?)
+                     (= tyyppi :teiden-hoito))
     false))
 
 (defn urakka
@@ -217,6 +224,12 @@
        (when (valilehti-mahdollinen? :toteumat ur)
          ^{:key "toteumat"}
          [toteumat/toteumat ur])
+
+       "Muutokset"
+       :mhu-muutokset
+       (when (valilehti-mahdollinen? :mhu-muutokset ur)
+         ^{:key "mhu-muutokset"}
+         [muutos-nakyma/muutokset-paatason-valilehti ur])
 
        "Toimenpiteet"
        :toimenpiteet

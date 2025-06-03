@@ -207,6 +207,9 @@ SELECT paivita_pohjavesialueet();
 -- Suunnitellut kulut Kittilän urakan 1. vuodelle vuoden päätöstä varten.
 \i testidata/vuodenpaatos.sql
 
+-- MHU muutokset
+\i testidata/muutos_testidata.sql
+
 \i testidata/analytiikka-paallystyskohteet.sql
 
 -- Populoidaan rahavaraukset

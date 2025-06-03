@@ -140,6 +140,7 @@
     :analytiikan-toteumien-ajastus
     :kustannusten-seuranta
     :komponenttien-tila
+    :muutokset
     :itmf
     :paikkauskohteet
     :valikatselmukset
@@ -229,6 +230,7 @@
     :paikkauskohteet
     :valikatselmukset
     :lupaukset
+    :muutokset
     :urakan-lupausmuistutukset
     :api-analytiikka
     :yleiset-ajastukset
