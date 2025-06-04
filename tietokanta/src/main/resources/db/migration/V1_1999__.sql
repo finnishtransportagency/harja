@@ -75,22 +75,23 @@ CREATE TABLE paatos_tavoitehinta_ylitys
 
 CREATE TABLE paatos_tavoitehinta_alitus
 (
-    id                             SERIAL PRIMARY KEY,
-    urakkaid                       INTEGER        NOT NULL,
-    hoitokauden_alkuvuosi          INTEGER        NOT NULL,
-    hoitokauden_alun_tavoitehinta  NUMERIC(12, 2) NOT NULL,
-    hoitokauden_lopun_tavoitehinta NUMERIC(12, 2) NOT NULL,
-    toteutuneet_kustannukset       NUMERIC(12, 2) NOT NULL,
-    alituksen_maara                NUMERIC(10, 2),
-    siirron_maara                  NUMERIC(10, 2), -- Jos siirretään seuraavalle vuodelle niin tähän se summa. Viimeisenä vuotena ei voida enää siirtää
-    tavoitepalkkio                 NUMERIC(10, 2),
-    tavoitepalkkion_maksuprosentti NUMERIC(4, 2),
-    kulu_id                        INTEGER,
-    viimeinen_hoitokausi           BOOLEAN,
-    luotu                          TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    luoja                          INTEGER        NOT NULL,
-    poistettu                      BOOLEAN        NOT NULL DEFAULT FALSE,
-    poistaja                       INTEGER,
+    id                                SERIAL PRIMARY KEY,
+    urakkaid                          INTEGER        NOT NULL,
+    hoitokauden_alkuvuosi             INTEGER        NOT NULL,
+    hoitokauden_alun_tavoitehinta     NUMERIC(12, 2) NOT NULL,
+    hoitokauden_lopun_tavoitehinta    NUMERIC(12, 2) NOT NULL,
+    toteutuneet_kustannukset          NUMERIC(12, 2) NOT NULL,
+    alituksen_maara                   NUMERIC(10, 2),
+    siirron_maara                     NUMERIC(10, 2), -- Jos siirretään seuraavalle vuodelle niin tähän se summa. Viimeisenä vuotena ei voida enää siirtää
+    tavoitepalkkio                    NUMERIC(10, 2),
+    tavoitepalkkion_maksuprosentti    NUMERIC(4, 2),
+    tavoitepalkkion_maksimi_prosentti NUMERIC(4, 2),  -- Tällä hetkellä kaikilla 3%, mutta voi muuttua tulevaisuudessa
+    kulu_id                           INTEGER,
+    viimeinen_hoitokausi              BOOLEAN,
+    luotu                             TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    luoja                             INTEGER        NOT NULL,
+    poistettu                         BOOLEAN        NOT NULL DEFAULT FALSE,
+    poistaja                          INTEGER,
     FOREIGN KEY (luoja) REFERENCES kayttaja (id),
     FOREIGN KEY (kulu_id) REFERENCES kulu (id),
     FOREIGN KEY (urakkaid) REFERENCES urakka (id)
@@ -272,7 +273,7 @@ DECLARE
     tavoitepalkkioprosentti                                      DECIMAL(4, 2);
     tavoitepalkkionmaxprosentti                                  DECIMAL(4, 2)  := 3; -- Tällä hetkellä kaikilla on 3%
     tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024    DECIMAL(4, 2)  := 70;
-    tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2024_vaativa DECIMAL(4, 2)  := 50;
+    tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2024_MHUplus DECIMAL(4, 2)  := 50;
     tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2025_        DECIMAL(4, 2)  := 25;
     tavoitehinnan_ylityksen_maksuprosentti                       DECIMAL(4, 2);
     luojaid                                                      INTEGER        := (SELECT id
@@ -308,7 +309,7 @@ BEGIN
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2025_
                                                            WHEN urakan_tiedot.alkupvm > '2024-10-02' AND
                                                                 urakan_tiedot.sopimustyyppi = 'mhu'
-                                                               THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2024_vaativa
+                                                               THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2024_MHUplus
                 -- Kaikille muille defaulttina 70%
                                                            ELSE tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024 END);
             -- Jos indeksi on käytössä sanktiolla, niin se on myös käytössä bonuksella
@@ -496,8 +497,8 @@ BEGIN
                                               AND tav."hoitokauden-alkuvuosi" = paatos."hoitokauden-alkuvuosi"
                                               AND tav.poistettu = FALSE)
             SELECT paatos."hoitokauden-alkuvuosi"                AS hoitokauden_alkuvuosi,
-                   ut.tavoitehinta_indeksikorjattu               AS hoitokauden_alun_tavoitehinta,
-                   (ut.tavoitehinta_indeksikorjattu + tav.summa) AS tavoitehinta,
+                   ut.tavoitehinta_indeksikorjattu               AS hoitovuoden_alun_tavoitehinta,
+                   (ut.tavoitehinta_indeksikorjattu + tav.summa) AS hoitovuoden_lopun_tavoitehinta,
                    COALESCE(ko."uusi-kattohinta",
                             (ut.kattohinta_indeksikorjattu + (tav.summa * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
                                                                  AS kattohinta,
@@ -516,7 +517,7 @@ BEGIN
                 laske_toteutuneet_kustannukset(paatos."urakka-id", paatos."hoitokauden-alkuvuosi");
 
             RAISE NOTICE 'Hoitokauden alkuvuosi: %, Hoitokauden alun tavoitehinta: %, Hoitokauden lopun tavoitehinta: %s, kattohinta: %, tarjous_tavoitehinta: %, hoitokauden_jarjestysluku: %',
-                urakan_hinnat.hoitokauden_alkuvuosi, urakan_hinnat.hoitokauden_alun_tavoitehinta, urakan_hinnat.tavoitehinta, urakan_hinnat.kattohinta, urakan_hinnat.tarjous_tavoitehinta, hoitokauden_jarjestysluku;
+                urakan_hinnat.hoitokauden_alkuvuosi, urakan_hinnat.hoitovuoden_alun_tavoitehinta, urakan_hinnat.hoitovuoden_lopun_tavoitehinta, urakan_hinnat.kattohinta, urakan_hinnat.tarjous_tavoitehinta, hoitokauden_jarjestysluku;
 
             RAISE NOTICE 'Toteutuneet kustannukset: %', toteutuneet_kustannukset_urakalle;
 
@@ -541,7 +542,7 @@ BEGIN
                                                     sanktioprosentti, indeksi, indeksikorotus, sanktio_id, luoja, luotu,
                                                     poistettu)
                          VALUES (paatos."urakka-id", paatos."hoitokauden-alkuvuosi", 'sanktio',
-                                 urakan_hinnat.tavoitehinta,
+                                 urakan_hinnat.hoitovuoden_lopun_tavoitehinta,
                                  urakan_hinnat.tarjous_tavoitehinta, paatos."lupaus-luvatut-pisteet",
                                  paatos."lupaus-toteutuneet-pisteet",
                                  (paatos."urakoitsijan-maksu" *-1), -- Vanhassa päätöstaulussa on lupaussanktio negatiivisena, joten käännetään se positiiviseksi tässä.
@@ -569,7 +570,7 @@ BEGIN
                                                     luotu,
                                                     poistettu)
                          VALUES (paatos."urakka-id", paatos."hoitokauden-alkuvuosi", 'bonus',
-                                 urakan_hinnat.tavoitehinta, urakan_hinnat.tarjous_tavoitehinta,
+                                 urakan_hinnat.hoitovuoden_lopun_tavoitehinta, urakan_hinnat.tarjous_tavoitehinta,
                                  paatos."lupaus-luvatut-pisteet",
                                  paatos."lupaus-toteutuneet-pisteet",
                                  paatos."tilaajan-maksu",
@@ -581,7 +582,7 @@ BEGIN
                 WHEN 'tavoitehinnan-alitus'
                     THEN RAISE NOTICE 'tavoitehinnan-alitus tiedot: %', paatos;
                          alituksen_maara_urakalle :=
-                             urakan_hinnat.tavoitehinta - toteutuneet_kustannukset_urakalle;
+                             urakan_hinnat.hoitovuoden_lopun_tavoitehinta - toteutuneet_kustannukset_urakalle;
                          INSERT INTO paatos_tavoitehinta_alitus (urakkaid,
                                                                  hoitokauden_alkuvuosi,
                                                                  hoitokauden_alun_tavoitehinta,
@@ -590,17 +591,19 @@ BEGIN
                                                                  alituksen_maara, siirron_maara,
                                                                  tavoitepalkkio,
                                                                  tavoitepalkkion_maksuprosentti,
+                                                                 tavoitepalkkion_maksimi_prosentti,
                                                                  kulu_id,
                                                                  viimeinen_hoitokausi,
                                                                  luotu, luoja,
                                                                  poistettu)
                          VALUES (paatos."urakka-id", paatos."hoitokauden-alkuvuosi",
-                                 urakan_hinnat.hoitokauden_alun_tavoitehinta, urakan_hinnat.tavoitehinta,
+                                 urakan_hinnat.hoitovuoden_alun_tavoitehinta, urakan_hinnat.hoitovuoden_lopun_tavoitehinta,
                                  toteutuneet_kustannukset_urakalle,
                                  alituksen_maara_urakalle,
                                  paatos.siirto,
                                  (paatos."urakoitsijan-maksu" * -1), -- Vanhassa päätöstaulussa on tavoitepalkkio negatiivisena ja eri tavalla tallennettuna, koska siitä on tehty negatiivinen kulu.
                                  urakka_parametrit.tavoitepalkkion_maksuprosentti,
+                                 urakka_parametrit.tavoitepalkkion_maksimi,
                                  paatos.kulu_id, viimeinen_hoitokausi,
                                  paatos.luotu, paatos."luoja-id",
                                  paatos.poistettu);
@@ -611,12 +614,12 @@ BEGIN
                          IF urakan_hinnat.kattohinta >= toteutuneet_kustannukset_urakalle THEN
                              -- Jos toteutuneet kustannukset ovat pienemmät kuin kattohinta, niin tavoitehinnan ylitys lasketaan toteutuneista kustannuksista
                              tavoitehinnan_ylitys :=
-                                 (toteutuneet_kustannukset_urakalle - urakan_hinnat.tavoitehinta);
+                                 (toteutuneet_kustannukset_urakalle - urakan_hinnat.hoitovuoden_lopun_tavoitehinta);
                              RAISE NOTICE 'tavoitehinnan-ylitys :: kattohinta suurempi kuin toteuma :: Toteutuneet kustannukset: %, kattohinta: %, tavoitehinnan_ylitys: %', toteutuneet_kustannukset_urakalle, urakan_hinnat.kattohinta, tavoitehinnan_ylitys;
                          ELSE
                              -- Kun toteutuneet kustannukset ylittävät myös kattohinnan, niin tavoitehinnan ylitys lasketaan kattohinnan ja tavoitehinnan välistä
                              tavoitehinnan_ylitys :=
-                                 (urakan_hinnat.kattohinta - urakan_hinnat.tavoitehinta);
+                                 (urakan_hinnat.kattohinta - urakan_hinnat.hoitovuoden_lopun_tavoitehinta);
                              RAISE NOTICE 'tavoitehinnan-ylitys tiedot :: toteuma alle kattohinnan  :: Toteutuneet kustannukset: %, kattohinta: %, tavoitehinnan_ylitys: %', toteutuneet_kustannukset_urakalle, urakan_hinnat.kattohinta, tavoitehinnan_ylitys;
 
                          end if;
@@ -633,7 +636,7 @@ BEGIN
                                                                  kulu_id, viimeinen_hoitokausi,
                                                                  luotu, luoja, poistettu)
                          VALUES (paatos."urakka-id", paatos."hoitokauden-alkuvuosi",
-                                 urakan_hinnat.tavoitehinta, urakan_hinnat.tarjous_tavoitehinta,
+                                 urakan_hinnat.hoitovuoden_lopun_tavoitehinta, urakan_hinnat.tarjous_tavoitehinta,
                                  tavoitehinnan_ylitys, -- Ylityksen määrä on laskettava, koska sitä ei ollut päätöksissä tallessa
                                  urakka_parametrit.tavoitehinnan_ylityksen_tilaajan_maksuprosentti,
                                  urakka_parametrit.tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti,
