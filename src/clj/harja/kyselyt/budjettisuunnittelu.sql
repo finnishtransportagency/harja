@@ -21,7 +21,12 @@ WITH tavoitehinnan_oikaisut AS
          (SELECT sum(summa) AS summa, "urakka-id", "hoitokauden-alkuvuosi"
           FROM tavoitehinnan_oikaisu
           WHERE NOT poistettu
-          GROUP BY "urakka-id", "hoitokauden-alkuvuosi")
+          GROUP BY "urakka-id", "hoitokauden-alkuvuosi"),
+    hoivuoden_lopun_indeksikorjaus AS
+         (SELECT phi.hoitokauden_lopun_indeksikorjaus, phi.hoitokauden_alkuvuosi
+          FROM paatos_hoitokauden_indeksikorjaus phi
+          WHERE phi.poistettu = FALSE
+            AND phi.urakkaid = :urakka)
 SELECT ut.id,
        ut.urakka,
        ut.hoitokausi,
@@ -39,9 +44,15 @@ SELECT ut.id,
        ut.vahvistaja,
        ut.versio,
        (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0))                               AS "tavoitehinta-oikaistu",
+       (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0) +
+        COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0))                                    AS "hoitovuoden-lopun-tavoitehinta",
        COALESCE(ko."uusi-kattohinta",
                 (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa,0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
                                                                                               AS "kattohinta-oikaistu",
+       COALESCE(ko."uusi-kattohinta",
+                (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa, 0) * 1.1)
+                    + (COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista ja hoitovuoden lopun indeksikorjauksista.
+                                                                                              AS "hoitovuoden-lopun-kattohinta",
        (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INTEGER                            AS "hoitokauden-alkuvuosi",
        ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta"
 FROM urakka_tavoite ut
@@ -53,6 +64,7 @@ FROM urakka_tavoite ut
          LEFT JOIN tavoitehinnan_oikaisut t ON u.id = t."urakka-id" AND
                                                EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
                                                t."hoitokauden-alkuvuosi"
+         LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
 WHERE urakka = :urakka
 ORDER BY ut.hoitokausi;
 

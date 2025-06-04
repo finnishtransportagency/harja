@@ -333,7 +333,7 @@
             siirto-ed-vuodelta 60000.0M
             tavoitepalkkio 10000.0M
             tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
-            tavoitepalkkion_maksimi_prosentti
+            tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
             kulu-id 1
             viimeinen_hoitokausi false
             ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta" tekemällä tavoitehinnan alituspäätös

@@ -52,8 +52,8 @@
                                            0))
                                     (:sanktiot yhteenvedon-tiedot)))
         ;; Alitukset ja ylitykset
-        oikaistu-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-oikaistu])
-        oikaistu-kattohinta (get-in yhteenvedon-tiedot [:budjettitavoite :kattohinta-oikaistu])
+        hoitovuoden-lopun-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-tavoitehinta])
+        hoitovuoden-lopun-kattohinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta])
         tavoitehinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-ylitys)
         tavoitehinnan-alituspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-alitus)
         tavoitehinnan-ylitys (or (:ylityksen_maara tavoitehinnan-ylityspaatos) 0)
@@ -78,10 +78,10 @@
      [:h2.yhteenveto "Yhteenveto"]
      [:div.flex-row.summa-rivi-ylin
       [:span.laskenta-rivi-lukema "Hoitovuoden lopun tavoitehinta"]
-      [:span.laskenta-rivi-lukema (fmt/euro-opt false oikaistu-tavoitehinta)]]
+      [:span.laskenta-rivi-lukema (fmt/euro-opt false hoitovuoden-lopun-tavoitehinta)]]
      [:div.flex-row.summa-rivi
       [:span.laskenta-rivi-lukema "Hoitovuoden lopun kattohinta"]
-      [:span.laskenta-rivi-lukema (fmt/euro-opt false oikaistu-kattohinta)]]
+      [:span.laskenta-rivi-lukema (fmt/euro-opt false hoitovuoden-lopun-kattohinta)]]
 
      [:h3 "Tavoitehintaan kuuluvat toteutuneet kustannukset"]
      [:div.flex-row.summa-rivi-ylin

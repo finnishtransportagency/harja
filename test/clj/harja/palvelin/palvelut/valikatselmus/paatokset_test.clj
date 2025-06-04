@@ -12,6 +12,7 @@
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.kyselyt.sanktiot :as sanktio-kyselyt]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
             [harja.kyselyt.jarjestelman-tila :as jarjestelma-kyselyt]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
@@ -796,7 +797,10 @@
         ;; Ei odoteta vastausta, koska ehdot ei täyty
         _ (try
             (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
-                          valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
+                          budjettisuunnittelu-kyselyt/hae-budjettitavoite
+                          (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                    :hoitovuoden-lopun-tavoitehinta tavoitehinta
+                                                    :hoitovuoden-lopun-kattohinta (* 1.1 tavoitehinta)}])]
               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-ylityspaatos +kayttaja-jvh+ paatos))
             (catch Exception e e))
         ;; Haetaan sen sijaan tehty päätös suoraan tietokannasta
@@ -932,8 +936,10 @@
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
-                                valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit]
-                                                                                kattohinta)]
+                                budjettisuunnittelu-kyselyt/hae-budjettitavoite
+                                (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                          :hoitovuoden-lopun-tavoitehinta (* 0.9 kattohinta)
+                                                          :hoitovuoden-lopun-kattohinta kattohinta}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-kattohinnan-ylityspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e e))
 
@@ -1301,8 +1307,10 @@
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaukset
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta_jalkeen)
-                                valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit] kattohinta)
+                                budjettisuunnittelu-kyselyt/hae-budjettitavoite
+                                (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                          :hoitovuoden-lopun-tavoitehinta tavoitehinta_jalkeen
+                                                          :hoitovuoden-lopun-kattohinta kattohinta}])
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ paatos))
