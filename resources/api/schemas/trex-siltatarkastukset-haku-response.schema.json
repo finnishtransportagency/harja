@@ -21,11 +21,12 @@
               },
               "tarkastusaika": {
                 "type": "string",
-                "description": "Tarkasastusajankohta. Päivämäärä ilman kellonaikaa. Esim. 2024-12-31"
+                "format": "datetime",
+                "description": "Tarkasastusajankohta. Päivämäärä ja kellonaika. Aikavyöhyke on määriteltävä. Esim. 2024-10-31T22:00:00Z."
               },
               "tarkastaja": {
                 "type": "string",
-                "description": "Siltatarkastuksen suoritaneen henkilön nimi. Esim. Mari Meikäläinen."
+                "description": "Siltatarkastuksen suoritaneen henkilön nimi. Esim. Mari Meikäläinen. Tieto on henkilötieto, käsittele sitä sen mukaisesti."
               },
               "luotu": {
                 "type": "string",
@@ -73,19 +74,19 @@
                 "properties": {
                   "harja-id": {
                     "type": "integer",
-                    "description": "Sillan id Harjassa."
+                    "description": "Sillan id Harjassa. Esim. 18096"
                   },
                   "tunnus": {
                     "type": "string",
-                    "description": "Sillan tunnus. Esim. H-1234"
+                    "description": "Sillan tunnus. Esim. SK-5733"
                   },
                   "oid": {
                     "type": "string",
-                    "description": "Sillan oid Taitorakennerekisterissä. Esim. "
+                    "description": "Sillan oid Taitorakennerekisterissä. Esim. 1.2.246.578.1.15.805733"
                   },
                   "siltaid": {
                     "type": "integer",
-                    "description": "Vanha tunniste sillalle. Esim."
+                    "description": "Vanha tunniste sillalle. Esim. 275261"
                   }
                 },
                 "required": [
@@ -224,7 +225,7 @@
                                       "E",
                                       "eiPade"
                                     ],
-                                    "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta. Koodi ja arvo ovat kytköksissä toisiinsa. a"
+                                    "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta. Koodi ja arvo ovat kytköksissä toisiinsa. "
                                   },
                                   "kuvaus": {
                                     "type": "string",
@@ -269,11 +270,11 @@
                                     },
                                     "url": {
                                       "type": "string",
-                                      "description": "URL josta voi hakea täysikokoisen kuvan."
+                                      "description": "URL josta voi hakea täysikokoisen kuvan. 3.6.2025 Lopullinen ratkaisu on auki, mutta Taitorakennerekisteri tarvitsee jonkinlaisen tunnisteen ja osoitteen, jolla hakea kuvan. Voi olla että se ei ole url, missä tapauksessa muutetaan tätä rajapintakuvausta."
                                     },
                                     "pikkukuva": {
                                       "type": "string",
-                                      "description": "Kuvaliitteen thumbnail."
+                                      "description": "Kuvaliitteen thumbnail. 3.6.2025 on vielä auki palautetaanko pikkukuvaa tässä rajapinnassa."
                                     }
                                   }
                                 }
