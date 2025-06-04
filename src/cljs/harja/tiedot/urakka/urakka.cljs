@@ -401,6 +401,16 @@
 
 (def laskutus-default {:kohdistetut-kulut kulut-default})
 (def lupaukset-default {})
+(def muutokset-default {:kirjatut-muutokset nil
+                        :lasketut-muutokset nil
+                        :rahavarausten-muutokset nil
+                        :tavoitehinnan-muutokset nil
+                        :suunniteltujen-maarien-muutokset nil
+                        :taulukko-nakyvissa? {:kirjatut-muutokset true
+                                              :lasketut-muutokset true
+                                              :rahavarausten-muutokset true
+                                              :tavoitehinnan-muutokset true
+                                              :suunniteltujen-maarien-muutokset true}})
 (def laatupoikkeamat-default {:listaus-tyyppi :kaikki
                               :tallennus-kaynnissa? false
                               :hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
@@ -423,6 +433,7 @@
                      :laatupoikkeamat laatupoikkeamat-default
                      :laskutus    laskutus-default
                      :lupaukset lupaukset-default
+                     :muutokset muutokset-default
                      :pot2 pot2-default-arvot
                      :suunnittelu suunnittelu-default-arvot
                      :toteumat    toteumat-default-arvot
@@ -458,6 +469,7 @@
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
 (defonce lupaukset (cursor tila [:lupaukset]))
+(defonce muutokset (cursor tila [:muutokset]))
 (defonce talvihoitoreitit (cursor tila [:talvihoitoreitit]))
 
 (defonce yleiset (cursor tila [:yleiset]))

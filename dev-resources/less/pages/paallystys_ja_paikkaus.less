@@ -499,3 +499,12 @@ div.yllapitokohteet {
 .kulutus-hyppy-ikoni-ok {
   transform: scale(0.8);
 }
+.pot-perustiedot {
+  .form-group label {
+    margin-top: 0;
+  }
+  // lomakekohtainen hack, jotta flex palstoittaa oikein
+  .pot-tieosoite-kentta div.basis256 {
+    max-width: 256px;
+  }
+}
