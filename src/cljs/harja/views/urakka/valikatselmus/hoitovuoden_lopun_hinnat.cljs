@@ -33,13 +33,13 @@
                [:div [:strong (fmt/euro-opt false (:hoitokauden_lopun_indeksikorjaus paatos))]]])
 
             [:div.flex-row
-             [:h3.ennen-painiketta "Hoitovuoden lopun tavoitehinta"]
-             [:div.otsikko-lukema (fmt/euro-opt false (:tavoitehinta_jalkeen paatos))]]
+             [:div.big-text "Hoitovuoden lopun tavoitehinta"]
+             [:div.big-text.lihavoitu (fmt/euro-opt false (:tavoitehinta_jalkeen paatos))]]
             [:div.flex-row
              [:div
-              [:h3.alempi-otsikko "Hoitovuoden lopun kattohinta"]
+              [:div.big-text "Hoitovuoden lopun kattohinta"]
               [:div.small-text (str (fmt/piste->pilkku (:kattohintakerroin paatos)) " x hoitovuoden lopun tavoitehinta")]]
-             [:div.otsikko-lukema (fmt/euro-opt false (:kattohinta paatos))]]]
+             [:div.big-text.lihavoitu (fmt/euro-opt false (:kattohinta paatos))]]]
            [:hr.paatos-hr]
            [:div
             [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?

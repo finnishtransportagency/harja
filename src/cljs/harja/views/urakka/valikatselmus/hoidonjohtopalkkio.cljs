@@ -60,8 +60,8 @@
             [:div.rivi-lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
 
            [:div.flex-row
-            [:h3.matala-otsikko "Hoidonjohtopalkkion muutos"]
-            [:div.otsikko-lukema (fmt/euro-opt false (:hoidonjohtopalkkio_muutos paatos))]]
+            [:div.big-text "Hoidonjohtopalkkion muutos"]
+            [:div.big-text.lihavoitu (fmt/euro-opt false (:hoidonjohtopalkkio_muutos paatos))]]
 
            (when-not (= 0 (:hoidonjohtopalkkio_muutos paatos))
              [:div.flex-row.laskenta-linkki

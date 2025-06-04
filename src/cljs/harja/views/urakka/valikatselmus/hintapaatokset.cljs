@@ -29,8 +29,8 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
-         [:div [:h3.matala "Tavoitehinnan ylitys"]]
-         [:div.otsikko-lukema (fmt/euro-opt false (:ylityksen_maara paatos))]]
+         [:div.big-text "Tavoitehinnan ylitys"]
+         [:div.big-text.lihavoitu (fmt/euro-opt false (:ylityksen_maara paatos))]]
        [:div.flex-row.summa-rivi-valja
         [:div (str "Tilaaja maksaa (" (:tilaajan_prosentti paatos) "%)")]
         [:div.rivi-lukema (fmt/euro-opt false (:tilaaja_maksaa paatos))]]
@@ -59,8 +59,8 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
-         [:div [:h3.matala-otsikko "Tavoitehinnan alitus"]]
-         [:div.otsikko-lukema (fmt/euro-opt false (:alituksen_maara paatos))]]
+         [:div.big-text "Tavoitehinnan alitus"]
+         [:div.big-text.lihavoitu (fmt/euro-opt false (:alituksen_maara paatos))]]
         [:div.flex-row.lista-rivi-ylin
          [:div (str "Tavoitepalkkio (" (:tavoitepalkkion_maksuprosentti paatos) "%)")]
          [:div.rivi-lukema (fmt/euro-opt false (:tavoitepalkkio paatos))]]
@@ -103,8 +103,8 @@
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [:div.flex-row
-         [:div [:h3.matala "Kattohinnan ylitys"]]
-         [:div.otsikko-lukema (fmt/euro-opt false (:ylityksen_maara paatos))]]
+         [:div.big-text "Kattohinnan ylitys"]
+         [:div.big-text.lihavoitu (fmt/euro-opt false (:ylityksen_maara paatos))]]
         (when (and (not paatos-tehty?) (not (:viimeinen_hoitokausi paatos)))
           [:div.harmaa-tausta
            [:div.flex-row

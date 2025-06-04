@@ -104,8 +104,8 @@
 
            [:div.flex-row {:aria-live "polite"}
             ;;Tämä :aria-live on tässä ruudunlukijaa varten, jotta se jätä tätä linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
-            [:h3.alempi-otsikko "Hoitovuoden lopun indeksikorjaus"]
-            [:div.otsikko-lukema (fmt/euro-opt false (:hoitokauden_lopun_indeksikorjaus paatos))]]
+            [:div.big-text "Hoitovuoden lopun indeksikorjaus"]
+            [:div.big-text.lihavoitu (fmt/euro-opt false (:hoitokauden_lopun_indeksikorjaus paatos))]]
            [:hr.paatos-hr]
 
            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?

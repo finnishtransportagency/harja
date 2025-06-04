@@ -91,7 +91,7 @@
                    (str " (+ indeksi  " (fmt/euro-opt (:indeksikorotus paatos)) " )"))]]]
               (= (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos))
               [:<>
-               [:h2.bonus-sanktio "Ei bonusta eikä sanktiota"]])]])
+               [:div.big-text.lihavoitu "Ei bonusta eikä sanktiota"]])]])
 
         ;; Jos päätöksessä on virhe, niin näytetään se
         (when (:virhe paatos)
