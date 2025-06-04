@@ -189,14 +189,14 @@
 
 (defn hae-tarjouksesta-rivit-vuodelle [avain tarjous-rivit nimi]
   (let [;; Etsitään kustannus, joka vastaa annettua nimeä
-        rivit (sort-by :vuosi (reduce (fn [r rivi]
-                                        (let [r-rivit (keep #(when (= nimi (:nimi %))
-                                                               (dissoc (merge % {:vuosi (:hoitokauden_alkuvuosi rivi)})
-                                                                       :id :nimi :osio :tehtava_id :tehtavaryhma_id :rahavaraus_id
-                                                                       :johto_ja_hallintokorvaus_toimenkuva_id))
-                                                            (avain rivi))]
-                                          (vec (concat r r-rivit))))
-                                      [] tarjous-rivit))]
+        rivit (into [] (sort-by :vuosi (reduce (fn [r rivi]
+                                                 (let [r-rivit (keep #(when (= nimi (:nimi %))
+                                                                        (dissoc (merge % {:vuosi (:hoitokauden_alkuvuosi rivi)})
+                                                                                :id :nimi :osio :tehtava_id :tehtavaryhma_id :rahavaraus_id
+                                                                                :johto_ja_hallintokorvaus_toimenkuva_id))
+                                                                     (avain rivi))]
+                                                   (vec (concat r r-rivit))))
+                                               [] tarjous-rivit)))]
     rivit))
 
 (defn- muodosta-tarjous-rivi [r hoitovuosittaiset-arvot]

@@ -42,11 +42,11 @@
                                     :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
 
                                    ;; Johto ja hallintokorvaukset eli toimenkuvat
-                                   {:nimi "vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                                   {:nimi "Vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                                     :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
-                                   {:nimi "apulainen/työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 4 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                                   {:nimi "Apulainen/työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 4 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                                     :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
-                                   {:nimi "valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                                   {:nimi "Valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                                     :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
 
                                    ;; Hoidonjohtopalkkio
@@ -132,9 +132,9 @@
         ;; Tallenna tarjous kantaan
         vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
         ;; Hae tarjous tietokannasta
-        tarjoukset-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
+        tarjous-rivit-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
 
-    (is (= (count tarjoukset-tietokannasta) (count rahavaraukset)))))
+    (is (= (count (butlast tarjous-rivit-tietokannasta)) (count rahavaraukset)) "Rahavarausten lisäksi tarjous palauttaa yhteenvetorivin.")))
 
 (deftest tallenna-laajat-kustannukset-ja-hae-kustannukset-tarjoukselle-onnistuu
   (let [db (:db jarjestelma)
@@ -163,7 +163,7 @@
         ;; Hae tarjous tietokannasta
         tarjoukset-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
     ;; Varmistetaan, että tietokannasta löytyy oikea määrä rivejä
-    (is (= (count tarjoukset-tietokannasta) (+ 3 (count rahavaraukset))))))
+    (is (= (count (butlast tarjoukset-tietokannasta)) (+ 3 (count rahavaraukset))))))
 
 (deftest tallenna-hankintoja-tarjoukselle-onnistuu
   (let [db (:db jarjestelma)
@@ -250,7 +250,7 @@
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
         tarjoukset-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
 
-    (is (= (count tarjoukset-tietokannasta) (count johto-ja-hallintokorvaukset)))))
+    (is (= (count (butlast tarjoukset-tietokannasta)) (count johto-ja-hallintokorvaukset)))))
 
 ;; Rajanpintatestit
 (deftest tallenna-tarjous-rajapinnasta-onnistuu
