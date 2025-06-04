@@ -315,6 +315,7 @@ SELECT 0                          AS budjetoitu_summa,
            WHEN lk.tehtavaryhma IS NULL AND lk.tyyppi::TEXT = 'lisatyo' THEN tk.nimi
            WHEN lk.tehtavaryhma IS NULL AND lk.tyyppi::TEXT = 'muukulu' THEN tk.nimi
            WHEN tr.nimi = 'J - Johto- ja hallintokorvaus' THEN 'Johto- ja hallintokorvaus (käsin kirjattu)'
+           WHEN tr.nimi = 'G - Hoidonjohtopalkkio'  AND lk.tyyppi::TEXT = 'paatos' THEN 'Hoidonjohtopalkkion muutos'
            ELSE tr.nimi
            END                   AS tehtava_nimi,
        CASE
