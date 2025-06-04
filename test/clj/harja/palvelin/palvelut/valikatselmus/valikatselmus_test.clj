@@ -333,11 +333,12 @@
             siirto-ed-vuodelta 60000.0M
             tavoitepalkkio 10000.0M
             tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+            tavoitepalkkion_maksimi_prosentti
             kulu-id 1
             viimeinen_hoitokausi false
             ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta" tekemällä tavoitehinnan alituspäätös
             alituspaatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                     alituksen-maara siirto-ed-vuodelta tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id
+                     alituksen-maara siirto-ed-vuodelta tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id
                      viimeinen_hoitokausi (:id kayttaja))
             _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) alituspaatos)
 
@@ -394,11 +395,12 @@
               siirto-ed-vuodelta 60000.0M
               tavoitepalkkio 10000.0M
               tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+              tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
               kulu-id 1
               viimeinen_hoitokausi false
               ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta" tekemällä tavoitehinnan alituspäätös
               alituspaatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                             alituksen-maara siirto-ed-vuodelta tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id
+                             alituksen-maara siirto-ed-vuodelta tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id
                              viimeinen_hoitokausi (:id kayttaja))
               _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) alituspaatos)
 

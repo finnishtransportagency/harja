@@ -21,7 +21,7 @@
    :luoja luoja})
 
 (defn tavoitehinnan-alituspaatos [urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                                  alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id
+                                  alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id
                                   viimeinen_hoitokausi luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
@@ -32,6 +32,7 @@
    :siirron_maara siirron-maara
    :tavoitepalkkio tavoitepalkkio
    :tavoitepalkkion_maksuprosentti tavoitepalkkion-maksuprosentti
+   :tavoitepalkkion_maksimi_prosentti tavoitepalkkion_maksimi_prosentti
    :kulu_id kulu-id
    :viimeinen_hoitokausi viimeinen_hoitokausi
    :luoja luoja})

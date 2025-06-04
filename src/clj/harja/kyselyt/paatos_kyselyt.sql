@@ -86,10 +86,10 @@ WHERE id = :paatos-id
 -- name: tee-tavoitehinnan-alitus-paatos<!
 -- Tee tavoitehinnan alitus päätös
 INSERT INTO paatos_tavoitehinta_alitus (urakkaid, hoitokauden_alkuvuosi, hoitokauden_alun_tavoitehinta, hoitokauden_lopun_tavoitehinta, toteutuneet_kustannukset,
-                                        alituksen_maara, siirron_maara, tavoitepalkkio, kulu_id, tavoitepalkkion_maksuprosentti,
+                                        alituksen_maara, siirron_maara, tavoitepalkkio, kulu_id, tavoitepalkkion_maksuprosentti, tavoitepalkkion_maksimi_prosentti,
                                         viimeinen_hoitokausi, luoja, luotu)
 VALUES (:urakkaid, :hoitokauden_alkuvuosi, :hoitokauden_alun_tavoitehinta, :hoitokauden_lopun_tavoitehinta, :toteutuneet_kustannukset, :alituksen_maara,
-        :siirron_maara, :tavoitepalkkio, :kulu_id, :tavoitepalkkion_maksuprosentti, :viimeinen_hoitokausi, :luoja, NOW());
+        :siirron_maara, :tavoitepalkkio, :kulu_id, :tavoitepalkkion_maksuprosentti, :tavoitepalkkion_maksimi_prosentti, :viimeinen_hoitokausi, :luoja, NOW());
 
 -- name: poista-tavoitehinnan-alitus-paatos<!
 -- Poista tavoitehinnan alitus päätös

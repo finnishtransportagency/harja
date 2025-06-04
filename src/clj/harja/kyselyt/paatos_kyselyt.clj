@@ -167,6 +167,7 @@
   :siirron_maara <eurot>
   :tavoitepalkkio <eurot>
   :tavoitepalkkion_maksuprosentti <prosentti>
+  :tavoitepalkkion_maksimi_prosentti <prosentti>
   :viimeinen_hoitokausi <boolean>
   :kulu_id <luodun kulun id>
   :luoja <kuka>}"

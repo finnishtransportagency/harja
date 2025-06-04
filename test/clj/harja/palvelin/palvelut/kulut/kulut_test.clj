@@ -436,9 +436,10 @@
         siirron-maara 100M
         tavoitepalkkio 150M
         tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
         kulu-id 1
         paatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)
 
         _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)
 
@@ -470,9 +471,10 @@
         siirron-maara 100M
         tavoitepalkkio 150M
         tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
         kulu-id 1
         paatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)
 
         _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)
         ;; Ja koitetaan siirtää kulu seuraavalle hoitokaudelle, jolla ei ole välikatselmusta tehtynä

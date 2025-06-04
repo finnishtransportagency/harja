@@ -75,7 +75,7 @@
   (is (= luoja (:luoja paatos))))
 
 (defn testaa-tavoitehinnan-alitus [paatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                                   alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id
+                                   alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id
                                    viimeinen_hoitokausi luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
@@ -87,6 +87,7 @@
   (is (= tavoitepalkkio (:tavoitepalkkio paatos)))
   (is (= kulu-id (:kulu_id paatos)))
   (is (= tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti paatos)))
+  (is (= tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi_prosentti paatos)))
   (is (= viimeinen_hoitokausi (:viimeinen_hoitokausi paatos)))
   (is (= luoja (:luoja paatos))))
 
@@ -568,7 +569,7 @@
     (is (nil? (:luotu poistettu-paatos)))
     (is (= urakkaid (:urakkaid poistettu-paatos)))))
 
-;; Testaa tavoitehinnan alituspäätöksen lisäsy
+;; Testaa tavoitehinnan alituspäätöksen lisääminen
 (deftest kysely-tavoitehinnan-alitus-lisays-onnistuu-test
   (let [hoitokauden-alkuvuosi 2024
         urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -583,13 +584,14 @@
         siirron-maara 100M
         tavoitepalkkio 150M
         tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
         kulu-id 1
         paatos (paatos-apurit/tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)]
     (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-      alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)))
+      alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)))
 
 (deftest rajapinta-tavoitehinnan-alitus-lisays-onnistuu-test
   (let [hoitokauden-alkuvuosi 2021
@@ -607,9 +609,10 @@
         siirron-maara 100M
         tavoitepalkkio 150M
         tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
         kulu-id nil
         paatos (paatos-apurit/tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)
         vastaus (try
                   (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
                                 valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hoitokauden-alun-tavoitehinta)
@@ -639,9 +642,10 @@
         siirron-maara 100M
         tavoitepalkkio 150M
         tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
         kulu-id 1
         paatos (paatos-apurit/tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)
         _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)
 
         ;; Määrittele haettavat päätökset - Luetaan vain tavoitehinnan alituspäätös, kun se on ainoa, mikä tässä testissä on luotu
@@ -667,9 +671,10 @@
         siirron-maara 100M
         tavoitepalkkio 150M
         tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
         kulu-id nil
         paatos (paatos-apurit/tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti kulu-id false kayttajaid)
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)
         vastaus (try
                   (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
                                 valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hoitokauden-alun-tavoitehinta)

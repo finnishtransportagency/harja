@@ -27,6 +27,7 @@
 (s/def ::siirron_maara number?)
 (s/def ::siirtorajoitus_prosentti #(or (nil? %) (number? %)))
 (s/def ::tavoitepalkkion_maksuprosentti number?)
+(s/def ::tavoitepalkkion_maksimi_prosentti number?)
 (s/def ::luvatut_pisteet int?)
 (s/def ::toteutuneet_pisteet int?)
 (s/def ::luoja int?)
@@ -64,7 +65,7 @@
 
 (s/def ::tavoitehinnan-alituspaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::hoitokauden_alun_tavoitehinta
                                                     ::hoitokauden_lopun_tavoitehinta ::toteutuneet_kustannukset ::alituksen_maara
-                                                    ::siirron_maara ::tavoitepalkkio ::tavoitepalkkion_maksuprosentti ::viimeinen_hoitokausi
+                                                    ::siirron_maara ::tavoitepalkkio ::tavoitepalkkion_maksuprosentti ::tavoitepalkkion_maksimi_prosentti ::viimeinen_hoitokausi
                                                     ::luoja]
                                     :opt-un [::kulu_id]))
 (s/def ::tavoitehinnan-ylityspaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::tavoitehinta
