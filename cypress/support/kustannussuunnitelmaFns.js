@@ -400,8 +400,10 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
     cy.contains('Näytä päättyneet').click();
 
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
+    // Mene suunnittelu välilehdelle
     cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
-
+    // Avaa Kustannussuunnitelma
+    cy.get('[data-cy=tabs-taso2-Kustannussuunnitelma]').click();
     // Tässä otetaan indeksikertoimet talteen
     cy.wait('@budjettisuunnittelun-indeksit')
         .then(($xhr) => {
