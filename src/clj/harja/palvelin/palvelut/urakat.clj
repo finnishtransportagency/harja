@@ -134,7 +134,7 @@
                                                   :etunimi      etunimi
                                                   :matkapuhelin matkapuhelin
                                                   :sahkoposti   sahkoposti
-                                                  :organisaatio organisaatio}))
+                                                  :organisaatio (Long/parseLong organisaatio)}))
                                          (.getArray jdbc-array)))))
 
 (def urakka-xf

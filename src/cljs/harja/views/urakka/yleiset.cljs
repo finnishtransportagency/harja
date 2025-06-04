@@ -6,6 +6,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.grid.protokollat :as grid-protokollat]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.debug :as debug]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as urakka]
             [harja.domain.urakka :as u]
@@ -477,35 +478,37 @@
                                                   (reset! aikavali-loppu nil))
           {:luokka "nappi-toissijainen"}]]])))))
 
-(defn- muokkaa-urakan-yhteystietoja-lomake [{:keys [urakan_yhteystiedot id] :as _urakka} avaa-toggle-fn voi-muokata?]
+(defn- muokkaa-urakan-yhteystietoja-lomake [{:keys [urakan_yhteystiedot urakoitsija id] :as _urakka} avaa-toggle-fn voi-muokata?]
   (let [;; Urakan yhteystiedot tulevat -> hae-hallintayksikon-urakat 
         urakan_yhteystiedot (first urakan_yhteystiedot)
         ;; Destruktoi yhteystiedot 
-        {:keys [etunimi matkapuhelin sahkoposti organisaatio]} urakan_yhteystiedot 
+        {:keys [matkapuhelin sahkoposti]} urakan_yhteystiedot
         ;; Palvelinkutsu
         tallenna-fn (fn [yhteystiedot-atom]
                       (go
-                        (let [_ (println "Tallennetaan, tiedot: " id " " (:matkapuhelin yhteystiedot-atom) " " (:sahkoposti yhteystiedot-atom) " " (js/parseInt organisaatio))
+                        (let [_ (println "Tallennetaan, tiedot: " id " " (:matkapuhelin yhteystiedot-atom) " " (:sahkoposti yhteystiedot-atom) " " (:id urakoitsija))
                               vastaus (<! (tiedot/tallenna-urakan-yleinen-puh-ja-sposti
                                             id
                                             (:matkapuhelin yhteystiedot-atom)
                                             (:sahkoposti yhteystiedot-atom)
-                                            (js/parseInt organisaatio)))]
-        
+                                            (:id urakoitsija)))]
+                          
                           (if (k/virhe? vastaus)
                             (viesti/nayta! "Urakan yhteystietojen tallennus epäonnistui" :warning)
                             (do
                               (viesti/nayta! "Urakan yhteystiedot tallennettu" :success)
+                              (nav/paivita-urakan-tiedot! id
+                                (fn [u]
+                                  (println "Päivitetään urakan yhteystiedot: " u)
+                                 (assoc-in u [:urakan_yhteystiedot :etunimi] "vastaus")))
                               ;; Sulje muokkaus samalla jos tallennus onnistui 
                               (avaa-toggle-fn))))))]
 
     ;; Ei tuck protokollaa, käytetään reagentin with-let 
-    (r/with-let [yhteystiedot (atom {:etunimi etunimi
-                                     :matkapuhelin matkapuhelin
+    (r/with-let [yhteystiedot (atom {:matkapuhelin matkapuhelin
                                      :sahkoposti sahkoposti})
                  virheita? (fn []
                              (or
-                               (nil? (seq (:etunimi @yhteystiedot)))
                                (nil? (seq (:matkapuhelin @yhteystiedot)))
                                (nil? (seq (:sahkoposti @yhteystiedot)))))]
       [lomake/lomake
@@ -514,7 +517,7 @@
         :muokkaa! (fn [rivi]
                     (swap! yhteystiedot merge rivi))
         :header [:div.col-md-12
-                 [:h2.header-yhteiset "Muokkaa urakan yhteystietoja"]
+                 [:h2.header-yhteiset "Muokkaa urakan yleisiä yhteystietoja"]
                  [:hr]]
         :footer [:<>
                  [:hr]
@@ -530,14 +533,6 @@
                    [yleiset/info-laatikko :varoitus "Pakollisia tietoja puuttuu."])]}
 
        [(lomake/rivi
-          {:nimi :etunimi
-           :tyyppi :string
-           :otsikko "Etunimi"
-           :pakollinen? true
-           :salli-kirjoitus? true
-           :validoi [#(when (nil? (seq %)) "Syötä etunimi")]
-           ::lomake/col-luokka "col-xs-12"}
-
           {:nimi :matkapuhelin
            :tyyppi :string
            :otsikko "Matkapuhelin"
@@ -565,7 +560,7 @@
         urakan_yhteystiedot (first urakan_yhteystiedot)
         ;; Formatoi tähän kuinka yhteystiedot näkyy, kun muokkaus ei ole käytössä 
         yhteystiedot (if urakan_yhteystiedot
-                       (str (:sahkoposti urakan_yhteystiedot) " " (:matkapuhelin urakan_yhteystiedot))
+                       (str "Sähköposti: " (:sahkoposti urakan_yhteystiedot) ", Puhelinnumero: " (:matkapuhelin urakan_yhteystiedot))
                        "Ei yhteystietoja")
         voi-muokata? (and
                        (roolit/tilaajan-kayttaja? @istunto/kayttaja)
@@ -881,6 +876,7 @@
                      (nayta-yha-tuontidialogi-tarvittaessa ur)))
       (fn [ur]
         [:div
+         [debug/debug ur]
          [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot @yhteystiedot]
          (when (= :paallystys (:tyyppi ur))
            [paallystys-indeksit/paallystysurakan-indeksit ur])

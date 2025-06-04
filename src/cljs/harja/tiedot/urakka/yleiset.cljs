@@ -81,9 +81,9 @@
 (defn hae-urakan-yleinen-puh-ja-sposti [urakka-id]
   (k/post! :hae-urakan-yleinen-puh-ja-sposti urakka-id))
 
-(defn tallenna-urakan-yleinen-puh-ja-sposti [ur matkapuhelin sahkoposti organisaatio-id]
+(defn tallenna-urakan-yleinen-puh-ja-sposti [id matkapuhelin sahkoposti organisaatio-id]
   (k/post! :tallenna-urakan-yleinen-puh-ja-sposti
-    {:urakka-id (:id ur)
+    {:urakka-id id
      :matkapuhelin matkapuhelin
      :sahkoposti sahkoposti
      :organisaatio-id organisaatio-id}))
