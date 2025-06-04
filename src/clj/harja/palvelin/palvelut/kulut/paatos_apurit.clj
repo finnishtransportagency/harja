@@ -123,7 +123,7 @@
                       (and (= :hoidonjohtopalkkion-muutos paatoksen-tyyppi) (>= kokonaissumma 0))
                       "Välikatselmuksessa luotu kulu. Hoidonjohtopalkkion muutos. Urakoitsija maksaa."
                       (and (= :hoidonjohtopalkkion-muutos paatoksen-tyyppi) (< kokonaissumma 0))
-                      "Välikatselmuksessa luotu kulu. Hoidonjohtopalkkion muutos. Tilaaja maksaa."
+                      "Välikatselmuksessa luotu kulu. Hoidonjohtopalkkion muutos, tavoitehinnan ulkopuolinen kulu."
                       :else nil)
          ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle
          laskutuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (:hoitokauden_alkuvuosi paatos)) 9 15))
