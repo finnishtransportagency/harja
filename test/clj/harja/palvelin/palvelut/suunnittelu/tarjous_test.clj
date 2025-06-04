@@ -1,12 +1,12 @@
 (ns harja.palvelin.palvelut.suunnittelu.tarjous-test
   (:require [clojure.test :refer [deftest testing use-fixtures compose-fixtures is]]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
+            [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.tyokalut.yleiset :refer :all]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
-            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
-            [taoensso.timbre :as log]))
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -17,7 +17,10 @@
           :http-palvelin (testi-http-palvelin)
           :budjetoidut-tyot (component/using
                               (bs/->Budjettisuunnittelu)
-                              [:http-palvelin :db])))))
+                              [:http-palvelin :db])
+          :tarjous (component/using
+                     (tarjous-palvelu/->Tarjous)
+                     [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -37,12 +40,13 @@
                                    ;; Erillishankinnat
                                    {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
                                     :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
+
                                    ;; Johto ja hallintokorvaukset eli toimenkuvat
-                                   {:nimi "Valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                                   {:nimi "vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                                     :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
-                                   {:nimi "Vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                                   {:nimi "apulainen/työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 4 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                                     :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
-                                   {:nimi "Päätoiminen apulainen / työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 4 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                                   {:nimi "valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                                     :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
 
                                    ;; Hoidonjohtopalkkio
@@ -50,7 +54,7 @@
                                     :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
                                    ;; Yhteensä rivi
                                    {:nimi "Yhteensä tavoitehinta", :osio "yhteensa"
-                                    :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 50.00} {:vuosi 2024 :summa 100.00} {:vuosi 2025 :summa 150.00}], :yhteensa 300.00}]})
+                                    :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 90.00} {:vuosi 2024 :summa 180.00} {:vuosi 2025 :summa 270.00}], :yhteensa 540.00}]})
 
 (defn muodosta-tarjous-rahavarauksista [rahavaraukset vuodet]
   {:tarjous (mapv
@@ -69,17 +73,17 @@
 
 (defn muodosta-tarjous-toimenkuvista [toimenkuvat vuodet]
   {:tarjous (mapv
-                  (fn [toimenkuva]
-                    {:nimi (:nimi toimenkuva)
-                     :osio (:osio toimenkuva)
-                     :toimenkuva-id (:toimenkuva-id toimenkuva)
-                     :tehtava-id (:tehtava-id toimenkuva)
-                     :tehtavaryhma-id (:tehtavaryhma-id toimenkuva)
-                     :rahavaraus-id (:rahavaraus-id toimenkuva)
-                     :hoitovuosittaiset-arvot (mapv
-                                                (fn [vuosi]
-                                                  {:vuosi (:vuosi vuosi) :summa (rand-int 1000)}) ;; Generoidaan satunnaiset summat
-                                                vuodet)})
+              (fn [toimenkuva]
+                {:nimi (:nimi toimenkuva)
+                 :osio (:osio toimenkuva)
+                 :toimenkuva-id (:toimenkuva-id toimenkuva)
+                 :tehtava-id (:tehtava-id toimenkuva)
+                 :tehtavaryhma-id (:tehtavaryhma-id toimenkuva)
+                 :rahavaraus-id (:rahavaraus-id toimenkuva)
+                 :hoitovuosittaiset-arvot (mapv
+                                            (fn [vuosi]
+                                              {:vuosi (:vuosi vuosi) :summa (rand-int 1000)}) ;; Generoidaan satunnaiset summat
+                                            vuodet)})
               toimenkuvat)})
 
 (deftest tallenna-yksinkertainen-tarjous-tietokantaan-onnistuneesti
@@ -247,3 +251,32 @@
         tarjoukset-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
 
     (is (= (count tarjoukset-tietokannasta) (count johto-ja-hallintokorvaukset)))))
+
+;; Rajanpintatestit
+(deftest tallenna-tarjous-rajapinnasta-onnistuu
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tarjous (assoc tarjous-tietomalli :urakka-id urakka-id)
+        ;; Testi failaa, jos tämän kommentoinnin ottaa pois.
+        ;tarjous (assoc-in tarjous [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa] 100M) ;; Muutetaan ensimmäisen rivin summa
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ tarjous)]
+    (is (= (:tarjous vastaus) (:tarjous tarjous-tietomalli)))))
+
+(deftest muokkaa-tarjous-rajapinnasta-onnistuu
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tarjous (assoc tarjous-tietomalli :urakka-id urakka-id)
+        uusi-summa 500M
+        ;; Tallennetaan tarjous ensin
+        ensivastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ tarjous)
+        ensivastaus-kustannus (first (:tarjous ensivastaus))
+
+        ;; Muokataan tarjousta
+        muokattu-tarjous (assoc-in tarjous [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa] uusi-summa)
+        muokkausvastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ muokattu-tarjous)
+        muokkausvastaus-kustannus (first (:tarjous muokkausvastaus))]
+    (is (= 10.00 (get-in ensivastaus-kustannus [:hoitovuosittaiset-arvot 0 :summa])))
+    (is (= uusi-summa (bigdec (get-in muokkausvastaus-kustannus [:hoitovuosittaiset-arvot 0 :summa]))))
+    ;; Ensivastauksen rivimäärä on sama
+    (is (= (count (:tarjous tarjous-tietomalli)) (count (:tarjous ensivastaus))))
+    ;; Muokkausvastauksen rivimäärä on sama
+    (is (= (count (:tarjous tarjous-tietomalli)) (count (:tarjous muokkausvastaus))))))
