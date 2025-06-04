@@ -70,7 +70,7 @@
         (when (and (:siirron_maara paatos)  (not= 0 (:siirron_maara paatos)))
           [:div.flex-row.lista-rivi-korkea
            [:div "Siirretään seuraavan vuoden hankintakustannuksiin alennukseksi"]
-           [:div.rivi-lukema (str "-" (fmt/euro-opt false (:siirron_maara paatos)))]])
+           [:div.rivi-lukema (fmt/euro-opt false (:siirron_maara paatos))]])
         [:hr.paatos-hr]
 
         ;; Päätöksenteko napit tai mahdollinen virhe

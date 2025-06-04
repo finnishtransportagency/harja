@@ -38,7 +38,7 @@
             [:div.flex-row
              [:div
               [:h3.alempi-otsikko "Hoitovuoden lopun kattohinta"]
-              [:div.small-text (str (:kattohintakerroin paatos) " x hoitovuoden lopun tavoitehinta")]]
+              [:div.small-text (str (fmt/piste->pilkku (:kattohintakerroin paatos)) " x hoitovuoden lopun tavoitehinta")]]
              [:div.otsikko-lukema (fmt/euro-opt false (:kattohinta paatos))]]]
            [:hr.paatos-hr]
            [:div
