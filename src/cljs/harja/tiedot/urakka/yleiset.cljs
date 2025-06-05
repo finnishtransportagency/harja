@@ -78,9 +78,6 @@
 (defn hae-urakan-yhteyshenkilot [urakka-id]
   (k/post! :hae-urakan-yhteyshenkilot urakka-id))
 
-(defn hae-urakan-yleinen-puh-ja-sposti [urakka-id]
-  (k/post! :hae-urakan-yleinen-puh-ja-sposti urakka-id))
-
 (defn tallenna-urakan-yleinen-puh-ja-sposti [id matkapuhelin sahkoposti organisaatio-id]
   (k/post! :tallenna-urakan-yleinen-puh-ja-sposti
     {:urakka-id id

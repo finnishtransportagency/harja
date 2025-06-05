@@ -204,7 +204,6 @@ SELECT
   (SELECT array_agg(
          concat_ws('|',
            y.id,
-           y.etunimi,
            y.matkapuhelin,
            y.sahkoposti,
            y.organisaatio)

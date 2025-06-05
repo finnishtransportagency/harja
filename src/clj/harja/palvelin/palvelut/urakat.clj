@@ -127,11 +127,10 @@
   (if-not jdbc-array
     urakka
     (assoc urakka :urakan_yhteystiedot (mapv (fn [s]
-                                               (let [[id etunimi matkapuhelin sahkoposti organisaatio]
+                                               (let [[id matkapuhelin sahkoposti organisaatio]
                                                      ;; Katso: listaa-urakat-hallintayksikolle
                                                      (str/split s #"\|")]
                                                  {:id           (Long/parseLong id)
-                                                  :etunimi      etunimi
                                                   :matkapuhelin matkapuhelin
                                                   :sahkoposti   sahkoposti
                                                   :organisaatio (Long/parseLong organisaatio)}))
