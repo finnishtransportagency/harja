@@ -9,7 +9,8 @@
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.transit :as transit]))
 
 (def valikatselmus-nakymassa? (atom false))
 
@@ -29,6 +30,15 @@
                 muutos (into (sorted-map) muutos)]
             muutos))
         muutokset))))
+
+(defn kasittele-throw-virhe [vastaus]
+  (let [raaka-virhe (get-in vastaus [:parse-error :original-text])
+        raaka-virhe (str/replace raaka-virhe #"\\" "")
+        raaka-virhe (str/replace raaka-virhe #"\"" "")
+
+        ;; Emme tarvitse ensimmäistä virhesanaa
+        virheet (str/join " " (rest (str/split raaka-virhe #" ")))]
+    virheet))
 
 ;; Oikaisut
 (defrecord TallennaOikaisu [oikaisu id])
@@ -65,6 +75,7 @@
 (defrecord TallennaTavoitehinnanYlitysPaatos [paatos])
 (defrecord PoistaTavoitehinnanYlitysPaatos [paatos])
 (defrecord TallennaKattohinnanYlitysPaatos [paatos])
+(defrecord TallennaKattohinnanYlitysPaatosEpaonnistui [vastaus])
 (defrecord PoistaKattohinnanYlitysPaatos [paatos])
 (defrecord TallennaPoytakirjanRaporttiPaatos [paatos])
 (defrecord PoistaPoytakirjanRaporttiPaatos [paatos])
@@ -357,6 +368,8 @@
     (let [paatos (first (filter #(= (ffirst %) :kattohinnan-ylitys) (:paatokset app)))
           kattohinnan-ylityksen-maara (get-in paatos [:kattohinnan-ylitys :ylityksen_maara])
           paatos (-> paatos
+                   ;; Poistetaan mahdollinen virhe
+                   (assoc-in [:kattohinnan-ylitys :virhe] nil)
                    ;; Merkitään saatu siirtomäärä
                    (assoc-in [:kattohinnan-ylitys :siirrettava_maara] uusi-arvo)
                    ;; Vähennetään kattohinnan ylityksen määrästä siirrettävä summa
@@ -431,8 +444,24 @@
     (tuck-apurit/post! :tee-kattohinnan-ylityspaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
       {:onnistui ->HaeValikatselmuksenTiedotOnnistui
-       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+       :epaonnistui ->TallennaKattohinnanYlitysPaatosEpaonnistui
+       :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
+
+  TallennaKattohinnanYlitysPaatosEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [virhe (kasittele-throw-virhe vastaus)
+          paatos (first (filter #(= (ffirst %) :kattohinnan-ylitys) (:paatokset app)))
+          paatos (assoc-in paatos [:kattohinnan-ylitys :virhe] virhe)
+          app (update app :paatokset (fn [paatokset]
+                                       (map #(if (= (ffirst %) :kattohinnan-ylitys)
+                                               paatos
+                                               %)
+                                         paatokset)))]
+      (viesti/nayta-toast! (if virhe virhe "Tapahtui virhe. Tarkista tilanne ja koeta hetken päästä uudelleen.") :varoitus)
+      (-> app
+        (assoc :tallennus-kesken? false)
+        (assoc :haku-kaynnissa? false))))
 
   PoistaKattohinnanYlitysPaatos
   (process-event [{paatos :paatos} app]
