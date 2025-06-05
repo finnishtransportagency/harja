@@ -128,12 +128,12 @@
         ;; Uusien päällysteiden tiemerkinnät (paikkaus)
         paikkaus-kustannukset (hae-tiemerkinta-paikkausten-kustannukset db kayttaja {:urakka-id urakka-id
                                                                                      :urakka-alkupvm (if kaikki? nil (-> valittu-aikavali first))})
-        paikkaus-kustannukset (apurit/laske-tiemerkintakustannukset paikkaus-kustannukset)
+        paikkaus-kustannukset (apurit/laske-tiemerkintakustannukset paikkaus-kustannukset :paikkausten-merkinnat)
 
         ;; Uusien päällysteiden tiemerkinnät (päällystys)
         paallystys-kustannukset (hae-tiemerkinta-paallystyskohteiden-kustannukset db kayttaja {:urakka-id urakka-id
                                                                                                :urakka-alkupvm (if kaikki? nil (-> valittu-aikavali first))})
-        paallystys-kustannukset (apurit/laske-tiemerkintakustannukset paallystys-kustannukset)
+        paallystys-kustannukset (apurit/laske-tiemerkintakustannukset paallystys-kustannukset :paallysteiden-merkinnat)
 
         ;; Sanktiot ja bonukset
         sanktiot-ja-bonukset (laadunseuranta/hae-urakan-sanktiot-ja-bonukset db kayttaja {:hae-sanktiot? true
@@ -156,7 +156,9 @@
                               paikkaus-kustannukset
                               paallystys-kustannukset
                               sanktiot-ja-bonukset
-                              muut-kustannukset))]
+                              muut-kustannukset))
+
+        yhteenveto (conj yhteenveto (apurit/laske-yhteensa yhteenveto))]
     yhteenveto))
 
 (defrecord TiemerkinnanKustannusKirjaukset []

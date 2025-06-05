@@ -5,9 +5,12 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]))
 
 (defonce yhteenveto-tyypit {:korjaus "Tiemerkintöjen korjaus"
-                            :muut-kustannukset "Muut kustannukset"
                             :paikkausten-merkinnat "Paikkauskohteiden tiemerkintäkustannukset"
-                            :paallysteiden-merkinnat "Päällystyskohteiden tiemerkintäkustannukset"})
+                            :paallysteiden-merkinnat "Päällystyskohteiden tiemerkintäkustannukset"
+                            :sakko "Sakot"
+                            :bonus "Bonukset"
+                            :arvonmuutokset "Arvonmuutokset"
+                            :muut-kustannukset "Muut kustannukset"})
 
 (defonce laji-valinnat {:kaikki "Kaikki"
                         :yllapidon_sakko "Sakko"

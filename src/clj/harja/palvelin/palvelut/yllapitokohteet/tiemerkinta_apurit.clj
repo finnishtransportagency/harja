@@ -38,7 +38,11 @@
                           :viesti "PK-osuuksien summan on oltava 100"}]}))))
 
 
-(defn- koosta-palautettu-arvo
+(defn- laske-prosentti [kokonais-hinta osa]
+  (if (pos? kokonais-hinta) (/ (* osa 100.0) kokonais-hinta) 0))
+
+
+(defn koosta-palautettu-arvo
   "Halutaan varmistaa että kaikki kentät palauttaa yhtenäisen mapin"
   [tyyppi kokonais-hinta
    pk1-hinta pk1-prosentti
@@ -61,6 +65,21 @@
 
    :ei-luokkaa-hinta ei-luokkaa-hinta
    :ei-luokkaa-prosentti ei-luokkaa-prosentti})
+
+
+(defn laske-yhteensa [yhteenveto]
+  (let [kokonais-hinta (reduce + 0 (map :kustannus yhteenveto))
+        pk1-hinta (reduce + 0 (map #(or (:pk1-hinta %) 0) yhteenveto))
+        pk2-hinta (reduce + 0 (map #(or (:pk2-hinta %) 0) yhteenveto))
+        pk3-hinta (reduce + 0 (map #(or (:pk3-hinta %) 0) yhteenveto))
+        ei-luokkaa-hinta  (reduce + 0 (map #(or (:ei-luokkaa-hinta %) 0) yhteenveto))]
+ 
+    (koosta-palautettu-arvo
+      :yhteensa kokonais-hinta
+      pk1-hinta (laske-prosentti kokonais-hinta pk1-hinta)
+      pk2-hinta (laske-prosentti kokonais-hinta pk2-hinta)
+      pk3-hinta (laske-prosentti kokonais-hinta pk3-hinta)
+      ei-luokkaa-hinta (laske-prosentti kokonais-hinta ei-luokkaa-hinta))))
 
 
 (defn laske-korjaukset
@@ -93,7 +112,7 @@
 
 (defn laske-tiemerkintakustannukset
   "Laskee uusien päällysteiden merkinnät yhteenvedolle valitun aikavälin perusteella"
-  [kustannukset]
+  [kustannukset tyyppi]
   ;;({:pienmerkinnat 60000.00M,  :linjamerkinnat 10000.00M, :jyrsinnat 30000.00M :pk-luokka PK2},
   ;; {:pienmerkinnat 1100.00M,  :linjamerkinnat 0M, :jyrsinnat 0M :pk-luokka PK1 })
   ;;({:pienmerkinnat 15000.00M, :linjamerkinnat 35000.00M, :pk-luokka Ei tiedossa, :jyrsinnat 10000.00M},
@@ -111,18 +130,14 @@
         pk2-hinta (laske-summa-fn "PK2")
         pk3-hinta (laske-summa-fn "PK3")
         ei-luokkaa-hinta (laske-summa-fn "Ei tiedossa")
-        kokonais-hinta (+ pk1-hinta pk2-hinta pk3-hinta ei-luokkaa-hinta)
-
-        laske-prosentti-fn (fn [osa]
-                             ;; Laskee pk luokan prosentti arvon 
-                             (if (pos? kokonais-hinta) (/ (* osa 100.0) kokonais-hinta) 0))]
+        kokonais-hinta (+ pk1-hinta pk2-hinta pk3-hinta ei-luokkaa-hinta)]
 
     [(koosta-palautettu-arvo
-       :paallystys kokonais-hinta
-       pk1-hinta (laske-prosentti-fn pk1-hinta)
-       pk2-hinta (laske-prosentti-fn pk2-hinta)
-       pk3-hinta (laske-prosentti-fn pk3-hinta)
-       ei-luokkaa-hinta (laske-prosentti-fn ei-luokkaa-hinta))]))
+       tyyppi kokonais-hinta
+       pk1-hinta (laske-prosentti kokonais-hinta pk1-hinta)
+       pk2-hinta (laske-prosentti kokonais-hinta pk2-hinta)
+       pk3-hinta (laske-prosentti kokonais-hinta pk3-hinta)
+       ei-luokkaa-hinta (laske-prosentti kokonais-hinta ei-luokkaa-hinta))]))
 
 
 (defn laske-sakot
@@ -139,8 +154,8 @@
                      nil nil
                      nil nil
                      hinta 100.0))]
-    [(tee-rivi :sakot sakko-hinta)
-     (tee-rivi :bonukset bonus-hinta)]))
+    [(tee-rivi :sakko sakko-hinta)
+     (tee-rivi :bonus bonus-hinta)]))
 
 
 (defn laske-muut
@@ -172,22 +187,20 @@
                           ;; Laskee kokonaishinnan (kaikki yht)
                           (reduce + 0 (map :hinta (get ryhmat tyyppi))))
 
-        laske-prosentti-fn (fn [osa hinta]
-                             ;; Laskee pk luokan prosentti arvon 
-                             (if (pos? hinta) (/ (* osa 100.0) hinta) 0))
-
         koosta-vastaus (fn [tyyppi]
-                         (let [kokonais-hinta (laske-kaikki-fn tyyppi)
+                         (let [yhteenveto-tyypit {:muut :muut-kustannukset
+                                                  :arvonmuutos :arvonmuutokset}
+                               kokonais-hinta (laske-kaikki-fn tyyppi)
                                pk1-hinta (laske-pk-summa-fn tyyppi "PK1")
                                pk2-hinta (laske-pk-summa-fn tyyppi "PK2")
                                pk3-hinta (laske-pk-summa-fn tyyppi "PK3")
                                ei-luokkaa-hinta (laske-pk-summa-fn tyyppi "Ei pk-luokkaa")]
 
                            (koosta-palautettu-arvo
-                             tyyppi kokonais-hinta
-                             pk1-hinta (laske-prosentti-fn pk1-hinta kokonais-hinta)
-                             pk2-hinta (laske-prosentti-fn pk2-hinta kokonais-hinta)
-                             pk3-hinta (laske-prosentti-fn pk3-hinta kokonais-hinta)
-                             ei-luokkaa-hinta (laske-prosentti-fn ei-luokkaa-hinta kokonais-hinta))))]
+                             (tyyppi yhteenveto-tyypit) kokonais-hinta
+                             pk1-hinta (laske-prosentti kokonais-hinta pk1-hinta)
+                             pk2-hinta (laske-prosentti kokonais-hinta pk2-hinta)
+                             pk3-hinta (laske-prosentti kokonais-hinta pk3-hinta)
+                             ei-luokkaa-hinta (laske-prosentti kokonais-hinta ei-luokkaa-hinta))))]
 
     (mapv koosta-vastaus [:muut :arvonmuutos])))
