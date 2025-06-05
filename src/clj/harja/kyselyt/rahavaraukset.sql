@@ -1,3 +1,12 @@
+-- name: hae-urakan-rahavaraukset
+-- Haetaan yksittäisen urakan rahavarausten perustiedot
+SELECT rv.id,
+       COALESCE(NULLIF(rvu.urakkakohtainen_nimi, ''), rv.nimi) AS nimi,
+       rv.jarjestys
+  FROM rahavaraus rv
+           JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :urakka_id
+ ORDER BY rv.jarjestys ASC;
+
 -- name: hae-urakan-rahavaraukset-ja-tehtavaryhmat
 -- Palautetaan ensisijaisesti urakkakohtainen nimi, mutta jos sitä ei ole, niin defaultataan normaaliin nimeen.
 SELECT rv.id,

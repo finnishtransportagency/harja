@@ -124,7 +124,7 @@
      [:div.liite
       (if (naytettava-liite? tiedosto)
         [:div
-         [:div
+         [:div.liite-rivi
           [:img.pikkukuva.klikattava {:tabIndex 0
                                       :alt (:nimi tiedosto)
                                       :src (k/pikkukuva-url (:id tiedosto))
@@ -135,8 +135,8 @@
           (when salli-poisto?
             [liitteen-poisto tiedosto poista-liite-fn])]
          (when-not virustarkastettu?
-           [:span.virustarkistus (str "Virustarkastus käynnissä. Liitteen voi avata, kun tarkastus on tehty.")])]
-        [:span
+           [:div.virustarkistus "Virustarkastus käynnissä. Liitteen voi avata, kun tarkastus on tehty."])]
+        [:div.liite-rivi
          [:a.liite-linkki
           {:target "_blank" :href (k/liite-url (:id tiedosto))}
           (str nimi (when nayta-koko? (str " (" (sievenna-liitteen-koko koko) ") ")))]
@@ -198,9 +198,9 @@
   Optiot:
   siltatarkastusliite? Boolean, true kun haetaan siltatarkastuksen liitteitä"
   ;; PENDING Olisipa kiva jos ikoni heijastelisi tiedoston tyyppiä :-)
-  [liite optiot]
+  [liite {:keys [ikoni] :as optiot}]
   [:span
-   [liitelinkki liite (ikonit/file) optiot]
+   [liitelinkki liite (or ikoni (ikonit/file)) optiot]
    [:span " "]])
 
 (defn liitteet-ikoneina
@@ -292,7 +292,7 @@
                               :poista-liite-fn poista-liite}]
                             [liitetiedosto liite {:salli-poisto? salli-poistaa-lisatty-liite?
                                                   :poista-liite-fn poista-liite}]))
-            inputin-id "tiedoston-lataus-input"]
+            inputin-id (str "tiedoston-lataus-input-" (gensym))]
         [:span
          ;; Näytä vastikään ladattu liite / liitteet
          (when (and nayta-lisatyt-liitteet? @tiedosto)
@@ -445,7 +445,7 @@
   nappi-luokka              Voidaan tällä hetkellä tehdä napiton-nappi"
   [params-map opts]
   (fn [params-map {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
-    (let [inputin-id "tiedoston-lataus-input"]
+    (let [inputin-id (str "tiedoston-lataus-input-" (gensym))]
       [:span
        [:span.liitekomponentti
         [:button {:class (str "file-upload nappi-toissijainen "

@@ -91,7 +91,7 @@
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :tloik :labyrintti :tekstiviesti
+    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :tloik :sms
     :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
@@ -140,6 +140,7 @@
     :analytiikan-toteumien-ajastus
     :kustannusten-seuranta
     :komponenttien-tila
+    :muutokset
     :itmf
     :paikkauskohteet
     :valikatselmukset
@@ -165,6 +166,7 @@
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
     :paallystysilmoitukset-hallinta
+    :tiemerkinnan-kustannuskirjaukset
     :urakkatilanne
     :api-talvihoitoreitit
     :talvihoitoreitit
@@ -176,7 +178,7 @@
     :todennus
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :labyrintti :tekstiviesti
+    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :sms
     :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
@@ -228,6 +230,7 @@
     :paikkauskohteet
     :valikatselmukset
     :lupaukset
+    :muutokset
     :urakan-lupausmuistutukset
     :api-analytiikka
     :yleiset-ajastukset
@@ -254,6 +257,7 @@
     :paallystysilmoitukset-hallinta
     :urakkatilanne
     :tieosoitteet-hallinta
+    :tiemerkinnan-kustannuskirjaukset
     :ajastukset-hallinta})
 
 (def hidas-ok-status #{:itmf})

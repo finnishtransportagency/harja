@@ -169,14 +169,6 @@ DECLARE
     hankinnat_ja_hoidon_hk_yht            NUMERIC;
     hankinnat_ja_hoidon_val_yht           NUMERIC;
 
-    --- Äkilliset hoitotyöt ja vahinkojen korjaukset
-    akilliset_ja_vahingot_rivi            RECORD;
-
-    -- Rahavarausten ID:t
-    akilliset_id                          INT;
-    vahingot_id                           INT;
-    kannustin_id                          INT;
-
     -- Tavoitehinnat yhteensä
     tavhin_hoitokausi_yht                 NUMERIC;
     tavhin_val_aika_yht                   NUMERIC;
@@ -452,15 +444,7 @@ BEGIN
     lisatyo_hoidonjohto_hoitokausi_yht := 0.0;
     lisatyo_hoidonjohto_val_aika_yht := 0.0;
 
-    -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta 
-    -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
-    SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
-
-    -- Hae rahavaraus id:t äkillisille hoitotöille ja vahingoille, uusi tietomalli korvaa vanhaa koodia jossa haetaan kulu_kohdistus maksuerätyypillä
-    SELECT id INTO akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO vahingot_id FROM rahavaraus WHERE nimi LIKE '%Vahinkojen korjaukset%' ORDER BY id ASC LIMIT 1;
-
-    FOR rivi IN SELECT 
+    FOR rivi IN SELECT
       summa         AS kht_summa, 
       l.erapaiva    AS erapaiva, 
       tpi.id        AS toimenpideinstanssi_id, 
@@ -482,7 +466,7 @@ BEGIN
                hoidonjohto_tpi_id
             )
         LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
-            WHERE lk.rahavaraus_id IS NULL 
+            WHERE lk.rahavaraus_id IS NULL -- Ei oteta tässä mukaan rahavarauksia, niihin kohdistetut kulut lasketaan erikseen
               AND lk.poistettu IS NOT TRUE
               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
               AND lk.tyyppi != 'muukulu'
@@ -767,9 +751,8 @@ BEGIN
                     END IF;
                 END IF;
 
-                -- MHU ylläpidon kulut, jotka eivät ole lisätöitä, eivätkä kannustinjärjestelmä rahavarauksia
-                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
-                   (rivi.yksiloiva_tunniste IS NULL OR (rivi.rahavaraus_id IS NULL OR rivi.rahavaraus_id != kannustin_id)) THEN
+                -- MHU ylläpidon kulut, jotka eivät ole lisätöitä
+                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
 
                     yllapito_hoitokausi_yht := yllapito_hoitokausi_yht + COALESCE(yllapito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && yllapito_tpi  THEN: %', yllapito_hoitokausi_yht;
@@ -780,9 +763,8 @@ BEGIN
                     END IF;
                 END IF;
 
-                -- MHU ylläpidon kulut, joka on lisätyö , mutta ei kohdistettu rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)
-                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
-                   (rivi.yksiloiva_tunniste IS NULL OR (rivi.rahavaraus_id IS NULL OR rivi.rahavaraus_id != kannustin_id)) THEN
+                -- MHU ylläpidon kulut, joka on lisätyö
+                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
 
                     lisatyo_yllapito_hoitokausi_yht :=
                             lisatyo_yllapito_hoitokausi_yht + COALESCE(lisatyo_yllapito_rivi.summa, 0.0);

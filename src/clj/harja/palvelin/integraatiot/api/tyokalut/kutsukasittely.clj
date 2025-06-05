@@ -1,7 +1,6 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.kutsukasittely
   "API:n kutsujen käsittely funktiot"
   (:require [cheshire.core :as cheshire]
-            [harja.palvelin.komponentit.todennus :as todennus]
             [taoensso.timbre :as log]
             [clojure.walk :as walk]
             [clojure.core.async :refer [<! go thread]]

@@ -18,7 +18,7 @@
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [hiccup.core :refer [html h]]
             [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
-            [harja.palvelin.integraatiot.labyrintti.sms :as sms]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms-integraatio]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.tloik
              [ilmoitukset :as ilmoitukset]
@@ -41,10 +41,10 @@
     (jms-util/kuuntele!
       itmf ilmoitusviestijono
       (with-meta (partial ilmoitukset/vastaanota-ilmoitus
-                          itmf (tee-lokittaja this "ilmoituksen-kirjaus")
-                          ilmoitusasetukset db ilmoitusviestijono ilmoituskuittausjono
-                          jms-lahettaja kehitysmoodi?)
-                 {:jms-kuuntelija :tloik-ilmoitusviesti}))))
+                   itmf (tee-lokittaja this "ilmoituksen-kirjaus")
+                   ilmoitusasetukset db ilmoitusviestijono ilmoituskuittausjono
+                   jms-lahettaja kehitysmoodi?)
+        {:jms-kuuntelija :tloik-ilmoitusviesti}))))
 
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))
@@ -57,14 +57,14 @@
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut))
       {:jms-kuuntelija :tloik-toimenpidekuittaus})))
 
-(defn rekisteroi-kuittauskuuntelijat! [{:keys [itmf labyrintti db] :as this} jonot]
+(defn rekisteroi-kuittauskuuntelijat! [{:keys [itmf sms db] :as this} jonot]
   (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys")
-                                         itmf (:toimenpideviestijono jonot))]
-    (when-let [labyrintti labyrintti]
+                        itmf (:toimenpideviestijono jonot))]
+    (when-let [sms sms]
       (log/debug "Yhdistetään kuuntelija Labyritin SMS Gatewayhyn")
-      (sms/rekisteroi-kuuntelija! labyrintti
-                                  (fn [numero viesti]
-                                    (tekstiviesti/vastaanota-tekstiviestikuittaus jms-lahettaja db numero viesti))))))
+      (sms-integraatio/rekisteroi-kuuntelija! sms
+        (fn [numero viesti]
+          (tekstiviesti/vastaanota-tekstiviestikuittaus jms-lahettaja db numero viesti))))))
 
 (defn tee-ilmoitustoimenpide-jms-lahettaja [this asetukset]
   (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:itmf this) (:toimenpideviestijono asetukset)))
@@ -95,26 +95,26 @@
 
 (defrecord Tloik [asetukset kehitysmoodi?]
   component/Lifecycle
-  (start [{:keys [labyrintti api-sahkoposti] :as this}]
+  (start [{:keys [sms api-sahkoposti] :as this}]
     (rekisteroi-kuittauskuuntelijat! this asetukset)
     (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono
                   uudelleenlahetysvali-minuuteissa]} asetukset
           email api-sahkoposti
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
-                              {:sms labyrintti
+                              {:sms sms
                                :email email})
           toimenpide-jms-lahettaja (tee-ilmoitustoimenpide-jms-lahettaja this asetukset)]
       (assoc this
         :itmf-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija
-                                          this
-                                          ilmoitusviestijono
-                                          ilmoituskuittausjono
-                                          ilmoitusasetukset
-                                          toimenpide-jms-lahettaja
-                                          kehitysmoodi?)
+                                         this
+                                         ilmoitusviestijono
+                                         ilmoituskuittausjono
+                                         ilmoitusasetukset
+                                         toimenpide-jms-lahettaja
+                                         kehitysmoodi?)
         :itmf-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija
-                                              this
-                                              toimenpidekuittausjono)
+                                             this
+                                             toimenpidekuittausjono)
         :paivittainen-lahetys-tehtava (tee-ajastettu-uudelleenlahetys-tehtava
                                         this
                                         toimenpide-jms-lahettaja
@@ -138,8 +138,8 @@
       (doseq [[_ lahettajan-nimi] lahettajat]
         (jms-util/kasky (:itmf this) {:poista-lahettaja [(jms-util/oletusjarjestelmanimi lahettajan-nimi) lahettajan-nimi]}))
       (as-> this $
-            (apply dissoc $ kuuntelijat)
-            (apply dissoc $ ajastetut))))
+        (apply dissoc $ kuuntelijat)
+        (apply dissoc $ ajastetut))))
 
   Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]
@@ -152,28 +152,28 @@
           lahettajajonot (vals (select-keys asetukset [:ilmoituskuittausjono :toimenpideviestijono]))
           kuuntelijajonojen-tila (reduce (fn [jonojen-tila jonon-nimi]
                                            (merge jonojen-tila
-                                                  {jonon-nimi (jms-util/jms-jono-ok? (:itmf this) jonon-nimi)}))
-                                         {}
-                                         kuuntelijajonot)
+                                             {jonon-nimi (jms-util/jms-jono-ok? (:itmf this) jonon-nimi)}))
+                                   {}
+                                   kuuntelijajonot)
           lahetysjonojen-tilat (reduce (fn [jonojen-tila jonon-nimi]
                                          (merge jonojen-tila
-                                                {jonon-nimi (or (not (jms-util/jms-jono-olemassa? (:itmf this) jonon-nimi))
-                                                                (jms-util/jms-jono-ok? (:itmf this) jonon-nimi))}))
-                                       {}
-                                       lahettajajonot)
+                                           {jonon-nimi (or (not (jms-util/jms-jono-olemassa? (:itmf this) jonon-nimi))
+                                                         (jms-util/jms-jono-ok? (:itmf this) jonon-nimi))}))
+                                 {}
+                                 lahettajajonot)
           ilmoitusviestijonon-kuuntelija-ok? (or (nil? (:ilmoitusviestijono asetukset))
-                                                 (jms-util/jms-jonolla-kuuntelija? (:itmf this)
-                                                                                   (:ilmoitusviestijono asetukset)
-                                                                                   :tloik-ilmoitusviesti))
+                                               (jms-util/jms-jonolla-kuuntelija? (:itmf this)
+                                                 (:ilmoitusviestijono asetukset)
+                                                 :tloik-ilmoitusviesti))
           toimenpidekuittausjonon-kuuntelija-ok? (or (nil? (:toimenpidekuittausjono asetukset))
-                                                     (jms-util/jms-jonolla-kuuntelija? (:itmf this)
-                                                                                       (:toimenpidekuittausjono asetukset)
-                                                                                       :tloik-toimenpidekuittaus))]
+                                                   (jms-util/jms-jonolla-kuuntelija? (:itmf this)
+                                                     (:toimenpidekuittausjono asetukset)
+                                                     :tloik-toimenpidekuittaus))]
       {::kp/kaikki-ok? (and (every? (fn [[_ ok?]] ok?) kuuntelijajonojen-tila)
-                            (every? (fn [[_ ok?]] ok?) lahetysjonojen-tilat)
-                            ilmoitusviestijonon-kuuntelija-ok?
-                            toimenpidekuittausjonon-kuuntelija-ok?)
+                         (every? (fn [[_ ok?]] ok?) lahetysjonojen-tilat)
+                         ilmoitusviestijonon-kuuntelija-ok?
+                         toimenpidekuittausjonon-kuuntelija-ok?)
        ::kp/tiedot (merge kuuntelijajonojen-tila
-                          lahetysjonojen-tilat
-                          {:ilmoitusviestijonon-kuuntelija-ok? ilmoitusviestijonon-kuuntelija-ok?
-                           :toimenpidekuittausjonon-kuuntelija-ok? toimenpidekuittausjonon-kuuntelija-ok?})})))
+                     lahetysjonojen-tilat
+                     {:ilmoitusviestijonon-kuuntelija-ok? ilmoitusviestijonon-kuuntelija-ok?
+                      :toimenpidekuittausjonon-kuuntelija-ok? toimenpidekuittausjonon-kuuntelija-ok?})})))

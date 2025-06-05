@@ -318,7 +318,7 @@
                                     lomake? (str "form-control ")
                                     disabled? (str "disabled"))
                      :placeholder placeholder}]
-         (when aputeksti [:div aputeksti])
+         (when aputeksti [:div.aputeksti aputeksti])
          ;; näytetään laskuri kun merkkejä on jäljellä alle 25%
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
@@ -786,7 +786,7 @@
                     :lukutila? true ;; read only tilan ero vain disablediin: ei ole niin "harmaa". Kumpaakaan ei voi muokata
                     :arvo @data})])
 
-(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? kaari-flex-row? muutos-fn opts radio-luokka]}]
+(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? kaari-flex-row? muutos-fn opts radio-luokka nayta-rivina?]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
   (let [checked (if oletus-valittu?
                   {:default-checked oletus-valittu?}
@@ -794,24 +794,26 @@
         selite (:selite opts)
         valittu-komponentti (:valittu-komponentti opts)]
     [:<>
-    [:div {:class (if (false? kaari-flex-row?)
-                    (str " flex-row"))}
-     [:input#kulu-normaali.vayla-radio
-      (merge {:id id
-              :type :radio
-              :name ryhma
-              :disabled disabloitu?
-              :class radio-luokka
-              :on-change muutos-fn}
-             checked)]
-     [:label (merge {:style (when (false? kaari-flex-row?) {:flex-shrink 0 :flex-grow 1})}
-                    {:for id}) teksti]]
-    [:div.vayla-radio-lapsi
-     (when selite
-       [:div.caption
-        selite])
-     (when (and (some true? (vals checked)) valittu-komponentti)
-       valittu-komponentti)]]))
+     [:div {:class (if (false? kaari-flex-row?)
+                     (str " flex-row"))}
+      [:input#kulu-normaali.vayla-radio
+       (merge {:id id
+               :type :radio
+               :name ryhma
+               :disabled disabloitu?
+               :class radio-luokka
+               :on-change muutos-fn}
+         checked)]
+      [:label (merge
+                {:style (when (false? kaari-flex-row?) {:flex-shrink 0 :flex-grow 1})}
+                {:class (when-not nayta-rivina? "radio-column")}
+                {:for id}) teksti]]
+     [:div.vayla-radio-lapsi
+      (when selite
+        [:div.caption
+         selite])
+      (when (and (some true? (vals checked)) valittu-komponentti)
+        valittu-komponentti)]]))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta vaihtoehto-arvo nayta-rivina?
                                             oletusarvo vayla-tyyli? disabloitu? valitse-fn radio-luokka
@@ -826,7 +828,7 @@
                oletusarvo
                (some (partial = oletusarvo) vaihtoehdot))
       (reset! data oletusarvo))
-    [:div {:style {:flex-shrink 0 :flex-grow 1}}
+    [:div {:style {:flex-shrink 0 :flex-grow 1 :min-width "180px"}}
      (let [group-id (gensym (str "radio-group-"))
            radiobuttonit (doall
                            (for [vaihtoehto vaihtoehdot
@@ -851,7 +853,8 @@
                                              :id (gensym elementin-id)
                                              :opts opts
                                              :kaari-flex-row? kaari-flex-row?
-                                             :radio-luokka radio-luokka}]
+                                             :radio-luokka radio-luokka
+                                             :nayta-rivina? nayta-rivina?}]
                                ^{:key elementin-id}
                                [:div {:class (y/luokat "radio" radio-luokka)}
                                 [:label
@@ -1165,8 +1168,7 @@
            [:span.pvm-kentta
             {:on-click #(do (.stopPropagation %)
                           (.preventDefault %)
-                          (reset! auki true) nil)
-             :style {:display "inline-block"}}
+                          (reset! auki true) nil)}
             [:div.pvm-ikoni input-komponentti
              [:span.ikoni-osio
               (ikonit/calendar)]]

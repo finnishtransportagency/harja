@@ -123,7 +123,8 @@
         :pakollinen? true}]
       emailapi]
      [:h2 "Lähetä tekstiviesti LinkMobilityn LinkSMS-palvelulla."]
-     [:p "LinkSMS-palveusta on Harjassa usein käytetty vanhaa nimeä Labyrintti. Jos testaat kehitysympäristössä, katso ReadMe-tiedostosta mitä muutoksia pitää tehdä main.clj-tiedostoon ja millainen ssh-yhteys tarvitaan." ]
+     ;; TODO: Kun #yliheitto ok, poista viittaus vanhaan SMS-integraatioon
+     [:p "LinkSMS-palveusta on Harjassa usein käytetty vanhaa nimeä Labyrintti. Labyrintti korvautuu uudella SMS-integraatiolla, jota voi testata tässä mikäli uusi SMS-integraatio on aktiivinen." ]
      [lomake/lomake
       {:ei-borderia? true
        :tarkkaile-ulkopuolisia-muutoksia? true

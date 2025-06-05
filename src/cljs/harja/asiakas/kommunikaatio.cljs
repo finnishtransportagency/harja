@@ -316,8 +316,6 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   (str (polku) "excel?_=" (name tyyppi) "&"
        (yhdista-parametrit parametrit)))
 
-(defn logout-url []
-  (str +polku+ "sso/logout?auth=1"))
 
 (defn wmts-polku-mml []
   (str +polku+ "wmts/"))
