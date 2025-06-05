@@ -112,7 +112,7 @@
           [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
 
       [:button.nappi-murupolkualasveto.dropdown-toggle
-       {:aria-label "Avaa hallintayksikkövalikko"
+       {:aria-label "Avaa hallintayksikkö-valikko"
         :on-click #(swap! valinta-auki
                      (fn [v]
                        (if (= v :hallintayksikko)
@@ -159,7 +159,8 @@
         [:span.valittu-urakka.murupolkuteksti (or (:nimi valittu) "- Urakka -") " "]
 
         [:button.nappi-murupolkualasveto.dropdown-toggle
-         {:on-click #(swap! valinta-auki
+         {:aria-label "Avaa urakka-valikko"
+          :on-click #(swap! valinta-auki
                        (fn [v]
                          (if (= v :urakka)
                            nil
