@@ -14,10 +14,10 @@
    {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2021 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
    {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
    {:nimi "Hoitovuoden lopun indeksikorjaus" :tyyppi nil :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 3 :paatostyyppi "indeksikorjaus"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "A" :urakan_alkuvuosi 2020 :urakan_loppuvuosi 2028 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :urakan_loppuvuosi 2029 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 4  :paatostyyppi "hoitovuoden-lopun-hinta"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 4  :paatostyyppi "hinta"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "C" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 4  :paatostyyppi "hinta"}
+   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "A" :urakan_alkuvuosi 2021 :urakan_loppuvuosi 2028 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
+   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :urakan_loppuvuosi 2029 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
+   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 4 :paatostyyppi "hinta"}
+   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "C" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hinta"}
    {:nimi "Tavoitehinnan alitus" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 5 :paatostyyppi "tavoitehinta"}
    {:nimi "Tavoitehinnan alitus" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 5 :paatostyyppi "tavoitehinta"}
    {:nimi "Tavoitehinnan ylitys" :tyyppi "A" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 6 :paatostyyppi "tavoitehinta"}
@@ -124,6 +124,9 @@
 
 (defn paatos-tallennettu-tietokantaan? [tietokanta-paatokset nimi]
   (:id (first (filter #(when (= (:nimi %) nimi) %) tietokanta-paatokset))))
+
+(defn paatos-mahdollinen? [mahdolliset-paatokset nimi]
+  (boolean (seq (filter #(when (= (:nimi %) nimi) %) mahdolliset-paatokset))))
 
 (defn valmistele-lupauspaatokset [db validoinnit-kaytossa? valittu-hoitovuosi urakkaid paatokset toteutuneet-pisteet
                                   luvatut-pisteet tavoitehinta-indeksikorjattu tarjouksen-tavoitehinta indeksi]
@@ -271,8 +274,8 @@
                                                                                          :hoitovuosinro hoitovuosinro}))))
 
 (defn valmistele-tavoitehinnan-alituspaatos [db validoinnit-kaytossa? urakkaid paatokset urakan-loppuvuosi kuluva-hoitovuosi
-                                              hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta kustannukset
-                                              hoitovuosinro tietokanta-paatokset]
+                                             hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta kustannukset
+                                             hoitovuosinro tietokanta-paatokset]
   ;; Edeltävät vaatimukset: Kaikille: Hoitovuoden tulee olla päättynyt
   ;; -24 vuodesta alkaen lisäksi:
   ;; Kustannussuunnitelma vahvistettu
@@ -456,7 +459,7 @@
 (defn valmistele-hoitovuoden-lopun-hintapaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset tavoitehinta-indeksikorjattu
                                                 tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus
                                                 hoitovuoden-lopun-kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus
-                                                tietokanta-paatokset]
+                                                tietokanta-paatokset mahdolliset-paatokset]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; Hoitotovuoden pitää olla päättynyt
   ;; Tavoitehinnan muutokset -päätös on tallennettu
@@ -473,20 +476,22 @@
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 4)
 
-      (and (or (= valittu-hoitovuosi 2024) (= valittu-hoitovuosi 2025))
-        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun indeksikorjaus")))
+      (and validoinnit-kaytossa?
+        (and
+          (paatos-mahdollinen? mahdolliset-paatokset "Hoitovuoden lopun indeksikorjaus")
+          (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun indeksikorjaus"))))
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Hoitovuoden lopun indeksikorjaus -päätös on vielä tekemättä." true 4)
 
-      (and tavoitehinta-indeksikorjattu tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus hoitovuoden-lopun-kattohinta)
+      (and tavoitehinta-indeksikorjattu tavoitehinnan-muutokset #_hoitokauden-lopun-indeksikorjaus hoitovuoden-lopun-kattohinta)
       (let [hintapaatos (first (filter #(= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") paatokset))
             hintamuutos (apply + (map :summa tavoitehinnan-muutokset))
             ;; Täytetään pakolliset tiedot
             hintapaatos (-> hintapaatos
                           (assoc :nimi "Hoitovuoden lopun tavoite- ja kattohinta") ;; Nimi löytyy, jos päätösten alkuvuosia ei kovakoodaten vaihdeta testitarkoituksissa
                           (assoc :tavoitehinta_ennen tavoitehinta-indeksikorjattu)
-                          (assoc :tavoitehinta_jalkeen (+ tavoitehinta-indeksikorjattu hintamuutos hoitokauden-lopun-indeksikorjaus))
+                          (assoc :tavoitehinta_jalkeen (+ tavoitehinta-indeksikorjattu hintamuutos (or hoitokauden-lopun-indeksikorjaus 0)))
                           (assoc :tavoitehinnan_muutokset hintamuutos)
-                          (assoc :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus)
+                          (assoc :hoitokauden_lopun_indeksikorjaus (or hoitokauden-lopun-indeksikorjaus 0))
                           (assoc :kattohinta hoitovuoden-lopun-kattohinta)
                           (assoc :kattohintakerroin kattohintakerroin)
                           (assoc :lisaa_tavoitehintaan_lopunindeksikorjaus lisaa-hoitokauden-lopun-indeksikorjaus))
@@ -498,7 +503,7 @@
 
       :else
       ;; Jos tarvittavia tietoja ei ole, niin varoitetaan siitä käyttäjää
-      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Hoitovuoden lopun indeksikorjaus -päätös on vielä tekemättä." true 4))))
+      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "else : Hoitovuoden lopun indeksikorjaus -päätös on vielä tekemättä." true 4))))
 
 (defn valmistele-hoidonjohtopalkkionmuutospaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset tavoitehinta
                                                   tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset]
@@ -522,7 +527,7 @@
       (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
       (let [paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
             ;; Desimaalien tarkkuus on tärkeää. Käyttöliittymässä kuitenkin käytetään pyöristettyjä lukuja. Taustalla lasketaan raakaluvuilla.
-            muutosprosentti-raaka  (.divide (bigdec tavoitehinta) (bigdec tarjouksen-tavoitehinta) 10 BigDecimal/ROUND_HALF_UP)
+            muutosprosentti-raaka (.divide (bigdec tavoitehinta) (bigdec tarjouksen-tavoitehinta) 10 BigDecimal/ROUND_HALF_UP)
             ;tulos (with-precision 15 (/ tavoitehinta tarjouksen-tavoitehinta))
             hoidonjohtopalkkio-muutos (if (>= muutosprosentti-raaka 1)
                                         (- (* hoidonjohtopalkkio muutosprosentti-raaka) hoidonjohtopalkkio)
