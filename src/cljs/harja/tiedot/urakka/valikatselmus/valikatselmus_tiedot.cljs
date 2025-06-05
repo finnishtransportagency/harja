@@ -13,6 +13,8 @@
             [harja.transit :as transit]))
 
 (def valikatselmus-nakymassa? (atom false))
+(def tavoitehinnan-muutostallennus-max (atom 9999))
+(def tavoitehinnan-muutostallennus-kpl (atom 0))
 
 (defonce tavoitehinnan-muutokset (atom []))
 
@@ -179,17 +181,15 @@
                                                  ::valikatselmus/hoitokauden-alkuvuosi
                                                  ::urakka/id])))
           ;; Viimeisen oikaisun indeksi, näytetään viimeisenä toast viesti 
-          viimeinen-idx (dec (count validit-oikaisut))]
+          viimeinen-idx (count validit-oikaisut)
+          ;; Tallennetaan atomiin oikaisujen määrä
+          _ (reset! tavoitehinnan-muutostallennus-max viimeinen-idx)]
 
-      (doseq [[idx oikaisu] (map-indexed vector validit-oikaisut)]
+      (doseq [oikaisu validit-oikaisut]
         (scrollaa-muutoksiin)
         (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
           oikaisu
-          {:onnistui (if (= idx viimeinen-idx)
-                       ;; Kun viimeinen oikaisu on tallennettu, näytä viesti
-                       ->TallennaOikaisuOnnistuiToast
-                       ;; Tallennus vielä kesken 
-                       ->TallennaOikaisuOnnistui)
+          {:onnistui ->TallennaOikaisuOnnistui
            :epaonnistui ->TallennaOikaisuEpaonnistui
            :paasta-virhe-lapi? true})))
 
@@ -197,14 +197,19 @@
 
   TallennaOikaisuOnnistui
   (process-event [{:keys [vastaus _id]} {:keys [_hoitokauden-alkuvuosi _tavoitehinnan-oikaisut] :as app}]
+    (swap! tavoitehinnan-muutostallennus-kpl inc)
     (->
       (kasittele-valikatselmuksen-vastaus app vastaus)
-      (assoc :tallennus-kesken? true)))
+      (assoc :tallennus-kesken? (if (= @tavoitehinnan-muutostallennus-kpl @tavoitehinnan-muutostallennus-max)
+                                  false true))))
 
   TallennaOikaisuOnnistuiToast
   (process-event [{:keys [vastaus _id]} {:keys [_hoitokauden-alkuvuosi _tavoitehinnan-oikaisut] :as app}]
+    (js/console.log "TallennaOikaisuOnnistuiToast")
     (viesti/nayta-toast! "Oikaisu tallennettu")
-    (kasittele-valikatselmuksen-vastaus app vastaus))
+    (->
+      (kasittele-valikatselmuksen-vastaus app vastaus)
+      (assoc :tallennus-kesken? false)))
 
   TallennaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]
