@@ -164,14 +164,10 @@
 
 (defn- hae-tiedot [app]
   (tuck-apurit/post! app :hae-tiemerkinta-yhteenveto
-    
-
     {:urakan-tiedot @nav/valittu-urakka
      :valittu-aikavali @u/valittu-aikavali
-     
-     ;;
-     }
-    
+     :kaikki? (u/koko-urakkakausi-valittuna?)
+     :sopimus (-> @u/valittu-sopimusnumero first)}
     {:onnistui ->HaeTiedotOnnistui
      :epaonnistui ->HaeTiedotEpaonnistui}))
 
@@ -190,27 +186,22 @@
 
   HaeTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    
-    (println "\n OK-vastaus: " vastaus)
-
     (-> app
-      
-      (assoc :haku-kaynnissa? false :rivit [])
-      ))
+      (assoc :haku-kaynnissa? false :rivit vastaus)))
 
   HaeTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (epaonnistui vastaus app))
 
 
-  
 
-  #_ (process-event [_ app]
-    (hae-muut-kustannukset app)
-    (->
-      (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
-      (assoc :haku-kaynnissa? true :rivit nil)
-      (assoc-in [:valinnat :aikavali] @u/valittu-aikavali)))
+
+  #_(process-event [_ app]
+      (hae-muut-kustannukset app)
+      (->
+        (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
+        (assoc :haku-kaynnissa? true :rivit nil)
+        (assoc-in [:valinnat :aikavali] @u/valittu-aikavali)))
 
 
   ;; callback # 2 

@@ -17,7 +17,8 @@
 (defn- yhteenveto-grid
   "Taulukko"
   [_e! rivit haku-kaynnissa?]
-  (let [valittu-vuosi (-> @u/valittu-aikavali first (pvm/vuosi))
+  (let [valittu-vuosi (when (first @u/valittu-aikavali)
+                        (-> @u/valittu-aikavali first (pvm/vuosi)))
         vuosi-termi (if (u/koko-urakkakausi-valittuna?) "Kaikki toteutuneet kustannukset" (str "Toteutuneet kustannukset " valittu-vuosi))
         urakka (-> @nav/valittu-urakka :nimi)]
 

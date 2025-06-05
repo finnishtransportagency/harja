@@ -56,7 +56,7 @@
 (defn hae-tiemerkinta-paallystyskohteiden-kustannukset
   [db kayttaja {:keys [urakka-id urakka-alkupvm yllapitokohdetyotyyppi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
-  (let [vuosi (pvm/vuosi urakka-alkupvm)]
+  (let [vuosi (if urakka-alkupvm (pvm/vuosi urakka-alkupvm) 0)]
     (q/hae-urakan-yllapitokohteiden-kustannukset db {:urakka urakka-id 
                                                      :yllapitokohdetyotyyppi (or yllapitokohdetyotyyppi  "paallystys") 
                                                      :vuosi vuosi})))
@@ -64,7 +64,7 @@
 (defn hae-tiemerkinta-paikkausten-kustannukset
   [db kayttaja {:keys [urakka-id urakka-alkupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
-  (let [vuosi (pvm/vuosi urakka-alkupvm)]
+  (let [vuosi (if urakka-alkupvm (pvm/vuosi urakka-alkupvm) 0)]
     (q/hae-urakan-paikkauskohteiden-kustannukset db {:urakka-id urakka-id :vuosi vuosi})))
 
 (defn tallenna-tiemerkinta-yllapitokohteiden-kustannukset
@@ -116,47 +116,48 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
   (q/hae-tiemerkinta-kustannustyypit db))
 
-
-
-
-
-
-
-
 (defn hae-tiemerkinta-yhteenveto
-  "Haetaan ja lasketaan yhteenvetoon kaikki tiedot"
-  [db kayttaja {:keys [
-                       urakan-tiedot
-                       valittu-aikavali
-                       
-                       urakka-id urakka-alkupvm
-                       
-                       hae-sanktiot? hae-bonukset? alku loppu
+  "Haetaan ja lasketaan tiemerkinnän yhteenvetoon kaikki siihen kuuluvat kustannukset"
+  [db kayttaja {:keys [urakan-tiedot valittu-aikavali kaikki? sopimus] :as _tiedot}]
 
-                       sopimus
-                       ] :as _tiedot}]
-  
-  (let [;; Tiemerkintöjen korjaus 
+  (let [urakka-id (:id urakan-tiedot)
+        ;; Tiemerkintöjen korjaus 
         korjaus-kustannukset (hae-tiemerkinta-kustannuskirjaukset db kayttaja {:urakka urakan-tiedot})
-        korjaus-kustannukset (apurit/laske-korjaukset-yhteen korjaus-kustannukset valittu-aikavali)
+        korjaus-kustannukset (apurit/laske-korjaukset korjaus-kustannukset valittu-aikavali)
 
         ;; Uusien päällysteiden tiemerkinnät (paikkaus)
-        ;paikkaus-kustannukset (hae-tiemerkinta-paikkausten-kustannukset db kayttaja tiedot)
+        paikkaus-kustannukset (hae-tiemerkinta-paikkausten-kustannukset db kayttaja {:urakka-id urakka-id
+                                                                                     :urakka-alkupvm (if kaikki? nil (-> valittu-aikavali first))})
+        paikkaus-kustannukset (apurit/laske-tiemerkintakustannukset paikkaus-kustannukset)
 
         ;; Uusien päällysteiden tiemerkinnät (päällystys)
-        ;paallystys-kustannukset (hae-tiemerkinta-paallystyskohteiden-kustannukset db kayttaja tiedot)
+        paallystys-kustannukset (hae-tiemerkinta-paallystyskohteiden-kustannukset db kayttaja {:urakka-id urakka-id
+                                                                                               :urakka-alkupvm (if kaikki? nil (-> valittu-aikavali first))})
+        paallystys-kustannukset (apurit/laske-tiemerkintakustannukset paallystys-kustannukset)
 
         ;; Sanktiot ja bonukset
-        ;sanktiot-ja-bonukset (laadunseuranta/hae-urakan-sanktiot-ja-bonukset db kayttaja tiedot)
+        sanktiot-ja-bonukset (laadunseuranta/hae-urakan-sanktiot-ja-bonukset db kayttaja {:hae-sanktiot? true
+                                                                                          :hae-bonukset? true
+                                                                                          :urakka-id urakka-id
+                                                                                          :alku      (-> valittu-aikavali first)
+                                                                                          :loppu     (-> valittu-aikavali second)})
+        sanktiot-ja-bonukset (apurit/laske-sakot sanktiot-ja-bonukset)
 
         ;; Muut kustannukset
-        ;muut-kustannukset (yllapito-toteumat/hae-yllapito-toteumat db kayttaja tiedot)
+        muut-kustannukset (yllapito-toteumat/hae-yllapito-toteumat db kayttaja {:urakka  urakka-id
+                                                                                :sopimus sopimus
+                                                                                :alkupvm  (-> valittu-aikavali first)
+                                                                                :loppupvm (-> valittu-aikavali second)})
+        muut-kustannukset (apurit/laske-muut muut-kustannukset)
 
-        _ (println "\n \n res: " (apurit/laske-korjaukset-yhteen korjaus-kustannukset valittu-aikavali) " \n ")
-        ;;
-        ]
 
-    korjaus-kustannukset))
+        yhteenveto (into [] (concat
+                              korjaus-kustannukset
+                              paikkaus-kustannukset
+                              paallystys-kustannukset
+                              sanktiot-ja-bonukset
+                              muut-kustannukset))]
+    yhteenveto))
 
 (defrecord TiemerkinnanKustannusKirjaukset []
   component/Lifecycle

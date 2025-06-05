@@ -69,7 +69,8 @@ LEFT JOIN tiemerkinta_yllapitokohteen_kustannus tyk ON ypk.id = tyk.yllapitokohd
 WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka
   AND ypk.yllapitokohdetyotyyppi = :yllapitokohdetyotyyppi :: YLLAPITOKOHDETYOTYYPPI
-  AND ypk.vuodet @> ARRAY[:vuosi]::INTEGER[]
+  -- Jos passataan 0, hae kaikki vuodet
+  AND (:vuosi = 0 OR ypk.vuodet @> ARRAY[:vuosi]::INTEGER[])
   AND ypk.poistettu IS FALSE
 ORDER BY coalesce(ypk.muokattu,  ypk.luotu) DESC;
 
@@ -111,8 +112,9 @@ WHERE st_intersects(o.alue,
                                      CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
                         ELSE NULL
                         END)
-AND u.id = :urakka-id                        
-AND EXTRACT(YEAR FROM pk.alkupvm) = :vuosi
+AND u.id = :urakka-id
+-- Jos passataan 0, hae kaikki vuodet
+AND (:vuosi = 0 OR EXTRACT(YEAR FROM pk.alkupvm) = :vuosi)
 AND pk.poistettu = false
 -- Näytetään paikkauskohde vasta kun tiemerkintä on merkattu valmiiksi
 AND pk."tiemerkinnan-tila" = 'valmis'
