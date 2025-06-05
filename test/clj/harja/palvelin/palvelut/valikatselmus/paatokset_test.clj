@@ -915,7 +915,7 @@
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-kattohinnan-ylityspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e e))]
     ;; Koska virheitä, tarkista virhe
-    (is (str/includes? vastaus "Virheellinen päätös: Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle. Poista siirron osuus."))))
+    (is (str/includes? vastaus "Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle. Poista siirron osuus."))))
 
 (deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2025-test
   (let [;; Hae vaativa mhu urakka
@@ -925,9 +925,9 @@
         hoitokauden-alkuvuosi 2024
         kattohinta 5M
         toteutuneet-kustannukset 5M
-        ylityksen-maara 10M
-        urakoitsija-maksaa 50M
-        siirrettava-maara 50M
+        ylityksen-maara 50M
+        urakoitsija-maksaa (/ 50M 2)
+        siirrettava-maara (/ 50M 2)
         siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
         maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         kulu-id nil

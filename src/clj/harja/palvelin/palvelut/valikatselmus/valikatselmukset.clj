@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.valikatselmus.valikatselmukset
   (:require
     [com.stuartsierra.component :as component]
+    [cognitect.transit :as transit]
     [clojure.string :as string]
     [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
@@ -26,14 +27,14 @@
     [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu]
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta-palvelu]
     [harja.palvelin.palvelut.kulut.paatos-apurit :as paatos-apurit]
-    [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+    [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
     [harja.pvm :as pvm]
     [harja.domain.lupaus-domain :as lupaus-domain]
     [clojure.java.jdbc :as jdbc]
     [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]))
 
-(defn heita-virhe [viesti] (throw+ {:type "Error"
-                                    :virheet {:koodi "ERROR" :viesti viesti}}))
+(defn heita-virhe [viesti]
+  (throw+ viesti))
 
 (defn tarkista-valikatselmusten-urakkatyyppi [urakka toimenpide]
   (let [toimenpide-teksti (case toimenpide
@@ -500,6 +501,18 @@
           budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) koko-budjettitavoite)
           hoitovuoden-lopun-kattohinta (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
 
+          validaatio (if (> (:siirrettava_maara paatos) (:ylityksen_maara paatos))
+                       (conj validaatio (str "Siirrettävä määrä ylittää maksimiarvon." ))
+                       validaatio)
+
+          validaatio (if (> (:urakoitsija_maksaa paatos) (:ylityksen_maara paatos))
+                       (conj validaatio (str "Urakoitsijan maksu ylittää maksimiarvon." ))
+                       validaatio)
+
+          validaatio (if (> (+ (:urakoitsija_maksaa paatos) (:siirrettava_maara paatos)) (:ylityksen_maara paatos))
+                       (conj validaatio (str "Urakoitsijan ja siirrettävä määrä ylittää maksimiarvon." ))
+                       validaatio)
+
           validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-kattohinta) (konversio/konvertoi->int (:kattohinta paatos)))
                        (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa. Hoitovuoden lopun kattohinta:" hoitovuoden-lopun-kattohinta " €. Päätöksen mukainen kattohinta: " (:kattohinta paatos) " €"))
                        validaatio)
@@ -518,11 +531,13 @@
           kulu_id (when-not (seq validaatio)
                     (paatos-apurit/tallenna-kulu db paatos kayttaja :kattohinnan-ylitys (:urakoitsija_maksaa paatos)))
           paatos (assoc paatos :kulu_id kulu_id)
-          _ (if (seq validaatio)
-              (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
-              (paatos-kyselyt/tee-kattohinnan-ylityspaatos db paatos))]
-      ;; Hae välikatselmuksen tiedot
-      (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
+          vastaus (if (seq validaatio)
+              (heita-virhe (str (string/join ", " validaatio)))
+              (do
+                (paatos-kyselyt/tee-kattohinnan-ylityspaatos db paatos)
+                ;; Hae välikatselmuksen tiedot
+                (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)})))]
+      vastaus)))
 
 (defn poista-kattohinnan-ylityspaatos [db kayttaja paatos]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
