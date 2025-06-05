@@ -127,8 +127,7 @@
 
       ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
       [:ul.dropdown-menu.livi-alasvetolista
-       {:role "menu"
-        :on-key-down #(kasittele-alasvetovalikon-toiminnot % {:id "alasveto-hallintayksikko"
+       {:on-key-down #(kasittele-alasvetovalikon-toiminnot % {:id "alasveto-hallintayksikko"
                                                              :valittu-rivi valittu-rivi
                                                              :valinta-auki valinta-auki})}
        (for [muu-yksikko (filter #(not= % valittu) @hal/vaylamuodon-hallintayksikot)]
