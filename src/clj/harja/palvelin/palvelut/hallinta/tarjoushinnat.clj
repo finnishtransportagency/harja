@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.hallinta.tarjoushinnat
   (:require [com.stuartsierra.component :as component]
+            [harja.pvm :as pvm]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -12,7 +13,8 @@
                                         ;; Varmistetaan, että jos urakalla ei ole jollekin vuodedelle urakka_tarjous taulussa vielä riviä, niin
                                         ;; siitä silti muodostetaan mäppi, jotta sille voidaan syöttää summa käyttöliittymässä
                                         (let [muodostetut-tarjoushinnat-urakalle (reduce (fn [acc vuosinro]
-                                                                                           (let [hoidokauden-alkuvuosi (+ urakka-alkupvm vuosinro)
+                                                                                           (let [urakka-alkupvm (:urakka-alkupvm (first urakan-tarjoushinnat))
+                                                                                                 hoidokauden-alkuvuosi (+ (pvm/vuosi urakka-alkupvm) vuosinro)
                                                                                                  paatoksia-tekematta? (valikatselmus-palvelu/onko-paatoksia-tekematta db kayttaja {:urakkaid urakka
                                                                                                                                                                                   :kuluva-hoitovuosi hoidokauden-alkuvuosi})]
                                                                                              (conj acc {:urakka urakka
