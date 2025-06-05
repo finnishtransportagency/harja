@@ -27,17 +27,19 @@
             (fmt/euro-opt (:tarjouksen_tavoitehinta paatos)) " - 1) * 100")]
     [:div.laskenta-rivi-lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
 
-   [:div.flex-row.laskenta-rivi-matalampi
-    [:div "Hoitovuoden indeksikorjattu hoidonjohtopalkkio"]
-    [:div.laskenta-rivi-lukema (fmt/euro-opt (:hoidonjohtopalkkio paatos))]]
+   (when-not (= 0 (:hoidonjohtopalkkio_muutos paatos))
+    [:div.flex-row.laskenta-rivi-matalampi
+     [:div "Hoitovuoden indeksikorjattu hoidonjohtopalkkio"]
+     [:div.laskenta-rivi-lukema (fmt/euro-opt (:hoidonjohtopalkkio paatos))]])
 
-   [:div.row.laskenta-kaava
-    [:div.laskenta-rivi-lukema.laskenta-avattuna "Hoidonjohtopalkkion muutos ="]
-    [:div.laskenta-rivi-matalampi (str "(" (fmt/euro-opt (:tavoitehinta paatos)) " / "
-                                    (fmt/euro-opt (:tarjouksen_tavoitehinta paatos)) " - 1) * "
-                                    (fmt/euro-opt (:hoidonjohtopalkkio paatos))
-                                    " = ")
-     [:span.laskenta-rivi-matalampi.laskenta-rivi-lukema (fmt/euro-opt (:hoidonjohtopalkkio_muutos paatos))]]]])
+   (when-not (= 0 (:hoidonjohtopalkkio_muutos paatos))
+     [:div.row.laskenta-kaava
+      [:div.laskenta-rivi-lukema.laskenta-avattuna "Hoidonjohtopalkkion muutos ="]
+      [:div.laskenta-rivi-matalampi (str "(" (fmt/euro-opt (:tavoitehinta paatos)) " / "
+                                      (fmt/euro-opt (:tarjouksen_tavoitehinta paatos)) " - 1) * "
+                                      (fmt/euro-opt (:hoidonjohtopalkkio paatos))
+                                      " = ")
+       [:span.laskenta-rivi-matalampi.laskenta-rivi-lukema (fmt/euro-opt (:hoidonjohtopalkkio_muutos paatos))]]])])
 
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :hoidonjohtopalkkion-muutos
@@ -63,17 +65,16 @@
             [:div.big-text "Hoidonjohtopalkkion muutos"]
             [:div.big-text.lihavoitu (fmt/euro-opt false (:hoidonjohtopalkkio_muutos paatos))]]
 
-           (when-not (= 0 (:hoidonjohtopalkkio_muutos paatos))
-             [:div.flex-row.laskenta-linkki
-              [yleiset/linkki "Näytä laskenta"
-               (fn [] (modal/nayta! {:otsikko "Laskenta"
-                                     :otsikko-muotoilut {:font-size "32px"}
-                                     :body-tyyli {:margin-bottom "24px"}
-                                     :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
-                                     :footer [napit/sulje #(modal/piilota!)]
-                                     :footer-tyyli {:text-align "left"}}
-                        [laskenta-modaali paatos]))
-               {:style {:text-decoration :underline}}]])
+           [:div.flex-row.laskenta-linkki
+            [yleiset/linkki "Näytä laskenta"
+             (fn [] (modal/nayta! {:otsikko "Laskenta"
+                                   :otsikko-muotoilut {:font-size "32px"}
+                                   :body-tyyli {:margin-bottom "24px"}
+                                   :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
+                                   :footer [napit/sulje #(modal/piilota!)]
+                                   :footer-tyyli {:text-align "left"}}
+                      [laskenta-modaali paatos]))
+             {:style {:text-decoration :underline}}]]
 
            [:hr.paatos-hr-korkeampi]
 
