@@ -92,7 +92,6 @@
         :luokka "text-nowrap"
         :leveys 0.25}
 
-
        {:otsikko "Pk2-osuus"
         :nimi :hinta
         :tyyppi :komponentti

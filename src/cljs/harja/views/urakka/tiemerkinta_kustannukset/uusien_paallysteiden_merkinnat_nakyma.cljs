@@ -100,7 +100,7 @@
       (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                       (e! (tiedot/->PaivitaValinnat uusi))))
       (komp/sisaan #(do 
-                      (u/valitse-kuluva-hk!)
+                      (when (u/koko-urakkakausi-valittuna?) (u/valitse-kuluva-hk!))
                       (e! (tiedot/->HaePaallystysKustannukset))
                       (e! (tiedot/->HaePaikkausKustannukset))
                       (e! (tiedot/->PaivitaValinnat
