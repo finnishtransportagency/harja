@@ -6,17 +6,13 @@
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.kyselyt.valikatselmus :as q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
-            [harja.kyselyt.sanktiot :as sanktiot-q]
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
             [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
-            [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
             [harja.tyokalut.yleiset :refer [round2]]
             [harja.pvm :as pvm]
-            [harja.testi :refer :all]
-            [taoensso.timbre :as log])
+            [harja.testi :refer :all])
   (:import (clojure.lang ExceptionInfo)
            (harja.domain.roolit EiOikeutta)))
 
