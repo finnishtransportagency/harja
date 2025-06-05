@@ -216,7 +216,7 @@
          loppuetaisyys (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr) (:let tr) (::let tr))
          ei-tierekisteriosoitetta (if (or (nil? (:teksti-ei-tr-osoitetta? optiot))
                                           (boolean (:teksti-ei-tr-osoitetta? optiot)))
-                                    "Ei tierekisteriosoitetta"
+                                    "Ei tieosoitetta"
                                     "")]
      ;; Muodosta teksti
      (str (if tie
