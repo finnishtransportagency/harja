@@ -1,5 +1,5 @@
 -- Tiedosto nimetty väärällä numerolla, koska migraatioon on pitkä aika ja näin vältytään konflikteilta
--- Lisätään urakka -taulun käyttämään sopimustyyppi tietueeseen tiedot mhu ja mhu+ vaativien hoitourakoiden erottelemiseksi.
+-- Lisätään urakka -taulun käyttämään sopimustyyppi tietueeseen tiedot mhu ja mhu+ hoitourakoiden erottelemiseksi.
 ALTER TYPE sopimustyyppi ADD VALUE 'mhu';
 ALTER TYPE sopimustyyppi ADD VALUE 'mhu+';
 
@@ -214,7 +214,7 @@ CREATE TABLE urakka_parametrit
     indeksi_kaytossa_bonuksella                         BOOLEAN,       -- Onko indeksikorjaus käytössä bonuksella. -19/20 alkavilla urakoilla käytössä asiakastyytyväisyysbonuksella, muilla ei
     lupauspaatoksen_bonusprosentti                      DECIMAL(4, 2), -- Luvatun pistemäärän ylittävää pistettä kohden maksettava bonusprosentti tarjouksen tavoitehinnasta
     lupauspaatoksen_sanktioprosentti                    DECIMAL(4, 2), -- Luvatun pistemäärän alittavaa pistettä kohden maksettava sanktioprosentti tarjouksen tavoitehinnasta
-    lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus BOOLEAN, -- -24 alkaen hoitovuoden lopun tavoitehintaan lisätään myös hiotovuoden lopun indeksikorjaus
+    lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus BOOLEAN,       -- -24 alkaen hoitovuoden lopun tavoitehintaan lisätään myös hiotovuoden lopun indeksikorjaus
     hoitokauden_lopun_kattohinta_kerroin                DECIMAL(4, 2), -- Kaava kattohinnan laskemiseen, voi olla 1.1 tai 1.2 kertaa hoitovuoden lopun tavoitehinta, joka sekin lasketaan eri tavalla eri vuosina
     muokkaa_kattohinta_kasin                            BOOLEAN,       -- -19/20 alkavilla urakoilla kattohinta annetaan käsin, muilla 10% tavoitehinnasta
     kattohintaylityksen_siirron_prosenttirajoitus       DECIMAL(4, 2), -- Esim 0.03 (prosenttia) vuonna -25 alkavilla urakoilla
@@ -254,7 +254,8 @@ CREATE TABLE jarjestelman_asetukset
     muokkaaja                          INTEGER,
     FOREIGN KEY (muokkaaja) REFERENCES kayttaja (id)
 );
-INSERT INTO jarjestelman_asetukset (valikatselmus_validoinnit_kaytossa) VALUES (TRUE);
+INSERT INTO jarjestelman_asetukset (valikatselmus_validoinnit_kaytossa)
+VALUES (TRUE);
 
 
 -- Pyritään täyttämään taulu mahdollisimman hyvin alkuun ja hallintapaneelista sitten loput
@@ -280,10 +281,10 @@ DECLARE
                                                                                     FROM kayttaja
                                                                                     WHERE kayttajanimi = 'Integraatio');
     indeksi_kaytossa                                             BOOLEAN;
-    kattohintaylityksen_siirron_prosenttirajoitus                DECIMAL(4, 2);
-    muokkaa_kattohinta_kasin                                     BOOLEAN;
-    hoitokauden_lopun_kattohinta_kerroin                         DECIMAL(4, 2);
-    lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus          BOOLEAN;
+    kattohintaylityksen_prosenttirajoitus_siirrolle              DECIMAL(4, 2);
+    muokkaa_kasin_kattohinta                                     BOOLEAN;
+    kerroin_hoitokauden_lopun_kattohinnalle                      DECIMAL(4, 2);
+    tavoitehintaan_hoitovuodenlopunindeksikorjaus                BOOLEAN;
 BEGIN
     -- Haetaan kaikki MHU-urakat ja lisätään niiden perustiedot urakka_parametrit tauluun
     for urakan_tiedot in (SELECT * FROM urakka WHERE id = urakkaid_ and tyyppi IN ('teiden-hoito'))
@@ -307,34 +308,38 @@ BEGIN
                                                            WHEN urakan_tiedot.alkupvm > '2024-10-02' AND
                                                                 urakan_tiedot.sopimustyyppi != 'mhu+'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2025_
-                                                           WHEN urakan_tiedot.alkupvm > '2024-10-02' AND
-                                                                urakan_tiedot.sopimustyyppi = 'mhu'
+                                                           WHEN urakan_tiedot.alkupvm > '2023-10-02' AND
+                                                                urakan_tiedot.sopimustyyppi = 'mhu+'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2024_MHUplus
                 -- Kaikille muille defaulttina 70%
                                                            ELSE tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024 END);
+
+            RAISE NOTICE 'tavoitehinnan_ylityksen_maksuprosentti :: urakkaid % :: sopimustyyppi: % :: tavoitehinnan_ylityksen_maksuprosentti: %',
+                         urakan_tiedot.id, urakan_tiedot.sopimustyyppi, tavoitehinnan_ylityksen_maksuprosentti;
+
             -- Jos indeksi on käytössä sanktiolla, niin se on myös käytössä bonuksella
             indeksi_kaytossa := (CASE
                                      WHEN urakan_tiedot.alkupvm < '2020-10-02' THEN TRUE
                                      ELSE FALSE END);
 
-            muokkaa_kattohinta_kasin := (CASE
+            muokkaa_kasin_kattohinta := (CASE
                                              WHEN urakan_tiedot.alkupvm < '2020-10-02' THEN TRUE
                                              ELSE FALSE END);
 
             -- -25 vuodesta alkaen kattohintaylityksen siirron määrälle rajoitus on voimassa
-            kattohintaylityksen_siirron_prosenttirajoitus := (CASE
-                                                                  WHEN urakan_tiedot.alkupvm < '2024-10-02'
-                                                                      THEN NULL
-                                                                  ELSE 0.03 END);
+            kattohintaylityksen_prosenttirajoitus_siirrolle := (CASE
+                                                                    WHEN urakan_tiedot.alkupvm < '2024-10-02'
+                                                                        THEN NULL
+                                                                    ELSE 0.03 END);
 
-            hoitokauden_lopun_kattohinta_kerroin := (CASE
-                                                         WHEN urakan_tiedot.alkupvm < '2024-10-02' THEN 1.1
-                                                         ELSE 1.2 END);
+            kerroin_hoitokauden_lopun_kattohinnalle := (CASE
+                                                            WHEN urakan_tiedot.alkupvm < '2024-10-02' THEN 1.1
+                                                            ELSE 1.2 END);
 
-            lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus := (CASE
-                                                                        WHEN urakan_tiedot.alkupvm < '2023-10-02'
-                                                                            THEN FALSE
-                                                                        ELSE TRUE END);
+            tavoitehintaan_hoitovuodenlopunindeksikorjaus := (CASE
+                                                                  WHEN urakan_tiedot.alkupvm < '2023-10-02'
+                                                                      THEN FALSE
+                                                                  ELSE TRUE END);
 
             -- Tarkistetaan, että löytyykö rivi jo taulusta
             IF EXISTS(SELECT 1 FROM urakka_parametrit WHERE urakkaid = urakan_tiedot.id)
@@ -348,10 +353,10 @@ BEGIN
                     tavoitepalkkion_maksimi                             = tavoitepalkkionmaxprosentti,
                     tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti = (100 - tavoitehinnan_ylityksen_maksuprosentti),
                     tavoitehinnan_ylityksen_tilaajan_maksuprosentti     = tavoitehinnan_ylityksen_maksuprosentti,
-                    kattohintaylityksen_siirron_prosenttirajoitus       = kattohintaylityksen_siirron_prosenttirajoitus,
-                    muokkaa_kattohinta_kasin                            = muokkaa_kattohinta_kasin,
-                    hoitokauden_lopun_kattohinta_kerroin                = hoitokauden_lopun_kattohinta_kerroin,
-                    lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus = lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus,
+                    kattohintaylityksen_siirron_prosenttirajoitus       = kattohintaylityksen_prosenttirajoitus_siirrolle,
+                    muokkaa_kattohinta_kasin                            = muokkaa_kasin_kattohinta,
+                    hoitokauden_lopun_kattohinta_kerroin                = kerroin_hoitokauden_lopun_kattohinnalle,
+                    lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus = tavoitehintaan_hoitovuodenlopunindeksikorjaus,
                     muokattu                                            = NOW(),
                     muokkaaja                                           = luojaid
                 WHERE urakkaid = urakan_tiedot.id;
@@ -370,9 +375,9 @@ BEGIN
                 VALUES (urakan_tiedot.id, indeksi_kaytossa, indeksi_kaytossa, bonusprosentti, sanktioprosentti,
                         tavoitepalkkioprosentti, tavoitepalkkionmaxprosentti,
                         (100 - tavoitehinnan_ylityksen_maksuprosentti), tavoitehinnan_ylityksen_maksuprosentti,
-                        kattohintaylityksen_siirron_prosenttirajoitus, muokkaa_kattohinta_kasin,
-                        hoitokauden_lopun_kattohinta_kerroin,
-                        lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus, luojaid, NOW());
+                        kattohintaylityksen_prosenttirajoitus_siirrolle, muokkaa_kasin_kattohinta,
+                        kerroin_hoitokauden_lopun_kattohinnalle,
+                        tavoitehintaan_hoitovuodenlopunindeksikorjaus, luojaid, NOW());
             END IF;
         end LOOP;
 END
@@ -465,7 +470,8 @@ BEGIN
         LOOP
             RAISE NOTICE 'Päätöksen tiedot: %', paatos;
 
-            hoitokauden_viimeinen_paiva := (SELECT TO_DATE(CONCAT((paatos."hoitokauden-alkuvuosi"),'1001'),'YYYYMMDD'));
+            hoitokauden_viimeinen_paiva :=
+                (SELECT TO_DATE(CONCAT((paatos."hoitokauden-alkuvuosi"), '1001'), 'YYYYMMDD'));
 
             -- Tulostetaan päätöksen tiedot
             -- HAetaan urakan parametrit
@@ -545,7 +551,7 @@ BEGIN
                                  urakan_hinnat.hoitovuoden_lopun_tavoitehinta,
                                  urakan_hinnat.tarjous_tavoitehinta, paatos."lupaus-luvatut-pisteet",
                                  paatos."lupaus-toteutuneet-pisteet",
-                                 (paatos."urakoitsijan-maksu" *-1), -- Vanhassa päätöstaulussa on lupaussanktio negatiivisena, joten käännetään se positiiviseksi tässä.
+                                 (paatos."urakoitsijan-maksu" * -1), -- Vanhassa päätöstaulussa on lupaussanktio negatiivisena, joten käännetään se positiiviseksi tässä.
                                  urakka_parametrit.lupauspaatoksen_sanktioprosentti,
                                  urakan_tiedot.indeksi, indeksikorotus,
                                  paatos.sanktio_id, paatos."luoja-id", paatos.luotu, paatos.poistettu);
@@ -597,7 +603,8 @@ BEGIN
                                                                  luotu, luoja,
                                                                  poistettu)
                          VALUES (paatos."urakka-id", paatos."hoitokauden-alkuvuosi",
-                                 urakan_hinnat.hoitovuoden_alun_tavoitehinta, urakan_hinnat.hoitovuoden_lopun_tavoitehinta,
+                                 urakan_hinnat.hoitovuoden_alun_tavoitehinta,
+                                 urakan_hinnat.hoitovuoden_lopun_tavoitehinta,
                                  toteutuneet_kustannukset_urakalle,
                                  alituksen_maara_urakalle,
                                  paatos.siirto,
