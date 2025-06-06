@@ -827,6 +827,16 @@
 (defn hoitokauden-alkuvuosi-nykyhetkesta [nyt]
   (hoitokauden-alkuvuosi (vuosi nyt) (kuukausi nyt)))
 
+(defn kuluva-hoitovuosi []
+  (let [vuosi-alkaa (vuosi (nyt))
+        vuosi-loppuu (inc vuosi-alkaa)]
+    (str vuosi-alkaa "-" vuosi-loppuu)))
+
+(defn kulujen-kirjauksen-maarapaiva []
+  (let [vuosi-alkaa (vuosi (nyt))
+        vuosi-loppuu (inc vuosi-alkaa)]
+    (str "15.11." vuosi-loppuu)))
+
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."
   [pvm]
