@@ -47,20 +47,79 @@
     {::hairio/voimassa? true
      ::hairio/loppuaika (op/< (c/to-sql-time (t/now)))}))
 
-(defn- validoi-ajat [db alkuaika loppuaika]
-  (cond
-    (= loppuaika alkuaika)
-    [{:virhe (str "Alkuaika ja loppuaika eivät voi olla samat.")}]
+(defn- validoi-ajat
+  ([db alkuaika loppuaika]
+   (validoi-ajat db alkuaika loppuaika false nil))
+  ([db alkuaika loppuaika update? id]
+   (let [haku (if-not update?
+                {::hairio/voimassa? true}
+                {::hairio/voimassa? true ::hairio/id (op/not= id)})]
+     (cond
+       (= loppuaika alkuaika)
+       [{:virhe "Alkuaika ja loppuaika eivät voi olla samat."}]
 
-    (pvm/ennen? loppuaika alkuaika)
-    [{:virhe (str "Alkuajan pitäisi olla ennen loppuaikaa.")}]
+       (pvm/ennen? loppuaika alkuaika)
+       [{:virhe "Alkuajan pitäisi olla ennen loppuaikaa."}]
 
-    (hairio/onko-paallekkainen? alkuaika loppuaika (specql/fetch db ::hairio/hairioilmoitus
-                                                    hairio/sarakkeet
-                                                    {::hairio/voimassa? true}))
-    [{:virhe (str "Aikaväli leikkaa olemassaolevaa häiriöilmoitusta.")}]
-    ;; Ei virheitä
-    :else nil))
+       (hairio/onko-paallekkainen? alkuaika loppuaika (specql/fetch db ::hairio/hairioilmoitus hairio/sarakkeet haku))
+       [{:virhe "Aikaväli leikkaa olemassaolevaa häiriöilmoitusta."}]
+
+       :else nil))))
+
+(defn- tallenna-hairioilmoitukset [db user {:keys [tiedot]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
+  (reduce
+    (fn [_ rivi]
+      (let [{::hairio/keys [viesti tyyppi alkuaika loppuaika id]} rivi
+            poistettu? (:poistettu rivi)
+            validointi-virhe (validoi-ajat db alkuaika loppuaika true id)
+            hae-kaikki #(->>
+                          (specql/fetch db ::hairio/hairioilmoitus hairio/sarakkeet {})
+                          (sort-by ::hairio/alkupvm)
+                          reverse
+                          vec)]
+        (cond
+          ;; Käyttäjä haluaa poistaa rivin 
+          poistettu?
+          (do
+            (specql/delete! db ::hairio/hairioilmoitus {::hairio/id id})
+            (log/debug "Poistettiin häiriöilmoitus")
+            (hae-kaikki))
+
+          ;; Riviä ei ole, tehdään uusi 
+          (< id 0)
+          (if validointi-virhe
+            validointi-virhe
+            (do
+              (specql/insert! db ::hairio/hairioilmoitus
+                {::hairio/viesti viesti
+                 ::hairio/pvm (c/to-sql-date (t/now))
+                 ::hairio/voimassa? true
+                 ::hairio/tyyppi (or tyyppi :hairio)
+                 ::hairio/alkuaika alkuaika
+                 ::hairio/loppuaika loppuaika})
+              (log/debug "Luotiin uusi häiriöilmoitus")
+              (hae-kaikki)))
+
+          ;; Päivitetään olemassa oleva rivi 
+          (> id 0)
+          (if validointi-virhe
+            validointi-virhe
+            (do
+              (specql/update! db ::hairio/hairioilmoitus
+                {::hairio/viesti viesti
+                 ::hairio/pvm (c/to-sql-date (t/now))
+                 ::hairio/voimassa? true
+                 ::hairio/tyyppi (or tyyppi :hairio)
+                 ::hairio/alkuaika alkuaika
+                 ::hairio/loppuaika loppuaika}
+                {::hairio/id id})
+              (log/debug "Päivitettiin häiriöilmoitus")
+              (hae-kaikki)))
+
+          :else (hae-kaikki))))
+    nil
+    tiedot))
 
 (defn- aseta-hairioilmoitus [db user {::hairio/keys [viesti tyyppi alkuaika loppuaika]}]
   (let [validointi-virhe (validoi-ajat db alkuaika loppuaika)]
@@ -97,6 +156,12 @@
       (fn [user _]
         (hae-voimassaoleva-hairioilmoitus db user))
       {:lokita-kysely? false})
+    
+    (julkaise-palvelu
+      http
+      :tallenna-hairioilmoitukset
+      (fn [user tiedot]
+        (tallenna-hairioilmoitukset db user tiedot)))
 
     (julkaise-palvelu
       http
@@ -122,6 +187,7 @@
       (:http-palvelin this)
       :hae-hairioilmoitukset
       :hae-voimassaoleva-hairioilmoitus
+      :tallenna-hairioilmoitukset
       :aseta-hairioilmoitus
       :aseta-kaikki-hairioilmoitukset-pois
       :aseta-hairioilmoitus-pois)
