@@ -67,7 +67,9 @@
    :ei-luokkaa-prosentti ei-luokkaa-prosentti})
 
 
-(defn laske-yhteensa [yhteenveto]
+(defn laske-yhteensa 
+  "Laskee yhteenvedolle viimeisen yhteensä- rivin"
+  [yhteenveto]
   (let [kokonais-hinta (reduce + 0 (map :kustannus yhteenveto))
         pk1-hinta (reduce + 0 (map #(or (:pk1-hinta %) 0) yhteenveto))
         pk2-hinta (reduce + 0 (map #(or (:pk2-hinta %) 0) yhteenveto))

@@ -119,8 +119,8 @@
 (defn hae-tiemerkinta-yhteenveto
   "Haetaan ja lasketaan tiemerkinnän yhteenvetoon kaikki siihen kuuluvat kustannukset"
   [db kayttaja {:keys [urakan-tiedot valittu-aikavali kaikki? sopimus] :as _tiedot}]
-
   (let [urakka-id (:id urakan-tiedot)
+        _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
         ;; Tiemerkintöjen korjaus 
         korjaus-kustannukset (hae-tiemerkinta-kustannuskirjaukset db kayttaja {:urakka urakan-tiedot})
         korjaus-kustannukset (apurit/laske-korjaukset korjaus-kustannukset valittu-aikavali)

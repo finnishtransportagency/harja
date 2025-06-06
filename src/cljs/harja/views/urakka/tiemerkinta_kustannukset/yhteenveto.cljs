@@ -17,10 +17,13 @@
 (defn- yhteenveto-grid
   "Yhteenveto taulukko, kaikki lasketaan bäkkärissä"
   [_e! rivit haku-kaynnissa?]
-  (let [valittu-vuosi (when (first @u/valittu-aikavali)
+  (let [urakka (-> @nav/valittu-urakka :nimi)
+        valittu-vuosi (when (first @u/valittu-aikavali)
                         (-> @u/valittu-aikavali first (pvm/vuosi)))
-        vuosi-termi (if (u/koko-urakkakausi-valittuna?) "Kaikki toteutuneet kustannukset" (str "Toteutuneet kustannukset " valittu-vuosi))
-        urakka (-> @nav/valittu-urakka :nimi)
+
+        vuosi-termi (if (u/koko-urakkakausi-valittuna?)
+                      "Kaikki toteutuneet kustannukset"
+                      (str "Toteutuneet kustannukset " valittu-vuosi))
 
         hinta-sarake (fn [hinta prosentti tekstina?]
                        (let [hinta (or hinta 0.0)
@@ -33,7 +36,8 @@
                            [:span
                             [:span (str hinta " €")]
                             [:span.caption (str " (" prosentti ")")]])))
-
+        ;; Eritä viimeinen yhteenveto rivi datasta 
+        ;; Se näytetään erikseen rivi-jalkeen- äf än 
         yhteenveto (first (filter #(= (:tyyppi %) :yhteensa) rivit))
         rivit (remove #(= (:tyyppi %) :yhteensa) rivit)]
 
@@ -57,16 +61,12 @@
                                                   ei-luokkaa-hinta ei-luokkaa-prosentti]} yhteenveto]
                                       [[{:teksti "Yhteensä" :luokka "yhteensa"}
                                         {:teksti (str (fmt/euro-opt false kustannus) " €") :tasaa :oikea :luokka "yhteensa"}
-
                                         ;; PK 1
                                         {:teksti (hinta-sarake pk1-hinta pk1-prosentti true) :tasaa :oikea :luokka "yhteensa"}
-
                                         ;; PK 2 
                                         {:teksti (hinta-sarake pk2-hinta pk2-prosentti true) :tasaa :oikea :luokka "yhteensa"}
-
                                         ;; PK 3
                                         {:teksti (hinta-sarake pk3-hinta pk3-prosentti true) :tasaa :oikea :luokka "yhteensa"}
-
                                         ;; Ei pk luokkaa
                                         {:teksti (hinta-sarake ei-luokkaa-hinta ei-luokkaa-prosentti true) :tasaa :oikea :luokka "yhteensa"}]]))}
 
