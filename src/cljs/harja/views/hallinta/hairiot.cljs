@@ -1,14 +1,21 @@
 (ns harja.views.hallinta.hairiot
   "Näkymästä voi lähettää kaikille käyttäjille sähköpostia. Hyödyllinen esimerkiksi päivityskatkoista tiedottamiseen."
-  (:require [harja.tiedot.hallinta.hairiot :as tiedot]
-            [harja.ui.yleiset :refer [ajax-loader]]
-            [harja.ui.komponentti :as komp]
-            [harja.domain.hairioilmoitus :as hairio]
+  (:require [tuck.core :refer [tuck]]
+
+            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
+            [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :refer [ajax-loader-pieni]]
             [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
-            [harja.pvm :as pvm])
-  (:require-macros [harja.tyokalut.ui :refer [for*]]))
+            [harja.ui.grid :as grid]
+            [harja.ui.ikonit :as ikonit]
+
+            [harja.tiedot.urakka :as urakka-tiedot]
+            [harja.tiedot.urakka.urakka :as urakka-tila]
+            [harja.domain.hairioilmoitus :as hairio]
+            [harja.tiedot.hallinta.hairiot :as tiedot]))
+
 
 (defn- listaa-hairioilmoitus [hairio]
   (let [tuleva? (pvm/ennen? (pvm/nyt) (::hairio/alkuaika hairio))
@@ -32,7 +39,9 @@
 
                              :else
                              nil)]
-    (str (fmt/pvm (::hairio/pvm hairio))
+    (str (when 
+           
+           (fmt/pvm (::hairio/pvm hairio)))
       (when voimassaolo-teksti
         voimassaolo-teksti)
       " - "
@@ -40,7 +49,7 @@
       " - "
       (::hairio/viesti hairio))))
 
-(defn- vanhat-hairioilmoitukset [hairiot]
+#_ (defn- vanhat-hairioilmoitukset [hairiot]
   [:div
    [:h3 "Vanhat häiriöilmoitukset"]
    (if (empty? hairiot)
@@ -49,18 +58,14 @@
       (for* [hairio hairiot]
           [:li (listaa-hairioilmoitus hairio)])])])
 
-(defn- aseta-hairioilmoitus []
+(defn- aseta-hairioilmoitus [e! {:keys [tallennus-kaynnissa? asetetaan-hairioilmoitus? tuore-hairioilmoitus] :as app}]
   [:div
    [lomake/lomake
-    {:muokkaa! (fn [data]
-                 (reset! tiedot/tuore-hairioilmoitus data))
+    {:muokkaa! #(e! (tiedot/->TuoreHairioilmoitus (lomake/ilman-lomaketietoja %))) 
      :footer [:<>
-              [napit/tallenna "Aseta" #(tiedot/aseta-hairioilmoitus @tiedot/tuore-hairioilmoitus)
-               {:disabled @tiedot/tallennus-kaynnissa?}]
-              [napit/peruuta
-               #(do (reset! tiedot/asetetaan-hairioilmoitus? false)
-                    (reset! tiedot/tuore-hairioilmoitus {:tyyppi :hairio
-                                                         :teksti nil}))]]}
+              [napit/tallenna "Aseta" #(e! (tiedot/->AsetaHairioilmoitus)) {:disabled tallennus-kaynnissa?}]
+              [napit/peruuta #(e! (tiedot/->KumoaIlmoitus))]]}
+    
     [{:otsikko "Viesti"
       :tyyppi :text
       :nimi :teksti
@@ -79,36 +84,100 @@
        {:otsikko "Päättymisaika"
         :tyyppi :pvm-aika
         :nimi :loppuaika})]
-    @tiedot/tuore-hairioilmoitus]])
+    tuore-hairioilmoitus]])
 
-(defn- voimassaoleva-hairioilmoitus [hairio]
+(defn- voimassaoleva-hairioilmoitus [e! {:keys [rivit asetetaan-hairioilmoitus? tallennus-kaynnissa?] :as app}]
+  
+  (let [voimassaoleva-hairio (hairio/voimassaoleva-hairio rivit)
+        
+        _ (println "\n voimassa oleva: " voimassaoleva-hairio)
+        ]
+
   [:div
-     [:h3 "Nykyinen häiriöilmoitus" ]
-     (if @tiedot/asetetaan-hairioilmoitus?
-       [aseta-hairioilmoitus]
+     [:h3 "Nykyinen häiriöilmoitus"]
+     (if asetetaan-hairioilmoitus?
+       [aseta-hairioilmoitus e! app]
        [:div
-        [:p (if hairio
-              (listaa-hairioilmoitus hairio)
+        [:p (if voimassaoleva-hairio
+              (listaa-hairioilmoitus voimassaoleva-hairio)
               "Ei voimassaolevaa häiriöilmoitusta. Kun asetat häiriöilmoituksen, se näytetään kaikille Harjan käyttäjille selaimen alapalkissa. Ilmoituksen yhteydessä näytetään aina ilmoituksen päivämäärä, joten sitä ei tarvitse kirjoittaa erikseen. Voit myös ajastaa häiriöilmoituksia etukäteen.")]
 
-        (when hairio
-          [napit/poista "Poista häiriöilmoitus" #(tiedot/poista-hairioilmoitus {:id (::hairio/id hairio)})
-           {:disabled @tiedot/tallennus-kaynnissa?}])])])
+        (when asetetaan-hairioilmoitus?
+          [napit/poista "Poista häiriöilmoitus" #(tiedot/poista-hairioilmoitus {:id (::hairio/id asetetaan-hairioilmoitus?)})
+           {:disabled tallennus-kaynnissa?}])])]))
 
-(defn- tulevat-hairioilmoitukset [hairiot]
-  (let [tulevat (hairio/tulevat-hairiot hairiot)]
+(defn- tulevat-hairioilmoitukset [e! {:keys [rivit haku-kaynnissa?] :as app}]
+  (let [tulevat-hairiot (vec (hairio/tulevat-hairiot rivit))
+        
+        _ (println "\n t: " tulevat-hairiot)
+        ]
     [:div
      [:h3 "Tulevat häiriöilmoitukset"]
-     (if (empty? tulevat)
-       "Ei tulevia häiriöilmoituksia"
-       [:ul
+     (if (empty? tulevat-hairiot)
+       [:span "Ei tulevia häiriöilmoituksia"]
+       [:<> 
+        [grid/grid {:tyhja (if haku-kaynnissa?
+                             [ajax-loader-pieni "Haku käynnissä..."]
+                             "Ei löytynyt tuloksia.")
+                    :tunniste ::hairio/id
+                    :voi-kumota? false
+                    :piilota-toiminnot? true
+                    :tallenna-vain-muokatut true
+                    :mahdollista-rivin-valinta? false
+                    :sivuta 25
+
+                    :tallenna (fn [sisalto]
+                                #_ ())
+                    }
+        
+         [{:otsikko-komp (fn [_ _]
+                           [:div.pvm "Alkuaika"
+                            [:div [ikonit/action-sort-descending]]])
+           
+           :nimi ::hairio/alkuaika
+           :fmt pvm/pvm-opt 
+           :tyyppi :pvm
+           
+           :luokka "caption text-nowrap"
+           :leveys 0.2}
+          
+          {:otsikko "Loppuaika"
+           :nimi ::hairio/loppuaika
+           :fmt pvm/pvm-opt
+           :tyyppi :pvm 
+           :luokka "caption text-nowrap"
+           :leveys 0.2}
+
+        
+          {:otsikko "Viesti"
+           :tyyppi :string 
+           :nimi ::hairio/viesti
+           :leveys 0.5}
+          
+          {:otsikko "Tyyppi"
+           :tyyppi :valinta
+           :valinnat hairio/tyyppi-fmt
+           :valinta-nayta #(when % (if (vector? %) (second %) (% hairio/tyyppi-fmt)))
+           :nimi ::hairio/tyyppi
+           :leveys 0.5}
+
+          
+          ]
+         tulevat-hairiot]
+        
+        ]
+       
+       #_ [:ul
         (for* [hairio tulevat]
           [:div
            [:li (listaa-hairioilmoitus hairio)]
            [:div.flex-row [napit/poista "Poista häiriöilmoitus" #(tiedot/poista-hairioilmoitus {:id (::hairio/id hairio)})
-                           {:disabled @tiedot/tallennus-kaynnissa?}]]])])]))
+                           {:disabled @tiedot/tallennus-kaynnissa?}]]])]
+       
+       
+       )]))
 
-(defn hairiot []
+#_ (defn hairiot []
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (komp/ulos #(do (reset! tiedot/hairiot nil)
@@ -123,13 +192,57 @@
           [ajax-loader "Haetaan..."]
 
           [:div.hairioilmoitukset
-           [harja.ui.debug/debug {:a hairiotilmoitukset
-                                  :voimassaoleva voimassaoleva-hairio
-                                  :tulevat tulevat-hairiot
-                                  :vanhat vanhat-hairiot}]
            [voimassaoleva-hairioilmoitus voimassaoleva-hairio]
            [tulevat-hairioilmoitukset tulevat-hairiot]
            [napit/yleinen-ensisijainen "Aseta häiriöilmoitus"
             #(reset! tiedot/asetetaan-hairioilmoitus? true)]
            [:hr]
            [vanhat-hairioilmoitukset vanhat-hairiot]])))))
+
+(defn hairiot* [e! _app]
+  (komp/luo
+    (komp/lippu tiedot/nakymassa?)
+    (komp/sisaan
+      #(do
+         (urakka-tiedot/valitse-kuluva-hk!)
+         (e! (tiedot/->HaeTiedot))))
+    (fn [e! app] 
+      
+      [:div.hairioilmoitukset
+       [voimassaoleva-hairioilmoitus e! app] 
+       [tulevat-hairioilmoitukset e! app]
+       [napit/yleinen-ensisijainen "Aseta häiriöilmoitus" #(e! (tiedot/->AsetetaanHairioilmoitus))]
+       [:hr]
+       #_ [vanhat-hairioilmoitukset e! app]
+       
+       ]
+      
+      ))
+  
+  
+  
+  #_ (komp/luo
+    (komp/lippu tiedot/nakymassa?)
+    (komp/ulos #(do (reset! tiedot/hairiot nil)
+                  (reset! tiedot/asetetaan-hairioilmoitus? false)))
+    (komp/sisaan tiedot/hae-hairiot)
+    (fn []
+      (let [hairiotilmoitukset @tiedot/hairiot
+            voimassaoleva-hairio (hairio/voimassaoleva-hairio hairiotilmoitukset)
+            tulevat-hairiot (hairio/tulevat-hairiot hairiotilmoitukset)
+            vanhat-hairiot (hairio/vanhat-hairiot hairiotilmoitukset)]
+        (if (nil? hairiotilmoitukset)
+          [ajax-loader "Haetaan..."]
+  
+          [:div.hairioilmoitukset
+           [voimassaoleva-hairioilmoitus voimassaoleva-hairio]
+           [tulevat-hairioilmoitukset tulevat-hairiot]
+           [napit/yleinen-ensisijainen "Aseta häiriöilmoitus"
+            #(reset! tiedot/asetetaan-hairioilmoitus? true)]
+           [:hr]
+           [vanhat-hairioilmoitukset vanhat-hairiot]]))))
+  )
+
+
+(defn hairiot []
+  [tuck urakka-tila/hallinta-hairiot hairiot*])
