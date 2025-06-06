@@ -86,21 +86,6 @@
             (log/debug "Poistettiin häiriöilmoitus")
             (hae-kaikki))
 
-          ;; Riviä ei ole, tehdään uusi 
-          (< id 0)
-          (if validointi-virhe
-            validointi-virhe
-            (do
-              (specql/insert! db ::hairio/hairioilmoitus
-                {::hairio/viesti viesti
-                 ::hairio/pvm (c/to-sql-date (t/now))
-                 ::hairio/voimassa? true
-                 ::hairio/tyyppi (or tyyppi :hairio)
-                 ::hairio/alkuaika alkuaika
-                 ::hairio/loppuaika loppuaika})
-              (log/debug "Luotiin uusi häiriöilmoitus")
-              (hae-kaikki)))
-
           ;; Päivitetään olemassa oleva rivi 
           (> id 0)
           (if validointi-virhe
