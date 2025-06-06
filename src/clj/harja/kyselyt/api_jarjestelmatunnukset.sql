@@ -53,7 +53,7 @@ SELECT klu.id,
   FROM kayttajan_lisaoikeudet_urakkaan klu
            JOIN urakka u ON klu.urakka = u.id
  WHERE klu.kayttaja = :kayttaja
-   AND klu.poistettu = FALSE
+   AND klu.poistettu IS NOT TRUE
  ORDER BY kayttaja;
 
 -- name: hae-urakat-lisaoikeusvalintaan
