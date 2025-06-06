@@ -17,9 +17,25 @@
   [grid/grid {:tunniste :id
               :voi-poistaa? (constantly false)
               :voi-lisata? false 
-              :paneelikomponentit [(fn [] [napit/nappi "Aseta kaikki pakolliseksi valinnaksi uudessa kulussa"
-                                           #(e! (tiedot/->ValitseKaikkiRivit (:tehtavat rivi) (:tehtavaryhma_id rivi) (:otsikko rivi)))
-                                           {:luokka "nappi-ensisijainen"}])] 
+              ::mahdollista-rivin-valinta? true
+              :paneelikomponentit [(fn [] [:div.valittujen-tehtavien-toiminnot
+                                           (let [valitut-maara (count @tiedot/valitut-tehtavat)]
+                                             [:span.margin-right-8 (str "Valittuna: " valitut-maara " tehtävää")])
+                                           (when (pos? (count @tiedot/valitut-tehtavat))
+                                             [:<>
+                                              [napit/nappi "Tulosta valitut tehtävät migraatiota varten"
+                                               #(e! (tiedot/->TulostaKaikkiValitut))
+                                               {:luokka "nappi-toissijainen"}]
+                                              [napit/nappi "Tyhjennä valinnat"
+                                               #(e! (tiedot/->TyhjaaValitutTehtavat))
+                                               {:luokka "nappi-toissijainen"}]])
+                                           (when (seq @tiedot/tulostetut-tehtavat)
+                                             [:div.tulostetut-tehtavat
+                                              [:h4 "Tulostetut tehtävät:"]
+                                              [:ul
+                                               (for [[idx tehtava] (map-indexed vector @tiedot/tulostetut-tehtavat)]
+                                                 ^{:key (str "tulostettu-" idx)}
+                                                 [:li (str "'"(:nimi tehtava)"'" "," "'"(:yksiloiva_tunniste tehtava)"'")])]])])] 
               :tallenna (fn [muokatut-rivit _arvo]
                                 ;; Tallenna funktion pitää aina palauttaa kanava, passaa muokkaa funktiolle nil
                           (tuck-apurit/e-kanavalla! e! tiedot/->MuokkaaTehtavat muokatut-rivit))
@@ -28,7 +44,15 @@
               ;; taulukon sarakemääriä muutettaessa. Tyylejä säädetty toteumat.less tiedostossa.
               :esta-tiivis-grid? true
               :reunaviiva? true}
-   [{:otsikko "Id" :nimi :id :leveys 0.5 :muokattava? (constantly false)}
+   [(grid/rivinvalintasarake
+     {:otsikko "Valitse"
+      :otsikkovalinta? false
+      :leveys 1
+      :rivi-valittu?-fn (fn [rivi] 
+                          (tiedot/tehtava-valittu? (:id rivi)))
+      :rivi-valittu-fn (fn [rivi valittu?]
+                         (e! (tiedot/->ValitseTehtava rivi valittu?)))})
+    {:otsikko "Id" :nimi :id :leveys 0.5 :muokattava? (constantly false)}
     {:otsikko "Tehtävä" :nimi :nimi :leveys 2 :muokattava? (constantly false)}
     {:otsikko "Yksikkö" :nimi :yksikko :leveys 0.8 :muokattava? (constantly false)}
     {:otsikko "Suoritettava tehtavä" :nimi :suoritettavatehtava :leveys 1 :muokattava? (constantly false)}
