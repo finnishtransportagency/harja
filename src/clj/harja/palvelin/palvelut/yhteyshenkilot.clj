@@ -221,9 +221,9 @@
   [db user {:keys [urakka-id rooli vastuuhenkilo varahenkilot] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (when (and (= (roolit/osapuoli user) :urakoitsija)
-             (not= rooli "vastuuhenkilo"))
+          (not= rooli "vastuuhenkilo"))
     (log/error "Käyttäjä " user " yritti luoda vastuuhenkilön urakkaan "
-               urakka-id " roolilla " rooli)
+      urakka-id " roolilla " rooli)
     (throw (SecurityException. "Ei oikeutta luoda vastuuhenkilö annetulle roolille")))
 
   (let [luo<! (fn [c kayttaja ensisijainen]
@@ -245,35 +245,26 @@
           (luo<! c varahenkilo false))))
     (hae-urakan-vastuuhenkilot db user urakka-id)))
 
-(defn hae-urakan-yleinen-puh-ja-sposti [db user urakka-id]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
-  (first (q/hae-urakan-yleinen-puh-ja-sposti db urakka-id)))
-
 (defn tallenna-urakan-yleinen-puh-ja-sposti [db user {:keys [urakka-id matkapuhelin sahkoposti organisaatio-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [c db]
     ;; Hae urankan organisaatio
-    (let [nykyinen-yhteystieto (first (q/hae-urakan-yleinen-puh-ja-sposti c urakka-id))]
-      (if nykyinen-yhteystieto
-        ;; Päivitä olemassa olevaa
-        (do
-          (q/paivita-yhteyshenkilo c
-            "Urakka" ""
-            "" matkapuhelin
-            sahkoposti
-            organisaatio-id
-            (:id nykyinen-yhteystieto))
-          (:id nykyinen-yhteystieto))
-        ;; Luo uusi
-        (let [id (:id (q/luo-yhteyshenkilo c
-                        "Urakka" ""
-                        "" matkapuhelin
-                        sahkoposti
-                        organisaatio-id
-                        nil nil nil
-                        (:id user)))]
-          (q/liita-yhteyshenkilo-urakkaan<! c "Urakan yhteystiedot" id urakka-id)
-          id)))))
+    (let [nykyinen-yhteystieto (first (q/hae-urakan-yleinen-puh-ja-sposti c urakka-id))
+          nykyinen-id (:id nykyinen-yhteystieto)
+          
+          uusi-id (when-not nykyinen-yhteystieto
+                    (:id
+                     (q/luo-yhteyshenkilo c "Urakka" "" "" matkapuhelin sahkoposti organisaatio-id nil nil nil (:id user))))
+          
+          paivita? (and
+                     (not uusi-id)
+                     nykyinen-yhteystieto)
+          
+          _ (if paivita?
+              (q/paivita-yhteyshenkilo c "Urakka" "" "" matkapuhelin sahkoposti organisaatio-id nykyinen-id)
+              (q/liita-yhteyshenkilo-urakkaan<! c "Urakan yhteystiedot" uusi-id urakka-id))]
+      
+      (if paivita? nykyinen-id uusi-id))))
 
 (defrecord Yhteyshenkilot []
   component/Lifecycle
@@ -317,10 +308,6 @@
       (fn [user tiedot]
         (tallenna-urakan-vastuuhenkilot-roolille (:db this) user tiedot))
       
-      :hae-urakan-yleinen-puh-ja-sposti
-      (fn [user urakka-id]
-        (hae-urakan-yleinen-puh-ja-sposti (:db this) user urakka-id))
-      
       :tallenna-urakan-yleinen-puh-ja-sposti
       (fn [user tiedot]
         (tallenna-urakan-yleinen-puh-ja-sposti (:db this) user tiedot)))
@@ -329,15 +316,14 @@
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
-                     :hae-urakan-yhteyshenkilot
-                     :tallenna-urakan-yhteyshenkilot
-                     :hae-urakan-paivystajat
-                     :tallenna-urakan-paivystajat
-                     :hae-urakan-kayttajat
-                     :hae-urakoiden-kayttajat-rooleissa
-                     :hae-urakan-vastuuhenkilot
-                     :tallenna-urakan-vastuuhenkilot-roolille 
-                     :hae-urakan-yleinen-puh-ja-sposti
-                     :tallenna-urakan-yleinen-puh-ja-sposti)
+      :hae-urakan-yhteyshenkilot
+      :tallenna-urakan-yhteyshenkilot
+      :hae-urakan-paivystajat
+      :tallenna-urakan-paivystajat
+      :hae-urakan-kayttajat
+      :hae-urakoiden-kayttajat-rooleissa
+      :hae-urakan-vastuuhenkilot
+      :tallenna-urakan-vastuuhenkilot-roolille
+      :tallenna-urakan-yleinen-puh-ja-sposti)
     this))
 

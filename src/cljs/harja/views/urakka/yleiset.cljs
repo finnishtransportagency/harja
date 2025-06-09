@@ -485,8 +485,7 @@
         ;; Palvelinkutsu
         tallenna-fn (fn [yhteystiedot-atom]
                       (go
-                        (let [_ (println "Tallennetaan, tiedot: " id " " (:matkapuhelin yhteystiedot-atom) " " (:sahkoposti yhteystiedot-atom) " " (:id urakoitsija))
-                              vastaus (<! (tiedot/tallenna-urakan-yleinen-puh-ja-sposti
+                        (let [vastaus (<! (tiedot/tallenna-urakan-yleinen-puh-ja-sposti
                                             id
                                             (:matkapuhelin yhteystiedot-atom)
                                             (:sahkoposti yhteystiedot-atom)
@@ -497,17 +496,15 @@
                             (do
                               (viesti/nayta! "Urakan yhteystiedot tallennettu" :success)
                               (nav/paivita-urakan-tiedot! id
-                                (fn [u]
-                                  (println "Päivitetään urakan yhteystiedot: " u)
-                                  (let [vanhat-yhteystiedot (:urakan_yhteystiedot u)
-                                        uudet-yhteystiedot {:sahkoposti (:sahkoposti yhteystiedot-atom)
+                                (fn [valitun-urakan-tiedot]
+                                  (let [uudet-yhteystiedot {:sahkoposti (:sahkoposti yhteystiedot-atom)
                                                             :matkapuhelin (:matkapuhelin yhteystiedot-atom)}]
-                                    (if (empty? vanhat-yhteystiedot)
-                                      ;; Jos urakalla ei ole yhteystietoja, luodaan uusi
-                                      (assoc u :urakan_yhteystiedot [uudet-yhteystiedot])
-                                      ;; Muuten päivitetään vanhat yhteystiedot
-                                      (update u :urakan_yhteystiedot #(mapv (fn [rivi]
-                                                                              (merge rivi uudet-yhteystiedot)) %))))                                  ))
+                                    (if (seq (:urakan_yhteystiedot valitun-urakan-tiedot))
+                                        ;; Päivitä olemassaoleva
+                                      (update valitun-urakan-tiedot :urakan_yhteystiedot #(mapv (fn [rivi]
+                                                                              (merge rivi uudet-yhteystiedot)) %))
+                                        ;; Luo uusi
+                                      (assoc valitun-urakan-tiedot :urakan_yhteystiedot [uudet-yhteystiedot])))))
                               ;; Sulje muokkaus samalla jos tallennus onnistui 
                               (avaa-toggle-fn))))))]
 
@@ -524,7 +521,7 @@
         :muokkaa! (fn [rivi]
                     (swap! yhteystiedot merge rivi))
         :header [:div.col-md-12
-                 [:h2.header-yhteiset "Muokkaa urakan yleisiä yhteystietoja"]
+                 [:h2.header-yhteiset "Muokkaa urakan yhteystietoja"]
                  [:hr]]
         :footer [:<>
                  [:hr]
@@ -562,7 +559,9 @@
         muokkaa-fn #(swap! muokataan? not)
         urakan_yhteystiedot (first urakan_yhteystiedot)
         yhteystiedot (if urakan_yhteystiedot
-                       (str "Sähköposti: " (:sahkoposti urakan_yhteystiedot) ", Puhelinnumero: " (:matkapuhelin urakan_yhteystiedot))
+                       (str 
+                         "Sähköposti: " (:sahkoposti urakan_yhteystiedot) ", " 
+                         "Puhelinnumero: " (:matkapuhelin urakan_yhteystiedot))
                        "Ei yhteystietoja")
         voi-muokata? (and
                        (roolit/tilaajan-kayttaja? @istunto/kayttaja)

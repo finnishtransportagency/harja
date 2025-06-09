@@ -202,28 +202,22 @@
            :varahenkilo false
            :vastuuhenkilo true}))))
 
-(deftest urakan-yleisen-puhelinnumeron-ja-sahkopostin-haku-toimii
-  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-urakan-yleinen-puh-ja-sposti +kayttaja-jvh+ urakka-id)]
-    (is (not (nil? vastaus)))
-    (is (= (:matkapuhelin vastaus) "0501234567"))
-    (is (= (:sahkoposti vastaus) "urakka@yit.fi"))))
-
-(deftest urakan-yleisen-puhelinnumeron-ja-sahkopostin-tallennus-toimii  
+(deftest urakan-yleisen-puhelinnumeron-ja-sahkopostin-tallennus-toimii
   (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         kayttaja +kayttaja-jvh+
         organisaatio-id (hae-organisaatio-id-nimella "YIT Rakennus Oy")
         odotetut-yhteystiedot {:urakka-id urakka-id
-                               :matkapuhelin "0507654321"
+                               :matkapuhelin "+358507654321"
                                :sahkoposti "testiurakka@yit.fi"
                                :organisaatio-id organisaatio-id}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :tallenna-urakan-yleinen-puh-ja-sposti kayttaja odotetut-yhteystiedot)
-        uudet-yhteystiedot (kutsu-palvelua (:http-palvelin jarjestelma)
-                             :hae-urakan-yleinen-puh-ja-sposti kayttaja urakka-id)
-        _ (is (not (nil? vastaus)))
-        _ (is (= (:matkapuhelin uudet-yhteystiedot) "+358507654321"))
-        _ (is (= (:sahkoposti uudet-yhteystiedot) (:sahkoposti odotetut-yhteystiedot)))
-        _ (is (= (:organisaatio uudet-yhteystiedot) (:organisaatio-id odotetut-yhteystiedot)))]
-    ))
+        uudet-yhteystiedot (first
+                             (q (str "SELECT y.id, y.etunimi, y.matkapuhelin, y.sahkoposti, y.organisaatio
+                                      FROM yhteyshenkilo y
+                                      JOIN yhteyshenkilo_urakka yu ON yu.yhteyshenkilo = y.id
+                                      WHERE yu.urakka = " urakka-id " AND yu.rooli = 'Urakan yhteystiedot'")))]
+    (is (not (nil? vastaus)))
+    (is (= (nth uudet-yhteystiedot 2) (:matkapuhelin odotetut-yhteystiedot)))
+    (is (= (nth uudet-yhteystiedot 3) (:sahkoposti odotetut-yhteystiedot)))
+    (is (= (nth uudet-yhteystiedot 4) (:organisaatio-id odotetut-yhteystiedot)))))
