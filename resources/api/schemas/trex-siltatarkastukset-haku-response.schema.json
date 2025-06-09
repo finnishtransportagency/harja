@@ -232,50 +232,50 @@
                                     "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta käyttäjäystävällisessä tekstimuodossa. Koodi ja kuvaus ovat kytköksissä toisiinsa."
                                   }
                                 }
-                              },
-                              "lisatieto": {
-                                "type": "string",
-                                "description": "Vapaamuotoinen tarkastettuun siltatarkastuskohteeseen liittyvä kommentti."
-                              },
-                              "kuvat": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "additionalProperties": false,
-                                  "kuva": {
-                                    "harja-id": {
-                                      "type": "integer",
-                                      "minimum": 1,
-                                      "description": "Liitteen id Harjassa."
-                                    },
-                                    "liite-oid": {
-                                      "type": "string",
-                                      "description": "Liitteen oid Harjassa."
-                                    },
-                                    "nimi": {
-                                      "type": "string",
-                                      "description": "Liitetiedoston nimi."
-                                    },
-                                    "tiedostotyyppi": {
-                                      "type": "string",
-                                      "description": "Liitetiedoston tyyppi Harjassa. Esim. image/jpeg. Lähes kaikki siltatarkastuksen liitteet ovat jpg-muotoisia, mutta myös png- ja pdf-tiedostoja sekä yksi zip siltatarkastuksiin ladattu."
-                                    },
-                                    "koko": {
-                                      "type": "number",
-                                      "description": "Ladattavan liitetiedoston koko."
-                                    },
-                                    "kuvaus": {
-                                      "type": "string",
-                                      "description": "Vapaamuotoinen kuvaus ladatusta liitteestä."
-                                    },
-                                    "url": {
-                                      "type": "string",
-                                      "description": "URL josta voi hakea täysikokoisen kuvan. 3.6.2025 Lopullinen ratkaisu on auki, mutta Taitorakennerekisteri tarvitsee jonkinlaisen tunnisteen ja osoitteen, jolla hakea kuvan. Voi olla että se ei ole url, missä tapauksessa muutetaan tätä rajapintakuvausta."
-                                    },
-                                    "pikkukuva": {
-                                      "type": "string",
-                                      "description": "Kuvaliitteen thumbnail. 3.6.2025 on vielä auki palautetaanko pikkukuvaa tässä rajapinnassa."
-                                    }
+                              }
+                            },
+                            "lisatieto": {
+                              "type": "string",
+                              "description": "Vapaamuotoinen tarkastettuun siltatarkastuskohteeseen liittyvä kommentti."
+                            },
+                            "kuvat": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "kuva": {
+                                  "harja-id": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "description": "Liitteen id Harjassa."
+                                  },
+                                  "liite-oid": {
+                                    "type": "string",
+                                    "description": "Liitteen oid Harjassa."
+                                  },
+                                  "nimi": {
+                                    "type": "string",
+                                    "description": "Liitetiedoston nimi."
+                                  },
+                                  "tiedostotyyppi": {
+                                    "type": "string",
+                                    "description": "Liitetiedoston tyyppi Harjassa. Esim. image/jpeg. Lähes kaikki siltatarkastuksen liitteet ovat jpg-muotoisia, mutta myös png- ja pdf-tiedostoja sekä yksi zip siltatarkastuksiin ladattu."
+                                  },
+                                  "koko": {
+                                    "type": "number",
+                                    "description": "Ladattavan liitetiedoston koko."
+                                  },
+                                  "kuvaus": {
+                                    "type": "string",
+                                    "description": "Vapaamuotoinen kuvaus ladatusta liitteestä."
+                                  },
+                                  "url": {
+                                    "type": "string",
+                                    "description": "URL josta voi hakea täysikokoisen kuvan. 3.6.2025 Lopullinen ratkaisu on auki, mutta Taitorakennerekisteri tarvitsee jonkinlaisen tunnisteen ja osoitteen, jolla hakea kuvan. Voi olla että se ei ole url, missä tapauksessa muutetaan tätä rajapintakuvausta."
+                                  },
+                                  "pikkukuva": {
+                                    "type": "string",
+                                    "description": "Kuvaliitteen thumbnail. 3.6.2025 on vielä auki palautetaanko pikkukuvaa tässä rajapinnassa."
                                   }
                                 }
                               }
@@ -294,6 +294,7 @@
     }
   }
 }
+
 
 
 
