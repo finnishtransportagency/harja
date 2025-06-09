@@ -155,7 +155,7 @@
                      nil nil
                      nil nil
                      nil nil
-                     hinta 100.0))]
+                     hinta (if-not (= hinta 0) 100.0 0.0)))]
     [(tee-rivi :sakko sakko-hinta)
      (tee-rivi :bonus bonus-hinta)]))
 
