@@ -46,15 +46,15 @@ SET api_oikeudet =
 WHERE kayttajanimi = :kayttajanimi;
 
 -- name: hae-jarjestelmatunnuksen-lisaoikeudet
-SELECT
-  klu.id,
-  u.id as "urakka-id",
-  u.nimi AS "urakka-nimi",
-  kayttaja
-FROM kayttajan_lisaoikeudet_urakkaan klu
-  JOIN urakka u ON klu.urakka = u.id
-WHERE kayttaja = :kayttaja
-ORDER BY kayttaja;
+SELECT klu.id,
+       u.id   AS "urakka-id",
+       u.nimi AS "urakka-nimi",
+       kayttaja
+  FROM kayttajan_lisaoikeudet_urakkaan klu
+           JOIN urakka u ON klu.urakka = u.id
+ WHERE klu.kayttaja = :kayttaja
+   AND klu.poistettu IS NOT TRUE
+ ORDER BY kayttaja;
 
 -- name: hae-urakat-lisaoikeusvalintaan
 SELECT
@@ -77,17 +77,22 @@ SET kayttajanimi = :kayttajanimi,
 WHERE id = :id;
 
 -- name: paivita-jarjestelmatunnuksen-lisaoikeus-urakkaan!
-UPDATE kayttajan_lisaoikeudet_urakkaan SET
-  urakka = :urakka
-WHERE id = :id;
+UPDATE kayttajan_lisaoikeudet_urakkaan
+   SET urakka    = :urakka,
+       muokkaaja = :muokkaaja,
+       muokattu  = CURRENT_TIMESTAMP
+ WHERE id = :id;
 
 -- name: poista-jarjestelmatunnuksen-lisaoikeus-urakkaan!
-DELETE FROM kayttajan_lisaoikeudet_urakkaan WHERE
-id = :id;
+UPDATE kayttajan_lisaoikeudet_urakkaan
+   SET poistettu = TRUE,
+       muokkaaja = :muokkaaja,
+       muokattu  = CURRENT_TIMESTAMP
+ WHERE id = :id;
 
 -- name: luo-jarjestelmatunnukselle-lisaoikeus-urakkaan<!
-INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja)
-    VALUES (:urakka, :kayttaja);
+INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja, luoja, luotu)
+    VALUES (:urakka, :kayttaja, :luoja, NOW());
 
 -- name: lisaa-jarjestelmatunnukselle-kirjoitusoikeus!
 -- Tämä on vain hallintapaneelin debug käyttöjä varten. Älä käytä mihinkään muuhun
