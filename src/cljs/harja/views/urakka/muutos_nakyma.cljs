@@ -288,17 +288,18 @@
 
 (defn muutoslistaus [e! app]
   [:span.muutoslistaus
-   (if (muutos-tiedot/ennen-muutoksien-kayttoonotto? (:valittu-hoitokausi app))
-     ;; Tähän 1.10.2024 tai sitä aiemmiun alkaneiden hoitokausien "legacy" muutostoiminnot
-     [:span.muutostiedot
-      [tavoitehinnan-muutokset e! app]
-      [suunniteltujen-maarien-muutokset e! app]]
+   (when (:valittu-hoitokausi app)
+     (if (muutos-tiedot/ennen-muutoksien-kayttoonotto? (:valittu-hoitokausi app))
+       ;; Tähän 1.10.2024 tai sitä aiemmiun alkaneiden hoitokausien "legacy" muutostoiminnot
+       [:span.muutostiedot
+        [tavoitehinnan-muutokset e! app]
+        [suunniteltujen-maarien-muutokset e! app]]
 
-     ;; Tähän 1.10.2025 tai sitä myöhemmin alkavien hoitokausien uudet muutostoiminnot
-     [:span.uudet-muutostiedot
-      [kirjatut-muutokset e! app]
-      [lasketut-muutokset e! app]
-      [rahavarausten-muutokset e! app]])])
+       ;; Tähän 1.10.2025 tai sitä myöhemmin alkavien hoitokausien uudet muutostoiminnot
+       [:span.uudet-muutostiedot
+        [kirjatut-muutokset e! app]
+        [lasketut-muutokset e! app]
+        [rahavarausten-muutokset e! app]]))])
 
 (def +indeksikorjausta-ei-vahvistettu-txt+ "Indeksikorjausta ei saatavilla")
 
