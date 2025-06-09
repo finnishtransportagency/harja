@@ -1,9 +1,3 @@
--- Tiedosto nimetty väärällä numerolla, koska migraatioon on pitkä aika ja näin vältytään konflikteilta
--- Lisätään urakka -taulun käyttämään sopimustyyppi tietueeseen tiedot mhu ja mhu+ hoitourakoiden erottelemiseksi.
-ALTER TYPE sopimustyyppi ADD VALUE 'mhu';
-ALTER TYPE sopimustyyppi ADD VALUE 'mhu+';
-
-
 -- Lisätään välikatselmuksen päätöksiin liittyvät taulut
 CREATE TABLE paatos_lupaus
 (
