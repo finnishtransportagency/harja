@@ -112,7 +112,7 @@
           [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
 
       [:button.nappi-murupolkualasveto.dropdown-toggle
-       {:aria-label "Avaa hallintayksikkövalikko"
+       {:aria-label "Avaa hallintayksikkö-valikko"
         :on-click #(swap! valinta-auki
                      (fn [v]
                        (if (= v :hallintayksikko)
@@ -127,8 +127,7 @@
 
       ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
       [:ul.dropdown-menu.livi-alasvetolista
-       {:role "menu"
-        :on-key-down #(kasittele-alasvetovalikon-toiminnot % {:id "alasveto-hallintayksikko"
+       {:on-key-down #(kasittele-alasvetovalikon-toiminnot % {:id "alasveto-hallintayksikko"
                                                              :valittu-rivi valittu-rivi
                                                              :valinta-auki valinta-auki})}
        (for [muu-yksikko (filter #(not= % valittu) @hal/vaylamuodon-hallintayksikot)]
@@ -160,7 +159,8 @@
         [:span.valittu-urakka.murupolkuteksti (or (:nimi valittu) "- Urakka -") " "]
 
         [:button.nappi-murupolkualasveto.dropdown-toggle
-         {:on-click #(swap! valinta-auki
+         {:aria-label "Avaa urakka-valikko"
+          :on-click #(swap! valinta-auki
                        (fn [v]
                          (if (= v :urakka)
                            nil
