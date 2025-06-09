@@ -165,7 +165,6 @@
                          (if (= v :urakka)
                            nil
                            :urakka)))
-          :aria-label "Avaa urakkavalikko"
           :on-key-down #(kasittele-toggle-napin-toiminnot % {:id "alasveto-urakka"
                                                              :valinta-auki valinta-auki
                                                              :valikon-tieto :urakka})}
