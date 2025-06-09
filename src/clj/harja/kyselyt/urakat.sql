@@ -1135,7 +1135,7 @@ SELECT
   org.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
   JOIN organisaatio org ON u.urakoitsija = org.id
-  JOIN kayttajan_lisaoikeudet_urakkaan klu ON klu.urakka = u.id
+  JOIN kayttajan_lisaoikeudet_urakkaan klu ON klu.urakka = u.id AND klu.poistettu IS NOT TRUE
   JOIN kayttaja k ON klu.kayttaja = k.id
 WHERE k.kayttajanimi = :kayttajanimi
       AND k.jarjestelma;
@@ -1159,12 +1159,13 @@ SELECT
   org.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
   JOIN organisaatio org ON u.urakoitsija = org.id
-WHERE (exists(SELECT klu.id
-              FROM kayttajan_lisaoikeudet_urakkaan klu
-                JOIN kayttaja k ON klu.kayttaja = k.id
-              WHERE klu.urakka = u.id
-                    AND k.kayttajanimi = :kayttajanimi
-                    AND k.jarjestelma)
+ WHERE (EXISTS(SELECT klu.id
+                 FROM kayttajan_lisaoikeudet_urakkaan klu
+                          JOIN kayttaja k ON klu.kayttaja = k.id
+                WHERE klu.urakka = u.id
+                  AND k.kayttajanimi = :kayttajanimi
+                  AND k.jarjestelma
+                  AND klu.poistettu IS NOT TRUE)
        OR
        exists(SELECT o.id
               FROM organisaatio o

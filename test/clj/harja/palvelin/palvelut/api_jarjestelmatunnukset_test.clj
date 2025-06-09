@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.api-jarjestelmatunnukset-test
   (:require [clojure.test :refer :all]
+            [harja.kyselyt.kayttajat :as kayttajat-q]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.haku :refer :all]
@@ -121,7 +122,7 @@
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
                           :tallenna-jarjestelmatunnuksen-lisaoikeudet +kayttaja-jvh+ testioikeudet)
         uusi-id (ffirst (q "SELECT id FROM kayttajan_lisaoikeudet_urakkaan WHERE kayttaja = " kayttaja-id
-                           " AND urakka = " urakka-id ";"))]
+                           " AND urakka = " urakka-id " AND poistettu IS NOT TRUE;"))]
 
     (is (integer? uusi-id))
 
@@ -133,20 +134,24 @@
           _ (kutsu-palvelua (:http-palvelin jarjestelma)
                             :tallenna-jarjestelmatunnuksen-lisaoikeudet +kayttaja-jvh+ testioikeudet)]
 
-      (is (nil? (ffirst (q "SELECT id FROM kayttajan_lisaoikeudet_urakkaan WHERE kayttaja = " kayttaja-id
-                               " AND urakka = " urakka-id ";")))))))
+      (is (= true (ffirst (q "SELECT poistettu FROM kayttajan_lisaoikeudet_urakkaan WHERE kayttaja = " kayttaja-id
+                             " AND urakka = " urakka-id ";")))))))
 
 (deftest jarjestelmatunnuksen-lisaoikeudet-ei-toimi-ilman-oikeuksia
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         kayttaja-id (:id +kayttaja-tero+)
         testioikeudet [{:id -1
                         :urakka-id urakka-id
-                        :kayttaja kayttaja-id}]]
+                        :kayttaja kayttaja-id}]
+        ;; Siivoa pois mahdollinen aiemmissa testeissä muodostunut oikeus
+        _ (u "DELETE FROM kayttajan_lisaoikeudet_urakkaan WHERE kayttaja = " kayttaja-id
+            " AND urakka = " urakka-id ";")]
     (try+
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-jarjestelmatunnuksen-lisaoikeudet +kayttaja-tero+ testioikeudet)
       (is false "Nyt on joku paha oikeusongelma")
       (catch EiOikeutta e
         (is e)))
+    ;; Varmistetaan, että oikeutta ei ole saatu luotua riittämättömillä rajapintaoikeuksilla
     (is (nil? (ffirst (q "SELECT id FROM kayttajan_lisaoikeudet_urakkaan WHERE kayttaja = " kayttaja-id
                          " AND urakka = " urakka-id ";"))))))
