@@ -1,0 +1,5 @@
+(ns harja.kyselyt.muutos-kyselyt
+  (:require [jeesql.core :refer [defqueries]]))
+
+
+(defqueries "harja/kyselyt/muutos_kyselyt.sql")

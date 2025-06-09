@@ -318,7 +318,7 @@
                                     lomake? (str "form-control ")
                                     disabled? (str "disabled"))
                      :placeholder placeholder}]
-         (when aputeksti [:div aputeksti])
+         (when aputeksti [:div.aputeksti aputeksti])
          ;; näytetään laskuri kun merkkejä on jäljellä alle 25%
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
@@ -1168,8 +1168,7 @@
            [:span.pvm-kentta
             {:on-click #(do (.stopPropagation %)
                           (.preventDefault %)
-                          (reset! auki true) nil)
-             :style {:display "inline-block"}}
+                          (reset! auki true) nil)}
             [:div.pvm-ikoni input-komponentti
              [:span.ikoni-osio
               (ikonit/calendar)]]

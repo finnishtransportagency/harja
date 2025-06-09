@@ -82,6 +82,7 @@
     [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
+    [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
     [harja.palvelin.palvelut.kustannusten-kirjaus :as tiemerkinnan-kustannus-kirjaukset]
     [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
@@ -494,6 +495,9 @@
       :lupaukset (component/using
                    (lupaus-palvelu/->Lupaus (select-keys asetukset [:kehitysmoodi]))
                    [:http-palvelin :db :fim :api-sahkoposti])
+      :muutokset (component/using
+                   (muutos-palvelu/->Muutos (select-keys asetukset [:kehitysmoodi]))
+                   [:http-palvelin :db])
       :valitavoitteet (component/using
                         (valitavoitteet/->Valitavoitteet)
                         [:http-palvelin :db])
