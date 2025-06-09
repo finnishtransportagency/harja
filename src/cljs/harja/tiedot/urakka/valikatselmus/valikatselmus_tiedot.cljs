@@ -46,7 +46,6 @@
 (defrecord TallennaOikaisu [oikaisu id])
 (defrecord TallennaOikaisut [oikaisut hoitokauden-alkuvuosi])
 (defrecord TallennaOikaisuOnnistui [vastaus id])
-(defrecord TallennaOikaisuOnnistuiToast [vastaus id])
 (defrecord TallennaOikaisuEpaonnistui [vastaus])
 (defrecord PoistaOikaisu [oikaisu id])
 (defrecord PoistaOikaisuOnnistui [vastaus])
@@ -183,7 +182,9 @@
           ;; Viimeisen oikaisun indeksi, näytetään viimeisenä toast viesti 
           viimeinen-idx (count validit-oikaisut)
           ;; Tallennetaan atomiin oikaisujen määrä
-          _ (reset! tavoitehinnan-muutostallennus-max viimeinen-idx)]
+          _ (reset! tavoitehinnan-muutostallennus-max viimeinen-idx)
+          ;; Resetoidaan alkutilanne
+          _ (reset! tavoitehinnan-muutostallennus-kpl 0)]
 
       (doseq [oikaisu validit-oikaisut]
         (scrollaa-muutoksiin)
@@ -198,18 +199,12 @@
   TallennaOikaisuOnnistui
   (process-event [{:keys [vastaus _id]} {:keys [_hoitokauden-alkuvuosi _tavoitehinnan-oikaisut] :as app}]
     (swap! tavoitehinnan-muutostallennus-kpl inc)
+    (when (= @tavoitehinnan-muutostallennus-kpl @tavoitehinnan-muutostallennus-max)
+      (viesti/nayta-toast! "Oikaisu tallennettu"))
     (->
       (kasittele-valikatselmuksen-vastaus app vastaus)
       (assoc :tallennus-kesken? (if (= @tavoitehinnan-muutostallennus-kpl @tavoitehinnan-muutostallennus-max)
                                   false true))))
-
-  TallennaOikaisuOnnistuiToast
-  (process-event [{:keys [vastaus _id]} {:keys [_hoitokauden-alkuvuosi _tavoitehinnan-oikaisut] :as app}]
-    (js/console.log "TallennaOikaisuOnnistuiToast")
-    (viesti/nayta-toast! "Oikaisu tallennettu")
-    (->
-      (kasittele-valikatselmuksen-vastaus app vastaus)
-      (assoc :tallennus-kesken? false)))
 
   TallennaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]
