@@ -463,7 +463,7 @@
 
           ;; Jos validointi on kunnossa, niin luodaan tavoitehinnan ylityskulu - jonka maksaa urakoitsija
           kulu_id (when-not (seq validaatio)
-                    (paatos-apurit/tallenna-kulu db paatos kayttaja :tavoitehinnan-ylitys (:tilaaja_maksaa paatos)))
+                    (paatos-apurit/tallenna-kulu db paatos kayttaja :tavoitehinnan-ylitys (:urakoitsija_maksaa paatos)))
           paatos (assoc paatos :kulu_id kulu_id)
           _ (if (seq validaatio)
               (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
