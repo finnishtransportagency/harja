@@ -149,8 +149,10 @@
        {:tunniste :id
         :luokat ["tavoitehinnan-muutokset-grid"]
         :tyhja "Ei tavoitehinnan muutoksia."
-        :voi-lisata? false :voi-kumota? false
-        :voi-poistaa? (constantly false) :voi-muokata? true}
+        :voi-lisata? false
+        :voi-kumota? false
+        :voi-poistaa? (constantly false)
+        :voi-muokata? true}
 
        ;; taulukon kentät
        [{:otsikko "Muutos" :nimi :muutos :tyyppi :string :leveys 15}
@@ -174,8 +176,10 @@
        {:tunniste :id
         :luokat ["suunniteltujen-maarien-muutokset-grid"]
         :tyhja "Ei suunniteltujen määrien muutoksia."
-        :voi-lisata? false :voi-kumota? false
-        :voi-poistaa? (constantly false) :voi-muokata? true}
+        :voi-lisata? false
+        :voi-kumota? false
+        :voi-poistaa? (constantly false)
+        :voi-muokata? true}
 
        ;; taulukon kentät
        [{:otsikko "Muutoksen syy" :nimi :syy :tyyppi :string :leveys 15}
@@ -209,11 +213,13 @@
       :taulukko
       (fn [e! app]
         [grid/grid
-         {:tunniste     :id
-          :luokat       ["rahavarausten-muutokset-grid"]
-          :tyhja        "Ei rahavarausten muutoksia."
-          :voi-lisata?  false :voi-kumota? false
-          :voi-poistaa? (constantly false) :voi-muokata? true
+         {:tunniste :id
+          :luokat ["rahavarausten-muutokset-grid"]
+          :tyhja "Ei rahavarausten muutoksia."
+          :voi-lisata? false
+          :voi-kumota? false
+          :voi-poistaa? (constantly false)
+          :voi-muokata? true
           :rivi-jalkeen-fn (fn []
                              [{:teksti "Tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :yhteenveto-vayla true}
                               {:teksti "" :sarakkeita 1 :luokka "yhteensa"}
@@ -256,8 +262,10 @@
        {:tunniste :id
         :luokat ["lasketut-muutokset-grid"]
         :tyhja "Ei laskettuja muutoksia."
-        :voi-lisata? false :voi-kumota? false
-        :voi-poistaa? (constantly false) :voi-muokata? true}
+        :voi-lisata? false
+        :voi-kumota? false
+        :voi-poistaa? (constantly false)
+        :voi-muokata? true}
 
        ;; taulukon kentät
        [{:otsikko "Tehtävä" :nimi :tehtava :tyyppi :string :leveys 15}
@@ -286,8 +294,10 @@
        {:tunniste :id
         :luokat ["kirjatut-muutokset-grid"]
         :tyhja "Ei kirjattuja muutoksia."
-        :voi-lisata? false :voi-kumota? false
-        :voi-poistaa? (constantly false) :voi-muokata? false}
+        :voi-lisata? false
+        :voi-kumota? false
+        :voi-poistaa? (constantly false)
+        :voi-muokata? false}
 
        ;; taulukon kentät
        [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys 15

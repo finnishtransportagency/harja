@@ -37,10 +37,10 @@ SELECT m.id,
                                                                  m.versio = tjm.versio AND
                                                                  tjm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi)
            LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos AND m.versio = lii.versio)
- WHERE m.urakka = :urakka AND
+ WHERE m.urakka = :urakka
        -- hox: on myös sellaisia muutoksia, jotka ovat voimassa vain meneillään olevan hoitokauden
        -- niiden käsittely puuttuu vielä tästä kyselystä
-       m.voimassa_alkaen <= (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD'))
+   AND  m.voimassa_alkaen <= (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD'))
  GROUP BY m.id, m.versio, m.urakka, m.voimassa_alkaen, m.tyyppi, m.nimi, m.syy, m.kulu_kohdistus, m.luonnos;
 
 -- name: rahavarausten-toteumat
@@ -51,9 +51,9 @@ SELECT rv.id, SUM(kk.summa) as toteumat
            JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
            JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id
            JOIN urakka u ON rvu.urakka_id = u.id AND tpi.urakka = u.id
- WHERE u.id = :urakka AND
-     k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
-         (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
+ WHERE u.id = :urakka
+   AND k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
+     (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
  GROUP BY rv.id;
 
 
