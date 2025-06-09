@@ -201,6 +201,17 @@ SELECT
   u.sopimustyyppi,
   u.indeksi,
   u.urakkanro,
+  (SELECT array_agg(
+         concat_ws('|',
+           y.id,
+           y.matkapuhelin,
+           y.sahkoposti,
+           y.organisaatio)
+       )
+    FROM yhteyshenkilo y
+      JOIN yhteyshenkilo_urakka yu ON yu.yhteyshenkilo = y.id
+    WHERE yu.urakka = u.id AND yu.rooli = 'Urakan yhteystiedot'
+  )                                       AS urakan_yhteystiedot,
   (SELECT *
    FROM indeksilaskennan_perusluku(u.id)) AS indeksilaskennan_perusluku,
   hal.id                                  AS hallintayksikko_id,
