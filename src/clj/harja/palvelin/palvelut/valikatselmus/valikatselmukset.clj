@@ -649,7 +649,7 @@
                        Suunniteltu hoidonjohtopalkkio:" hoidonjohtopalkkio "€. Päätöksen mukainen hoidonjohtopalkkio: " (:hoidonjohtopalkkio paatos) " €"))
                        validaatio)
           ;; Luodaan päätöksen mukainen kulu, jos hoitovuoden lopun tavoitehinta poikkeaa yli 5% tarjouksen tavoitehinnasta.
-          kulu_id (when (and (not (seq validaatio)) (> (:muutosprosentti paatos) 5))
+          kulu_id (when (and (not (seq validaatio)) (or (< (:muutosprosentti paatos) -5) (> (:muutosprosentti paatos) 5)))
                     (paatos-apurit/tallenna-kulu db paatos kayttaja :hoidonjohtopalkkion-muutos
                       ;; Osassa päätöksistä summat on ristiriidassa kulujen summien kanssa. Joten ne muokataan aina kululle eri päin.
                       ;; Tehdään se hoidonjohtopalkiolle tässä, niin se menee kululle oikein
