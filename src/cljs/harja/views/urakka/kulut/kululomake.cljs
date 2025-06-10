@@ -454,8 +454,9 @@
         {:vayla-tyyli? true :teksti-nappi? true :style {:font-size "14px" :padding-right "16px"}}]
        [:h2 (str (if-not (nil? (:id lomake)) "Muokkaa kulua" "Uusi kulu"))]]
       
-      [yleiset/info-laatikko :vahva-ilmoitus
-       (str "Hoitovuoden "(pvm/kuluva-hoitovuosi)" kulujen kirjauksen määräpäivä on" (pvm/kulujen-kirjauksen-maarapaiva)) nil "100%" {:luokka "ala-margin-16 max-width-full max-width-full"}]
+      (when (and (pvm/onko-hoitovuosi-loppunut?) (not paatos-tehty?))
+        [yleiset/info-laatikko :vahva-ilmoitus
+         (str "Hoitovuoden "(pvm/kuluva-hoitovuosi)" kulujen kirjauksen määräpäivä on " (pvm/kulujen-kirjauksen-maarapaiva)) nil "100%" {:luokka "ala-margin-16 max-width-full max-width-full"}])
 
       ;; Poista-nappi
       [:div.col-xs-12.col-md-6
