@@ -9,6 +9,8 @@ INSERT INTO kayttaja (kayttajanimi, etunimi, sukunimi, sahkoposti, puhelin, orga
  (SELECT id FROM organisaatio WHERE nimi = 'Esimerkkillinen Konsultti Oy'), true);
 
 -- Anna KariKonsultille lisäoikeudet oulun MH-urakkaan, jotta tarkastuksia voidaan lisätä
-INSERT INTO kayttajan_lisaoikeudet_urakkaan (kayttaja, urakka) VALUES
-((SELECT id FROM kayttaja WHERE kayttajanimi = 'KariKonsultti'),
- (SELECT id FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'));
+INSERT INTO kayttajan_lisaoikeudet_urakkaan (kayttaja, urakka, luoja, luotu)
+VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi = 'KariKonsultti'),
+        (SELECT id FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+        NOW());

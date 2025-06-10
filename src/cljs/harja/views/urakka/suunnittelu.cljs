@@ -50,7 +50,9 @@
 
           "Uusi Kustannussuunnitelma"
           :uusi-kustannussuunnitelma
-          (if (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
+          (if (and
+                (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
+                (istunto/ominaisuus-kaytossa? :mhu-urakka))
             [tarjous-kustannussuunnitelma-nakyma/tarjous-kustannussuunnitelma])
 
           "Kustannussuunnitelma"
