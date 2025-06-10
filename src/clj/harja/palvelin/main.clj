@@ -26,8 +26,7 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
     [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad-integraatio]
-    [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
-    [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as tekstiviesti]
+    [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
@@ -83,6 +82,7 @@
     [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
+    [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
     [harja.palvelin.palvelut.kustannusten-kirjaus :as tiemerkinnan-kustannus-kirjaukset]
     [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
@@ -312,24 +312,21 @@
                 :db :db
                 :integraatioloki :integraatioloki
                 :api-sahkoposti :api-sahkoposti
-                :labyrintti :labyrintti})
+                :sms :sms})
 
       ;; Didiroad integraatio
       :digiroad-integraatio (component/using
                               (digiroad-integraatio/->Digiroad (:digiroad asetukset))
                               [:http-palvelin :db :integraatioloki])
 
-      ;; LinkMobilityn LinkSMS, vanha Harja + pilvi-Harjan sms-lähetys. Refaktoroi vanha toteutus pois, kun #yliheitto ok.
-      :labyrintti (component/using
-                    (if kehitysmoodi
-                      (labyrintti/feikki-labyrintti)
-                      (labyrintti/luo-labyrintti (:labyrintti asetukset)))
-                    [:http-palvelin :db :integraatioloki])
-
-      ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto. Refaktoroi tänne myös lähetys, kun #yliheitto ok.
-      :tekstiviesti (component/using
-                      (tekstiviesti/->Tekstiviesti (select-keys asetukset [:tloik]))
-                      [:http-palvelin :db :integraatioloki :itmf])
+      ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto ja uusi SMS-integraatio
+      ;; TODO: Kun #yliheitto ok, poista viittaukset vanhaan integraatioon
+      :sms (component/using
+             (if kehitysmoodi
+               (sms/luo-feikki-tekstiviesti-komponentti)
+               ;; Tuodaan uuden integraation asetukset ":sms" ja vanhan LinkSMS-integraatioon asetukset ":labyrintti"
+               (sms/luo-tekstiviesti-komponentti (:sms asetukset) (:labyrintti asetukset)))
+             [:http-palvelin :db :integraatioloki])
 
       :yha-integraatio (component/using
                          (yha-integraatio/->Yha (:yha asetukset))
@@ -498,6 +495,9 @@
       :lupaukset (component/using
                    (lupaus-palvelu/->Lupaus (select-keys asetukset [:kehitysmoodi]))
                    [:http-palvelin :db :fim :api-sahkoposti])
+      :muutokset (component/using
+                   (muutos-palvelu/->Muutos (select-keys asetukset [:kehitysmoodi]))
+                   [:http-palvelin :db])
       :valitavoitteet (component/using
                         (valitavoitteet/->Valitavoitteet)
                         [:http-palvelin :db])
@@ -522,7 +522,7 @@
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db :fim :api-sahkoposti :labyrintti :pdf-vienti :excel-vienti])
+                        [:http-palvelin :db :fim :api-sahkoposti :sms :pdf-vienti :excel-vienti])
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
@@ -636,7 +636,7 @@
                 :http-palvelin :http-palvelin
                 :ulkoinen-sahkoposti :ulkoinen-sahkoposti
                 :api-sahkoposti :api-sahkoposti
-                :labyrintti :labyrintti})
+                :sms :sms})
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
@@ -764,7 +764,7 @@
                        :itmf :itmf
                        :integraatioloki :integraatioloki
                        :api-sahkoposti :api-sahkoposti
-                       :labyrintti :labyrintti})
+                       :sms :sms})
 
       :kanavasiltojen-geometriahaku
       (component/using

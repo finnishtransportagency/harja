@@ -145,7 +145,7 @@
      (when (and (not paikkauskohde-id)
                 (not osoite-sama-kuin-yhasta-tuodessa?))
        [:div {:style {:margin-top "4px"}}
-        [:label.kentan-label "Alkuperäinen suunniteltu TR-osoite:"]
+        [:label.kentan-label "Alkuperäinen suunniteltu tieosoite:"]
         [:div {:style {}}
          (tr/tierekisteriosoite-tekstina yha-tr-osoite)]])]))
 
@@ -320,7 +320,7 @@
                :label-ja-kentta-samalle-riville? true
                ::lomake/col-luokka "col-xs-12"}
               (if muokattava?
-                {:tyyppi :reagent-komponentti
+                {:tyyppi :reagent-komponentti :kaariva-luokka "pot-tieosoite-kentta"
                  :otsikko "Tieosoite"
                  :komponentti tr-kentta
                  :komponentti-args [e! (merge paallystysilmoituksen-osa {:optiot {:vayla-tyyli? true}})]
