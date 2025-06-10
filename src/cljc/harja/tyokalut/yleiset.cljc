@@ -93,7 +93,7 @@
   [coll1 coll2 avain]
   (let [m1 (into {} (map (juxt avain identity) coll1))
         m2 (into {} (map (juxt avain identity) coll2))
-        kaikki-avaimet (set (concat (keys m1) (keys m2)))]
+        kaikki-avaimet (distinct (concat (keys m1) (keys m2)))]
     (map (fn [a]
            (merge (get m2 a {}) (get m1 a {})))
       kaikki-avaimet)))

@@ -173,11 +173,11 @@ label.radio- {
       // Lisätään vielä kolme, jotta täsmää ui-speksiin.
       margin-right: 3px;
       display: inline-block;
-      min-width: 1.5rem;
-      width: 1.5rem;
-      height: 1.5rem;
+      min-width: 1.625rem;
+      width: 1.625rem;
+      height: 1.625rem;
       background: transparent;
-      border: 3px solid transparent;
+      border: 4px solid transparent;
       box-shadow: inset 0 0 0 1px @focus-color;
       border-radius: 20px;
       padding: 0 @valistys-4;
@@ -198,7 +198,7 @@ label.radio- {
     + label:before {
       background: @gray235;
       border-color: @gray235;
-      box-shadow: inset 0 0 0 2px @blue-dark;
+      box-shadow: inset 0 0 0 1px @blue-dark;
       color: @blue-dark;
     }
     &:checked + label:after {
@@ -215,7 +215,7 @@ label.radio- {
   &:checked {
     + label {
       &:before {
-        box-shadow: inset 0 0 0 2px @focus-color;
+        box-shadow: inset 0 0 0 1px @focus-color;
       }
       &:after {
         content: '';
@@ -226,7 +226,7 @@ label.radio- {
 
         border-radius: 6px;
         position: absolute;
-        left: 7px;
+        left: 8px;
       }
     }
   }
@@ -249,7 +249,7 @@ label.radio- {
     + label {
       cursor: auto;
       &:before {
-        box-shadow: inset 0 0 0 2px @gray200;
+        box-shadow: inset 0 0 0 1px @gray200;
         background: transparent;
         border-color: transparent;
       }
@@ -258,7 +258,7 @@ label.radio- {
       + label {
         cursor: auto;
         &:before {
-          box-shadow: inset 0 0 0 2px @gray200;
+          box-shadow: inset 0 0 0 1px @gray200;
           background: transparent;
           border-color: transparent;
         }

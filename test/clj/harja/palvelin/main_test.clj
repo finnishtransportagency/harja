@@ -171,7 +171,8 @@
     :api-talvihoitoreitit
     :talvihoitoreitit
     :tieosoitteet-hallinta
-    :ajastukset-hallinta})
+    :ajastukset-hallinta
+    :tarjous})
 
 (def ei-statusta
   #{:metriikka
@@ -258,7 +259,8 @@
     :urakkatilanne
     :tieosoitteet-hallinta
     :tiemerkinnan-kustannuskirjaukset
-    :ajastukset-hallinta})
+    :ajastukset-hallinta
+    :tarjous})
 
 (def hidas-ok-status #{:itmf})
 
