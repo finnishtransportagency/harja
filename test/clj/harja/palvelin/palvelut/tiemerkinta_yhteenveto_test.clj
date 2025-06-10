@@ -467,3 +467,55 @@
                 "Yhteensä sarakkeen ei pk luokkaa prosentti laskenta toimii")]))))
 
 
+(deftest hae-tiemerkinta-kustannustyypit-toimii
+  (let [params {:urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")}
+        vastaus (tee-kutsu :hae-tiemerkinta-kustannustyypit params)]
+    (is (=
+         #{:muu :indeksi :sopimusalueen-muutos :arvonmuutos :lisatyo :muutostyo}
+         (set (map (comp keyword :tyyppi) vastaus)))
+      "Kaikki kustannustyypit löytyy")))
+
+
+(deftest tiemerkinnan-tila-trigger-toimii []
+  (let [paikkauskohde-nimi "MT 86 Paavolantie"
+        tiemerkinnan-tila (fn [] (ffirst (q
+                                           (format "SELECT \"tiemerkinnan-tila\" FROM paikkauskohde WHERE nimi = '%s'"
+                                             paikkauskohde-nimi))))
+        vaihda-tila (fn [tila]
+                      (u
+                        (format "UPDATE paikkauskohde SET 
+                                 \"paikkauskohteen-tila\" = '%s'::paikkauskohteen_tila,
+                                 \"tiemerkintaa-tuhoutunut?\" = true 
+                                 WHERE nimi = '%s'"
+                          tila paikkauskohde-nimi)))
+
+        _ (vaihda-tila "ehdotettu")
+        _ (is (= (tiemerkinnan-tila) "ei-tiemerkintaa") "Ehdotettu -> ei tiemerkintää")
+
+        _ (vaihda-tila "tilattu")
+        _ (is (= (tiemerkinnan-tila) "ei-tiemerkintaa") "Tilattu -> ei tiemerkintää")
+
+        _ (vaihda-tila "tarkistettu")
+        _ (is (= (tiemerkinnan-tila) "ei-tiemerkintaa") "Tarkistettu -> ei tiemerkintää")
+
+        _ (vaihda-tila "hylatty")
+        _ (is (= (tiemerkinnan-tila) "ei-tiemerkintaa") "Hylätty -> ei tiemerkintää")
+
+        ;; Valmis -> tila pitäisi muuttua käsittelemättä 
+        _ (vaihda-tila "valmis")
+        _ (is (= (tiemerkinnan-tila) "kasittelematta")
+            "Paikkauskohde valmistui -> Tiemerkinnän tila pitäisi olla käsittelemättä")
+
+
+        ;; Merkitse paikkauskohde valmiiksi, mutta tiemerkintää ei tuhoutunut
+        _ (vaihda-tila "hylatty")
+        _ (u
+            (format "UPDATE paikkauskohde SET 
+                                           \"paikkauskohteen-tila\" = '%s'::paikkauskohteen_tila,
+                                           \"tiemerkintaa-tuhoutunut?\" = false 
+                                           WHERE nimi = '%s'"
+              "valmis" paikkauskohde-nimi))
+
+        _ (is (= (tiemerkinnan-tila) "ei-tiemerkintaa")
+            "Tiemerkintää ei tuhoutunut -> tila pitäisi olla: ei tiemerkintää")]))
+
