@@ -113,24 +113,26 @@
          :paatos_tavoiteh_ylitys_val_aika_yht (nth raportti 53)
          :paatos_kattoh_ylitys_hoitokausi_yht (nth raportti 54)
          :paatos_kattoh_ylitys_val_aika_yht (nth raportti 55)
-         :muut_kustannukset_hoitokausi_yht (nth raportti 56)
-         :muut_kustannukset_val_aika_yht (nth raportti 57)
-         :yhteensa_kaikki_hoitokausi_yht (nth raportti 58)
-         :yhteensa_kaikki_val_aika_yht (nth raportti 59)
-         :perusluku (nth raportti 60)
-         :rahavaraus_nimet (nth raportti 61)
-         :hoitokausi_yht_array (nth raportti 62)
-         :val_aika_yht_array (nth raportti 63)
-         :kaikki_rahavaraukset_hoitokausi_yht (nth raportti 64)
-         :kaikki_rahavaraukset_val_yht (nth raportti 65)
-         :muut_kulut_hoitokausi (nth raportti 66)
-         :muut_kulut_val_aika (nth raportti 67)
-         :muut_kulut_hoitokausi_yht (nth raportti 68)
-         :muut_kulut_val_aika_yht (nth raportti 69)
-         :muut_kulut_ei_tavoite_hoitokausi (nth raportti 70)
-         :muut_kulut_ei_tavoite_val_aika (nth raportti 71)
-         :muut_kulut_ei_tavoite_hoitokausi_yht (nth raportti 72)
-         :muut_kulut_ei_tavoite_val_aika_yht (nth raportti 73)}]
+         :paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht (nth raportti 56)
+         :paatos_hoidonjohtopalkkion_muutos_val_aika_yht (nth raportti 57)
+         :muut_kustannukset_hoitokausi_yht (nth raportti 58)
+         :muut_kustannukset_val_aika_yht (nth raportti 59)
+         :yhteensa_kaikki_hoitokausi_yht (nth raportti 60)
+         :yhteensa_kaikki_val_aika_yht (nth raportti 61)
+         :perusluku (nth raportti 62)
+         :rahavaraus_nimet (nth raportti 63)
+         :hoitokausi_yht_array (nth raportti 64)
+         :val_aika_yht_array (nth raportti 65)
+         :kaikki_rahavaraukset_hoitokausi_yht (nth raportti 66)
+         :kaikki_rahavaraukset_val_yht (nth raportti 67)
+         :muut_kulut_hoitokausi (nth raportti 68)
+         :muut_kulut_val_aika (nth raportti 69)
+         :muut_kulut_hoitokausi_yht (nth raportti 70)
+         :muut_kulut_val_aika_yht (nth raportti 71)
+         :muut_kulut_ei_tavoite_hoitokausi (nth raportti 72)
+         :muut_kulut_ei_tavoite_val_aika (nth raportti 73)
+         :muut_kulut_ei_tavoite_hoitokausi_yht (nth raportti 74)
+         :muut_kulut_ei_tavoite_val_aika_yht (nth raportti 75)}]
 
     tulos))
 
@@ -165,7 +167,7 @@
         vastaus (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
     (is (not (nil? vastaus)) "Saatiin raportti")
-    (is (= (count (first vastaus)) 74) "Raportilla on oikea määrä rivejä")))
+    (is (= (count (first vastaus)) 76) "Raportilla on oikea määrä rivejä")))
 
 
 (deftest tyomaaraportti-talvihoito-hankinnat-toimii
