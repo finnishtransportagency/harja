@@ -1,18 +1,8 @@
 (ns harja.palvelin.palvelut.suunnittelu.tarjous-palvelu
-  (:require [clojure.java.jdbc :as jdbc]
-            [com.stuartsierra.component :as component]
-            [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
-            [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
-            [harja.kyselyt.urakat :as urakat-kyselyt]
+  (:require [com.stuartsierra.component :as component]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
-            [harja.palvelin.palvelut.tierekisteri-haku :as tieosoite-haku]
-            [harja.kyselyt.konversio :as konv]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.tierekisteri :as tr-domain]
-            [taoensso.timbre :as log]
-            [clj-time.coerce :as c]
-            [harja.pvm :as pvm]))
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-tarjouksen-tiedot [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
@@ -57,5 +47,6 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
       :hae-tarjouksen-tiedot
+      :hae-tyhjat-tarjouksen-tiedot
       :tallenna-tarjouksen-tiedot)
     this))

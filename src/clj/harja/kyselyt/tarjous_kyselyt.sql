@@ -20,10 +20,10 @@ VALUES (:tarjous_id, :urakka_id, :hoitokauden_alkuvuosi, :summa, :osio::suunnitt
 -- name: hae-tarjouksen-tiedot
 select t.id as "tarjous-id", t.hoitokauden_alkuvuosi, t.urakka_id, t.tarjous_tavoitehinta, t.tarjous_kattohinta,
        (SELECT array_agg(row(tk.id,
-           CASE WHEN tk.osio::suunnittelu_osio = 'tavoitehintaiset-rahavaraukset'::suunnittelu_osio THEN r.nimi
-                WHEN tk.osio::suunnittelu_osio = 'hankintakustannukset'::suunnittelu_osio THEN 'Kilpailutettavat hankinnat'
-                WHEN tk.osio::suunnittelu_osio = 'erillishankinnat'::suunnittelu_osio THEN 'Erillishankinnat'
-                WHEN tk.osio::suunnittelu_osio = 'hoidonjohtopalkkio'::suunnittelu_osio THEN 'Hoidonjohtopalkkio'
+           CASE WHEN tk.osio = 'tavoitehintaiset-rahavaraukset'::suunnittelu_osio THEN r.nimi
+                WHEN tk.osio = 'hankintakustannukset'::suunnittelu_osio THEN 'Kilpailutettavat hankinnat'
+                WHEN tk.osio = 'erillishankinnat'::suunnittelu_osio THEN 'Erillishankinnat'
+                WHEN tk.osio = 'hoidonjohtopalkkio'::suunnittelu_osio THEN 'Hoidonjohtopalkkio'
                 ELSE tk.osio::text END,
             tk.summa, tk.osio, tk.tehtava_id, tk.tehtavaryhma_id, tk.rahavaraus_id))
         FROM tarjous_kustannukset tk
