@@ -531,11 +531,11 @@
             ;tulos (with-precision 15 (/ tavoitehinta tarjouksen-tavoitehinta))
             hoidonjohtopalkkio-muutos (if (>= muutosprosentti-raaka 1)
                                         (- (* hoidonjohtopalkkio muutosprosentti-raaka) hoidonjohtopalkkio)
-                                        (* (- (* hoidonjohtopalkkio muutosprosentti-raaka) hoidonjohtopalkkio) -1)) ;; Käännetään luku negatiiviseksi
+                                        (- (* hoidonjohtopalkkio muutosprosentti-raaka) hoidonjohtopalkkio))
             muutosprosentti (round2 1 (* (- muutosprosentti-raaka 1) 100))
             ;; Hoidonjohtopalkkioon tehdään muutos, jos hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia muuttuu enemmän kuin 5%
             ;; tarjouksen mukaiseen tavoitehintaan verrattuna.
-            hoidonjohtopalkkio-muutos (if (> muutosprosentti 5)
+            hoidonjohtopalkkio-muutos (if (or (< muutosprosentti -5) (> muutosprosentti 5))
                                         hoidonjohtopalkkio-muutos
                                         0)
 
