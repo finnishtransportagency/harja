@@ -1,18 +1,16 @@
-(ns harja.palvelin.palvelut.hairioilmoitukset-test
+(ns harja.palvelin.palvelut.hairioilmoitukset-test 
+
   (:require [clojure.test :refer :all]
-            [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.domain.hairioilmoitus :as hairio]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
+            [clojure.string :as s]
+            [slingshot.slingshot :refer [try+]]
             [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
-            [clojure.set :as set])
-  (:import (harja.domain.roolit EiOikeutta))
-  (:use [slingshot.slingshot :only [try+ throw+]])
-  (:use [clojure.string :as s]))
+            [clj-time.core :as t])
+  (:import (harja.domain.roolit EiOikeutta)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -32,6 +30,103 @@
 (use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
+
+(deftest tallenna-kaikki-toimii
+  (let [uusi-hairio {::hairio/tyyppi :hairio,
+                     ::hairio/viesti "Nyt on paha tilanne! Sima on loppu!",
+                     ::hairio/alkuaika #inst "2025-06-10T07:00:00.000-00:00",
+                     ::hairio/loppuaika #inst "2025-06-10T08:00:00.000-00:00"}
+        ;; -----------------------------------
+        ;; Inserttaa häiriöilmoitus
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :aseta-hairioilmoitus +kayttaja-jvh+ uusi-hairio)
+
+        id (-> vastaus first ::hairio/id)
+        viesti (-> vastaus first ::hairio/viesti)
+
+        _ (is (some? id) "Uusi häiriö pitäisi olla kannassa")
+        _ (is (= (::hairio/viesti uusi-hairio) viesti) "Uusi häiriö pitäisi olla kannassa")
+
+        ;; -----------------------------------
+        ;; Päivitä olemassa oleva häiriöilmoitus, mikä juuri insertattiin
+        paivitetty-hairio {::hairio/pvm #inst "2025-06-06T11:27:24.000-00:00",
+                           ::hairio/loppuaika #inst "2025-06-09T08:00:00.000-00:00",
+                           ::hairio/voimassa? true,
+                           ::hairio/id id,
+                           ::hairio/viesti "Nyt on paha tilanne! Sima on loppu!",
+                           ::hairio/alkuaika #inst "2025-06-08T07:00:00.000-00:00",
+                           ::hairio/tyyppi :hairio}
+
+        paivitetyt {:tiedot (list paivitetty-hairio)}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-hairioilmoitukset +kayttaja-jvh+ paivitetyt)
+        odotettu-viesti (-> paivitetty-hairio ::hairio/viesti)
+        vastaus-viesti (-> vastaus first ::hairio/viesti)
+        _ (is (= vastaus-viesti odotettu-viesti) "Päivityksen pitäisi onnistua")
+
+        ;; -----------------------------------
+        ;; Testaa häiriöilmoituksen poisto, samalla palvelulla
+        poistettu-hairio (assoc paivitetty-hairio :poistettu true)
+        paivitetyt {:tiedot (list poistettu-hairio)}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-hairioilmoitukset +kayttaja-jvh+ paivitetyt)
+        _ (is (= (count vastaus) 0) "Ilmoitus pitäisi poistua kannasta")
+
+
+        ;; -----------------------------------
+        ;; Tee 2 ilmoitusta 
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :aseta-hairioilmoitus +kayttaja-jvh+ uusi-hairio)
+        id (-> vastaus first ::hairio/id)
+        viesti (-> vastaus first ::hairio/viesti)
+
+        _ (is (some? id) "Uusi häiriö pitäisi olla kannassa")
+        _ (is (= (::hairio/viesti uusi-hairio) viesti) "Uusi häiriö pitäisi olla kannassa")
+
+        toinen-hairio {::hairio/pvm #inst "2025-06-10T11:27:24.000-00:00",
+                       ::hairio/loppuaika #inst "2025-11-09T08:00:00.000-00:00",
+                       ::hairio/viesti "Tultiin miihaelin kanssa holvista läpi",
+                       ::hairio/alkuaika #inst "2025-06-10T11:27:24.000-00:00",
+                       ::hairio/tyyppi :hairio}
+
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :aseta-hairioilmoitus +kayttaja-jvh+ toinen-hairio)
+        _ (is (= (count vastaus) 2) "Kannassa pitäisi olla 2 ilmoitusta")
+
+        
+        hairio-2-id (-> vastaus second ::hairio/id)
+
+        ;; -----------------------------------
+        ;; Aseta ilmoitukselle invalid aikaväli
+        leikkaava-muokkaus {::hairio/pvm #inst "2025-06-06T11:27:24.000-00:00",
+                            ::hairio/loppuaika #inst "2025-06-06T08:00:00.000-00:00",
+                            ::hairio/voimassa? true,
+                            ::hairio/id hairio-2-id,
+                            ::hairio/viesti "Nyt on paha tilanne! Sima on loppu!",
+                            ::hairio/alkuaika #inst "2025-06-12T07:00:00.000-00:00",
+                            ::hairio/tyyppi :hairio}
+
+        ;; Pitäisi palautua jokin virhe 
+        paivitetyt {:tiedot (list leikkaava-muokkaus)}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-hairioilmoitukset +kayttaja-jvh+ paivitetyt)
+        virhe (-> vastaus first :virhe)
+
+        _ (is (some? virhe) "Virhe pitäisi olla olemassa")
+        _ (is (= virhe "Alkuajan pitäisi olla ennen loppuaikaa.") "Odotettu virhe tapahtuu")
+
+
+        ;; -----------------------------------
+        ;; Aseta toisen ilmoituksen aikaväli leikkaamaan ensimmäistä
+        leikkaava-muokkaus {::hairio/pvm #inst "2025-06-06T11:27:24.000-00:00",
+                            ::hairio/loppuaika #inst "2025-06-12T08:00:00.000-00:00",
+                            ::hairio/voimassa? true,
+                            ::hairio/id hairio-2-id,
+                            ::hairio/viesti "Nyt on paha tilanne! Sima on loppu!",
+                            ::hairio/alkuaika #inst "2025-06-06T07:00:00.000-00:00",
+                            ::hairio/tyyppi :hairio}
+
+        paivitetyt {:tiedot (list leikkaava-muokkaus)}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-hairioilmoitukset +kayttaja-jvh+ paivitetyt)
+
+        ;; Virhe pitäisi syntyä leikkavasta aikavälistä 
+        virhe (-> vastaus first :virhe)
+        _ (is (some? virhe) "Virhe pitäisi olla olemassa")
+        _ (is (= virhe "Aikaväli leikkaa olemassaolevaa häiriöilmoitusta.") "Odotettu virhe tapahtuu")]))
 
 (deftest kaikki-saavat-hakea-tuoreimman-hairioilmoituksen
   (let [vastaus (kutsu-palvelua

@@ -66,6 +66,7 @@
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
+    [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
@@ -480,6 +481,9 @@
                          [:http-palvelin :db])
       :suolarajoitukset (component/using
                           (suolarajoitus-palvelu/->Suolarajoitus)
+                          [:http-palvelin :db])
+      :tarjous (component/using
+                          (tarjous-palvelu/->Tarjous)
                           [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)

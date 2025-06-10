@@ -70,7 +70,10 @@
         rahavaraukset-yhteensa (rahavarausten-summarivi rahavaraukset)
         rahavaraukset (conj rahavaraukset rahavaraukset-yhteensa)
         budjettitavoiteet (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
-        muutosten-vaikutus-yhteensa (reduce + 0 (map :tavoitehinnan-muutos kirjatut-muutokset))]
+        muutosten-vaikutus-yhteensa (reduce + 0
+                                      (concat
+                                        (map :tavoitehinnan-muutos kirjatut-muutokset)
+                                        [(:tavoitehinnan-muutos (last rahavaraukset))]))]
     ;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
     {:kirjatut-muutokset kirjatut-muutokset
      ;; TODO: laskennat lasketuille muutoksille jos hoitokausi 2025-2026 tai jälkeen
