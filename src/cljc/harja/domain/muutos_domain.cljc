@@ -14,12 +14,12 @@
 
 (def +muutostyypit+
   "MHU muutosten mahdolliset tyypit. Näiden tulee matchata tietokannassa olevaan custom typeen MHU_MUUTOSTYYPPI"
-  #{"pysyva"
-    "rahavaraus"
-    "johto-ja-hallintokorvaus"
-    "erillisrahoitettu"
-    "toteutuneet-maarat"
-    "maarapoikkeama"})
+  ["erillisrahoitettu"
+   "johto-ja-hallintokorvaus"
+   "maarapoikkeama"
+   "pysyva"
+   "rahavaraus"
+   "toteutuneet-maarat"])
 
 (defn tyyppi-fmt
   "Palauttaa muutostyypin tietokannasta tulevan enumin nimen käyttöliittymää varten selkokielisenä. Esim. 'pysyva' -> 'Pysyvä'."
