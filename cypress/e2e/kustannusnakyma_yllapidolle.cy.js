@@ -119,8 +119,8 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
         cy.get('.grid').eq(1).find('tr').eq(0).find('td').eq(2).contains('88 060,00 €');
 
         // Yhteensä
-        cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(0).find('td').eq(2).find('span').contains('336 080,00');
-        cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(1).find('td').eq(2).find('span').contains('348 100,00');
+        cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(0).find('td').eq(2).find('span').contains('337 580,00');
+        cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(1).find('td').eq(2).find('span').contains('349 600,00');
     });
 
 
@@ -183,8 +183,8 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
         cy.get('.grid').eq(1).find('tr').eq(2).find('td').eq(2).contains('123 456,12 €');
 
         // Yhteensä
-        cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(0).find('td').eq(2).find('span').contains('459 536,12');
+        cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(0).find('td').eq(2).find('span').contains('461 036,12');
         // Urakka-ajan kustannukset yhteensä
-        cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(1).find('td').eq(2).find('span').contains('471 556,12');
+        cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(1).find('td').eq(2).find('span').contains('473 056,12');
     });
 }); 
