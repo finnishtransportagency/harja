@@ -614,8 +614,8 @@ DECLARE
     hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan NUMERIC;
     hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu    NUMERIC;
     hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan   NUMERIC;
-    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu    NUMERIC;
-    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan   NUMERIC;
+    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu        NUMERIC;
+    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan       NUMERIC;
     hj_hoitovuoden_paattaminen_rivi                             HJHOITOKAUDENPAATTAMINEN_RIVI;
 
     -- Asetuksia
@@ -839,6 +839,8 @@ BEGIN
         hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan := 0.0;
         hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu := 0.0;
         hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan := 0.0;
+        hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu := 0.0;
+        hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan := 0.0;
 
         -- Hoidonjohdolla (toimenpidekoodi 23150) omat erilliset mahdolliset kulunsa.
         -- Erilliskustannus-tauluun tallennetaan erilaiset bonukset.
@@ -1273,6 +1275,7 @@ Yhteenveto:';
         RAISE NOTICE 'Hoitovuoden päättäminen (tavoitepalkkio) laskutettu: %', hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu;
         RAISE NOTICE 'Hoitovuoden päättäminen (tavoitehinnan ylitys) laskutettu: %', hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu;
         RAISE NOTICE 'Hoitovuoden päättäminen (kattohinnan ylitys) laskutettu: %', hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu;
+        RAISE NOTICE 'Hoitovuoden päättäminen (hoidonjohtopalkkion muutos) laskutettu: %', hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu;
 
 
         RAISE NOTICE '
