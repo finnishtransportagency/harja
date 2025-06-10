@@ -1,8 +1,47 @@
--- Paikkauskohteelle suorittava TR-urakka
-ALTER TABLE paikkauskohde ADD COLUMN suorittava_tiemerkintaurakka integer REFERENCES urakka (id);
+-- Luodaan uusi taulut tarjouksen tiedoille
+CREATE TABLE tarjous
+(
+    id                    serial PRIMARY KEY,
+    hoitokauden_alkuvuosi INTEGER   NOT NULL,
+    urakka_id             INTEGER   NOT NULL,
+    tarjous_tavoitehinta  NUMERIC(10, 2) NOT NULL,
+    tarjous_kattohinta    NUMERIC(10, 2) NOT NULL,
+    luotu                 TIMESTAMP NOT NULL DEFAULT NOW(),
+    luoja                 INTEGER NOT NULL REFERENCES kayttaja (id),
+    muokattu              TIMESTAMP,
+    muokkaaja             INTEGER REFERENCES kayttaja (id),
+    FOREIGN KEY (urakka_id) REFERENCES urakka (id)
+);
 
--- Lisää muut kustannukset päällystyskohteille
-ALTER TABLE tiemerkinta_yllapitokohteen_kustannus ADD COLUMN muut_kustannukset NUMERIC(10, 2);
+CREATE TABLE tarjous_kustannukset (
+    id serial PRIMARY KEY,
+    tarjous_id INTEGER NOT NULL REFERENCES tarjous(id), -- Pääasiallinen mäppäys tämän kautta. Urakka ja hoitokauden_alkuvuosi helpottaa hakemista
+    urakka_id INTEGER NOT NULL REFERENCES urakka(id),
+    hoitokauden_alkuvuosi INTEGER NOT NULL,
+    summa NUMERIC(10, 2) NOT NULL,
+    osio SUUNNITTELU_OSIO NOT NULL,
+    tehtava_id INTEGER REFERENCES tehtava(id), -- tehtava.id
+    tehtavaryhma_id INTEGER REFERENCES tehtavaryhma(id), -- tehtavaryhma.id
+    rahavaraus_id INTEGER REFERENCES rahavaraus(id), -- rahavaraus.id
+    luoja INTEGER REFERENCES kayttaja (id),
+    luotu TIMESTAMP NOT NULL DEFAULT NOW(),
+    muokattu TIMESTAMP,
+    muokkaaja INTEGER REFERENCES kayttaja (id)
+);
 
--- Lisää muut kustannukset päällystyskohteille
-ALTER TABLE tiemerkinta_paikkauskohteen_kustannus ADD COLUMN muut_kustannukset NUMERIC(10, 2);
+CREATE TABLE tarjous_johto_ja_hallintokorvaus (
+    id serial PRIMARY KEY,
+    tarjous_id INTEGER NOT NULL REFERENCES tarjous(id), -- Pääasiallinen mäppäys tämän kautta. Urakka ja hoitokauden_alkuvuosi helpottaa hakemista
+    urakka_id INTEGER NOT NULL REFERENCES urakka(id),
+    hoitokauden_alkuvuosi INTEGER NOT NULL,
+    summa NUMERIC(10, 2) NOT NULL,
+    osio SUUNNITTELU_OSIO NOT NULL,
+    johto_ja_hallintokorvaus_toimenkuva_id INTEGER NOT NULL REFERENCES johto_ja_hallintokorvaus_toimenkuva(id),
+    tehtava_id INTEGER REFERENCES tehtava(id),
+    tehtavaryhma_id INTEGER REFERENCES tehtavaryhma(id),
+    luoja INTEGER NOT NULL REFERENCES kayttaja (id),
+    luotu TIMESTAMP NOT NULL DEFAULT NOW(),
+    muokattu TIMESTAMP,
+    muokkaaja INTEGER REFERENCES kayttaja (id)
+);
+

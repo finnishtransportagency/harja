@@ -74,12 +74,7 @@
        (nil? @cache-atom)
        (public-key-vanhentunut? cache-atom paivitys-intervalli))
      (try
-       (let [_ (log/info
-                 ;; TODO, logitusta tuotantoon, jotta nähdään cachen toimivuus
-                 ;; Poistetaan myöhemmin
-                 (str "Tehdään GET JWT public key kutsu, paivita? " paivita? " LX: " lx-kayttaja))
-
-             response @(http/get api-url {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
+       (let [response @(http/get api-url {:headers {;; Lisää Cognitolle tiedoksi mistä pyyntö tulee
                                                     "User-Agent" (if paivita?
                                                                     ;; Koska todennus epäonnistui, laita LX tunnus mukaan 
                                                                    (str user-agent-headers " (update public-key/" lx-kayttaja ")")
@@ -169,30 +164,24 @@
         iam-data-algoritmi (-> iam-data-header :alg (str/lower-case) (keyword))
 
         ;; Nämä on arvokkaita testauksessa ja voi jättää toistaiseksi tähän
-        #_ #_ _ (when kehitysmoodi?
-            (println "\n accesstoken payload: " (-> accesstoken dekoodaa-token :payload))
-            (println "\n accesstoken header: " (-> accesstoken dekoodaa-token :header))
-            (println "\n accesstoken signature: " (-> accesstoken dekoodaa-token :signature))
-            (println "\n accesstoken-algoritmi: " accesstoken-algoritmi)
-            (println "\n accesstoken-public-key: " accesstoken-public-key)
+        #_#__ (when kehitysmoodi?
+                (println "\n accesstoken payload: " (-> accesstoken dekoodaa-token :payload))
+                (println "\n accesstoken header: " (-> accesstoken dekoodaa-token :header))
+                (println "\n accesstoken signature: " (-> accesstoken dekoodaa-token :signature))
+                (println "\n accesstoken-algoritmi: " accesstoken-algoritmi)
+                (println "\n accesstoken-public-key: " accesstoken-public-key)
 
-            (println "\n iam-data payload: " (-> iam-data dekoodaa-token :payload))
-            (println "\n iam-data header: " (-> iam-data dekoodaa-token :header))
-            (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature))
-            (println "\n iam-data-algoritmi: " iam-data-algoritmi)
-            (println "\n iam-data-public-key: " iam-data-public-key))
+                (println "\n iam-data payload: " (-> iam-data dekoodaa-token :payload))
+                (println "\n iam-data header: " (-> iam-data dekoodaa-token :header))
+                (println "\n iam-data signature: " (-> iam-data dekoodaa-token :signature))
+                (println "\n iam-data-algoritmi: " iam-data-algoritmi)
+                (println "\n iam-data-public-key: " iam-data-public-key))
 
         ;; Verifioi tokenit kutsumalla unsign, joka tarkastaa saapuvien tietojen allekirjoituksen
         ;; Signaturen verifiointi tulee suoraan javalta (java.security.Signature), niitä ei clojurena ole suoraa näkyvillä
         _ (jwt/unsign iam-data iam-data-public-key {:alg iam-data-algoritmi}) ;; Sisältää käyttäjän tietoja & Roolit
         _ (jwt/unsign accesstoken accesstoken-public-key {:alg accesstoken-algoritmi}) ;; Sisältää mm. user poolin url, client idt
-        _ (log/info 
-            ;; TODO, logitusta tuotantoon jotta nähdään toimivuus, tämän voi myöhemmin poistaa, mergetään toistaiseksi näin
-            "Todennettiin onnistuneesti (JWT): "
-            (str
-              (-> iam-data dekoodaa-token :payload :custom:etunimi)
-              " - "
-              (-> iam-data dekoodaa-token :payload :custom:uid)))]))
+        ]))
 
 
 (defn- todennus-varmistus-epaonnistui
@@ -258,15 +247,8 @@
   (log/error "HÄTÄ FIX: Jos käyttäjät jää ilman hyvää syytä ulos, aseta TODENNUS_VARMISTUS_PAALLA false -> depoly configs [infra]")
 
   ;; Todennus ei mennyt läpi, poista kaikki oikeudet käyttäjältä
-  ;; TODO.. Ei laiteta blokkausta vielä päälle tuotantoon, mergetään toistaiseksi näin.
-  ;;
-  ; "failed" uudelleenohjaa "Todennus epäonnistui" näkymään
-  ; (-> (tunnistetiedot iam-data) (assoc "custom:rooli" "failed")) 
-
-  ;; TODO.. 
-  ;; Palauta tunnistetiedot toistaiseksi, ja jatka todennusta normaalisti, vaikka virhe tapahtui
-  ;; Blokkaus päälle vasta sitten kun tämä on todettu tuotannossa toimivaksi
-  (tunnistetiedot iam-data))
+  ;; "failed" uudelleenohjaa "Todennus epäonnistui" näkymään
+  (-> (tunnistetiedot iam-data) (assoc "custom:rooli" "failed")))
 
 
 ;; Pidä käyttäjän tietoja tallessa x ajan, todennusta kutsutaan liian tiheästi muuten 

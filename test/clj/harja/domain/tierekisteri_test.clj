@@ -37,7 +37,7 @@
   (is (= (tierekisteri/tierekisteriosoite-tekstina
            {}
            {})
-         "Ei tierekisteriosoitetta"))
+         "Ei tieosoitetta"))
   (is (= (tierekisteri/tierekisteriosoite-tekstina
            {}
            {:teksti-ei-tr-osoitetta? false})
@@ -66,7 +66,7 @@
   (is (= (tierekisteri/tierekisteriosoite-tekstina
            {:aosa 3 :aet 3 :losa 5 :let 3}
            {:teksti-tie? false})
-         "Ei tierekisteriosoitetta"))
+         "Ei tieosoitetta"))
   (is (= (tierekisteri/tierekisteriosoite-tekstina
            {:tie 19 :aosa 3 :aet 3 :losa 5}
            {:teksti-tie? false})
