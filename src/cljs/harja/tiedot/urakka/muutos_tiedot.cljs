@@ -65,8 +65,9 @@
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
 
 (defn ennen-muutoksien-kayttoonotto? [valittu-hoitokausi]
-  (< (pvm/vuosi (first valittu-hoitokausi))
-    muutoksien-kayttoonoton-hoitokauden-alkuvuosi))
+  (when valittu-hoitokausi
+    (< (pvm/vuosi (first valittu-hoitokausi))
+      muutoksien-kayttoonoton-hoitokauden-alkuvuosi)))
 
 (extend-protocol tuck/Event
   HoitokausiVaihdettu
