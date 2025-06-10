@@ -28,10 +28,9 @@
   "Validointi tiemerkintöjen korjaus kustannuksille"
   [rivi]
   (let [summa (->> [:pk1 :pk2 :pk3]
-                (map #(get rivi % 0))
-                (reduce +)
-                float)]
-    (when-not (= 100.0 summa)
+                (map #(bigdec (get rivi % 0)))
+                (reduce +))]
+    (when-not (= 100.0M summa)
       (log/error "PK-osuuksien summan on oltava 100, saatiin:" summa)
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
