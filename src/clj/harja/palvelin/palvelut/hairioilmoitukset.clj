@@ -49,10 +49,12 @@
 
 (defn- validoi-ajat
   ([db alkuaika loppuaika]
-   (validoi-ajat db alkuaika loppuaika false nil))
-  ([db alkuaika loppuaika update? id]
-   (let [haku (if-not update?
+   (validoi-ajat db alkuaika loppuaika nil))
+  ([db alkuaika loppuaika id]
+   (let [haku (if-not id
                 {::hairio/voimassa? true}
+                ;; Excluudaa muokattava rivi validoinnista 
+                ;; muokattavaa riviä ei tarkisteta ristiriitojen osalta, koska se olisi aina ristiriidassa itsensä kanssa
                 {::hairio/voimassa? true ::hairio/id (op/not= id)})]
      (cond
        (= loppuaika alkuaika)
@@ -68,43 +70,43 @@
 
 (defn- tallenna-hairioilmoitukset [db user {:keys [tiedot]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
-  (reduce
-    (fn [_ rivi]
-      (let [{::hairio/keys [viesti tyyppi alkuaika loppuaika id]} rivi
-            poistettu? (:poistettu rivi)
-            validointi-virhe (validoi-ajat db alkuaika loppuaika true id)
-            hae-kaikki #(->>
-                          (specql/fetch db ::hairio/hairioilmoitus hairio/sarakkeet {})
-                          (sort-by ::hairio/alkupvm)
-                          reverse
-                          vec)]
-        (cond
-          ;; Käyttäjä haluaa poistaa rivin 
-          poistettu?
-          (do
-            (specql/delete! db ::hairio/hairioilmoitus {::hairio/id id})
-            (log/debug "Poistettiin häiriöilmoitus")
-            (hae-kaikki))
+  (let [hae-kaikki #(->> (specql/fetch db ::hairio/hairioilmoitus hairio/sarakkeet {})
+                      (sort-by ::hairio/alkupvm)
+                      reverse
+                      vec)
+        virhe
+        (reduce
+          (fn [_ rivi]
+            (let [{::hairio/keys [viesti tyyppi alkuaika loppuaika id]} rivi
+                  poistettu? (:poistettu rivi)
+                  validointi-virhe (validoi-ajat db alkuaika loppuaika id)]
+              (cond
+                ;; Lopeta päivitys, jos tapahtuu virhe
+                validointi-virhe (reduced validointi-virhe)
 
-          ;; Päivitetään olemassa oleva rivi 
-          (> id 0)
-          (if validointi-virhe
-            validointi-virhe
-            (do
-              (specql/update! db ::hairio/hairioilmoitus
-                {::hairio/viesti viesti
-                 ::hairio/pvm (c/to-sql-date (t/now))
-                 ::hairio/voimassa? true
-                 ::hairio/tyyppi (or tyyppi :hairio)
-                 ::hairio/alkuaika alkuaika
-                 ::hairio/loppuaika loppuaika}
-                {::hairio/id id})
-              (log/debug "Päivitettiin häiriöilmoitus")
-              (hae-kaikki)))
+                ;; Käyttäjä haluaa poistaa rivin 
+                poistettu?
+                (do
+                  (specql/delete! db ::hairio/hairioilmoitus {::hairio/id id})
+                  (log/debug "Poistettiin häiriöilmoitus"))
 
-          :else (hae-kaikki))))
-    nil
-    tiedot))
+                ;; Käyttäjä päivittää olemassa olevaa riviä 
+                (and id (> id 0))
+                (do
+                  (specql/update! db ::hairio/hairioilmoitus
+                    {::hairio/viesti viesti
+                     ::hairio/pvm (c/to-sql-date (t/now))
+                     ::hairio/voimassa? true
+                     ::hairio/tyyppi (or tyyppi :hairio)
+                     ::hairio/alkuaika alkuaika
+                     ::hairio/loppuaika loppuaika}
+                    {::hairio/id id})
+                  (log/debug "Päivitettiin häiriöilmoitus")))))
+          nil
+          tiedot)]
+    ;; Palautetaan vastaus, jos tapahtui virhe, päivitys lopetetaan siihen riviin
+    (if virhe virhe (hae-kaikki))))
+
 
 (defn- aseta-hairioilmoitus [db user {::hairio/keys [viesti tyyppi alkuaika loppuaika]}]
   (let [validointi-virhe (validoi-ajat db alkuaika loppuaika)]
