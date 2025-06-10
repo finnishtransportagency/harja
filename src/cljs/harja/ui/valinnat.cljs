@@ -86,7 +86,7 @@
     - urakkatyyppi: Urakkatyyppi avainsanana (esim. :hoito, :tiemerkinta)"
   (cond
     (#{:hoito :teiden-hoito} urakkatyyppi)
-    "Hoitokausi"
+    "Hoitovuosi"
 
     (#{:tiemerkinta} urakkatyyppi)
     "Sopimusvuosi"
