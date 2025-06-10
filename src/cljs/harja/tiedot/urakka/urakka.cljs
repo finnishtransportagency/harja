@@ -430,6 +430,7 @@
                                            :kustannussuunnitelma {:hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))}})
 
 (defonce tila (atom {:yleiset     {:urakka {}}
+                     :hallinta-hairiot {}
                      :laatupoikkeamat laatupoikkeamat-default
                      :laskutus    laskutus-default
                      :lupaukset lupaukset-default
@@ -446,6 +447,8 @@
                      :tiemerkinta-sanktiot-ja-bonukset {}
                      :tiemerkinta-uusien-paallysteiden-merkkinnat {}
                      :tarjous-kustannussuunnitelma tarjous-kustannussuunnitelma-default}))
+
+(defonce hallinta-hairiot (cursor tila [:hallinta-hairiot]))
 
 (defonce tiemerkinta-korjaukset (cursor tila [:tiemerkinta-korjaukset]))
 (defonce tiemerkinta-yhteenveto (cursor tila [:tiemerkinta-yhteenveto]))
