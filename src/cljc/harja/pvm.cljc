@@ -837,6 +837,12 @@
         vuosi-loppuu (inc vuosi-alkaa)]
     (str "15.11." vuosi-loppuu)))
 
+(defn onko-hoitovuosi-loppunut?
+  "Palautetaan true, kun hoitovuosi on päättynyt (ts. kuluva kuukausi on lokakuu tai myöhemmin)." 
+  []
+  (let [nykykuukausi (kuukausi (nyt))]
+    (>= nykykuukausi 10)))
+
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."
   [pvm]
