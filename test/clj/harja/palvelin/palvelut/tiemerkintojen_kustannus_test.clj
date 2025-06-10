@@ -3,6 +3,7 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.pvm :as pvm]
             [harja.palvelin.palvelut.kustannusten-kirjaus :as tiemerkkarit]))
 
 (defn jarjestelma-fixture [testit]
@@ -20,6 +21,64 @@
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each jarjestelma-fixture)
+
+(deftest hae-tiemerkinta-kustannuskirjaukset-toimii
+  (testing "Tiemerkintä-kustannuskirjausten hakeminen toimii"
+    (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
+          urakka (first (q-map "SELECT nimi, id, alkupvm, loppupvm FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2017-2024'"))
+          kustannusvuosi 2022
+          kustannus-summa 25000.0
+
+          ;; Siivotaan vanhat kustannukset jos niitä on
+          _ (u (format "DELETE FROM tiemerkinta_korjauskustannus WHERE urakka = %s AND kustannusvuosi = %s"
+                 urakka-id kustannusvuosi))
+
+          ;; Lisätään testidataa
+          _ (i (format "INSERT INTO tiemerkinta_korjauskustannus (urakka, kustannusvuosi, kustannus, pk1, pk2, pk3, luoja, luotu, muokkaaja, muokattu) 
+                        VALUES 
+                        (%s, %s, %s, 25.0, 35.0, 40.0, 1, now(), 1, now())"
+                 urakka-id kustannusvuosi kustannus-summa))
+
+          ;; Haetaan kustannukset
+          kustannukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                         :hae-tiemerkinta-kustannuskirjaus
+                         +kayttaja-jvh+
+                         {:urakka urakka})
+          
+          ;; Suodatetaan meitä kiinnostavat rivit
+          kustannus-rivi (first (filter #(= (:kustannusvuosi %) kustannusvuosi) kustannukset))
+          urakan-kaikki-vuodet (range (pvm/vuosi (:alkupvm urakka))
+                                 (+ (pvm/vuosi (:loppupvm urakka)) 1))]
+
+      ;; Tarkistetaan että hakutulos ei ole tyhja
+      (is (not (empty? kustannukset)) "Kustannuksia löytyy")
+
+      ;; Tarkistetaan että lisätty kustannus löytyy
+      (is (= (:urakka kustannus-rivi) urakka-id) "Oikea urakka")
+      (is (= (:kustannusvuosi kustannus-rivi) kustannusvuosi) "Oikea vuosi")
+      (is (= (:kustannus kustannus-rivi) kustannus-summa) "Oikea kustannus")
+      (is (= (:pk1 kustannus-rivi) 25.0) "Oikea pk1")
+      (is (= (:pk2 kustannus-rivi) 35.0) "Oikea pk2")
+      (is (= (:pk3 kustannus-rivi) 40.0) "Oikea pk3")
+
+      ;; Tarkistetaan että kaikille vuosille on rivit
+      (is (= (count kustannukset) (count urakan-kaikki-vuodet))
+        "Kaikkien vuosien rivit löytyvät (myös defaultit)")
+
+      ;; Tarkistetaan että default-rivit ovat nolla-arvoisia
+      (let [default-rivi (first (filter #(and
+                                           (= (:kustannusvuosi %) (+ kustannusvuosi 1))
+                                           (not= kustannusvuosi (+ kustannusvuosi 1)))
+                                  kustannukset))]
+        (when default-rivi
+          (is (= (:kustannus default-rivi) 0) "Default-kustannus on nolla")
+          (is (= (:pk1 default-rivi) 0) "Default-pk1 on nolla")
+          (is (= (:pk2 default-rivi) 0) "Default-pk2 on nolla")
+          (is (= (:pk3 default-rivi) 0) "Default-pk3 on nolla")))
+
+      ;; Siivotaan testidatat
+      (u (format "DELETE FROM tiemerkinta_korjauskustannus WHERE urakka = %s AND kustannusvuosi = %s"
+           urakka-id kustannusvuosi)))))
 
 (deftest tallennus-paivitys-toimii
   (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
@@ -139,9 +198,9 @@
 
           ;; Lisää kustannus
           _ (i (format "INSERT INTO tiemerkinta_yllapitokohteen_kustannus 
-               (yllapitokohde, linjamerkinnat, pienmerkinnat, jyrsinnat, luoja, luotu) 
+               (yllapitokohde, linjamerkinnat, pienmerkinnat, jyrsinnat, muut_kustannukset, luoja, luotu) 
                VALUES 
-               (%s, 1000, 500, 300, 1, now())"
+               (%s, 1000, 500, 300, 400, 1, now())"
                  yllapitokohde-id))
 
           ;; Hae kustannukset
@@ -157,7 +216,8 @@
       (let [kohde (first (filter #(= (:kohdenumero %) kohdenumero) kustannukset))]
         (is (= (:linjamerkinnat kohde) 1000.00M))
         (is (= (:pienmerkinnat kohde) 500.00M))
-        (is (= (:jyrsinnat kohde) 300.00M)))
+        (is (= (:jyrsinnat kohde) 300.00M))
+        (is (= (:muut-kustannukset kohde) 400.00M)))
 
       ;; Siivoa testidatat
       (u (format "DELETE FROM tiemerkinta_yllapitokohteen_kustannus WHERE yllapitokohde = %s"
@@ -190,7 +250,8 @@
           kustannustiedot {:tiedot [{:id yllapitokohde-id
                                      :linjamerkinnat 1200.50M
                                      :pienmerkinnat 600.75M
-                                     :jyrsinnat 350.25M}]}
+                                     :jyrsinnat 350.25M
+                                     :muut-kustannukset 320.25M}]}
 
           tallennustulos (kutsu-palvelua (:http-palvelin jarjestelma)
                            :tallenna-tiemerkinta-yllapitokohteiden-kustannukset
@@ -216,12 +277,14 @@
       (is (= (:linjamerkinnat kohde) 1200.50M) "Linjamerkintöjen summa täsmää")
       (is (= (:pienmerkinnat kohde) 600.75M) "Pienmerkintöjen summa täsmää")
       (is (= (:jyrsinnat kohde) 350.25M) "Jyrsintöjen summa täsmää")
+      (is (= (:muut-kustannukset kohde) 320.25M) "Muut kustannukset summa täsmää")
 
       ;; Kokeile päivitystä muuttamalla arvoja
       (let [paivitystiedot {:tiedot [{:id yllapitokohde-id
                                       :linjamerkinnat 2000.00M
                                       :pienmerkinnat 1000.00M
-                                      :jyrsinnat 500.00M}]}
+                                      :jyrsinnat 500.00M
+                                      :muut-kustannukset 520.25M}]}
 
             paivitystulos (kutsu-palvelua (:http-palvelin jarjestelma)
                             :tallenna-tiemerkinta-yllapitokohteiden-kustannukset
@@ -245,7 +308,8 @@
 
         (is (= (:linjamerkinnat paivitetty-kohde) 2000.00M) "Päivitetty linjamerkintöjen summa täsmää")
         (is (= (:pienmerkinnat paivitetty-kohde) 1000.00M) "Päivitetty pienmerkintöjen summa täsmää")
-        (is (= (:jyrsinnat paivitetty-kohde) 500.00M) "Päivitetty jyrsintöjen summa täsmää"))
+        (is (= (:jyrsinnat paivitetty-kohde) 500.00M) "Päivitetty jyrsintöjen summa täsmää")
+        (is (= (:muut-kustannukset paivitetty-kohde) 520.25M) "Päivitetty Muut kustannukset summa täsmää"))
 
       ;; Siivoa testidatat
       (u (format "DELETE FROM tiemerkinta_yllapitokohteen_kustannus WHERE yllapitokohde = %s"
@@ -262,11 +326,11 @@
 
           ;; Luo paikkauskohde
           paikkauskohde-id (i (format "INSERT INTO paikkauskohde
-                                       (nimi, \"urakka-id\", \"ulkoinen-id\", alkupvm, loppupvm, poistettu, \"tiemerkinnan-tila\")
+                                       (nimi, \"urakka-id\", \"ulkoinen-id\", alkupvm, loppupvm, poistettu, \"tiemerkinnan-tila\", suorittava_tiemerkintaurakka)
                                        VALUES
-                                       ('Testipaikkauskohde plim', %s, '%s', '%s', '%s', false, '%s')
+                                       ('Testipaikkauskohde plim', %s, '%s', '%s', '%s', false, '%s', '%s')
                                        RETURNING id"
-                                urakka-id ulkoinen-id (:alkupvm urakka) (:loppupvm urakka) "valmis"))
+                                urakka-id ulkoinen-id (:alkupvm urakka) (:loppupvm urakka) "valmis" urakka-id))
 
           ;; Lisää tieosoite paikkauskohteelle
           _ (i (format "UPDATE paikkauskohde 
@@ -277,9 +341,9 @@
 
           ;; Lisää kustannus
           _ (i (format "INSERT INTO tiemerkinta_paikkauskohteen_kustannus 
-                       (paikkauskohde, linjamerkinnat, pienmerkinnat, jyrsinnat, luoja, luotu) 
+                       (paikkauskohde, linjamerkinnat, pienmerkinnat, jyrsinnat, muut_kustannukset, luoja, luotu) 
                        VALUES 
-                       (%s, 800, 400, 200, 1, now())"
+                       (%s, 800, 400, 200, 400, 1, now())"
                  paikkauskohde-id))
 
           ;; Hae kustannukset
@@ -295,7 +359,8 @@
       (let [kohde (first (filter #(= (:kohdenumero %) ulkoinen-id) kustannukset))]
         (is (= (:linjamerkinnat kohde) 800.00M))
         (is (= (:pienmerkinnat kohde) 400.00M))
-        (is (= (:jyrsinnat kohde) 200.00M)))
+        (is (= (:jyrsinnat kohde) 200.00M))
+        (is (= (:muut-kustannukset kohde) 400.00M)))
 
       ;; Siivoa testidatat
       (u (format "DELETE FROM tiemerkinta_paikkauskohteen_kustannus WHERE paikkauskohde = %s"
@@ -311,11 +376,11 @@
 
           ;; Luo paikkauskohde
           paikkauskohde-id (i (format "INSERT INTO paikkauskohde
-                                       (nimi, \"urakka-id\", \"ulkoinen-id\", alkupvm, loppupvm, poistettu, \"tiemerkinnan-tila\")
+                                       (nimi, \"urakka-id\", \"ulkoinen-id\", alkupvm, loppupvm, poistettu, \"tiemerkinnan-tila\", suorittava_tiemerkintaurakka)
                                        VALUES
-                                       ('Testipaikkauskohde tallennus', %s, '%s', '%s', '%s', false, '%s')
+                                       ('Testipaikkauskohde tallennus', %s, '%s', '%s', '%s', false, '%s', '%s')
                                        RETURNING id"
-                                urakka-id ulkoinen-id (:alkupvm urakka) (:loppupvm urakka) "valmis"))
+                                urakka-id ulkoinen-id (:alkupvm urakka) (:loppupvm urakka) "valmis", urakka-id))
 
           ;; Lisää tieosoite paikkauskohteelle
           _ (i (format "UPDATE paikkauskohde 
@@ -328,7 +393,8 @@
           kustannustiedot {:tiedot [{:id paikkauskohde-id
                                      :linjamerkinnat 700.25M
                                      :pienmerkinnat 350.50M
-                                     :jyrsinnat 200.75M}]}
+                                     :jyrsinnat 200.75M
+                                     :muut-kustannukset 320.25M}]}
 
           tallennustulos (kutsu-palvelua (:http-palvelin jarjestelma)
                            :tallenna-tiemerkinta-paikkauskohteiden-kustannukset
@@ -353,13 +419,16 @@
 
       (is (= (:linjamerkinnat kohde) 700.25M) "Linjamerkintöjen summa täsmää")
       (is (= (:pienmerkinnat kohde) 350.50M) "Pienmerkintöjen summa täsmää")
-      (is (= (:jyrsinnat kohde) 200.75M) "Jyrsintöjen summa täsmää")
+      (is (= (:jyrsinnat kohde) 200.75M) "Jyrsintöjen summa täsmää") 
+      (is (= (:muut-kustannukset kohde) 320.25M) "Muut kustannukset summa täsmää")
+
 
       ;; Kokeile päivitystä muuttamalla arvoja
       (let [paivitystiedot {:tiedot [{:id paikkauskohde-id
                                       :linjamerkinnat 900.00M
                                       :pienmerkinnat 450.00M
-                                      :jyrsinnat 250.00M}]}
+                                      :jyrsinnat 250.00M
+                                      :muut-kustannukset 520.25M}]}
 
             paivitystulos (kutsu-palvelua (:http-palvelin jarjestelma)
                             :tallenna-tiemerkinta-paikkauskohteiden-kustannukset
@@ -383,7 +452,8 @@
 
         (is (= (:linjamerkinnat paivitetty-kohde) 900.00M) "Päivitetty linjamerkintöjen summa täsmää")
         (is (= (:pienmerkinnat paivitetty-kohde) 450.00M) "Päivitetty pienmerkintöjen summa täsmää")
-        (is (= (:jyrsinnat paivitetty-kohde) 250.00M) "Päivitetty jyrsintöjen summa täsmää"))
+        (is (= (:jyrsinnat paivitetty-kohde) 250.00M) "Päivitetty jyrsintöjen summa täsmää")
+        (is (= (:muut-kustannukset paivitetty-kohde) 520.25M) "Päivitetty Muut kustannukset summa täsmää"))
 
       ;; Siivoa testidatat
       (u (format "DELETE FROM tiemerkinta_paikkauskohteen_kustannus WHERE paikkauskohde = %s"
