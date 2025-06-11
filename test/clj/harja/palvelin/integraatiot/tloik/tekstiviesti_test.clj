@@ -95,7 +95,7 @@
     (is (rivit "Yhteydenottopyyntö: Ei"))
     (is (rivit "Paikka: Kilpisjärvi"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
-    (is (rivit "Tienumero: Ei tierekisteriosoitetta"))
+    (is (rivit "Tienumero: Ei tieosoitetta"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
 
 (deftest tekstiviestin-muodostus-aiheella

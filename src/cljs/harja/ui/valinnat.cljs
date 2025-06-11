@@ -80,23 +80,29 @@
                          :valitse-fn valitse-fn}
     urakkatyypit]])
 
+(defn palauta-urakkatyypin-vuosi-termi [urakkatyyppi]
+  "Palauttaa urakkatyypin mukaisen tekstin.
+    Parametrit:
+    - urakkatyyppi: Urakkatyyppi avainsanana (esim. :hoito, :tiemerkinta)"
+  (cond
+    (#{:hoito :teiden-hoito} urakkatyyppi)
+    "Hoitovuosi"
+
+    (#{:tiemerkinta} urakkatyyppi)
+    "Sopimusvuosi"
+
+    (or
+      (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)
+      (#{:paallystys} urakkatyyppi))
+    "Urakkavuosi"
+
+    :else "Sopimuskausi"))
+
 (defn urakan-hoitokausi
   ([ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
    (urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-fn false))
   ([ur hoitokaudet valittu-hoitokausi-atom valitse-fn disabled?]
-   (let [vuosi-termi (cond
-                       (#{:hoito :teiden-hoito} (:tyyppi ur))
-                       "Hoitokausi"
-
-                       (#{:tiemerkinta} (:tyyppi ur))
-                       "Sopimusvuosi"
-
-                       (or
-                         (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))
-                         #{:paallystys (:tyyppi ur)})
-                       "Urakkavuosi"
-
-                       :else "Sopimuskausi")]
+   (let [vuosi-termi (palauta-urakkatyypin-vuosi-termi (:tyyppi ur))]
      [:div.label-ja-alasveto.hoitokausi
       [:span.alasvedon-otsikko vuosi-termi]
       [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
@@ -114,12 +120,7 @@
 (defn urakan-hoitokausi-tuck
   [valittu-hoitokausi hoitokaudet tuck-event optiot]
   (let [urakkatyyppi (-> @nav/valittu-urakka :tyyppi)
-        vuosi-termi (cond
-                      (#{:hoito :teiden-hoito} urakkatyyppi) "Hoitokausi"
-                      (or
-                        (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)
-                        #{:paallystys urakkatyyppi}) "Urakkavuosi"
-                      :else "Sopimuskausi")]
+        vuosi-termi (palauta-urakkatyypin-vuosi-termi urakkatyyppi)]
     [:div {:class (if (:wrapper-luokka optiot)
                     (:wrapper-luokka optiot)
                     "col-xs-6.col-md-3")}
