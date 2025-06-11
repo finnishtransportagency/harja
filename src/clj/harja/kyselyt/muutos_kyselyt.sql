@@ -54,7 +54,8 @@ SELECT rv.id, SUM(kk.summa) as toteumat
  WHERE u.id = :urakka
    AND k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
      (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
- GROUP BY rv.id;
+ GROUP BY rv.id, rv.jarjestys
+ ORDER BY rv.jarjestys;
 
 
 -- name: paivita-muutos!

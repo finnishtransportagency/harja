@@ -338,13 +338,13 @@ INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu,
                            "urakka-id", "yhalahetyksen-tila", virhe, tarkistettu, "tarkistaja-id", "ilmoitettu-virhe",
                            alkupvm, loppupvm, tilattupvm, tyomenetelma, tierekisteriosoite_laajennettu, "paikkauskohteen-tila",
                            "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot, "pot?", valmistumispvm,
-                           tiemerkintapvm, "toteutunut-hinta", "tiemerkintaa-tuhoutunut?", "tiemerkinnan-tila", takuuaika, "yllapitokohde-id")
+                           tiemerkintapvm, "toteutunut-hinta", "tiemerkintaa-tuhoutunut?", "tiemerkinnan-tila", takuuaika, "yllapitokohde-id", suorittava_tiemerkintaurakka)
 VALUES (:luoja-id, :ulkoinen-id, :nimi, FALSE, :luotu,
         :urakka-id, :yhalahetyksen-tila, :virhe, :tarkistettu, :tarkistaja-id, :ilmoitettu-virhe,
         :alkupvm, :loppupvm, :tilattupvm, :tyomenetelma,
         ROW(:tie, :aosa, :aet, :losa, :let, :ajorata,NULL,NULL,NULL,NULL)::TR_OSOITE_LAAJENNETTU,
         :paikkauskohteen-tila::paikkauskohteen_tila, :suunniteltu-maara, :suunniteltu-hinta, :yksikko, :lisatiedot, :pot?, :valmistumispvm,
-        :tiemerkintapvm, :toteutunut-hinta, :tiemerkintaa-tuhoutunut?, :tiemerkinnan-tila::tiemerkinnan_tila_enum, :takuuaika, :yllapitokohde-id);
+        :tiemerkintapvm, :toteutunut-hinta, :tiemerkintaa-tuhoutunut?, :tiemerkinnan-tila::tiemerkinnan_tila_enum, :takuuaika, :yllapitokohde-id, :suorittava-tiemerkintaurakka);
 
 -- name: paivita-paikkauskohde!
 UPDATE paikkauskohde
@@ -376,7 +376,8 @@ UPDATE paikkauskohde
        "tiemerkintaa-tuhoutunut?"     = :tiemerkintaa-tuhoutunut?,
        "tiemerkinnan-tila"            = :tiemerkinnan-tila::tiemerkinnan_tila_enum,
        takuuaika                      = :takuuaika,
-       "yllapitokohde-id"             = :yllapitokohde-id
+       "yllapitokohde-id"             = :yllapitokohde-id,
+       suorittava_tiemerkintaurakka   = :suorittava-tiemerkintaurakka
  WHERE id = :id;
 
 --name: hae-paikkauskohde
@@ -398,6 +399,7 @@ SELECT pk.id                                       AS id,
        pk.lisatiedot                               AS lisatiedot,
        pk."pot?"                                   AS "pot?",
        pk."yllapitokohde-id"                       AS "yllapitokohde-id",
+       pk.suorittava_tiemerkintaurakka             AS "suorittava-tiemerkintaurakka",
        o.nimi                                      AS urakoitsija,
        (pk.tierekisteriosoite_laajennettu).tie     AS tie,
        (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
