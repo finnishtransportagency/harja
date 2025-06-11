@@ -15,14 +15,7 @@
 (defn rivin-kustannusten-summa [rivi avaimet]
   (reduce (fn [summa avain] (+ summa (get rivi avain 0))) 0 avaimet))
 
-(def valinnat
-  (reaction 
-      {:urakka @nav/valittu-urakka
-       :sopimus-id (first @u/valittu-sopimusnumero)
-       :aikavali @u/valittu-aikavali
-       :valittu-hoitokausi @u/valittu-hoitokausi}))
-
-(defrecord PaivitaValinnat [valinnat])
+(defrecord HoitokausiVaihdettu [urakka hoitokausi])
 
 (defrecord HaePaallystysKustannukset [])
 (defrecord HaePaallystysKustannuksetOnnistui [vastaus])
@@ -45,23 +38,23 @@
   (viesti/nayta-toast! (str "Hakeminen epäonnistui \n Vastaus: " (pr-str vastaus)) :varoitus))
 
 
-(extend-protocol tuck/Event 
-  PaivitaValinnat
-  (process-event [{valinnat :valinnat} app]
-    (let [valinnat (merge (:valinnat app)
-                     valinnat)
+(extend-protocol tuck/Event
+  HoitokausiVaihdettu
+  (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
+    (let [app (-> app
+                (assoc :valittu-hoitokausi hoitokausi))
           paallyste-haku (tuck/send-async! ->HaePaallystysKustannukset)
-          paikkaus-haku (tuck/send-async! ->HaePaikkausKustannukset)]
-      
-      (go (paallyste-haku valinnat))
-      (go (paikkaus-haku valinnat))
-      (assoc app :valinnat valinnat :haku-kaynnissa? true :paikkaus-kustannukset [] :kustannukset [])))
+          paikkaus-haku (tuck/send-async! ->HaePaikkausKustannukset)
+          hoitokaudet @u/valitun-urakan-hoitokaudet]
+      (go (paallyste-haku))
+      (go (paikkaus-haku))
+      (assoc app :urakan-hoitokaudet hoitokaudet  :haku-kaynnissa? true :paikkaus-kustannukset [] :kustannukset [])))
   
   HaePaallystysKustannukset
   (process-event [_ app]
     (tuck-apurit/post! :hae-tiemerkinta-paallystyskohteiden-kustannukset
       {:urakka-id (:id @nav/valittu-urakka)
-       :urakka-alkupvm (-> @u/valittu-aikavali first)}
+       :urakka-alkupvm (first (:valittu-hoitokausi app))}
       {:onnistui ->HaePaallystysKustannuksetOnnistui
        :epaonnistui ->HaePaallystysKustannuksetEpaonnistui})
     (assoc app :haku-kaynnissa? true))
@@ -83,7 +76,7 @@
   (process-event [_ app]
     (tuck-apurit/post! :hae-tiemerkinta-paikkausten-kustannukset
       {:urakka-id (:id @nav/valittu-urakka)
-       :urakka-alkupvm (-> @u/valittu-aikavali first)}
+       :urakka-alkupvm (first (:valittu-hoitokausi app))}
       {:onnistui ->HaePaikkausKustannuksetOnnistui
        :epaonnistui ->HaePaikkausKustannuksetEpaonnistui})
     (assoc app :haku-kaynnissa? true)) 

@@ -334,7 +334,7 @@
             (ilmoita-tiemerkintaan db fim email user kohde))
 
     ;; Siivotaan paikkauskohteesta mahdolliset tiemerkintään liittyvät tiedot pois
-    (dissoc kohde :viesti :kopio-itselle? :tiemerkinta-urakka)))
+    (dissoc kohde :viesti :kopio-itselle?)))
 
 (defn tarkista-pot-raportointi
   "Mikäli paikkauskohteelle on merkattu :pot? true, tehdään paikkauskohteesta pot ilmoitus.
@@ -474,6 +474,11 @@
                          :toteutunut-hinta (when (:toteutunut-hinta kohde)
                                              (bigdec (:toteutunut-hinta kohde)))
                          :tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
+                         ;; Asetetaan suorittava tiemerkintäurakka ja varmistetaan että ei nollata - Välitetään kulujen kirjauksen paikkausosiolle 
+                         :suorittava-tiemerkintaurakka (if (and (nil? (:tiemerkintapvm vanha-kohde))
+                                                               (:tiemerkintaa-tuhoutunut? kohde))
+                                                         (:tiemerkinta-urakka kohde)
+                                                         (:suorittava-tiemerkintaurakka vanha-kohde))
                          :takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
                          :tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))
                          :yllapitokohde-id (:yllapitokohde-id kohde)

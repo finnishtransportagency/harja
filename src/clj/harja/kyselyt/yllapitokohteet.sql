@@ -994,7 +994,7 @@ SELECT
   lahetysaika,
   keskimaarainen_vuorokausiliikenne,
   nykyinen_paallyste,
-  suorittava_tiemerkintaurakka,
+  ypk.suorittava_tiemerkintaurakka,
   karttapaivamaara
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
