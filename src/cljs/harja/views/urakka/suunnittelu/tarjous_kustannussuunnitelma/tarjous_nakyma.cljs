@@ -1,10 +1,14 @@
 (ns harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.tarjous-nakyma
-  "Tarjouksen hallinta"
-  (:require [harja.ui.debug :as debug]
-            [harja.ui.grid :as grid]
-            [harja.fmt :as fmt]
+  "Kustannussuunnitelman etusivu määrittää, että renderöidäänkö tarjous vai kustannussuunnitelma"
+  (:require [harja.fmt :as fmt]
+            [harja.ui.debug :as debug]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
-            [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as tarjous-tiedot]))
+            [harja.ui.grid :as grid]
+            [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as tarjous-tiedot]
+            [tuck.core :as tuck]))
 
 (defonce tallenna-painettu (atom false))
 (defonce virheet-atom (atom {}))
@@ -43,18 +47,18 @@
         ;; Otetaan taulukosta yhteenvetorivi pois ennen käsittelyä
         yhteenveto (last tarjouksen-tiedot)
         yhteenveto-rivit (reduce (fn [y rivi]
-                                  (conj y {:teksti (fmt/euro false (:summa rivi)) :tasaa :oikea :luokka "yhteensa lihavoitu"}))
-                                 [{:teksti "Tarjouksen tavoitehinta" :luokka "yhteensa lihavoitu" :yhteenveto-vayla true :tyyppi :euro :fmt #(fmt/euro false %)}]
-                          (:hoitovuosittaiset-arvot yhteenveto))
+                                   (conj y {:teksti (fmt/euro false (:summa rivi)) :tasaa :oikea :luokka "yhteensa lihavoitu"}))
+                           [{:teksti "Tarjouksen tavoitehinta" :luokka "yhteensa lihavoitu" :yhteenveto-vayla true :tyyppi :euro :fmt #(fmt/euro false %)}]
+                           (:hoitovuosittaiset-arvot yhteenveto))
         ;; Lisätään vielä yhteenveto yhteenvetoriviin
         yhteenveto-rivit (conj yhteenveto-rivit
-                              {:teksti (fmt/euro false (:yhteensa yhteenveto))
-                               :luokka "yhteensa lihavoitu"
-                               :tasaa :oikea
-                               :tyyppi :euro
-                               :fmt #(fmt/euro false %)
-                               :muokattava? false
-                               :rivi-disabled? true})
+                           {:teksti (fmt/euro false (:yhteensa yhteenveto))
+                            :luokka "yhteensa lihavoitu"
+                            :tasaa :oikea
+                            :tyyppi :euro
+                            :fmt #(fmt/euro false %)
+                            :muokattava? false
+                            :rivi-disabled? true})
         taulukon-tiedot (reduce (fn [rivit tarjous-rivi]
                                   (let [vuosiarvot (reduce (fn [uusi rivi]
                                                              (-> uusi
@@ -102,6 +106,23 @@
       taulukon-tiedot]
 
      ;; Custom-toteutus. Tallennusnapit on taulukon jälkeen
-     [tallennus-painikkeet e! app]
-     ])
-  )
+     [tallennus-painikkeet e! app]]))
+
+
+(defn nakyma* [e! app]
+  (komp/luo
+    (komp/sisaan #(e! (tarjous-tiedot/->HaeTarjouksenTiedot)))
+    (fn [e! app]
+      [:div
+       (when (:tarjous app)
+         [:div
+          [:div.row
+           [:div.col-xs-12.col-md-6
+            [:h1 "Hoitovuoden alun tavoitehinta"]
+            [:div (-> @tila/yleiset :urakka :nimi)]]]
+          [:div.row
+           [yleiset/info-laatikko :neutraali "Tarkempi kustannusten suunnittelu tehdään tarjouksen tietojen tallentamisen jälkeen." nil nil {:sulje-nappi-id (gensym)}]]
+          [tarjous-nakyma e! app]])])))
+
+(defn tarjous []
+  (tuck/tuck tila/tarjous-kustannussuunnitelma nakyma*))
