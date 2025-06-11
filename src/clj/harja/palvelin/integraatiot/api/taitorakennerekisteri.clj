@@ -62,7 +62,7 @@
           :hae-siltatarkastukset request
           (fn [parametrit kayttaja db]
             (hae-siltatarkastukset db parametrit kayttaja))
-          :analytiikka)))
+          :taitorakenne)))
     this)
 
   (stop [{http :http-palvelin :as this}]
