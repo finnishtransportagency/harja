@@ -5,9 +5,10 @@
             [compojure.core :refer [GET]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-get-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [cheshire.core :as json]
             [clojure.java.io :as io]
             [taoensso.timbre :as log])
@@ -44,8 +45,8 @@
        :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" (:loppuaika parametrit))})))
 
 (defn hae-siltatarkastukset
-  "Hakee siltatarkastukset annettujen alku- ja loppuajan puitteissa.  
-  HOX!! palauttaa vain esimerkkidatan."
+  "Hakee siltatarkastukset annettujen alku- ja loppuajan puitteissa."
+  ;;TODO Toteuta oikea tietokantakysely
   [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
   (log/info "Taitorakennerekisteri API, siltatarkastusten haku, parametrit: " (pr-str parametrit))
   (tarkista-haun-parametrit parametrit)
@@ -57,12 +58,12 @@
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :hae-siltatarkastukset
-      (GET "/api/taitorakennerekisteri/siltatarkastukset/:alkuaika/:loppuaika" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki "trex"
-          :hae-siltatarkastukset request
+      (GET "/api/taitorakennerekisteri/siltatarkastukset/:alkuaika/:loppuaika" parametrit
+        (kasittele-get-kutsu db integraatioloki :hae-siltatarkastukset parametrit
+          json-skeemat/+taitorakennerekisteri-siltatarkastukset-haku-vastaus+
           (fn [parametrit kayttaja db]
             (hae-siltatarkastukset db parametrit kayttaja))
-          :taitorakenne)))
+          :taitorakenne "trex")))
     this)
 
   (stop [{http :http-palvelin :as this}]
