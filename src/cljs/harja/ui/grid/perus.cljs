@@ -358,7 +358,7 @@
 
 (def renderoi-rivia-kerralla 100)
 
-(defn- muokkauspaneeli [{:keys [muokkauspaneeli-alhaalla?
+(defn- muokkauspaneeli [{:keys [muokkauspaneeli-alhaalla? toimintojen-sijainti
                                 nayta-otsikko? muokataan tallenna tiedot muuta-gridia-muokataan?
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 custom-toiminto paneelikomponentit
@@ -368,7 +368,12 @@
                                 raporttivienti raporttiparametrit virhe-viesti raporttivienti-lapinakyva? tallenna-id]} skeema tiedot]
   [:div.panel-heading
    (if-not muokataan
-     [:span.pull-right.muokkaustoiminnot
+     [:span {:class (y/luokat
+                      (case toimintojen-sijainti
+                        ;; mahdollisuus viedä toiminnot vasemmalle, oletus oikealla
+                        :vasen "pull-left"
+                        "pull-right")
+                      "muokkaustoiminnot")}
       ;; Raporttiviennin napit (jos annettu optiona)
       (when raporttivienti
         (assert (or (raporttivienti :pdf) (raporttivienti :excel))
@@ -464,7 +469,12 @@
                        ^{:key i}
                        [komponentti])
           paneelikomponentit))]
-     [:span.pull-right.muokkaustoiminnot
+     [:span {:class (y/luokat
+                      (case toimintojen-sijainti
+                        ;; mahdollisuus viedä toiminnot vasemmalle, oletus oikealla
+                        :vasen "pull-left"
+                        "pull-right")
+                      "muokkaustoiminnot")}
       (when voi-kumota?
         [:button.nappi-toissijainen
          {:disabled (not muokattu?)
@@ -484,7 +494,7 @@
           (y/wrap-if
             validointivirhe
             [y/tooltip {} :% validointivirhe]
-            [:button.nappi-myonteinen.grid-tallenna
+            [:button.nappi-ensisijainen.grid-tallenna
              {:disabled (or validointivirhe
                             (not (empty? (apply concat (vals @virheet))))
                             @tallennus-kaynnissa
@@ -511,16 +521,16 @@
                                          (nollaa-muokkaustiedot!)
                                          (reset! tallennus-kaynnissa false))))))))
               :id tallenna-id}
-             [ui-ikonit/ikoni-ja-teksti (ui-ikonit/tallenna) "Tallenna"]])))
+             "Tallenna"])))
 
       (when-not muokkaa-aina
-        [:button.nappi-kielteinen.grid-peru
+        [:button.nappi-toissijainen.grid-peru
          {:on-click #(do
                        (.preventDefault %)
                        (nollaa-muokkaustiedot!)
                        (when peruuta (peruuta))
                        nil)}
-         [ui-ikonit/ikoni-ja-teksti (ui-ikonit/harja-icon-status-denied) "Peruuta"]])])
+         "Peruuta"])])
    (when nayta-otsikko? [:h6.panel-title otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
@@ -906,6 +916,7 @@
   :aloita-muokkaus-fn                   kutsutaan kun muokkaus alkaa. Kutsuva pää voi tällöin esim. muokata datasisällön eriksi muokkausta varten
   :piilota-toiminnot?                   boolean, piilotetaan toiminnot sarake jos true
   :nayta-toimintosarake?                Näyttää oikealla tyhjän sarakkeen vaikka ei oltaisi muokkaustilassa. Syy: usean taulukon alignointi
+  :toimintojen-sijainti                 :oikea (default) tai :vasen, määrittää mihin toimintonapit sijoitetaan
   :rivin-luokka                         funktio joka palauttaa rivin luokan
   :uusi-rivi                            jos annettu uuden rivin tiedot käsitellään tällä funktiolla
   :vetolaatikot                         {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
@@ -948,7 +959,7 @@
            nollaa-muokkaustiedot-tallennuksen-jalkeen? tallennus-ei-mahdollinen-tooltip
            aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
            taulukko-validointi taulukko-varoitus taulukko-huomautus 
-           piilota-border?] :as opts} skeema tiedot]
+           piilota-border? toimintojen-sijainti] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         taulukon-ref (atom nil)
@@ -1256,7 +1267,8 @@
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti piilota-muokkaus?
                     validoi-fn voi-kumota? raporttivienti raporttiparametrit raporttivienti-lapinakyva? virhe-viesti data-cy reunaviiva?
-                    esta-tiivis-grid? ensimmainen-sarake-sticky? avattavat-rivit sivuttain-rullattava? paneelikomponentit] :as opts}
+                    esta-tiivis-grid? ensimmainen-sarake-sticky? avattavat-rivit sivuttain-rullattava? paneelikomponentit
+                    toimintojen-sijainti] :as opts}
             skeema alkup-tiedot]
         (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
               skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
@@ -1310,7 +1322,7 @@
                                :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
                                :raporttivienti-lapinakyva? raporttivienti-lapinakyva?
                                :validoi-fn validoi-fn :virhe-viesti virhe-viesti
-                               :tallenna-id tallenna-id}
+                               :tallenna-id tallenna-id :toimintojen-sijainti toimintojen-sijainti}
                               skeema
                               tiedot))
            [:div.panel-body
@@ -1376,6 +1388,7 @@
                                          :piilota-toiminnot? piilota-toiminnot?
                                          :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
                                          :nayta-toimintosarake? nayta-toimintosarake?
+                                         :toimintojen-sijainti toimintojen-sijainti
                                          :skeema skeema
                                          :vetolaatikot-auki vetolaatikot-auki
                                          :avattavat-rivit-auki avattavat-rivit-auki
