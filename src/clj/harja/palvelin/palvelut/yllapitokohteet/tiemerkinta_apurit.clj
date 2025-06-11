@@ -167,8 +167,31 @@
    :lisatyo :muu :muutostyo :indeksi :sopimusalueen-muutos
 
    Paitsi :arvomuutos tulee omana rivinään"
-  [rivit]
-  (let [normalisoitu (map
+  [rivit paallystys paikkaus]
+  ;;  (println "\n p: " paallystys "\n p2:" paikkaus)
+  ;; p:  {:pk1 0M, :pk2 0M, :pk3 0M, :ei-tiedossa 50.00M} 
+  ;; p2: {:pk1 0M, :pk2 0M, :pk3 0M, :ei-tiedossa 0M}
+  (let [niputa-muut-kustannukset (fn [r]
+                                   (map (fn [[pk hinta]]
+                                          {:hinta hinta
+                                           :tyyppi :muut
+                                           :yllapitoluokka {:nimi (case pk
+                                                                    :pk1 "PK1"
+                                                                    :pk2 "PK2"
+                                                                    :pk3 "PK3"
+                                                                    :ei-tiedossa "Ei pk-luokkaa")}})
+                                     r))
+
+        ;; TODO 
+        _ (println "\n r: " rivit)
+        _ (println "\n e: " (vec (concat rivit
+                                   (niputa-muut-kustannukset paallystys)
+                                   (niputa-muut-kustannukset paikkaus))))
+        #_#__  (concat rivit
+                 (niputa-muut-kustannukset paallystys)
+                 (niputa-muut-kustannukset paikkaus))
+
+        normalisoitu (map
                        ;; Palautetaan joko :muut tai :arvomuutos 
                        #(assoc % :tyyppi (if (= (:tyyppi %) :arvonmuutos) :arvonmuutos :muut))
                        rivit)

@@ -42,8 +42,8 @@
         rivit (remove #(= (:tyyppi %) :yhteensa) rivit)]
 
     [:<>
-     [:h2 urakka]
      [:h2 vuosi-termi]
+     [:h3 urakka]
 
      [grid/grid {:tyhja (if haku-kaynnissa?
                           [ajax-loader-pieni "Haku käynnissä..."]

@@ -36,7 +36,7 @@
   "Muut kustannukset, Sakot ja bonukset 
    Välilehdet samalla leiskalle, joten yhteinen komponentti"
   [otsikko lisaa-uusi-fn aikavali
-   {:keys [raportti] :as _valinnat} 
+   {:keys [raportti] :as _valinnat}
    muokataan muokkauspaneeli grid haku-kaynnissa? laji-suodatin yhteenveto?]
   ;; Body 
   [:div.tiemerkinta-kustannusten-kirjaus
@@ -53,8 +53,9 @@
     aikavali
 
     ;; Laji
-    [:div.laji (when laji-suodatin "Laji")
-     [:div.kentta (when laji-suodatin laji-suodatin)]]
+    (when laji-suodatin
+      [:div.laji "Laji"
+       [:div.kentta laji-suodatin]])
 
     ;; Lisää uusi 
     (when-not yhteenveto?

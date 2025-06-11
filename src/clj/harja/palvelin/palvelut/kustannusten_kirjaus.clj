@@ -121,6 +121,21 @@
   [db kayttaja {:keys [urakan-tiedot valittu-aikavali kaikki? sopimus] :as _tiedot}]
   (let [urakka-id (:id urakan-tiedot)
         _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
+
+        laske-merkintojen-muut-kustannukset (fn [data]
+                                              ;; TODO 
+                                              ;; Selvityksessä vielä
+                                              (reduce
+                                                (fn [acc {:keys [pk-luokka muut-kustannukset]}]
+                                                  (let [k (case pk-luokka
+                                                            "PK1" :pk1
+                                                            "PK2" :pk2
+                                                            "PK3" :pk3
+                                                            :ei-tiedossa)]
+                                                    (update acc k #(+' (or % 0M) muut-kustannukset))))
+                                                {:pk1 0M :pk2 0M :pk3 0M :ei-tiedossa 0M}
+                                                data))
+
         ;; Tiemerkintöjen korjaus 
         korjaus-kustannukset (hae-tiemerkinta-kustannuskirjaukset db kayttaja {:urakka urakan-tiedot})
         korjaus-kustannukset (apurit/laske-korjaukset korjaus-kustannukset valittu-aikavali)
@@ -128,11 +143,17 @@
         ;; Uusien päällysteiden tiemerkinnät (paikkaus)
         paikkaus-kustannukset (hae-tiemerkinta-paikkausten-kustannukset db kayttaja {:urakka-id urakka-id
                                                                                      :urakka-alkupvm (if kaikki? nil (-> valittu-aikavali first))})
+        ;; Muut kustannukset (paikkaus) TODO
+        paikkaus-muut-kustannukset (laske-merkintojen-muut-kustannukset paikkaus-kustannukset)
+
         paikkaus-kustannukset (apurit/laske-tiemerkintakustannukset paikkaus-kustannukset :paikkausten-merkinnat)
 
         ;; Uusien päällysteiden tiemerkinnät (päällystys)
         paallystys-kustannukset (hae-tiemerkinta-paallystyskohteiden-kustannukset db kayttaja {:urakka-id urakka-id
                                                                                                :urakka-alkupvm (if kaikki? nil (-> valittu-aikavali first))})
+        ;; Muut kustannukset (päällystys) TODO 
+        paallystys-muut-kustannukset (laske-merkintojen-muut-kustannukset paallystys-kustannukset)
+
         paallystys-kustannukset (apurit/laske-tiemerkintakustannukset paallystys-kustannukset :paallysteiden-merkinnat)
 
         ;; Sanktiot ja bonukset
@@ -143,12 +164,12 @@
                                                                                           :loppu     (-> valittu-aikavali second)})
         sanktiot-ja-bonukset (apurit/laske-sakot sanktiot-ja-bonukset)
 
-        ;; Muut kustannukset
+        ;; Muut kustannukset TODO
         muut-kustannukset (yllapito-toteumat/hae-yllapito-toteumat db kayttaja {:urakka  urakka-id
                                                                                 :sopimus sopimus
                                                                                 :alkupvm  (-> valittu-aikavali first)
                                                                                 :loppupvm (-> valittu-aikavali second)})
-        muut-kustannukset (apurit/laske-muut muut-kustannukset)
+        muut-kustannukset (apurit/laske-muut muut-kustannukset paallystys-muut-kustannukset paikkaus-muut-kustannukset)
 
 
         yhteenveto (into [] (concat
