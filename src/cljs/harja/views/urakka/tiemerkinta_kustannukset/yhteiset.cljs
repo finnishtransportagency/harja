@@ -53,13 +53,12 @@
     aikavali
 
     ;; Laji
-    (when laji-suodatin
-      [:div.laji "Laji"
-       [:div.kentta laji-suodatin]])
+    [:div.laji (when laji-suodatin "Laji")
+     [:div.kentta (when laji-suodatin laji-suodatin)]]
 
     ;; Lisää uusi 
     (when-not yhteenveto?
-      [:div
+      [:div.lisaa-uusi
        [napit/uusi "Lisää uusi" lisaa-uusi-fn {:disabled false}]])]
 
    ;; Muokkauspaneeli
