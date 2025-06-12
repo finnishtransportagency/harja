@@ -1,17 +1,14 @@
--- Lisää muokkaustiedot (luoja, luotu, muokkaaja, muokattu), sekä poistettu sarake
-ALTER TABLE kayttajan_lisaoikeudet_urakkaan
-    ADD COLUMN luotu     TIMESTAMP,
-    ADD COLUMN luoja     INTEGER REFERENCES kayttaja (id),
-    ADD COLUMN muokattu  TIMESTAMP                        DEFAULT NULL,
-    ADD COLUMN muokkaaja INTEGER REFERENCES kayttaja (id) DEFAULT NULL,
-    ADD COLUMN poistettu BOOLEAN                          DEFAULT FALSE;
+CREATE TABLE mhu_muutos_rahavarausmuutoksen_syy
+(
+    urakka INTEGER REFERENCES urakka(id) NOT NULL,
+    hoitokauden_alkuvuosi INTEGER NOT NULL,
+    rahavaraus_id INTEGER REFERENCES rahavaraus(id) NOT NULL,
+    syy TEXT,
 
+    luotu     TIMESTAMP DEFAULT NOW(),
+    luoja     INTEGER REFERENCES kayttaja (id),
+    muokattu  TIMESTAMP DEFAULT NULL,
+    muokkaaja INTEGER REFERENCES kayttaja (id) DEFAULT NULL,
 
--- Aseta luoja sarakkeseen arvoksi käyttäjä "Integraatio" kaikille olemassa oleville riveille
-UPDATE toteutuneet_kustannukset
-   SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
- WHERE luoja IS NULL;
-
--- Aseta NOT NULL rajoite "luoja" sarakkeelle
-ALTER TABLE toteutuneet_kustannukset
-    ALTER COLUMN luoja SET NOT NULL;
+    CONSTRAINT unique_urakka_hoitokausi_rahavaraus UNIQUE (urakka, hoitokauden_alkuvuosi, rahavaraus_id)
+);

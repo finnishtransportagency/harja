@@ -207,9 +207,7 @@
       :summa (:tavoitehinnan-muutos yhteenveto)
       :toiminnot (fn [e! app]
                    [::span
-                    [:p rahavarausten-muutokset-aputeksti]
-                    ;; Tämä muokkaus mahdollistaa vain syyn lisäämisen
-                    [napit/uusi "Muokkaa" #(e! (muutos-tiedot/->MuokkaaRahavaraustenMuutoksienSyita))]])
+                    [yleiset/vihje rahavarausten-muutokset-aputeksti]])
       :taulukko
       (fn [e! app]
         [grid/grid
@@ -220,6 +218,7 @@
           :voi-kumota? false
           :voi-poistaa? (constantly false)
           :voi-muokata? true
+          :tallenna #(e! (muutos-tiedot/->TallennaRahavarausmuutostenSyyt %))
           :rivi-jalkeen-fn (fn []
                              [{:teksti "Tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :yhteenveto-vayla true}
                               {:teksti "" :sarakkeita 1 :luokka "yhteensa"}
@@ -228,18 +227,21 @@
                               {:teksti (fmt/euro-opt (:tavoitehinnan-muutos yhteenveto)) :tasaa :oikea :luokka "yhteensa"}])}
 
          ;; taulukon kentät
-         [{:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys 15}
-          {:otsikko "Muutoksen syy" :nimi :syy :tyyppi :string :leveys 25}
+         [{:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys 15 :muokattava? (constantly false)}
+          {:otsikko "Muutoksen syy" :nimi :syy :tyyppi :text
+           :pituus-max 1000 :koko [50 3] :leveys 25}
           {:otsikko "Suunniteltu määrä" :nimi :summa-indeksikorjattu :tyyppi :numero
-           :tasaa :oikea :leveys 10
+           :tasaa :oikea :leveys 10 :muokattava? (constantly false)
            :fmt (fn [arvo]
                   (if arvo
                     (fmt/euro-opt arvo)
                     "Ei indeksikorjattua summaa"))}
           {:otsikko "Toteutunut määrä" :nimi :toteumat :tyyppi :numero
-           :fmt     fmt/euro-opt :tasaa :oikea :leveys 10}
+           :fmt     fmt/euro-opt :tasaa :oikea :leveys 10
+           :muokattava? (constantly false)}
           {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero
-           :fmt     fmt/euro-opt :tasaa :oikea :leveys 10}]
+           :fmt     fmt/euro-opt :tasaa :oikea :leveys 10
+           :muokattava? (constantly false)}]
          rivit])}]))
 
 (def lasketut-muutokset-aputeksti
@@ -249,13 +251,12 @@
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :lasketut-muutokset
     :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :lasketut-muutokset))
-    :otsikko "Tehtävä- ja määräluetteloon perustuvat tavoitehintamuutokset"
+    :otsikko "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"
     :summa (reduce + 0 (map :tavoitehinnan-muutos lasketut-muutokset))
     :toiminnot (fn [e! app]
                  ;; Tämä muokkaus mahdollistaa vain syyn lisäämisen
                  [:span
-                  [:p lasketut-muutokset-aputeksti]
-                  [napit/uusi "Muokkaa" #(e! (muutos-tiedot/->MuokkaaLaskettujenMuutoksienSyita))]])
+                  [yleiset/vihje lasketut-muutokset-aputeksti]])
     :taulukko
     (fn [e! app]
       [grid/grid
@@ -265,7 +266,8 @@
         :voi-lisata? false
         :voi-kumota? false
         :voi-poistaa? (constantly false)
-        :voi-muokata? true}
+        :voi-muokata? true
+        :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
 
        ;; taulukon kentät
        [{:otsikko "Tehtävä" :nimi :tehtava :tyyppi :string :leveys 15}
