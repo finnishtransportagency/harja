@@ -1164,6 +1164,9 @@
 (defn anna-tielupaoikeus [kayttaja]
     (u (format "update kayttaja set api_oikeudet = ARRAY['tielupa'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
 
+(defn anna-taitorakenneoikeus [kayttaja]
+  (u (format "update kayttaja set api_oikeudet = ARRAY['taitorakenne'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
+
 (defn poista-kayttajan-api-oikeudet [kayttaja]
   (u (format "update kayttaja set api_oikeudet = NULL WHERE kayttajanimi = '%s'" kayttaja)))
 

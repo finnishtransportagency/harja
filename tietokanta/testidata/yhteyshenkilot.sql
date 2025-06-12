@@ -319,3 +319,11 @@ INSERT INTO yhteyshenkilo (etunimi, sukunimi, kayttajatunnus, tyopuhelin, matkap
 INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) VALUES
 ((SELECT id FROM yhteyshenkilo WHERE etunimi = 'Tarmo' AND sukunimi = 'Mourunki' LIMIT 1),
  (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'), 'Kunnossapitopäällikkö');
+
+ -- Lisätään Iin MHU 2021-2026 urakkaan yleinen sähköposti ja puhelinnumero
+ INSERT INTO yhteyshenkilo (etunimi, sukunimi, kayttajatunnus, tyopuhelin, matkapuhelin, sahkoposti, organisaatio, sampoid, ulkoinen_id) VALUES
+ ('Urakka', '', null, '', '0501234567', 'urakka@yit.fi',
+ (SELECT id FROM organisaatio where nimi = 'YIT Rakennus Oy'), null, null);
+ INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) VALUES
+ ((SELECT id FROM yhteyshenkilo WHERE etunimi = 'Urakka' AND sukunimi = '' LIMIT 1),
+ (SELECT id FROM urakka WHERE nimi = 'Iin MHU 2021-2026'), 'Urakan yhteystiedot');

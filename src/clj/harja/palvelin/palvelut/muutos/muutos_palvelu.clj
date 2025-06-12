@@ -7,7 +7,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.kyselyt [muutos-kyselyt :as muutos-kyselyt]]
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.konversio :as konv]
+            [harja.tyokalut.yleiset :as yleiset]
             [taoensso.timbre :as log]))
 
 
@@ -19,30 +21,64 @@
             (assoc rivi :tavoitehinnan-muutos total)))
     muutokset))
 
+(defn- rahavarausten-summarivi [rahavaraukset]
+  (let [{:keys [summa-indeksikorjattu toteumat]}
+        (reduce (fn [acc {:keys [summa-indeksikorjattu toteumat]}]
+                  {:summa-indeksikorjattu (+ (:summa-indeksikorjattu acc 0)
+                                            (or summa-indeksikorjattu 0))
+                   :toteumat (+ (:toteumat acc 0)
+                               (or toteumat 0))})
+          {}
+          rahavaraukset)]
+    {:id :yhteenveto
+     :summa-indeksikorjattu summa-indeksikorjattu
+     :toteumat toteumat
+     :tavoitehinnan-muutos (- toteumat summa-indeksikorjattu)}))
+
+
 (defn hae-urakan-muutostiedot
   [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (log/debug "hae-urakan-muutostiedot: " tiedot)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-        vastaus (mapv
-                  (fn [rivi]
-                    (-> rivi
-                      (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
-                      (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
-                      (update :liitteet #(konv/jsonb->clojuremap %))))
-                  (muutos-kyselyt/hae-urakan-hoitovuoden-muutostiedot db {:urakka urakka-id
-                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
-        kirjatut-muutokset (tavoitehinnan-muutos vastaus)
+        kirjatut-muutokset-vastaus (mapv
+                                     (fn [rivi]
+                                       (-> rivi
+                                         (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
+                                         (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
+                                         (update :liitteet #(konv/jsonb->clojuremap %))))
+                                     (muutos-kyselyt/hae-urakan-hoitovuoden-muutostiedot db {:urakka urakka-id
+                                                                                             :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+        kirjatut-muutokset (tavoitehinnan-muutos kirjatut-muutokset-vastaus)
+        rahavarausten-suunnitelmat (map
+                                     #(select-keys % [:id :nimi :summa-indeksikorjattu])
+                                     (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id
+                                                                                                               ;; haetaan vain valitulle hoitovuodelle
+                                                                                                               :alkuvuosi hoitokauden-alkuvuosi
+                                                                                                               :loppuvuosi (inc hoitokauden-alkuvuosi)}))
+        rahavarausten-toteumat (muutos-kyselyt/rahavarausten-toteumat db {:urakka urakka-id
+                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
+        rahavaraukset (yleiset/yhdista-mapit-avaimella rahavarausten-suunnitelmat rahavarausten-toteumat :id)
+        rahavaraukset (mapv
+                        ;; lasketaan erotus vain jos molemmat arvot ovat olemassa
+                        #(if (and (:summa-indeksikorjattu %)
+                               (:toteumat %))
+                           (assoc % :tavoitehinnan-muutos (- (:toteumat %)
+                                                            (:summa-indeksikorjattu %)))
+                           %)
+                        rahavaraukset)
+        rahavaraukset-yhteensa (rahavarausten-summarivi rahavaraukset)
+        rahavaraukset (conj rahavaraukset rahavaraukset-yhteensa)
         budjettitavoiteet (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
-        muutosten-vaikutus-yhteensa (reduce + 0 (map :tavoitehinnan-muutos kirjatut-muutokset))]
-    (prn "Haetut muutostiedot: " kirjatut-muutokset)
-    (prn "Haetut budjettitavoitteet : " budjettitavoiteet)
+        muutosten-vaikutus-yhteensa (reduce + 0
+                                      (concat
+                                        (map :tavoitehinnan-muutos kirjatut-muutokset)
+                                        [(:tavoitehinnan-muutos (last rahavaraukset))]))]
     ;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
     {:kirjatut-muutokset kirjatut-muutokset
      ;; TODO: laskennat lasketuille muutoksille jos hoitokausi 2025-2026 tai jälkeen
      :lasketut-muutokset []
-     ;; TODO: laskennat rahavarausten muutoksille jos hoitokausi 2025-2026 tai jälkeen
-     :rahavarausten-muutokset []
+     :rahavarausten-muutokset rahavaraukset
      ;; TODO: laskennat vanhojen tavoitehintojen muutoksille jos hoitokausi ennen 2025-2026
      :tavoitehinnan-muutokset []
      ;; TODO: laskennat vanhojen suunniteltujen määrien muutoksille jos hoitokausi ennen 2025-2026

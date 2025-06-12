@@ -4,7 +4,8 @@
             [harja.ui.dom :as dom]
             [harja.pvm :as pvm]
             [harja.ui.ikonit :as ikonit]
-            [cljs.core.async :refer [<! timeout]])
+            [cljs.core.async :refer [<! timeout]]
+            [harja.ui.saavutettavuus :as saavutettavuus])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def viestin-nayttoaika-lyhyt 2500)
@@ -131,4 +132,5 @@
                                    :luokka luokka
                                    :nakyvissa? true
                                    :kesto kesto
-                                   :tehty (pvm/nyt)}))))
+                                   :tehty (pvm/nyt)})
+     (saavutettavuus/aseta-aria-live-viesti! viesti))))

@@ -23,7 +23,8 @@
   urakat-laadunseuranta-talvihoitoreititys
   urakat-paikkaukset-toteumat
   urakat-paikkaukset-kustannukset
-  urakat-paikkaukset-paikkauskohteetkustannukset)
+  urakat-paikkaukset-paikkauskohteetkustannukset
+  urakat-suunnittelu-kustannussuunnittelu)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
