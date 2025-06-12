@@ -102,7 +102,8 @@
 
       (concat [{:otsikko "" :nimi :nimi :tyyppi :string :leveys (str nimi-leveys "%") :muokattava? (constantly false)}]
         vuositaulukon-otsikot
-        [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro :fmt #(fmt/euro false %) :leveys (str yhteensa-leveys "%") :tasaa :oikea :muokattava? (constantly false)}])
+        [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro :fmt (fn [arvo]
+                                                                       (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%") :tasaa :oikea :muokattava? (constantly false)}])
       taulukon-tiedot]
 
      ;; Custom-toteutus. Tallennusnapit on taulukon jälkeen
