@@ -6,10 +6,7 @@
 
 (defn hae-tarjouksen-tiedot [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (let [tarjous {:urakka-id urakka-id
-                 :tarjous (tarjous-kyselyt/luo-default-tarjous db urakka-id)}
-        tarjous (tarjous-kyselyt/lisaa-yhteenvetorivi-tarjoukseen tarjous)]
-    tarjous))
+  (tarjous-kyselyt/hae-tarjous db urakka-id))
 
 (defn hae-tyhjat-tarjouksen-tiedot
   "Käyttöliittymässä voidaan tyhjätä tarjouslomake, jolloin halutaan
