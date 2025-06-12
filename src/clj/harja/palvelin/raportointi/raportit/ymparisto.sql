@@ -8,7 +8,8 @@ WITH paikkaustehtavat AS (SELECT tpk4.*
                                  -- "Päällysteiden paikkaus"-tehtävät
                            WHERE tpk3.koodi = '20107'
                              AND tpk4.poistettu IS NOT TRUE
-                             AND tpk4.yksikko = 'tonni')
+                             AND tpk4.yksikko = 'tonni'
+                           OR yksiloiva_tunniste = 'c692284b-4a93-4984-ae87-183292a91440')
 
 SELECT
   u.id AS urakka_id,
