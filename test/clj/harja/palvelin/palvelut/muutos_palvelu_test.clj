@@ -30,7 +30,7 @@
     kayttaja
     tiedot))
 
-(deftest hae-urakan-muutostiedot-ii
+(deftest hae-urakan-kirjatut-muutokset-ii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
         toimenpide-id-paall-paikk (ffirst (q "SELECT id FROM toimenpide WHERE koodi = '20107';")) ; Päällystepaikkaukset
@@ -65,6 +65,31 @@
       "Kaikki muutosrivit löytyvät vastausjoukosta")))
 
 
+(deftest hae-urakan-rahavarausten-muutostiedot-ii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+        odotetut-rahavarausten-muutokset
+        [{:id 1, :toteumat 100000M, :nimi "Äkilliset hoitotyöt", :summa-indeksikorjattu 133200M, :tavoitehinnan-muutos -33200M}
+         {:id 2, :toteumat 1000M, :nimi "Vahinkojen korjaukset", :summa-indeksikorjattu 2640M, :tavoitehinnan-muutos -1640M}
+         {:id 3, :nimi "Tilaajan rahavaraus kannustinjärjestelmään", :summa-indeksikorjattu nil}
+         {:id :yhteenveto, :summa-indeksikorjattu 135840M, :toteumat 101000M, :tavoitehinnan-muutos -34840M}]
+        vastaus (:rahavarausten-muutokset (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                   :valittu-hoitokausi valittu-hoitokausi}))]
+    (is (= (count vastaus) 4) "Rahavarausten muutokset: oikea määrä rivejä")
+    (is (some #{:yhteenveto} (mapv :id vastaus)) "Rahavarausten muutokset: yhteenveto löytyy")
+    (is (= vastaus odotetut-rahavarausten-muutokset) "Rahavarausten muutokset: koko lista odotettuja arvoja")))
+
+
+(deftest hae-urakan-tavoitehinta-muutosten-kokonaissumma-ii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+
+        vastaus (get-in
+                  (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                          :valittu-hoitokausi valittu-hoitokausi})
+                  [:budjettitavoitteet :muutosten-vaikutus-yhteensa])]
+    (is (= vastaus -29840M) "Rahavarausten muutosten kokonaissumma")))
+
 (deftest hae-urakan-muutostiedot-ii-kun-annetuilla-ehdoilla-ei-loydy
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         valittu-hoitokausi-22-23 [(pvm/->pvm "1.10.2022") (pvm/->pvm "30.09.2023")]
@@ -82,13 +107,4 @@
     (is (= (count (:kirjatut-muutokset vastaus-24-25)) 0) "oikea määrä muutoksia 24-25")
     (is (= odotetut-rivit (:kirjatut-muutokset vastaus-22-23) (:kirjatut-muutokset vastaus-23-24) (:kirjatut-muutokset vastaus-24-25)))))
 
-(deftest paivita-muutos-ja-tarkista-historiataulut
-  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
-        toimenpide-id-paall-paikk (ffirst (q "SELECT id FROM toimenpide WHERE koodi = '20107';")) ; Päällystepaikkaukset
-        toimenpide-id-soratiet (ffirst (q "SELECT id FROM toimenpide WHERE koodi = '23124';")) ; Soratiet
-        toimenpide-id-mhu-yllapito (ffirst (q "SELECT id FROM toimenpide WHERE koodi = '20191';")) ; -- MHU Ylläpito
-        liite-id (ffirst (q "SELECT id FROM liite WHERE nimi = 'rumpu.jpg'"))
-        ;; TODO: tähän muutoksen tallennus, sellaiseen riviin joka on testidatassa että aiheutuu UPDATE
-        ;; Assertoidaan datan syntyminen historiatauluihin ja oikeat versiot jne
-        ]))
+
