@@ -62,12 +62,12 @@
   (process-event
     [_ app]
     (tuck-apurit/post! :hae-tarjouksen-tiedot
-                       {:urakka-id (-> @tila/yleiset :urakka :id)}
-                       {:onnistui ->HaeTarjouksenTiedotOnnistui
-                        :epaonnistui ->HaeTarjouksenTiedotEpaonnistui})
+      {:urakka-id (-> @tila/yleiset :urakka :id)}
+      {:onnistui ->HaeTarjouksenTiedotOnnistui
+       :epaonnistui ->HaeTarjouksenTiedotEpaonnistui})
     (-> app
-        (assoc :haku-kaynnissa? true)
-        (assoc :tallennus-kesken? false)))
+      (assoc :haku-kaynnissa? true)
+      (assoc :tallennus-kesken? false)))
 
   HaeTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -84,18 +84,18 @@
   (process-event
     [_ app]
     (tuck-apurit/post! :hae-tyhjat-tarjouksen-tiedot
-                       {:urakka-id (-> @tila/yleiset :urakka :id)}
-                       {:onnistui ->HaeTyhjatTarjouksenTiedotOnnistui
-                        :epaonnistui ->HaeTyhjatTarjouksenTiedotEpaonnistui})
+      {:urakka-id (-> @tila/yleiset :urakka :id)}
+      {:onnistui ->HaeTyhjatTarjouksenTiedotOnnistui
+       :epaonnistui ->HaeTyhjatTarjouksenTiedotEpaonnistui})
     (-> app
-        (assoc :haku-kaynnissa? true)
-        (assoc :tallennus-kesken? false)))
+      (assoc :haku-kaynnissa? true)
+      (assoc :tallennus-kesken? false)))
 
   HaeTyhjatTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
     (-> app
-        (assoc :haku-kaynnissa? false)
-        (assoc :tarjous (:tarjous vastaus))))
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))))
 
   HaeTyhjatTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -148,9 +148,11 @@
   TallennaKilpailutettavatHankinnat
   (process-event
     [{kilpailutettavat-hankinnat :kilpailutettavat-hankinnat} app]
-    (let []
+    (let [vuosi (pvm/vuosi (first (:valittu-hoitokausi app)))]
       (tuck-apurit/post! :tallenna-kilpailutettavat-hankinnat
-        kilpailutettavat-hankinnat
+        {:urakka-id (-> @tila/yleiset :urakka :id)
+         :hoitovuoden-alkuvuosi vuosi
+         :toimenpiteet kilpailutettavat-hankinnat}
         {:onnistui ->TallennaKilpailutettavatHankinnatOnnistui
          :epaonnistui ->TallennaKilpailutettavatHankinnatEpaonnistui})
       (assoc app :tallennus-kesken? true)))
@@ -159,7 +161,9 @@
   (process-event [{:keys [vastaus]} app]
     (-> app
       (assoc :tallennus-kesken? false)
-      (assoc :tarjous (:tarjous vastaus))))
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
 
   TallennaKilpailutettavatHankinnatEpaonnistui
   (process-event [{:keys [vastaus]} app]

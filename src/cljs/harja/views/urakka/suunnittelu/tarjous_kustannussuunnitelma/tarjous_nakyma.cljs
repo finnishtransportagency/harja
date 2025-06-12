@@ -77,7 +77,6 @@
         _ (reset! grid-tiedot-atom taulukon-tiedot)]
 
     [:div
-     [debug/debug app]
      [:hr]
      [:h3 "Tarjouksen tiedot"]
      ;; Custom toteutus - Tallennusnapit on taulukon yläpuolella
@@ -123,7 +122,8 @@
             [:div (-> @tila/yleiset :urakka :nimi)]]]
           [:div.row
            [yleiset/info-laatikko :neutraali "Tarkempi kustannusten suunnittelu tehdään tarjouksen tietojen tallentamisen jälkeen." nil nil {:sulje-nappi-id (gensym)}]]
-          [tarjous-nakyma e! app]])])))
+          [tarjous-nakyma e! app]
+          [debug/debug app]])])))
 
 (defn tarjous []
   (tuck/tuck tila/tarjous-kustannussuunnitelma nakyma*))
