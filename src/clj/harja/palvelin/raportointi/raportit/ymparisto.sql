@@ -9,7 +9,8 @@ WITH paikkaustehtavat AS (SELECT tpk4.*
                            WHERE tpk3.koodi = '20107'
                              AND tpk4.poistettu IS NOT TRUE
                              AND tpk4.yksikko = 'tonni'
-                           OR yksiloiva_tunniste = 'c692284b-4a93-4984-ae87-183292a91440')
+                           OR yksiloiva_tunniste = 'c692284b-4a93-4984-ae87-183292a91440'
+                           OR yksiloiva_tunniste = '1fcb77c3-a9b1-4cd4-b7d7-32c22fe629e8')
 
 SELECT
   u.id AS urakka_id,
