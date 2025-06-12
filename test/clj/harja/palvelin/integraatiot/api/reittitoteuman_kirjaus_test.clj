@@ -488,8 +488,8 @@
     (is (= 403 (:status vastaus-lisays)))))
 
 (deftest tarkista-toteuman-tallentaminen-lisaoikeudella
-  (u "INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja) VALUES (" urakka ", "
-     (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'destia';")) ");")
+  (u "INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja, luoja, luotu) VALUES (" urakka ", "
+     (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'destia';")) "," (:id +kayttaja-jvh+) ", NOW());")
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus "destia")
@@ -681,9 +681,9 @@
                                   WHERE organisaatio=(SELECT hallintayksikko FROM urakka WHERE id=" oulun-alueurakka-id ") AND "
                               "organisaatio=(SELECT hallintayksikko FROM urakka WHERE id=" kajaanin-alueurakka-id ")")))
         ;; Annetaan käyttäjälle lisäoikeudet ja tehdään siitä järjestelmä, jotta api-kutsut menee läpi.
-        _ (u "INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja) VALUES
-        (" oulun-alueurakka-id ", " (ffirst (q (str "SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'"))) "),
-        (" kajaanin-alueurakka-id ", " (ffirst (q (str "SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'"))) ")")
+        _ (u "INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja, luoja, luotu) VALUES
+        (" oulun-alueurakka-id ", " (ffirst (q (str "SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'"))) ", " (:id +kayttaja-jvh+) ", NOW()),
+        (" kajaanin-alueurakka-id ", " (ffirst (q (str "SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'"))) ", " (:id +kayttaja-jvh+) ", NOW())")
         _ (u "UPDATE kayttaja SET jarjestelma = TRUE WHERE kayttajanimi= '" kayttaja "'")
 
         _ (anna-kirjoitusoikeus kayttaja)

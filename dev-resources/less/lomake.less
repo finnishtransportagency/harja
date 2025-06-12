@@ -144,6 +144,24 @@
     width: 100%;
   }
 
+  .muokkaus-modal-napit 
+  {
+    margin-bottom: @valistys-24;
+    
+    .nappi-ensisijainen  {
+        margin-right: 25px;
+    }
+
+    .nappi-toissijainen {
+        float: right;
+        margin-right: 0px;
+    }
+
+    .lomake-poista {
+        float: none;
+    }
+  }
+
   .tieosoite-kentta {
     > table {
       width: 100%;
@@ -229,6 +247,9 @@
 
   &.ei-borderia {
     border: none;
+  }
+  .aputeksti {
+    color:  @harmaa-tumma;
   }
 }
 

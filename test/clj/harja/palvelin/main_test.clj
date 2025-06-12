@@ -140,6 +140,7 @@
     :analytiikan-toteumien-ajastus
     :kustannusten-seuranta
     :komponenttien-tila
+    :muutokset
     :itmf
     :paikkauskohteet
     :valikatselmukset
@@ -170,7 +171,9 @@
     :api-talvihoitoreitit
     :talvihoitoreitit
     :tieosoitteet-hallinta
-    :ajastukset-hallinta})
+    :ajastukset-hallinta
+    :tarjous
+    :api-taitorakennerekisteri})
 
 (def ei-statusta
   #{:metriikka
@@ -229,6 +232,7 @@
     :paikkauskohteet
     :valikatselmukset
     :lupaukset
+    :muutokset
     :urakan-lupausmuistutukset
     :api-analytiikka
     :yleiset-ajastukset
@@ -256,7 +260,9 @@
     :urakkatilanne
     :tieosoitteet-hallinta
     :tiemerkinnan-kustannuskirjaukset
-    :ajastukset-hallinta})
+    :ajastukset-hallinta
+    :tarjous
+    :api-taitorakennerekisteri})
 
 (def hidas-ok-status #{:itmf})
 

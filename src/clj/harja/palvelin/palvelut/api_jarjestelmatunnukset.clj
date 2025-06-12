@@ -58,11 +58,13 @@
   (jdbc/with-db-transaction [c db]
     (doseq [{:keys [id urakka-id poistettu]} oikeudet]
       (if poistettu
-        (q/poista-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:id id})
+        (q/poista-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:id id :muokkaaja (:id user)})
         (if-not (id-olemassa? id)
           (q/luo-jarjestelmatunnukselle-lisaoikeus-urakkaan<! c {:kayttaja kayttaja-id
+                                                                 :luoja (:id user)
                                                                  :urakka urakka-id})
           (q/paivita-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:urakka urakka-id
+                                                                  :muokkaaja (:id user)
                                                                   :id id})))))
   (hae-jarjestelmatunnuksen-lisaoikeudet db user {:kayttaja-id kayttaja-id}))
 

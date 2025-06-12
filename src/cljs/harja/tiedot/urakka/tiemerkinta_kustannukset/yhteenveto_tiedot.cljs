@@ -71,7 +71,8 @@
     :hinta  (reduce + 0 (map #(+
                                (:pienmerkinnat % 0)
                                (:linjamerkinnat % 0)
-                               (:jyrsinnat % 0)) kohteet))}])
+                               (:jyrsinnat % 0)
+                               (:muut-kustannukset % 0)) kohteet))}])
 
 
 (defn sanktiot-ja-muut-yhteen [rivit]

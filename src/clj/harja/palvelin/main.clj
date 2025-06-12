@@ -66,6 +66,7 @@
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
+    [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
@@ -82,6 +83,7 @@
     [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
+    [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
     [harja.palvelin.palvelut.kustannusten-kirjaus :as tiemerkinnan-kustannus-kirjaukset]
     [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
@@ -148,6 +150,7 @@
     [harja.palvelin.integraatiot.api.analytiikka :as analytiikka]
     [harja.palvelin.integraatiot.api.tyomaapaivakirja :as api-tyomaapaivakirja]
     [harja.palvelin.integraatiot.api.talvihoitoreitit-api :as api-talvihoitoreitit]
+    [harja.palvelin.integraatiot.api.taitorakennerekisteri :as taitorakennerekisteri]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
     [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
 
@@ -479,6 +482,9 @@
       :suolarajoitukset (component/using
                           (suolarajoitus-palvelu/->Suolarajoitus)
                           [:http-palvelin :db])
+      :tarjous (component/using
+                          (tarjous-palvelu/->Tarjous)
+                          [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
@@ -494,6 +500,9 @@
       :lupaukset (component/using
                    (lupaus-palvelu/->Lupaus (select-keys asetukset [:kehitysmoodi]))
                    [:http-palvelin :db :fim :api-sahkoposti])
+      :muutokset (component/using
+                   (muutos-palvelu/->Muutos (select-keys asetukset [:kehitysmoodi]))
+                   [:http-palvelin :db])
       :valitavoitteet (component/using
                         (valitavoitteet/->Valitavoitteet)
                         [:http-palvelin :db])
@@ -739,6 +748,10 @@
       :api-talvihoitoreitit (component/using
                               (api-talvihoitoreitit/->TalvihoitoreittiAPI)
                               [:http-palvelin :db :integraatioloki])
+      
+      :api-taitorakennerekisteri (component/using
+                                   (taitorakennerekisteri/->Taitorakennerekisteri)
+                                   [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)

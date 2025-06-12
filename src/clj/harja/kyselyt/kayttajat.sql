@@ -332,24 +332,24 @@ SELECT exists(
 
 -- name: onko-kayttajalla-lisaoikeus-urakkaan
 -- Tarkistaa onko käyttäjälle annettu lisäoikeudet urakkaan
-SELECT exists(
-    SELECT klu.id
-    FROM kayttajan_lisaoikeudet_urakkaan klu
-      JOIN kayttaja k ON klu.kayttaja = k.id
-    WHERE urakka = :urakka
-          AND klu.kayttaja = :kayttaja
-          AND k.poistettu IS NOT TRUE);
+SELECT EXISTS(SELECT klu.id
+                FROM kayttajan_lisaoikeudet_urakkaan klu
+                         JOIN kayttaja k ON klu.kayttaja = k.id
+               WHERE urakka = :urakka
+                 AND klu.kayttaja = :kayttaja
+                 AND k.poistettu IS NOT TRUE
+                 AND klu.poistettu IS NOT TRUE);
 
 -- name: onko-normikayttajalla-lisaoikeus-urakkaan
 -- Tarkistaa onko käyttäjälle annettu lisäoikeudet urakkaan. Sallii myös käyttäjät, joilla ei ole järjestelmäasetuksia eli API käyttöoikeuksia annettu
-SELECT exists(
-               SELECT klu.id
-               FROM kayttajan_lisaoikeudet_urakkaan klu
-                        JOIN kayttaja k ON klu.kayttaja = k.id
+SELECT EXISTS(SELECT klu.id
+                FROM kayttajan_lisaoikeudet_urakkaan klu
+                         JOIN kayttaja k ON klu.kayttaja = k.id
                WHERE urakka = :urakka
                  AND klu.kayttaja = :kayttaja
                  --AND k.jarjestelma IS TRUE
-                 AND k.poistettu IS NOT TRUE);
+                 AND k.poistettu IS NOT TRUE
+                 AND klu.poistettu IS NOT TRUE);
 
 -- name: onko-kayttaja-organisaatiossa
 -- Tarkistaa onko käyttäjä organisaatiossa
