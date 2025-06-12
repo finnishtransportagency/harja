@@ -67,6 +67,7 @@
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
+    [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as uusi-kustannussuunnitelma-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
@@ -484,6 +485,9 @@
       :tarjous (component/using
                           (tarjous-palvelu/->Tarjous)
                           [:http-palvelin :db])
+      :uusi-kustannussuunnitelma (component/using
+                                   (uusi-kustannussuunnitelma-palvelu/->UusiKustannussuunnitelmaPalvelu)
+                                   [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
