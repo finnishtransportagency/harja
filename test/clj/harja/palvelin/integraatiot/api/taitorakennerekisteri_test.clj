@@ -46,3 +46,19 @@
                     [(str "/api/taitorakennerekisteri/siltatarkastukset/" alkuaika "/" loppuaika)]
                     kayttaja portti)]
       (is (= 403 (:status vastaus))))))
+
+(deftest hae-siltatarkastukset-oikeuksien-hallinta
+  (testing "Käyttäjälle annetaan taitorakenne oikeus"
+    (let [alkuaika "2023-01-01T00:00:00+02:00"
+          loppuaika "2023-12-31T23:59:59+02:00"
+          kayttaja-ilman-oikeuksia "yit-rakennus"
+          
+          kutsu-epaonnistuu (api-tyokalut/get-kutsu
+                              [(str "/api/taitorakennerekisteri/siltatarkastukset/" alkuaika "/" loppuaika)]
+                              kayttaja-ilman-oikeuksia portti)
+          _ (anna-taitorakenneoikeus kayttaja-ilman-oikeuksia)
+          kutsu-onnistuu (api-tyokalut/get-kutsu
+                           [(str "/api/taitorakennerekisteri/siltatarkastukset/" alkuaika "/" loppuaika)]
+                           kayttaja-ilman-oikeuksia portti)]
+      (is (= 403 (:status kutsu-epaonnistuu)))
+      (is (= 200 (:status kutsu-onnistuu))))))
