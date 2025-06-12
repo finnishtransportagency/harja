@@ -5,6 +5,7 @@
             [harja.domain.kulut :as kulut]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.kulut.mhu-kulut :as tiedot]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.debug :as debug]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.pvm :as pvm-valinta]
@@ -13,8 +14,9 @@
             [harja.ui.modal :as modal]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.kentat :as kentat]
-            [clojure.string :as str]
-            [harja.pvm :as pvm]))
+            [clojure.string :as str] 
+            [harja.pvm :as pvm]
+            [goog.string :as gstring]))
 
 (def kulu-lukittu-teksti "Hoitokauden välikatselmuksen tavoitehintaan liittyvät päätökset on tehty, joten kuluja ei voi enää lisätä tai muokata.")
 
@@ -456,8 +458,25 @@
       
       (when (and (pvm/onko-hoitovuosi-loppunut?) (not paatos-tehty?))
         [yleiset/info-laatikko :vahva-ilmoitus
-         (str "Hoitovuoden "(pvm/kuluva-hoitovuosi)" kulujen kirjauksen määräpäivä on " (pvm/kulujen-kirjauksen-maarapaiva)) nil "100%" {:luokka "ala-margin-16 max-width-full max-width-full"}])
-
+         [:<>
+          [:div
+           (str (gstring/unescapeEntities "&ensp;&#x2022;&ensp;")
+             "Hoitovuoden " (pvm/kuluva-hoitovuosi)
+             " kulujen kirjauksen määräpäivä on " (pvm/kulujen-kirjauksen-maarapaiva))]
+          [:div.info-laatikko-kohta-vali 
+           (str (gstring/unescapeEntities "&ensp;&#x2022;&ensp;")
+             "Olethan syöttänyt kuluihin liittyvät toteumat?")
+           [:div.info-laatikko-sisennetty-kohta
+            (gstring/unescapeEntities "&ensp;&#x2022;&ensp;")
+            [:span.info-laatikko-teksti-normaali 
+             "Urakoisijan velvollisuuksiin kuuluu ilmoittaa toimenpiteiden toteumat. Voit syöttää tiedot "]
+            [yleiset/linkki "Toteumat" #(siirtymat/avaa-toteumat)]
+            [:span.info-laatikko-teksti-normaali
+             " sivulla."]]]]
+         nil
+         "100%"
+         {:luokka "ala-margin-16 max-width-full max-width-full"}])
+    
       ;; Poista-nappi
       [:div.col-xs-12.col-md-6
        (when (and (not (nil? (:id lomake))) (not kulu-lukittu?))
