@@ -52,7 +52,7 @@
                            (:hoitovuosittaiset-arvot yhteenveto))
         ;; Lisätään vielä yhteenveto yhteenvetoriviin
         yhteenveto-rivit (conj yhteenveto-rivit
-                           {:teksti (fmt/euro false (:yhteensa yhteenveto))
+                           {:teksti (if (:yhteensa yhteenveto) (fmt/euro false (:yhteensa yhteenveto)) "0,00")
                             :luokka "yhteensa lihavoitu"
                             :tasaa :oikea
                             :tyyppi :euro

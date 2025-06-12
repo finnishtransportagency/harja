@@ -39,6 +39,12 @@
 (defrecord TallennaTarjouksenTiedotOnnistui [vastaus])
 (defrecord TallennaTarjouksenTiedotEpaonnistui [vastaus])
 
+;; Tallennetaan kilpailutettavat hankinnat kustannussuunnitelmaan
+(defrecord TallennaKilpailutettavatHankinnat [kilpailutettavat-hankinnat])
+(defrecord TallennaKilpailutettavatHankinnatOnnistui [vastaus])
+(defrecord TallennaKilpailutettavatHankinnatEpaonnistui [vastaus])
+
+
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
 
 (defn hae-kustannussuunnitelman-tiedot
@@ -122,7 +128,7 @@
   HaeKustannussuunnitelmanTiedot
   (process-event
     [_ app]
-    (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app))
+    (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (pvm/vuosi (first (:valittu-hoitokausi app))))
     (-> app
       (assoc :haku-kaynnissa? true)
       (assoc :tallennus-kesken? false)))
@@ -139,6 +145,27 @@
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))
 
+  TallennaKilpailutettavatHankinnat
+  (process-event
+    [{kilpailutettavat-hankinnat :kilpailutettavat-hankinnat} app]
+    (let []
+      (tuck-apurit/post! :tallenna-kilpailutettavat-hankinnat
+        kilpailutettavat-hankinnat
+        {:onnistui ->TallennaKilpailutettavatHankinnatOnnistui
+         :epaonnistui ->TallennaKilpailutettavatHankinnatEpaonnistui})
+      (assoc app :tallennus-kesken? true)))
+
+  TallennaKilpailutettavatHankinnatOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (assoc :tallennus-kesken? false)
+      (assoc :tarjous (:tarjous vastaus))))
+
+  TallennaKilpailutettavatHankinnatEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (assoc app :tallennus-kesken? false))
+
   ValitseHoitokausiKustannussuunnitelmaan
   (process-event [{vuosi :vuosi} app]
     (let [app (-> app
@@ -150,5 +177,5 @@
                 (assoc :haku-kaynnissa? true)
                 (assoc :hoitokauden-alkuvuosi vuosi))]
       ;; Haetaan kaikki välikatselmuksessa tarvittavat tiedot
-      (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app))
+      (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) vuosi)
       (assoc app :haku-kaynnissa? true))))
