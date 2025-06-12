@@ -46,3 +46,7 @@ INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisa
 INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, api_oikeudet, jarjestelma) VALUES
           ('etunimi', 'sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'),
            ARRAY['analytiikka'::apioikeus], true);
+-- Taitorakennerekisterin apien testaamiseksi tarvittava käyttäjä
+INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, api_oikeudet, jarjestelma) VALUES
+          ('etunimi', 'sukunimi', 'taitorakenne-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'),
+           ARRAY['taitorakenne'::apioikeus], true);
