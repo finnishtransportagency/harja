@@ -126,10 +126,9 @@
                                          :down
                                          :right)]
        [:h2 otsikko]]
-      (when-not (= summa :ei-summaa) [:div.summa {:aria-label (str otsikko " yhteensä "
-                                                                summa
-                                                                " euroa")}
-                                      (fmt/euro-opt summa)])]
+      (when-not (= summa :ei-summaa)
+        [:div.summa {:aria-label (str otsikko " yhteensä " summa " euroa")}
+         (fmt/euro-opt summa)])]
      (when sisalto-nakyvissa?
        [:span
         [:div.toiminnot
@@ -203,7 +202,9 @@
   [e! {:keys [rahavarausten-muutokset] :as app}]
   (let [rivit (butlast rahavarausten-muutokset)
         yhteenveto (last rahavarausten-muutokset)
-        suunnittelutiedot-puuttuvat (every? #(nil? (:summa-indeksikorjattu %)) rivit)]
+        suunnittelutiedot-puuttuvat (every? #(or
+                                               (nil? (:summa-indeksikorjattu %))
+                                               (zero? (:summa-indeksikorjattu %))) rivit)]
     [kehystetty-avattava-grid e! app
      {:taulukon-avain :rahavarausten-muutokset
       :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :rahavarausten-muutokset))
@@ -213,7 +214,7 @@
                    [::span
                     [yleiset/vihje rahavarausten-muutokset-aputeksti]
                     (when suunnittelutiedot-puuttuvat
-                      [yleiset/info-laatikko "Suunnittelutiedot puuttuvat tarjouksen tiedoista."])])
+                      [yleiset/toast-viesti "Suunnittelutiedot puuttuvat tarjouksen tiedoista."])])
       :taulukko
       (fn [e! app]
         [grid/grid
