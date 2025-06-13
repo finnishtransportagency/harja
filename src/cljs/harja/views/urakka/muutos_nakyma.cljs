@@ -1,25 +1,23 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
-  (:require [cljs.core.async :refer [<!]]
-            [harja.fmt :as fmt]
-            [harja.ui.ikonit :as ui-ikonit]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.napit :as napit]
-            [reagent.core :refer [atom] :as r]
+  (:require [reagent.core  :as r]
             [tuck.core :as tuck]
-            [harja.domain.muutos-domain :as muutos-domain]
-            [harja.ui.debug :refer [debug]]
+            
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.fmt :as fmt]
+            [harja.ui.napit :as napit]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.ikonit :as ui-ikonit]
             [harja.ui.grid :as grid]
+            [harja.ui.debug :refer [debug]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
-            [harja.loki :refer [log logt]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot])
-  (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+            [harja.domain.muutos-domain :as muutos-domain]
+            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]))
 
 (defn liite-kentta
   "Lomakkeen liitekenttä, joka näyttää liitteiden listauksen ja mahdollistaa uusien liitteiden lisäämisen."
@@ -225,7 +223,7 @@
           :voi-kumota? false
           :voi-poistaa? (constantly false)
           :voi-muokata? true
-          :tallenna #(e! (muutos-tiedot/->TallennaRahavarausmuutostenSyyt %))
+          :tallenna #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaRahavarausmuutostenSyyt %)
           :rivi-jalkeen-fn (fn []
                              [{:teksti "Tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :yhteenveto-vayla true}
                               {:teksti "" :sarakkeita 1 :luokka "yhteensa"}
