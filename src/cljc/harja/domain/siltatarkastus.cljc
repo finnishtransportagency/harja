@@ -13,7 +13,7 @@
     5 "Päällysteen kunto"
     6 "Reunapalkin siisteys ja kunto"
     7 "Reunapalkin liikuntasauma"
-    8 "Reunapalkin ja päälllysteen välisen sauman siisteys ja kunto"
+    8 "Reunapalkin ja päällysteen välisen sauman siisteys ja kunto"
     9 "Sillanpäiden saumat"
     10 "Sillan ja penkereen raja"
     ;; Varusteet ja laitteet
