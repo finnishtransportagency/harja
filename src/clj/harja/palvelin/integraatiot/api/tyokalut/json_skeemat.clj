@@ -65,6 +65,9 @@
 (def +analytiikka-mhu-toteutuneet-kustannukset-vastaus+ "api/schemas/analytiikka-mhu-toteutuneet-kustannukset-haku-response.schema.json")
 (def analytiikka-mhu-toteutuneet-kustannukset-vastaus (tee-validaattori +analytiikka-mhu-toteutuneet-kustannukset-vastaus+))
 
+;; Taitorakennerekisteri
+(def +taitorakennerekisteri-siltatarkastukset-haku-vastaus+ "api/schemas/trex-siltatarkastukset-haku-response.schema.json")
+(def taitorakennerekisteri-siltatarkastukset-haku-vastaus (tee-validaattori +taitorakennerekisteri-siltatarkastukset-haku-vastaus+))
 
 (def +tielupien-haku+ "api/schemas/tielupien-haku-request.schema.json")
 (def tielupien-haku (tee-validaattori "api/schemas/tielupien-haku-request.schema.json"))
