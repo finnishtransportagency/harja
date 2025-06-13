@@ -484,7 +484,7 @@
           (y/wrap-if
             validointivirhe
             [y/tooltip {} :% validointivirhe]
-            [:button.nappi-myonteinen.grid-tallenna
+            [:button.nappi-ensisijainen.grid-tallenna
              {:disabled (or validointivirhe
                             (not (empty? (apply concat (vals @virheet))))
                             @tallennus-kaynnissa
@@ -511,16 +511,16 @@
                                          (nollaa-muokkaustiedot!)
                                          (reset! tallennus-kaynnissa false))))))))
               :id tallenna-id}
-             [ui-ikonit/ikoni-ja-teksti (ui-ikonit/tallenna) "Tallenna"]])))
+             "Tallenna"])))
 
       (when-not muokkaa-aina
-        [:button.nappi-kielteinen.grid-peru
+        [:button.nappi-toissijainen.grid-peru
          {:on-click #(do
                        (.preventDefault %)
                        (nollaa-muokkaustiedot!)
                        (when peruuta (peruuta))
                        nil)}
-         [ui-ikonit/ikoni-ja-teksti (ui-ikonit/harja-icon-status-denied) "Peruuta"]])])
+         "Peruuta"])])
    (when nayta-otsikko? [:h6.panel-title otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
