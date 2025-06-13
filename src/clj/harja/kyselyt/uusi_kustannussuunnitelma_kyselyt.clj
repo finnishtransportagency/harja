@@ -5,5 +5,5 @@
   {:positional? true})
 
 (declare hae-urakan-toimenpiteet hae-kuukausittainen-kiintea-kustannus
-  hae-kiinteat-kustannukset-kuukausittain poista-kiinteat-kustannukset-kuukausittain!
-  tallenna-kiinteat-kustannukset-kuukausittain<! paivita-kiinteat-kustannukset-kuukausittain<!)
+  hae-kiintea-kustannus-kuukausittain poista-kiinteat-kustannukset-kuukausittain!
+  tallenna-kiinteat-kustannukset-kuukaudelta<! paivita-kiinteat-kustannukset-kuukausittain<!)

@@ -17,12 +17,12 @@
         toimenpiteet (suunnitelma-q/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         ;; Kiinteähintaiset kustannukset
         kiinteat (reduce (fn [acc {:keys [nimi toimenpideinstanssi-id] :as toimenpide}]
-                           (let [kiinteat-alkukausi (suunnitelma-q/hae-kiinteat-kustannukset-kuukausittain
+                           (let [kiinteat-alkukausi (suunnitelma-q/hae-kiintea-kustannus-kuukausittain
                                                       db {:sopimus-id sopimus-id
                                                           :kuukaudet [10, 11, 12]
                                                           :vuosi hoitovuoden-alkuvuosi
                                                           :toimenpideinstanssi-id toimenpideinstanssi-id})
-                                 kiinteat-loppukausi (suunnitelma-q/hae-kiinteat-kustannukset-kuukausittain
+                                 kiinteat-loppukausi (suunnitelma-q/hae-kiintea-kustannus-kuukausittain
                                                        db {:sopimus-id sopimus-id
                                                            :kuukaudet [1, 2, 3, 4, 5, 6, 7, 8, 9]
                                                            :vuosi (inc hoitovuoden-alkuvuosi)
@@ -97,7 +97,7 @@
                          :tehtava nil
                          :muokkaaja kayttaja-id})
                       ;; Lisää uusi
-                      (suunnitelma-q/tallenna-kiinteat-kustannukset-kuukausittain<! db
+                      (suunnitelma-q/tallenna-kiinteat-kustannukset-kuukaudelta<! db
                         {:sopimus-id sopimus-id
                          :toimenpideinstanssi-id toimenpideinstanssi-id
                          :vuosi hoitovuoden-alkuvuosi

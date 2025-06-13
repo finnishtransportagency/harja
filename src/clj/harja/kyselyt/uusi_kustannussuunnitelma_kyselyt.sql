@@ -4,7 +4,7 @@ FROM toimenpideinstanssi tpi
          JOIN toimenpide t ON tpi.toimenpide = t.id
 WHERE tpi.urakka = :urakkaid;
 
--- name: hae-kiinteat-kustannukset-kuukausittain
+-- name: hae-kiintea-kustannus-kuukausittain
 SELECT id, vuosi, kuukausi, summa, kiinteahintainen_tyo.summa_indeksikorjattu, toimenpideinstanssi,
        tehtavaryhma, tehtava, sopimus
   FROM kiinteahintainen_tyo
@@ -29,7 +29,7 @@ SELECT id, vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi,
    AND toimenpideinstanssi = :toimenpideinstanssi-id
    AND sopimus = :sopimus-id;
 
--- name: tallenna-kiinteat-kustannukset-kuukausittain<!
+-- name: tallenna-kiinteat-kustannukset-kuukaudelta<!
 INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi,
                                    tehtavaryhma, tehtava, sopimus, luotu, luoja)
 VALUES (:vuosi, :kuukausi, :summa, :summa_indeksikorjattu, :toimenpideinstanssi-id,
