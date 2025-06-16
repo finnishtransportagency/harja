@@ -7,14 +7,18 @@ WHERE tpi.urakka = :urakkaid;
 -- name: hae-kiintea-kustannus-kuukausittain
 SELECT id, vuosi, kuukausi, summa, kiinteahintainen_tyo.summa_indeksikorjattu, toimenpideinstanssi,
        tehtavaryhma, tehtava, sopimus
-  FROM kiinteahintainen_tyo
- WHERE sopimus = :sopimus-id
-   AND vuosi = :vuosi
-   and toimenpideinstanssi = :toimenpideinstanssi-id
-   AND kuukausi in (:kuukaudet);
+FROM kiinteahintainen_tyo
+WHERE sopimus = :sopimus-id
+  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+  and toimenpideinstanssi = :toimenpideinstanssi-id;
 
 -- name: poista-kiinteat-kustannukset-kuukausittain!
-DELETE FROM kiinteahintainen_tyo
+UPDATE kiinteahintainen_tyo
+ SET summa = null,
+     summa_indeksikorjattu = null,
+     muokattu = NOW(),
+     muokkaaja = :muokkaaja
  WHERE sopimus = :sopimus-id
    AND vuosi = :vuosi
    and toimenpideinstanssi = :toimenpideinstanssi-id
