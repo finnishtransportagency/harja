@@ -63,6 +63,7 @@
   (let [tarjous-hankintakustannukset (filter #(= (:osio %) "hankintakustannukset") (:tarjous tarjous))
         tarjous-hankintakustannukset-yhteensa (:yhteensa (first tarjous-hankintakustannukset) 0)
         toimenpiteet (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])
+        valhvistettu? (true? (get-in app [:kustannussuunnitelma :kustannussuunnitelma-vahvistettu?]))
         taulukon-tiedot (butlast toimenpiteet) ;; Jätetään yhteenvetorivi pois tässä kohdassa
         _ (reset! grid-tiedot-atom taulukon-tiedot)
 
@@ -71,6 +72,13 @@
         yht (:yhteensa (last toimenpiteet))
 
         kirjaamatta (- tarjous-hankintakustannukset-yhteensa yht)
+        kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
+        kirjaamatta-rivi (when-not valhvistettu? [^{:luokka "kustannukset-yhteenveto"}
+                                                  {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
+                                                  {:teksti "" :luokka kirjaamatta-luokka}
+                                                  {:teksti "" :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                                                  {:teksti "" :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                                                  {:teksti (fmt/euro false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}])
 
         yhteenveto-rivit [[^{:luokka "kustannukset-yhteenveto"}
                            {:teksti "Yhteensä" :luokka "yhteensa"}
@@ -78,12 +86,7 @@
                            {:teksti (fmt/euro false yht-alkukausi) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                            {:teksti (fmt/euro false yht-loppukausi) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                            {:teksti (fmt/euro false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
-                          [^{:luokka "kustannukset-yhteenveto"}
-                           {:teksti "Kirjaamatta" :luokka "yhteensa"}
-                           {:teksti "" :luokka "yhteensa"}
-                           {:teksti "" :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                           {:teksti "" :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                           {:teksti (fmt/euro false kirjaamatta) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]]]
+                          kirjaamatta-rivi]]
     [:div.kustannussuunnitelma-osio
      [otsikkotiedot e! app]
      [:div.row
