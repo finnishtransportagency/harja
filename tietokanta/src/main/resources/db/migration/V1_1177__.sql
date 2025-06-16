@@ -36,8 +36,7 @@ WITH pakolliset_tehtavat (nimi) AS (
     VALUES
     ('Suolaus'),
     ('Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)'),
-    ('Liukkaudentorjunta hiekoituksella (materiaali)'),
-    ('Ennalta arvaamattomien kuljetusten avustaminen'),
+    ('Liukkaudentorjunta hiekoituksella (materiaali)'), -- TODO: Lisää uusi tehtävä ('Ennalta arvaamattomien kuljetusten avustaminen hiekoituksella (materiaali)),
     ('Vakiokokoisten liikennemerkkien uusiminen,  pelkkä merkki'),
     ('Vakiokokoisten liikennemerkkien uusiminen ja lisääminen merkki tukirakenteineen (60 mm varsi)'),
     ('Vakiokokoisten liikennemerkkien uusiminen ja lisääminen merkki tukirakenteineen (90 mm varsi)'),
