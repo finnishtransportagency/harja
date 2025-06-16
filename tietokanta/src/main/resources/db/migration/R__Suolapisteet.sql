@@ -269,19 +269,21 @@ BEGIN
                                             INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti,
                                                                                   materiaalikoodi,
                                                                                   maara,
-                                                                                  rajoitusalue_id)
+                                                                                  rajoitusalue_id,
+                                                                                  luotu)
                                             VALUES (loydetyt_toteuman_reittipisteet.toteuma, rp.aika, rp.sijainti,
                                                     m.materiaalikoodi, m.maara * suolausalue.osuus,
-                                                    suolausalue.rajoitusalue_id);
+                                                    suolausalue.rajoitusalue_id,current_timestamp);
                                         END IF;
 
                                         IF suolausalue.tyyppi = 'muu' THEN
                                             INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti,
                                                                                   materiaalikoodi,
                                                                                   maara,
-                                                                                  rajoitusalue_id)
+                                                                                  rajoitusalue_id,
+                                                                                  luotu)
                                             VALUES (loydetyt_toteuman_reittipisteet.toteuma, rp.aika, rp.sijainti,
-                                                    m.materiaalikoodi, m.maara * suolausalue.osuus, NULL);
+                                                    m.materiaalikoodi, m.maara * suolausalue.osuus, NULL, current_timestamp);
                                         END IF;
                                     END LOOP;
                             END IF;
