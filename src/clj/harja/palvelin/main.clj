@@ -66,6 +66,7 @@
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
+    [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
@@ -149,6 +150,7 @@
     [harja.palvelin.integraatiot.api.analytiikka :as analytiikka]
     [harja.palvelin.integraatiot.api.tyomaapaivakirja :as api-tyomaapaivakirja]
     [harja.palvelin.integraatiot.api.talvihoitoreitit-api :as api-talvihoitoreitit]
+    [harja.palvelin.integraatiot.api.taitorakennerekisteri :as taitorakennerekisteri]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
     [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
 
@@ -480,6 +482,9 @@
       :suolarajoitukset (component/using
                           (suolarajoitus-palvelu/->Suolarajoitus)
                           [:http-palvelin :db])
+      :tarjous (component/using
+                          (tarjous-palvelu/->Tarjous)
+                          [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
@@ -743,6 +748,10 @@
       :api-talvihoitoreitit (component/using
                               (api-talvihoitoreitit/->TalvihoitoreittiAPI)
                               [:http-palvelin :db :integraatioloki])
+      
+      :api-taitorakennerekisteri (component/using
+                                   (taitorakennerekisteri/->Taitorakennerekisteri)
+                                   [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)

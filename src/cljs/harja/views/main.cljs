@@ -38,7 +38,8 @@
             [harja.pvm :as pvm]
             [harja.ui.napit :as napit]
             [harja.ui.kartta-debug :refer [kartta-layers]]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.ui.saavutettavuus :as saavutettavuus])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -231,6 +232,9 @@
      [modal/modal-container]
      [viesti-container]
      [toast-viesti-container]
+      ;; Aria-live containerit eri prioriteeteille  
+     [saavutettavuus/aria-live-container (:polite @saavutettavuus/aria-viestit) {:kohteliaisuus "polite"}]  
+     [saavutettavuus/aria-live-container (:assertive @saavutettavuus/aria-viestit) {:kohteliaisuus "assertive"}]
      (when @nav/kartta-nakyvissa?
        [kartta-layers korkeus])
 

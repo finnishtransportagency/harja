@@ -1,54 +1,155 @@
 (ns harja.tiedot.hallinta.hairiot
-  (:require [harja.pvm :as pvm]
+  (:require [tuck.core :as tuck]
             [reagent.core :refer [atom]]
-            [cljs.core.async :refer [<!]]
+
+            [harja.ui.viesti :as viesti]
+            [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.hairioilmoitus :as hairio]
-            [harja.tiedot.hairioilmoitukset :as hairio-ui]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.viesti :as viesti])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.tiedot.hairioilmoitukset :as hairio-ui]))
 
+(defonce ^{:private true} nollatut-valinnat {:rivit nil
+                                             :valinnat {}
+                                             :valittu-rivi {}
+                                             :muokataan false
+                                             :haku-kaynnissa? true
+                                             :tallennus-kaynnissa? false
+                                             :asetetaan-hairioilmoitus? false 
+                                             :tuore-hairioilmoitus {:tyyppi :hairio :teksti nil}})
 (def nakymassa? (atom false))
-(def hairiot (atom nil))
-(def asetetaan-hairioilmoitus? (atom false))
 
-(def tyhja-hairioilmoitus {:tyyppi :hairio
-                           :teksti nil
-                           :alkuaika (pvm/nyt)})
 
-(def tuore-hairioilmoitus (atom tyhja-hairioilmoitus))
-(def tallennus-kaynnissa? (atom false))
+(defrecord HaeTiedot [])
+(defrecord HaeTiedotOnnistui [vastaus])
+(defrecord PaivitysEpaonnistui [vastaus])
+(defrecord PaivitysOnnistui [vastaus])
+(defrecord AsetaHairioilmoitus [])
+(defrecord AsetetaanHairioilmoitus [])
+(defrecord TuoreHairioilmoitus [ilmoitus])
+(defrecord KumoaIlmoitus [])
+(defrecord PoistaHairio [id])
+(defrecord PoistaHairioOnnistui [vastaus])
+(defrecord TallennaMuokatut [muokatut])
 
-(defn hae-hairiot []
-  (go (let [vastaus (<! (k/post! :hae-hairioilmoitukset {}))]
-        (if (k/virhe? vastaus)
-          (viesti/nayta! "Häiriöilmoitusten haku epäonnistui" :warn)
-          (reset! hairiot vastaus)))))
 
-(defn aseta-hairioilmoitus [{:keys [tyyppi teksti alkuaika loppuaika]}]
-  (reset! tallennus-kaynnissa? true)
-  (go (let [vastaus (<! (k/post! :aseta-hairioilmoitus {::hairio/tyyppi tyyppi
-                                                        ::hairio/viesti teksti
-                                                        ::hairio/alkuaika alkuaika
-                                                        ::hairio/loppuaika loppuaika}))]
-        (reset! tallennus-kaynnissa? false)
-        (reset! asetetaan-hairioilmoitus? false)
-        (if (or
-              (k/virhe? vastaus)
-              (:virhe (first vastaus)))
-          (viesti/nayta-toast!
-            (str "Häiriöilmoituksen asettaminen epäonnistui!" "\n" (:virhe (first vastaus)))
-            :varoitus
-            (* 60 1000))
-          (do (reset! hairiot vastaus)
-            (reset! tuore-hairioilmoitus tyhja-hairioilmoitus)
-            (hairio-ui/hae-tuorein-hairioilmoitus!))))))
+(defn- epaonnistui [vastaus app]
+  (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
+  (viesti/nayta-toast! "Tietojen haku epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
+  (assoc app 
+    :haku-kaynnissa? false
+    :tallennus-kaynnissa? false
+    :asetetaan-hairioilmoitus? false))
 
-(defn poista-hairioilmoitus [{:keys [id]}]
-  (reset! tallennus-kaynnissa? true)
-  (go (let [vastaus (<! (k/post! :aseta-hairioilmoitus-pois {::hairio/id id}))]
-        (reset! tallennus-kaynnissa? false)
-        (if (k/virhe? vastaus)
-          (viesti/nayta! "Häiriöilmoituksen poistaminen epäonnistui!" :warn)
-          (do (reset! hairiot vastaus)
-            (hairio-ui/hae-tuorein-hairioilmoitus!))))))
+
+(defn hae-tiedot [app]
+  (tuck-apurit/post! app :hae-hairioilmoitukset
+    {}
+    {:onnistui ->HaeTiedotOnnistui
+     :epaonnistui ->PaivitysEpaonnistui}))
+
+
+(defn uusi-hairio 
+  [{:keys [tuore-hairioilmoitus] :as app}]
+  (tuck-apurit/post! app :aseta-hairioilmoitus
+    {::hairio/tyyppi (:tyyppi tuore-hairioilmoitus)
+     ::hairio/viesti (:teksti tuore-hairioilmoitus)
+     ::hairio/alkuaika (:alkuaika tuore-hairioilmoitus)
+     ::hairio/loppuaika (:loppuaika tuore-hairioilmoitus)}
+    {:onnistui ->PaivitysOnnistui
+     :epaonnistui ->PaivitysEpaonnistui}))
+
+
+(defn poista-hairio [id app]
+  (tuck-apurit/post! app :aseta-hairioilmoitus-pois 
+    {::hairio/id id}
+    {:onnistui ->PaivitysOnnistui
+     :epaonnistui ->PaivitysEpaonnistui}))
+
+
+(defn tallenna-muokatut [app muokatut]
+  (tuck-apurit/post! app :tallenna-hairioilmoitukset
+    {:tiedot muokatut}
+    {:onnistui ->PaivitysOnnistui
+     :epaonnistui ->PaivitysEpaonnistui}))
+
+
+(defn- kasittele-hairion-virhe [vastaus app]
+  (if-let [virhe (:virhe (first (filter :virhe vastaus)))]
+    (do
+      (viesti/nayta-toast! virhe :varoitus viesti/viestin-nayttoaika-keskipitka)
+      (hae-tiedot (assoc app
+                    :rivit nil
+                    :haku-kaynnissa? false
+                    :tallennus-kaynnissa? false
+                    :asetetaan-hairioilmoitus? false)))
+    (assoc app
+      :rivit vastaus
+      :haku-kaynnissa? false
+      :tallennus-kaynnissa? false
+      :asetetaan-hairioilmoitus? false)))
+
+
+(extend-protocol tuck/Event
+  
+  HaeTiedot
+  (process-event [_ app]
+    (hae-tiedot app)
+    (->
+      (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
+      (assoc :haku-kaynnissa? true)))
+
+  HaeTiedotOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc app :rivit vastaus))
+
+  PaivitysEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (epaonnistui vastaus app))
+
+  PaivitysOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (hairio-ui/hae-tuorein-hairioilmoitus!)
+    (kasittele-hairion-virhe vastaus app))
+
+  AsetaHairioilmoitus
+  (process-event [_ app]
+    (uusi-hairio app)
+    (-> app
+      (assoc
+        :tallennus-kaynnissa? true
+        :asetetaan-hairioilmoitus? false)))
+
+  AsetetaanHairioilmoitus
+  (process-event [_ app]
+    (assoc app :asetetaan-hairioilmoitus? true))
+
+  TuoreHairioilmoitus
+  (process-event [ilmoitus app]
+    (assoc app :tuore-hairioilmoitus (:ilmoitus ilmoitus)))
+
+  KumoaIlmoitus
+  (process-event [_ app]
+    (assoc app
+      :asetetaan-hairioilmoitus? false
+      :tuore-hairioilmoitus {:tyyppi :hairio :teksti nil}))
+
+  PoistaHairio
+  (process-event [{:keys [id]} app]
+    (poista-hairio id app)
+    (-> app
+      (assoc
+        :tallennus-kaynnissa? false
+        :asetetaan-hairioilmoitus? false)))
+
+  PoistaHairioOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc app
+      :rivit vastaus
+      :haku-kaynnissa? false
+      :tallennus-kaynnissa? false
+      :asetetaan-hairioilmoitus? false
+      :tuore-hairioilmoitus {:tyyppi :hairio :teksti nil}))
+
+  TallennaMuokatut
+  (process-event [{:keys [muokatut]} app]
+    (tallenna-muokatut app muokatut)
+    app))

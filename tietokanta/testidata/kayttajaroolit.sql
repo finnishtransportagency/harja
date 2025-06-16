@@ -21,12 +21,15 @@ INSERT INTO kayttaja_organisaatio_rooli (kayttaja, organisaatio, rooli) VALUES (
 INSERT INTO kayttaja_organisaatio_rooli (kayttaja, organisaatio, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='paajehu'), (SELECT organisaatio FROM kayttaja WHERE kayttajanimi='paajehu'), 'Paakayttaja');
 -- Erillisoikeudet urakoihin
 
-INSERT INTO kayttajan_lisaoikeudet_urakkaan (kayttaja, urakka) VALUES ((SELECT id
-                                                                        FROM kayttaja
-                                                                        WHERE kayttajanimi = 'carement'),
-                                                                       (SELECT id
-                                                                        FROM urakka
-                                                                        WHERE nimi = 'Oulun alueurakka 2014-2019'));
+INSERT INTO kayttajan_lisaoikeudet_urakkaan (kayttaja, urakka, luoja, luotu)
+VALUES ((SELECT id
+           FROM kayttaja
+          WHERE kayttajanimi = 'carement'),
+        (SELECT id
+           FROM urakka
+          WHERE nimi = 'Oulun alueurakka 2014-2019'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+        NOW());
 
 -- Kemin alueurakkaa varten tehdyt mäppäykset
 INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES
