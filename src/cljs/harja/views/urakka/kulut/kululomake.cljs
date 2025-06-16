@@ -100,7 +100,8 @@
       [:div.label-ja-alasveto {:style {:width "320px"}}
        [:span.alasvedon-otsikko "Tehtävä*"]
        [yleiset/livi-pudotusvalikko
-        {:valinta valinta
+        {:data-cy "tehtava-dropdown"
+         :valinta valinta
          :format-fn format-fn
          :pakollinen? true
          :valitse-fn valitse-fn
