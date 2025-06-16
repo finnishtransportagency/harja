@@ -50,8 +50,9 @@
   [db kayttaja urakka-id hoitovuoden-alkuvuosi kilpailutettavat-hankinnat]
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         ; Splittaa alkukauden summat kuukausittain
-        _ (doseq [{:keys [nimi alkukausi loppukausi toimenpideinstanssi-id] :as toimenpide} (butlast kilpailutettavat-hankinnat)]
+        _ (doseq [{:keys [nimi alkukausi loppukausi toimenpideinstanssi-id] :as toimenpide} kilpailutettavat-hankinnat]
             (let [alkukausi (bigdec alkukausi)
+
                   alkukausi-kuukaudet (yleiset/round2 2 (with-precision 4 (/ alkukausi 3)))
                   alkukausi-viimeinen-kuukausi (- alkukausi (* 2 alkukausi-kuukaudet))
                   loppukausi (bigdec loppukausi)
