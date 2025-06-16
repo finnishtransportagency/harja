@@ -70,7 +70,6 @@
                                                   WHERE sopimus = %s
                                                     AND vuosi = %s AND kuukausi IN (10,11,12)"
                                          sopimus-id hoitovuoden-alkuvuosi))]
-                                         sopimus-id hoitovuoden-alkuvuosi))]
 
     (is (= (bigdec tietomallin-alkukausisumma) (bigdec (:summa (first alkukausi-tietokannasta)))))))
 
