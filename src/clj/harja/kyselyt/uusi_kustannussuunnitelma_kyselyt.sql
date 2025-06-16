@@ -24,7 +24,7 @@ UPDATE kiinteahintainen_tyo
    and toimenpideinstanssi = :toimenpideinstanssi-id
    AND kuukausi in (:kuukaudet);
 
--- name: hae-kuukausittainen-kiintea-kustannus
+-- name: hae-kiintea-kustannus-toimenpiteelle-kuukaudelta
 SELECT id, vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi,
        tehtavaryhma, tehtava, sopimus
   FROM kiinteahintainen_tyo

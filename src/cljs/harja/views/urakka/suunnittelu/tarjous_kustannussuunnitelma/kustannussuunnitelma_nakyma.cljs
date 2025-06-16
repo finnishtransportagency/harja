@@ -25,7 +25,8 @@
         tarjous-hankintakustannukset-yhteensa (:yhteensa (first tarjous-hankintakustannukset) 0)
         kilpailutettavat-hankinnat (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])
         kilpailutettavat-hankinnat-yhteensa (:yhteensa (last kilpailutettavat-hankinnat))
-        kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))]
+        kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))
+        indeksikerroin (get-in app [:kustannussuunnitelma :indeksikerroin])]
     [:div
         [:div.row
          [:div.col-xs-12
@@ -49,7 +50,9 @@
 
          [:div.col-xs-12.col-md-3
           [:div.small-text.bold "Indeksikorjattu"]
-          [:div.body-text (if kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (fmt/euro true kilpailutettavat-hankinnat-yhteensa-indeksikorjattu) "0,00 €")]]]
+          [:div.body-text (if kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (fmt/euro true kilpailutettavat-hankinnat-yhteensa-indeksikorjattu) "0,00 €")]
+          [:div.body-text (when indeksikerroin
+                            (str "(" indeksikerroin " * " (if kilpailutettavat-hankinnat-yhteensa (fmt/euro false kilpailutettavat-hankinnat-yhteensa-indeksikorjattu) "0,00 €")" )"))]]]
 
         [:div.row
          [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]

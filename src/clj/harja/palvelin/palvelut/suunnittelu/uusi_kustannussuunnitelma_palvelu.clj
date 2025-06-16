@@ -1,12 +1,12 @@
 (ns harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu
   (:require [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [harja.tyokalut.yleiset :as yleiset]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
             [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]))
 
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
@@ -78,62 +78,11 @@
                                   :indeksikerroin indeksikerroin}}]
     k))
 
-(defn tallenna-kuukausittainen-summa [db kk-jakso alkujakso? nimi viimeinen-summa summa hoitovuoden-alkuvuosi sopimus-id
-                                      toimenpideinstanssi-id kayttaja-id]
-  (let [_ (doseq [kk kk-jakso]
-            (let [summa (cond
-                          (and alkujakso? (= kk 12)) viimeinen-summa
-                          (and (not alkujakso?) (= kk 9)) viimeinen-summa
-                          :else summa)
-                  dbrivi (first (suunnitelma-q/hae-kuukausittainen-kiintea-kustannus db
-                                  {:vuosi hoitovuoden-alkuvuosi
-                                   :kuukausi kk
-                                   :sopimus-id sopimus-id
-                                   :toimenpideinstanssi-id toimenpideinstanssi-id}))
-                  t (if (:id dbrivi)
-                      (suunnitelma-q/paivita-kiinteat-kustannukset-kuukausittain<! db
-                        {:id (:id dbrivi)
-                         :vuosi hoitovuoden-alkuvuosi
-                         :kuukausi kk
-                         :summa summa
-                         :summa_indeksikorjattu nil
-                         :toimenpideinstanssi-id toimenpideinstanssi-id
-                         :tehtavaryhma nil
-                         :tehtava nil
-                         :muokkaaja kayttaja-id})
-                      ;; Lisää uusi
-                      (suunnitelma-q/tallenna-kiinteat-kustannukset-kuukaudelta<! db
-                        {:sopimus-id sopimus-id
-                         :toimenpideinstanssi-id toimenpideinstanssi-id
-                         :vuosi hoitovuoden-alkuvuosi
-                         :kuukausi kk
-                         :summa summa
-                         :summa_indeksikorjattu nil
-                         :tehtavaryhma nil
-                         :tehtava nil
-                         :luoja kayttaja-id}))]))]))
-
 (defn tallenna-kilpailutettavat-hankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/info "tallenna-kilpailutettavat-hankinnat :: tiedot: " tiedot)
-  (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
-        ; Splittaa alkukauden summat kuukausittain
-        _ (doseq [{:keys [nimi alkukausi loppukausi toimenpideinstanssi-id] :as toimenpide} (butlast (:toimenpiteet tiedot))]
-            (let [alkukausi (bigdec alkukausi)
-                  alkukausi-kuukaudet (yleiset/round2 2 (with-precision 4 (/ alkukausi 3)))
-                  alkukausi-viimeinen-kuukausi (- alkukausi (* 2 alkukausi-kuukaudet))
-                  loppukausi (bigdec loppukausi)
-                  loppukausi-kuukaudet (yleiset/round2 2 (with-precision 4 (/ loppukausi 9)))
-                  loppukausi-viimeinen-kuukausi (- loppukausi (* 8 loppukausi-kuukaudet))
-
-                  ;; Tallenna alkujakso
-                  _ (tallenna-kuukausittainen-summa db (range 10 13) true nimi alkukausi-viimeinen-kuukausi alkukausi-kuukaudet
-                      hoitovuoden-alkuvuosi sopimus-id toimenpideinstanssi-id (:id kayttaja))
-                  ;; Tallenna loppujakso
-                  _ (tallenna-kuukausittainen-summa db (range 1 10) false nimi loppukausi-viimeinen-kuukausi loppukausi-kuukaudet
-                      (inc hoitovuoden-alkuvuosi) sopimus-id toimenpideinstanssi-id (:id kayttaja))]))]
-    (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
-
+  (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id hoitovuoden-alkuvuosi (:toimenpiteet tiedot))
+  (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
 
 (defrecord UusiKustannussuunnitelmaPalvelu []
   component/Lifecycle
@@ -145,7 +94,8 @@
     (julkaise-palvelu (:http-palvelin this)
       :tallenna-kilpailutettavat-hankinnat
       (fn [user tiedot]
-        (tallenna-kilpailutettavat-hankinnat (:db this) user tiedot)))
+        (tallenna-kilpailutettavat-hankinnat (:db this) user tiedot))
+      {:kysely-spec ::k-domain/kustannussuunnitelma})
 
     this)
 
