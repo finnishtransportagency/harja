@@ -65,10 +65,11 @@
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitovuoden-alkuvuosi 2024
         tietomallin-alkukausisumma (apply + (map :alkukausi (butlast (:toimenpiteet hankinnat-tietomalli))))
-        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi hankinnat-tietomalli)
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
         alkukausi-tietokannasta (q-map (format "SELECT SUM(summa) as summa FROM kiinteahintainen_tyo
                                                   WHERE sopimus = %s
                                                     AND vuosi = %s AND kuukausi IN (10,11,12)"
+                                         sopimus-id hoitovuoden-alkuvuosi))]
                                          sopimus-id hoitovuoden-alkuvuosi))]
 
     (is (= (bigdec tietomallin-alkukausisumma) (bigdec (:summa (first alkukausi-tietokannasta)))))))
