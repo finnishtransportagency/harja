@@ -180,6 +180,7 @@ SELECT u.id AS urakka_id,
        CASE
            WHEN tk.yksikko = 'tonni'
                THEN 't'
+           ELSE tk.yksikko
            END AS materiaali_yksikko,
        'paikkausmateriaali'::MATERIAALITYYPPI AS materiaali_tyyppi,
        NULL AS kk,
