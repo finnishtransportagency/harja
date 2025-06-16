@@ -155,8 +155,6 @@
                             (s/optional-key :varuste-tuonti-suoritusaika) [s/Num]
                             (s/optional-key :oid-tuonti-suoritusaika) [s/Num]}
 
-   (s/optional-key :labyrintti) {:sms-url s/Str
-                                 :apiavain s/Str}
    (s/optional-key :sms) {:url s/Str
                           :apiavain s/Str
                           :aktiivinen? s/Bool}

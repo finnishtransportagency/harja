@@ -179,15 +179,9 @@
                                      (clojure.string/trim-newline)))
          :oid-tuonti-suoritusaika nil}
 
- ;; LinkSMS eli "Labyrintti", joka on vieläkin vanhempi integraatio (Vanha, poistuva SMS-integraatio)
- ;; TODO: Kun #yliheitto tapahtunut, poista vanhat asetukset ja tee :sms-integraatiosta pysyvästi aktiivinen
- :labyrintti {:sms-url "https://api.testivaylapilvi.fi/harja/sms/send"
-              :apiavain ""} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
-
- ;; Uusi SMS-integraatio
+ ;; SMS-integraatio tekstiviestien lähetykseen
  :sms {:url "https://api.testivaylapilvi.fi/harja/sms/"
-       :apiavain ""
-       :aktiivinen? #=(eval (harja.tyokalut.env/env "HARJA_SMS_AKTIIVINEN" true))}
+       :apiavain ""}
 
  ;; ClamAV-palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}
@@ -256,4 +250,3 @@
  :palautevayla {:url "https://fipadev.service-now.com"
                 :apiavain ""
                 :paivitysaika [12 45 00]}}
-
