@@ -143,16 +143,12 @@
         ;; Uusien päällysteiden tiemerkinnät (paikkaus)
         paikkaus-kustannukset (hae-tiemerkinta-paikkausten-kustannukset db kayttaja {:urakka-id urakka-id
                                                                                      :urakka-alkupvm (if kaikki? nil (-> valittu-aikavali first))})
-        ;; Muut kustannukset (paikkaus) TODO
-        paikkaus-muut-kustannukset (laske-merkintojen-muut-kustannukset paikkaus-kustannukset)
 
         paikkaus-kustannukset (apurit/laske-tiemerkintakustannukset paikkaus-kustannukset :paikkausten-merkinnat)
 
         ;; Uusien päällysteiden tiemerkinnät (päällystys)
         paallystys-kustannukset (hae-tiemerkinta-paallystyskohteiden-kustannukset db kayttaja {:urakka-id urakka-id
                                                                                                :urakka-alkupvm (if kaikki? nil (-> valittu-aikavali first))})
-        ;; Muut kustannukset (päällystys) TODO 
-        paallystys-muut-kustannukset (laske-merkintojen-muut-kustannukset paallystys-kustannukset)
 
         paallystys-kustannukset (apurit/laske-tiemerkintakustannukset paallystys-kustannukset :paallysteiden-merkinnat)
 
@@ -164,12 +160,12 @@
                                                                                           :loppu     (-> valittu-aikavali second)})
         sanktiot-ja-bonukset (apurit/laske-sakot sanktiot-ja-bonukset)
 
-        ;; Muut kustannukset TODO
+        ;; Muut kustannukset 
         muut-kustannukset (yllapito-toteumat/hae-yllapito-toteumat db kayttaja {:urakka  urakka-id
                                                                                 :sopimus sopimus
                                                                                 :alkupvm  (-> valittu-aikavali first)
                                                                                 :loppupvm (-> valittu-aikavali second)})
-        muut-kustannukset (apurit/laske-muut muut-kustannukset paallystys-muut-kustannukset paikkaus-muut-kustannukset)
+        muut-kustannukset (apurit/laske-muut muut-kustannukset)
 
 
         yhteenveto (into [] (concat

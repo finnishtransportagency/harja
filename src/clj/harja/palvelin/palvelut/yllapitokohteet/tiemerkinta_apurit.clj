@@ -121,10 +121,11 @@
   (let [ryhmat (group-by :pk-luokka kustannukset)
         laske-summa-fn (fn [luokka]
                          ;; Summaa kaikki kustannukset pk luokan mukaan 
-                         (reduce + 0 (map (fn [{:keys [pienmerkinnat linjamerkinnat jyrsinnat]}]
+                         (reduce + 0 (map (fn [{:keys [pienmerkinnat linjamerkinnat jyrsinnat muut-kustannukset]}]
                                             (+ (or pienmerkinnat 0)
                                                (or linjamerkinnat 0)
-                                               (or jyrsinnat 0)))
+                                               (or jyrsinnat 0)
+                                               (or muut-kustannukset 0)))
                                        (get ryhmat luokka))))
 
         pk1-hinta (laske-summa-fn "PK1")
@@ -167,31 +168,8 @@
    :lisatyo :muu :muutostyo :indeksi :sopimusalueen-muutos
 
    Paitsi :arvomuutos tulee omana rivinään"
-  [rivit paallystys paikkaus]
-  ;;  (println "\n p: " paallystys "\n p2:" paikkaus)
-  ;; p:  {:pk1 0M, :pk2 0M, :pk3 0M, :ei-tiedossa 50.00M} 
-  ;; p2: {:pk1 0M, :pk2 0M, :pk3 0M, :ei-tiedossa 0M}
-  (let [niputa-muut-kustannukset (fn [r]
-                                   (map (fn [[pk hinta]]
-                                          {:hinta hinta
-                                           :tyyppi :muut
-                                           :yllapitoluokka {:nimi (case pk
-                                                                    :pk1 "PK1"
-                                                                    :pk2 "PK2"
-                                                                    :pk3 "PK3"
-                                                                    :ei-tiedossa "Ei pk-luokkaa")}})
-                                     r))
-
-        ;; TODO 
-        _ (println "\n r: " rivit)
-        _ (println "\n e: " (vec (concat rivit
-                                   (niputa-muut-kustannukset paallystys)
-                                   (niputa-muut-kustannukset paikkaus))))
-        #_#__  (concat rivit
-                 (niputa-muut-kustannukset paallystys)
-                 (niputa-muut-kustannukset paikkaus))
-
-        normalisoitu (map
+  [rivit]
+  (let [normalisoitu (map
                        ;; Palautetaan joko :muut tai :arvomuutos 
                        #(assoc % :tyyppi (if (= (:tyyppi %) :arvonmuutos) :arvonmuutos :muut))
                        rivit)

@@ -105,8 +105,7 @@ SELECT paivita_pohjavesialueet();
 \i testidata/yllapito/yllapito_toteumat.sql
 
 -- Tiemerkinnät 
--- TODO lisää tämä, ja korjaa testit 
--- \i testidata/yllapito/tiemerkinta.sql
+\i testidata/yllapito/tiemerkinta.sql
 
 -- Päivitä päällystys & paikkausurakoiden geometriat kohdeluetteloiden perusteella
 SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
