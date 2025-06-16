@@ -122,9 +122,7 @@
         :tyyppi :string
         :pakollinen? true}]
       emailapi]
-     [:h2 "Lähetä tekstiviesti LinkMobilityn LinkSMS-palvelulla."]
-     ;; TODO: Kun #yliheitto ok, poista viittaus vanhaan SMS-integraatioon
-     [:p "LinkSMS-palveusta on Harjassa usein käytetty vanhaa nimeä Labyrintti. Labyrintti korvautuu uudella SMS-integraatiolla, jota voi testata tässä mikäli uusi SMS-integraatio on aktiivinen." ]
+     [:h2 "Lähetä tekstiviesti SMS-integraation kautta."]
      [lomake/lomake
       {:ei-borderia? true
        :tarkkaile-ulkopuolisia-muutoksia? true
