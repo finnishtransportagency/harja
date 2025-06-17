@@ -2,6 +2,7 @@
   (:require [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
@@ -9,48 +10,46 @@
             [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
             [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]))
 
-(defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-  (log/info "hae-kustannussuunnitelman-tiedot :: tiedot: " tiedot)
+(defn hae-kiinteat-kustannukset [db urakka-id hoitovuoden-alkuvuosi]
   (let [;; Urakan sopimus id
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         ;; Haetaan urakan toimenpiteet
         toimenpiteet (suunnitelma-q/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         ;; Kiinteähintaiset kustannukset
         kiinteat (reduce (fn [acc {:keys [nimi toimenpideinstanssi-id] :as toimenpide}]
-                           (let [kiinteat (suunnitelma-q/hae-kiintea-kustannus-kuukausittain
-                                                      db {:sopimus-id sopimus-id
-                                                          :vuosi hoitovuoden-alkuvuosi
-                                                          :toimenpideinstanssi-id toimenpideinstanssi-id})
-                                 kiinteat-alkukausi (filter #(>= (:kuukausi %) 10) kiinteat)
-                                 kiinteat-loppukausi (filter #(<= (:kuukausi %) 9) kiinteat)
-                                 alkukausi (if (seq kiinteat-alkukausi) (apply + (map :summa kiinteat-alkukausi)) 0)
-                                 alkukausi-indeksikorjattu (if (seq kiinteat-alkukausi)
-                                                             (apply + (map (fn [rivi]
-                                                                             (if (:summa_indeksikorjattu rivi)
-                                                                               (:summa_indeksikorjattu rivi)
-                                                                               0))
-                                                                        kiinteat-loppukausi))
-                                                             0)
-                                 loppukausi (if (seq kiinteat-loppukausi) (apply + (map :summa kiinteat-loppukausi)) 0)
-                                 loppukausi-indeksikorjattu (if (seq kiinteat-loppukausi)
-                                                              (apply + (map (fn [rivi]
-                                                                              (if (:summa_indeksikorjattu rivi)
-                                                                                (:summa_indeksikorjattu rivi)
-                                                                                0))
-                                                                         kiinteat-loppukausi))
-                                                              0)]
-                             (conj acc {:nimi nimi
-                                        :toimenpideinstanssi-id toimenpideinstanssi-id
-                                        :alkukausi alkukausi
-                                        :alkukausi-indeksikorjattu alkukausi-indeksikorjattu
-                                        :loppukausi loppukausi
-                                        :loppukausi-indeksikorjattu loppukausi-indeksikorjattu
-                                        :yhteensa (+ alkukausi loppukausi)
-                                        :yhteensa-indeksikorjattu (+ alkukausi-indeksikorjattu loppukausi-indeksikorjattu)
-                                        :pysyvat-muutokset "Ei muutoksia"})))
-                   []
-                   toimenpiteet)
+                  (let [kiinteat (suunnitelma-q/hae-kiintea-kustannus-kuukausittain
+                                   db {:sopimus-id sopimus-id
+                                       :vuosi hoitovuoden-alkuvuosi
+                                       :toimenpideinstanssi-id toimenpideinstanssi-id})
+                        kiinteat-alkukausi (filter #(>= (:kuukausi %) 10) kiinteat)
+                        kiinteat-loppukausi (filter #(<= (:kuukausi %) 9) kiinteat)
+                        alkukausi (if (seq kiinteat-alkukausi) (apply + (map :summa kiinteat-alkukausi)) 0)
+                        alkukausi-indeksikorjattu (if (seq kiinteat-alkukausi)
+                                                    (apply + (map (fn [rivi]
+                                                                    (if (:summa_indeksikorjattu rivi)
+                                                                      (:summa_indeksikorjattu rivi)
+                                                                      0))
+                                                               kiinteat-loppukausi))
+                                                    0)
+                        loppukausi (if (seq kiinteat-loppukausi) (apply + (map :summa kiinteat-loppukausi)) 0)
+                        loppukausi-indeksikorjattu (if (seq kiinteat-loppukausi)
+                                                     (apply + (map (fn [rivi]
+                                                                     (if (:summa_indeksikorjattu rivi)
+                                                                       (:summa_indeksikorjattu rivi)
+                                                                       0))
+                                                                kiinteat-loppukausi))
+                                                     0)]
+                    (conj acc {:nimi nimi
+                               :toimenpideinstanssi-id toimenpideinstanssi-id
+                               :alkukausi alkukausi
+                               :alkukausi-indeksikorjattu alkukausi-indeksikorjattu
+                               :loppukausi loppukausi
+                               :loppukausi-indeksikorjattu loppukausi-indeksikorjattu
+                               :yhteensa (+ alkukausi loppukausi)
+                               :yhteensa-indeksikorjattu (+ alkukausi-indeksikorjattu loppukausi-indeksikorjattu)
+                               :pysyvat-muutokset "Ei muutoksia"})))
+          []
+          toimenpiteet)
         ;; Yhteenvetorivi
         yhteenveto {:nimi "Yhteensä"
                     :alkukausi (apply + (map :alkukausi kiinteat))
@@ -60,8 +59,23 @@
                     :yhteensa (+ (apply + (map :alkukausi kiinteat)) (apply + (map :loppukausi kiinteat)))
                     :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu kiinteat)) (apply + (map :loppukausi-indeksikorjattu kiinteat)))
                     :pysyvat-muutokset "Ei muutoksia"}
-        kiinteat (conj kiinteat yhteenveto)
+        kiinteat (conj kiinteat yhteenveto)]
+    kiinteat))
 
+(defn jasenna-rahavaraukset-tarjouksesta [tarjous hoitovuoden-alkuvuosi]
+  (let [; haetaan urakan rahavaraukset
+        rahavaraukset (filter #(= "tavoitehintaiset-rahavaraukset" (:osio %)) (:tarjous tarjous))
+        rahavaraus-rivit (reduce (fn [lopulliset rahavaraus]
+                                   (let [vuosittainen-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot rahavaraus))))]
+                                     (vec (concat lopulliset [{:nimi (:nimi rahavaraus) :summa vuosittainen-summa :summa-indeksikorjattu nil}]))))
+                           [] rahavaraukset)]
+    rahavaraus-rivit))
+
+
+(defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  (log/info "hae-kustannussuunnitelman-tiedot :: tiedot: " tiedot)
+  (let [kiinteat (hae-kiinteat-kustannukset db urakka-id hoitovuoden-alkuvuosi)
         ;; Indeksikerroin
         indeksikerroin (:indeksikerroin
                          (first
@@ -71,10 +85,14 @@
 
         ;; Hae tarjouksen tiedot
         tarjous (tarjous-kyselyt/hae-tarjous db urakka-id)
+        _ (println "tarjous: " tarjous)
+        ;; Jäsennä rahavaraukset tarjouksesta
+        rahavaraukset (jasenna-rahavaraukset-tarjouksesta tarjous hoitovuoden-alkuvuosi)
 
         k {:urakka-id urakka-id
            :tarjous tarjous
            :kustannussuunnitelma {:kilpailutettavat-hankinnat {:toimenpiteet kiinteat}
+                                  :rahavaraukset rahavaraukset
                                   :indeksikerroin indeksikerroin}}]
     k))
 
