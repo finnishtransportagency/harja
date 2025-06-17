@@ -51,3 +51,55 @@ SET vuosi = :vuosi,
     muokattu = NOW(),
     muokkaaja = :muokkaaja
 WHERE id = :id;
+
+-- name: hae-erillishankinta-kuukausittain
+SELECT id,
+       kuukausi,
+       vuosi,
+       summa,
+       summa_indeksikorjattu,
+       toimenpideinstanssi,
+       tehtavaryhma,
+       tehtava,
+       sopimus
+FROM kustannusarvioitu_tyo
+WHERE sopimus = :sopimus-id
+  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+  and toimenpideinstanssi = :toimenpideinstanssi-id
+  AND tehtavaryhma = :tehtavaryhma-id;
+
+-- name: hae-toimenpideinstanssi-koodilla
+SELECT tpi.id, tpi.toimenpide, t.nimi, t.koodi
+FROM toimenpideinstanssi tpi
+         JOIN toimenpide t ON tpi.toimenpide = t.id
+WHERE tpi.urakka = :urakka-id
+  AND t.koodi = :koodi;
+
+-- name: hae-kuukauden-erillishankinta
+SELECT id,
+       kuukausi,
+       vuosi,
+       summa,
+       summa_indeksikorjattu,
+       toimenpideinstanssi,
+       tehtavaryhma,
+       tehtava,
+       sopimus
+FROM kustannusarvioitu_tyo
+WHERE id = :id;
+
+-- name: paivita-kuukauden-erillishankinta<!
+UPDATE kustannusarvioitu_tyo
+SET summa                 = :summa,
+    summa_indeksikorjattu = :summa_indeksikorjattu,
+    muokkaaja             = :muokkaaja,
+    muokattu              = NOW()
+WHERE id = :id;
+
+-- name: tallenna-kuukauden-erillishankinta<!
+INSERT INTO kustannusarvioitu_tyo (kuukausi, vuosi, summa, summa_indeksikorjattu,
+                                    toimenpideinstanssi, tehtavaryhma, sopimus, tyyppi, osio, luoja, luotu)
+VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
+        :toimenpideinstanssi-id, :tehtavaryhma-id, :sopimus-id,
+        'laskutettava-tyo', 'erillishankinnat', :luoja, NOW());
