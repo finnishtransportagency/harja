@@ -122,20 +122,6 @@
   (let [urakka-id (:id urakan-tiedot)
         _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
 
-        laske-merkintojen-muut-kustannukset (fn [data]
-                                              ;; TODO 
-                                              ;; Selvityksessä vielä
-                                              (reduce
-                                                (fn [acc {:keys [pk-luokka muut-kustannukset]}]
-                                                  (let [k (case pk-luokka
-                                                            "PK1" :pk1
-                                                            "PK2" :pk2
-                                                            "PK3" :pk3
-                                                            :ei-tiedossa)]
-                                                    (update acc k #(+' (or % 0M) muut-kustannukset))))
-                                                {:pk1 0M :pk2 0M :pk3 0M :ei-tiedossa 0M}
-                                                data))
-
         ;; Tiemerkintöjen korjaus 
         korjaus-kustannukset (hae-tiemerkinta-kustannuskirjaukset db kayttaja {:urakka urakan-tiedot})
         korjaus-kustannukset (apurit/laske-korjaukset korjaus-kustannukset valittu-aikavali)
