@@ -27,7 +27,7 @@
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00}) vuodet)
         ;; Lisätään default tarjoukseen Kilpailutettavat hankinnat, Erillishankinnat ja Hoidonjohtopalkkio
         tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset"  :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
-                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 60.00}
+                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}
                  {:nimi "Erillishankinnat", :osio "erillishankinnat"  :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
                   :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
                  {:nimi "Hoidonjohtopalkkio" :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
