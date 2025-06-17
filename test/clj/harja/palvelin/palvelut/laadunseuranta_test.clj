@@ -63,9 +63,7 @@
                                                                            :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])
                         :sms (component/using (sms/luo-tekstiviesti-komponentti
-                                                       ;; Uusi SMS-integraatio aktiivinen ja korvaa siten vanhan käytössä
-                                                       {:url +testi-sms-url+ :apiavain "testiapiavain" :aktiivinen? true}
-                                                       {:sms-url +testi-sms-url+ :apiavain "testiapiavain"})
+                                                {:url +testi-sms-url+ :apiavain "testiapiavain"})
                                       [:http-palvelin :db :integraatioloki])
                         :laadunseuranta (component/using
                                           (ls/->Laadunseuranta)

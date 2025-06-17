@@ -369,11 +369,9 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
     ;; sarakkeet
     [{:tyyppi :vetolaatikon-tila :leveys 1}
      {:otsikko "Nimi" :nimi :materiaali_nimi :hae (comp :nimi :materiaali) :leveys 10}
-     {:otsikko "Yksik\u00ADkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys 2}
-     {:otsikko "Suunniteltu määrä" :nimi :sovittu_maara :hae :maara
-      :tyyppi :numero :desimaalien-maara 2 :leveys 4 :tasaa :oikea}
+     {:otsikko "Yksik\u00ADkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys 3}
      {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara
-      :tyyppi :numero :desimaalien-maara 2 :leveys 4 :tasaa :oikea}
+      :tyyppi :numero :desimaalien-maara 2 :leveys 6 :tasaa :oikea}
      {:otsikko "Jäljellä" :nimi :materiaalierotus :tyyppi :komponentti :tasaa :oikea
       :muokattava? (constantly false) :leveys 4
       :komponentti
