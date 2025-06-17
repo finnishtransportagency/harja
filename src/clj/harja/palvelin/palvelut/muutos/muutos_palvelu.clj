@@ -59,6 +59,9 @@
         rahavarausten-toteumat (muutos-kyselyt/rahavarausten-toteumat db {:urakka urakka-id
                                                                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         rahavaraukset (yleiset/yhdista-mapit-avaimella rahavarausten-suunnitelmat rahavarausten-toteumat :id)
+        rahavarausmuutosten-syyt (muutos-kyselyt/rahavarausmuutosten-syyt db {:urakka urakka-id
+                                                                              :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
+        rahavaraukset (yleiset/yhdista-mapit-avaimella rahavaraukset rahavarausmuutosten-syyt :id)
         rahavaraukset (mapv
                         ;; lasketaan erotus vain jos molemmat arvot ovat olemassa
                         #(if (and (:summa-indeksikorjattu %)
@@ -103,6 +106,22 @@
       ;; TODO: muutoksen tallennus tähän
       )))
 
+(defn tallenna-rahavarausmuutosten-syyt
+  [db user {:keys [urakka-id valittu-hoitokausi rivit]}]
+  (log/debug "Tallenna rahavarausmuutosten syyt" urakka-id valittu-hoitokausi rivit)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))]
+    (jdbc/with-db-transaction [db db]
+      (doseq [{:keys [id syy]} rivit]
+        (muutos-kyselyt/upsert-rahavarausmuutosten-syyt!
+          db
+          {:urakka urakka-id
+           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+           :rahavaraus_id id
+           :syy syy
+           :kayttaja (:id user)}))
+      (hae-urakan-muutostiedot db user {:urakka-id urakka-id
+                                        :valittu-hoitokausi valittu-hoitokausi}))))
 
 (defrecord Muutos [asetukset]
   component/Lifecycle
@@ -122,10 +141,16 @@
       (fn [user tiedot]
         (tallenna-muutos (:db this) user tiedot)))
 
+    (julkaise-palvelu (:http-palvelin this)
+      :tallenna-rahavarausmuutosten-syyt
+      (fn [user tiedot]
+        (tallenna-rahavarausmuutosten-syyt (:db this) user tiedot)))
+
     this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
       :hae-urakan-muutostiedot
-      :tallenna-muutos)
+      :tallenna-muutos
+      :tallenna-rahavarausmuutosten-syyt)
     this))
