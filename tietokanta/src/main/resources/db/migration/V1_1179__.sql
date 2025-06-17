@@ -1,6 +1,6 @@
--- Lisätään uusi sarake, joka määrittää onko tehtävän valinta pakollinen uutta kulua luotaessa
+-- Lisätään uusi sarake, maaramitattava? joka voi hyödyntää tarkasteluun onko tehtävän valinta pakollinen uutta kulua luotaessa
 ALTER TABLE tehtava 
-ADD COLUMN pakollinen_uudessa_kulussa BOOLEAN DEFAULT FALSE;
+ADD COLUMN "maaramitattava?" BOOLEAN DEFAULT FALSE;
 
 -- Lisätään uusi sarake tehtavalle kohdistus-tauluun, joka viittaa tehtävään
 ALTER TABLE kulu_kohdistus 
@@ -88,7 +88,7 @@ WITH pakolliset_tehtavat (nimi) AS (
     ('Pysäkkikatoksen poistaminen')
 )
 UPDATE tehtava t
-SET pakollinen_uudessa_kulussa = true,
+SET "maaramitattava?"   = true,
     muokattu            = current_timestamp,
     muokkaaja           = (select id from kayttaja where kayttajanimi = 'Integraatio')
 FROM pakolliset_tehtavat vt

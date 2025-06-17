@@ -441,7 +441,7 @@
                       :tehtavaryhma-id tehtavaryhma-id}) 
           db-tehtavien-lkm (ffirst (q (str "SELECT count(*) FROM tehtava t
                                                         WHERE t.tehtavaryhma = " tehtavaryhma-id "
-                                                        AND t.pakollinen_uudessa_kulussa is true
+                                                        AND t.\"maaramitattava?\" is true
                                                         AND t.\"mhu-tehtava?\" is true
                                                         AND t.poistettu is not true 
                                                         AND t.piilota is not true;")))]
@@ -450,7 +450,7 @@
       (is (= (count tehtavat) db-tehtavien-lkm) "Palauttaa oikean määrän tehtäviä")
       (is (every? #(contains? % :id) tehtavat) "Jokaisella tehtävällä on id")
       (is (every? #(contains? % :nimi) tehtavat) "Jokaisella tehtävällä on nimi")
-      (is (every? #(true? (:pakollinen-uudessa-kulussa %)) tehtavat) "Jokaisella palautetulla tehtävällä pakollinen_uudessa_kulussa on true")))
+      (is (every? #(true? (:maaramitattava? %)) tehtavat) "Jokaisella palautetulla tehtävällä maaramitattava? on true")))
 
   (testing "Virheellinen urakka-id heittää poikkeuksen"
     (is (thrown? IllegalArgumentException

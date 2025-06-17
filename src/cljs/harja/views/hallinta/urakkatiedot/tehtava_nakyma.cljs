@@ -60,7 +60,7 @@
     {:otsikko "Voim. loppuvuosi" :nimi :voimassaolo_loppuvuosi :leveys 1 :muokattava? (constantly false)}
     {:otsikko "Käsin lisättavä?" :nimi :kasin_lisattava_maara :leveys 1 :muokattava? (constantly false)}
     {:otsikko "Aluetieto?" :nimi :aluetieto :leveys 1 :muokattava? (constantly false)}
-    {:otsikko "Pakollinen uudessa kulussa" :nimi :pakollinen_uudessa_kulussa :leveys 1 :tyyppi :valinta :muokattava true
+    {:otsikko "Määrämitattava?" :nimi :maaramitattava? :leveys 1 :tyyppi :valinta :muokattava true
      :valinnat {true "Kyllä"
                 false "Ei"}
      :valinta-arvo first

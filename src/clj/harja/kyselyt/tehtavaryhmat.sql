@@ -43,7 +43,7 @@ SELECT tro.id        AS tehtavaryhmaotsikko_id,
        JSONB_AGG(ROW_TO_JSON(ROW (t.id, t.nimi, t.yksikko, t.jarjestys, t.api_seuranta, t.suoritettavatehtava,
            t.piilota, t.api_tunnus, t."mhu-tehtava?", t.yksiloiva_tunniste,
            t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.kasin_lisattava_maara,
-           t."raportoi-tehtava?", t.materiaaliluokka_id, t.materiaalikoodi_id, t.aluetieto, t.pakollinen_uudessa_kulussa))) AS tehtavat
+           t."raportoi-tehtava?", t.materiaaliluokka_id, t.materiaalikoodi_id, t.aluetieto, t."maaramitattava?"))) AS tehtavat
   FROM tehtavaryhmaotsikko tro
            JOIN tehtavaryhma tr ON tro.id = tr.tehtavaryhmaotsikko_id
            LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND "mhu-tehtava?" = TRUE
@@ -59,7 +59,7 @@ UPDATE tehtavaryhma
 
 -- name: paivita-tehtava!
 UPDATE tehtava
-   SET pakollinen_uudessa_kulussa = :pakollinen_uudessa_kulussa
+   SET "maaramitattava?" = :maaramitattava?
  WHERE id = :id;
 
 -- name: tehtavat-tehtavaryhmaotsikoittain

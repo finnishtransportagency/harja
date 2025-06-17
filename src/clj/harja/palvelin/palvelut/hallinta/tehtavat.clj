@@ -26,7 +26,7 @@
    :f15 :materiaaliluokka_id,
    :f16 :materiaalikoodi_id,
    :f17 :aluetieto,
-   :f18 :pakollinen_uudessa_kulussa})
+   :f18 :maaramitattava?})
 
 (defn hae-mhu-tehtavaryhmaotsikot [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
