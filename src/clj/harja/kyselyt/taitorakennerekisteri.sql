@@ -44,7 +44,7 @@ SELECT
 FROM siltatarkastus st
 JOIN urakka u ON st.urakka = u.id
 JOIN silta s ON st.silta = s.id
-WHERE (st.tarkastusaika BETWEEN :alkuaika AND :loppuaika)
+WHERE (st.luotu BETWEEN :alkuaika AND :loppuaika)
    OR (st.muokattu BETWEEN :alkuaika AND :loppuaika)
    AND st.poistettu = false
 ORDER BY st.luotu DESC;

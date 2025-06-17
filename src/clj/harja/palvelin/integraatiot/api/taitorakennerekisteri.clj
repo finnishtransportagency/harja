@@ -60,48 +60,13 @@
    :oid (:trex_oid tarkastus)
    :siltaid (:siltaid tarkastus)})
 
-(defn kohde-id->tyyppi [id] 
-  (let [numero->api (clojure.set/map-invert api-siltatarkastukset/api-kohde->numero)]
-    (get numero->api id "tuntematon")))
-
-(defn kohde-id->nimi [id]
-  (siltadomain/siltatarkastuskohteen-nimi id))
-
-(defn kohde-id->paarakenneosa [id]
-  (cond
-    (<= id 3) {:tyyppi "alusrakenne" :nimi "Alusrakenne"}
-    (<= id 10) {:tyyppi "paallysrakenne" :nimi "Päällysrakenne"}
-    (<= id 19) {:tyyppi "varusteet-ja-laitteet" :nimi "Varusteet ja laitteet"}
-    (<= id 24) {:tyyppi "siltapaikan-rakenteet" :nimi "Siltapaikan rakenteet"}
-    :else {:tyyppi "tuntematon" :nimi "Tuntematon"}))
-
-(defn koodi->arvo [koodi]
-  (case koodi
-    "A" "eiToimenpiteita"
-    "B" "puhdistettava"
-    "C" "urakanKunnostettava"
-    "D" "korjausOhjelmoitava"
-    "E" "E"
-    "-" "eiPade"
-    "eiToimenpiteita"))
-
-(defn koodi->kuvaus [koodi]
-  (case koodi
-    "A" "Ei toimenpiteitä"
-    "B" "Puhdistettava"
-    "C" "Urakan kunnostettava"
-    "D" "Korjaus ohjelmoitava"
-    "E" "E"
-    "-" "Ei päde"
-    "Ei toimenpiteitä"))
-
 (defn muodosta-havainnot [kohde]
   (when-let [tulos (:tulos kohde)]
     [{:toimenpidetarpeet (map (fn [koodi]
                                 {:toimenpidetarve
                                  {:koodi koodi
-                                  :arvo (koodi->arvo koodi)
-                                  :kuvaus (koodi->kuvaus koodi)}})
+                                  :arvo (siltadomain/koodi->arvo koodi)
+                                  :kuvaus (siltadomain/koodi->kuvaus koodi)}})
                            tulos)
       :lisatieto (:lisatieto kohde)
       :kuvat (when-let [liitteet (:liitteet kohde)]
@@ -112,7 +77,7 @@
                               :tiedostotyyppi (:tyyppi liite)
                               :koko (:koko liite)
                               :kuvaus (:kuvaus liite)
-                              :url (str "/api/liitteet/" (:liite_id liite))
+                              :url (str "/url/placeholder/")
                               :pikkukuva nil}})
                  liitteet))}]))
 
@@ -122,9 +87,9 @@
       (map (fn [kohde]
              {:kohde
               {:tyyppi-id (:kohde_id kohde)
-               :tyyppi (kohde-id->tyyppi (:kohde_id kohde))
-               :nimi (kohde-id->nimi (:kohde_id kohde))
-               :paarakenneosa (kohde-id->paarakenneosa (:kohde_id kohde))
+               :tyyppi (siltadomain/siltatarkastuskohteen-tyyppi (:kohde_id kohde))
+               :nimi (siltadomain/siltatarkastuskohteen-nimi (:kohde_id kohde))
+               :paarakenneosa (siltadomain/kohde-id->paarakenneosa (:kohde_id kohde))
                :havainnot (muodosta-havainnot kohde)}})
         kohteet))))
 
