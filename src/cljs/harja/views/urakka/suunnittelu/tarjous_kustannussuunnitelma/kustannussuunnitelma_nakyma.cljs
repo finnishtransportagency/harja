@@ -17,7 +17,7 @@
 (defonce virheet-atom (atom {}))
 (defonce grid-tiedot-atom (atom [{}]))
 
-(defn- otsikkotiedot [e! {:keys [valittu-hoitokausi tarjous] :as app}]
+(defn- otsikkotiedot [e! {:keys [valittu-hoitokausi tarjous] :as app} otsikko {:keys [div1 div2 div3 div4] :as opts}]
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
@@ -28,36 +28,34 @@
         kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))
         indeksikerroin (get-in app [:kustannussuunnitelma :indeksikerroin])]
     [:div
-        [:div.row
-         [:div.col-xs-12
-          [:h2 "Kilpailutettavat hankinnat"]
-          [:div.body-text {:style {:margin-top "-15px"}} (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]]]
-        [:div.row {:style {:padding-top "1rem"}}
-         [:div.col-xs-12.col-md-3
-          [:div.small-text.bold "Tarjouksen määrä"]
-          [:div.body-text (fmt/euro true tarjous-hankintakustannukset-yhteensa)]]
+     [:div.row
+      [:div.col-xs-12
+       [:h2 otsikko]
+       [:div.body-text {:style {:margin-top "-15px"}} (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]]]
 
-         [:div.col-xs-12.col-md-3
-          [:div.small-text.bold "Pysyvät muutokset"]
-          [:div.body-text "Ei muutoksia"]
-          [:div.body-text [yleiset/linkki "Siirry muutoksiin"
-                           #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
-                              {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]]
+     [:div.row {:style {:padding-top "1rem"}}
+      (when div1
+        [:div.col-xs-12.col-md-3
+         [:div.small-text.bold "Tarjouksen määrä"]
+         [:div.body-text (fmt/euro true tarjous-hankintakustannukset-yhteensa)]])
+      (when div2
+       [:div.col-xs-12.col-md-3
+        [:div.small-text.bold "Pysyvät muutokset"]
+        [:div.body-text "Ei muutoksia"]
+        [:div.body-text [yleiset/linkki "Siirry muutoksiin"
+                         #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
+                            {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]])
+      (when div3
+       [:div.col-xs-12.col-md-3
+        [:div.small-text.bold "Yhteensä"]
+        [:div.body-text (if kilpailutettavat-hankinnat-yhteensa (fmt/euro true kilpailutettavat-hankinnat-yhteensa) "0,00 €")]])
 
-         [:div.col-xs-12.col-md-3
-          [:div.small-text.bold "Yhteensä"]
-          [:div.body-text (if kilpailutettavat-hankinnat-yhteensa (fmt/euro true kilpailutettavat-hankinnat-yhteensa) "0,00 €")]]
-
-         [:div.col-xs-12.col-md-3
-          [:div.small-text.bold "Indeksikorjattu"]
-          [:div.body-text (if kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (fmt/euro true kilpailutettavat-hankinnat-yhteensa-indeksikorjattu) "0,00 €")]
-          [:div.body-text (when indeksikerroin
-                            (str "(" indeksikerroin " * " (if kilpailutettavat-hankinnat-yhteensa (fmt/euro false kilpailutettavat-hankinnat-yhteensa-indeksikorjattu) "0,00 €")" )"))]]]
-
-        [:div.row
-         [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
-        [:div.row
-         [:div.col-xs-12.body-text "Erittele " [:strong "yhteensä-summa"] " toimenpiteille."]]]))
+      (when div4
+       [:div.col-xs-12.col-md-3
+        [:div.small-text.bold "Indeksikorjattu"]
+        [:div.body-text (if kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (fmt/euro true kilpailutettavat-hankinnat-yhteensa-indeksikorjattu) "0,00 €")]
+        [:div.body-text (when indeksikerroin
+                          (str "(" indeksikerroin " * " (if kilpailutettavat-hankinnat-yhteensa (fmt/euro false kilpailutettavat-hankinnat-yhteensa-indeksikorjattu) "0,00 €") " )"))]])]]))
 
 (defn kilpailutettavat-hankinnat [e! {:keys [tallennus-kesken? valittu-hoitokausi tarjous] :as app}]
   (let [tarjous-hankintakustannukset (filter #(= (:osio %) "hankintakustannukset") (:tarjous tarjous))
@@ -88,7 +86,13 @@
                            {:teksti (fmt/euro false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                           kirjaamatta-rivi]]
     [:div.kustannussuunnitelma-osio
-     [otsikkotiedot e! app]
+     [otsikkotiedot e! app "Kilpailutettavat hankinnat" {:div1 true :div2 true :div3 true :div4 true}]
+
+     [:div.row
+      [:div.row
+       [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
+      [:div.row
+       [:div.col-xs-12.body-text "Erittele " [:strong "yhteensä-summa"] " toimenpiteille."]]]
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko ""
@@ -127,9 +131,39 @@
          {:disabled (or tallennus-kesken? false)}]]]]]))
 
 (defn rahavaraukset [e! app]
-  [:div.row.kustannussuunnitelma-osio
-   [:div.col-xs-12
-    [:h2 "Rahavaraukset"]]])
+  (let [rahavaraukset (get-in app [:kustannussuunnitelma :rahavaraukset])
+        yht (apply + (map (fn [rivi]
+                            (:summa rivi 0)) rahavaraukset))
+        yht-indeksikorjattu (apply + (map (fn [rivi]
+                                            (:summa-indeksikorjattu rivi 0)) rahavaraukset))
+        yhteenveto-rivi [[^{:luokka "kustannukset-yhteenveto"}
+                           {:teksti "Yhteensä" :luokka "yhteensa"}
+                           {:teksti (fmt/euro false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                           {:teksti (fmt/euro false yht-indeksikorjattu) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]]]
+   [:div.row.kustannussuunnitelma-osio
+    [otsikkotiedot e! app "Rahavaraukset" {:div1 true :div2 false :div3 false :div4 true}]
+    [:div.row
+     [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
+    [:div.row
+     [:div.col-xs-12
+      [grid/grid {:otsikko ""
+                  :muokkaa-aina false
+                  :voi-muokata? false
+                  :muokattava? (constantly false)
+                  :voi-poistaa? (constantly false)
+                  :voi-lisata? false
+                  :voi-kumota? false
+                  :piilota-toiminnot? false
+                  :tunniste :nimi
+
+                  ;; Lisätään yhteenveto rivi gridin päätteeksi
+                  :rivi-jalkeen-fn (fn [rivit]
+                                     ^{:luokka "yhteenveto"}
+                                     yhteenveto-rivi)}
+       [{:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys "70%" :muokattava? (constantly false)}
+        {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "15%" :tyyppi :euro :tasaa :oikea :fmt #(fmt/euro false %)}
+        {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "15%" :tyyppi :euro :tasaa :oikea :fmt #(when % (fmt/euro false %))}]
+       rahavaraukset]]]]))
 
 (defn kustannussuunnitelma [e! {:keys [tallennus-kesken? valittu-hoitokausi] :as app}]
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
