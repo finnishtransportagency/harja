@@ -1254,4 +1254,12 @@ WHERE
    AND u.luotu BETWEEN :alku AND :loppu
    OR u.muokattu BETWEEN :alku AND :loppu
    OR yt.luotu BETWEEN :alku AND :loppu
-   OR yt.muokattu BETWEEN :alku AND :loppu
+   OR yt.muokattu BETWEEN :alku AND :loppu;
+
+-- name: aseta-tai-paivita-urakkaparametrit
+SELECT aseta_tai_paivita_urakka_parametrit_urakalle(:urakkaid);
+
+-- name: hae-urakan-parametrit
+select *
+  from urakka_parametrit
+ WHERE urakkaid = :urakkaid;
