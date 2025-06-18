@@ -15,7 +15,7 @@
 (defn rivin-kustannusten-summa [rivi avaimet]
   (reduce (fn [summa avain] (+ summa (get rivi avain 0))) 0 avaimet))
 
-(defrecord HoitokausiVaihdettu [urakka hoitokausi])
+(defrecord HoitokausiVaihdettu [hoitokausi])
 
 (defrecord HaePaallystysKustannukset [])
 (defrecord HaePaallystysKustannuksetOnnistui [vastaus])
@@ -34,22 +34,26 @@
 (defrecord TallennaPaikkausKustannuksetEpaonnistui [vastaus])
 
 
-(defn- hakeminen-epaonnistui-toast [vastaus]
-  (viesti/nayta-toast! (str "Hakeminen epäonnistui \n Vastaus: " (pr-str vastaus)) :varoitus))
+(defn- hakeminen-epaonnistui-toast [_vastaus]
+  (viesti/nayta-toast! "Tietojen haku epäonnistui" :varoitus))
 
 
 (extend-protocol tuck/Event
   HoitokausiVaihdettu
-  (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
-    (let [app (-> app
-                (assoc :valittu-hoitokausi hoitokausi))
-          paallyste-haku (tuck/send-async! ->HaePaallystysKustannukset)
+  (process-event [{:keys [hoitokausi]} app]
+    (let [paallyste-haku (tuck/send-async! ->HaePaallystysKustannukset)
           paikkaus-haku (tuck/send-async! ->HaePaikkausKustannukset)
-          hoitokaudet @u/valitun-urakan-hoitokaudet]
+          hoitokaudet @u/valitun-urakan-hoitokaudet
+          _ (u/valitse-hoitokausi! hoitokausi)]
       (go (paallyste-haku))
       (go (paikkaus-haku))
-      (assoc app :urakan-hoitokaudet hoitokaudet  :haku-kaynnissa? true :paikkaus-kustannukset [] :kustannukset [])))
-  
+      (assoc app
+        :haku-kaynnissa? true
+        :kustannukset []
+        :paikkaus-kustannukset []
+        :valittu-hoitokausi hoitokausi
+        :urakan-hoitokaudet hoitokaudet)))
+
   HaePaallystysKustannukset
   (process-event [_ app]
     (tuck-apurit/post! :hae-tiemerkinta-paallystyskohteiden-kustannukset
