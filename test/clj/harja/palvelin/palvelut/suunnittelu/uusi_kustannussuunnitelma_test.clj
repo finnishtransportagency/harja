@@ -45,6 +45,19 @@
                                           {:nimi "Yhteensä", :osio "hankintakustannukset" :toimenpideinstanssi-id 0 :pysyvat-muutokset "Ei muutoksia"
                                            :alkukausi 700 :alkukausi-indeksikorjattu 777 :loppukausi 2100 :loppukausi-indeksikorjattu 2331 :yhteensa 2800 :yhteensa-indeksikorjattu 3108}]})
 
+(def erillishankinnat-tietomalli {:erillishankinnat [{:summa 1000 :summa_indeksikorjattu 1111 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 10 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Lokakuu 2024"}
+                                                     {:summa 2000 :summa_indeksikorjattu 2222 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 11 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Marraskuu 2024"}
+                                                     {:summa 3000 :summa_indeksikorjattu 3333 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 12 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Joulukuu 2024"}
+                                                     {:summa 4000 :summa_indeksikorjattu 4444 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 1 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Tammikuu 2025"}
+                                                     {:summa 5000 :summa_indeksikorjattu 5555 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 2 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Helmikuu 2025"}
+                                                     {:summa 6000 :summa_indeksikorjattu 6666 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 3 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Maaliskuu 2025"}
+                                                     {:summa 7000 :summa_indeksikorjattu 7777 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 4 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Huhtikuu 2025"}
+                                                     {:summa 8000 :summa_indeksikorjattu 8888 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 5 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Toukokuu 2025"}
+                                                     {:summa 9000 :summa_indeksikorjattu 9999 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 6 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Kesäkuu 2025"}
+                                                     {:summa 10000 :summa_indeksikorjattu 11111 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 7 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Heinäkuu 2025"}
+                                                     {:summa 11000 :summa_indeksikorjattu 12121 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 8 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Elokuu 2025"}
+                                                     {:summa 12000 :summa_indeksikorjattu 13333 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 9 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Syyskuu 2025"}]})
+
 (defn poista-yhteenvetorivi [tietomalli]
   {:toimenpiteet (filter #(not= (:nimi %) "Yhteensä") (:toimenpiteet tietomalli))})
 
@@ -101,3 +114,96 @@
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))]
     (is (= (nil? (:error vastaus))))))
+
+;; Erillishankinnat
+(deftest tallenna-erillishankinnat-tietokantaan-onnistuneesti
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+        hoitovuoden-alkuvuosi 2024
+        tietomallin-summa (apply + (map :summa (:erillishankinnat erillishankinnat-tietomalli)))
+
+        _ (uusi-kust-kyselyt/tallenna-erillishankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:erillishankinnat erillishankinnat-tietomalli))
+        erillishankinnat-tietokannasta (q-map (format "SELECT SUM(summa) as summa
+                                                         FROM kustannusarvioitu_tyo
+                                                  WHERE sopimus = %s
+                                                    AND (
+                                                    (vuosi = %s AND kuukausi in (10,11,12)) OR
+                                                    (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
+                                                sopimus-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
+
+    (is (= (bigdec tietomallin-summa) (bigdec (:summa (first erillishankinnat-tietokannasta)))))))
+
+(deftest tallenna-erillishankinnat-rajapinnasta-ei-toimi
+  (let [vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-erillishankinnat +kayttaja-jvh+ {:jee "jee"})
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))]
+
+    (is (= (str/includes? (:error vastaus) "Palvelun :tallenna-erillishankinnat kysely ei ole validi.")))
+    (is (= (str/includes? (:error vastaus) "failed: (contains? % :erillishankinnat)")))))
+
+(deftest tallenna-erillishankinnat-rajapinnasta-ei-toimi2
+  (let [vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-erillishankinnat +kayttaja-jvh+ erillishankinnat-tietomalli)
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))]
+
+    (is (str/includes? (:error vastaus) "Palvelun :tallenna-erillishankinnat kysely ei ole validi."))
+    ;; Urakka-id puuttuu
+    (is (str/includes? (:error vastaus) "failed: (contains? % :urakka-id)"))))
+
+(deftest tallenna-erillishankinnat-rajapinnasta-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tietomallin-summa (apply + (map :summa (:erillishankinnat erillishankinnat-tietomalli)))
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-erillishankinnat +kayttaja-jvh+ (merge erillishankinnat-tietomalli
+                                                                {:urakka-id urakka-id
+                                                                 :hoitovuoden-alkuvuosi 2024}))
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))
+        vastaus-summa (apply + (map :summa (get-in vastaus [:kustannussuunnitelma :erillishankinnat])))]
+
+    ;; Ei ole erroreita
+    (is (nil? (:error vastaus)))
+    (is (= (bigdec tietomallin-summa) (bigdec vastaus-summa)))))
+
+(deftest muokkaa-erillishankinnat-rajapinnasta-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; Tallenna ensin tietomallin tiedot
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-erillishankinnat +kayttaja-jvh+ (merge erillishankinnat-tietomalli
+                                                                {:urakka-id urakka-id
+                                                                 :hoitovuoden-alkuvuosi 2024}))
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))
+        vastaus-erillishankinnat (into [] (get-in vastaus [:kustannussuunnitelma :erillishankinnat]))
+
+        ;; Varmistetaan, ettei ole erroreita
+        _ (is (nil? (:error vastaus)))
+
+        ;; Tallenna muokattu tietomalli
+        muokattu-vastaus (-> vastaus-erillishankinnat
+                           (assoc-in [0 :summa] 1500)
+                           (assoc-in [1 :summa] 2500)
+                           (assoc-in [2 :summa] 3500))
+        muokattu-summa (apply + (map :summa muokattu-vastaus))
+        muokattu-vastaus (try
+                           (kutsu-palvelua (:http-palvelin jarjestelma)
+                             :tallenna-erillishankinnat +kayttaja-jvh+
+                             (merge {:erillishankinnat muokattu-vastaus}
+                               {:urakka-id urakka-id
+                                :hoitovuoden-alkuvuosi 2024}))
+                           (catch Exception e
+                             (println "Tapahtui virhe:" (.getMessage e))
+                             {:error (.getMessage e)}))
+        muokattu-vastaus-summa (apply + (map :summa (get-in muokattu-vastaus [:kustannussuunnitelma :erillishankinnat])))]
+
+    (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
