@@ -156,8 +156,7 @@
                             (s/optional-key :oid-tuonti-suoritusaika) [s/Num]}
 
    (s/optional-key :sms) {:url s/Str
-                          :apiavain s/Str
-                          :aktiivinen? s/Bool}
+                          :apiavain s/Str}
 
    (s/optional-key :virustarkistus) {:url s/Str}
    (s/optional-key :tiedostopesula) {:base-url s/Str}
