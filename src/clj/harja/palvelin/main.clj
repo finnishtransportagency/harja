@@ -499,7 +499,7 @@
                    [:http-palvelin :db :fim :api-sahkoposti])
       :muutokset (component/using
                    (muutos-palvelu/->Muutos (select-keys asetukset [:kehitysmoodi]))
-                   [:http-palvelin :db])
+                   [:http-palvelin :db :db-replica])
       :valitavoitteet (component/using
                         (valitavoitteet/->Valitavoitteet)
                         [:http-palvelin :db])

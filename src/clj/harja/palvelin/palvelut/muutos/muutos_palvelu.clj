@@ -1,16 +1,19 @@
 (ns harja.palvelin.palvelut.muutos.muutos-palvelu
   (:require [clojure.java.jdbc :as jdbc]
+            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
+
             [harja.pvm :as pvm]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
-            [harja.kyselyt [muutos-kyselyt :as muutos-kyselyt]]
-            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.yleiset :as yleiset]
-            [taoensso.timbre :as log]))
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt [muutos-kyselyt :as muutos-kyselyt]]
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+
+            [harja.palvelin.palvelut.toteumat :as toteumat]))
 
 
 (defn tavoitehinnan-muutos [muutokset]
@@ -86,13 +89,6 @@
 
     ;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
     {:kirjatut-muutokset kirjatut-muutokset
-     ;; TODO 
-     :lasketut-muutokset [{:id 123424
-                           :tehtava "Test"
-                           :yksikko "Tonni"
-                           :syy "test syy"
-                           :suunniteltu_maara 1245
-                           :tavoitehinnan-muutos 500}]
      :rahavarausten-muutokset rahavaraukset
      ;; TODO: laskennat vanhojen tavoitehintojen muutoksille jos hoitokausi ennen 2025-2026
      :tavoitehinnan-muutokset []
@@ -135,34 +131,56 @@
       (hae-urakan-muutostiedot db user {:urakka-id urakka-id
                                         :valittu-hoitokausi valittu-hoitokausi}))))
 
+
+(defn hae-tehtava-maaramuutokset
+  [db user {:keys [urakka-id tehtavaryhma hoitokauden-alkuvuosi] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+
+  (let [vastaus (mapv
+                  #(assoc % :id (gensym))
+                  (vec (toteumat/mhu-toteumatehtavat db user tiedot)))
+        ;; 
+        ]
+
+
+    (println "\n tt:: " (toteumat/mhu-toteumatehtavat db user tiedot))
+    vastaus)
+  ;; 
+  )
+
 (defrecord Muutos [asetukset]
   component/Lifecycle
-  (start [this]
+  (start [{http         :http-palvelin
+           db           :db
+           db-replica   :db-replica
+           :as          this}]
 
-    (when (ominaisuus-kaytossa? :mhu-muutokset)
-      (julkaise-palvelu (:http-palvelin this)
+    (when (ominaisuus-kaytossa? :mhu-muutokset) ;; what is this 
+      (julkaise-palvelu http
         :hae-urakan-muutostiedot
         (fn [user tiedot]
-          (hae-urakan-muutostiedot
-            (:db this)
-            user
-            tiedot))))
+          (hae-urakan-muutostiedot db user tiedot))))
 
-    (julkaise-palvelu (:http-palvelin this)
+    (julkaise-palvelu http
       :tallenna-muutos
       (fn [user tiedot]
-        (tallenna-muutos (:db this) user tiedot)))
+        (tallenna-muutos db user tiedot)))
 
-    (julkaise-palvelu (:http-palvelin this)
+    (julkaise-palvelu http
       :tallenna-rahavarausmuutosten-syyt
       (fn [user tiedot]
-        (tallenna-rahavarausmuutosten-syyt (:db this) user tiedot)))
+        (tallenna-rahavarausmuutosten-syyt db user tiedot)))
 
+    (julkaise-palvelu http
+      :hae-tehtava-maaramuutokset
+      (fn [user tiedot]
+        (hae-tehtava-maaramuutokset db-replica user tiedot)))
     this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
       :hae-urakan-muutostiedot
+      :hae-tehtava-maaramuutokset
       :tallenna-muutos
       :tallenna-rahavarausmuutosten-syyt)
     this))

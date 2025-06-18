@@ -360,7 +360,8 @@
         #(do
            (when urakka
              (e! (muutos-tiedot/->ValitseUrakka urakka))
-             (e! (muutos-tiedot/->HaeUrakanMuutostiedot urakka))))
+             (e! (muutos-tiedot/->HaeUrakanMuutostiedot urakka))
+             (e! (muutos-tiedot/->HaeTehtavaMaaraMuutokset))))
         #(e! (muutos-tiedot/->NakymastaPoistuttiin)))
       (komp/watcher nav/valittu-urakka
         (fn [_ _ urakka]

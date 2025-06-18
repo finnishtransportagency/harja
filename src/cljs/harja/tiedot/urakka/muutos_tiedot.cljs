@@ -47,6 +47,20 @@
 (defrecord ValitseUrakka [urakka])
 (defrecord NakymastaPoistuttiin [])
 (defrecord PaivitaLomake [lomake])
+;; Tehtävä määrämuutokset 
+(defrecord HaeTehtavaMaaraMuutokset [])
+(defrecord HaeTehtavaMaaramuutoksetOnnistui [vastaus])
+(defrecord HaeTehtavaMaaramuutoksetEpaonnistui [vastaus])
+
+
+(defn- hae-tehtava-maaramuutokset [app tehtavaryhma-id alkuvuosi]
+  (tuck-apurit/post! app
+    :hae-tehtava-maaramuutokset
+    {:urakka-id (-> @tila/yleiset :urakka :id)
+     :tehtavaryhma tehtavaryhma-id
+     :hoitokauden-alkuvuosi alkuvuosi}
+    {:onnistui ->HaeTehtavaMaaramuutoksetOnnistui
+     :epaonnistui ->HaeTehtavaMaaramuutoksetEpaonnistui}))
 
 
 (defn valitse-urakka [app urakka]
@@ -88,11 +102,11 @@
       (hae-urakan-muutostiedot app urakka)
       app))
 
+
   HaeUrakanMuutostiedotOnnnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app
       :kirjatut-muutokset (:kirjatut-muutokset vastaus)
-      :lasketut-muutokset (:lasketut-muutokset vastaus)
       :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
       :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus)
       :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
@@ -120,12 +134,12 @@
 
   TallennaMuutosEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Muutoksen tallentaminen epäonnistui!" :varoitus)
+    (viesti/nayta-toast! "Muutoksen tallentaminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
   TallennaRahavarausmuutostenSyytEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Rahavarauksien muutosten syiden tallentaminen epäonnistui!" :varoitus)
+    (viesti/nayta-toast! "Rahavarauksien muutosten syiden tallentaminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
   ToggleTaulukonNakyvyys
@@ -199,7 +213,7 @@
 
   LisaaTavoitehintojenMuutos
   (process-event [_ app] app)
-  
+
   LisaaSuunniteltujenMaarienMuutos
   (process-event [_ app] app)
 
@@ -212,4 +226,29 @@
 
   PaivitaLomake
   (process-event [{lomake :lomake} app]
-    (assoc app :muokattava-muutos lomake)))
+    (assoc app :muokattava-muutos lomake))
+  
+  HaeTehtavaMaaraMuutokset
+  (process-event [_ app]
+    (let [;; _ (println "\n valittu: " (-> @u/valittu-hoitokausi first (pvm/vuosi)) " or : " (:hoitokauden-alkuvuosi app))
+          ;; 
+          ]
+      (hae-tehtava-maaramuutokset app 0 (or 
+                                          (:hoitokauden-alkuvuosi app) 
+                                          (-> @u/valittu-hoitokausi first (pvm/vuosi))))
+      app))
+
+  HaeTehtavaMaaramuutoksetOnnistui
+  (process-event [{:keys [vastaus]} app]
+    ;; (println "\n suunnitellut:: " vastaus " \n ") 
+    (assoc app :lasketut-muutokset vastaus)
+    ;; 
+    )
+
+  HaeTehtavaMaaramuutoksetEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Suunnitellun määrän haku epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+
+  ;; 
+  )
