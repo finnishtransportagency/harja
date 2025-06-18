@@ -105,22 +105,25 @@
      :leveys 2}]
    kustannukset])
 
-(defn uusien-kustannusten-merkinnat* [e! app] 
+(defn uusien-kustannusten-merkinnat* [e! _app] 
     (komp/luo
       (komp/sisaan #(do 
-                      (u/valitse-kuluva-hk!)
-                      (e! (tiedot/->HoitokausiVaihdettu @nav/valittu-urakka 
-                                                        @u/valittu-hoitokausi)))) 
-      (fn [e! {:keys [kustannukset paikkaus-kustannukset haku-kaynnissa?] :as app}]
+                      (when (u/koko-urakkakausi-valittuna?) (u/valitse-kuluva-hk!))
+                      (e! (tiedot/->HoitokausiVaihdettu @u/valittu-aikavali)))) 
+      
+      (fn [e! {:keys [kustannukset paikkaus-kustannukset 
+                      haku-kaynnissa? urakan-hoitokaudet valittu-hoitokausi] :as _app}]
+        
         [:div.livi-grid.tiemerkinta-kustannusten-kirjaus
          [:h1 "Uusien päällysteiden tiemerkinnät"] 
          ;; [debug/debug app]
+
+         ;; Aikaväli 
          [:div.flex-row.margin-bottom-16
-          [valinnat/urakan-hoitokausi-tuck
-           (:valittu-hoitokausi app)
-           (:urakan-hoitokaudet app)
-          #(e! (tiedot/->HoitokausiVaihdettu @nav/valittu-urakka %))
+          [valinnat/urakan-hoitokausi-tuck valittu-hoitokausi urakan-hoitokaudet
+          #(e! (tiedot/->HoitokausiVaihdettu %))
           {:wrapper-luokka "label-ja-alasveto hoitokausi"}]]
+         
          [uusien-kustannusten-merkinnat-taulukko e! 
           "Päällystyskohteiden tiemerkintäkustannukset" 
           kustannukset 
@@ -128,6 +131,7 @@
           :paallystys
           nil
           haku-kaynnissa?]
+         
          [uusien-kustannusten-merkinnat-taulukko e! 
           "Paikkauskohteiden tiemerkintäkustannukset"
           paikkaus-kustannukset 
