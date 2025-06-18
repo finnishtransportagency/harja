@@ -163,7 +163,7 @@
     vastaus))
 
 (defn- laheta-sms
-  "Lähetetään tekstiviesti (integraatioväylän ja) LinkMobilen LinkSMS-palvelun kautta. Toimii vain stg- ja tuotantoympäristöissä IP whitelistauksen vuoksi."
+  "Lähetetään tekstiviesti (integraatioväylän ja) SMS-integraation kautta. Toimii vain stg- ja tuotantoympäristöissä IP whitelistauksen vuoksi."
   [sms tekstiviesti]
   (let [vastaus (sms/laheta sms (:puhelinnumero tekstiviesti) (:viesti tekstiviesti) "Testi" {})
         _ (log/info "tekstiviestilähetyksen vastaus: " (pr-str vastaus))]

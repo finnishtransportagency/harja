@@ -108,3 +108,124 @@
     (is (= odotetut-rivit (:kirjatut-muutokset vastaus-22-23) (:kirjatut-muutokset vastaus-23-24) (:kirjatut-muutokset vastaus-24-25)))))
 
 
+(deftest tallenna-rahavarausmuutosten-syyt-ii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+        payload-1 [{:id 1 :syy "Tämä on syy 1"}
+                   {:id 2 :syy "Tämä on syy 2"}
+                   {:id 3 :syy "Tämä on syy 3"}]
+        payload-2 [{:id 1 :syy "Tämä on syy 1 muokattuna"}]
+        ;; ensimmäinen tallennus, muokkaaja ja muokattu tyhjiä
+        vastaus-luonnin-jalkeen (get-in
+                                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-rahavarausmuutosten-syyt
+                                    +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :valittu-hoitokausi valittu-hoitokausi
+                                     :rivit payload-1})
+                                  [:rahavarausten-muutokset])
+        kanta-luonnin-jalkeen (q-map (format "SELECT * FROM mhu_muutos_rahavarausmuutoksen_syy WHERE urakka = %s AND hoitokauden_alkuvuosi = %s;"
+                                       urakka-id
+                                       (pvm/vuosi (first valittu-hoitokausi))))
+        odotettu-kanta-luonnin-jalkeen-ilman-aikaleimaa [{:hoitokauden_alkuvuosi 2025
+                                                          :luoja (:id +kayttaja-jvh+)
+                                                          :muokattu nil
+                                                          :muokkaaja nil
+                                                          :rahavaraus_id 1
+                                                          :syy "Tämä on syy 1"
+                                                          :urakka 36}
+                                                         {:hoitokauden_alkuvuosi 2025
+                                                          :luoja (:id +kayttaja-jvh+)
+                                                          :muokattu nil
+                                                          :muokkaaja nil
+                                                          :rahavaraus_id 2
+                                                          :syy "Tämä on syy 2"
+                                                          :urakka 36}
+                                                         {:hoitokauden_alkuvuosi 2025
+                                                          :luoja (:id +kayttaja-jvh+)
+                                                          :muokattu nil
+                                                          :muokkaaja nil
+                                                          :rahavaraus_id 3
+                                                          :syy "Tämä on syy 3"
+                                                          :urakka 36}]
+        odotetut-luonnin-jalkeen [{:id                    1
+                                   :nimi                  "Äkilliset hoitotyöt"
+                                   :summa-indeksikorjattu 133200M
+                                   :syy                   "Tämä on syy 1"
+                                   :tavoitehinnan-muutos  -33200M
+                                   :toteumat              100000M}
+                                  {:id                    2
+                                   :nimi                  "Vahinkojen korjaukset"
+                                   :summa-indeksikorjattu 2640M
+                                   :syy                   "Tämä on syy 2"
+                                   :tavoitehinnan-muutos  -1640M
+                                   :toteumat              1000M}
+                                  {:id                    3
+                                   :nimi                  "Tilaajan rahavaraus kannustinjärjestelmään"
+                                   :summa-indeksikorjattu nil
+                                   :syy                   "Tämä on syy 3"}
+                                  {:id                    :yhteenveto
+                                   :summa-indeksikorjattu 135840M
+                                   :tavoitehinnan-muutos  -34840M
+                                   :toteumat              101000M}]
+        vastaus-muokkauksen-jalkeen (get-in
+                                      (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :tallenna-rahavarausmuutosten-syyt
+                                        +kayttaja-jvh+
+                                        {:urakka-id urakka-id
+                                         :valittu-hoitokausi valittu-hoitokausi
+                                         :rivit payload-2})
+                                      [:rahavarausten-muutokset])
+        kanta-muokkauksen-jalkeen (q-map (format "SELECT * FROM mhu_muutos_rahavarausmuutoksen_syy WHERE urakka = %s AND hoitokauden_alkuvuosi = %s;"
+                                           urakka-id
+                                           (pvm/vuosi (first valittu-hoitokausi))))
+        odotettu-kanta-muokkauksen-jalkeen-ilman-aikaleimaa [{:hoitokauden_alkuvuosi 2025
+                                                              :luoja (:id +kayttaja-jvh+)
+                                                              :muokattu "tähän vaihdetaan assertissa jokin date..."
+                                                              :muokkaaja (:id +kayttaja-jvh+)
+                                                              :rahavaraus_id 1
+                                                              :syy "Tämä on syy 1 muokattuna"
+                                                              :urakka 36}
+                                                             {:hoitokauden_alkuvuosi 2025
+                                                              :luoja (:id +kayttaja-jvh+)
+                                                              :muokattu nil
+                                                              :muokkaaja nil
+                                                              :rahavaraus_id 2
+                                                              :syy "Tämä on syy 2"
+                                                              :urakka 36}
+                                                             {:hoitokauden_alkuvuosi 2025
+                                                              :luoja (:id +kayttaja-jvh+)
+                                                              :muokattu nil
+                                                              :muokkaaja nil
+                                                              :rahavaraus_id 3
+                                                              :syy "Tämä on syy 3"
+                                                              :urakka 36}]
+        odotetut-muokkauksen-jalkeen  [{:id                    1
+                                        :nimi                  "Äkilliset hoitotyöt"
+                                        :summa-indeksikorjattu 133200M
+                                        :syy                   "Tämä on syy 1 muokattuna"
+                                        :tavoitehinnan-muutos  -33200M
+                                        :toteumat              100000M}
+                                       {:id                    2
+                                        :nimi                  "Vahinkojen korjaukset"
+                                        :summa-indeksikorjattu 2640M
+                                        :syy                   "Tämä on syy 2"
+                                        :tavoitehinnan-muutos  -1640M
+                                        :toteumat              1000M}
+                                       {:id                    3
+                                        :nimi                  "Tilaajan rahavaraus kannustinjärjestelmään"
+                                        :summa-indeksikorjattu nil
+                                        :syy                   "Tämä on syy 3"}
+                                       {:id                    :yhteenveto
+                                        :summa-indeksikorjattu 135840M
+                                        :tavoitehinnan-muutos  -34840M
+                                        :toteumat              101000M}]]
+    ;; assertoidaan luodut, näistä löytyy muokkausmetatiedoista vain luoja ja luotu
+    (is (= vastaus-luonnin-jalkeen odotetut-luonnin-jalkeen) "Rahavarausmuutosten syyt luonnin jälkeen")
+(is (= (map #(dissoc % :luotu) kanta-luonnin-jalkeen) (map #(dissoc % :luotu) odotettu-kanta-luonnin-jalkeen-ilman-aikaleimaa)) "Rahavarausmuutosten syyt kannasta luonnin jälkeen")
+    (is (every? #(instance? java.util.Date (:luotu %)) kanta-luonnin-jalkeen) ":luotu on date")
+
+    ;; assertoidaan muokatut, näistä löytyy id:llä 1 myös muokattu ja muokkaaja
+    (is (= (map #(dissoc % :luotu :muokattu) kanta-muokkauksen-jalkeen) (map #(dissoc % :luotu :muokattu) odotettu-kanta-muokkauksen-jalkeen-ilman-aikaleimaa)) "Rahavarausmuutosten syyt kannasta muokkauksen jälkeen")
+    (is (instance? java.util.Date (:muokattu (first (filter #(= (:rahavaraus_id %) 1) kanta-muokkauksen-jalkeen)))) "Muokatun syyn muokkausaika on asetettu")
+    (is (= vastaus-muokkauksen-jalkeen odotetut-muokkauksen-jalkeen) "Rahavarausmuutosten syyt muokkauksen jälkeen")))

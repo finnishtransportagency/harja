@@ -1,13 +1,15 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.kustannukset-palvelu
   "Ylläpidon kustannukset näkymän palvelut"
-  (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+  (:require [clojure.string :as str]
+            [com.stuartsierra.component :as component]
+
+            [harja.pvm :as pvm]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.urakat :as urakka-kyselyt]
-            [harja.domain.oikeudet :as oikeudet]
-            [clojure.string :as str]
+            [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
             [harja.kyselyt.yllapito-kustannukset-kyselyt :as q]
-            [harja.pvm :as pvm]))
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
 
 (defn hae-paikkaus-kustannukset [db kayttaja {:keys [urakka-id aikavali vuosi] :as _tiedot}]
@@ -22,9 +24,21 @@
                             :loppuvuosi (pvm/vuosi loppupvm) ;; Päällystysurakat päättyy 31.12. joten ei tarvitse vähentää 1 vuotta
                             :vuosi nil
                             :urakka-id urakka-id}
+        
+        sanktiot-ja-bonukset (laadunseuranta/hae-urakan-sanktiot-ja-bonukset db kayttaja {:hae-sanktiot? true
+                                                                                          :hae-bonukset? true
+                                                                                          :urakka-id urakka-id
+                                                                                          :alku alkupvm
+                                                                                          :loppu loppupvm})
 
         kokonaiskustannus-vastaus (q/hae-paikkaus-kustannukset db kokonaisparametrit)
-        yht (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) kokonaiskustannus-vastaus))
+        yht (reduce + (map (fn [rivi] 
+                             (or (:kokonaiskustannus rivi) 0)) 
+                        kokonaiskustannus-vastaus))
+        
+        ;; Laske sakot ja bonukset mukaan urakan kokonaiskustannuksiin
+        yht (+ yht (reduce + (map #(or (:summa %) 0) sanktiot-ja-bonukset)))
+        
         parametrit {:alkuaika (when
                                 (and
                                   (some? aikavali)
