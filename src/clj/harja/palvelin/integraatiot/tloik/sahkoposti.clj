@@ -106,7 +106,9 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
      ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
      ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
      ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
-     ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]]))
+     ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]
+     [(when (:lisatieto ilmoitus) "Kuvaus ")
+      (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))]]))
 
 (defn- aiheen-sisaltavat-yleiset-tiedot [db ilmoitus]
   (let [aiheet-ja-tarkenteet (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db)]
