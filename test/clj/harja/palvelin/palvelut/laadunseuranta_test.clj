@@ -63,9 +63,7 @@
                                                                            :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])
                         :sms (component/using (sms/luo-tekstiviesti-komponentti
-                                                       ;; Uusi SMS-integraatio aktiivinen ja korvaa siten vanhan käytössä
-                                                       {:url +testi-sms-url+ :apiavain "testiapiavain" :aktiivinen? true}
-                                                       {:sms-url +testi-sms-url+ :apiavain "testiapiavain"})
+                                                {:url +testi-sms-url+ :apiavain "testiapiavain"})
                                       [:http-palvelin :db :integraatioloki])
                         :laadunseuranta (component/using
                                           (ls/->Laadunseuranta)
@@ -488,7 +486,7 @@
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-laatupoikkeaman-tiedot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                            :laatupoikkeama-id 1})]
+                                                                            :laatupoikkeama-id 3})]
     (is (not (empty? vastaus)))
     (is (string? (:kuvaus vastaus)))
     (is (>= (count (:kuvaus vastaus)) 10))))
@@ -522,10 +520,10 @@
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
                      :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
-                     :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 16, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
+                     :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 18, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
                      :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/sql-timestamp #inst "2019-10-10T21:06:06.370000000-00:00") :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
+    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/sql-timestamp #inst "2019-10-10T21:06:06.370000000-00:00") :id 9, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
 
 
 (deftest hae-urakan-jalkeiset-sanktiot

@@ -1,9 +1,14 @@
 (ns harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.tarjous-nakyma
-  "Tarjouksen hallinta"
-  (:require [harja.ui.debug :as debug]
-            [harja.ui.grid :as grid]
+  "Kustannussuunnitelman etusivu määrittää, että renderöidäänkö tarjous vai kustannussuunnitelma"
+  (:require [harja.fmt :as fmt]
+            [harja.ui.debug :as debug]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
-            [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as tarjous-tiedot]))
+            [harja.ui.grid :as grid]
+            [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as tarjous-tiedot]
+            [tuck.core :as tuck]))
 
 (defonce tallenna-painettu (atom false))
 (defonce virheet-atom (atom {}))
@@ -42,21 +47,29 @@
         ;; Otetaan taulukosta yhteenvetorivi pois ennen käsittelyä
         yhteenveto (last tarjouksen-tiedot)
         yhteenveto-rivit (reduce (fn [y rivi]
-                                  (conj y {:teksti (:summa rivi) :tasaa :oikea :luokka "yhteensa lihavoitu"}))
-                          [{:teksti "Tarjouksen tavoitehinta" :luokka "yhteensa lihavoitu" :yhteenveto-vayla true}]
-                          (:hoitovuosittaiset-arvot yhteenveto))
+                                   (conj y {:teksti (fmt/euro false (:summa rivi)) :tasaa :oikea :luokka "yhteensa lihavoitu"}))
+                           [{:teksti "Tarjouksen tavoitehinta" :luokka "yhteensa lihavoitu" :yhteenveto-vayla true :tyyppi :euro :fmt #(fmt/euro false %)}]
+                           (:hoitovuosittaiset-arvot yhteenveto))
         ;; Lisätään vielä yhteenveto yhteenvetoriviin
         yhteenveto-rivit (conj yhteenveto-rivit
-                              {:teksti (:yhteensa yhteenveto)
-                               :luokka "yhteensa lihavoitu"
-                               :tasaa :oikea
-                               :muokattava? false
-                               :rivi-disabled? true})
+                           {:teksti (if (:yhteensa yhteenveto) (fmt/euro false (:yhteensa yhteenveto)) "0,00")
+                            :luokka "yhteensa lihavoitu"
+                            :tasaa :oikea
+                            :tyyppi :euro
+                            :fmt #(fmt/euro false %)
+                            :muokattava? false
+                            :rivi-disabled? true})
         taulukon-tiedot (reduce (fn [rivit tarjous-rivi]
                                   (let [vuosiarvot (reduce (fn [uusi rivi]
-                                                             (assoc uusi (keyword (str "vuosi-" (:vuosi rivi))) (:summa rivi)))
+                                                             (-> uusi
+                                                               (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
+                                                               (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
+                                                               (assoc :tehtava-id (:tehtava-id tarjous-rivi))
+                                                               (assoc :tehtavaryhma-id (:tehtavaryhma-id tarjous-rivi))
+                                                               (assoc :osio (:osio tarjous-rivi))
+                                                               (assoc (keyword (str "vuosi-" (:vuosi rivi))) (:summa rivi))))
                                                      {} (:hoitovuosittaiset-arvot tarjous-rivi))
-                                        nimiarvot (merge {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)})
+                                        nimiarvot {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)}
                                         lopputulos (merge vuosiarvot nimiarvot)]
                                     (concat rivit [lopputulos])))
                           [] (drop-last tarjouksen-tiedot)) ;; Jätetään viimeinen rivi pois, koska se on yhteenvetorivi
@@ -89,10 +102,28 @@
 
       (concat [{:otsikko "" :nimi :nimi :tyyppi :string :leveys (str nimi-leveys "%") :muokattava? (constantly false)}]
         vuositaulukon-otsikot
-        [{:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :euro :leveys (str yhteensa-leveys "%") :tasaa :oikea :muokattava? (constantly false)}])
+        [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro :fmt (fn [arvo]
+                                                                       (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%") :tasaa :oikea :muokattava? (constantly false)}])
       taulukon-tiedot]
 
      ;; Custom-toteutus. Tallennusnapit on taulukon jälkeen
-     [tallennus-painikkeet e! app]
-     ])
-  )
+     [tallennus-painikkeet e! app]]))
+
+
+(defn nakyma* [e! app]
+  (komp/luo
+    (komp/sisaan #(e! (tarjous-tiedot/->HaeTarjouksenTiedot)))
+    (fn [e! app]
+      [:div
+       (when (:tarjous app)
+         [:div
+          [:div.row
+           [:div.col-xs-12.col-md-6
+            [:h1 "Hoitovuoden alun tavoitehinta"]
+            [:div (-> @tila/yleiset :urakka :nimi)]]]
+          [:div.row
+           [yleiset/info-laatikko :neutraali "Tarkempi kustannusten suunnittelu tehdään tarjouksen tietojen tallentamisen jälkeen." nil nil {:sulje-nappi-id (gensym)}]]
+          [tarjous-nakyma e! app]])])))
+
+(defn tarjous []
+  (tuck/tuck tila/tarjous-kustannussuunnitelma nakyma*))

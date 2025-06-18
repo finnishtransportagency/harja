@@ -201,6 +201,17 @@ SELECT
   u.sopimustyyppi,
   u.indeksi,
   u.urakkanro,
+  (SELECT array_agg(
+         concat_ws('|',
+           y.id,
+           y.matkapuhelin,
+           y.sahkoposti,
+           y.organisaatio)
+       )
+    FROM yhteyshenkilo y
+      JOIN yhteyshenkilo_urakka yu ON yu.yhteyshenkilo = y.id
+    WHERE yu.urakka = u.id AND yu.rooli = 'Urakan yhteystiedot'
+  )                                       AS urakan_yhteystiedot,
   (SELECT *
    FROM indeksilaskennan_perusluku(u.id)) AS indeksilaskennan_perusluku,
   hal.id                                  AS hallintayksikko_id,
@@ -1143,7 +1154,7 @@ SELECT
   org.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
   JOIN organisaatio org ON u.urakoitsija = org.id
-  JOIN kayttajan_lisaoikeudet_urakkaan klu ON klu.urakka = u.id
+  JOIN kayttajan_lisaoikeudet_urakkaan klu ON klu.urakka = u.id AND klu.poistettu IS NOT TRUE
   JOIN kayttaja k ON klu.kayttaja = k.id
 WHERE k.kayttajanimi = :kayttajanimi
       AND k.jarjestelma;
@@ -1167,12 +1178,13 @@ SELECT
   org.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
   JOIN organisaatio org ON u.urakoitsija = org.id
-WHERE (exists(SELECT klu.id
-              FROM kayttajan_lisaoikeudet_urakkaan klu
-                JOIN kayttaja k ON klu.kayttaja = k.id
-              WHERE klu.urakka = u.id
-                    AND k.kayttajanimi = :kayttajanimi
-                    AND k.jarjestelma)
+ WHERE (EXISTS(SELECT klu.id
+                 FROM kayttajan_lisaoikeudet_urakkaan klu
+                          JOIN kayttaja k ON klu.kayttaja = k.id
+                WHERE klu.urakka = u.id
+                  AND k.kayttajanimi = :kayttajanimi
+                  AND k.jarjestelma
+                  AND klu.poistettu IS NOT TRUE)
        OR
        exists(SELECT o.id
               FROM organisaatio o

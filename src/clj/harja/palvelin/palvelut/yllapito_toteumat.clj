@@ -1,21 +1,16 @@
 (ns harja.palvelin.palvelut.yllapito-toteumat
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
-            [harja.domain.skeema :refer [Toteuma validoi]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.yllapito-muut-toteumat :as q]
             [harja.domain.tiemerkinta-toteumat :as tt]
             [taoensso.timbre :as log]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.id :as id]
-            [harja.palvelin.komponentit.http-palvelin
-             :refer
-             [julkaise-palvelu poista-palvelut]]
             [clojure.java.jdbc :as jdbc]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 
 (defn vaadi-yksikkohintainen-toteuma-kuuluu-urakkaan [db toteuma-id vaitetty-urakka-id]

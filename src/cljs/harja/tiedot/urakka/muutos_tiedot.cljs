@@ -27,6 +27,11 @@
 (defrecord MuokkaaLaskettujenMuutoksienSyita [])
 (defrecord MuokkaaRahavaraustenMuutoksienSyita [])
 
+(defrecord TallennaLaskettujenMuutostenSyyt [rivit])
+(defrecord TallennaRahavarausmuutostenSyyt [rivit])
+(defrecord TallennaRahavarausmuutostenSyytEpaonnistui [vastaus])
+
+
 ;; Liitteet
 (defrecord LisaaLiite [liite])
 (defrecord PoistaLisattyLiite [])
@@ -123,6 +128,11 @@
     (viesti/nayta-toast! "Muutoksen tallentaminen epäonnistui!" :varoitus)
     app)
 
+  TallennaRahavarausmuutostenSyytEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Rahavarauksien muutosten syiden tallentaminen epäonnistui!" :varoitus)
+    app)
+
   ToggleTaulukonNakyvyys
   (process-event [{taulukon-avain :taulukon-avain} app]
     (assoc-in app [:taulukko-nakyvissa? taulukon-avain]
@@ -133,10 +143,27 @@
     ;; TODO: aloita laskettujen muutosten syiden muokkaus taulukossa, ei avata lomaketta
     app)
 
+  TallennaLaskettujenMuutostenSyyt
+  (process-event [_ app]
+    ;; TODO: Tallenna laskettujen muutosten syyt, mallia vaikka rahavarausmuutosten syiden tallentamisesta
+    app)
+
   MuokkaaRahavaraustenMuutoksienSyita
   (process-event [_ app]
-    ;; TODO: aloita rahavarausten muutosten syiden muokkaus taulukossa, ei avata lomaketta
-    app)
+    (assoc app :rahavarausten-syyt-muokattavana? true))
+
+  TallennaRahavarausmuutostenSyyt
+  (process-event [{rivit :rivit} app]
+    (let [urakka (:urakka @tila/yleiset)]
+      (tuck-apurit/post! :tallenna-rahavarausmuutosten-syyt
+        {:urakka-id (:id urakka)
+         :valittu-hoitokausi (:valittu-hoitokausi app)
+         :rivit (map #(select-keys % [:id :syy]) rivit)}
+        {:onnistui ->HaeUrakanMuutostiedotOnnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
+         :epaonnistui ->TallennaRahavarausmuutostenSyytEpaonnistui})
+      app))
+
+
 
   LisaaLiite
   (process-event

@@ -431,12 +431,15 @@
 (def tiemerkinta-kustannukset-default {})
 
 (def tarjous-kustannussuunnitelma-default {:haku-kaynnissa? false?
+                                           :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
+                                                                   (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))))]
                                            :tarjous nil
-                                           :kustannussuunnitelma {:hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))}})
+                                           :kustannussuunnitelma nil})
 
-(defonce tila (atom {:yleiset     {:urakka {}}
+(defonce tila (atom {:yleiset {:urakka {}}
+                     :hallinta-hairiot {}
                      :laatupoikkeamat laatupoikkeamat-default
-                     :laskutus    laskutus-default
+                     :laskutus laskutus-default
                      :lupaukset lupaukset-default
                      :muutokset muutokset-default
                      :pot2 pot2-default-arvot
@@ -453,6 +456,8 @@
                      :tiemerkinta-sanktiot-ja-bonukset {}
                      :tiemerkinta-uusien-paallysteiden-merkkinnat {}
                      :tarjous-kustannussuunnitelma tarjous-kustannussuunnitelma-default}))
+
+(defonce hallinta-hairiot (cursor tila [:hallinta-hairiot]))
 
 (defonce tiemerkinta-korjaukset (cursor tila [:tiemerkinta-korjaukset]))
 (defonce tiemerkinta-yhteenveto (cursor tila [:tiemerkinta-yhteenveto]))

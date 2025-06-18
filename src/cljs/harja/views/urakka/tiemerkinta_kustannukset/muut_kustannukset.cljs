@@ -179,8 +179,8 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan
-      #(do 
-         (urakka-tiedot/valitse-kuluva-hk!)
+      #(do
+         (when (urakka-tiedot/koko-urakkakausi-valittuna?) (urakka-tiedot/valitse-kuluva-hk!))
          (e! (tiedot/->HaeTiedot))))
     (fn [e! app] [muut-kustannukset-listaus e! app])))
 
