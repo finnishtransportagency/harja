@@ -88,8 +88,13 @@
     himmennyksen-sisalto]
    himmennettava-elementti])
 
-(defn indeksi [kokoelma itemi]
-  (first (keep-indexed #(when (= %2 itemi) %1) kokoelma)))
+(defn indeksi
+  "Hakee indeksin kokoelmasta. Kolmella parametrilla hakee indeksin vektorista,
+   jossa on tietyllä avaimella annettu arvo."
+  ([kokoelma kohde]
+   (first (keep-indexed #(when (= %2 kohde) %1) kokoelma)))
+  ([kokoelma avain arvo]
+   (first (keep-indexed #(when (= (get %2 avain) arvo) %1) kokoelma))))
 
 (defn nuolivalinta
   "Tekee handlerin, joka helpottaa nuolivalinnan tekemistä. Ottaa kolme funktiota: ylös, alas ja enter,

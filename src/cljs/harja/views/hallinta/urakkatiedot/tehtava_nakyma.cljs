@@ -1,29 +1,70 @@
 (ns harja.views.hallinta.urakkatiedot.tehtava-nakyma
   "Tuodaan tehtävät, tehtäväryhmät ja tehtäväryhmien otsikot näkyväksi."
-  (:require [tuck.core :refer [tuck send-value! send-async!]]
+  (:require [tuck.core :refer [tuck send-value! send-async!]] 
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.komponentti :as komp]
+            [reagent.core :refer [atom] :as r]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
+            [harja.ui.kentat :as kentat]
+            [harja.ui.napit :as napit]
             [harja.tiedot.hallinta.tehtava-tiedot :as tiedot]))
+
 
 (defn tehtavat-vetolaatikko
   "Tehtäväryhmän tehtävät"
   [e! app {:keys [id] :as rivi}]
   [grid/grid {:tunniste :id
-              :piilota-muokkaus? true
+              :voi-poistaa? (constantly false)
+              :voi-lisata? false 
+              ::mahdollista-rivin-valinta? true
+              :paneelikomponentit [(fn [] [:div.valittujen-tehtavien-toiminnot
+                                           (let [valitut-maara (count @tiedot/valitut-tehtavat)]
+                                             [:span.margin-right-8 (str "Valittuna: " valitut-maara " tehtävää")])
+                                           (when (pos? (count @tiedot/valitut-tehtavat))
+                                             [:<>
+                                              [napit/nappi "Tulosta valitut tehtävät migraatiota varten"
+                                               #(e! (tiedot/->TulostaKaikkiValitut))
+                                               {:luokka "nappi-toissijainen"}]
+                                              [napit/nappi "Tyhjennä valinnat"
+                                               #(e! (tiedot/->TyhjaaValitutTehtavat))
+                                               {:luokka "nappi-toissijainen"}]])
+                                           (when (seq @tiedot/tulostetut-tehtavat)
+                                             [:div.tulostetut-tehtavat
+                                              [:h4 "Tulostetut tehtävät:"]
+                                              [:ul
+                                               (for [[idx tehtava] (map-indexed vector @tiedot/tulostetut-tehtavat)]
+                                                 ^{:key (str "tulostettu-" idx)}
+                                                 [:li (str "'"(:nimi tehtava)"'" "," "'"(:yksiloiva_tunniste tehtava)"'")])]])])] 
+              :tallenna (fn [muokatut-rivit _arvo]
+                                ;; Tallenna funktion pitää aina palauttaa kanava, passaa muokkaa funktiolle nil
+                          (tuck-apurit/e-kanavalla! e! tiedot/->MuokkaaTehtavat muokatut-rivit))
+              :tallenna-vain-muokatut false
               ;; Estetään dynaamisesti muuttuva "tiivis gridin" tyyli, jotta siniset viivat eivät mene vääriin kohtiin,
               ;; taulukon sarakemääriä muutettaessa. Tyylejä säädetty toteumat.less tiedostossa.
               :esta-tiivis-grid? true
               :reunaviiva? true}
-   [{:otsikko "Id" :nimi :id :leveys 0.5}
-    {:otsikko "Tehtävä" :nimi :nimi :leveys 2}
-    {:otsikko "Yksikkö" :nimi :yksikko :leveys 0.8}
-    {:otsikko "Suoritettava tehtavä" :nimi :suoritettavatehtava :leveys 1}
-    {:otsikko "Voim. alkuvuosi" :nimi :voimassaolo_alkuvuosi :leveys 1}
-    {:otsikko "Voim. loppuvuosi" :nimi :voimassaolo_loppuvuosi :leveys 1}
-    {:otsikko "Käsin lisättavä?" :nimi :kasin_lisattava_maara :leveys 1}
-    {:otsikko "Aluetieto?" :nimi :aluetieto :leveys 1}]
+   [(grid/rivinvalintasarake
+     {:otsikko "Valitse"
+      :otsikkovalinta? false
+      :leveys 1
+      :rivi-valittu?-fn (fn [rivi] 
+                          (tiedot/tehtava-valittu? (:id rivi)))
+      :rivi-valittu-fn (fn [rivi valittu?]
+                         (e! (tiedot/->ValitseTehtava rivi valittu?)))})
+    {:otsikko "Id" :nimi :id :leveys 0.5 :muokattava? (constantly false)}
+    {:otsikko "Tehtävä" :nimi :nimi :leveys 2 :muokattava? (constantly false)}
+    {:otsikko "Yksikkö" :nimi :yksikko :leveys 0.8 :muokattava? (constantly false)}
+    {:otsikko "Suoritettava tehtavä" :nimi :suoritettavatehtava :leveys 1 :muokattava? (constantly false)}
+    {:otsikko "Voim. alkuvuosi" :nimi :voimassaolo_alkuvuosi :leveys 1 :muokattava? (constantly false)}
+    {:otsikko "Voim. loppuvuosi" :nimi :voimassaolo_loppuvuosi :leveys 1 :muokattava? (constantly false)}
+    {:otsikko "Käsin lisättavä?" :nimi :kasin_lisattava_maara :leveys 1 :muokattava? (constantly false)}
+    {:otsikko "Aluetieto?" :nimi :aluetieto :leveys 1 :muokattava? (constantly false)}
+    {:otsikko "Määrämitattava?" :nimi :maaramitattava? :leveys 1 :tyyppi :valinta :muokattava true
+     :valinnat {true "Kyllä"
+                false "Ei"}
+     :valinta-arvo first
+     :valinta-nayta second}]
    (:tehtavat rivi)])
 
 (defn tehtavaryhmat-vetolaatikko
@@ -64,7 +105,7 @@
       (let [tehtavaryhmaotsikot (:tehtavaryhmaotsikot app)
             suoritettavat-tehtavat (:suoritettavat-tehtavat app)]
         [:div
-         ;[debug/debug app]
+         [debug/debug app]
          [:div "Listataan tehtäväryhmäotsikot ja niille kuuluvat tehtäväryhmät ja niiden (MHU) tehtävät."]
          [grid/grid
           {:otsikko "Tehtäväryhmäotsikot"
