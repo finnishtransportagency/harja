@@ -108,7 +108,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
      ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
      ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]
      [(when (:lisatieto ilmoitus) "Kuvaus ")
-      (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))]]))
+      (when (:lisatieto ilmoitus) (sanitoi (:lisatieto ilmoitus)))]]))
 
 (defn- aiheen-sisaltavat-yleiset-tiedot [db ilmoitus]
   (let [aiheet-ja-tarkenteet (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db)]
@@ -129,7 +129,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
          (when (:selitteet ilmoitus) (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus))))]
         ["Otsikko " (:otsikko ilmoitus)]
         ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
-        ["Kuvaus " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))]
+        ["Kuvaus " (when (:lisatieto ilmoitus) (sanitoi (:lisatieto ilmoitus)))]
         ["Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
         [(when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
          (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))]])]))
