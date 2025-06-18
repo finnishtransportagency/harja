@@ -141,7 +141,6 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
         (aiheen-sisaltavat-yleiset-tiedot db ilmoitus))]
 
      [:div (parsi-kuvalinkit-sahkopostiin (:kuvat ilmoitus))]
-     [:blockquote (sanitoi (:lisatieto ilmoitus))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
          [:a {:href (format open-google-map-url-template lat lon)
