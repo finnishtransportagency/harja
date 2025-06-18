@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot
   (:require [tuck.core :as tuck]
+            [harja.pvm :as pvm]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]))
@@ -23,6 +24,12 @@
 (defrecord HaeTarjouksenTiedotOnnistui [vastaus])
 (defrecord HaeTarjouksenTiedotEpaonnistui [vastaus])
 
+;; Haetaan kustannussuunnitelman tiedot
+(defrecord HaeKustannussuunnitelmanTiedot [])
+(defrecord HaeKustannussuunnitelmanTiedotOnnistui [vastaus])
+(defrecord HaeKustannussuunnitelmanTiedotEpaonnistui [vastaus])
+
+
 (defrecord HaeTyhjatTarjouksenTiedot [])
 (defrecord HaeTyhjatTarjouksenTiedotOnnistui [vastaus])
 (defrecord HaeTyhjatTarjouksenTiedotEpaonnistui [vastaus])
@@ -32,6 +39,16 @@
 (defrecord TallennaTarjouksenTiedotOnnistui [vastaus])
 (defrecord TallennaTarjouksenTiedotEpaonnistui [vastaus])
 
+(defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
+
+(defn hae-kustannussuunnitelman-tiedot
+  "Haetaan kustannussuunnitelman tiedot, jotta voidaan näyttää ne UI Gridissä.
+  Vuosi on hoitovuoden alkuvuosi, jolle kustannussuunnitelma haetaan."
+  [urakka-id vuosi]
+  (tuck-apurit/post! :hae-kustannussuunnitelman-tiedot
+    {:urakka-id urakka-id :hoitovuoden-alkuvuosi vuosi}
+    {:onnistui ->HaeKustannussuunnitelmanTiedotOnnistui
+     :epaonnistui ->HaeKustannussuunnitelmanTiedotEpaonnistui}))
 
 (extend-protocol tuck/Event
 
@@ -100,4 +117,38 @@
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
-    (assoc app :tallennus-kesken? false)))
+    (assoc app :tallennus-kesken? false))
+
+  HaeKustannussuunnitelmanTiedot
+  (process-event
+    [_ app]
+    (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app))
+    (-> app
+      (assoc :haku-kaynnissa? true)
+      (assoc :tallennus-kesken? false)))
+
+  HaeKustannussuunnitelmanTiedotOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+
+  HaeKustannussuunnitelmanTiedotEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (assoc app :haku-kaynnissa? false))
+
+  ValitseHoitokausiKustannussuunnitelmaan
+  (process-event [{vuosi :vuosi} app]
+    (let [app (-> app
+                (assoc :valittu-kuukausi nil)
+                ;; Lupaukset on kiinteässä linkissä kustannusten seurannan kanssa joten tarvitaan hoitokaudellekin sama avain
+                (assoc :valittu-hoitokausi [(pvm/hoitokauden-alkupvm vuosi)
+                                            (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                (assoc :nykyhetki (pvm/nyt))
+                (assoc :haku-kaynnissa? true)
+                (assoc :hoitokauden-alkuvuosi vuosi))]
+      ;; Haetaan kaikki välikatselmuksessa tarvittavat tiedot
+      (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app))
+      (assoc app :haku-kaynnissa? true))))
