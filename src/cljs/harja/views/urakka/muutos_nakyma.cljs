@@ -249,19 +249,16 @@
            :muokattava? (constantly false)}]
          rivit])}]))
 
-(def lasketut-muutokset-aputeksti
-  "Tavoitehintamuutosten laskennassa käytetään Harjan suunniteltuja ja toteutuneita määriä sekä palvelusopimuksen mukaisia kaavoja.")
-
 (defn- lasketut-muutokset [e! {:keys [lasketut-muutokset] :as app}]
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :lasketut-muutokset
     :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :lasketut-muutokset))
     :otsikko "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"
     :summa (reduce + 0 (map :tavoitehinnan-muutos lasketut-muutokset))
-    :toiminnot (fn [e! app]
+    :toiminnot (fn [_e! _app]
                  ;; Tämä muokkaus mahdollistaa vain syyn lisäämisen
                  [:span
-                  [yleiset/vihje lasketut-muutokset-aputeksti]])
+                  [yleiset/vihje "Tavoitehintamuutosten laskennassa käytetään Harjan suunniteltuja ja toteutuneita määriä sekä palvelusopimuksen mukaisia kaavoja."]])
     :taulukko
     (fn [e! app]
       [grid/grid
@@ -283,6 +280,7 @@
         {:otsikko "Määrämuutos (+/-)" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
         {:otsikko "Kirjatut kulut (€)" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
         {:otsikko "Kirjatut kulut (€)" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
+
         {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero
          :fmt fmt/euro-opt :tasaa :oikea :leveys 15}]
        lasketut-muutokset])}])
@@ -368,8 +366,9 @@
         (fn [_ _ urakka]
           (when urakka
             (e! (muutos-tiedot/->ValitseUrakka urakka)))))
+      
       (fn [e! app]
-        [:span.muutokset-sivu
+        [:div.muutokset-sivu
          (if (:muokattava-muutos app)
            [muutoslomake e! app]
            [:valinnat-ja-listaus
@@ -380,7 +379,8 @@
               #(e! (muutos-tiedot/->HoitokausiVaihdettu urakka %))]]
             [muutosten-vaikutus e! app]
             [muutoslistaus e! app]])
-         [debug app]]))))
+         #_ [debug app]
+         ]))))
 
 (defn muutokset-paatason-valilehti [ur]
   (fn [ur]

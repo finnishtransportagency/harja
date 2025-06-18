@@ -54,8 +54,8 @@
                                      #(select-keys % [:id :nimi :summa-indeksikorjattu])
                                      (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id
                                                                                                                ;; haetaan vain valitulle hoitovuodelle
-                                                                                                               :alkuvuosi hoitokauden-alkuvuosi
-                                                                                                               :loppuvuosi (inc hoitokauden-alkuvuosi)}))
+                                                                                                                :alkuvuosi hoitokauden-alkuvuosi
+                                                                                                                :loppuvuosi (inc hoitokauden-alkuvuosi)}))
         rahavarausten-toteumat (muutos-kyselyt/rahavarausten-toteumat db {:urakka urakka-id
                                                                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         rahavaraukset (yleiset/yhdista-mapit-avaimella rahavarausten-suunnitelmat rahavarausten-toteumat :id)
@@ -67,7 +67,7 @@
                         #(if (and (:summa-indeksikorjattu %)
                                (:toteumat %))
                            (assoc % :tavoitehinnan-muutos (- (:toteumat %)
-                                                            (:summa-indeksikorjattu %)))
+                                                             (:summa-indeksikorjattu %)))
                            %)
                         rahavaraukset)
         rahavaraukset-yhteensa (rahavarausten-summarivi rahavaraukset)
@@ -76,11 +76,23 @@
         muutosten-vaikutus-yhteensa (reduce + 0
                                       (concat
                                         (map :tavoitehinnan-muutos kirjatut-muutokset)
-                                        [(:tavoitehinnan-muutos (last rahavaraukset))]))]
+                                        [(:tavoitehinnan-muutos (last rahavaraukset))]))
+
+
+
+
+        ;; 
+        ]
+
     ;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
     {:kirjatut-muutokset kirjatut-muutokset
-     ;; TODO: laskennat lasketuille muutoksille jos hoitokausi 2025-2026 tai jälkeen
-     :lasketut-muutokset []
+     ;; TODO 
+     :lasketut-muutokset [{:id 123424
+                           :tehtava "Test"
+                           :yksikko "Tonni"
+                           :syy "test syy"
+                           :suunniteltu_maara 1245
+                           :tavoitehinnan-muutos 500}]
      :rahavarausten-muutokset rahavaraukset
      ;; TODO: laskennat vanhojen tavoitehintojen muutoksille jos hoitokausi ennen 2025-2026
      :tavoitehinnan-muutokset []
@@ -91,9 +103,9 @@
                           :muutosten-vaikutus-yhteensa muutosten-vaikutus-yhteensa
                           :hoitovuoden-lopun-tavoitehinta (when (:tavoitehinta-indeksikorjattu budjettitavoiteet)
                                                             (+
-                                                              (:tavoitehinta-indeksikorjattu budjettitavoiteet)
+                                                             (:tavoitehinta-indeksikorjattu budjettitavoiteet)
                                                               ;; TODO: tässä huomioitava kaikkien muutosten vaikutus, työversiossa vasta kirjatut muutokset mukana
-                                                              muutosten-vaikutus-yhteensa))}}))
+                                                             muutosten-vaikutus-yhteensa))}}))
 
 
 (defn tallenna-muutos [db user {:keys [urakka-id valittu-hoitokausi muutos] :as tiedot}]

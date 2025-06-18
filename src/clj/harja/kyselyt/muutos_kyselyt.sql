@@ -86,3 +86,11 @@ UPDATE mhu_muutos
        luonnos = :luonnos,
        voimassa_alkaen = :voimassa_alkaen
  WHERE id = :id;
+
+
+-- name: hae-tehtava-maara-tavoitehintamuutokset 
+-- TODO 
+SELECT rahavaraus_id AS id, syy
+  FROM mhu_muutos_rahavarausmuutoksen_syy
+ WHERE urakka = :urakka
+   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
