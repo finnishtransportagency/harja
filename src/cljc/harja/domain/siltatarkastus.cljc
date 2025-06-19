@@ -1,7 +1,7 @@
 (ns harja.domain.siltatarkastus)
 
 (defn siltatarkastuskohteen-tyyppi
-  ""
+  "Siltatarkastuksessa käytettyjen kohteiden tyyppi mäpättynä järjestysnumeroon"
   [kohdenro]
   (case kohdenro
     ;; Alusrakenne

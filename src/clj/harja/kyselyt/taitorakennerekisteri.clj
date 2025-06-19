@@ -2,5 +2,4 @@
   "Taitorakennerekisterin kyselyt"
   (:require [jeesql.core :refer [defqueries]]))
 
-(defqueries "harja/kyselyt/taitorakennerekisteri.sql"
-  {:positional? true})
+(defqueries "harja/kyselyt/taitorakennerekisteri.sql")

@@ -12,13 +12,10 @@
             [harja.kyselyt.taitorakennerekisteri :as taitorakennerekisteri-kyselyt]
             [harja.kyselyt.konversio :as konversio]
             [harja.pvm :as pvm]
-            [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
             [harja.domain.siltatarkastus :as siltadomain]
-            [cheshire.core :as json]
-            [clojure.java.io :as io]
-            [taoensso.timbre :as log])
-  (:import (java.text SimpleDateFormat))
-  (:use [slingshot.slingshot :only [throw+]]))
+            [taoensso.timbre :as log]
+            [slingshot.slingshot :refer [throw+]])
+  (:import (java.text SimpleDateFormat)))
 
 (s/def ::alkuaika #(and (string? %) (>= (count %) 20) (or
                                                         (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))
@@ -77,7 +74,7 @@
                               :tiedostotyyppi (:tyyppi liite)
                               :koko (:koko liite)
                               :kuvaus (:kuvaus liite)
-                              :url (str "/url/placeholder/")
+                              :url "/url/placeholder/"
                               :pikkukuva nil}})
                  liitteet))}]))
 
@@ -95,7 +92,7 @@
 
 (defn hae-siltatarkastukset
   "Hakee siltatarkastukset annettujen alku- ja loppuajan puitteissa."
-  [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
+  [db {:keys [alkuaika loppuaika] :as parametrit} _kayttaja]
   (log/info "Taitorakennerekisteri API, siltatarkastusten haku, parametrit: " (pr-str parametrit))
   (tarkista-haun-parametrit parametrit)
   
