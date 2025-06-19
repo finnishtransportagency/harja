@@ -76,8 +76,7 @@
       (if loppukausi? "Tammi-syyskuun " "Loka-joulukuun ") "arvossa virhe. Anna positiivinen summa.")))
 
 (defn parsi-erillishankinnat-virhe [virhe erillishankinnat]
-  (let [_ (js/console.log "parsi-erillishankinnat-virhe:" (pr-str virhe))
-        virheen-rivi (when-let [matches (re-find #"\[:erillishankinnat (\d+) :summa\]" virhe)]
+  (let [virheen-rivi (when-let [matches (re-find #"\[:erillishankinnat (\d+) :summa\]" virhe)]
                        (js/parseInt (second matches)))
         erillishankinta (nth erillishankinnat virheen-rivi)
         rivin-nimi (:kalenterikuukausi erillishankinta)]

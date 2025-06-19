@@ -210,7 +210,7 @@
                           {:teksti (fmt/euro false yht-indeksikorjattu) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                          kirjaamatta-rivi]
         _ (reset! grid-erillishankinnat-atom erillishankinnat)]
-    
+
     [:div.row.kustannussuunnitelma-osio
      [otsikkotiedot e! app "Erillishankinnat" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
      [:div.row
