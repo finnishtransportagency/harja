@@ -241,7 +241,7 @@
          {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "15%" :tyyppi :euro :tasaa :oikea :fmt #(when % (fmt/euro false %)) :muokattava? (constantly false)}]
         erillishankinnat]]]
 
-     [:div.row [:div.col-xs-12 [:span.body-text "Haja luo kulut kuukausille, kun tallennat tiedot."]]]
+     [:div.row [:div.col-xs-12 [:span.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]]
      [:div.row [:div.col-xs-12] [:hr]]
      [:div.row
       [:div.col-xs-12
@@ -310,7 +310,7 @@
          {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "15%" :tyyppi :euro :tasaa :oikea :fmt #(when % (fmt/euro false %)) :muokattava? (constantly false)}]
         hoidonjohtopalkkiot]]]
 
-     [:div.row [:div.col-xs-12 [:span.body-text "Haja luo kulut kuukausille, kun tallennat tiedot."]]]
+     [:div.row [:div.col-xs-12 [:span.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]]
      [:div.row [:div.col-xs-12] [:hr]]
      [:div.row
       [:div.col-xs-12
