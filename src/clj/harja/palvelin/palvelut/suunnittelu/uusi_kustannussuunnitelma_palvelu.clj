@@ -2,6 +2,8 @@
   (:require [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
+            [clojure.java.jdbc :as jdbc]
+            [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
@@ -73,8 +75,9 @@
 (defn hae-erillishankinnat [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
   (let [;; Hae hoidonjohto toimenpideinstannssi
         ;; Hoindonjohto toimenpide.koodi = 23151
-        hoidonjohto-tpi-id (:id (first (suunnitelma-q/hae-toimenpideinstanssi-koodilla db {:urakka-id urakka-id
-                                                                                           :koodi "23151"})))
+        hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                         {:urakka urakka-id
+                                          :koodi "23151"})))
         tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
         erillishankinnat (when hoidonjohto-tpi-id
                            (suunnitelma-q/hae-erillishankinta-kuukausittain db
@@ -91,8 +94,7 @@
                              erillishankinnat)
                            ;; Jos ei ole tallennettu erillishankintoja, niin luodaan nolla arvot
                            (mapv (fn [kk]
-                                   (let [vuosi (if (>= kk 10) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi))
-                                         _ (println "(str \"01.\" kk \".\" vuosi)" (str "01." kk "." vuosi))]
+                                   (let [vuosi (if (>= kk 10) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi))]
                                      {:id nil
                                       :sopimus sopimus-id
                                       :tehtavaryhma (:id tehtavaryhma)
@@ -108,42 +110,45 @@
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/info "hae-kustannussuunnitelman-tiedot :: tiedot: " tiedot)
-  (let [;; Urakan sopimus id
-        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
-        kiinteat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        ;; Indeksikerroin
-        indeksikerroin (:indeksikerroin
-                         (first
-                           (filter
-                             #(= hoitovuoden-alkuvuosi (:vuosi %))
-                             (budjettisuunnittelu/hae-urakan-indeksikertoimet db kayttaja {:urakka-id urakka-id}))))
+  (jdbc/with-db-transaction [db db]
+    (let [;; Urakan sopimus id
+          sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+          kiinteat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+          ;; Indeksikerroin
+          indeksikerroin (:indeksikerroin
+                           (first
+                             (filter
+                               #(= hoitovuoden-alkuvuosi (:vuosi %))
+                               (budjettisuunnittelu/hae-urakan-indeksikertoimet db kayttaja {:urakka-id urakka-id}))))
 
-        ;; Hae tarjouksen tiedot
-        tarjous (tarjous-kyselyt/hae-tarjous db urakka-id)
-        ;; Jäsennä rahavaraukset tarjouksesta
-        rahavaraukset (jasenna-rahavaraukset-tarjouksesta tarjous hoitovuoden-alkuvuosi)
-        ;; Hae erillishankinnat
-        erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+          ;; Hae tarjouksen tiedot
+          tarjous (tarjous-kyselyt/hae-tarjous db urakka-id)
+          ;; Jäsennä rahavaraukset tarjouksesta
+          rahavaraukset (jasenna-rahavaraukset-tarjouksesta tarjous hoitovuoden-alkuvuosi)
+          ;; Hae erillishankinnat
+          erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
 
-        k {:urakka-id urakka-id
-           :tarjous tarjous
-           :kustannussuunnitelma {:kilpailutettavat-hankinnat {:toimenpiteet kiinteat}
-                                  :rahavaraukset rahavaraukset
-                                  :erillishankinnat erillishankinnat
-                                  :indeksikerroin indeksikerroin}}]
-    k))
+          k {:urakka-id urakka-id
+             :tarjous tarjous
+             :kustannussuunnitelma {:kilpailutettavat-hankinnat {:toimenpiteet kiinteat}
+                                    :rahavaraukset rahavaraukset
+                                    :erillishankinnat erillishankinnat
+                                    :indeksikerroin indeksikerroin}}]
+      k)))
 
 (defn tallenna-kilpailutettavat-hankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/info "tallenna-kilpailutettavat-hankinnat :: tiedot: " tiedot)
-  (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id hoitovuoden-alkuvuosi (:toimenpiteet tiedot))
-  (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
+  (jdbc/with-db-transaction [db db]
+    (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id hoitovuoden-alkuvuosi (:toimenpiteet tiedot))
+    (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
 (defn tallenna-erillishankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/info "tallenna-erillishankinnat :: tiedot: " tiedot)
-  (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id hoitovuoden-alkuvuosi (:erillishankinnat tiedot))
-  (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
+  (jdbc/with-db-transaction [db db]
+    (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id hoitovuoden-alkuvuosi (:erillishankinnat tiedot))
+    (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
 (defrecord UusiKustannussuunnitelmaPalvelu []
   component/Lifecycle

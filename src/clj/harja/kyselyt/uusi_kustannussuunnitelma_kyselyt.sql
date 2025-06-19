@@ -69,13 +69,6 @@ WHERE sopimus = :sopimus-id
   and toimenpideinstanssi = :toimenpideinstanssi-id
   AND tehtavaryhma = :tehtavaryhma-id;
 
--- name: hae-toimenpideinstanssi-koodilla
-SELECT tpi.id, tpi.toimenpide, t.nimi, t.koodi
-FROM toimenpideinstanssi tpi
-         JOIN toimenpide t ON tpi.toimenpide = t.id
-WHERE tpi.urakka = :urakka-id
-  AND t.koodi = :koodi;
-
 -- name: hae-kuukauden-erillishankinta
 SELECT id,
        kuukausi,
