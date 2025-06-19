@@ -1,15 +1,18 @@
 (ns harja.kyselyt.uusi-kustannussuunnitelma-kyselyt
   (:require [jeesql.core :refer [defqueries]]
-            [taoensso.timbre :as log]
             [harja.tyokalut.yleiset :as yleiset]
-            [harja.kyselyt.urakat :as urakat-q]))
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
+            [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]))
 
 (defqueries "harja/kyselyt/uusi_kustannussuunnitelma_kyselyt.sql"
   {:positional? true})
 
 (declare hae-urakan-toimenpiteet hae-kiintea-kustannus-toimenpiteelle-kuukaudelta
   hae-kiintea-kustannus-kuukausittain poista-kiinteat-kustannukset-kuukausittain!
-  tallenna-kiinteat-kustannukset-kuukaudelta<! paivita-kiinteat-kustannukset-kuukausittain<!)
+  tallenna-kiinteat-kustannukset-kuukaudelta<! paivita-kiinteat-kustannukset-kuukausittain<!
+  hae-erillishankinta-kuukausittain hae-kuukauden-erillishankinta
+  paivita-kuukauden-erillishankinta<! tallenna-kuukauden-erillishankinta<!)
 
 (defn tallenna-hankintojen-kuukausittainen-summa [db kk-jakso alkujakso? nimi viimeinen-summa summa hoitovuoden-alkuvuosi sopimus-id
                                                   toimenpideinstanssi-id kayttaja-id]
@@ -48,6 +51,7 @@
 
 (defn tallenna-kilpailutettavat-hankinnat
   [db kayttaja urakka-id hoitovuoden-alkuvuosi kilpailutettavat-hankinnat]
+  ;; Lisätään transktiot, jottei yhden epäonnistuminen päästä muita läpi
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         ; Splittaa alkukauden summat kuukausittain
         _ (doseq [{:keys [nimi alkukausi loppukausi toimenpideinstanssi-id] :as toimenpide} kilpailutettavat-hankinnat]
@@ -64,3 +68,33 @@
                   ;; Tallenna loppujakso
                   _ (tallenna-hankintojen-kuukausittainen-summa db (range 1 10) false nimi loppukausi-viimeinen-kuukausi loppukausi-kuukaudet
                       (inc hoitovuoden-alkuvuosi) sopimus-id toimenpideinstanssi-id (:id kayttaja))]))]))
+
+(defn tallenna-erillishankinnat
+  [db kayttaja urakka-id hoitovuoden-alkuvuosi erillishankinnat]
+  (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+        ;; Hae hoidonjohto toimenpideinstannssi
+        ;; Hoindonjohto toimenpide.koodi = 23151
+        hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                         {:urakka urakka-id
+                                          :koodi "23151"})))
+        tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db
+                              {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
+        ; Tallenna kuukausittaiset summat
+        _ (doseq [rivi erillishankinnat]
+            (let [dbrivi (first (hae-kuukauden-erillishankinta db {:id (:id rivi)}))
+                  t (if (:id dbrivi)
+                      (paivita-kuukauden-erillishankinta<! db
+                        {:id (:id dbrivi)
+                         :summa (:summa rivi)
+                         :summa_indeksikorjattu nil
+                         :muokkaaja (:id kayttaja)})
+                      ;; Lisää uusi
+                      (tallenna-kuukauden-erillishankinta<! db
+                        {:sopimus-id sopimus-id
+                         :toimenpideinstanssi-id hoidonjohto-tpi-id
+                         :vuosi (:vuosi rivi)
+                         :kuukausi (:kuukausi rivi)
+                         :summa (:summa rivi)
+                         :summa_indeksikorjattu nil
+                         :tehtavaryhma-id (:id tehtavaryhma)
+                         :luoja (:id kayttaja)}))]))]))
