@@ -4,4 +4,4 @@
 (defqueries "harja/kyselyt/tehtavaryhmat.sql"
   {:positional? true})
 
-(declare hae-tehtavaryhma)
+(declare hae-tehtavaryhma hae-tehtavaryhma-tunnisteella)
