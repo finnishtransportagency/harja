@@ -1,6 +1,9 @@
 (ns harja.palvelin.palvelut.muutos.muutos-palvelu
   (:require [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
+            [harja.domain.kulut :as kulut-domain]
+            [harja.kyselyt.kulut :as kulu-kyselyt]
+            [harja.kyselyt.urakat :as q-urakat]
             [harja.pvm :as pvm]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -96,15 +99,58 @@
                                                               muutosten-vaikutus-yhteensa))}}))
 
 
+(defn- tallenna-johto-ja-hallintokorvauksen-muutokset
+  "Tallentaa johto- ja hallintokorvauksen muutokset tietokantaan kuluiksi, linkittää muutokseen."
+  [db user urakka muutos-id-ja-versio rivit]
+  (doseq [rivi rivit
+          :let [kulu {:urakka (:id urakka)
+                      :erapaiva (:pvm rivi)
+                      :numero (:numero rivi)
+                      :kayttaja (:id user)
+                      :lisatieto "Muutoksesta automaattisesti luotu kulu"
+                      :laskun_numero (:laskun-numero rivi)
+                      :koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi (:pvm rivi) (:alkupvm urakka))
+                      :kokonaissumma (:tavoitehinnan-muutos rivi)}
+                ;; jotta saadaan talteen muutoshistoria, aina luodaan uusi kulu ja sen kohdistus, vanhat merkitään poistetuksi
+                kulu-id-db (:id (kulu-kyselyt/luo-kulu<! db kulu))]
+          ]
+    ;; TODO: luo kulun kohdistus tätän!
+    (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio (:versio muutos-id-ja-versio)
+                                                   :muutos (:id muutos-id-ja-versio)
+                                                   :kulu kulu-id-db})))
+
 (defn tallenna-muutos [db user {:keys [urakka-id valittu-hoitokausi muutos] :as tiedot}]
   (log/debug "tallenna-muutos: " tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (let [kustannusvaikutukset (:kustannusvaikutukset muutos)
+  (let [urakka (first (q-urakat/hae-urakka db urakka-id))
+        kustannusvaikutukset (:kustannusvaikutukset muutos)
         tehtava-ja-maaramuutokset (:tehtavat_ja_maarat muutos)
-        liitteet (:liitteet muutos)]
+        johto-ja-hallintokorvausmuutokset (:johto-ja-hallintokorvausmuutokset muutos)
+        liitteet (:liitteet muutos)
+        muutos {:id (:id muutos)
+                :versio (:versio muutos)
+                :urakka urakka-id
+                :voimassa_alkaen (:voimassa_alkaen muutos)
+                :nimi (:nimi muutos)
+                :syy (:syy muutos)
+                :kulu_kohdistus (:kulu-kohdistus muutos)
+                :luonnos (:luonnos muutos)
+                :hoitokauden_alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+                :tyyppi (:tyyppi muutos)
+                :kayttaja (:id user)}]
     (jdbc/with-db-transaction [db db]
-      ;; TODO: muutoksen tallennus tähän
-      )))
+      (let [muutos-paluurivi (if (:id muutos)
+                               (muutos-kyselyt/paivita-muutos!
+                                 db
+                                 muutos)
+                               (muutos-kyselyt/luo-muutos<!
+                                 db
+                                 muutos))]
+      (case (:tyyppi muutos)
+        "johto-ja-hallintokorvaus")
+      (tallenna-johto-ja-hallintokorvauksen-muutokset db user urakka muutos-paluurivi johto-ja-hallintokorvausmuutokset))
+    (hae-urakan-muutostiedot db user {:urakka-id urakka-id
+                                      :valittu-hoitokausi valittu-hoitokausi}))))
 
 (defn tallenna-rahavarausmuutosten-syyt
   [db user {:keys [urakka-id valittu-hoitokausi rivit]}]

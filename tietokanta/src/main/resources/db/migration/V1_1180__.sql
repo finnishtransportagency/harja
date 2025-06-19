@@ -2,7 +2,9 @@ CREATE TABLE mhu_muutos_kulu
 (
     versio INTEGER DEFAULT 1, -- jokainen tallennus tallentaa täyden version muutoksesta, ml. alitaulut joissa on tietoa
     muutos INTEGER REFERENCES mhu_muutos(id),
-    kulu INTEGER REFERENCES kulu(id)
+    kulu INTEGER REFERENCES kulu(id),
+
+    UNIQUE (versio, muutos, kulu)
 );
 CREATE TABLE mhu_muutos_kulu_historia () INHERITS (mhu_muutos_kulu);
 

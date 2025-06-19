@@ -135,16 +135,17 @@
   (process-event [{muutos :muutos} app]
     (prn "tallenna muutos: " muutos)
     (let [urakka (:urakka @tila/yleiset)
-          johto-ja-hallintokorvausmuutoksen-rivit (when (= (:tyyppi muutos)
+          johto-ja-hallintokorvausmuutokset (when (= (:tyyppi muutos)
                                                           "johto-ja-hallintokorvaus")
-                                                    @johto-ja-hallintokorvausmuutokset-atom)
-          muutos (assoc muutos :johto-ja-hallintokorvausmuutoksen-rivit johto-ja-hallintokorvausmuutoksen-rivit)]
+                                                    (vals @johto-ja-hallintokorvausmuutokset-atom))
+          muutos (assoc muutos :johto-ja-hallintokorvausmuutokset johto-ja-hallintokorvausmuutokset)]
       (tuck-apurit/post! :tallenna-muutos
         {:urakka-id (:id urakka)
          :valittu-hoitokausi (:valittu-hoitokausi app)
          :muutos muutos}
         {:onnistui ->HaeUrakanMuutostiedotOnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
-         :epaonnistui ->TallennaMuutosEpaonnistui})))
+         :epaonnistui ->TallennaMuutosEpaonnistui})
+      app))
 
   TallennaMuutosEpaonnistui
   (process-event [{vastaus :vastaus} app]

@@ -151,7 +151,7 @@
                       [:span.tallenna-ja-peruuta
                        [:hr]
                        [napit/tallenna
-                        #(e! (muutos-tiedot/->TallennaMuutos muutos))]
+                        #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos (lomake/ilman-lomaketietoja muutos))]
                        [napit/peruuta
                         #(e! (muutos-tiedot/->MuokkaaMuutosta nil))]])}
         ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat

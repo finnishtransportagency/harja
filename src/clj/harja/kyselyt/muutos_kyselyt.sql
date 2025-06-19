@@ -74,15 +74,28 @@ VALUES
                       muokkaaja = EXCLUDED.luoja,
                       muokattu = NOW();
 
+-- name: luo-muutos<!
+    -- name: luo-muutos<!
+    INSERT INTO mhu_muutos
+    (urakka, tyyppi, nimi, syy, kulu_kohdistus, luonnos, voimassa_alkaen, luoja, luotu)
+    VALUES
+    (:urakka, :tyyppi::MHU_MUUTOSTYYPPI, :nimi, :syy, :kulu_kohdistus, :luonnos, :voimassa_alkaen, :kayttaja, NOW())
+    RETURNING id, versio;
+
 -- name: paivita-muutos!
 UPDATE mhu_muutos
    SET versio = versio + 1,
        muokattu = NOW(),
        muokkaaja = :kayttaja,
        nimi = :nimi,
-       tyyppi = :tyyppi,
+       tyyppi = :tyyppi::MHU_MUUTOSTYYPPI,
        syy = :syy,
        kulu_kohdistus = :kulu_kohdistus,
        luonnos = :luonnos,
        voimassa_alkaen = :voimassa_alkaen
- WHERE id = :id;
+ WHERE id = :id
+RETURNING id, versio;
+
+-- name: luo-muutos-kulu-linkitys<!
+INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
+VALUES (:versio, :muutos, :kulu);
