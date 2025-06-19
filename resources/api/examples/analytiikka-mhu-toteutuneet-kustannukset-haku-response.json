@@ -4,42 +4,339 @@
     "urakkatunnus": "PR0001234",
     "kulut": [
       {
-        "kulu-id": 1234,
-        "laskun-tunniste": "2024A0001",
-        "kulun-kuvaus": "Ylimääräinen suolausreitti: Keskikylän risteys.",
-        "poistettu": false,
-        "kulun-ajankohta": {
-          "koontilaskun-vuosi": 2024,
-          "koontilaskun-kuukausi": 1,
-          "laskun-paivamaara": "2024-01-15"
-        },
-        "kulun-kokonaissumma": 1000.12,
-        "kulukohdistukset": [
-          {
-            "kulukohdistus-id": 9327,
-            "rivinumero": 1,
-            "tyyppi": "lisatyo",
-            "lisatieto": "Keskikylän risteys, työ",
-            "summa": 300.12,
-            "kohdistus": {
-              "toimenpide": 144,
-              "tehtavaryhma": 1,
-              "rahavaraus": 14
-            }
+        "kulu": {
+          "kulu-id": 45,
+          "kulun-kuvaus": "Välikatselmuksessa luotu kulu. Tavoitehinta alitettiin. Urakoitsijalle maksetaan tavoitepalkkiota.",
+          "kulun-ajankohta": {
+            "koontilaskun-vuosi": 2024,
+            "laskun-paivamaara": "2024-09-14T21:00:00Z",
+            "koontilaskun-kuukausi": 9
           },
-          {
-            "kulukohdistus-id": 9328,
-            "rivinumero": 2,
-            "tyyppi": "lisatyo",
-            "lisatieto": "Keskikylän risteys, suola",
-            "summa": 700.00,
-            "kohdistus": {
-              "toimenpide": 144,
-              "tehtavaryhma": 2,
-              "rahavaraus": 14
+          "kulun-kokonaissumma": 17087.3367,
+          "kulukohdistukset": [
+            {
+              "kulukohdistus": {
+                "kohdistus": {
+                  "toimenpide": 601,
+                  "tehtavaryhma": 29
+                },
+                "poistettu": false,
+                "kulukohdistus-id": 48,
+                "rivinumero": 0,
+                "tyyppi": "kokonaishintainen",
+                "lisatieto": "Välikatselmuksessa luotu kulu. Tavoitehinta alitettiin. Urakoitsijalle maksetaan tavoitepalkkiota.",
+                "summa": 17087.3367
+              }
             }
-          }
-        ]
+          ],
+          "poistettu": false
+        }
+      },
+      {
+        "kulu": {
+          "kulu-id": 42,
+          "laskun-tunniste": "76",
+          "kulun-ajankohta": {
+            "koontilaskun-vuosi": 2024,
+            "laskun-paivamaara": "2024-10-31T22:00:00Z",
+            "koontilaskun-kuukausi": 11
+          },
+          "kulun-kokonaissumma": 545.67,
+          "kulukohdistukset": [
+            {
+              "kulukohdistus": {
+                "kohdistus": {
+                  "toimenpide": 612,
+                  "tehtavaryhma": 14
+                },
+                "poistettu": false,
+                "kulukohdistus-id": 45,
+                "rivinumero": 0,
+                "tyyppi": "kokonaishintainen",
+                "summa": 200
+              }
+            },
+            {
+              "kulukohdistus": {
+                "kohdistus": {
+                  "toimenpide": 618,
+                  "tehtavaryhma": 2
+                },
+                "poistettu": false,
+                "kulukohdistus-id": 50,
+                "rivinumero": 1,
+                "tyyppi": "kokonaishintainen",
+                "summa": 345.67
+              }
+            }
+          ],
+          "poistettu": false
+        }
+      },
+      {
+        "kulu": {
+          "kulu-id": 43,
+          "laskun-tunniste": "2323",
+          "kulun-ajankohta": {
+            "koontilaskun-vuosi": 2024,
+            "laskun-paivamaara": "2024-10-31T22:00:00Z",
+            "koontilaskun-kuukausi": 11
+          },
+          "kulun-kokonaissumma": 350,
+          "kulukohdistukset": [
+            {
+              "kulukohdistus": {
+                "kohdistus": {
+                  "toimenpide": 612,
+                  "tehtavaryhma": 13
+                },
+                "poistettu": false,
+                "kulukohdistus-id": 46,
+                "rivinumero": 0,
+                "tyyppi": "kokonaishintainen",
+                "summa": 230
+              }
+            },
+            {
+              "kulukohdistus": {
+                "kohdistus": {
+                  "toimenpide": 612,
+                  "tehtavaryhma": 14
+                },
+                "poistettu": false,
+                "kulukohdistus-id": 49,
+                "rivinumero": 1,
+                "tyyppi": "kokonaishintainen",
+                "summa": 120
+              }
+            }
+          ],
+          "poistettu": false
+        }
+      }
+    ],
+    "sanktiot": [
+      {
+        "sanktio": {
+          "sanktio-id": 36,
+          "sanktion-ajankohta": "2022-09-08",
+          "sanktion-maara": 1000,
+          "sanktion-maara-indeksikorjattuna": 1012,
+          "indeksi": "MAKU 2015",
+          "toimenpide-id": 618,
+          "suorasanktio": false,
+          "sanktiolaji": "A",
+          "sanktiotyyppi": {
+            "nimi": "Talvihoito, päätiet",
+            "koodi": 13,
+            "toimenpide-id": 618
+          },
+          "laatupoikkeama-id": 44,
+          "poistettu": false
+        }
+      },
+      {
+        "sanktio": {
+          "sanktio-id": 73,
+          "sanktion-ajankohta": "2024-11-01",
+          "sanktion-maara": 1000,
+          "sanktion-maara-indeksikorjattuna": 0,
+          "indeksi": null,
+          "toimenpide-id": 608,
+          "suorasanktio": true,
+          "sanktiolaji": "A",
+          "sanktiotyyppi": {
+            "nimi": "Muut hoitourakan tehtäväkokonaisuudet",
+            "koodi": 17,
+            "toimenpide-id": null
+          },
+          "laatupoikkeama-id": 53,
+          "poistettu": false
+        }
+      }
+    ],
+    "bonukset": [
+      {
+        "bonus": {
+          "bonus-id": 46,
+          "bonuksen-ajankohta": "2024-11-11",
+          "bonuksen-maara": 11111,
+          "indeksi": null,
+          "toimenpide-id": 601,
+          "bonustyyppi": "asiakastyytyvaisyysbonus",
+          "bonuksen-kasittelyajankohta": "2024-11-11",
+          "bonuksen-kasittelytapa": "tyomaakokous",
+          "poistettu": false
+        }
+      },
+      {
+        "bonus": {
+          "bonus-id": 48,
+          "bonuksen-ajankohta": "2024-09-14",
+          "bonuksen-maara": 1989,
+          "indeksi": null,
+          "toimenpide-id": 601,
+          "bonustyyppi": "lupausbonus",
+          "bonuksen-kasittelyajankohta": "2024-09-14",
+          "bonuksen-kasittelytapa": "valikatselmus",
+          "poistettu": false
+        }
+      }
+    ],
+    "tavoitehinnan-muutokset": [
+      {
+        "tavoitehinnan-muutos": {
+          "muutos-id": 1,
+          "muutoksen-maara": 20000,
+          "muutoksen-hoitovuosi": 2021,
+          "muutoskategoria": "Muu",
+          "muutoksen-selite": "Muokattava testioikaisu",
+          "poistettu": false
+        }
+      },
+      {
+        "tavoitehinnan-muutos": {
+          "muutos-id": 2,
+          "muutoksen-maara": 1234,
+          "muutoksen-hoitovuosi": 2021,
+          "muutoskategoria": "Muu",
+          "muutoksen-selite": "Poistettava testioikaisu",
+          "poistettu": true
+        }
+      },
+      {
+        "tavoitehinnan-muutos": {
+          "muutos-id": 3,
+          "muutoksen-maara": 1234,
+          "muutoksen-hoitovuosi": 2021,
+          "muutoskategoria": "Muu",
+          "muutoksen-selite": "Tavoitehintaan vaikuttava muutos",
+          "poistettu": false
+        }
+      },
+      {
+        "tavoitehinnan-muutos": {
+          "muutos-id": 9,
+          "muutoksen-maara": 123.99,
+          "muutoksen-hoitovuosi": 2023,
+          "muutoskategoria": "Materiaalit",
+          "muutoksen-selite": "Lisää matksua",
+          "poistettu": false
+        }
+      },
+      {
+        "tavoitehinnan-muutos": {
+          "muutos-id": 8,
+          "muutoksen-maara": 34.9,
+          "muutoksen-hoitovuosi": 2023,
+          "muutoskategoria": "Tiestömuutokset",
+          "muutoksen-selite": "Uutta tietä",
+          "poistettu": false
+        }
+      },
+      {
+        "tavoitehinnan-muutos": {
+          "muutos-id": 6,
+          "muutoksen-maara": -78.98,
+          "muutoksen-hoitovuosi": 2024,
+          "muutoskategoria": "Hoitoluokkamuutokset",
+          "muutoksen-selite": "Alennettiin hoitoluokkaa",
+          "poistettu": false
+        }
+      },
+      {
+        "tavoitehinnan-muutos": {
+          "muutos-id": 5,
+          "muutoksen-maara": 300000,
+          "muutoksen-hoitovuosi": 2024,
+          "muutoskategoria": "Liikennejärjestelyt",
+          "muutoksen-selite": "Eipä mitään",
+          "poistettu": true
+        }
+      },
+      {
+        "tavoitehinnan-muutos": {
+          "muutos-id": 7,
+          "muutoksen-maara": 2444.8,
+          "muutoksen-hoitovuosi": 2024,
+          "muutoskategoria": "Materiaalit",
+          "muutoksen-selite": "Lisää matskua",
+          "poistettu": false
+        }
+      }
+    ],
+    "hoitovuoden-paatokset": [
+      {
+        "hoitovuoden-paatos": {
+          "paatos-id": 3,
+          "paatoksen-hoitovuosi": 2023,
+          "paatostyyppi": "tavoitehinnan-alitus",
+          "paatoksen-tulos": {
+            "kokonaismaara": null,
+            "tilaaja-maksaa": 0,
+            "urakoitsija-maksaa": -17087.3367,
+            "siirretaan-seuraavalle-hoitovuodelle": -153786.03029999998,
+            "tavoitehinta": null
+          },
+          "lupausten-tulos": {
+            "luvatut-pisteet": null,
+            "toteutuneet-pisteet": null
+          },
+          "viittaukset-toteutuneisiin-kustannuksiin": {
+            "bonus-id": null,
+            "kulu-id": 45,
+            "sanktio-id": null
+          },
+          "poistettu": false
+        }
+      },
+      {
+        "hoitovuoden-paatos": {
+          "paatos-id": 4,
+          "paatoksen-hoitovuosi": 2023,
+          "paatostyyppi": "lupausbonus",
+          "paatoksen-tulos": {
+            "kokonaismaara": null,
+            "tilaaja-maksaa": 1988.9999999999998,
+            "urakoitsija-maksaa": 0,
+            "tavoitehinta": 90000,
+            "siirretaan-seuraavalle-hoitovuodelle": 0
+          },
+          "lupausten-tulos": {
+            "luvatut-pisteet": 76,
+            "toteutuneet-pisteet": 93
+          },
+          "viittaukset-toteutuneisiin-kustannuksiin": {
+            "bonus-id": 48,
+            "kulu-id": null,
+            "sanktio-id": null
+          },
+          "poistettu": false
+        }
+      },
+      {
+        "hoitovuoden-paatos": {
+          "paatos-id": 2,
+          "paatoksen-hoitovuosi": 2024,
+          "paatostyyppi": "tavoitehinnan-alitus",
+          "paatoksen-tulos": {
+            "kokonaismaara": null,
+            "tilaaja-maksaa": 0,
+            "urakoitsija-maksaa": -12894,
+            "tavoitehinta": null,
+            "siirretaan-seuraavalle-hoitovuodelle": -115917
+          },
+          "lupausten-tulos": {
+            "luvatut-pisteet": null,
+            "toteutuneet-pisteet": null
+          },
+          "viittaukset-toteutuneisiin-kustannuksiin": {
+            "bonus-id": null,
+            "kulu-id": 44,
+            "sanktio-id": null
+          },
+          "poistettu": true
+        }
       }
     ]
   }

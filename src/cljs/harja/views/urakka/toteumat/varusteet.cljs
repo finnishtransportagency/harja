@@ -154,7 +154,7 @@
         Vanhat varustekirjaukset löytyvät Harjasta edelleen, mutta varusteiden yksityiskohtaisia tietoja ei voida tarkastella.
         Velhon varustetiedot tulevat Harjaan näkyviin arviolta kesällä 2023." "100%"]
        (when virhe
-         (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
+         [yleiset/info-laatikko :varoitus virhe nil "450px" {:sulje-nappi-id (gensym) :sulje-fn (fn [_] (e! (v/->VirheKasitelty)))}])
        [kartta/kartan-paikka]
        [varustehakulomake e! nykyiset-valinnat naytettavat-toteumat app]])))
 

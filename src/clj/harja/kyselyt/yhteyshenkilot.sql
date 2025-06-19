@@ -17,7 +17,19 @@ SELECT
 FROM yhteyshenkilo y
   LEFT JOIN yhteyshenkilo_urakka yu ON yu.yhteyshenkilo = y.id
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
-WHERE yu.urakka = :urakka;
+WHERE yu.urakka = :urakka AND yu.rooli != 'Urakan yhteystiedot';
+
+-- name: hae-urakan-yleinen-puh-ja-sposti
+-- Hakee urakan yleinen puhelinnumero ja sähköposti
+SELECT
+  y.id,
+  y.etunimi,
+  y.matkapuhelin,
+  y.sahkoposti,
+  y.organisaatio
+FROM yhteyshenkilo y
+  JOIN yhteyshenkilo_urakka yu ON yu.yhteyshenkilo = y.id
+WHERE yu.urakka = :urakka AND yu.rooli = 'Urakan yhteystiedot';
 
 -- name: poista-urakan-paivystykset!
 -- Poistaa annetun urakan päivystykset ulkoisella id:lla

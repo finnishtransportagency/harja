@@ -2,6 +2,7 @@
   "Yleinen leijuke -komponentti. Leijuke on muun sisällön päälle tuleva absoluuttisesti
   positioitu pieni elementti, esim. lyhyt lomake."
   (:require [reagent.core :as r]
+            [reagent.dom :as rdom]
             [reagent.core :refer [atom] :as r]
             [harja.ui.napit :as napit]
             [harja.ui.komponentti :as komp]
@@ -30,7 +31,7 @@
                 :top "auto"}})
 
 (defn- maarita-suunta [komponentti]
-  (let [wrapper-node (r/dom-node komponentti)
+  (let [wrapper-node (rdom/dom-node komponentti)
         komponentti-node (.-firstChild wrapper-node)
         [_ _ leveys korkeus :as sij] (dom/sijainti komponentti-node)
         viewport-korkeus @dom/korkeus
@@ -121,6 +122,24 @@
     [vihjeleijuke
      leijuke-optiot
      leijuke-sisalto]]])
+
+(defn ulkoinen-vihje []
+  (fn [optiot leijuke-sisalto nakyvissa? toggle-fn]
+    [:div.inline-block.yleinen-pikkuvihje.klikattava {:style {:margin-left "16px"}}
+     [:div.vihjeen-sisalto {:on-click #(toggle-fn)}
+      (when nakyvissa?
+        [leijuke (merge
+                   {:otsikko [ikonit/ikoni-ja-teksti (ikonit/nelio-info) "Vihje"]
+                    :sulje! #(toggle-fn)}
+                   optiot)
+         [:div {:style {:min-width "300px"}}
+          leijuke-sisalto]])]]))
+
+(defn avattava-ulkoinen-vihje
+  [leijuke-optiot leijuke-sisalto nakyvissa? toggle-fn]
+  [:div
+   [:span
+    [ulkoinen-vihje leijuke-optiot leijuke-sisalto nakyvissa? toggle-fn]]])
 
 (defn multipage-vihjesisalto [& sisallot]
   (let [sivu-index (atom 0)

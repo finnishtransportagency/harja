@@ -10,10 +10,10 @@
             [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
-            [harja.palvelin.integraatiot.labyrintti.sms-test :refer [+testi-sms-url+]]
+            [harja.palvelin.integraatiot.sms.sms-test :refer [+testi-sms-url+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
-            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [clojure.java.io :as io]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
@@ -22,7 +22,8 @@
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [clojure.string :as str]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
@@ -61,32 +62,16 @@
                                                                                             :vastausosoite "harja-ala-vastaa@vayla.fi"}
                                                                            :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])
-                        :labyrintti (component/using (labyrintti/->Labyrintti +testi-sms-url+
-                                                                              "testiapiavain" (atom #{}))
-                                                     [:db :integraatioloki :http-palvelin])
+                        :sms (component/using (sms/luo-tekstiviesti-komponentti
+                                                {:url +testi-sms-url+ :apiavain "testiapiavain"})
+                                      [:http-palvelin :db :integraatioloki])
                         :laadunseuranta (component/using
                                           (ls/->Laadunseuranta)
-                                          [:http-palvelin :db :fim :api-sahkoposti :labyrintti])))))
+                                          [:http-palvelin :db :fim :api-sahkoposti :sms])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each jarjestelma-fixture)
-
-
-;; Helpottaa testien roskien keruuta. Toisinaan kun omalla koneella ajaa kaikki testit useampaan kertaan,
-;; jäävät siivoamattomat sanktiot testikantaan vääristämään tuloksia
-(defn poista-sanktio-perustelulla
-  "Poistaa laatupoikkeaman perustelukentän sisällön mukaan tunnistaen, ja siihen liittyvät sanktiot."
-  [perustelu]
-  (let [laatupoikkeama-idt (map first (q (str "SELECT id FROM laatupoikkeama where perustelu = '" perustelu "';")))
-        sanktio-idt (when
-                      (seq laatupoikkeama-idt)
-                      (map first (q (str "SELECT id FROM sanktio where laatupoikkeama IN (" (str/join "," laatupoikkeama-idt) ");"))))]
-
-    (when (seq sanktio-idt)
-      (u "DELETE FROM sanktio WHERE id IN (" (str/join "," sanktio-idt) ");"))
-    (when (seq laatupoikkeama-idt)
-      (u "DELETE FROM laatupoikkeama WHERE id IN(" (str/join "," laatupoikkeama-idt) ");"))))
 
 (deftest tallenna-laatupoikkeama
   (let [laatupoikkeama {:yllapitokohde nil
@@ -155,7 +140,7 @@
                                           :sanktiot [olemassa-oleva-sanktio])))))
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla "Testi")))
+    (testidatan-kaytto/poista-sanktio-perustelulla "Testi")))
 
 (deftest laatupoikkeaman-selvityspyynnosta-lahtee-sms
   (let [laatupoikkeama {:sijainti {:type :point
@@ -274,7 +259,7 @@
         (is (= perustelu (get-in lisatty-sakko [:laatupoikkeama :paatos :perustelu])) "Päällystysurakan sanktiorunko oikea summa")))
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 (deftest tallenna-suorasanktio-hoidon-urakassa-sakko
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -331,7 +316,7 @@
 
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 (deftest tallenna-suorasanktio-2021-alkavassa-mhu-urakassa-sakko
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
@@ -364,7 +349,7 @@
 
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 (deftest tallenna-suorasanktio-ei-salli-vaaran-urakkatyypin-sanktiolajia
   (let [perustelu "ABC gorilla gävelee"
@@ -393,7 +378,7 @@
                                +kayttaja-jvh+ paallystys-sakko laatupoikkeama-paallystys hk-alkupvm hk-loppupvm))))
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 (deftest paivita-eri-urakan-suorasanktiota
   (let [perustelu "ABC möhöfantti kävelee"
@@ -414,7 +399,7 @@
                                +kayttaja-jvh+ paallystys-sakko laatupoikkeama-paallystys hk-alkupvm hk-loppupvm))))
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 (deftest suorasanktion-poistaminen-vs-laatupoikkeamaan-liitetyn-sanktion-poistaminen
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -494,14 +479,14 @@
               (= false (:lp_poistettu poistettu-lp-sanktio-kannassa))))))
 
     ;; Siivoa roskat
-    (poista-sanktio-perustelulla perustelu)))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
 
 (deftest hae-laatupoikkeaman-tiedot
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-laatupoikkeaman-tiedot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                            :laatupoikkeama-id 1})]
+                                                                            :laatupoikkeama-id 3})]
     (is (not (empty? vastaus)))
     (is (string? (:kuvaus vastaus)))
     (is (>= (count (:kuvaus vastaus)) 10))))
@@ -535,10 +520,10 @@
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
                      :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
-                     :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 16, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
+                     :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 18, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
                      :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/sql-timestamp #inst "2019-10-10T21:06:06.370000000-00:00") :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
+    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/sql-timestamp #inst "2019-10-10T21:06:06.370000000-00:00") :id 9, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
 
 
 (deftest hae-urakan-jalkeiset-sanktiot

@@ -59,9 +59,16 @@
   (let [host (.-host js/location)]
     (kehitysymparistossa-localhost?* host)))
 
+(defn kehitysymparistossa-gc?
+  "Tarkistaa ollaanko gc-kehitysympäristössä"
+  []
+  (let [host (.-host js/location)]
+    (or (gstr/contains host "googleusercontent")
+      (gstr/contains host "harja-gc"))))
+
 (defn vaylapilvi-ymparistossa?
   [host]
-  (#{"harjadev.testivaylapilvi.fi" "harjatest.testivaylapilvi.fi" "harja.vaylapilvi.fi"} host))
+  (or (str/ends-with? host ".vaylapilvi.fi") (str/ends-with? host ".testivaylapilvi.fi")))
 
 (def +polku+ (let [host (.-host js/location)]
                (if (or
@@ -309,8 +316,6 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   (str (polku) "excel?_=" (name tyyppi) "&"
        (yhdista-parametrit parametrit)))
 
-(defn logout-url []
-  (str +polku+ "sso/logout?auth=1"))
 
 (defn wmts-polku-mml []
   (str +polku+ "wmts/"))

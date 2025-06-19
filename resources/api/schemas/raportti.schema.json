@@ -26,7 +26,7 @@
         },
         "materiaaliraportti": {
           "id": "urn:harja/raportti/materiaaliraportti",
-          "$ref": "file:resources/api/schemas/entities/materiaalit.schema.json",
+          "$ref": "file:resources/api/schemas/entities/raportti-materiaalit.schema.json",
           "required": false
         }
       }

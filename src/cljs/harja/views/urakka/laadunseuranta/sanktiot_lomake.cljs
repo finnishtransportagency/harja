@@ -231,6 +231,7 @@
            {:otsikko "Puute tai laiminlyönti"
             :nimi :vakiofraasi
             :tyyppi :valinta
+            :pitka-teksti? true
             ::lomake/col-luokka "col-xs-12"
             :valinta-arvo first
             :valinta-nayta second

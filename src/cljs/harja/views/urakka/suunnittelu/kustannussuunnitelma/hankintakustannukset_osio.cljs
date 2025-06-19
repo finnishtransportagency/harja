@@ -450,23 +450,22 @@
                     (.preventDefault event)
                     (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?] not)))]
     (fn [suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid {:keys [toimenpide maksetaan kopioidaan-tuleville-vuosille?]}]
-      (let [toimenpide (toimenpide-tekstiksi toimenpide)]
-        [:div.kustannussuunnitelma-hankinnat
-         [:div.kustannussuunnitelma-filter
-          [:div
-           [:span "Toimenpide"]
-           [yleiset/livi-pudotusvalikko {:valinta toimenpide
-                                         :valitse-fn valitse-toimenpide
-                                         :format-fn toimenpide-tekstiksi
-                                         :vayla-tyyli? true
-                                         :data-cy "suunnitellut-hankinnat-toimenpide-select"}
-            (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet)]]
-          [maksetaan-filter (r/partial valitse-kausi suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid) maksetaan]]
-         [:input#kopioi-hankinnat-tuleville-hoitovuosille.vayla-checkbox
-          {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
-           :on-change vaihda-fn}]
-         [:label {:for "kopioi-hankinnat-tuleville-hoitovuosille"}
-          "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]]))))
+      [:div.kustannussuunnitelma-hankinnat
+       [:div.kustannussuunnitelma-filter
+        [:div
+         [:span "Toimenpide"]
+         [yleiset/livi-pudotusvalikko {:valinta toimenpide
+                                       :valitse-fn valitse-toimenpide
+                                       :format-fn toimenpide-tekstiksi
+                                       :vayla-tyyli? true
+                                       :data-cy "suunnitellut-hankinnat-toimenpide-select"}
+          (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet)]]
+        [maksetaan-filter (r/partial valitse-kausi suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid) maksetaan]]
+       [:input#kopioi-hankinnat-tuleville-hoitovuosille.vayla-checkbox
+        {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
+         :on-change vaihda-fn}]
+       [:label {:for "kopioi-hankinnat-tuleville-hoitovuosille"}
+        "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]])))
 
 
 

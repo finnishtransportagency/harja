@@ -46,7 +46,7 @@
 
 ;; MH-urakoille määrien toteumat
 (def default-toteuma-maara {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                            :toimenpide {:id (hae-tehtavaryhman-id "ELY-rahoitteiset, ylläpito (E)")
+                            :toimenpide {:id (hae-tehtavaryhman-id "E - ELY-rahoitteiset, ylläpito")
                                          :otsikko "8 MUUTA"}
                             :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "24.06.2020")
                             :tyyppi :maaramitattava

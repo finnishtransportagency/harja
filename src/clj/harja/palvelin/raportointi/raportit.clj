@@ -2,8 +2,10 @@
   "Sisältää kaikki Harjan raportit. Nämä tiedot ennen ladattiin tietokannasta,
   nyt ne on määritelty kätevästi `raportit` vektorissa.
 
-  Jos lisäät uuden raportin, lisää sen nimiavaruuden require alle sekä
-  raportin tiedot `raportit` vektoriin."
+  Jos lisäät uuden raportin joudut tekemään kolme toimenpidettä:
+  - lisää sille oikeudet roolit -exceliin
+  - lisää sen nimiavaruus require alle
+  - lisää raportin tiedot, konteksti ja parametrit `raportit` vektoriin."
 
  (:require
   ;; vaaditaan built in raportit
@@ -51,6 +53,9 @@
   [harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat]
   [harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat]
   [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara]
+  [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto]
+  [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu]
+  [harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
@@ -99,7 +104,7 @@
     :kuvaus-tarkenne "Laskutusyhteenveto (työmaakokous)"
     :suorita      #'harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa/suorita
     :urakkatyyppi #{:teiden-hoito}}
-   
+
    {:nimi         :tyomaapaivakirja-nakyma
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :kuvaus       "Työmaapäiväkirja"
@@ -382,7 +387,7 @@
     :kuvaus       "Liikennetapahtumat"
     :suorita      #'harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat/suorita
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}
-   
+
    {:nimi         :kanavien-hairiotilanteet
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"urakka"}
@@ -422,7 +427,54 @@
     :konteksti    #{"urakka"}
     :kuvaus       "Kulut tehtäväryhmittäin"
     :suorita      #'harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain/suorita
-    :urakkatyyppi #{:teiden-hoito}}])
+    :urakkatyyppi #{:teiden-hoito}}
+
+   {:nimi         :paikkausten-yhteenveto
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
+    :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu/suorita
+    :kuvaus-tarkenne "Paikkausten yhteenveto MHU"
+    :kuvaus       "MHUPaikkaustenyhteenveto"
+    :urakkatyyppi #{:teiden-hoito}}
+
+   {:nimi         :ppu-paikkausten-yhteenveto
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
+    :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto/suorita-ppu
+    :kuvaus-tarkenne "Paikkausten yhteenveto PPU"
+    :kuvaus       "KokonaisurakanPaikkaustenyhteenveto"
+    :urakkatyyppi #{:paallystys}
+    :sopimustyyppi #{:kokonaisurakka}}
+
+   {:nimi         :mpu-paikkausten-yhteenveto
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
+    :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto/suorita-mpu
+    :kuvaus-tarkenne "Paikkausten yhteenveto MPU"
+    :kuvaus       "MPUPaikkaustenyhteenveto"
+    :urakkatyyppi #{:paallystys}
+    :sopimustyyppi #{:mpu}}
+
+   {:nimi         :tiemerkinta-sakot-bonukset
+    :konteksti    #{"urakka"}
+    :urakkatyyppi #{:tiemerkinta}
+    :kuvaus       "Tiemerkintä - Sakot ja bonukset"
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/sakot-ja-bonukset}
+
+   {:nimi         :tiemerkinta-muut-kustannukset
+    :konteksti    #{"urakka"}
+    :urakkatyyppi #{:tiemerkinta}
+    :kuvaus       "Tiemerkintä - Muut kustannukset"
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/muut-kustannukset}
+
+   {:nimi :tiemerkinta-kustannukset-yhteenveto
+    :konteksti    #{"urakka"}
+    :urakkatyyppi #{:tiemerkinta}
+    :kuvaus       "Tiemerkintä - Yhteenveto"
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :suorita      #'harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset/yhteenveto}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))

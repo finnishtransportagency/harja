@@ -1,10 +1,9 @@
 (ns harja.domain.laadunseuranta
   "Validin tarkastuksen skeema"
-  (:require [schema.core :as s]
+  (:require [schema.core :as s :include-macros true]
             [harja.domain.skeema :refer [pvm-tyyppi] :as skeema]
             [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti Sijainti]]
-            [taoensso.timbre :as log]
-            [clojure.string :as str]))
+            [taoensso.timbre :as log]))
 
 (def Kasittelytapa (s/enum :tyomaakokous :puhelin :kommentit :muu))
 (def Paatostyyppi (s/enum :sanktio :ei_sanktiota :hylatty))

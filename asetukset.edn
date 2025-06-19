@@ -20,12 +20,12 @@
 
  ;; Todennuksen JWT asetukset
  ;; Käytetään todennukseen kun käyttäjä tulee Harjaan
- :todennus-varmistus {;; x-iam-data tokenin public key (käyttäjäroolit)
-                      ;; x-iam-accesstoken avain tulee payloadin mukana, sille ei tarvitse muuttujaa erikseen
+ :todennus-varmistus {;; x-iam-data tokenin public key (käyttäjäroolit) 
+                      ;; x-iam-accesstoken avain tulee payloadin mukana, sille ei tarvitse muuttujaa erikseen 
                       :public-key-url #=(eval (harja.tyokalut.env/env "COGNITO_IAMDATA_KEY" nil))
 
-                      ;; Onko Cognito todennuksen token authentikointi päällä?
-                      ;; Voi ongelma tilanteessa laittaa false, jos esim. käyttäjät ei pääse Harjaan ilman hyvää syytä
+                      ;; Onko Cognito todennuksen token authentikointi päällä? 
+                      ;; Voi ongelma tilanteessa laittaa false, jos esim. käyttäjät ei pääse Harjaan ilman hyvää syytä 
                       :todennus-varmistus-paalla? #=(eval (harja.tyokalut.env/env "TODENNUS_VARMISTUS_PAALLA" false))}
 
 
@@ -150,7 +150,7 @@
                         :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
 
                         :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
-                        
+
                         :kanavien-shapefile "file://shp/Vesivaylien_kanavat/sulkukanavat_uusiPolygon.shp"
                         :kanavien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=vesivaylatiedot:sulkukanavat_uusi&outputFormat=SHAPE-ZIP"
                         :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Sulkukanavat_uusiPolygon.shz"
@@ -211,7 +211,7 @@
                                :tiedostopesula
                                :replica-db
                                :sampo
-                               ;; Sampoapi, vai apisampo?
+                               ;; Sampoapi, vai apisampo? 
                                ;; Ei tartte kehitysmoodissa
                                :sampo-api
                                :api-sampo}

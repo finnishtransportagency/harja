@@ -1123,6 +1123,19 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                          (range (inc ensimmainen-vuosi) viimeinen-vuosi))
                    [[(vuoden-eka-pvm viimeinen-vuosi) (paivan-lopussa loppupvm)]])))))
 
+(defn urakan-vuodet-sampolle [alkupvm loppupvm]
+  ;; Tämä funktio on versio funktiosta urakan-vuodet. Urakan vuodet palauttaa loppupäivämäärän kellonajan vuorokauden loppuun.
+  ;; Sampo haluaa kellonajan aina muodossa 00:00:00.0. Siksi oma käsittelynsä Sampolle, jossa käytetään vain paivan-alussa-funktiota.
+  (let [ensimmainen-vuosi (vuosi alkupvm)
+        viimeinen-vuosi (vuosi loppupvm)]
+    (if (= ensimmainen-vuosi viimeinen-vuosi)
+      [[alkupvm loppupvm]]
+
+      (vec (concat [[alkupvm (paivan-alussa (vuoden-viim-pvm ensimmainen-vuosi))]]
+             (mapv (fn [vuosi]
+                     [(vuoden-eka-pvm vuosi) (paivan-alussa (vuoden-viim-pvm vuosi))])
+               (range (inc ensimmainen-vuosi) viimeinen-vuosi))
+             [[(vuoden-eka-pvm viimeinen-vuosi) (paivan-alussa loppupvm)]])))))
 (def paivan-aikavali (juxt paivan-alussa paivan-lopussa))
 
 #?(:clj

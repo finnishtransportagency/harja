@@ -17,37 +17,37 @@
 
 (deftest valinta
  (let [data (r/atom nil)]
-  (komponenttitesti
-   [kentat/tee-kentta {:nimi :foo :tyyppi :valinta
-                       :valinta-nayta #(if (nil? %) "Valitse" %)
-                       :valinnat ["abc" "kissa kävelee" "tikapuita pitkin taivaseen"]}
-    data]
+   (komponenttitesti
+     [kentat/tee-kentta {:nimi :foo :tyyppi :valinta
+                         :valinta-nayta #(if (nil? %) "Valitse" %)
+                         :valinnat ["abc" "kissa kävelee" "tikapuita pitkin taivaseen"]}
+      data]
 
-   "Aluksi arvo on Valitse ja data nil"
-   (is (= "Valitse" (u/text :.valittu)))
-   (is (nil? @data))
-   --
+     "Aluksi arvo on Valitse ja data nil"
+     (is (= "Valitse" (u/text :.valittu)))
+     (is (nil? @data))
+     --
 
-   "Ennen klikkaamistakin kolme vaikkei näkyvissä"
-   (is (= 3 (count (u/sel :li.harja-alasvetolistaitemi))))
+     "Ennen klikkaamistakin kolme vaikkei näkyvissä"
+     (is (= 3 (count (u/sel :li.harja-alasvetolistaitemi))))
 
-   "Ennen klikkaamista valinnat eivät ole näkyvissä"
-   (is (nil? (u/sel1 :div.dropdown.open)))
+     "Ennen klikkaamista valinnat eivät ole näkyvissä"
+     (is (nil? (u/sel1 :div.dropdown.open)))
 
-   "Klikkaaminen avaa pulldownin"
-   (u/click :button.nappi-alasveto)
-   --
-   (is (= 3 (count (u/sel :li.harja-alasvetolistaitemi))))
-   (is (some? (u/sel1 :div.dropdown.open)))
+     "Klikkaaminen avaa pulldownin"
+     (u/click :button.nappi-alasveto)
+     --
+     (is (= 3 (count (u/sel :li.harja-alasvetolistaitemi))))
+     (is (some? (u/sel1 :div.dropdown.open)))
 
-   "Valitaan kissa kävelee"
-   (u/click ".harja-alasvetolistaitemi:nth-child(2) > span > a")
-   --
-   (is (= "kissa kävelee" (u/text :.valittu)))
-   (is (= @data "kissa kävelee"))
+     "Valitaan kissa kävelee"
+     (u/click ".harja-alasvetolistaitemi:nth-child(2) > span > a")
+     --
+     (is (= "kissa kävelee" (u/text :.valittu)))
+     (is (= @data "kissa kävelee"))
 
-   "Valinnan jälkeen lista piiloon"
-   (is (nil? (u/sel1 :div.dropdown.open))))))
+     "Valinnan jälkeen lista piiloon"
+     (is (nil? (u/sel1 :div.dropdown.open))))))
 
 
 (deftest numero

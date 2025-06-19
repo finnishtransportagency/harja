@@ -28,9 +28,8 @@ FROM yrita_tierekisteriosoite_pisteille2(
 -- alkupisteen, loppupisteen ja viivan geometrian. Jos viivaa
 -- ei löydy, palauttaa NULL geometriana.
 SELECT *
-FROM
-      tieviivat_pisteille(ST_GeomFromText(:pisteet), :threshold :: INTEGER)
-    AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY);
+  FROM tieviivat_pisteille(ST_GeomFromText(:pisteet), :threshold :: INTEGER)
+       AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY);
 
 -- name: hae-tieviivat-pisteille-aika
 -- Hakee tieverkolle projisoidut viivat annetuille pisteille.
@@ -62,7 +61,7 @@ SELECT paivita_tr_taulut();
 -- name: tierekisteriosoite-viivaksi
 -- single?: true
 -- hakee geometrian annetulle tierekisteriosoitteelle
-SELECT * FROM tierekisteriosoitteelle_viiva(
+SELECT * FROM tieosoitteelle_geometria(
    CAST(:tie AS INTEGER),
    CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER),
    CAST(:losa AS INTEGER), CAST(:loppuet AS INTEGER));
@@ -177,14 +176,12 @@ ORDER BY tie
 LIMIT 100;
 
 -- name: hae-tieosan-tiedot
-SELECT "tr-numero",
-       "tr-osa",
-       MIN("tr-alkuetaisyys") as "tr-alkuetaisyys",
-       MAX("tr-loppuetaisyys") as "tr-loppuetaisyys"
-  FROM tr_osoitteet tr
- WHERE tr."tr-numero" = :tie
-   AND tr."tr-osa" = :osa
- GROUP BY "tr-numero", "tr-osa";
+SELECT tie,
+       osa,
+       pituus
+  FROM tr_osien_pituudet trop
+ WHERE trop.tie = :tie
+   AND trop.osa = :osa;
 
 -- name: onko-tr-yhtenainen?
 -- single?: true
@@ -196,6 +193,53 @@ SELECT count(distinct ("tr-osa")) as kpl
 -- name: onko-tie-olemassa?
 -- single?: true
 select exists(
-    SELECT "tr-numero"
-      FROM tr_osoitteet tr
-     WHERE tr."tr-numero" = :tie);
+    SELECT tr.tie
+      FROM tr_osien_pituudet tr
+     WHERE tr.tie = :tie);
+
+-- name: hae-tieosoitteet
+-- Ei haeta tässä vaiheessa vielä kaistoja tai ajoratoja
+SELECT * FROM (
+SELECT DISTINCT ON (CONCAT("tr-numero", "tr-osa", "tr-alkuetaisyys")) CONCAT("tr-numero", "tr-osa", "tr-alkuetaisyys") AS tunniste,
+                                                                      "tr-numero"                                      AS tie,
+                                                                      "tr-osa"                                         AS osa,
+                                                                      "tr-alkuetaisyys"                                AS alkuetaisyys,
+                                                                      "tr-loppuetaisyys"                               AS loppuetaisyys,
+                                                                      tietyyppi
+  FROM tr_osoitteet) as tiet
+ORDER BY tie, osa, alkuetaisyys;
+
+-- name: tieosoitteen-ajoratakilometrit-kaistaaineistosta
+-- single?: true
+-- Haetaan ensin kaikki annetulle tieosoitteelle osuvat relevantit ajoratatiedot, joista myöhemmin summataan
+  WITH relevantit AS
+           (SELECT *
+              FROM tr_osoitteet
+             WHERE "tr-numero" = :tr-numero AND
+                 "tr-osa" BETWEEN :tr-alkuosa AND :tr-loppuosa AND
+               -- alkupään tarkastelu
+                 (:tr-alkuosa < "tr-osa" OR (:tr-alkuosa = "tr-osa" AND :tr-alkuetaisyys < "tr-loppuetaisyys")) AND
+               -- loppupään tarkastelu
+                 (:tr-loppuosa > "tr-osa" OR (:tr-loppuosa = "tr-osa" AND  :tr-loppuetaisyys > "tr-alkuetaisyys")) AND
+               -- huomioitava vain pääkaistat 11 ja 21, muuten esim. kääntymiskaistoista tulee häiriötä laskentaan
+                 (("tr-ajorata" = 0 AND "tr-kaista" = 11) OR
+                  ("tr-ajorata" = 1 AND "tr-kaista" = 11) OR
+                  ("tr-ajorata" = 2 AND "tr-kaista" = 21) OR
+                     -- joitakin kävelyn ja pyöräilyn väyliä on rajoitusalueina, niillä on aina tienumero 70000-80000, ajorata 0 ja kaista 31
+                  ("tr-numero" BETWEEN 70000 AND 80000 AND "tr-ajorata" = 0 AND "tr-kaista" = 31))
+             ORDER BY "tr-osa", "tr-alkuetaisyys")
+SELECT SUM(
+           CASE
+               -- jos ko. osat ovat varmuudella kaikki kokonaisuudessan mukana
+               WHEN (:tr-alkuosa < "tr-osa" AND :tr-loppuosa > "tr-osa") THEN "tr-loppuetaisyys" - "tr-alkuetaisyys"
+               -- jos alkuosa osoitteessa on pienempi, mutta loppuosa sama
+               WHEN (:tr-alkuosa < "tr-osa" AND :tr-loppuosa = "tr-osa") THEN
+                   LEAST("tr-loppuetaisyys", :tr-loppuetaisyys) - "tr-alkuetaisyys"
+               -- jos loppuosa osoitteessa on suurempi, mutta alkuosa sama
+               WHEN (:tr-loppuosa > "tr-osa" AND :tr-alkuosa = "tr-osa") THEN
+                   "tr-loppuetaisyys" - GREATEST("tr-alkuetaisyys", :tr-alkuetaisyys)
+               -- jos alku- ja loppuosa on sama, saadaan haluttu väli least ja greatest avulla
+               WHEN :tr-alkuosa = "tr-osa" AND :tr-loppuosa = "tr-osa" THEN
+                   LEAST("tr-loppuetaisyys", :tr-loppuetaisyys) - GREATEST("tr-alkuetaisyys", :tr-alkuetaisyys)
+               END) AS ajoratakilometrit
+  FROM relevantit;

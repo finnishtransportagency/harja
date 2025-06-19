@@ -135,6 +135,7 @@
        (on-loppu? tie)))
 
 (defn laske-tien-pituus
+  "Laskee tieosoitteen pituuden, osien pituudet sisään mäppinä muodossa  {1 7041, 2 3827, ... n 2343}"
   ([tie] (laske-tien-pituus {} tie))
   ([osien-pituudet {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tie}]
    (assert (or (map? osien-pituudet)
@@ -215,7 +216,7 @@
          loppuetaisyys (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr) (:let tr) (::let tr))
          ei-tierekisteriosoitetta (if (or (nil? (:teksti-ei-tr-osoitetta? optiot))
                                           (boolean (:teksti-ei-tr-osoitetta? optiot)))
-                                    "Ei tierekisteriosoitetta"
+                                    "Ei tieosoitetta"
                                     "")]
      ;; Muodosta teksti
      (str (if tie
@@ -261,9 +262,15 @@
 
 (defn tr-osoite-kasvusuuntaan [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tr-osoite}]
   (let [kasvava-osoite {:tr-alkuosa (if (> tr-alkuosa tr-loppuosa) tr-loppuosa tr-alkuosa)
-                        :tr-alkuetaisyys (if (> tr-alkuosa tr-loppuosa) tr-loppuetaisyys tr-alkuetaisyys)
+                        :tr-alkuetaisyys (if (or (> tr-alkuosa tr-loppuosa)
+                                               (and tr-alkuetaisyys tr-loppuetaisyys
+                                                 (= tr-alkuosa tr-loppuosa)
+                                                 (< tr-loppuetaisyys tr-alkuetaisyys))) tr-loppuetaisyys tr-alkuetaisyys)
                         :tr-loppuosa (if (> tr-alkuosa tr-loppuosa) tr-alkuosa tr-loppuosa)
-                        :tr-loppuetaisyys (if (> tr-alkuosa tr-loppuosa) tr-alkuetaisyys tr-loppuetaisyys)}]
+                        :tr-loppuetaisyys (if (or (> tr-alkuosa tr-loppuosa)
+                                                (and tr-alkuetaisyys tr-loppuetaisyys
+                                                  (= tr-alkuosa tr-loppuosa)
+                                                  (< tr-loppuetaisyys tr-alkuetaisyys))) tr-alkuetaisyys tr-loppuetaisyys)}]
     ;; Palautetaan korjattu tr-osoite. Jos mapissa oli muita avaimia, ne saa jäädä
     (merge tr-osoite kasvava-osoite)))
 
@@ -504,6 +511,12 @@
   ;; Tätä on alettu käyttää enemmän noin 2022 tienoilla, ainakin paikkauspuolella.
   [tie alkuosa alkuet loppuosa loppuet]
   (str tie " - " alkuosa "/" alkuet " - " loppuosa "/" loppuet))
+
+(defn osoiteosat-moderni-fmt
+  "Formatoi tieosoitteen kentät modernilla tavalla ilman tienumeroa, esim 1/0 - 3/300"
+  ;; Tätä on alettu käyttää enemmän noin 2022 tienoilla, ainakin paikkauspuolella.
+  [alkuosa alkuet loppuosa loppuet]
+  (str alkuosa "/" alkuet " - " loppuosa "/" loppuet))
 
 ;; Hoitourakoissa on asiakkaan kanssa sovittu, että seuraaville Päällysteiden paikkaus -toimenpiteen
 ;; alaisille tehtäville vaaditaan syöttölomakkeella aina sijainti

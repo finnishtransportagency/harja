@@ -1,6 +1,7 @@
 (ns harja.ui.komponentti
   "Apureita, joilla voi kasata komponentteja mixin osista."
   (:require [reagent.core :as r :refer [atom]]
+            [reagent.dom :as rdom]
             [harja.asiakas.tapahtumat :as t]
             [harja.tiedot.muokkauslukko :as lukko]
             [harja.tiedot.istunto :as istunto]
@@ -282,7 +283,7 @@
   ([alipolku]
    (piirretty
     (fn [this]
-      (let [elt (r/dom-node this)]
+      (let [elt (rdom/dom-node this)]
         (when-let [elt (if alipolku
                          (.querySelector elt alipolku)
                          elt)]
@@ -293,7 +294,7 @@
   []
   (piirretty
    (fn [this]
-     (let [node (r/dom-node this)
+     (let [node (rdom/dom-node this)
            [_ y _ h] (dom/sijainti node)
            korkeus @dom/korkeus]
        (when (> (+ y h) korkeus)

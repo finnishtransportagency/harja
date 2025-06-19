@@ -12,6 +12,8 @@
             [cljs-time.core :as t]
             [harja.ui.komponentti :as komp]))
 
+(defonce urakan-hoitovuodet-ja-kausi (atom nil))
+
 (defn tienumero
   ([tienumero-atom] (tienumero tienumero-atom nil {}))
   ([tienumero-atom toiminta-f] (tienumero tienumero-atom toiminta-f {}))
@@ -40,8 +42,38 @@
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
 
-(defn urakan-hoitokausi [ur]
-  (valinnat/urakan-hoitokausi ur u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!))
+(defn urakan-hoitokausi
+  ([ur]
+   (urakan-hoitokausi ur false))
+  ([ur disabled?]
+   (valinnat/urakan-hoitokausi ur u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi! disabled?)))
+
+(defn urakan-hoitokausi-kaikki
+  [ur disabled?]
+  (let [_
+        ;; Lisää koko  urakan aikaväli
+        (reset! urakan-hoitovuodet-ja-kausi (conj @u/valitun-urakan-hoitokaudet
+                                              [(ffirst @u/valitun-urakan-hoitokaudet)
+                                               (second (last @u/valitun-urakan-hoitokaudet))]))]
+    ;; Alasvetoon tulee valinnaksi "Kaikki"
+    (valinnat/urakan-hoitokausi ur urakan-hoitovuodet-ja-kausi u/valittu-hoitokausi u/valitse-hoitokausi! disabled?)))
+
+(defn paivittava-urakkavuosi-tuck
+  "Urakkavuosi valinta, triggeröi haun"
+  [aikavali haku-fn haku-kaynnissa? anna-valita-kaikki?]
+  (let [fn-aikavali-muuttunut? (fn [aika]
+                                 (let [alku (-> @u/valittu-hoitokausi first)
+                                       loppu (-> @u/valittu-hoitokausi second)
+                                       valinnat-alku (-> aika first)
+                                       valinnat-loppu (-> aika second)]
+                                   (boolean (or
+                                              (not= alku valinnat-alku)
+                                              (not= loppu valinnat-loppu)))))]
+
+    [:div {:on-click #(when (fn-aikavali-muuttunut? aikavali) (haku-fn))}
+     (if anna-valita-kaikki?
+       [urakan-hoitokausi-kaikki @nav/valittu-urakka haku-kaynnissa?]
+       [urakan-hoitokausi @nav/valittu-urakka haku-kaynnissa?])]))
 
 (defn hoitokauden-kuukausi []
   [valinnat/hoitokauden-kuukausi
@@ -253,9 +285,9 @@ valintaoptiot {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
   (fn [ur]
     (valinnat/urakan-valinnat ur (select-keys valintaoptiot [:hoitokausi :aikavali-optiot]))))
 
-(defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur]
-  (fn [ur]
-    (valinnat/urakan-valinnat ur (select-keys valintaoptiot [:sopimus :hoitokausi :aikavali-optiot :toimenpide]))))
+(defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur elementin-nimi]
+  (fn [ur elementin-nimi]
+    (valinnat/urakan-valinnat ur (assoc-in (select-keys valintaoptiot [:sopimus :hoitokausi :aikavali-optiot :toimenpide]) [:aikavali-optiot :elementin-nimi] elementin-nimi))))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali
   ([ur] (urakan-sopimus-ja-hoitokausi-ja-aikavali ur {}))
@@ -266,6 +298,3 @@ valintaoptiot {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
        (merge-with merge
                    (select-keys valintaoptiot [:sopimus :hoitokausi :aikavali-optiot])
                    optiot)))))
-
-
-

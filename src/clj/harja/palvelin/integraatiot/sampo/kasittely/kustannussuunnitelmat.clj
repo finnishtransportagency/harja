@@ -80,8 +80,8 @@
   (let [vuodet (mapv (fn [vuosi]
                        {:alkupvm  (first vuosi)
                         :loppupvm (second vuosi)})
-                     (pvm/urakan-vuodet (konv/java-date (:alkupvm (:toimenpideinstanssi maksueran-tiedot)))
-                                        (konv/java-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))))
+                     (pvm/urakan-vuodet-sampolle (konv/java-date (:alkupvm (:toimenpideinstanssi maksueran-tiedot)))
+                                                 (konv/java-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))))
         maksueratyyppi (:tyyppi (:maksuera maksueran-tiedot))
         urakkatyyppi (get-in maksueran-tiedot [:urakka :tyyppi])]
 

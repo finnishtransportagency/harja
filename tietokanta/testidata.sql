@@ -99,10 +99,13 @@ SELECT paivita_pohjavesialueet();
 \i testidata/yllapito/reikapaikkaukset.sql
 
 -- MPU kustannukset 
-\i testidata/yllapito/mpu_kustannukset.sql
+\i testidata/yllapito/paikkauskustannukset.sql
 
 -- Ylläpidon toteumat
 \i testidata/yllapito/yllapito_toteumat.sql
+
+-- Tiemerkinnät 
+\i testidata/yllapito/tiemerkinta.sql
 
 -- Päivitä päällystys & paikkausurakoiden geometriat kohdeluetteloiden perusteella
 SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
@@ -115,6 +118,8 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 -- Turvallisuuspoikkeamat
 \i testidata/turvallisuuspoikkeamat.sql
 
+--== Laadunseuranta ==--
+\i testidata/laadunseuranta/talvihoitoreitit_testidata.sql
 -- Laatupoikkeamat
 
 \i testidata/laatupoikkeamat.sql
@@ -205,10 +210,16 @@ SELECT paivita_pohjavesialueet();
 -- Suunnitellut kulut Kittilän urakan 1. vuodelle vuoden päätöstä varten.
 \i testidata/vuodenpaatos.sql
 
+-- MHU muutokset
+\i testidata/muutos_testidata.sql
+
 \i testidata/analytiikka-paallystyskohteet.sql
 
 -- Populoidaan rahavaraukset
 SELECT populoi_rahavaraus_idt();
+
+-- Lisätään urakkakohtaiset rahavaraukset
+\i testidata/rahavaraukset.sql
 
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 select paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('0001-01-01'::DATE,'2100-12-31'::DATE);

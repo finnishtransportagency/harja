@@ -14,13 +14,22 @@ runs:
       env:
         CLUSTER_NAME: ${{ inputs.cluster }}
         SERVICE_NAME: ${{ inputs.service }}
-        DESIRED_COUNT: "1"
+        DESIRED_COUNT_DEFAULT: "1"
 
       # Komennon 'update-service' stdout ohjataan /dev/nulliin, koska se voi tulostaa sensitiivisiä tietoja
       run: |
         echo "Getting available service: ${SERVICE_NAME}"
         AVAILABLE_SERVICE=$(aws ecs list-services --cluster "${CLUSTER_NAME}" --region eu-west-1 --query "serviceArns[?contains(@, \`${SERVICE_NAME}\`) == \`true\`] | [0]" --output text)
         
+        CURRENT_DESIRED_COUNT=$(aws ecs describe-services --cluster "${CLUSTER_NAME}" --services "${AVAILABLE_SERVICE}" --region eu-west-1 --query "services[0].desiredCount" --output text)
+
+        # If desired count is already 0, set it to default value. Otherwise, keep the current desired count.
+        if [[ "${CURRENT_DESIRED_COUNT}" == "0" ]]; then
+          DESIRED_COUNT="${DESIRED_COUNT_DEFAULT}"
+        else
+          DESIRED_COUNT="${CURRENT_DESIRED_COUNT}"
+        fi
+
         echo "Restarting tasks..."
         aws ecs update-service --force-new-deployment \
         --cluster "${CLUSTER_NAME}" --service $AVAILABLE_SERVICE \

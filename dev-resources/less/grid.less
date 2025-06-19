@@ -55,7 +55,7 @@
     padding-left: 0;
     padding-right: 0;
     margin-bottom: 16px;
-    button {
+    button, a {
       padding: 4px 8px;
     }
     .nappi-ensisijainen span,
@@ -315,6 +315,9 @@
     .livicon-trash {
       margin-left: 2px;
     }
+  }
+  td.toiminnot span.rivilla-virheita {
+    margin-right: -6px;
   }
 
   td.rivinumero {
@@ -598,6 +601,19 @@
         }
       }
     }
+  }
+  /* rivi-jalkeen yhteensä rivin td muotoilut */
+  td.yhteensa {
+    background-color: @blue-lighter;
+    font-weight: bold;
+  }
+  td.yhteensa-ei-korostusta {
+    background-color: @blue-lighter;
+    font-weight: normal;
+  }
+  td.yhteensa-punainen {
+    background-color: @red-lighter;
+    font-weight: bold;
   }
 }
 
@@ -913,4 +929,8 @@ span.ajax-loader-pisteet {
     border-bottom: 5px solid rgba(0,0,0,0.0) !important;
   }
 }
-
+.sort-nuoli {
+  img {
+    transform: scale(0.6);
+  }
+}

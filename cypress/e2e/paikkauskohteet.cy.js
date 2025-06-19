@@ -62,8 +62,8 @@ let avaaToteumat = () => {
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
 
 
-    cy.get('label[for=filtteri-aikavali] + div .pvm-kentta > .input-default > input').first().focus().type("01.01.2021" ).clear().type("01.01.2021" );
-    cy.get('label[for=filtteri-aikavali] + div .pvm-kentta > .input-default > input').last().focus().type("31.12.2021").clear().type("31.12.2021" );
+    cy.get('label[for=filtteri-aikavali] + div .pvm-kentta > .pvm-ikoni > .input-default').first().focus().type("01.01.2021" ).clear().type("01.01.2021" );
+    cy.get('label[for=filtteri-aikavali] + div .pvm-kentta > .pvm-ikoni > .input-default').last().focus().type("31.12.2021").clear().type("31.12.2021" );
     cy.get('label').contains("Työmenetelmä").click(); // Klikataan vain ohi aukeavasta valikosta.
     cy.contains('.nappi-ensisijainen', 'Hae toteumia').click({force: true})
     cy.wait('@2021-paikkaukset', {timeout: clickTimeout})
@@ -89,8 +89,20 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('[data-cy=tabs-taso2-Paikkauskohteet]').click()
 
         cy.server()
+        cy.route('POST', '_/paikkauskohteet-urakalle').as('kohteet')
+
+        cy.get('.nappi-ensisijainen', { timeout: clickTimeout }).should('not.be.disabled');
+        cy.contains('.nappi-ensisijainen', 'Hae kohteita').click({force: true})
+        cy.wait('@kohteet', {timeout: clickTimeout})
+
+        cy.get('.nappi-ensisijainen', { timeout: clickTimeout }).should('not.be.disabled');
+        cy.get('[data-cy="paikkauskohde-vuosivalinta"] button').click();
+
         cy.route('POST', '_/paikkauskohteet-urakalle').as('2021-kohteet')
-        cy.contains('.nappi-ensisijainen', 'Hae kohteita', ).click({force: true})
+
+        cy.get('[data-cy="paikkauskohde-vuosivalinta"] li.harja-alasvetolistaitemi', {timeout: 3000}).eq(2).click()
+        cy.contains('.nappi-ensisijainen', 'Hae kohteita').click({force: true})
+        
         cy.wait('@2021-kohteet', {timeout: clickTimeout})
     })
 
@@ -99,6 +111,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
         // Avataan paikkauskohdelomake uuden luomista varten
+        cy.get('.nappi-ensisijainen', { timeout: clickTimeout }).should('not.be.disabled');
         cy.get('[data-cy="lisaa-paikkauskohde"]').click();
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
@@ -115,8 +128,8 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('label[for=losa] + span > input').type("420")
         cy.get('label[for=let] + span > input').type("5000")
         // Ajankohta
-        cy.get('label[for=alkupvm] + .pvm-kentta > .input-default').type("1.5.2021")
-        cy.get('label[for=loppupvm] + .pvm-kentta > .input-default').type("1.6.2021")
+        cy.get('label[for=alkupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.5.2021")
+        cy.get('label[for=loppupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.6.2021")
         //Suunnitellut määrät ja summa
         cy.get('label[for=suunniteltu-maara] + span > input').type("355")
         cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})
@@ -257,7 +270,7 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.viewport(1100, 2000)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
-
+        cy.get('.nappi-ensisijainen', { timeout: clickTimeout }).should('not.be.disabled');
         // Avataan paikkauskohdelomake uuden luomista varten
         cy.get('[data-cy="lisaa-paikkauskohde"]').click();
         // Varmistetaan, että sivupaneeli aukesi
@@ -274,8 +287,8 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.get('label[for=losa] + span > input').type("421")
         cy.get('label[for=let] + span > input').type("2000")
         // Ajankohta
-        cy.get('label[for=alkupvm] + .pvm-kentta > .input-default').type("1.8.2021")
-        cy.get('label[for=loppupvm] + .pvm-kentta > .input-default').type("1.9.2021")
+        cy.get('label[for=alkupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.8.2021")
+        cy.get('label[for=loppupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.9.2021")
         //Suunnitellut määrät ja summa
         cy.get('label[for=suunniteltu-maara] + span > input').type("1111")
         cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})

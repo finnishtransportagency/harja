@@ -1,6 +1,6 @@
 (ns harja.domain.paallystysilmoitus
   "Ylläpidon päällystysurakoissa käytettävän POT-lomakkeen skeemat."
-  (:require [schema.core :as schema]
+  (:require [schema.core :as schema :include-macros true]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [specql.impl.registry]
             [specql.data-types]
@@ -83,11 +83,10 @@
    {:nimi "AN10" :koodi 3}
    {:nimi "AN14" :koodi 4}
    {:nimi "AN19" :koodi 5}
-   {:nimi "AN30" :koodi 6}
-   {:nimi "AN22" :koodi 7}])
+   {:nimi "AN30" :koodi 6}])
 
 (def +kyylamyllyt-ja-nil+
-  (conj +kuulamyllyt+ {:nimi "Ei kuulamyllyä" :koodi nil}))
+  (conj +kuulamyllyt+  {:nimi "Ei tietoa" :koodi 9} {:nimi "Ei kuulamyllyä" :koodi nil}))
 
 (def +kuulamylly-tai-nil+ "Kuulamylly annetulla koodilla"
   (apply schema/enum (map :koodi +kyylamyllyt-ja-nil+)))
@@ -358,3 +357,7 @@
 
 ;; POT2 lomaketta aletaan käyttää kesällä 2021 ja siitä eteenpäin.
 (def pot2-vuodesta-eteenpain 2021)
+
+;; jos kaista ei ole yhtenäinen ja tyhjä väli on 0 < hyppy < kynnysarvo, merkataan se hypyksi
+;; konsepti liittyy päällystysilmoitukseen missä on tarve visualisoida hypyt
+(def hypyn-kynnysarvo-metreina 50)

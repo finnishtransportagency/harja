@@ -166,7 +166,9 @@
   (reset! sanktio-atom rivi)
   ;; TODO: Tässä on jotakin sanktioiden liitteiden hakua valinnan yhteydessä?
   ;;       Pitääkö tunnistaa lisäksi onko bonus valittu ja hakea myös bonuksen liitteet?
-  (if (= :virhe (tiedot/hae-sanktion-liitteet! (get-in rivi [:laatupoikkeama :urakka])
+  (if (= :virhe (tiedot/hae-sanktion-liitteet! (or 
+                                                 (get-in rivi [:laatupoikkeama :urakka]) 
+                                                 (get-in rivi [:urakka :id]))
                                                (get-in rivi [:laatupoikkeama :id])
                                                sanktio-atom))
     (viesti/nayta-toast! "Sanktion liitteiden hakeminen epäonnistui" :warning)
@@ -236,6 +238,7 @@
       [:div.laadunseuranta-otsikko
        [:h1 {:style {:width "545px"}} (if yllapitourakka? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]]
       [:div.header-export
+       ;; Excel
        [:div
         ^{:key "raporttixls"}
         [:form {:style {:margin-left "auto"}
@@ -248,8 +251,10 @@
                                           :loppu hoitokauden-loppu
                                           :suodattimet @tiedot/sanktio-bonus-suodattimet})}]
          [:button {:type "submit"
-                   :class #{"button-secondary-default" "suuri"}}
-          [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
+                   :class #{"nappi-toissijainen"}}
+          [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna Excel"]]]]
+
+       ;; PDF 
        [:div
         ^{:key "raporttipdf"}
         [:form {:style {:margin-left "16px"}
@@ -262,8 +267,8 @@
                                           :loppu hoitokauden-loppu
                                           :suodattimet @tiedot/sanktio-bonus-suodattimet})}] ;#{:muistutukset :sanktiot :bonukset :arvonvahennykset}
          [:button {:type "submit"
-                   :class #{"button-secondary-default" "suuri"}}
-          [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna PDF"]]]]]]
+                   :class #{"nappi-toissijainen"}}
+          [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna PDF"]]]]]]
      [suodattimet-ja-toiminnot valittu-urakka sivupaneeli-auki?-atom @tiedot/urakan-lajisuodattimet]
 
      [grid/grid
@@ -293,9 +298,9 @@
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi)
           :leveys 2.5 :fmt #(cond
-                            (and % (= "Ei tarvita sanktiotyyppiä" %)) "–"
-                            (and % (not= "Ei tarvita sanktiotyyppiä" %)) %
-                            :else "–")})
+                              (and % (= "Ei tarvita sanktiotyyppiä" %)) "–"
+                              (and % (not= "Ei tarvita sanktiotyyppiä" %)) %
+                              :else "–")})
        (when (not yllapitourakka?)
          {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
           :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-kuvaus :leveys 3})

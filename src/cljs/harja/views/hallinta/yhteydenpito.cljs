@@ -24,26 +24,32 @@
    [lomake/lomake
     {:ei-borderia? true
      :footer-fn (fn [yhteydenotto]
-                  [napit/tallenna "Lähetä"
+                  [napit/tallenna
+                   "Lähetä"
                    #(varmista-kayttajalta/varmista-kayttajalta
                       {:otsikko "Sähköposti kaikille Harja käyttäjille"
                        :sisalto [:div "Oletko varma, että haluat lähettää viestin kaikille vuoden sisällä kirjautuneille Harjan käyttäjille?"]
                        :hyvaksy "Lähetä"
-                       :toiminto-fn (fn [] (e! (tiedot/->Laheta yhteydenotto)))
-                       :disabled (true? lahetys-kaynnissa?)})])
+                       :toiminto-fn (fn [] (e! (tiedot/->Laheta yhteydenotto)))})
+                    {
+                      :aria-label "Lähetä"
+                      :disabled (or lahetys-kaynnissa?
+                                  (not (lomake/voi-tallentaa? yhteydenotto)))}])
      :muokkaa! #(e! (tiedot/->Muokkaa %))}
     [{:nimi :otsikko
       :otsikko "Otsikko"
       :tyyppi :string
       :palstoja 2
-      :pakollinen? true}
+      :pakollinen? true
+      :validoi [[:ei-tyhja]]}
      {:nimi :sisalto
       :otsikko "Sisältö"
       :tyyppi :text
       :koko [80 20]
       :pituus-max 2048
       :palstoja 2
-      :pakollinen? true}]
+      :pakollinen? true
+      :validoi [[:ei-tyhja]]}]
     yhteydenotto]])
 
 (defn yhteydenpito* []

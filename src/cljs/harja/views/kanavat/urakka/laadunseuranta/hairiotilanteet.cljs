@@ -35,7 +35,7 @@
      ^{:key "urakkavalinnat"}
 
      [:div.kanava-suodattimet
-      
+
       [:div.ryhma
        [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
         valittu-urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
@@ -43,7 +43,7 @@
         (r/wrap (get-in app [:valinnat :vikaluokka])
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:vikaluokka uusi}))))
-        
+
         hairiotilanne/vikaluokat+kaikki
         #(if % (hairiotilanne/fmt-vikaluokka %) "Kaikki")]
 
@@ -51,7 +51,7 @@
         (r/wrap (get-in app [:valinnat :korjauksen-tila])
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:korjauksen-tila uusi}))))
-        
+
         hairiotilanne/korjauksen-tlat+kaikki
         #(if % (hairiotilanne/fmt-korjauksen-tila %) "Kaikki")]]
 
@@ -135,7 +135,8 @@
     ;; Tieliikenne
     {:otsikko "Tie odotus (h)" :nimi ::hairiotilanne/tieodotusaika-h :tyyppi :numero :leveys 3.5 :desimaalien-maara 2}
     {:otsikko "Ajoneuvo lkm" :nimi ::hairiotilanne/ajoneuvo-lkm :tyyppi :numero :leveys 3.5 :desimaalien-maara 0}
-
+    
+    {:otsikko "Korjaaja" :nimi ::hairiotilanne/korjaajan-nimi :tyyppi :string :leveys 6}
     {:otsikko "Kor\u00ADjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string :leveys 10}
     {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :leveys 3.5 :desimaalien-maara 2}
     {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 5
@@ -249,7 +250,7 @@
         {:tyyppi :string
          :nimi ::hairiotilanne/korjaajan-nimi
          :otsikko "Korjaajan nimi"}
-        
+
         {:nimi ::hairiotilanne/korjauksen-aloitus
          :otsikko "Korjauksen aloitus"
          :pakollinen? true
@@ -467,23 +468,23 @@
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do (e! (tiedot/->NakymaAvattu))
-                           (e! (tiedot/->PaivitaValinnat
-                                 {:urakka @nav/valittu-urakka
-                                  :sopimus-id (first @u/valittu-sopimusnumero)
-                                  :aikavali @u/valittu-aikavali}))
-                           (tasot/taso-paalle! :kan-kohteet)
-                           (tasot/taso-paalle! :kan-hairiot)
-                           (tasot/taso-pois! :organisaatio)
-                           (kartta-tiedot/kasittele-infopaneelin-linkit!
-                             {:kan-hairiotilanne {:toiminto (fn [ht]
-                                                              (e! (tiedot/->ValitseHairiotilanne ht))
-                                                              (kartta-tiedot/piilota-infopaneeli!))
-                                                  :teksti "Avaa häiriötilanne"}}))
-                      #(e! (tiedot/->NakymaSuljettu)
-                           (tasot/taso-pois! :kan-kohteet)
-                           (tasot/taso-pois! :kan-hairiot)
-                           (tasot/taso-paalle! :organisaatio)
-                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
+                         (e! (tiedot/->PaivitaValinnat
+                               {:urakka @nav/valittu-urakka
+                                :sopimus-id (first @u/valittu-sopimusnumero)
+                                :aikavali @u/valittu-aikavali}))
+                         (tasot/taso-paalle! :kan-kohteet)
+                         (tasot/taso-paalle! :kan-hairiot)
+                         (tasot/taso-pois! :organisaatio)
+                         (kartta-tiedot/kasittele-infopaneelin-linkit!
+                           {:kan-hairiotilanne {:toiminto (fn [ht]
+                                                            (e! (tiedot/->ValitseHairiotilanne ht))
+                                                            (kartta-tiedot/piilota-infopaneeli!))
+                                                :teksti "Avaa häiriötilanne"}}))
+      #(e! (tiedot/->NakymaSuljettu)
+         (tasot/taso-pois! :kan-kohteet)
+         (tasot/taso-pois! :kan-hairiot)
+         (tasot/taso-paalle! :organisaatio)
+         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
 
     (fn [e! {valittu-hairiotilanne :valittu-hairiotilanne :as app}]
       @tiedot/valinnat                                      ;; Reaktio on luettava komponentissa, muuten se ei päivity

@@ -12,7 +12,7 @@
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.tloik.aineistot.toimenpidepyynnot :as aineisto-toimenpidepyynnot]
@@ -43,12 +43,12 @@
     :api-sahkoposti (component/using
                        (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                        [:http-palvelin :db :integraatioloki :itmf])
-    :labyrintti (component/using
-                  (labyrintti/->Labyrintti "foo" "testiapiavain" (atom #{}))
-                  [:db :http-palvelin :integraatioloki])
+    :sms (component/using (sms/luo-tekstiviesti-komponentti
+                            {:url "foo" :apiavain "testiapiavain"})
+           [:http-palvelin :db :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
+             [:db :itmf :integraatioloki :sms :api-sahkoposti])))
 
 (use-fixtures :each (fn [testit]
                       (binding [*aloitettavat-jmst* #{"itmf"}
@@ -197,7 +197,7 @@
                   (fn [db urakka-id] (list {:id 1
                                             :etunimi "Pekka"
                                             :sukunimi "Päivystäjä"
-                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                                            ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                             :matkapuhelin nil
                                             :tyopuhelin nil
                                             :sahkoposti "email.email@example.com"
@@ -285,7 +285,7 @@
                   (fn [db urakka-id] (list {:id 1
                                             :etunimi "Pekka"
                                             :sukunimi "Päivystäjä"
-                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                                            ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                             :matkapuhelin nil
                                             :tyopuhelin nil
                                             :sahkoposti "email.email@example.com"
@@ -341,7 +341,7 @@
                     (list {:id 1
                            :etunimi "Pekka"
                            :sukunimi "Päivystäjä"
-                           ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                           ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                            ;; Jos puhelinnumero annetaan, kaikki toimii kuten pitääkin, eli tekstaria ei lähetetä, mutta errori logitetaan
                            :matkapuhelin nil
                            :tyopuhelin nil
@@ -353,7 +353,7 @@
                       {:id 2
                        :etunimi "Pekka2"
                        :sukunimi "Päivystäjä2"
-                       ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                       ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                        :matkapuhelin nil
                        :tyopuhelin nil
                        :sahkoposti nil ;"Testataan kokonaan puuttuvalla emailosoitteella
@@ -402,7 +402,7 @@
                   (fn [db urakka-id] (list {:id 1
                                             :etunimi "Pekka"
                                             :sukunimi "Päivystäjä"
-                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                                            ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                             :matkapuhelin nil
                                             :tyopuhelin nil
                                             :sahkoposti "email.email@example.com"
@@ -499,7 +499,7 @@
 ;; simuloidaan siis T-Loik lähetysvirheitä lisäämällä virhe_lkm counteria
 (deftest ilmoitustoimenpiteen-asteittaisesti-harveneva-uudelleenlahetys
   (let [db (:db jarjestelma)
-        kaikki-uudelleenlahetettavat-alussa (ffirst (q "SELECT count(*) FROM ilmoitustoimenpide where (tila IS NULL or tila = 'virhe') AND kuittaustyyppi != 'valitys';"))
+        kaikki-uudelleenlahetettavat-alussa (ffirst (q "SELECT count(*) FROM ilmoitustoimenpide where (tila IS NULL or tila IN ('virhe', 'odottaa_vastausta')) AND kuittaustyyppi != 'valitys' AND kuitattu > '2024-01-01';"))
         uudelleen-lahetettavat-kaikissa-urakoissa-ennen (count (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))
 
         _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = virhe_lkm + 1, ed_lahetysvirhe = NOW() - interval '5 minutes';")
@@ -531,7 +531,7 @@
 
         ;; palautellaan varalta asiat alkutilaan...
         _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = 0, ed_lahetysvirhe = NULL;")]
-    (is (> kaikki-uudelleenlahetettavat-alussa 50) "Varmistetaan että ehdot täyttäviä kuittauksia on enemmän kuin nolla.")
+    (is (> kaikki-uudelleenlahetettavat-alussa 5) "Varmistetaan että ehdot täyttäviä kuittauksia on enemmän kuin nolla.")
 
     (is (= uudelleen-lahetettavat-kaikissa-urakoissa-ennen kaikki-uudelleenlahetettavat-alussa) "Kaikki lähetettävät nostetaan...")
     (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-5min-virheita-1 0) "1 virhe, alle 10min mennyt, ei nosteta...")
@@ -542,3 +542,19 @@
     (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-55min-virheita-6 0) "6 virhettä, odotellaan pitempään kuin 4 tai 5 virheellä...")
     (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-tasan-10-virhetta kaikki-uudelleenlahetettavat-alussa) "Tasan 10 virhettä ja pitkä aika kulunut, kaikki nousee...")
     (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-yli-10-virhetta 0) "Yli 10 virhettä, ei enää nosteta...")))
+
+(deftest ilmoitustoimenpiteen-uudelleenlahetys-huomioi-myos-vastausta-odottavat
+  (let [db (:db jarjestelma)
+        kaikki-uudelleenlahetettavat-alussa (ffirst (q "SELECT count(*) FROM ilmoitustoimenpide where (tila IS NULL or tila IN ('virhe', 'odottaa_vastausta')) AND kuittaustyyppi != 'valitys' AND kuitattu > '2024-01-01';"))
+        uudelleen-lahetettavat-kaikissa-urakoissa-ennen (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db)
+        yksi-toimenpide-id (:id (first uudelleen-lahetettavat-kaikissa-urakoissa-ennen))
+        _ (u (format "UPDATE ilmoitustoimenpide SET tila = 'odottaa_vastausta' WHERE id = %s;" yksi-toimenpide-id))
+        uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db)
+        ;; palautellaan varalta asiat alkutilaan...
+        _ (u "UPDATE ilmoitustoimenpide SET tila = NULL, virhe_lkm = 0, ed_lahetysvirhe = NULL;")]
+    (is (> kaikki-uudelleenlahetettavat-alussa 5) "Varmistetaan että ehdot täyttäviä kuittauksia on enemmän kuin nolla.")
+    (is (= (count uudelleen-lahetettavat-kaikissa-urakoissa-ennen) kaikki-uudelleenlahetettavat-alussa) "Kaikki lähetettävät nostetaan...")
+    ;; myös odottaa_vastausta tilassa oleva kuittaus nousee uudelleenlähetettävien määrään
+    (is (some #(= (:id %) yksi-toimenpide-id) uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen) "Yksi odottaa_vastausta toimenpide nousee uudelleenlähetettäviin...")
+    (is (= (count uudelleen-lahetettavat-kaikissa-urakoissa-ennen) (count uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen)) "Kaikki lähetettävät nostetaan...")))
+

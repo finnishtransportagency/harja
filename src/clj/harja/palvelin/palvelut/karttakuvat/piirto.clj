@@ -160,6 +160,16 @@ minimi-etaisyys 40)
     (piirra-ikonit g {:points (mapcat :points lines)
                       :ikonit ikonit} ruudukko)))
 
+(defmethod piirra :default [g toteuma alue ruudukko]
+  ;; Jos :type on nil, tulee: defn maarittele-feature kun geo tyyppi on geometry-collection
+  ;; ei tehdä  tässä mitään, vähän epäselvää kuitenkin, tarvisiko jotain tehdä. 
+  ;; 
+  ;; Voi debuggailla tarvittaessa :
+  ;; (println (str "\nPiirrä metodille ei löydy metodia: '" (pr (:type alue)) "' datatype: " (type (:type alue)) " nil? " (nil? (:type alue))))
+  ;; (println (str "tyyppi-kartalla: " (:tyyppi-kartalla alue)))
+  ;; (println (str "tyyppi: " (:tyyppi alue)))
+  nil)
+
 (def varoitusteksti
   "Paljon tuloksia, kaikkea ei ehditty piirtää! Tarkenna hakuehtoja tai zoomaa lähemmäs.")
 
@@ -201,6 +211,6 @@ minimi-etaisyys 40)
                (async/to-chan asiat)
                asiat)]
       (go-loop-timeout
-       {:timeout piirron-aikakatkaisu-ms}
-       [{alue :alue :as asia} ch]
-       (piirra g asia alue ruudukko)))))
+        {:timeout piirron-aikakatkaisu-ms}
+        [{alue :alue :as asia} ch]
+        (piirra g asia alue ruudukko)))))

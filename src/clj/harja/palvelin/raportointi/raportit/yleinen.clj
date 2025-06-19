@@ -9,25 +9,48 @@
             [jeesql.core :refer [defqueries]]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.fmt :as fmt]
-            [harja.domain.urakka :as urakka]))
+            [harja.domain.urakka :as urakka]
+            [harja.kyselyt.urakat :as urakat-q]))
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
 (def materiaalitoteumien-paivitysinfo
   "Ympäristö- ja materiaaliraporttien laskelmat päivitetään kerran vuorokaudessa raporttien nopeuttamiseksi. Laskenta tehdään öisin, eli uudet arvot näkyvät raportilla seuraavana päivänä. Jos haluat tarkistaa tänään syötettyjä arvoja, voit tehdä sen Toteumat-osion välilehdiltä Suola ja Materiaalit.")
 
+(defn kokoa-lyhytnimet [data]
+  (->> data
+    (map #(or (:lyhyt_nimi %) (:nimi %)))
+    (str/join ", ")))
+
+(defn suodata-urakat [data idt]
+  (filter #(idt (:id %)) data))
+
+(defn hae-urakan-lyhytnimet
+  "Palauttaa valittujen urakoiden lyhytnimet, fallback urakan pitkä nimi
+   
+   Parametrit:
+   - db:            tietokanta yhteyspooli
+   - urakkatyyppi:  esim. :tiemerkinta
+   - urakat:        joko #{...} setti urakka-id:itä tai yksittäinen urakka-id integer"
+  [db urakkatyyppi urakat]
+  (let [_ (assert (or (set? urakat) (integer? urakat)) "Urakat täytyy olla setti #{1 2 3}, tai urakka-id")
+        urakat (if (set? urakat) urakat #{urakat})
+        urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+        lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi urakkatyyppi :vain-puuttuvat false :urakantila "kaikki"})
+        valitut-urakat-nimet (suodata-urakat lyhytnimet urakat)]
+    (kokoa-lyhytnimet valitut-urakat-nimet)))
+
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
-  (let [kk-vali? (and (and alkupvm loppupvm)
+  (let [kk-vali? (and alkupvm loppupvm
                       (pvm/kyseessa-kk-vali? alkupvm loppupvm))
         konteksti (if (sequential? konteksti)
                     (str/join ", " konteksti)
                     konteksti)]
     (if kk-vali?
       (str konteksti ", " nimi " " (pvm/kuukautena-ja-vuonna (l/to-local-date-time alkupvm)))
-      (str konteksti ", " nimi
-           (when (and alkupvm loppupvm)
-             (str " ajalta " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))))))
+      (str konteksti ", " nimi (when (and alkupvm loppupvm)
+                                 (str " ajalta " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))))))
 
 (defn ryhmittele-tulokset-raportin-taulukolle
   "rivit                   ryhmiteltävät rivit
@@ -252,6 +275,7 @@
   (let [urakka (:urakka (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         alkupvm (:alkupvm (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         loppupvm (:loppupvm (:raportin-yleiset-tiedot raportin-tunnistetiedot))
+        vuosi (:vuosi (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         raportin-nimi (:raportin-nimi (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         lyhennetty? (:lyhennetty-tiedostonimi raportin-tunnistetiedot)
         ;; Jos loppupvm on täysin sama, sitä ei tarvitse mainita
@@ -261,14 +285,22 @@
       (and urakka raportin-nimi alkupvm loppupvm)
       ;; Jos nimessä käytetään urakan lyhytnimiä, ei tarvitse urakkaa mainita erikseen
       (if lyhennetty?
-        (str raportin-nimi ", " (str alkupvm " - " loppupvm))
-        (str urakka ", " raportin-nimi ", " (str alkupvm " - " loppupvm)))
+        (str raportin-nimi)
+        (str urakka ", " raportin-nimi))
+
+      (and
+        raportin-nimi
+        (str/includes? raportin-nimi "ajalta"))
+      (str raportin-nimi)
 
       (and (not urakka) raportin-nimi alkupvm (not loppupvm))
       (str raportin-nimi ", " alkupvm)
 
       (and (not urakka) raportin-nimi alkupvm loppupvm)
       (str raportin-nimi ", " alkupvm " - " loppupvm)
+
+      (and (not alkupvm) (not loppupvm) raportin-nimi vuosi)
+      (str urakka ", " raportin-nimi ", " vuosi)
 
       :else
       (str raportin-nimi))))

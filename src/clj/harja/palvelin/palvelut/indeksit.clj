@@ -45,6 +45,7 @@
 
 (defn indeksi-muuttunut [db {:keys [nimi vuosi kuukausi] :as indeksi}]
   (log/debug "Indeksi muuttunut" indeksi)
+  ;; Kutsutaan kun käyttäjä kirjaa hallintaan indeksilukuja
   ;; 
   ;; Perusluku = Alkuvuodesta edellisen vuoden [syys, loka, marras] indeksien keskiarvo
   ;;

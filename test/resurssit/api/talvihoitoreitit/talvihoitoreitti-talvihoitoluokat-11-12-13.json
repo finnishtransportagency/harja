@@ -1,0 +1,38 @@
+{
+  "tunniste": "__ULKOINENID__",
+  "reittinimi": "__NIMI__",
+  "kalustot": {
+    "tr_maara": 3,
+    "ka_maara": 0,
+    "kup_maara": 3
+  },
+  "sijainnit": [
+    {
+      "tie": 21419,
+      "aosa": 996,
+      "aet": 0,
+      "losa": 996,
+      "let": 1042,
+      "hoitoluokka": "Talvihoito",
+      "pituus": 1042
+    },
+    {
+      "tie": 29858,
+      "aosa": 995,
+      "aet": 0,
+      "losa": 995,
+      "let": 12,
+      "hoitoluokka": "Hoito osin",
+      "pituus": 12
+    },
+    {
+      "tie": 24020,
+      "aosa": 995,
+      "aet": 0,
+      "losa": 995,
+      "let": 28,
+      "hoitoluokka": "Ei talvihoitoa",
+      "pituus": 28
+    }
+  ]
+}

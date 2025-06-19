@@ -19,6 +19,9 @@ $$
                         NULL, NULL, _urakka, _luotu, _kayttaja) RETURNING id)
         INSERT
         INTO rajoitusalue_rajoitus (rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu, luoja)
+        SELECT id, 6.6, FALSE, 2015, _luotu, _kayttaja
+        FROM ra1
+        UNION ALL
         SELECT id, 6.6, FALSE, 2019, _luotu, _kayttaja
         FROM ra1
         UNION ALL
@@ -32,7 +35,10 @@ $$
         FROM ra1
         UNION ALL
         SELECT id, 7.0, FALSE, 2023, _luotu, _kayttaja
-        FROM ra1;
+        FROM ra1
+        UNION ALL
+        SELECT id, 7.0, FALSE, 2024, _luotu, _kayttaja
+          FROM ra1;
 
         -- Pohjavesialue: Jääli
         WITH ra2 AS (
@@ -45,6 +51,9 @@ $$
                         _urakka, _luotu, _kayttaja) RETURNING id)
         INSERT
         INTO rajoitusalue_rajoitus (rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu, luoja)
+        SELECT id, 10, FALSE, 2015, _luotu, _kayttaja
+        FROM ra2
+        UNION ALL
         SELECT id, 10, FALSE, 2019, _luotu, _kayttaja
         FROM ra2
         UNION ALL

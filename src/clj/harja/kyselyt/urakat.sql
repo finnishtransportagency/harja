@@ -201,6 +201,17 @@ SELECT
   u.sopimustyyppi,
   u.indeksi,
   u.urakkanro,
+  (SELECT array_agg(
+         concat_ws('|',
+           y.id,
+           y.matkapuhelin,
+           y.sahkoposti,
+           y.organisaatio)
+       )
+    FROM yhteyshenkilo y
+      JOIN yhteyshenkilo_urakka yu ON yu.yhteyshenkilo = y.id
+    WHERE yu.urakka = u.id AND yu.rooli = 'Urakan yhteystiedot'
+  )                                       AS urakan_yhteystiedot,
   (SELECT *
    FROM indeksilaskennan_perusluku(u.id)) AS indeksilaskennan_perusluku,
   hal.id                                  AS hallintayksikko_id,
@@ -784,7 +795,7 @@ FROM (SELECT u.id                                                    as id,
                       ST_Distance84(vua.alue, st_makepoint(:x, :y)),
                       ST_Distance84(pua.alue, st_makepoint(:x, :y))) AS etaisyys
       FROM urakka u
-               LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
+               LEFT JOIN urakoiden_alueet ua ON u.id = ua.id AND ua.tyyppi NOT IN ('vesivayla-kanavien-hoito', 'vesivayla-hoito', 'vesivayla-kanavien-korjaus')
                LEFT JOIN valaistusurakka vua ON vua.valaistusurakkanro = u.urakkanro
                LEFT JOIN paallystyspalvelusopimus pua ON pua.paallystyspalvelusopimusnro = u.urakkanro
                JOIN organisaatio org ON u.urakoitsija = org.id
@@ -977,7 +988,7 @@ SELECT
       org.ytunnus AS urakoitsija_ytunnus,
       ST_Distance84(au.alue, st_makepoint(:x, :y)) AS etaisyys 
 FROM urakka u
-      LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
+      LEFT JOIN urakoiden_alueet ua ON u.id = ua.id AND ua.tyyppi NOT IN ('vesivayla-kanavien-hoito', 'vesivayla-hoito', 'vesivayla-kanavien-korjaus')
       JOIN organisaatio org ON u.urakoitsija = org.id
       JOIN alueurakka au ON au.alueurakkanro = u.urakkanro AND u.tyyppi IN ('hoito', 'teiden-hoito')
 WHERE u.alkupvm + interval '12 hour' <= current_timestamp
@@ -1124,7 +1135,7 @@ SELECT
   org.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
   JOIN organisaatio org ON u.urakoitsija = org.id
-  JOIN kayttajan_lisaoikeudet_urakkaan klu ON klu.urakka = u.id
+  JOIN kayttajan_lisaoikeudet_urakkaan klu ON klu.urakka = u.id AND klu.poistettu IS NOT TRUE
   JOIN kayttaja k ON klu.kayttaja = k.id
 WHERE k.kayttajanimi = :kayttajanimi
       AND k.jarjestelma;
@@ -1148,12 +1159,13 @@ SELECT
   org.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
   JOIN organisaatio org ON u.urakoitsija = org.id
-WHERE (exists(SELECT klu.id
-              FROM kayttajan_lisaoikeudet_urakkaan klu
-                JOIN kayttaja k ON klu.kayttaja = k.id
-              WHERE klu.urakka = u.id
-                    AND k.kayttajanimi = :kayttajanimi
-                    AND k.jarjestelma)
+ WHERE (EXISTS(SELECT klu.id
+                 FROM kayttajan_lisaoikeudet_urakkaan klu
+                          JOIN kayttaja k ON klu.kayttaja = k.id
+                WHERE klu.urakka = u.id
+                  AND k.kayttajanimi = :kayttajanimi
+                  AND k.jarjestelma
+                  AND klu.poistettu IS NOT TRUE)
        OR
        exists(SELECT o.id
               FROM organisaatio o
@@ -1242,4 +1254,12 @@ WHERE
    AND u.luotu BETWEEN :alku AND :loppu
    OR u.muokattu BETWEEN :alku AND :loppu
    OR yt.luotu BETWEEN :alku AND :loppu
-   OR yt.muokattu BETWEEN :alku AND :loppu
+   OR yt.muokattu BETWEEN :alku AND :loppu;
+
+-- name: aseta-tai-paivita-urakkaparametrit
+SELECT aseta_tai_paivita_urakka_parametrit_urakalle(:urakkaid);
+
+-- name: hae-urakan-parametrit
+select *
+  from urakka_parametrit
+ WHERE urakkaid = :urakkaid;

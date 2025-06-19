@@ -13,11 +13,26 @@
   .label-ja-alasveto {
     width: 200px;
   }
-  .pvm-aika-kentta {
-    display: inline-block;
-    width: unset;
-    input.pvm {
-      max-width: 80px;
+
+  .label-ja-aikavali {
+    width: 420px;
+    label {
+      margin: @valistys-16 0 0 0;
+      line-height: inherit;
+      font-weight: 600;
+    }
+    .pvm-aika-kentta {
+      display: inline-block;
+      width: unset;
+    }
+
+    .pvm {
+      width: 120px;
+      height: @valistys-32;
+    }
+
+    .aika-input {
+      height: @valistys-32;
     }
   }
 }

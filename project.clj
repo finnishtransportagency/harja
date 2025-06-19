@@ -17,7 +17,7 @@
                  ;;;;;;; Yleiset ;;;;;;;
 
                  [prismatic/schema "1.4.1"]
-                 [org.clojure/core.async "0.7.559"]
+                 [org.clojure/core.async "1.6.681"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
                  [com.cognitect/transit-clj "1.0.333"]
@@ -35,7 +35,7 @@
                  ;; -- Lokitus
                  [com.taoensso/timbre "6.5.0"]
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.24.1"]
+                 [org.apache.logging.log4j/log4j-core "2.24.3"]
 
                  ;; -- Metriikkadata
                  [org.clojure/java.jmx "1.1.0"]
@@ -55,10 +55,14 @@
                  ;; Pattern match kirjasto
                  [org.clojure/core.match "1.1.0"]
 
+                 ;; Todennus / kirjautumisen allekirjoituksen varmistus 
+                 ;; Täältä tulee java kirjaston kautta jwt signaturen vahvistus, joka tehdään käyttäjän tullessa Harjaan
+                 [buddy/buddy-sign "3.5.351"]
+
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.7.4"]
+                 [org.postgresql/postgresql "42.7.7"]
                  [net.postgis/postgis-jdbc "2024.1.0"]
                  [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
@@ -68,10 +72,10 @@
                  [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "32.0" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "32.0" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "32.0" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "32.0" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -138,15 +142,11 @@
                  [com.taoensso/truss "1.12.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.19.0"]
-
-                 ;; Performance metriikat
-                 ;; TODO: Pilvisiirtymän jälkeen poistetaan tämä riippuvuus
-                 [yleisradio/new-reliquary "1.1.0"]
+                 [dk.ative/docjure "1.21.0"]
 
                  ;; -- Front-end tilan hallinta
                  [webjure/tuck "20181204"]
-                 [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck]]
+                 [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck figwheel]]
 
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
@@ -168,7 +168,7 @@
 
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
-                         [commons-codec "1.17.1"]]
+                         [commons-codec "1.18.0"]]
 
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 

@@ -54,29 +54,29 @@
                          :otsikko "L15 - Puolangantie"
                          :valitavoitteet nil})])
 
-(def odotettu-aikajana-2024
+(def odotettu-aikajana-2025
   [:aikajana
    {}
-   (list #:harja.ui.aikajana{:ajat [#:harja.ui.aikajana{:alku #inst "2024-05-15T21:00:00.000-00:00"
+   (list #:harja.ui.aikajana{:ajat [#:harja.ui.aikajana{:alku #inst "2025-05-15T21:00:00.000-00:00"
                                                         :drag nil
                                                         :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2024-05-23T21:00:00.000-00:00"
+                                                        :loppu #inst "2025-05-23T21:00:00.000-00:00"
                                                         :reuna "black"
                                                         :sahkopostitiedot nil
-                                                        :teksti "Koko kohde: 16.05.2024 – 24.05.2024"}
-                                    #:harja.ui.aikajana{:alku #inst "2024-05-18T21:00:00.000-00:00"
+                                                        :teksti "Koko kohde: 16.05.2025 – 24.05.2025"}
+                                    #:harja.ui.aikajana{:alku #inst "2025-05-18T21:00:00.000-00:00"
                                                         :drag nil
                                                         :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2024-05-20T21:00:00.000-00:00"
+                                                        :loppu #inst "2025-05-20T21:00:00.000-00:00"
                                                         :sahkopostitiedot nil
-                                                        :teksti "Päällystys: 19.05.2024 – 21.05.2024"
+                                                        :teksti "Päällystys: 19.05.2025 – 21.05.2025"
                                                         :vari "#282B2A"}
-                                    #:harja.ui.aikajana{:alku #inst "2024-05-21T21:00:00.000-00:00"
+                                    #:harja.ui.aikajana{:alku #inst "2025-05-21T21:00:00.000-00:00"
                                                         :drag nil
                                                         :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2024-05-22T21:00:00.000-00:00"
+                                                        :loppu #inst "2025-05-22T21:00:00.000-00:00"
                                                         :sahkopostitiedot nil
-                                                        :teksti "Tiemerkintä: 22.05.2024 – 23.05.2024"
+                                                        :teksti "Tiemerkintä: 22.05.2025 – 23.05.2025"
                                                         :vari "#DECB03"}]
                              :otsikko "L14 - Ouluntie 2"
                              :valitavoitteet nil})])
@@ -163,7 +163,7 @@
      ""
      ""]]])
 
-(def odotettu-kohdeluettelo-2024
+(def odotettu-kohdeluettelo-2025
   [:taulukko
    {:otsikko "Kohdeluettelo"}
    [{:leveys 4
@@ -235,14 +235,14 @@
      "11"
      ""
      "-"
-     "16.05.2024"
-     "19.05.2024"
-     "21.05.2024"
-     "21.05.2024"
-     "04.06.2024"
-     "22.05.2024"
-     "23.05.2024"
-     "24.05.2024"]]])
+     "16.05.2025"
+     "19.05.2025"
+     "21.05.2025"
+     "21.05.2025"
+     "04.06.2025"
+     "22.05.2025"
+     "23.05.2025"
+     "24.05.2025"]]])
 
 (deftest aikataulu-raportin-suoritus-urakalle-toimii-vuosi-2023
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -260,18 +260,18 @@
     (is (= aikajana odotettu-aikajana-2023))
     (is (= kohdeluettelo odotettu-kohdeluettelo-2023))))
 
-(deftest aikataulu-raportin-suoritus-urakalle-toimii-vuosi-2024
+(deftest aikataulu-raportin-suoritus-urakalle-toimii-vuosi-2025
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :yllapidon-aikataulu
                    :konteksti "urakka"
                    :urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
-                   :parametrit {:vuosi 2024 :urakkatyyppi :paallystys}})
+                   :parametrit {:vuosi 2025 :urakkatyyppi :paallystys}})
         otsikko (-> vastaus (nth 1))
         aikajana (-> vastaus (nth 2))
         kohdeluettelo (-> vastaus last)]
     (is (vector? vastaus))
-    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Ylläpidon aikataulu 2024" :rajoita-pdf-rivimaara nil}))
-    (is (= aikajana odotettu-aikajana-2024))
-    (is (= kohdeluettelo odotettu-kohdeluettelo-2024))))
+    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Ylläpidon aikataulu 2025" :rajoita-pdf-rivimaara nil}))
+    (is (= aikajana odotettu-aikajana-2025))
+    (is (= kohdeluettelo odotettu-kohdeluettelo-2025))))

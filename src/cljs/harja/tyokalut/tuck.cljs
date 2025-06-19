@@ -16,6 +16,19 @@
 
 (defonce jarjestys-pub (pub jarjestys-kanava :kutsu-kasittely))
 
+(defn nollaa-tuck-tila
+  "Nollaa Tuck-tilan osittain säilyttäen olemassa olevat syvemmän tason arvot.
+   Korvaa arvot, jotka on määritelty `nollatut-valinnat`
+   Käytetään kun suodattimia päivitetään, urakkaa vaihdetaan, yms, jotta tilaan ei jää mitään roikkumaan."
+  [app nollatut-valinnat]
+  (merge-with (fn [app valinta]
+                (if (and
+                      (map? app) (map? valinta))
+                  (merge app valinta)
+                  valinta))
+    app
+    nollatut-valinnat))
+
 (defn- palvelukutsu*
   "Optiot:
    viive              Aika millisekunteina, jonka verran palvelupyynnön lähetystä

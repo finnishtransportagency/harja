@@ -22,10 +22,10 @@
 # Tämänhetkinen Debianin stable-release on versio: 12 (bookworm)
 # GH Actions: "It's recommended to use Docker images based on the Debian operating system."
 
-FROM node:18-bookworm-slim
+FROM node:22-bookworm-slim
 
 # Yhdistä image harjan repositoryyn
-LABEL org.opencontainers.image.source https://github.com/finnishtransportagency/harja
+LABEL org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
 
 # NPM pakettien versiot Docker build argumentteina
 ARG NPM_CYPRESS_VERSION

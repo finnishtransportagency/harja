@@ -32,7 +32,7 @@
     kustannusten-kentat))
 
 
-(defn- koosta-yhteenveto [tiedot]
+(defn- koosta-yhteenveto [tiedot valikatselmus-siirrot-ed-vuodelta]
   (let [kaikki-yhteensa-laskutettu (apply + (map #(:kaikki_laskutettu %) tiedot))
         kaikki-yhteensa-laskutetaan (apply + (map #(:kaikki_laskutetaan %) tiedot))
         kaikki-tavoitehintaiset-laskutettu (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutettu %)))
@@ -41,24 +41,36 @@
         kaikki-tavoitehintaiset-laskutetaan (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutetaan %)))
                                                              (:tavoitehintaiset_laskutetaan %)
                                                              0) tiedot))]
-    {:kaikki-tavoitehintaiset-laskutettu kaikki-tavoitehintaiset-laskutettu
+    { :hk_valikatselmus_siirrot_ed_vuodelta valikatselmus-siirrot-ed-vuodelta
+     ;; Lisätään välikatselmuksen kulujen siirrot laskutettuihin kuluihin (Lisätään hoitokauden alusta lähtien kokonaissuummaan)
+     ;; Hoitokauden alusta
+     :kaikki-tavoitehintaiset-laskutettu (+ kaikki-tavoitehintaiset-laskutettu valikatselmus-siirrot-ed-vuodelta)
+     ;; Kk-välin laskutus
      :kaikki-tavoitehintaiset-laskutetaan kaikki-tavoitehintaiset-laskutetaan
-     :kaikki-yhteensa-laskutettu kaikki-yhteensa-laskutettu
+
+     ;; Hoitokauden alusta
+     :kaikki-yhteensa-laskutettu (+ kaikki-yhteensa-laskutettu valikatselmus-siirrot-ed-vuodelta)
+     ;; KK-välin laskutus
      :kaikki-yhteensa-laskutetaan kaikki-yhteensa-laskutetaan
      :nimi "Kaikki toteutuneet kustannukset"}))
 
 
-(defn- koosta-tavoite [tiedot urakka-tavoite]
+(defn- koosta-tavoite [tiedot urakka-tavoite valikatselmus-siirrot-ed-vuodelta]
   (let [kaikki-tavoitehintaiset-laskutettu (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutettu %)))
                                                             (:tavoitehintaiset_laskutettu %)
-                                                            0) tiedot))]
+                                                            0) tiedot))
+        oikaistu? (and
+                    (some? (:tavoitehinta-oikaistu urakka-tavoite))
+                    (some? (:tavoitehinta-indeksikorjattu urakka-tavoite))
+                    (not= (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite)))]
+
     (if urakka-tavoite
-      {:tavoite-hinta (or (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M)
-       :jaljella (- (or (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M) kaikki-tavoitehintaiset-laskutettu)
-       :nimi "Tavoite"}
+      {:tavoite-hinta (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M)
+       :jaljella (- (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M) kaikki-tavoitehintaiset-laskutettu valikatselmus-siirrot-ed-vuodelta)
+       :oikaistu? oikaistu?}
       {:tavoite-hinta 0
        :jaljella 0
-       :nimi "Tavoite"})))
+       :oikaistu? oikaistu?})))
 
 
 (defn- taulukko-rivi
@@ -201,6 +213,8 @@
 
         hoitokausi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm (first urakat)) alkupvm)
         urakka-tavoite (first (filter #(= (:hoitokausi %) hoitokausi) (budjetti-q/hae-budjettitavoite db {:urakka urakka-id})))
+        hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)
+        valikatselmus-siirrot-ed-vuodelta (budjetti-q/hae-valikatselmus-siirrot-ed-vuodelta db {:urakka urakka-id :alkupvm (first hoitokausi)})
 
         urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
                                       :urakka-nimi (:nimi %)
@@ -229,8 +243,8 @@
                                            kaikki-tuotteittain))
 
         tiedot (into [] (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
-        yhteenveto (koosta-yhteenveto tiedot)
-        tavoite (koosta-tavoite tiedot urakka-tavoite)
+        yhteenveto (koosta-yhteenveto tiedot valikatselmus-siirrot-ed-vuodelta)
+        tavoite (koosta-tavoite tiedot urakka-tavoite valikatselmus-siirrot-ed-vuodelta)
         koostettu-yhteenveto (conj [] yhteenveto tavoite)
 
         sheet-nimi "Tuotekohtainen"
@@ -287,6 +301,8 @@
      (when hoitokausi?
        (taulukot/toteutuneet-valitaulukko {:data (second koostettu-yhteenveto)
                                            :otsikko ""
-                                           :laskutettu-teksti "Tavoitehinta"
+                                           :laskutettu-teksti (str (if (-> koostettu-yhteenveto second :oikaistu?)
+                                                                     "Tavoitehinta (oikaistu)"
+                                                                     "Tavoitehinta (indeksikorjattu)"))
                                            :laskutetaan-teksti "Budjettia jäljellä"
                                            :kyseessa-kk-vali? true}))]))

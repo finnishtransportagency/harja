@@ -7,5 +7,5 @@
 
 (defmacro with-component [component & body]
   `(do
-     (reagent.core/render ~component @harja.testutils.shared-testutils/*test-container*)
+     (reagent.dom/render ~component @harja.testutils.shared-testutils/*test-container*)
      ~@body))

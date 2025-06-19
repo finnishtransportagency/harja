@@ -11,7 +11,7 @@
             [reagent.core :as r]
             [harja.ui.grid-debug :as g-debug]
             [reagent.ratom :as ratom]
-            [reagent.dom :as dom])
+            [reagent.dom :as rdom])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 
@@ -1414,7 +1414,7 @@
                  (let [[_ grid] (r/argv this)
                        ;; Tätä domNodeHaku funktiota voi sitten käyttää jossain muualla, jos haluaa esim. muuttaa dom noden attribuutin arvoa
                        ;; ilman, että se triggeröi reactin renderöintiä.
-                       _ (set! (.-domNode grid) (fn [] (dom/dom-node this)))
+                       _ (set! (.-domNode grid) (fn [] (rdom/dom-node this)))
                        _ (when (instance? DynaaminenGrid grid)
                            @(get-in grid [:osien-maara-muuttui :trigger]))
                        {luokat :class dom-id :id style :style

@@ -17,7 +17,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
-            [harja.palvelin.integraatiot.labyrintti.sms :as sms]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.kyselyt.tieturvallisuusverkko :as tieturvallisuusverkko-kyselyt]
             [harja.kyselyt.paallysteen-korjausluokat :as korjausluokka-kyselyt]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieturvallisuusverkko :as tieturvallisuusverkko-tuonti]
@@ -163,9 +163,9 @@
     vastaus))
 
 (defn- laheta-sms
-  "Lähetetään tekstiviesti (integraatioväylän ja) LinkMobilen LinkSMS-palvelun kautta. Toimii vain stg- ja tuotantoympäristöissä IP whitelistauksen vuoksi."
+  "Lähetetään tekstiviesti (integraatioväylän ja) SMS-integraation kautta. Toimii vain stg- ja tuotantoympäristöissä IP whitelistauksen vuoksi."
   [sms tekstiviesti]
-  (let [vastaus (sms/laheta sms (:puhelinnumero tekstiviesti) (:viesti tekstiviesti)  {"X-Correlation-ID" "Testi"})
+  (let [vastaus (sms/laheta sms (:puhelinnumero tekstiviesti) (:viesti tekstiviesti) "Testi" {})
         _ (log/info "tekstiviestilähetyksen vastaus: " (pr-str vastaus))]
     ;; Palautetaan onnistunut setti, jos onnistuu, ja jos ei onnistu, niin palautetaan koko setti
     (if (str/includes? (:sisalto vastaus) "OK")
@@ -243,7 +243,7 @@
   (start [{db :db
            ulkoinen-sahkoposti :ulkoinen-sahkoposti
            api-sahkoposti :api-sahkoposti
-           sms :labyrintti
+           sms :sms
            http :http-palvelin :as this}]
     (http/julkaise-palvelut
       http

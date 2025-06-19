@@ -36,7 +36,9 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     tavhin_hoitokausi_yht                 NUMERIC,
     tavhin_val_aika_yht                   NUMERIC,
     hoitokauden_tavoitehinta              NUMERIC,
-    hk_tavhintsiirto_ed_vuodelta          NUMERIC,
+    tavoitehinta_on_oikaistu              BOOLEAN,
+    -- Valikatselmuksesta siirretyt kulut edelliseltä vuodelta
+    hk_valikatselmus_siirrot_ed_vuodelta  NUMERIC,
     budjettia_jaljella                    NUMERIC,
     lisatyo_talvihoito_hoitokausi_yht     NUMERIC,
     lisatyo_talvihoito_val_aika_yht       NUMERIC,
@@ -167,14 +169,6 @@ DECLARE
     hankinnat_ja_hoidon_hk_yht            NUMERIC;
     hankinnat_ja_hoidon_val_yht           NUMERIC;
 
-    --- Äkilliset hoitotyöt ja vahinkojen korjaukset
-    akilliset_ja_vahingot_rivi            RECORD;
-
-    -- Rahavarausten ID:t
-    akilliset_id                          INT;
-    vahingot_id                           INT;
-    kannustin_id                          INT;
-
     -- Tavoitehinnat yhteensä
     tavhin_hoitokausi_yht                 NUMERIC;
     tavhin_val_aika_yht                   NUMERIC;
@@ -236,7 +230,9 @@ DECLARE
     hoitokauden_nro                       NUMERIC;
     hoitokauden_vuosi                     NUMERIC; -- Käytetään kun loopataan valitut hoitovuodet aikavälistä
     hoitokauden_tavoitehinta              NUMERIC;
-    hk_tavhintsiirto_ed_vuodelta          NUMERIC;
+    tavoitehinta_on_oikaistu              BOOLEAN;
+    -- Valikatselmuksesta siirretyt kulut edelliseltä vuodelta
+    hk_valikatselmus_siirrot_ed_vuodelta  NUMERIC;
     budjettia_jaljella                    NUMERIC;
     urakan_tiedot                         RECORD;
 
@@ -301,7 +297,9 @@ BEGIN
 
         IF hoitokauden_nro >= (hk_alkuvuosi - urakan_alkuvuosi + 1) 
         AND hoitokauden_nro <= (hk_loppuvuosi - urakan_alkuvuosi + 1) THEN
+
             RAISE NOTICE 'Lasketaan tavoitehinta hoitokauden_vuosi: %, hoitokauden_nro: %', hoitokauden_vuosi, hoitokauden_nro;
+
             hoitokauden_tavoitehinta := hoitokauden_tavoitehinta + 
             COALESCE(
               ( SELECT SUM(COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0))
@@ -309,20 +307,48 @@ BEGIN
                  WHERE ut.hoitokausi = hoitokauden_nro
                    AND ut.urakka = ur), 0
             );
+
+            -- Onko tavoitehintaa oikaistu 
+            IF EXISTS (
+              SELECT 1 
+              FROM tavoitehinnan_oikaisu to2 
+              WHERE to2."urakka-id" = ur 
+                AND to2."hoitokauden-alkuvuosi" = hk_alkuvuosi 
+                AND to2.poistettu = false
+            ) THEN
+              tavoitehinta_on_oikaistu := true;
+              
+              -- Lisää oikaistu määrä tavoitehintaan, oli sitten miinusta tai plussaa 
+              hoitokauden_tavoitehinta := hoitokauden_tavoitehinta + 
+                COALESCE(
+                    (SELECT SUM(to2.summa) 
+                     FROM tavoitehinnan_oikaisu to2 
+                     WHERE to2."urakka-id" = ur 
+                       AND to2."hoitokauden-alkuvuosi" = hk_alkuvuosi 
+                       AND to2.poistettu = false), 0
+                );
+            ELSE 
+              tavoitehinta_on_oikaistu := false;
+            END IF;
         END IF;
     END LOOP;
 
     RAISE NOTICE '***TOTAL hoitokauden_tavoitehinta: %', hoitokauden_tavoitehinta;
     -------------------------
 
-    hk_tavhintsiirto_ed_vuodelta := 0.0;
-    hk_tavhintsiirto_ed_vuodelta := hk_tavhintsiirto_ed_vuodelta +
-        ( SELECT COALESCE(ut.tavoitehinta_siirretty_indeksikorjattu, ut.tavoitehinta_siirretty, 0) AS siirretty
-           FROM urakka_tavoite ut
-          WHERE ut.hoitokausi = hoitokauden_nro
-            AND ut.urakka = ur);
-            
-    RAISE NOTICE '*** hk_tavhintsiirto_ed_vuodelta: % ', hk_tavhintsiirto_ed_vuodelta;
+    -- Välikatselmuksesta voi siirtyä seuravaalle vuodelle maksettavia kuluja Kattohinnan ylityksestä tai kulujen vähennyksiä
+    -- Tavoitehinnan alittamisesta.
+    -- Tässä summataan siirretyt kulut yhteen ja ne otetaan huomioon jäljelläolevassa budjetissa alempana
+    hk_valikatselmus_siirrot_ed_vuodelta := 0.0;
+    hk_valikatselmus_siirrot_ed_vuodelta := hk_valikatselmus_siirrot_ed_vuodelta +
+                                            (SELECT COALESCE(SUM(up.siirto), 0)
+                                               FROM urakka_paatos up
+                                              WHERE up."urakka-id" = ur
+                                                AND up."hoitokauden-alkuvuosi" = (hk_alkuvuosi - 1)
+                                                AND up.siirto != 0
+                                                AND up.poistettu = FALSE);
+
+    RAISE NOTICE '*** hk_valikatselmus_siirrot_ed_vuodelta: % ', hk_valikatselmus_siirrot_ed_vuodelta;
 
     -- Kaikki kustannukset haetaan toimenpideinstanssien perusteella.
     -- Urakan toimenpideinstanssit saadaan, kun haetaan toimenpidekoodi taulusta oikealla koodilla olevat toimenpiteet (eli tason 3 asiat),
@@ -418,15 +444,7 @@ BEGIN
     lisatyo_hoidonjohto_hoitokausi_yht := 0.0;
     lisatyo_hoidonjohto_val_aika_yht := 0.0;
 
-    -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta 
-    -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
-    SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
-
-    -- Hae rahavaraus id:t äkillisille hoitotöille ja vahingoille, uusi tietomalli korvaa vanhaa koodia jossa haetaan kulu_kohdistus maksuerätyypillä
-    SELECT id INTO akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO vahingot_id FROM rahavaraus WHERE nimi LIKE '%Vahinkojen korjaukset%' ORDER BY id ASC LIMIT 1;
-
-    FOR rivi IN SELECT 
+    FOR rivi IN SELECT
       summa         AS kht_summa, 
       l.erapaiva    AS erapaiva, 
       tpi.id        AS toimenpideinstanssi_id, 
@@ -448,7 +466,7 @@ BEGIN
                hoidonjohto_tpi_id
             )
         LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
-            WHERE lk.rahavaraus_id IS NULL 
+            WHERE lk.rahavaraus_id IS NULL -- Ei oteta tässä mukaan rahavarauksia, niihin kohdistetut kulut lasketaan erikseen
               AND lk.poistettu IS NOT TRUE
               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
               AND lk.tyyppi != 'muukulu'
@@ -733,9 +751,8 @@ BEGIN
                     END IF;
                 END IF;
 
-                -- MHU ylläpidon kulut, jotka eivät ole lisätöitä, eivätkä kannustinjärjestelmä rahavarauksia
-                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
-                   (rivi.yksiloiva_tunniste IS NULL OR (rivi.rahavaraus_id IS NULL OR rivi.rahavaraus_id != kannustin_id)) THEN
+                -- MHU ylläpidon kulut, jotka eivät ole lisätöitä
+                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
 
                     yllapito_hoitokausi_yht := yllapito_hoitokausi_yht + COALESCE(yllapito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && yllapito_tpi  THEN: %', yllapito_hoitokausi_yht;
@@ -746,9 +763,8 @@ BEGIN
                     END IF;
                 END IF;
 
-                -- MHU ylläpidon kulut, joka on lisätyö , mutta ei kohdistettu rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)
-                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
-                   (rivi.yksiloiva_tunniste IS NULL OR (rivi.rahavaraus_id IS NULL OR rivi.rahavaraus_id != kannustin_id)) THEN
+                -- MHU ylläpidon kulut, joka on lisätyö
+                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
 
                     lisatyo_yllapito_hoitokausi_yht :=
                             lisatyo_yllapito_hoitokausi_yht + COALESCE(lisatyo_yllapito_rivi.summa, 0.0);
@@ -855,7 +871,7 @@ BEGIN
     -- HOIDONJOHTO --  erillishankinnat
     erillishankinnat_rivi :=
         (SELECT hj_erillishankinnat(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, '23150'::TEXT,
-                                    hoidonjohto_tpi_id::INTEGER, ur::INTEGER, sopimus_id::INTEGER));
+                                    hoidonjohto_tpi_id::INTEGER, ur::INTEGER));
 
     erillishankinnat_hoitokausi_yht := 0.0;
     erillishankinnat_val_aika_yht := 0.0;
@@ -974,12 +990,18 @@ BEGIN
             lk.tavoitehintainen AS tavoitehintainen 
         FROM kulu l
         JOIN kulu_kohdistus lk ON lk.kulu = l.id
+        LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
         -- Etsi pelkästään muukulu tyyppiset  kirjaukset, toimenpideinstansseilla ei ole näissä väliä 
         -- Tavoitehintaiset kuuluu tehtäväryhmälle, ei tavoitehintaiset kuuluu toimenpiteelle, mutta työmaakokouksessa ei tarvitse niputtaa
         WHERE lk.tyyppi = 'muukulu'
           AND lk.poistettu IS NOT TRUE
           AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-          AND l.urakka = ur 
+          AND l.urakka = ur
+          -- J - Johto- ja hallintokorvaus huomioidaan myös muukulu-tyyppiseksi kirjattuna laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä, joten karsitaan pois tässä.
+          -- W - Erillishankinnat, myös omana rivinään, ei lasketa niitä tähän 
+          AND ((tr.yksiloiva_tunniste IS NOT NULL 
+                AND tr.yksiloiva_tunniste NOT IN ('a6614475-1950-4a61-82c6-fda0fd19bb54', '37d3752c-9951-47ad-a463-c1704cf22f4c')) 
+              OR tr.yksiloiva_tunniste IS NULL)
     LOOP
         IF rivi.erapaiva <= aikavali_loppupvm THEN
             --
@@ -1010,7 +1032,10 @@ BEGIN
 
     -- Tavoitehintaiset Yhteensä-  arvot,  nämä on tekohetkellä aivan samat,
     -- mutta tehty kuitenkin, jos jatkossa tämän taulukon alle tulee lisää rivejä, niitä voi tähän niputtaa
-    muut_kulut_hoitokausi_yht := muut_kulut_hoitokausi;
+    muut_kulut_hoitokausi_yht := muut_kulut_hoitokausi
+        -- Otetaan mukaan muihin tavoitehintaisiin kuluihin myös kulujen siirrot edelliselta vuodelta
+        -- Käsitellään siirrot kuitenkin omana rivinään laskutusyhteenvedossa, jotta ne erottuvat selkeästi muista kuluista
+        + hk_valikatselmus_siirrot_ed_vuodelta;
     muut_kulut_val_aika_yht := muut_kulut_val_aika;
 
     -- Ei tavoitehintaiset yhteensä-  arvot lasketaan bonusten ja sanktioiden jälkeen alempana
@@ -1053,7 +1078,7 @@ BEGIN
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
-    budjettia_jaljella := budjettia_jaljella + (hk_tavhintsiirto_ed_vuodelta + hoitokauden_tavoitehinta) - tavhin_hoitokausi_yht;
+    budjettia_jaljella := budjettia_jaljella + hoitokauden_tavoitehinta - tavhin_hoitokausi_yht;
 
     ---------------------------------------------
     ---- Muut toteutuneet kustannukset  ---------
@@ -1304,7 +1329,9 @@ BEGIN
         -- Tavoitehinnat yht.
               tavhin_hoitokausi_yht, tavhin_val_aika_yht,
         -- Tavoitehinnan muodostus
-              hoitokauden_tavoitehinta, hk_tavhintsiirto_ed_vuodelta,
+              hoitokauden_tavoitehinta, 
+              tavoitehinta_on_oikaistu,
+              hk_valikatselmus_siirrot_ed_vuodelta,
               budjettia_jaljella,
         -- Lisätyöt
         -- Lisätyö talvihoito

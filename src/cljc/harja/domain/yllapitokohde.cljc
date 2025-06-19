@@ -90,10 +90,10 @@ yllapitoluokkanimi->numero
    (if niputa-kaistat?
      ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
         :tie :tr-numero :tienumero
+        :kaista :tr-kaista
         :aosa :tr-alkuosa :aet
         :tr-alkuetaisyys :ajr
-        :tr-ajorata :ajorata
-        :kaista :tr-kaista) kohde)
+        :tr-ajorata :ajorata) kohde)
 
      ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
         :tie :tr-numero :tienumero

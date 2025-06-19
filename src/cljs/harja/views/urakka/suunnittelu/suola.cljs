@@ -577,7 +577,7 @@
               [lomake-talvisuolan-kayttoraja-alueurakka e! app urakka]
               [yleiset/ajax-loader "Ladataan..."])
 
-            [yleiset/virheviesti-sailio "Tuntematon urakkatyyppi"])
+            [yleiset/info-laatikko :varoitus "Tuntematon urakkatyyppi" nil "400px" {:sulje-nappi-id (gensym)}])
 
           (when (= :teiden-hoito (:tyyppi urakka))
             [:<>
@@ -589,10 +589,10 @@
                [yleiset/ajax-loader "Ladataan..."])])]
 
          ;; Pohjavesialueiden rajoitusalueiden taulukko ym.
-         [:div.pohjavesialueiden-suolarajoitukset
+         [:div.rajoitusalueiden-suolarajoitukset
           [:div.header
            [:h3 {:class "pull-left"}
-            "Pohjavesialueiden suolarajoitukset"]
+            "Rajoitusalueiden suolarajoitukset"]
            [napit/uusi "Lisää rajoitusalue"
             #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli true {:kopioidaan-tuleville-vuosille? true}))
             {:luokka "pull-right"

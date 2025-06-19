@@ -1,7 +1,13 @@
-<b>Nykyinen versio: 1.0.63</b>
-<b>Julkaistu: 22.08.2023</b>
+<b>Nykyinen versio: 1.0.65</b>
+<b>Julkaistu: 09.01.2024</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.65 Julkaistu 9.1.2025
+    - Lisätty reikäpaikkausrajapinta.
+    - Päivitetty materiaaliraporttirajapinnalle toteumarajapinnasta erillinen materiaalimääritys, jotta negatiiviset materiaalimäärät voidaan palauttaa rajapinnan kautta.
+- Versionumero 1.0.64 Julkaistu 1.10.2024
+    - Työmaapäiväkirjan versio 2. Käytä tätä versiota, kun kehität uutta.
+    - Lisätty talvihoitoreittirajapinta.
 - Versionumero 1.0.63 Julkaistu 22.08.2023
     - Lisätty tieturvallisuustarkastus rajapinta.
 - Versionumero 1.0.62 Julkaistu 14.08.2023

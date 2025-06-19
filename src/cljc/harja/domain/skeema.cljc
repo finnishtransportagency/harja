@@ -1,6 +1,7 @@
 (ns harja.domain.skeema
   "Jaettavia skeemamäärityksiä"
-  (:require [schema.core :as s])
+  (:require #?(:clj [schema.core :as s :include-macros true]
+               :cljs [schema.core :as s :include-macros true]))
   #?(:cljs (:import (goog.date DateTime))
      :clj (:import (java.util Date))))
 

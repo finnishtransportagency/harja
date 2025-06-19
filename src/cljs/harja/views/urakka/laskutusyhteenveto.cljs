@@ -126,8 +126,8 @@
   (if-let [tiedot @laskutusyhteenvedon-tiedot]
     [muodosta-html
      (-> tiedot
-         (assoc-in [1 :tunniste] raportin-nimi)
-         (assoc-in [1 :yhteenvetotyyppi] @valittu-yhteenveto-muoto))]
+       (assoc-in [1 :tunniste] raportin-nimi)
+       (assoc-in [1 :yhteenvetotyyppi] @valittu-yhteenveto-muoto))]
     [yleiset/ajax-loader "Raporttia suoritetaan..."]))
 
 (defn laskutusyhteenveto
@@ -153,7 +153,7 @@
                                   :space-valissa? true
                                   :vaihtoehdot [:tyomaakokous :tuotekohtainen]
                                   :vayla-tyyli? true
-                                  :nayta-rivina? true
+                                  :nayta-rivina? false
                                   :valitse-fn #(do
                                                  (reset! u/valittu-hoitokauden-kuukausi nil)
                                                  (reset! valittu-yhteenveto-aikarajaus :hoitokausi))
@@ -163,21 +163,21 @@
             [:div {:class "laskutus-yhteensa"} "Aikarajaus"
              [:div {:class "kentta"}
 
-             [kentat/tee-kentta {:tyyppi :radio-group
-                                 :vaihtoehdot (cond 
-                                                ;; Työmaakokoukselle ei anneta vuosivalintaa
-                                                (= @valittu-yhteenveto-muoto :tyomaakokous) [:hoitokausi :valittu-aikakvali]
-                                                :else [:hoitokausi :kalenterivuosi :valittu-aikakvali])
-                                 :vayla-tyyli? true
-                                 :nayta-rivina? false
-                                 ;; Kun vaihdetaan yhteenvedon muotoa resetoidaan kalenteri arvoja
-                                 :valitse-fn #(do
-                                                (reset! u/valittu-hoitokauden-kuukausi nil)
-                                                (reset! u/valittu-hoitokausi nil)
-                                                (reset! kuukaudet (pvm/vuoden-kuukausivalit (pvm/vuosi (pvm/nyt))))
-                                                (reset! valittu-vuosi (pvm/vuosi (pvm/nyt))))
-                                 :vaihtoehto-nayta aikarajaus-valinnat}
-              valittu-yhteenveto-aikarajaus]]]])
+              [kentat/tee-kentta {:tyyppi :radio-group
+                                  :vaihtoehdot (cond
+                                                 ;; Työmaakokoukselle ei anneta vuosivalintaa
+                                                 (= @valittu-yhteenveto-muoto :tyomaakokous) [:hoitokausi :valittu-aikakvali]
+                                                 :else [:hoitokausi :kalenterivuosi :valittu-aikakvali])
+                                  :vayla-tyyli? true
+                                  :nayta-rivina? false
+                                  ;; Kun vaihdetaan yhteenvedon muotoa resetoidaan kalenteri arvoja
+                                  :valitse-fn #(do
+                                                 (reset! u/valittu-hoitokauden-kuukausi nil)
+                                                 (reset! u/valittu-hoitokausi nil)
+                                                 (reset! kuukaudet (pvm/vuoden-kuukausivalit (pvm/vuosi (pvm/nyt))))
+                                                 (reset! valittu-vuosi (pvm/vuosi (pvm/nyt))))
+                                  :vaihtoehto-nayta aikarajaus-valinnat}
+               valittu-yhteenveto-aikarajaus]]]])
 
          (cond
            ;; Hoitokausi valittuna

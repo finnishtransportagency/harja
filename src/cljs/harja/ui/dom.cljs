@@ -1,6 +1,7 @@
 (ns harja.ui.dom
   "Yleisiä apureita DOMin ja selaimen hallintaan"
   (:require [reagent.core :as r]
+            [reagent.dom :as rdom]
             [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! timeout] :as async]
@@ -13,7 +14,7 @@
   "Tarkistaa onko annettu tapahtuma tämän React komponentin sisällä."
   ([komponentti tapahtuma] (sisalla? komponentti tapahtuma nil))
   ([komponentti tapahtuma {elementti? :elementti?}]
-   (let [dom (r/dom-node komponentti)
+   (let [dom (rdom/dom-node komponentti)
          elt (if elementti? tapahtuma (.-target tapahtuma))]
      (when (and (not (nil? elt)) (not (nil? (.-parentNode elt))))
        (loop [ylempi (.-parentNode elt)]
@@ -188,6 +189,33 @@
   (let [r (.getBoundingClientRect solmu)
         leveys (.-width r)]
     leveys))
+
+(defn hae-nakyman-elementit [nakyma]
+  (->> (.querySelectorAll nakyma "button, [href], input, select, textarea")
+    array-seq
+    (filter #(not (.-disabled %)))
+    (filter #(not (.-hidden %)))))
+
+(defn siirra-fokus-nakymaan [nakyma siirra-fokus-elementtiin]
+  (let [focusable-elementit (hae-nakyman-elementit nakyma)]
+    (when focusable-elementit
+      (cond
+        (= siirra-fokus-elementtiin :last) (.focus (last focusable-elementit))
+        (= siirra-fokus-elementtiin :second) (.focus (second focusable-elementit))
+        :else (.focus (first focusable-elementit))))))
+
+(defn tee-fokus-ansa
+  "Fokusoidaan elementti, mutta jos käyttäjä yrittää siirtää fokusta pois, se palautetaan takaisin."
+  [ref]
+  (let [focusable-elementit (when @ref (hae-nakyman-elementit @ref))]
+    (set! (.-onkeydown js/document)
+      (fn [e]
+        (when (and (tab+shift-nappaimet? e) (= (.-activeElement js/document) (first focusable-elementit)))
+          (.preventDefault e)
+          (.focus (last focusable-elementit)))
+        (when (and (tab-nappain-ilman-shiftia? e) (= (.-activeElement js/document) (last focusable-elementit)))
+          (.preventDefault e)
+          (.focus (first focusable-elementit)))))))
 
 (defn lataus-komponentille
   "Jos komponentin luominen kestää pitkää, tämän voi wrapata komponentin ympärille, jolloinka

@@ -32,3 +32,15 @@
     (is (=marginaalissa? (BigDecimal. (:let tr)) trgeom_pituus 20))
     ;; Ihan metrilleen ei saada tarkkoja lukuja, kun tieosoitteen paaluvälit ei ole ihan metrejä, joten sallitaan pieni marginaali
     (is (=marginaalissa?  (BigDecimal. (- (:let tr) (:let pk))) erotus 20))))
+
+(deftest luokan-laskenta-toimii-vaikka-aosa-ja-losa-eivat-ole-samat
+  ;; usein tuotannossa on kohteita, joilla aosa ja losa eivät ole samat
+  ;; entinen laskenta ei toiminut näille kohteille. Testataan, että laskenta toimii
+  ;; kohteen tieosoite: (66,15,0,18,3700,0)
+  (let [kohde (first (q-map "SELECT id, pkluokka FROM paikkauskohde WHERE nimi = 'Kt66 testipaikkauskohde PK2-alueella';"))
+        laskettu-pk-luokka (ffirst (q (format "SELECT * FROM paivita_paikkauskohteen_korjausluokka(%s);" (:id kohde))))
+        ;; odotettuun luokkaan on katsottu todellinen tapaus tuotannosta, jossa aiempi toteutus toimi väärin
+        odotettu-pk-luokka "PK2"]
+    (is (integer? (:id kohde)) "paikkauskohteen id ")
+    (is (string? (:pkluokka kohde)) "paikkauskohteen  pk-luokka")
+    (is (= odotettu-pk-luokka laskettu-pk-luokka))) "PK-luokka lasketaan oikein")

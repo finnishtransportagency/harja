@@ -5,6 +5,8 @@
 (defqueries "harja/kyselyt/toimenpideinstanssit.sql"
   {:positional? true})
 
+(declare hae-urakan-toimenpideinstanssi-toimenpidekoodilla)
+
 (defn onko-tuotu-samposta? [db sampo_toimenpidekoodi sampo-toimenpide-id urakka_sampoid]
   (:exists (first (onko-tuotu-samposta db sampo_toimenpidekoodi sampo-toimenpide-id urakka_sampoid))))
 

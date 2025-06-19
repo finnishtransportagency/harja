@@ -70,7 +70,7 @@
     (reset! undo-tiedot {:tyyppi tyyppi :index index :timeout-id timeout-id})))
 
 (defn lahetys-virheet-nappi [rivi muoto]
-  (let [nayta-virheet-fn (fn [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus] :as rivi}]
+  (let [nayta-virheet-fn (fn [rivi]
                            (varmista-kayttajalta/varmista-kayttajalta
                              {:otsikko "YHA-lähetyksessä virhe"
                               :sisalto (pot-yhteinen/lahetys-virhe-teksti rivi)
@@ -203,8 +203,6 @@
             (for*
               [rivin-toiminto rivin-toiminnot]
               [napit/nappi-hover-vihjeella rivin-toiminto])
-            [rivin-lisatoiminnot-dropdown rivin-toiminnot lisatoiminnot-auki?]
-            (when (= "epaonnistunut" (:velho-rivi-lahetyksen-tila rivi))
-              (lahetys-virheet-nappi rivi :lyhyt))])]))))
+            [rivin-lisatoiminnot-dropdown rivin-toiminnot lisatoiminnot-auki?]])]))))
 
 

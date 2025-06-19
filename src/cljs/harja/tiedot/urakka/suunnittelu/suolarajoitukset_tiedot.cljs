@@ -80,8 +80,8 @@
 
 ;; Suolarajoituslomakkeen Päivitys
 (defrecord PaivitaLomake [lomake tarkista-tierekisteri?])
-(defrecord HaeTierekisterinTiedotOnnistui [vastaus])
-(defrecord HaeTierekisterinTiedotEpaonnistui [vastaus])
+(defrecord HaeTieosoitteenJaAjoratojenPituudetOnnistui [vastaus])
+(defrecord HaeTieosoitteenJaAjoratojenPituudetEpaonnistui [vastaus])
 
 (defrecord TallennaLomake [lomake tila])
 (defrecord TallennaLomakeOnnistui [vastaus])
@@ -394,7 +394,7 @@
                         (not (empty? (set/difference vanha-tierekisteri uusi-tierekisteri)))
                         (not= (count vanha-tierekisteri) (count uusi-tierekisteri)))))
                 (do
-                  (tuck-apurit/post! :tierekisterin-tiedot
+                  (tuck-apurit/post! :tieosoitteen-ja-ajoratojen-pituudet
                     {:rajoitusalue-id (:rajoitusalue_id lomake)
                      :tie (:tie lomake)
                      :aosa (:aosa lomake)
@@ -404,14 +404,14 @@
                      :urakka-id urakka-id
                      :hoitokauden-alkuvuosi (:valittu-hoitovuosi app)}
 
-                    {:onnistui ->HaeTierekisterinTiedotOnnistui
-                     :epaonnistui ->HaeTierekisterinTiedotEpaonnistui
+                    {:onnistui ->HaeTieosoitteenJaAjoratojenPituudetOnnistui
+                     :epaonnistui ->HaeTieosoitteenJaAjoratojenPituudetEpaonnistui
                      :paasta-virhe-lapi? true})
                   (assoc app :hae-tiedot-kaynnissa? true))
                 app)]
       app))
 
-  HaeTierekisterinTiedotOnnistui
+  HaeTieosoitteenJaAjoratojenPituudetOnnistui
   (process-event [{vastaus :vastaus} app]
     (let [virhe (if (= 400 (:status vastaus))
                   (:vastaus vastaus)
@@ -436,7 +436,7 @@
         (not validointi-info) (assoc-in [:lomake :validaatioinfot] nil)
         true (assoc :hae-tiedot-kaynnissa? false))))
 
-  HaeTierekisterinTiedotEpaonnistui
+  HaeTieosoitteenJaAjoratojenPituudetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (let [tierekisterivirhe (when (get-in vastaus [:response :virhe])
                               (get-in vastaus [:response :virhe]))

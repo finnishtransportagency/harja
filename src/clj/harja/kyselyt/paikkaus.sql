@@ -81,6 +81,7 @@ SELECT pk.id                                       AS id,
        pk."pot?"                                   AS "pot?",
        pk.takuuaika                                AS takuuaika,
        pk."tiemerkintaa-tuhoutunut?"               AS "tiemerkintaa-tuhoutunut?",
+       pk."tiemerkinnan-tila"                      AS "tiemerkinnan-tila",
        o.nimi                                      AS urakoitsija,
        (pk.tierekisteriosoite_laajennettu).tie     AS tie,
        (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
@@ -91,7 +92,7 @@ SELECT pk.id                                       AS id,
        CASE
            WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
                (SELECT *
-                FROM tierekisteriosoitteelle_viiva(
+                FROM tieosoitteelle_geometria(
                         CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -136,7 +137,7 @@ WHERE pk."urakka-id" = :urakka-id
                                                CASE
                                                         WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL
                                                         THEN  (SELECT *
-                                                                 FROM tierekisteriosoitteelle_viiva(
+                                                                 FROM tieosoitteelle_geometria(
                                                             CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                                                             CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                                                             CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -173,6 +174,7 @@ SELECT pk.id                                       AS id,
        pk.yksikko                                  AS yksikko,
        pk.lisatiedot                               AS lisatiedot,
        pk."pot?"                                   AS "pot?",
+       pk."tiemerkinnan-tila"                      AS "tiemerkinnan-tila",
        o.nimi                                      AS urakoitsija,
        (pk.tierekisteriosoite_laajennettu).tie     AS tie,
        (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
@@ -188,7 +190,7 @@ SELECT pk.id                                       AS id,
                AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
                THEN
                (SELECT *
-                FROM tierekisteriosoitteelle_viiva(
+                FROM tieosoitteelle_geometria(
                         CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -218,7 +220,7 @@ WHERE st_intersects(a.alue,
                    AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
             THEN
                 (SELECT *
-                   FROM tierekisteriosoitteelle_viiva(
+                   FROM tieosoitteelle_geometria(
                      CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                      CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                      CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -258,6 +260,7 @@ SELECT pk.id                                       AS id,
        pk.yksikko                                  AS yksikko,
        pk.lisatiedot                               AS lisatiedot,
        pk."pot?"                                   AS "pot?",
+       pk."tiemerkinnan-tila"                      AS "tiemerkinnan-tila",
        urakoitsija.nimi                            AS urakoitsija,
        (pk.tierekisteriosoite_laajennettu).tie     AS tie,
        (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
@@ -273,7 +276,7 @@ SELECT pk.id                                       AS id,
                AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
             THEN
                (SELECT *
-                FROM tierekisteriosoitteelle_viiva(
+                FROM tieosoitteelle_geometria(
                         CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -304,7 +307,7 @@ WHERE st_intersects(o.alue,
                             AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
                         THEN
                             (SELECT *
-                             FROM tierekisteriosoitteelle_viiva(
+                             FROM tieosoitteelle_geometria(
                                      CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                                      CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                                      CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -335,13 +338,13 @@ INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu,
                            "urakka-id", "yhalahetyksen-tila", virhe, tarkistettu, "tarkistaja-id", "ilmoitettu-virhe",
                            alkupvm, loppupvm, tilattupvm, tyomenetelma, tierekisteriosoite_laajennettu, "paikkauskohteen-tila",
                            "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot, "pot?", valmistumispvm,
-                           tiemerkintapvm, "toteutunut-hinta", "tiemerkintaa-tuhoutunut?", takuuaika, "yllapitokohde-id")
+                           tiemerkintapvm, "toteutunut-hinta", "tiemerkintaa-tuhoutunut?", "tiemerkinnan-tila", takuuaika, "yllapitokohde-id", suorittava_tiemerkintaurakka)
 VALUES (:luoja-id, :ulkoinen-id, :nimi, FALSE, :luotu,
         :urakka-id, :yhalahetyksen-tila, :virhe, :tarkistettu, :tarkistaja-id, :ilmoitettu-virhe,
         :alkupvm, :loppupvm, :tilattupvm, :tyomenetelma,
         ROW(:tie, :aosa, :aet, :losa, :let, :ajorata,NULL,NULL,NULL,NULL)::TR_OSOITE_LAAJENNETTU,
         :paikkauskohteen-tila::paikkauskohteen_tila, :suunniteltu-maara, :suunniteltu-hinta, :yksikko, :lisatiedot, :pot?, :valmistumispvm,
-        :tiemerkintapvm, :toteutunut-hinta, :tiemerkintaa-tuhoutunut?, :takuuaika, :yllapitokohde-id);
+        :tiemerkintapvm, :toteutunut-hinta, :tiemerkintaa-tuhoutunut?, :tiemerkinnan-tila::tiemerkinnan_tila_enum, :takuuaika, :yllapitokohde-id, :suorittava-tiemerkintaurakka);
 
 -- name: paivita-paikkauskohde!
 UPDATE paikkauskohde
@@ -371,8 +374,10 @@ UPDATE paikkauskohde
        tiemerkintapvm                 = :tiemerkintapvm,
        "toteutunut-hinta"             = :toteutunut-hinta,
        "tiemerkintaa-tuhoutunut?"     = :tiemerkintaa-tuhoutunut?,
+       "tiemerkinnan-tila"            = :tiemerkinnan-tila::tiemerkinnan_tila_enum,
        takuuaika                      = :takuuaika,
-       "yllapitokohde-id"             = :yllapitokohde-id
+       "yllapitokohde-id"             = :yllapitokohde-id,
+       suorittava_tiemerkintaurakka   = :suorittava-tiemerkintaurakka
  WHERE id = :id;
 
 --name: hae-paikkauskohde
@@ -394,6 +399,7 @@ SELECT pk.id                                       AS id,
        pk.lisatiedot                               AS lisatiedot,
        pk."pot?"                                   AS "pot?",
        pk."yllapitokohde-id"                       AS "yllapitokohde-id",
+       pk.suorittava_tiemerkintaurakka             AS "suorittava-tiemerkintaurakka",
        o.nimi                                      AS urakoitsija,
        (pk.tierekisteriosoite_laajennettu).tie     AS tie,
        (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
@@ -404,7 +410,7 @@ SELECT pk.id                                       AS id,
        CASE
            WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
                (SELECT *
-                FROM tierekisteriosoitteelle_viiva(
+                FROM tieosoitteelle_geometria(
                         CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
@@ -412,7 +418,8 @@ SELECT pk.id                                       AS id,
                         CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
            ELSE NULL
            END                                     AS geometria,
-       pk.tiemerkintapvm                           AS tiemerkintapvm
+       pk.tiemerkintapvm                           AS tiemerkintapvm,
+       pk.pkluokka
 FROM paikkauskohde pk,
      urakka u,
      organisaatio o
@@ -483,8 +490,12 @@ WHERE pk.poistettu = FALSE
   AND pk."paikkauskohteen-tila" in ('valmis', 'tilattu')
   AND pk."pot?" = FALSE
   AND pk."urakka-id" = :urakka-id
-  AND (:alkuaika::DATE IS NULL or (pk.tilattupvm >= :alkuaika::DATE OR pk.alkupvm >= :alkuaika::DATE))
-  AND (:loppuaika::DATE IS NULL OR (pk.tilattupvm <= :loppuaika::DATE OR pk.loppupvm <= :loppuaika::DATE))
+  AND
+    -- varaudutaan siihen että käyttäjä voi jättää antamatta alku- ja loppuajan tai antaa vain toisen
+    ((:alkuaika::DATE IS NULL or (pk.tilattupvm >= :alkuaika::DATE OR pk.alkupvm >= :alkuaika::DATE))
+         AND (:loppuaika::DATE IS NULL OR (pk.tilattupvm <= :loppuaika::DATE OR pk.loppupvm <= :loppuaika::DATE))
+         -- jos alku ja loppu annettu, huomioidaan lisäksi kaikki aikavälillä käynnissäolleet kohteet
+        OR (pk.alkupvm BETWEEN :alkuaika AND :loppuaika OR pk.loppupvm BETWEEN :alkuaika AND :loppuaika))
   AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
 -- Ehto  - jos tie on annettu
   AND (:tie::TEXT IS NULL OR (p.tierekisteriosoite).tie = :tie)
@@ -550,7 +561,7 @@ SELECT pk.id,
            WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
                (SELECT ST_ASTEXT(
                            st_simplify(
-                               tierekisteriosoitteelle_viiva(
+                               tieosoitteelle_geometria(
                                    (pk.tierekisteriosoite_laajennettu).tie,
                                    (pk.tierekisteriosoite_laajennettu).aosa,
                                    (pk.tierekisteriosoite_laajennettu).aet,
@@ -565,6 +576,8 @@ WHERE luotu BETWEEN :alku AND :loppu
 -- name: hae-paikkaukset-analytiikalle
 SELECT p.id,
        p."paikkauskohde-id",
+       p."urakka-id"               AS urakka,
+       u.urakkanro                 AS urakkatunnus,
        p.poistettu,
        tm.nimi                     AS paikkaustyomenetelma,
        (p.tierekisteriosoite).tie  AS tierekisteriosoitevali_tienumero,
@@ -585,9 +598,14 @@ SELECT p.id,
        p."pinta-ala",
        p.juoksumetri,
        p.kpl,
-       p.massamenekki
+       p.massamenekki,
+       p.kustannus
 FROM paikkaus p
          LEFT JOIN paikkauksen_tienkohta ptk ON p.id = ptk."paikkaus-id"
          LEFT JOIN paikkauskohde_tyomenetelma tm ON p.tyomenetelma = tm.id
+         JOIN urakka u ON p."urakka-id" = u.id
 WHERE p.luotu BETWEEN :alku AND :loppu
-   OR p.muokattu BETWEEN :alku AND :loppu
+   OR p.muokattu BETWEEN :alku AND :loppu;
+
+-- name: paivita-paikkauskohteen-korjausluokka
+SELECT * FROM paivita_paikkauskohteen_korjausluokka(:id);

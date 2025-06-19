@@ -22,12 +22,6 @@
   margin-bottom: 1rem;
 }
 
-.ilmoitukset-sort {
-  img {
-    transform: scale(0.6);
-  }
-}
-
 .ilmoitukset {
   .boolean > .checkbox {
     padding-top: 0;
@@ -111,6 +105,13 @@
     @media (max-width: extract(@taulukko-breakpointit, 4)) {
       width: 96px;
     }
+  }
+
+  .paivays {
+    label {
+      margin-top: @valistys-8;
+    }
+    margin-bottom: @valistys-4;
   }
 }
 
@@ -210,7 +211,7 @@
 }
 
 .selite-virkaapu {
-  color: @pinkki-kevyt;
+  color: @punainen4;
   font-weight: bold;
 }
 

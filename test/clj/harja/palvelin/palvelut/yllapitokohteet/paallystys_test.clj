@@ -944,7 +944,7 @@
                              (assoc-in [:paallystekerros 1 :tr-alkuosa] 1)
                              (assoc-in [:paallystekerros 1 :tr-loppuosa] 1)
                              (assoc-in [:paallystekerros 1 :tr-loppuetaisyys] 3827)
-                             (assoc-in [:paallystekerros 1 :tr-alkuetaisyys] (+ aet 100))
+                             (assoc-in [:paallystekerros 1 :tr-alkuetaisyys] (+ aet (- pot-domain/hypyn-kynnysarvo-metreina 1)))
                              (assoc-in [:paallystekerros 1 :tr-numero] 20)
                              (assoc-in [:paallystekerros 1 :tr-kaista] 12)
                              (assoc-in [:paallystekerros 1 :tr-ajorata] 1))
@@ -1140,7 +1140,7 @@
                                                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         alustarivit-ennen (:alusta paallystysilmoitus-kannassa-ennen)
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)
-        alustarivi-15 (alustarivi-idlla alustarivit-jalkeen 15)]
+        alustarivi-18 (alustarivi-idlla alustarivit-jalkeen 18)]
     (is (not (nil? paallystysilmoitus-kannassa-ennen)))
     (is (= (:versio paallystysilmoitus-kannassa-ennen) 2))
     (is (= 6 (count alustarivit-ennen)))
@@ -1152,12 +1152,12 @@
     (is (alustarivi-idlla-loytyy? alustarivit-ennen 5) "alusta id:llä 5 löytyy")
     (is (alustarivi-idlla-loytyy? alustarivit-ennen 6) "alusta id:llä 6 löytyy")
     (is (not (alustarivi-idlla-loytyy? alustarivit-jalkeen 7)) "alusta id:llä 7 löytyy")
-    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 12) "alusta id:llä 12 löytyy")
-    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 13) "alusta id:llä 13 löytyy")
-    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 14) "alusta id:llä 14 löytyy")
     (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 15) "alusta id:llä 15 löytyy")
+    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 16) "alusta id:llä 16 löytyy")
+    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 17) "alusta id:llä 17 löytyy")
+    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 18) "alusta id:llä 18 löytyy")
     (is (= {:verkon-tyyppi 1 :verkon-tarkoitus 2 :verkon-sijainti 3}
-           (select-keys alustarivi-15 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
+           (select-keys alustarivi-18 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-lisaa-alustarivi-ja-vain-pakolliset-verkko-tiedot
@@ -1170,9 +1170,9 @@
         [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
                                                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)
-        alustarivi-15 (alustarivi-idlla alustarivit-jalkeen 15)]
+        alustarivi-18 (alustarivi-idlla alustarivit-jalkeen 18)]
     (is (= {:verkon-tyyppi 1 :verkon-tarkoitus nil :verkon-sijainti 3}
-           (select-keys alustarivi-15 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
+           (select-keys alustarivi-18 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-lisaa-alustarivi-ja-vain-pakolliset-tas-tiedot
@@ -1185,9 +1185,9 @@
         [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)
-        alustarivi-9 (alustarivi-idlla alustarivit-jalkeen 14)]
+        alustarivi-17 (alustarivi-idlla alustarivit-jalkeen 17)]
     (is (= {:kasittelysyvyys 55, :sideaine 1, :sideainepitoisuus 10.0M, :murske nil, :massamenekki nil}
-           (select-keys alustarivi-9 [:kasittelysyvyys :sideaine :sideainepitoisuus :murske :massamenekki])))
+           (select-keys alustarivi-17 [:kasittelysyvyys :sideaine :sideainepitoisuus :murske :massamenekki])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-lisaa-alustarivi
@@ -1213,16 +1213,11 @@
                                                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)]
     (is (= 5 (count alustarivit-jalkeen)))
-    (is (= #{{:pot2a_id 14
-              :tr-numero 20}
-             {:pot2a_id 15
-              :tr-numero 20}
-             {:pot2a_id 16
-              :tr-numero 7777}
-             {:pot2a_id 12
-              :tr-numero 20}
-             {:pot2a_id 13
-              :tr-numero 20}}
+    (is (=  #{{:pot2a_id 15, :tr-numero 20} 
+              {:pot2a_id 16, :tr-numero 20}
+              {:pot2a_id 17, :tr-numero 20} 
+              {:pot2a_id 19, :tr-numero 7777}
+              {:pot2a_id 18, :tr-numero 20}}
            (clojure.set/project alustarivit-jalkeen [:pot2a_id :tr-numero])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
@@ -1289,9 +1284,9 @@
         [_ paallystysilmoitus-kannassa-paivitetty] (tallenna-pot2-testi-paallystysilmoitus
                                                   urakka-id sopimus-id paallystyskohde-id paivitetty-paallystysilmoitus)
         alustarivit-paivitetyt (:alusta paallystysilmoitus-kannassa-paivitetty)
-        paivitetty-alustarivi-15 (alustarivi-idlla alustarivit-paivitetyt 15)]
-    (is (some? paivitetty-alustarivi-15) "alusta id:llä 15 löytyy")
-    (is (= paivitetyt-verkon-tiedot (select-keys paivitetty-alustarivi-15 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
+        paivitetty-alustarivi-18 (alustarivi-idlla alustarivit-paivitetyt 18)]
+    (is (some? paivitetty-alustarivi-18) "alusta id:llä 18 löytyy")
+    (is (= paivitetyt-verkon-tiedot (select-keys paivitetty-alustarivi-18 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-ei-ole-kaikki-pakolliset-verkontiedot
@@ -1881,3 +1876,63 @@
                                           :tr-numero 20}]}}
            (paallystys/lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus kohdeosat))
         "Kohdeosille on lisätty id:t oikein, kun ajorataa ja kaistaa ei ole")))
+
+;; huom. hyppyjä tarkasteltaessa on välttämätöntä järjestää rivit kaistoittain
+;; ao. testidatassa se on tehty käsin, palvelu tekee tämän toki itsestään
+;; alla testataan vain funktiota joten tehdään sortti sitä ennen käsin
+(def testidata-hypyton-mutta-ajorata-vaihtuu
+  [{:kohdeosa-id 36683, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36684, :tr-numero 3, :tr-ajorata 1, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 1270, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36685, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}
+   {:kohdeosa-id 36686, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36687, :tr-numero 3, :tr-ajorata 2, :tr-kaista 21, :tr-alkuosa 215, :tr-alkuetaisyys 1270, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36688, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}])
+
+(def testidata-hypyllinen-ja-ajorata-vaihtuu
+  [{:kohdeosa-id 36683, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36684, :tr-numero 3, :tr-ajorata 1, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 1272, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36685, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}
+   {:kohdeosa-id 36686, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36687, :tr-numero 3, :tr-ajorata 2, :tr-kaista 21, :tr-alkuosa 215, :tr-alkuetaisyys 1272, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36688, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}])
+
+(def testidata-hypyllinen-ja-alle-kynnysarvon
+  [{:kohdeosa-id 36683, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36684, :tr-numero 3, :tr-ajorata 1, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys (+ (- pot-domain/hypyn-kynnysarvo-metreina 1) 1270), :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36685, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}])
+
+(def testidata-hypyllinen-mutta-yli-kynnysarvon-joten-ei-huomioida
+  [{:kohdeosa-id 36683, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36684, :tr-numero 3, :tr-ajorata 1, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys (+ pot-domain/hypyn-kynnysarvo-metreina 1272), :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36685, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 215, :tr-alkuetaisyys 3083, :tr-loppuosa 215, :tr-loppuetaisyys 7735}])
+
+(def testidata-hypyton-tienosa-vaihtuu
+  [{:kohdeosa-id 36683, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   {:kohdeosa-id 36686, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 214, :tr-alkuetaisyys 918, :tr-loppuosa 215, :tr-loppuetaisyys 1270}
+   ;; tässä keinotekoisesti muutetaan tien osaa hyvin paljon, tämä ei ole hyppy vaan selkeästi toisistaan erillään olevat alikohteet
+   {:kohdeosa-id 36684, :tr-numero 3, :tr-ajorata 0, :tr-kaista 11, :tr-alkuosa 218, :tr-alkuetaisyys 1272, :tr-loppuosa 215, :tr-loppuetaisyys 3083}
+   {:kohdeosa-id 36685, :tr-numero 3, :tr-ajorata 0, :tr-kaista 21, :tr-alkuosa 218, :tr-alkuetaisyys 1272, :tr-loppuosa 215, :tr-loppuetaisyys 3083}])
+
+;; joskus tiestöllä ajorata voi muuttua esim 0 --> 1, ja kaista pysyy samana, esim 11, ja taas palataan takaisin ajoradalle 0.
+;; tällaisessa tilanteessa jos päällyste on kaistalle jatkuva, ei tule raportoida hyppyä. Tehdään erillinen testi tälle, koska
+;; toimintaa jouduttiin tältä osin korjaamaan HARJA-1153 myötä
+(deftest ajaradan-muutos-ei-tarkoita-hyppya-test
+  (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyton-mutta-ajorata-vaihtuu 0 0)]
+    (is (= 0 hyppyjen-lkm) "Ei hyppyjä")))
+
+(deftest hyppy-loytyy
+  (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyllinen-ja-ajorata-vaihtuu 0 0)]
+    (is (= 2 hyppyjen-lkm) "2 hyppyä")))
+
+(deftest hyppy-on-ja-alle-kynnysarvon
+  (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyllinen-ja-alle-kynnysarvon 0 0)]
+    (is (= 1 hyppyjen-lkm) "Hyppy")))
+
+(deftest hyppya-ei-ole-koska-etaisyys-yli-kynnysarvon
+  (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyllinen-mutta-yli-kynnysarvon-joten-ei-huomioida 0 0)]
+    (is (= 0 hyppyjen-lkm) "ei hyppyä")))
+
+(deftest hyppya-ei-ole-koska-tienosa-vaihtuu
+  (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyton-tienosa-vaihtuu 0 0)]
+    (is (= 0 hyppyjen-lkm) "ei hyppyä")))
+

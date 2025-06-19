@@ -1,29 +1,20 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkaukset
   (:require [com.stuartsierra.component :as component]
-            [clojure.java.jdbc :as jdbc]
-            [specql.op :as op]
-            [harja.geo :as geo]
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.tieverkko :as tv]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
             [taoensso.timbre :as log]
             [slingshot.slingshot :refer [try+]]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
-            [specql.core :as specql]
             [clojure.data.json :as json])
-  (:import (java.text SimpleDateFormat ParseException)
-           (java.sql Date)
-           (java.util TimeZone)))
+  (:import (java.text SimpleDateFormat)))
 
 (defn kasittele-koko-ja-sijainti
   "Paikkauskohteiden sisään haetaan siis json objektina paikkaukset. Ja koska kyseessä on json objekti, niin kaikki
@@ -88,7 +79,7 @@
   "Haetaan paikkauskohteet, joita ei ole poistettu ja joiden tila on tilattu/valmis ja joilla ei ole pot raportointitilana.
   Samalla haetaan paikkauskohteille paikkaus taulusta rivit (eli paikkauksen toteumat, huomaa taulujen nimiöinti) sekä
   paikkausten materiaalit ja tienkohdat."
-  [db user {:keys [aikavali-kuluva tyomenetelmat tr nayta] :as tiedot}]
+  [db user {:keys [aikavali-kuluva tyomenetelmat tr nayta aikavali] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (or (::paikkaus/urakka-id tiedot)
                                                                          (:urakka-id tiedot)))
   (let [urakka-id (or (::paikkaus/urakka-id tiedot)
@@ -97,12 +88,10 @@
         menetelmat (when (> (count menetelmat) 0)
                      menetelmat)
         vain-kohteet-joilla-toteumia? (= nayta :kohteet-joilla-toteumia)
-        _ (log/debug "hae-urakan-paikkaukset :: tiedot" (pr-str tiedot) (pr-str (konversio/sql-date (first aikavali-kuluva))) "tr" (pr-str tr) "vain-kohteet-joilla-toteumia?" vain-kohteet-joilla-toteumia?)
+        [alkuaika loppuaika] (or aikavali aikavali-kuluva)
         paikkauskohteet (q/hae-urakan-paikkauskohteet-ja-paikkaukset db {:urakka-id urakka-id
-                                                                         :alkuaika (when (and aikavali-kuluva (first aikavali-kuluva))
-                                                                                     (konversio/sql-date (first aikavali-kuluva)))
-                                                                         :loppuaika (when (and aikavali-kuluva (second aikavali-kuluva))
-                                                                                      (konversio/sql-date (second aikavali-kuluva)))
+                                                                         :alkuaika (konversio/sql-date alkuaika)
+                                                                         :loppuaika (konversio/sql-date loppuaika)
                                                                          :tyomenetelmat menetelmat
                                                                          :tie (:numero tr)
                                                                          :aosa (:alkuosa tr)

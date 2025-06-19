@@ -45,7 +45,8 @@
             [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
             [harja.tiedot.urakka.toteumat.materiaalitoteumat-kartalla :as materiaalitoteumat-kartalla]
-            [harja.tiedot.urakka.tienumerot-kartalla :as tienumerot-kartalla])
+            [harja.tiedot.urakka.tienumerot-kartalla :as tienumerot-kartalla]
+            [harja.tiedot.urakka.laadunseuranta.talvihoitoreitit-tiedot :as talvihoitoreitit])
   
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
@@ -92,7 +93,8 @@
     :paikkaukset-paallystysilmoitukset
     :tieluvat
     :maarien-toteumat
-    :materiaalitoteumat})
+    :materiaalitoteumat
+    :talvihoitoreitit})
 
 (def
   ^{:doc
@@ -275,7 +277,8 @@
    :tieluvat tieluvat/tieluvat-kartalla
    :maarien-toteumat maarien-toteumat-kartalla/toteumat-kartalla
    :materiaalitoteumat materiaalitoteumat-kartalla/materiaalitoteumat-kartalla
-   :tienumerot tienumerot-kartalla/tienumerot-kartalla})
+   :tienumerot tienumerot-kartalla/tienumerot-kartalla
+   :talvihoitoreitit talvihoitoreitit/talvihoitoreitit-kartalla})
 
 (defn nayta-geometria!
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
@@ -359,7 +362,8 @@
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
                       (inc oletus-zindex))
        :infopaneelin-merkki (aseta-z-index (vec (vals @(geometrioiden-atomit :infopaneelin-merkki)))
-                                           (+ oletus-zindex 2))}
+                                           (+ oletus-zindex 2))
+       :talvihoitoreitit (taso :talvihoitoreitit)}
       ;; Tilannekuvan geometriat muodostetaan hieman eri tavalla
      (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
         (into {}
@@ -407,7 +411,8 @@
    :tieluvat tieluvat/karttataso-tieluvat
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)
-   :tienumerot tienumerot-kartalla/karttataso-nakyvissa?})
+   :tienumerot tienumerot-kartalla/karttataso-nakyvissa?
+   :talvihoitoreitit talvihoitoreitit/karttataso-nakyvissa?})
 
 (defn- nykyiset-karttatasot* [atomit nimet-set]
   (->> atomit

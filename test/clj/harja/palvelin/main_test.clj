@@ -91,15 +91,15 @@
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :tloik :labyrintti :tekstiviesti
+    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :tloik :sms
     :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
-    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset :tuck-remoting :ilmoitukset-ws-palvelu
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
+    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset #_:tuck-remoting #_:ilmoitukset-ws-palvelu
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
@@ -140,6 +140,7 @@
     :analytiikan-toteumien-ajastus
     :kustannusten-seuranta
     :komponenttien-tila
+    :muutokset
     :itmf
     :paikkauskohteet
     :valikatselmukset
@@ -160,26 +161,35 @@
     :tehtavat-hallinta
     :tarjoushinnat-hallinta
     :reikapaikkaukset
-    :mpu-kustannukset
+    :kustannukset
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
-    :kojelauta-hallinta})
+    :paallystysilmoitukset-hallinta
+    :tiemerkinnan-kustannuskirjaukset
+    :urakkatilanne
+    :api-talvihoitoreitit
+    :talvihoitoreitit
+    :tieosoitteet-hallinta
+    :ajastukset-hallinta
+    :tarjous
+    :api-taitorakennerekisteri
+    :uusi-kustannussuunnitelma})
 
 (def ei-statusta
   #{:metriikka
     :todennus
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :labyrintti :tekstiviesti
+    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :sms
     :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
-    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset :tuck-remoting :ilmoitukset-ws-palvelu
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
+    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset #_:tuck-remoting #_:ilmoitukset-ws-palvelu
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
@@ -223,6 +233,7 @@
     :paikkauskohteet
     :valikatselmukset
     :lupaukset
+    :muutokset
     :urakan-lupausmuistutukset
     :api-analytiikka
     :yleiset-ajastukset
@@ -240,11 +251,20 @@
     :tehtavat-hallinta
     :tarjoushinnat-hallinta
     :reikapaikkaukset
-    :mpu-kustannukset
+    :kustannukset
     :rahavaraukset-hallinta
     :urakkahenkilot-hallinta
+    :api-talvihoitoreitit
+    :talvihoitoreitit
     :lupaukset-hallinta
-    :kojelauta-hallinta})
+    :paallystysilmoitukset-hallinta
+    :urakkatilanne
+    :tieosoitteet-hallinta
+    :tiemerkinnan-kustannuskirjaukset
+    :ajastukset-hallinta
+    :tarjous
+    :api-taitorakennerekisteri
+    :uusi-kustannussuunnitelma})
 
 (def hidas-ok-status #{:itmf})
 

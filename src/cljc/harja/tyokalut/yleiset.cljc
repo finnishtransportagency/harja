@@ -87,3 +87,19 @@
              {asetettava-avain (vec (->> kokoelma2
                                       (filter #(= yhteinen-arvo (get-in % yhteinen-key2)))
                                       (map #(get-in % etsittava-avain))))}))) kokoelma1))
+
+(defn yhdista-mapit-avaimella
+  "Yhdistää kaksi kokoelmaa mappeja avaimen perusteella."
+  [coll1 coll2 avain]
+  (let [m1 (into {} (map (juxt avain identity) coll1))
+        m2 (into {} (map (juxt avain identity) coll2))
+        kaikki-avaimet (distinct (concat (keys m1) (keys m2)))]
+    (map (fn [a]
+           (merge (get m2 a {}) (get m1 a {})))
+      kaikki-avaimet)))
+
+
+(defn random-luku-valilta
+  "Antaa random luvun valilta alku-loppu. Esim väliltä 1 ja 8 luvuksi voi tulla 6."
+  [alku loppu]
+  (+ alku (rand-int (inc (- loppu alku)))))

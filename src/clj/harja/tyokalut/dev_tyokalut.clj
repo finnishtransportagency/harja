@@ -105,11 +105,11 @@
 
 (defn-tyokalu kirjoita-tiedostoon
   "Kirjoittaa annetun Clojure datan .edn tiedostoon dev-resources/tmp kansioon"
-  ([input tiedoston-nimi] (kirjoita-tiedostoon input tiedoston-nimi true))
-  ([input tiedoston-nimi ylikirjoita?]
+  ([input tiedoston-nimi] (kirjoita-tiedostoon input tiedoston-nimi true nil))
+  ([input tiedoston-nimi ylikirjoita? tiedostopaate]
    (async/go
      (when (:kirjoita-tiedostoon? @config)
-       (let [tiedoston-polku (str "dev-resources/tmp/" tiedoston-nimi ".edn")
+       (let [tiedoston-polku (str "dev-resources/tmp/" tiedoston-nimi (or tiedostopaate ".edn"))
              tiedosto-olemassa? (.exists (io/file tiedoston-polku))]
          (if (and tiedosto-olemassa?
                   (not ylikirjoita?))

@@ -97,7 +97,7 @@
       (is (= (:valmis-kommentti vt2) "valmis tämäkin!"))
 
       ;; VT3 tallentui oikein
-      (is (nil? (:valmis-merkitsija vt3)))
+      (is (some? (:valmis-merkitsija vt3)))
       (is (nil? (:valmispvm vt3)))
       (is (nil? (:valtakunnallinen-id vt3)))
       (is (= (:urakka-id vt3) urakka-id))
@@ -211,10 +211,10 @@
                                (= raahen-mhu-urakan-id (:urakka-id %))
                                (= (:nimi %) "Pyyhi pölyt ja sammuta valot hoitokauden lopussa")) raahen-valitavoitteet)]
     (is (empty? ei-luoda-urakan-ulkopuolelle) "Ei saa edes luoda urakan ulkopuolelle")
-    (is (= 5 (count tallennetut)) "Viidelle hoitokaudelle replikoitu")
+    (is (= 4 (count tallennetut)) "Viidelle hoitokaudelle replikoitu")
     (is (nil? (some #(= (:takaraja %)
                        (pvm/->pvm "30.9.2023")) raahen-valitavoitteet)) "2023 tiedot oikein")
-    (is (some? (some #(= (:takaraja %)
+    (is (nil? (some #(= (:takaraja %)
                         (pvm/->pvm "30.9.2024")) raahen-valitavoitteet)) "2024 tiedot oikein")
     (is (some? (some #(= (:takaraja %)
                         (pvm/->pvm "30.9.2025")) raahen-valitavoitteet)) "2025 tiedot oikein")
@@ -333,3 +333,23 @@
 
         (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
         (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))))
+
+(deftest valtakunnallisten-valitavoitteiden-valmispvm-voi-poistaa
+    (let [muhoksen-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                  :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                  (hae-urakan-id-nimella "Muhoksen päällystysurakka"))
+          rivi (first (filter #(= "Se iso kivi siirretty pois tieltä" (:nimi %)) muhoksen-urakan-vanhat-valitavoitteet))
+          urakka-id (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Muhoksen päällystysurakka'")))
+
+          vastaus (kutsu-palvelua
+                    (:http-palvelin jarjestelma)
+                    :tallenna-urakan-valitavoitteet
+                    +kayttaja-jvh+
+                    {:urakka-id      urakka-id
+                     :valitavoitteet [(assoc rivi :valmispvm nil)]})
+          muhoksen-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                      :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                      (hae-urakan-id-nimella "Muhoksen päällystysurakka"))]
+      (is (nil? (:valmispvm (first (filter #(= "Se iso kivi siirretty pois tieltä" (:nimi %)) muhoksen-urakan-paivitetyt-valitavoitteet)))))))

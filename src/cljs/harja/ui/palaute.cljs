@@ -14,27 +14,21 @@
    {:nimi "Tehtävälista" :tyyppi :tehtavalista}
    {:nimi "Yleinen palaute" :tyyppi :yleinen}])
 
-(defn- palauteohje-yleinen [palaute-tyyppi]
-  [:p "Klikkaa "
+(defn- palauteohje-yleinen [palaute-tyyppi] 
    [modal/modal-linkki
-    "tästä"
-    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-yleinen) palaute-tyyppi)]
-   [:span " lähettääksesi palautetta Harjan kehitystiimille."]])
+    "Lähetä tästä klikkaamalla sähköpostilla palautetta Harjan kehitystiimille."
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-yleinen) palaute-tyyppi)])
 
 (defn- palauteohje-kehitysidea [palaute-tyyppi]
-  [:p "Klikkaa "
    [modal/modal-linkki
-    "tästä"
-    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-kehitysidea) palaute-tyyppi)]
-   [:span " kertoaksesi kehitysideasi Harjan kehitystiimille."]])
+    "Lähetä tästä klikkaamalla sähköpostia Harjan kehitystiimille kertoaksesi kehitysideasi."
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-kehitysidea) palaute-tyyppi)])
 
 (defn- palauteohje-tekninen-ongelma [palaute-tyyppi]
-  [:span
-   [:p "Klikkaa "
+  [:span 
     [modal/modal-linkki
-     "tästä"
+     "Lähetä tästä klikkaamalla sähköpostia Harjan kehitystiimille teknisen ongelman raportointia varten."
      (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
-    [:span " raportoidaksesi teknisen ongelman Harjan kehitystiimille."]]
    [:p
     [yleiset/vihje-elementti "Huomioithan raportoidessasi ongelmasta seuraavat asiat:"]
     [:ul
@@ -42,20 +36,16 @@
 
 (defn- palauteohje-kayttooikeus [palaute-tyyppi]
   [:div
-   [:p "Jos käyttäjältä puuttuu käyttäjätunnukset Harjaan, ole yhteydessä oman organisaatiosi pääkäyttäjään. Jos et tiedä kuka organisaatiosi pääkäyttäjä on, ole yhteydessä Väyläviraston Käyttövaltuushallintaan osoitteessa jl_kvhtuki@vayla.fi"]
-   [:p
-    [:span "Mikäli et pääse suorittamaan Harjassa jotain tehtävää, johon sinulla tulisi olla oikeus, klikkaa "]
+   [:p "Jos käyttäjältä puuttuu käyttäjätunnukset Harjaan, ole yhteydessä oman organisaatiosi pääkäyttäjään. Jos et tiedä kuka organisaatiosi pääkäyttäjä on, ole yhteydessä Väyläviraston Käyttövaltuushallintaan osoitteessa jl_kvhtuki@vayla.fi"] 
     [modal/modal-linkki
-     "tästä"
-     (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
-    [:span " lähettääksesi palautetta Harjan kehitystiimille."]]])
+     "Mikäli et pääse suorittamaan Harjassa jotain tehtävää, johon sinulla tulisi olla oikeus, lähetä tästä klikkaamalla palautetta Harjan kehitystiimille sähköpostitse"
+     (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]])
 
 (defn- palauteohje-tehtavalista [palaute-tyyppi]
-  [:p "Harjan pääkäyttäjä vastaa Harjan tehtävälistasta. Klikkaa "
+  [:p "Harjan pääkäyttäjä vastaa Harjan tehtävälistasta. "
    [modal/modal-linkki
-    "tästä"
-    (tiedot/mailto-linkki (tiedot/mailto-paakayttaja) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
-   [:span " lähettääksesi palautetta tehtävälistaa ylläpitävälle pääkäyttäjälle."]])
+    "Lähetä tästä palautetta tehtävälistaa ylläpitävälle pääkäyttäjälle sähköpostitse."
+    (tiedot/mailto-linkki (tiedot/mailto-paakayttaja) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]])
 
 (defn- palauteohje [palautetyyppi]
   [:div.palauteohje
@@ -82,7 +72,8 @@
         palautetyypit]
 
        [palauteohje @valinta-atom]
-       [:p (str "Palautteen voit lähettää sähköpostitse osoitteeseen " tiedot/sahkoposti-kehitystiimi)]
+       [:p "Palautteen voit lähettää sähköpostitse osoitteeseen " 
+        [:a {:href (tiedot/mailto-kehitystiimi)} tiedot/sahkoposti-kehitystiimi]]
        [yleiset/vihje-elementti [:span
                                  [:span "Olethan tutustunut "]
                                  [modal/modal-linkki
@@ -92,9 +83,9 @@
                                  [:span " ennen palautteen lähettämistä?"]]]])))
 
 (defn palaute-linkki []
-  [:a {:class "klikattava"
-       :id "palautelinkki"
-       :on-click #(modal/nayta! {:otsikko "Palautteen lähettäminen"
-                                 :luokka "palaute-dialog"}
-                                [palautelomake])}
+  [:a.klikattava {:href "#"
+                  :id "palautelinkki"
+                  :on-click #(modal/nayta! {:otsikko "Palautteen lähettäminen"
+                                            :luokka "palaute-dialog"}
+                               [palautelomake])}
    [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Palautetta!"]])

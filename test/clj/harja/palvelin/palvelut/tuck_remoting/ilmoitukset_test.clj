@@ -8,7 +8,6 @@
     [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
     [harja.palvelin.integraatiot.jms :as jms]
     [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
-    [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
     [harja.palvelin.komponentit.itmf :as itmf]
     [tuck.remoting :as tr]
@@ -43,12 +42,9 @@
                            #_#_:api-sahkoposti (component/using
                                              (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                              [:http-palvelin :db :integraatioloki :itmf])
-                           #_#_:labyrintti (component/using
-                                         (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
-                                         [:db :http-palvelin :integraatioloki])
                            #_#_:tloik (component/using
                                     (tloik-tyokalut/luo-tloik-komponentti)
-                                    [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])
+                                    [:db :itmf :integraatioloki :sms :api-sahkoposti])
                            :tuck-remoting (component/using
                                             (tr-komponentti/luo-tuck-remoting)
                                             [:http-palvelin :db])

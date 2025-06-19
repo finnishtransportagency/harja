@@ -1,13 +1,12 @@
 (ns harja.palvelin.asetukset
   "Yleinen Harja-palvelimen konfigurointi. Esimerkkinä käytetty Antti Virtasen clj-weba."
   (:require [harja.tyokalut.env :as env]
-            [schema.core :as s]
+            [schema.core :as s :include-macros true]
             [clojure.string :as str]
             [meta-merge.core :refer [meta-merge]]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
-            [harja.palvelin.lokitus.slack :as slack]
-            [taoensso.timbre.appenders.postal :refer [postal-appender]]))
+            [harja.palvelin.lokitus.slack :as slack]))
 
 
 (def Tietokanta {:palvelin s/Str
@@ -21,6 +20,10 @@
   "Harja-palvelinasetuksien skeema"
   {(s/optional-key :alusta) s/Keyword
    (s/optional-key :sahke-headerit) {s/Str {s/Str s/Str}}
+   (s/optional-key :todennus-varmistus) {:public-key-url s/Str
+                                         :todennus-varmistus-paalla? s/Bool}
+   (s/optional-key :clojure-async-thread-poolin-koko) s/Int
+
    :http-palvelin {:portti s/Int
                    :url s/Str
                    (s/optional-key :threads) s/Int
@@ -48,8 +51,7 @@
                                                           (s/optional-key :glog) {(s/optional-key :url) s/Str
                                                                                   (s/optional-key :from) s/Str
                                                                                   (s/optional-key :to) s/Str
-                                                                                  (s/optional-key :q) s/Str
-                                                                                  }
+                                                                                  (s/optional-key :q) s/Str}
                                                           (s/optional-key :jira) [s/Str]}}
 
          (s/optional-key :email) {:taso s/Keyword
@@ -143,20 +145,15 @@
    (s/optional-key :yha) {:url s/Str
                           :api-key s/Str}
 
-   (s/optional-key :velho) {:paallystetoteuma-url s/Str
-                            :token-url s/Str
-                            :kayttajatunnus s/Str
-                            :salasana s/Str
+   (s/optional-key :velho) {:token-url s/Str
                             :varuste-api-juuri-url s/Str
                             :varuste-kayttajatunnus s/Str
                             :varuste-salasana s/Str
                             (s/optional-key :varuste-tuonti-suoritusaika) [s/Num]
                             (s/optional-key :oid-tuonti-suoritusaika) [s/Num]}
 
-   (s/optional-key :yha-velho) {}
-
-   (s/optional-key :labyrintti) {:sms-url s/Str
-                                 :apiavain s/Str}
+   (s/optional-key :sms) {:url s/Str
+                          :apiavain s/Str}
 
    (s/optional-key :virustarkistus) {:url s/Str}
    (s/optional-key :tiedostopesula) {:base-url s/Str}

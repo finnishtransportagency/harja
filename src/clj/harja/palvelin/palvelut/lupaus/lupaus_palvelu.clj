@@ -115,6 +115,7 @@
 (defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
+        hoitokauden-alkuvuosi (pvm/vuosi hk-alkupvm)
         vastaus (into []
                       (lupaus-kyselyt/hae-urakan-lupaustiedot db {:urakka urakka-id
                                                                    :alkupvm hk-alkupvm
@@ -147,6 +148,7 @@
         tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
         luvatut-pisteet-puuttuu? (not (:pisteet lupaus-sitoutuminen))
         tallennettu-paatos (lupauspaatos db urakka-id (pvm/vuosi hk-alkupvm))
+        valikatselmus-tehty? (valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)
         tallennettu-bonus-tai-sanktio (some-> tallennettu-paatos lupaus-domain/paatos->bonus-tai-sanktio)
         bonus-tai-sanktio (or
                             tallennettu-bonus-tai-sanktio
@@ -194,7 +196,7 @@
                   :odottaa-kannanottoa odottaa-kannanottoa
                   :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa
                   :odottaa-urakoitsijan-kannanottoa? odottaa-urakoitsijan-kannanottoa?
-                  :valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id)
+                  :valikatselmus-tehty-urakalle? valikatselmus-tehty?
                   :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
                   :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}}))
 
@@ -225,11 +227,14 @@
   (assert (not (valikatselmus-tehty-urakalle? db urakka-id))
           "Luvattuja pisteitä ei voi enää muuttaa, jos urakalle on tehty välikatselmus.")
   (jdbc/with-db-transaction [db db]
-                            (let [params {:id id
+                            (let [;; lupaussitoutumisia pitää olla kannassa maksimissaan 1. Aiemmin oli vika, että frontti saattoi lähettää alkutilanteessa useita
+                                  ;; rivejä ilman id:tä, ja syntyi enemmän kuin yksi aktiivinen rivi. Nyt estetään se tarkistamalla kannasta onko ko. urakalle jo tieto
+                                  sitoutumistiedot-id (:id (first (lupaus-kyselyt/hae-sitoutumistiedot db {:urakka-id urakka-id})))
+                                  params {:id sitoutumistiedot-id
                                           :urakka-id urakka-id
                                           :pisteet pisteet
                                           :kayttaja (:id user)}]
-                              (if id
+                              (if sitoutumistiedot-id
                                 (lupaus-kyselyt/paivita-urakan-luvatut-pisteet<! db params)
                                 (lupaus-kyselyt/lisaa-urakan-luvatut-pisteet<! db params)))))
 
@@ -434,8 +439,7 @@
              "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
          kuukausipisteet (lupaus-kyselyt/hae-kuukausittaiset-pisteet db {:hk-alkuvuosi vuosi
                                                                          :urakka-id urakka-id})
-         sitoutumistiedot (first (lupaus-kyselyt/hae-sitoutumistiedot db {:hk-alkuvuosi vuosi
-                                                                          :urakka-id urakka-id}))
+         sitoutumistiedot (first (lupaus-kyselyt/hae-sitoutumistiedot db {:urakka-id urakka-id}))
          ;; Kuukausittaisten pisteiden muokkaamisessa vaikuttaa tämän hoitokauden välikatselmus
          valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
          ;; Koko urakkakauden sitoutumispisteisiin vaikuttaa onko urakalle tehty yhtään välitkaselmusta

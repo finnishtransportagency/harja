@@ -1,15 +1,12 @@
 (ns harja.palvelin.integraatiot.velho.velho-komponentti
   (:require [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.integraatiot.velho.pot-lahetys :as pot-lahetys]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.velho.urakkatietojen-haku :as oid-haku]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukko]
             [harja.pvm :as pvm]))
 
-(defprotocol PaallystysilmoituksenLahetys
-  (laheta-kohde [this urakka-id kohde-id]))
 
 (defprotocol VarustetoteumaHaku
   (hae-urakan-varustetoteumat [this tiedot])
@@ -56,10 +53,6 @@
       (dissoc :varustetoteuma-tuonti-tehtava)
       (dissoc :velho-oid-tuonti-tehtava)
       (dissoc :velho-nimikkeisto-tuonti-tehtava)))
-
-  PaallystysilmoituksenLahetys
-  (laheta-kohde [this urakka-id kohde-id]
-    (pot-lahetys/laheta-kohde-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-id))
 
   VelhoOidHaku
   (hae-velho-oidit [this]

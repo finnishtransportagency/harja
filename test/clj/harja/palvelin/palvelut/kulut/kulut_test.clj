@@ -38,7 +38,7 @@
                       :rivi                1
                       :summa               666
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                       :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"}
@@ -46,7 +46,7 @@
                       :rivi                2
                       :summa               666
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                       :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"}]
@@ -66,7 +66,7 @@
   {:rivi                3
    :summa               987
    :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-   :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+   :tehtavaryhma        (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
    :tehtava             nil
    :tavoitehintainen :true
    :tyyppi "hankintakulu"})
@@ -83,7 +83,7 @@
                        :rivi                1
                        :summa               666
                        :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                       :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                       :tehtavaryhma        (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                        :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"}
@@ -91,7 +91,7 @@
                       :rivi                2
                       :summa               3333.33
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "T1 - Äkilliset hoitotyöt, Liikenneympäristön hoito")
                       :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"}]
@@ -108,7 +108,7 @@
                       :rivi                1
                       :summa               666.66
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "T1 - Äkilliset hoitotyöt, Liikenneympäristön hoito")
                       :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"
@@ -127,7 +127,7 @@
                       :rivi                1
                       :summa               666.66
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Vahinkojen korjaukset, Liikenneympäristön hoito (T2)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "T2 - Vahinkojen korjaukset, Liikenneympäristön hoito")
                       :tehtava             nil
                       :tavoitehintainen :true
                       :tyyppi "hankintakulu"
@@ -297,7 +297,6 @@
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :kulu-kohdistuksineen uusi-kulu})
-        _ (println "tallennettu-kulu: " (pr-str tallennettu-kulu))
         tallennettu-id (:id tallennettu-kulu)
         paivitetty-kulu
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
@@ -402,10 +401,10 @@
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         vanha-erapaiva nil
         ;; Feikkaa, että välikatselmus on pidetty
-        ei-saa-koska-valikatselmus-pidetty (with-redefs [valikatselmus-kyselyt/onko-valikatselmus-pidetty? (fn [_ _] true)]
+        ei-saa-koska-valikatselmus-pidetty (with-redefs [valikatselmus-kyselyt/hintapaatos-tehty? (fn [_ _] true)]
                 (kulut/tarkista-saako-kulua-tallentaa (:db jarjestelma) urakka-id erapaiva vanha-erapaiva))
         ;; Feikkaa, että välikatselmusta ei ole vielä ehditty pitää
-        saa-koska-valikatselmus-pitamatta (with-redefs [valikatselmus-kyselyt/onko-valikatselmus-pidetty? (fn [_ _] false)]
+        saa-koska-valikatselmus-pitamatta (with-redefs [valikatselmus-kyselyt/hintapaatos-tehty? (fn [_ _] false)]
                                              (kulut/tarkista-saako-kulua-tallentaa (:db jarjestelma) urakka-id erapaiva vanha-erapaiva))]
     (is (= false ei-saa-koska-valikatselmus-pidetty))
     (is (= true saa-koska-valikatselmus-pitamatta))))
@@ -489,8 +488,8 @@
    :toimenpideinstanssi (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'")),
    :tehtavaryhma 15, :lisatieto nil, :rivi 1})
 
-(deftest hae-aikavalilla-kaikki-kulu-kohdistuksineent
-  (testing "hae-aikavalilla-kaikki-kulu-kohdistuksineent"
+(deftest hae-aikavalilla-kaikki-kulu-kohdistuksineen
+  (testing "hae-aikavalilla-kaikki-kulu-kohdistuksineen"
     (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           alkupvm (pvm/->pvm "1.1.2019")
           loppupvm (pvm/->pvm "30.9.2024")
@@ -501,7 +500,8 @@
                                    :alkupvm alkupvm
                                    :loppupvm loppupvm})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 31
+          _ (println "VASTAUS " vastaus)
+          odotettu-count 32
           kulu-id-9 (first (filter #(= 9 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -517,7 +517,7 @@
                                    :alkupvm nil
                                    :loppupvm nil})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 31
+          odotettu-count 32
           kulu-id-9 (first (filter #(= 9 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -535,7 +535,7 @@
                                    :alkupvm hoitokauden-alkupvm
                                    :loppupvm hoitokauden-loppupvm})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 30 ;; yksi kulu on päivätty ennen hoitokauden alkua
+          odotettu-count 31 ;; yksi kulu on päivätty ennen hoitokauden alkua
           kulu-id-9 (first (filter #(= 9 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -545,7 +545,7 @@
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         ;; Päivitetään testiä varten ykden tehtäväryhmän voimassaolo niin, että se ei ole voimassa
         ;; Käytetään tehtäväryhmää: Talvihoito (A)
-        tehtavaryhmaid (:id (first (q-map "SELECT id FROM tehtavaryhma WHERE nimi = 'Talvihoito (A)'")))
+        tehtavaryhmaid (:id (first (q-map "SELECT id FROM tehtavaryhma WHERE nimi = 'A - Talvihoito'")))
         talvihoito-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23104")
         _ (u (format "UPDATE tehtavaryhma SET voimassaolo_alkuvuosi = '2000', voimassaolo_loppuvuosi = '2001' WHERE id = %s;" tehtavaryhmaid))
         virhe  (try+ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)

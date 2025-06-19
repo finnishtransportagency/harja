@@ -15,6 +15,7 @@
             [harja.domain.turvallisuuspoikkeama :as turpo]
             [harja.domain.laadunseuranta.laatupoikkeama :as lp]
             [harja.domain.laadunseuranta.tarkastus :as tarkastus]
+            [harja.domain.muutos-domain :as muutos]
             [harja.domain.toteuma :as toteuma]
             [harja.domain.erilliskustannus :as erilliskustannus]
             [harja.domain.oikeudet :as oikeudet]
@@ -50,12 +51,22 @@
 
 (defn lataa-siltatarkastusliite [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))
-        {:keys [tyyppi koko urakat data]} (liitteet/lataa-liite liitteet id {:siltatarkastusliite? true})]
-    (oikeudet/vaadi-lukuoikeus-jostain-urakasta oikeudet/urakat-liitteet (:kayttaja req) urakat)
-    {:status 200
-      :headers {"Content-Type" tyyppi
-                "Content-Length" koko}
-      :body (ByteArrayInputStream. data)}))
+        {:keys [tyyppi koko urakat data]} (try
+                                            (liitteet/lataa-liite liitteet id {:siltatarkastusliite? true})
+                                            (catch Exception e
+                                              (log/error (str "Siltatarkastusliitteen latausvirhe, liite id: " id " virhe: " e))))]
+    (if urakat
+      ;; Lataus onnistui
+      (do
+        (oikeudet/vaadi-lukuoikeus-jostain-urakasta oikeudet/urakat-liitteet (:kayttaja req) urakat)
+        {:status 200
+         :headers {"Content-Type" tyyppi
+                   "Content-Length" koko}
+         :body (ByteArrayInputStream. data)})
+      ;; Latauksessa virhe
+      (do
+        (oikeudet/ei-oikeustarkistusta!)
+        {:status 200}))))
 
 (defn lataa-pikkukuva [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))
@@ -110,7 +121,16 @@
               :domain-taulu-id ::erilliskustannus/id
               :domain-taulu-urakka-id ::erilliskustannus/urakka
               :oikeustarkistus (fn [_ user urakka-id _]
-                                       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id))}})
+                                       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id))}
+
+   :muutokset {:linkkitaulu ::liite-domain/mhu-muutos<->liite
+               :linkkitaulu-domain-id ::liite-domain/muutos-id
+               :linkkitaulu-liite-id ::liite-domain/liite-id
+               :domain-taulu ::muutos/muutos
+               :domain-taulu-id ::muutos/id
+               :domain-taulu-urakka-id ::muutos/urakka
+               :oikeustarkistus (fn [_ user urakka-id _]
+                                  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id))}})
 
 (defn- poista-kommentin-liite-linkitys [db user {:keys [urakka-id domain liite-id domain-id]}]
   ;; Etsitään kommentti, joka kuuluu annettuun domain-asiaan ja jolla on liitteenä liite-id.

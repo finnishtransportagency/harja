@@ -19,6 +19,10 @@
                                          "talvihoito")
     (log/warn "Talvihoitoluokkaa ei voida tuoda ilman geometriaa.")))
 
+;; Testaa omalla koneella:
+;; 1. Lataa aineisto asetukset.edn tiedostosta löytyvästä urlista ja pura zip
+;; 2. Aseta shapefile muuttujaan polku shapefileen
+;; (vie-hoitoluokat-kantaan db "<polku shapefileen, esim. file:///Users/<user>/Downloads/paallysteen_korjausluokka/paallysteen_korjausluokkaLine.shp")
 (defn vie-hoitoluokat-kantaan [db shapefile]
   (if shapefile
     (do

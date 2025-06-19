@@ -13,6 +13,8 @@
             [harja.views.urakka.suunnittelu.suola :as suola]
             [harja.views.urakka.suunnittelu.materiaalit :as mat]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.kustannussuunnitelma-view :as kustannussuunnitelma]
+            [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.tarjous-nakyma :as tarjous-nakyma]
+            [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-nakyma :as kustannussuunitelma-nakyma]
             [harja.views.vesivaylat.urakka.suunnittelu.kiintiot :as kiintiot]
             [harja.loki :refer [log]]
             [harja.ui.debug :as debug]
@@ -47,8 +49,23 @@
          [bs/tabs {:style :tabs :classes "tabs-taso2"
                    :active (nav/valittu-valilehti-atom :suunnittelu)}
 
+          "Hoitovuoden alun tavoitehinta"
+          :tarjous
+          (if (and
+                (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
+                (istunto/ominaisuus-kaytossa? :mhu-urakka))
+            [tarjous-nakyma/tarjous])
+
+          "Uusi Kustannussuunnitelma"
+          :uusi-kustannussuunnitelma
+          (if (and
+                (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
+                (istunto/ominaisuus-kaytossa? :mhu-urakka))
+            [kustannussuunitelma-nakyma/kustannussuunitelma])
+
           "Kustannussuunnitelma"
           :kustannussuunnitelma
+          ^{:key "uusi-kustannussuunnitelma"}
           (when (and (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
                      (valilehti-mahdollinen? :kustannussuunnitelma ur)
                      (istunto/ominaisuus-kaytossa? :mhu-urakka))

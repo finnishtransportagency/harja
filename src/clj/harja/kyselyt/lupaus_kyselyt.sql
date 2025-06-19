@@ -42,7 +42,7 @@ SELECT l.id                     AS "lupaus-id",
        jsonb_agg(row_to_json(row(vas.id, vas.kuukausi, vas.vuosi, vas.vastaus, vas."lupaus-vaihtoehto-id",
                                  lv.pisteet, vas."veto-oikeutta-kaytetty", vas."veto-oikeus-aika", vas.paatos))) AS vastaukset
   FROM lupausryhma r
-       LEFT JOIN lupaus_sitoutuminen sit ON sit."urakka-id" = :urakka
+       LEFT JOIN lupaus_sitoutuminen sit ON sit."urakka-id" = :urakka AND sit.poistettu IS FALSE
        JOIN lupaus l ON r.id = l."lupausryhma-id"
        LEFT JOIN lupaus_vastaus vas ON (l.id = vas."lupaus-id" AND vas."urakka-id" = :urakka
                                     AND (concat(vas.vuosi, '-', vas.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE))

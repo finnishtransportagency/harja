@@ -3,26 +3,59 @@
   Refaktoroitu vanhasta harja.views.urakka.valinnat namespacesta."
   (:require [harja.tiedot.navigaatio :as nav]
             [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
+            [harja.transit :as transit]
 
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.yleiset :refer [livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [livi-pudotusvalikko] :as yleiset]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.fmt :as fmt]
             [clojure.string :as str]
-            [cljs-time.core :as t]
             [goog.events.EventType :as EventType]
             [harja.ui.lomake :as lomake]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.asiakas.kommunikaatio :as komm]
             [harja.ui.dom :as dom]
-            [harja.domain.urakka :as u-domain]
-            [harja.loki :as log]
-            [harja.ui.yleiset :as yleiset])
-  (:require-macros [harja.tyokalut.ui :refer [for*]]
-                   [cljs.core.async.macros :refer [go]]))
+            [harja.domain.urakka :as u-domain])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
+
+(defn raporttiviennit
+  [raporttiparametrit haku-kaynnissa?]
+  [:div.raporttiviennit
+   ;;
+   ;; Excel raportti
+   ^{:key "raporttixls"}
+   [:form {:target "_blank" :method "POST"
+           :action (komm/excel-url :raportointi)}
+
+    [:input {:type "hidden" :name "parametrit"
+             :value (transit/clj->transit raporttiparametrit)}]
+
+    [:button {:type "submit"
+              :disabled haku-kaynnissa?
+              :class #{"nappi-toissijainen"}}
+
+     [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna Excel"]]]
+
+   ;;
+   ;; Pdf raportti
+   ^{:key "raporttipdf"}
+   [:form {:target "_blank" :method "POST"
+           :action (komm/pdf-url :raportointi)}
+
+    [:input {:type "hidden" :name "parametrit"
+             :value (transit/clj->transit raporttiparametrit)}]
+
+    [:button {:type "submit"
+              :disabled haku-kaynnissa?
+              :class #{"nappi-toissijainen"}}
+
+     [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna PDF"]]]])
 
 (defn urakan-sopimus
   ([ur valittu-sopimusnumero-atom valitse-fn] (urakan-sopimus ur valittu-sopimusnumero-atom valitse-fn {}))
@@ -47,36 +80,54 @@
                          :valitse-fn valitse-fn}
     urakkatyypit]])
 
+(defn palauta-urakkatyypin-vuosi-termi [urakkatyyppi]
+  "Palauttaa urakkatyypin mukaisen tekstin.
+    Parametrit:
+    - urakkatyyppi: Urakkatyyppi avainsanana (esim. :hoito, :tiemerkinta)"
+  (cond
+    (#{:hoito :teiden-hoito} urakkatyyppi)
+    "Hoitovuosi"
+
+    (#{:tiemerkinta} urakkatyyppi)
+    "Sopimusvuosi"
+
+    (or
+      (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)
+      (#{:paallystys} urakkatyyppi))
+    "Urakkavuosi"
+
+    :else "Sopimuskausi"))
+
 (defn urakan-hoitokausi
-  [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
-  (let [vuosi-termi (cond
-                      (#{:hoito :teiden-hoito} (:tyyppi ur)) "Hoitokausi"
-                      (or
-                        (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))
-                       #{:paallystys (:tyyppi ur)}) "Urakkavuosi"
-                      :else "Sopimuskausi") ]
-    [:div.label-ja-alasveto.hoitokausi
-     [:span.alasvedon-otsikko vuosi-termi]
-     [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
-                           :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % @hoitokaudet vuosi-termi) "Valitse")
-                           :valitse-fn valitse-fn}
-      @hoitokaudet]]))
+  ([ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
+   (urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-fn false))
+  ([ur hoitokaudet valittu-hoitokausi-atom valitse-fn disabled?]
+   (let [vuosi-termi (palauta-urakkatyypin-vuosi-termi (:tyyppi ur))]
+     [:div.label-ja-alasveto.hoitokausi
+      [:span.alasvedon-otsikko vuosi-termi]
+      [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
+                            :disabled disabled?
+                            :format-fn (fn [aikavali]
+                                         (if aikavali
+                                           (let [sisaltaa-koko-kauden? (and
+                                                                         (= (last aikavali) (-> @hoitokaudet last second))
+                                                                         (= (first aikavali) (ffirst @hoitokaudet)))]
+                                             (fmt/hoitokauden-jarjestysluku-ja-vuodet aikavali @hoitokaudet vuosi-termi sisaltaa-koko-kauden?))
+                                           "Valitse"))
+                            :valitse-fn valitse-fn}
+       @hoitokaudet]])))
 
 (defn urakan-hoitokausi-tuck
   [valittu-hoitokausi hoitokaudet tuck-event optiot]
   (let [urakkatyyppi (-> @nav/valittu-urakka :tyyppi)
-        vuosi-termi (cond
-                      (#{:hoito :teiden-hoito} urakkatyyppi) "Hoitokausi"
-                      (or
-                        (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)
-                        #{:paallystys urakkatyyppi}) "Urakkavuosi"
-                      :else "Sopimuskausi")]
+        vuosi-termi (palauta-urakkatyypin-vuosi-termi urakkatyyppi)]
     [:div {:class (if (:wrapper-luokka optiot)
                     (:wrapper-luokka optiot)
                     "col-xs-6.col-md-3")}
      [:label.alasvedon-otsikko-vayla vuosi-termi]
      [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                    :vayla-tyyli? true
+                                   :skrollattava? true
                                    :valitse-fn tuck-event
                                    :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet vuosi-termi) "Valitse")}
       hoitokaudet]]))
@@ -166,6 +217,7 @@
          tyyppi (if (= :pvm-aika (:tyyppi asetukset))
                   :pvm-aika
                   :pvm)
+         elementin-nimi (:elementin-nimi asetukset)
          uusi-aikavali (fn [paa uusi-arvo]
                          {:pre [(contains? #{:alku :loppu} paa)]}
                          (let [uusi-arvo (if (= tyyppi :pvm-aika)
@@ -209,8 +261,7 @@
                             (remove-watch valittu-aikavali-atom :aikavali-komponentin-kuuntelija)))
        (fn [_ {:keys [nayta-otsikko? aikavalin-rajoitus luokka
                       aloitusaika-pakota-suunta paattymisaika-pakota-suunta
-                      lomake? otsikko for-teksti validointi vayla-tyyli?
-                      ikoni-sisaan?]}]
+                      lomake? otsikko for-teksti validointi vayla-tyyli?]}]
          (when-not (= aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom))
            (swap! asetukset-atom assoc :aikavalin-rajoitus aikavalin-rajoitus))
          [:span {:class (cond
@@ -226,15 +277,15 @@
            [tee-kentta {:tyyppi tyyppi
                         :pakota-suunta aloitusaika-pakota-suunta
                         :validointi validointi
-                        :ikoni-sisaan? ikoni-sisaan?
-                        :vayla-tyyli? vayla-tyyli?}
+                        :vayla-tyyli? vayla-tyyli?
+                        :elementin-nimi (when elementin-nimi (str elementin-nimi "-alku"))}
             aikavalin-alku]
            [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
            [tee-kentta {:tyyppi tyyppi
                         :pakota-suunta paattymisaika-pakota-suunta
                         :validointi validointi
-                        :ikoni-sisaan? ikoni-sisaan?
-                        :vayla-tyyli? vayla-tyyli?}
+                        :vayla-tyyli? vayla-tyyli?
+                        :elementin-nimi (when elementin-nimi (str elementin-nimi "-loppu"))}
             aikavalin-loppu]]])))))
 
 (defn numerovali
@@ -270,18 +321,20 @@
     "Ei toimenpidettä"))
 
 (defn urakan-toimenpide
-  [urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
-  (when (not (some
-               #(= % @valittu-toimenpideinstanssi-atom)
-               @urakan-toimenpideinstanssit-atom))
-    ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
-    (reset! valittu-toimenpideinstanssi-atom (first @urakan-toimenpideinstanssit-atom)))
-  [:div.label-ja-alasveto.toimenpide
-   [:span.alasvedon-otsikko "Toimenpide"]
-   [livi-pudotusvalikko {:valinta @valittu-toimenpideinstanssi-atom
-                         :format-fn #(toimenpideinstanssi-fmt %)
-                         :valitse-fn valitse-fn}
-    @urakan-toimenpideinstanssit-atom]])
+  ([urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
+   (urakan-toimenpide urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn nil))
+  ([urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn ur]
+   (when (not (some
+                #(= % @valittu-toimenpideinstanssi-atom)
+                @urakan-toimenpideinstanssit-atom))
+     ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
+     (reset! valittu-toimenpideinstanssi-atom (first @urakan-toimenpideinstanssit-atom)))
+   [:div.label-ja-alasveto.toimenpide
+    [:span.alasvedon-otsikko "Toimenpide"]
+    [livi-pudotusvalikko {:valinta @valittu-toimenpideinstanssi-atom
+                          :format-fn #(toimenpideinstanssi-fmt %)
+                          :valitse-fn valitse-fn}
+     @urakan-toimenpideinstanssit-atom]]))
 
 (defn urakan-kokonaishintainen-tehtava
   [urakan-kokonaishintaiset-tehtavat-atom
@@ -347,8 +400,10 @@
      [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn (:otsikko kuukausi)])
    (when-let [{:keys [urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]} toimenpide]
      [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn])
-   (when-let [{:keys [valittu-aikavali-atom]} aikavali-optiot]
-     [aikavali valittu-aikavali-atom])])
+   (when-let [{:keys [valittu-aikavali-atom elementin-nimi]} aikavali-optiot]
+     (if elementin-nimi
+       [aikavali valittu-aikavali-atom {:elementin-nimi elementin-nimi}]
+       [aikavali valittu-aikavali-atom]))])
 
 (defn vuosi
   ([ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom]
@@ -411,12 +466,12 @@
          alkuaikakentta {:nimi (or (:alkuaika kenttien-nimet) :alkuaika)
                          :otsikko "Alku"
                          ::lomake/col-luokka (when aikavalivalitsin-flex?
-                                               "lomakepalsta-flex-puolikas")
+                                               "lomakepalsta-flex-kokonainen paivays")
                          :tyyppi (if vain-pvm :pvm :pvm-aika)
                          :validoi [[:ei-tyhja "Anna alkuaika"]]}
          loppuaikakentta {:nimi (or (:loppuaika kenttien-nimet) :loppuaika)
                           ::lomake/col-luokka (when aikavalivalitsin-flex?
-                                                "lomakepalsta-flex-puolikas")
+                                                "lomakepalsta-flex-kokonainen paivays")
                           :otsikko "Loppu"
                           :tyyppi (if vain-pvm :pvm :pvm-aika)
                           :validoi [[:ei-tyhja "Anna loppuaika"]
@@ -564,7 +619,7 @@
                           (maarita-sticky!)))
       (komp/piirretty #(reset! elementin-etaisyys-ylareunaan
                                (dom/elementin-etaisyys-dokumentin-ylareunaan
-                                 (r/dom-node %))))
+                                 (rdom/dom-node %))))
       (fn [{:keys [urakka] :as optiot} & sisalto]
         [:div.urakkatoiminnot {:class (str (when @naulattu? "urakkatoiminnot-naulattu ")
                                            (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
@@ -608,6 +663,9 @@
                                                                    (count (filter :valittu? valinnat)))
                                      valintojen-maara (count valinnat)
                                      naytettava-teksti (cond
+                                                         ;; Jos teksti ei ole vectori, näytä vaan se teksti
+                                                         (not (vector? teksti))
+                                                         teksti
                                                          (= valittujen-valintojen-maara valintojen-maara)
                                                          "Kaikki valittu"
                                                          (and

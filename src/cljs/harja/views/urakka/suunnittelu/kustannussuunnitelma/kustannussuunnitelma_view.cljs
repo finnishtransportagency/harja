@@ -446,10 +446,11 @@
 
 
              (when (< (count @urakka/urakan-toimenpideinstanssit) 7)
-               [yleiset/virheviesti-sailio
+               [yleiset/info-laatikko :varoitus
                 (str "Urakasta puuttuu toimenpideinstansseja, jotka täytyy siirtää urakkaan Samposta. "
                   "Toimenpideinstansseja on urakassa nyt "
-                  (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
+                  (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")
+                nil "100%" {:sulje-nappi-id (gensym)}])
 
              ;; -- Kustannussuunnitelman päämenu, jonka linkkejä klikkaamalla vieretetään näkymä liittyvään osioon.
              (let [osioiden-tilat (get-in app [:domain :osioiden-tilat])

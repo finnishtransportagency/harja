@@ -58,22 +58,16 @@
     (when (= :lukittu tila)
       [poista-lukitus e! urakka])]])
 
-(defn lahetys-virhe-teksti [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus
-                                    velho-lahetyksen-tila velho-rivi-lahetyksen-tila
-                                    lahetysaika lahetetty lahetys-onnistunut lahetysvirhe] :as lahetyksen-tila}]
+(defn lahetys-virhe-teksti [{:keys [lahetetty lahetys-onnistunut lahetysvirhe] :as lahetyksen-tila}]
   (let [pre-tyyli {:style {:background-color "inherit" :padding-bottom "16px" ;; padding bottom tarpeen koska horizontal scroll bar muuten peittää
                            :max-height "100px" :overflow-y "auto" :border-style "none"}}]
-    (when (or (contains? #{"epaonnistunut" "osittain-onnistunut"} velho-lahetyksen-tila)
-              (contains? #{"epaonnistunut"} velho-rivi-lahetyksen-tila)
-              (and (some? lahetys-onnistunut) (false? lahetys-onnistunut) (some? lahetysvirhe)))
+    (when (and (some? lahetys-onnistunut) (false? lahetys-onnistunut) (some? lahetysvirhe))
       [:div
        (when (some? lahetysvirhe)
          [:div
           (when lahetetty
             [:p (str "Edellisen kerran lähetetty " (fmt/pvm lahetetty))])
-          [:pre pre-tyyli lahetysvirhe]])
-       (when (some? velho-lahetyksen-vastaus)
-         [:pre pre-tyyli velho-lahetyksen-vastaus])])))
+          [:pre pre-tyyli lahetysvirhe]])])))
 
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
   (when (and valmispvm-paallystys
@@ -151,7 +145,7 @@
      (when (and (not paikkauskohde-id)
                 (not osoite-sama-kuin-yhasta-tuodessa?))
        [:div {:style {:margin-top "4px"}}
-        [:label.kentan-label "Alkuperäinen suunniteltu TR-osoite:"]
+        [:label.kentan-label "Alkuperäinen suunniteltu tieosoite:"]
         [:div {:style {}}
          (tr/tierekisteriosoite-tekstina yha-tr-osoite)]])]))
 
@@ -326,7 +320,7 @@
                :label-ja-kentta-samalle-riville? true
                ::lomake/col-luokka "col-xs-12"}
               (if muokattava?
-                {:tyyppi :reagent-komponentti
+                {:tyyppi :reagent-komponentti :kaariva-luokka "pot-tieosoite-kentta"
                  :otsikko "Tieosoite"
                  :komponentti tr-kentta
                  :komponentti-args [e! (merge paallystysilmoituksen-osa {:optiot {:vayla-tyyli? true}})]
@@ -365,10 +359,10 @@
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             {:otsikko "Työ aloitettu" :tyyppi :pvm :nimi :aloituspvm
              :label-ja-kentta-samalle-riville? true
-             :ikoni-sisaan? true :vayla-tyyli? true :pakollinen? true
+             :vayla-tyyli? true :pakollinen? true
              ::lomake/col-luokka "col-xs-12"}
             {:otsikko "Kohde valmistunut" :tyyppi :pvm :nimi :valmispvm-kohde :pakollinen? true
-             :label-ja-kentta-samalle-riville? true :ikoni-sisaan? true :vayla-tyyli? true
+             :label-ja-kentta-samalle-riville? true :vayla-tyyli? true
              :validoi [[:pvm-kentan-jalkeen :aloituspvm "Valmistumisen pitää olla työn alkamisen jälkeen"]]
              ::lomake/col-luokka "col-xs-12"}
             (if paikkauskohteet?

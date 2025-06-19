@@ -89,7 +89,6 @@
                                                      (valitse-organisaatio org))}
                        (when org-nimi org-nimi)]
       "Org. tyyppi:" (when org-tyyppi (name org-tyyppi))
-      "Käyttäjänimi:" (get k :kayttajanimi)
       "Puhelin:" (get k :puhelin)
       "Sähköposti:" (when email
                       [:a {:href (str "mailto:" email)}
@@ -103,17 +102,7 @@
   [k]
   (modal/nayta! {:otsikko (str (:etunimi k) " " (:sukunimi k))
                  :luokka "yhteystieto"
-                 :footer [:div.display-flex.justify-between
-                          [napit/yleinen-toissijainen "Kirjaudu ulos Väyläviraston palveluista"
-                           #(varmista-kayttajalta/varmista-kayttajalta
-                              {:otsikko "Kirjaudu ulos?"
-                               :sisalto "Uloskirjautuminen kirjaa sinut ulos kaikista Väyläviraston palveluista."
-                               :hyvaksy "Kirjaudu ulos"
-                               :toiminto-fn (fn []
-                                              (set! (.-location js/window) (k/logout-url)))})
-
-                           {:ikoni (ikonit/harja-icon-action-log-out)}]
-                          [napit/sulje #(modal/piilota!)]]}
+                 :footer [napit/sulje #(modal/piilota!)]}
     (kayttajan-tiedot k)))
 
 (defn valitse-hakutulos
@@ -168,6 +157,7 @@
                                               "Muut")
                            :on-select #(valitse-hakutulos %)
                            :aputeksti "Hae Harjasta"
+                           :aria-label "Hae Harjasta"
                            :tunniste #((juxt :tyyppi :id) %)
                            :vinkki #(when-not (empty? @hakutermi)
                                       (if (liikaa-osumia? @hakutulokset)

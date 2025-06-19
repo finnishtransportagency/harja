@@ -2,8 +2,7 @@
   (:require [clojure.core.async :as async]
             [harja.palvelin.jarjestelma-rajapinta :as jr]
             [harja.tyokalut.predikaatti :as predikaatti]
-            [harja.fmt :as fmt]
-            [certifiable.log :as log])
+            [taoensso.timbre :as log])
   (:import [java.net InetAddress]))
 
 (def ^{:private true

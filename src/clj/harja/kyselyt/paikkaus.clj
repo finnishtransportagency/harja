@@ -6,8 +6,6 @@
             [specql.op :as op]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.roolit :as roolit]
-            [clojure.string :as str]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tierekisteri :as tierekisteri]
@@ -18,11 +16,15 @@
             [taoensso.timbre :as log]
             [specql.core :as specql]
             [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [slingshot.slingshot :refer [throw+]]
             [harja.domain.tierekisteri.validointi :as tr-validointi]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.tierekisteri :as tr-domain]))
+
+(declare hae-urakan-paikkauskohteet-ja-paikkaukset hae-paikkauskohteen-tyomenetelma hae-paikkauskohde
+  hae-paikkauskohteet-ulkoisella-idlla paivita-paikkauskohteen-korjausluokka
+  paivita-paikkauskohteen-ilmoitettu-virhe!
+  tallenna-paikkauskohde<! paivita-paikkauskohde! poista-paikkauskohde!)
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman.")

@@ -2,17 +2,17 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.palautevayla :as palautevayla-q]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
-            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.tloik.tekstiviesti :as tekstiviestit]
             [clojure.string :as str]))
 
 (def kayttaja "jvh")
-(def +labyrintti-url+ "http://localhost:28080/sendsms")
+(def +sms-url+ "http://localhost:28080/sms")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -24,14 +24,14 @@
     :api-sahkoposti (component/using
                        (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                        [:http-palvelin :db :integraatioloki :itmf])
-    :labyrintti (component/using
-                  (labyrintti/luo-labyrintti
-                    {:url +labyrintti-url+
-                     :kayttajatunnus "solita-2" :salasana "ne8aCrasesev"})
+    :sms (component/using
+                  (sms/luo-tekstiviesti-komponentti
+                    {:url +sms-url+
+                     :apiavain "miu"})
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
+             [:db :itmf :integraatioloki :sms :api-sahkoposti])))
 
 (defn tekstiviestin-rivit [ilmoitus]
   (into #{} (str/split-lines
@@ -93,7 +93,7 @@
     (is (rivit "Yhteydenottopyyntö: Ei"))
     (is (rivit "Paikka: Kilpisjärvi"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
-    (is (rivit "Tienumero: Ei tierekisteriosoitetta"))
+    (is (rivit "Tienumero: Ei tieosoitetta"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
 
 (deftest tekstiviestin-muodostus-aiheella

@@ -58,13 +58,22 @@
   (jdbc/with-db-transaction [c db]
     (doseq [{:keys [id urakka-id poistettu]} oikeudet]
       (if poistettu
-        (q/poista-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:id id})
+        (q/poista-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:id id :muokkaaja (:id user)})
         (if-not (id-olemassa? id)
           (q/luo-jarjestelmatunnukselle-lisaoikeus-urakkaan<! c {:kayttaja kayttaja-id
+                                                                 :luoja (:id user)
                                                                  :urakka urakka-id})
           (q/paivita-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:urakka urakka-id
+                                                                  :muokkaaja (:id user)
                                                                   :id id})))))
   (hae-jarjestelmatunnuksen-lisaoikeudet db user {:kayttaja-id kayttaja-id}))
+
+(defn tallenna-kayttajalle-kirjoitusoikeus [db user {:keys [oikeudet]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+
+  (log/info "Tallennetaan käyttäjälle kirjoitusoikeus:" (pr-str oikeudet))
+
+  (q/lisaa-jarjestelmatunnukselle-kirjoitusoikeus! db {:kayttaja_id (:id user)}))
 
 (defrecord APIJarjestelmatunnukset []
   component/Lifecycle
@@ -87,6 +96,9 @@
     
     (julkaise-palvelu http :tallenna-jarjestelmatunnuksen-lisaoikeudet
       (fn [user payload] (tallenna-jarjestelmatunnuksen-lisaoikeudet db user payload)))
+
+    (julkaise-palvelu http :lisaa-kayttajalle-kirjoitusoikeus
+      (fn [user payload] (tallenna-kayttajalle-kirjoitusoikeus db user payload)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -96,5 +108,6 @@
       :hae-jarjestelmatunnuksen-lisaoikeudet
       :hae-urakat-lisaoikeusvalintaan
       :tallenna-jarjestelmatunnukset
-      :tallenna-jarjestelmatunnuksen-lisaoikeudet)
+      :tallenna-jarjestelmatunnuksen-lisaoikeudet
+      :lisaa-kayttajalle-kirjoitusoikeus)
     this))

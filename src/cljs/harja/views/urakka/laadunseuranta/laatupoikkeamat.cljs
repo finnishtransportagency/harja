@@ -75,8 +75,8 @@
                (e! (laatupoikkeamat/->PaivitaAikavali arvo (:listaus-tyyppi app) urakka-id))))))
        {:otsikko "Aikaväli"
         :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
-        :ikoni-sisaan? true
-        :vayla-tyyli? true}]
+        :vayla-tyyli? true
+        :elementin-nimi "laatupoikkeamat-aikavali"}]
 
       ^{:key "urakkatoiminnot"}
       [valinnat/urakkatoiminnot {:urakka urakka-id}
@@ -96,7 +96,7 @@
        :tyhja (if (nil? poikkeamat)
                 [yleiset/ajax-loader "Laatupoikkeamia ladataan"]
                 "Ei laatupoikkeamia")}
-      [{:otsikko "Päivä\u00ADmäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
+      [{:otsikko "Havaittu" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
        (when (or (= :paallystys nakyma)
                  (= :paikkaus nakyma)
                  (= :tiemerkinta nakyma))

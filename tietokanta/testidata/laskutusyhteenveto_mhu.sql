@@ -177,9 +177,9 @@ $$
         tpi_yllapito := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Ylläpito TP');
         kayttaja_id := (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
         toimenpidekoodi_hoidonjohtopalkkio := (SELECT id FROM tehtava WHERE nimi = 'Hoidonjohtopalkkio');
-        tehtavaryhma_erillishankinnat := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
-        tehtavaryhma_hjpalkkiot := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
-        tehtavaryhma_johto_hallintokorvaus := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
+        tehtavaryhma_erillishankinnat := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c'); -- Erillishankinnat
+        tehtavaryhma_hjpalkkiot := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68'); -- Hoidonjohtopalkkio
+        tehtavaryhma_johto_hallintokorvaus := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'); -- Johto- ja hallintokorvaus
         vuosi := (SELECT extract(YEAR FROM NOW()) - 1);
         ennen_urakkaa := FALSE;
 
@@ -216,7 +216,7 @@ $$
         INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja)
         VALUES ((select id from kulu where kokonaissumma = 1000 AND urakka=urakka_id), 0,
                 (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'),
-                (select id from tehtavaryhma where nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio'), 'kokonaishintainen'::MAKSUERATYYPPI, 'paatos', 1000,
+                (select id from tehtavaryhma where yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3'), 'kokonaishintainen'::MAKSUERATYYPPI, 'paatos', 1000,
                 '2019-10-13'::TIMESTAMP, kayttaja_id);
 
         -- Bonukset - 03/2020
@@ -235,7 +235,7 @@ $$
         INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja)
         VALUES ((select id from kulu where kokonaissumma = 500 AND urakka = urakka_id), 0,
                 (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'),
-                (select id from tehtavaryhma where nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio'),
+                (select id from tehtavaryhma where yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3'),
                 'kokonaishintainen'::MAKSUERATYYPPI, 'paatos', 500,
                 '2020-3-13'::TIMESTAMP, kayttaja_id);
 

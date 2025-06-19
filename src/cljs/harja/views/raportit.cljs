@@ -54,6 +54,7 @@
 
 (def mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
+                  v-sopimustyyppi (:sopimustyyppi v-ur)
                   v-hal @nav/valittu-hallintayksikko
                   v-urakkatyyppi #{(:arvo @nav/urakkatyyppi)}
                   ;; vesiväylä-urakkatyypillä toistaiseksi tunnistetaan kanava vs. vesiväylät hallintayksikön nimestä
@@ -75,9 +76,15 @@
                                              (when v-hal "hallintayksikko") #{"hallintayksikko"}
                                              :default #{"koko maa"})
                                            #{"urakka"})
+                  sopimustyypin-raportit (filter
+                                          (fn [rivi]
+                                            (if-not (nil? (:sopimustyyppi rivi))
+                                              (contains? (:sopimustyyppi rivi) v-sopimustyyppi)
+                                              true))
+                                          (vals @raporttityypit))
                   urakkatyypin-raportit (filter
                                           #(set/subset? v-urakkatyyppi (:urakkatyyppi %))
-                                          (vals @raporttityypit))
+                                          sopimustyypin-raportit)
                   kontekstityypin-raportit (filter (fn [ur]
                                                    (every? (fn [k]
                                                              (contains? (:konteksti ur) k)) mahdolliset-kontekstit))
@@ -175,6 +182,11 @@
 (defn vain-hoitokausivalinta? [raportti]
   (#{:suolasakko} raportti))
 
+;; Erityisesti korjausurakoissa halutaan tarkastella joko koko vuotta tai vapaata aikaväliä
+(defn ei-kuukausivalintaa? [raportti]
+  (#{:mpu-paikkausten-yhteenveto
+     :ppu-paikkausten-yhteenveto} raportti))
+
 (defn vain-kuukausivalinta? [raportti urakka-valittu?]
   ;; Näytetään vain kuukausivalinta, jos kyseessä on työmaakokous
   ;; TAI jos kyseessä on tarkastusraportti, eikä ole valittu urakkaa.
@@ -238,6 +250,8 @@
                      (pvm/vuosi (pvm/nyt)))
         vain-hoitokausivalinta? (vain-hoitokausivalinta? (:nimi @valittu-raporttityyppi))
         vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)
+        ei-kuukausivalintaa? (ei-kuukausivalintaa? (:nimi @valittu-raporttityyppi))
+        _ (when ei-kuukausivalintaa? (reset! valittu-kuukausi nil))
         korkeintaan-edellinen-paiva (fn [uusi-paiva]
                                       (not (pvm/sama-tai-jalkeen? uusi-paiva (pvm/nyt) true)))
         hoitokauden-pvm-vali (if (or hoitourakassa? vesivaylaurakassa?)
@@ -280,21 +294,22 @@
            (reset! valittu-hoitokausi %)
            (reset! valittu-vuosi nil)
            (reset! valittu-kuukausi nil))])
-      [ui-valinnat/kuukausi {:disabled (or @vapaa-aikavali?
+      (when-not ei-kuukausivalintaa?
+        [ui-valinnat/kuukausi {:disabled (or @vapaa-aikavali?
                                            vain-hoitokausivalinta?)
-                             :nil-valinta (cond
-                                            vain-kuukausivalinta?
-                                            "Valitse kuukausi"
+                               :nil-valinta (cond
+                                              vain-kuukausivalinta?
+                                              "Valitse kuukausi"
 
-                                            @valittu-vuosi
-                                            "Koko vuosi"
+                                              @valittu-vuosi
+                                              "Koko vuosi"
 
-                                            :else
-                                            "Koko hoitokausi")
-                             :disabloi-tulevat-kk? true}
-       (cond-> @kuukaudet
-               vain-kuukausivalinta? rest)
-       valittu-kuukausi]]
+                                              :else
+                                              "Koko hoitokausi")
+                               :disabloi-tulevat-kk? true}
+         (cond-> @kuukaudet
+           vain-kuukausivalinta? rest)
+         valittu-kuukausi])]
 
      (when-not (or vain-hoitokausivalinta? vain-kuukausivalinta?)
        [:div.raportin-valittu-aikavali
@@ -747,7 +762,7 @@
             konteksti (cond
                         v-ur "urakka"
                         v-hal "hallintayksikko"
-                        :default "koko maa")
+                        :else "koko maa")
             raportissa? (some? @raportit/suoritettu-raportti)
             raporttilista @mahdolliset-raporttityypit
             ladataanko-urakoita? (some (fn [[k v]]
@@ -756,8 +771,8 @@
                                          ;; urakoita ei ole -> urakoita ladataan
                                          (or
                                            (and
-                                             (seq raporttilista)
                                              (seq v-hal)
+                                             (seq raporttilista)
                                              (nil? ensimmainen-urakka-yksikossa))
                                            ;; raporttilista ei ole tyhjänä,
                                            ;; listassa toisen yksikön urakka -> urakoita ladataan
@@ -775,7 +790,7 @@
              "Hallintayksikkö" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
              "Urakka" (cond
                         ;; Latausindikaattori jos urakkahaku on käynnissä
-                        (and v-hal ladataanko-urakoita?)
+                        (and v-hal ladataanko-urakoita? @nav/urakka-haku-kaynnissa?)
                         [ajax-loader-pieni (str "Haetaan tietoja...")]
 
                         ;; Urakoita ei ladata, hy valittuna
@@ -819,7 +834,7 @@
                           [:span "Raportteja haetaan..."]
                           (empty? raporttilista)
                           [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)) v-ur)]
-                          :default
+                          :else
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
                                                 :format-fn #(if % (str
                                                                     ;; Jos urakkaa ei ole valittuna ja suuri konteksti avain olemassa

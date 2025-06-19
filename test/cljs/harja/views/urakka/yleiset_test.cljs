@@ -66,6 +66,6 @@
       (u/click :button.nappi-ensisijainen)
       --
       "Muokkaustoimintojen nappien määrä kun toiminnot avattu"
-      (is (= 7 (count (u/sel [:button]))))
+      (is (= 10 (count (u/sel [:button]))))
       (is (= 4 (count (u/sel [:.muokkaustoiminnot :button]))))
       (is (= 3 (count (u/sel [:.livi-alasveto :button])))))))

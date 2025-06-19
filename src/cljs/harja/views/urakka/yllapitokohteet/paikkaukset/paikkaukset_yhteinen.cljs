@@ -68,7 +68,6 @@
        [valinnat/aikavali aikavali-atom {:otsikko aikavali-otsikko
                                          :for-teksti "filtteri-aikavali"
                                          :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
-                                         :ikoni-sisaan? true
                                          :vayla-tyyli? true}]
        [:span {:style {:width "500px"}}
         [:label.alasvedon-otsikko-vayla "Työmenetelmä"]

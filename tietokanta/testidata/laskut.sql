@@ -7,24 +7,24 @@ VALUES ('2019-09-15', 3666.66, (select id from urakka where nimi = 'Oulun MHU 20
 
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 666.66), 1, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'),
- (select id from tehtavaryhma where nimi = 'Vesakonraivaukset ja puun poisto (V)'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 333.33, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
+ (select id from tehtavaryhma where yksiloiva_tunniste = '405a8a12-70c0-4ef6-91f4-689197493239'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 333.33, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 666.66), 2, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'),
- (select id from tehtavaryhma where nimi = 'Nurmetukset ja muut vihertyöt (N)'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 222.22, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
+ (select id from tehtavaryhma where yksiloiva_tunniste = '1855032a-2bb3-46d4-b9b4-c6d4e4c25d05'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 222.22, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 666.66), 3, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'),
- (select id from tehtavaryhma where nimi = 'Puhtaanapito (P)'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 111.11, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
+ (select id from tehtavaryhma where yksiloiva_tunniste = '430b0c7e-64c1-42e3-99d2-35d17f9fceba'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 111.11, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
 
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 6666.66), 1, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'),
- (select id from tehtavaryhma where nimi = 'Kuivatusjärjestelmät (K)'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 2222.22, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
+ (select id from tehtavaryhma where yksiloiva_tunniste = '0250dcc5-a13c-4efe-87ee-a7a1b8f65764'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 2222.22, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 6666.66), 2, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'),
- (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)'), 'akillinen-hoitotyo'::MAKSUERATYYPPI, 'rahavaraus', 4444.44, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
+ (select id from tehtavaryhma where yksiloiva_tunniste = 'c3cb9e68-7f08-4145-ad8f-f2985e8f1658'), 'akillinen-hoitotyo'::MAKSUERATYYPPI, 'rahavaraus', 4444.44, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
 
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa,  luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 3666.66), 1, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Talvihoito TP'),
- (select id from tehtavaryhma where nimi = 'Talvihoito (A)'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 3666.66, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
+ (select id from tehtavaryhma where yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 3666.66, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
 
 INSERT INTO liite (nimi, tyyppi, lahde, urakka, luotu, luoja) VALUES ('pensas-2019080019.jpg', 'image/png', 'harja-ui'::lahde, (select id from urakka where nimi = 'Oulun MHU 2019-2024'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
 INSERT INTO kulu_liite (kulu, liite, luotu, luoja) VALUES ((select id from kulu where kokonaissumma = 666.66), (select id from liite where nimi = 'pensas-2019080019.jpg'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
@@ -36,6 +36,7 @@ $$
         kayttaja_id              INTEGER;
         urakka_id                INTEGER;
         tinst_talvihoito         INTEGER;
+        tinst_lyh                INTEGER;
         tinst_mhu_hoidon_johto   INTEGER;
         tinst_soratie            INTEGER;
         tinst_paallystys         INTEGER;
@@ -49,24 +50,29 @@ $$
         tehtava_korvaus          INTEGER;
         tehtava_erillishankinnat INTEGER;
         tehtava_mhu_hoidon_johto INTEGER;
+        tehtava_muut             INTEGER;
+        rahavaraus_varalasku     INTEGER;
 
     BEGIN
         kayttaja_id := (select id from kayttaja where kayttajanimi = 'Integraatio');
         urakka_id := (select id from urakka where nimi = 'Oulun MHU 2019-2024');
         tinst_talvihoito := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Talvihoito TP');
+        tinst_lyh := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP');
         tinst_soratie := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Soratien hoito TP');
         tinst_paallystys := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Päällystepaikkaukset TP');
         tinst_korvaus := (select id from toimenpideinstanssi where nimi = 'Oulu MHU MHU Korvausinvestointi TP');
         tinst_yllapito := (select id from toimenpideinstanssi where nimi = 'Oulu MHU MHU Ylläpito TP');
         tinst_mhu_hoidon_johto := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP');
-        tehtava_talvihoito := (select id from tehtavaryhma where nimi = 'Talvihoito (A)');
-        tehtava_soratie := (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)');
-        tehtava_paikkaus := (select id from tehtavaryhma where nimi = 'Kuumapäällyste (Y1)');
-        tehtava_yllapito := (select id from tehtavaryhma where nimi = 'Avo-ojitus, soratiet (Z)');
-        tehtava_palkkio := (select id from tehtavaryhma where nimi = 'Hoidonjohtopalkkio (G)');
-        tehtava_korvaus := (select id from tehtavaryhma where nimi = 'RKR-korjaus (Q)');
-        tehtava_mhu_hoidon_johto := (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)');
-        tehtava_erillishankinnat := (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)');
+        tehtava_talvihoito := (select id from tehtavaryhma where yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac');
+        tehtava_soratie := (select id from tehtavaryhma where yksiloiva_tunniste = 'dc151971-facc-48c4-90c9-e429987206e1');
+        tehtava_paikkaus := (select id from tehtavaryhma where yksiloiva_tunniste = 'b1cca2a5-6445-4f49-878d-a95f144cc190');
+        tehtava_yllapito := (select id from tehtavaryhma where yksiloiva_tunniste = '82ecc58a-f96c-46f0-9c70-d29bb6cd4266');
+        tehtava_palkkio := (select id from tehtavaryhma where yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68');
+        tehtava_korvaus := (select id from tehtavaryhma where yksiloiva_tunniste = '9bfa48c6-a225-4d56-9275-8b08cf6302c4');
+        tehtava_mhu_hoidon_johto := (select id from tehtavaryhma where yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54');
+        tehtava_erillishankinnat := (select id from tehtavaryhma where yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c');
+        tehtava_muut := (select id from tehtavaryhma where yksiloiva_tunniste = '4e3cf237-fdf5-4f58-b2ec-319787127b3e');
+        rahavaraus_varalasku := (select id from rahavaraus where nimi = 'Varalaskupaikat');
 
 -- Laskut MHU raporttia varten -  Maksettu 15.10.2019 - Laskutuskausi alkaa 1.10
 -- Talvihoito
@@ -94,7 +100,8 @@ INSERT INTO kulu (erapaiva, kokonaissumma, urakka, luotu, luoja, koontilaskun_ku
 VALUES ('2019-10-16', 7000.77, urakka_id, current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
 INSERT INTO kulu (erapaiva, kokonaissumma, urakka, luotu, luoja, koontilaskun_kuukausi)
 VALUES ('2019-10-16', 700.77, urakka_id, current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
-
+INSERT INTO kulu (erapaiva, kokonaissumma, urakka, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 1000.00, urakka_id, current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
 
 -- Kohdistukset - 15.10.2019 - Laskutuskausi alkaa 1.10
 -- Talvihoito
@@ -132,6 +139,9 @@ INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksu
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, tavoitehintainen, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 700.77 AND erapaiva = '2019-10-16'), 1, tinst_yllapito,
  tehtava_yllapito, 'lisatyo'::MAKSUERATYYPPI, 'lisatyo', false, 700.77, current_timestamp,kayttaja_id);
+INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, rahavaraus_id, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
+((select id from kulu where kokonaissumma = 1000.00 AND erapaiva = '2019-10-16'), 1, tinst_yllapito,
+tehtava_muut, rahavaraus_varalasku, 'kokonaishintainen'::MAKSUERATYYPPI, 'rahavaraus', 1000.00, current_timestamp, kayttaja_id);
 
 
 -- Laskut 20.03.2020

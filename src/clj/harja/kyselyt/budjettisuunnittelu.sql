@@ -56,6 +56,18 @@ FROM urakka_tavoite ut
 WHERE urakka = :urakka
 ORDER BY ut.hoitokausi;
 
+-- name: hae-valikatselmus-siirrot-ed-vuodelta
+-- single?: true
+SELECT COALESCE(SUM(up.siirto), 0)
+  FROM urakka_paatos up
+           JOIN urakka u ON up."urakka-id" = u.id
+ WHERE up."urakka-id" = :urakka
+   AND up."hoitokauden-alkuvuosi" = (EXTRACT(YEAR FROM :alkupvm::DATE) - 1)
+   -- Ainoastaan kattohinnan ylityksestä tai tavoitehinnan alituksesta voi tulla siirtoja
+   AND up.tyyppi in ('kattohinnan-ylitys', 'tavoitehinnan-alitus')
+   AND up.siirto != 0
+   AND up.poistettu = FALSE;
+
 -- name:hae-johto-ja-hallintokorvaukset
 SELECT jh.tunnit,
        jh.tuntipalkka,
@@ -216,7 +228,7 @@ with muuttuneet as (
                and indeksikorjaus_vahvistettu is null
                -- Tilaajan rahavarauksille ei lasketa indeksikorjauksia
                and not (
-                     -- Johto- ja hallintokorvaus (J)
+                     -- J - Johto- ja hallintokorvaus
                      tr.yksiloiva_tunniste is not null and tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'
                      -- MHU ja HJU Hoidon johto
                      and tpi.toimenpide = (select id from toimenpide where koodi = '23151'))

@@ -592,6 +592,12 @@
       urakka-id
       (throw (Exception. (format "Annetulla nimellä: '%s'  ei löydy urakkaa!!" nimi))))))
 
+(defn hae-urakan-id-sampo-idlla [sampoid]
+  (ffirst (q (str "SELECT id FROM urakka WHERE sampoid = '" sampoid "';"))))
+
+(defn hae-urakoitsijan-id-ytunnuksella [ytunnus]
+  (ffirst (q (str "SELECT id FROM organisaatio WHERE tyyppi = 'urakoitsija' AND ytunnus = '" ytunnus "';"))))
+
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
   ([nimi kayttaja]
@@ -905,8 +911,14 @@
 (defn hae-tehtavan-id-nimella [nimi]
   (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "';"))))
 
+(defn hae-tehtavan-id-tunnisteella [tunniste]
+  (ffirst (q (str "SELECT id from tehtava where yksiloiva_tunniste = '" tunniste "';"))))
+
 (defn hae-tehtavaryhman-id [nimi]
   (ffirst (q (str "SELECT id from tehtavaryhma where nimi = '" nimi "';"))))
+
+(defn hae-tehtavaryhman-id-tunnisteella [tunniste]
+  (ffirst (q (str "SELECT id from tehtavaryhma where yksiloiva_tunniste = '" tunniste "';"))))
 
 (defn hae-rahavaraus-nimella [nimi]
   (ffirst (q-map (format "SELECT id, nimi from rahavaraus where nimi = '%s';" nimi))))
@@ -1000,6 +1012,18 @@
 (defn hae-sopimus-id-nimella [nimi]
   (ffirst (q (format "SELECT id
                       FROM   sopimus
+                      WHERE  nimi = '%s';"
+               nimi))))
+
+(defn hae-sopimus-id-urakka-idlla [id]
+  (ffirst (q (format "SELECT id
+                      FROM   sopimus
+                      WHERE  urakka = %s;"
+               id))))
+
+(defn hae-organisaatio-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   organisaatio
                       WHERE  nimi = '%s';"
                nimi))))
 
@@ -1140,30 +1164,11 @@
 (defn anna-tielupaoikeus [kayttaja]
     (u (format "update kayttaja set api_oikeudet = ARRAY['tielupa'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
 
+(defn anna-taitorakenneoikeus [kayttaja]
+  (u (format "update kayttaja set api_oikeudet = ARRAY['taitorakenne'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
+
 (defn poista-kayttajan-api-oikeudet [kayttaja]
   (u (format "update kayttaja set api_oikeudet = NULL WHERE kayttajanimi = '%s'" kayttaja)))
-
-(defn asenna-pot-lahetyksen-tila [kohde-id pot2-id]
-  (u (str "UPDATE paallystysilmoitus
-              SET paatos_tekninen_osa = 'hyvaksytty',
-                  tila = 'valmis'
-            WHERE paallystyskohde = " kohde-id ";"))
-  (u (str "UPDATE yllapitokohde
-              SET velho_lahetyksen_aika = NULL,
-                  velho_lahetyksen_tila = 'ei-lahetetty',
-                  velho_lahetyksen_vastaus = NULL
-              WHERE id = " kohde-id ";"))
-  (u (str "UPDATE pot2_paallystekerros
-              SET velho_lahetyksen_aika = NULL,
-                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
-                  velho_lahetyksen_vastaus = NULL
-              WHERE jarjestysnro = 1 AND
-                    pot2_id = " pot2-id ";"))
-  (u (str "UPDATE pot2_alusta
-              SET velho_lahetyksen_aika = NULL,
-                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
-                  velho_lahetyksen_vastaus = NULL
-              WHERE pot2_id = " pot2-id ";")))
 
 (defn poista-paallystysilmoitus-paallystyskohtella [paallystyskohde-id]
   (u (str "DELETE FROM pot2_paallystekerros
@@ -1326,6 +1331,14 @@
 
 (use-fixtures :once urakkatieto-fixture)
 
+(defn ely-paakayttaja []
+  {:sahkoposti "elypk@example.org", :kayttajanimi "ely-pk-urakanvalvoja",
+   :roolit #{"ELY_Paakayttaja"}, :id 4178,
+   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
+   :organisaatioroolit {}
+   :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
+   :urakkaroolit {}})
+
 (defn oulun-2005-urakan-tilaajan-urakanvalvoja []
   {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
    :roolit #{"ELY_Urakanvalvoja"}, :id 417,
@@ -1376,7 +1389,7 @@
    :roolit #{"Laadunvalvoja"}, :id 18, :etunimi "Keppi",
    :organisaatio {:id @kemin-aluerakennus-id, :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
    :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
-   :organisaatioroolit {} #_{@kemin-aluerakennus-id #{"laadunvalvoja"}}
+   :organisaatioroolit {}
    :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Laadunvalvoja"}}})
 
 (defn kemin-alueurakan-2019-2023-urakan-tilaajan-urakanvalvoja []

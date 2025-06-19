@@ -59,7 +59,7 @@ VALUES (
   215000.0::NUMERIC,                                  -- kustannus
   'm2'::TEXT,                                         -- yksikkö
   81::INT,                                            -- määrä
-  (SELECT tierekisteriosoitteelle_viiva(20, 1, 860, 1, 1020)) -- geometria
+  (SELECT tieosoitteelle_geometria(20, 1, 860, 1, 1020)) -- geometria
 );
 
 
@@ -115,7 +115,7 @@ VALUES (
   25000.0::NUMERIC,                                  -- kustannus
   'jm'::TEXT,                                         -- yksikkö
   66::INT,                                            -- määrä
-  (SELECT tierekisteriosoitteelle_viiva(20, 1, 750, 1, 800)) -- geometria
+  (SELECT tieosoitteelle_geometria(20, 1, 750, 1, 800)) -- geometria
 );
 
 
@@ -171,7 +171,7 @@ VALUES (
   3520.0::NUMERIC,                                    -- kustannus
   'm2'::TEXT,                                         -- yksikkö
   66::INT,                                            -- määrä
-  (SELECT tierekisteriosoitteelle_viiva(20, 1, 480, 1, 700)) -- geometria
+  (SELECT tieosoitteelle_geometria(20, 1, 480, 1, 700)) -- geometria
 );
 
 
@@ -227,7 +227,7 @@ VALUES (
   4500.0::NUMERIC,                                    -- kustannus
   'kpl'::TEXT,                                        -- yksikkö
   66::INT,                                            -- määrä
-  (SELECT tierekisteriosoitteelle_viiva(20, 1, 140, 1, 360)) -- geometria
+  (SELECT tieosoitteelle_geometria(20, 1, 140, 1, 360)) -- geometria
 );
 
 
@@ -283,5 +283,174 @@ VALUES (
   1500.0::NUMERIC,                                    -- kustannus
   'kpl'::TEXT,                                        -- yksikkö
   66::INT,                                            -- määrä
-  (SELECT tierekisteriosoitteelle_viiva(20, 1, 1, 1, 120)) -- geometria
+  (SELECT tieosoitteelle_geometria(20, 1, 1, 1, 120)) -- geometria
+);
+
+
+-- Lisää nykypäivälle vielä testidataa 
+INSERT INTO paikkaus (
+  "paikkaus-tyyppi", 
+  "luoja-id", 
+  luotu, 
+  "muokkaaja-id", 
+  muokattu, 
+  "poistaja-id", 
+  poistettu, 
+  "urakka-id", 
+  "paikkauskohde-id", 
+  "ulkoinen-id", 
+  alkuaika, 
+  loppuaika, 
+  tierekisteriosoite, 
+  tyomenetelma, 
+  massatyyppi, 
+  leveys, 
+  massamenekki, 
+  massamaara, 
+  "pinta-ala", 
+  raekoko, 
+  kuulamylly, 
+  kustannus,
+  "reikapaikkaus-yksikko",
+  maara,
+  sijainti 
+)
+VALUES (
+  'reikapaikkaus'::paikkaustyyppi,
+  (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')::INT,
+  (CURRENT_TIMESTAMP - INTERVAL '1 day'),
+  NULL::INT,
+  NULL::TIMESTAMP,
+  NULL::INT,
+  FALSE,
+  (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka')::INT,
+  NULL::INT,
+  2234344::INT,
+  (CURRENT_TIMESTAMP - INTERVAL '1 day'),
+  (CURRENT_TIMESTAMP - INTERVAL '1 day'),
+  ROW(20, 1, 1, 1, 120, NULL)::TR_OSOITE,
+  (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = 'Jyrsintäkorjaukset (HJYR/TJYR)')::INT,
+  'Ei määritelty'::TEXT,
+  NULL::NUMERIC,
+  NULL::NUMERIC,
+  NULL::NUMERIC,
+  NULL::NUMERIC,
+  NULL::INTEGER,
+  NULL::TEXT,
+  1500.0::NUMERIC,
+  'kpl'::TEXT, 
+  66::INT,
+  (SELECT tieosoitteelle_geometria(20, 1, 1, 1, 120)) 
+);
+
+
+INSERT INTO paikkaus (
+  "paikkaus-tyyppi", 
+  "luoja-id", 
+  luotu, 
+  "muokkaaja-id", 
+  muokattu, 
+  "poistaja-id", 
+  poistettu, 
+  "urakka-id", 
+  "paikkauskohde-id", 
+  "ulkoinen-id", 
+  alkuaika, 
+  loppuaika, 
+  tierekisteriosoite, 
+  tyomenetelma, 
+  massatyyppi, 
+  leveys, 
+  massamenekki, 
+  massamaara, 
+  "pinta-ala", 
+  raekoko, 
+  kuulamylly, 
+  kustannus,
+  "reikapaikkaus-yksikko",
+  maara,
+  sijainti 
+)
+VALUES (
+  'reikapaikkaus'::paikkaustyyppi,                                                               -- tyyppi
+  (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')::INT,                             -- luojaid
+  (CURRENT_TIMESTAMP - INTERVAL '1 day'),
+  NULL::INT,                                                                                     -- muokkaaja_id, jos ei olemassa, NULL
+  NULL::TIMESTAMP,                                                                               -- muokattu
+  NULL::INT,                                                                                     -- poistajaid
+  FALSE,                                                                                         -- poistettu
+  (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka')::INT,                      -- urakkaid 
+  NULL::INT,                                                                                     -- paikkauskohdeid
+  2234343::INT,                                                                                  -- ulkoinenid (tuodaan excelistä)
+  (CURRENT_TIMESTAMP - INTERVAL '2 day'),
+  (CURRENT_TIMESTAMP - INTERVAL '2 day'),
+  ROW(20, 1, 140, 1, 360, NULL)::TR_OSOITE,                                                      -- tr osoite
+  (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = 'Jyrsintäkorjaukset (HJYR/TJYR)')::INT,-- tyomenetelma 
+  'Ei määritelty'::TEXT,                              -- massatyyppi, ei määritelty reikäpaikkauksille
+  NULL::NUMERIC,                                      -- leveys
+  NULL::NUMERIC,                                      -- massamenekki 
+  NULL::NUMERIC,                                      -- massamaara 
+  NULL::NUMERIC,                                      -- pintaala
+  NULL::INTEGER,                                      -- raekoko 
+  NULL::TEXT,                                         -- kuulamylly
+  4500.0::NUMERIC,                                    -- kustannus
+  'kpl'::TEXT,                                        -- yksikkö
+  66::INT,                                            -- määrä
+  (SELECT tieosoitteelle_geometria(20, 1, 140, 1, 360)) -- geometria
+);
+
+
+INSERT INTO paikkaus (
+  "paikkaus-tyyppi", 
+  "luoja-id", 
+  luotu, 
+  "muokkaaja-id", 
+  muokattu, 
+  "poistaja-id", 
+  poistettu, 
+  "urakka-id", 
+  "paikkauskohde-id", 
+  "ulkoinen-id", 
+  alkuaika, 
+  loppuaika, 
+  tierekisteriosoite, 
+  tyomenetelma, 
+  massatyyppi, 
+  leveys, 
+  massamenekki, 
+  massamaara, 
+  "pinta-ala", 
+  raekoko, 
+  kuulamylly, 
+  kustannus,
+  "reikapaikkaus-yksikko",
+  maara,
+  sijainti 
+)
+VALUES (
+  'reikapaikkaus'::paikkaustyyppi,                                                               -- tyyppi
+  (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')::INT,                             -- luojaid
+  CURRENT_TIMESTAMP,
+  NULL::INT,                                                                                     -- muokkaaja_id, jos ei olemassa, NULL
+  NULL::TIMESTAMP,                                                                               -- muokattu
+  NULL::INT,                                                                                     -- poistajaid
+  FALSE,                                                                                         -- poistettu
+  (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka')::INT,                      -- urakkaid 
+  NULL::INT,                                                                                     -- paikkauskohdeid
+  2234342::INT,                                                                                  -- ulkoinenid (tuodaan excelistä)
+  CURRENT_TIMESTAMP,
+  CURRENT_TIMESTAMP,
+  ROW(20, 1, 480, 1, 700, NULL)::TR_OSOITE,                                                      -- tr osoite
+  (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = 'Jyrsintäkorjaukset (HJYR/TJYR)')::INT,-- tyomenetelma 
+  'Ei määritelty'::TEXT,                              -- massatyyppi, ei määritelty reikäpaikkauksille
+  NULL::NUMERIC,                                      -- leveys
+  NULL::NUMERIC,                                      -- massamenekki 
+  NULL::NUMERIC,                                      -- massamaara 
+  NULL::NUMERIC,                                      -- pintaala
+  NULL::INTEGER,                                      -- raekoko 
+  NULL::TEXT,                                         -- kuulamylly
+  3520.0::NUMERIC,                                    -- kustannus
+  'm2'::TEXT,                                         -- yksikkö
+  66::INT,                                            -- määrä
+  (SELECT tieosoitteelle_geometria(20, 1, 480, 1, 700)) -- geometria
 );
