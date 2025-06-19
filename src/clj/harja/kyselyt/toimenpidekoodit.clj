@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/toimenpidekoodit.sql"
   {:positional? true})
+
+(declare hae-tehtava-tunnisteella)

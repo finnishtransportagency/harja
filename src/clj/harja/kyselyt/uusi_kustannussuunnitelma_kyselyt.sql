@@ -96,3 +96,21 @@ INSERT INTO kustannusarvioitu_tyo (kuukausi, vuosi, summa, summa_indeksikorjattu
 VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
         :toimenpideinstanssi-id, :tehtavaryhma-id, :sopimus-id,
         'laskutettava-tyo', 'erillishankinnat', :luoja, NOW());
+
+
+-- name: hae-hoidonjohtopalkkiot-kuukausittain
+SELECT id,
+       kuukausi,
+       vuosi,
+       summa,
+       summa_indeksikorjattu,
+       toimenpideinstanssi,
+       tehtavaryhma,
+       tehtava,
+       sopimus
+FROM kustannusarvioitu_tyo
+WHERE sopimus = :sopimus-id
+  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+  and toimenpideinstanssi = :toimenpideinstanssi-id
+  AND tehtava = :tehtava-id;

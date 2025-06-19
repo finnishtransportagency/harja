@@ -12,7 +12,8 @@
   hae-kiintea-kustannus-kuukausittain poista-kiinteat-kustannukset-kuukausittain!
   tallenna-kiinteat-kustannukset-kuukaudelta<! paivita-kiinteat-kustannukset-kuukausittain<!
   hae-erillishankinta-kuukausittain hae-kuukauden-erillishankinta
-  paivita-kuukauden-erillishankinta<! tallenna-kuukauden-erillishankinta<!)
+  paivita-kuukauden-erillishankinta<! tallenna-kuukauden-erillishankinta<!
+  hae-hoidonjohtopalkkiot-kuukausittain)
 
 (defn tallenna-hankintojen-kuukausittainen-summa [db kk-jakso alkujakso? nimi viimeinen-summa summa hoitovuoden-alkuvuosi sopimus-id
                                                   toimenpideinstanssi-id kayttaja-id]
