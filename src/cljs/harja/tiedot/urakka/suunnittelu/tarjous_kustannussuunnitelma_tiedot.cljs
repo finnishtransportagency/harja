@@ -5,7 +5,12 @@
             [harja.pvm :as pvm]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
+            [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.urakka :as tila]))
+
+(defn scrollaa-muutoksiin [elementin-id]
+  ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat
+  (siirrin/siirry-elementin-id elementin-id 450))
 
 (defn muunna-vuodet
   "Muunnetaan UI Gridin käyttämä tietomalli bäkkärin käyttämään muotoon.
@@ -51,7 +56,14 @@
 (defrecord PaivitaErillishankinnat [erillishankinnat])
 (defrecord TallennaErillishankinnatOnnistui [vastaus])
 (defrecord TallennaErillishankinnatEpaonnistui [vastaus])
-(defrecord JaaErillishankinnatTasan [summa])
+(defrecord JaaErillishankinnatTasan [summa elementti])
+
+;; Tallenna erillishankinnat
+(defrecord TallennaHoidonjohtopalkkiot [hoidonjohtopalkkiot])
+(defrecord PaivitaHoidonjohtopalkkiot [hoidonjohtopalkkiot])
+(defrecord TallennaHoidonjohtopalkkiotOnnistui [vastaus])
+(defrecord TallennaHoidonjohtopalkkiotEpaonnistui [vastaus])
+(defrecord JaaHoidonjohtopalkkiotTasan [summa hoidonjohtopalkkio-elementti])
 
 
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
@@ -80,6 +92,13 @@
                        (js/parseInt (second matches)))
         erillishankinta (nth erillishankinnat virheen-rivi)
         rivin-nimi (:kalenterikuukausi erillishankinta)]
+    (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi " arvossa virhe. Anna positiivinen summa.")))
+
+(defn parsi-hoidonjohtopalkkiot-virhe [virhe hoidonjohtopalkkiot]
+  (let [virheen-rivi (when-let [matches (re-find #"\[:hoidonjohtopalkkiot (\d+) :summa\]" virhe)]
+                       (js/parseInt (second matches)))
+        hoidonjohtopalkkio (nth hoidonjohtopalkkiot virheen-rivi)
+        rivin-nimi (:kalenterikuukausi hoidonjohtopalkkio)]
     (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi " arvossa virhe. Anna positiivinen summa.")))
 
 (extend-protocol tuck/Event
@@ -257,7 +276,7 @@
 
   TallennaErillishankinnatOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Kilpailutettavat hankinat tallennettiin.")
+    (viesti/nayta-toast! "Erillishankinnat tallennettiin onnistuneesti.")
     (-> app
       (assoc-in [:kustannussuunnitelma :erillishankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
@@ -278,7 +297,7 @@
         (assoc :tallennus-kesken? false))))
 
   JaaErillishankinnatTasan
-  (process-event [{:keys [summa]} app]
+  (process-event [{:keys [summa elementti]} app]
     (let [erillishankinnat (get-in app [:kustannussuunnitelma :erillishankinnat])
           kk-summa (tyokalut/round2 2 (/ summa 12))
           viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
@@ -287,7 +306,63 @@
                                             {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
                                              :summa_indeksikorjattu nil}))
                              erillishankinnat)]
+      (scrollaa-muutoksiin elementti)
       (assoc-in app [:kustannussuunnitelma :erillishankinnat] erillishankinnat)))
+
+  PaivitaHoidonjohtopalkkiot
+  (process-event
+    [{hoidonjohtopalkkiot :hoidonjohtopalkkiot} app]
+    (let [muuttuneet (sort-by (juxt :vuosi :kuukausi) (vec hoidonjohtopalkkiot))]
+      (-> app
+        (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot-virheet] nil)
+        (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot] muuttuneet))))
+
+  TallennaHoidonjohtopalkkiot
+  (process-event
+    [{hoidonjohtopalkkiot :hoidonjohtopalkkiot} app]
+    (tuck-apurit/post! :tallenna-erillishankinnat
+      {:urakka-id (-> @tila/yleiset :urakka :id)
+       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
+       :hoidonjohtopalkkiot hoidonjohtopalkkiot}
+      {:onnistui ->TallennaHoidonjohtopalkkiotOnnistui
+       :epaonnistui ->TallennaHoidonjohtopalkkiotEpaonnistui
+       :paasta-virhe-lapi? true})
+    (assoc app :tallennus-kesken? true))
+
+  TallennaHoidonjohtopalkkiotOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Kilpailutettavat hankinat tallennettiin.")
+    (-> app
+      (assoc-in [:kustannussuunnitelma :erillishankinnat-virheet] nil)
+      (assoc :tallennus-kesken? false)
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+
+  TallennaHoidonjohtopalkkiotEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (let [parsitut-virheet (parsi-hoidonjohtopalkkiot-virhe (get-in vastaus [:parse-error :original-text])
+                             (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot]))]
+      (viesti/nayta-toast!
+        parsitut-virheet
+        :varoitus
+        viesti/viestin-nayttoaika-keskipitka)
+      (-> app
+        (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot-virheet] parsitut-virheet)
+        (assoc :tallennus-kesken? false))))
+
+  JaaHoidonjohtopalkkiotTasan
+  (process-event [{:keys [summa hoidonjohtopalkkio-elementti]} app]
+    (let [hoidonjohtopalkkiot (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot])
+          kk-summa (tyokalut/round2 2 (/ summa 12))
+          viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
+          hoidonjohtopalkkiot (map-indexed (fn [indeksi rivi]
+                                          (merge rivi
+                                            {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
+                                             :summa_indeksikorjattu nil}))
+                             hoidonjohtopalkkiot)]
+      (scrollaa-muutoksiin hoidonjohtopalkkio-elementti)
+      (assoc-in app [:kustannussuunnitelma :hoidonjohtopalkkiot] hoidonjohtopalkkiot)))
 
   ValitseHoitokausiKustannussuunnitelmaan
   (process-event [{vuosi :vuosi} app]
