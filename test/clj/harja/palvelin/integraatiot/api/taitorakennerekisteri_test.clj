@@ -3,6 +3,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.taitorakennerekisteri :as api-taitorakennerekisteri]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
+            [harja.tyokalut.json-validointi :as json]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]))
 
@@ -26,7 +28,11 @@
                     kayttaja portti)
           dekoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
-      (is (not (nil? dekoodattu-body))))))
+      (is (not (nil? dekoodattu-body)))
+      (is (nil? (json/validoi
+                  json-skeemat/+taitorakennerekisteri-siltatarkastukset-haku-vastaus+
+                  (:body vastaus)))
+        "Vastaus on JSON-skeeman mukainen"))))
 
 (deftest hae-siltatarkastukset-vaarat-parametrit
   (testing "Virheelliset päivämäärät"
