@@ -5,6 +5,7 @@
             
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ui-ikonit]
@@ -40,15 +41,16 @@
 
 (defn- muutoslomakkeen-kentat-yhteiset
   "Eri muutostyypeille yhteiset kentät. Voi silti sisältää pienen määrän haaroitusta."
-  [e! {:keys [muokattava-muutos] :as app}]
+  [e! {:keys [muokattava-muutos valittu-hoitokausi urakan-hoitokaudet] :as app}]
   (vec
     (keep identity
       (concat
         [{:otsikko "Tyyppi"
           :nimi :tyyppi
+          :kaariva-luokka "muutostyyppivalinta"
           :tyyppi :valinta
           :vayla-tyyli? true
-          :valinnat muutos-domain/+muutostyypit+
+          :valinnat muutos-domain/+muutostyypit-lomakkeella+
           :valinta-arvo identity
           :valinta-nayta muutos-domain/tyyppi-fmt
           :uusi-rivi? true}
@@ -59,16 +61,21 @@
                            [yleiset/info-laatikko :neutraali
                             "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."])})
          (lomake/ryhma {:otsikko "Perustiedot"}
-           {:nimi :nimi
-            :otsikko "Nimi"
-            :tyyppi :string
-            :uusi-rivi? true
-            :pakollinen? true}
+           (when (= "johto-ja-hallintokorvaus" (:tyyppi muokattava-muutos))
+             {:nimi :hoitovuosi :tyyppi :string :otsikko "Hoitovuosi" :muokattava? (constantly false)
+              :hae #(fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hoitokausi urakan-hoitokaudet "Hoitovuosi")})
+           (when (= "pysyva" (:tyyppi muokattava-muutos))
+             {:nimi :nimi
+              :otsikko "Nimi"
+              :tyyppi :string
+              :uusi-rivi? true
+              :pakollinen? true})
            {:nimi :syy
             :otsikko "Muutoksen syy"
             :tyyppi :text
-            :koko [90 6]
-            :aputeksti "Kuvaile muutos mahdollisimman tarkasti."
+            :palstoja 2
+            :koko [90 4]
+            :aputeksti "Kuvaile muutos mahdollisimman tarkasti. Ethän syötä kenttään henkilö- tai muuta arkaluontoista tietoa."
             :pituus-max 1000
             :uusi-rivi? true
             :pakollinen? true}
@@ -82,34 +89,84 @@
   [e! app]
   [])
 
+
+(defn- muutoslomakkeen-kentat-johto-ja-hallintokorvaus
+  "johto-ja-hallintokorvaus muutoksen lomakekomponentti"
+  [e! {:keys [johto-ja-hallintokorvausten-muutokset
+              valittu-hoitokausi
+              valittu-hoitokausi-vuosi-kk-muodossa]}]
+  (let [muutostapa (muutos-tiedot/jjh-korvaus-muutos-vai-vahennys? @nav/valittu-urakka)
+        summa (reduce + 0 (map :tavoitehinnan-muutos (vals @muutos-tiedot/johto-ja-hallintokorvausmuutokset-atom)))]
+    [{:nimi :johto-ja-hallintokorvaus-muutokset
+      :otsikko ""
+      :palstoja 2
+      :tyyppi :komponentti :uusi-rivi? true
+      :komponentti
+      (fn [e! {:keys [johto-ja-hallintokorvausten-muutokset valittu-hoitokausi]}]
+        [:span
+         [:hr]
+         [:h3 "Muutokset tavoitehintaan ja kuluihin"]
+         [grid/muokkaus-grid
+          {:tunniste :pvm
+           :luokat ["johto-ja-hallintokorvaus-muutokset-grid"]
+           :piilota-toiminnot? true
+           :voi-lisata? false
+           :voi-kumota? false
+           :voi-poistaa? (constantly false)
+           :voi-muokata? true
+           :rivi-jalkeen [{:teksti "Yhteensä" :sarakkeita 1 :luokka "yhteensa"}
+                          {:teksti (fmt/euro-opt summa) :tasaa :oikea :luokka "yhteensa"}]}
+
+          ;; taulukon kentät
+          [{:otsikko "Kalenterikuukausi" :nimi :pvm :tyyppi :string :leveys 20
+            :muokattava? (constantly false)
+            :fmt #(pvm/koko-kuukausi-ja-vuosi % true)}
+           {:otsikko (if (= muutostapa :muutos)
+                       "Muutos € (+/-)"
+                       "Vähennys (€)")
+            :nimi :tavoitehinnan-muutos :vaadi-negatiivinen? (when (= muutostapa :vahennys) true)
+            :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}]
+          muutos-tiedot/johto-ja-hallintokorvausmuutokset-atom]
+         [yleiset/info-laatikko :neutraali
+          "Harja luo oikaisevat kulut automaattisesti tallentamisen jälkeen."
+          nil nil {:luokka "johto-ja-hallintokorvaus-muutokset-info"}]])}]))
+
+
 (defn muutoslomake [e! {:keys [muokattava-muutos] :as app}]
-  [:span.muutoslomake
+  (komp/luo
+    (komp/sisaan-ulos
+      #(e! (muutos-tiedot/->HaeJohtoJaHallintokorvausmuutos muokattava-muutos))
+      #(e! (muutos-tiedot/->MuokkaaMuutosta nil)))
+    (fn [e! {:keys [muokattava-muutos] :as app}]
+      [:span.muutoslomake
 
-   ;; todo: eri tyyppisten muutosten lomakkeiden toteutus tähän
-   ;; oletettavasti kannattaa toteuttaa lomakkeen harja.ui.lomake avulla
-   ;; siten että niiden sisälle sijoitetaan tarvittaessa taulukkoja :muokkaus-grid, ks. esim views/urakka/toteumat/muut_materiaalit.cljs#L127
-   [lomake/lomake
-    {:otsikko (if (:id muokattava-muutos)
-                "Muokkaa muutosta"
-                "Lisää uusi muutos")
-     :muokkaa! #(e! (muutos-tiedot/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
-     :footer-fn (fn [muutos]
-                  [:span.tallenna-ja-peruuta
-                   [napit/tallenna
-                    #(e! (muutos-tiedot/->TallennaMuutos muutos))]
-                   [napit/peruuta
-                    #(e! (muutos-tiedot/->MuokkaaMuutosta nil))]])}
-    ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
-    (into []
-      (concat
-        (muutoslomakkeen-kentat-yhteiset e! app)
+       ;; todo: eri tyyppisten muutosten lomakkeiden toteutus tähän
+       ;; siten että niiden sisälle sijoitetaan tarvittaessa taulukkoja :muokkaus-grid, ks. esim views/urakka/toteumat/muut_materiaalit.cljs#L127
+       [lomake/lomake
+        {:otsikko (if (:id muokattava-muutos)
+                    "Muokkaa muutosta"
+                    "Lisää uusi muutos")
+         :muokkaa! #(e! (muutos-tiedot/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+         :footer-fn (fn [muutos]
+                      [:span.tallenna-ja-peruuta
+                       [:hr]
+                       [napit/tallenna
+                        #(e! (muutos-tiedot/->TallennaMuutos muutos))]
+                       [napit/peruuta
+                        #(e! (muutos-tiedot/->MuokkaaMuutosta nil))]])}
+        ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
+        (into []
+          (concat
+            (muutoslomakkeen-kentat-yhteiset e! app)
 
-        (case (:tyyppi muokattava-muutos)
-          "pysyva" (muutoslomakkeen-kentat-pysyva e! app)
+            (case (:tyyppi muokattava-muutos)
+              "pysyva" (muutoslomakkeen-kentat-pysyva e! app)
 
-          ;; tässä kohti default, että jokaiselle aukeaa jotain... poistunee lopulta kun kaikki toteutettu
-          (muutoslomakkeen-kentat-pysyva e! app))))
-    muokattava-muutos]])
+              "johto-ja-hallintokorvaus" (muutoslomakkeen-kentat-johto-ja-hallintokorvaus e! app)
+
+              ;; tässä kohti default, että jokaiselle aukeaa jotain... poistunee lopulta kun kaikki toteutettu
+              (muutoslomakkeen-kentat-pysyva e! app))))
+        muokattava-muutos]])))
 
 (defn- kehystetty-avattava-grid
   "Piirtää yhtenäisesti Muutoksien taulukot collapsoitaviksi."

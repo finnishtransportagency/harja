@@ -15,7 +15,7 @@
 
 ;; Hae muutostiedot
 (defrecord HaeUrakanMuutostiedot [urakka])
-(defrecord HaeUrakanMuutostiedotOnnnistui [vastaus])
+(defrecord HaeUrakanMuutostiedotOnnistui [vastaus])
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
 
 ;; Vaihda hoitokausi
@@ -26,6 +26,9 @@
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
 (defrecord MuokkaaLaskettujenMuutoksienSyita [])
 (defrecord MuokkaaRahavaraustenMuutoksienSyita [])
+(defrecord HaeJohtoJaHallintokorvausmuutos [muutos])
+(defrecord HaeJohtoJaHallintokorvausmuutosOnnistui [vastaus])
+(defrecord HaeJohtoJaHallintokorvausmuutosEpaonnistui [vastaus])
 
 (defrecord TallennaLaskettujenMuutostenSyyt [rivit])
 (defrecord TallennaRahavarausmuutostenSyyt [rivit])
@@ -47,6 +50,13 @@
 
 (defrecord PaivitaLomake [lomake])
 
+(defn jjh-korvaus-muutos-vai-vahennys?
+  "Johto- ja hallintokorvauksen muutos on muutos jos urakka alkanut 2024 tai aiemmin, muutoin vähennys"
+  [urakka]
+  (if (<= (:alkupvm urakka) (pvm/hoitokauden-alkupvm 2024))
+    :muutos
+    :vahennys))
+
 (defn valitse-urakka [app urakka]
   (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)
         vanha-hoitokausi (:valittu-hoitokausi app)
@@ -57,6 +67,15 @@
         (assoc :urakan-hoitokaudet hoitokaudet)
         (assoc :valittu-hoitokausi uusi-hoitokausi))))
 
+(def johto-ja-hallintokorvausmuutokset-atom (atom nil))
+
+(defn johto-ja-hallintokorvausmuutoksen-rivit
+  [valittu-hoitokausi]
+  (let [avaimet (pvm/aikavalin-kuukaudet-pvm-vektorina valittu-hoitokausi)]
+    (apply array-map
+      (interleave avaimet
+        (map #(hash-map :pvm % :tavoitehinnan-muutos 0) avaimet)))))
+
 (defn hae-urakan-muutostiedot
   "Hakee urakan muutostiedot, eli miten tavoitehinta ja tehtävä- ja määräluettelo ovat muuttuneet alkuperäisiin tietoihin nähden."
   ([app] (hae-urakan-muutostiedot app (:urakka @tila/yleiset)))
@@ -64,7 +83,7 @@
    (tuck-apurit/post! :hae-urakan-muutostiedot
      {:urakka-id (:id urakka)
       :valittu-hoitokausi (:valittu-hoitokausi app)}
-     {:onnistui ->HaeUrakanMuutostiedotOnnnistui
+     {:onnistui ->HaeUrakanMuutostiedotOnnistui
       :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui})))
 
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
@@ -93,7 +112,7 @@
         (hae-urakan-muutostiedot app urakka)
         app)))
 
-  HaeUrakanMuutostiedotOnnnistui
+  HaeUrakanMuutostiedotOnnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app
       :kirjatut-muutokset (:kirjatut-muutokset vastaus)
@@ -115,12 +134,16 @@
   TallennaMuutos
   (process-event [{muutos :muutos} app]
     (prn "tallenna muutos: " muutos)
-    (let [urakka (:urakka @tila/yleiset)]
+    (let [urakka (:urakka @tila/yleiset)
+          johto-ja-hallintokorvausmuutoksen-rivit (when (= (:tyyppi muutos)
+                                                          "johto-ja-hallintokorvaus")
+                                                    @johto-ja-hallintokorvausmuutokset-atom)
+          muutos (assoc muutos :johto-ja-hallintokorvausmuutoksen-rivit johto-ja-hallintokorvausmuutoksen-rivit)]
       (tuck-apurit/post! :tallenna-muutos
         {:urakka-id (:id urakka)
          :valittu-hoitokausi (:valittu-hoitokausi app)
          :muutos muutos}
-        {:onnistui ->HaeUrakanMuutostiedotOnnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
+        {:onnistui ->HaeUrakanMuutostiedotOnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
          :epaonnistui ->TallennaMuutosEpaonnistui})))
 
   TallennaMuutosEpaonnistui
@@ -159,11 +182,32 @@
         {:urakka-id (:id urakka)
          :valittu-hoitokausi (:valittu-hoitokausi app)
          :rivit (map #(select-keys % [:id :syy]) rivit)}
-        {:onnistui ->HaeUrakanMuutostiedotOnnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
+        {:onnistui ->HaeUrakanMuutostiedotOnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
          :epaonnistui ->TallennaRahavarausmuutostenSyytEpaonnistui})
       app))
 
+  HaeJohtoJaHallintokorvausmuutos
+  (process-event [{muutos :muutos} app]
+    (let [urakka (:urakka @tila/yleiset)
+          valittu-hoitokausi (:valittu-hoitokausi app)]
+      (reset! johto-ja-hallintokorvausmuutokset-atom
+        (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi))
+      #_(tuck-apurit/post! :hae-johto-ja-hallintokorvausmuutos
+        {:urakka-id (:id urakka)
+         :valittu-hoitokausi valittu-hoitokausi
+         :muutos-id (:id muutos)}
+        {:onnistui ->HaeJohtoJaHallintokorvausmuutosOnnistui
+         :epaonnistui ->HaeJohtoJaHallintokorvausmuutosEpaonnistui})
+      app))
 
+  HaeJohtoJaHallintokorvausmuutosOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc-in app [:muokattava-muutos :johto-ja-hallintokorvausmuutos] vastaus))
+
+  HaeJohtoJaHallintokorvausmuutosEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Johto- ja hallintokorvausmuutoksen hakeminen epäonnistui!" :varoitus)
+    app)
 
   LisaaLiite
   (process-event

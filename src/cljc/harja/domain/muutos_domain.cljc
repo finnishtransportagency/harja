@@ -12,21 +12,20 @@
    harja.domain.muokkaustiedot/poistettu?-sarake])
 
 
-(def +muutostyypit+
+(def +muutostyypit-lomakkeella+
   "MHU muutosten mahdolliset tyypit. Näiden tulee matchata tietokannassa olevaan custom typeen MHU_MUUTOSTYYPPI"
   ["erillisrahoitettu"
    "johto-ja-hallintokorvaus"
    "maarapoikkeama"
    "pysyva"
-   "rahavaraus"
    "toteutuneet-maarat"])
 
 (defn tyyppi-fmt
   "Palauttaa muutostyypin tietokannasta tulevan enumin nimen käyttöliittymää varten selkokielisenä. Esim. 'pysyva' -> 'Pysyvä'."
    [tyyppi]
-  ({"pysyva" "Pysyvä"
+  ({"pysyva" "Pysyvä muutos"
     "rahavaraus" "Rahavaraus"
-    "johto-ja-hallintokorvaus" "Johto- ja hallintokorvaus"
+    "johto-ja-hallintokorvaus" "Johto- ja hallintokorvauksen muutos"
     "erillisrahoitettu" "Erillisrahoitettu"
     "toteutuneet-maarat" "Toteutuneet määrät"
     "maarapoikkeama" "Määräpoikkeama"} tyyppi))
