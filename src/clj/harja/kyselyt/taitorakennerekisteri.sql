@@ -46,5 +46,4 @@ JOIN urakka u ON st.urakka = u.id
 JOIN silta s ON st.silta = s.id
 WHERE (st.luotu BETWEEN :alkuaika AND :loppuaika)
    OR (st.muokattu BETWEEN :alkuaika AND :loppuaika)
-   AND st.poistettu = false
 ORDER BY st.luotu DESC;
