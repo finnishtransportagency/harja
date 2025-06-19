@@ -189,6 +189,13 @@
     (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id hoitovuoden-alkuvuosi (:erillishankinnat tiedot))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
+(defn tallenna-hoidonjohtopalkkiot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  (log/info "tallenna-hoidonjohtopalkkiot :: tiedot: " tiedot)
+  (jdbc/with-db-transaction [db db]
+    (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id hoitovuoden-alkuvuosi (:hoidonjohtopalkkiot tiedot))
+    (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
+
 (defrecord UusiKustannussuunnitelmaPalvelu []
   component/Lifecycle
   (start [this]
@@ -206,6 +213,11 @@
       (fn [user tiedot]
         (tallenna-erillishankinnat (:db this) user tiedot))
       {:kysely-spec ::k-domain/erillishankinta})
+    (julkaise-palvelu (:http-palvelin this)
+      :tallenna-hoidonjohtopalkkiot
+      (fn [user tiedot]
+        (tallenna-hoidonjohtopalkkiot (:db this) user tiedot))
+      {:kysely-spec ::k-domain/hoidonjohtopalkkio})
 
     this)
 
@@ -213,5 +225,6 @@
     (poista-palvelut (:http-palvelin this)
       :hae-kustannussuunnitelman-tiedot
       :tallenna-kilpailutettavat-hankinnat
-      :tallenna-erillishankinnat)
+      :tallenna-erillishankinnat
+      :tallenna-hoidonjohtopalkkiot)
     this))

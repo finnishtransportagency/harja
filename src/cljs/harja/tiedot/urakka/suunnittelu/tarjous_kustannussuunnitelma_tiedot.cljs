@@ -320,7 +320,7 @@
   TallennaHoidonjohtopalkkiot
   (process-event
     [{hoidonjohtopalkkiot :hoidonjohtopalkkiot} app]
-    (tuck-apurit/post! :tallenna-erillishankinnat
+    (tuck-apurit/post! :tallenna-hoidonjohtopalkkiot
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
        :hoidonjohtopalkkiot hoidonjohtopalkkiot}

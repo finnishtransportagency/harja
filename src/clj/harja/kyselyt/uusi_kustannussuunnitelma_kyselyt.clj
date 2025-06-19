@@ -3,7 +3,8 @@
             [harja.tyokalut.yleiset :as yleiset]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
-            [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]))
+            [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]
+            [harja.kyselyt.toimenpidekoodit :as tehtava-kyselyt]))
 
 (defqueries "harja/kyselyt/uusi_kustannussuunnitelma_kyselyt.sql"
   {:positional? true})
@@ -13,7 +14,8 @@
   tallenna-kiinteat-kustannukset-kuukaudelta<! paivita-kiinteat-kustannukset-kuukausittain<!
   hae-erillishankinta-kuukausittain hae-kuukauden-erillishankinta
   paivita-kuukauden-erillishankinta<! tallenna-kuukauden-erillishankinta<!
-  hae-hoidonjohtopalkkiot-kuukausittain)
+  hae-hoidonjohtopalkkiot-kuukausittain hae-kuukauden-hoidonjohtopalkkio
+  paivita-kuukauden-hoidonjohtopalkkio<! tallenna-kuukauden-hoidonjohtopalkkio<!)
 
 (defn tallenna-hankintojen-kuukausittainen-summa [db kk-jakso alkujakso? nimi viimeinen-summa summa hoitovuoden-alkuvuosi sopimus-id
                                                   toimenpideinstanssi-id kayttaja-id]
@@ -98,4 +100,33 @@
                          :summa (:summa rivi)
                          :summa_indeksikorjattu nil
                          :tehtavaryhma-id (:id tehtavaryhma)
+                         :luoja (:id kayttaja)}))]))]))
+
+(defn tallenna-hoidonjohtopalkkiot
+  [db kayttaja urakka-id hoitovuoden-alkuvuosi hoidonjohtopalkkiot]
+  (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+        ;; Hae hoidonjohto toimenpideinstannssi
+        ;; Hoindonjohto toimenpide.koodi = 23151
+        hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                         {:urakka urakka-id
+                                          :koodi "23151"})))
+        tehtava (first (tehtava-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"}))
+        ; Tallenna kuukausittaiset summat
+        _ (doseq [rivi hoidonjohtopalkkiot]
+            (let [dbrivi (first (hae-kuukauden-hoidonjohtopalkkio db {:id (:id rivi)}))
+                  t (if (:id dbrivi)
+                      (paivita-kuukauden-hoidonjohtopalkkio<! db
+                        {:id (:id dbrivi)
+                         :summa (:summa rivi)
+                         :summa_indeksikorjattu nil
+                         :muokkaaja (:id kayttaja)})
+                      ;; Lisää uusi
+                      (tallenna-kuukauden-hoidonjohtopalkkio<! db
+                        {:sopimus-id sopimus-id
+                         :toimenpideinstanssi-id hoidonjohto-tpi-id
+                         :vuosi (:vuosi rivi)
+                         :kuukausi (:kuukausi rivi)
+                         :summa (:summa rivi)
+                         :summa_indeksikorjattu nil
+                         :tehtava-id (:id tehtava)
                          :luoja (:id kayttaja)}))]))]))
