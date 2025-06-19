@@ -1,5 +1,39 @@
 (ns harja.domain.siltatarkastus)
 
+(defn siltatarkastuskohteen-tyyppi
+  "Siltatarkastuksessa käytettyjen kohteiden tyyppi mäpättynä järjestysnumeroon"
+  [kohdenro]
+  (case kohdenro
+    ;; Alusrakenne
+    1 "maatukienSiisteysJaKunto"
+    2 "valitukienSiisteysJaKunto"
+    3 "laakeritasojenSiisteysJaKunto"
+    ;; Päällysrakenne
+    4 "kansilaatta"
+    5 "paallysteenKunto"
+    6 "reunapalkinSiisteysJaKunto"
+    7 "reunapalkinLiikuntasauma"
+    8 "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto"
+    9 "sillanpaidenSaumat"
+    10 "sillanJaPenkereenRaja"
+    ;; Varusteet ja laitteet
+    11 "kaiteidenJaSuojaverkkojenVauriot"
+    12 "liikuntasaumalaitteidenSiisteysJaKunto"
+    13 "laakerit"
+    14 "syoksytorvet"
+    15 "tippuputket"
+    16 "kosketussuojatJaNiidenKiinnitykset"
+    17 "valaistuslaitteet"
+    18 "johdotJaKaapelit"
+    19 "liikennemerkit"
+    ;; Siltapaikan rakenteet
+    20 "kuivatuslaitteidenSiisteysJaKunto"
+    21 "etuluiskienSiisteysJaKunto"
+    22 "keilojenSiisteysJaKunto"
+    23 "tieluiskienSiisteysJaKunto"
+    24 "portaidenSiisteysJaKunto"
+    "tuntematon"))
+
 (defn siltatarkastuskohteen-nimi
   "Siltatarkastuksessa käytettyjen kohteiden nimet mäpättynä järjestysnumeroon"
   [kohdenro]
@@ -33,3 +67,37 @@
     23 "Tieluiskien siisteys ja kunto"
     24 "Portaiden siisteys ja kunto"
     "Tuntematon tarkastuskohde"))
+
+(defn kohde-id->paarakenneosa
+  "Siltatarkastuksessa käytettyjen päärakenneosien tyyppi ja nimi mäpättynä kohde-id:hen"
+  [id]
+  (cond
+    (<= id 3) {:tyyppi "alusrakenne" :nimi "Alusrakenne"}
+    (<= id 10) {:tyyppi "paallysrakenne" :nimi "Päällysrakenne"}
+    (<= id 19) {:tyyppi "varusteet-ja-laitteet" :nimi "Varusteet ja laitteet"}
+    (<= id 24) {:tyyppi "siltapaikan-rakenteet" :nimi "Siltapaikan rakenteet"}
+    :else {:tyyppi "tuntematon" :nimi "Tuntematon"}))
+
+(defn koodi->arvo
+  "Siltatarkastuksessa käytettyjen toimenpidetarvekoodien arvo mäpättynä koodiin"
+  [koodi]
+  (case koodi
+    "A" "eiToimenpiteita"
+    "B" "puhdistettava"
+    "C" "urakanKunnostettava"
+    "D" "korjausOhjelmoitava"
+    "E" "E"
+    "-" "eiPade"
+    "eiToimenpiteita"))
+
+(defn koodi->kuvaus
+  "Siltatarkastuksessa käytettyjen toimenpidetarvekoodien kuvaus mäpättynä koodiin"
+  [koodi]
+  (case koodi
+    "A" "Ei toimenpiteitä"
+    "B" "Puhdistettava"
+    "C" "Urakan kunnostettava"
+    "D" "Korjaus ohjelmoitava"
+    "E" "E"
+    "-" "Ei päde"
+    "Ei toimenpiteitä"))

@@ -6,10 +6,10 @@ INSERT INTO silta (tyyppi, siltanro, siltanimi, alue, tr_numero, tr_alkuosa, tr_
 INSERT INTO silta (tyyppi, siltanro, siltanimi, alue, tr_numero, tr_alkuosa, tr_alkuetaisyys, siltatunnus, siltaid, urakat) VALUES (2, 7778, 'Pyhäjoen silta', ST_GeomFromText('LINESTRING (429477 7210390, 429290 7215633)')::GEOMETRY, 20, 1, 3334, 'O-00006', 512346, (SELECT array_agg(id) ::INT[] FROM urakka WHERE nimi ilike ('%oulu%') AND tyyppi='hoito'::urakkatyyppi));
 INSERT INTO silta (tyyppi, siltanro, siltanimi, alue, tr_numero, tr_alkuosa, tr_alkuetaisyys, siltatunnus, siltaid, urakat) VALUES (2, 0, 'Tekaistu kuntasilta', ST_GeomFromText('LINESTRING (430319 7212424, 430347 7212433)')::GEOMETRY, 20, 1, 3401, 'O-0', 0, (SELECT array_agg(id) ::INT[] FROM urakka WHERE nimi ilike ('%oulu%') AND tyyppi='hoito'::urakkatyyppi));
 
-INSERT INTO siltatarkastus (lahde, tarkastusaika, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2006-04-15', 'Sini Sillantarkastaja', (SELECT id from silta WHERE siltanro = 1537), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
-INSERT INTO siltatarkastus (lahde, tarkastusaika, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2007-02-25', 'Sirkka Sillankoestaja', (SELECT id from silta WHERE siltanro = 1537), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
-INSERT INTO siltatarkastus (lahde, tarkastusaika, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2007-05-05', 'Mari Mittatarkka', (SELECT id from silta WHERE siltanro = 902), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
-INSERT INTO siltatarkastus (lahde, tarkastusaika, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2008-06-25', 'Late Lujuuslaskija', (SELECT id from silta WHERE siltanro = 325235), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
+INSERT INTO siltatarkastus (lahde, tarkastusaika, luotu, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2006-04-15', '2006-04-15', 'Sini Sillantarkastaja', (SELECT id from silta WHERE siltanro = 1537), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
+INSERT INTO siltatarkastus (lahde, tarkastusaika, luotu, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2007-02-25', '2007-02-25', 'Sirkka Sillankoestaja', (SELECT id from silta WHERE siltanro = 1537), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
+INSERT INTO siltatarkastus (lahde, tarkastusaika, luotu, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2007-05-05', '2007-05-05', 'Mari Mittatarkka', (SELECT id from silta WHERE siltanro = 902), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
+INSERT INTO siltatarkastus (lahde, tarkastusaika, luotu, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2008-06-25', '2008-06-25', 'Late Lujuuslaskija', (SELECT id from silta WHERE siltanro = 325235), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
 
 INSERT INTO siltatarkastuskohde (siltatarkastus, kohde, tulos, lisatieto) VALUES ((SELECT id from siltatarkastus where tarkastusaika = '2006-04-15'  AND urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012')), 1, '{"A"}', 'Maatuki ruosteessa.');
 INSERT INTO siltatarkastuskohde (siltatarkastus, kohde, tulos) VALUES ((SELECT id from siltatarkastus where tarkastusaika = '2006-04-15'  AND urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012')), 2, '{"B"}');
@@ -112,8 +112,8 @@ INSERT INTO siltatarkastuskohde (siltatarkastus, kohde, tulos) VALUES ((SELECT i
 
 
 -- Luodaan Kajaanintien sillalle 2 tarkastusta, jossa jälkimmäinen korjaa ensimmäisessä havaittuja ongelmi
-INSERT INTO siltatarkastus (lahde, tarkastusaika, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2014-04-08', 'Samuel Siltanen', (SELECT id from silta WHERE siltanro = 7777), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
-INSERT INTO siltatarkastus (lahde, tarkastusaika, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2015-04-08', 'Kalermo Korjaaja', (SELECT id from silta WHERE siltanro = 7777), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
+INSERT INTO siltatarkastus (lahde, tarkastusaika, luotu, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2014-04-08', '2014-04-08', 'Samuel Siltanen', (SELECT id from silta WHERE siltanro = 7777), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
+INSERT INTO siltatarkastus (lahde, tarkastusaika, luotu, tarkastaja, silta, urakka) VALUES ('harja-ui'::lahde, '2015-04-08', '2014-04-08', 'Kalermo Korjaaja', (SELECT id from silta WHERE siltanro = 7777), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'));
 
 INSERT
   INTO siltatarkastuskohde (siltatarkastus, kohde, tulos)
