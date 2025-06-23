@@ -121,6 +121,30 @@
     
     {:siltatarkastukset muunnetut-tarkastukset}))
 
+(defn hae-sillan-siltatarkastukset
+  "Hakee siltatarkastukset sillalle sillan trex_oid:n perusteella."
+  [db {:keys [trex-oid] :as parametrit} _kayttaja]
+  (log/info "Taitorakennerekisteri API, sillan siltatarkastusten haku, parametrit: " (pr-str parametrit))
+  
+  (let [siltatarkastukset (taitorakennerekisteri-kyselyt/hae-sillan-siltatarkastukset-taitorakennerekisterille
+                            db {:trex-oid trex-oid})
+        muunnetut-tarkastukset (map (fn [tarkastus]
+                                      {:siltatarkastus
+                                       {:harja-id (:siltatarkastus_id tarkastus)
+                                        :tarkastusaika (when (:tarkastusaika tarkastus)
+                                                         (pvm/aika-iso8601-aikavyohykkeen-kanssa (:tarkastusaika tarkastus)))
+                                        :tarkastaja (:tarkastaja tarkastus)
+                                        :luotu (when (:luotu tarkastus)
+                                                 (pvm/aika-iso8601-aikavyohykkeen-kanssa (:luotu tarkastus)))
+                                        :muokattu (when (:muokattu tarkastus)
+                                                    (pvm/aika-iso8601-aikavyohykkeen-kanssa (:muokattu tarkastus)))
+                                        :poistettu (boolean (:poistettu tarkastus))
+                                        :urakka (muodosta-urakka-tiedot tarkastus)
+                                        :silta (muodosta-silta-tiedot tarkastus)
+                                        :tarkastuskohteet (muodosta-tarkastuskohteet (:tarkastuskohteet tarkastus))}})
+                                 siltatarkastukset)]
+    {:siltatarkastukset muunnetut-tarkastukset}))
+
 (defrecord Taitorakennerekisteri []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
@@ -132,8 +156,18 @@
           (fn [parametrit kayttaja db]
             (hae-siltatarkastukset db parametrit kayttaja))
           :taitorakenne "trex")))
+    (julkaise-reitti
+      http :hae-sillan-siltatarkastukset
+      (GET "/api/taitorakennerekisteri/siltatarkastukset/:trex-oid" parametrit
+        (kasittele-get-kutsu db integraatioloki :hae-sillan-siltatarkastukset parametrit
+          json-skeemat/+taitorakennerekisteri-siltatarkastukset-haku-vastaus+
+          (fn [parametrit kayttaja db]
+            (hae-sillan-siltatarkastukset db parametrit kayttaja))
+          :taitorakenne "trex")))
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :hae-siltatarkastukset)
+    (poista-palvelut http 
+      :hae-siltatarkastukset
+      :hae-sillan-siltatarkastukset)
     this))
