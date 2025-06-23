@@ -57,6 +57,22 @@ SELECT rv.id, SUM(kk.summa) as toteumat
  GROUP BY rv.id, rv.jarjestys
  ORDER BY rv.jarjestys;
 
+-- name: rahavarausmuutosten-syyt
+SELECT rahavaraus_id AS id, syy
+  FROM mhu_muutos_rahavarausmuutoksen_syy
+ WHERE urakka = :urakka
+   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
+
+-- name: upsert-rahavarausmuutosten-syyt!
+INSERT INTO mhu_muutos_rahavarausmuutoksen_syy
+(urakka, hoitokauden_alkuvuosi, rahavaraus_id, syy, luoja)
+VALUES
+    (:urakka, :hoitokauden_alkuvuosi, :rahavaraus_id, :syy, :kayttaja)
+    ON CONFLICT (urakka, hoitokauden_alkuvuosi, rahavaraus_id)
+        DO UPDATE SET
+                      syy = EXCLUDED.syy,
+                      muokkaaja = EXCLUDED.luoja,
+                      muokattu = NOW();
 
 -- name: paivita-muutos!
 UPDATE mhu_muutos

@@ -67,6 +67,7 @@
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
+    [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as uusi-kustannussuunnitelma-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
@@ -150,6 +151,7 @@
     [harja.palvelin.integraatiot.api.analytiikka :as analytiikka]
     [harja.palvelin.integraatiot.api.tyomaapaivakirja :as api-tyomaapaivakirja]
     [harja.palvelin.integraatiot.api.talvihoitoreitit-api :as api-talvihoitoreitit]
+    [harja.palvelin.integraatiot.api.taitorakennerekisteri :as taitorakennerekisteri]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
     [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
 
@@ -319,14 +321,11 @@
       :digiroad-integraatio (component/using
                               (digiroad-integraatio/->Digiroad (:digiroad asetukset))
                               [:http-palvelin :db :integraatioloki])
-
-      ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto ja uusi SMS-integraatio
-      ;; TODO: Kun #yliheitto ok, poista viittaukset vanhaan integraatioon
+      ;; SMS-integraatio tekstiviestien lähetykseen
       :sms (component/using
              (if kehitysmoodi
                (sms/luo-feikki-tekstiviesti-komponentti)
-               ;; Tuodaan uuden integraation asetukset ":sms" ja vanhan LinkSMS-integraatioon asetukset ":labyrintti"
-               (sms/luo-tekstiviesti-komponentti (:sms asetukset) (:labyrintti asetukset)))
+               (sms/luo-tekstiviesti-komponentti (:sms asetukset)))
              [:http-palvelin :db :integraatioloki])
 
       :yha-integraatio (component/using
@@ -484,6 +483,9 @@
       :tarjous (component/using
                           (tarjous-palvelu/->Tarjous)
                           [:http-palvelin :db])
+      :uusi-kustannussuunnitelma (component/using
+                                   (uusi-kustannussuunnitelma-palvelu/->UusiKustannussuunnitelmaPalvelu)
+                                   [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
@@ -747,6 +749,10 @@
       :api-talvihoitoreitit (component/using
                               (api-talvihoitoreitit/->TalvihoitoreittiAPI)
                               [:http-palvelin :db :integraatioloki])
+      
+      :api-taitorakennerekisteri (component/using
+                                   (taitorakennerekisteri/->Taitorakennerekisteri)
+                                   [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)

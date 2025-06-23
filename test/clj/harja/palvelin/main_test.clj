@@ -172,7 +172,9 @@
     :talvihoitoreitit
     :tieosoitteet-hallinta
     :ajastukset-hallinta
-    :tarjous})
+    :tarjous
+    :api-taitorakennerekisteri
+    :uusi-kustannussuunnitelma})
 
 (def ei-statusta
   #{:metriikka
@@ -260,7 +262,9 @@
     :tieosoitteet-hallinta
     :tiemerkinnan-kustannuskirjaukset
     :ajastukset-hallinta
-    :tarjous})
+    :tarjous
+    :api-taitorakennerekisteri
+    :uusi-kustannussuunnitelma})
 
 (def hidas-ok-status #{:itmf})
 

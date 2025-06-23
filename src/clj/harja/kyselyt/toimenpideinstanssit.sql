@@ -82,7 +82,6 @@ SELECT *
 FROM toimenpideinstanssi
 WHERE urakka = :urakka AND toimenpide = (select id from toimenpide where koodi = :koodi);
 
-
 -- name: hae-hoidon-maksuerattomat-toimenpideistanssit
 SELECT
   tpi.id   AS toimenpide_id,

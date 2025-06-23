@@ -8,7 +8,6 @@
             [clojure.string :as str-clj]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
-            #_[harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [cljs-time.core :as t]
             [harja.domain.tierekisteri :as tr]
@@ -305,9 +304,7 @@
 
 (defn validoi-rivi
   [taulukko rivi skeema rivi-validointi]
-  (let [
-        _ (println "validoi params: " taulukko rivi skeema rivi-validointi)
-        rivi-virheet-sarakkeille (mapv (fn [{saanto :fn sarakkeet :sarakkeet}]
+  (let [rivi-virheet-sarakkeille (mapv (fn [{saanto :fn sarakkeet :sarakkeet}]
                                          (let [tulos (saanto rivi taulukko)]
                                            (reduce-kv (fn [m k v]
                                                         (assoc m k (v tulos)))

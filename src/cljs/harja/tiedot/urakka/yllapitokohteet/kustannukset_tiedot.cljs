@@ -117,16 +117,10 @@
     (let [nollaa-arvot (assoc default-arvot :haku-kaynnissa? true)
           aikavali (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi)
           vuosi @urakka/valittu-urakan-vuosi
-          urakka @nav/valittu-urakka
-          aikavali-koko-urakka [(:alkupvm urakka) (:loppupvm urakka)]
 
           ;; Nouda valitun vuoden tiedot
           callback-valittu {:onnistui ->HaeKustannustiedotOnnistui
-                            :epaonnistui ->HaeKustannustiedotEpaonnistui}
-
-          ;; Nouda koko urakka-ajan kustannukset yhteensä (pelkästään summa näytetään)
-          callback-koko-urakka {:onnistui ->HaeKustannuksetYhteensaOnnistui
-                                :epaonnistui ->HaeKustannuksetYhteensaEpaonnistui}]
+                            :epaonnistui ->HaeKustannustiedotEpaonnistui}]
       (hae-kustannusten-selitteet app)
       (hae-paikkaus-kustannukset app aikavali vuosi callback-valittu)
       nollaa-arvot))
@@ -206,8 +200,8 @@
           rivit-sortattu (sort-by #(str/lower-case (:kustannustyyppi %)) muut-kustannukset)]
 
       (assoc app
-        :muut-kustannukset rivit-sortattu
         :haku-kaynnissa? false
+        :muut-kustannukset rivit-sortattu
         :kustannukset-yhteensa kustannukset-yhteensa)))
 
   HaeSanktiotJaBonuksetEpaonnistui

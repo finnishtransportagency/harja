@@ -15,7 +15,7 @@
     (komp/luo
       (komp/lippu tiedot/kustannusten-kirjaus-valilehti-nakyvissa?)
       (komp/sisaan #(do 
-                      (u/valitse-kuluva-hk!)
+                      (when (u/koko-urakkakausi-valittuna?) (u/valitse-kuluva-hk!))
                       (e! (tiedot/->HaeKustannukset urakka))))
       (fn [e! {:keys [kustannukset haku-kaynnissa?] :as _app}]
         [:div.livi-grid.tiemerkinta-kustannusten-kirjaus

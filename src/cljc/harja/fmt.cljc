@@ -32,7 +32,7 @@
   "Palauttaa luvun tekstinä joka ryhmitelty tuhansittain"
   [numero]
   #?(:cljs
-     (.toLocaleString (js/Number. numero))
+     (.toLocaleString (js/Number. numero) "fi-FI")
      :clj
      (.format (java.text.DecimalFormat. "#,###") numero)))
 

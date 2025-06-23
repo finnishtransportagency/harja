@@ -59,9 +59,7 @@
                            (:vastausosoite integraatio/ulkoinen-sahkoposti-asetukset))
                          [:integraatioloki :db])
     :sms (component/using (sms/luo-tekstiviesti-komponentti
-                                   ;; Uusi SMS-integraatio aktiivinen ja korvaa siten vanhan käytössä
-                                   {:url "foo" :apiavain "testiapiavain" :aktiivinen? true}
-                                   {:sms-url "foo" :apiavain "testiapiavain"})
+                                   {:url "foo" :apiavain "testiapiavain"})
                   [:http-palvelin :db :integraatioloki])
     :tloik (component/using
              (tloik-testi-tyokalut/luo-tloik-komponentti)

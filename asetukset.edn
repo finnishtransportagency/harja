@@ -82,7 +82,7 @@
  ;        :uudelleenlahetysvali-minuuteissa 30}
 
  :ulkoinen-sahkoposti {:vastausosoite "harja-ala-vastaa@vayla.fi"
-                     ;; :palvelin "solita-service-1.solita.fi"
+                       ;; :palvelin "solita-service-1.solita.fi"
                        }
 
  :api-sahkoposti {:suora? false                              ;; Lokaalisti voit lähettää sähköpostit suoraa ilman apia
@@ -151,10 +151,6 @@
 
                         :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
 
-                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/turvalaitteet.shp"
-                        :turvalaitteiden-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:turvalaitteet&outputFormat=SHAPE-ZIP"
-                        :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
-
                         :kanavien-shapefile "file://shp/Vesivaylien_kanavat/sulkukanavat_uusiPolygon.shp"
                         :kanavien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=vesivaylatiedot:sulkukanavat_uusi&outputFormat=SHAPE-ZIP"
                         :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Sulkukanavat_uusiPolygon.shz"
@@ -179,15 +175,9 @@
                                      (clojure.string/trim-newline)))
          :oid-tuonti-suoritusaika nil}
 
- ;; LinkSMS eli "Labyrintti", joka on vieläkin vanhempi integraatio (Vanha, poistuva SMS-integraatio)
- ;; TODO: Kun #yliheitto tapahtunut, poista vanhat asetukset ja tee :sms-integraatiosta pysyvästi aktiivinen
- :labyrintti {:sms-url "https://api.testivaylapilvi.fi/harja/sms/send"
-              :apiavain ""} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
-
- ;; Uusi SMS-integraatio
+ ;; SMS-integraatio tekstiviestien lähetykseen
  :sms {:url "https://api.testivaylapilvi.fi/harja/sms/"
-       :apiavain ""
-       :aktiivinen? #=(eval (harja.tyokalut.env/env "HARJA_SMS_AKTIIVINEN" true))}
+       :apiavain ""}
 
  ;; ClamAV-palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}
@@ -256,4 +246,3 @@
  :palautevayla {:url "https://fipadev.service-now.com"
                 :apiavain ""
                 :paivitysaika [12 45 00]}}
-
