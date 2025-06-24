@@ -68,3 +68,34 @@
                            kayttaja-ilman-oikeuksia portti)]
       (is (= 403 (:status kutsu-epaonnistuu)))
       (is (= 200 (:status kutsu-onnistuu))))))
+
+(deftest hae-sillan-siltatarkastukset-onnistuu
+  (testing "Sillan siltatarkastuksen haku onnistuu oikeilla parametreilla"
+    (let [silta_oid "9.2.246.578.1.15.40174"
+          vastaus (api-tyokalut/get-kutsu
+                    [(str "/api/taitorakennerekisteri/siltatarkastukset/" silta_oid)]
+                    kayttaja portti)
+          dekoodattu-body (cheshire/decode (:body vastaus) true)]
+      (is (= 200 (:status vastaus)))
+      (is (not (nil? dekoodattu-body)))
+      (is (nil? (json/validoi
+                  json-skeemat/+taitorakennerekisteri-siltatarkastukset-haku-vastaus+
+                  (:body vastaus)))
+        "Vastaus on JSON-skeeman mukainen"))))
+
+(deftest hae-sillan-siltatarkastukset-vaara-parametri
+  (testing "Virheellinen silta_oid"
+    (let [silta_oid ""
+          vastaus (api-tyokalut/get-kutsu
+                    [(str "/api/taitorakennerekisteri/siltatarkastukset/" silta_oid)]
+                    kayttaja portti)]
+      (is (= 403 (:status vastaus))))))
+
+(deftest hae-sillan-siltatarkastukset-ei-oikeuksia
+  (testing "Kutsu epäoonnistuu ilman oikeuksia"
+    (let [silta_oid "9.2.246.578.1.15.40174"
+          _ (poista-kayttajan-api-oikeudet kayttaja)
+          vastaus (api-tyokalut/get-kutsu
+                    [(str "/api/taitorakennerekisteri/siltatarkastukset/" silta_oid)]
+                    kayttaja portti)]
+      (is (= 403 (:status vastaus))))))

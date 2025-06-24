@@ -94,5 +94,5 @@ SELECT
 FROM siltatarkastus st
 JOIN urakka u ON st.urakka = u.id
 JOIN silta s ON st.silta = s.id
-WHERE s.trex_oid = :trex-oid
+WHERE s.trex_oid = :silta_oid
 ORDER BY st.luotu DESC;
