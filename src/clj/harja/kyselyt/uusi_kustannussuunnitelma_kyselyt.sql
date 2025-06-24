@@ -140,3 +140,52 @@ INSERT INTO kustannusarvioitu_tyo (kuukausi, vuosi, summa, summa_indeksikorjattu
 VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
         :toimenpideinstanssi-id, :tehtava-id, :sopimus-id,
         'laskutettava-tyo', 'hoidonjohtopalkkio', :luoja, NOW());
+
+--name: vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
+UPDATE kiinteahintainen_tyo kt
+SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP ELSE NULL END,
+    vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja ELSE NULL END,
+    summa_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(kt.summa::NUMERIC, kt.vuosi::INTEGER, kt.kuukausi::INTEGER, :urakka-id::INTEGER) ELSE NULL END
+FROM toimenpideinstanssi tpi
+WHERE kt.toimenpideinstanssi = tpi.id
+  AND tpi.urakka = :urakka-id
+  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND kt.versio = 0;
+
+--name: vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille!
+UPDATE kustannusarvioitu_tyo kt
+SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP ELSE NULL END,
+    vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja ELSE NULL END,
+    summa_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(kt.summa::NUMERIC, kt.vuosi::INTEGER, kt.kuukausi::INTEGER, :urakka-id::INTEGER) ELSE NULL END
+FROM toimenpideinstanssi tpi
+WHERE kt.toimenpideinstanssi = tpi.id
+  AND tpi.urakka = :urakka-id
+  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND kt.versio = 0;
+
+--name: vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille!
+UPDATE johto_ja_hallintokorvaus jh
+SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
+    vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END,
+    tuntipalkka_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(jh.tuntipalkka::NUMERIC, jh.vuosi::INTEGER, jh.kuukausi::INTEGER, :urakka-id::INTEGER) ELSE NULL END
+WHERE jh."urakka-id" = :urakka-id
+  AND (CONCAT(jh.vuosi, '-', jh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND jh.versio = 0;
+
+-- name: indeksikorjaukset-vahvistettu?
+SELECT COUNT(*) > 0 AS "kiinteat-vahvistettu?"
+FROM kiinteahintainen_tyo kt
+         JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+WHERE tpi.urakka = :urakka-id
+  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND kt.indeksikorjaus_vahvistettu IS NOT NULL
+  AND kt.versio = 0
+
+UNION ALL
+SELECT COUNT(*) > 0 AS "arvioidut-vahvistettu?"
+FROM kustannusarvioitu_tyo kt
+         JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+WHERE tpi.urakka = :urakka-id
+  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND kt.indeksikorjaus_vahvistettu IS NOT NULL
+  AND kt.versio = 0;

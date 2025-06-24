@@ -15,7 +15,11 @@
   hae-erillishankinta-kuukausittain hae-kuukauden-erillishankinta
   paivita-kuukauden-erillishankinta<! tallenna-kuukauden-erillishankinta<!
   hae-hoidonjohtopalkkiot-kuukausittain hae-kuukauden-hoidonjohtopalkkio
-  paivita-kuukauden-hoidonjohtopalkkio<! tallenna-kuukauden-hoidonjohtopalkkio<!)
+  hae-rahavaraus-vuodelta
+  paivita-kuukauden-hoidonjohtopalkkio<! tallenna-kuukauden-hoidonjohtopalkkio<!
+  vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
+  vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille!
+  vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille! indeksikorjaukset-vahvistettu?)
 
 (defn tallenna-hankintojen-kuukausittainen-summa [db kk-jakso alkujakso? nimi viimeinen-summa summa hoitovuoden-alkuvuosi sopimus-id
                                                   toimenpideinstanssi-id kayttaja-id]
