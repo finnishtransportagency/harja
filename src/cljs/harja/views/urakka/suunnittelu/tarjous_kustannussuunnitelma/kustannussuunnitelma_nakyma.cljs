@@ -310,21 +310,86 @@
          {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "15%" :tyyppi :euro :tasaa :oikea :fmt #(when % (fmt/euro false %)) :muokattava? (constantly false)}]
         hoidonjohtopalkkiot]]]
 
-     [:div.row [:div.col-xs-12 [:span.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]]
-     [:div.row [:div.col-xs-12] [:hr]]
+     (when-not vahvistettu?
+       [:div
+        [:div.row [:div.col-xs-12 [:span.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]]
+        [:div.row [:div.col-xs-12] [:hr]]
+
+        [:div.row
+         [:div.col-xs-12
+          [:div.painikkeet
+           [napit/yleinen-ensisijainen "Tallenna tiedot"
+            #(do
+               (reset! tallenna-painettu false)
+               (e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @grid-hoidonjohtopalkkiot-atom)))
+            {:disabled (or tallennus-kesken? false)}]
+           [napit/yleinen-toissijainen "Jaa tasan joka kuukaudelle"
+            #(do
+               (reset! tallenna-painettu false)
+               (e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
+            {:disabled (or tallennus-kesken? false)}]]]]])]))
+
+(defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
+  (let [tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
+        tarjous-yht-rivi (filter #(= tarjous-vuosi (:vuosi %)) (:hoitovuosittaiset-arvot (first (filter #(= "yhteensa" (:osio %)) (:tarjous tarjous)))))
+        urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+        urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
+        hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
+        tarjouksen-maara (or (:summa (first tarjous-yht-rivi)) 0)
+        pysyvat-muutokset-maara (or (:pysyvat-muutokset-maara kustannussuunnitelma) 0)
+        hoitovuoden-alun-tavoitehinta (or (:hoitovuoden-alun-tavoitehinta kustannussuunnitelma) 0)
+        hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (:hoitovuoden-alun-indeksikorjattu-tavoitehinta kustannussuunnitelma) 0)
+        indeksikerroin (:indeksikerroin kustannussuunnitelma)
+        kattohintakerroin (:kattohintakerroin kustannussuunnitelma)
+        hoitovuoden-alun-kattohinta (or (:hoitovuoden-alun-kattohinta kustannussuunnitelma) 0)
+        hoitovuoden-alun-indeksikorjattu-kattohinta (or (:hoitovuoden-alun-indeksikorjattu-kattohinta kustannussuunnitelma) 0)
+        vahvistettu? (true? (:vahvistettu? kustannussuunnitelma))]
+    [:div.row.kustannussuunnitelma-osio
      [:div.row
       [:div.col-xs-12
+       [:h2 "Hoitovuoden alun tavoite- ja kattohinta"]
+       [:div.body-text {:style {:margin-top "-15px"}} (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]]]
+
+     [:div.row
+      [:div.col-xs-12
+       [:div.col-xs-11.body-text.pull-righ.bottom-border-text.text-right "Tarjouksen tavoitehinta"]
+       [:div.col-xs-1.body-text.bottom-border-text.strong (fmt/euro true tarjouksen-maara)]]]
+     [:div.row
+      [:div.col-xs-12
+       [:div.col-xs-11.body-text.pull-righ.bottom-border-text.text-right "Pysyvät muutokset"]
+       [:div.col-xs-1.body-text.bottom-border-text.strong (fmt/euro true pysyvat-muutokset-maara)]]]
+     [:div.row
+      [:div.col-xs-12
+       [:div.col-xs-11.body-text.pull-righ.bottom-border-text.text-right "Hoitovuoden alun tavoitehinta"]
+       [:div.col-xs-1.body-text.bottom-border-text.strong (fmt/euro true hoitovuoden-alun-tavoitehinta)]]]
+     [:div.row
+      [:div.col-xs-12
+       [:div.col-xs-11.body-text.pull-righ.bottom-border-text.text-right (str "Indeksikorjattu hoitovuoden alun tavoitehinta (" indeksikerroin " * " (fmt/euro false hoitovuoden-alun-tavoitehinta) ")")]
+       [:div.col-xs-1.body-text.bottom-border-text.strong (fmt/euro true hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]]
+     [:div.row
+      [:div.col-xs-12
+       [:div.col-xs-11.body-text.pull-righ.bottom-border-text.text-right (str "Hoitovuoden alun kattohinta (" kattohintakerroin " * " (fmt/euro false hoitovuoden-alun-tavoitehinta) ")")]
+       [:div.col-xs-1.body-text.bottom-border-text.strong (fmt/euro true hoitovuoden-alun-kattohinta)]]]
+     [:div.row
+      [:div.col-xs-12
+       [:div.col-xs-11.body-text.pull-righ.bottom-border-text.text-right (str "Indeksikorjattu hoitovuoden alun kattohinta (" indeksikerroin " * " (fmt/euro false hoitovuoden-alun-kattohinta) ")")]
+       [:div.col-xs-1.body-text.bottom-border-text.strong (fmt/euro true hoitovuoden-alun-indeksikorjattu-kattohinta)]]]
+
+     [:div.row {:style {:margin-top "2rem"}}
+      [:div.col-xs-12
        [:div.painikkeet
-        [napit/yleinen-ensisijainen "Tallenna tiedot"
-         #(do
-            (reset! tallenna-painettu false)
-            (e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @grid-hoidonjohtopalkkiot-atom)))
-         {:disabled (or tallennus-kesken? false)}]
-        [napit/yleinen-toissijainen "Jaa tasan joka kuukaudelle"
-         #(do
-            (reset! tallenna-painettu false)
-            (e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
-         {:disabled (or tallennus-kesken? false)}]]]]]))
+        (if-not vahvistettu?
+          [napit/yleinen-ensisijainen "Vahvista tavoite- ja kattohinta"
+           #(do
+              (reset! tallenna-painettu false)
+              (e! (kust-tiedot/->VahvistaTaiPeruutaTavoiteJaKattohinta true)))
+           {:disabled (or tallennus-kesken? false)}]
+
+          [napit/yleinen-toissijainen "Peruuta vahvistus"
+           #(do
+              (reset! tallenna-painettu false)
+              (e! (kust-tiedot/->VahvistaTaiPeruutaTavoiteJaKattohinta false)))
+           {:disabled (or tallennus-kesken? false)}])]]]]))
 
 (defn kustannussuunnitelma [e! {:keys [tallennus-kesken? valittu-hoitokausi] :as app}]
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
@@ -356,7 +421,8 @@
      [kilpailutettavat-hankinnat e! app]
      [rahavaraukset e! app]
      [erillishankinnat e! app]
-     [hoidonjohtopalkkiot e! app]]))
+     [hoidonjohtopalkkiot e! app]
+     [tavoite-ja-kattohinta e! app]]))
 
 (defn nakyma* [e! {:keys [tallennus-kesken? valittu-hoitokausi] :as app}]
   (komp/luo
