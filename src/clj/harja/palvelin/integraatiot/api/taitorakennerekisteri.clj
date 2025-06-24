@@ -23,9 +23,9 @@
 (s/def ::loppuaika #(and (string? %) (>= (count %) 20) (or
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %)))))
-(s/def ::silta_oid #(and (string? %)
+(s/def ::silta-oid #(and (string? %)
                      (seq %)
-                     (re-matches #"^[a-zA-Z0-9\-_.]+$" %)))
+                     (re-matches #"^[0-9.]+$" %)))
 
 (defn- tarkista-api-parametrit [parametrit tyyppi]
   (case tyyppi
@@ -51,10 +51,10 @@
                     {:koodi virheet/+puutteelliset-parametrit+
                      :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" (:loppuaika parametrit))})))
 
-    :silta_oid (when (not (s/valid? ::silta_oid (:silta_oid parametrit)))
+    :silta-oid (when (not (s/valid? ::silta-oid (:silta-oid parametrit)))
                 (virheet/heita-viallinen-apikutsu-poikkeus
                   {:koodi virheet/+puutteelliset-parametrit+
-                   :viesti (format "Silta-oid on väärässä muodoss. %s " (:silta_oid parametrit))})) 
+                   :viesti (format "Silta-oid on väärässä muodoss. %s " (:silta-oid parametrit))})) 
     :default nil))
 
 (defn muodosta-urakka-tiedot [tarkastus]
@@ -136,10 +136,10 @@
   "Hakee siltatarkastukset sillalle sillan trex_oid:n perusteella."
   [db {:keys [silta-oid] :as parametrit} _kayttaja]
   (log/info "Taitorakennerekisteri API, sillan siltatarkastusten haku, parametrit: " (pr-str parametrit))
-  (tarkista-api-parametrit parametrit :silta_oid)
+  (tarkista-api-parametrit parametrit :silta-oid)
 
   (let [siltatarkastukset (taitorakennerekisteri-kyselyt/hae-sillan-siltatarkastukset-taitorakennerekisterille
-                            db {:silta_oid silta-oid})
+                            db {:silta-oid silta-oid})
         muunnetut-tarkastukset (map (fn [tarkastus]
                                       {:siltatarkastus
                                        {:harja-id (:siltatarkastus_id tarkastus)
@@ -170,7 +170,7 @@
           :taitorakenne "trex")))
     (julkaise-reitti
       http :hae-sillan-siltatarkastukset
-      (GET "/api/taitorakennerekisteri/siltatarkastukset/:silta_oid" parametrit
+      (GET "/api/taitorakennerekisteri/siltatarkastukset/:silta-oid" parametrit
         (kasittele-get-kutsu db integraatioloki :hae-sillan-siltatarkastukset parametrit
           json-skeemat/+taitorakennerekisteri-siltatarkastukset-haku-vastaus+
           (fn [parametrit kayttaja db]
