@@ -1,11 +1,14 @@
 (ns harja.kyselyt.uusi-kustannussuunnitelma-kyselyt
   (:require [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
-            [harja.tyokalut.yleiset :as yleiset]
+            [harja.tyokalut.yleiset :refer [round2] :as yleiset]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
             [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]
-            [harja.kyselyt.toimenpidekoodit :as tehtava-kyselyt]))
+            [harja.kyselyt.toimenpidekoodit :as tehtava-kyselyt]
+            [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
+            [harja.kyselyt.kustannusarvioidut-tyot :as ka-q]
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]))
 
 (defqueries "harja/kyselyt/uusi_kustannussuunnitelma_kyselyt.sql"
   {:positional? true})
@@ -314,3 +317,109 @@
                          :summa_indeksikorjattu nil
                          :tehtava-id (:id tehtava)
                          :luoja (:id kayttaja)}))]))]))
+
+(defn voidaanko-vahvistaa-tavoitehintaa?
+  "Jotta urakan tavoitehinta voidaan vahvistaa, Kustannusten Suunnittelussa pitää olla täydennettynä kaikki tiedot."
+  [db urakka-id hoitovuoden-alkuvuosi]
+  (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+
+        ;; Kaikki kustannussuunnitelman summat vaikuttaa tavoitehintaan
+        ;; Pysyvät muutokset lisätään mukaan joko vähentämään tai lisäämään tavoitehintaa
+        kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+        hankinnat-ok? (not (empty? kilpailutettavat-hankinnat))
+
+
+        rahavaraukset (hae-rahavaraukset db sopimus-id hoitovuoden-alkuvuosi)
+        rahavaraukset-ok? (not (empty? rahavaraukset))
+
+        erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+        erillishankinnat-ok? (not (empty? erillishankinnat))
+
+        hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+        hoidonjohtopalkkiot-ok? (not (empty? hoidonjohtopalkkiot))
+
+        voidaan-vahvistaa? (every? true? [hankinnat-ok? rahavaraukset-ok? erillishankinnat-ok? hoidonjohtopalkkiot-ok?])]
+    voidaan-vahvistaa?))
+
+(defn vahvista-tavoite-ja-kattohinta [db kayttaja urakka-id vahvista? hoitovuoden-alkuvuosi]
+  (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+        vahvistus-pvm (pvm/nyt)
+        hoitokauden-alkupvm (pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi))
+        hoitokauden-loppupvm (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))
+        _ (vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille! db
+            {:urakka-id urakka-id
+             :alkupvm hoitokauden-alkupvm
+             :loppupvm hoitokauden-loppupvm
+             :vahvista? vahvista?
+             :vahvistaja (:id kayttaja)
+             :vahvistus-pvm vahvistus-pvm})
+
+        ;; Rahavaraukset on näytetty tähän asti tarjouksen tiedoista. Kopioidaan ne nyt kustannusarvoitu_tyo tauluun
+        ;; Hae ensin tarjouksen tiedot
+        tarjous (tarjous-kyselyt/hae-tarjous db urakka-id)
+        rahavaraukset (filter #(= "tavoitehintaiset-rahavaraukset" (:osio %)) (:tarjous tarjous))
+
+        _ (mapv (fn [rahavaraus]
+                  (let [rahavaraus-id (:rahavaraus-id rahavaraus)
+                        vuosittainen-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot rahavaraus))))
+
+                        ;; Jokaisella kustannusarvoitu_tyo -rivillä pitää olla toimenpideinstanssi.
+                        ;; Rahavaraukset eivät kuulu millekään tällä hetkellä tiedetylle toimenpideinstanssille.
+                        ;; Mutta yksinkertaisuuden vuoksi toimenpideinstanssin pakollisuutta ei lähdetty muuttamaan, vaan laitetaan
+                        ;; Rahavaraukselle vain jokin toimenpideinstanssi. Sen olemassaolo filtteröidään muualla pois.
+                        ensimmainen-toimenpideinstanssi-id (:id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id})))
+
+                        ;; Päivitetään rahavarauksen summa ja indeksikorjattu summa kustannusarvioitu_työ tauluun
+                        kt-rahavaraus-kuukaudet (ka-q/hae-rahavarauskustannus db {:rahavaraus_id rahavaraus-id
+                                                                                  :vuosi hoitovuoden-alkuvuosi
+                                                                                  :sopimus_id sopimus-id})
+
+                        dbrahavaraus (if (not (empty? kt-rahavaraus-kuukaudet))
+                                       (let [kk (atom 0)] ;; Lokaalisti voi olla vaikka vain kolmena kuukautena summa, vaikka pitäisi olla 12
+                                         (doseq [r kt-rahavaraus-kuukaudet
+                                                 :let [_ (swap! kk inc)
+                                                       kuukausimaara (count kt-rahavaraus-kuukaudet)
+                                                       kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (/ vuosittainen-summa kuukausimaara))) ;; Tallenna nil kantaan, jos nil arvo on syötetty
+                                                       viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* (dec kuukausimaara) kuukausisumma))))]]
+                                           ;; Rahavarauksesta ei voi muuttua, kuin summa
+                                           (ka-q/paivita-rahavaraus<! db {:summa (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-kuukausisumma kuukausisumma)
+                                                                          :muokattu (pvm/nyt)
+                                                                          :muokkaaja (:id kayttaja)
+                                                                          :id (:id r)})))
+                                       (doseq [kk (range 1 13)
+                                               :let [kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (/ vuosittainen-summa 12)))
+                                                     viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* 11 kuukausisumma))))]]
+                                         (ka-q/lisaa-rahavaraus<! db {:vuosi (if (< kk 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
+                                                                      :kuukausi kk
+                                                                      :sopimus_id sopimus-id
+                                                                      :toimenpideinstanssi_id ensimmainen-toimenpideinstanssi-id
+                                                                      :tehtava_id nil
+                                                                      :rahavaraus_id rahavaraus-id
+                                                                      :summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma)
+                                                                      :luoja (:id kayttaja)})))]
+                    dbrahavaraus))
+            rahavaraukset)
+
+        _ (vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille! db
+            {:urakka-id urakka-id
+             :alkupvm hoitokauden-alkupvm
+             :loppupvm hoitokauden-loppupvm
+             :vahvista? vahvista?
+             :vahvistaja (:id kayttaja)
+             :vahvistus-pvm vahvistus-pvm})
+        _ (vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille! db
+            {:urakka-id urakka-id
+             :alkupvm hoitokauden-alkupvm
+             :loppupvm hoitokauden-loppupvm
+             :vahvista? vahvista?
+             :vahvistaja (:id kayttaja)
+             :vahvistus-pvm vahvistus-pvm})
+        _ (vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille! db
+            {:urakka-id urakka-id
+             :vuosi hoitovuoden-alkuvuosi
+             :hoitovuosi-nro hoitokausinumero
+             :vahvista? vahvista?
+             :vahvistaja (:id kayttaja)
+             :vahvistus-pvm vahvistus-pvm})]))
