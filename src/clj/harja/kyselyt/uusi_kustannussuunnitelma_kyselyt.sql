@@ -5,7 +5,7 @@ FROM toimenpideinstanssi tpi
 WHERE tpi.urakka = :urakkaid;
 
 -- name: hae-kiintea-kustannus-kuukausittain
-SELECT id, vuosi, kuukausi, summa, kiinteahintainen_tyo.summa_indeksikorjattu, toimenpideinstanssi,
+SELECT id, vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi,
        tehtavaryhma, tehtava, sopimus
 FROM kiinteahintainen_tyo
 WHERE sopimus = :sopimus-id
@@ -140,6 +140,17 @@ INSERT INTO kustannusarvioitu_tyo (kuukausi, vuosi, summa, summa_indeksikorjattu
 VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
         :toimenpideinstanssi-id, :tehtava-id, :sopimus-id,
         'laskutettava-tyo', 'hoidonjohtopalkkio', :luoja, NOW());
+
+-- name: hae-rahavaraus-vuodelta
+SELECT r.nimi,
+       SUM(summa) as summa,
+       SUM(summa_indeksikorjattu) as "summa-indeksikorjattu"
+FROM kustannusarvioitu_tyo kt
+     join rahavaraus r on kt.rahavaraus_id = r.id
+WHERE sopimus = :sopimus-id
+  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+   OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+GROUP BY r.id;
 
 --name: vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
 UPDATE kiinteahintainen_tyo kt
