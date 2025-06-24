@@ -65,6 +65,11 @@
 (defrecord TallennaHoidonjohtopalkkiotEpaonnistui [vastaus])
 (defrecord JaaHoidonjohtopalkkiotTasan [summa hoidonjohtopalkkio-elementti])
 
+;; Vahvistukset
+(defrecord VahvistaTaiPeruutaTavoiteJaKattohinta [vahvista?])
+(defrecord VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui [vastaus])
+(defrecord VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui [vastaus])
+
 
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
 
@@ -331,7 +336,7 @@
 
   TallennaHoidonjohtopalkkiotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Kilpailutettavat hankinat tallennettiin.")
+    (viesti/nayta-toast! "Hoidonjohtopalkkiot tallennettiin.")
     (-> app
       (assoc-in [:kustannussuunnitelma :erillishankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
@@ -376,4 +381,37 @@
                 (assoc :hoitokauden-alkuvuosi vuosi))]
       ;; Haetaan kaikki välikatselmuksessa tarvittavat tiedot
       (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) vuosi)
-      (assoc app :haku-kaynnissa? true))))
+      (assoc app :haku-kaynnissa? true)))
+
+  VahvistaTaiPeruutaTavoiteJaKattohinta
+  (process-event
+    [{vahvista? :vahvista?} app]
+    (js/console.log "Vahvista tai peruuta tavoite ja kattohinta" vahvista?)
+    (tuck-apurit/post! :vahvista-tavoite-ja-kattohinta
+      {:urakka-id (-> @tila/yleiset :urakka :id)
+       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
+       :vahvista? vahvista?}
+      {:onnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
+       :epaonnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
+       :paasta-virhe-lapi? true})
+    (-> app
+      (assoc :haku-kaynnissa? true)
+      (assoc :tallennus-kesken? true)))
+
+  VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin.")
+    (-> app
+      (assoc :tallennus-kesken? false)
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+
+  VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast!
+      "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
+      :varoitus
+      viesti/viestin-nayttoaika-keskipitka)
+    (-> app
+      (assoc :tallennus-kesken? false))))
