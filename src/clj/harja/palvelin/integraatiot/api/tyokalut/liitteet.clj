@@ -1,5 +1,8 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.liitteet
-  (:require [harja.palvelin.komponentit.liitteet :as liitteet]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
+            [taoensso.timbre :as log]
+            [harja.palvelin.komponentit.liitteet :as liitteet]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [harja.kyselyt.tarkastukset :as tarkastukset]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -15,19 +18,29 @@
   (.encode (Base64/getEncoder) data))
 
 (defn palauta-vain-uniikit-liitteet [db urakka-id liitteet]
-  (keep (fn [l]
-          (let [liite (:liite l)
-                nimi (:nimi liite)
-                data (dekoodaa-base64 (:sisalto liite))
-                koko (alength data)
-                db-liite (liitteet-q/hae-liite-meta-tiedoilla db
-                           {:urakka-id urakka-id
-                            :nimi nimi
-                            :koko koko})]
-            (if (or (nil? db-liite) (empty? db-liite))
-              l
-              nil)))
-    liitteet))
+  (let [uniikit (keep (fn [l]
+                        (let [liite (:liite l)
+                              nimi (:nimi liite)
+                              data (dekoodaa-base64 (:sisalto liite))
+                              koko (alength data)
+                              db-liite (liitteet-q/hae-liite-meta-tiedoilla db
+                                         {:urakka-id urakka-id
+                                          :nimi nimi
+                                          :koko koko})]
+                          (if (or (nil? db-liite) (empty? db-liite))
+                            l
+                            nil)))
+                  liitteet)]
+    ;; Lokitetaan ei-uniikit liitteet, jotka jätetään käsittelemättä
+    ;; Tämä voi auttaa virheiden jäljittämisessä, jos samoja liitteitä yritetään lähettää useaan kertaan.
+    (when (< (count uniikit) (count liitteet))
+
+      (let [hylatyt (set/difference
+                      (set (map #(-> % :liite :nimi) liitteet))
+                      (set (map #(-> % :liite :nimi) uniikit)))]
+        (log/warn "Jätettiin käsittelemättä ei-uniikit liitteet:" (str/join ", " hylatyt))))
+
+    uniikit))
 
 (defn- luo-liitteet [db liitteiden-hallinta urakan-id kirjaaja liitteet liite-luotu-fn]
   (doseq [liitteen-data liitteet]
