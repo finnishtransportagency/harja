@@ -183,6 +183,30 @@ WHERE jh."urakka-id" = :urakka-id
   AND (CONCAT(jh.vuosi, '-', jh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND jh.versio = 0;
 
+--name: vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille!
+UPDATE urakka_tavoite ut
+SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
+    vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END,
+    tavoitehinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.tavoitehinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE NULL END,
+    kattohinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.kattohinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE NULL END
+WHERE ut.urakka = :urakka-id
+  -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
+  AND ut.hoitokausi = :hoitovuosi-nro
+  AND ut.versio = 0;
+
+-- name: paivita-tavoite-ja-kattohinta<!
+UPDATE urakka_tavoite
+SET tavoitehinta = :tavoitehinta,
+    kattohinta = :kattohinta,
+    muokattu = NOW(),
+    muokkaaja = :muokkaaja
+WHERE urakka = :urakka-id
+  AND hoitokausi = :hoitokausinumero;
+
+-- name: lisaa-tavoite-ja-kattohinta<!
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, luotu, luoja)
+VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :kattohinta, NOW(), :luoja);
+
 -- name: indeksikorjaukset-vahvistettu?
 SELECT COUNT(*) > 0 AS "kiinteat-vahvistettu?"
 FROM kiinteahintainen_tyo kt
@@ -200,3 +224,9 @@ WHERE tpi.urakka = :urakka-id
   AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND kt.indeksikorjaus_vahvistettu IS NOT NULL
   AND kt.versio = 0;
+
+-- name: hae-urakan-hoitovuoden-tavoitetiedot
+SELECT id, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, tarjous_tavoitehinta
+    FROM urakka_tavoite
+WHERE urakka = :urakka-id
+  AND hoitokausi = :hoitokausinumero;

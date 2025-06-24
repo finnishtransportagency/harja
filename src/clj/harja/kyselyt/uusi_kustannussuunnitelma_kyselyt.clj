@@ -1,5 +1,6 @@
 (ns harja.kyselyt.uusi-kustannussuunnitelma-kyselyt
-  (:require [jeesql.core :refer [defqueries]]
+  (:require [harja.pvm :as pvm]
+            [jeesql.core :refer [defqueries]]
             [harja.tyokalut.yleiset :as yleiset]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
@@ -19,7 +20,186 @@
   paivita-kuukauden-hoidonjohtopalkkio<! tallenna-kuukauden-hoidonjohtopalkkio<!
   vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
   vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille!
-  vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille! indeksikorjaukset-vahvistettu?)
+  vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille!
+  vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille!
+  indeksikorjaukset-vahvistettu? paivita-tavoite-ja-kattohinta<!
+  lisaa-tavoite-ja-kattohinta<! hae-urakan-hoitovuoden-tavoitetiedot)
+
+(defn hae-kiinteat-kustannukset [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
+  (let [;; Haetaan urakan toimenpiteet
+        toimenpiteet (hae-urakan-toimenpiteet db {:urakkaid urakka-id})
+        ;; Kiinteähintaiset kustannukset
+        kiinteat (reduce (fn [acc {:keys [nimi toimenpideinstanssi-id] :as toimenpide}]
+                           (let [kiinteat (hae-kiintea-kustannus-kuukausittain
+                                            db {:sopimus-id sopimus-id
+                                                :vuosi hoitovuoden-alkuvuosi
+                                                :toimenpideinstanssi-id toimenpideinstanssi-id})
+                                 kiinteat-alkukausi (filter #(>= (:kuukausi %) 10) kiinteat)
+                                 kiinteat-loppukausi (filter #(<= (:kuukausi %) 9) kiinteat)
+                                 alkukausi (if (seq kiinteat-alkukausi) (apply + (map :summa kiinteat-alkukausi)) 0)
+                                 alkukausi-indeksikorjattu (if (seq kiinteat-alkukausi)
+                                                             (apply + (map (fn [rivi]
+                                                                             (if (:summa_indeksikorjattu rivi)
+                                                                               (:summa_indeksikorjattu rivi)
+                                                                               0))
+                                                                        kiinteat-alkukausi))
+                                                             0)
+                                 loppukausi (if (seq kiinteat-loppukausi) (apply + (map :summa kiinteat-loppukausi)) 0)
+                                 loppukausi-indeksikorjattu (if (seq kiinteat-loppukausi)
+                                                              (apply + (map (fn [rivi]
+                                                                              (if (:summa_indeksikorjattu rivi)
+                                                                                (:summa_indeksikorjattu rivi)
+                                                                                0))
+                                                                         kiinteat-loppukausi))
+                                                              0)]
+                             (conj acc {:nimi nimi
+                                        :toimenpideinstanssi-id toimenpideinstanssi-id
+                                        :alkukausi alkukausi
+                                        :alkukausi-indeksikorjattu alkukausi-indeksikorjattu
+                                        :loppukausi loppukausi
+                                        :loppukausi-indeksikorjattu loppukausi-indeksikorjattu
+                                        :yhteensa (+ alkukausi loppukausi)
+                                        :yhteensa-indeksikorjattu (+ alkukausi-indeksikorjattu loppukausi-indeksikorjattu)
+                                        :pysyvat-muutokset "Ei muutoksia"})))
+                   []
+                   toimenpiteet)
+        ;; Yhteenvetorivi
+        yhteenveto {:nimi "Yhteensä"
+                    :alkukausi (apply + (map :alkukausi kiinteat))
+                    :alkukausi-indeksikorjattu (apply + (map :alkukausi-indeksikorjattu kiinteat))
+                    :loppukausi (apply + (map :loppukausi kiinteat))
+                    :loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu kiinteat))
+                    :yhteensa (+ (apply + (map :alkukausi kiinteat)) (apply + (map :loppukausi kiinteat)))
+                    :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu kiinteat)) (apply + (map :loppukausi-indeksikorjattu kiinteat)))
+                    :pysyvat-muutokset "Ei muutoksia"}
+        kiinteat (conj kiinteat yhteenveto)]
+    kiinteat))
+
+(defn hae-rahavaraukset
+  "Haetaan rahavaraukset tietokannsta kustannussuunnitelmaan.
+  Saadaan [{:nimi <rahavarausnimi> :summa <summa> :summa-indeksikorjattu nil} ...]"
+  [db sopimus-id hoitovuoden-alkuvuosi]
+  (let [rahavaraukset (hae-rahavaraus-vuodelta db {:sopimus-id sopimus-id :vuosi hoitovuoden-alkuvuosi})]
+    rahavaraukset))
+
+(defn hae-hoidonjohtopalkkiot [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
+  (let [;; Hae hoidonjohto toimenpideinstannssi
+        ;; Hoindonjohto toimenpide.koodi = 23151
+        hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                         {:urakka urakka-id
+                                          :koodi "23151"})))
+        tehtava (first (tehtava-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"}))
+        hoidonjohtopalkkiot (when hoidonjohto-tpi-id
+                              (hae-hoidonjohtopalkkiot-kuukausittain db
+                                {:sopimus-id sopimus-id
+                                 :vuosi hoitovuoden-alkuvuosi
+                                 :tehtava-id (:id tehtava)
+                                 :toimenpideinstanssi-id hoidonjohto-tpi-id}))
+        hoidonjohtopalkkiot (if (seq hoidonjohtopalkkiot)
+                              ;; Jos on tallennettu jo hoidonjohtopalkkioita, niin lisätään niihin kalenterikuukausi
+                              (map (fn [rivi]
+                                     (merge rivi
+                                       {:kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
+                                                             (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)}))
+                                hoidonjohtopalkkiot)
+                              ;; Jos ei ole tallennettu hoidonjohtopalkkioita, niin luodaan nolla arvot
+                              (mapv (fn [kk]
+                                      (let [vuosi (if (>= kk 10) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi))]
+                                        {:id nil
+                                         :sopimus sopimus-id
+                                         :tehtava (:id tehtava)
+                                         :toimenpideinstanssi hoidonjohto-tpi-id
+                                         :kuukausi kk
+                                         :vuosi vuosi
+                                         :summa 0
+                                         :summa_indeksikorjattu nil
+                                         :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi (pvm/->pvm (str "01." kk "." vuosi)) true)}))
+                                [10 11 12 1 2 3 4 5 6 7 8 9]))]
+    (sort-by (juxt :vuosi :kuukausi) hoidonjohtopalkkiot)))
+
+(defn hae-erillishankinnat [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
+  (let [;; Hae hoidonjohto toimenpideinstannssi
+        ;; Hoindonjohto toimenpide.koodi = 23151
+        hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                         {:urakka urakka-id
+                                          :koodi "23151"})))
+        tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
+        erillishankinnat (when hoidonjohto-tpi-id
+                           (hae-erillishankinta-kuukausittain db
+                             {:sopimus-id sopimus-id
+                              :vuosi hoitovuoden-alkuvuosi
+                              :tehtavaryhma-id (:id tehtavaryhma)
+                              :toimenpideinstanssi-id hoidonjohto-tpi-id}))
+        erillishankinnat (if (seq erillishankinnat)
+                           ;; Jos on tallennettu jo erillishankintoja, niin lisätään niihin kalenterikuukausi
+                           (map (fn [rivi]
+                                  (merge rivi
+                                    {:kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
+                                                          (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)}))
+                             erillishankinnat)
+                           ;; Jos ei ole tallennettu erillishankintoja, niin luodaan nolla arvot
+                           (mapv (fn [kk]
+                                   (let [vuosi (if (>= kk 10) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi))]
+                                     {:id nil
+                                      :sopimus sopimus-id
+                                      :tehtavaryhma (:id tehtavaryhma)
+                                      :toimenpideinstanssi hoidonjohto-tpi-id
+                                      :kuukausi kk
+                                      :vuosi vuosi
+                                      :summa 0
+                                      :summa_indeksikorjattu nil
+                                      :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi (pvm/->pvm (str "01." kk "." vuosi)) true)}))
+                             [10 11 12 1 2 3 4 5 6 7 8 9]))]
+    (sort-by (juxt :vuosi :kuukausi) erillishankinnat)))
+
+(defn paivita-tavoite-ja-kattohinta
+  "Jokaisen kustannussuunnitelman muutoksen jälkeen tavoite- ja kattohinta pitää laskea uusiksi."
+  [db kayttaja urakka-id hoitovuoden-alkuvuosi]
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+        hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+        urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
+
+        ;; Kaikki kustannussuunnitelman summat vaikuttaa tavoitehintaan
+        ;; Pysyvät muutokset lisätään mukaan joko vähentämään tai lisäämään tavoitehintaa
+        kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+        hankinnat-yht (:yhteensa (last kilpailutettavat-hankinnat))
+
+        rahavaraukset (hae-rahavaraukset db sopimus-id hoitovuoden-alkuvuosi)
+        rahavaraukset-yht (apply + (map (fn [rivi] (:summa rivi 0)) rahavaraukset))
+
+        erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+        erillishankinnat-yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
+
+        hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+        hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (:summa rivi 0)) hoidonjohtopalkkiot))
+        ;; TODO: kun muutokset on valmiita, niin hae tiedot
+        pysyvat-muutokset-maara 0
+
+        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+        hoitovuoden-alun-tavoitehinta (+ hankinnat-yht rahavaraukset-yht erillishankinnat-yht hoidonjohtopalkkiot-yht)
+
+        hoitovuoden-alun-kattohinta (or (when kattohintakerroin
+                                          (* kattohintakerroin hoitovuoden-alun-tavoitehinta)) 0)
+
+        tavoitetiedot (first (hae-urakan-hoitovuoden-tavoitetiedot db {:hoitokausinumero hoitokausinumero
+                                                                       :urakka-id urakka-id}))
+
+        ;; Päivitä tai lisää tavoite ja kattohinta tietokantaan
+        tiedot (if (:id tavoitetiedot)
+                 (paivita-tavoite-ja-kattohinta<! db
+                   {:urakka-id urakka-id
+                    :hoitokausinumero hoitokausinumero
+                    :tavoitehinta hoitovuoden-alun-tavoitehinta
+                    :kattohinta hoitovuoden-alun-kattohinta
+                    :muokkaaja (:id kayttaja)})
+                 (lisaa-tavoite-ja-kattohinta<! db
+                   {:urakka-id urakka-id
+                    :hoitokausinumero hoitokausinumero
+                    :tavoitehinta hoitovuoden-alun-tavoitehinta
+                    :kattohinta hoitovuoden-alun-kattohinta
+                    :luoja (:id kayttaja)}))]
+    tiedot))
 
 (defn tallenna-hankintojen-kuukausittainen-summa [db kk-jakso alkujakso? nimi viimeinen-summa summa hoitovuoden-alkuvuosi sopimus-id
                                                   toimenpideinstanssi-id kayttaja-id]
