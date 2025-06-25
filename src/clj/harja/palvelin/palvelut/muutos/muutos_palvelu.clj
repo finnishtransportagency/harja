@@ -125,7 +125,7 @@
 
                   ;; tähän puuttuvien muutostyyppien lomakehaut...
                   nil)]
-    (when (= (count vastaus)  1)
+    (when (> (count vastaus)  1)
       (do
         (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
         (throw (Error. "Muutoksia palautui enemmän kuin yksi"))))
