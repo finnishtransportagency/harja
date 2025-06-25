@@ -82,7 +82,7 @@
             [:div [:strong (fmt/euro-opt false (:tavoitehinta_ennen paatos))]]]
 
            [:div.flex-row.lista-rivi-korkeampi
-            [:div "Pistelukujen muutos"]
+            [:div "Indeksin pistelukujen muutos"]
             [:div [:strong (fmt/desimaaliluku (:pistelukujen_muutos_prosentteina paatos) 1 false) "%"]]]
 
            [:div.flex-row.summa-rivi
