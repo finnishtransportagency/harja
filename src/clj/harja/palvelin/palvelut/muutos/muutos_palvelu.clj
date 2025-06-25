@@ -259,9 +259,8 @@
 
         :tallenna-rahavarausmuutosten-syyt
         (fn [user tiedot]
-          (tallenna-rahavarausmuutosten-syyt (:db this) user tiedot))
-
-        this)))
+          (tallenna-rahavarausmuutosten-syyt (:db this) user tiedot))))
+    this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
