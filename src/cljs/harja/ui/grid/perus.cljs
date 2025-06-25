@@ -681,7 +681,7 @@
                                        salli-valiotsikoiden-piilotus?
                                        piilotetut-valiotsikot tiedot gridin-tietoja
                                        esta-poistaminen-tooltip piilota-toiminnot?
-                                       voi-muokata-rivia? skeema vetolaatikot-auki esta-tiivis-grid? tallenna-id]}]
+                                       voi-muokata-rivia? skeema vetolaatikot-auki esta-tiivis-grid? rivin-luokka tallenna-id]}]
   (let [muokatut @muokatut
         jarjestys @jarjestys
         tulevat-rivit (fn [aloitus-idx]
@@ -713,8 +713,8 @@
                                                   :vetolaatikot vetolaatikot
                                                   :muokkaa! muokkaa!
                                                   :luokka (str (if (even? (+ i 1))
-                                                                 "parillinen"
-                                                                 "pariton"))
+                                                                 (str "parillinen " (when rivin-luokka (rivin-luokka rivi)))
+                                                                 (str "pariton " (when rivin-luokka (rivin-luokka rivi)))))
                                                   :id id
                                                   :rivi-index i
                                                   :rivin-virheet rivin-virheet
@@ -1289,7 +1289,7 @@
               tallenna-id (str "tallenna-" (gensym))]
           [:div.panel.panel-default.livi-grid (merge
                                                 {:id (:id opts)
-                                                 :class luokat}
+                                                 :class (if (seq luokat) (clojure.string/join luokat) luokat)}
                                                 (when data-cy
                                                   {:data-cy data-cy}))
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])
@@ -1357,6 +1357,7 @@
                                            :avattavat-rivit-auki avattavat-rivit-auki
                                            :tallennus-kaynnissa? tallennus-kaynnissa
                                            :esta-tiivis-grid? esta-tiivis-grid?
+                                           :rivin-luokka rivin-luokka
                                            :tallenna-id tallenna-id})
                   (nayttokayttoliittyma {:renderoi-max-rivia renderoi-max-rivia
                                          :tiedot tiedot :colspan colspan :tyhja tyhja

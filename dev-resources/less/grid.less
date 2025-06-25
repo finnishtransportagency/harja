@@ -20,6 +20,7 @@
 }
 
 @livitaulukon-input-korkeus: @input-korkeus;
+@taulukon-high-vertical-padding: 16px;
 @taulukon-vertical-padding: 8px;
 @taulukon-vertical-padding-muokattava-kentta: 4px;
 @livi-taulukon-padding: @taulukon-vertical-padding 16px;
@@ -234,6 +235,9 @@
 
   tr, td, th {
     padding: @livi-taulukon-padding;
+    &.korkea {
+      height: 3rem;
+    }
     &.tiivis {
       padding: @livi-taulukon-padding-tiivis;
     } 
@@ -427,6 +431,9 @@
         }
       }
     }
+    &.korkea {
+      height: 3rem;
+    }
     td {
       background-color: @harmaa15;
       &.ei-muokattava {
@@ -459,6 +466,9 @@
       }
       &.muokattava.tasaa-oikealle > span.grid-kentta-wrapper > input {
         padding: 0;
+      }
+      &.korkea {
+        height: 3rem;
       }
       .alasveto-gridin-kentta {
         &.tasaa-oikealle .nappi-alasveto {

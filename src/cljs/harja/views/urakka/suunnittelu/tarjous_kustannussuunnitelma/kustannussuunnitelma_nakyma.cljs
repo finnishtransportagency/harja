@@ -83,11 +83,11 @@
                                                  {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}])
 
         yhteenveto-rivit [[^{:luokka "kustannukset-yhteenveto"}
-                           {:teksti "Yhteensä" :luokka "yhteensa"}
-                           {:teksti "Ei muutoksia" :luokka "yhteensa-ei-korostusta"}
-                           {:teksti (fmt/euro-opt false yht-alkukausi) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                           {:teksti (fmt/euro-opt false yht-loppukausi) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                           {:teksti (fmt/euro-opt false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
+                           {:teksti "Yhteensä" :luokka "yhteensa korkea"}
+                           {:teksti "Ei muutoksia" :luokka "yhteensa-ei-korostusta korkea"}
+                           {:teksti (fmt/euro-opt false yht-alkukausi) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                           {:teksti (fmt/euro-opt false yht-loppukausi) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                           {:teksti (fmt/euro-opt false yht) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                           kirjaamatta-rivi]
 
         kilpailutettavat-hankinnat (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])
@@ -123,15 +123,21 @@
                    ;; Lisätään 2 riviä gridin päätteeksi
                    :rivi-jalkeen-fn (fn [rivit]
                                       ^{:luokka "yhteenveto"}
-                                      yhteenveto-rivit)}
-        [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "30%" :muokattava? (constantly false)}
+                                      yhteenveto-rivit)
+                   :rivin-luokka (fn [_] "korkea")}
+        [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "30%" :muokattava? (constantly false)
+          :otsikkorivi-luokka "korkea"}
          {:otsikko "Pysyvät muutokset (€)" :nimi :pysyvat-muutokset :tyyppi :string
           :leveys "20%" :muokattava? (constantly false)}
          {:otsikko (str "Loka-joulukuu " (pvm/vuosi (first valittu-hoitokausi)) " (€)") :nimi :alkukausi :tyyppi :euro
-          :leveys "20%" :validoi [[:ei-tyhja "Anna positiivinen summa."]] :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea}
-         {:otsikko (str "Tammi-syyskuu " (pvm/vuosi (second valittu-hoitokausi)) " (€)") :nimi :loppukausi :tyyppi :euro
-          :leveys "20%" :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 9999999 2)) :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea}
-         {:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :string :leveys "20%" :muokattava? (constantly false) :tasaa :oikea}]
+          :leveys "20%" :validoi [[:ei-tyhja "Anna positiivinen summa."]]
+          :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea :otsikkorivi-luokka "korkea"}
+         {:otsikko (str "Tammi-syyskuu " (pvm/vuosi (second valittu-hoitokausi)) " (€)")
+          :nimi :loppukausi :tyyppi :euro
+          :leveys "20%" :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 9999999 2))
+          :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea :otsikkorivi-luokka "korkea"}
+         {:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :string :leveys "20%" :muokattava? (constantly false)
+          :tasaa :oikea :otsikkorivi-luokka "korkea"}]
         taulukon-tiedot]]]
 
      (when-not vahvistettu?
@@ -162,9 +168,9 @@
         yht (apply + (map (fn [rivi] (:summa rivi 0)) rahavaraukset))
         yht-indeksikorjattu (apply + (map (fn [rivi] (:summa-indeksikorjattu rivi 0)) rahavaraukset))
         yhteenveto-rivi [[^{:luokka "kustannukset-yhteenveto"}
-                          {:teksti "Yhteensä" :luokka "yhteensa"}
-                          {:teksti (fmt/euro-opt false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                          {:teksti (fmt/euro-opt false yht-indeksikorjattu) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]]]
+                          {:teksti "Yhteensä" :luokka "yhteensa korkea"}
+                          {:teksti (fmt/euro-opt false yht) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                          {:teksti (fmt/euro-opt false yht-indeksikorjattu) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]]]
 
     [:div.row.kustannussuunnitelma-osio
      [otsikkotiedot e! app "Rahavaraukset" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
@@ -185,10 +191,14 @@
                    ;; Lisätään yhteenveto rivi gridin päätteeksi
                    :rivi-jalkeen-fn (fn [rivit]
                                       ^{:luokka "yhteenveto"}
-                                      yhteenveto-rivi)}
-        [{:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys "70%" :muokattava? (constantly false)}
-         {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "15%" :tyyppi :euro :tasaa :oikea :fmt #(when % (fmt/euro-opt false %))}
-         {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "15%" :tyyppi :euro :tasaa :oikea :fmt #(when % (fmt/euro-opt false %))}]
+                                      yhteenveto-rivi)
+                   :rivin-luokka (fn [_] "korkea")}
+        [{:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys "60%"
+          :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+         {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
+          :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea"}
+         {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+          :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea"}]
         rahavaraukset]]]]))
 
 (defn erillishankinnat [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
@@ -238,10 +248,14 @@
                    ;; Lisätään yhteenveto rivi gridin päätteeksi
                    :rivi-jalkeen-fn (fn [rivit]
                                       ^{:luokka "yhteenveto"}
-                                      yhteenveto-rivi)}
-        [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "70%" :muokattava? (constantly false)}
-         {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "15%" :tyyppi :euro :tasaa :oikea :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?)}
-         {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "15%" :tyyppi :euro :tasaa :oikea :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false)}]
+                                      yhteenveto-rivi)
+                   :rivin-luokka (fn [_] "korkea")}
+        [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "60%"
+          :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+         {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
+          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
+         {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
         erillishankinnat]]]
 
      (when-not vahvistettu?
@@ -310,10 +324,14 @@
                    ;; Lisätään yhteenveto rivi gridin päätteeksi
                    :rivi-jalkeen-fn (fn [rivit]
                                       ^{:luokka "yhteenveto"}
-                                      yhteenveto-rivi)}
-        [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "70%" :muokattava? (constantly false)}
-         {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "15%" :tyyppi :euro :tasaa :oikea :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?)}
-         {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "15%" :tyyppi :euro :tasaa :oikea :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false)}]
+                                      yhteenveto-rivi)
+                   :rivin-luokka (fn [_] "korkea")}
+        [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "60%"
+          :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+         {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
+          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
+         {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
         hoidonjohtopalkkiot]]]
 
      (when-not vahvistettu?
