@@ -1,3 +1,5 @@
+ALTER TABLE mhu_muutos ALTER COLUMN muokattu DROP DEFAULT;
+
 CREATE TABLE mhu_muutos_kulu
 (
     versio INTEGER DEFAULT 1, -- jokainen tallennus tallentaa täyden version muutoksesta, ml. alitaulut joissa on tietoa
@@ -21,3 +23,6 @@ CREATE TRIGGER mhu_muutos_kulu_historia_trigger
     BEFORE UPDATE OR DELETE ON mhu_muutos_kulu
     FOR EACH ROW
 EXECUTE FUNCTION paivita_mhu_muutos_kulu_historia();
+
+-- luodaan johto- ja hallintokorvauksen muutokselle oma kulun kohdistustyyppi, jotta selkeä erotella kustannusten seurannassa
+ALTER TYPE kohdistustyyppi ADD VALUE 'jjh-muutos';

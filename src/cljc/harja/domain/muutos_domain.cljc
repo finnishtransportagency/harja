@@ -22,10 +22,12 @@
 
 (defn tyyppi-fmt
   "Palauttaa muutostyypin tietokannasta tulevan enumin nimen käyttöliittymää varten selkokielisenä. Esim. 'pysyva' -> 'Pysyvä'."
-   [tyyppi]
+   [tyyppi urakan-sopimustyyppi]
   ({"pysyva" "Pysyvä muutos"
     "rahavaraus" "Rahavaraus"
-    "johto-ja-hallintokorvaus" "Johto- ja hallintokorvauksen muutos"
+    "johto-ja-hallintokorvaus" (if (= :mhu+ urakan-sopimustyyppi)
+                                 "Kumppanuusmaksun muutos"
+                                 "Johto- ja hallintokorvauksen muutos")
     "erillisrahoitettu" "Erillisrahoitettu"
     "toteutuneet-maarat" "Toteutuneet määrät"
     "maarapoikkeama" "Määräpoikkeama"} tyyppi))

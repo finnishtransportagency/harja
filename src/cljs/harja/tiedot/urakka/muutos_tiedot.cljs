@@ -26,9 +26,9 @@
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
 (defrecord MuokkaaLaskettujenMuutoksienSyita [])
 (defrecord MuokkaaRahavaraustenMuutoksienSyita [])
-(defrecord HaeJohtoJaHallintokorvausmuutos [muutos])
-(defrecord HaeJohtoJaHallintokorvausmuutosOnnistui [vastaus])
-(defrecord HaeJohtoJaHallintokorvausmuutosEpaonnistui [vastaus])
+(defrecord HaeMuutoksenTiedot [muutos])
+(defrecord HaeMuutoksenTiedotOnnistui [vastaus muutos valittu-hoitokausi])
+(defrecord HaeMuutoksenTiedotEpaonnistui [vastaus])
 
 (defrecord TallennaLaskettujenMuutostenSyyt [rivit])
 (defrecord TallennaRahavarausmuutostenSyyt [rivit])
@@ -70,11 +70,20 @@
 (def johto-ja-hallintokorvausmuutokset-atom (atom nil))
 
 (defn johto-ja-hallintokorvausmuutoksen-rivit
-  [valittu-hoitokausi]
-  (let [avaimet (pvm/aikavalin-kuukaudet-pvm-vektorina valittu-hoitokausi)]
-    (apply array-map
-      (interleave avaimet
-        (map #(hash-map :pvm % :tavoitehinnan-muutos 0) avaimet)))))
+  "Luo johto-ja-hallintokorvausmuutoksen rivit eli kulut. Yhdistää tyhjät rivit ja kannasta tulevat kulut."
+  [valittu-hoitokausi kulut]
+  (let [avaimet (pvm/aikavalin-kuukaudet-pvm-vektorina valittu-hoitokausi)
+        ;; backend ja frontend pvm:t vähän erimuotoisia. Koska niitä käytetään avaimina, normalisoidaan ensin
+        normalisoi #(when (pvm/pvm? %)
+                      (pvm/luo-pvm (pvm/vuosi %) (dec (pvm/kuukausi %)) (pvm/paiva %)))
+        kulut-normalisoitu (map #(update % :pvm normalisoi) kulut)
+        kulut-map (group-by :pvm kulut-normalisoitu)
+        normalisoidut-avaimet (map normalisoi avaimet)
+        parit (mapcat (fn [pvm]
+                        [pvm (or (first (get kulut-map pvm))
+                               {:pvm pvm :tavoitehinnan-muutos 0})])
+                normalisoidut-avaimet)]
+    (apply array-map parit)))
 
 (defn hae-urakan-muutostiedot
   "Hakee urakan muutostiedot, eli miten tavoitehinta ja tehtävä- ja määräluettelo ovat muuttuneet alkuperäisiin tietoihin nähden."
@@ -92,6 +101,14 @@
   (when valittu-hoitokausi
     (< (pvm/vuosi (first valittu-hoitokausi))
       muutoksien-kayttoonoton-hoitokauden-alkuvuosi)))
+
+(defn alusta-tyyppikohtaisia-arvoja [tyyppi valittu-hoitokausi]
+  (case tyyppi
+    "johto-ja-hallintokorvaus"
+    (reset! johto-ja-hallintokorvausmuutokset-atom
+      (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi []))
+
+    :default))
 
 (extend-protocol tuck/Event
   HoitokausiVaihdettu
@@ -115,6 +132,8 @@
   HaeUrakanMuutostiedotOnnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app
+      ;; suljetaan aina lomake kun on saatu uudet muutostiedot
+      :muokattava-muutos nil
       :kirjatut-muutokset (:kirjatut-muutokset vastaus)
       :lasketut-muutokset (:lasketut-muutokset vastaus)
       :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
@@ -127,6 +146,23 @@
     (viesti/nayta-toast! "Muutostietojen hakeminen epäonnistui!" :varoitus)
     app)
 
+  HaeMuutoksenTiedotOnnistui
+  (process-event [{vastaus :vastaus
+                   muutos :muutos
+                   valittu-hoitokausi :valittu-hoitokausi} app]
+    (case (:tyyppi muutos)
+      "johto-ja-hallintokorvaus"
+      (reset! johto-ja-hallintokorvausmuutokset-atom
+        (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus)))
+
+      :default)
+    app)
+
+  HaeMuutoksenTiedotEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Muutoksen tietojen hakeminen epäonnistui!" :varoitus)
+    app)
+
   MuokkaaMuutosta
   (process-event [{rivi :rivi} app]
     (assoc app :muokattava-muutos rivi))
@@ -135,10 +171,12 @@
   (process-event [{muutos :muutos} app]
     (prn "tallenna muutos: " muutos)
     (let [urakka (:urakka @tila/yleiset)
-          johto-ja-hallintokorvausmuutokset (when (= (:tyyppi muutos)
-                                                          "johto-ja-hallintokorvaus")
-                                                    (vals @johto-ja-hallintokorvausmuutokset-atom))
-          muutos (assoc muutos :johto-ja-hallintokorvausmuutokset johto-ja-hallintokorvausmuutokset)]
+          kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+                                              ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
+                                              (filter #(and (some? (:tavoitehinnan-muutos %))
+                                                         (not= 0 (:tavoitehinnan-muutos %)))
+                                                (vals @johto-ja-hallintokorvausmuutokset-atom)))
+          muutos (assoc muutos :kulut kulut)]
       (tuck-apurit/post! :tallenna-muutos
         {:urakka-id (:id urakka)
          :valittu-hoitokausi (:valittu-hoitokausi app)
@@ -187,28 +225,20 @@
          :epaonnistui ->TallennaRahavarausmuutostenSyytEpaonnistui})
       app))
 
-  HaeJohtoJaHallintokorvausmuutos
+  HaeMuutoksenTiedot
   (process-event [{muutos :muutos} app]
-    (let [urakka (:urakka @tila/yleiset)
-          valittu-hoitokausi (:valittu-hoitokausi app)]
-      (reset! johto-ja-hallintokorvausmuutokset-atom
-        (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi))
-      #_(tuck-apurit/post! :hae-johto-ja-hallintokorvausmuutos
-        {:urakka-id (:id urakka)
-         :valittu-hoitokausi valittu-hoitokausi
-         :muutos-id (:id muutos)}
-        {:onnistui ->HaeJohtoJaHallintokorvausmuutosOnnistui
-         :epaonnistui ->HaeJohtoJaHallintokorvausmuutosEpaonnistui})
+    (let [valittu-hoitokausi (:valittu-hoitokausi app)]
+      (if (:id muutos)
+        (tuck-apurit/post! :hae-muutoksen-tiedot
+          {:urakka-id @nav/valittu-urakka-id
+           :muutos {:id (:id muutos)
+                    :versio (:versio muutos)
+                    :tyyppi (:tyyppi muutos)}}
+          {:onnistui ->HaeMuutoksenTiedotOnnistui
+           :onnistui-parametrit [muutos valittu-hoitokausi]
+           :epaonnistui ->HaeMuutoksenTiedotEpaonnistui}))
       app))
 
-  HaeJohtoJaHallintokorvausmuutosOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (assoc-in app [:muokattava-muutos :johto-ja-hallintokorvausmuutos] vastaus))
-
-  HaeJohtoJaHallintokorvausmuutosEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Johto- ja hallintokorvausmuutoksen hakeminen epäonnistui!" :varoitus)
-    app)
 
   LisaaLiite
   (process-event
@@ -268,5 +298,4 @@
   PaivitaLomake
   (process-event [{lomake :lomake} app]
     (prn "PaivitaLomake: " lomake)
-    (let []
-      (assoc app :muokattava-muutos lomake))))
+    (assoc app :muokattava-muutos lomake)))

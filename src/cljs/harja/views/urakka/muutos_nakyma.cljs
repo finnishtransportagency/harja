@@ -47,12 +47,18 @@
       (concat
         [{:otsikko "Tyyppi"
           :nimi :tyyppi
+          ;; sallitaan muokkaus vain uudelle muutokselle
+          :muokattava? (fn [rivi] (nil? (:id rivi)))
+          :aseta (fn [rivi arvo]
+                   (muutos-tiedot/alusta-tyyppikohtaisia-arvoja arvo valittu-hoitokausi)
+                   (assoc rivi :tyyppi arvo))
           :kaariva-luokka "muutostyyppivalinta"
           :tyyppi :valinta
           :vayla-tyyli? true
           :valinnat muutos-domain/+muutostyypit-lomakkeella+
           :valinta-arvo identity
-          :valinta-nayta muutos-domain/tyyppi-fmt
+          :valinta-nayta (fn [arvo]
+                           (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))
           :uusi-rivi? true}
          (when (= "pysyva" (:tyyppi muokattava-muutos))
            {:tyyppi :komponentti
@@ -120,7 +126,7 @@
           ;; taulukon kentät
           [{:otsikko "Kalenterikuukausi" :nimi :pvm :tyyppi :string :leveys 20
             :muokattava? (constantly false)
-            :fmt #(pvm/koko-kuukausi-ja-vuosi % true)}
+            :fmt #(when % (pvm/koko-kuukausi-ja-vuosi % true))}
            {:otsikko (if (= muutostapa :muutos)
                        "Muutos € (+/-)"
                        "Vähennys (€)")
@@ -135,7 +141,7 @@
 (defn muutoslomake [e! {:keys [muokattava-muutos] :as app}]
   (komp/luo
     (komp/sisaan-ulos
-      #(e! (muutos-tiedot/->HaeJohtoJaHallintokorvausmuutos muokattava-muutos))
+      #(e! (muutos-tiedot/->HaeMuutoksenTiedot muokattava-muutos))
       #(e! (muutos-tiedot/->MuokkaaMuutosta nil)))
     (fn [e! {:keys [muokattava-muutos] :as app}]
       [:span.muutoslomake
@@ -365,7 +371,8 @@
 
        ;; taulukon kentät
        [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys 15
-         :fmt muutos-domain/tyyppi-fmt}
+         :fmt (fn [arvo]
+                (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))}
         {:otsikko "Muutoksen syy" :nimi :syy :tyyppi :string :leveys 35}
         {:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :pvm :leveys 15}
         {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero

@@ -1563,7 +1563,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
        (df/unparse (df/formatter-local "yyyy-MM-dd")))))
 
 (defn aikavalin-kuukaudet-pvm-vektorina
-  "Palauttaa vektorin jossa annetun aikavälin [alkupvm loppupvm] kuukaudet muodossa ['15.10.2025' ...]. Päivänumeron voi vaihtaa, oletus 15."
+  "Palauttaa vektorin jossa annetun aikavälin [alkupvm loppupvm] kuukaudet päivämäärinä. Päivänumeron voi vaihtaa, oletus 15."
   ([aikavali]
    (aikavalin-kuukaudet-pvm-vektorina aikavali 15))
   ([aikavali paiva]
