@@ -63,7 +63,7 @@
                           (suunnitelma-q/hae-rahavaraukset db sopimus-id hoitovuoden-alkuvuosi)
                           ;; Jäsennä rahavaraukset tarjouksesta
                           (jasenna-rahavaraukset-tarjouksesta tarjous hoitovuoden-alkuvuosi))
-          rahavaraukset-yht (if (seq rahavaraukset) (apply + (map (fn [rivi] (:summa rivi 0)) rahavaraukset)) 0)
+          rahavaraukset-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0 )) rahavaraukset))
 
           ;; Hae erillishankinnat
           erillishankinnat (suunnitelma-q/hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)

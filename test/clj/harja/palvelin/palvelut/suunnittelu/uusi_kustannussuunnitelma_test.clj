@@ -1,13 +1,16 @@
 (ns harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-test
   (:require [clojure.string :as str]
             [clojure.test :refer [deftest testing use-fixtures compose-fixtures is]]
+            [harja.palvelin.palvelut.suunnittelu.apurit :as apurit]
             [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]
             [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.tyokalut.yleiset :refer :all]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]))
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -271,8 +274,8 @@
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+ (merge hoidonjohtopalkkiot-tietomalli
-                                                                {:urakka-id urakka-id
-                                                                 :hoitovuoden-alkuvuosi 2024}))
+                                                                   {:urakka-id urakka-id
+                                                                    :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
@@ -288,8 +291,8 @@
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+ (merge hoidonjohtopalkkiot-tietomalli
-                                                                {:urakka-id urakka-id
-                                                                 :hoitovuoden-alkuvuosi 2024}))
+                                                                   {:urakka-id urakka-id
+                                                                    :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
@@ -316,3 +319,58 @@
         muokattu-vastaus-summa (apply + (map :summa (get-in muokattu-vastaus [:kustannussuunnitelma :hoidonjohtopalkkiot])))]
 
     (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
+
+(deftest vahvista-tavoite-ja-kattohinta-ei-onnistu
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hoitovuoden-alkuvuosi 2024
+        tiedot {:urakka-id urakka-id
+                :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                :vahvista? true}
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ tiedot)
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))]
+
+    ;; Ei voi vahvistaa, koska tietoja puuttuu
+    (is (= (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe]) "Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista ja korjaa tiedot."))))
+
+(deftest vahvista-tavoite-ja-kattohinta-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hoitovuoden-alkuvuosi 2024
+
+        ;; Lisätään ensin kilpailutettavat hankinnat
+        ;; ;; Poista yhteenvetorivi ennen tallennusta
+        hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
+        ;; Lisätään erillishankinnat
+        _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:erillishankinnat erillishankinnat-tietomalli))
+        ;; Lisätään hoidonjohtopalkkiot
+        _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli))
+
+        ;; Rahavaraukset vaativat tarjouksen täyttämisen.
+        kayttaja-id (:id +kayttaja-jvh+)
+        ;; Käytetään kattohintana 1.1 x tavoitehintaa
+        kattohintakerroin 1.1
+
+        ;; Haetaan urakan rahavaraukset
+        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+        ;; Vuodet tietomallista
+        vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli)
+        tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+
+        ;; Vahvistetaan tavoite ja kattohinta
+        tiedot {:urakka-id urakka-id
+                :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                :vahvista? true}
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ tiedot)
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))]
+
+    ;; Ei voi vahvistaa, koska tietoja puuttuu
+    (is (= (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe]) "Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista ja korjaa tiedot."))))
