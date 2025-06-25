@@ -132,30 +132,40 @@
     
     {:siltatarkastukset muunnetut-tarkastukset}))
 
+(defn onko-silta-olemassa?
+  "Tarkistaa, onko silta olemassa trex_oid:n perusteella."
+  [db silta-oid]
+  (:exists (first (taitorakennerekisteri-kyselyt/loytyyko-silta-trex-oidilla
+                    db {:silta-oid silta-oid}))))
+
 (defn hae-sillan-siltatarkastukset
   "Hakee siltatarkastukset sillalle sillan trex_oid:n perusteella."
   [db {:keys [silta-oid] :as parametrit} _kayttaja]
   (log/info "Taitorakennerekisteri API, sillan siltatarkastusten haku, parametrit: " (pr-str parametrit))
   (tarkista-api-parametrit parametrit :silta-oid)
 
-  (let [siltatarkastukset (taitorakennerekisteri-kyselyt/hae-sillan-siltatarkastukset-taitorakennerekisterille
-                            db {:silta-oid silta-oid})
-        muunnetut-tarkastukset (map (fn [tarkastus]
-                                      {:siltatarkastus
-                                       {:harja-id (:siltatarkastus_id tarkastus)
-                                        :tarkastusaika (when (:tarkastusaika tarkastus)
-                                                         (pvm/aika-iso8601-aikavyohykkeen-kanssa (:tarkastusaika tarkastus)))
-                                        :tarkastaja (:tarkastaja tarkastus)
-                                        :luotu (when (:luotu tarkastus)
-                                                 (pvm/aika-iso8601-aikavyohykkeen-kanssa (:luotu tarkastus)))
-                                        :muokattu (when (:muokattu tarkastus)
-                                                    (pvm/aika-iso8601-aikavyohykkeen-kanssa (:muokattu tarkastus)))
-                                        :poistettu (boolean (:poistettu tarkastus))
-                                        :urakka (muodosta-urakka-tiedot tarkastus)
-                                        :silta (muodosta-silta-tiedot tarkastus)
-                                        :tarkastuskohteet (muodosta-tarkastuskohteet (:tarkastuskohteet tarkastus))}})
-                                 siltatarkastukset)]
-    {:siltatarkastukset muunnetut-tarkastukset}))
+  (if-not (onko-silta-olemassa? db silta-oid)
+    (throw+ {:type virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+tuntematon-silta+
+                        :viesti (format "Siltaa ei löydy oid:lla %s" silta-oid)}]})
+    (let [siltatarkastukset (taitorakennerekisteri-kyselyt/hae-sillan-siltatarkastukset-taitorakennerekisterille
+                              db {:silta-oid silta-oid})
+          muunnetut-tarkastukset (map (fn [tarkastus]
+                                        {:siltatarkastus
+                                         {:harja-id (:siltatarkastus_id tarkastus)
+                                          :tarkastusaika (when (:tarkastusaika tarkastus)
+                                                           (pvm/aika-iso8601-aikavyohykkeen-kanssa (:tarkastusaika tarkastus)))
+                                          :tarkastaja (:tarkastaja tarkastus)
+                                          :luotu (when (:luotu tarkastus)
+                                                   (pvm/aika-iso8601-aikavyohykkeen-kanssa (:luotu tarkastus)))
+                                          :muokattu (when (:muokattu tarkastus)
+                                                      (pvm/aika-iso8601-aikavyohykkeen-kanssa (:muokattu tarkastus)))
+                                          :poistettu (boolean (:poistettu tarkastus))
+                                          :urakka (muodosta-urakka-tiedot tarkastus)
+                                          :silta (muodosta-silta-tiedot tarkastus)
+                                          :tarkastuskohteet (muodosta-tarkastuskohteet (:tarkastuskohteet tarkastus))}})
+                                   siltatarkastukset)]
+      {:siltatarkastukset muunnetut-tarkastukset})))
 
 (defrecord Taitorakennerekisteri []
   component/Lifecycle

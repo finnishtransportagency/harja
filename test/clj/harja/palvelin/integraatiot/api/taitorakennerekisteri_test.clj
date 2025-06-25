@@ -91,6 +91,16 @@
                     kayttaja portti)]
       (is (= 403 (:status vastaus))))))
 
+(deftest hae-sillan-siltatarkastukset-olematon-silta
+  (testing "Haku olemattomalla silta-oid:lla palauttaa virheen"
+    (let [silta_oid "9.9.999.999.9.99.99999" 
+          vastaus (api-tyokalut/get-kutsu
+                    [(str "/api/taitorakennerekisteri/siltatarkastukset/" silta_oid)]
+                    kayttaja portti)
+          dekoodattu-body (cheshire/decode (:body vastaus) true)]
+      (is (= 400 (:status vastaus)))
+      (is (= "tuntematon-silta" (get-in (first (:virheet dekoodattu-body)) [:virhe :koodi]))))))
+
 (deftest hae-sillan-siltatarkastukset-ei-oikeuksia
   (testing "Kutsu epäoonnistuu ilman oikeuksia"
     (let [silta_oid "9.2.246.578.1.15.40174"
