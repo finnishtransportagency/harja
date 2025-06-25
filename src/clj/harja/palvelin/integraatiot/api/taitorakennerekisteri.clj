@@ -54,7 +54,7 @@
     :silta-oid (when (not (s/valid? ::silta-oid (:silta-oid parametrit)))
                 (virheet/heita-viallinen-apikutsu-poikkeus
                   {:koodi virheet/+puutteelliset-parametrit+
-                   :viesti (format "Silta-oid on väärässä muodoss. %s " (:silta-oid parametrit))})) 
+                   :viesti (format "Silta-oid on väärässä muodossa. %s " (:silta-oid parametrit))})) 
     :default nil))
 
 (defn muodosta-urakka-tiedot [tarkastus]
