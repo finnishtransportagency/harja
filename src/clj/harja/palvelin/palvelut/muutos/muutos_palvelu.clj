@@ -203,12 +203,8 @@
                 :kayttaja (:id user)}]
     (jdbc/with-db-transaction [db db]
       (let [muutos-paluurivi (if (:id muutos)
-                               (muutos-kyselyt/paivita-muutos<!
-                                 db
-                                 muutos)
-                               (muutos-kyselyt/luo-muutos<!
-                                 db
-                                 muutos))]
+                               (muutos-kyselyt/paivita-muutos<! db muutos)
+                               (muutos-kyselyt/luo-muutos<! db muutos))]
       (case (:tyyppi muutos)
         "johto-ja-hallintokorvaus")
       (tallenna-johto-ja-hallintokorvauksen-muutokset db user urakka muutos-paluurivi kulut))

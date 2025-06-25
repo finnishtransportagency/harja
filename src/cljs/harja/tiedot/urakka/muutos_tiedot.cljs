@@ -228,7 +228,7 @@
   HaeMuutoksenTiedot
   (process-event [{muutos :muutos} app]
     (let [valittu-hoitokausi (:valittu-hoitokausi app)]
-      (if (:id muutos)
+      (when (:id muutos)
         (tuck-apurit/post! :hae-muutoksen-tiedot
           {:urakka-id @nav/valittu-urakka-id
            :muutos {:id (:id muutos)
