@@ -176,7 +176,7 @@
            [:div.valikatselmus-haku
             [yleiset/ajax-loader-pieni "Haetaan välikatselmuksen tietoja..."]]
            [:div.valikatselmus-container
-            [debug/debug app]
+            #_ [debug/debug app]
             [:div.col-xs-12.col-md-7
 
              [valikatselmus-otsikko-ja-tiedot e! app]

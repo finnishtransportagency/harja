@@ -56,8 +56,14 @@
         hoitovuoden-lopun-kattohinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta])
         tavoitehinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-ylitys)
         tavoitehinnan-alituspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-alitus)
-        tavoitehinnan-ylitys (or (:ylityksen_maara tavoitehinnan-ylityspaatos) 0)
-        tavoitehinnan-alitus (or (:alituksen_maara tavoitehinnan-alituspaatos) 0)
+        ;; Jos validoinnit on käytössä ja hoitovuosi on kesken, niin päätöksiä ei anneta frontille.
+        ;; Lasketaan siis tavoitehinnan ylitys ja alitus olemassa olevista luvuista.
+        tavoitehinnan-ylitys (if (and (not tavoitehinnan-ylityspaatos) (> toteuma-yht hoitovuoden-lopun-tavoitehinta))
+                               (- toteuma-yht hoitovuoden-lopun-tavoitehinta)
+                               (or (:ylityksen_maara tavoitehinnan-ylityspaatos) 0))
+        tavoitehinnan-alitus (if (and (not tavoitehinnan-alituspaatos) (< toteuma-yht hoitovuoden-lopun-tavoitehinta))
+                               (- hoitovuoden-lopun-tavoitehinta toteuma-yht)
+                               (or (:alituksen_maara tavoitehinnan-alituspaatos) 0))
         tavoitepalkkio (or (arvo-paatoksesta tavoitehinnan-alituspaatos :tavoitepalkkio) 0)
         seuraavan-vuoden-hankintakustannusten-alennus (or (arvo-paatoksesta tavoitehinnan-alituspaatos :siirron_maara) 0)
 
@@ -66,7 +72,9 @@
         tilaajan-osuus-tavoitehinnan-ylitys (or (arvo-paatoksesta tavoitehinnan-ylityspaatos :urakoitsija_maksaa) 0)
         urakoitsijan-osuus-tavoitehinnan-ylitys (or (arvo-paatoksesta tavoitehinnan-ylityspaatos :tilaaja_maksaa) 0)
         kattohinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :kattohinnan-ylitys)
-        kattohinnan-ylitys (or (:ylityksen_maara kattohinnan-ylityspaatos) 0)
+        kattohinnan-ylitys (if (and (not kattohinnan-ylityspaatos) (> toteuma-yht hoitovuoden-lopun-kattohinta))
+                             (- toteuma-yht hoitovuoden-lopun-kattohinta)
+                             (or (:ylityksen_maara kattohinnan-ylityspaatos) 0))
         ;; Niputetaan siirrot yhdelle riville
         siirto-seuraavan-vuoden-hankintakustannuksiin (- (or (arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara) 0)
                                                         seuraavan-vuoden-hankintakustannusten-alennus)
@@ -101,14 +109,14 @@
       [:span.laskenta-rivi-lukema "Toteutuma yhteensä"]
       [:span.laskenta-rivi-lukema (fmt/euro-opt false toteuma-yht)]]
      ;; Ei näytetä tavoitehinnan ylitystä, mikäli ei ole ylitystä
-     (when tavoitehinnan-ylityspaatos
+     (when (or tavoitehinnan-ylityspaatos (and (not tavoitehinnan-ylityspaatos) (not= 0 tavoitehinnan-ylitys)))
        [:div.flex-row.summa-rivi
         [:span {:class (when (> tavoitehinnan-ylitys 0)
                          "negatiivinen-numero")} "Tavoitehinnan ylitys"]
         [:span {:class (when (> tavoitehinnan-ylitys 0)
                          "negatiivinen-numero")} (fmt/euro-opt false tavoitehinnan-ylitys)]])
      ;; Näytetään tavoitehinnan-alitusrivi mikäli alitus on olemassa
-     (when tavoitehinnan-alituspaatos
+     (when (or tavoitehinnan-alituspaatos (and (not tavoitehinnan-alituspaatos) (not= 0 tavoitehinnan-alitus)))
        [:div.flex-row.summa-rivi
         [:span {:class (when (< 0 tavoitehinnan-alitus)
                          "positiivinen-numero")} "Tavoitehinnan alitus"]
