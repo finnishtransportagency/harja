@@ -49,14 +49,12 @@
          [:div.small-text.bold "Yhteensä"]
          [:div.body-text (if yhteensa (fmt/euro-opt true yhteensa) "0,00 €")]])
 
-      (if (and vahvistettu? div4)
+      (when div4
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Indeksikorjattu"]
-         [:div.body-text (if yhteensa-indeksikorjattu (fmt/euro-opt true yhteensa-indeksikorjattu) "0,00 €")]
-         [:div.body-text (when indeksikerroin
+         [:div.body-text (if vahvistettu? (fmt/euro-opt true yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
+         [:div.body-text (when vahvistettu?
                            (str "(" indeksikerroin " * " (if yhteensa (fmt/euro-opt false yhteensa) "0,00 €") " )"))]]
-        (when div4
-          [:div "Ei näytetä, koska ei vahvistusta"])
         )]]))
 
 (defn kilpailutettavat-hankinnat [e! {:keys [tallennus-kesken? valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
@@ -106,7 +104,9 @@
        [:div.col-xs-12.body-text "Erittele " [:strong "yhteensä-summa"] " toimenpiteille."]]]
      [:div.row
       [:div.col-xs-12
+
        [grid/grid {:otsikko ""
+                   :luokat ["matala-panel"]
                    :muokkaa-aina (if vahvistettu? false true)
                    :voi-muokata? (if vahvistettu? false true)
                    :muokattava? (constantly (if vahvistettu? false true))
@@ -142,7 +142,7 @@
 
      (when-not vahvistettu?
        [:div
-        [:div.row [:div.col-xs-12] [:hr]]
+        [:div.row [:div.col-xs-12 [:hr]]]
 
         (when (:kilpailutettavat-hankinnat-virheet kustannussuunnitelma)
           [:div.row {:style {:margin-bottom "1rem"}}
@@ -179,6 +179,7 @@
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko ""
+                   :luokat ["matala-panel"]
                    :muokkaa-aina false
                    :voi-muokata? false
                    :muokattava? (constantly false)
@@ -232,6 +233,7 @@
      [:div#erilliskustannukset-elementti.row
       [:div.col-xs-12
        [grid/grid {:otsikko ""
+                   :luokat ["matala-panel"]
                    :muokkaa-aina voi-muokata?
                    :voi-muokata? voi-muokata?
                    :muokattava? voi-muokata?
@@ -261,7 +263,7 @@
      (when-not vahvistettu?
        [:div
         [:div.row [:div.col-xs-12 [:span.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]]
-        [:div.row [:div.col-xs-12] [:hr]]
+        [:div.row [:div.col-xs-12 [:hr]]]
 
         [:div.row
          [:div.col-xs-12
@@ -309,6 +311,7 @@
      [:div#hoidonjohtopalkkio-elementti.row
       [:div.col-xs-12
        [grid/grid {:otsikko ""
+                   :luokat ["matala-panel"]
                    :muokkaa-aina voi-muokata?
                    :voi-muokata? voi-muokata?
                    :muokattava? (constantly voi-muokata?)
@@ -337,7 +340,7 @@
      (when-not vahvistettu?
        [:div
         [:div.row [:div.col-xs-12 [:span.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]]
-        [:div.row [:div.col-xs-12] [:hr]]
+        [:div.row [:div.col-xs-12 [:hr]]]
 
         [:div.row
          [:div.col-xs-12
@@ -427,7 +430,7 @@
         hoitokaudet (into [] (range urakan-alkuvuosi (+ urakan-kesto-vuosina urakan-alkuvuosi)))]
     [:div
      [:div.row
-      [:div.col-xs-12.col-md-6
+      [:div.col-xs-12.col-md-6 {:style {:padding-left "0"}}
        [:h1 "Hoitovuoden alun tavoitehinta"]
        [:div (-> @tila/yleiset :urakka :nimi)]]
       [:div.col-xs-12.col-md-6
@@ -437,7 +440,7 @@
         {:style {:float "right"
                  :line-height "2rem"}}]]]
      [:div.row {:style {:margin-top "1rem"}}
-      [:div.col-xs-12.col-md-3
+      [:div.col-xs-12.col-md-3 {:style {:padding-left "0"}}
        [:span.caption-small-strong.alasveto-label "Hoitovuosi"]
        [yleiset/livi-pudotusvalikko {:valinta (pvm/vuosi (first valittu-hoitokausi))
                                      :vayla-tyyli? true

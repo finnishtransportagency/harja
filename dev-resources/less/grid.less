@@ -44,7 +44,10 @@
 .livi-grid {
   color: @harmaa1;
   &.panel {
-    margin-bottom: 34px;
+    margin-bottom: 32px;
+  }
+  &.matala-panel {
+    margin-bottom: 1rem;
   }
   // pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
   // tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
@@ -82,7 +85,7 @@
       font-weight: 600;
     }
     td {
-      vertical-align: top;
+      vertical-align: middle;
       input:not([type="checkbox"]), select {
         width: 100%;
         z-index: 10;
@@ -283,7 +286,7 @@
     margin-bottom: 1px;
   }
   .muokkaustoiminnot {
-    margin-bottom: 9px;
+    margin-bottom: 8px;
     button {
       margin-right: 1em;
     }
@@ -503,6 +506,12 @@
         border-bottom: 5px solid @white-default;
         border-left: none;
         border-right: none;
+        outline: @black-lighter;
+        outline-style: solid;
+      }
+      > span.grid-kentta-wrapper input:focus {
+        outline: 2px solid @blue-default;
+        outline-offset: -2px;
       }
       .nappi-alasveto {
         border: none;
