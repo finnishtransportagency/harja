@@ -2,6 +2,8 @@
   (:require [clojure.string :as str]
             [reagent.core :as r :refer [atom]]
             [harja.ui.kentat :as kentat]
+            [harja.ui.napit :as napit]
+            [harja.ui.modal :as modal]
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.urakka.urakka :as tila]
@@ -45,6 +47,18 @@
          (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos))
                                                                     :teksti "Automaattisesti kirjattu tavoitehinnan ylitys -kulu poistetaan."})]])]))
 
+(defn- tavoitehinnan-laskentamodaali [paatos]
+  (let []
+    [:div
+     [:div.flex-row
+      [:p.laskenta-rivi "Mikäli toteutuneiden hankintakustannusten, johto- ja hallintakorvauksen sekä hoidonjohtopalkkion yhteisarvo alittaa kyseisen hoitovuoden tavoitehinnan, maksetaan
+      urakoitsijalle tavoitepalkkiota 30% hoitovuoden tavoitehinnan alituksesta."]]
+     [:div.flex-row
+      [:p.laskenta-rivi "Jos tavoitepalkkio > 3 %, siirretään ylittävä osuus seuraavan hoitovuoden hoitotöiden hankintakustannuksiin alennukseksi."]]
+     [:div.flex-row
+      [:p.laskenta-rivi "Poikkeus: viimeisenä hoitovuonna ei ole siirtomahdollisuutta. Tavoitepalkkio maksetaan täysimääräisesti koko viimeisen vuoden hoitovuoden
+      lopun tavoitehinnan alittavasta osuudesta."]]]))
+
 (defn tavoitehinnan-alitus [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :tavoitehinta-alitus
         paatos-tehty? (some? (:id paatos))
@@ -71,6 +85,18 @@
           [:div.flex-row.lista-rivi-korkea
            [:div "Siirretään seuraavan vuoden hankintakustannuksiin alennukseksi"]
            [:div.rivi-lukema (fmt/euro-opt false (:siirron_maara paatos))]])
+
+        [:div.flex-row.laskenta-linkki-matalampi
+         [yleiset/linkki "Näytä laskenta"
+          (fn [] (modal/nayta! {:otsikko "Laskenta"
+                                :otsikko-muotoilut {:font-size "32px"}
+                                :body-tyyli {:margin-bottom "16px"}
+                                :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
+                                :footer [napit/sulje #(modal/piilota!)]
+                                :footer-tyyli {:text-align "left"}}
+                   [tavoitehinnan-laskentamodaali paatos]))
+          {:style {:text-decoration :underline}}]]
+
         [:hr.paatos-hr]
 
         ;; Päätöksenteko napit tai mahdollinen virhe
