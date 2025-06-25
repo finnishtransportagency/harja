@@ -13,8 +13,8 @@ SELECT m.id,
                                   JOIN mhu_muutos_kulu mmk ON (k.id = mmk.kulu AND m.id = mmk.muutos AND m.versio = mmk.versio)
                                   JOIN kulu_kohdistus kk ON k.id = kk.kulu AND kk.tyyppi = 'jjh-muutos'
                                   WHERE k.poistettu IS FALSE AND kk.poistettu IS FALSE
-                                   AND erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
-                                            (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))) AS "jjh-muutosten-summa",
+                                    AND k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
+                                      (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))) AS "jjh-muutosten-summa",
 
        CASE
            WHEN COUNT(kust.*) = 0 THEN NULL
@@ -83,12 +83,11 @@ VALUES
                       muokattu = NOW();
 
 -- name: luo-muutos<!
-    -- name: luo-muutos<!
-    INSERT INTO mhu_muutos
-    (urakka, tyyppi, nimi, syy, kulu_kohdistus, luonnos, voimassa_alkaen, luoja, luotu)
-    VALUES
-    (:urakka, :tyyppi::MHU_MUUTOSTYYPPI, :nimi, :syy, :kulu_kohdistus, :luonnos, :voimassa_alkaen, :kayttaja, NOW())
-    RETURNING id, versio;
+   INSERT INTO mhu_muutos
+   (urakka, tyyppi, nimi, syy, kulu_kohdistus, luonnos, voimassa_alkaen, luoja, luotu)
+   VALUES
+       (:urakka, :tyyppi::MHU_MUUTOSTYYPPI, :nimi, :syy, :kulu_kohdistus, :luonnos, :voimassa_alkaen, :kayttaja, NOW())
+RETURNING id, versio;
 
 -- name: paivita-muutos<!
 UPDATE mhu_muutos
