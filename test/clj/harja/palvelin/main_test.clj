@@ -173,7 +173,8 @@
     :tieosoitteet-hallinta
     :ajastukset-hallinta
     :tarjous
-    :api-taitorakennerekisteri})
+    :api-taitorakennerekisteri
+    :uusi-kustannussuunnitelma})
 
 (def ei-statusta
   #{:metriikka
@@ -262,7 +263,8 @@
     :tiemerkinnan-kustannuskirjaukset
     :ajastukset-hallinta
     :tarjous
-    :api-taitorakennerekisteri})
+    :api-taitorakennerekisteri
+    :uusi-kustannussuunnitelma})
 
 (def hidas-ok-status #{:itmf})
 
