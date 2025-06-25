@@ -109,7 +109,7 @@
 
 (defn hae-muutoksen-tiedot
   "Palauttaa yksittäisen muutoksen tarkat tiedot lomaketta varten."
-  [db user {:keys [urakka-id muutos] :as tiedot}]
+  [db user {:keys [urakka-id muutos]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (let [vastaus (case (:tyyppi muutos)
                   "johto-ja-hallintokorvaus"
@@ -124,10 +124,12 @@
                                                                                      :urakka urakka-id}))
 
                   ;; tähän puuttuvien muutostyyppien lomakehaut...
-                  nil)
-        _ (assert (= 1 (count vastaus)) "Muutoksia täytyy palautua tasan yksi")
-        vastaus (first vastaus)]
-    vastaus))
+                  nil)]
+    (when (= (count vastaus)  1)
+      (do
+        (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
+        (throw (Error. "Muutoksia palautui enemmän kuin yksi"))))
+    (first vastaus)))
 
 
 (defn- poista-vanhat-kulutiedot!
@@ -237,17 +239,11 @@
 
         :hae-urakan-muutostiedot
         (fn [user tiedot]
-          (hae-urakan-muutostiedot
-            (:db this)
-            user
-            tiedot))
+          (hae-urakan-muutostiedot (:db this) user tiedot))
 
         :hae-muutoksen-tiedot
         (fn [user tiedot]
-          (hae-muutoksen-tiedot
-            (:db this)
-            user
-            tiedot))
+          (hae-muutoksen-tiedot (:db this) user tiedot))
 
         :tallenna-muutos
         (fn [user tiedot]

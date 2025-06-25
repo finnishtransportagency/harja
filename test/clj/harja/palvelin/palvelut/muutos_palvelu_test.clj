@@ -335,3 +335,19 @@
     ;; assertoidaan luodut, näistä löytyy muokkausmetatiedoista vain luoja ja luotu
     (is (= vastaus-luonnin-jalkeen odotetut-luonnin-jalkeen) "Johto- ja hallintokorvausmuutokset luonnin jälkeen")
     (is (= vastaus-updaten-jalkeen odotetut-updaten-jalkeen) "Johto- ja hallintokorvausmuutokset updaten jälkeen")))
+
+(deftest hae-yksittaisen-muutoksen-tiedot-lomakkeelle-ii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        muutos {:id (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos WHERE syy = 'Työmääräarviot ylittyivät';")),
+                :versio 1, :tyyppi "johto-ja-hallintokorvaus"}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-muutoksen-tiedot
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :muutos muutos})
+        odotettu-muutostieto {:id     4
+                              :kulut  [{:kulu-id (ffirst (q "SELECT id FROM kulu WHERE lisatieto = 'Muutoksesta automaattisesti luotu kulu 1'"))
+                                        :pvm #inst"2025-10-15T00:00:00.000-00:00"
+                                        :tavoitehinnan-muutos 1230}]
+                              :versio 1}]
+    (is (= vastaus odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
