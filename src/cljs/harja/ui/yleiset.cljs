@@ -403,7 +403,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled disabled-vaihtoehdot itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
-                   pakollinen? tarkenne muokattu? pitka-teksti?] :as asetukset} vaihtoehdot]
+                   pakollinen? tarkenne muokattu? pitka-teksti? placeholder] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -453,7 +453,11 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                     :valinta valinta
                                     :valitse-fn valitse-fn
                                     :format-fn format-fn})}
-            [:div.valittu.overflow-ellipsis (or naytettava-arvo (format-fn valinta))]
+            [:div.valittu.overflow-ellipsis (cond
+                                              naytettava-arvo naytettava-arvo
+                                              valinta (format-fn valinta)
+                                              placeholder [:span.valittu-placeholder {:style {:color "#888"}} placeholder]
+                                              :else nil)]
             (if @auki?
               ^{:key :auki}
               [:span.livicon-chevron-up {:id (str "chevron-up-btn-" (or elementin-id "") "-" (hash vaihtoehdot))
