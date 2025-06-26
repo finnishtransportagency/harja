@@ -87,9 +87,10 @@
         rahavaraukset (conj rahavaraukset rahavaraukset-yhteensa)
         budjettitavoiteet (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
         muutosten-vaikutus-yhteensa (reduce + 0
-                                      (concat
-                                        (map :tavoitehinnan-muutos kirjatut-muutokset)
-                                        [(:tavoitehinnan-muutos (last rahavaraukset))]))]
+                                      (remove nil?
+                                        (concat
+                                          (map :tavoitehinnan-muutos kirjatut-muutokset)
+                                          [(:tavoitehinnan-muutos (last rahavaraukset))])))]
     ;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
     {:kirjatut-muutokset kirjatut-muutokset
      ;; TODO: laskennat lasketuille muutoksille jos hoitokausi 2025-2026 tai jälkeen
@@ -214,9 +215,9 @@
       (let [muutos-paluurivi (if (:id muutos)
                                (muutos-kyselyt/paivita-muutos<! db muutos)
                                (muutos-kyselyt/luo-muutos<! db muutos))]
-      (case (:tyyppi muutos)
-        "johto-ja-hallintokorvaus")
-      (tallenna-johto-ja-hallintokorvauksen-muutokset db user urakka muutos-paluurivi kulut))
+        ;; hox: voi tehdä case:lla, kun myöhemmin tulee lisää tyyppejä
+        (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+          (tallenna-johto-ja-hallintokorvauksen-muutokset db user urakka muutos-paluurivi kulut)))
     (hae-urakan-muutostiedot db user {:urakka-id urakka-id
                                       :valittu-hoitokausi valittu-hoitokausi}))))
 
