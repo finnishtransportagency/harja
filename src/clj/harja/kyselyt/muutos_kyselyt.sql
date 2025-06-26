@@ -108,9 +108,8 @@ INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
 VALUES (:versio, :muutos, :kulu);
 
 -- name: luo-jjh-kulun-kohdistus<!
-INSERT
-  INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
-                       tavoitehintainen)
+INSERT INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
+                            tavoitehintainen)
 VALUES (:kulu, 0, :summa,
         :toimenpideinstanssi,
         (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'),
