@@ -188,7 +188,9 @@
                                                kohdistus
                                                (dissoc kohdistus :rahavaraus_id :rahavaraus_nimi))
                                    ;; Muutetaan tavoitehintainen keywordiksi
-                                    kohdistus (update kohdistus :tavoitehintainen #(keyword (str %)))]
+                                    kohdistus (-> kohdistus
+                                                  (update :tavoitehintainen #(keyword (str %)))
+                                                  (update :tehtava konversio/jsonb->clojuremap))]
                                kohdistus))
                        kohdistukset)
         ;; Frontilla kulun muokkauksessa on olennaista, että kulun kohdistuksen rahavaraus sisältää kaikki mahdolliset tehtäväryhmät
@@ -230,13 +232,18 @@
   "Luo uuden kohdistuksen kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan kulun viitteen ja rivinumeron perusteella."
   [db user urakka-id kulu-id kohdistus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
-  (let [_ (prn "tehtava-id" (:id (:tehtava kohdistus)))
+  (let [tehtava-id (or (:id (:tehtava kohdistus)) (:tehtava kohdistus))
+        on-muu-tehtava? (= -1 tehtava-id)
         kulu_kohdistus {:id (:kohdistus-id kohdistus)
                         :summa (:summa kohdistus)
                         :toimenpideinstanssi (:toimenpideinstanssi kohdistus)
                         :tehtavaryhma (:tehtavaryhma kohdistus)
-                        :tehtava-id (:id (:tehtava kohdistus))
-                        :maksueratyyppi (kohdistuksen-maksueratyyppi db (:tehtavaryhma kohdistus) (:id (:tehtava kohdistus)) (:lisatyo? kohdistus))
+                        ;; Jos kyseessä on "Muu tehtävä", tehtävä-id:tä ei tallenneta
+                        :tehtava-id (when-not on-muu-tehtava? tehtava-id)
+                        :maksueratyyppi (kohdistuksen-maksueratyyppi db 
+                                          (:tehtavaryhma kohdistus) 
+                                          (when-not on-muu-tehtava? tehtava-id) 
+                                          (:lisatyo? kohdistus))
                         :kayttaja (:id user)
                         :lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)
                         :rahavarausid (when (:rahavaraus kohdistus) (:id (:rahavaraus kohdistus)))
