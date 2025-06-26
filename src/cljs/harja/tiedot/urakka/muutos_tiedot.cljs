@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.muutos-tiedot
   "Urakan muutosten tiedot."
-  (:require [reagent.core :refer [atom]]
+  (:require [harja.ui.lomake :as lomake]
+            [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
@@ -84,6 +85,12 @@
                                {:pvm pvm :tavoitehinnan-muutos 0})])
                 normalisoidut-avaimet)]
     (apply array-map parit)))
+
+(def pakolliset-kentat-fmt
+  {:voimassa_alkaen "Voimassa alkaen"
+   :nimi "Nimi"
+   :syy "Muutoksen syy"
+   :tyyppi "Tyyppi"})
 
 (defn hae-urakan-muutostiedot
   "Hakee urakan muutostiedot, eli miten tavoitehinta ja tehtävä- ja määräluettelo ovat muuttuneet alkuperäisiin tietoihin nähden."
@@ -171,19 +178,26 @@
   TallennaMuutos
   (process-event [{muutos :muutos} app]
     (let [urakka (:urakka @tila/yleiset)
+          puuttuvat-pakolliset-kentat (map
+                                        #(get pakolliset-kentat-fmt %)
+                                        (lomake/puuttuvat-pakolliset-kentat muutos))
+          muutos (lomake/ilman-lomaketietoja muutos)
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
                                               ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
                                               (filter #(and (some? (:tavoitehinnan-muutos %))
                                                          (not= 0 (:tavoitehinnan-muutos %)))
                                                 (vals @johto-ja-hallintokorvausmuutokset-atom)))
           muutos (assoc muutos :kulut kulut)]
-      (tuck-apurit/post! :tallenna-muutos
-        {:urakka-id (:id urakka)
-         :valittu-hoitokausi (:valittu-hoitokausi app)
-         :muutos muutos}
-        {:onnistui ->HaeUrakanMuutostiedotOnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
-         :epaonnistui ->TallennaMuutosEpaonnistui})
-      (assoc app :tallennus-kesken? true)))
+      (if-not (empty? puuttuvat-pakolliset-kentat)
+        (assoc-in app [:muokattava-muutos :puuttuvat-pakolliset-kentat] puuttuvat-pakolliset-kentat)
+        (do
+          (tuck-apurit/post! :tallenna-muutos
+            {:urakka-id (:id urakka)
+             :valittu-hoitokausi (:valittu-hoitokausi app)
+             :muutos muutos}
+            {:onnistui ->HaeUrakanMuutostiedotOnnistui ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
+             :epaonnistui ->TallennaMuutosEpaonnistui})
+          (assoc app :tallennus-kesken? true)))))
 
   TallennaMuutosEpaonnistui
   (process-event [{vastaus :vastaus} app]

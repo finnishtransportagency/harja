@@ -1,8 +1,8 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
-  (:require [reagent.core  :as r]
+  (:require [clojure.string :as str]
+            [reagent.core :as r]
             [tuck.core :as tuck]
-            
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
@@ -17,8 +17,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.domain.muutos-domain :as muutos-domain]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]))
+            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
+            [harja.domain.muutos-domain :as muutos-domain]))
 
 (defn liite-kentta
   "Lomakkeen liitekenttä, joka näyttää liitteiden listauksen ja mahdollistaa uusien liitteiden lisäämisen."
@@ -47,6 +47,7 @@
       (concat
         [{:otsikko "Tyyppi"
           :nimi :tyyppi
+          :pakollinen? true
           ;; sallitaan muokkaus vain uudelle muutokselle
           :muokattava? (fn [rivi] (nil? (:id rivi)))
           :aseta (fn [rivi arvo]
@@ -145,9 +146,6 @@
       #(e! (muutos-tiedot/->MuokkaaMuutosta nil)))
     (fn [e! {:keys [muokattava-muutos tallennus-kesken?] :as app}]
       [:span.muutoslomake
-
-       ;; todo: eri tyyppisten muutosten lomakkeiden toteutus tähän
-       ;; siten että niiden sisälle sijoitetaan tarvittaessa taulukkoja :muokkaus-grid, ks. esim views/urakka/toteumat/muut_materiaalit.cljs#L127
        [lomake/lomake
         {:otsikko (if (:id muokattava-muutos)
                     "Muokkaa muutosta"
@@ -156,10 +154,15 @@
          :footer-fn (fn [muutos]
                       [:span.tallenna-ja-peruuta
                        [:hr]
+                       (when-not (empty? (:puuttuvat-pakolliset-kentat muokattava-muutos))
+                         [yleiset/info-laatikko :varoitus
+                          (str "Lomakkeelta puuttuu pakollisia kenttiä: "
+                            (str/join ", " (:puuttuvat-pakolliset-kentat muokattava-muutos))
+                            ". Korjaa ne ja yritä uudelleen.")])
                        [napit/tallenna "Tallenna"
                         #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos
-                           (lomake/ilman-lomaketietoja muutos))
-                        {:disabled tallennus-kesken?}                        ]
+                           muutos)
+                        {:disabled tallennus-kesken?}]
                        [napit/peruuta "Peruuta"
                         #(e! (muutos-tiedot/->MuokkaaMuutosta nil))
                         {:disabled tallennus-kesken?}]])}
