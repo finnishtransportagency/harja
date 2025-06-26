@@ -213,13 +213,25 @@ SELECT kk.id                                      AS "kohdistus-id",
        kk.rahavaraus_id                           AS rahavaraus_id,
        COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), rv.nimi) AS rahavaraus_nimi,
        kk.tyyppi                                  AS tyyppi,
-       kk.tavoitehintainen                        AS tavoitehintainen
+       kk.tavoitehintainen                        AS tavoitehintainen,
+       CASE WHEN kk.tehtava IS NOT NULL THEN 
+         jsonb_build_object(
+           'id', t.id,
+           'nimi', t.nimi,
+           'jarjestys', t.jarjestys,
+           'emo', t.emo,
+           'maaramitattava?', t."maaramitattava?",
+           'toimenpideinstanssi', kk.toimenpideinstanssi
+         )
+       ELSE NULL END                              AS "tehtava"
   FROM kulu_kohdistus kk
            LEFT JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
            LEFT JOIN rahavaraus_urakka ru ON rv.id = ru.rahavaraus_id AND ru.urakka_id = :urakka_id
+           LEFT JOIN tehtava t ON kk.tehtava = t.id
  WHERE kk.kulu = :kulu
    AND kk.poistettu IS NOT TRUE
  ORDER BY kk.id;
+
 
 -- name: luo-kulu<!
 INSERT
