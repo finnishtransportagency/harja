@@ -797,3 +797,13 @@
 
 (defn tieosoite-lyhyt-muoto [{:keys [tie alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
   (str tie "/" alkuosa "/" alkuetaisyys "/" loppuosa "/" loppuetaisyys))
+
+(defn sopimustyyppi-fmt
+  "Näyttää (MHU) urakan sopimustyypin."
+  [sopimustyyppi]
+  (case sopimustyyppi
+    ;; MHU-urakoissa on ainakin kaksi urakkaa, joiden tyyppi on MHU+
+    :mhu+ "MHU+"
+
+    ;; Toistaiseksi ei tarvetta näyttää yleisintä tapausta
+    nil))
