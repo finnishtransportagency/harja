@@ -51,13 +51,6 @@
 
 (defrecord PaivitaLomake [lomake])
 
-(defn jjh-korvaus-muutos-vai-vahennys?
-  "Johto- ja hallintokorvauksen muutos on muutos jos urakka alkanut 2024 tai aiemmin, muutoin vähennys"
-  [urakka]
-  (if (<= (:alkupvm urakka) (pvm/hoitokauden-alkupvm 2024))
-    :muutos
-    :vahennys))
-
 (defn valitse-urakka [app urakka]
   (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)
         vanha-hoitokausi (:valittu-hoitokausi app)
@@ -196,12 +189,14 @@
              :valittu-hoitokausi (:valittu-hoitokausi app)
              :muutos muutos}
             {:onnistui ->HaeUrakanMuutostiedotOnnistui ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
-             :epaonnistui ->TallennaMuutosEpaonnistui})
+             :epaonnistui ->TallennaMuutosEpaonnistui
+             :paasta-virhe-lapi? true})
           (assoc app :tallennus-kesken? true)))))
 
   TallennaMuutosEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Muutoksen tallentaminen epäonnistui!" :varoitus)
+    (viesti/nayta-toast! (str "Muutoksen tallentaminen epäonnistui! "
+                           (get-in vastaus [:response :virhe])) :varoitus)
     (assoc app :tallennus-kesken? false))
 
   TallennaRahavarausmuutostenSyytEpaonnistui

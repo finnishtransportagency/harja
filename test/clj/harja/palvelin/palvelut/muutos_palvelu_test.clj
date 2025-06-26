@@ -374,3 +374,21 @@
                                         :tavoitehinnan-muutos 1230}]
                               :versio 1}]
     (is (= vastaus odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
+
+(deftest johto-ja-hallintokorvausmuutoksen-kulu-2025-ja-jalkeen-oltava-negatiivinen
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        ;; muutetaan väliaikaisesti urakan alkupvm 10.1.2025 jotta sääntö astuu voimaan
+        _ (u (format "UPDATE urakka SET alkupvm = '2025-10-01' WHERE id = %s;" urakka-id))
+        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+        muutos-payload {:voimassa_alkaen #inst "2025-06-25T10:07:32.000-00:00",
+                        :syy "Johtamisen tarve muuttui",
+                        :kulut (list {:pvm #inst "2025-10-14T21:00:00.000-00:00", :tavoitehinnan-muutos 10})
+                        :tyyppi "johto-ja-hallintokorvaus"}]
+    (is (thrown? Error
+          (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-muutos
+            +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :valittu-hoitokausi valittu-hoitokausi
+             :muutos muutos-payload}))
+      "Johto- ja hallintokorvausmuutoksen kulu 2025 ja jälkeen on oltava negatiivinen")))

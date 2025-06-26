@@ -1,6 +1,7 @@
 (ns harja.domain.muutos-domain
   "Muutos-domainin määritykset"
   (:require [clojure.spec.alpha :as s]
+            [harja.pvm :as pvm]
             [harja.domain.muokkaustiedot :as m]
             #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]
                 :cljs [[specql.impl.registry]]))
@@ -31,3 +32,10 @@
     "erillisrahoitettu" "Erillisrahoitettu"
     "toteutuneet-maarat" "Toteutuneet määrät"
     "maarapoikkeama" "Määräpoikkeama"} tyyppi))
+
+(defn jjh-korvaus-muutos-vai-vahennys?
+  "Johto- ja hallintokorvauksen muutos on :muutos jos urakka alkanut 1.10.2024 tai aiemmin, muutoin vähennys"
+  [urakan-alkupvm]
+  (if (pvm/ennen? urakan-alkupvm (pvm/->pvm "5.10.2024"))
+    :muutos
+    :vahennys))

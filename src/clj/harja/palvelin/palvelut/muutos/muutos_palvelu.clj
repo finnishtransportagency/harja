@@ -3,6 +3,7 @@
             [com.stuartsierra.component :as component]
             [harja.domain.kulut :as kulut-domain]
             [harja.domain.mhu :as mhu]
+            [harja.domain.muutos-domain :as muutos-domain]
             [harja.kyselyt.kulut :as kulu-kyselyt]
             [harja.kyselyt.toimenpideinstanssit :as tpi-q]
             [harja.kyselyt.urakat :as q-urakat]
@@ -128,7 +129,7 @@
     (when (> (count vastaus)  1)
       (do
         (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
-        (throw (Error. "Muutoksia palautui enemmän kuin yksi"))))
+        (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on ongelmatilanne. Ota yhteys Harja-palautteeseen."))))
     (first vastaus)))
 
 
@@ -161,6 +162,12 @@
                         :laskun_numero (:laskun-numero rivi)
                         :koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi (:pvm rivi) (:alkupvm urakka))
                         :kokonaissumma (:tavoitehinnan-muutos rivi)}
+                  ;; 1.10.2025 ja jälkeen alkavissa urakassa vaaditaan negatiivinen summa näiden muutosten kuluissa
+                  _ (when (and
+                            (= :vahennys
+                              (muutos-domain/jjh-korvaus-muutos-vai-vahennys? (:alkupvm urakka)))
+                            (> (:tavoitehinnan-muutos rivi) 0))
+                    (throw (Error. "1.10.2025 tai sen jälkeen alkavissa urakoissa Johto- ja hallintokorvausmuutoksen kulut voivat olla vain vähennyksiä eli miinusmerkkisiä.")))
                   ;; jotta saadaan talteen muutoshistoria, aina luodaan uusi kulu ja sen kohdistus, vanhat merkitään poistetuksi
                   kulu-id-db (:id (kulu-kyselyt/luo-kulu<! db kulu))
                   ;; luodaan aina uusi kohdistus, jos kyseessä "päivitys", poistetaan vanha kohdistus jotta jää historia talteen

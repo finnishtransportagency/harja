@@ -99,10 +99,8 @@
 
 (defn- muutoslomakkeen-kentat-johto-ja-hallintokorvaus
   "johto-ja-hallintokorvaus muutoksen lomakekomponentti"
-  [e! {:keys [johto-ja-hallintokorvausten-muutokset
-              valittu-hoitokausi
-              valittu-hoitokausi-vuosi-kk-muodossa]}]
-  (let [muutostapa (muutos-tiedot/jjh-korvaus-muutos-vai-vahennys? @nav/valittu-urakka)
+  [e! {:keys [valittu-hoitokausi]}]
+  (let [muutostapa (muutos-domain/jjh-korvaus-muutos-vai-vahennys? (:alkupvm @nav/valittu-urakka))
         summa (reduce + 0 (map :tavoitehinnan-muutos (vals @muutos-tiedot/johto-ja-hallintokorvausmuutokset-atom)))]
     [{:nimi :johto-ja-hallintokorvaus-muutokset
       :otsikko ""
