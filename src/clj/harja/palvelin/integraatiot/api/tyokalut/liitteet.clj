@@ -42,7 +42,7 @@
 
     uniikit))
 
-(defn- luo-liitteet [db liitteiden-hallinta urakan-id kirjaaja liitteet liite-luotu-fn]
+(defn luo-liitteet [db liitteiden-hallinta urakan-id kirjaaja liitteet liite-luotu-fn]
   (doseq [liitteen-data liitteet]
     (when (:sisalto (:liite liitteen-data))
       (let [liite (:liite liitteen-data)
