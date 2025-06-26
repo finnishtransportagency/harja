@@ -94,25 +94,26 @@
     (not validi?)))
 
 (defn tehtavan-valinta [{:keys [valitse-fn disabled virhe? valinta format-fn tehtava-haku-menossa]} tehtavat]
-  [:<>
-   (when (or (seq tehtavat) valinta)
-     [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
-      [:div.label-ja-alasveto {:style {:width "320px"}}
-       [:span.alasvedon-otsikko "Tehtävä*"]
-       [yleiset/livi-pudotusvalikko
-        {:data-cy "tehtava-dropdown"
-         :valinta valinta
-         :format-fn format-fn
-         :pakollinen? true
-         :valitse-fn valitse-fn
-         :disabled disabled
-         :virhe? virhe?
-         :vayla-tyyli? true}
-        tehtavat]]])
-   (when tehtava-haku-menossa
-     [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
-      [:div.margin-top-32
-       [yleiset/ajax-loader-pieni "Ladataan mahdollisia tehtäviä..."]]])])
+    [:<>
+     (when (or (seq tehtavat) valinta)
+       [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
+        [:div.label-ja-alasveto {:style {:width "320px"}}
+         [:span.alasvedon-otsikko "Tehtävä*"]
+         [yleiset/livi-pudotusvalikko
+          {:data-cy "tehtava-dropdown"
+           :placeholder "Valitse tehtävä"
+           :valinta valinta
+           :format-fn format-fn
+           :pakollinen? true
+           :valitse-fn valitse-fn
+           :disabled disabled
+           :virhe? virhe?
+           :vayla-tyyli? true}
+          tehtavat]]])
+     (when tehtava-haku-menossa
+       [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
+        [:div.margin-top-32
+         [yleiset/ajax-loader-pieni "Ladataan mahdollisia tehtäviä..."]]])])
 
 (defn lisatieto [e! lisatieto lomake nro]
   [:div.col-xs-12.col-md-3
@@ -156,8 +157,7 @@
                                         :valitse-fn #(do
                                                         ;; Hankintakulut on tavoitehintaisia 
                                                        (e! (tiedot/->TavoitehintaanKuuluminen :true nro))
-                                                       (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro))
-                                                       (e! (tiedot/->HaeUrakanTehtavaryhmanTehtavat (-> @tila/tila :yleiset :urakka) % nro)))}
+                                                       (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro)))}
            tehtavaryhmat]]]
        [tehtavan-valinta {:valitse-fn #(e! (tiedot/->ValitseTehtavaKohdistukselle % nro))
                           :disabled tehtava-haku-menossa
@@ -218,8 +218,7 @@
                                          :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtavaryhma)
                                          :format-fn :tehtavaryhma
                                          :valitse-fn #(do
-                                                        (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro))
-                                                        (e! (tiedot/->HaeUrakanTehtavaryhmanTehtavat (-> @tila/tila :yleiset :urakka) % nro)))}
+                                                        (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro)))}
             tehtavaryhmat]]]
          [tehtavan-valinta {:valitse-fn #(e! (tiedot/->ValitseTehtavaKohdistukselle % nro))
                             :disabled tehtava-haku-menossa
