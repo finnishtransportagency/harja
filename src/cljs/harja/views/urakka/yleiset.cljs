@@ -169,22 +169,26 @@
               (pvm/pvm p)
               "Ei asetettu")])]))))
 
-(defn- yllapitourakan-sopimustyyppi [ur]
+(defn- sopimustyyppi
+  "Komponentti joka hanskaa sopimustyypin. Ylläpidon urakoissa sitä voi muuttaa, MHU+:ssa vain näyttää."
+  [ur]
   (when (and (not= :hoito (:tyyppi ur))
-             (not= :teiden-hoito (:tyyppi ur))
              (not (u/vesivaylaurakkatyyppi? (:tyyppi ur))))
-    (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-          sopimustyyppi (:sopimustyyppi ur)]
-      [yleiset/livi-pudotusvalikko {:class "alasveto-sopimustyyppi"
-                                    :valinta sopimustyyppi
-                                    :format-fn #(case %
-                                                  :palvelusopimus "Palvelusopimus"
-                                                  :kokonaisurakka "Kokonaisurakka"
-                                                  :mpu "Palvelusopimus (MPU)"
-                                                  "Ei sopimustyyppiä")
-                                    :valitse-fn #(tallenna-sopimustyyppi ur %)
-                                    :disabled (not kirjoitusoikeus?)}
-       sopimus/+sopimustyypit+])))
+    (if (= :teiden-hoito (:tyyppi ur))
+      (when (:sopimustyyppi ur) (fmt/sopimustyyppi-fmt (:sopimustyyppi ur)))
+      (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+           sopimustyyppi (:sopimustyyppi ur)]
+       [yleiset/livi-pudotusvalikko {:class "alasveto-sopimustyyppi"
+                                     :valinta sopimustyyppi
+                                     :format-fn #(case %
+                                                   :palvelusopimus "Palvelusopimus"
+                                                   :kokonaisurakka "Kokonaisurakka"
+                                                   :mpu "Palvelusopimus (MPU)"
+                                                   "Ei sopimustyyppiä")
+                                     :valitse-fn #(tallenna-sopimustyyppi ur %)
+                                     :vayla-tyyli? true
+                                     :disabled (not kirjoitusoikeus?)}
+        sopimus/+sopimustyypit+]))))
 
 (defn yha-tiedot [ur]
   {:yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? ur)
@@ -622,7 +626,7 @@
 
       ;; valaistus, tiemerkintä --> palvelusopimus
       ;; päällystys --> kokonaisurakka
-      "Sopimustyyppi: " (yllapitourakan-sopimustyyppi ur)
+      "Sopimustyyppi: " (sopimustyyppi ur)
       "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
                     [urakan-indeksi ur])
       "Urakan kesäaika: " [urakan-kesa-aika ur]]]))
