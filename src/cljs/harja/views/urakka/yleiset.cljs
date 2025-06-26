@@ -186,6 +186,7 @@
                                                    :mpu "Palvelusopimus (MPU)"
                                                    "Ei sopimustyyppiä")
                                      :valitse-fn #(tallenna-sopimustyyppi ur %)
+                                     :vayla-tyyli? true
                                      :disabled (not kirjoitusoikeus?)}
         sopimus/+sopimustyypit+]))))
 
