@@ -31,7 +31,7 @@
 (deftest palauta-vain-uniikit-liitteet
   (testing "Kaikki uniikkeja"
     (let [db (:db jarjestelma)
-          urakka-id 1
+          urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           liitteet [{:liite {:nimi "ei-kannassa1.xml" :tyyppi "text/xml" :sisalto (base64-enkoodaa-string "data1")}}
                     {:liite {:nimi "ei-kannassa2.xml" :tyyppi "text/xml" :sisalto (base64-enkoodaa-string "data2")}}]]
       ;; Ei lisätä liitteitä kantaan, koska oletaan liitteet uniikeiksi
@@ -39,8 +39,8 @@
 
   (testing "Osa duplikaatteje ja koko/nimi/urakka vaihtelee"
     (let [db (:db jarjestelma)
-          urakka-id-1 1
-          urakka-id-2 2
+          urakka-id-1 (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          urakka-id-2 (hae-iin-maanteiden-hoitourakan-2021-2026-id)
           liitteet-kantaan-1 [{:liite {:nimi "liite1.xml" :tyyppi "text/xml" :sisalto (base64-enkoodaa-string "data1")}}
                               {:liite {:nimi "liite2.xml" :tyyppi "text/xml" :sisalto (base64-enkoodaa-string "data2")}}]
           liitteet-kantaan-2 [{:liite {:nimi "liite3.xml" :tyyppi "text/xml" :sisalto (base64-enkoodaa-string "data3")}}]
@@ -80,7 +80,7 @@
         (poista-liite liite-id))))
   (testing "Kaikki duplikaatteja"
     (let [db (:db jarjestelma)
-          urakka-id 1
+          urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           liitteet [{:liite {:nimi "duplikaatti1.xml" :tyyppi "text/xml" :sisalto (base64-enkoodaa-string "duplikaatti1")}}
                     {:liite {:nimi "duplikaatti2.xml" :tyyppi "text/xml" :sisalto (base64-enkoodaa-string "duplikaatti2")}}]
           liite-db-idt (atom [])]
