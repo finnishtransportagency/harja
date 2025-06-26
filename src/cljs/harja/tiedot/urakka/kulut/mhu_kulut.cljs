@@ -43,6 +43,7 @@
 (defrecord LiiteLisatty [liite])
 (defrecord LiitteenPoistoOnnistui [tulos parametrit])
 
+(defrecord HaeTehtavatKaikilleKohdistuksille [lomake])
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
 (defrecord HaeUrakanTehtavaryhmanTehtavat [urakka tehtavaryhma nro])
 (defrecord HaeUrakanKulut [hakuparametrit])
@@ -333,11 +334,19 @@
       app))
 
   ValitseTehtavaryhmaKohdistukselle
-  (process-event [{nro :nro tehtavaryhma :tehtavaryhma} app]
-    (let [;; Toimenpideinstanssi on saatavilla tehtäväryhmän tiedoista, joten asetetaan se samalla
+  (process-event [{:keys [nro tehtavaryhma]} app]
+    (let [urakka (-> @tila/yleiset :urakka)
+          ;; Toimenpideinstanssi on saatavilla tehtäväryhmän tiedoista, joten asetetaan se samalla
           app (-> app
                 (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi tehtavaryhma))
-                (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] tehtavaryhma))]
+                (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] tehtavaryhma)
+                (assoc-in [:lomake :kohdistukset nro :tehtava] nil)
+                (assoc-in [:lomake :kohdistukset nro :tehtavaryhman-tehtavat] nil)
+                (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] true))]
+      ;; Haetaan tehtävät kun tehtäväryhmä valitaan
+      (when (and tehtavaryhma (:id tehtavaryhma))
+        ((tuck/current-send-function)
+         (->HaeUrakanTehtavaryhmanTehtavat urakka tehtavaryhma nro)))
       app))
 
   TavoitehintaanKuuluminen
@@ -604,15 +613,31 @@
              (assoc :lomake lomake)
              (assoc-in [:lomake :kohdistukset nro :tehtavaryhman-tehtavat] tulos)
              (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] false))]
-      app))
+      (if (= 1 (count tulos))
+            ;; Aseta ainoa tehtävä valinnaksi
+        (assoc-in app [:lomake :kohdistukset nro :tehtava] (first tulos))
+        app)))
   
+  HaeTehtavatKaikilleKohdistuksille
+  (process-event [{lomake :lomake} app]
+    (let [urakka (-> @tila/yleiset :urakka)]
+      (doseq [idx (range (count (:kohdistukset lomake)))]
+        (let [kohdistus (get-in lomake [:kohdistukset idx])
+              tehtavaryhma (:tehtavaryhma kohdistus)]
+          (when (and tehtavaryhma (:id tehtavaryhma))
+            ((tuck/current-send-function)
+             (->HaeUrakanTehtavaryhmanTehtavat urakka tehtavaryhma idx)))))
+      app))
   
   KuluHaettuLomakkeelle
   (process-event [{kulu :kulu} app]
-    (-> app
-      (assoc-in [:parametrit :haku-menossa] false)
-      (update-in [:parametrit :haetaan] dec)
-      (assoc :syottomoodi true :lomake (kulu->lomake app kulu))))
+    (let [lomake (kulu->lomake app kulu)
+          app (-> app
+                (assoc-in [:parametrit :haku-menossa] false)
+                (update-in [:parametrit :haetaan] dec)
+                (assoc :syottomoodi true :lomake lomake))]
+      ((tuck/current-send-function) (->HaeTehtavatKaikilleKohdistuksille lomake))
+      app))
 
   AvaaKulu
   (process-event [{kulu :kulu} app]
