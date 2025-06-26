@@ -81,7 +81,6 @@
   (log/debug "tallenna-tehtavat :: tiedot:" (pr-str tiedot))
   (doseq [tehtava (:muokatut-tehtavat tiedot)
           :let [;; Tarkista, että tehtava on olemassa
-                _ (prn "Tehtävä" tehtava)
                 tehtavadb (tehtavaryhmat-kyselyt/hae-tehtava db (:id (:id tehtava)))
                 _ (if (nil? tehtavadb)
                   ;; Varoita käyttäjää tuntemattomasta tehtävästä
