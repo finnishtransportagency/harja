@@ -324,7 +324,20 @@
         urakka, versio, voimassa_alkaen FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))
         ;; validi_aikana on triggeröity special case, joka syytä testata, historiarivi saa ts-rangen loppuarvonsa updatessa
         historiarivi-validi-aikana-alku (ffirst (q (format "SELECT lower(validi_aikana) FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))
-        historiarivi-validi-aikana-loppu (ffirst (q (format "SELECT upper(validi_aikana) FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))]
+        historiarivi-validi-aikana-loppu (ffirst (q (format "SELECT upper(validi_aikana) FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))
+        ;; tehdään vielä toinen päivitys: tämä varmastaa että historiataulun uniikkius ei rikkoudu triggerin takia
+        vastaus-toisen-updaten-jalkeen (filter
+                                         #(= "Johtamisen tarve muuttui taas kerran" (:syy %))
+                                         (:kirjatut-muutokset
+                                           (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-muutos
+                                             +kayttaja-jvh+
+                                             {:urakka-id urakka-id
+                                              :valittu-hoitokausi valittu-hoitokausi
+                                              :muutos (assoc muutos-payload
+                                                        :id (inc max-id-ennen-tallennusta)
+                                                        :syy "Johtamisen tarve muuttui taas kerran")})))
+        historirivit-toisen-updaten-jalkeen (q-map (format "SELECT id, versio FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta)))]
     (is (instance? java.util.Date historiarivi-validi-aikana-alku) "onhan pvm")
     (is (instance? java.util.Date historiarivi-validi-aikana-loppu) "onhan pvm")
     (is (pvm/ennen? historiarivi-validi-aikana-alku historiarivi-validi-aikana-loppu) "validi_aikana on ts-range, jossa alku < loppu")
@@ -334,7 +347,17 @@
     (is (= odotettu-historiarivi historiassa-rivi-updaten-jalkeen) "historiatietoa syntyi, koska UPDATE tehtiin")
     ;; assertoidaan luodut, näistä löytyy muokkausmetatiedoista vain luoja ja luotu
     (is (= vastaus-luonnin-jalkeen odotetut-luonnin-jalkeen) "Johto- ja hallintokorvausmuutokset luonnin jälkeen")
-    (is (= vastaus-updaten-jalkeen odotetut-updaten-jalkeen) "Johto- ja hallintokorvausmuutokset updaten jälkeen")))
+    (is (= vastaus-updaten-jalkeen odotetut-updaten-jalkeen) "Johto- ja hallintokorvausmuutokset updaten jälkeen")
+    (is (= vastaus-toisen-updaten-jalkeen
+          (list (assoc (first odotetut-updaten-jalkeen)
+                  :versio 3
+                  :syy "Johtamisen tarve muuttui taas kerran")))
+      "Johto- ja hallintokorvausmuutokset toisen updaten jälkeen")
+    (is (= [{:id (inc max-id-ennen-tallennusta)
+             :versio 1}
+            {:id (inc max-id-ennen-tallennusta)
+             :versio 2}]
+          historirivit-toisen-updaten-jalkeen) "historiassa on kaksi riviä toisen updaten jälkeen")))
 
 (deftest hae-yksittaisen-muutoksen-tiedot-lomakkeelle-ii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")

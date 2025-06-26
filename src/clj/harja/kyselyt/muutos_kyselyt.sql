@@ -90,7 +90,7 @@ VALUES
 RETURNING id, versio;
 
 -- name: paivita-muutos<!
-UPDATE mhu_muutos
+UPDATE ONLY mhu_muutos
    SET versio = versio + 1,
        muokattu = NOW(),
        muokkaaja = :kayttaja,

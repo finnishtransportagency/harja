@@ -134,6 +134,7 @@
     (assoc app
       ;; suljetaan aina lomake kun on saatu uudet muutostiedot
       :muokattava-muutos nil
+      :tallennus-kesken? false ;; tallennuksen jälkeinen haku tulee tähän handleriin
       :kirjatut-muutokset (:kirjatut-muutokset vastaus)
       :lasketut-muutokset (:lasketut-muutokset vastaus)
       :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
@@ -169,7 +170,6 @@
 
   TallennaMuutos
   (process-event [{muutos :muutos} app]
-    (prn "tallenna muutos: " muutos)
     (let [urakka (:urakka @tila/yleiset)
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
                                               ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
@@ -183,12 +183,12 @@
          :muutos muutos}
         {:onnistui ->HaeUrakanMuutostiedotOnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
          :epaonnistui ->TallennaMuutosEpaonnistui})
-      app))
+      (assoc app :tallennus-kesken? true)))
 
   TallennaMuutosEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Muutoksen tallentaminen epäonnistui!" :varoitus)
-    app)
+    (assoc app :tallennus-kesken? false))
 
   TallennaRahavarausmuutostenSyytEpaonnistui
   (process-event [{vastaus :vastaus} app]

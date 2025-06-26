@@ -138,12 +138,12 @@
           nil nil {:luokka "johto-ja-hallintokorvaus-muutokset-info"}]])}]))
 
 
-(defn muutoslomake [e! {:keys [muokattava-muutos] :as app}]
+(defn muutoslomake [e! {:keys [muokattava-muutos tallennus-kesken?] :as app}]
   (komp/luo
     (komp/sisaan-ulos
       #(e! (muutos-tiedot/->HaeMuutoksenTiedot muokattava-muutos))
       #(e! (muutos-tiedot/->MuokkaaMuutosta nil)))
-    (fn [e! {:keys [muokattava-muutos] :as app}]
+    (fn [e! {:keys [muokattava-muutos tallennus-kesken?] :as app}]
       [:span.muutoslomake
 
        ;; todo: eri tyyppisten muutosten lomakkeiden toteutus tähän
@@ -156,10 +156,13 @@
          :footer-fn (fn [muutos]
                       [:span.tallenna-ja-peruuta
                        [:hr]
-                       [napit/tallenna
-                        #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos (lomake/ilman-lomaketietoja muutos))]
-                       [napit/peruuta
-                        #(e! (muutos-tiedot/->MuokkaaMuutosta nil))]])}
+                       [napit/tallenna "Tallenna"
+                        #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos
+                           (lomake/ilman-lomaketietoja muutos))
+                        {:disabled tallennus-kesken?}                        ]
+                       [napit/peruuta "Peruuta"
+                        #(e! (muutos-tiedot/->MuokkaaMuutosta nil))
+                        {:disabled tallennus-kesken?}]])}
         ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
         (into []
           (concat
