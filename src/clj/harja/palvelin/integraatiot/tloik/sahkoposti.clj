@@ -80,6 +80,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (html-tyokalut/nappilinkki napin-teksti
                              (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
+;; TODO: Deprekoitu. Palautetaan vanha tapa käyttöön, mikäli sähköpostin kuvalinkkien muotoilussa tulee ongelmia.
 (defn- parsi-kuvalinkit-sahkopostiin [kuvat]
   (when-not (empty? kuvat)
      [:table
@@ -94,6 +95,16 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                           [:a {:href linkki} (str "Kuvalinkki " (inc indeksi))]]])
                       kuvat))]))
 
+(defn- yleistietotaulukon-kuvalinkit [kuvat]
+  (into [:div]
+    (map-indexed
+      (fn [indeksi linkki]
+        [:div
+         {:key (str (hash linkki) "-" indeksi)}
+         ;; Sanitoidaan linkki, jotta sen turvallisuus on varmistettu
+         [:a {:href (sanitoi linkki)} (str "Kuvalinkki " (inc indeksi))]])
+      kuvat)))
+
 (defn- karttasijainti-linkki-email [url]
   [:table {:width "100%" :cellspacing "0" :cellpadding "0" :border "0"}
    [:tbody
@@ -107,7 +118,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                :target "_blank"
                :rel "noopener noreferrer"} "Avaa sijainti kartalla"]]]]]]]]])
 
-(defn- selitteen-sisaltavat-yleiset-tiedot [ilmoitus]
+(defn- selitteen-sisaltavat-yleiset-tiedot [ilmoitus kuvat]
   (html-tyokalut/tietoja
     [["Urakka" (:urakkanimi ilmoitus)]
      ["Tunniste" (:tunniste ilmoitus)]
@@ -121,9 +132,13 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
      ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
      ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]
      [(when (:lisatieto ilmoitus) "Kuvaus ")
-      (when (:lisatieto ilmoitus) (sanitoi (:lisatieto ilmoitus)))]]))
+      (when (:lisatieto ilmoitus) (sanitoi (:lisatieto ilmoitus)))]
+     [(when (seq kuvat) "Kuvalinkit")
+      (when (seq kuvat) (with-meta
+                          (yleistietotaulukon-kuvalinkit (:kuvat ilmoitus))
+                          {:sanitoi? false}))]]))
 
-(defn- aiheen-sisaltavat-yleiset-tiedot [db ilmoitus]
+(defn- aiheen-sisaltavat-yleiset-tiedot [db ilmoitus kuvat]
   (let [aiheet-ja-tarkenteet (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db)]
     (html-tyokalut/tietoja
       [["Urakka" (:urakkanimi ilmoitus)]
@@ -144,7 +159,11 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
        ["Kuvaus " (when (:lisatieto ilmoitus) (sanitoi (:lisatieto ilmoitus)))]
        ["Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
        [(when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
-        (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))]])))
+        (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))]
+       [(when (seq kuvat) "Kuvalinkit")
+        (when (seq kuvat) (with-meta
+                            (yleistietotaulukon-kuvalinkit (:kuvat ilmoitus))
+                            {:sanitoi? false}))]])))
 
 (defn- viesti-wrapper
   "Käärii sähköpostin sisällön HTML-taulukkoon, joka on yhteensopivampi Outlookin kanssa kanssa.
@@ -165,18 +184,20 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (html
     (viesti-wrapper
       ;; Yleiset tiedot taulukko
+
       (if-not (get-in ilmoitus [:luokittelu :aihe])
-        (selitteen-sisaltavat-yleiset-tiedot ilmoitus)
-        (aiheen-sisaltavat-yleiset-tiedot db ilmoitus))
+        (selitteen-sisaltavat-yleiset-tiedot ilmoitus (:kuvat ilmoitus))
+        (aiheen-sisaltavat-yleiset-tiedot db ilmoitus (:kuvat ilmoitus)))
 
       ;; Kuvalinkit
-      (when (seq (:kuvat ilmoitus))
-        [:div {:style "padding-top:16px; padding-bottom: 14px;"}
-         (parsi-kuvalinkit-sahkopostiin (:kuvat ilmoitus))])
+      ;; TODO: Deprekoitu. Palautetaan vanha tapa käyttöön, mikäli sähköpostin kuvalinkkien muotoilussa tulee ongelmia.
+      ;;       Kuvalinkit on nyt integroitu suoraan yleistietotaulukkoon.
+      #_(when (seq (:kuvat ilmoitus))
+          [(parsi-kuvalinkit-sahkopostiin (:kuvat ilmoitus))])
 
       ;; Karttasijaintilinkki
       (when-let [sijainti (:sijainti ilmoitus)]
-        [:div {:style "padding-top:16px; padding-bottom: 14px;"}
+        [:div {:style "padding-top:14px; padding-bottom: 14px;"}
          (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
            (karttasijainti-linkki-email (format open-google-map-url-template lat lon)))])
 
