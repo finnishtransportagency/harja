@@ -190,7 +190,7 @@
                                    ;; Muutetaan tavoitehintainen keywordiksi
                                     kohdistus (-> kohdistus
                                                   (update :tavoitehintainen #(keyword (str %)))
-                                                  (update :tehtava konversio/jsonb->clojuremap))]
+                                                  (update :tehtava konv/jsonb->clojuremap))]
                                kohdistus))
                        kohdistukset)
         ;; Frontilla kulun muokkauksessa on olennaista, että kulun kohdistuksen rahavaraus sisältää kaikki mahdolliset tehtäväryhmät
