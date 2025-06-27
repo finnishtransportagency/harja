@@ -441,13 +441,15 @@
                                :talvihoitoreitit nil})
 
 (def tarjous-kustannussuunnitelma-default {:haku-kaynnissa? false?
+                                           :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
+                                                                   (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))))]
                                            :tarjous nil
-                                           :kustannussuunnitelma {:hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))}})
+                                           :kustannussuunnitelma nil})
 
-(defonce tila (atom {:yleiset     {:urakka {}}
+(defonce tila (atom {:yleiset {:urakka {}}
                      :hallinta-hairiot {}
                      :laatupoikkeamat laatupoikkeamat-default
-                     :laskutus    laskutus-default
+                     :laskutus laskutus-default
                      :lupaukset lupaukset-default
                      :muutokset muutokset-default
                      :pot2 pot2-default-arvot
