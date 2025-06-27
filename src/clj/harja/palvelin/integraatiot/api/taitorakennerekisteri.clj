@@ -65,7 +65,7 @@
 (defn muodosta-silta-tiedot [tarkastus]
   {:harja-id (:silta_id tarkastus)
    :tunnus (:siltatunnus tarkastus)
-   :oid (:trex_oid tarkastus)
+   :oid (:silta_oid tarkastus)
    :siltaid (:siltaid tarkastus)})
 
 (defn muodosta-havainnot [kohde]
@@ -133,13 +133,13 @@
     {:siltatarkastukset muunnetut-tarkastukset}))
 
 (defn onko-silta-olemassa?
-  "Tarkistaa, onko silta olemassa trex_oid:n perusteella."
+  "Tarkistaa, onko silta olemassa silta_oid:n perusteella."
   [db silta-oid]
   (:exists (first (taitorakennerekisteri-kyselyt/loytyyko-silta-trex-oidilla
                     db {:silta-oid silta-oid}))))
 
 (defn hae-sillan-siltatarkastukset
-  "Hakee siltatarkastukset sillalle sillan trex_oid:n perusteella."
+  "Hakee siltatarkastukset sillalle sillan silta_oid:n perusteella."
   [db {:keys [silta-oid] :as parametrit} _kayttaja]
   (log/info "Taitorakennerekisteri API, sillan siltatarkastusten haku, parametrit: " (pr-str parametrit))
   (tarkista-api-parametrit parametrit :silta-oid)
