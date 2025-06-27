@@ -158,30 +158,32 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
             :cellspacing "0" :cellpadding "0" :border "0" :width "100%"}
     [:tbody {:style "margin: 0;padding: 0;"}
      [:tr {:style "font-family: Helvetica, sans-serif;font-size: 100%;margin: 0;padding: 0;"}
-      (into [[:td {:style "font-family: Helvetica, sans-serif;font-size: 16px;margin: 0;padding: 8px;font-weight: normal;line-height: 24px;background-color: #ffffff"}]]
+      (into [:td {:style "font-family: Helvetica, sans-serif;font-size: 16px;margin: 0;padding: 8px;font-weight: normal;line-height: 24px;background-color: #ffffff"}]
         sisalto)]]]])
 
-(defn- viesti [db vastausosoite otsikko ilmoitus]
+(defn viesti [db vastausosoite otsikko ilmoitus]
   (html
-    [viesti-wrapper
-     ;; Yleiset tiedot taulukko
-     (if-not (get-in ilmoitus [:luokittelu :aihe])
-       (selitteen-sisaltavat-yleiset-tiedot ilmoitus)
-       (aiheen-sisaltavat-yleiset-tiedot db ilmoitus))
+    (viesti-wrapper
+      ;; Yleiset tiedot taulukko
+      (if-not (get-in ilmoitus [:luokittelu :aihe])
+        (selitteen-sisaltavat-yleiset-tiedot ilmoitus)
+        (aiheen-sisaltavat-yleiset-tiedot db ilmoitus))
 
-     ;; Kuvalinkit
-     [:div (parsi-kuvalinkit-sahkopostiin (:kuvat ilmoitus))]
+      ;; Kuvalinkit
+      (when (seq (:kuvat ilmoitus))
+        [:div {:style "padding-top:16px; padding-bottom: 14px;"}
+         (parsi-kuvalinkit-sahkopostiin (:kuvat ilmoitus))])
 
-     ;; Karttasijaintilinkki
-     (when-let [sijainti (:sijainti ilmoitus)]
-       [:div {:style "padding-top:16px; padding-bottom: 14px;"}
-        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
-          [karttasijainti-linkki-email (format open-google-map-url-template lat lon)])])
+      ;; Karttasijaintilinkki
+      (when-let [sijainti (:sijainti ilmoitus)]
+        [:div {:style "padding-top:16px; padding-bottom: 14px;"}
+         (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
+           (karttasijainti-linkki-email (format open-google-map-url-template lat lon)))])
 
-     ;; Kuittausnappulat
-     (for [teksti (map first kuittaustyypit)]
-       [:div {:style "padding-top: 10px;"}
-        (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
+      ;; Kuittausnappulat
+      (for [teksti (map first kuittaustyypit)]
+        [:div {:style "padding-top: 10px;"}
+         (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))]))))
 
 (defn otsikko-ja-viesti [db vastausosoite ilmoitus]
   (let [otsikko (otsikko ilmoitus)
