@@ -1,5 +1,7 @@
 (ns harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot
-  (:require [tuck.core :as tuck]
+  (:require [clojure.string :as str]
+            [harja.tyokalut.yleiset :as tyokalut]
+            [tuck.core :as tuck]
             [harja.pvm :as pvm]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
@@ -29,7 +31,6 @@
 (defrecord HaeKustannussuunnitelmanTiedotOnnistui [vastaus])
 (defrecord HaeKustannussuunnitelmanTiedotEpaonnistui [vastaus])
 
-
 (defrecord HaeTyhjatTarjouksenTiedot [])
 (defrecord HaeTyhjatTarjouksenTiedotOnnistui [vastaus])
 (defrecord HaeTyhjatTarjouksenTiedotEpaonnistui [vastaus])
@@ -38,6 +39,20 @@
 (defrecord TallennaTarjouksenTiedot [tarjous])
 (defrecord TallennaTarjouksenTiedotOnnistui [vastaus])
 (defrecord TallennaTarjouksenTiedotEpaonnistui [vastaus])
+
+;; Tallennetaan kilpailutettavat hankinnat kustannussuunnitelmaan
+(defrecord TallennaKilpailutettavatHankinnat [kilpailutettavat-hankinnat])
+(defrecord PaivitaKilpailutettavatHankinnat [kilpailutettavat-hankinnat])
+(defrecord TallennaKilpailutettavatHankinnatOnnistui [vastaus])
+(defrecord TallennaKilpailutettavatHankinnatEpaonnistui [vastaus])
+
+;; Tallenna erillishankinnat
+(defrecord TallennaErillishankinnat [erillishankinnat])
+(defrecord PaivitaErillishankinnat [erillishankinnat])
+(defrecord TallennaErillishankinnatOnnistui [vastaus])
+(defrecord TallennaErillishankinnatEpaonnistui [vastaus])
+(defrecord JaaErillishankinnatTasan [summa])
+
 
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
 
@@ -50,18 +65,35 @@
     {:onnistui ->HaeKustannussuunnitelmanTiedotOnnistui
      :epaonnistui ->HaeKustannussuunnitelmanTiedotEpaonnistui}))
 
+(defn parsi-kilpailutettavat-hankinnat-virhe [virhe toimenpiteet]
+  (let [virheen-rivi (when-let [matches (or (re-find #"\[:toimenpiteet (\d+) :loppukausi\]" virhe)
+                                          (re-find #"\[:toimenpiteet (\d+) :alkukausi\]" virhe))]
+                       (js/parseInt (second matches)))
+        loppukausi? (str/includes? virhe ":loppukausi")
+        toimenpide-rivi (nth toimenpiteet virheen-rivi)
+        rivin-nimi (:nimi toimenpide-rivi)]
+    (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi
+      (if loppukausi? "Tammi-syyskuun " "Loka-joulukuun ") "arvossa virhe. Anna positiivinen summa.")))
+
+(defn parsi-erillishankinnat-virhe [virhe erillishankinnat]
+  (let [virheen-rivi (when-let [matches (re-find #"\[:erillishankinnat (\d+) :summa\]" virhe)]
+                       (js/parseInt (second matches)))
+        erillishankinta (nth erillishankinnat virheen-rivi)
+        rivin-nimi (:kalenterikuukausi erillishankinta)]
+    (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi " arvossa virhe. Anna positiivinen summa.")))
+
 (extend-protocol tuck/Event
 
   HaeTarjouksenTiedot
   (process-event
     [_ app]
     (tuck-apurit/post! :hae-tarjouksen-tiedot
-                       {:urakka-id (-> @tila/yleiset :urakka :id)}
-                       {:onnistui ->HaeTarjouksenTiedotOnnistui
-                        :epaonnistui ->HaeTarjouksenTiedotEpaonnistui})
+      {:urakka-id (-> @tila/yleiset :urakka :id)}
+      {:onnistui ->HaeTarjouksenTiedotOnnistui
+       :epaonnistui ->HaeTarjouksenTiedotEpaonnistui})
     (-> app
-        (assoc :haku-kaynnissa? true)
-        (assoc :tallennus-kesken? false)))
+      (assoc :haku-kaynnissa? true)
+      (assoc :tallennus-kesken? false)))
 
   HaeTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -78,18 +110,18 @@
   (process-event
     [_ app]
     (tuck-apurit/post! :hae-tyhjat-tarjouksen-tiedot
-                       {:urakka-id (-> @tila/yleiset :urakka :id)}
-                       {:onnistui ->HaeTyhjatTarjouksenTiedotOnnistui
-                        :epaonnistui ->HaeTyhjatTarjouksenTiedotEpaonnistui})
+      {:urakka-id (-> @tila/yleiset :urakka :id)}
+      {:onnistui ->HaeTyhjatTarjouksenTiedotOnnistui
+       :epaonnistui ->HaeTyhjatTarjouksenTiedotEpaonnistui})
     (-> app
-        (assoc :haku-kaynnissa? true)
-        (assoc :tallennus-kesken? false)))
+      (assoc :haku-kaynnissa? true)
+      (assoc :tallennus-kesken? false)))
 
   HaeTyhjatTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
     (-> app
-        (assoc :haku-kaynnissa? false)
-        (assoc :tarjous (:tarjous vastaus))))
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))))
 
   HaeTyhjatTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -122,7 +154,7 @@
   HaeKustannussuunnitelmanTiedot
   (process-event
     [_ app]
-    (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app))
+    (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (pvm/vuosi (first (:valittu-hoitokausi app))))
     (-> app
       (assoc :haku-kaynnissa? true)
       (assoc :tallennus-kesken? false)))
@@ -139,6 +171,124 @@
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))
 
+  PaivitaKilpailutettavatHankinnat
+  (process-event
+    [{kilpailutettavat-hankinnat :kilpailutettavat-hankinnat} app]
+    (let [muuttuneet (vec kilpailutettavat-hankinnat)
+          ;; Laske yhteenvedot uusiksi
+          muuttuneet (mapv (fn [rivi]
+                            (let [alkukausi (or (:alkukausi rivi) 0)
+                                  loppukausi (or (:loppukausi rivi) 0)]
+                              (merge rivi
+                                {:alkukausi alkukausi
+                                 :loppukausi loppukausi
+                                 :alkukausi-indeksikorjattu nil
+                                 :loppukausi-indeksikorjattu nil
+                                 :yhteensa (+ alkukausi loppukausi)
+                                 :yhteensa-indeksikorjattu nil})))
+                       muuttuneet)
+          yhteenveto {:nimi "Yhteensä"
+                      :alkukausi (apply + (map :alkukausi muuttuneet))
+                      :alkukausi-indeksikorjattu (apply + (map :alkukausi-indeksikorjattu muuttuneet))
+                      :loppukausi (apply + (map :loppukausi muuttuneet))
+                      :loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu muuttuneet))
+                      :yhteensa (+ (apply + (map :alkukausi muuttuneet)) (apply + (map :loppukausi muuttuneet)))
+                      :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu muuttuneet)) (apply + (map :loppukausi-indeksikorjattu muuttuneet)))
+                      :pysyvat-muutokset "Ei muutoksia"}
+          muuttuneet (conj muuttuneet yhteenveto)]
+      (-> app
+        (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] nil)
+        (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet] muuttuneet))))
+
+  TallennaKilpailutettavatHankinnat
+  (process-event
+    [{kilpailutettavat-hankinnat :kilpailutettavat-hankinnat} app]
+    (let [vuosi (pvm/vuosi (first (:valittu-hoitokausi app)))]
+      (tuck-apurit/post! :tallenna-kilpailutettavat-hankinnat
+        {:urakka-id (-> @tila/yleiset :urakka :id)
+         :hoitovuoden-alkuvuosi vuosi
+         :toimenpiteet kilpailutettavat-hankinnat}
+        {:onnistui ->TallennaKilpailutettavatHankinnatOnnistui
+         :epaonnistui ->TallennaKilpailutettavatHankinnatEpaonnistui
+         :paasta-virhe-lapi? true})
+      (assoc app :tallennus-kesken? true)))
+
+  TallennaKilpailutettavatHankinnatOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Kilpailutettavat hankinat tallennettiin.")
+    (-> app
+      (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] nil)
+      (assoc :tallennus-kesken? false)
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+
+  TallennaKilpailutettavatHankinnatEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (let [parsitut-virheet (parsi-kilpailutettavat-hankinnat-virhe (get-in vastaus [:parse-error :original-text])
+                             (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet]))]
+      (viesti/nayta-toast!
+           parsitut-virheet
+           :varoitus
+           viesti/viestin-nayttoaika-keskipitka)
+      (-> app
+        (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] parsitut-virheet)
+        (assoc :tallennus-kesken? false))))
+
+  PaivitaErillishankinnat
+  (process-event
+    [{erillishankinnat :erillishankinnat} app]
+    (let [muuttuneet (sort-by (juxt :vuosi :kuukausi) (vec erillishankinnat))]
+      (-> app
+        (assoc-in [:kustannussuunnitelma :erillishankinnat-virheet] nil)
+        (assoc-in [:kustannussuunnitelma :erillishankinnat] muuttuneet))))
+
+  TallennaErillishankinnat
+  (process-event
+    [{erillishankinnat :erillishankinnat} app]
+    (tuck-apurit/post! :tallenna-erillishankinnat
+      {:urakka-id (-> @tila/yleiset :urakka :id)
+       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
+       :erillishankinnat erillishankinnat}
+      {:onnistui ->TallennaErillishankinnatOnnistui
+       :epaonnistui ->TallennaErillishankinnatEpaonnistui
+       :paasta-virhe-lapi? true})
+    (assoc app :tallennus-kesken? true))
+
+  TallennaErillishankinnatOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Kilpailutettavat hankinat tallennettiin.")
+    (-> app
+      (assoc-in [:kustannussuunnitelma :erillishankinnat-virheet] nil)
+      (assoc :tallennus-kesken? false)
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+
+  TallennaErillishankinnatEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (let [parsitut-virheet (parsi-erillishankinnat-virhe (get-in vastaus [:parse-error :original-text])
+                             (get-in app [:kustannussuunnitelma :erillishankinnat]))]
+      (viesti/nayta-toast!
+        parsitut-virheet
+        :varoitus
+        viesti/viestin-nayttoaika-keskipitka)
+      (-> app
+        (assoc-in [:kustannussuunnitelma :erillishankinnat-virheet] parsitut-virheet)
+        (assoc :tallennus-kesken? false))))
+
+  JaaErillishankinnatTasan
+  (process-event [{:keys [summa]} app]
+    (let [erillishankinnat (get-in app [:kustannussuunnitelma :erillishankinnat])
+          kk-summa (tyokalut/round2 2 (/ summa 12))
+          viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
+          erillishankinnat (map-indexed (fn [indeksi rivi]
+                                          (merge rivi
+                                            {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
+                                             :summa_indeksikorjattu nil}))
+                             erillishankinnat)]
+      (assoc-in app [:kustannussuunnitelma :erillishankinnat] erillishankinnat)))
+
   ValitseHoitokausiKustannussuunnitelmaan
   (process-event [{vuosi :vuosi} app]
     (let [app (-> app
@@ -150,5 +300,5 @@
                 (assoc :haku-kaynnissa? true)
                 (assoc :hoitokauden-alkuvuosi vuosi))]
       ;; Haetaan kaikki välikatselmuksessa tarvittavat tiedot
-      (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app))
+      (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) vuosi)
       (assoc app :haku-kaynnissa? true))))

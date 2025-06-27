@@ -47,5 +47,9 @@ VALUES (:jarjestelma,
 
 -- name: poista-vanhentuneet-havainnot!
 -- Poistaa vanhentuneet havainnot työkoneseurannasta, jos edellinen havainto > 5h vanha
-DELETE FROM tyokonehavainto
- WHERE vastaanotettu < NOW() - INTERVAL '5 hours';
+-- Poikkeus: valaistusurakoissa havainnot säilytetään 3 viikkoa
+-- TODO: Valaistusurakoita koskeva ratkaisu ajateltiin väliaikaiseksi kesällä 2025
+DELETE
+FROM tyokonehavainto
+WHERE (vastaanotettu < NOW() - INTERVAL '5 hours' AND urakkaid IN (select id from urakka where tyyppi != 'valaistus'))
+   OR (vastaanotettu < NOW() - INTERVAL '3 weeks' AND urakkaid IN (select id from urakka where tyyppi = 'valaistus'));
