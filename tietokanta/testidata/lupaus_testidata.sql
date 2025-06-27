@@ -52,7 +52,7 @@ DO $$
         urakkaid_suomussalmi INTEGER;
         urakkaid_ii INTEGER;
     BEGIN
-        urakkaid_kajaani = (SELECT id FROM urakka where nimi = 'POP MHU Kajaani 2024-2029'); 
+        urakkaid_kajaani = (SELECT id FROM urakka where nimi = 'POP MHU Kajaani 2025-2030');
         urakkaid_suomussalmi = (SELECT id FROM urakka where nimi = 'POP MHU Suomussalmi 2024-2029');
         urakkaid_ii = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026'); 
         INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)

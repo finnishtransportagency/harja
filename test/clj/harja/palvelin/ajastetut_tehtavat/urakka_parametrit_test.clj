@@ -37,7 +37,7 @@
         ii-parametrit (first (q-map (format "SELECT * FROM urakka_parametrit WHERE urakkaid = %s" ii-urakka-id)))
 
         ;; Kajaani on MHU+ urakka
-        kajaani-urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        kajaani-urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         kajaani-parametrit (first (q-map (format "SELECT * FROM urakka_parametrit WHERE urakkaid = %s" kajaani-urakka-id)))
 
         bonusprosentti-tasan-alle-2024 0.13M
