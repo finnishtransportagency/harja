@@ -135,7 +135,7 @@
 (defn onko-silta-olemassa?
   "Tarkistaa, onko silta olemassa silta_oid:n perusteella."
   [db silta-oid]
-  (:exists (first (taitorakennerekisteri-kyselyt/loytyyko-silta-trex-oidilla
+  (:exists (first (taitorakennerekisteri-kyselyt/loytyyko-silta-oidilla
                     db {:silta-oid silta-oid}))))
 
 (defn hae-sillan-siltatarkastukset

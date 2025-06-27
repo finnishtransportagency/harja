@@ -137,7 +137,7 @@
         (is (= sillat-ennen sillat-jalkeen))))
 
     (testing "Siirrä silta toiseen urakkaan kun sillalle on merkattu tarkastuksia entiseen urakkaan"
-      (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:silta_oid odotettu-vastaus) :siltatunnus (:siltatunnus odotettu-vastaus) :siltanimi (:siltanimi odotettu-vastaus)})))
+      (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:silta-oid (:silta_oid odotettu-vastaus) :siltatunnus (:siltatunnus odotettu-vastaus) :siltanimi (:siltanimi odotettu-vastaus)})))
                                                :urakka kajaani-aktiivinen-u-id
                                                :tarkastusaika (Date.)
                                                :tarkastaja "Foo"
@@ -181,7 +181,7 @@
           luotava-silta (assoc silta-tuonti :oid "54350234")
           _tee-silta (vie-silta-urakalle ds luotava-silta (:id aktiivinen-urakka))
           tehty-silta (first (q-map (str "SELECT * FROM silta WHERE silta_oid = '" (:oid luotava-silta) "'")))
-          _tarkastus (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:oid luotava-silta) :siltatunnus (:tunnus luotava-silta) :siltanimi (:nimi luotava-silta)})))
+          _tarkastus (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:silta-oid (:oid luotava-silta) :siltatunnus (:tunnus luotava-silta) :siltanimi (:nimi luotava-silta)})))
                                                               :urakka (:id aktiivinen-urakka)
                                                               :tarkastusaika (Date.)
                                                               :tarkastaja "Foo"
@@ -204,7 +204,7 @@
           luotava-silta (assoc silta-tuonti :oid "9876543")
           _tee-silta (vie-silta-urakalle ds luotava-silta (:id paattynyt-urakka))
           tehty-silta (first (q-map (str "SELECT * FROM silta WHERE silta_oid = '" (:oid luotava-silta) "'")))
-          _tarkastus (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:oid luotava-silta) :siltanimi (:nimi luotava-silta) :siltatunnus (:tunnus luotava-silta)})))
+          _tarkastus (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:silta-oid (:oid luotava-silta) :siltanimi (:nimi luotava-silta) :siltatunnus (:tunnus luotava-silta)})))
                                                              :urakka (:id paattynyt-urakka)
                                                              :tarkastusaika (Date.)
                                                              :tarkastaja "Foo"

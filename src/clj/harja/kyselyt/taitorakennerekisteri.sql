@@ -48,7 +48,7 @@ WHERE (st.luotu BETWEEN :alkuaika AND :loppuaika)
    OR (st.muokattu BETWEEN :alkuaika AND :loppuaika)
 ORDER BY st.luotu DESC;
 
--- name: loytyyko-silta-trex-oidilla
+-- name: loytyyko-silta-oidilla
 -- Palauttaa boolean arvon, joka kertoo löytyykö silta annetulla silta_oid:lla
 SELECT EXISTS(
   SELECT 1
