@@ -16,7 +16,8 @@
             [harja.ui.kentat :as kentat]
             [clojure.string :as str] 
             [harja.pvm :as pvm]
-            [goog.string :as gstring]))
+            [goog.string :as gstring]
+            [harja.asiakas.kommunikaatio :as k]))
 
 (def kulu-lukittu-teksti "Hoitokauden välikatselmuksen tavoitehintaan liittyvät päätökset on tehty, joten kuluja ei voi enää lisätä tai muokata.")
 
@@ -94,6 +95,7 @@
     (not validi?)))
 
 (defn tehtavan-valinta [{:keys [valitse-fn disabled virhe? valinta format-fn tehtava-haku-menossa]} tehtavat]
+  (when (and (k/kehitysymparistossa?) (pvm/jalkeen? (pvm/nyt) (pvm/->pvm "01.10.2025")))
     [:<>
      (when (or (seq tehtavat) valinta)
        [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
@@ -113,7 +115,7 @@
      (when tehtava-haku-menossa
        [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
         [:div.margin-top-32
-         [yleiset/ajax-loader-pieni "Ladataan mahdollisia tehtäviä..."]]])])
+         [yleiset/ajax-loader-pieni "Ladataan mahdollisia tehtäviä..."]]])]))
 
 (defn lisatieto [e! lisatieto lomake nro]
   [:div.col-xs-12.col-md-3
@@ -395,6 +397,20 @@
                           :input-luokka "maara-input"
                           :vayla-tyyli? true}}]]]]]))
 
+(defn testausvalinnat [e! app]
+  (when (k/kehitysymparistossa?)
+    [:<>
+     [:h3 "Testausta varten"] 
+     [:span.nykyhetki.label-ja-kentta
+      [:span.kentan-otsikko "Aseta nykyhetki"]
+      [:div.kentta
+       [kentat/tee-kentta
+        {:tyyppi :pvm}
+        (r/wrap
+          (:nykyhetki app)
+          #(e! (tiedot/->AsetaNykyhetki %)))]]]
+     [debug/debug app {:otsikko "KULUJEN TUCK STATE"}]]))
+
 (defn kululomake [e! app]
   (let [syottomoodi (:syottomoodi app)
         tehtavaryhmat (:tehtavaryhmat app)
@@ -447,7 +463,7 @@
                            (fmt/euro (or summa-yht 0)))]
     [:div.kululomake
      [:div.row
-      [debug/debug app]]
+      [testausvalinnat e! app]]
      [:div.row
       ;; Otsikko
       [:div.col-xs-12.col-md-6

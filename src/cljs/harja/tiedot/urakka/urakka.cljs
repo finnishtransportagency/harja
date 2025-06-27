@@ -9,7 +9,8 @@
             [harja.loki :as loki]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.tiedot.urakka :as u]))
+            [harja.tiedot.urakka :as u]
+            [harja.asiakas.kommunikaatio :as k]))
 
 (def kuluva-alkuvuosi
   (if (>= (pvm/kuukausi (pvm/nyt)) 10)
@@ -274,7 +275,8 @@
   ([kulu]
    (kulun-validointi-meta kulu {}))
   ([{:keys [kohdistukset] :as _kulu} opts]
-   (let [kohdistusvalidoinnit (mapcat (fn [i]
+   (let [onko-tehtava-validointi-kaytossa? (and (k/kehitysymparistossa?) (pvm/jalkeen? (pvm/nyt) (pvm/->pvm "01.10.2025")))
+         kohdistusvalidoinnit (mapcat (fn [i]
                                         (let [kohdistus (get kohdistukset i)
                                               tehtavaryhman-tehtavat? (seq (:tehtavaryhman-tehtavat kohdistus))]
                                           (cond
@@ -288,9 +290,9 @@
                                             (= :hankintakulu (:tyyppi kohdistus))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
-                                             (when tehtavaryhman-tehtavat?
+                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
                                                [:kohdistukset i :tehtava])
-                                             (when tehtavaryhman-tehtavat?
+                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
                                                (:kulut/tehtava validoinnit))]
 
                                             ;; Rahavarauksella on pakko olla rahavaraus ja tehtäväryhmä
@@ -304,9 +306,9 @@
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
                                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
-                                             (when tehtavaryhman-tehtavat?
+                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
                                                [:kohdistukset i :tehtava])
-                                             (when tehtavaryhman-tehtavat?
+                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
                                                (:kulut/tehtava validoinnit))]
 
                                             ;; Kun Muu kulu on ei-tavoitehintainen tarkistetaan summa, lisätieto ja toimenpideinstanssi

@@ -11,6 +11,7 @@
     [harja.pvm :as pvm])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
+(defrecord AsetaNykyhetki [nykyhetki])
 (defrecord LisaaKohdistus [lomake])
 (defrecord PoistaKohdistus [indeksi])
 (defrecord KohdistusTyyppi [tyyppi nro])
@@ -198,6 +199,7 @@
 (defn alusta-lomake [app]
   (let [urakan-alkupvm (:alkupvm @navigaatio/valittu-urakka)
         urakan-loppupvm (:loppupvm @navigaatio/valittu-urakka)
+        nykyhetki (or (:nykyhetki app) (pvm/nyt))
         hk-loppu-pvm (pvm/hoitokauden-loppupvm (pvm/vuosi urakan-loppupvm))
         kuluva-hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/nyt))
         ;; Kuluva kuukausi ei voi olla pienempi, kuin urakan alkupvm:n kuukausi
@@ -283,7 +285,16 @@
   (keep-indexed #(when (not= %1 n) %2) coll))
 
 (extend-protocol tuck/Event
-
+  
+  AsetaNykyhetki
+  (process-event [{nykyhetki :nykyhetki} app]
+    (let [app (assoc app :nykyhetki nykyhetki)]
+          ;; Aseta pvm-funktioiden käyttämä testipäivämäärä
+      (if nykyhetki
+        (pvm/aseta-testi-nykyhetki! nykyhetki)
+        (pvm/poista-testi-nykyhetki!))
+      app))
+  
   LisaaKohdistus
   (process-event [{lomake :lomake} app]
     (let [kohdistukset (into [] (:kohdistukset lomake))
