@@ -376,7 +376,7 @@
     (is (= vastaus odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
 
 (deftest johto-ja-hallintokorvausmuutoksen-kulu-2025-ja-jalkeen-oltava-negatiivinen
-  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         ;; muutetaan väliaikaisesti urakan alkupvm 10.1.2025 jotta sääntö astuu voimaan
         _ (u (format "UPDATE urakka SET alkupvm = '2025-10-01' WHERE id = %s;" urakka-id))
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
