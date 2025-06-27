@@ -112,27 +112,26 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
 
 (defn- aiheen-sisaltavat-yleiset-tiedot [db ilmoitus]
   (let [aiheet-ja-tarkenteet (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db)]
-    [:div
-     (html-tyokalut/tietoja
-       [["Urakka" (:urakkanimi ilmoitus)]
-        ["Id" (:ilmoitusid ilmoitus)]
-        ["Tunniste" (:tunniste ilmoitus)]
-        ["Ilmoitettu" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
-        ["Lähetetty HARJAan" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
-        ["Yhteydenottopyyntö " (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")]
-        ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
-        ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
-        ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]
-        ["Aihe " (palautevayla/hae-aihe aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :aihe]))]
-        ["Tarkenne " (palautevayla/hae-tarkenne aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :tarkenne]))]
-        [(when (:selitteet ilmoitus) "Selitteet")
-         (when (:selitteet ilmoitus) (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus))))]
-        ["Otsikko " (:otsikko ilmoitus)]
-        ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
-        ["Kuvaus " (when (:lisatieto ilmoitus) (sanitoi (:lisatieto ilmoitus)))]
-        ["Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
-        [(when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
-         (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))]])]))
+    (html-tyokalut/tietoja
+      [["Urakka" (:urakkanimi ilmoitus)]
+       ["Id" (:ilmoitusid ilmoitus)]
+       ["Tunniste" (:tunniste ilmoitus)]
+       ["Ilmoitettu" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
+       ["Lähetetty HARJAan" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
+       ["Yhteydenottopyyntö " (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")]
+       ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
+       ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
+       ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]
+       ["Aihe " (palautevayla/hae-aihe aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :aihe]))]
+       ["Tarkenne " (palautevayla/hae-tarkenne aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :tarkenne]))]
+       [(when (:selitteet ilmoitus) "Selitteet")
+        (when (:selitteet ilmoitus) (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus))))]
+       ["Otsikko " (:otsikko ilmoitus)]
+       ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
+       ["Kuvaus " (when (:lisatieto ilmoitus) (sanitoi (:lisatieto ilmoitus)))]
+       ["Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
+       [(when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
+        (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))]])))
 
 (defn- viesti [db vastausosoite otsikko ilmoitus]
   (html
