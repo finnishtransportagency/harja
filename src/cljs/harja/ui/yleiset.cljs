@@ -453,11 +453,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                     :valinta valinta
                                     :valitse-fn valitse-fn
                                     :format-fn format-fn})}
-            [:div.valittu.overflow-ellipsis (cond
-                                              naytettava-arvo naytettava-arvo
-                                              valinta (format-fn valinta)
-                                              placeholder [:span.valittu-placeholder {:style {:color "#888"}} placeholder]
-                                              :else nil)]
+            [:div.valittu.overflow-ellipsis (or naytettava-arvo (format-fn valinta))]
             (if @auki?
               ^{:key :auki}
               [:span.livicon-chevron-up {:id (str "chevron-up-btn-" (or elementin-id "") "-" (hash vaihtoehdot))
