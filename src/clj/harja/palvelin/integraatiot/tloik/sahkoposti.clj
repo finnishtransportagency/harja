@@ -94,6 +94,19 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                           [:a {:href linkki} (str "Kuvalinkki " (inc indeksi))]]])
                       kuvat))]))
 
+(defn- karttasijainti-linkki-email [url]
+  [:table {:width "100%" :cellspacing "0" :cellpadding "0" :border "0"}
+   [:tbody
+    [:tr
+     [:td
+      [:table {:cellspacing "0" :cellpadding "0" :border "0"}
+       [:tbody
+        [:tr
+         [:td
+          [:a {:href url
+               :target "_blank"
+               :rel "noopener noreferrer"} "Avaa sijainti kartalla"]]]]]]]]])
+
 (defn- selitteen-sisaltavat-yleiset-tiedot [ilmoitus]
   (html-tyokalut/tietoja
     [["Urakka" (:urakkanimi ilmoitus)]
@@ -161,10 +174,9 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
 
      ;; Karttasijaintilinkki
      (when-let [sijainti (:sijainti ilmoitus)]
-       (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
-         [:a {:href (format open-google-map-url-template lat lon)
-              :target "_blank"
-              :rel "noopener noreferrer"} "Avaa sijainti kartalla"]))
+       [:div {:style "padding-top:16px; padding-bottom: 14px;"}
+        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
+          [karttasijainti-linkki-email (format open-google-map-url-template lat lon)])])
 
      ;; Kuittausnappulat
      (for [teksti (map first kuittaustyypit)]
