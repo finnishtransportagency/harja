@@ -25,6 +25,8 @@
                     (java.text SimpleDateFormat)
                     (org.joda.time DateTime DateTimeZone))))
 
+(def ^:dynamic *testi-nykyhetki* nil)
+
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
@@ -177,8 +179,24 @@
   "Frontissa palauttaa goog.date.Datetimen (käyttäjän laitteen aika)
   Backendissä palauttaa java.util.Daten"
   []
-  #?(:cljs (DateTime.)
+  #?(:cljs (if *testi-nykyhetki*
+             *testi-nykyhetki*
+             (DateTime.))
      :clj  (Date.)))
+
+#?(:cljs
+(defn aseta-testi-nykyhetki!
+  "Asettaa testipäivämäärän. Käytä vain testeissä!"
+  [pvm]
+  (set! *testi-nykyhetki* (cond
+                            (instance? DateTime pvm) pvm
+                            (instance? js/Date pvm) (goog.date.DateTime. (js/Date. pvm)) 
+                            :else nil))))
+
+(defn poista-testi-nykyhetki!
+  "Poistaa testipäivämäärän"
+  []
+  (set! *testi-nykyhetki* nil))
 
 #?(:clj
    (defn eilinen
