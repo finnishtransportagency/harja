@@ -133,20 +133,40 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
        [(when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
         (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))]])))
 
+(defn- viesti-wrapper
+  "Käärii sähköpostin sisällön HTML-taulukkoon, joka on yhteensopivampi Outlookin kanssa kanssa.
+   Taulukon ulkoasu on yksinkertainen ja taulukko on 100% leveä.
+   On tärkeää resetoida kaikki välistykseen liittyvät tyylit, koska Outlook.
+   Välistyksen voi säätää erikseen taulukon sisällä. Älä käytä marginia, koska se on epäluotettava Outlookissa.
+   Käytä pääsääntöisesti paddingia, joka toimii luotettavammin."
+  [& sisalto]
+  [:div
+   [:table {:style "margin: 0;padding: 0;border-spacing: 0;overflow: hidden;background-color: #ffffff;"
+            :cellspacing "0" :cellpadding "0" :border "0" :width "100%"}
+    [:tbody {:style "margin: 0;padding: 0;"}
+     [:tr {:style "font-family: Helvetica, sans-serif;font-size: 100%;margin: 0;padding: 0;"}
+      (into [[:td {:style "font-family: Helvetica, sans-serif;font-size: 16px;margin: 0;padding: 8px;font-weight: normal;line-height: 24px;background-color: #ffffff"}]]
+        sisalto)]]]])
+
 (defn- viesti [db vastausosoite otsikko ilmoitus]
   (html
-    [:div
-     [:table
-      (if-not (get-in ilmoitus [:luokittelu :aihe])
-        (selitteen-sisaltavat-yleiset-tiedot ilmoitus)
-        (aiheen-sisaltavat-yleiset-tiedot db ilmoitus))]
+    [viesti-wrapper
+     ;; Yleiset tiedot taulukko
+     (if-not (get-in ilmoitus [:luokittelu :aihe])
+       (selitteen-sisaltavat-yleiset-tiedot ilmoitus)
+       (aiheen-sisaltavat-yleiset-tiedot db ilmoitus))
 
+     ;; Kuvalinkit
      [:div (parsi-kuvalinkit-sahkopostiin (:kuvat ilmoitus))]
+
+     ;; Karttasijaintilinkki
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
          [:a {:href (format open-google-map-url-template lat lon)
               :target "_blank"
               :rel "noopener noreferrer"} "Avaa sijainti kartalla"]))
+
+     ;; Kuittausnappulat
      (for [teksti (map first kuittaustyypit)]
        [:div {:style "padding-top: 10px;"}
         (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
