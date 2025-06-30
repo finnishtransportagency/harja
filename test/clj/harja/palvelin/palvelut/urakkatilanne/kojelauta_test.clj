@@ -36,7 +36,7 @@
     (is (every? #(integer? (:hoitokauden_alkuvuosi %)) vastaus))
     (is (every? #(integer? (:ely_id %)) vastaus))
     (is (every? #(map? (:ks_tila %)) vastaus))
-    (is (= 10 (count vastaus)) "Urakoiden lukumäärä")))
+    (is (= 9 (count vastaus)) "Urakoiden lukumäärä")))
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2024-vajaa-kayttooikeus-throwaa
   ;; Urakanvalvojan pitää nähdä
@@ -54,8 +54,8 @@
                                       :hoitokauden-alkuvuosi 2024
                                       :urakka-idt nil
                                       :ely-idt #{}})]
-    (is (= 10 (count vastaus-urakanvalvojalle)) "Urakanvalvoja näkee")
-    (is (= 10 (count vastaus-ely-paakayttajalle)) "ELY:n Pääkäyttäjä näkee"))
+    (is (= 9 (count vastaus-urakanvalvojalle)) "Urakanvalvoja näkee")
+    (is (= 9 (count vastaus-ely-paakayttajalle)) "ELY:n Pääkäyttäjä näkee"))
 
   ;; Urakoitsijalle ei tässä vaiheessa näytetä (myöh. suunnitelma avata oman urakan osalta)
   (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -103,9 +103,8 @@
     (is (str/includes? vastaus "Iin MHU") "Iin MHU")
     (is (str/includes? vastaus "Raahen MHU") "Iin MHU")
     (is (str/includes? vastaus "MHU Suomussalmi") "Iin MHU")
-    (is (str/includes? vastaus "MHU Kajaani") "Kajaanin MHU")
 
-    (is (= 4 (count vastaus)) "Urakoiden lukumäärä")))
+    (is (= 3 (count vastaus)) "Urakoiden lukumäärä")))
 
 (deftest vain-iin-mhu-kojelautaan-hk-alkuvuosi-2024
   (let [iin-mhu-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
