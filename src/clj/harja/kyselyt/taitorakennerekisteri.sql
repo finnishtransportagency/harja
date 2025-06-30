@@ -14,7 +14,7 @@ SELECT
   s.id as silta_id,
   s.siltatunnus,
   s.siltanimi,
-  s.trex_oid,
+  s.silta_oid,
   s.siltaid,
   -- Tarkastuskohteet
   (SELECT json_agg(
@@ -48,12 +48,12 @@ WHERE (st.luotu BETWEEN :alkuaika AND :loppuaika)
    OR (st.muokattu BETWEEN :alkuaika AND :loppuaika)
 ORDER BY st.luotu DESC;
 
--- name: loytyyko-silta-trex-oidilla
--- Palauttaa boolean arvon, joka kertoo löytyykö silta annetulla trex_oid:lla
+-- name: loytyyko-silta-oidilla
+-- Palauttaa boolean arvon, joka kertoo löytyykö silta annetulla silta_oid:lla
 SELECT EXISTS(
   SELECT 1
   FROM silta s
-  WHERE s.trex_oid = :silta-oid
+  WHERE s.silta_oid = :silta-oid
 );
 
 -- name: hae-sillan-siltatarkastukset-taitorakennerekisterille
@@ -72,7 +72,7 @@ SELECT
   s.id as silta_id,
   s.siltatunnus,
   s.siltanimi,
-  s.trex_oid,
+  s.silta_oid,
   s.siltaid,
   -- Tarkastuskohteet
   (SELECT json_agg(
@@ -102,5 +102,5 @@ SELECT
 FROM siltatarkastus st
 JOIN urakka u ON st.urakka = u.id
 JOIN silta s ON st.silta = s.id
-WHERE s.trex_oid = :silta-oid
+WHERE s.silta_oid = :silta-oid
 ORDER BY st.luotu DESC;
