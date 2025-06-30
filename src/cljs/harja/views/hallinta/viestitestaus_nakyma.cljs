@@ -171,9 +171,10 @@
         :placeholder "Vastaanottajan puhelinnumero"
         :pakollinen? false}
        {:nimi :ilmoitus-id
-        :otsikko "Tieliikenneilmoituksen ID (key)"
+        :otsikko "Tieliikenneilmoituksen ID (ilmoitus-id)"
         :placeholder "Tieliikenneilmoituksen ID"
-        :tyyppi :string
+        :tyyppi :positiivinen-numero
+        :kokonaisluku? true
         :pakollinen? true}]
       ilmoitus-tiedot]]))
 
