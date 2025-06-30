@@ -6,7 +6,7 @@
             [harja.ui.napit :as napit]
             [harja.tiedot.hallinta.viestitestaus-tiedot :as tiedot]))
 
-(defn viestitestaus* [e! {:keys [email emailapi tekstiviesti] :as app}]
+(defn viestitestaus* [e! {:keys [email emailapi tekstiviesti ilmoitus-tiedot] :as app}]
   (let [disable-laheta? (if (or (nil? (:palvelin email))
                               (nil? (:tunnus email))
                               (nil? (:salasana email))
@@ -28,7 +28,10 @@
                                   (nil? (:puhelinnumero tekstiviesti))
                                   (nil? (:viesti tekstiviesti)))
                               true
-                              false)]
+                              false)
+        disable-laheta-paivystajan-ilmoitus? (or
+                                               (and (nil? (:puhelinnumero ilmoitus-tiedot)) (nil? (:sahkoposti ilmoitus-tiedot)))
+                                               (nil? (:ilmoitus-id ilmoitus-tiedot)))]
     [:div
      [:h1 "Sähköpostin ja tekstiviestin lähetyksen testaustoiminnot"]
      [:p "Voit testata täällä eri ympäristöissä sähköpostin ja tekstiviestin lähettämistä."]
@@ -122,6 +125,8 @@
         :tyyppi :string
         :pakollinen? true}]
       emailapi]
+
+
      [:h2 "Lähetä tekstiviesti SMS-integraation kautta."]
      [lomake/lomake
       {:ei-borderia? true
@@ -141,7 +146,36 @@
         :tyyppi :string
         :pakollinen? true}]
       tekstiviesti]
-     ]))
+
+     [:h2 "Testaa päivystäjän ilmoitusta (tieliikenneilmoitukset)"]
+     [:p "Tämä lähettää päivystäjälle tarkoitetun ilmoitusviestin, kuten tapahtuisi uuden tieliikenneilmoituksen saapuessa."]
+     [:p "Viesti lähetetään sähköpostiin ja lisäksi tekstiviestinä, jos puhelinnumero on annettu."]
+     [:p "Tällä voi testata viestintää ilman T-Loik-integraatiota. Tieliikenneilmoituksen tiedot haetaan Harjan tietokannasta ID:llä."]
+     [lomake/lomake
+      {:ei-borderia? true
+       :tarkkaile-ulkopuolisia-muutoksia? true
+       :footer-fn (fn [t]
+                    [:div
+                     [napit/tallenna "Lähetä päivystäjän ilmoitus"
+                      #(e! (tiedot/->LahetaPaivystajanIlmoitus t))
+                      {:disabled disable-laheta-paivystajan-ilmoitus? :paksu? true}]])
+       :muokkaa! #(e! (tiedot/->MuokkaaPaivystajanIlmoitus %))}
+      [{:nimi :sahkoposti
+        :otsikko "Sähköposti"
+        :tyyppi :email
+        :placeholder "Vastaanottajan sähköposti"
+        :pakollinen? true}
+       {:nimi :puhelinnumero
+        :otsikko "Puhelinnumero"
+        :tyyppi :puhelin
+        :placeholder "Vastaanottajan puhelinnumero"
+        :pakollinen? false}
+       {:nimi :ilmoitus-id
+        :otsikko "Tieliikenneilmoituksen ID (key)"
+        :placeholder "Tieliikenneilmoituksen ID"
+        :tyyppi :string
+        :pakollinen? true}]
+      ilmoitus-tiedot]]))
 
 (defn viestitestaus []
   [tuck tiedot/tila viestitestaus*])

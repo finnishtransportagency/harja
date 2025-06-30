@@ -176,6 +176,17 @@
               :viesti vastaus}})
     vastaus))
 
+(defn- laheta-paivystajan-ilmoitus
+  ""
+  [sms api-sahkoposti {:keys [ilmoitus-id sahkoposti puhelinnumero] :as ilmoitus-tiedot}]
+  (let [email-sensuroitu (when (string? sahkoposti)
+                           (str/replace sahkoposti #"(?<=^.)[^@]*|(?<=@.).*(?=\.[^.]+$)" "***"))
+        puh-sensuroitu (when (string? puhelinnumero)
+                         (str/replace puhelinnumero #"\d(?=\d{4})" "*"))]
+    (println "Lähetetään päivystajan ilmoitus, ilmoitus-id: " ilmoitus-id
+      " sähköposti: " email-sensuroitu
+      " puhelinnumero: " puh-sensuroitu)))
+
 (defn hae-tieturvalliusuus-geometriat
   "Kokeillaan hakea kaikki tieturvallisuusgeometriat. Jos haluat lokaalisti ajaa geometriat kantaan, päivitä polku, josta niitä
   tallennetaan. Lokaalisti tieturvallisuusgeometrioita ei välttämättä ole ajettu kantaan."
@@ -275,6 +286,8 @@
       (vaadi-jvh! (partial #'laheta-emailapi api-sahkoposti))
       :debug-laheta-tekstiviesti
       (vaadi-jvh! (partial #'laheta-sms sms))
+      :debug-laheta-paivystajan-ilmoitus
+      (vaadi-jvh! (partial #'laheta-paivystajan-ilmoitus api-sahkoposti sms))
       :debug-hae-tieturvalliusuus-geometriat
       (vaadi-jvh! (partial #'hae-tieturvalliusuus-geometriat db))
       :debug-hae-yllapitokohteen-geometriat
