@@ -165,12 +165,12 @@
                       +ilmoitusviesti-aiheella+
                       +ilmoitusviesti+)
         (concat
-          [tunniste
-           (if aihe?
-             [aihe
-              tarkenne]
-             [selitteet])
-           (:urakkanimi ilmoitus)
+          [tunniste]
+          (if aihe?
+            [aihe
+             tarkenne]
+            [selitteet])
+          [(:urakkanimi ilmoitus)
            tr-osoite
            paikankuvaus
            (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
