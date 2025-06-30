@@ -6,6 +6,52 @@ CREATE TYPE suolausalueen_osuus AS
     osuus        FLOAT
 );
 
+-- Funktio: Kohdista_suolapiste_ajoradalle
+-- Poistetaan vanha versio. Uudessa viilattu koodia ja täsmennetty nimi muotoon: kohdista_suolapiste_ajoradalle
+DROP FUNCTION IF EXISTS lahin_piste_suolattavalla_tiella(piste point);
+
+-- Kohdista_suolapiste_ajoradalle siirtää ajoradalta sivuun osuneen suolapisteen ajoradalle näissä tapauksissa:
+-- 1. Suolapiste on epätarkkuuden vuoksi kohdstunut käpyväylälle.
+-- Käpyväyliä ei suolata, joten nämä pisteet kuuluvat ajoradalle.
+-- 2. Suolapiste on talvihoitoluokitellulla tiestöllä, mutta sivussa ajoradasta.
+
+-- Toteutukseen jäävät heikkoudet:
+-- 1. Kohdista_suolapiste_ajoradalle ei täsmennä pisteen sijaintia, jos piste on talvihoitoluokittelemattomalla tiestöllä ajoradasta sivussa.
+-- Periaatteessa tällainen täsmennys voitaisiin koodiin lisätä, mutta käytännössä silloin on kysymys kaikkien suolapisteiden
+-- kohdistuksen tarkennuksesta, ja se kuuluisi pikemminkin urakoitsijajärjestelmälle.
+-- Toki myös kaksi täsmennystä, joka Harja tekee, olisi parempi hoitaa urakoitsijajärjestelmässä.
+-- 2. Alkuperäisen pisteen siirtäminen max 25 metriä sen kohdistamiseksi talvihoitoluokitellulle tielle
+-- voi vääristää rajoitusalueiden suolapäättelyä. Ei olisi hyvä täsmentää pisteiden sijaintia Harjassa ollenkaan.
+-- Parempi ratkaisu olisi kohdistaa piste täsmällisesti tieverkolle jo urakoitsijajärjestelmässä.
+
+-- Miksi sitten Harjassa täsmennetään pisteiden sijaintia?
+-- Pisteen käsittely on todettu tässä tarpeelliseksi, koska urakoitsijajärjestelmistä tulee joskus tien sivuun osuneita pisteitä.
+-- On mahdollista että piste on syrjässä ajoradalta, ja se vaikuttaa rajoitusalueen hakuun tai rajoitusalueen suolamäärän laskentaan. Tätä ei voi sallia.
+
+CREATE OR REPLACE FUNCTION kohdista_suolapiste_ajoradalle(piste point)
+    RETURNS POINT AS
+$$
+DECLARE
+    tasmennetty_piste POINT;
+BEGIN
+    -- Haetaan talvihoitoluokitelluilta teiltä pisteet
+    WITH geometriat AS (SELECT hoitoluokka                                                      AS talvihoitoluokka,
+                               st_distance84(geometria, piste::geometry)          AS etaisyys,
+                               st_closestpoint(geometria, piste::geometry)::POINT AS lahin_piste
+                        FROM hoitoluokka
+                        WHERE tietolajitunniste = 'talvihoito'
+                          AND st_dwithin(geometria, piste::geometry, 25)
+                        ORDER BY etaisyys)
+    SELECT lahin_piste FROM geometriat WHERE talvihoitoluokka NOT IN (9,10,11) ORDER BY etaisyys ASC LIMIT 1 INTO tasmennetty_piste;
+
+    IF tasmennetty_piste IS NOT NULL THEN
+        RETURN tasmennetty_piste;
+    ELSE
+        RETURN piste; -- Jos täsmällisempää pistettä ei löytynyt, palautetaan alkuperäinen piste
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Funktiolle välitetään kaksi suolaustoteuman pistettä: alkupiste ja loppupiste, jossa suolankäyttö raportoidaan.
 -- Funktio muodostaa pisteiden perusteella tieosoitevälin ja jakaa sen osiin sen mukaan miten välille osuu suolankäytön rajoitusalueita ja rajoittamatonta aluetta.
 -- Rajoitusalueet ovat urakka- ja hoitovuosikohtaisia.
@@ -21,13 +67,15 @@ DECLARE
     piste1_              POINT;
     piste2_              POINT;
 BEGIN
-    -- Varmistetaan että haetaan piste tielä, jota suolataan. Tällä varmistetaan, ettei saada rajoitusaluetta tien geometriaa,
-    -- jota ei suolata. Tällä varmistetaan, ettei virheellisesti jätetä suolattua rajoitusaluetta merkitsemättä
-    -- vaikka gps-pisteet osuisivat pyörätielle.
-    SELECT lahin_piste_suolattavalla_tiella(piste1) INTO piste1_;
-    SELECT lahin_piste_suolattavalla_tiella(piste2) INTO piste2_;
-    jaljella_osuutta := 1; -- Vähennetään tästä rajoitusalueet
+    -- Täsmennä pisteen sijaintia siltä varalta, että GPS-piste on osunut osuisivat pyörätielle tai rajoitusalueesta sivuun.
+    SELECT kohdista_suolapiste_ajoradalle(piste1) INTO piste1_;
+    SELECT kohdista_suolapiste_ajoradalle(piste2) INTO piste2_;
 
+    jaljella_osuutta := 1; -- Vähennetään kokonaismäärästä rajoitusalueet, loput suolasta on rajoittamattomien alueiden suolaa.
+
+    -- Pisteen ei kuuluisi palautua nullina funktiolta kohdista_suolapiste_ajoradalle. Joko se kohdistuu tarkemmin tieverkolle ja siirtyy hieman
+    -- tai saadaan takaisin sama piste. Jos SUOLATOTEUMA_REITTIPISTE-taulusta puuttuu suolapisteitä, jotka ovat
+    -- toteuman TOTEUMAN_REITTIPISTEET-tiedoissa, kyseessä on virhetilanne, joka kannattaa selvittää.
     IF (piste1_ IS NULL OR piste2_ IS NULL) THEN
         RETURN;
     END IF;
@@ -121,23 +169,33 @@ BEGIN
                 FOREACH m IN ARRAY rp.materiaalit
                     LOOP
                         IF suolamateriaalikoodit @> ARRAY [m.materiaalikoodi] THEN
-                            IF edellinen_rp IS DISTINCT FROM NULL THEN
-                                FOR suolausalue IN SELECT tyyppi, rajoitusalue_id, osuus FROM pistevalin_suolausalueet(edellinen_rp.sijainti, rp.sijainti, urakkaid, hoitokauden_alkuvuosi)
-                                    LOOP
-                                        -- Lisätään rajoitusalueisiin liittyvät määrät
-                                        IF suolausalue.rajoitusalue_id IS DISTINCT FROM NULL AND
-                                           suolausalue.tyyppi = 'rajoitusalue' THEN
-                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id, luotu)
-                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus, suolausalue.rajoitusalue_id, current_timestamp);
-                                        END IF;
-
-                                        -- Lisätään rajoittamattomien alueiden määrät
-                                        IF suolausalue.tyyppi = 'muu' THEN
-                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id, luotu)
-                                            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,m.maara * suolausalue.osuus,NULL, current_timestamp);
-                                        END IF;
-                                    END LOOP;
+                            -- Jos edellinen piste on null, kyseessä on reitin ensimmäinen suolapiste. Pisteväli on tällöin yksi piste.
+                            -- Jos ensimmäisessä pisteessä on raportoitu suolaa, suola on tulkittava käytetyksi kokonaan siinä pisteessä.
+                            IF edellinen_rp IS NULL THEN
+                                edellinen_rp.sijainti = rp.sijainti;
                             END IF;
+                            FOR suolausalue IN SELECT tyyppi, rajoitusalue_id, osuus
+                                               FROM pistevalin_suolausalueet(edellinen_rp.sijainti, rp.sijainti,
+                                                                             urakkaid, hoitokauden_alkuvuosi)
+                                LOOP
+                                    -- Lisätään rajoitusalueisiin liittyvät määrät
+                                    IF suolausalue.rajoitusalue_id IS DISTINCT FROM NULL AND
+                                       suolausalue.tyyppi = 'rajoitusalue' THEN
+                                        INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi,
+                                                                              maara, rajoitusalue_id, luotu)
+                                        VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,
+                                                m.maara * suolausalue.osuus, suolausalue.rajoitusalue_id,
+                                                current_timestamp);
+                                    END IF;
+
+                                    -- Lisätään rajoittamattomien alueiden määrät
+                                    IF suolausalue.tyyppi = 'muu' THEN
+                                        INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi,
+                                                                              maara, rajoitusalue_id, luotu)
+                                        VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,
+                                                m.maara * suolausalue.osuus, NULL, current_timestamp);
+                                    END IF;
+                                END LOOP;
                         END IF;
                     END LOOP;
                 edellinen_rp := rp;
@@ -152,6 +210,8 @@ $$ LANGUAGE plpgsql;
 -- Ajetaan ajastetusti yöllä klo 00:45, ei siis välittömästi, koska tämän ajaminen vie aika kauan.
 DROP FUNCTION paivita_suolatoteumat_urakalle(INTEGER, DATE, DATE);
 
+-- Funktiota käytetään päivittämään kuluvan hoitokauden suolatoteumien pisteet silloin, kun rajoitusaluetta muokataan.
+-- Käytä aikarajauksessa alkanut-saraketta, älä luotu-saraketta. Kutsuja rajaa korjauksen hoitokauden aikana ajettuihin toteumiin.
 CREATE OR REPLACE FUNCTION paivita_suolatoteumat_urakalle(urakkaid INTEGER, alkaa DATE, loppuu DATE)
     RETURNS VOID AS
 $$
@@ -173,7 +233,7 @@ BEGIN
     -- Poista kaikki suolatoteuma_reittipisteet, jotka ovat päivitysparametrien piirissä
     DELETE
     FROM suolatoteuma_reittipiste
-    WHERE toteuma IN (SELECT id FROM toteuma WHERE urakka = urakkaid AND luotu BETWEEN alkaa AND loppuu);
+    WHERE toteuma IN (SELECT id FROM toteuma WHERE urakka = urakkaid AND alkanut BETWEEN alkaa AND loppuu);
 
     -- Haetaan toteumat ja niiden reittipisteet urakan ja aikavälin puitteissa. Käsitellään vain ei poistettuja
     FOR loydetyt_toteuman_reittipisteet IN
@@ -181,41 +241,51 @@ BEGIN
         FROM toteuma t
                  JOIN toteuman_reittipisteet tr ON t.id = tr.toteuma
         WHERE t.urakka = urakkaid
-          AND t.luotu BETWEEN alkaa AND loppuu
+          AND t.alkanut BETWEEN alkaa AND loppuu
           AND t.poistettu IS FALSE
 
         LOOP
-        -- Loopataan löydetyt reittipisteet läpi
-        -- Ja jokaiselle löydetylle reittipiste arraylle pyöritetään oma looppi, jossa itse lisääminen suolatoteuma_reittpiste - tauluun tapahtuu
+            -- Loopataan löydetyt reittipisteet läpi
+            -- Jokaiselle löydetylle reittipiste arraylle pyöritetään oma looppi, jossa itse lisääminen suolatoteuma_reittpiste - tauluun tapahtuu
+            -- Nollaa edellinen reittipiste, kun aloitetaan käsittelemään uutta toteumaa. Ei haluta vertailla eri toteumien pisteitä.
+            edellinen_rp := NULL;
             FOREACH rp IN ARRAY loydetyt_toteuman_reittipisteet.reittipisteet
                 LOOP
                     FOREACH m IN ARRAY rp.materiaalit
                         LOOP
                             IF suolamateriaalikoodit @> ARRAY [m.materiaalikoodi] THEN
-                                IF edellinen_rp IS DISTINCT FROM NULL THEN
-                                    FOR suolausalue IN SELECT tyyppi, rajoitusalue_id, osuus
-                                                       FROM pistevalin_suolausalueet(edellinen_rp.sijainti, rp.sijainti, urakkaid, loydetyt_toteuman_reittipisteet.hoitokauden_alkuvuosi)
-                                        LOOP
-                                            IF suolausalue.rajoitusalue_id IS DISTINCT FROM NULL AND
-                                               suolausalue.tyyppi = 'rajoitusalue' THEN
-                                                INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti,
-                                                                                      materiaalikoodi,
-                                                                                      maara,
-                                                                                      rajoitusalue_id)
-                                                VALUES (loydetyt_toteuman_reittipisteet.toteuma, rp.aika, rp.sijainti,
-                                                        m.materiaalikoodi,m.maara * suolausalue.osuus, suolausalue.rajoitusalue_id);
-                                            END IF;
-
-                                            IF suolausalue.tyyppi = 'muu' THEN
-                                                INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti,
-                                                                                      materiaalikoodi,
-                                                                                      maara,
-                                                                                      rajoitusalue_id)
-                                                VALUES (loydetyt_toteuman_reittipisteet.toteuma, rp.aika, rp.sijainti,
-                                                        m.materiaalikoodi,m.maara * suolausalue.osuus, NULL);
-                                            END IF;
-                                        END LOOP;
+                                -- Jos edellinen piste on null, kyseessä on reitin ensimmäinen suolapiste. Pisteväli on tällöin yksi piste.
+                                -- Jos ensimmäisessä pisteessä on raportoitu suolaa, suola on tulkittava käytetyksi kokonaan siinä pisteessä.
+                                IF edellinen_rp IS NULL THEN
+                                    edellinen_rp.sijainti = rp.sijainti;
                                 END IF;
+                                FOR suolausalue IN SELECT tyyppi, rajoitusalue_id, osuus
+                                                   FROM pistevalin_suolausalueet(edellinen_rp.sijainti, rp.sijainti,
+                                                                                 urakkaid,
+                                                                                 loydetyt_toteuman_reittipisteet.hoitokauden_alkuvuosi)
+                                    LOOP
+                                        IF suolausalue.rajoitusalue_id IS DISTINCT FROM NULL AND
+                                           suolausalue.tyyppi = 'rajoitusalue' THEN
+                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti,
+                                                                                  materiaalikoodi,
+                                                                                  maara,
+                                                                                  rajoitusalue_id,
+                                                                                  luotu)
+                                            VALUES (loydetyt_toteuman_reittipisteet.toteuma, rp.aika, rp.sijainti,
+                                                    m.materiaalikoodi, m.maara * suolausalue.osuus,
+                                                    suolausalue.rajoitusalue_id,current_timestamp);
+                                        END IF;
+
+                                        IF suolausalue.tyyppi = 'muu' THEN
+                                            INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti,
+                                                                                  materiaalikoodi,
+                                                                                  maara,
+                                                                                  rajoitusalue_id,
+                                                                                  luotu)
+                                            VALUES (loydetyt_toteuman_reittipisteet.toteuma, rp.aika, rp.sijainti,
+                                                    m.materiaalikoodi, m.maara * suolausalue.osuus, NULL, current_timestamp);
+                                        END IF;
+                                    END LOOP;
                             END IF;
                         END LOOP;
                     edellinen_rp := rp;

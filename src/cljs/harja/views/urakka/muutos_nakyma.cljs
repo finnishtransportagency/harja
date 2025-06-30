@@ -1,25 +1,24 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
-  (:require [cljs.core.async :refer [<!]]
-            [harja.fmt :as fmt]
-            [harja.ui.ikonit :as ui-ikonit]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.napit :as napit]
-            [reagent.core :refer [atom] :as r]
+  (:require [clojure.string :as str]
+            [reagent.core :as r]
             [tuck.core :as tuck]
-            [harja.domain.muutos-domain :as muutos-domain]
-            [harja.ui.debug :refer [debug]]
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
+            [harja.ui.napit :as napit]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.ikonit :as ui-ikonit]
             [harja.ui.grid :as grid]
+            [harja.ui.debug :refer [debug]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
-            [harja.loki :refer [log logt]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot])
-  (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
+            [harja.domain.muutos-domain :as muutos-domain]))
 
 (defn liite-kentta
   "Lomakkeen liitekenttä, joka näyttää liitteiden listauksen ja mahdollistaa uusien liitteiden lisäämisen."
@@ -42,17 +41,25 @@
 
 (defn- muutoslomakkeen-kentat-yhteiset
   "Eri muutostyypeille yhteiset kentät. Voi silti sisältää pienen määrän haaroitusta."
-  [e! {:keys [muokattava-muutos] :as app}]
+  [e! {:keys [muokattava-muutos valittu-hoitokausi urakan-hoitokaudet] :as app}]
   (vec
     (keep identity
       (concat
         [{:otsikko "Tyyppi"
           :nimi :tyyppi
+          :pakollinen? true
+          ;; sallitaan muokkaus vain uudelle muutokselle
+          :muokattava? (fn [rivi] (nil? (:id rivi)))
+          :aseta (fn [rivi arvo]
+                   (muutos-tiedot/alusta-tyyppikohtaisia-arvoja arvo valittu-hoitokausi)
+                   (assoc rivi :tyyppi arvo))
+          :kaariva-luokka "muutostyyppivalinta"
           :tyyppi :valinta
           :vayla-tyyli? true
-          :valinnat muutos-domain/+muutostyypit+
+          :valinnat muutos-domain/+muutostyypit-lomakkeella+
           :valinta-arvo identity
-          :valinta-nayta muutos-domain/tyyppi-fmt
+          :valinta-nayta (fn [arvo]
+                           (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))
           :uusi-rivi? true}
          (when (= "pysyva" (:tyyppi muokattava-muutos))
            {:tyyppi :komponentti
@@ -61,16 +68,21 @@
                            [yleiset/info-laatikko :neutraali
                             "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."])})
          (lomake/ryhma {:otsikko "Perustiedot"}
-           {:nimi :nimi
-            :otsikko "Nimi"
-            :tyyppi :string
-            :uusi-rivi? true
-            :pakollinen? true}
+           (when (= "johto-ja-hallintokorvaus" (:tyyppi muokattava-muutos))
+             {:nimi :hoitovuosi :tyyppi :string :otsikko "Hoitovuosi" :muokattava? (constantly false)
+              :hae #(fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hoitokausi urakan-hoitokaudet "Hoitovuosi")})
+           (when (= "pysyva" (:tyyppi muokattava-muutos))
+             {:nimi :nimi
+              :otsikko "Nimi"
+              :tyyppi :string
+              :uusi-rivi? true
+              :pakollinen? true})
            {:nimi :syy
             :otsikko "Muutoksen syy"
             :tyyppi :text
-            :koko [90 6]
-            :aputeksti "Kuvaile muutos mahdollisimman tarkasti."
+            :palstoja 2
+            :koko [90 4]
+            :aputeksti "Kuvaile muutos mahdollisimman tarkasti. Ethän syötä kenttään henkilö- tai muuta arkaluontoista tietoa."
             :pituus-max 1000
             :uusi-rivi? true
             :pakollinen? true}
@@ -84,34 +96,87 @@
   [e! app]
   [])
 
-(defn muutoslomake [e! {:keys [muokattava-muutos] :as app}]
-  [:span.muutoslomake
 
-   ;; todo: eri tyyppisten muutosten lomakkeiden toteutus tähän
-   ;; oletettavasti kannattaa toteuttaa lomakkeen harja.ui.lomake avulla
-   ;; siten että niiden sisälle sijoitetaan tarvittaessa taulukkoja :muokkaus-grid, ks. esim views/urakka/toteumat/muut_materiaalit.cljs#L127
-   [lomake/lomake
-    {:otsikko (if (:id muokattava-muutos)
-                "Muokkaa muutosta"
-                "Lisää uusi muutos")
-     :muokkaa! #(e! (muutos-tiedot/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
-     :footer-fn (fn [muutos]
-                  [:span.tallenna-ja-peruuta
-                   [napit/tallenna
-                    #(e! (muutos-tiedot/->TallennaMuutos muutos))]
-                   [napit/peruuta
-                    #(e! (muutos-tiedot/->MuokkaaMuutosta nil))]])}
-    ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
-    (into []
-      (concat
-        (muutoslomakkeen-kentat-yhteiset e! app)
+(defn- muutoslomakkeen-kentat-johto-ja-hallintokorvaus
+  "johto-ja-hallintokorvaus muutoksen lomakekomponentti"
+  [e! {:keys [valittu-hoitokausi]}]
+  (let [muutostapa (muutos-domain/jjh-korvaus-muutos-vai-vahennys? (:alkupvm @nav/valittu-urakka))
+        summa (reduce + 0 (map :tavoitehinnan-muutos (vals @muutos-tiedot/johto-ja-hallintokorvausmuutokset-atom)))]
+    [{:nimi :johto-ja-hallintokorvaus-muutokset
+      :otsikko ""
+      :palstoja 2
+      :tyyppi :komponentti :uusi-rivi? true
+      :komponentti
+      (fn [e! {:keys [johto-ja-hallintokorvausten-muutokset valittu-hoitokausi]}]
+        [:span
+         [:hr]
+         [:h3 "Muutokset tavoitehintaan ja kuluihin"]
+         [grid/muokkaus-grid
+          {:tunniste :pvm
+           :luokat ["johto-ja-hallintokorvaus-muutokset-grid"]
+           :piilota-toiminnot? true
+           :voi-lisata? false
+           :voi-kumota? false
+           :voi-poistaa? (constantly false)
+           :voi-muokata? true
+           :rivi-jalkeen [{:teksti "Yhteensä" :sarakkeita 1 :luokka "yhteensa"}
+                          {:teksti (fmt/euro-opt summa) :tasaa :oikea :luokka "yhteensa"}]}
 
-        (case (:tyyppi muokattava-muutos)
-          "pysyva" (muutoslomakkeen-kentat-pysyva e! app)
+          ;; taulukon kentät
+          [{:otsikko "Kalenterikuukausi" :nimi :pvm :tyyppi :string :leveys 20
+            :muokattava? (constantly false)
+            :fmt #(when % (pvm/koko-kuukausi-ja-vuosi % true))}
+           {:otsikko (if (= muutostapa :muutos)
+                       "Muutos € (+/-)"
+                       "Vähennys (€)")
+            :nimi :tavoitehinnan-muutos :vaadi-negatiivinen? (when (= muutostapa :vahennys) true)
+            :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}]
+          muutos-tiedot/johto-ja-hallintokorvausmuutokset-atom]
+         [yleiset/info-laatikko :neutraali
+          "Harja luo oikaisevat kulut automaattisesti tallentamisen jälkeen."
+          nil nil {:luokka "johto-ja-hallintokorvaus-muutokset-info"}]])}]))
 
-          ;; tässä kohti default, että jokaiselle aukeaa jotain... poistunee lopulta kun kaikki toteutettu
-          (muutoslomakkeen-kentat-pysyva e! app))))
-    muokattava-muutos]])
+
+(defn muutoslomake [e! {:keys [muokattava-muutos tallennus-kesken?] :as app}]
+  (komp/luo
+    (komp/sisaan-ulos
+      #(e! (muutos-tiedot/->HaeMuutoksenTiedot muokattava-muutos))
+      #(e! (muutos-tiedot/->MuokkaaMuutosta nil)))
+    (fn [e! {:keys [muokattava-muutos tallennus-kesken?] :as app}]
+      [:span.muutoslomake
+       [lomake/lomake
+        {:otsikko (if (:id muokattava-muutos)
+                    "Muokkaa muutosta"
+                    "Lisää uusi muutos")
+         :muokkaa! #(e! (muutos-tiedot/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+         :footer-fn (fn [muutos]
+                      [:span.tallenna-ja-peruuta
+                       [:hr]
+                       (when-not (empty? (:puuttuvat-pakolliset-kentat muokattava-muutos))
+                         [yleiset/info-laatikko :varoitus
+                          (str "Lomakkeelta puuttuu pakollisia kenttiä: "
+                            (str/join ", " (:puuttuvat-pakolliset-kentat muokattava-muutos))
+                            ". Korjaa ne ja yritä uudelleen.")])
+                       [napit/tallenna "Tallenna"
+                        #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos
+                           muutos)
+                        {:disabled tallennus-kesken?}]
+                       [napit/peruuta "Peruuta"
+                        #(e! (muutos-tiedot/->MuokkaaMuutosta nil))
+                        {:disabled tallennus-kesken?}]])}
+        ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
+        (into []
+          (concat
+            (muutoslomakkeen-kentat-yhteiset e! app)
+
+            (case (:tyyppi muokattava-muutos)
+              "pysyva" (muutoslomakkeen-kentat-pysyva e! app)
+
+              "johto-ja-hallintokorvaus" (muutoslomakkeen-kentat-johto-ja-hallintokorvaus e! app)
+
+              ;; tässä kohti default, että jokaiselle aukeaa jotain... poistunee lopulta kun kaikki toteutettu
+              (muutoslomakkeen-kentat-pysyva e! app))))
+        muokattava-muutos]])))
 
 (defn- kehystetty-avattava-grid
   "Piirtää yhtenäisesti Muutoksien taulukot collapsoitaviksi."
@@ -126,7 +191,9 @@
                                          :down
                                          :right)]
        [:h2 otsikko]]
-      (when-not (= summa :ei-summaa) [:div.summa (fmt/euro-opt summa)])]
+      (when-not (= summa :ei-summaa)
+        [:div.summa {:aria-label (str otsikko " yhteensä " summa " euroa")}
+         (fmt/euro-opt summa)])]
      (when sisalto-nakyvissa?
        [:span
         [:div.toiminnot
@@ -199,7 +266,10 @@
   "Näyttää rahavarausten muutokset taulukossa sekä yhteenvedon. Taulukko on avattava ja suljettava. Sisältö automaattisesti laskettu muista tauluista."
   [e! {:keys [rahavarausten-muutokset] :as app}]
   (let [rivit (butlast rahavarausten-muutokset)
-        yhteenveto (last rahavarausten-muutokset)]
+        yhteenveto (last rahavarausten-muutokset)
+        suunnittelutiedot-puuttuvat (every? #(or
+                                               (nil? (:summa-indeksikorjattu %))
+                                               (zero? (:summa-indeksikorjattu %))) rivit)]
     [kehystetty-avattava-grid e! app
      {:taulukon-avain :rahavarausten-muutokset
       :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :rahavarausten-muutokset))
@@ -207,9 +277,9 @@
       :summa (:tavoitehinnan-muutos yhteenveto)
       :toiminnot (fn [e! app]
                    [::span
-                    [:p rahavarausten-muutokset-aputeksti]
-                    ;; Tämä muokkaus mahdollistaa vain syyn lisäämisen
-                    [napit/uusi "Muokkaa" #(e! (muutos-tiedot/->MuokkaaRahavaraustenMuutoksienSyita))]])
+                    [yleiset/vihje rahavarausten-muutokset-aputeksti]
+                    (when suunnittelutiedot-puuttuvat
+                      [yleiset/toast-viesti "Suunnittelutiedot puuttuvat tarjouksen tiedoista."])])
       :taulukko
       (fn [e! app]
         [grid/grid
@@ -220,6 +290,7 @@
           :voi-kumota? false
           :voi-poistaa? (constantly false)
           :voi-muokata? true
+          :tallenna #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaRahavarausmuutostenSyyt %)
           :rivi-jalkeen-fn (fn []
                              [{:teksti "Tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :yhteenveto-vayla true}
                               {:teksti "" :sarakkeita 1 :luokka "yhteensa"}
@@ -228,18 +299,21 @@
                               {:teksti (fmt/euro-opt (:tavoitehinnan-muutos yhteenveto)) :tasaa :oikea :luokka "yhteensa"}])}
 
          ;; taulukon kentät
-         [{:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys 15}
-          {:otsikko "Muutoksen syy" :nimi :syy :tyyppi :string :leveys 25}
+         [{:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys 15 :muokattava? (constantly false)}
+          {:otsikko "Muutoksen syy" :nimi :syy :tyyppi :text
+           :pituus-max 1000 :koko [50 3] :leveys 25}
           {:otsikko "Suunniteltu määrä" :nimi :summa-indeksikorjattu :tyyppi :numero
-           :tasaa :oikea :leveys 10
+           :tasaa :oikea :leveys 10 :muokattava? (constantly false)
            :fmt (fn [arvo]
                   (if arvo
                     (fmt/euro-opt arvo)
                     "Ei indeksikorjattua summaa"))}
           {:otsikko "Toteutunut määrä" :nimi :toteumat :tyyppi :numero
-           :fmt     fmt/euro-opt :tasaa :oikea :leveys 10}
+           :fmt     fmt/euro-opt :tasaa :oikea :leveys 10
+           :muokattava? (constantly false)}
           {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero
-           :fmt     fmt/euro-opt :tasaa :oikea :leveys 10}]
+           :fmt     fmt/euro-opt :tasaa :oikea :leveys 10
+           :muokattava? (constantly false)}]
          rivit])}]))
 
 (def lasketut-muutokset-aputeksti
@@ -249,13 +323,12 @@
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :lasketut-muutokset
     :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :lasketut-muutokset))
-    :otsikko "Tehtävä- ja määräluetteloon perustuvat tavoitehintamuutokset"
+    :otsikko "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"
     :summa (reduce + 0 (map :tavoitehinnan-muutos lasketut-muutokset))
     :toiminnot (fn [e! app]
                  ;; Tämä muokkaus mahdollistaa vain syyn lisäämisen
                  [:span
-                  [:p lasketut-muutokset-aputeksti]
-                  [napit/uusi "Muokkaa" #(e! (muutos-tiedot/->MuokkaaLaskettujenMuutoksienSyita))]])
+                  [yleiset/vihje lasketut-muutokset-aputeksti]])
     :taulukko
     (fn [e! app]
       [grid/grid
@@ -265,7 +338,8 @@
         :voi-lisata? false
         :voi-kumota? false
         :voi-poistaa? (constantly false)
-        :voi-muokata? true}
+        :voi-muokata? true
+        :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
 
        ;; taulukon kentät
        [{:otsikko "Tehtävä" :nimi :tehtava :tyyppi :string :leveys 15}
@@ -301,7 +375,8 @@
 
        ;; taulukon kentät
        [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys 15
-         :fmt muutos-domain/tyyppi-fmt}
+         :fmt (fn [arvo]
+                (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))}
         {:otsikko "Muutoksen syy" :nimi :syy :tyyppi :string :leveys 35}
         {:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :pvm :leveys 15}
         {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero

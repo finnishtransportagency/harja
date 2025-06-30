@@ -15,7 +15,7 @@
   (let [poistetut (first (tapahtumat-kyselyt/poista-viimeisimmat-tapahtumat db))]
     (log/info (format "tapahtuma-tiedot taulusta poistettiin %s riviä" (:maara poistetut)))))
 
-(defn paivita-mahdolliset-suolatoteumat
+(defn paivita-mahdolliset-suolatoteumat-kuluvalla-hoitokaudella
   "Päivitetään urakan suolatoteuma_reittipiste -taulun sisältö vain kuluneelta hoitovuodelta. Aiemmin tämä päivitti koko urakka-ajalta,
   mutta nyt kun suolatoteuma_reittipiste -taulun päivittäminen on hidastunut tietojen tarkentumisen myötä, niin
   potku ei enää riitä koko urakka-ajalta päivitellä."
@@ -50,7 +50,7 @@
         "rajoitusalueen_suolatoteumat"
         #(do
            (log/info "ajasta-paivittain :: rajoitusalueen_suolatoteumat :: Alkaa " (pvm/nyt))
-           (paivita-mahdolliset-suolatoteumat db)
+           (paivita-mahdolliset-suolatoteumat-kuluvalla-hoitokaudella db)
            (log/info "ajasta-paivittain :: rajoitusalueen_suolatoteumat :: Loppuu " (pvm/nyt)))))))
 
 (defrecord YleisetAjastuket []

@@ -25,19 +25,30 @@
    Arvo voi olla tekstiä tai HTML-elementti, jos sanitointi otetaan pois päältä.
 
    Optiot:
-   sanitoi?       Sanitoi kentän ja arvon, jottei taulukossa voi esittää HTML-koodia. Oletuksena true.
-                  Arvojen tulee olla tekstiä tai tekstiksi muunnettavia.
-                  Jos kentän tai arvojen halutaan olevan komponentteja tai muusta syystä ei haluta
-                  sanitoida, voidaan sanitoinniksi asettaa false,
-                  jolloin arvojen sanitointi on kutsujapään vastuulla."
+   sanitoi?        Sanitoi kentän ja arvon, jottei taulukossa voi esittää HTML-koodia. Oletuksena true.
+                   Arvojen tulee olla tekstiä tai tekstiksi muunnettavia.
+                   Jos kentän tai arvojen halutaan olevan komponentteja tai muusta syystä ei haluta
+                   sanitoida, voidaan sanitoinniksi asettaa false,
+                   jolloin arvojen sanitointi on kutsujapään vastuulla.
+   arvon metatieto
+        - sanitoi? Määrittää, otetaanko yksittäinen arvon sisältö sanitoituna mukaan. Sanitoinnin tarpeen tunnistaminen
+                   kutsujapään vastuulla."
   ([kentta-arvo-parit] (tietoja {} kentta-arvo-parit))
   ([{:keys [sanitoi?] :as optiot} kentta-arvo-parit]
-   (let [sanitoi? (or sanitoi? true)]
+   (let [sanitoi-taulukko? (or sanitoi? true)]
      [:table
       (for [[kentta arvo] kentta-arvo-parit]
-        [:tr
-         [:td [:b (if sanitoi? (sanitoi kentta) kentta)]]
-         [:td (if sanitoi? (sanitoi arvo) arvo)]])])))
+        (let [arvo-meta (meta arvo)
+              ;; Defaulttina sanitoidaan kaikki arvot, ellei arvon metatiedoista löydy sanitoi?-asetusta.
+              ;; Näin voidaan määritellä otetaanko mukaan esimerkiksi HTML-elementtejä yksittäiseen kenttä-arvo-pariin,
+              ;; mutta sanitoidaan muut taulukon kenttä-arvo-parit.
+              sanitoi-arvo? (cond
+                               (nil? (:sanitoi? arvo-meta)) sanitoi-taulukko?
+                               (boolean? (:sanitoi? arvo-meta)) (:sanitoi? arvo-meta)
+                               :else sanitoi-taulukko?)]
+          [:tr
+           [:td [:b (if sanitoi-taulukko? (sanitoi kentta) kentta)]]
+           [:td (if sanitoi-arvo? (sanitoi arvo) arvo)]]))])))
 
 (defn nappilinkki
   "Luo yksinkertaisen nappi-linkin.

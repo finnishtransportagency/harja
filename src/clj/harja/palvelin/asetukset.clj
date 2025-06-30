@@ -132,9 +132,6 @@
                                            (s/optional-key :siltojenpalvelusopimusten-shapefile) s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-osoite) s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-tuontikohde) s/Str
-                                           (s/optional-key :turvalaitteiden-shapefile) s/Str
-                                           (s/optional-key :turvalaitteiden-osoite) s/Str
-                                           (s/optional-key :turvalaitteiden-tuontikohde) s/Str
                                            (s/optional-key :kanavien-shapefile) s/Str
                                            (s/optional-key :kanavien-osoite) s/Str
                                            (s/optional-key :kanavien-tuontikohde) s/Str
@@ -155,11 +152,8 @@
                             (s/optional-key :varuste-tuonti-suoritusaika) [s/Num]
                             (s/optional-key :oid-tuonti-suoritusaika) [s/Num]}
 
-   (s/optional-key :labyrintti) {:sms-url s/Str
-                                 :apiavain s/Str}
    (s/optional-key :sms) {:url s/Str
-                          :apiavain s/Str
-                          :aktiivinen? s/Bool}
+                          :apiavain s/Str}
 
    (s/optional-key :virustarkistus) {:url s/Str}
    (s/optional-key :tiedostopesula) {:base-url s/Str}

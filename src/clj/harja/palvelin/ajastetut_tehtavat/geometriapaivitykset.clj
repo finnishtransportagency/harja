@@ -22,7 +22,6 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.paallystyspalvelusopimukset :as paallystyspalvelusopimusten-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tekniset-laitteet-urakat :as tekniset-laitteet-urakat-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavasulut :as kanavasulut]
             [harja.kyselyt.geometriaaineistot :as geometria-aineistot]
             [harja.domain.geometriaaineistot :as ga]
@@ -206,14 +205,6 @@
     :siltojenpalvelusopimusten-shapefile
     siltapalvelusopimukset/vie-siltojen-palvelusopimukset-kantaan))
 
-(def tee-turvalaitteiden-paivitystehtava
-  (maarittele-paivitystehtava
-    "turvalaitteet"
-    :turvalaitteiden-osoite
-    :turvalaitteiden-tuontikohde
-    :turvalaitteiden-shapefile
-    turvalaitteet/vie-turvalaitteet-kantaan))
-
 (def tee-kanavien-paivitystehtava
   (maarittele-paivitystehtava
     "kanavat"
@@ -241,7 +232,6 @@
       :paallystyspalvelusopimusten-paivitys (tee-paallystyspalvelusopimusten-paivitystehtava this asetukset)
       :tekniset-laitteet-urakoiden-paivitys (tee-tekniset-laitteet-urakoiden-paivitystehtava this asetukset)
       :siltojen-palvelusopimusten-paivitys (tee-siltojen-palvelusopimusten-paivitystehtava this asetukset)
-      :turvalaitteiden-paivitys (tee-turvalaitteiden-paivitystehtava this asetukset)
       :kanavien-paivitys (tee-kanavien-paivitystehtava this asetukset)))
 
   (stop [this]
@@ -259,7 +249,6 @@
                      :paallystyspalvelusopimusten-paivitys
                      :tekniset-laitteet-urakoiden-paivitys
                      :siltojen-palvelusopimusten-paivitys
-                     :turvalaitteiden-paivitys
                      :kanavien-paivitys]
             :let [lopeta-fn (get this tehtava)]]
       (cond

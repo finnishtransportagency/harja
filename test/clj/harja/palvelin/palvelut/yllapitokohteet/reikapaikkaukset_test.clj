@@ -41,13 +41,13 @@
                             :aikavali nil
                             :urakka-id urakka-id} :hae-reikapaikkaukset)]
     
-    (is (= (-> vastaus count) 5))
+    (is (= (-> vastaus count) 8))
     (is (= (-> vastaus first :aosa) 1))
-    (is (= (-> vastaus first :kustannus) 1500.0M))
+    (is (= (-> vastaus first :kustannus) 3520.0M))
     (is (= (-> vastaus first :tie) 20))
-    (is (= (-> vastaus first :let) 120))
+    (is (= (-> vastaus first :let) 700))
     (is (= (-> vastaus first :losa) 1))
-    (is (= (-> vastaus first :aet) 1))
+    (is (= (-> vastaus first :aet) 480))
     (is (= (-> vastaus first :tyomenetelma) 9))
     (is (= (-> vastaus first :maara) 66))
     (is (some? (-> vastaus first :sijainti)))
@@ -72,7 +72,7 @@
 (deftest tallennus-paivitys-ja-poisto-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         ulkoinen-id 6363336
-        toteumien-maara 5
+        toteumien-maara 8
         haku-params {:tr nil
                      :aikavali nil
                      :urakka-id urakka-id}
@@ -205,5 +205,5 @@
                               :urakka-id urakka-id}))]
     (is (= (first vastaus) :pohjan-taytto) "Excel-viennin tyypin pitäisi olla :pohjan-taytto")
     (is (= (count vastaus) 3) "Halutaan kolme elementtiä, tyyppi, parametrit ja data")
-    (is (= (last (first (last vastaus))) 249520.0M) "Datan ensimmäisen rivin viimeinen tieto pitäisi olla reikäpaikkausten kulujen summa")
-    (is (= (count (last vastaus)) 7) "Datarivejä pitäisi olla 7, yhteenvetorivi, tyhjä rivi välissä ja 5 reikäpaikkausta" )))
+    (is (= (last (first (last vastaus))) 259040.0M) "Datan ensimmäisen rivin viimeinen tieto pitäisi olla reikäpaikkausten kulujen summa")
+    (is (= (count (last vastaus)) 10) "Datarivejä pitäisi olla 10, yhteenvetorivi, tyhjä rivi välissä ja 8 reikäpaikkausta")))
