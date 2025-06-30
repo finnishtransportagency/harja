@@ -207,7 +207,7 @@
 (defn- laheta-paivystaja-ilmoitus-sahkopostilla [db api-sahkoposti vastaanottajan-email {id :ilmoitusid :as ilmoitus}]
   (log/info (format "Lähetetään ilmoitus (id: %s) sähköpostilla" id))
 
-  (let [lahettaja "no-reply@harjatesti.fi" #_(sahkoposti/vastausosoite api-sahkoposti)
+  (let [lahettaja "harja-ala-vastaa@vayla.fi" #_(sahkoposti/vastausosoite api-sahkoposti)
         [otsikko viesti] (tloik-sahkoposti/otsikko-ja-viesti db lahettaja ilmoitus)
         vastaus (sahkoposti/laheta-viesti! api-sahkoposti lahettaja vastaanottajan-email (str "TESTI: " otsikko) viesti {"X-Correlation-ID" id})]
     (when (not= "Message processed" vastaus)
