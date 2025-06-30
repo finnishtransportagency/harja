@@ -1,10 +1,12 @@
 (ns harja.palvelin.palvelut.debug
   "Erinäisiä vain JVH:lle tarkoitettuja palveluita, joilla voi selvitellä
   eri tilanteita, esim. TR-osiossa."
-  (:require [harja.domain.oikeudet :as oikeudet]
+  (:require [clojure.string :as string]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.palautevayla :as palautevayla-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :as http]
             [harja.kyselyt.debug :as q]
 
@@ -17,6 +19,7 @@
             [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.tieliikenneilmoitukset :as tieliikenneilmoitukset-q]
             [harja.palvelin.integraatiot.tloik.sahkoposti :as tloik-sahkoposti]
+            [harja.palvelin.integraatiot.tloik.tekstiviesti :as tloik-tekstivietsi]
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
@@ -202,31 +205,64 @@
     ilmoitus))
 
 (defn- laheta-paivystaja-ilmoitus-sahkopostilla [db api-sahkoposti vastaanottajan-email {id :ilmoitusid :as ilmoitus}]
-  (let [lahettaja "no-reply@harjatesti.fi" #_(sahkoposti/vastausosoite api-sahkoposti)
-        [otsikko viesti] (tloik-sahkoposti/otsikko-ja-viesti db lahettaja ilmoitus)]
-    (try
-      (sahkoposti/laheta-viesti! api-sahkoposti lahettaja vastaanottajan-email (str "TESTI: " otsikko) viesti {"X-Correlation-ID" id})
-      (catch Exception e
-        (log/error (format "Ilmoituksen %s lähettämisessä sähköpostilla tapahtui poikkeus." (:ilmoitusid ilmoitus)) e))))
-  (log/warn (format "Ilmoitusta %s ei voida lähettää sähköpostilla ilman sähköpostiosoitetta." (:ilmoitusid ilmoitus))))
+  (log/info (format "Lähetetään ilmoitus (id: %s) sähköpostilla" id))
 
-(defn- laheta-paivystaja-ilmoitus-sms []
-  (log/info "TODO: Toteuta SMS-lähetys päivystajan ilmoitukselle, jos puhelinnumero on annettu."))
+  (let [lahettaja "no-reply@harjatesti.fi" #_(sahkoposti/vastausosoite api-sahkoposti)
+        [otsikko viesti] (tloik-sahkoposti/otsikko-ja-viesti db lahettaja ilmoitus)
+        vastaus (sahkoposti/laheta-viesti! api-sahkoposti lahettaja vastaanottajan-email (str "TESTI: " otsikko) viesti {"X-Correlation-ID" id})]
+    (when (not= "Message processed" vastaus)
+      (log/error (format "Ilmoituksen %s lähettämisessä sähköpostilla tapahtui virhe, vastaus integraatiolta %s" id vastaus))
+      (throw (Exception. "Sähköpostin lähetys epäonnistui")))))
+
+(defn- laheta-paivystaja-ilmoitus-sms [db sms {id :ilmoitusid :as ilmoitus} puhelinnumero]
+  (log/info (format "Lähetetään ilmoitus (id: %s) tekstiviestillä" id))
+
+  (let [viestinumero (rand-int 100000) ; Satunnainen viestinumero
+        aiheet-ja-tarkenteet (when (get-in ilmoitus [:luokittelu :aihe])
+                               (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db))
+        viesti (tloik-tekstivietsi/ilmoitus-tekstiviesti ilmoitus viestinumero aiheet-ja-tarkenteet)
+        vastaus (sms/laheta sms puhelinnumero viesti (:ilmoitusid ilmoitus) {})]
+
+    (when (or (not vastaus) (not (str/includes? (:sisalto vastaus) "OK")))
+      (log/error (format "Ilmoituksen %s lähettämisessä tekstiviestillä tapahtui virhe, vastaus integraatiolta: %s" id vastaus))
+      (throw (Exception. "Tekstiviestin lähetys epäonnistui")))))
 
 (defn- laheta-paivystajan-ilmoitus
   ""
   [db api-sahkoposti sms {:keys [ilmoitus-id sahkoposti puhelinnumero] :as ilmoitus-tiedot}]
-  (let [email-sensuroitu (when (string? sahkoposti)
-                           (str/replace sahkoposti #"(?<=^.)[^@]*|(?<=@.).*(?=\.[^.]+$)" "***"))
-        puh-sensuroitu (when (string? puhelinnumero)
-                         (str/replace puhelinnumero #"\d(?=\d{4})" "*"))
-        _ (println "Lähetetään päivystajan ilmoitus, ilmoitus-id: " ilmoitus-id
-            " sähköposti: " email-sensuroitu
-            " puhelinnumero: " puh-sensuroitu)
+  (try
+    (when (and (string/blank? sahkoposti) (string/blank? puhelinnumero))
+      (do
+        (log/error (format "Päivystajan ilmoitusta %s ei voida lähettää ilman sähköpostiosoitetta tai puhelinnumeroa." ilmoitus-id))
+        (throw (Exception. "Päivystajan ilmoitusta ei voida lähettää ilman sähköpostiosoitetta tai puhelinnumeroa."))))
 
-        ilmoitus (hae-ilmoitus db ilmoitus-id)]
+    (let [email-sensuroitu (when (string? sahkoposti)
+                             (str/replace sahkoposti #"(?<=^.)[^@]*|(?<=@.).*(?=\.[^.]+$)" "***"))
+          puh-sensuroitu (when (string? puhelinnumero)
+                           (str/replace puhelinnumero #"\d(?=\d{4})" "*"))
+          _ (println "Lähetetään päivystajan ilmoitus, ilmoitus-id: " ilmoitus-id
+              " sähköposti: " email-sensuroitu
+              " puhelinnumero: " puh-sensuroitu)
 
-    (laheta-paivystaja-ilmoitus-sahkopostilla db api-sahkoposti sahkoposti ilmoitus)))
+          ilmoitus (hae-ilmoitus db ilmoitus-id)]
+
+      (when-not (string/blank? sahkoposti)
+        (laheta-paivystaja-ilmoitus-sahkopostilla db api-sahkoposti sahkoposti ilmoitus))
+
+      (when-not (string/blank? puhelinnumero)
+        (laheta-paivystaja-ilmoitus-sms db sms ilmoitus puhelinnumero))
+
+      {:status 200
+       :body {:viesti "Päivystäjän ilmoitus lähetetty"
+              :ilmoitus-id ilmoitus-id}})
+
+    (catch Exception e
+      (log/error (format "Päivystäjän ilmoituksen lähettämisessä tapahtui poikkeus: %s" e))
+      {:status 500
+       :error "Virhe"
+       :body {:virhe "Päivystäjän ilmoituksen lähettäminen epäonnistui"
+              :viesti (.getMessage e)
+              :ilmoitus-id ilmoitus-id}})))
 
 ;; --- Päivystäjän ilmoituksen testaus -- Päättyy ---
 

@@ -149,7 +149,7 @@
 
      [:h2 "Testaa päivystäjän ilmoitusta (tieliikenneilmoitukset)"]
      [:p "Tämä lähettää päivystäjälle tarkoitetun ilmoitusviestin, kuten tapahtuisi uuden tieliikenneilmoituksen saapuessa."]
-     [:p "Viesti lähetetään sähköpostiin ja lisäksi tekstiviestinä, jos puhelinnumero on annettu."]
+     [:p "Viesti lähetetään sähköpostina ja/tai tekstiviestinä, riippuen siitä, mitkä yhteystiedot on annettu."]
      [:p "Tällä voi testata viestintää ilman T-Loik-integraatiota. Tieliikenneilmoituksen tiedot haetaan Harjan tietokannasta ID:llä."]
      [lomake/lomake
       {:ei-borderia? true
@@ -160,22 +160,24 @@
                       #(e! (tiedot/->LahetaPaivystajanIlmoitus t))
                       {:disabled disable-laheta-paivystajan-ilmoitus? :paksu? true}]])
        :muokkaa! #(e! (tiedot/->MuokkaaPaivystajanIlmoitus %))}
-      [{:nimi :sahkoposti
-        :otsikko "Sähköposti"
-        :tyyppi :email
-        :placeholder "Vastaanottajan sähköposti"
-        :pakollinen? true}
-       {:nimi :puhelinnumero
-        :otsikko "Puhelinnumero"
-        :tyyppi :puhelin
-        :placeholder "Vastaanottajan puhelinnumero"
-        :pakollinen? false}
-       {:nimi :ilmoitus-id
-        :otsikko "Tieliikenneilmoituksen ID (ilmoitus-id)"
-        :placeholder "Tieliikenneilmoituksen ID"
-        :tyyppi :positiivinen-numero
-        :kokonaisluku? true
-        :pakollinen? true}]
+      [(lomake/rivi
+         {:nimi :ilmoitus-id
+          :otsikko "Tieliikenneilmoituksen ID (ilmoitus-id)"
+          :placeholder "Tieliikenneilmoituksen ID (katso Ilmoitukset-näkymästä)"
+          :tyyppi :positiivinen-numero
+          :kokonaisluku? true
+          :pakollinen? true})
+       (lomake/rivi
+         {:nimi :sahkoposti
+          :otsikko "Sähköposti"
+          :tyyppi :email
+          :placeholder "Vastaanottajan sähköposti"
+          :pakollinen? false}
+         {:nimi :puhelinnumero
+          :otsikko "Puhelinnumero"
+          :tyyppi :puhelin
+          :placeholder "Vastaanottajan puhelinnumero"
+          :pakollinen? false})]
       ilmoitus-tiedot]]))
 
 (defn viestitestaus []
