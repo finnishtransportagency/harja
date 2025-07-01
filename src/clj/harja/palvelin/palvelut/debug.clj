@@ -19,7 +19,7 @@
             [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.tieliikenneilmoitukset :as tieliikenneilmoitukset-q]
             [harja.palvelin.integraatiot.tloik.sahkoposti :as tloik-sahkoposti]
-            [harja.palvelin.integraatiot.tloik.tekstiviesti :as tloik-tekstivietsi]
+            [harja.palvelin.integraatiot.tloik.tekstiviesti :as tloik-tekstiviesti]
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
@@ -220,7 +220,7 @@
   (let [viestinumero (rand-int 100000) ; Satunnainen viestinumero
         aiheet-ja-tarkenteet (when (get-in ilmoitus [:luokittelu :aihe])
                                (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db))
-        viesti (tloik-tekstivietsi/ilmoitus-tekstiviesti ilmoitus viestinumero aiheet-ja-tarkenteet)
+        viesti (tloik-tekstiviesti/ilmoitus-tekstiviesti ilmoitus viestinumero aiheet-ja-tarkenteet)
         vastaus (sms/laheta sms puhelinnumero viesti (:ilmoitusid ilmoitus) {})]
 
     (when (or (not vastaus) (not (str/includes? (:sisalto vastaus) "OK")))
