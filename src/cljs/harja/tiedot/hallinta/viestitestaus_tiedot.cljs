@@ -33,7 +33,12 @@
                           :lahetys-kaynnissa? false}
                :tekstiviesti {:puhelinnumero "<vastaanottajan puhelinnumero>"
                               :viesti "<anna viesti>"
-                              :lahetys-kaynnissa? false}})
+                              :lahetys-kaynnissa? false}
+               :ilmoitus-tiedot {:puhelinnumero nil
+                                 :sahkoposti nil
+                                 :ilmoitus-id nil
+                                 :lahetys-kaynnissa? false}})
+
 (def tila (atom alkutila))
 (def nakymassa? (atom false))
 
@@ -54,6 +59,12 @@
 (defrecord LahetaSMS [tekstiviesti])
 (defrecord LahetysSMSOnnistui [vastaus])
 (defrecord LahetysSMSEpaonnistui [vastaus])
+
+;; Päivystäjän ilmoituksen lähetys
+(defrecord MuokkaaPaivystajanIlmoitus [ilmoitus-tiedot])
+(defrecord LahetaPaivystajanIlmoitus [ilmoitus-tiedot])
+(defrecord LahetaPaivystajanIlmoitusOnnistui [vastaus])
+(defrecord LahetaPaivystajanIlmoitusEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
 
@@ -168,5 +179,35 @@
   (process-event [{vastaus :vastaus} app]
     (do
       (viesti/nayta-toast! "Lähetys epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+      (js/console.error "Virhe: " (pr-str vastaus))
+      (assoc app :lahetys-kaynnissa? false)))
+
+
+  MuokkaaPaivystajanIlmoitus
+  (process-event [{ilmoitus-tiedot :ilmoitus-tiedot} app]
+    (assoc app :ilmoitus-tiedot ilmoitus-tiedot))
+
+  LahetaPaivystajanIlmoitus
+  (process-event [{ilmoitus-tiedot :ilmoitus-tiedot} app]
+    (let [data (select-keys ilmoitus-tiedot [:puhelinnumero :sahkoposti :ilmoitus-id])]
+      (js/console.log "Lähetetään ilmoitus paivystajälle: " (pr-str data))
+
+      (tuck-apurit/post! :debug-laheta-paivystajan-ilmoitus data
+        {:onnistui ->LahetaPaivystajanIlmoitusOnnistui
+         :epaonnistui ->LahetaPaivystajanIlmoitusEpaonnistui})
+      (js/console.log "Lähetys matkalla!")
+      (assoc app :lahetys-kaynnissa? true)))
+
+  LahetaPaivystajanIlmoitusOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Päivystäjän ilmoitus lähetetty" :onnistui)
+      (js/console.log "Vastaus: " (pr-str vastaus))
+      (assoc app :lahetys-kaynnissa? false)))
+
+  LahetaPaivystajanIlmoitusEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Päivystäjän ilmoituksen lähetys epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
       (js/console.error "Virhe: " (pr-str vastaus))
       (assoc app :lahetys-kaynnissa? false))))
