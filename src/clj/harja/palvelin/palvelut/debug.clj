@@ -189,7 +189,7 @@
 (defn hae-ilmoitus [db ilmoitusid]
   (let [id (:id (first (tieliikenneilmoitukset-q/hae-id-ilmoitus-idlla db ilmoitusid)))
         _ (when-not id
-            (log/error (format "Ilmoitusta %s ei löytynyt tietokannasta." ilmoitusid))
+            (log/error (format "[Testi] Ilmoitusta %s ei löytynyt tietokannasta." ilmoitusid))
             (throw (Exception. "Ilmoitusta ei löytynyt ilmoitus-id:llä")))
         ilmoitus (first
                    (konversio/sarakkeet-vektoriin
@@ -205,17 +205,17 @@
     ilmoitus))
 
 (defn- laheta-paivystaja-ilmoitus-sahkopostilla [db api-sahkoposti vastaanottajan-email {id :ilmoitusid :as ilmoitus}]
-  (log/info (format "Lähetetään ilmoitus (id: %s) sähköpostilla" id))
+  (log/info (format "[Testi] Lähetetään ilmoitus (id: %s) sähköpostilla" id))
 
   (let [lahettaja "harja-ala-vastaa@vayla.fi" #_(sahkoposti/vastausosoite api-sahkoposti)
         [otsikko viesti] (tloik-sahkoposti/otsikko-ja-viesti db lahettaja ilmoitus)
         vastaus (sahkoposti/laheta-viesti! api-sahkoposti lahettaja vastaanottajan-email (str "TESTI: " otsikko) viesti {"X-Correlation-ID" id})]
     (when (not= "Message processed" vastaus)
-      (log/error (format "Ilmoituksen %s lähettämisessä sähköpostilla tapahtui virhe, vastaus integraatiolta %s" id vastaus))
+      (log/error (format "[Testi] Ilmoituksen %s lähettämisessä sähköpostilla tapahtui virhe, vastaus integraatiolta %s" id vastaus))
       (throw (Exception. "Sähköpostin lähetys epäonnistui")))))
 
 (defn- laheta-paivystaja-ilmoitus-sms [db sms {id :ilmoitusid :as ilmoitus} puhelinnumero]
-  (log/info (format "Lähetetään ilmoitus (id: %s) tekstiviestillä" id))
+  (log/info (format "[Testi] Lähetetään ilmoitus (id: %s) tekstiviestillä" id))
 
   (let [viestinumero (rand-int 100000) ; Satunnainen viestinumero
         aiheet-ja-tarkenteet (when (get-in ilmoitus [:luokittelu :aihe])
@@ -224,7 +224,7 @@
         vastaus (sms/laheta sms puhelinnumero viesti (:ilmoitusid ilmoitus) {})]
 
     (when (or (not vastaus) (not (str/includes? (:sisalto vastaus) "OK")))
-      (log/error (format "Ilmoituksen %s lähettämisessä tekstiviestillä tapahtui virhe, vastaus integraatiolta: %s" id vastaus))
+      (log/error (format "[Testi] Ilmoituksen %s lähettämisessä tekstiviestillä tapahtui virhe, vastaus integraatiolta: %s" id vastaus))
       (throw (Exception. "Tekstiviestin lähetys epäonnistui")))))
 
 (defn- laheta-paivystajan-ilmoitus
@@ -233,14 +233,14 @@
   (try
     (when (and (string/blank? sahkoposti) (string/blank? puhelinnumero))
       (do
-        (log/error (format "Päivystajan ilmoitusta %s ei voida lähettää ilman sähköpostiosoitetta tai puhelinnumeroa." ilmoitus-id))
+        (log/error (format "[Testi] Päivystajan ilmoitusta %s ei voida lähettää ilman sähköpostiosoitetta tai puhelinnumeroa." ilmoitus-id))
         (throw (Exception. "Päivystajan ilmoitusta ei voida lähettää ilman sähköpostiosoitetta tai puhelinnumeroa."))))
 
     (let [email-sensuroitu (when (string? sahkoposti)
                              (str/replace sahkoposti #"(?<=^.)[^@]*|(?<=@.).*(?=\.[^.]+$)" "***"))
           puh-sensuroitu (when (string? puhelinnumero)
                            (str/replace puhelinnumero #"\d(?=\d{4})" "*"))
-          _ (log/info "Lähetetään päivystajan ilmoitus, ilmoitus-id: " ilmoitus-id
+          _ (log/info "[Testi] Lähetetään päivystajan ilmoitus, ilmoitus-id: " ilmoitus-id
               " sähköposti: " email-sensuroitu
               " puhelinnumero: " puh-sensuroitu)
 
@@ -257,7 +257,7 @@
               :ilmoitus-id ilmoitus-id}})
 
     (catch Exception e
-      (log/error (format "Päivystäjän ilmoituksen lähettämisessä tapahtui poikkeus: %s" e))
+      (log/error (format "[Testi] Päivystäjän ilmoituksen lähettämisessä tapahtui poikkeus: %s" e))
       {:status 500
        :error "Virhe"
        :body {:virhe "Päivystäjän ilmoituksen lähettäminen epäonnistui"
