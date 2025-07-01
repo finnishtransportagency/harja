@@ -240,7 +240,7 @@
                              (str/replace sahkoposti #"(?<=^.)[^@]*|(?<=@.).*(?=\.[^.]+$)" "***"))
           puh-sensuroitu (when (string? puhelinnumero)
                            (str/replace puhelinnumero #"\d(?=\d{4})" "*"))
-          _ (println "Lähetetään päivystajan ilmoitus, ilmoitus-id: " ilmoitus-id
+          _ (log/info "Lähetetään päivystajan ilmoitus, ilmoitus-id: " ilmoitus-id
               " sähköposti: " email-sensuroitu
               " puhelinnumero: " puh-sensuroitu)
 
