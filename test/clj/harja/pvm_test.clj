@@ -457,3 +457,60 @@
     (is (false? (pvm/samassa-kvartaalissa? pvm3_a pvm3_b)))
     (is (false? (pvm/samassa-kvartaalissa? sql-ts-pvm3-a sql-ts-pvm3-b)))))
 
+(deftest aaikavalin-kuukaudet-pvm-vektorina-test
+  (testing "hoitovuoden aikaväliltä"
+    (let [alku (pvm/->pvm "1.10.2025")
+          loppu (pvm/->pvm "30.9.2026")]
+      (is (= (pvm/aikavalin-kuukaudet-pvm-vektorina [alku loppu] 15)
+             [#inst "2025-10-14T21:00:00.000-00:00"
+              #inst "2025-11-14T22:00:00.000-00:00"
+              #inst "2025-12-14T22:00:00.000-00:00"
+              #inst "2026-01-14T22:00:00.000-00:00"
+              #inst "2026-02-14T22:00:00.000-00:00"
+              #inst "2026-03-14T22:00:00.000-00:00"
+              #inst "2026-04-14T21:00:00.000-00:00"
+              #inst "2026-05-14T21:00:00.000-00:00"
+              #inst "2026-06-14T21:00:00.000-00:00"
+              #inst "2026-07-14T21:00:00.000-00:00"
+              #inst "2026-08-14T21:00:00.000-00:00"
+              #inst "2026-09-14T21:00:00.000-00:00"]))))
+
+  (testing "hoitovuoden aikaväliltä annettu päivä"
+    (let [alku (pvm/->pvm "1.10.2025")
+          loppu (pvm/->pvm "30.9.2026")]
+      (is (= (pvm/aikavalin-kuukaudet-pvm-vektorina [alku loppu] 1)
+             [#inst "2025-09-30T21:00:00.000-00:00"
+              #inst "2025-10-31T22:00:00.000-00:00"
+              #inst "2025-11-30T22:00:00.000-00:00"
+              #inst "2025-12-31T22:00:00.000-00:00"
+              #inst "2026-01-31T22:00:00.000-00:00"
+              #inst "2026-02-28T22:00:00.000-00:00"
+              #inst "2026-03-31T21:00:00.000-00:00"
+              #inst "2026-04-30T21:00:00.000-00:00"
+              #inst "2026-05-31T21:00:00.000-00:00"
+              #inst "2026-06-30T21:00:00.000-00:00"
+              #inst "2026-07-31T21:00:00.000-00:00"
+              #inst "2026-08-31T21:00:00.000-00:00"]))))
+
+  (testing "yksi kuukausi"
+    (let [alku (pvm/->pvm "1.02.2023")
+          loppu (pvm/->pvm "28.02.2023")]
+      (is (= (pvm/aikavalin-kuukaudet-pvm-vektorina [alku loppu])
+             [#inst "2023-02-14T22:00:00.000-00:00"]))))
+
+  (testing "muutama kuukausi samana vuonna"
+    (let [alku (pvm/->pvm "1.03.2023")
+          loppu (pvm/->pvm "1.05.2023")]
+      (is (= (pvm/aikavalin-kuukaudet-pvm-vektorina [alku loppu])
+             [#inst "2023-03-14T22:00:00.000-00:00"
+              #inst "2023-04-14T21:00:00.000-00:00"
+              #inst "2023-05-14T21:00:00.000-00:00"]))))
+
+  (testing "yli vuosirajan"
+    (let [alku (pvm/->pvm "1.11.2022")
+          loppu (pvm/->pvm "28.02.2023")]
+      (is (= (pvm/aikavalin-kuukaudet-pvm-vektorina [alku loppu])
+             [#inst "2022-11-14T22:00:00.000-00:00"
+              #inst "2022-12-14T22:00:00.000-00:00"
+              #inst "2023-01-14T22:00:00.000-00:00"
+              #inst "2023-02-14T22:00:00.000-00:00"])))))

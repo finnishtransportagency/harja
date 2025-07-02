@@ -592,6 +592,12 @@
       urakka-id
       (throw (Exception. (format "Annetulla nimellä: '%s'  ei löydy urakkaa!!" nimi))))))
 
+(defn hae-urakan-id-sampo-idlla [sampoid]
+  (ffirst (q (str "SELECT id FROM urakka WHERE sampoid = '" sampoid "';"))))
+
+(defn hae-urakoitsijan-id-ytunnuksella [ytunnus]
+  (ffirst (q (str "SELECT id FROM organisaatio WHERE tyyppi = 'urakoitsija' AND ytunnus = '" ytunnus "';"))))
+
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
   ([nimi kayttaja]
@@ -622,7 +628,7 @@
 (def iin-maanteiden-hoitourakan-lupaussitoutumisen-id (atom nil))
 (def raahen-maanteiden-hoitourakan-2023-2028-id (atom nil))
 (def raahen-maanteiden-hoitourakan-2023-2028-sopimus-id (atom nil))
-(def kajaanin-maanteiden-hoitourakan-2024-2029-id (atom nil))
+(def kajaanin-maanteiden-hoitourakan-2025-2030-id (atom nil))
 (def suomussalmen-maanteiden-hoitourakan-2024-2029-id (atom nil))
 
 
@@ -881,10 +887,10 @@
                    FROM   urakka
                    WHERE  nimi = 'Raahen MHU 2023-2028')"))))
 
-(defn hae-kajaanin-maanteiden-hoitourakan-2024-2029-id []
+(defn hae-kajaanin-maanteiden-hoitourakan-2025-2030-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
-                   WHERE  nimi = 'POP MHU Kajaani 2024-2029'"))))
+                   WHERE  nimi = 'POP MHU Kajaani 2025-2030'"))))
 
 (defn hae-suomussalmen-maanteiden-hoitourakan-2024-2029-id []
   (ffirst (q (str "SELECT id
@@ -1158,6 +1164,9 @@
 (defn anna-tielupaoikeus [kayttaja]
     (u (format "update kayttaja set api_oikeudet = ARRAY['tielupa'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
 
+(defn anna-taitorakenneoikeus [kayttaja]
+  (u (format "update kayttaja set api_oikeudet = ARRAY['taitorakenne'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
+
 (defn poista-kayttajan-api-oikeudet [kayttaja]
   (u (format "update kayttaja set api_oikeudet = NULL WHERE kayttajanimi = '%s'" kayttaja)))
 
@@ -1306,7 +1315,7 @@
   (reset! iin-maanteiden-hoitourakan-lupaussitoutumisen-id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id))
   (reset! raahen-maanteiden-hoitourakan-2023-2028-id (hae-raahen-maanteiden-hoitourakan-2023-2028-id))
   (reset! raahen-maanteiden-hoitourakan-2023-2028-sopimus-id (hae-raahen-maanteiden-hoitourakan-2023-2028-sopimus-id))
-  (reset! kajaanin-maanteiden-hoitourakan-2024-2029-id (hae-kajaanin-maanteiden-hoitourakan-2024-2029-id))
+  (reset! kajaanin-maanteiden-hoitourakan-2025-2030-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id))
   (reset! suomussalmen-maanteiden-hoitourakan-2024-2029-id (hae-suomussalmen-maanteiden-hoitourakan-2024-2029-id)))
 
 (defn urakkatieto-lopetus! []

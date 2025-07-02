@@ -216,7 +216,7 @@ WHERE tehtavaryhma IS NOT NULL
   AND poistettu IS NOT TRUE
   AND piilota IS NOT TRUE;
 
--- name: hae-urakan-suunniteltu-materiaalin-kaytto-tehtavamaarista
+-- name: hae-urakan-suunniteltu-materiaalin-kaytto-tehtavamaarista-analytiikalle
 -- Hakee materiaalien suunnittelutiedot urakalle.
 -- Varmistetaan, että tarjouksen tiedot on syötetty. Muuten ei palauteta mitään.
 SELECT
@@ -227,6 +227,8 @@ SELECT
     ml.nimi as materiaaliluokka,
     ml.yksikko AS materiaaliluokka_yksikko,
     ml.materiaalityyppi AS materiaaliluokka_tyyppi,
+    ut.id AS "harja-id",
+    ut.tehtava AS "tehtava-id",
     ut."hoitokauden-alkuvuosi",
     SUM(ut.maara) as maara,
     ut.muokattu,
@@ -239,10 +241,10 @@ FROM urakka_tehtavamaara ut
          JOIN sopimuksen_tehtavamaarat_tallennettu stt on u.id = stt.urakka AND stt.tallennettu IS TRUE
 WHERE ut.poistettu IS NOT TRUE
   AND u.id = :urakka
-GROUP BY ut."hoitokauden-alkuvuosi", mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, ut.muokattu, ut.luotu;
+GROUP BY ut."hoitokauden-alkuvuosi", mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, ut.muokattu, ut.luotu, ut.id, ut.tehtava;
 
--- name: hae-alueurakan-suunnitellut-tehtavamaarat
-select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", MAX(yt.luotu) as luotu,
+-- name: hae-alueurakan-suunnitellut-tehtavamaarat-analytiikalle
+select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", yt.id as "harja-id", MAX(yt.luotu) as luotu,
        MAX(yt.muokattu) as muokattu,
        CASE
            WHEN EXTRACT(MONTH FROM yt.alkupvm)::int = 1 AND EXTRACT(DAY FROM yt.alkupvm)::int = 1 THEN (EXTRACT(YEAR FROM yt.alkupvm) -1)::INT
@@ -256,15 +258,16 @@ where yt.urakka = :urakka-id
   -- joten käytetään varmuuden vuoksi overlaps funktiota, joka palauttaa tiedot, mikäli edes osa suunnitellusta
   -- aikavälistä osuu annettuun ajankohtaan.
   and (yt.alkupvm, yt.loppupvm) overlaps (:alkupvm, :loppupvm)
-group by yt.urakka, yt.tehtava, tk.id, "hoitokauden-alkuvuosi";
+group by yt.urakka, yt.tehtava, tk.id, yt.id, "hoitokauden-alkuvuosi";
 
--- name: hae-mhurakan-suunnitellut-tehtavamaarat
+-- name: hae-mhurakan-suunnitellut-tehtavamaarat-analytiikalle
 -- Hakee materiaalien suunnittelutiedot urakalle.
 -- Varmistetaan, että tarjouksen tiedot on syötetty. Muuten ei palauteta mitään.
 SELECT
     SUM(ut.maara) as maara,
     tk.nimi as tehtava,
     tk.id as "tehtava-id",
+    ut.id as "harja-id",
     ut."hoitokauden-alkuvuosi",
     ut.muokattu,
     ut.luotu
@@ -274,4 +277,4 @@ FROM urakka_tehtavamaara ut
 WHERE ut.poistettu IS NOT TRUE
   AND ut.urakka = :urakka-id
   AND ut."hoitokauden-alkuvuosi" in (:hoitokauden-alkuvuodet)
-GROUP BY ut."hoitokauden-alkuvuosi", tk.id, ut.muokattu, ut.luotu;
+GROUP BY ut."hoitokauden-alkuvuosi", tk.id, ut.muokattu, ut.luotu, ut.id;

@@ -22,7 +22,12 @@
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero (-> @tila/yleiset :urakka :alkupvm) valittu-hoitokauden-alkuvuosi)
 
         ;; Toteutuneet kustannukset
-        hankintakustannukset (or (get-in valikatselmuksen-tiedot [:kustannukset :hankintakustannukset-toteutunut]) 0)
+        ;; Välikatselmuksessa käytetyt Hankintakustannukset ovat eri asia kuin Kustannusten Seurannan Hankintakustannukset/Suunnitellut Hankinnat.
+        ;; Välikatselmuksessa Hankintakustannuksiin lisätään toteutuneet Rahavaraukset.
+        hankintakustannukset (or
+                               (+ (get-in valikatselmuksen-tiedot [:kustannukset :hankintakustannukset-toteutunut])
+                                 (get-in valikatselmuksen-tiedot [:kustannukset :rahavaraukset-toteutunut]))
+                               0)
         erillishankinnat (or (get-in valikatselmuksen-tiedot [:kustannukset :erillishankinnat-toteutunut]) 0)
         johto-ja-hallintokorvaus (or (get-in valikatselmuksen-tiedot [:kustannukset :johto-ja-hallintokorvaus-toteutunut]) 0)
         hoidonjohtopalkkio (or (get-in valikatselmuksen-tiedot [:kustannukset :hoidonjohdonpalkkio-toteutunut]) 0)

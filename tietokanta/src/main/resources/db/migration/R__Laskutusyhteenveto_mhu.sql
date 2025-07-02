@@ -618,7 +618,6 @@ DECLARE
     rahavaraus_nimet                      TEXT[]    := '{}';
     hoitokausi_yht_array                  NUMERIC[] := '{}';
     val_aika_yht_array                    NUMERIC[] := '{}';
-    kannustin_id                          INT;
 
     -- Rahavaraus yhteensä arvot
     rv_val_aika_yht                       NUMERIC := 0;
@@ -692,15 +691,12 @@ BEGIN
         -------------------  Hankinnat    -------------------------
         -----------------------------------------------------------
 
-        -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta 
-        -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
-        SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
-
         -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut hankinnat työt
         -- Paitsi hoidon johdon hankinnat, jotka on erillishankintoja ja ne on otettu huomioon eri kohdassa
         hankinnat_laskutettu := 0.0;
         hankinnat_laskutetaan := 0.0;
 
+        -- Käsitellään muut toimenpiteet, ei Hoidon johtoa, jolla oma käsittely myöhemmin.
         IF (t.tuotekoodi != '23150') THEN
             FOR hankinnat_i IN 
                 SELECT 
@@ -717,7 +713,7 @@ BEGIN
                   AND lk.poistettu IS NOT TRUE
                   AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                   -- Poistetaan rahavaraukset hankinnoista. Näille oma laari.
-                  AND (tr.yksiloiva_tunniste IS NULL OR(lk.rahavaraus_id IS NULL OR lk.rahavaraus_id != kannustin_id))
+                  AND lk.rahavaraus_id IS NULL
                   AND lk.tavoitehintainen = TRUE
             LOOP
                 SELECT  hankinnat_i.kht_summa AS summa,
@@ -1159,8 +1155,10 @@ BEGIN
                 AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                 AND l.urakka = ur
                 AND tpi.id = t.tpi
-              -- J - Johto- ja hallintokorvaus huomioidaan myös muukulu-tyyppiseksi kirjattuna laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä, joten karsitaan pois tässä.
-              AND ((tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54') OR tr.yksiloiva_tunniste IS NULL)
+                -- J - Johto- ja hallintokorvaus huomioidaan myös muukulu-tyyppiseksi kirjattuna laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä, joten karsitaan pois tässä.
+                -- W - Erillishankinnat, myös omana rivinään, ei lasketa niitä tähän 
+                AND tr.yksiloiva_tunniste NOT IN ('a6614475-1950-4a61-82c6-fda0fd19bb54', '37d3752c-9951-47ad-a463-c1704cf22f4c')
+              
         LOOP
             IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
                 -- Hoitokausi yhteensä

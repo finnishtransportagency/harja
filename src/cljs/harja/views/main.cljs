@@ -38,7 +38,8 @@
             [harja.pvm :as pvm]
             [harja.ui.napit :as napit]
             [harja.ui.kartta-debug :refer [kartta-layers]]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.ui.saavutettavuus :as saavutettavuus])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -231,6 +232,9 @@
      [modal/modal-container]
      [viesti-container]
      [toast-viesti-container]
+      ;; Aria-live containerit eri prioriteeteille  
+     [saavutettavuus/aria-live-container (:polite @saavutettavuus/aria-viestit) {:kohteliaisuus "polite"}]  
+     [saavutettavuus/aria-live-container (:assertive @saavutettavuus/aria-viestit) {:kohteliaisuus "assertive"}]
      (when @nav/kartta-nakyvissa?
        [kartta-layers korkeus])
 
@@ -268,6 +272,10 @@
            (empty? (:urakkaroolit kayttaja))
            (empty? (:organisaatioroolit kayttaja)))))
 
+(defn todennus-varmistus-epaonnistui? [kayttaja]
+  ;; Tarkoittaa että todennus epäonnistui, tästä laukaistaan myös slack häly: JWT-ERROR
+  (boolean (contains? (:roolit kayttaja) "failed")))
+
 (defn kuuntele-oikeusvirheita []
   (t/kuuntele! :ei-oikeutta (fn [tiedot]
                               (viesti/nayta! (:viesti tiedot)
@@ -290,9 +298,16 @@
             [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
             (if (nil? kayttaja)
               [ladataan]
-              (if (ei-kayttooikeutta? kayttaja)
+              (cond
+                (todennus-varmistus-epaonnistui? kayttaja)
+                [:div.ei-kayttooikeutta-wrap
+                 [:img#harja-brand-icon {:src "images/harja_logo_soft.svg"}]
+                 [:div.ei-kayttooikeutta "Todennus epäonnistui. Ei käyttöoikeutta Harjaan."]]
+
+                (ei-kayttooikeutta? kayttaja)
                 [:div.ei-kayttooikeutta-wrap
                  [:img#harja-brand-icon {:src "images/harja_logo_soft.svg"}]
                  [:div.ei-kayttooikeutta "Ei käyttöoikeutta Harjaan. Ota yhteys organisaatiosi käyttövaltuusvastaavaan."]]
-                [paasisalto sivu korkeus]))))
+
+                :else [paasisalto sivu korkeus]))))
         [ladataan]))))

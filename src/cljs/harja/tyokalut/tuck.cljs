@@ -16,6 +16,19 @@
 
 (defonce jarjestys-pub (pub jarjestys-kanava :kutsu-kasittely))
 
+(defn nollaa-tuck-tila
+  "Nollaa Tuck-tilan osittain säilyttäen olemassa olevat syvemmän tason arvot.
+   Korvaa arvot, jotka on määritelty `nollatut-valinnat`
+   Käytetään kun suodattimia päivitetään, urakkaa vaihdetaan, yms, jotta tilaan ei jää mitään roikkumaan."
+  [app nollatut-valinnat]
+  (merge-with (fn [app valinta]
+                (if (and
+                      (map? app) (map? valinta))
+                  (merge app valinta)
+                  valinta))
+    app
+    nollatut-valinnat))
+
 (defn- palvelukutsu*
   "Optiot:
    viive              Aika millisekunteina, jonka verran palvelupyynnön lähetystä
@@ -25,7 +38,8 @@
 
    tunniste           Tunnisteen kannattaa olla jokin kontekstia kuvaava avain.
                       Palvelun nimikin käy, mutta kannattaa kuvata mieluummin konteksti,
-                      sillä samaa palvelua saatetaan kutsua eri kontekstissa."
+                      sillä samaa palvelua saatetaan kutsua eri kontekstissa.
+   paasta-virhe-lapi? Mahdollistaa palvelimen virheen päästämisen frontille asti ja näyttämisen käyttäjälle."
   [app palvelu argumentit {:keys [onnistui onnistui-parametrit viive tunniste
                                   epaonnistui epaonnistui-parametrit lahetetty
                                   paasta-virhe-lapi? palauta-kanava?]

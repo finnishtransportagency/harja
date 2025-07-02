@@ -58,7 +58,6 @@
     (is (= :kayttaja (:tyyppi kayttaja-tero-toripolliisi)) "haku: käyttäjän tyyppi")
     (is (= "Tero" (:etunimi kayttaja-tero-toripolliisi)) "haku: käyttäjän etunimi")
     (is (= "Toripolliisi" (:sukunimi kayttaja-tero-toripolliisi)) "haku: käyttäjän sukunimi")
-    (is (= "tero" (:kayttajanimi kayttaja-tero-toripolliisi)) "haku: käyttäjän käyttäjänimi")
     (is (= "Pohjois-Pohjanmaa" (:org_nimi kayttaja-tero-toripolliisi)) "haku: käyttäjän org_nimi")
     (is (= "Tero Toripolliisi, Pohjois-Pohjanmaa" (:hakusanat kayttaja-tero-toripolliisi)) "haku: käyttäjän hakusanat")
     (is (number? (:id kayttaja-tero-toripolliisi)) "haku: käyttäjän id")

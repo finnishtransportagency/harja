@@ -80,6 +80,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (html-tyokalut/nappilinkki napin-teksti
                              (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
+;; TODO: Deprekoitu. Palautetaan vanha tapa käyttöön, mikäli sähköpostin kuvalinkkien muotoilussa tulee ongelmia.
 (defn- parsi-kuvalinkit-sahkopostiin [kuvat]
   (when-not (empty? kuvat)
      [:table
@@ -94,7 +95,30 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                           [:a {:href linkki} (str "Kuvalinkki " (inc indeksi))]]])
                       kuvat))]))
 
-(defn- selitteen-sisaltavat-yleiset-tiedot [ilmoitus]
+(defn- yleistietotaulukon-kuvalinkit [kuvat]
+  (into [:div]
+    (map-indexed
+      (fn [indeksi linkki]
+        [:div
+         {:key (str (hash linkki) "-" indeksi)}
+         ;; Sanitoidaan linkki, jotta sen turvallisuus on varmistettu
+         [:a {:href (sanitoi linkki)} (str "Kuvalinkki " (inc indeksi))]])
+      kuvat)))
+
+(defn- karttasijainti-linkki-email [url]
+  [:table {:width "100%" :cellspacing "0" :cellpadding "0" :border "0"}
+   [:tbody
+    [:tr
+     [:td
+      [:table {:cellspacing "0" :cellpadding "0" :border "0"}
+       [:tbody
+        [:tr
+         [:td
+          [:a {:href url
+               :target "_blank"
+               :rel "noopener noreferrer"} "Avaa sijainti kartalla"]]]]]]]]])
+
+(defn- selitteen-sisaltavat-yleiset-tiedot [ilmoitus kuvat]
   (html-tyokalut/tietoja
     [["Urakka" (:urakkanimi ilmoitus)]
      ["Tunniste" (:tunniste ilmoitus)]
@@ -106,50 +130,81 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
      ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
      ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
      ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
-     ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]]))
+     ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]
+     [(when (:lisatieto ilmoitus) "Kuvaus ")
+      (when (:lisatieto ilmoitus) (sanitoi (:lisatieto ilmoitus)))]
+     [(when (seq kuvat) "Kuvalinkit")
+      (when (seq kuvat) (with-meta
+                          (yleistietotaulukon-kuvalinkit (:kuvat ilmoitus))
+                          {:sanitoi? false}))]]))
 
-(defn- aiheen-sisaltavat-yleiset-tiedot [db ilmoitus]
+(defn- aiheen-sisaltavat-yleiset-tiedot [db ilmoitus kuvat]
   (let [aiheet-ja-tarkenteet (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db)]
-    [:div
-     (html-tyokalut/tietoja
-       [["Urakka" (:urakkanimi ilmoitus)]
-        ["Id" (:ilmoitusid ilmoitus)]
-        ["Tunniste" (:tunniste ilmoitus)]
-        ["Ilmoitettu" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
-        ["Lähetetty HARJAan" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
-        ["Yhteydenottopyyntö " (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")]
-        ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
-        ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
-        ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]
-        ["Aihe " (palautevayla/hae-aihe aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :aihe]))]
-        ["Tarkenne " (palautevayla/hae-tarkenne aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :tarkenne]))]
-        [(when (:selitteet ilmoitus) "Selitteet")
-         (when (:selitteet ilmoitus) (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus))))]
-        ["Otsikko " (:otsikko ilmoitus)]
-        ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
-        ["Kuvaus " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))]
-        ["Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
-        [(when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
-         (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))]])]))
+    (html-tyokalut/tietoja
+      [["Urakka" (:urakkanimi ilmoitus)]
+       ["Id" (:ilmoitusid ilmoitus)]
+       ["Tunniste" (:tunniste ilmoitus)]
+       ["Ilmoitettu" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
+       ["Lähetetty HARJAan" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
+       ["Yhteydenottopyyntö " (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")]
+       ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
+       ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
+       ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]
+       ["Aihe " (palautevayla/hae-aihe aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :aihe]))]
+       ["Tarkenne " (palautevayla/hae-tarkenne aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :tarkenne]))]
+       [(when (:selitteet ilmoitus) "Selitteet")
+        (when (:selitteet ilmoitus) (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus))))]
+       ["Otsikko " (:otsikko ilmoitus)]
+       ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
+       ["Kuvaus " (when (:lisatieto ilmoitus) (sanitoi (:lisatieto ilmoitus)))]
+       ["Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
+       [(when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
+        (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))]
+       [(when (seq kuvat) "Kuvalinkit")
+        (when (seq kuvat) (with-meta
+                            (yleistietotaulukon-kuvalinkit (:kuvat ilmoitus))
+                            {:sanitoi? false}))]])))
 
-(defn- viesti [db vastausosoite otsikko ilmoitus]
+(defn- viesti-wrapper
+  "Käärii sähköpostin sisällön HTML-taulukkoon, joka on yhteensopivampi Outlookin kanssa kanssa.
+   Taulukon ulkoasu on yksinkertainen ja taulukko on 100% leveä.
+   On tärkeää resetoida kaikki välistykseen liittyvät tyylit, koska Outlook.
+   Välistyksen voi säätää erikseen taulukon sisällä. Älä käytä marginia, koska se on epäluotettava Outlookissa.
+   Käytä pääsääntöisesti paddingia, joka toimii luotettavammin."
+  [& sisalto]
+  [:div
+   [:table {:style "margin: 0;padding: 0;border-spacing: 0;overflow: hidden;background-color: #ffffff;"
+            :cellspacing "0" :cellpadding "0" :border "0" :width "100%"}
+    [:tbody {:style "margin: 0;padding: 0;"}
+     [:tr {:style "font-family: Helvetica, sans-serif;font-size: 100%;margin: 0;padding: 0;"}
+      (into [:td {:style "font-family: Helvetica, sans-serif;font-size: 16px;margin: 0;padding: 8px;font-weight: normal;line-height: 24px;background-color: #ffffff"}]
+        sisalto)]]]])
+
+(defn viesti [db vastausosoite otsikko ilmoitus]
   (html
-    [:div
-     [:table
-      (if-not (get-in ilmoitus [:luokittelu :aihe])
-        (selitteen-sisaltavat-yleiset-tiedot ilmoitus)
-        (aiheen-sisaltavat-yleiset-tiedot db ilmoitus))]
+    (viesti-wrapper
+      ;; Yleiset tiedot taulukko
 
-     [:div (parsi-kuvalinkit-sahkopostiin (:kuvat ilmoitus))]
-     [:blockquote (sanitoi (:lisatieto ilmoitus))]
-     (when-let [sijainti (:sijainti ilmoitus)]
-       (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
-         [:a {:href (format open-google-map-url-template lat lon)
-              :target "_blank"
-              :rel "noopener noreferrer"} "Avaa sijainti kartalla"]))
-     (for [teksti (map first kuittaustyypit)]
-       [:div {:style "padding-top: 10px;"}
-        (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
+      (if-not (get-in ilmoitus [:luokittelu :aihe])
+        (selitteen-sisaltavat-yleiset-tiedot ilmoitus (:kuvat ilmoitus))
+        (aiheen-sisaltavat-yleiset-tiedot db ilmoitus (:kuvat ilmoitus)))
+
+      ;; Kuvalinkit
+      ;; TODO: Deprekoitu. Palautetaan vanha tapa käyttöön, mikäli sähköpostin kuvalinkkien muotoilussa tulee ongelmia.
+      ;;       Kuvalinkit on nyt integroitu suoraan yleistietotaulukkoon.
+      #_(when (seq (:kuvat ilmoitus))
+          [(parsi-kuvalinkit-sahkopostiin (:kuvat ilmoitus))])
+
+      ;; Karttasijaintilinkki
+      (when-let [sijainti (:sijainti ilmoitus)]
+        [:div {:style "padding-top:14px; padding-bottom: 14px;"}
+         (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
+           (karttasijainti-linkki-email (format open-google-map-url-template lat lon)))])
+
+      ;; Kuittausnappulat
+      (for [teksti (map first kuittaustyypit)]
+        [:div {:style "padding-top: 10px;"}
+         (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))]))))
 
 (defn otsikko-ja-viesti [db vastausosoite ilmoitus]
   (let [otsikko (otsikko ilmoitus)

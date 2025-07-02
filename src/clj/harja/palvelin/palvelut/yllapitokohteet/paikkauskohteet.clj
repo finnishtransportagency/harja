@@ -334,7 +334,7 @@
             (ilmoita-tiemerkintaan db fim email user kohde))
 
     ;; Siivotaan paikkauskohteesta mahdolliset tiemerkintään liittyvät tiedot pois
-    (dissoc kohde :viesti :kopio-itselle? :tiemerkinta-urakka)))
+    (dissoc kohde :viesti :kopio-itselle?)))
 
 (defn tarkista-pot-raportointi
   "Mikäli paikkauskohteelle on merkattu :pot? true, tehdään paikkauskohteesta pot ilmoitus.
@@ -446,6 +446,8 @@
         ;; Kohteen valmistumispäivä kaivellaan pot raportoitavalla vähä eri tavalla
         valmistumispvm (or (and (:pot? kohde) (:pot-valmistumispvm kohde)) (:valmistumispvm kohde) nil)
 
+        tiemerkinnan-tila (or (:tiemerkinnan-tila kohde) "ei-tiemerkintaa")
+
         paikkauskohde (merge
                         {:ulkoinen-id (konversio/konvertoi->int (:ulkoinen-id kohde))
                          :urakka-id (:urakka-id kohde)
@@ -472,6 +474,11 @@
                          :toteutunut-hinta (when (:toteutunut-hinta kohde)
                                              (bigdec (:toteutunut-hinta kohde)))
                          :tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
+                         ;; Asetetaan suorittava tiemerkintäurakka ja varmistetaan että ei nollata - Välitetään kulujen kirjauksen paikkausosiolle 
+                         :suorittava-tiemerkintaurakka (if (and (nil? (:tiemerkintapvm vanha-kohde))
+                                                               (:tiemerkintaa-tuhoutunut? kohde))
+                                                         (:tiemerkinta-urakka kohde)
+                                                         (:suorittava-tiemerkintaurakka vanha-kohde))
                          :takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
                          :tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))
                          :yllapitokohde-id (:yllapitokohde-id kohde)
@@ -480,7 +487,8 @@
                          :aet (konversio/konvertoi->int (:aet kohde))
                          :losa (konversio/konvertoi->int (:losa kohde))
                          :let (konversio/konvertoi->int (:let kohde))
-                         :ajorata (konversio/konvertoi->int (or (:ajorata kohde) 0))}
+                         :ajorata (konversio/konvertoi->int (or (:ajorata kohde) 0))
+                         :tiemerkinnan-tila tiemerkinnan-tila}
                         (when on-kustannusoikeudet?
                           {:suunniteltu-hinta (bigdec (or (:suunniteltu-hinta kohde) 0))})
                         (when kohde-id

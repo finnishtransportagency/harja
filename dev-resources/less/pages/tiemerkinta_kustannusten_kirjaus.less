@@ -1,0 +1,110 @@
+@import "../yleiset.less";
+
+.tiemerkinta-kustannusten-kirjaus
+{
+    padding: @valistys-16 0;
+
+    .header {
+        display: flex;
+        margin: auto;
+        justify-content: space-between;
+
+        font-family: "Open Sans", Arial, sans-serif;
+        font-style: normal;
+        font-weight: 600;
+        font-size: 0.75rem;
+
+        .raporttiviennit {
+            display: flex;
+            margin: 1rem 0;
+            gap: @valistys-6;
+        }
+    }
+
+    .suodattimet {
+        display: flex;
+        justify-content: space-between;
+        margin-top: @valistys-12;
+
+        .laji {
+            color: @black-light;
+            font-weight: bold;
+            font-weight: normal;
+            margin-top: @valistys-4;
+            margin-left: @valistys-16;
+            margin-right: auto;
+
+            .kentta {
+                margin-top: -@valistys-14
+            }
+        }
+
+        /* Lisää uusi */ 
+        .lisaa-uusi {
+            align-content: center;
+            margin-left: auto;
+            align-self: flex-end;
+            margin: 0.25rem;
+        }
+    }
+
+    /* Grid */
+    .muut-kustannukset-listaus {
+        .pvm {
+            display: flex;
+            white-space: nowrap;
+
+            :first-child {
+                width: 20px;
+                padding-left: @valistys-4;
+            }
+        }
+    }
+
+    /* Muokkauspaneeli */
+    .overlay-oikealla 
+    {
+        width: 600px;
+        overflow: auto;
+        padding: 22px;
+    }
+
+    .leveys-kokonainen {
+        margin: auto;
+        width: 95%;
+    }
+
+    .leveys-tiivis {
+        margin: auto;
+        width: 25%;
+    }
+
+    .lomake-ryhma-otsikko {
+        padding-bottom: 0px;
+    }
+
+    .summa-valinta {
+        float: left;
+        margin-right: 13px;
+        margin-left: 0px;
+        padding-left: 12px;
+    }
+
+    .muokkaus-modal-napit 
+    {
+        margin-bottom: @valistys-24;
+        
+        .nappi-ensisijainen  {
+            margin-right: 25px;
+        }
+
+        .nappi-toissijainen {
+            float: right;
+            margin-right: 0px;
+        }
+
+        .lomake-poista {
+            float: none;
+        }
+    }
+}

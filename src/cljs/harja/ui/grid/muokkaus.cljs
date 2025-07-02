@@ -489,7 +489,7 @@
            [:span.kentan-yksikko yksikko])
          (when sarake-sort
            [napit/nappi "" (:fn sarake-sort)
-            {:luokka (y/luokat "muokkaus-grid-sort-nappi"
+            {:luokka (y/luokat "muokkaus-grid-sort-nappi sort-nuoli"
                        (:luokka sarake-sort))
              :ikoninappi? true
              :ikoni [ikonit/action-sort-descending]}])])

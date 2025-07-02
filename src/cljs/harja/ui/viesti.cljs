@@ -4,7 +4,8 @@
             [harja.ui.dom :as dom]
             [harja.pvm :as pvm]
             [harja.ui.ikonit :as ikonit]
-            [cljs.core.async :refer [<! timeout]])
+            [cljs.core.async :refer [<! timeout]]
+            [harja.ui.saavutettavuus :as saavutettavuus])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def viestin-nayttoaika-lyhyt 2500)
@@ -86,7 +87,9 @@
                     (swap! toast-viesti-sisalto assoc :nakyvissa? false))))))
 
         ^{:key "viesti"}
-        [:div {:class (str "toast-viesti-container " (or keskella-luokka ""))}
+        [:div {:class (if (< 70 (count viesti))
+                        (str "toast-viesti-container container-leveampi" (or keskella-luokka ""))
+                        (str "toast-viesti-container " (or keskella-luokka "")))}
          [:div {:on-click #(swap! toast-viesti-sisalto assoc :nakyvissa? false)
                 :class (when luokka (+toast-viesti-luokat+ luokka))}
           (when ikoni [:span ikoni])
@@ -129,4 +132,5 @@
                                    :luokka luokka
                                    :nakyvissa? true
                                    :kesto kesto
-                                   :tehty (pvm/nyt)}))))
+                                   :tehty (pvm/nyt)})
+     (saavutettavuus/aseta-aria-live-viesti! viesti))))

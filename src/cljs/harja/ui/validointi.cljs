@@ -8,7 +8,6 @@
             [clojure.string :as str-clj]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
-            #_[harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [cljs-time.core :as t]
             [harja.domain.tierekisteri :as tr]
@@ -95,6 +94,14 @@
 
 (defmethod validoi-saanto :vakiohuomautus [_ _ data _ _ & [viesti]]
   viesti)
+
+(def valitse-arvot (comp vals select-keys))
+
+(defmethod validoi-saanto :validoi-summa-on-100 [_ _ _ rivi _ optiot & [viesti]]
+  (let [arvot (valitse-arvot rivi optiot)
+        summa (reduce + arvot)]
+    (when (and (not (= summa 100)) (> (:kustannus rivi) 0))
+      (or viesti "Yhteenlasketun summan on oltava 100"))))
 
 (defmethod validoi-saanto :validi-tr [_ _ data rivi _ & [viesti reittipolku]]
   (let [osoite (tr/normalisoi data)]
@@ -387,6 +394,7 @@
                        (keep (fn [[index rivi]]
                                (let [kenttien-virheet (validoi-rivin-kentat gridin-tiedot rivi skeema tyyppi)
                                      rivin-virheet (when rivivalidointi
+
                                                      (validoi-rivi gridin-tiedot rivi skeema rivivalidointi))
                                      virheet (liita-rivitason-virheet rivin-virheet kenttien-virheet)]
                                  (when-not (empty? virheet)

@@ -1,5 +1,7 @@
 (ns harja.kyselyt.tieverkko
-  (:require [jeesql.core :refer [defqueries]]
+  (:require [clojure.set :as set]
+            [jeesql.core :refer [defqueries]]
+            [harja.domain.tierekisteri :as tr-domain]
             [harja.kyselyt.konversio :as konv]))
 
 (defqueries "harja/kyselyt/tieverkko.sql"
@@ -7,7 +9,7 @@
 
 (declare hae-tr-osoite-valille* hae-tr-osoite* hae-trpisteiden-valinen-tieto tierekisteriosoite-viivaksi
   onko-osoitteen-etaisyydet-validit? hae-osien-pituudet onko-tie-olemassa? hae-tieosan-tiedot onko-tr-yhtenainen?
-  hae-ajoratojen-pituudet hae-tieosoitteet)
+  hae-ajoratojen-pituudet hae-tieosoitteet tieosoitteen-ajoratakilometrit-kaistaaineistosta)
 
 (defn hae-tr-osoite-valille-ehka
   "Hakee TR osoitteen pisteille. Jos teille ei löydy yhteistä pistettä, palauttaa nil."
@@ -113,19 +115,24 @@
   "Pätkitään funkkari osiin, jotta se on helpommin testattavissa. Tämä laskee siis
   tien pätkälle pituudet riippuen siitä, miten osan-pituudet listassa on annettu"
   [osan-pituudet kohde]
-  (let [varakohde kohde
-        kohde (if (and (not (nil? (:aosa kohde))) (not (nil? (:losa kohde)))
-                    (or (> (:aosa kohde) (:losa kohde))
-                      (and (= (:aosa kohde) (:losa kohde))
-                        (> (:aet kohde) (:let kohde)))))
-                (-> kohde
-                  (assoc :aosa (:losa varakohde))
-                  (assoc :losa (:aosa varakohde))
-                  (assoc :aet (:let varakohde))
-                  (assoc :let (:aet varakohde)))
-                kohde)]
+  (let [avain-muunnos {:aosa :tr-alkuosa
+                       :aet :tr-alkuetaisyys
+                       :losa :tr-loppuosa
+                       :let :tr-loppuetaisyys}
+        ;; käännetään kohde tarvittaessa oikein päin, avaimia hieman edestakaisin muunnellen
+        kohde-muunnettavaksi (set/rename-keys kohde avain-muunnos)
+        kohde (if (and
+                     ;; Jos osoitetta ei ole, palautuu nullpointer
+                     (some? (:tr-alkuosa kohde-muunnettavaksi))
+                     (some? (:tr-alkuetaisyys kohde-muunnettavaksi))
+                     (some? (:tr-loppuosa kohde-muunnettavaksi))
+                     (some? (:tr-loppuetaisyys kohde-muunnettavaksi)))
+                 (set/rename-keys
+                   (tr-domain/tr-osoite-kasvusuuntaan kohde-muunnettavaksi)
+                   (set/map-invert avain-muunnos))
+                 kohde-muunnettavaksi)]
     ;; Pieni validointi kohteen arvoille
-    (when (and (not (nil? (:aosa kohde))) (not (nil? (:losa kohde)))
+    (when (and (:aosa kohde) (:losa kohde)
             (<= (:aosa kohde) (:losa kohde)))
       (reduce (fn [k rivi]
                 (let [tulos

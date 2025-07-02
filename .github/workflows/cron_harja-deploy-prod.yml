@@ -19,9 +19,11 @@ on:
         default: false
         required: false
   # Ajastettu käynnistys
-  # Ajetaan deployment joka arkipäivä klo 7 (Huom, GitHub actions on UTC-aikavyöhykkeessä)
+  # Ajetaan deployment joka arkipäivä klo 7
+  # GitHub actions on UTC-aikavyöhykkeessä, joten erilliset säännöt karkeasti kesä- ja talviaikaan
   schedule:
-    - cron: '0 5 * * 1-5'
+    - cron: '0 5 * 11-12,1-3 1-5'
+    - cron: '0 4 * 4-10 1-5'
 
 # Aseta least-privilege default permissionit workflowille
 # Jos jokin job tarvitsee enemmän oikeuksia, ne pitää erikseen määritellä job-kohtaisesti
@@ -128,7 +130,7 @@ jobs:
 
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy notification to Slack
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52
         if: ${{ steps.deployment-check.outputs.status == 'deploy' }}
         env:
           LATEST_BUILD_SHA_LINK: <${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.latest-successful-build.outputs.commit-sha }}|${{ steps.latest-successful-build.outputs.commit-sha }}>
@@ -149,7 +151,7 @@ jobs:
             }
 
       - name: Send deploy notification to Slack
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52
         if: ${{ steps.deployment-check.outputs.status == 'skip' }}
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -221,7 +223,7 @@ jobs:
             const result = await script({github, context, core})
 
       - name: Send success notification to Slack
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52
         if: success()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
