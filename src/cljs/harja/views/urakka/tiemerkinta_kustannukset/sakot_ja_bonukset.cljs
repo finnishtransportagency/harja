@@ -252,7 +252,7 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan #(do 
-                    (urakka-tiedot/valitse-kuluva-hk!)
+                    (when (urakka-tiedot/koko-urakkakausi-valittuna?) (urakka-tiedot/valitse-kuluva-hk!))
                     (e! (tiedot/->ValitseLaji :kaikki))
                     (e! (tiedot/->HaeTiedot))))
     (fn [e! app] [sakot-bonukset-listaus e! app])))

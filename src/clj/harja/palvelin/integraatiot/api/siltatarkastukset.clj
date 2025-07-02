@@ -118,8 +118,8 @@
   (when (silta-q/onko-olemassa? db silta-id ulkoinen-tarkastus-id tarkastusaika)
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+duplikaatti-siltatarkastus+
-                        :viesti (format "Sillalle (tunnus: %s) ei voi kirjata uutta tarkastusta, sillä samalla aikaleimalla (%s) on jo kirjattu tarkastus. Tarkastusajalle saa olla vain yksi tarkastus."
-                                        siltatunnus tarkastusaika)}]})))
+                        :viesti (format "Sillalle (tunnus: %s) ei voi kirjata uutta tarkastusta, sillä samalla aikaleimalla (%s) on jo kirjattu tarkastus eri tunnisteella. Tarkastusajalle saa olla vain yksi tarkastus. Vastaanotettu tunniste: %s"
+                                  siltatunnus tarkastusaika ulkoinen-tarkastus-id)}]})))
 
 (defn lisaa-siltatarkastus [{id :id} data kayttaja db liitteiden-hallinta]
   (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)

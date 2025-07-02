@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.tloik.tekstiviesti-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
+            [harja.domain.tieliikenneilmoitukset :as apurit]
             [harja.kyselyt.palautevayla :as palautevayla-q]
             [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.testi :refer :all]
@@ -27,9 +28,7 @@
     :sms (component/using
                   (sms/luo-tekstiviesti-komponentti
                     {:url +sms-url+
-                     :apiavain "miu"}
-                    {:sms-url +sms-url+
-                     :apiavain "mau"})
+                     :apiavain "miu"})
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
@@ -49,21 +48,37 @@
   (let [ilmoitus {:tunniste "UV666"
                   :otsikko "Testiympäristö liekeissä!"
                   :paikankuvaus "Konesali"
+                  :urakkanimi "Testiurakka"
                   :sijainti {:tr-numero 1
                              :tr-alkuosa 2
                              :tr-alkuetaisyys 3
                              :tr-loppuosa 4
                              :tr-loppuetaisyys 5}
+                  :ilmoittaja {:etunimi "Heikki"
+                              :sukunimi "Hervoton"
+                              :matkapuhelin "0401234567"
+                              :sahkoposti "ananasakaama@testimaili.com"}
+                  :lahettaja {:etunimi "Erkki"
+                              :sukunimi "Esimerkki"
+                              :organisaatio "TestiOrg"
+                              :ytunnus "12348589"
+                              :tyopuhelin "0401234567"
+                              :matkapuhelin "0401234567"
+                              :sahkoposti "erkki.esimerkki@testiorg.org"}
                   :lisatieto "Soittakaapa äkkiä"
                   :yhteydenottopyynto true
                   :selitteet #{:toimenpidekysely}}
-        rivit (tekstiviestin-rivit ilmoitus)]
-    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (viestinumero: 1234)."))
-    (is (rivit "Yhteydenottopyyntö: Kyllä"))
+        rivit (tekstiviestin-rivit ilmoitus)
+        _ (println rivit)]
+    (is (rivit "TPP: UV666"))
+    (is (rivit "Selitteet: Toimenpidekysely."))
+    (is (rivit "Testiurakka"))
+    (is (rivit "Tieosoite: 1 / 2 / 3 / 4 / 5"))
     (is (rivit "Paikka: Konesali"))
-    (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
-    (is (rivit "Tienumero: 1 / 2 / 3 / 4 / 5"))
-    (is (rivit "Selitteet: Toimenpidekysely."))))
+    (is (rivit (str "Ilmoittaja: " (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus)))))
+    (is (rivit "Yhteydenotto: Kyllä"))
+    (is (rivit (str "Lähettäjä: " (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus)))))
+    (is (rivit "Lisätietoja: Soittakaapa äkkiä."))))
 
 (deftest tekstiviestin-muodostus-pisteelle
   (let [ilmoitus {:tunniste "UV666"
@@ -76,11 +91,12 @@
                   :yhteydenottopyynto true
                   :selitteet #{:toimenpidekysely}}
         rivit (tekstiviestin-rivit ilmoitus)]
-    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (viestinumero: 1234)."))
-    (is (rivit "Yhteydenottopyyntö: Kyllä"))
+    (is (rivit "TPP: UV666"))
+    (is (rivit "Selitteet: Toimenpidekysely."))
+    (is (rivit "Tieosoite: 1 / 2 / 3"))
+    (is (rivit "Yhteydenotto: Kyllä"))
     (is (rivit "Paikka: Konesali"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
-    (is (rivit "Tienumero: 1 / 2 / 3"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
 
 (deftest tekstiviestin-muodostus-ilman-tr-osoitetta
@@ -91,34 +107,49 @@
                   :yhteydenottopyynto false
                   :selitteet #{:toimenpidekysely}}
         rivit (tekstiviestin-rivit ilmoitus)]
-    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (viestinumero: 1234)."))
-    (is (rivit "Yhteydenottopyyntö: Ei"))
+    (is (rivit "TPP: UV666"))
+    (is (rivit "Selitteet: Toimenpidekysely."))
+    (is (rivit "Tieosoite: Ei tieosoitetta"))
     (is (rivit "Paikka: Kilpisjärvi"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
-    (is (rivit "Tienumero: Ei tieosoitetta"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
 
 (deftest tekstiviestin-muodostus-aiheella
   (let [ilmoitus {:tunniste "UV666"
                   :otsikko "Testiympäristö liekeissä!"
                   :paikankuvaus "Konesali"
+                  :urakkanimi "Testiurakka"
                   :sijainti {:tr-numero 1
                              :tr-alkuosa 2
                              :tr-alkuetaisyys 3
                              :tr-loppuosa 4
                              :tr-loppuetaisyys 5}
+                  :ilmoittaja {:etunimi "Heikki"
+                               :sukunimi "Hervoton"
+                               :matkapuhelin "0401234567"
+                               :sahkoposti "ananasakaama@testimaili.com"}
+                  :lahettaja {:etunimi "Erkki"
+                              :sukunimi "Esimerkki"
+                              :organisaatio "TestiOrg"
+                              :ytunnus "12348589"
+                              :tyopuhelin "0401234567"
+                              :matkapuhelin "0401234567"
+                              :sahkoposti "erkki.esimerkki@testiorg.org"}
                   :lisatieto "Soittakaapa äkkiä"
                   :yhteydenottopyynto true
                   :luokittelu {:aihe 900
                                :tarkenne 9001}}
         rivit (tekstiviestin-rivit ilmoitus)]
-    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (viestinumero: 1234)."))
-    (is (rivit "Yhteydenottopyyntö: Kyllä"))
+    (is (rivit "TPP: UV666"))
+    (is (rivit "Testaus"))
+    (is (rivit "Testaaminen"))
+    (is (rivit "Testiurakka"))
+    (is (rivit "Tieosoite: 1 / 2 / 3 / 4 / 5"))
+    (is (rivit (str "Ilmoittaja: " (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus)))))
+    (is (rivit "Yhteydenotto: Kyllä"))
+    (is (rivit (str "Lähettäjä: " (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus)))))
     (is (rivit "Paikka: Konesali"))
-    (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
-    (is (rivit "Tienumero: 1 / 2 / 3 / 4 / 5"))
-    (is (rivit "Aihe: Testaus."))
-    (is (rivit "Tarkenne: Testaaminen."))))
+    (is (rivit "Lisätietoja: Soittakaapa äkkiä."))))
 
 
 (deftest tekstiviestin-parsinta
