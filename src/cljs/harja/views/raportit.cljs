@@ -577,7 +577,7 @@
                               (set! (.-value input)
                                     (tr/clj->transit parametrit))
                               true))]
-    [:span
+    [:div
      (for [[ikoni teksti id url] yleiset/+raportin-vientimuodot+]
        ^{:key id}
        [:form {:target "_blank" :method "POST" :id id
@@ -696,11 +696,11 @@
      [:div.row
       [:div.col-md-12
         (if raportissa?
-          [:div
+          [:div.flex-row
            [napit/takaisin "Palaa raporttivalintoihin"
             #(reset! raportit/suoritettu-raportti nil)]
            [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]]
-          [:div.raportin-toiminnot
+          [:div.raportin-toiminnot.flex-row.loppuun
            [napit/palvelinkutsu-nappi " Tee raportti"
             #(go
                (reset! raportit/suoritettu-raportti :ladataan)
