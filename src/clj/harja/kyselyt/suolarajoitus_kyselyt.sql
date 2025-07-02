@@ -337,7 +337,7 @@ SELECT id, hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi", indeksi, urakka as 
    AND tyyppi = 'kokonaismaara'::suolasakko_tyyppi;
 
 -- name: hae-suunniteltu-suolan-kaytto-hoitovuosittain-alueurakalle
-SELECT s.hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi", s.talvisuolaraja
+SELECT s.id as "id", s.hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi", s.talvisuolaraja
 FROM suolasakko s
      JOIN urakka u on s.urakka = u.id AND u.tyyppi = 'hoito'
 WHERE s.urakka = :urakka-id
