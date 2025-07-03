@@ -421,7 +421,9 @@
                            :materiaali nil
                            :materiaali_yksikko nil
                            :materiaali_tyyppi nil
-                           :harja-id nil
+                           :suolaraja-id nil
+                           :hoito-materiaalimaara-id nil
+                           :mhu-materiaalimaara-id nil
                            :tehtava-id nil})
 
         tulos (reduce (fn [tulos vuosi]
@@ -457,7 +459,9 @@
                               vuoden-suolat (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
                                                      (merge suolamateriaali
                                                        {:maara (:talvisuolaraja %)
-                                                        :harja-id (:id %)
+                                                        :suolaraja-id (:id %)
+                                                        :hoito-materiaalimaara-id nil
+                                                        :mhu-materiaalimaara-id nil
                                                         :tehtava-id nil}))
                                               alueurakan-suolasuunnitelma)
                               vuoden-suolat (if vuoden-suolat (conj [] vuoden-suolat) [])
