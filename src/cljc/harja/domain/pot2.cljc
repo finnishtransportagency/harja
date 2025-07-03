@@ -17,14 +17,16 @@
 (def +masuunikuonan-sideainetyyppi-koodi+ 12)
 (def +kulutuskerros-toimenpide-karhinta+ 41)
 (def +rem-toimenpide+ 31)
+(def +rem-plus-toimenpide+ 32)
 (def +remo-toimenpide+ 33)
+(def +rem-tas-toimenpide+ 4)
 
 (def alusta-toimenpide-kaikki-lisaavaimet
   {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"
                      :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
                      :tyyppi :positiivinen-numero :kokonaisluku? true
                      :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 1 500 0))}
-   :massamenekki {:nimi :massamenekki :otsikko "Massa\u00ADmäärä" :yksikko "kg/m²"
+   :massamenekki {:nimi :massamenekki :otsikko "Massamenekki" :yksikko "kg/m²"
                   :tyyppi :positiivinen-numero :desimaalien-maara 1
                   :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
    :murske {:nimi :murske :otsikko "Murske"

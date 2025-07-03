@@ -52,23 +52,20 @@
                                                      paallekkyydet}
                                                     (not alikohde?))))
 
-(defn paallystekerros-rc-prosentti [rivi massat]
-  (let [rem-toimenpide? (#{pot2-domain/+rem-toimenpide+ pot2-domain/+remo-toimenpide+} (:toimenpide rivi))
-        karhinta-toimenpide? (= pot2-domain/+kulutuskerros-toimenpide-karhinta+ (:toimenpide rivi))
+(defn paallystekerros-rc-prosentti [{:keys [toimenpide massamenekki] :as rivi} massat]
+  (let [rem-toimenpide? (#{pot2-domain/+rem-toimenpide+ pot2-domain/+rem-plus-toimenpide+ pot2-domain/+remo-toimenpide+} toimenpide)
+        karhinta-toimenpide? (= pot2-domain/+kulutuskerros-toimenpide-karhinta+ toimenpide)
         massa (first (filter #(= (:materiaali rivi) (::pot2-domain/massa-id %)) massat))
-        asfalttirouheen-osuus (->> massa
-                                ::pot2-domain/runkoaineet
-                                (filter #(= pot2-domain/+runkoainetyyppi-asfalttirouhe+ (:runkoaine/tyyppi %)))
-                                first
-                                :runkoaine/massaprosentti)]
+        asfalttirouheen-osuus (pot2-tiedot/asfalttirouheen-osuus-massassa massa)
+        rc-pros (pot2-tiedot/koko-toimenpiteen-rc-pros massamenekki massa)]
     (cond
       ;; rem-toimenpiteissä rc%, eli asfalttirouheen osuus on se massa, mitä EI tuoda uutena vaan mnurskataan olemassa olevasta asfaltista.
       ;; Oletus on, että vanhan asfaltin ja uuden sekoitus on aina 100kg/m2.
       rem-toimenpide?
-      (- 100 (:massamenekki rivi))
+      rc-pros
 
       ;; Karhinnassa on RC% aina 100
-       karhinta-toimenpide?
+      karhinta-toimenpide?
       100
 
       :else

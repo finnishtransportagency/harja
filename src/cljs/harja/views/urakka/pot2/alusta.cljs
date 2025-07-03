@@ -326,7 +326,7 @@
        {:otsikko "Toimenpiteen tie\u00ADdot" :nimi :toimenpiteen-tiedot :leveys (:tp-tiedot pot2-yhteiset/gridin-leveydet)
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]
-                       [pot2-tiedot/toimenpiteen-tiedot {:koodistot materiaalikoodistot} rivi])}
+                       [pot2-tiedot/toimenpiteen-tiedot {:koodistot materiaalikoodistot} rivi massat voi-muokata?])}
        {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom  :alusta voi-muokata? ohjauskahva]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
