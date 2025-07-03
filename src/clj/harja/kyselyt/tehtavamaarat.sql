@@ -227,7 +227,9 @@ SELECT
     ml.nimi as materiaaliluokka,
     ml.yksikko AS materiaaliluokka_yksikko,
     ml.materiaalityyppi AS materiaaliluokka_tyyppi,
-    ut.id AS "harja-id",
+    NULL AS "materiaalin-kaytto-id",
+    ut.id AS "materiaalimaara-id",
+    NULL AS "suolaraja-id",
     ut.tehtava AS "tehtava-id",
     ut."hoitokauden-alkuvuosi",
     SUM(ut.maara) as maara,
@@ -244,7 +246,7 @@ WHERE ut.poistettu IS NOT TRUE
 GROUP BY ut."hoitokauden-alkuvuosi", mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, ut.muokattu, ut.luotu, ut.id, ut.tehtava;
 
 -- name: hae-alueurakan-suunnitellut-tehtavamaarat-analytiikalle
-select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", yt.id as "harja-id", MAX(yt.luotu) as luotu,
+select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", NULL AS "urakka-tehtavamaara-id", yt.id as "yksikkohintainen-tyo-id", MAX(yt.luotu) as luotu,
        MAX(yt.muokattu) as muokattu,
        CASE
            WHEN EXTRACT(MONTH FROM yt.alkupvm)::int = 1 AND EXTRACT(DAY FROM yt.alkupvm)::int = 1 THEN (EXTRACT(YEAR FROM yt.alkupvm) -1)::INT
@@ -267,7 +269,8 @@ SELECT
     SUM(ut.maara) as maara,
     tk.nimi as tehtava,
     tk.id as "tehtava-id",
-    ut.id as "harja-id",
+    ut.id as "urakka-tehtavamaara-id",
+    NULL AS "yksikkohintainen-tyo-id",
     ut."hoitokauden-alkuvuosi",
     ut.muokattu,
     ut.luotu
