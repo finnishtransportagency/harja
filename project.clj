@@ -57,7 +57,7 @@
 
                  ;; Todennus / kirjautumisen allekirjoituksen varmistus 
                  ;; Täältä tulee java kirjaston kautta jwt signaturen vahvistus, joka tehdään käyttäjän tullessa Harjaan
-                 [buddy/buddy-sign "3.5.351"]
+                 [buddy/buddy-sign "3.6.1-359"]
 
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
