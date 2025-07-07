@@ -376,7 +376,7 @@ jobs:
 
       - name: Front end tests
         run: |
-          lein with-profile +test doo phantom test once
+          lein with-profile +test,+phantomjs doo phantom test once
 
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
   integration-tests:

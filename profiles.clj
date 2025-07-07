@@ -83,16 +83,20 @@
                        ;; Selenium + webdriver depsut pois käytöstä, koska niitä ei enää ajeta
                        #_[clj-webdriver "0.7.2"]
                        #_[org.seleniumhq.selenium/selenium-java "3.8.1"]
-                       #_[org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]
-                       ;; TODO tuosta cljs-react-test riippuvuudesta pitäisi päästä eroon. Testit, jotka
-                       ;; käyttää sitä, voi kirjoittaa uusiksi Cypressillä.
-                       ;; Jotta frontti testit toimii, pitää säilyttää tuo riippuvuus, jonka takia myös
-                       ;; reagentti pitää downgradeta testejä varten.
-                       [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
-                       [cljsjs/react-with-addons "15.6.1-0"]
-                       [cljsjs/react-dom "15.4.2-2" :exclusions [cljsjs/react]]
-                       [cljs-react-test "0.1.4-SNAPSHOT"]]
-        :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]}
+                       #_[org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]]}
+
+ ;; Phantomjs testejä varten tarvitaan erillinen profiili, koska se ei tue enää uudempia kirjastoversioita ja JavaScriptin
+ ;; uudemmat ominaisuudet eivät toimi siinä.
+ :phantomjs {:dependencies [
+                            ;; TODO tuosta cljs-react-test riippuvuudesta pitäisi päästä eroon. Testit, jotka
+                            ;; käyttää sitä, voi kirjoittaa uusiksi Cypressillä.
+                            ;; Jotta frontti testit toimii, pitää säilyttää tuo riippuvuus, jonka takia myös
+                            ;; reagentti pitää downgradeta testejä varten.
+                            [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
+                            [cljsjs/react-with-addons "15.6.1-0"]
+                            [cljsjs/react-dom "15.4.2-2" :exclusions [cljsjs/react]]
+                            [cljs-react-test "0.1.4-SNAPSHOT"]]
+             :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]}
  :prod-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
 
  ;; -- Laadunseuranta --

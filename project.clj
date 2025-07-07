@@ -268,8 +268,8 @@
             "testit" ["do" "clean,"
                       "deps,"
                       "test,"
-                      "with-profile" "+test" "doo" "phantom" "test" "once,"
-                      "with-profile" "+test" "doo" "phantom" "laadunseuranta-test" "once"]
+                      "with-profile" "+test,+phantomjs" "doo" "phantom" "test" "once,"
+                      "with-profile" "+test,+phantomjs" "doo" "phantom" "laadunseuranta-test" "once"]
 
             ;; Työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
