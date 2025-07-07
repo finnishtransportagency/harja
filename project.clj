@@ -35,7 +35,7 @@
                  ;; -- Lokitus
                  [com.taoensso/timbre "6.5.0"]
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.24.3"]
+                 [org.apache.logging.log4j/log4j-core "2.25.0"]
 
                  ;; -- Metriikkadata
                  [org.clojure/java.jmx "1.1.0"]
@@ -57,7 +57,7 @@
 
                  ;; Todennus / kirjautumisen allekirjoituksen varmistus 
                  ;; Täältä tulee java kirjaston kautta jwt signaturen vahvistus, joka tehdään käyttäjän tullessa Harjaan
-                 [buddy/buddy-sign "3.5.351"]
+                 [buddy/buddy-sign "3.6.1-359"]
 
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
@@ -72,10 +72,10 @@
                  [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -115,7 +115,7 @@
                  [org.apache.poi/poi "5.3.0"]
                  [org.apache.poi/poi-scratchpad "5.3.0"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "5.3.0"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "2.5.0"]
+                 [org.clojure/data.json "2.5.1"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]

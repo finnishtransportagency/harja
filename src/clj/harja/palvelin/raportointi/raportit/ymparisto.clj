@@ -270,10 +270,10 @@
                 :leveys (if urakoittain? "4.83%" "5%")
                 :fmt :numero}) kuukaudet)
         (if nayta-suunnittelu?
-          [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
-           {:otsikko "Suunniteltu (t)" :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
+          [{:otsikko (str "Yhteensä") :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
+           {:otsikko "Suunniteltu" :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
            {:otsikko "Tot-%" :leveys (if urakoittain? "6%" "7%") :fmt :prosentti :jos-tyhja "-"}]
-          [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}])))
+          [{:otsikko (str "Yhteensä") :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}])))
 
     (mapcat
       (fn [[{:keys [urakka materiaali]} rivit]]
@@ -594,7 +594,6 @@
                          :nayta-suunnittelu? (if (pvm/onko-hoitokausi? alkupvm loppupvm)
                                                true
                                                false)}]
-
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      [:teksti-paksu otsikko]
