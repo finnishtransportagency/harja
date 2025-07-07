@@ -83,16 +83,27 @@
                        ;; Selenium + webdriver depsut pois käytöstä, koska niitä ei enää ajeta
                        #_[clj-webdriver "0.7.2"]
                        #_[org.seleniumhq.selenium/selenium-java "3.8.1"]
-                       #_[org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]
-                       ;; TODO tuosta cljs-react-test riippuvuudesta pitäisi päästä eroon. Testit, jotka
-                       ;; käyttää sitä, voi kirjoittaa uusiksi Cypressillä.
-                       ;; Jotta frontti testit toimii, pitää säilyttää tuo riippuvuus, jonka takia myös
-                       ;; reagentti pitää downgradeta testejä varten.
-                       [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
-                       [cljsjs/react-with-addons "15.6.1-0"]
-                       [cljsjs/react-dom "15.4.2-2" :exclusions [cljsjs/react]]
-                       [cljs-react-test "0.1.4-SNAPSHOT"]]
-        :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]}
+                       #_[org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]]}
+
+ ;; TODO: Hankkiudu eroon PhantomJS:stä
+ ;; Phantomjs testejä varten tarvitaan erillinen profiili, koska se ei tue enää uudempia kirjastoversioita ja JavaScriptin
+ ;; uudemmat ominaisuudet eivät toimi siinä.
+ :phantomjs {:dependencies [
+                            ;; TODO tuosta cljs-react-test riippuvuudesta pitäisi päästä eroon. Testit, jotka
+                            ;; käyttää sitä, voi kirjoittaa uusiksi Cypressillä.
+                            ;; Jotta frontti testit toimii, pitää säilyttää tuo riippuvuus, jonka takia myös
+                            ;; reagentti pitää downgradeta testejä varten.
+                            [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
+                            [cljsjs/react-with-addons "15.6.1-0"]
+                            [cljsjs/react-dom "15.4.2-2" :exclusions [cljsjs/react]]
+                            [cljs-react-test "0.1.4-SNAPSHOT"]
+
+                            ;; Cloju(Script) assertointi ja lokitus
+                            ;; Downgradetettu, koska PhantomJS ei tue uudempia versioita. Mukana tuleva encore.js
+                            ;; käyttää uudempia JS ominaisuuksia, jotka eivät toimi PhantomJS:ssä.
+                            [com.taoensso/truss "1.12.0"]
+                            [com.taoensso/timbre "6.5.0"]]
+             :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]}
  :prod-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
 
  ;; -- Laadunseuranta --
