@@ -48,7 +48,8 @@ jobs:
       deps-tree: 'false'
       lint-clj: 'false'
       backend-tests: 'false'
-      basic-tests: 'false'
+      slow-tests: 'false'
+      front-end-tests: 'false'
       integration-tests: 'false'
 
   # Tarkistaa testijobin yleisen statuksen ja lähettää notifikaation, mikäli jotain meni pieleen

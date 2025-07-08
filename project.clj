@@ -32,10 +32,20 @@
                  ;; Komponenttituki palvelimen komponenttien hallintaan
                  [com.stuartsierra/component "1.1.0"]
 
-                 ;; -- Lokitus
-                 [com.taoensso/timbre "6.5.0"]
+                 ;; -- Lokitus / assertointi / virheiden käsittely
+                 ;;   Taoensson kirjastoissa täytyy ottaa huomioon, että ne käyttävät yhdessä Encore ja Truss -kirjastoja
+                 ;;   Näistä voi tulla konflikteja, jotka täytyy ottaa huomioon: https://www.taoensso.com/dependency-conflicts
+
+                 ;; Clojure ja ClojureScript assertointi
+                 [com.taoensso/truss "2.1.1"]
+
+                 ;; Lokitus
+                 [com.taoensso/timbre "6.7.1"]
+
                  ;; Figwheel tarvitsee log4j-coren
                  [org.apache.logging.log4j/log4j-core "2.25.0"]
+
+                 ;; --
 
                  ;; -- Metriikkadata
                  [org.clojure/java.jmx "1.1.0"]
@@ -137,9 +147,6 @@
 
                  ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
                  [org.apache.ant/ant "1.10.15"]
-
-                 ;; Clojure(Script) assertointi
-                 [com.taoensso/truss "1.12.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.21.0"]
@@ -261,8 +268,8 @@
             "testit" ["do" "clean,"
                       "deps,"
                       "test,"
-                      "with-profile" "+test" "doo" "phantom" "test" "once,"
-                      "with-profile" "+test" "doo" "phantom" "laadunseuranta-test" "once"]
+                      "with-profile" "+phantomjs" "doo" "phantom" "test" "once,"
+                      "with-profile" "+phantomjs" "doo" "phantom" "laadunseuranta-test" "once"]
 
             ;; Työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi

@@ -23,7 +23,8 @@
     {:otsikko "Voim. alkuvuosi" :nimi :voimassaolo_alkuvuosi :leveys 1}
     {:otsikko "Voim. loppuvuosi" :nimi :voimassaolo_loppuvuosi :leveys 1}
     {:otsikko "Käsin lisättavä?" :nimi :kasin_lisattava_maara :leveys 1}
-    {:otsikko "Aluetieto?" :nimi :aluetieto :leveys 1}]
+    {:otsikko "Aluetieto?" :nimi :aluetieto :leveys 1}
+    {:otsikko "Toimenpide" :nimi :f18 :leveys 1}]           ;; f18 = toimenpiteen nimi
    (:tehtavat rivi)])
 
 (defn tehtavaryhmat-vetolaatikko
@@ -51,7 +52,8 @@
       {:nimi :nimi :leveys 2 :otsikko "Nimi" :tyyppi :string :muokattava? (constantly false)}
       {:nimi :voimassaolo_alkuvuosi :leveys 1 :otsikko "Voimassaolo alkuvuosi" :kokonaisluku? true :tyyppi :positiivinen-numero}
       {:nimi :voimassaolo_loppuvuosi :leveys 1 :kokonaisluku? true :otsikko "Voimassaolo loppuvuosi" :tyyppi :positiivinen-numero}
-      {:nimi :yksiloiva_tunniste :leveys 1 :otsikko "Yksilöivä tunniste" :tyyppi :string :muokattava? (constantly false)}]
+      {:nimi :yksiloiva_tunniste :leveys 1 :otsikko "Yksilöivä tunniste" :tyyppi :string :muokattava? (constantly false)}
+      {:nimi :toimenpide :leveys 1 :otsikko "Toimenpide" :tyyppi :string :muokattava? (constantly false)}]
      tehtavaryhmat]))
 
 (defn listaus* [e! app]
@@ -65,7 +67,8 @@
             suoritettavat-tehtavat (:suoritettavat-tehtavat app)]
         [:div
          ;[debug/debug app]
-         [:div "Listataan tehtäväryhmäotsikot ja niille kuuluvat tehtäväryhmät ja niiden (MHU) tehtävät."]
+         [:div "Listataan Tehtävä- ja määräluettelossa käytetyt väliotsikot ja niihin liittyvät tehtäväryhmät sekä tehtäväryhmiin kytkeytyvät, MH-urakoissa relevantit tehtävät. " [:br]
+          "Tehtäväryhmän ja siihen kuuluvien tehtävien pitäisi liittyä samaan toimenpiteeseen, vaikka onkin mahdollista konffata tiedot ristiriitaisesti."]
          [grid/grid
           {:otsikko "Tehtäväryhmäotsikot"
            :tunniste :tehtavaryhmaotsikko_id
