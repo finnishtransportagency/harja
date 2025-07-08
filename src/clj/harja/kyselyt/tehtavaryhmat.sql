@@ -44,7 +44,7 @@ SELECT tro.id        AS tehtavaryhmaotsikko_id,
            JOIN tehtavaryhma tr ON tro.id = tr.tehtavaryhmaotsikko_id
            LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND "mhu-tehtava?" = TRUE
            LEFT JOIN toimenpide trtp ON tr.toimenpide_id = trtp.id -- Tehtäväryhmän toimenpide
-           LEFT JOIN toimenpide ttp ON t.emo = ttp.id -- Tehtävän toimenpide (tehtäväryhmän ja siihen kuuluvien tehtävien toimenpiteen pitäisi olla sama)
+           JOIN toimenpide ttp ON t.emo = ttp.id -- Tehtävän toimenpide (tehtäväryhmän ja siihen kuuluvien tehtävien toimenpiteen pitäisi olla sama)
  GROUP BY tro.id, tr.id, tro.otsikko, trtp.nimi, tr.jarjestys
 ORDER BY tro.otsikko ASC, tr.jarjestys ASC;
 
