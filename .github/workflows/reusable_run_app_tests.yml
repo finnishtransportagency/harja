@@ -50,8 +50,13 @@ on:
         default: 'true'
         type: string
         required: false
-      basic-tests:
-        description: 'Enabloi basic-tests job'
+      slow-tests:
+        description: 'Enabloi slow-tests job'
+        default: 'true'
+        type: string
+        required: false
+      front-end-tests:
+        description: 'Enabloi front-end-tests job'
         default: 'true'
         type: string
         required: false
@@ -319,9 +324,9 @@ jobs:
           # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
           detailed_summary: true
 
-  basic-tests:
-    if: ${{ inputs.basic-tests == 'true' }}
-    name: "Frontti- ja hitaat testit"
+  slow-tests:
+    if: ${{ inputs.slow-tests == 'true' }}
+    name: "Hitaat testit"
     runs-on: ubuntu-latest
     env:
       TZ: "EET"
@@ -369,6 +374,39 @@ jobs:
           # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
           detailed_summary: true
 
+  front-end-tests:
+    if: ${{ inputs.front-end-tests == 'true' }}
+    name: "Front-end testit"
+    runs-on: ubuntu-latest
+    env:
+      TZ: "EET"
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+      packages: read
+      # Tarvitaan test-reportin julkaisuun PR:ssä
+      #checks: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
+      - name: Start test database
+        uses: ./.github/actions/start-test-db
+        env:
+          TEST_DB_SERVICE: ${{ inputs.test-db-service }}
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          service-name: ${{ env.TEST_DB_SERVICE }}
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-build-env-and-tools
+
       - name: Setup test tools
         uses: ./.github/actions/setup-test-tools
         with:
@@ -376,7 +414,7 @@ jobs:
 
       - name: Front end tests
         run: |
-          lein with-profile +test doo phantom test once
+          lein with-profile +phantomjs doo phantom test once
 
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
   integration-tests:
