@@ -32,10 +32,20 @@
                  ;; Komponenttituki palvelimen komponenttien hallintaan
                  [com.stuartsierra/component "1.1.0"]
 
-                 ;; -- Lokitus
-                 [com.taoensso/timbre "6.5.0"]
+                 ;; -- Lokitus / assertointi / virheiden käsittely
+                 ;;   Taoensson kirjastoissa täytyy ottaa huomioon, että ne käyttävät yhdessä Encore ja Truss -kirjastoja
+                 ;;   Näistä voi tulla konflikteja, jotka täytyy ottaa huomioon: https://www.taoensso.com/dependency-conflicts
+
+                 ;; Clojure ja ClojureScript assertointi
+                 [com.taoensso/truss "2.1.1"]
+
+                 ;; Lokitus
+                 [com.taoensso/timbre "6.7.1"]
+
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.24.3"]
+                 [org.apache.logging.log4j/log4j-core "2.25.0"]
+
+                 ;; --
 
                  ;; -- Metriikkadata
                  [org.clojure/java.jmx "1.1.0"]
@@ -57,7 +67,7 @@
 
                  ;; Todennus / kirjautumisen allekirjoituksen varmistus 
                  ;; Täältä tulee java kirjaston kautta jwt signaturen vahvistus, joka tehdään käyttäjän tullessa Harjaan
-                 [buddy/buddy-sign "3.5.351"]
+                 [buddy/buddy-sign "3.6.1-359"]
 
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
@@ -72,10 +82,10 @@
                  [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -115,7 +125,7 @@
                  [org.apache.poi/poi "5.3.0"]
                  [org.apache.poi/poi-scratchpad "5.3.0"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "5.3.0"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "2.5.0"]
+                 [org.clojure/data.json "2.5.1"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
@@ -137,9 +147,6 @@
 
                  ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
                  [org.apache.ant/ant "1.10.15"]
-
-                 ;; Clojure(Script) assertointi
-                 [com.taoensso/truss "1.12.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.21.0"]
@@ -261,8 +268,8 @@
             "testit" ["do" "clean,"
                       "deps,"
                       "test,"
-                      "with-profile" "+test" "doo" "phantom" "test" "once,"
-                      "with-profile" "+test" "doo" "phantom" "laadunseuranta-test" "once"]
+                      "with-profile" "+phantomjs" "doo" "phantom" "test" "once,"
+                      "with-profile" "+phantomjs" "doo" "phantom" "laadunseuranta-test" "once"]
 
             ;; Työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
