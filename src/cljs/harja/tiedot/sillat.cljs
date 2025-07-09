@@ -39,8 +39,8 @@
   (-> silta
     (assoc-in [:alue :fill] true)
     (assoc-in [:alue :color] (cond
-                               (on-tarkastettu-hoitokautena? silta) (:tarkistettu silta-varit)
                                (ei-urakan-vastuulla? silta) (:poistettu silta-varit)
+                               (on-tarkastettu-hoitokautena? silta) (:tarkistettu silta-varit)
                                :else (:ei-tarkistettu silta-varit)))
     (assoc-in [:alue :zindex] (cond
                                 (ei-urakan-vastuulla? silta) 4
