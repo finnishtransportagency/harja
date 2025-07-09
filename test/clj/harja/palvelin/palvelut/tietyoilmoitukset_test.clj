@@ -28,7 +28,7 @@
             [harja.kyselyt.tietyoilmoitukset :as q-tietyoilmoitukset])
   (:use org.httpkit.fake)
   (:import (org.apache.pdfbox.text PDFTextStripper)
-           (org.apache.pdfbox.pdmodel PDDocument)))
+           (org.apache.pdfbox Loader)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -246,7 +246,7 @@
 (defn pdf-tuloste-sisaltaa-tekstia [pdf tekstit]
   (testing "PDF avattavissa ja sisältää tekstiä"
     (let [text (.getText (PDFTextStripper.)
-                         (PDDocument/load (java.io.ByteArrayInputStream. pdf)))]
+                         (Loader/loadPDF (byte-array pdf)))]
 
       (testing "PDF teksti sisältää ilmoituksen tekstejä"
         (doseq [teksti tekstit]
