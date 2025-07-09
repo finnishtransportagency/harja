@@ -1282,6 +1282,42 @@
                  :ei-oikeutta-virhe))
             :ei-oikeutta-virhe)))
 
+    (testing "vahvista-suunnitelman-osa-hoitovuodelle kutsun oikeustarkistus, urakan projektipäällikkö (ELY urakanvalvoja)"
+      (is (= (try+ (bs/vahvista-suunnitelman-osa-hoitovuodelle (:db jarjestelma) +tilaaja-projektipaallikko+ {:urakka-id 33 :hoitovuosi 1 :tyyppi :hankintakustannukset})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
+            {:hankintakustannukset {1 true}}) "ELY_Urakanvalvoja eli urakan projektipäällikkö saa vahvistaa kustannussuunnitelman."))
+
+    (testing "kumoa-suunnitelman-osan-vahvistus-hoitovuodelle kutsun oikeustarkistus, urakan projektipäällikkö (ELY urakanvalvoja)"
+      (is (= (try+ (bs/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle (:db jarjestelma) +tilaaja-projektipaallikko+ {:urakka-id 33 :hoitovuosi 1 :tyyppi :hankintakustannukset})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
+            {:hankintakustannukset {1 false}}) "ELY_Urakanvalvoja eli urakan projektipäällikkö saa kumota kustannussuunnitelman vahvistuksen."))
+
+    (testing "vahvista-suunnitelman-osa-hoitovuodelle kutsun oikeustarkistus, kunnossapitovastaava (ELY Pääkäyttäjä)"
+      (is (= (try+ (bs/vahvista-suunnitelman-osa-hoitovuodelle (:db jarjestelma) +tilaaja-kunnossapitovastaava+ {:urakka-id 33 :hoitovuosi 1 :tyyppi :hankintakustannukset})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
+            {:hankintakustannukset {1 true}}) "ELY_Paakayttaja eli kunnossapitovastaava saa vahvistaa kustannussuunnitelman."))
+
+    (testing "kumoa-suunnitelman-osan-vahvistus-hoitovuodelle kutsun oikeustarkistus, kunnossapitovastaava (ELY Pääkäyttäjä)"
+      (is (= (try+ (bs/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle (:db jarjestelma) +tilaaja-kunnossapitovastaava+ {:urakka-id 33 :hoitovuosi 1 :tyyppi :hankintakustannukset})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
+            {:hankintakustannukset {1 false}}) "ELY_Paakayttaja eli kunnossapitovastaava saa kumota kustannussuunnitelman vahvistuksen."))
+
+    (testing "vahvista-suunnitelman-osa-hoitovuodelle kutsun oikeustarkistus, tilaajan konsultti (Rakennuttajakonsultti)"
+      (is (= (try+ (bs/vahvista-suunnitelman-osa-hoitovuodelle (:db jarjestelma) +tilaaja-konsultti+ {:urakka-id 33 :hoitovuosi 1 :tyyppi :hankintakustannukset})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
+            :ei-oikeutta-virhe) "Rakennuttajakonsultti eli tilaajan konsultti ei saa vahvistaa kustannussuunnitelmaa."))
+
+    (testing "kumoa-suunnitelman-osan-vahvistus-hoitovuodelle kutsun oikeustarkistus, tilaajan konsultti (Rakennuttajakonsultti)"
+      (is (= (try+ (bs/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle (:db jarjestelma) +tilaaja-konsultti+ {:urakka-id 33 :hoitovuosi 1 :tyyppi :hankintakustannukset})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
+            :ei-oikeutta-virhe) "Rakennuttajakonsultti eli tilaajan konsultti ei saa kumota kustannussuunnitelman vahvistusta."))
+
     (testing "tallenna-tavoitehintaiset-rahavaraukset"
       (is (= (try+ (bs/tallenna-tavoitehintainen-rahavaraus (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
                (catch harja.domain.roolit.EiOikeutta eo#
