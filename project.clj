@@ -213,7 +213,6 @@
                                    :pretty-print true
                                    :source-map true
                                    ;:parallel-build false Failaa randomisti
-                                   :libs ["src/js/kuvataso.js"]
                                    :closure-output-charset "US-ASCII"
                                    :main harja.runner}}
                        {:id "laadunseuranta-test"
