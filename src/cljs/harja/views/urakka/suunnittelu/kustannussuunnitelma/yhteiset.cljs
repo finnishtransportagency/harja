@@ -14,6 +14,7 @@
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit])
   (:require-macros [harja.ui.taulukko.grid :refer [defsolu]]))
 
@@ -25,7 +26,8 @@
 (def ^{:private true} oikeus-vahvistaa-osio-roolit #{"ELY_Urakanvalvoja"})
 
 (defn oikeus-vahvistaa-osio? [kayttaja urakka-id]
-  (or (roolit/rooli-urakassa? kayttaja oikeus-vahvistaa-osio-roolit urakka-id) (roolit/jvh? kayttaja)))
+  (oikeudet/on-muu-oikeus? "vahvistus" oikeudet/urakat-suunnittelu-kustannussuunnittelu urakka-id kayttaja))
+
 
 ;; -- Muut apurit --
 
