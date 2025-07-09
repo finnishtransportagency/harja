@@ -168,7 +168,7 @@
   ;; FIXME: Avain "tyyppi" on oikeasti osio
   ;; FIXME: Avain "hoitovuosi" onkin oikeasti hoitovuosi-nro, eli järjestysnumero eikä vuosi!
   [db user {:keys [urakka-id hoitovuosi tyyppi]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (oikeudet/vaadi-oikeus "vahvistus" oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
 
   (let [osio (mhu/osio-kw->osio-str tyyppi)]
     (jdbc/with-db-transaction [db db]
@@ -208,7 +208,7 @@
 (defn kumoa-suunnitelman-osan-vahvistus-hoitovuodelle
   ;; FIXME: Avain "tyyppi" on oikeasti osio-kw
   [db user {:keys [urakka-id hoitovuosi tyyppi]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (oikeudet/vaadi-oikeus "vahvistus" oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
 
   (jdbc/with-db-transaction [db db]
     (let [kumottavat-osiot (into #{tyyppi}
