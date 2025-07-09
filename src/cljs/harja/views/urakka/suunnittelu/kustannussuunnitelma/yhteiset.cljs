@@ -22,9 +22,6 @@
 (defonce e! nil)
 
 ;; -- Roolit --
-
-(def ^{:private true} oikeus-vahvistaa-osio-roolit #{"ELY_Urakanvalvoja"})
-
 (defn oikeus-vahvistaa-osio? [kayttaja urakka-id]
   (oikeudet/on-muu-oikeus? "vahvistus" oikeudet/urakat-suunnittelu-kustannussuunnittelu urakka-id kayttaja))
 
