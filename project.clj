@@ -121,9 +121,8 @@
                  [com.andrewmcveigh/cljs-time "0.5.2"]
 
                  ;; -- Karttatasot front-end
-                 ;; Kuvataso error tulee ol.source.Image inheritistä, jos päivittää neloseen
-                 ;; TODO: Päivitys vaatii siirtymisen shadow-cljs:ään
-                 [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
+                 ;; TODO: Päivitys suurempiin versioihin vaatii siirtymisen shadow-cljs:ään
+                 [cljsjs/openlayers "4.0.1-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "5.3.0"]
