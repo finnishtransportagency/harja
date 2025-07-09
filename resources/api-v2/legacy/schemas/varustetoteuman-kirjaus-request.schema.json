@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/varustetoteuman-kirjaus",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "varustetoteumat": {
+      "id": "urn:harja/varustetoteuman-kirjaus",
+      "type": "array",
+      "maxItems": 1000,
+      "required": true,
+      "items": {
+        "id": "urn:harja/varustetoteuman-kirjaus/varustetoteumat",
+        "type": "object",
+        "properties": {
+          "varustetoteuma": {
+            "id": "urn:harja/varustetoteuman-kirjaus/varustetoteumat/0/varustetoteuma",
+            "type": "object",
+            "additionalProperties": false,
+            "required": true,
+            "properties": {
+              "toteuma": {
+                "id": "urn:harja/varustetoteuman-kirjaus/varustetoteumat/0/varustetoteuma/toteuma",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
+              },
+              "toimenpiteet": {
+                "id": "urn:harja/varustetoteuman-kirjaus/varustetoteumat/0/varustetoteuma/toteuma",
+                "type": "object",
+                "additionalProperties": false,
+                "id": "urn:harja/varustetoteuman-kirjaus",
+                "type": "array",
+                "maxItems": 1000,
+                "items": {
+                  "id": "urn:harja/varustetoteuman-kirjaus/varustetoteumat",
+                  "type": "object",
+                  "properties": {
+                    "varusteen-lisays": {
+                      "id": "urn:harja/varustetoteuman-kirjaus/varustetoteumat/0/varustetoteuma/varusteen-lisays",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "$ref": "file:resources/api/schemas/entities/varusteen-lisays.schema.json"
+                    },
+                    "varusteen-poisto": {
+                      "id": "urn:harja/varustetoteuman-kirjaus/varustetoteumat/0/varustetoteuma/varusteen-poisto",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "$ref": "file:resources/api/schemas/entities/varusteen-poisto.schema.json"
+                    },
+                    "varusteen-paivitys": {
+                      "id": "urn:harja/varustetoteuman-kirjaus/varustetoteumat/0/varustetoteuma/varusteen-paivitys",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "$ref": "file:resources/api/schemas/entities/varusteen-paivitys.schema.json"
+                    },
+                    "varusteen-tarkastus": {
+                      "id": "urn:harja/varustetoteuman-kirjaus/varustetoteumat/0/varustetoteuma/varusteen-tarkastus",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "$ref": "file:resources/api/schemas/entities/varusteen-tarkastus.schema.json"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

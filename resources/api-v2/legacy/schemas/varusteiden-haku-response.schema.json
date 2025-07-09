@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "varusteet": {
+      "id": "urn:harja/varusteet",
+      "type": "array",
+      "maxItems": 5000,
+      "items": {
+        "id": "urn:harja/varusteet/0",
+        "type": "object",
+        "properties": {
+          "varuste": {
+            "id": "urn:harja/varusteet/0/varuste",
+            "type": "object",
+            "additionalProperties": false,
+            "properties":{
+              "tunniste": {
+                "id": "urn:harja/varusteet/0/varuste/tunniste",
+                "$ref": "file:resources/api/schemas/entities/tietueen-tunniste.schema.json",
+                "required": true
+              },
+              "tietue": {
+                "id": "urn:harja/varusteet/0/varuste/tietue",
+                "$ref": "file:resources/api/schemas/entities/varuste.schema.json",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

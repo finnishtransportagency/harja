@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "id": {
+      "id": "urn:harja/id",
+      "type": "string"
+    },
+    "virheet": {
+      "id": "urn:harja/virheet",
+      "type": "string"
+    },
+    "varoitukset": {
+      "id": "urn:harja/varoitukset",
+      "type": "string"
+    },
+    "ilmoitukset": {
+      "id": "urn:harja/ilmoitukset",
+      "type": "string"
+    },
+    "huomiot": {
+      "id": "urn:harja/huomiot",
+      "type": "array",
+      "maxItems" : 100,
+      "items": {
+        "id": "urn:harja/huomiot/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tunniste": {
+            "id": "urn:harja/tunniste",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+          },
+          "varoitukset": {
+            "id": "urn:harja/huomiot/0/varoitukset",
+            "type": "array",
+            "maxItems" : 100,
+            "items": {
+              "id": "urn:harja/huomiot/0/varoitukset/0",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "varoitus": {
+                  "id": "urn:harja/huomiot/0/varoitukset/0/varoitus",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "virheet": {
+            "id": "urn:harja/huomiot/0/virheet",
+            "type": "array",
+            "maxItems" : 100,
+            "items": {
+              "id": "urn:harja/huomiot/0/virheet/0",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "virhe": {
+                  "id": "urn:harja/huomiot/0/virheet/0/virhe",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "ilmoitukset": {
+            "id": "urn:harja/huomiot/0/ilmoitukset",
+            "type": "array",
+            "maxItems" : 100,
+            "items": {
+              "id": "urn:harja/huomiot/0/ilmoitukset/0",
+              "type": "object",
+              "properties": {
+                "tiedotus": {
+                  "id": "urn:harja/huomiot/0/ilmoitukset/0/ilmoitus",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

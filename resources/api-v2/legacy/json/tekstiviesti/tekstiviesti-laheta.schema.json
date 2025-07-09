@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "title": "Tekstiviestin lähetys",
+  "description": "Harja => Integraatioväylä, tekstiviestin lähetys Harjasta käyttäjälle",
+  "default": {},
+  "examples": [
+    {
+      "viesti-id": "1f646060-97b0-4166-9e3a-5491e9ddc30f",
+      "korrelaatio-id": "50655135",
+      "vastaanottaja": "+358401234123",
+      "sisalto": "Tämä ei ole enää käytössä."
+    }
+  ],
+  "required": [
+    "viesti-id",
+    "korrelaatio-id",
+    "vastaanottaja",
+    "sisalto"
+  ],
+  "properties": {
+    "viesti-id": {
+      "$id": "#/properties/viesti-id",
+      "type": "string",
+      "title": "Viesti-id",
+      "description": "Viestinvaihdon yksilöivä GUID, jonka Harja generoi.",
+      "examples": [
+        "1f646060-97b0-4166-9e3a-5491e9ddc30f"
+      ]
+    },
+    "korrelaatio-id": {
+      "$id": "#/properties/korrelaatio-id",
+      "type": "string",
+      "title": "Korrelaatio-id",
+      "description": "Viestin suurempaan kontekstiin liittävä id. Tieliikenneilmoituksiin liittyvässä viestinvaihdossa ilmoitusid.",
+      "default": "",
+      "examples": [
+        "50655135"
+      ]
+    },
+    "vastaanottaja": {
+      "$id": "#/properties/vastaanottaja",
+      "type": "string",
+      "title": "Vastaanottajan puhelinnumero",
+      "description": "Tekstiviestin vastaanottajan puhelinnumero",
+      "default": "",
+      "examples": [
+        "+358401234123"
+      ]
+    },
+    "sisalto": {
+      "$id": "#/properties/sisalto",
+      "type": "string",
+      "title": "Viestisisältö",
+      "description": "Tekstiviestin sisältö. Käytännössä tieliikenneilmoituksen tiedot tai Harjan kuittaus käyttäjän lähettämään tekstiviestiin.",
+      "default": "",
+      "examples": [
+        "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu."
+      ]
+    }
+  }
+}
+
