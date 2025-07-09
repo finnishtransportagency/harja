@@ -51,8 +51,8 @@
 
 (defn- paivystys-voimassa?
   [paivystys]
-  (and (< (:alku paivystys) (pvm/nyt))
-       (< (pvm/nyt) (:loppu paivystys))))
+  (and (pvm/ennen? (:alku paivystys) (pvm/nyt))
+       (pvm/ennen? (pvm/nyt) (:loppu paivystys))))
 
 (defn paivystajalista
   [ur paivystajat tallenna!]
