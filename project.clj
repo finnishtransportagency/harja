@@ -56,6 +56,10 @@
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.48"]
                  [http-kit "2.8.0"]
+                 ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
+                 ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
+                 [ring/ring-codec "1.3.0"]
+                 [ring/ring-core "1.14.2"]
                  [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
