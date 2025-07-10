@@ -1,9 +1,8 @@
--- Lisätään uusi liukkauden torjuntaan liittyvä tehtäväryhmä Talvihoito-toimenpiteen alle
-INSERT INTO tehtavaryhma (nimi, jarjestys, nakyva, poistettu, luotu, luoja, yksiloiva_tunniste, tehtavaryhmaotsikko_id,
-                          voimassaolo_alkuvuosi, toimenpide_id)
-VALUES ('B4 - Ennalta arvaamattomien kuljetusten avustaminen hiekoituksella', 25, false, false, current_timestamp,
-        (select id from kayttaja where kayttajanimi = 'Integraatio'),
-        '3a5cb840-11a7-438f-bdae-a87da64bf98a', 1, 2025, (select id from toimenpide where koodi = '23104'));
+ALTER TABLE tehtava
+ADD COLUMN linkkitunniste UUID;
 
--- Lisätään tehtäväryhmään tehtävä
--- Olemassa oleva vai uusi?
+COMMENT ON column tehtava.linkkitunniste IS
+E'Joskus samalle reaalimaailman tehtävälle on Harjassa enemmän kuin yksi rivi TEHTAVA-taulussa. Alueurakoissa tämä oli yleistä, mutta tilanteeseen voidaan joutua myös MH-urakoissa,
+jos eri vuosina toteumaa seurataan eri mittarilla (tehtävätoteuma raportoidaan eri yksiköllä) tai jos tehtävän linkitykset tehtäväryhmään tai toimenpiteeseen muuttuvat eri urakkavuosikerroissa.
+Tämän kentän avulla voit linkittää saman työtehtävän eri ilmentymät yhteen. Huom. Sarakkeen lisäämisen yhteydessä ei käydä läpi olemassa olevia tehtäviä ja niiden linkitystarpeita, joten kaikkia linkityksiä ei ole tietokannassa.
+Miksi voidaan haluta linkittää? Jotta osataan yhdistää tiedot raporteilla oikein, informaatioksi tietoa hyödyntäville kehitystiimeille.';
