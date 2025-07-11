@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "id": "urn:harja/id",
+      "type": "integer",
+      "required": true
+    },
+    "paivystaja": {
+      "id": "urn:harja/paivystys/paivystaja",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/paivystajahenkilo.schema.json",
+      "required": true
+    },
+    "alku": {
+      "id": "urn:harja/paivystys/alku",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "loppu": {
+      "id": "urn:harja/paivystys/loppu",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "vastuuhenkilo": {
+      "id": "urn:harja/paivystys/vastuuhenkilo",
+      "type": "boolean"
+    },
+    "varahenkilo": {
+      "id": "urn:harja/paivystys/varahenkilo",
+      "type": "boolean"
+    }
+  }
+}
