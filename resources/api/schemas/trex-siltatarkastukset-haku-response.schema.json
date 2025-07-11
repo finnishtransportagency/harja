@@ -21,7 +21,7 @@
               },
               "tarkastusaika": {
                 "type": "string",
-                "format": "datetime",
+                "format": "date-time",
                 "description": "Tarkasastusajankohta. Päivämäärä ja kellonaika. Aikavyöhyke on määriteltävä. Esim. 2024-10-31T22:00:00Z."
               },
               "tarkastaja": {

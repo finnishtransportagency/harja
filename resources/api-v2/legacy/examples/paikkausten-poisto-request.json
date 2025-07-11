@@ -1,0 +1,31 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2019-01-30T12:00:00Z"
+  },
+  "poistettavat-paikkauskohteet": [
+    666, 221337
+  ],
+  "poistettavat-paikkaukset": [
+    23,
+    24,
+    25,
+    26
+  ],
+  "poistettavat-paikkauskustannukset": [
+    745,
+    746,
+    747,
+    748
+  ]
+}
+

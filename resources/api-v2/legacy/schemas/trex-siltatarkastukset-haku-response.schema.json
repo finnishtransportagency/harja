@@ -1,0 +1,300 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "siltatarkastukset": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "siltatarkastus": {
+            "id": "urn:harja/siltatarkastus",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "harja-id": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Siltatarkastuksen yksilöivä tunniste Harjassa"
+              },
+              "tarkastusaika": {
+                "type": "string",
+                "format": "datetime",
+                "description": "Tarkasastusajankohta. Päivämäärä ja kellonaika. Aikavyöhyke on määriteltävä. Esim. 2024-10-31T22:00:00Z."
+              },
+              "tarkastaja": {
+                "type": "string",
+                "description": "Siltatarkastuksen suoritaneen henkilön nimi. Esim. Mari Meikäläinen. Tieto on henkilötieto, käsittele sitä sen mukaisesti."
+              },
+              "luotu": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Siltatarkastuksen tallennusajankohta."
+              },
+              "muokattu": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time",
+                "description": "Siltatarkastuksen viimeisin muokkausajankohta."
+              },
+              "poistettu": {
+                "type": "boolean",
+                "description": "True jos siltatarkastus on merkitty poistetuksi tietokannassa. Puuttuva arvo on sama kuin false, siltatarkastusta ei ole poistettu."
+              },
+              "urakka": {
+                "id": "urn:harja/siltatarkastus/urakka",
+                "type": "object",
+                "properties": {
+                  "harja-id": {
+                    "type": "integer",
+                    "description": "Urakka jossa siltatarkastus on tehty. Urakan id Harjassa."
+                  },
+                  "tunnus": {
+                    "type": "string",
+                    "description": "Urakka jossa siltatarkastus on tehty. Urakan laajemmin käytössä oleva tunnus. Uudemmissa urakoissa PR-alkuinen, aiemmin numero. Esim. geometria-aineistoissa urakka yksilöidään tällä nykyään Samposta peräisin olevalla tunnisteella."
+                  },
+                  "nimi": {
+                    "type": "string",
+                    "description": "Urakka jossa siltatarkastus on tehty. Urakan nimi."
+                  }
+                },
+                "required": [
+                  "harja-id",
+                  "tunnus",
+                  "nimi"
+                ]
+              },
+              "silta": {
+                "id": "urn:harja/siltatarkastus/silta",
+                "type": "object",
+                "properties": {
+                  "harja-id": {
+                    "type": "integer",
+                    "description": "Sillan id Harjassa. Esim. 18096"
+                  },
+                  "tunnus": {
+                    "type": "string",
+                    "description": "Sillan tunnus. Esim. SK-5733"
+                  },
+                  "oid": {
+                    "type": "string",
+                    "description": "Sillan oid Taitorakennerekisterissä. Esim. 1.2.246.578.1.15.805733"
+                  },
+                  "siltaid": {
+                    "type": "integer",
+                    "description": "Vanha tunniste sillalle. Esim. 275261"
+                  }
+                },
+                "required": [
+                  "harja-id",
+                  "tunnus",
+                  "oid"
+                ]
+              },
+              "tarkastuskohteet": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "kohde": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "tyyppi-id": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 24,
+                          "description": "Siltatarkastuskohteen tyypin id. Esim. 3. Eri kohdetyyppejä on Harjassa tällä hetkellä 24. Kohdetyypit kuuluvat kolmeen päärakenneosaan. Mikäli kohdetyyppejä tulee tulevaisuudessa lisää, tämän elementin maksimiarvo muuttuu."
+                        },
+                        "tyyppi": {
+                          "type": "string",
+                          "enum": [
+                            "maatukienSiisteysJaKunto",
+                            "valitukienSiisteysJaKunto",
+                            "laakeritasojenSiisteysJaKunto",
+                            "kansilaatta",
+                            "paallysteenKunto",
+                            "reunapalkinSiisteysJaKunto",
+                            "reunapalkinLiikuntasauma",
+                            "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto",
+                            "sillanpaidenSaumat",
+                            "sillanJaPenkereenRaja",
+                            "kaiteidenJaSuojaverkkojenVauriot",
+                            "liikuntasaumalaitteidenSiisteysJaKunto",
+                            "laakerit",
+                            "syoksytorvet",
+                            "tippuputket",
+                            "kosketussuojatJaNiidenKiinnitykset",
+                            "valaistuslaitteet",
+                            "johdotJaKaapelit",
+                            "liikennemerkit",
+                            "kuivatuslaitteidenSiisteysJaKunto",
+                            "etuluiskienSiisteysJaKunto",
+                            "keilojenSiisteysJaKunto",
+                            "tieluiskienSiisteysJaKunto",
+                            "portaidenSiisteysJaKunto"
+                          ],
+                          "description": "Siltatarkastuskohdetta kuvaava merkkimuotoinen enumeraatio. Esim. laakeritasojenSiisteysJaKunto. Enumeraatio vastaa siltatarkastuskohteen id:tä (3 - laakeritasojenSiisteysJaKunto)."
+                        },
+                        "nimi": {
+                          "type": "string",
+                          "enum": [
+                            "Maatukien siisteys ja kunto",
+                            "Välitukien siisteys ja kunto",
+                            "Laakeritasojen siisteys ja kunto",
+                            "Kansilaatta",
+                            "Päällysteen kunto",
+                            "Reunapalkin siisteys ja kunto",
+                            "Reunapalkin liikuntasauma",
+                            "Reunapalkin ja päällysteen välisen sauman siisteys ja kunto",
+                            "Sillanpäiden saumat",
+                            "Sillan ja penkereen raja",
+                            "Kaiteiden ja suojaverkkojen vauriot",
+                            "Liikuntasaumalaitteiden siisteys ja kunto",
+                            "Laakerit",
+                            "Syöksytorvet",
+                            "Tippuputket",
+                            "Kosketussuojat ja niiden kiinnitykset",
+                            "Valaistuslaitteet",
+                            "Johdot ja kaapelit",
+                            "Liikennemerkit",
+                            "Kuivatuslaitteiden siisteys ja kunto",
+                            "Etuluiskien siisteys ja kunto",
+                            "Keilojen siisteys ja kunto",
+                            "Tieluiskien siisteys ja kunto",
+                            "Portaiden siisteys ja kunto",
+                            "Tuntematon tarkastuskohde"
+                          ],
+                          "description": "Siltatarkastuskohdetta kuvaava määrämuotoinen teksti. Esim. Laakeritasojen siisteys ja kunto. Teksti vastaa siltatarkastuskohteen id:tä ja arvoa. Esim.(3 - laakeritasojenSiisteysJaKunto - Laakeritasojen siisteys ja kunto)"
+                        },
+                        "paarakenneosa": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "tyyppi": {
+                              "type": "string",
+                              "enum": [
+                                "alusrakenne",
+                                "paallysrakenne",
+                                "varusteet-ja-laitteet",
+                                "siltapaikan-rakenteet"
+                              ],
+                              "description": "Sillan päärakenneosan tyyppi. Esim. alusrakenne. Kukin kohdetyyppi kuuluu vain yhteen päärakenneosaan."
+                            },
+                            "nimi": {
+                              "type": "string",
+                              "description": "Sillan päärakenneosan käyttäjäystävällinen nimi. Esim. Varusteet ja laitteet."
+                            }
+                          }
+                        },
+                        "havainnot": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "toimenpidetarpeet": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "toimenpidetarve": {
+                                  "koodi": {
+                                    "type": "string",
+                                    "enum": [
+                                      "A",
+                                      "B",
+                                      "C",
+                                      "D",
+                                      "E",
+                                      "-"
+                                    ],
+                                    "description": "Siltatarkastuskohteen toimenpidetarpeen koodi. Tarkastus voi tuottaa yksittäisen koodin lisäksi yhdistelmiä: B+C, B+C+D, C+D. E on uusi koodi, joka on vielä tarkemmin määriteltävä. Viiva tarkoittaa, että kohde ei ole sillan kohdalla relevantti."
+                                  },
+                                  "arvo": {
+                                    "type": "string",
+                                    "enum": [
+                                      "eiToimenpiteita",
+                                      "puhdistettava",
+                                      "urakanKunnostettava",
+                                      "korjausOhjelmoitava",
+                                      "E",
+                                      "eiPade"
+                                    ],
+                                    "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta. Koodi ja arvo ovat kytköksissä toisiinsa. "
+                                  },
+                                  "kuvaus": {
+                                    "type": "string",
+                                    "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta käyttäjäystävällisessä tekstimuodossa. Koodi ja kuvaus ovat kytköksissä toisiinsa."
+                                  }
+                                }
+                              }
+                            },
+                            "lisatieto": {
+                              "type": "string",
+                              "description": "Vapaamuotoinen tarkastettuun siltatarkastuskohteeseen liittyvä kommentti."
+                            },
+                            "kuvat": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "kuva": {
+                                  "harja-id": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "description": "Liitteen id Harjassa."
+                                  },
+                                  "liite-oid": {
+                                    "type": "string",
+                                    "description": "Liitteen oid Harjassa."
+                                  },
+                                  "nimi": {
+                                    "type": "string",
+                                    "description": "Liitetiedoston nimi."
+                                  },
+                                  "tiedostotyyppi": {
+                                    "type": "string",
+                                    "description": "Liitetiedoston tyyppi Harjassa. Esim. image/jpeg. Lähes kaikki siltatarkastuksen liitteet ovat jpg-muotoisia, mutta myös png- ja pdf-tiedostoja sekä yksi zip siltatarkastuksiin ladattu."
+                                  },
+                                  "koko": {
+                                    "type": "number",
+                                    "description": "Ladattavan liitetiedoston koko."
+                                  },
+                                  "kuvaus": {
+                                    "type": "string",
+                                    "description": "Vapaamuotoinen kuvaus ladatusta liitteestä."
+                                  },
+                                  "url": {
+                                    "type": "string",
+                                    "description": "URL josta voi hakea täysikokoisen kuvan. 3.6.2025 Lopullinen ratkaisu on auki, mutta Taitorakennerekisteri tarvitsee jonkinlaisen tunnisteen ja osoitteen, jolla hakea kuvan. Voi olla että se ei ole url, missä tapauksessa muutetaan tätä rajapintakuvausta."
+                                  },
+                                  "pikkukuva": {
+                                    "type": "string",
+                                    "description": "Kuvaliitteen thumbnail. 3.6.2025 on vielä auki palautetaanko pikkukuvaa tässä rajapinnassa."
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+
+
