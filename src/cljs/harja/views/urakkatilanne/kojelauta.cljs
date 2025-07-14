@@ -131,7 +131,7 @@
                                          (< hoitokauden_alkuvuosi edellisen-hoitokauden-alkuvuosi)
                                          (and
                                            (= hoitokauden_alkuvuosi edellisen-hoitokauden-alkuvuosi)
-                                           (> (pvm/nyt)
+                                           (pvm/jalkeen? (pvm/nyt)
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannusten seurantaan"]
@@ -374,7 +374,7 @@
     (fn [e! app]
       [:div.kojelauta-hallinta
        [:h1 "Urakoiden tilanne"]
-       (when (< (pvm/nyt) (pvm/->pvm "7.12.2024"))
+       (when (pvm/ennen? (pvm/nyt) (pvm/->pvm "7.12.2024"))
          [yleiset/vihje vihjeteksti-uudesta-ominaisuudesta])
        [suodattimet e! app]
        ;; [debug/debug app]
