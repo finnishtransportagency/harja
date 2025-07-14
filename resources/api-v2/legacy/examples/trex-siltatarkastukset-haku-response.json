@@ -1,0 +1,1240 @@
+{
+  "siltatarkastukset": [
+    {
+      "siltatarkastus": {
+        "harja-id": 48575,
+        "tarkastusaika": "2025-04-27T11:20:48Z",
+        "tarkastaja": "Malla Mallitarkastaja",
+        "luotu": "2025-04-27T11:20:48Z",
+        "urakka": {
+          "harja-id": 705,
+          "tunnus": "PR00001705",
+          "nimi": "POP Esimerkkiurakka 22-32"
+        },
+        "silta": {
+          "harja-id": 287045,
+          "tunnus": "KeS-814",
+          "oid": "1.2.246.578.1.15.1407404"
+        },
+        "tarkastuskohteet": [
+          {
+            "kohde": {
+              "tyyppi-id": 1,
+              "tyyppi": "maatukienSiisteysJaKunto",
+              "nimi": "Maatukien siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "alusrakenne",
+                "nimi": "Alusrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "B",
+                        "arvo": "puhdistettava",
+                        "kuvaus": "Puhdistettava"
+                      }
+                    },
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "C",
+                        "arvo": "urakanKunnostettava",
+                        "kuvaus": "Urakan kunnostettava"
+                      }
+                    }
+                  ],
+                  "lisatieto": "Tämä on esimerkkisanoma.",
+                  "kuvat": [
+                    {
+                      "kuva": {
+                        "harja-id": 1,
+                        "liite-oid": "1234asdf",
+                        "nimi": "Kuva-sillan-osasta.jpg",
+                        "tiedostotyyppi": "image/jpeg",
+                        "koko": 918032,
+                        "kuvaus": "Vaurio näkyy tässä hyvin.",
+                        "url": ""
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 2,
+              "tyyppi": "valitukienSiisteysJaKunto",
+              "nimi": "Välitukien siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "alusrakenne",
+                "nimi": "Alusrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 3,
+              "tyyppi": "laakeritasojenSiisteysJaKunto",
+              "nimi": "Laakeritasojen siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "alusrakenne",
+                "nimi": "Alusrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 4,
+              "tyyppi": "kansilaatta",
+              "nimi": "Kansilaatta",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 5,
+              "tyyppi": "paallysteenKunto",
+              "nimi": "Päällysteen kunto",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 6,
+              "tyyppi": "reunapalkinSiisteysJaKunto",
+              "nimi": "Reunapalkin siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 7,
+              "tyyppi": "reunapalkinLiikuntasauma",
+              "nimi": "Reunapalkin liikuntasauma",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 8,
+              "tyyppi": "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto",
+              "nimi": "Reunapalkin ja päällysteen välisen sauman siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 9,
+              "tyyppi": "sillanpaidenSaumat",
+              "nimi": "Sillanpäiden saumat",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 10,
+              "tyyppi": "sillanJaPenkereenRaja",
+              "nimi": "Sillan ja penkereen raja",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 11,
+              "tyyppi": "kaiteidenJaSuojaverkkojenVauriot",
+              "nimi": "Kaiteiden ja suojaverkkojen vauriot",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "D",
+                        "arvo": "korjausOhjelmoitava",
+                        "kuvaus": "Korjaus ohjelmoitava"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 12,
+              "tyyppi": "liikuntasaumalaitteidenSiisteysJaKunto",
+              "nimi": "Liikuntasaumalaitteiden siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 13,
+              "tyyppi": "laakerit",
+              "nimi": "Laakerit",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 14,
+              "tyyppi": "syoksytorvet",
+              "nimi": "Syöksytorvet",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 15,
+              "tyyppi": "tippuputket",
+              "nimi": "Tippuputket",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "-",
+                        "arvo": "eiPade",
+                        "kuvaus": "Ei päde tähän siltaan"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 16,
+              "tyyppi": "kosketussuojatJaNiidenKiinnitykset",
+              "nimi": "Kosketussuojat ja niiden kiinnitykset",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 17,
+              "tyyppi": "valaistuslaitteet",
+              "nimi": "Valaistuslaitteet",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 18,
+              "tyyppi": "johdotJaKaapelit",
+              "nimi": "Johdot ja kaapelit",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 19,
+              "tyyppi": "liikennemerkit",
+              "nimi": "Liikennemerkit",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 20,
+              "tyyppi": "kuivatuslaitteidenSiisteysJaKunto",
+              "nimi": "Kuivatuslaitteiden siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "siltapaikan-rakenteet",
+                "nimi": "Siltapaikan rakenteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 21,
+              "tyyppi": "etuluiskienSiisteysJaKunto",
+              "nimi": "Etuluiskien siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "siltapaikan-rakenteet",
+                "nimi": "Siltapaikan rakenteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 22,
+              "tyyppi": "keilojenSiisteysJaKunto",
+              "nimi": "Keilojen siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "siltapaikan-rakenteet",
+                "nimi": "Siltapaikan rakenteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 23,
+              "tyyppi": "tieluiskienSiisteysJaKunto",
+              "nimi": "Tieluiskien siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "siltapaikan-rakenteet",
+                "nimi": "Siltapaikan rakenteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "C",
+                        "arvo": "urakanKunnostettava",
+                        "kuvaus": "Urakan kunnostettava"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 24,
+              "tyyppi": "portaidenSiisteysJaKunto",
+              "nimi": "Portaiden siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "siltapaikan-rakenteet",
+                "nimi": "Siltapaikan rakenteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "siltatarkastus": {
+        "harja-id": 18576,
+        "tarkastusaika": "2020-04-30T12:20:48Z",
+        "tarkastaja": "Malla Mallitarkastaja",
+        "luotu": "2020-04-30T12:00:48Z",
+        "muokattu": "2020-05-02T08:20:48Z",
+        "urakka": {
+          "harja-id": 305,
+          "tunnus": "1305",
+          "nimi": "POP Esimerkkiurakka 11-21"
+        },
+        "silta": {
+          "harja-id": 8412,
+          "tunnus": "KeS-1160",
+          "siltaid": 10456,
+          "oid": "1.2.246.578.1.15.901160"
+        },
+        "tarkastuskohteet": [
+          {
+            "kohde": {
+              "tyyppi-id": 1,
+              "tyyppi": "maatukienSiisteysJaKunto",
+              "nimi": "Maatukien siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "alusrakenne",
+                "nimi": "Alusrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "B",
+                        "arvo": "puhdistettava",
+                        "kuvaus": "Puhdistettava"
+                      }
+                    },
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "C",
+                        "arvo": "urakanKunnostettava",
+                        "kuvaus": "Urakan kunnostettava"
+                      }
+                    }
+                  ],
+                  "lisatieto": "Tämä on esimerkkisanoma.",
+                  "kuvat": [
+                    {
+                      "kuva": {
+                        "harja-id": 1,
+                        "liite-oid": "1234asdf",
+                        "nimi": "Kuva-sillan-osasta.jpg",
+                        "tiedostotyyppi": "image/jpeg",
+                        "koko": 918032,
+                        "kuvaus": "Vaurio näkyy tässä hyvin.",
+                        "url": ""
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 2,
+              "tyyppi": "valitukienSiisteysJaKunto",
+              "nimi": "Välitukien siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "alusrakenne",
+                "nimi": "Alusrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 3,
+              "tyyppi": "laakeritasojenSiisteysJaKunto",
+              "nimi": "Laakeritasojen siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "alusrakenne",
+                "nimi": "Alusrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 4,
+              "tyyppi": "kansilaatta",
+              "nimi": "Kansilaatta",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 5,
+              "tyyppi": "paallysteenKunto",
+              "nimi": "Päällysteen kunto",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 6,
+              "tyyppi": "reunapalkinSiisteysJaKunto",
+              "nimi": "Reunapalkin siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 7,
+              "tyyppi": "reunapalkinLiikuntasauma",
+              "nimi": "Reunapalkin liikuntasauma",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 8,
+              "tyyppi": "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto",
+              "nimi": "Reunapalkin ja päällysteen välisen sauman siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 9,
+              "tyyppi": "sillanpaidenSaumat",
+              "nimi": "Sillanpäiden saumat",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 10,
+              "tyyppi": "sillanJaPenkereenRaja",
+              "nimi": "Sillan ja penkereen raja",
+              "paarakenneosa": {
+                "tyyppi": "paallysrakenne",
+                "nimi": "Päällysrakenne"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 11,
+              "tyyppi": "kaiteidenJaSuojaverkkojenVauriot",
+              "nimi": "Kaiteiden ja suojaverkkojen vauriot",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "D",
+                        "arvo": "korjausOhjelmoitava",
+                        "kuvaus": "Korjaus ohjelmoitava"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 12,
+              "tyyppi": "liikuntasaumalaitteidenSiisteysJaKunto",
+              "nimi": "Liikuntasaumalaitteiden siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 13,
+              "tyyppi": "laakerit",
+              "nimi": "Laakerit",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 14,
+              "tyyppi": "syoksytorvet",
+              "nimi": "Syöksytorvet",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 15,
+              "tyyppi": "tippuputket",
+              "nimi": "Tippuputket",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "-",
+                        "arvo": "eiPade",
+                        "kuvaus": "Ei päde tähän siltaan"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 16,
+              "tyyppi": "kosketussuojatJaNiidenKiinnitykset",
+              "nimi": "Kosketussuojat ja niiden kiinnitykset",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 17,
+              "tyyppi": "valaistuslaitteet",
+              "nimi": "Valaistuslaitteet",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 18,
+              "tyyppi": "johdotJaKaapelit",
+              "nimi": "Johdot ja kaapelit",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 19,
+              "tyyppi": "liikennemerkit",
+              "nimi": "Liikennemerkit",
+              "paarakenneosa": {
+                "tyyppi": "varusteet-ja-laitteet",
+                "nimi": "Varusteet ja laitteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 20,
+              "tyyppi": "kuivatuslaitteidenSiisteysJaKunto",
+              "nimi": "Kuivatuslaitteiden siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "siltapaikan-rakenteet",
+                "nimi": "Siltapaikan rakenteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 21,
+              "tyyppi": "etuluiskienSiisteysJaKunto",
+              "nimi": "Etuluiskien siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "siltapaikan-rakenteet",
+                "nimi": "Siltapaikan rakenteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 22,
+              "tyyppi": "keilojenSiisteysJaKunto",
+              "nimi": "Keilojen siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "siltapaikan-rakenteet",
+                "nimi": "Siltapaikan rakenteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 23,
+              "tyyppi": "tieluiskienSiisteysJaKunto",
+              "nimi": "Tieluiskien siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "siltapaikan-rakenteet",
+                "nimi": "Siltapaikan rakenteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "C",
+                        "arvo": "urakanKunnostettava",
+                        "kuvaus": "Urakan kunnostettava"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kohde": {
+              "tyyppi-id": 24,
+              "tyyppi": "portaidenSiisteysJaKunto",
+              "nimi": "Portaiden siisteys ja kunto",
+              "paarakenneosa": {
+                "tyyppi": "siltapaikan-rakenteet",
+                "nimi": "Siltapaikan rakenteet"
+              },
+              "havainnot": [
+                {
+                  "toimenpidetarpeet": [
+                    {
+                      "toimenpidetarve": {
+                        "koodi": "A",
+                        "arvo": "eiToimenpiteita",
+                        "kuvaus": "Ei toimenpiteitä"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

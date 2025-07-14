@@ -131,7 +131,7 @@
   (assert (= 4 (count alue)) "Alueen tulee olla vektori [minx miny maxx maxy]")
   (when-let [ol3 @the-kartta]
     (let [view (.getView ol3)]
-      (.fit view (clj->js alue) (.getSize ol3)))))
+      (.fit view (clj->js alue)))))
 
 (defn extent-sisaltaa-extent? [iso pieni]
   (assert (and (vector? iso) (vector? pieni)) "Alueen tulee vektori numeroita")
@@ -272,7 +272,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   [ol3 feature]
   (let [view (.getView ol3)
         extent (.getExtent (.getGeometry feature))]
-    (.fit view extent (.getSize ol3))))
+    (.fit view extent)))
 
 (defn- poista-openlayers-popup!
   "Älä käytä tätä suoraan, vaan kutsu poista-popup! tai

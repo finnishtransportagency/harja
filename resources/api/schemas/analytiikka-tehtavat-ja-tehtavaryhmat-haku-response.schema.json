@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "tehtavat": {
@@ -9,12 +9,10 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "type": "integer",
-            "required": true
+            "type": "integer"
           },
           "nimi": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "tehtavaryhma": {
             "type": ["integer", "null"]
@@ -63,12 +61,10 @@
           },
 
           "kasin_lisattava_maara": {
-            "type": "boolean",
-            "required": true
+            "type": "boolean"
           },
           "aluetieto": {
-            "type": "boolean",
-            "required": true
+            "type": "boolean"
           },
           "raportoi-tehtava?": {
             "type": "boolean"
@@ -85,8 +81,7 @@
             "format": "date-time"
           },
           "poistettu": {
-            "type": "boolean",
-            "required": true
+            "type": "boolean"
           }
         },
         "required": [
@@ -100,21 +95,18 @@
     },
     "tehtavaryhmat": {
       "type": "array",
-      "additionalProperties": false,
+      "additionalItems": false,
       "items": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "required": true
+            "type": "integer"
           },
           "nimi": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "otsikko": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "jarjestys": {
             "type": "integer"
@@ -133,16 +125,14 @@
           },
           "luotu": {
             "type": "string",
-            "format": "date-time",
-            "required": true
+            "format": "date-time"
           },
           "muokattu": {
             "type": ["string", "null"],
             "format": "date-time"
           },
           "poistettu": {
-            "type": "boolean",
-            "required": true
+            "type": "boolean"
           },
           "versio": {
             "type": ["string", "null"]

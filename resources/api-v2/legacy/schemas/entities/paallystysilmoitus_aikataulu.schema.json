@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "takuupvm": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/takuupvm",
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

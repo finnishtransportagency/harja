@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "required": true,
+  "properties": {
+    "tunniste": {
+      "id": "urn:harja/paikkauskustannukset/0/tunniste",
+      "required": true,
+      "additionalProperties": false,
+      "type": "object",
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+    },
+    "paikkauskohde": {
+      "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/paikkauskohde",
+      "required": true,
+      "additionalProperties": false,
+      "type": "object",
+      "nimi": {
+        "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/paikkauskohde/nimi",
+        "type": "string"
+      },
+      "tunniste": {
+        "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/paikkauskohde/tunniste",
+        "required": true,
+        "additionalProperties": false,
+        "type": "object",
+        "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+      }
+    },
+    "kirjausaika": {
+      "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/kirjausaika",
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "required": true
+    },
+    "kokonaishintaiset-kustannukset": {
+      "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/kokonaishintaiset-kustannukset",
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/kokonaishintaiset-kustannukset/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kokonaishintainen-kustannus": {
+            "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/kokonaishintaiset-kustannukset/0/kokonaishintainen-kustannus",
+            "type": "object",
+            "additionalProperties": false,
+            "selite": {
+              "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/kokonaishintaiset-kustannukset/0/kokonaishintainen-kustannus/selite",
+              "type": "string"
+            },
+            "hinta": {
+              "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/kokonaishintaiset-kustannukset/0/kokonaishintainen-kustannus/hinta",
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "yksikkohintaiset-kustannukset": {
+      "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/yksikkohintaiset-kustannukset",
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/yksikkohintaiset-kustannukset/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "yksikkohintainen-kustannus": {
+            "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/yksikkohintaiset-kustannukset/0/yksikkohintainen-kustannus",
+            "type": "object",
+            "additionalProperties": false,
+            "selite": {
+              "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/yksikkohintaiset-kustannukset/0/yksikkohintainen-kustannus/selite",
+              "type": "string"
+            },
+            "yksikko": {
+              "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/yksikkohintaiset-kustannukset/0/yksikkohintainen-kustannus/yksikko",
+              "type": "string"
+            },
+            "yksikkohinta": {
+              "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/yksikkohintaiset-kustannukset/0/yksikkohintainen-kustannus/yksikkohinta",
+              "type": "number"
+            },
+            "maara": {
+              "id": "urn:harja/paikkauskustannukset/0/paikkauskustannus/yksikkohintaiset-kustannukset/0/yksikkohintainen-kustannus/maara",
+              "type": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}
