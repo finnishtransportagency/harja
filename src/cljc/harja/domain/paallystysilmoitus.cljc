@@ -1,15 +1,16 @@
 (ns harja.domain.paallystysilmoitus
   "Ylläpidon päällystysurakoissa käytettävän POT-lomakkeen skeemat."
-  (:require [schema.core :as schema :include-macros true]
+  (:require [clojure.spec.alpha :as s]
+            [schema.core :as schema :include-macros true]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [specql.impl.registry]
+            [specql.transform :as xf]
             [specql.data-types]
             [harja.domain.urakka :as urakka]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.tierekisteri :as tr]
             [clojure.spec.alpha :as s]
-    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
-              ]))
+            #?(:clj [harja.kyselyt.specql-db :refer [define-tables]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 

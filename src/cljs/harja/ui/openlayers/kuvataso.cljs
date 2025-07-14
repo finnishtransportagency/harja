@@ -1,7 +1,6 @@
 (ns harja.ui.openlayers.kuvataso
   "Taso, joka hakee kuvan Harja palvelimelta"
-  (:require [kuvataso.Lahde]
-            [ol.layer.Tile]
+  (:require [ol.layer.Tile]
             [ol.source.TileImage]
             [ol.extent :as ol-extent]
             [harja.loki :refer [log]]

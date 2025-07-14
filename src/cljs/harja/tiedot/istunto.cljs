@@ -9,9 +9,12 @@
             [goog.dom :as dom]
             [goog.events :as events]
             [reagent.core :as reagent]
-            [goog.net.cookies :as cookie])
+            [goog.net.Cookies])
+  (:import [goog.events EventType])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
+
+(defonce ^:dynamic *cookies* (.getInstance goog.net.Cookies))
 
 (def kayttaja (atom nil))
 
@@ -43,11 +46,11 @@
   (reset! kayttoaikaa-jaljella-sekunteina oletuskayttoaika-ilman-kayttajasyotteita-sekunteina))
 
 (defn lisaa-ajastin-tapahtumakuuntelijat []
-  (events/listen (dom/getWindow) (.-MOUSEMOVE events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa!))
-  (events/listen (dom/getWindow) (.-KEYDOWN events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa!))
-  (events/listen (dom/getWindow) (.-TOUCHMOVE events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa!))
-  (events/listen (dom/getWindow) (.-SCROLL events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa!))
-  (events/listen (dom/getWindow) (.-CLICK events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa!)))
+  (events/listen (dom/getWindow) (.-MOUSEMOVE EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa!))
+  (events/listen (dom/getWindow) (.-KEYDOWN EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa!))
+  (events/listen (dom/getWindow) (.-TOUCHMOVE EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa!))
+  (events/listen (dom/getWindow) (.-SCROLL EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa!))
+  (events/listen (dom/getWindow) (.-CLICK EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa!)))
 
 (defn aikakatkaise-istunto! []
   (reset! istunto-aikakatkaistu? true)
@@ -112,7 +115,7 @@
               (:testikayttajat k))))
 
 (defonce testikayttaja
-  (reaction (let [tk (cookie/get "testikayttaja")]
+  (reaction (let [tk (.get *cookies* "testikayttaja")]
               (some #(when (= tk (:kayttajanimi %)) %) @testikayttajat))))
 
 (defn testikaytto-mahdollista? []
@@ -120,8 +123,8 @@
 
 (defn aseta-testikayttaja! [kayttaja]
   (if-not kayttaja
-    (cookie/remove "testikayttaja")
-    (cookie/set "testikayttaja" (:kayttajanimi kayttaja)))
+    (.remove *cookies* "testikayttaja")
+    (.set *cookies* "testikayttaja" (:kayttajanimi kayttaja)))
   (.reload js/window.location))
 
 

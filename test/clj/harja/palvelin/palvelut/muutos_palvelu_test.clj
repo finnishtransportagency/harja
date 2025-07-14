@@ -50,7 +50,7 @@
                                                          :valittu-hoitokausi valittu-hoitokausi})
         odotetut-kirjatut-muutokset [{:kulu_kohdistus nil, :kustannusvaikutukset (list {:summa 1000, :toimenpide 2391, :kustannuslaji "hankintakustannukset"}),
                                       :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot.",
-                                      :tehtavat_ja_maarat (list {:tehtava 3116, :uusi_maara 1100, :maaramuutos 100, :edellinen_maara 1000}), :urakka 36, :nimi "Päällysteen paikkausmuutos",
+                                      :tehtavat_ja_maarat (list {:tehtava 3117, :uusi_maara 1100, :maaramuutos 100, :edellinen_maara 1000}), :urakka 36, :nimi "Päällysteen paikkausmuutos",
                                       :id 1, :jjh-muutosten-summa nil, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "pysyva"}
                                      {:kulu_kohdistus nil, :kustannusvaikutukset (list {:summa 3000, :toimenpide 608, :kustannuslaji "hankintakustannukset"}),
                                       :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.",
@@ -64,10 +64,8 @@
                                      {:kulu_kohdistus nil, :kustannusvaikutukset nil,
                                       :voimassa_alkaen #inst "2025-06-24T21:00:00.000-00:00", :syy "Työmääräarviot ylittyivät",
                                       :tehtavat_ja_maarat nil, :urakka 36, :nimi nil,
-                                      :id 4, :jjh-muutosten-summa 1230M, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 1230M, :tyyppi "johto-ja-hallintokorvaus"}]
+                                      :id 4, :jjh-muutosten-summa 1230M, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 1230M, :tyyppi "johto-ja-hallintokorvaus"}]]
 
-
-        ]
     (is (= (count (:kirjatut-muutokset vastaus)) 4) "oikea määrä muutoksia")
     (is (every? (fn [rivi] (some #(= rivi %) (:kirjatut-muutokset vastaus))) odotetut-kirjatut-muutokset)
       "Kaikki muutosrivit löytyvät vastausjoukosta")))
