@@ -25,7 +25,7 @@ VALUES ('Ennalta arvaamattomien kuljetusten avustaminen (materiaali)',
                                from tehtavaryhma
                                where yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac')),
         (select id from tehtavaryhma where yksiloiva_tunniste = '3a5cb840-11a7-438f-bdae-a87da64bf98a'),
-        true, 'tonni', 2025, false, false, 5, 5, true, 108,
+        true, 'tonni', 2025, false, false, (select id from materiaaliluokka where nimi = 'Hiekoitushiekka'), (select id from materiaalikoodi where nimi = 'Hiekoitushiekka'), true, 108,
         '2d27d7d0-7240-412d-b8fc-67e669087803',
         current_timestamp,
         (select id from kayttaja where kayttajanimi = 'Integraatio'));
