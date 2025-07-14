@@ -1156,7 +1156,6 @@
       :urakan-varustetoteumat
       :hae-toteuman-reitti-ja-tr-osoite
       :siirry-toteuma
-      :tallenna-varustetoteuma
       :hae-toteumien-reitit
       :hae-toteuman-liitteet)
     this))
