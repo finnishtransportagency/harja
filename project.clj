@@ -11,7 +11,7 @@
   :dependencies [
                  ;; Clojure ja ClojureScript
                  [org.clojure/clojure "1.10.3"]
-                 [org.clojure/clojurescript "1.10.764"]
+                 [org.clojure/clojurescript "1.10.914"]
                  [org.clojure/spec.alpha "0.5.238"]
 
                  ;;;;;;; Yleiset ;;;;;;;
