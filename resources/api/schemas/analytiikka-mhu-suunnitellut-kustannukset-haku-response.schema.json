@@ -41,12 +41,12 @@
                         "kuukausi": {
                           "type": "integer",
                           "description": "Kalenterikuukausi jota suunniteltu kustannus koskee."
-                        },
-                        "required": [
-                          "vuosi",
-                          "kuukausi"
-                        ]
-                      }
+                        }
+                      },
+                      "required": [
+                        "vuosi",
+                        "kuukausi"
+                      ]
                     },
                     "kustannus": {
                       "type": "object",
@@ -61,13 +61,13 @@
                         },
                         "indeksikorjauksen-vahvistusajankohta": {
                           "type": "string",
-                          "format": "datetime",
+                          "format": "date-time",
                           "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, ei indeksikorjausta kustannukselle ole vielä hyväksytty."
-                        },
-                        "required": [
-                          "summa"
-                        ]
-                      }
+                        }
+                      },
+                      "required": [
+                        "summa"
+                      ]
                     },
                     "kohdistus": {
                       "type": "object",
@@ -87,23 +87,23 @@
                         "tehtava": {
                           "type": "integer",
                           "description": "Harjan tehtava-id."
-                        },
-                        "required": [
-                          "toimenpide"
-                        ]
-                      }
+                        }
+                      },
+                      "required": [
+                        "toimenpide"
+                      ]
                     },
                     "versio": {
                       "type": "integer",
                       "description": "Kustannuksen versio. Käytetään ehkä tulevaisuudessa kustannuksen muutoshistorian seuraamiseen. Versio on nolla, kun versiointia ei ole käytössä."
-                    },
-                    "required": [
-                      "kustannus-id",
-                      "ajankohta",
-                      "kustannus",
-                      "kohdistus"
-                    ]
-                  }
+                    }
+                  },
+                  "required": [
+                    "kustannus-id",
+                    "ajankohta",
+                    "kustannus",
+                    "kohdistus"
+                  ]
                 }
               }
             }
@@ -132,12 +132,12 @@
                         "kuukausi": {
                           "type": "integer",
                           "description": "Kalenterikuukausi jota suunniteltu kustannus koskee."
-                        },
-                        "required": [
-                          "vuosi",
-                          "kuukausi"
-                        ]
-                      }
+                        }
+                      },
+                      "required": [
+                        "vuosi",
+                        "kuukausi"
+                      ]
                     },
                     "kustannus": {
                       "type": "object",
@@ -152,13 +152,13 @@
                         },
                         "indeksikorjauksen-vahvistusajankohta": {
                           "type": "string",
-                          "format": "datetime",
+                          "format": "date-time",
                           "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, ei indeksikorjausta kustannukselle ole vielä hyväksytty."
-                        },
-                        "required": [
-                          "summa"
-                        ]
-                      }
+                        }
+                      },
+                      "required": [
+                        "summa"
+                      ]
                     },
                     "kohdistus": {
                       "type": "object",
@@ -184,14 +184,14 @@
                     "versio": {
                       "type": "integer",
                       "description": "Kustannuksen versio. Käytetään tulevaisuudessa kustannuksen muutoshistorian seuraamiseen. Versio on nolla, kun versiointia ei ole käytössä."
-                    },
-                    "required": [
-                      "kustannus-id",
-                      "ajankohta",
-                      "kustannus",
-                      "kohdistus"
-                    ]
-                  }
+                    }
+                  },
+                  "required": [
+                    "kustannus-id",
+                    "ajankohta",
+                    "kustannus",
+                    "kohdistus"
+                  ]
                 }
               }
             }
@@ -240,13 +240,13 @@
                         "ennen-urakkaa": {
                           "type": "boolean",
                           "description": "True = Toimenkuva on relevantti ennen urakan alkua, vaikka kustannus kohdistetaan ensimmäisen hoitovuoden lokakuulle. False = Toimenkuva synnyttää kustannuksia urakan aikana."
-                        },
-                        "required": [
-                          "vuosi",
-                          "kuukausi",
-                          "ennen-urakkaa"
-                        ]
-                      }
+                        }
+                      },
+                      "required": [
+                        "vuosi",
+                        "kuukausi",
+                        "ennen-urakkaa"
+                      ]
                     },
                     "toimenkuvan-kustannus": {
                       "type": "object",
@@ -271,13 +271,13 @@
                           "type": "string",
                           "format": "date-time",
                           "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, ei indeksikorjausta kustannukselle ole vielä hyväksytty."
-                        },
-                        "required": [
-                          "tunnit",
-                          "tuntipalkka",
-                          "summa"
-                        ]
-                      }
+                        }
+                      },
+                      "required": [
+                        "tunnit",
+                        "tuntipalkka",
+                        "summa"
+                      ]
                     },
                     "kohdistus": {
                       "type": "object",
@@ -306,15 +306,15 @@
                     "versio": {
                       "type": "integer",
                       "description": "Kustannuksen versio. Käytetään tulevaisuudessa kustannuksen muutoshistorian seuraamiseen."
-                    },
-                    "required": [
-                      "kustannus-id",
-                      "toimenkuva",
-                      "toimenkuvan-ajankohta",
-                      "toimenkuvan-kustannus",
-                      "kohdistus"
-                    ]
-                  }
+                    }
+                  },
+                  "required": [
+                    "kustannus-id",
+                    "toimenkuva",
+                    "toimenkuvan-ajankohta",
+                    "toimenkuvan-kustannus",
+                    "kohdistus"
+                  ]
                 }
               }
             }
@@ -358,17 +358,17 @@
                         },
                         "indeksikorjauksen-vahvistusajankohta": {
                           "type": "string",
-                          "format": "datetime",
+                          "format": "date-time",
                           "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Vahvistus koskee sekä tavoitehintaa että edelliseltä vuodelta siirrettyä tavoitehinnan lisää. Jos tyhjä, ei indeksikorjausta tavoitehinnalle ole vielä hyväksytty tai indeksikorjaus ei ole relevantti (esimerkiksi ensimmäisellä hoitokaudella)."
                         },
                         "tarjouksen-tavoitehinta": {
                           "type": "number",
                           "description": "Urakkatarjouksessa annettu, hoitovuosikohtainen tavoitehinta. Yksikkö: euro."
-                        },
-                        "required": [
-                          "summa"
-                        ]
-                      }
+                        }
+                      },
+                      "required": [
+                        "summa"
+                      ]
                     },
                     "kattohinta": {
                       "type": "object",
@@ -391,34 +391,34 @@
                         },
                         "indeksikorjauksen-vahvistusajankohta": {
                           "type": "string",
-                          "format": "datetime",
+                          "format": "date-time",
                           "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Vahvistus koskee sekä tavoitehintaa että edelliseltä vuodelta siirrettyä kattohinnan lisää. Jos tyhjä, ei indeksikorjausta tavoitehinnalle ole vielä hyväksytty tai indeksikorjaus ei ole relevantti (esimerkiksi ensimmäisellä hoitokaudella)."
-                        },
-                        "required": [
-                          "summa"
-                        ]
-                      }
+                        }
+                      },
+                      "required": [
+                        "summa"
+                      ]
                     },
                     "versio": {
                       "type": "integer",
                       "description": "Kustannustavoitteen versio. Käytetään ehkä tulevaisuudessa tavoite- ja kattohinnan muutoshistorian seuraamiseen. Versio on nolla, kun versiointia ei ole käytössä."
-                    },
-                    "required": [
-                      "tavoite-id",
-                      "ajankohta",
-                      "tavoitehinta",
-                      "kattohinta"
-                    ]
-                  }
+                    }
+                  },
+                  "required": [
+                    "tavoite-id",
+                    "ajankohta",
+                    "tavoitehinta",
+                    "kattohinta"
+                  ]
                 }
               }
             }
-          },
-          "required": [
-            "urakka",
-            "urakkatunnus"
-          ]
-        }
+          }
+        },
+        "required": [
+          "urakka",
+          "urakkatunnus"
+        ]
       }
     }
   }

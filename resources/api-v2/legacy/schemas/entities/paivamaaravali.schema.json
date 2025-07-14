@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "alkupvm": {
+      "id": "urn:harja/alkupvm",
+      "type": "string",
+      "format": "date-time"
+    },
+    "loppupvm": {
+      "id": "urn:harja/loppupvm",
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -101,7 +101,6 @@
                                            (s/optional-key :tieosoiteverkon-osoite) s/Str
                                            (s/optional-key :tieosoiteverkon-tuontikohde) s/Str
                                            (s/optional-key :laajennetun-tieosoiteverkon-tiedot) s/Str
-                                           (s/optional-key :paivita-kaista-aineisto) s/Bool
                                            (s/optional-key :pohjavesialueen-shapefile) s/Str
                                            (s/optional-key :pohjavesialueen-osoite) s/Str
                                            (s/optional-key :pohjavesialueen-tuontikohde) s/Str

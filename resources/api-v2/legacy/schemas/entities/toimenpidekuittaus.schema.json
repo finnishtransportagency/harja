@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "kuitattu": {
+      "id": "urn:harja/kuittaus/kuitattu",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "kuittaustyyppi": {
+      "id": "urn:harja/kuittaus/kuittaustyyppi",
+      "required": true,
+      "enum": [
+        "vastaanotto",
+        "lopetus",
+        "vastaus",
+        "muutos",
+        "aloitus",
+        "valitys",
+        "vaara-urakka"
+      ]
+    },
+    "vakiofraasi": {
+      "id": "urn:harja/kuittaus/vakiofraasi",
+      "required": true,
+      "type": "string"
+    },
+    "vapaateksti": {
+      "id": "urn:harja/kuittaus/vapaateksti",
+      "required": true,
+      "type": "string"
+    },
+    "kuittaaja": {
+      "id": "urn:harja/kuittaus/kuittaaja",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json",
+      "required": false
+    },
+    "kuittaajaorganisaatio": {
+      "id": "urn:harja/kuittaus/kuittaajaorganisaatio",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
+      "required": false
+    }
+  }
+}

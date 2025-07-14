@@ -234,8 +234,6 @@
                   "id": "urn:harja/siltatarkastus/sillantarkastuskohteet/siltapaikanRakenteet/portaidenSiisteysJaKunto",
                   "type": "object",
                   "required": true,
-                  "type": "object",
-                  "required": true,
                   "additionalProperties": false,
                   "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
                 }
