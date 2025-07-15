@@ -43,7 +43,7 @@
                  [com.taoensso/timbre "6.7.1"]
 
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.25.0"]
+                 [org.apache.logging.log4j/log4j-core "2.25.1"]
 
                  ;; --
 
@@ -51,7 +51,7 @@
                  [org.clojure/java.jmx "1.1.0"]
 
                  ;; -- JSON encode/decode
-                 [cheshire "5.13.0"]
+                 [cheshire "6.0.0"]
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.48"]
