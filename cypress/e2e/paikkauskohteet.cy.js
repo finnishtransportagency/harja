@@ -22,10 +22,11 @@ function siivoaKanta() {
 }
 
 let avaaPaikkauskohteetSuoraan = function () {
-    cy.server()
-    cy.route('POST', '_/paikkauskohteet-urakalle').as('kohteet')
-    cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('tyomenetelmat')
+    cy.intercept('POST', '_/paikkauskohteet-urakalle').as('kohteet')
+    cy.intercept('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('tyomenetelmat')
+
     cy.visit("/")
+
     cy.contains('.haku-lista-item', 'Lappi').click()
     cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
@@ -40,15 +41,16 @@ let avaaPaikkauskohteetSuoraan = function () {
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
     cy.get('label[for=filtteri-vuosi] + div').valinnatValitse({valinta: '2021'})
 
-    cy.route('POST', '_/paikkauskohteet-urakalle').as('2021-kohteet')
+    cy.intercept('POST', '_/paikkauskohteet-urakalle').as('2021-kohteet')
     cy.get('[data-cy="hae-paikkauskohteita"]').click();
     cy.wait('@2021-kohteet', {timeout: 15000})
 }
 
 let avaaToteumat = () => {
-    cy.server()
-    cy.route('POST', '_/hae-urakan-paikkaukset').as('2021-paikkaukset')
+    cy.intercept('POST', '_/hae-urakan-paikkaukset').as('2021-paikkaukset')
+
     cy.visit("/")
+
     cy.contains('.haku-lista-item', 'Lappi').click()
     cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
@@ -88,8 +90,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.get('[data-cy=tabs-taso2-Paikkauskohteet]').click()
 
-        cy.server()
-        cy.route('POST', '_/paikkauskohteet-urakalle').as('kohteet')
+        cy.intercept('POST', '_/paikkauskohteet-urakalle').as('kohteet')
 
         cy.get('.nappi-ensisijainen', { timeout: clickTimeout }).should('not.be.disabled');
         cy.contains('.nappi-ensisijainen', 'Hae kohteita').click({force: true})
@@ -98,7 +99,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('.nappi-ensisijainen', { timeout: clickTimeout }).should('not.be.disabled');
         cy.get('[data-cy="paikkauskohde-vuosivalinta"] button').click();
 
-        cy.route('POST', '_/paikkauskohteet-urakalle').as('2021-kohteet')
+        cy.intercept('POST', '_/paikkauskohteet-urakalle').as('2021-kohteet')
 
         cy.get('[data-cy="paikkauskohde-vuosivalinta"] li.harja-alasvetolistaitemi', {timeout: 3000}).eq(2).click()
         cy.contains('.nappi-ensisijainen', 'Hae kohteita').click({force: true})
@@ -152,9 +153,8 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
 
-        cy.server()
-        cy.route('POST', '_/tallenna-paikkauskohde-urakalle').as('tilaus')
-        cy.route('POST', '_/paikkauskohteet-urakalle').as('kohteet')
+        cy.intercept('POST', '_/tallenna-paikkauskohde-urakalle').as('tilaus')
+        cy.intercept('POST', '_/paikkauskohteet-urakalle').as('kohteet')
 
         // Avataan paikkauskohdelomake uuden luomista varten
         cy.contains('tr.paikkauskohderivi > td > div > span ', 'CPKohde').click({force: true})
@@ -304,9 +304,8 @@ describe('Päällystysilmoitukset toimii', function () {
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
 
-        cy.server()
-        cy.route('POST', '_/tallenna-paikkauskohde-urakalle').as('tilaus')
-        cy.route('POST', '_/paikkauskohteet-urakalle').as('kohteet')
+        cy.intercept('POST', '_/tallenna-paikkauskohde-urakalle').as('tilaus')
+        cy.intercept('POST', '_/paikkauskohteet-urakalle').as('kohteet')
 
         // Avataan paikkauskohdelomake uuden luomista varten
         cy.contains('tr.paikkauskohderivi > td > div > span ', potRaportoitava).click({force: true})

@@ -40,8 +40,7 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
     })
 
     it("selitteellisen ilmoitusten haku hakusanalla toimii", function () {
-        cy.server()
-        cy.route({
+        cy.intercept({
                 url: "*/hae-ilmoitukset",
                 method: "POST",
                 response:
@@ -57,9 +56,8 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.contains("Tie on liukas ja urainen")
     })
 
-    it('Ilmoituksen haku aiheella ja tarkenteella toimii', function () {
-        cy.server();
-        cy.route({
+    it('Ilmoituksen haku aiheella ja tarkenteella toimii', function () {;
+        cy.intercept({
                 url: "*/hae-ilmoitukset",
                 method: "POST"
             }
@@ -73,9 +71,8 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.get('[data-cy=ilmoitukset-grid]').contains("Testailu");
     })
 
-    it('Ilmoitusten haku vain aiheella toimii', function () {
-        cy.server();
-        cy.route({
+    it('Ilmoitusten haku vain aiheella toimii', function () {;
+        cy.intercept({
                 url: "*/hae-ilmoitukset",
                 method: "POST"
             }
