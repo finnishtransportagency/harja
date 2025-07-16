@@ -48,34 +48,9 @@
         (io/copy in out)
         (.toByteArray out)))))
 
-;; FIXME: odota-s3-virustarkistus funktio käyttää näitä atomeita tilanhallintaan. Se on huono ratkaisu, koska
-;;        funktio kääritään (async/thread ...) kutsulla threadiksi, jolloin useampi thread voi muokata saman atomin
-;;        arvoa ja tämä voi johtaa odottamattomaan käyttäytymiseen.
- (def s3-virustarkistusvastaus (atom nil))
- (def s3-virustarkistus-maara (atom 0))
- (def virustarkistus-max-maara 8)
+(def virustarkistus-max-maara 8)
 
-(defn- odota-s3-virustarkistus [db s3-url s3hash]
-  (async/go-loop []
-    (async/<! (async/timeout 15000))
-    ;; FIXME: Jokaisen threadin pitäisi pitää kirjaa vastauksesta itsenäisesti, eikä tallentaa sitä globaaliin atomiin.
-    (let [_ (reset! s3-virustarkistusvastaus (lue-s3-tiedosto s3-url s3hash db))
-          _ (swap! s3-virustarkistus-maara inc)
-          _ (log/info "odota-s3-virustarkistus :: tulos:" (pr-str @s3-virustarkistusvastaus))]
-      (cond
-        (and (not (nil? @s3-virustarkistusvastaus)) (< @s3-virustarkistus-maara virustarkistus-max-maara) )
-        (do
-          (log/info "Liite on virustarkastettu.")
-          ;; Merkitään se tarkastetuksi
-          (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash}))
-        (and (nil? @s3-virustarkistusvastaus) (< @s3-virustarkistus-maara virustarkistus-max-maara) )
-        (do
-          (log/info "Tiedosto tarkastamatta, odotetaan 15 sekuntia...")
-          (recur))
-        (and (nil? @s3-virustarkistusvastaus) (>= @s3-virustarkistus-maara virustarkistus-max-maara) )
-        (log/error "Virustarkastus epäonnistui. Tarkistuskertojen maksimi ylittyi.")))))
-
-(defn odota-s3-virustarkistus-v2
+(defn odota-s3-virustarkistus
   [db s3-url s3hash]
   (async/go-loop [virustarkistus-maara 1]
     (async/<! (async/timeout 15000))
@@ -253,13 +228,7 @@
   (log/debug "Tyyppi: " (pr-str tyyppi))
   (log/debug "Koko väitetty / havaittu: " (pr-str koko) (and (instance? java.io.File lahdetiedosto) (.length lahdetiedosto)))
   (log/debug "lahde:" lahdetiedosto)
-  ;; Resetoidaan atomit jokaisen latauksen yhteydessä
-  ;; FIXME: odota-s3-virustarkistus funktio käyttää näitä atomeita tilanhallintaan.
-  ;;        Thredien ei tulisi jakaa tilaa, joten tämä on huono ratkaisu.
-  ;;        Käytetään uutta odota-s3-virustarkistus-v2 funktiota, joka ei käytä globaaleja atomeita ja poistetaan globaalien
-  ;;        atomien käyttö.
-  (reset! s3-virustarkistusvastaus nil)
-  (reset! s3-virustarkistus-maara 0)
+
   (let [koko (if (instance? java.io.File lahdetiedosto)
                (.length lahdetiedosto)
                koko)
@@ -269,7 +238,7 @@
       (do
         (let [liite (tallenna-liite-tietokantaan db lahdetiedosto :aws s3-url liite-perustiedot)
               ;; S3 tallennuksessa käynnistetään virustarkastus
-              _ (when (:s3hash liite) (async/thread (odota-s3-virustarkistus-v2 db s3-url (:s3hash liite))))]
+              _ (when (:s3hash liite) (async/thread (odota-s3-virustarkistus db s3-url (:s3hash liite))))]
           liite))
       (do
         (log/debug "Liite hylätty: " (:viesti liitetarkistus))
