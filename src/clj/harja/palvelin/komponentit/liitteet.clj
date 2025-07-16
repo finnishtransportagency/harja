@@ -1,5 +1,6 @@
 (ns harja.palvelin.komponentit.liitteet
   (:require [clojure.string :as str]
+            [cheshire.core :as cheshire]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.liitteet :as liitteet-q]
             [com.stuartsierra.component :as component]
@@ -47,13 +48,17 @@
         (io/copy in out)
         (.toByteArray out)))))
 
-(def s3-virustarkistusvastaus (atom nil))
-(def s3-virustarkistus-maara (atom 0))
-(def virustarkistus-max-maara 8)
+;; FIXME: odota-s3-virustarkistus funktio käyttää näitä atomeita tilanhallintaan. Se on huono ratkaisu, koska
+;;        funktio kääritään (async/thread ...) kutsulla threadiksi, jolloin useampi thread voi muokata saman atomin
+;;        arvoa ja tämä voi johtaa odottamattomaan käyttäytymiseen.
+ (def s3-virustarkistusvastaus (atom nil))
+ (def s3-virustarkistus-maara (atom 0))
+ (def virustarkistus-max-maara 8)
 
 (defn- odota-s3-virustarkistus [db s3-url s3hash]
   (async/go-loop []
     (async/<! (async/timeout 15000))
+    ;; FIXME: Jokaisen threadin pitäisi pitää kirjaa vastauksesta itsenäisesti, eikä tallentaa sitä globaaliin atomiin.
     (let [_ (reset! s3-virustarkistusvastaus (lue-s3-tiedosto s3-url s3hash db))
           _ (swap! s3-virustarkistus-maara inc)
           _ (log/info "odota-s3-virustarkistus :: tulos:" (pr-str @s3-virustarkistusvastaus))]
@@ -70,6 +75,34 @@
         (and (nil? @s3-virustarkistusvastaus) (>= @s3-virustarkistus-maara virustarkistus-max-maara) )
         (log/error "Virustarkastus epäonnistui. Tarkistuskertojen maksimi ylittyi.")))))
 
+(defn odota-s3-virustarkistus-v2
+  [db s3-url s3hash]
+  (async/go-loop [virustarkistus-maara 1]
+    (async/<! (async/timeout 15000))
+    (let [virustarkistusvastaus (lue-s3-tiedosto s3-url s3hash db)]
+      (log/info "Virustarkistuksen tuloksen haku, yritys:" virustarkistus-maara "/" virustarkistus-max-maara
+        ", s3hash:" s3hash ", tulos:" (if virustarkistusvastaus "Saatiin S3 vastaus" "Ei S3 vastausta"))
+
+      (cond
+        ;; Jos vastaus saatiin, lopetetaan odotus ja merkitään liite tarkastetuksi
+        (not (nil? virustarkistusvastaus))
+        (do
+          (log/info "Liite on virustarkastettu, s3hash:" s3hash)
+          (try
+            (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash})
+            (catch Exception e
+              (log/error "Virustarkastuksen tilan merkitseminen epäonnistui, s3hash: " s3hash ", virhe:" e))))
+
+        ;; Jos vastausta ei saatu, ja voidaan vielä yrittää uudelleen
+        (< virustarkistus-maara virustarkistus-max-maara)
+        (do
+          (log/info "Tiedosto tarkastamatta, odotetaan 15 sekuntia, s3hash:" s3hash)
+          (recur (inc virustarkistus-maara)))
+
+        ;; Maksimimäärä yrityksiä käytetty
+        :else
+        (log/error "Virustarkastus epäonnistui. Tarkistuskertojen maksimi ylittyi, s3hash:" s3hash)))))
+
 (defn- tallenna-s3
   "Anna lähetettävä tiedosto java.io.inputstreaminä.
   1. Luo ensin urlin POST komennolla, johon liite voidaan lähettää.
@@ -82,12 +115,12 @@
           ;; tiedostot saadaan sitten haettua
           s3hash (str/trim (str (pvm/iso8601 (pvm/nyt)) "-" (UUID/randomUUID)))
           ;; Generoi presignedurl, johon varsinainen liite lähetetään
-          vastaus @(http/post s3-url {:body (cheshire.core/encode {"key" s3hash "operation" "put"})
+          vastaus @(http/post s3-url {:body (cheshire/encode {"key" s3hash "operation" "put"})
                                       :timeout 50000})
           _ (log/info "Generoi presignedurl :: vastaus " vastaus)
           ;; Vastauksesta parsitaan varsinainen url, johon liite lähetetään
           varsinainen-put-url (when (= 200 (:status vastaus))
-                                 (str/trim (get (cheshire.core/decode (:body vastaus)) "url")))
+                                 (str/trim (get (cheshire/decode (:body vastaus)) "url")))
           _ (log/info "Lähetetään tiedosto urliin: " varsinainen-put-url)
           liite-vastaus (when varsinainen-put-url
                           @(http/put varsinainen-put-url {:body input-stream-sisalto}))
@@ -114,25 +147,25 @@
   (try
     (let [_ (log/info "lue-s3-tiedosto")
           ;; Generoi presignedurl, josta liite haetaan
-          vastaus @(http/post s3-url {:body (cheshire.core/encode {"key" (str s3hash) "operation" "get"})
+          vastaus @(http/post s3-url {:body (cheshire/encode {"key" (str s3hash) "operation" "get"})
                                       :timeout 50000})
-          _ (log/info "lue-s3-tiedosto :: vastaus:" vastaus)
+          _ (log/info "lue-s3-tiedosto :: vastaus:" (dissoc vastaus :opts :body))
           _ (when (not= 200 (:status vastaus))
               (log/error "File: " s3hash " got download error: " (:body vastaus)))
 
           ;; Vastauksesta parsitaan varsinainen url, josta liite ladataan
-          varsinainen-get-url (when (= 200 (:status vastaus)) (str/trim (get (cheshire.core/decode (:body vastaus)) "url")))
-          _ (log/info "lue-s3-tiedosto :: varsinainen-get-url:" varsinainen-get-url)
+          varsinainen-get-url (when (= 200 (:status vastaus)) (str/trim (get (cheshire/decode (:body vastaus)) "url")))
+          ;_ (log/info "lue-s3-tiedosto :: varsinainen-get-url:" varsinainen-get-url)
 
-          liite (when varsinainen-get-url @(http/get varsinainen-get-url))
-          _ (log/info "lue-s3-tiedosto :: liite:" liite)
+          liite-vastaus (when varsinainen-get-url @(http/get varsinainen-get-url))
+          _ (log/info "lue-s3-tiedosto :: liite:" (dissoc liite-vastaus :opts :body))
 
           ;; Jos liite saatiin, merkitään kantaan, että se on virustarkastettu
-          _ (when (= 200 (:status liite)) (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash}))]
+          _ (when (= 200 (:status liite-vastaus)) (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash}))]
       ;; Jos osoitetta ei saatu, palautetaan liitteen sijasta nil
       (when varsinainen-get-url
         (with-open [out (ByteArrayOutputStream.)]
-          (io/copy (:body liite) out)
+          (io/copy (:body liite-vastaus) out)
           (.toByteArray out))))
     (catch Exception e
       (do
@@ -221,6 +254,10 @@
   (log/debug "Koko väitetty / havaittu: " (pr-str koko) (and (instance? java.io.File lahdetiedosto) (.length lahdetiedosto)))
   (log/debug "lahde:" lahdetiedosto)
   ;; Resetoidaan atomit jokaisen latauksen yhteydessä
+  ;; FIXME: odota-s3-virustarkistus funktio käyttää näitä atomeita tilanhallintaan.
+  ;;        Thredien ei tulisi jakaa tilaa, joten tämä on huono ratkaisu.
+  ;;        Käytetään uutta odota-s3-virustarkistus-v2 funktiota, joka ei käytä globaaleja atomeita ja poistetaan globaalien
+  ;;        atomien käyttö.
   (reset! s3-virustarkistusvastaus nil)
   (reset! s3-virustarkistus-maara 0)
   (let [koko (if (instance? java.io.File lahdetiedosto)
@@ -232,7 +269,7 @@
       (do
         (let [liite (tallenna-liite-tietokantaan db lahdetiedosto :aws s3-url liite-perustiedot)
               ;; S3 tallennuksessa käynnistetään virustarkastus
-              _ (when (:s3hash liite) (async/thread (odota-s3-virustarkistus db s3-url (:s3hash liite))))]
+              _ (when (:s3hash liite) (async/thread (odota-s3-virustarkistus-v2 db s3-url (:s3hash liite))))]
           liite))
       (do
         (log/debug "Liite hylätty: " (:viesti liitetarkistus))
