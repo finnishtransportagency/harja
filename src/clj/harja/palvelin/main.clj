@@ -266,6 +266,7 @@
       :liitteiden-hallinta (component/using
                              (liitteet-komp/->Liitteet
                                (get-in asetukset [:liitteet :s3-url])
+                               (get-in asetukset [:liitteet :thread-pool-koko])
                                (:alusta asetukset))
                              [:db :virustarkistus :tiedostopesula])
 

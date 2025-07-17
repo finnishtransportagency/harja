@@ -6,10 +6,13 @@
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.liitteet :as liitteet])
-  (:import (org.apache.commons.io IOUtils)))
+  (:import (java.util.concurrent ThreadPoolExecutor)
+           (org.apache.commons.io IOUtils)))
 
 (defn poista-liite [liite-id]
   (u (str "DELETE FROM liite WHERE id = " liite-id ";")))
+
+(def thread-pool-size 5)
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -19,7 +22,7 @@
           :db (tietokanta/luo-tietokanta testitietokanta)
           :liitteiden-hallinta
           (component/using
-            (harja.palvelin.komponentit.liitteet/->Liitteet nil nil)
+            (harja.palvelin.komponentit.liitteet/->Liitteet nil thread-pool-size nil)
             [:db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -75,7 +78,8 @@
     {:data (byte-array 10)}))
 
 (deftest tarkista-virustarkistus-onnistuu
-  (let [s3hash "test-hash"
+  (let [liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
+        s3hash "test-hash"
         kutsulaskuri-atom (atom 0)]
     (testing "Virustarkistus onnistuu normaalisti kolmannella yrityksellä"
       (with-redefs [liitteet/lue-s3-tiedosto
@@ -93,12 +97,13 @@
           ;; Suoritetaan virustarkistuksen odotus
           (let [thread1 (liitteet/odota-s3-virustarkistus-saije
                           (:db jarjestelma) s3-url s3hash
+                          (:virustarkistus-thread-pool liitteiden-hallinta)
                           {:max-yritykset 3
                            :odotusaika 0
                            :odotusaika-rnd 0
                            :odotusaika-lisays 50})]
 
-            (async/<!! thread1)
+            @thread1
 
             ;; Tarkistetaan että kutsulaskuri osoittaa funktiota kutsutun 3 kertaa
             (is (= 2 @kutsulaskuri-atom) "Virustarkistusta pitäisi yrittää kunnes se onnistuu")
@@ -110,7 +115,8 @@
           ;; Siivoa
           (poista-liite liite-id)))))
 
-  (let [s3hash "test-hash-fail"
+  (let [liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
+        s3hash "test-hash-fail"
         kutsulaskuri-atom (atom 0)]
     (testing "Virustarkistus aikakatkaistaan maksimi yritysten jälkeen"
       (with-redefs [liitteet/lue-s3-tiedosto
@@ -129,12 +135,13 @@
           ;; Suoritetaan virustarkistuksen odotus
           (let [thread1 (liitteet/odota-s3-virustarkistus-saije
                           (:db jarjestelma) s3-url s3hash
+                          (:virustarkistus-thread-pool liitteiden-hallinta)
                           {:max-yritykset 2
                            :odotusaika 0
                            :odotusaika-rnd 0
                            :odotusaika-lisays 50})]
 
-            (async/<!! thread1)
+            @thread1
 
             (is (= 2 @kutsulaskuri-atom) "Virustarkistusta pitäisi yrittää maksimi yritysten verran")
 
@@ -146,7 +153,8 @@
           (poista-liite liite-id)))))
 
   (testing "Rinnakkainen virustarkistus toimii usealle tiedostolle samanaikaisesti"
-    (let [s3hash1 "test-hash-1"
+    (let [liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
+          s3hash1 "test-hash-1"
           s3hash2 "test-hash-2"
           s3hash3 "test-hash-3"
           kutsulaskuri-atom1 (atom 0)
@@ -173,27 +181,30 @@
           ;; Suoritetaan virustarkistuksen odotus rinnakkain kaikille tiedostoille
           (let [thread1 (liitteet/odota-s3-virustarkistus-saije
                           (:db jarjestelma) s3-url s3hash1
+                          (:virustarkistus-thread-pool liitteiden-hallinta)
                           {:max-yritykset 3
                            :odotusaika 0
                            :odotusaika-rnd 0
                            :odotusaika-lisays 50})
                 thread2 (liitteet/odota-s3-virustarkistus-saije
                           (:db jarjestelma) s3-url s3hash2
+                          (:virustarkistus-thread-pool liitteiden-hallinta)
                           {:max-yritykset 3
                            :odotusaika 0
                            :odotusaika-rnd 0
                            :odotusaika-lisays 50})
                 thread3 (liitteet/odota-s3-virustarkistus-saije
                           (:db jarjestelma) s3-url s3hash3
+                          (:virustarkistus-thread-pool liitteiden-hallinta)
                           {:max-yritykset 3
                            :odotusaika 0
                            :odotusaika-rnd 0
                            :odotusaika-lisays 50})]
 
             ;; Odota kaikkien threadien valmistumista
-            (async/<!! thread1)
-            (async/<!! thread2)
-            (async/<!! thread3)
+            @thread1
+            @thread2
+            @thread3
 
             (is (= 1 @kutsulaskuri-atom1) "Virustarkistusta pitäisi yrittää maksimi yritysten verran")
             (is (= 2 @kutsulaskuri-atom2) "Virustarkistusta pitäisi yrittää maksimi yritysten verran")
@@ -212,7 +223,8 @@
           (poista-liite liite-id-3))))))
 
 (deftest tarkasta-virustarkistus-virhetilanteissa
-  (let [s3hash "test-hash"
+  (let [liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
+        s3hash "test-hash"
         kutsulaskuri-atom (atom 0)]
     (testing "Virustarkistus käsittelee poikkeukset oikein"
       (with-redefs [liitteet/lue-s3-tiedosto
@@ -229,13 +241,14 @@
 
           ;; Suoritetaan virustarkistuksen odotus, pitäisi selviytyä virheestä
           (let [thread1 (liitteet/odota-s3-virustarkistus-saije
-                          (:db jarjestelma) s3-url "test-hash-error"
+                          (:db jarjestelma) s3-url s3hash
+                          (:virustarkistus-thread-pool liitteiden-hallinta)
                           {:max-yritykset 3
                            :odotusaika 0
                            :odotusaika-rnd 0
                            :odotusaika-lisays 50})]
 
-            (async/<!! thread1)
+            @thread1
 
             ;; Tarkastetaan, että liitteen virustarkituksen tila on edelleen sama
             (let [virustarkastettu? (ffirst (q (str "SELECT \"virustarkastettu?\" FROM liite WHERE id = " liite-id ";")))]
@@ -243,3 +256,44 @@
 
           ;; Siivoa
           (poista-liite liite-id))))))
+
+(deftest tarkista-thread-poolin-toimivuus
+  (testing "Thread-pool käsittelee rinnakkaisia tehtäviä oikein"
+    (let [liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
+          thread-pool ^ThreadPoolExecutor (:virustarkistus-thread-pool liitteiden-hallinta)
+          kutsulaskuri-atom (atom 0)]
+      (with-redefs [liitteet/lue-s3-tiedosto
+                    (fn [url hash db]
+                      (swap! kutsulaskuri-atom inc)
+                      {:data (byte-array 10)})]
+
+        ;; Suoritetaan useita threadeja rinnakkain poolin kautta
+        (let [threads (doall
+                        (for [i (range 20)]
+                          (liitteet/odota-s3-virustarkistus-saije
+                            (:db jarjestelma) s3-url (str "test-hash-" i)
+                            thread-pool
+                            {:max-yritykset 1
+                             :odotusaika 200
+                             :odotusaika-rnd 0
+                             :odotusaika-lisays 50})))]
+
+          ;; Odota hetki, jotta thread-pool saa tehtävät käsiteltyä
+          (Thread/sleep 50)
+
+          ;; Tarkistetaan, että thread-pool on käynnissä ja aktiivisia threadejä on odotettu määrä
+          (is (= thread-pool-size (.getPoolSize thread-pool)))
+          (is (= thread-pool-size (.getActiveCount thread-pool)))
+
+          ;; Tarkistetaan, että thread-poolin jonossa on odotettu määrä tehtäviä
+          (is (= (- 20 thread-pool-size) (.size (.getQueue thread-pool))))
+
+          ;; Odota kaikkien threadien valmistumista
+          (doseq [t threads] @t))
+
+        ;; Tarkistetaan, että kutsuja on kutsuttu odotettu määrä
+          (is (= 20 @kutsulaskuri-atom) "Thread-poolin pitäisi käsitellä kaikki rinnakkaiset tehtävät")
+
+          ;; Tarkista lopputilanne
+          (is (= 0 (.size (.getQueue thread-pool))))
+          (is (= 0 (.getActiveCount thread-pool)))))))
