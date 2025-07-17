@@ -48,19 +48,24 @@
         (io/copy in out)
         (.toByteArray out)))))
 
-(def virustarkistus-max-maara 8)
+(def virustarkistus-odotus-max-yritykset 8)
 
 (defn odota-s3-virustarkistus
   [db s3-url s3hash]
-  (async/go-loop [virustarkistus-maara 1]
-    (async/<! (async/timeout 15000))
-    (let [virustarkistusvastaus (lue-s3-tiedosto s3-url s3hash db)]
-      (log/info "Virustarkistuksen tuloksen haku, yritys:" virustarkistus-maara "/" virustarkistus-max-maara
-        ", s3hash:" s3hash ", tulos:" (if virustarkistusvastaus "Saatiin S3 vastaus" "Ei S3 vastausta"))
+  (async/go-loop [n-kierros 1
+                  ;; Arvotaan ensimmäiseksi odotusajaksi 10-15 sekuntia,
+                  ;; jotta mahdollista isoa liitemassaa ei tarkasteta samanaikaisesti
+                  odotusaika (+ 10000 (rand-int 5000))]
+    (async/<! (async/timeout odotusaika))
+    ;; Itse liitetiedoston payloadia ei tarvitse käsitellä tässä
+    ;; Meille riittää tieto onko tiedosto ladattavissa S3:sta, eli onko virustarkistus suoritettu
+    (let [liite-saatavilla? (boolean (lue-s3-tiedosto s3-url s3hash db))]
+      (log/info "Virustarkistuksen tuloksen haku, yritys:" n-kierros "/" virustarkistus-odotus-max-yritykset
+        ", s3hash:" s3hash ", tulos:" (if liite-saatavilla? "Saatiin S3 vastaus" "Ei S3 vastausta"))
 
       (cond
         ;; Jos vastaus saatiin, lopetetaan odotus ja merkitään liite tarkastetuksi
-        (not (nil? virustarkistusvastaus))
+        liite-saatavilla?
         (do
           (log/info "Liite on virustarkastettu, s3hash:" s3hash)
           (try
@@ -69,10 +74,13 @@
               (log/error "Virustarkastuksen tilan merkitseminen epäonnistui, s3hash: " s3hash ", virhe:" e))))
 
         ;; Jos vastausta ei saatu, ja voidaan vielä yrittää uudelleen
-        (< virustarkistus-maara virustarkistus-max-maara)
+        (< n-kierros virustarkistus-odotus-max-yritykset)
         (do
           (log/info "Tiedosto tarkastamatta, odotetaan 15 sekuntia, s3hash:" s3hash)
-          (recur (inc virustarkistus-maara)))
+          (recur
+            (inc n-kierros)
+            ;; Kasvatetaan odotusaikaa joka kierroksella
+            (+ odotusaika 2500)))
 
         ;; Maksimimäärä yrityksiä käytetty
         :else
