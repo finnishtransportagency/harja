@@ -5,6 +5,7 @@
             [harja.kyselyt.liitteet :as liitteet-q]
             [com.stuartsierra.component :as component]
             [clojure.java.io :as io]
+            [harja.tyokalut.yleiset :as yleiset]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [harja.domain.liite :as t-liitteet]
@@ -50,41 +51,50 @@
 
 (def virustarkistus-odotus-max-yritykset 8)
 
-(defn odota-s3-virustarkistus
-  [db s3-url s3hash]
-  (async/go-loop [n-kierros 1
-                  ;; Arvotaan ensimmäiseksi odotusajaksi 10-15 sekuntia,
-                  ;; jotta mahdollista isoa liitemassaa ei tarkasteta samanaikaisesti
-                  odotusaika (+ 10000 (rand-int 5000))]
-    (async/<! (async/timeout odotusaika))
-    ;; Itse liitetiedoston payloadia ei tarvitse käsitellä tässä
-    ;; Meille riittää tieto onko tiedosto ladattavissa S3:sta, eli onko virustarkistus suoritettu
-    (let [liite-saatavilla? (boolean (lue-s3-tiedosto s3-url s3hash db))]
-      (log/info "Virustarkistuksen tuloksen haku, yritys:" n-kierros "/" virustarkistus-odotus-max-yritykset
-        ", s3hash:" s3hash ", tulos:" (if liite-saatavilla? "Saatiin S3 vastaus" "Ei S3 vastausta"))
+(defn odota-s3-virustarkistus-saije
+  ([db s3-url s3hash]
+   (odota-s3-virustarkistus-saije db s3-url s3hash {}))
+  ([db s3-url s3hash {:keys [max-yritykset odotusaika odotusaika-rnd odotusaika-lisays]
+                      :or {max-yritykset virustarkistus-odotus-max-yritykset
+                           odotusaika 10000
+                           odotusaika-rnd 5000
+                           odotusaika-lisays 2500}}]
+   ;; OS-tason säije, jotta ei kuormiteta core.async threadpoolia
+   (async/thread
+     (loop [n-kierros 1
+            ;; Arvotaan ensimmäiseksi odotusajaksi 10-15 sekuntia,
+            ;; jotta mahdollista isoa liitemassaa ei tarkasteta samanaikaisesti
+            odotusaika (+ odotusaika (rand-int odotusaika-rnd))]
+       (Thread/sleep odotusaika)
+       ;; Itse liitetiedoston payloadia ei tarvitse käsitellä tässä
+       ;; Meille riittää tieto onko tiedosto ladattavissa S3:sta, eli onko virustarkistus suoritettu
+       (let [liite-saatavilla? (boolean (lue-s3-tiedosto s3-url s3hash db))]
+         (log/info "Virustarkistuksen tuloksen haku, yritys:" n-kierros "/" max-yritykset
+           ", s3hash:" s3hash ", tulos:" (if liite-saatavilla? "Saatiin S3 vastaus" "Ei S3 vastausta"))
 
-      (cond
-        ;; Jos vastaus saatiin, lopetetaan odotus ja merkitään liite tarkastetuksi
-        liite-saatavilla?
-        (do
-          (log/info "Liite on virustarkastettu, s3hash:" s3hash)
-          (try
-            (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash})
-            (catch Exception e
-              (log/error "Virustarkastuksen tilan merkitseminen epäonnistui, s3hash: " s3hash ", virhe:" e))))
+         (cond
+           ;; Jos vastaus saatiin, lopetetaan odotus ja merkitään liite tarkastetuksi
+           liite-saatavilla?
+           (do
+             (log/info "Liite on virustarkastettu, s3hash:" s3hash)
+             (try
+               (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash})
+               (catch Exception e
+                 (log/error "Virustarkastuksen tilan merkitseminen epäonnistui, s3hash: " s3hash ", virhe:" e))))
 
-        ;; Jos vastausta ei saatu, ja voidaan vielä yrittää uudelleen
-        (< n-kierros virustarkistus-odotus-max-yritykset)
-        (do
-          (log/info "Tiedosto tarkastamatta, odotetaan 15 sekuntia, s3hash:" s3hash)
-          (recur
-            (inc n-kierros)
-            ;; Kasvatetaan odotusaikaa joka kierroksella
-            (+ odotusaika 2500)))
+           ;; Jos vastausta ei saatu, ja voidaan vielä yrittää uudelleen
+           (< n-kierros max-yritykset)
+           (do
+             ;; Kasvatetaan odotusaikaa joka kierroksella
+             (let [uusi-odotusaika (+ odotusaika odotusaika-lisays)]
+               (log/info "Tiedosto tarkastamatta, odotetaan" (yleiset/round2 2 (/ uusi-odotusaika 1000)) "sekuntia, s3hash:" s3hash)
+               (recur
+                 (inc n-kierros)
+                 uusi-odotusaika)))
 
-        ;; Maksimimäärä yrityksiä käytetty
-        :else
-        (log/error "Virustarkastus epäonnistui. Tarkistuskertojen maksimi ylittyi, s3hash:" s3hash)))))
+           ;; Maksimimäärä yrityksiä käytetty
+           :else
+           (log/error "Virustarkastus epäonnistui. Tarkistuskertojen maksimi ylittyi, s3hash:" s3hash)))))))
 
 (defn- tallenna-s3
   "Anna lähetettävä tiedosto java.io.inputstreaminä.
@@ -246,7 +256,7 @@
       (do
         (let [liite (tallenna-liite-tietokantaan db lahdetiedosto :aws s3-url liite-perustiedot)
               ;; S3 tallennuksessa käynnistetään virustarkastus
-              _ (when (:s3hash liite) (async/thread (odota-s3-virustarkistus db s3-url (:s3hash liite))))]
+              _ (when (:s3hash liite) (odota-s3-virustarkistus-saije db s3-url (:s3hash liite)))]
           liite))
       (do
         (log/debug "Liite hylätty: " (:viesti liitetarkistus))
