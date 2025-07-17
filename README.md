@@ -1,4 +1,5 @@
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/finnishtransportagency/harja)
 
 # Väylän Harja-järjestelmä #
 
