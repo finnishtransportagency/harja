@@ -119,15 +119,15 @@
           ;; Generoi presignedurl, johon varsinainen liite lähetetään
           vastaus @(http/post s3-url {:body (cheshire/encode {"key" s3hash "operation" "put"})
                                       :timeout 50000})
-          _ (log/info "Generoi presignedurl :: vastaus " vastaus)
+          _ (log/info "Generoi presignedurl :: vastaus " (dissoc vastaus :opts :body))
           ;; Vastauksesta parsitaan varsinainen url, johon liite lähetetään
           varsinainen-put-url (when (= 200 (:status vastaus))
                                  (str/trim (get (cheshire/decode (:body vastaus)) "url")))
-          _ (log/info "Lähetetään tiedosto urliin: " varsinainen-put-url)
+          _ (log/debug "Lähetetään tiedosto urliin: " varsinainen-put-url)
           liite-vastaus (when varsinainen-put-url
                           @(http/put varsinainen-put-url {:body input-stream-sisalto}))
           _ (if varsinainen-put-url
-              (log/info "Liitteen tallennuksen vastaus: " liite-vastaus)
+              (log/info "Liitteen tallennuksen vastaus: " (dissoc liite-vastaus :opts :body))
               (log/error "Ei saatu yhteyttä S3:seen. Liitetiedosto jää lähettämättä "))]
 
       ;; Jos lataus osoitetta ei saatu, palautetaan nil
