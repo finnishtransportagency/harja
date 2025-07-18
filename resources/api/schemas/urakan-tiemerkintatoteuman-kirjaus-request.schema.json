@@ -1,86 +1,75 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/urakan-tiemerkintatoteuman-kirjaus-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "tiemerkintatoteumat": {
-      "id": "urn:harja/tiemerkintatoteumat",
       "type": "array",
       "maxItems": 4096,
-      "required": true,
       "items": {
-        "id": "urn:harja/tiemerkintatoteumat/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "tiemerkintatoteuma": {
-            "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma",
             "type": "object",
-            "required": true,
             "properties": {
               "tunniste": {
-                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/tunniste",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-                "required": true
+                "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
               },
               "hinta": {
-                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/hinta",
                 "type": "number",
-                "minimum": 0,
-                "required": true
+                "minimum": 0
               },
               "paivamaara": {
-                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/muutospvm",
                 "type": "string",
-                "format": "date-time",
-                "required": true
+                "format": "date-time"
               },
               "selite": {
-                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/selite",
-                "type": "string",
-                "required": true
+                "type": "string"
               },
               "tienumero": {
-                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/tienumero",
                 "type": "integer",
-                "required": true,
                 "minimum": 0
               },
               "pituus": {
-                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/pituus",
                 "type": "integer",
-                "required": true,
                 "minimum": 0
               },
               "yllapitoluokka": {
-                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/yllapitoluokka",
                 "type": "integer",
-                "required": true,
                 "minimum": 0
               },
               "hintatyyppi": {
-                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/hintatyyppi",
-                "required": true,
                 "type": "string",
                 "enum": [
                   "toteuma",
                   "suunnitelma"
                 ]
               }
-            }
+            },
+            "required": [
+              "tunniste",
+              "hinta",
+              "paivamaara",
+              "selite",
+              "tienumero",
+              "pituus",
+              "yllapitoluokka",
+              "hintatyyppi"
+            ]
           }
-        }
+        },
+        "required": ["tiemerkintatoteuma"]
       }
     }
-  }
+  },
+  "required": ["otsikko", "tiemerkintatoteumat"]
 }

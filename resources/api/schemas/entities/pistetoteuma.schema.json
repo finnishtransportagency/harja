@@ -1,26 +1,22 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/pistetoteuma",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "toteuma": {
-      "id": "urn:harja/pistetoteuma/toteuma",
       "type": "object",
       "additionalProperties": false,
-      "required": true,
       "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
     },
     "sijainti": {
-      "id": "urn:harja/pistetoteuma/sijainti",
-      "required": true,
       "$ref": "file:resources/api/schemas/entities/geometria-sijainti.schema.json"
     },
     "tyokone": {
-      "id": "urn:harja/pistetoteuma/tyokone",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tyokone.schema.json",
-      "required": false
+      "$ref": "file:resources/api/schemas/entities/tyokone.schema.json"
     }
-  }
+  },
+  "required": ["toteuma", "sijainti"]
 }

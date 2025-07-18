@@ -1,18 +1,15 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tyomaapaivakirja-paivitys-v2-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "tyomaapaivakirja": {
-      "id": "urn:harja/tyomaapaivakirja",
       "type": "object",
       "additionalProperties": false,
       "extends": [
@@ -23,18 +20,15 @@
           "type": "object",
           "properties": {
             "urakoitsijan-merkinnat": {
-              "id": "urn:harja/urakoitsijan-merkinnat",
               "type": "object",
               "required": true,
               "description": "Urakoitsijan merkinnät jälkikäteen kun päiväkirja on merkitty valmiiksi.",
               "properties": {
                 "kuvaus": {
-                  "id": "urn:harja/urakoitsijan-merkinnat/kuvaus",
                   "required": true,
                   "type": "string"
                 },
                 "nimi": {
-                  "id": "urn:harja/urakoitsijan-merkinnat/nimi",
                   "required": true,
                   "type": "string"
                 }
@@ -44,5 +38,6 @@
         }
       ]
     }
-  }
+  },
+  "required": ["otsikko"]
 }

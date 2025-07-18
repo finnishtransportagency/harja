@@ -1,17 +1,15 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/kuntoluokitus",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "luokka": {
-      "id": "urn:harja/luokka",
-      "type": "integer",
-      "required": true
+      "type": "integer"
     },
     "huomiot": {
-      "id": "urn:harja/havainnot",
       "type": "string"
     }
-  }
+  },
+  "required": ["luokka"]
 }

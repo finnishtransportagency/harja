@@ -1,22 +1,19 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/varusteen-poisto-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "varusteen-poisto": {
-      "id": "urn:harja/varusteen-poisto",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/varusteen-poisto.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/varusteen-poisto.schema.json"
     }
-  }
+  },
+  "required": ["otsikko", "varusteen-poisto"]
 }

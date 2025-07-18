@@ -1,14 +1,13 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tunniste",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "id": {
-      "id": "urn:harja/id",
       "type": "integer",
-      "maximum": 2147483647,
-      "required": true
+      "maximum": 2147483647
     }
-  }
+  },
+  "required": ["id"]
 }

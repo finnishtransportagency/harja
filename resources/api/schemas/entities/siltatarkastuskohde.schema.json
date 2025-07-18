@@ -1,11 +1,9 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/siltatarkastuskohde",
   "type": "object",
   "properties": {
     "ehdotettutoimenpide": {
-      "id": "urn:harja/ehdotettutoimenpide",
-      "required": true,
       "enum": [
         "eiToimenpiteita",
         "puhdistettava",
@@ -19,13 +17,12 @@
       ]
     },
     "lisatietoja": {
-      "id": "urn:harja/lisatietoja",
       "type": "string"
     },
     "liitteet": {
-      "id": "urn:harja/tarkastukset/0/liitteet",
       "type": "object",
       "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
     }
-  }
+  },
+  "required": ["ehdotettutoimenpide"]
 }

@@ -1,38 +1,30 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/liitteet",
   "type": "array",
-  "maxItems" : 100,
+  "maxItems": 100,
   "items": {
-    "id": "urn:harja/0",
     "type": "object",
     "additionalProperties": false,
     "properties": {
       "liite": {
-        "id": "urn:harja/0/liite",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "nimi": {
-            "id": "urn:harja/0/liite/nimi",
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "tyyppi": {
-            "id": "urn:harja/0/liite/tyyppi",
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "kuvaus": {
-            "id": "urn:harja/0/liite/kuvaus",
             "type": "string"
           },
           "sisalto": {
-            "id": "urn:harja/0/liite/sisalto",
-            "type": "string",
-            "required": true
+            "type": "string"
           }
-        }
+        },
+        "required": ["nimi", "tyyppi", "sisalto"]
       }
     }
   }

@@ -1,18 +1,15 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja/sijainti/linkki",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/sijainti/linkki",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "id": {
-      "id": "urn:harja/sijainti/linkki/id",
-      "type": "integer",
-      "required": true
+      "type": "integer"
     },
     "marvo": {
-      "id": "urn:harja/sijainti/linkki/marvo",
-      "type": "integer",
-      "required": true
+      "type": "integer"
     }
-  }
+  },
+  "required": ["id", "marvo"]
 }

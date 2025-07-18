@@ -1,21 +1,17 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/paikkauskustannusten-kirjaus-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "paikkauskustannukset": {
-      "id": "urn:harja/paikkauskustannukset",
       "type": "array",
       "maxItems": 200,
-      "required": true,
       "items": {
         "id": "urn:harja/paikkauskustannukset/0",
         "type": "object",
@@ -24,11 +20,12 @@
           "paikkauskustannus": {
             "type": "object",
             "additionalProperties": false,
-            "required": true,
             "$ref": "file:resources/api/schemas/entities/paikkauskustannus.schema.json"
           }
-        }
+        },
+        "required": ["paikkauskustannus"]
       }
     }
-  }
+  },
+  "required": ["otsikko", "paikkauskustannukset"]
 }

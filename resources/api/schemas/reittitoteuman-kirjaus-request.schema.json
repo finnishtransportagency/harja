@@ -1,29 +1,24 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/reittitoteuman-kirjaus-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "reittitoteuma": {
-      "id": "urn:harja/reittitoteuma",
       "type": "object",
       "additionalProperties": false,
-      "required": false,
       "$ref": "file:resources/api/schemas/entities/reittitoteuma.schema.json"
     },
     "reittitoteumat": {
-      "id": "urn:harja/reittitoteumat/0/reittitoteuma",
       "type": "object",
       "additionalProperties": false,
-      "required": false,
       "$ref": "file:resources/api/schemas/entities/reittitoteumat.schema.json"
     }
-  }
+  },
+  "required": ["otsikko"]
 }

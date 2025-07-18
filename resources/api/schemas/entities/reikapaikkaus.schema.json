@@ -1,47 +1,34 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/reikapaikkaus",
   "type": "object",
   "additionalProperties": false,
-  "required": true,
   "properties": {
     "tunniste": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/tunniste",
-      "required": true,
-      "additionalProperties": false,
       "type": "object",
+      "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
     },
     "pvm": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/pvm",
-      "type": [
-        "string"
-      ],
-      "format": "date",
-      "required": true
+      "type": "string",
+      "format": "date"
     },
     "sijainti": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/sijainti",
       "type": "object",
       "additionalProperties": false,
-      "required": true,
       "description": "Reikäpaikkauskohteen sijainti. Anna joko tieosoite, pistegeometria tai viivageometria.",
       "properties": {
         "tieosoite": {
-          "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/sijainti",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/tieosoitevali-tienkohdilla.schema.json"
         },
         "pistegeometria": {
-          "id": "urn:harja/reitti/0/koordinaattisijainti",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
-          "required": false
+          "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
         },
         "viivageometria": {
-          "id": "urn:harja/viivageometria",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/viivageometriasijainti.schema.json"
@@ -49,8 +36,6 @@
       }
     },
     "tyomenetelma": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/tyomenetelma",
-      "required": true,
       "enum": [
         "REPA",
         "KTVA",
@@ -64,22 +49,25 @@
       ]
     },
     "maara": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/maara",
       "type": "number",
-      "required": true,
       "description": "Yksikön mukainen määrä. Esim tonnia: 1.23"
     },
     "yksikko": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/yksikko",
       "type": "string",
-      "required": true,
       "description": "Yksikön nimi. Esim tonnia: t"
     },
     "kustannus": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/kustannus",
       "type": "number",
-      "required": true,
       "description": "Kustannus euroina. Esim 45534.23"
     }
-  }
+  },
+  "required": [
+    "tunniste",
+    "pvm",
+    "sijainti",
+    "tyomenetelma",
+    "maara",
+    "yksikko",
+    "kustannus"
+  ]
 }

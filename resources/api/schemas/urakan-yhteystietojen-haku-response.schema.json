@@ -1,109 +1,68 @@
 {  
-  "$schema": "http://json-schema.org/draft-03/schema",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "urn:harja/urakan-yhteystietojen-haku-response",
   "type": "object",
-  "required": false,
   "properties": {
     "urakka": {
       "type": "object",
-      "id": "urn:harja/urakka",
-      "required": false,
       "properties": {
         "alkupvm": {
-          "type": "string",
-          "id": "urn:harja/urakka/alkupvm",
-          "required": false
+          "type": "string"
         },
         "alueurakkanro": {
-          "type": "string",
-          "id": "urn:harja/urakka/alueurakkanro",
-          "required": false
+          "type": "string"
         },
         "elynro": {
-          "type": "number",
-          "id": "urn:harja/urakka/elynro",
-          "required": false
+          "type": "number"
         },
         "elynimi": {
-          "type": "string",
-          "id": "urn:harja/urakka/elynimi",
-          "required": false
+          "type": "string"
         },
         "loppupvm": {
-          "type": "string",
-          "id": "urn:harja/urakka/loppupvm",
-          "required": false
+          "type": "string"
         },
         "nimi": {
-          "type": "string",
-          "id": "urn:harja/urakka/nimi",
-          "required": false
+          "type": "string"
         },
         "sampoid": {
-          "type": "string",
-          "id": "urn:harja/urakka/sampoid",
-          "required": false
+          "type": "string"
         },
         "urakoitsija": {
           "type": "object",
-          "id": "urn:harja/urakka/urakoitsija",
-          "required": false,
           "properties": {
             "katuosoite": {
-              "type": "string",
-              "id": "urn:harja/urakka/urakoitsija/katuosoite",
-              "required": false
+              "type": "string"
             },
             "nimi": {
-              "type": "string",
-              "id": "urn:harja/urakka/urakoitsija/nimi",
-              "required": false
+              "type": "string"
             },
             "postinumero": {
-              "type": "string",
-              "id": "urn:harja/urakka/urakoitsija/postinumero",
-              "required": false
+              "type": "string"
             },
             "ytunnus": {
-              "type": "string",
-              "id": "urn:harja/urakka/urakoitsija/ytunnus",
-              "required": false
+              "type": "string"
             }
           }
         },
         "yhteyshenkilot": {
           "type": "array",
-          "id": "urn:harja/urakka/yhteyshenkilot",
-          "required": false,
           "items": {
             "type": "object",
-            "id": "urn:harja/urakka/yhteyshenkilot/0",
-            "required": false,
             "properties": {
               "yhteyshenkilo": {
                 "type": "object",
-                "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo",
-                "required": false,
                 "properties": {
                   "email": {
-                    "type": "string",
-                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/email",
-                    "required": false
+                    "type": "string"
                   },
                   "nimi": {
-                    "type": "string",
-                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/nimi",
-                    "required": false
+                    "type": "string"
                   },
                   "puhelinnumero": {
-                    "type": "string",
-                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/puhelinnumero",
-                    "required": false
+                    "type": "string"
                   },
                   "rooli": {
                     "type": "string",
-                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/rooli",
-                    "required": true,
                     "enum": [
                       "Urakan vastuuhenkilö",
                       "ELY urakanvalvoja",
@@ -131,19 +90,16 @@
                     ]
                   },
                   "vastuuhenkilo": {
-                    "type": "boolean",
-                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/vastuuhenkilo"
+                    "type": "boolean"
                   },
                   "varahenkilo": {
-                    "type": "boolean",
-                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/varahenkilo"
+                    "type": "boolean"
                   },
                   "organisaatio": {
-                    "type": "string",
-                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/rooli",
-                    "required": false
+                    "type": "string"
                   }
-                }
+                },
+                "required": ["rooli"]
               }
             }
           }

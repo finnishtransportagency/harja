@@ -1,69 +1,52 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tarkastus",
   "type": "object",
   "properties": {
     "tunniste": {
-      "id": "urn:harja/tunniste",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
     },
     "tarkastusajo": {
-      "id": "urn:harja/tarkastusajo",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-      "required": false
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
     },
     "havainnot": {
-      "id": "urn:harja/tarkastus/havainnot",
-      "required": false,
       "type": "string",
       "maxLength": 4096
     },
     "laadunalitus": {
-      "id": "urn:harja/tarkastus/laadunalitus",
-      "type": "boolean",
-      "required": false
+      "type": "boolean"
     },
     "naytetaan-urakoitsijalle": {
-      "id": "urn:harja/tarkastus/naytetaan-urakoitsijalle",
-      "type": "boolean",
-      "required": false
+      "type": "boolean"
     },
     "liitteet": {
-      "id": "urn:harja/liitteet",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
     },
     "aika": {
-      "id": "urn:harja/talvihoitotarkastus/paivamaara",
       "type": "string",
-      "format": "date-time",
-      "required": true
+      "format": "date-time"
     },
     "tarkastaja": {
-      "id": "urn:harja/talvihoitotarkastus/tarkastaja",
       "type": ["object","null"],
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json",
-      "required": false
+      "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json"
     },
     "alkusijainti": {
-      "id": "urn:harja/talvihoitotarkastus/alkusijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
     },
     "loppusijainti": {
-      "id": "urn:harja/talvihoitotarkastus/loppusijainti",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
     }
-  }
+  },
+  "required": ["tunniste", "aika", "alkusijainti"]
 }

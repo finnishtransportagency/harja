@@ -1,23 +1,21 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tyokone",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "id": {
       "id": "urn:harja/tyokone/id",
-      "required": true,
       "type": "string"
     },
     "tunnus": {
       "id": "urn:harja/tyokone/tunnus",
-      "required": true,
       "type": "string"
     },
     "tyokonetyyppi": {
       "id": "urn:harja/tyokone/tyyppi",
-      "required": true,
       "type": "string"
     }
-  }
+  },
+  "required": ["id", "tunnus", "tyokonetyyppi"]
 }

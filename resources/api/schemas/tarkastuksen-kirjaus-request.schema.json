@@ -1,67 +1,48 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tarkastuksen-kirjaus-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "tarkastus": {
-      "id": "urn:harja/tarkastus",
       "type": "object",
-      "required": true,
       "properties": {
         "tunniste": {
-          "id": "urn:harja/tunniste",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-          "required": true
+          "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
         },
         "kohde": {
-          "id": "urn:harja/kohde",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/kohde.schema.json",
-          "required": true
+          "$ref": "file:resources/api/schemas/entities/kohde.schema.json"
         },
         "sijainti": {
-          "id": "urn:harja/sijainti",
-          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-          "required": true
+          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
         },
         "reitti": {
-          "id": "urn:harja/reitti",
           "type": "object",
           "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
         },
         "tyyppi": {
-          "id": "urn:harja/tarkastus/tyyppi",
-          "type": "string",
-          "required": true
+          "type": "string"
         },
         "kuvaus": {
-          "id": "urn:harja/tarkastus/kuvaus",
-          "type": "string",
-          "required": true
+          "type": "string"
         },
         "paivamaara": {
-          "id": "urn:harja/tarkastus/paivamaara",
           "type": "string",
-          "format": "date-time",
-          "required": true
+          "format": "date-time"
         },
         "tarkastaja": {
-          "id": "urn:harja/tarkastus/tarkastaja",
           "type": ["object","null"],
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json",
-          "required": true
+          "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json"
         },
         "havainnot": {
           "type": "object",
@@ -69,12 +50,13 @@
           "$ref": "file:resources/api/schemas/entities/havainnot.schema.json"
         },
         "liitteet": {
-          "id": "urn:harja/tarkastukset/0/liitteet/",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
         }
-      }
+      },
+      "required": ["tunniste", "kohde", "sijainti", "tyyppi", "kuvaus", "paivamaara", "tarkastaja"]
     }
-  }
+  },
+  "required": ["otsikko", "tarkastus"]
 }

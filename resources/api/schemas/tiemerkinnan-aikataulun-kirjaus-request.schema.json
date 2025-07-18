@@ -1,21 +1,19 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tiemerkinnan-aikataulun-kirjaus-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "aikataulu": {
       "type": "object",
-      "id": "urn:harja/yllapitokohde/aikataulu",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/tiemerkinnan-aikataulu.schema.json"
     }
-  }
+  },
+  "required": ["otsikko"]
 }

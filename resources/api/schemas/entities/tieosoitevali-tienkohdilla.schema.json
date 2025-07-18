@@ -1,64 +1,51 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tieosoitevali-tienkohdilla",
   "type": "object",
   "properties": {
     "tie": {
-      "id": "urn:harja/tieosoitevali-usealla-sijainnilla/tienumero",
       "type": "integer",
-      "minimum": 0,
-      "required": true
+      "minimum": 0
     },
     "aosa": {
-      "id": "urn:harja/tieosoitevali-usealla-sijainnilla/aosa",
       "type": "integer",
-      "minimum": 0,
-      "required": true
+      "minimum": 0
     },
     "aet": {
-      "id": "urn:harja/tieosoitevali-usealla-sijainnilla/aet",
       "type": "integer",
-      "minimum": 0,
-      "required": true
+      "minimum": 0
     },
     "let": {
-      "id": "urn:harja/tieosoitevali-usealla-sijainnilla/let",
       "type": "integer",
-      "minimum": 0,
-      "required": true
+      "minimum": 0
     },
     "losa": {
-      "id": "urn:harja/tieosoitevali-usealla-sijainnilla/losa",
       "type": "integer",
-      "minimum": 0,
-      "required": true
+      "minimum": 0
     },
     "ajoradat": {
-      "id": "urn:harja/tieosoitevali-usealla-sijainnilla/ajoradat",
       "type": "array",
       "maxItems": 2,
       "items": {
-        "id": "urn:harja/tieosoitevali-usealla-sijainnilla/ajoradat/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "ajorata": {
-            "id": "urn:harja/tieosoitevali-usealla-sijainnilla/ajoradat/0/ajorata",
             "type": "integer",
             "minimum": 0,
-            "maximum": 2,
-            "required": true
+            "maximum": 2
           },
           "tienkohdat": {
             "$ref": "file:resources/api/schemas/entities/tienkohdat.schema.json"
           }
-        }
+        },
+        "required": ["ajorata"]
       }
+    },
+    "karttapvm": {
+      "type": "string",
+      "format": "date-time"
     }
   },
-  "karttapvm": {
-    "id": "urn:harja/sijainti/tie/karttapvm",
-    "type": "string",
-    "format": "date-time"
-  }
+  "required": ["tie", "aosa", "aet", "let", "losa"]
 }

@@ -1,6 +1,6 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/paikkausten-poisto-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -8,35 +8,29 @@
       "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "poistettavat-paikkauskohteet": {
-      "id": "urn:harja/poistettavat-paikkauskohteet",
       "type": "array",
       "maxItems": 200,
-      "required": false,
       "items": {
         "type": "integer"
       }
     },
     "poistettavat-paikkaukset": {
-      "id": "urn:harja/poistettavat-paikkaukset",
       "type": "array",
       "maxItems": 200,
-      "required": false,
       "items": {
         "type": "integer"
       }
     },
     "poistettavat-paikkauskustannukset": {
-      "id": "urn:harja/poistettavat-paikkauskustannukset",
       "type": "array",
       "maxItems": 200,
-      "required": false,
       "items": {
         "type": "integer"
       }
     }
-  }
+  },
+  "required": ["otsikko"]
 }

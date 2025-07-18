@@ -1,87 +1,69 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tyokoneenseurannan-kirjaus-viivageometrialla-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "havainnot": {
-      "id": "urn:harja/havainnot",
       "type": "array",
       "maxItems": 4096,
-      "required": true,
       "items": {
-        "id": "http://example.com/item-schema",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "havainto": {
-            "id": "urn:harja/havainnot/0",
             "type": "object",
-            "required": true,
             "properties": {
               "tyokone": {
-                "id": "urn:harja/havainnot/0/tyokone",
                 "type": "object",
                 "additionalProperties": false,
-                "required": true,
                 "properties": {
                   "id": {
-                    "id": "urn:harja/havainnot/0/tyokone/id",
-                    "type": "integer",
-                    "required": true
+                    "type": "integer"
                   },
                   "tunnus": {
-                    "id": "urn:harja/havainnot/0/tyokone/tunnus",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                   },
                   "tyokonetyyppi": {
-                    "id": "urn:harja/havainnot/0/tyokone/tyyppi",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                   }
-                }
+                },
+                "required": ["id", "tyokonetyyppi"]
               },
               "sijainti": {
-                "id": "urn:harja/havainnot/0/sijainti",
-                "$ref": "file:resources/api/schemas/entities/geometria-viivasijainti.schema.json",
-                "required": true
+                "$ref": "file:resources/api/schemas/entities/geometria-viivasijainti.schema.json"
               },
               "suunta": {
-                "id": "urn:harja/havainnot/0/suunta",
                 "anyOf": [
                   {"type": "number"},
                   {"type": "null"}
                 ]
               },
               "urakkaid": {
-                "id": "urn:harja/havainnot/0/urakkaid",
                 "type": "integer"
               },
               "havaintoaika": {
-                "id": "urn:harja/havainnot/0/havaintoaika",
                 "type": "string",
-                "format": "date-time",
-                "required": true
+                "format": "date-time"
               },
               "suoritettavatTehtavat": {
-                "id": "urn:harja/havainnot/0/tyokonetehtava",
                 "type": "object",
                 "maxItems": 10,
                 "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/suoritettavat-tehtavat.schema.json"
               }
-            }
+            },
+            "required": ["tyokone", "sijainti", "havaintoaika"]
           }
-        }
+        },
+        "required": ["havainto"]
       }
     }
-  }
+  },
+  "required": ["otsikko", "havainnot"]
 }

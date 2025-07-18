@@ -1,17 +1,15 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/organisaatio",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "nimi": {
-      "id": "urn:harja/nimi",
       "type": "string"
     },
     "ytunnus": {
-      "id": "urn:harja/ytunnus",
-      "type": "string",
-      "required": true
+      "type": "string"
     }
-  }
+  },
+  "required": ["ytunnus"]
 }

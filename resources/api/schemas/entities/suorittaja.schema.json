@@ -1,14 +1,12 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/suorittaja",
   "type": "object",
   "properties": {
     "organisaatio": {
-      "id": "urn:harja/organisaatio",
       "type": "string"
     },
     "henkilo": {
-      "id": "urn:harja/henkilo",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
