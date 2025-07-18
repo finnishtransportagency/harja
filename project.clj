@@ -291,8 +291,9 @@
                    :perf :perf
                    :integraatio :integraatio
                    :hidas :hidas
+                   :ohita :ohita
                    :default (fn [m]
-                              (let [testit-joita-ei-ajeta #{:integraatio :hidas}]
+                              (let [testit-joita-ei-ajeta #{:integraatio :hidas :ohita}]
                                 (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))
                    }
 
