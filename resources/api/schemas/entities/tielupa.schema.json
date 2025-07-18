@@ -11,7 +11,7 @@
         "tunniste": {
           "type": "object",
           "additionalProperties": false,
-          "$ref": "/tunniste.schema.json"
+          "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
         },
         "tyyppi": {
           "enum": [
