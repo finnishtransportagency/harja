@@ -319,6 +319,40 @@
       (when-let [err ?err]
         (str "\n" (log/stacktrace err {:stacktrace-fonts {}}))))))
 
+;; log-output-fn, joka tuotaa JSON-muotoisen lokituksen AWS CloudWatchia varten
+
+(defn- log-tag-aws [context]
+  (let [tag (cond
+              ;; Admin? (jarjestelmavastuuhenkilo)
+              (:jvh? context) "ADMIN"
+              :else nil)]
+    tag))
+
+(defn log-output-json-fn
+  "Harja (fn [data]) -> JSON string output fn."
+  [data]
+  (let [{:keys [level ?err ?ns-str ?file hostname_
+                timestamp_ ?line context msg_]} data
+        kayttajatunnus (:kayttajatunnus context)
+        client-ip (:client-ip context)
+        korrelaatio-id (:korrelaatio-id context)]
+    ;; Hyödynnetään cheshire-kirjastoa JSON-muotoiseen lokitukseen
+    (cheshire.core/generate-string
+      {:timestamp (force timestamp_)
+       :level (str/upper-case (name level))
+       :tag (log-tag-aws context)
+       :correlationId korrelaatio-id
+       :hostname (force hostname_)
+       :uid kayttajatunnus
+       :clientIp client-ip
+       :thread (.getName (Thread/currentThread))
+       :file ?file
+       :namespace (or ?ns-str ?file)
+       :line ?line
+       :msg (force msg_)
+       :err (when ?err
+              (log/stacktrace ?err {:stacktrace-fonts {}}))})))
+
 (defn konfiguroi-lokitus [asetukset]
   (log/merge-config! {:output-fn log-output-fn
                       :middleware [(logitetaanko (:log asetukset))
