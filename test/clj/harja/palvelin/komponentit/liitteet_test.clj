@@ -6,7 +6,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.liitteet :as liitteet])
-  (:import (java.util.concurrent ThreadPoolExecutor)
+  (:import (java.util.concurrent ThreadPoolExecutor TimeUnit)
            (org.apache.commons.io IOUtils)))
 
 (defn poista-liite [liite-id]
@@ -267,6 +267,9 @@
                       (swap! kutsulaskuri-atom inc)
                       {:data (byte-array 10)})]
 
+        ;; Pakota threadien keepalive aika pieneksi testejä varten
+        (.setKeepAliveTime thread-pool 400 TimeUnit/MILLISECONDS)
+
         ;; Suoritetaan useita threadeja rinnakkain poolin kautta
         (let [threads (doall
                         (for [i (range 20)]
@@ -280,6 +283,9 @@
 
           ;; Odota hetki, jotta thread-pool saa tehtävät käsiteltyä
           (Thread/sleep 50)
+
+          (is (= thread-pool-size (.getCorePoolSize thread-pool)))
+          (is (= thread-pool-size (.getMaximumPoolSize thread-pool)))
 
           ;; Tarkistetaan, että thread-pool on käynnissä ja aktiivisia threadejä on odotettu määrä
           (is (= thread-pool-size (.getPoolSize thread-pool)))
@@ -296,4 +302,32 @@
 
           ;; Tarkista lopputilanne
           (is (= 0 (.size (.getQueue thread-pool))))
-          (is (= 0 (.getActiveCount thread-pool)))))))
+          (is (= 0 (.getActiveCount thread-pool)))
+
+        ;; Odottele hetki, että thread-pool terminoi idle threadit
+        (Thread/sleep 1000)
+
+        ;; Tarkistetaan, että thread-pool on lopettanut idle threadit
+        (is (= 0 (.getPoolSize thread-pool)))
+
+        ;; Testataan, että thread-pool skaalaa takaisin ylös, kun tulee lisää tehtäviä
+        (reset! kutsulaskuri-atom 0)
+
+        (let [threads (doall
+                        (for [i (range 20)]
+                          (liitteet/odota-s3-virustarkistus-saije
+                            (:db jarjestelma) s3-url (str "test-hash-" i)
+                            thread-pool
+                            {:max-yritykset 1
+                             :odotusaika 200
+                             :odotusaika-rnd 0
+                             :odotusaika-lisays 50})))]
+
+          ;; Odota hetki, jotta thread-pool saa tehtävät käsiteltyä
+          (Thread/sleep 50)
+
+          ;; Odota kaikkien threadien valmistumista
+          (doseq [t threads] @t))
+
+        ;; Tarkistetaan, että kutsuja on kutsuttu odotettu määrä
+        (is (= 20 @kutsulaskuri-atom) "Thread-poolin pitäisi käsitellä kaikki rinnakkaiset tehtävät")))))

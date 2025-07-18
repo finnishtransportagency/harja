@@ -24,7 +24,7 @@
            (net.coobird.thumbnailator Thumbnailator)
            (net.coobird.thumbnailator.tasks UnsupportedFormatException)
            (java.util UUID)
-           (java.util.concurrent Executors ThreadPoolExecutor TimeUnit))
+           (java.util.concurrent Executors LinkedBlockingQueue ThreadPoolExecutor TimeUnit))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (declare lue-s3-tiedosto)
@@ -332,7 +332,24 @@
   component/Lifecycle
   (start [this]
     (assoc this
-      :virustarkistus-thread-pool (Executors/newFixedThreadPool (or thread-pool-koko 50))))
+      :virustarkistus-thread-pool (let [;; Maksimimäärä säikeitä, jotka voivat olla käynnissä samanaikaisesti
+                                        max-pool-koko (or thread-pool-koko 50)
+                                        ;; Aika, jonka idle-säikeet odottavat uusia tehtäviä ennen kuin ne lopetetaan
+                                        keep-alive-time 60
+                                        thread-pool (ThreadPoolExecutor.
+                                                      max-pool-koko max-pool-koko
+                                                      keep-alive-time
+                                                      TimeUnit/SECONDS
+                                                      ;; Rajoittamaton jono
+                                                      (LinkedBlockingQueue.))]
+                                    ;; Kun käytetään rajoittamatonta jonoa, ei ThreadPoolExecutor osaa skaalata threadien
+                                    ;; määrää ylös automattisesti. (Alunperin käytin asetusta core = 0, max = thread-pool-koko)
+                                    ;; Vältetään ongelma asettamalla core threadien määrä samaan kuin max-pool-koko ja
+                                    ;; sallitaan core threadien terminointi idle-tilassa: Threadien määrä tippuu
+                                    ;; nollaan, jos ei ole töitä tehtävänä ja skaalaa takaisin ylös, jos tulee uusia tehtäviä.
+                                    (.allowCoreThreadTimeOut thread-pool true)
+
+                                    thread-pool)))
   (stop [this]
     (when-let [pool ^ThreadPoolExecutor (:virustarkistus-thread-pool this)]
       (.shutdown pool)
