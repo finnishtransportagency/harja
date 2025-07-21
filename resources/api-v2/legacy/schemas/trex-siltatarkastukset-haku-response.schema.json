@@ -176,33 +176,36 @@
                                 "type": "object",
                                 "additionalProperties": false,
                                 "toimenpidetarve": {
-                                  "koodi": {
-                                    "type": "string",
-                                    "enum": [
-                                      "A",
-                                      "B",
-                                      "C",
-                                      "D",
-                                      "E",
-                                      "-"
-                                    ],
-                                    "description": "Siltatarkastuskohteen toimenpidetarpeen koodi. Tarkastus voi tuottaa yksittäisen koodin lisäksi yhdistelmiä: B+C, B+C+D, C+D. E on uusi koodi, joka on vielä tarkemmin määriteltävä. Viiva tarkoittaa, että kohde ei ole sillan kohdalla relevantti."
-                                  },
-                                  "arvo": {
-                                    "type": "string",
-                                    "enum": [
-                                      "eiToimenpiteita",
-                                      "puhdistettava",
-                                      "urakanKunnostettava",
-                                      "korjausOhjelmoitava",
-                                      "E",
-                                      "eiPade"
-                                    ],
-                                    "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta. Koodi ja arvo ovat kytköksissä toisiinsa. "
-                                  },
-                                  "kuvaus": {
-                                    "type": "string",
-                                    "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta käyttäjäystävällisessä tekstimuodossa. Koodi ja kuvaus ovat kytköksissä toisiinsa."
+                                  "type": "object",
+                                  "properties": {
+                                    "koodi": {
+                                      "type": "string",
+                                      "enum": [
+                                        "A",
+                                        "B",
+                                        "C",
+                                        "D",
+                                        "E",
+                                        "-"
+                                      ],
+                                      "description": "Siltatarkastuskohteen toimenpidetarpeen koodi. Tarkastus voi tuottaa yksittäisen koodin lisäksi yhdistelmiä: B+C, B+C+D, C+D. E on uusi koodi, joka on vielä tarkemmin määriteltävä. Viiva tarkoittaa, että kohde ei ole sillan kohdalla relevantti."
+                                    },
+                                    "arvo": {
+                                      "type": "string",
+                                      "enum": [
+                                        "eiToimenpiteita",
+                                        "puhdistettava",
+                                        "urakanKunnostettava",
+                                        "korjausOhjelmoitava",
+                                        "E",
+                                        "eiPade"
+                                      ],
+                                      "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta. Koodi ja arvo ovat kytköksissä toisiinsa. "
+                                    },
+                                    "kuvaus": {
+                                      "type": "string",
+                                      "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta käyttäjäystävällisessä tekstimuodossa. Koodi ja kuvaus ovat kytköksissä toisiinsa."
+                                    }
                                   }
                                 }
                               }
