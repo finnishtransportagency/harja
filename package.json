@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "cypress": "10.2.0",
+    "cypress": "14.5.2",
     "transit-js": "^0.8.867"
   },
   "engines": {
