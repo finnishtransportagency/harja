@@ -19,6 +19,7 @@
 (defonce grid-hankinnat-atom (atom [{}]))
 (defonce grid-erillishankinnat-atom (atom [{}]))
 (defonce grid-hoidonjohtopalkkiot-atom (atom [{}]))
+(defonce grid-johto-ja-hallintokorvaukset-atom (atom [{}]))
 
 (defn- otsikkotiedot [e! {:keys [valittu-hoitokausi kustannussuunnitelma] :as app} otsikko tarjouksen-maara yhteensa yhteensa-indeksikorjattu {:keys [div1 div2 div3 div4] :as opts}]
   (let [vahvistettu? (:vahvistettu? kustannussuunnitelma)
@@ -291,6 +292,96 @@
                (e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erilliskustannukset-elementti")))
             {:disabled (or tallennus-kesken? false)}]]]]])]))
 
+(defn johto-ja-hallintokorvaus [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
+  (let [johto-ja-hallintokorvaukset (:johto-ja-hallintokorvaukset kustannussuunnitelma)
+        tarjous-johto-ja-hallintokorvaukset (filter #(= (:osio %) "johto-ja-hallintokorvaus") (:tarjous tarjous))
+        tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
+        hoitovuosittaiset-arvot (flatten (map :hoitovuosittaiset-arvot tarjous-johto-ja-hallintokorvaukset))
+        valitun-vuoden-arvot (filter #(= (:vuosi %) tarjous-vuosi) hoitovuosittaiset-arvot)
+        tarjouksen-maara (apply + (map :summa valitun-vuoden-arvot))
+        vahvistettu? (:vahvistettu? kustannussuunnitelma)
+        voi-muokata? (not vahvistettu?)
+        yht (apply + (map (fn [rivi]
+                            (:summa rivi 0)) johto-ja-hallintokorvaukset))
+        yht-indeksikorjattu (apply + (map (fn [rivi]
+                                            (:summa_indeksikorjattu rivi 0)) johto-ja-hallintokorvaukset))
+        kirjaamatta (- tarjouksen-maara yht)
+        kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
+        kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
+                                                 {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
+                                                 {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                                                 {:teksti "" :luokka kirjaamatta-luokka}])
+
+        yhteenveto-rivi [[^{:luokka "kustannukset-yhteenveto"}
+                          {:teksti "Yhteensä" :luokka "yhteensa"}
+                          {:teksti (fmt/euro-opt false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                          {:teksti (if-not (= 0 yht-indeksikorjattu)
+                                     (fmt/euro-opt false yht-indeksikorjattu)
+                                     "-")
+                           :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
+                         kirjaamatta-rivi]
+        _ (reset! grid-johto-ja-hallintokorvaukset-atom johto-ja-hallintokorvaukset)]
+    [:div.row.kustannussuunnitelma-osio
+     [otsikkotiedot e! app "Johto- ja hallintokorvaus" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
+     [:div.row
+      [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
+     [:div#johto-ja-hallintokorvaus-elementti.row
+      [:div.col-xs-12
+       [grid/grid {:otsikko ""
+                   :luokat ["matala-panel"]
+                   :muokkaa-aina voi-muokata?
+                   :voi-muokata? voi-muokata?
+                   :muokattava? (constantly voi-muokata?)
+                   :voi-poistaa? (constantly false)
+                   :voi-lisata? false
+                   :voi-kumota? false
+                   :piilota-toiminnot? false
+                   :tunniste :kalenterikuukausi
+                   :muutos #(do
+                              (reset! tallenna-painettu false)
+                              (reset! grid-johto-ja-hallintokorvaukset-atom (vals (grid/hae-muokkaustila %)))
+                              (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset (vals (grid/hae-muokkaustila %))))
+                              (reset! virheet-atom (grid/hae-virheet %)))
+                   ;; Lisätään yhteenveto rivi gridin päätteeksi
+                   :rivi-jalkeen-fn (fn [rivit]
+                                      ^{:luokka "yhteenveto"}
+                                      yhteenveto-rivi)
+                   :rivin-luokka (fn [_] "korkea")}
+        [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "60%"
+          :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+         {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
+          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
+         (if-not (= 0 yht-indeksikorjattu)
+          {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+           :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :string :tasaa :oikea
+            :fmt #(str "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"})]
+        johto-ja-hallintokorvaukset]]]
+
+     (when-not vahvistettu?
+       [:div
+        [:div.row [:div.col-xs-12 [:span.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]]
+        [:div.row [:div.col-xs-12 [:hr]]]
+
+        (when (:johto-ja-hallintokorvaukset-virheet kustannussuunnitelma)
+          [:div.row {:style {:margin-bottom "1rem"}}
+           [:div.col-xs-12
+            [yleiset/info-laatikko :varoitus (:johto-ja-hallintokorvaukset-virheet kustannussuunnitelma) nil nil {:sulje-nappi-id (gensym)}]]])
+
+        [:div.row
+         [:div.col-xs-12
+          [:div.painikkeet
+           [napit/yleinen-ensisijainen "Tallenna tiedot"
+            #(do
+               (reset! tallenna-painettu false)
+               (e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @grid-johto-ja-hallintokorvaukset-atom)))
+            {:disabled (or tallennus-kesken? false)}]
+           [napit/yleinen-toissijainen "Jaa tasan joka kuukaudelle"
+            #(do
+               (reset! tallenna-painettu false)
+               (e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti")))
+            {:disabled (or tallennus-kesken? false)}]]]]])]))
+
 (defn hoidonjohtopalkkiot [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (let [hoidonjohtopalkkiot (:hoidonjohtopalkkiot kustannussuunnitelma)
         tarjous-hoidonjohtopalkkio (first (filter #(= (:osio %) "hoidonjohtopalkkio") (:tarjous tarjous)))
@@ -472,6 +563,7 @@
      [kilpailutettavat-hankinnat e! app]
      [rahavaraukset e! app]
      [erillishankinnat e! app]
+     [johto-ja-hallintokorvaus e! app]
      [hoidonjohtopalkkiot e! app]
      [tavoite-ja-kattohinta e! app]]))
 
