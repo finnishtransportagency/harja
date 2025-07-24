@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sijainti": {
+      "id": "urn:harja/sijainti",
+      "$ref": "file:resources/api/schemas/entities/sijainti-myos-vanhat-kaistat.schema.json",
+      "required": true
+    },
+    "alueurakkanumero": {
+      "id": "urn:harja/alueurakkanumero",
+      "type": ["string", "integer"]
+    }
+  }
+}

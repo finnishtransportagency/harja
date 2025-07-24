@@ -8,6 +8,9 @@
             #?(:cljs [goog.i18n.NumberFormatSymbols])
             #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
             #?(:cljs [goog.i18n.NumberFormat]))
+
+  #?(:cljs
+     (:import [goog.i18n.NumberFormat Format]))
   #?(:clj
      (:import (java.text NumberFormat)
               (java.util Locale)
@@ -22,7 +25,7 @@
    (set! goog.i18n.NumberFormatSymbols goog.i18n.NumberFormatSymbols_fi_FI))
 
 #?(:cljs
-   (def euro-number-format (doto (goog.i18n.NumberFormat. (.-DECIMAL goog.i18n.NumberFormat/Format))
+   (def euro-number-format (doto (goog.i18n.NumberFormat. (.-DECIMAL Format))
                              (.setShowTrailingZeros false)
                              (.setMinimumFractionDigits 2)
                              (.setMaximumFractionDigits 2))))
@@ -516,7 +519,7 @@
    (def desimaali-fmt
      (memoize (fn [min-desimaalit max-desimaalit]
                 (doto (goog.i18n.NumberFormat.
-                        (.-DECIMAL goog.i18n.NumberFormat/Format))
+                        (.-DECIMAL Format))
                   (.setShowTrailingZeros false)
                   (.setMinimumFractionDigits min-desimaalit)
                   (.setMaximumFractionDigits max-desimaalit))))))
@@ -797,3 +800,13 @@
 
 (defn tieosoite-lyhyt-muoto [{:keys [tie alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
   (str tie "/" alkuosa "/" alkuetaisyys "/" loppuosa "/" loppuetaisyys))
+
+(defn sopimustyyppi-fmt
+  "Näyttää (MHU) urakan sopimustyypin."
+  [sopimustyyppi]
+  (case sopimustyyppi
+    ;; MHU-urakoissa on ainakin kaksi urakkaa, joiden tyyppi on MHU+
+    :mhu+ "MHU+"
+
+    ;; Toistaiseksi ei tarvetta näyttää yleisintä tapausta
+    nil))

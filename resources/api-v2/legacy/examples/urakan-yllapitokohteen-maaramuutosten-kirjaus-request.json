@@ -1,0 +1,31 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
+  },
+  "maaramuutokset": [
+    {
+      "maaramuutos": {
+        "tunniste": {
+          "id": 123
+        },
+        "tyyppi": "ajoradan_paallyste",
+        "tyo": "Esimerkki työ",
+        "yksikko": "m2",
+        "tilattu-maara": 12,
+        "ennustettu-maara": 12,
+        "toteutunut-maara": 14.2,
+        "yksikkohinta": 50.2
+      }
+    }
+  ]
+}
