@@ -170,7 +170,10 @@
         yhteenveto-rivi [[^{:luokka "kustannukset-yhteenveto"}
                           {:teksti "Yhteensä" :luokka "yhteensa korkea"}
                           {:teksti (fmt/euro-opt false yht) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                          {:teksti (fmt/euro-opt false yht-indeksikorjattu) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]]]
+                          {:teksti (if-not (= 0 yht-indeksikorjattu)
+                                     (fmt/euro-opt false yht-indeksikorjattu)
+                                     "-")
+                           :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]]]
 
     [:div.row.kustannussuunnitelma-osio
      [otsikkotiedot e! app "Rahavaraukset" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
@@ -198,8 +201,11 @@
           :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
          {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
           :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea"}
-         {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-          :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea"}]
+         (if-not (= 0 yht-indeksikorjattu)
+           {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+            :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :string :tasaa :oikea
+            :fmt #(str "-") :otsikkorivi-luokka "korkea"})]
         rahavaraukset]]]]))
 
 (defn erillishankinnat [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
@@ -211,7 +217,7 @@
         vahvistettu? (:vahvistettu? kustannussuunnitelma)
         voi-muokata? (not vahvistettu?)
         yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
-        yht-indeksikorjattu (apply + (map (fn [rivi] (:summa-indeksikorjattu rivi 0)) erillishankinnat))
+        yht-indeksikorjattu (apply + (map (fn [rivi] (:summa_indeksikorjattu rivi 0)) erillishankinnat))
         kirjaamatta (- tarjouksen-maara yht)
         kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
@@ -222,7 +228,10 @@
         yhteenveto-rivi [[^{:luokka "kustannukset-yhteenveto"}
                           {:teksti "Yhteensä" :luokka "yhteensa"}
                           {:teksti (fmt/euro-opt false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                          {:teksti (fmt/euro-opt false yht-indeksikorjattu) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
+                          {:teksti (if-not (= 0 yht-indeksikorjattu)
+                                     (fmt/euro-opt false yht-indeksikorjattu)
+                                     "-")
+                           :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                          kirjaamatta-rivi]
         _ (reset! grid-erillishankinnat-atom erillishankinnat)]
 
@@ -256,8 +265,11 @@
           :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
          {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
           :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
-         {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
+         (if-not (= 0 yht-indeksikorjattu)
+           {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+            :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :string :tasaa :oikea
+            :fmt #(str "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"})]
         erillishankinnat]]]
 
      (when-not vahvistettu?
@@ -301,7 +313,10 @@
         yhteenveto-rivi [[^{:luokka "kustannukset-yhteenveto"}
                           {:teksti "Yhteensä" :luokka "yhteensa"}
                           {:teksti (fmt/euro-opt false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                          {:teksti (fmt/euro-opt false yht-indeksikorjattu) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
+                          {:teksti (if-not (= 0 yht-indeksikorjattu)
+                                     (fmt/euro-opt false yht-indeksikorjattu)
+                                     "-")
+                           :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                          kirjaamatta-rivi]
         _ (reset! grid-hoidonjohtopalkkiot-atom hoidonjohtopalkkiot)]
     [:div.row.kustannussuunnitelma-osio
@@ -323,6 +338,7 @@
                    :muutos #(do
                               (reset! tallenna-painettu false)
                               (reset! grid-hoidonjohtopalkkiot-atom (vals (grid/hae-muokkaustila %)))
+                              (e! (kust-tiedot/->PaivitaHoidonjohtopalkkiot (vals (grid/hae-muokkaustila %))))
                               (reset! virheet-atom (grid/hae-virheet %)))
                    ;; Lisätään yhteenveto rivi gridin päätteeksi
                    :rivi-jalkeen-fn (fn [rivit]
@@ -333,8 +349,11 @@
           :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
          {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
           :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
-         {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
+         (if-not (= 0 yht-indeksikorjattu)
+          {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+           :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :string :tasaa :oikea
+            :fmt #(str "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"})]
         hoidonjohtopalkkiot]]]
 
      (when-not vahvistettu?
