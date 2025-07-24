@@ -74,6 +74,19 @@
                                                            {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 8 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Elokuu 2025"}
                                                            {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 9 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Syyskuu 2025"}]})
 
+(def johto-ja-hallinto-tietomalli {:johto-ja-hallintokorvaukset [{:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2024 :kuukausi 10  :kalenterikuukausi "Lokakuu 2024"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2024 :kuukausi 11  :kalenterikuukausi "Marraskuu 2024"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2024 :kuukausi 12  :kalenterikuukausi "Joulukuu 2024"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 1  :kalenterikuukausi "Tammikuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 2  :kalenterikuukausi "Helmikuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 3  :kalenterikuukausi "Maaliskuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 4  :kalenterikuukausi "Huhtikuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 5  :kalenterikuukausi "Toukokuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 6  :kalenterikuukausi "Kesäkuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 7  :kalenterikuukausi "Heinäkuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 8  :kalenterikuukausi "Elokuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 9  :kalenterikuukausi "Syyskuu 2025"}]})
+
 (defn poista-yhteenvetorivi [tietomalli]
   {:toimenpiteet (filter #(not= (:nimi %) "Yhteensä") (:toimenpiteet tietomalli))})
 
@@ -322,10 +335,23 @@
 
 (deftest vahvista-tavoite-ja-kattohinta-ei-onnistu
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        sopimus-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         hoitovuoden-alkuvuosi 2024
         tiedot {:urakka-id urakka-id
                 :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
                 :vahvista? true}
+
+        ;; Poistetaan kaikki tiedot, niin vahvistus ei voi onnistua
+        _ (u (format "DELETE FROM kiinteahintainen_tyo WHERE sopimus = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
+        OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
+                     sopimus-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
+        _ (u (format "DELETE FROM kustannusarvioitu_tyo WHERE sopimus = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
+        OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
+               sopimus-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
+        _ (u (format "DELETE FROM johto_ja_hallintokorvaus WHERE \"urakka-id\" = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
+        OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
+               urakka-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
+
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                     :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ tiedot)
@@ -348,18 +374,21 @@
         _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:erillishankinnat erillishankinnat-tietomalli))
         ;; Lisätään hoidonjohtopalkkiot
         _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli))
-
+        ;; Lisätään johto- ja hallintokorvaukset
+        _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:johto-ja-hallintokorvaukset johto-ja-hallinto-tietomalli))
+        
         ;; Rahavaraukset vaativat tarjouksen täyttämisen.
         kayttaja-id (:id +kayttaja-jvh+)
         ;; Käytetään kattohintana 1.1 x tavoitehintaa
         kattohintakerroin 1.1
 
         ;; Haetaan urakan rahavaraukset
-        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset (:db jarjestelma) {:urakka_id urakka-id})
         ;; Vuodet tietomallista
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
-        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
+                                     (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous)
 
         ;; Vahvistetaan tavoite ja kattohinta
         tiedot {:urakka-id urakka-id
@@ -373,4 +402,12 @@
                     {:error (.getMessage e)}))]
 
     ;; Ei voi vahvistaa, koska tietoja puuttuu
-    (is (= (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe]) "Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista ja korjaa tiedot."))))
+    (is (nil? (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])))
+    (is (not (nil? (get-in vastaus [:tarjous]))))
+    (is (not (nil? (get-in vastaus [:kustannussuunnitelma]))))
+    (is (true? (get-in vastaus [:kustannussuunnitelma :vahvistettu?])))
+    (is (= 3 (count (get-in vastaus [:kustannussuunnitelma :rahavaraukset]))))
+    (is (= 8 (count (get-in vastaus [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet]))))
+    (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :erillishankinnat]))))
+    (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))))
+    (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :hoidonjohtopalkkiot]))))))

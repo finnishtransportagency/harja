@@ -393,7 +393,7 @@
         yht (apply + (map (fn [rivi]
                             (:summa rivi 0)) hoidonjohtopalkkiot))
         yht-indeksikorjattu (apply + (map (fn [rivi]
-                                            (:summa-indeksikorjattu rivi 0)) hoidonjohtopalkkiot))
+                                            (:summa_indeksikorjattu rivi 0)) hoidonjohtopalkkiot))
         kirjaamatta (- tarjouksen-maara yht)
         kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
