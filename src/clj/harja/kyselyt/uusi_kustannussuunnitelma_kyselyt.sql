@@ -97,6 +97,30 @@ VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
         :toimenpideinstanssi-id, :tehtavaryhma-id, :sopimus-id,
         'laskutettava-tyo', 'erillishankinnat', :luoja, NOW());
 
+-- name: hae-johto-ja-hallintokorvaukset-kuukausittain
+SELECT id,
+       kuukausi,
+       vuosi,
+       (tunnit * tuntipalkka)                 as summa,
+       (tunnit * tuntipalkka_indeksikorjattu) as summa_indeksikorjattu
+FROM johto_ja_hallintokorvaus
+WHERE "urakka-id" = :urakka-id
+  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9));
+
+-- name: paivita-kuukauden-johto-ja-hallintokorvaus<!
+UPDATE johto_ja_hallintokorvaus
+SET tuntipalkka                 = :tuntipalkka,
+    tuntipalkka_indeksikorjattu = :tuntipalkka_indeksikorjattu,
+    muokkaaja                   = :muokkaaja,
+    muokattu                    = NOW()
+WHERE id = :id;
+
+-- name: tallenna-kuukauden-johto-ja-hallintokorvaus<!
+INSERT INTO johto_ja_hallintokorvaus
+    (kuukausi, vuosi, "toimenkuva-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, "urakka-id", luoja, luotu)
+VALUES (:kuukausi, :vuosi, :toimenkuva-id, :tunnit, :tuntipalkka, :tuntipalkka_indeksikorjattu, :urakka-id, :luoja, NOW());
+
 -- name: hae-hoidonjohtopalkkiot-kuukausittain
 SELECT id,
        kuukausi,

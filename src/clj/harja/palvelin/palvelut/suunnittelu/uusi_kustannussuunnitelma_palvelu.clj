@@ -63,17 +63,21 @@
                           (suunnitelma-q/hae-rahavaraukset db sopimus-id hoitovuoden-alkuvuosi)
                           ;; Jäsennä rahavaraukset tarjouksesta
                           (jasenna-rahavaraukset-tarjouksesta tarjous hoitovuoden-alkuvuosi))
-          rahavaraukset-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0 )) rahavaraukset))
+          rahavaraukset-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) rahavaraukset))
 
           ;; Hae erillishankinnat
           erillishankinnat (suunnitelma-q/hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
           erillishankinnat-yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
 
+          ;; Hae johto- ja hallintokorvaukset - Eli toimenkuvien kustannukset
+          johto-ja-hallintokorvaukset (suunnitelma-q/hae-johto-ja-hallintokorvaukset db urakka-id hoitovuoden-alkuvuosi)
+          johto-ja-hallintokorvaukset-yht (apply + (map (fn [rivi] (:summa rivi 0)) johto-ja-hallintokorvaukset))
+
           ;; Hae hoidonjohtopalkkiot
           hoidonjohtopalkkiot (suunnitelma-q/hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
           hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (:summa rivi 0)) hoidonjohtopalkkiot))
 
-          hoitovuoden-alun-tavoitehinta (+ hankinnat-yht rahavaraukset-yht erillishankinnat-yht hoidonjohtopalkkiot-yht)
+          hoitovuoden-alun-tavoitehinta (+ hankinnat-yht rahavaraukset-yht erillishankinnat-yht johto-ja-hallintokorvaukset-yht hoidonjohtopalkkiot-yht)
           pysyvat-muutokset-maara 0
           hoitovuoden-alun-tavoitehinta (+ hoitovuoden-alun-tavoitehinta pysyvat-muutokset-maara)
           hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (when indeksikerroin
@@ -88,6 +92,7 @@
              :kustannussuunnitelma {:kilpailutettavat-hankinnat {:toimenpiteet kiinteat}
                                     :rahavaraukset rahavaraukset
                                     :erillishankinnat erillishankinnat
+                                    :johto-ja-hallintokorvaukset johto-ja-hallintokorvaukset
                                     :hoidonjohtopalkkiot hoidonjohtopalkkiot
                                     :hoitovuoden-alun-tavoitehinta hoitovuoden-alun-tavoitehinta
                                     :hoitovuoden-alun-indeksikorjattu-tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta
@@ -112,6 +117,14 @@
   (log/info "tallenna-erillishankinnat :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id hoitovuoden-alkuvuosi (:erillishankinnat tiedot))
+    (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
+    (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
+
+(defn tallenna-tallenna-johto-ja-hallintokorvaukset [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  (log/info "tallenna-johto-ja-hallintokorvaukset :: tiedot: " tiedot)
+  (jdbc/with-db-transaction [db db]
+    (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id hoitovuoden-alkuvuosi (:johto-ja-hallintokorvaukset tiedot))
     (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
@@ -160,6 +173,11 @@
         (tallenna-hoidonjohtopalkkiot (:db this) user tiedot))
       {:kysely-spec ::k-domain/hoidonjohtopalkkio})
     (julkaise-palvelu (:http-palvelin this)
+      :tallenna-johto-ja-hallintokorvaukset
+      (fn [user tiedot]
+        (tallenna-tallenna-johto-ja-hallintokorvaukset (:db this) user tiedot))
+      {:kysely-spec ::k-domain/johto-ja-hallintokorvaus})
+    (julkaise-palvelu (:http-palvelin this)
       :vahvista-tavoite-ja-kattohinta
       (fn [user tiedot]
         (vahvista-tai-kumoa-tavoite-ja-kattohinta (:db this) user tiedot)))
@@ -172,5 +190,6 @@
       :tallenna-kilpailutettavat-hankinnat
       :tallenna-erillishankinnat
       :tallenna-hoidonjohtopalkkiot
+      :tallenna-johto-ja-hallintokorvaukset
       :vahvista-tavoite-ja-kattohinta)
     this))
