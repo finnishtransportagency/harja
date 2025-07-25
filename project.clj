@@ -11,7 +11,7 @@
   :dependencies [
                  ;; Clojure ja ClojureScript
                  [org.clojure/clojure "1.10.3"]
-                 [org.clojure/clojurescript "1.10.520"]
+                 [org.clojure/clojurescript "1.10.764"]
                  [org.clojure/spec.alpha "0.5.238"]
 
                  ;;;;;;; Yleiset ;;;;;;;
@@ -32,20 +32,34 @@
                  ;; Komponenttituki palvelimen komponenttien hallintaan
                  [com.stuartsierra/component "1.1.0"]
 
-                 ;; -- Lokitus
-                 [com.taoensso/timbre "6.5.0"]
+                 ;; -- Lokitus / assertointi / virheiden käsittely
+                 ;;   Taoensson kirjastoissa täytyy ottaa huomioon, että ne käyttävät yhdessä Encore ja Truss -kirjastoja
+                 ;;   Näistä voi tulla konflikteja, jotka täytyy ottaa huomioon: https://www.taoensso.com/dependency-conflicts
+
+                 ;; Clojure ja ClojureScript assertointi
+                 [com.taoensso/truss "2.1.1"]
+
+                 ;; Lokitus
+                 [com.taoensso/timbre "6.7.1"]
+
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.24.3"]
+                 [org.apache.logging.log4j/log4j-core "2.25.1"]
+
+                 ;; --
 
                  ;; -- Metriikkadata
                  [org.clojure/java.jmx "1.1.0"]
 
                  ;; -- JSON encode/decode
-                 [cheshire "5.13.0"]
+                 [cheshire "6.0.0"]
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.48"]
                  [http-kit "2.8.0"]
+                 ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
+                 ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
+                 [ring/ring-codec "1.3.0"]
+                 [ring/ring-core "1.14.2"]
                  [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
@@ -57,25 +71,25 @@
 
                  ;; Todennus / kirjautumisen allekirjoituksen varmistus 
                  ;; Täältä tulee java kirjaston kautta jwt signaturen vahvistus, joka tehdään käyttäjän tullessa Harjaan
-                 [buddy/buddy-sign "3.5.351"]
+                 [buddy/buddy-sign "3.6.1-359"]
 
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
                  [org.postgresql/postgresql "42.7.7"]
-                 [net.postgis/postgis-jdbc "2024.1.0"]
+                 [net.postgis/postgis-jdbc "2025.1.1"]
                  [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
-                 [com.mchange/c3p0 "0.10.1"]
+                 [com.mchange/c3p0 "0.11.2"]
                  ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
                  [webjure/jeesql "0.4.7"]
                  [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "32.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "33.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -89,7 +103,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.18.6" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.0" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -107,15 +121,14 @@
                  [com.andrewmcveigh/cljs-time "0.5.2"]
 
                  ;; -- Karttatasot front-end
-                 ;; Kuvataso error tulee ol.source.Image inheritistä, jos päivittää neloseen
-                 ;; TODO: Päivitys vaatii siirtymisen shadow-cljs:ään
-                 [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
+                 ;; TODO: Päivitys suurempiin versioihin vaatii siirtymisen shadow-cljs:ään
+                 [cljsjs/openlayers "4.0.1-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "5.3.0"]
-                 [org.apache.poi/poi-scratchpad "5.3.0"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "5.3.0"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "2.5.0"]
+                 [org.apache.poi/poi "5.4.1"]
+                 [org.apache.poi/poi-scratchpad "5.4.1"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "5.4.1"] ;; .xlsx tiedoston lukua varten
+                 [org.clojure/data.json "2.5.1"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
@@ -130,16 +143,13 @@
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
-                 [org.apache.xmlgraphics/fop "2.10"]
+                 [org.apache.xmlgraphics/fop "2.11"]
 
                  ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
                  [java-http-clj "0.4.3"]
 
                  ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
                  [org.apache.ant/ant "1.10.15"]
-
-                 ;; Clojure(Script) assertointi
-                 [com.taoensso/truss "1.12.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.21.0"]
@@ -157,9 +167,9 @@
                  ;; data.xml tarvitaan mm. XML-tiedostojen parsimiseen ja pretty-printtaukseen
                  [org.clojure/data.xml "0.0.8"]]
 
-  :managed-dependencies [[org.apache.poi/poi "5.3.0"]
-                         [org.apache.poi/poi-scratchpad "5.3.0"]
-                         [org.apache.poi/poi-ooxml "5.3.0"]
+  :managed-dependencies [[org.apache.poi/poi "5.4.1"]
+                         [org.apache.poi/poi-scratchpad "5.4.1"]
+                         [org.apache.poi/poi-ooxml "5.4.1"]
                          ;; Ratkaise: CVE-2024-26308 ja CVE-2024-25710
                          ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
                          ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
@@ -202,7 +212,6 @@
                                    :pretty-print true
                                    :source-map true
                                    ;:parallel-build false Failaa randomisti
-                                   :libs ["src/js/kuvataso.js"]
                                    :closure-output-charset "US-ASCII"
                                    :main harja.runner}}
                        {:id "laadunseuranta-test"
@@ -261,8 +270,8 @@
             "testit" ["do" "clean,"
                       "deps,"
                       "test,"
-                      "with-profile" "+test" "doo" "phantom" "test" "once,"
-                      "with-profile" "+test" "doo" "phantom" "laadunseuranta-test" "once"]
+                      "with-profile" "+phantomjs" "doo" "phantom" "test" "once,"
+                      "with-profile" "+phantomjs" "doo" "phantom" "laadunseuranta-test" "once"]
 
             ;; Työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
@@ -282,8 +291,9 @@
                    :perf :perf
                    :integraatio :integraatio
                    :hidas :hidas
+                   :ohita :ohita
                    :default (fn [m]
-                              (let [testit-joita-ei-ajeta #{:integraatio :hidas}]
+                              (let [testit-joita-ei-ajeta #{:integraatio :hidas :ohita}]
                                 (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))
                    }
 

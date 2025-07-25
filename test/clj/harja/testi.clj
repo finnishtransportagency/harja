@@ -147,7 +147,7 @@
   {:datasource (tietokanta/luo-yhteyspool temppitietokanta)})
 
 (defn luo-liitteidenhallinta []
-  (liitteet/->Liitteet nil nil))
+  (liitteet/->Liitteet nil nil nil))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -1237,11 +1237,9 @@
   (q "select id, nimi, lyhenne from paikkauskohde_tyomenetelma;"))
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
-
 (def +kayttaja-tero+ (hae-testi-kayttajan-tiedot {:etunimi "Tero" :sukunimi "Toripolliisi" :roolit #{"ELY_Urakanvalvoja"}}))
 
 ;; id:2 Järjestelmävastuuhenkilö
-
 (def +kayttaja-jvh+ (hae-testi-kayttajan-tiedot {:etunimi "Jalmari" :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}}))
 
 ;; Organisaation 14 = Destian urakoitsija
@@ -1282,6 +1280,30 @@
                     :nimi "YIT Rakennus Oy"
                     :tyyppi "urakoitsija"}
      :urakkaroolit {urakka-id #{"vastuuhenkilo"}}}))
+
+(def +tilaaja-projektipaallikko+
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-testit",
+   :roolit #{"ELY_Urakanvalvoja"}, :id 22,
+   :organisaatio {:id 13, :nimi "Lappi", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{}
+   :organisaatioroolit {}
+   :urakkaroolit {33, #{"ELY_Urakanvalvoja"}}})
+
+(def +tilaaja-kunnossapitovastaava+
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-testit",
+   :roolit #{"Paakayttaja"}, :id 22,
+   :organisaatio {:id 13, :nimi "Lappi", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{33}
+   :organisaatioroolit {33, #{"ELY_Paakayttaja"}}
+   :urakkaroolit {}})
+
+(def +tilaaja-konsultti+
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-testit",
+   :roolit #{"Rakennuttajakonsultti"}, :id 22,
+   :organisaatio {:id 13, :nimi "Lappi", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{33}
+   :organisaatioroolit {}
+   :urakkaroolit {33, #{"Rakennuttajakonsultti"}}})
 
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
@@ -1620,7 +1642,7 @@
                                               [:db])
 
                            :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet nil nil)
+                                                  (liitteet/->Liitteet nil nil nil)
                                                   [:db])
 
                            ~@omat))))

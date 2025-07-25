@@ -1,6 +1,6 @@
 (ns harja.views.hallinta.urakkatiedot.tehtava-nakyma
   "Tuodaan tehtävät, tehtäväryhmät ja tehtäväryhmien otsikot näkyväksi."
-  (:require [tuck.core :refer [tuck send-value! send-async!]] 
+  (:require [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.komponentti :as komp]
             [reagent.core :refer [atom] :as r]
@@ -16,7 +16,7 @@
   [e! app {:keys [id] :as rivi}]
   [grid/grid {:tunniste :id
               :voi-poistaa? (constantly false)
-              :voi-lisata? false 
+              :voi-lisata? false
               ::mahdollista-rivin-valinta? true
               :paneelikomponentit [(fn [] [:div.valittujen-tehtavien-toiminnot
                                            (let [valitut-maara (count @tiedot/valitut-tehtavat)]
@@ -35,7 +35,7 @@
                                               [:ul
                                                (for [[idx tehtava] (map-indexed vector @tiedot/tulostetut-tehtavat)]
                                                  ^{:key (str "tulostettu-" idx)}
-                                                 [:li (str "'"(:nimi tehtava)"'" "," "'"(:yksiloiva_tunniste tehtava)"'")])]])])] 
+                                                 [:li (str "'"(:nimi tehtava)"'" "," "'"(:yksiloiva_tunniste tehtava)"'")])]])])]
               :tallenna (fn [muokatut-rivit _arvo]
                                 ;; Tallenna funktion pitää aina palauttaa kanava, passaa muokkaa funktiolle nil
                           (tuck-apurit/e-kanavalla! e! tiedot/->MuokkaaTehtavat muokatut-rivit))
@@ -48,7 +48,7 @@
      {:otsikko "Valitse"
       :otsikkovalinta? false
       :leveys 1
-      :rivi-valittu?-fn (fn [rivi] 
+      :rivi-valittu?-fn (fn [rivi]
                           (tiedot/tehtava-valittu? (:id rivi)))
       :rivi-valittu-fn (fn [rivi valittu?]
                          (e! (tiedot/->ValitseTehtava rivi valittu?)))})
@@ -60,6 +60,7 @@
     {:otsikko "Voim. loppuvuosi" :nimi :voimassaolo_loppuvuosi :leveys 1 :muokattava? (constantly false)}
     {:otsikko "Käsin lisättavä?" :nimi :kasin_lisattava_maara :leveys 1 :muokattava? (constantly false)}
     {:otsikko "Aluetieto?" :nimi :aluetieto :leveys 1 :muokattava? (constantly false)}
+    {:otsikko "Toimenpide" :nimi :f18 :leveys 1}
     {:otsikko "Määrämitattava?" :nimi :maaramitattava? :leveys 1 :tyyppi :valinta :muokattava true
      :valinnat {true "Kyllä"
                 false "Ei"}
@@ -92,7 +93,8 @@
       {:nimi :nimi :leveys 2 :otsikko "Nimi" :tyyppi :string :muokattava? (constantly false)}
       {:nimi :voimassaolo_alkuvuosi :leveys 1 :otsikko "Voimassaolo alkuvuosi" :kokonaisluku? true :tyyppi :positiivinen-numero}
       {:nimi :voimassaolo_loppuvuosi :leveys 1 :kokonaisluku? true :otsikko "Voimassaolo loppuvuosi" :tyyppi :positiivinen-numero}
-      {:nimi :yksiloiva_tunniste :leveys 1 :otsikko "Yksilöivä tunniste" :tyyppi :string :muokattava? (constantly false)}]
+      {:nimi :yksiloiva_tunniste :leveys 1 :otsikko "Yksilöivä tunniste" :tyyppi :string :muokattava? (constantly false)}
+      {:nimi :toimenpide :leveys 1 :otsikko "Toimenpide" :tyyppi :string :muokattava? (constantly false)}]
      tehtavaryhmat]))
 
 (defn listaus* [e! app]
@@ -105,8 +107,9 @@
       (let [tehtavaryhmaotsikot (:tehtavaryhmaotsikot app)
             suoritettavat-tehtavat (:suoritettavat-tehtavat app)]
         [:div
-         [debug/debug app]
-         [:div "Listataan tehtäväryhmäotsikot ja niille kuuluvat tehtäväryhmät ja niiden (MHU) tehtävät."]
+         ;[debug/debug app]
+         [:div "Listataan Tehtävä- ja määräluettelossa käytetyt väliotsikot ja niihin liittyvät tehtäväryhmät sekä tehtäväryhmiin kytkeytyvät, MH-urakoissa relevantit tehtävät. " [:br]
+          "Tehtäväryhmän ja siihen kuuluvien tehtävien pitäisi liittyä samaan toimenpiteeseen, vaikka onkin mahdollista konffata tiedot ristiriitaisesti."]
          [grid/grid
           {:otsikko "Tehtäväryhmäotsikot"
            :tunniste :tehtavaryhmaotsikko_id

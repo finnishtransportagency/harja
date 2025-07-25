@@ -183,8 +183,8 @@ VALUES
         {:otsikko "07/16"}
         {:otsikko "08/16"}
         {:otsikko "09/16"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
+        {:otsikko "Yhteensä"}
+        {:otsikko "Suunniteltu"}
         {:otsikko "Tot-%"})
       (apurit/tarkista-taulukko-kaikki-rivit talvisuolataulukko tarkistusfunktio))))
 
@@ -221,8 +221,8 @@ VALUES
         {:otsikko "07/16"}
         {:otsikko "08/16"}
         {:otsikko "09/16"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
+        {:otsikko "Yhteensä"}
+        {:otsikko "Suunniteltu"}
         {:otsikko "Tot-%"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
@@ -258,8 +258,8 @@ VALUES
         {:otsikko "07/16"}
         {:otsikko "08/16"}
         {:otsikko "09/16"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
+        {:otsikko "Yhteensä"}
+        {:otsikko "Suunniteltu"}
         {:otsikko "Tot-%"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
@@ -481,8 +481,8 @@ VALUES
         {:otsikko "07/18"}
         {:otsikko "08/18"}
         {:otsikko "09/18"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
+        {:otsikko "Yhteensä"}
+        {:otsikko "Suunniteltu"}
         {:otsikko "Tot-%"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko-pop-ely tarkistusfunktio))))
 
@@ -575,7 +575,7 @@ VALUES
         {:otsikko "10/18"}
         {:otsikko "11/18"}
         {:otsikko "12/18"}
-        {:otsikko "Yhteensä (t)"})
+        {:otsikko "Yhteensä"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko-oulu tarkistusfunktio))))
 
 
@@ -667,7 +667,7 @@ VALUES
         {:otsikko "10/18"}
         {:otsikko "11/18"}
         {:otsikko "12/18"}
-        {:otsikko "Yhteensä (t)"})
+        {:otsikko "Yhteensä"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
 (deftest ymparistoraportin-hoitoluokittaiset-maarat-vanha-ja-uusi-koodisto-sekaisin-pop-ely-urakoittain
@@ -750,7 +750,7 @@ VALUES
         {:otsikko "10/18"}
         {:otsikko "11/18"}
         {:otsikko "12/18"}
-        {:otsikko "Yhteensä (t)"}))))
+        {:otsikko "Yhteensä"}))))
 
 ;; Testaa että talvihoitoluokan normalisointisproc-toimii odotetusti.
 ;;Muutospvm aineistossa 2.7.2018 jonka mukaan vipu vääntyy.
@@ -851,7 +851,7 @@ VALUES
         {:otsikko "10/19"}
         {:otsikko "11/19"}
         {:otsikko "12/19"}
-        {:otsikko "Yhteensä (t)"})
+        {:otsikko "Yhteensä"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko-oulu tarkistusfunktio))))
 
 (deftest ymparistoraportin-koko-maan-urakoissa-urakkanumero-mukana

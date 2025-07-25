@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "enum": [
+    "betoni",
+    "kivi",
+    "avoin asfaltti",
+    "asfalttibetoni",
+    "epäjatkuva asfaltti",
+    "kivimastiksiasfaltti",
+    "kantavan kerroksen AB",
+    "bit.sidottu kantava ker.",
+    "valuasfaltti",
+    "pehmeä asfalttibetoni (b)",
+    "pehmeä asfalttibetoni (v)",
+    "pehmeä asfalttibetoni (o)",
+    "sirotepintaus",
+    "soratien pintaus",
+    "sora",
+    "EAB, asfalttibetoni",
+    "AB tiivis",
+    "EABK, Kantavan kerroksen EAB",
+    "EPAB-B, Pehmeät asfalttibetonit",
+    "EPAB-V, Pehmeät asfalttibetonit",
+    "komposiittiasfaltti",
+    "teräs",
+    "puu"
+  ]
+}
+

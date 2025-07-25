@@ -225,10 +225,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn selvita-etaisyydet [komponentti sijainti-ylos?]
   (let [etaisyys-alareunaan (dom/elementin-etaisyys-viewportin-alareunaan
-                              (.-parentNode (r/dom-node komponentti)))
+                              (.-parentNode (rdom/dom-node komponentti)))
         etaisyys-ylareunaan (dom/elementin-etaisyys-viewportin-ylareunaan
-                              (.-parentNode (r/dom-node komponentti)))
-        listan-korkeus (.-offsetHeight (.querySelector (.-parentNode (r/dom-node komponentti)) "ul"))]
+                              (.-parentNode (rdom/dom-node komponentti)))
+        listan-korkeus (.-offsetHeight (.querySelector (.-parentNode (rdom/dom-node komponentti)) "ul"))]
     (reset! sijainti-ylos? (and (< listan-korkeus etaisyys-ylareunaan) (> listan-korkeus etaisyys-alareunaan)))))
 
 (defn alasvetolista

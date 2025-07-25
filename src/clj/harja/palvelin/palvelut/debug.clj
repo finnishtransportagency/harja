@@ -1,9 +1,12 @@
 (ns harja.palvelin.palvelut.debug
   "Erinäisiä vain JVH:lle tarkoitettuja palveluita, joilla voi selvitellä
   eri tilanteita, esim. TR-osiossa."
-  (:require [harja.domain.oikeudet :as oikeudet]
+  (:require [clojure.string :as string]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
             [com.stuartsierra.component :as component]
+            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.palautevayla :as palautevayla-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :as http]
             [harja.kyselyt.debug :as q]
 
@@ -13,6 +16,10 @@
             [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit-kyselyt]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
+            [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
+            [harja.kyselyt.tieliikenneilmoitukset :as tieliikenneilmoitukset-q]
+            [harja.palvelin.integraatiot.tloik.sahkoposti :as tloik-sahkoposti]
+            [harja.palvelin.integraatiot.tloik.tekstiviesti :as tloik-tekstiviesti]
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
@@ -176,6 +183,89 @@
               :viesti vastaus}})
     vastaus))
 
+
+;; --- Päivystäjän ilmoituksen testaus -- Alkaa ---
+
+(defn hae-ilmoitus [db ilmoitusid]
+  (let [id (:id (first (tieliikenneilmoitukset-q/hae-id-ilmoitus-idlla db ilmoitusid)))
+        _ (when-not id
+            (log/error (format "[Testi] Ilmoitusta %s ei löytynyt tietokannasta." ilmoitusid))
+            (throw (Exception. "Ilmoitusta ei löytynyt ilmoitus-id:llä")))
+        ilmoitus (first
+                   (konversio/sarakkeet-vektoriin
+                     (into [] ilmoitukset/ilmoitus-xf
+                       (tieliikenneilmoitukset-q/hae-ilmoitus db {:id id}))
+                     {:kuittaus :kuittaukset}))
+        ;; Normaalisti käsitellään ns. raaka" T-Loikista tullut ilmoitus, joka on hiukan eri muodossa kuin kantaan tallennettu
+        ;; Tässä muokataan kannasta haetun ilmoituksen tietoja niin, että ne ovat samassa muodossa kuin T-Loikista tuleva ilmoitus
+        ilmoitus (assoc ilmoitus
+                   :sijainti {:x (get-in ilmoitus [:sijainti :coordinates 0])
+                              :y (get-in ilmoitus [:sijainti :coordinates 1])}
+                   :luokittelu {:aihe (:aihe ilmoitus) :tarkenne (:tarkenne ilmoitus)})]
+    ilmoitus))
+
+(defn- laheta-paivystaja-ilmoitus-sahkopostilla [db api-sahkoposti vastaanottajan-email {id :ilmoitusid :as ilmoitus}]
+  (log/info (format "[Testi] Lähetetään ilmoitus (id: %s) sähköpostilla" id))
+
+  (let [lahettaja "harja-ala-vastaa@vayla.fi" #_(sahkoposti/vastausosoite api-sahkoposti)
+        [otsikko viesti] (tloik-sahkoposti/otsikko-ja-viesti db lahettaja ilmoitus)
+        vastaus (sahkoposti/laheta-viesti! api-sahkoposti lahettaja vastaanottajan-email (str "TESTI: " otsikko) viesti {"X-Correlation-ID" id})]
+    (when (not= "Message processed" vastaus)
+      (log/error (format "[Testi] Ilmoituksen %s lähettämisessä sähköpostilla tapahtui virhe, vastaus integraatiolta %s" id vastaus))
+      (throw (Exception. "Sähköpostin lähetys epäonnistui")))))
+
+(defn- laheta-paivystaja-ilmoitus-sms [db sms {id :ilmoitusid :as ilmoitus} puhelinnumero]
+  (log/info (format "[Testi] Lähetetään ilmoitus (id: %s) tekstiviestillä" id))
+
+  (let [viestinumero (rand-int 100000) ; Satunnainen viestinumero
+        aiheet-ja-tarkenteet (when (get-in ilmoitus [:luokittelu :aihe])
+                               (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db))
+        viesti (tloik-tekstiviesti/ilmoitus-tekstiviesti ilmoitus viestinumero aiheet-ja-tarkenteet)
+        vastaus (sms/laheta sms puhelinnumero viesti (:ilmoitusid ilmoitus) {})]
+
+    (when (or (not vastaus) (not (str/includes? (:sisalto vastaus) "OK")))
+      (log/error (format "[Testi] Ilmoituksen %s lähettämisessä tekstiviestillä tapahtui virhe, vastaus integraatiolta: %s" id vastaus))
+      (throw (Exception. "Tekstiviestin lähetys epäonnistui")))))
+
+(defn- laheta-paivystajan-ilmoitus
+  ""
+  [db api-sahkoposti sms {:keys [ilmoitus-id sahkoposti puhelinnumero] :as ilmoitus-tiedot}]
+  (try
+    (when (and (string/blank? sahkoposti) (string/blank? puhelinnumero))
+      (do
+        (log/error (format "[Testi] Päivystajan ilmoitusta %s ei voida lähettää ilman sähköpostiosoitetta tai puhelinnumeroa." ilmoitus-id))
+        (throw (Exception. "Päivystajan ilmoitusta ei voida lähettää ilman sähköpostiosoitetta tai puhelinnumeroa."))))
+
+    (let [email-sensuroitu (when (string? sahkoposti)
+                             (str/replace sahkoposti #"(?<=^.)[^@]*|(?<=@.).*(?=\.[^.]+$)" "***"))
+          puh-sensuroitu (when (string? puhelinnumero)
+                           (str/replace puhelinnumero #"\d(?=\d{4})" "*"))
+          _ (log/info "[Testi] Lähetetään päivystajan ilmoitus, ilmoitus-id: " ilmoitus-id
+              " sähköposti: " email-sensuroitu
+              " puhelinnumero: " puh-sensuroitu)
+
+          ilmoitus (hae-ilmoitus db ilmoitus-id)]
+
+      (when-not (string/blank? sahkoposti)
+        (laheta-paivystaja-ilmoitus-sahkopostilla db api-sahkoposti sahkoposti ilmoitus))
+
+      (when-not (string/blank? puhelinnumero)
+        (laheta-paivystaja-ilmoitus-sms db sms ilmoitus puhelinnumero))
+
+      {:status 200
+       :body {:viesti "Päivystäjän ilmoitus lähetetty"
+              :ilmoitus-id ilmoitus-id}})
+
+    (catch Exception e
+      (log/error (format "[Testi] Päivystäjän ilmoituksen lähettämisessä tapahtui poikkeus: %s" e))
+      {:status 500
+       :error "Virhe"
+       :body {:virhe "Päivystäjän ilmoituksen lähettäminen epäonnistui"
+              :viesti (.getMessage e)
+              :ilmoitus-id ilmoitus-id}})))
+
+;; --- Päivystäjän ilmoituksen testaus -- Päättyy ---
+
 (defn hae-tieturvalliusuus-geometriat
   "Kokeillaan hakea kaikki tieturvallisuusgeometriat. Jos haluat lokaalisti ajaa geometriat kantaan, päivitä polku, josta niitä
   tallennetaan. Lokaalisti tieturvallisuusgeometrioita ei välttämättä ole ajettu kantaan."
@@ -275,6 +365,8 @@
       (vaadi-jvh! (partial #'laheta-emailapi api-sahkoposti))
       :debug-laheta-tekstiviesti
       (vaadi-jvh! (partial #'laheta-sms sms))
+      :debug-laheta-paivystajan-ilmoitus
+      (vaadi-jvh! (partial #'laheta-paivystajan-ilmoitus db api-sahkoposti sms))
       :debug-hae-tieturvalliusuus-geometriat
       (vaadi-jvh! (partial #'hae-tieturvalliusuus-geometriat db))
       :debug-hae-yllapitokohteen-geometriat
