@@ -394,7 +394,7 @@
   TallennaJohtoJaHallintokorvaukset
   (process-event
     [{johto-ja-hallintokorvaukset :johto-ja-hallintokorvaukset} app]
-    (tuck-apurit/post! :tallenna-johto-ja-hallintokorvaukset
+    (tuck-apurit/post! :tallenna-osio-johto-ja-hallintokorvaukset
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
        :johto-ja-hallintokorvaukset johto-ja-hallintokorvaukset}

@@ -173,7 +173,7 @@
         (tallenna-hoidonjohtopalkkiot (:db this) user tiedot))
       {:kysely-spec ::k-domain/hoidonjohtopalkkio})
     (julkaise-palvelu (:http-palvelin this)
-      :tallenna-johto-ja-hallintokorvaukset
+      :tallenna-osio-johto-ja-hallintokorvaukset            ;; Lyhyempi nimi konfliktaa vanhan kanssa
       (fn [user tiedot]
         (tallenna-tallenna-johto-ja-hallintokorvaukset (:db this) user tiedot))
       {:kysely-spec ::k-domain/johto-ja-hallintokorvaus})
@@ -190,6 +190,6 @@
       :tallenna-kilpailutettavat-hankinnat
       :tallenna-erillishankinnat
       :tallenna-hoidonjohtopalkkiot
-      :tallenna-johto-ja-hallintokorvaukset
+      :tallenna-osio-johto-ja-hallintokorvaukset
       :vahvista-tavoite-ja-kattohinta)
     this))
