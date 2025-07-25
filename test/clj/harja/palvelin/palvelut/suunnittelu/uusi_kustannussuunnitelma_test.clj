@@ -286,7 +286,7 @@
         tietomallin-summa (apply + (map :summa (:johto-ja-hallintokorvaukset johto-ja-hallinto-tietomalli)))
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-johto-ja-hallintokorvaukset +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli
+                    :tallenna-osio-johto-ja-hallintokorvaukset +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli
                                                                            {:urakka-id urakka-id
                                                                             :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
@@ -303,7 +303,7 @@
         ;; Tallenna ensin tietomallin tiedot
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-johto-ja-hallintokorvaukset +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli
+                    :tallenna-osio-johto-ja-hallintokorvaukset +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli
                                                                            {:urakka-id urakka-id
                                                                             :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
@@ -322,7 +322,7 @@
         muokattu-summa (apply + (map :summa muokattu-vastaus))
         muokattu-vastaus (try
                            (kutsu-palvelua (:http-palvelin jarjestelma)
-                             :tallenna-johto-ja-hallintokorvaukset +kayttaja-jvh+
+                             :tallenna-osio-johto-ja-hallintokorvaukset +kayttaja-jvh+
                              (merge {:johto-ja-hallintokorvaukset muokattu-vastaus}
                                {:urakka-id urakka-id
                                 :hoitovuoden-alkuvuosi 2024}))
