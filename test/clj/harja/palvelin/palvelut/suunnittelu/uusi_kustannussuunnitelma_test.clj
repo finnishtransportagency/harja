@@ -74,18 +74,18 @@
                                                            {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 8 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Elokuu 2025"}
                                                            {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 9 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Syyskuu 2025"}]})
 
-(def johto-ja-hallinto-tietomalli {:johto-ja-hallintokorvaukset [{:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2024 :kuukausi 10  :kalenterikuukausi "Lokakuu 2024"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2024 :kuukausi 11  :kalenterikuukausi "Marraskuu 2024"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2024 :kuukausi 12  :kalenterikuukausi "Joulukuu 2024"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 1  :kalenterikuukausi "Tammikuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 2  :kalenterikuukausi "Helmikuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 3  :kalenterikuukausi "Maaliskuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 4  :kalenterikuukausi "Huhtikuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 5  :kalenterikuukausi "Toukokuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 6  :kalenterikuukausi "Kesäkuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 7  :kalenterikuukausi "Heinäkuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 8  :kalenterikuukausi "Elokuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :vuosi 2025 :kuukausi 9  :kalenterikuukausi "Syyskuu 2025"}]})
+(def johto-ja-hallinto-tietomalli {:johto-ja-hallintokorvaukset [{:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 10 :kalenterikuukausi "Lokakuu 2024"}
+                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 11 :kalenterikuukausi "Marraskuu 2024"}
+                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 12 :kalenterikuukausi "Joulukuu 2024"}
+                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 1 :kalenterikuukausi "Tammikuu 2025"}
+                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 2 :kalenterikuukausi "Helmikuu 2025"}
+                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 3 :kalenterikuukausi "Maaliskuu 2025"}
+                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 4 :kalenterikuukausi "Huhtikuu 2025"}
+                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 5 :kalenterikuukausi "Toukokuu 2025"}
+                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 6 :kalenterikuukausi "Kesäkuu 2025"}
+                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 7 :kalenterikuukausi "Heinäkuu 2025"}
+                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 8 :kalenterikuukausi "Elokuu 2025"}
+                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 9 :kalenterikuukausi "Syyskuu 2025"}]})
 
 (defn poista-yhteenvetorivi [tietomalli]
   {:toimenpiteet (filter #(not= (:nimi %) "Yhteensä") (:toimenpiteet tietomalli))})
@@ -281,6 +281,58 @@
     ;; Urakka-id puuttuu
     (is (str/includes? (:error vastaus) "failed: (contains? % :urakka-id)"))))
 
+(deftest tallenna-johto-ja-hallintokorvaukset-rajapinnasta-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tietomallin-summa (apply + (map :summa (:johto-ja-hallintokorvaukset johto-ja-hallinto-tietomalli)))
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-johto-ja-hallintokorvaukset +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli
+                                                                           {:urakka-id urakka-id
+                                                                            :hoitovuoden-alkuvuosi 2024}))
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))
+        vastaus-summa (apply + (map :summa (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))]
+
+    ;; Ei ole erroreita
+    (is (nil? (:error vastaus)))
+    (is (= (bigdec tietomallin-summa) (bigdec vastaus-summa)))))
+
+(deftest muokkaa-johto-ja-hallintokorvaukset-rajapinnasta-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; Tallenna ensin tietomallin tiedot
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-johto-ja-hallintokorvaukset +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli
+                                                                           {:urakka-id urakka-id
+                                                                            :hoitovuoden-alkuvuosi 2024}))
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))
+        vastaus-hoidonjohtopalkkiot (into [] (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))
+
+        ;; Varmistetaan, ettei ole erroreita
+        _ (is (nil? (:error vastaus)))
+
+        ;; Tallenna muokattu tietomalli
+        muokattu-vastaus (-> vastaus-hoidonjohtopalkkiot
+                           (assoc-in [0 :summa] 1500)
+                           (assoc-in [1 :summa] 2500)
+                           (assoc-in [2 :summa] 3500))
+        muokattu-summa (apply + (map :summa muokattu-vastaus))
+        muokattu-vastaus (try
+                           (kutsu-palvelua (:http-palvelin jarjestelma)
+                             :tallenna-johto-ja-hallintokorvaukset +kayttaja-jvh+
+                             (merge {:johto-ja-hallintokorvaukset muokattu-vastaus}
+                               {:urakka-id urakka-id
+                                :hoitovuoden-alkuvuosi 2024}))
+                           (catch Exception e
+                             (println "Tapahtui virhe:" (.getMessage e))
+                             {:error (.getMessage e)}))
+        muokattu-vastaus-summa (apply + (map :summa (get-in muokattu-vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))]
+
+    (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
+
 (deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli)))
@@ -344,7 +396,7 @@
         ;; Poistetaan kaikki tiedot, niin vahvistus ei voi onnistua
         _ (u (format "DELETE FROM kiinteahintainen_tyo WHERE sopimus = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
         OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
-                     sopimus-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
+               sopimus-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
         _ (u (format "DELETE FROM kustannusarvioitu_tyo WHERE sopimus = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
         OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
                sopimus-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
@@ -376,7 +428,7 @@
         _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli))
         ;; Lisätään johto- ja hallintokorvaukset
         _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:johto-ja-hallintokorvaukset johto-ja-hallinto-tietomalli))
-        
+
         ;; Rahavaraukset vaativat tarjouksen täyttämisen.
         kayttaja-id (:id +kayttaja-jvh+)
         ;; Käytetään kattohintana 1.1 x tavoitehintaa
@@ -388,7 +440,7 @@
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                                     (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous)
+            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous)
 
         ;; Vahvistetaan tavoite ja kattohinta
         tiedot {:urakka-id urakka-id
