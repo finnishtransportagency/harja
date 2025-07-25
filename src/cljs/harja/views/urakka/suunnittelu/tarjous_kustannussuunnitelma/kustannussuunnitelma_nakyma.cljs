@@ -480,29 +480,29 @@
        [:div.body-text {:style {:margin-top "-15px"}} (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]]]
 
      [:div.row
-      [:div.col-xs-12
-       [:div.col-xs-10.body-text.pull-righ.bottom-border-text.text-right "Tarjouksen tavoitehinta"]
-       [:div.col-xs-2.body-text.bottom-border-text.strong (fmt/euro-opt true tarjouksen-maara)]]]
+      [:div.col-xs-12.korkea-rivi.bottom-border-text
+       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti "Tarjouksen tavoitehinta"]
+       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true tarjouksen-maara)]]]
      [:div.row
-      [:div.col-xs-12
-       [:div.col-xs-10.body-text.pull-righ.bottom-border-text.text-right "Pysyvät muutokset"]
-       [:div.col-xs-2.body-text.bottom-border-text.strong (fmt/euro-opt true pysyvat-muutokset-maara)]]]
+      [:div.col-xs-12.korkea-rivi.bottom-border-text
+       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti "Pysyvät muutokset"]
+       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true pysyvat-muutokset-maara)]]]
      [:div.row
-      [:div.col-xs-12
-       [:div.col-xs-10.body-text.pull-righ.bottom-border-text.text-right "Hoitovuoden alun tavoitehinta"]
-       [:div.col-xs-2.body-text.bottom-border-text.strong (fmt/euro-opt true hoitovuoden-alun-tavoitehinta)]]]
+      [:div.col-xs-12.korkea-rivi.bottom-border-text
+       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti "Hoitovuoden alun tavoitehinta"]
+       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true hoitovuoden-alun-tavoitehinta)]]]
      [:div.row
-      [:div.col-xs-12
-       [:div.col-xs-10.body-text.pull-righ.bottom-border-text.text-right (str "Indeksikorjattu hoitovuoden alun tavoitehinta (" indeksikerroin " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
-       [:div.col-xs-2.body-text.bottom-border-text.strong (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]]
+      [:div.col-xs-12.korkea-rivi.bottom-border-text
+       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun tavoitehinta (" indeksikerroin " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
+       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]]
      [:div.row
-      [:div.col-xs-12
-       [:div.col-xs-10.body-text.pull-righ.bottom-border-text.text-right (str "Hoitovuoden alun kattohinta (" kattohintakerroin " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
-       [:div.col-xs-2.body-text.bottom-border-text.strong (fmt/euro-opt true hoitovuoden-alun-kattohinta)]]]
+      [:div.col-xs-12.korkea-rivi.bottom-border-text
+       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti (str "Hoitovuoden alun kattohinta (" kattohintakerroin " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
+       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true hoitovuoden-alun-kattohinta)]]]
      [:div.row
-      [:div.col-xs-12
-       [:div.col-xs-10.body-text.pull-righ.bottom-border-text.text-right (str "Indeksikorjattu hoitovuoden alun kattohinta (" indeksikerroin " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")]
-       [:div.col-xs-2.body-text.bottom-border-text.strong (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-kattohinta)]]]
+      [:div.col-xs-12.korkea-rivi.bottom-border-text
+       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun kattohinta (" indeksikerroin " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")]
+       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-kattohinta)]]]
 
      [:div.row {:style {:margin-top "2rem"}}
       [:div.col-xs-12
