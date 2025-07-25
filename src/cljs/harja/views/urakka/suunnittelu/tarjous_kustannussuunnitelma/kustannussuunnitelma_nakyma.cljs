@@ -93,7 +93,7 @@
         kilpailutettavat-hankinnat-yhteensa (:yhteensa (last kilpailutettavat-hankinnat))
         kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))]
 
-    [:div.kustannussuunnitelma-osio
+    [:div.kustannussuunnitelma-osio.osio-976
      [otsikkotiedot e! app "Kilpailutettavat hankinnat" tarjouksen-maara
       kilpailutettavat-hankinnat-yhteensa kilpailutettavat-hankinnat-yhteensa-indeksikorjattu
       {:div1 true :div2 true :div3 true :div4 true}]
@@ -176,7 +176,7 @@
                                      "-")
                            :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]]]
 
-    [:div.row.kustannussuunnitelma-osio
+    [:div.row.kustannussuunnitelma-osio.kapea-osio
      [otsikkotiedot e! app "Rahavaraukset" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
      [:div.row
       [:div.col-xs-12
@@ -234,7 +234,7 @@
                          kirjaamatta-rivi]
         _ (reset! grid-erillishankinnat-atom erillishankinnat)]
 
-    [:div.row.kustannussuunnitelma-osio
+    [:div.row.kustannussuunnitelma-osio.kapea-osio
      [otsikkotiedot e! app "Erillishankinnat" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
      [:div#erilliskustannukset-elementti.row
       [:div.col-xs-12
@@ -317,7 +317,7 @@
                            :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                          kirjaamatta-rivi]
         _ (reset! grid-johto-ja-hallintokorvaukset-atom johto-ja-hallintokorvaukset)]
-    [:div.row.kustannussuunnitelma-osio
+    [:div.row.kustannussuunnitelma-osio.kapea-osio
      [otsikkotiedot e! app "Johto- ja hallintokorvaus" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
      [:div#johto-ja-hallintokorvaus-elementti.row
       [:div.col-xs-12
@@ -404,7 +404,7 @@
                            :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                          kirjaamatta-rivi]
         _ (reset! grid-hoidonjohtopalkkiot-atom hoidonjohtopalkkiot)]
-    [:div.row.kustannussuunnitelma-osio
+    [:div.row.kustannussuunnitelma-osio.kapea-osio
      [otsikkotiedot e! app "Hoidonjohtopalkkiot" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
      [:div#hoidonjohtopalkkio-elementti.row
       [:div.col-xs-12
@@ -473,7 +473,7 @@
         hoitovuoden-alun-kattohinta (or (:hoitovuoden-alun-kattohinta kustannussuunnitelma) 0)
         hoitovuoden-alun-indeksikorjattu-kattohinta (or (:hoitovuoden-alun-indeksikorjattu-kattohinta kustannussuunnitelma) 0)
         vahvistettu? (true? (:vahvistettu? kustannussuunnitelma))]
-    [:div.row.kustannussuunnitelma-osio
+    [:div.row.kustannussuunnitelma-osio.kapea-osio
      [:div.row
       [:div.col-xs-12
        [:h2 "Hoitovuoden alun tavoite- ja kattohinta"]
@@ -481,28 +481,28 @@
 
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti "Tarjouksen tavoitehinta"]
-       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true tarjouksen-maara)]]]
+       [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti "Tarjouksen tavoitehinta"]
+       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true tarjouksen-maara)]]]
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti "Pysyvät muutokset"]
-       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true pysyvat-muutokset-maara)]]]
+       [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti "Pysyvät muutokset"]
+       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true pysyvat-muutokset-maara)]]]
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti "Hoitovuoden alun tavoitehinta"]
-       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true hoitovuoden-alun-tavoitehinta)]]]
+       [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti "Hoitovuoden alun tavoitehinta"]
+       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-tavoitehinta)]]]
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun tavoitehinta (" indeksikerroin " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
-       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]]
+       [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun tavoitehinta (" indeksikerroin " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
+       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]]
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti (str "Hoitovuoden alun kattohinta (" kattohintakerroin " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
-       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true hoitovuoden-alun-kattohinta)]]]
+       [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti (str "Hoitovuoden alun kattohinta (" kattohintakerroin " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
+       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-kattohinta)]]]
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-10.body-text.pull-righ.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun kattohinta (" indeksikerroin " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")]
-       [:div.col-xs-2.body-text.strong.kohdista-teksti (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-kattohinta)]]]
+       [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun kattohinta (" indeksikerroin " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")]
+       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-kattohinta)]]]
 
      [:div.row {:style {:margin-top "2rem"}}
       [:div.col-xs-12
@@ -514,7 +514,7 @@
               (e! (kust-tiedot/->VahvistaTaiPeruutaTavoiteJaKattohinta true)))
            {:disabled (or tallennus-kesken? false)}]
 
-          [napit/yleinen-toissijainen "Peruuta vahvistus"
+          [napit/kumoa "Peruuta vahvistus"
            #(do
               (reset! tallenna-painettu false)
               (e! (kust-tiedot/->VahvistaTaiPeruutaTavoiteJaKattohinta false)))
