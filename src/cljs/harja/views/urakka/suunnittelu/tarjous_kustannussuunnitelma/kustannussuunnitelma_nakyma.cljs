@@ -179,10 +179,8 @@
     [:div.row.kustannussuunnitelma-osio
      [otsikkotiedot e! app "Rahavaraukset" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
      [:div.row
-      [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
-     [:div.row
       [:div.col-xs-12
-       [grid/grid {:otsikko ""
+       [grid/grid {:otsikko "Kustannusten erittely"
                    :luokat ["matala-panel"]
                    :muokkaa-aina false
                    :voi-muokata? false
@@ -238,11 +236,9 @@
 
     [:div.row.kustannussuunnitelma-osio
      [otsikkotiedot e! app "Erillishankinnat" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
-     [:div.row
-      [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
      [:div#erilliskustannukset-elementti.row
       [:div.col-xs-12
-       [grid/grid {:otsikko ""
+       [grid/grid {:otsikko "Kustannusten erittely"
                    :luokat ["matala-panel"]
                    :muokkaa-aina voi-muokata?
                    :voi-muokata? voi-muokata?
@@ -323,11 +319,9 @@
         _ (reset! grid-johto-ja-hallintokorvaukset-atom johto-ja-hallintokorvaukset)]
     [:div.row.kustannussuunnitelma-osio
      [otsikkotiedot e! app "Johto- ja hallintokorvaus" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
-     [:div.row
-      [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
      [:div#johto-ja-hallintokorvaus-elementti.row
       [:div.col-xs-12
-       [grid/grid {:otsikko ""
+       [grid/grid {:otsikko "Kustannusten erittely"
                    :luokat ["matala-panel"]
                    :muokkaa-aina voi-muokata?
                    :voi-muokata? voi-muokata?
@@ -412,11 +406,9 @@
         _ (reset! grid-hoidonjohtopalkkiot-atom hoidonjohtopalkkiot)]
     [:div.row.kustannussuunnitelma-osio
      [otsikkotiedot e! app "Hoidonjohtopalkkiot" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
-     [:div.row
-      [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
      [:div#hoidonjohtopalkkio-elementti.row
       [:div.col-xs-12
-       [grid/grid {:otsikko ""
+       [grid/grid {:otsikko "Kustannusten erittely"
                    :luokat ["matala-panel"]
                    :muokkaa-aina voi-muokata?
                    :voi-muokata? voi-muokata?
