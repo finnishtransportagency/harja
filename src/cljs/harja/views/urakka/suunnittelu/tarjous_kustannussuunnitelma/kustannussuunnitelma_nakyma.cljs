@@ -93,7 +93,7 @@
         kilpailutettavat-hankinnat-yhteensa (:yhteensa (last kilpailutettavat-hankinnat))
         kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))]
 
-    [:div.kustannussuunnitelma-osio.osio-976
+    [:div#kilpailutettavat-hankinnat-elementti.kustannussuunnitelma-osio.osio-976
      [otsikkotiedot e! app "Kilpailutettavat hankinnat" tarjouksen-maara
       kilpailutettavat-hankinnat-yhteensa kilpailutettavat-hankinnat-yhteensa-indeksikorjattu
       {:div1 true :div2 true :div3 true :div4 true}]
@@ -137,7 +137,7 @@
           :nimi :loppukausi :tyyppi :euro
           :leveys "20%" :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 9999999 2))
           :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea :otsikkorivi-luokka "korkea"}
-         {:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :string :leveys "20%" :muokattava? (constantly false)
+         {:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :string :fmt #(fmt/euro-opt false %)  :leveys "20%" :muokattava? (constantly false)
           :tasaa :oikea :otsikkorivi-luokka "korkea"}]
         taulukon-tiedot]]]
 
@@ -176,7 +176,7 @@
                                      "-")
                            :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]]]
 
-    [:div.row.kustannussuunnitelma-osio.kapea-osio
+    [:div#rahavaraukset-elementti.row.kustannussuunnitelma-osio.kapea-osio
      [otsikkotiedot e! app "Rahavaraukset" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
      [:div.row
       [:div.col-xs-12
@@ -234,9 +234,9 @@
                          kirjaamatta-rivi]
         _ (reset! grid-erillishankinnat-atom erillishankinnat)]
 
-    [:div.row.kustannussuunnitelma-osio.kapea-osio
+    [:div#erillishankinnat-elementti.row.kustannussuunnitelma-osio.kapea-osio
      [otsikkotiedot e! app "Erillishankinnat" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
-     [:div#erilliskustannukset-elementti.row
+     [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
                    :luokat ["matala-panel"]
@@ -285,7 +285,7 @@
            [napit/yleinen-toissijainen "Jaa tasan joka kuukaudelle"
             #(do
                (reset! tallenna-painettu false)
-               (e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erilliskustannukset-elementti")))
+               (e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
             {:disabled (or tallennus-kesken? false)}]]]]])]))
 
 (defn johto-ja-hallintokorvaus [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
@@ -317,9 +317,9 @@
                            :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                          kirjaamatta-rivi]
         _ (reset! grid-johto-ja-hallintokorvaukset-atom johto-ja-hallintokorvaukset)]
-    [:div.row.kustannussuunnitelma-osio.kapea-osio
+    [:div#johto-ja-hallintokorvaus-elementti.row.kustannussuunnitelma-osio.kapea-osio
      [otsikkotiedot e! app "Johto- ja hallintokorvaus" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
-     [:div#johto-ja-hallintokorvaus-elementti.row
+     [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
                    :luokat ["matala-panel"]
@@ -404,9 +404,9 @@
                            :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                          kirjaamatta-rivi]
         _ (reset! grid-hoidonjohtopalkkiot-atom hoidonjohtopalkkiot)]
-    [:div.row.kustannussuunnitelma-osio.kapea-osio
+    [:div#hoidonjohtopalkkio-elementti.row.kustannussuunnitelma-osio.kapea-osio
      [otsikkotiedot e! app "Hoidonjohtopalkkiot" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
-     [:div#hoidonjohtopalkkio-elementti.row
+     [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
                    :luokat ["matala-panel"]
@@ -473,7 +473,7 @@
         hoitovuoden-alun-kattohinta (or (:hoitovuoden-alun-kattohinta kustannussuunnitelma) 0)
         hoitovuoden-alun-indeksikorjattu-kattohinta (or (:hoitovuoden-alun-indeksikorjattu-kattohinta kustannussuunnitelma) 0)
         vahvistettu? (true? (:vahvistettu? kustannussuunnitelma))]
-    [:div.row.kustannussuunnitelma-osio.kapea-osio
+    [:div#tavoite-ja-kattohinta-elementti.row.kustannussuunnitelma-osio.kapea-osio
      [:div.row
       [:div.col-xs-12
        [:h2 "Hoitovuoden alun tavoite- ja kattohinta"]
