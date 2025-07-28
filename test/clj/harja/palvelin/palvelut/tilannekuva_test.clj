@@ -439,6 +439,8 @@
                                             :urakkanro "1248"}
                                            {:nimi "Aktiivinen Kajaani Testi"
                                             :urakkanro "12502"}
+                                           {:nimi "POP MHU Kajaani 2025-2030"
+                                            :urakkanro "1265"}
                                            {:nimi "POP MHU Suomussalmi 2024-2029"
                                             :urakkanro "1267"}
                                            {:nimi "Oulun MHU 2019-2024"
@@ -450,9 +452,7 @@
                                            {:nimi "Raahen MHU 2023-2028"
                                             :urakkanro "1649"}
                                            {:nimi "Pudasjärven alueurakka 2007-2012"
-                                            :urakkanro "1229"}
-                                           {:nimi "POP MHU Kajaani 2025-2030"
-                                            :urakkanro "1265"})}
+                                            :urakkanro "1229"})}
                                  {:hallintayksikko {:elynumero 12
                                                     :id 12
                                                     :nimi "Pohjois-Pohjanmaa"}
