@@ -134,7 +134,7 @@
         "Toisen urakan vastuuhenkilö ei saa hakea tietoja.")))
 
 (deftest urakan-lupaustietojen-haku-lupausryhmat-eroavat-kun-urakat-samalla-alkuvuodella
-  (let [kajaani-tiedot {:urakka-id @kajaanin-maanteiden-hoitourakan-2024-2029-id
+  (let [kajaani-tiedot {:urakka-id @kajaanin-maanteiden-hoitourakan-2025-2030-id
                         :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
                                              #inst "2028-09-30T20:59:59.000-00:00"]
                         :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}

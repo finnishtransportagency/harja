@@ -451,7 +451,7 @@
                                             :urakkanro "1649"}
                                            {:nimi "Pudasjärven alueurakka 2007-2012"
                                             :urakkanro "1229"}
-                                           {:nimi "POP MHU Kajaani 2024-2029"
+                                           {:nimi "POP MHU Kajaani 2025-2030"
                                             :urakkanro "1265"})}
                                  {:hallintayksikko {:elynumero 12
                                                     :id 12

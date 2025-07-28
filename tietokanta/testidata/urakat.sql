@@ -1396,7 +1396,7 @@ VALUES ('PR00001111', (SELECT id
 INSERT INTO urakka (sampoid, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija, alue, sopimustyyppi) VALUES
 ('PR00043299', (SELECT id
                          FROM organisaatio
-                         WHERE lyhenne = 'POP'), 'POP MHU Kajaani 2024-2029', '2024-10-01', '2029-09-30', 'teiden-hoito', '1265',
+                         WHERE lyhenne = 'POP'), 'POP MHU Kajaani 2025-2030', '2025-10-01', '2030-09-30', 'teiden-hoito', '1265',
         (SELECT id
          FROM organisaatio
          WHERE ytunnus = '2163026-3'),

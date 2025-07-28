@@ -19,8 +19,9 @@
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
     [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
     [harja.palvelin.komponentit.liitteet :as liitteet-komp]
-    [harja.palvelin.komponentit.tuck-remoting :as tuck-remoting]
-    [harja.palvelin.palvelut.tuck-remoting.ilmoitukset :as ilmoitukset-ws]
+    ;; FIXME: Tuck-remoting otettu toistaiseksi pois testikäytöstä kokonaan, koska se ei toimi kunnolla
+    #_[harja.palvelin.komponentit.tuck-remoting :as tuck-remoting]
+    #_[harja.palvelin.palvelut.tuck-remoting.ilmoitukset :as ilmoitukset-ws]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -266,6 +267,7 @@
       :liitteiden-hallinta (component/using
                              (liitteet-komp/->Liitteet
                                (get-in asetukset [:liitteet :s3-url])
+                               (get-in asetukset [:liitteet :thread-pool-koko])
                                (:alusta asetukset))
                              [:db :virustarkistus :tiedostopesula])
 

@@ -184,6 +184,6 @@
                     :toiminto-args [osio-kw hoitovuosi-nro]}]
                   ;; Jos käyttäjän rooli ei ole riittävä, niin näytetään varoitus.
                   (when (not oikeus-vahvistaa?)
-                    [:div.varoitus "Vain urakan aluevastaava voi vahvistaa suunnitelman"])
+                    [:div.varoitus "Vain urakan projektipäällikkö ja kunnossapitovastaava voivat vahvistaa suunnitelman"])
                   (when osiossa-virheita?
                     [:div.varoitus "Osiossa on virheitä, jotka on korjattava ennen kuin suunnitelman voi vahvistaa"])])])])]))))

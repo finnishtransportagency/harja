@@ -391,7 +391,7 @@
                       (inc (or loppuvuosi (dec (pvm/vuosi (:loppupvm urakan-tiedot))))))
 
         ;; Alueurakoille saadaan suunnitellut materiaalit materiaalin_kaytto taulusta
-        suunniteltu-materialimaara (materiaalit-kyselyt/hae-urakan-suunniteltu-materiaalin-kaytto db urakka-id)
+        suunniteltu-materialimaara (materiaalit-kyselyt/hae-urakan-suunniteltu-materiaalin-kaytto-analytiikalle db urakka-id)
         ;; Kootaan tulokset vuosittain
         vuosittainen-suunniteltu-materialimaara (reduce (fn [tulos vuosi]
                                                           (let [vuoden-materiaalit (filter
@@ -405,7 +405,7 @@
 
         ;; MH-urakoiden suunnitellut materiaalitiedot tulee urakka_tehtavamaarat taulusta, mutta HJU urakoille on suunniteltu niitä myös materiaalin_kayttotauluun
         ;; Joten molempia hakuja on käytettävä.
-        suunniteltu-tehtava-materiaalimaara (tehtavamaarat-kyselyt/hae-urakan-suunniteltu-materiaalin-kaytto-tehtavamaarista db urakka-id)
+        suunniteltu-tehtava-materiaalimaara (tehtavamaarat-kyselyt/hae-urakan-suunniteltu-materiaalin-kaytto-tehtavamaarista-analytiikalle db urakka-id)
 
         vuosittainen-suunniteltu-tehtava-materiaalimaara (reduce (fn [tulos vuosi]
                                                                    (let [vuoden-suunnitelmat (filter #(when (= vuosi (:hoitokauden-alkuvuosi %))
@@ -423,7 +423,11 @@
                           {:materiaali_id nil
                            :materiaali nil
                            :materiaali_yksikko nil
-                           :materiaali_tyyppi nil})
+                           :materiaali_tyyppi nil
+                           :suolaraja-id nil
+                           :hoito-materiaalimaara-id nil
+                           :mhu-materiaalimaara-id nil
+                           :tehtava-id nil})
 
         tulos (reduce (fn [tulos vuosi]
                         (let [vuoden-tehtavat-mat (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
@@ -457,7 +461,11 @@
 
                               vuoden-suolat (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
                                                      (merge suolamateriaali
-                                                       {:maara (:talvisuolaraja %)}))
+                                                       {:maara (:talvisuolaraja %)
+                                                        :suolaraja-id (:id %)
+                                                        :hoito-materiaalimaara-id nil
+                                                        :mhu-materiaalimaara-id nil
+                                                        :tehtava-id nil}))
                                               alueurakan-suolasuunnitelma)
                               vuoden-suolat (if vuoden-suolat (conj [] vuoden-suolat) [])
                               lopulliset-yhd-materiaalit (concat yhd-materiaalit loput-materiaalit vuoden-suolat)
@@ -550,11 +558,11 @@
 
         ;; Urakan tyyppi vaikuttaa siihen, mihin tehtävien määrät suunnitellaan
         suunnitellut-tehtavat (if (= "teiden-hoito" (:tyyppi urakan-tiedot))
-                                (tehtavamaarat-kyselyt/hae-mhurakan-suunnitellut-tehtavamaarat
+                                (tehtavamaarat-kyselyt/hae-mhurakan-suunnitellut-tehtavamaarat-analytiikalle
                                   db
                                   {:urakka-id urakka-id
                                    :hoitokauden-alkuvuodet hoitokaudet})
-                                (tehtavamaarat-kyselyt/hae-alueurakan-suunnitellut-tehtavamaarat
+                                (tehtavamaarat-kyselyt/hae-alueurakan-suunnitellut-tehtavamaarat-analytiikalle
                                   db
                                   {:urakka-id urakka-id
                                    :alkupvm alkupvm

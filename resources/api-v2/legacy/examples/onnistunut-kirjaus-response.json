@@ -1,0 +1,15 @@
+{
+    "ilmoitukset": "Kaikki toteumat kirjattu onnistuneesti",
+    "kohteet": [
+        {
+            "tunniste": {
+                "id": 123
+            },
+            "tiedotukset": [
+                {
+                    "tiedotus": ""
+                }
+            ]
+        }
+    ]
+}

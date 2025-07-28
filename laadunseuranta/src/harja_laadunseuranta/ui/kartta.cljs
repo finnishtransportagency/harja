@@ -185,15 +185,8 @@
   (.changed ajoneuvokerros)
   (.changed (.getView kartta)))
 
-(defn- smooth-pan [old-center duration]
-  (ol.animation.pan #js {:duration duration
-                         :source old-center}))
-
 (defn- paivita-kartan-keskipiste [kartta keskipiste]
   (let [view (.getView kartta)]
-    ;; smooth panning aiheuttaa vektorilayereiden piirron viivästymisen pahimmillaan minuutteja
-    ;; disabloidaan.
-    ;;(.beforeRender kartta (smooth-pan (.getCenter view) 1000))
     (doto view
       (.setCenter (clj->js (projektiot/latlon-vektoriksi keskipiste)))
       (.changed))))

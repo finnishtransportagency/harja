@@ -23,28 +23,39 @@
 (s/def ::loppuaika #(and (string? %) (>= (count %) 20) (or
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %)))))
+(s/def ::silta-oid #(and (string? %)
+                     (seq %)
+                     (re-matches #"^[0-9.]+$" %)))
 
-(defn- tarkista-haun-parametrit [parametrit]
-  (try
-    (s/valid? ::loppuaika (:loppuaika parametrit))
-    (s/valid? ::alkuaika (:alkuaika parametrit))
-    (parametrivalidointi/tarkista-parametrit
-      parametrit
-      {:alkuaika "Alkuaika puuttuu"
-       :loppuaika "Loppuaika puuttuu"})
-    (catch Exception e
-      (log/error "Virhe Taitorakennerekisteri-api kutsussa:" e)
-      (throw+ {:type virheet/+viallinen-kutsu+
-               :virheet [{:koodi virheet/+puutteelliset-parametrit+
-                          :viesti "Poikkeus annetuissa parametreissa. Anna päivämäärät muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03"}]})))
-  (when (not (s/valid? ::alkuaika (:alkuaika parametrit)))
-    (virheet/heita-viallinen-apikutsu-poikkeus
-      {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" (:alkuaika parametrit))}))
-  (when (not (s/valid? ::loppuaika (:loppuaika parametrit)))
-    (virheet/heita-viallinen-apikutsu-poikkeus
-      {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" (:loppuaika parametrit))})))
+(defn- tarkista-api-parametrit [parametrit tyyppi]
+  (case tyyppi
+    :aikavali (do
+                (try
+                  (s/valid? ::loppuaika (:loppuaika parametrit))
+                  (s/valid? ::alkuaika (:alkuaika parametrit))
+                  (parametrivalidointi/tarkista-parametrit
+                    parametrit
+                    {:alkuaika "Alkuaika puuttuu"
+                     :loppuaika "Loppuaika puuttuu"})
+                  (catch Exception e
+                    (log/error "Virhe Taitorakennerekisteri-api kutsussa:" e)
+                    (throw+ {:type virheet/+viallinen-kutsu+
+                             :virheet [{:koodi virheet/+puutteelliset-parametrit+
+                                        :viesti "Poikkeus annetuissa parametreissa. Anna päivämäärät muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03"}]})))
+                (when (not (s/valid? ::alkuaika (:alkuaika parametrit)))
+                  (virheet/heita-viallinen-apikutsu-poikkeus
+                    {:koodi virheet/+puutteelliset-parametrit+
+                     :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" (:alkuaika parametrit))}))
+                (when (not (s/valid? ::loppuaika (:loppuaika parametrit)))
+                  (virheet/heita-viallinen-apikutsu-poikkeus
+                    {:koodi virheet/+puutteelliset-parametrit+
+                     :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" (:loppuaika parametrit))})))
+
+    :silta-oid (when (not (s/valid? ::silta-oid (:silta-oid parametrit)))
+                (virheet/heita-viallinen-apikutsu-poikkeus
+                  {:koodi virheet/+puutteelliset-parametrit+
+                   :viesti (format "Silta-oid on väärässä muodossa. %s " (:silta-oid parametrit))})) 
+    :default nil))
 
 (defn muodosta-urakka-tiedot [tarkastus]
   {:harja-id (:urakka_id tarkastus)
@@ -54,7 +65,7 @@
 (defn muodosta-silta-tiedot [tarkastus]
   {:harja-id (:silta_id tarkastus)
    :tunnus (:siltatunnus tarkastus)
-   :oid (:trex_oid tarkastus)
+   :oid (:silta_oid tarkastus)
    :siltaid (:siltaid tarkastus)})
 
 (defn muodosta-havainnot [kohde]
@@ -94,7 +105,7 @@
   "Hakee siltatarkastukset annettujen alku- ja loppuajan puitteissa."
   [db {:keys [alkuaika loppuaika] :as parametrit} _kayttaja]
   (log/info "Taitorakennerekisteri API, siltatarkastusten haku, parametrit: " (pr-str parametrit))
-  (tarkista-haun-parametrit parametrit)
+  (tarkista-api-parametrit parametrit :aikavali)
   
   (let [alku-timestamp (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
         loppu-timestamp (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
@@ -121,6 +132,41 @@
     
     {:siltatarkastukset muunnetut-tarkastukset}))
 
+(defn onko-silta-olemassa?
+  "Tarkistaa, onko silta olemassa silta_oid:n perusteella."
+  [db silta-oid]
+  (:exists (first (taitorakennerekisteri-kyselyt/loytyyko-silta-oidilla
+                    db {:silta-oid silta-oid}))))
+
+(defn hae-sillan-siltatarkastukset
+  "Hakee siltatarkastukset sillalle sillan silta_oid:n perusteella."
+  [db {:keys [silta-oid] :as parametrit} _kayttaja]
+  (log/info "Taitorakennerekisteri API, sillan siltatarkastusten haku, parametrit: " (pr-str parametrit))
+  (tarkista-api-parametrit parametrit :silta-oid)
+
+  (if-not (onko-silta-olemassa? db silta-oid)
+    (throw+ {:type virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+tuntematon-silta+
+                        :viesti (format "Siltaa ei löydy oid:lla %s" silta-oid)}]})
+    (let [siltatarkastukset (taitorakennerekisteri-kyselyt/hae-sillan-siltatarkastukset-taitorakennerekisterille
+                              db {:silta-oid silta-oid})
+          muunnetut-tarkastukset (map (fn [tarkastus]
+                                        {:siltatarkastus
+                                         {:harja-id (:siltatarkastus_id tarkastus)
+                                          :tarkastusaika (when (:tarkastusaika tarkastus)
+                                                           (pvm/aika-iso8601-aikavyohykkeen-kanssa (:tarkastusaika tarkastus)))
+                                          :tarkastaja (:tarkastaja tarkastus)
+                                          :luotu (when (:luotu tarkastus)
+                                                   (pvm/aika-iso8601-aikavyohykkeen-kanssa (:luotu tarkastus)))
+                                          :muokattu (when (:muokattu tarkastus)
+                                                      (pvm/aika-iso8601-aikavyohykkeen-kanssa (:muokattu tarkastus)))
+                                          :poistettu (boolean (:poistettu tarkastus))
+                                          :urakka (muodosta-urakka-tiedot tarkastus)
+                                          :silta (muodosta-silta-tiedot tarkastus)
+                                          :tarkastuskohteet (muodosta-tarkastuskohteet (:tarkastuskohteet tarkastus))}})
+                                   siltatarkastukset)]
+      {:siltatarkastukset muunnetut-tarkastukset})))
+
 (defrecord Taitorakennerekisteri []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
@@ -132,8 +178,18 @@
           (fn [parametrit kayttaja db]
             (hae-siltatarkastukset db parametrit kayttaja))
           :taitorakenne "trex")))
+    (julkaise-reitti
+      http :hae-sillan-siltatarkastukset
+      (GET "/api/taitorakennerekisteri/siltatarkastukset/:silta-oid" parametrit
+        (kasittele-get-kutsu db integraatioloki :hae-sillan-siltatarkastukset parametrit
+          json-skeemat/+taitorakennerekisteri-siltatarkastukset-haku-vastaus+
+          (fn [parametrit kayttaja db]
+            (hae-sillan-siltatarkastukset db parametrit kayttaja))
+          :taitorakenne "trex")))
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :hae-siltatarkastukset)
+    (poista-palvelut http 
+      :hae-siltatarkastukset
+      :hae-sillan-siltatarkastukset)
     this))

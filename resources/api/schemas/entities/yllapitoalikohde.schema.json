@@ -25,8 +25,7 @@
     "geometria": {
       "id": "urn:harja/yllapitokohde/geometria",
       "type": "object",
-      "additionalProperties": false,
-      "type": "string"
+      "additionalProperties": false
     },
     "toimenpide": {
       "id": "urn:harja/yllapitokohde/toimenpide",

@@ -352,7 +352,7 @@
         (is (= false vastaus))))))
 
 (deftest onko-paatoksia-tekematta-vuodelle-2024-test
-  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
         hoitokauden-alkuvuosi 2024

@@ -52,11 +52,11 @@
         alkuosa (string-intiksi (get-in silta [:tieosoite :tr_alkuosa]))
         alkuetaisyys (string-intiksi (get-in silta [:tieosoite :tr_alkuetaisyys]))
         muutospvm (:paivitetty silta)
-        trex-oid (when-not (empty? (:oid silta))
+        silta-oid (when-not (empty? (:oid silta))
                    (:oid silta))
         tila (:tila silta)
         kaytossa? (= "kaytossa" tila)
-        urakkatiedot (q-sillat/hae-sillan-tiedot db {:trex-oid trex-oid :siltatunnus tunnus :siltanimi nimi})
+        urakkatiedot (q-sillat/hae-sillan-tiedot db {:silta-oid silta-oid :siltatunnus tunnus :siltanimi nimi})
 
         ;; Jos urakkatietoa on muokattu käsin, ei päivitetä sillan urakkoja.
         urakkatieto-kasin-muokattu? (:urakkatieto_kasin_muokattu (first urakkatiedot))
@@ -74,7 +74,7 @@
 
         _ (when (and (> (count urakat-sijainnilla) 1)
                   (not urakkatieto-kasin-muokattu?))
-            (log/warn "Sillalle " trex-oid "löytyi useita urakoita! Urakka-id:t: ["
+            (log/warn "Sillalle " silta-oid "löytyi useita urakoita! Urakka-id:t: ["
               (str/join ", " (map :id urakat-sijainnilla)) "]."
               "Vastuu-urakaksi merkitään " urakka-id))
 
@@ -119,7 +119,7 @@
                         :aosa alkuosa
                         :aet alkuetaisyys
                         :tunnus tunnus
-                        :trex-oid trex-oid
+                        :silta-oid silta-oid
                         :muutospvm muutospvm
                         :loppupvm (when-not kaytossa? muutospvm)
                         :poistettu poistetaan?
@@ -143,11 +143,11 @@
     ;
     ; Päättyneen urakan ID jätetään sillalle, koska sitä tarvitaan ainakin siltatarkastusraporteissa
     ;
-    ; Ei tallenneta siltoja ollenkaan, joista puuttuu siltanumero tai trex-oid
+    ; Ei tallenneta siltoja ollenkaan, joista puuttuu siltanumero tai silta-oid
     ; Ei myöskään luoda siltaa, jos se ei ole käytössä tai kuuluu kunnalle.
 
     (when-not (or (nil? siltanumero)
-                (nil? trex-oid))
+                (nil? silta-oid))
       (if-not (empty? urakkatiedot)
         (q-sillat/paivita-silta! db sql-parametrit)
         (when (and kaytossa? (not silta-kuuluu-kunnalle?))

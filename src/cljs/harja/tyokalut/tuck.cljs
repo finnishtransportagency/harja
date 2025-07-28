@@ -38,7 +38,8 @@
 
    tunniste           Tunnisteen kannattaa olla jokin kontekstia kuvaava avain.
                       Palvelun nimikin käy, mutta kannattaa kuvata mieluummin konteksti,
-                      sillä samaa palvelua saatetaan kutsua eri kontekstissa."
+                      sillä samaa palvelua saatetaan kutsua eri kontekstissa.
+   paasta-virhe-lapi? Mahdollistaa palvelimen virheen päästämisen frontille asti ja näyttämisen käyttäjälle."
   [app palvelu argumentit {:keys [onnistui onnistui-parametrit viive tunniste
                                   epaonnistui epaonnistui-parametrit lahetetty
                                   paasta-virhe-lapi? palauta-kanava?]

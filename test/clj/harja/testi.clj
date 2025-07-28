@@ -147,7 +147,7 @@
   {:datasource (tietokanta/luo-yhteyspool temppitietokanta)})
 
 (defn luo-liitteidenhallinta []
-  (liitteet/->Liitteet nil nil))
+  (liitteet/->Liitteet nil nil nil))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -628,7 +628,7 @@
 (def iin-maanteiden-hoitourakan-lupaussitoutumisen-id (atom nil))
 (def raahen-maanteiden-hoitourakan-2023-2028-id (atom nil))
 (def raahen-maanteiden-hoitourakan-2023-2028-sopimus-id (atom nil))
-(def kajaanin-maanteiden-hoitourakan-2024-2029-id (atom nil))
+(def kajaanin-maanteiden-hoitourakan-2025-2030-id (atom nil))
 (def suomussalmen-maanteiden-hoitourakan-2024-2029-id (atom nil))
 
 
@@ -887,10 +887,10 @@
                    FROM   urakka
                    WHERE  nimi = 'Raahen MHU 2023-2028')"))))
 
-(defn hae-kajaanin-maanteiden-hoitourakan-2024-2029-id []
+(defn hae-kajaanin-maanteiden-hoitourakan-2025-2030-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
-                   WHERE  nimi = 'POP MHU Kajaani 2024-2029'"))))
+                   WHERE  nimi = 'POP MHU Kajaani 2025-2030'"))))
 
 (defn hae-suomussalmen-maanteiden-hoitourakan-2024-2029-id []
   (ffirst (q (str "SELECT id
@@ -1237,11 +1237,9 @@
   (q "select id, nimi, lyhenne from paikkauskohde_tyomenetelma;"))
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
-
 (def +kayttaja-tero+ (hae-testi-kayttajan-tiedot {:etunimi "Tero" :sukunimi "Toripolliisi" :roolit #{"ELY_Urakanvalvoja"}}))
 
 ;; id:2 Järjestelmävastuuhenkilö
-
 (def +kayttaja-jvh+ (hae-testi-kayttajan-tiedot {:etunimi "Jalmari" :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}}))
 
 ;; Organisaation 14 = Destian urakoitsija
@@ -1283,6 +1281,30 @@
                     :tyyppi "urakoitsija"}
      :urakkaroolit {urakka-id #{"vastuuhenkilo"}}}))
 
+(def +tilaaja-projektipaallikko+
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-testit",
+   :roolit #{"ELY_Urakanvalvoja"}, :id 22,
+   :organisaatio {:id 13, :nimi "Lappi", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{}
+   :organisaatioroolit {}
+   :urakkaroolit {33, #{"ELY_Urakanvalvoja"}}})
+
+(def +tilaaja-kunnossapitovastaava+
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-testit",
+   :roolit #{"Paakayttaja"}, :id 22,
+   :organisaatio {:id 13, :nimi "Lappi", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{33}
+   :organisaatioroolit {33, #{"ELY_Paakayttaja"}}
+   :urakkaroolit {}})
+
+(def +tilaaja-konsultti+
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-testit",
+   :roolit #{"Rakennuttajakonsultti"}, :id 22,
+   :organisaatio {:id 13, :nimi "Lappi", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{33}
+   :organisaatioroolit {}
+   :urakkaroolit {33, #{"Rakennuttajakonsultti"}}})
+
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
   (testit))
@@ -1315,7 +1337,7 @@
   (reset! iin-maanteiden-hoitourakan-lupaussitoutumisen-id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id))
   (reset! raahen-maanteiden-hoitourakan-2023-2028-id (hae-raahen-maanteiden-hoitourakan-2023-2028-id))
   (reset! raahen-maanteiden-hoitourakan-2023-2028-sopimus-id (hae-raahen-maanteiden-hoitourakan-2023-2028-sopimus-id))
-  (reset! kajaanin-maanteiden-hoitourakan-2024-2029-id (hae-kajaanin-maanteiden-hoitourakan-2024-2029-id))
+  (reset! kajaanin-maanteiden-hoitourakan-2025-2030-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id))
   (reset! suomussalmen-maanteiden-hoitourakan-2024-2029-id (hae-suomussalmen-maanteiden-hoitourakan-2024-2029-id)))
 
 (defn urakkatieto-lopetus! []
@@ -1620,7 +1642,7 @@
                                               [:db])
 
                            :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet nil nil)
+                                                  (liitteet/->Liitteet nil nil nil)
                                                   [:db])
 
                            ~@omat))))

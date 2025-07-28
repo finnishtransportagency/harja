@@ -180,7 +180,7 @@
   (testing "2024 vuoden urakalle onnistuu"
     (let [;; Hae vaativa mhu urakka
           paatos-pvm (pvm/->pvm "12.05.2024")
-          urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+          urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
           urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
           indeksi (:indeksi urakan-tiedot)
           urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
@@ -234,7 +234,7 @@
 
 (deftest rajapinta-tee-lupauksetpaatos-bonus-onnistuu-test
   (let [paatos-pvm (pvm/->pvm "12.05.2024")
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         indeksi (:indeksi urakan-tiedot)
@@ -282,7 +282,7 @@
 
 (deftest rajapinta-tee-lupauksetpaatos-sanktio-onnistuu-test
   (let [paatos-pvm (pvm/->pvm "12.05.2024")
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         indeksi (:indeksi urakan-tiedot)
@@ -333,7 +333,7 @@
 ;; Haetaan lupauspaatos
 (deftest kysely-lupausbonus-haku-onnistuu-test
   (let [paatos-pvm (pvm/->pvm "12.05.2024")
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         indeksi (:indeksi urakan-tiedot)
@@ -364,7 +364,7 @@
 ;; Poistetaan lupauspaatos
 (deftest kysely-lupausbonus-poisto-onnistuu-test
   (let [paatos-pvm (pvm/->pvm "12.05.2024")
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         indeksi (:indeksi urakan-tiedot)
@@ -397,7 +397,7 @@
 
 (deftest rajapinta-poista-lupauksetpaatos-sanktio-onnistuu-test
   (let [paatos-pvm (pvm/->pvm "12.05.2024")
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         indeksi (:indeksi urakan-tiedot)
@@ -456,7 +456,7 @@
 ;; Testaa tavoitehinnan muutospäätöksen lisäys
 (deftest kysely-tavoitehinnan-muutos-lisays-onnistuu-2024-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
@@ -497,7 +497,7 @@
 
 (deftest rajapinta-tavoitehinnan-muutos-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
@@ -522,7 +522,7 @@
 ;; Poistetaan tavoitehinnan muutospäätös
 (deftest tavoitehinnan-muutos-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         muokkaa-kattohinta false
@@ -543,7 +543,7 @@
 
 (deftest rajapinta-tavoitehinnan-muutospaatos-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         muokkaa-kattohinta false
@@ -697,7 +697,7 @@
 ;; Tavoitehinnan ylitys lisäys
 (deftest kysely-tavoitehinnan-ylitys-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
@@ -720,7 +720,7 @@
 
 (deftest rajapinta-tavoitehinnan-ylitys-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
@@ -748,7 +748,7 @@
 ;; Tavoitehinnan ylitys - Poisto
 (deftest kysely-tavoitehinnan-ylityspaatoksen-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
@@ -778,7 +778,7 @@
 
 (deftest rajapinta-tavoitehinnan-ylityspaatoksen-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
@@ -819,7 +819,7 @@
 ;; Kattohinnan ylitys lisäys
 (deftest kysely-kattohinnan-ylitys-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
@@ -866,7 +866,7 @@
 
 (deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2024-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
@@ -983,7 +983,7 @@
 ;; Kattohinnan ylitys - Poisto
 (deftest kysely-kattohinnan-ylityspaatoksen-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
@@ -1012,7 +1012,7 @@
 
 (deftest rajapinta-kattohinnan-ylityspaatoksen-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
@@ -1038,7 +1038,7 @@
 ;; Hoitokaudenlopun indeksikorjauksen lisäys
 (deftest kysely-hoitovuoden-indeksikorjaus-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tavoitehinta 2000000M
@@ -1079,7 +1079,7 @@
 ;; Indeksikorjauksen poisto
 (deftest kysely-hoitovuoden-indeksikorjaus-poisto-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tavoitehinta 2000000M
@@ -1128,7 +1128,7 @@
 
 (deftest rajapinta-hoitovuoden-indeksikorjaus-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tavoitehinta 2000000M
@@ -1172,7 +1172,7 @@
 
 (deftest rajapinta-hoitovuoden-indeksikorjaus-poisto-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tavoitehinta 2000000M
@@ -1222,7 +1222,7 @@
 ;; Hoitokauden lopun hinnat - lisäys
 (deftest kysely-hoitovuoden-lopun-hintapaatos-lisays-onnistuu-2024-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         lisaa-tavoitehintaan-lopunindeksikorjaus (:lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus urakan-parametrit)
         kayttajaid (:id +kayttaja-jvh+)
@@ -1266,7 +1266,7 @@
 
 (deftest kysely-hoitovuoden-lopun-hintapaatos-poisto-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         lisaa-tavoitehintaan-lopunindeksikorjaus (:lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus urakan-parametrit)
         kayttajaid (:id +kayttaja-jvh+)
@@ -1291,7 +1291,7 @@
 
 (deftest rajapinta-hoitovuoden-lopun-hintapaatos-lisays-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         lisaa-tavoitehintaan-lopunindeksikorjaus (:lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus urakan-parametrit)
         kayttajaid (:id +kayttaja-jvh+)
@@ -1321,7 +1321,7 @@
 
 (deftest rajapinta-hoitovuoden-lopun-hintapaatos-poisto-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
@@ -1350,7 +1350,7 @@
 
 (deftest kysely-hoidonjohtopalkkion-muutospaatos-lisays-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tavoitehinta 2100000M    ;; Hoitovuoden lopun tavoihinta ilman indeksikorjausta
@@ -1370,7 +1370,7 @@
 
 (deftest kysely-hoidonjohtopalkkion-muutospaatos-poisto-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tavoitehinta 2100000M
@@ -1394,7 +1394,7 @@
 
 (deftest rajapinta-hoidonjohtopalkkion-muutospaatos-lisays-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tavoitehinta 2100000M
@@ -1423,7 +1423,7 @@
 
 (deftest rajapinta-hoidonjohtopalkkion-muutospaatos-poisto-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tavoitehinta 2100000M
@@ -1448,7 +1448,7 @@
 
 (deftest kysely-poytakirjan-raportin-lisays-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tarkistettu (pvm/nyt)
@@ -1458,7 +1458,7 @@
 
 (deftest kysely-poytakirjan-raportin-poisto-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tarkistettu (pvm/nyt)
@@ -1472,7 +1472,7 @@
 
 (deftest rajapinta-poytakirjan-raportin-lisays-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tarkistettu (pvm/nyt)
@@ -1485,7 +1485,7 @@
 
 (deftest rajapinta-poytakirjan-raportin-poisto-onnistuu-test
   (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2024-2029")
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
         tarkistettu (pvm/nyt)
