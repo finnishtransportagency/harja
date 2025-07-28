@@ -41,7 +41,7 @@
 
 
 (deftest hae-teiden-hoitourakoiden-lampotilat-ilmatieteenlaitokselta
-  (let [odotettu-vastaus {42 {:nimi "Raahen MHU 2023-2028" :kohde "Raahe_Ylivieska" :alueurakkanro "1649" :id 42
+  (let [odotettu-vastaus {43 {:nimi "Raahen MHU 2023-2028" :kohde "Raahe_Ylivieska" :alueurakkanro "1649" :id 43
                               :keskilampotila-1971-2000 -6.1 :keskilampotila-1991-2020 -6.1 :keskilampotila-1981-2010 -6.1
                               :ilmastollinen-ylaraja -1.2 :keskilampotilan-ilm-ka-erotus -2.5 :hanke 16 :ilmastollinen-alaraja -12.1
                               :keskilampotila -8.6 :pitkakeskilampotila -6.1}}]

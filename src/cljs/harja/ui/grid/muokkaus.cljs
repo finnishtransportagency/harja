@@ -23,12 +23,12 @@
 (defn- muokkauspaneeli [{:keys [otsikko otsikko-tyyli voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
                                 virhe-viesti custom-toiminto custom-yla-panel]}]
-  [:div.panel-heading
+  [:div.panel-heading {:style (when (:keskita-ylos custom-toiminto) {:padding-top "0px"})}
    (when otsikko [:h2.panel-title (when otsikko-tyyli {:style otsikko-tyyli}) otsikko])
    (when custom-yla-panel custom-yla-panel)
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
-     [:span.pull-right.muokkaustoiminnot
+     [:span {:class (if (:keskita-vasemmalle custom-toiminto) "pull-left muokkaustoiminnot" "pull-right muokkaustoiminnot")}
       (when custom-toiminto
         [napit/nappi (:teksti custom-toiminto)
          (:toiminto custom-toiminto)
@@ -477,11 +477,12 @@
   [skeema rivinumerot? piilota-toiminnot?]
   [:thead
    [:tr
-    (if rivinumerot? [:th {:width "40px"} " "])
+    (if rivinumerot? [:th {:scope "col" :width "40px"} " "])
     (map-indexed
       (fn [i {:keys [otsikko yksikko leveys nimi tasaa sarake-sort]}]
         ^{:key (str i nimi)}
-        [:th {:width (or leveys "5%")
+        [:th {:scope "col"
+              :width (or leveys "5%")
               :class (y/luokat (y/tasaus-luokka tasaa)
                        (grid-yleiset/tiivis-tyyli skeema))}
          otsikko
@@ -495,7 +496,7 @@
              :ikoni [ikonit/action-sort-descending]}])])
       skeema)
     (when-not piilota-toiminnot?
-      [:th.toiminnot {:width "40px"} " "])]])
+      [:th.toiminnot {:scope "col" :width "40px"} " "])]])
 
 (defn muokkaus-grid
   "Versio gridistä, jossa on vain muokkaustila. Tilan tulee olla muokkauksen vaatimassa {<id> <tiedot>} array mapissa.

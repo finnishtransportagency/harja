@@ -5,7 +5,8 @@
              [lupaus-kyselyt :as lupaus-kyselyt]
              [urakat :as urakat-q]
              [budjettisuunnittelu :as budjetti-q]
-             [valikatselmus :as valikatselmus-q]]
+             [valikatselmus :as valikatselmus-q]
+             [paatos-kyselyt :as paatos-kyselyt]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.lupaus-domain :as lupaus-domain]
@@ -67,7 +68,7 @@
    :f8 :veto-oikeus-aika
    :f9 :paatos})
 
-(defn- maarita-urakan-tavoitehinta
+(defn maarita-urakan-tavoitehinta
   "Urakalle voidaan budjetoida tavoitehinta hoitokausittain. Päätellään siis hoitokauden järjestysnumero ja tarkistetaan urakka_tavoite taulusta,
   että mikä on kulloisenkin hoitokauden tavoitehinta."
   [db urakka-id hk-alkupvm]
@@ -89,28 +90,18 @@
 (defn- liita-lupaus-vaihtoehdot [db lupaus]
   (assoc lupaus :vaihtoehdot (lupauksen-vastausvaihtoehdot db lupaus)))
 
-(defn valikatselmus-tehty-hoitokaudelle?
-  "Onko urakalle tehty välikatselmus annetulla hoitokaudella."
+(defn hae-lupauspaatos
+  "Haetaan lupaukseen liittyvä päätös hoitokaudelle"
   [db urakka-id hoitokauden-alkuvuosi]
-  {:pre [(number? urakka-id) (number? hoitokauden-alkuvuosi)]}
-  (lupaus-domain/valikatselmus-tehty?
-    (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)))
+  (let [lupauspaatos (first (paatos-kyselyt/hae-lupauspaatokset db {:urakkaid urakka-id
+                                                                    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))]
+    lupauspaatos))
 
-(defn tallennettu-bonus-tai-sanktio [db urakka-id hoitokauden-alkuvuosi]
-  (->
-    (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)
-    lupaus-domain/urakan-paatokset->bonus-tai-sanktio))
-
-(defn lupauspaatos [db urakka-id hoitokauden-alkuvuosi]
-  (->
-    (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)
-    lupaus-domain/urakan-paatokset->lupauspaatos))
-
-(defn valikatselmus-tehty-urakalle? [db urakka-id]
+(defn valikatselmus-tehty-urakalle? [db urakka-id hoitokauden-alkuvuosi]
   "Onko urakalle tehty välikatselmus minä tahansa hoitokautena."
   {:pre [(number? urakka-id)]}
-  (lupaus-domain/valikatselmus-tehty?
-    (valikatselmus-q/hae-urakan-paatokset db {:harja.domain.urakka/id urakka-id})))
+  (let [lupauspaatos (first (paatos-kyselyt/hae-lupauspaatokset db {:urakkaid urakka-id :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))]
+    (boolean lupauspaatos)))
 
 (defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
@@ -147,8 +138,8 @@
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
         tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
         luvatut-pisteet-puuttuu? (not (:pisteet lupaus-sitoutuminen))
-        tallennettu-paatos (lupauspaatos db urakka-id (pvm/vuosi hk-alkupvm))
-        valikatselmus-tehty? (valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)
+        tallennettu-paatos (hae-lupauspaatos db urakka-id (pvm/vuosi hk-alkupvm))
+        valikatselmus-tehty? (valikatselmus-tehty-urakalle? db urakka-id hoitokauden-alkuvuosi)
         tallennettu-bonus-tai-sanktio (some-> tallennettu-paatos lupaus-domain/paatos->bonus-tai-sanktio)
         bonus-tai-sanktio (or
                             tallennettu-bonus-tai-sanktio
@@ -173,7 +164,7 @@
                              :ei-viela-ennustetta)]
     {:lupaus-sitoutuminen (if tallennettu-paatos
                             ;; Näytetään päätökseen tallennetut pisteet, jos saatavilla
-                            {:pisteet (::valikatselmus-domain/lupaus-luvatut-pisteet tallennettu-paatos)}
+                            {:pisteet (:luvatut_pisteet tallennettu-paatos)}
                             lupaus-sitoutuminen)
      :lupausryhmat lupausryhmat
      ;; Lähtötiedot tarkistusta varten, ei välttämätöntä
@@ -186,12 +177,12 @@
                             :ennuste piste-ennuste
                             :toteuma (or
                                        ;; Näytetään päätökseen tallennetut pisteet, jos saatavilla
-                                       (::valikatselmus-domain/lupaus-toteutuneet-pisteet tallennettu-paatos)
+                                       (:toteutuneet_pisteet tallennettu-paatos)
                                        piste-toteuma)}
                   :bonus-tai-sanktio bonus-tai-sanktio
                   :tavoitehinta (or
                                   ;; Näytetään päätökseen tallennettu tavoitehinta, jos saatavilla
-                                  (::valikatselmus-domain/lupaus-tavoitehinta tallennettu-paatos)
+                                  (:tavoitehinta tallennettu-paatos)
                                   tavoitehinta)
                   :odottaa-kannanottoa odottaa-kannanottoa
                   :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa
@@ -217,15 +208,15 @@
                                         urakka-id " vaan urakkaan " lupauksen-urakka)))))))
 
 (defn tallenna-urakan-luvatut-pisteet
-  [db user {:keys [id urakka-id pisteet] :as tiedot}]
+  [db user {:keys [id urakka-id pisteet valittu-hoitokausi] :as tiedot}]
   (log/debug "tallenna-urakan-luvatut-pisteet tiedot " tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (when (not (roolit/tilaajan-kayttaja? user))
     (throw (SecurityException. "Luvattujen pisteiden tallentaminen vaatii tilaajan käyttäjän.")))
   (when id
     (vaadi-lupaus-sitoutuminen-kuuluu-urakkaan db urakka-id id))
-  (assert (not (valikatselmus-tehty-urakalle? db urakka-id))
-          "Luvattuja pisteitä ei voi enää muuttaa, jos urakalle on tehty välikatselmus.")
+  (assert (not (valikatselmus-tehty-urakalle? db urakka-id (pvm/vuosi (first valittu-hoitokausi))))
+    "Luvattuja pisteitä ei voi enää muuttaa, jos urakalle on tehty välikatselmus.")
   (jdbc/with-db-transaction [db db]
                             (let [;; lupaussitoutumisia pitää olla kannassa maksimissaan 1. Aiemmin oli vika, että frontti saattoi lähettää alkutilanteessa useita
                                   ;; rivejä ilman id:tä, ja syntyi enemmän kuin yksi aktiivinen rivi. Nyt estetään se tarkistamalla kannasta onko ko. urakalle jo tieto
@@ -301,8 +292,7 @@
                                                        tiedot)
         _ (assert lupaus-id)
         lupaus (first (lupaus-kyselyt/hae-lupaus db {:id lupaus-id}))]
-    (assert (false? (valikatselmus-tehty-hoitokaudelle?
-                       db urakka-id (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
+    (assert (false? (valikatselmus-tehty-urakalle? db urakka-id (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
             "Vastauksia ei voi enää muuttaa välikatselmuksen jälkeen")
     ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
     ;; ja muun tyyppiselle sallittu "lupaus-vaihtoehto-id".
@@ -441,9 +431,9 @@
                                                                          :urakka-id urakka-id})
          sitoutumistiedot (first (lupaus-kyselyt/hae-sitoutumistiedot db {:urakka-id urakka-id}))
          ;; Kuukausittaisten pisteiden muokkaamisessa vaikuttaa tämän hoitokauden välikatselmus
-         valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
+         valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-urakalle? db urakka-id (pvm/vuosi hk-alkupvm))
          ;; Koko urakkakauden sitoutumispisteisiin vaikuttaa onko urakalle tehty yhtään välitkaselmusta
-         valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id)
+         valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id vuosi)
          lopulliset-pisteet (lupaus-domain/kokoa-vastauspisteet kayttaja kuukausipisteet urakka-id
                               valittu-hoitokausi valikatselmus-tehty-hoitokaudelle?
                               nykyhetki)

@@ -360,7 +360,7 @@
 (defn sulje
   ([toiminto] (yleinen-toissijainen "Sulje" toiminto {}))
   ([teksti toiminto] (yleinen-toissijainen teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi? ei-ikonia?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str (cond
@@ -368,7 +368,7 @@
                                                  teksti-nappi?) "button-secondary-text"
                                             vayla-tyyli? "button-secondary-default"
                                             :else "nappi-toissijainen") " " luokka)
-                             :ikoni  (ikonit/sulje)})]))
+                             :ikoni (when-not ei-ikonia? (ikonit/sulje))})]))
 
 (defn tallenna
   ([toiminto] (tallenna "Tallenna" toiminto {}))

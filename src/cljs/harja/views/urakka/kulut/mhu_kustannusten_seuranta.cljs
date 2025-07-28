@@ -432,7 +432,7 @@
         haun-loppupvm (if (and valittu-kuukausi (not= "Kaikki" valittu-kuukausi))
                         (second valittu-kuukausi)
                         (pvm/iso8601 (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))))
-        valikatselmus-tekematta? (t-yhteiset/valikatselmus-tekematta? app)]
+        valikatselmus-tekematta? (:onko-paatoksia-tekematta app)]
 
     ;; Jos haku vielä käynnissä näytetään hyrrä
     (if (:haku-kaynnissa? app) 
@@ -495,10 +495,10 @@
          
          [:div.filtteri {:style {:padding-top "25px"}}
           (if valikatselmus-tekematta?
-            [yleiset/linkki "Tee välikatselmus"
-             #(siirtymat/avaa-valikatselmus hoitokausi-vec)]
-            [yleiset/linkki "Avaa välikatselmus"
-             #(siirtymat/avaa-valikatselmus hoitokausi-vec)])]]]
+            [yleiset/linkki "Siirry välikatselmukseen"
+             #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec)]
+            [yleiset/linkki "Siirry välikatselmukseen"
+             #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec)])]]]
 
        (if (:haku-kaynnissa? app)
          [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]
@@ -526,9 +526,7 @@
                               (if (= "Kaikki" valittu-kuukausi)
                                 nil
                                 (second valittu-kuukausi))))
-                        (e! (kustannusten-seuranta-tiedot/->HaeTavoitehintojenOikaisut valittu-urakka-id))
-                        (e! (kustannusten-seuranta-tiedot/->HaeKattohintojenOikaisut valittu-urakka-id))
-                        (e! (kustannusten-seuranta-tiedot/->HaeUrakanPaatokset valittu-urakka-id))
+                        (e! (kustannusten-seuranta-tiedot/->HaeOnkoPaatoksiaTekematta valittu-urakka-id hoitokauden-alkuvuosi))
                         (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi valittu-urakka-id kuluva-vuosi)))))
     (fn [e! {:keys [valikatselmus-auki?] :as app}]
       [:div {:id "vayla"}

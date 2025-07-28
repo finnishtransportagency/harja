@@ -246,14 +246,26 @@
                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]))
 
 (defn- hoitovuodenpaatos-kohdistus [e! lomake kohdistus nro]
-  (let [lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)
-        hoitovuoden-paatostyyppi (r/atom (:hoitovuoden-paatostyyppi kohdistus))
-        _ (js/console.log "hoitovuodenpaatos-kohdistus :: hoitovuoden-paatostyyppi" (pr-str hoitovuoden-paatostyyppi) )]
+  (let [tavoitehinta (r/atom (:tavoitehintainen kohdistus))
+        lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)
+        hoitovuoden-paatostyyppi (r/atom (:hoitovuoden-paatostyyppi kohdistus))]
     [:div.row
      [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
       [:div.label-ja-alasveto {:style {:width "320px"}}
        [:span.alasvedon-otsikko "Hoitovuoden päätöksen tyyppi*"]
        [:p (@hoitovuoden-paatostyyppi tiedot/vuoden-paatoksen-kulun-tyypit)]]]
+     [:div.col-xs-12.col-md-3
+      [:div.label-ja-alasveto {:style {:width "320px"}}
+       [:span.alasvedon-otsikko "Tavoitehintaan kuuluminen*"]
+       [kentat/tee-kentta {:tyyppi :radio-group
+                           :vaihtoehdot [:true :false]
+                           :vayla-tyyli? true
+                           :nayta-rivina? true
+                           :disabloitu? true
+                           :vaihtoehto-nayta {:true "Kuuluu tavoitehintaan"
+                                              :false "Ei kuulu tavoitehintaan"}
+                           :valitse-fn #(e! (tiedot/->TavoitehintaanKuuluminen % nro))}
+        tavoitehinta]]]
      [:div.col-xs-12.col-md-6 {:style {:width "350px"}}
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"

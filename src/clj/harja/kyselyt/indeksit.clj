@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/indeksit.sql"
   {:positional? true})
+
+(declare hae-urakan-hoitovuoden-indeksit-kuukausinimilla)
