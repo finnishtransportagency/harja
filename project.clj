@@ -264,14 +264,15 @@
                         "with-profile" "+prod-cljs" "compile-prod,"
 
                         ;; Harja mobiili laadunseuranta fronttibuildi
-                        "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                        ;"with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
 
                         "uberjar," "codox"]
             "testit" ["do" "clean,"
                       "deps,"
                       "test,"
                       "with-profile" "+phantomjs" "doo" "phantom" "test" "once,"
-                      "with-profile" "+phantomjs" "doo" "phantom" "laadunseuranta-test" "once"]
+                      ;"with-profile" "+phantomjs" "doo" "phantom" "laadunseuranta-test" "once"
+                      ]
 
             ;; Työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
@@ -283,7 +284,7 @@
             "tuotanto-notest" ["do" "clean," "compile,"
                                "less" "once,"
                                "with-profile" "+prod-cljs" "compile-prod,"
-                               "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                               ;"with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
   :test-selectors {;; lein test :perf
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
