@@ -239,12 +239,17 @@
 
   ;; Less CSS käännös tuotanto varten, käyttäen lein-lessiä on-prem-harjaa varten.
   :less {:source-paths ["dev-resources/less/application"
-                        "dev-resources/less/laadunseuranta/application"]
+                        ;"dev-resources/less/laadunseuranta/application"
+                        ]
          :target-path "resources/public/css/"}
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
-  :test-paths ["test/clj" "test/cljc" "laadunseuranta/test-src/clj"]
+  :source-paths ["src/clj" "src/cljc"
+                 ;"laadunseuranta/clj-src" "laadunseuranta/cljc-src"
+  "src/shared-cljc"]
+  :test-paths ["test/clj" "test/cljc"
+               ;"laadunseuranta/test-src/clj"
+               ]
   :aot :all
   :main harja.palvelin.main
   :auto-clean false ;; for uberjar
