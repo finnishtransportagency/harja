@@ -239,17 +239,12 @@
 
   ;; Less CSS käännös tuotanto varten, käyttäen lein-lessiä on-prem-harjaa varten.
   :less {:source-paths ["dev-resources/less/application"
-                        ;"dev-resources/less/laadunseuranta/application"
-                        ]
+                        "dev-resources/less/laadunseuranta/application"]
          :target-path "resources/public/css/"}
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj" "src/cljc"
-                 ;"laadunseuranta/clj-src" "laadunseuranta/cljc-src"
-  "src/shared-cljc"]
-  :test-paths ["test/clj" "test/cljc"
-               ;"laadunseuranta/test-src/clj"
-               ]
+  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
+  :test-paths ["test/clj" "test/cljc" "laadunseuranta/test-src/clj"]
   :aot :all
   :main harja.palvelin.main
   :auto-clean false ;; for uberjar
@@ -269,15 +264,14 @@
                         "with-profile" "+prod-cljs" "compile-prod,"
 
                         ;; Harja mobiili laadunseuranta fronttibuildi
-                        ;"with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                        "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
 
                         "uberjar," "codox"]
             "testit" ["do" "clean,"
                       "deps,"
                       "test,"
                       "with-profile" "+phantomjs" "doo" "phantom" "test" "once,"
-                      ;"with-profile" "+phantomjs" "doo" "phantom" "laadunseuranta-test" "once"
-                      ]
+                      "with-profile" "+phantomjs" "doo" "phantom" "laadunseuranta-test" "once"]
 
             ;; Työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
@@ -289,7 +283,7 @@
             "tuotanto-notest" ["do" "clean," "compile,"
                                "less" "once,"
                                "with-profile" "+prod-cljs" "compile-prod,"
-                               ;"with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                               "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
   :test-selectors {;; lein test :perf
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
