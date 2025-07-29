@@ -132,8 +132,9 @@
             (do
               (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
               (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on ongelmatilanne. Ota yhteys Harja-palautteeseen."))))
-        liitteet (liite-kyselyt/hae-liitteiden-tiedot db {:idt (:liite-idt muutos)
-                                                          :urakka urakka-id})
+        liitteet (when-not (empty? (:liite-idt muutos))
+                   (liite-kyselyt/hae-liitteiden-tiedot db {:idt (:liite-idt muutos)
+                                                            :urakka urakka-id}))
         vastaus (assoc (first tyypikohtaiset-tiedot) :liitteet liitteet)]
     vastaus))
 

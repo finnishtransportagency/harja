@@ -60,7 +60,7 @@
                                       :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
                                       :tehtavat_ja_maarat (list {:tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40} {:tehtava 3029, :uusi_maara 0, :maaramuutos -30, :edellinen_maara 30}),
                                       :urakka 36, :nimi "Tämän hoitovuoden määräpoikkeamamuutos",
-                                      :id 3, :jjh-muutosten-summa nil, :liitteet (list {:liite 11, :muutos 3}), :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "maarapoikkeama"}
+                                      :id 3, :jjh-muutosten-summa nil, :liitteet (list {:id 11, :muutos 3}), :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "maarapoikkeama"}
                                      {:kulu_kohdistus nil, :kustannusvaikutukset nil,
                                       :voimassa_alkaen #inst "2025-06-24T21:00:00.000-00:00", :syy "Työmääräarviot ylittyivät",
                                       :tehtavat_ja_maarat nil, :urakka 36, :nimi nil,
@@ -370,6 +370,7 @@
                               :kulut  [{:kulu-id (ffirst (q "SELECT id FROM kulu WHERE lisatieto = 'Muutoksesta automaattisesti luotu kulu 1'"))
                                         :pvm #inst"2025-10-15T00:00:00.000-00:00"
                                         :tavoitehinnan-muutos 1230}]
+                              :liitteet nil
                               :versio 1}]
     (is (= vastaus odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
 
