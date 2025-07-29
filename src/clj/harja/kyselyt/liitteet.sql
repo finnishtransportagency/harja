@@ -73,3 +73,14 @@ SELECT l."virustarkastettu?" as "virustarkastettu?",
        l.s3hash
   FROM liite l
  WHERE l.id = :id;
+
+-- name: hae-liitteiden-tiedot
+SELECT id,
+       nimi,
+       kuvaus,
+       tyyppi,
+       koko,
+       liite_oid,
+       "virustarkastettu?"
+  FROM liite
+ WHERE id IN (:idt) AND urakka = :urakka;
