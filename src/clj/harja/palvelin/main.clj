@@ -178,7 +178,7 @@
 
 
     ;; Harja mobiili Laadunseuranta
-    [harja-laadunseuranta.core :as harja-laadunseuranta]
+    ;[harja-laadunseuranta.core :as harja-laadunseuranta]
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
@@ -795,7 +795,7 @@
       (component/using (analytiikan-toteumat/->AnalytiikanToteumat)
         [:http-palvelin :db])
 
-      :mobiili-laadunseuranta
+      #_#_:mobiili-laadunseuranta
       (component/using
         (harja-laadunseuranta/->Laadunseuranta)
         [:db  :http-palvelin])
