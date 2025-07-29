@@ -60,7 +60,7 @@
                                       :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
                                       :tehtavat_ja_maarat (list {:tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40} {:tehtava 3029, :uusi_maara 0, :maaramuutos -30, :edellinen_maara 30}),
                                       :urakka 36, :nimi "Tämän hoitovuoden määräpoikkeamamuutos",
-                                      :id 3, :jjh-muutosten-summa nil, :liitteet (list {:liite 11, :muutos 3}), :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "maarapoikkeama"}
+                                      :id 3, :jjh-muutosten-summa nil, :liitteet (list {:id 11, :muutos 3}), :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "maarapoikkeama"}
                                      {:kulu_kohdistus nil, :kustannusvaikutukset nil,
                                       :voimassa_alkaen #inst "2025-06-24T21:00:00.000-00:00", :syy "Työmääräarviot ylittyivät",
                                       :tehtavat_ja_maarat nil, :urakka 36, :nimi nil,
@@ -323,6 +323,12 @@
         ;; validi_aikana on triggeröity special case, joka syytä testata, historiarivi saa ts-rangen loppuarvonsa updatessa
         historiarivi-validi-aikana-alku (ffirst (q (format "SELECT lower(validi_aikana) FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))
         historiarivi-validi-aikana-loppu (ffirst (q (format "SELECT upper(validi_aikana) FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))
+        ;; alkuperäisen rivin validius
+        muutosrivi-validi-aikana-alku (ffirst (q (format "SELECT lower(validi_aikana) FROM ONLY mhu_muutos WHERE id = %s;" (inc max-id-ennen-tallennusta))))
+        muutosrivi-validi-aikana-loppu (ffirst (q (format "SELECT upper(validi_aikana) FROM ONLY mhu_muutos WHERE id = %s;" (inc max-id-ennen-tallennusta))))
+        ;; voimassaolevan rivin tstzrangen loppu on infinity. Sen testaaminen eksplisiittisesti osoittautui hitaaksi, joten
+        ;; tyydytään tässä kohti toteamaan että rivi on voimassa myös esim. vuonna 2035.
+        muutosrivi-validi-aikana-loppu-rivi (first (q-map (format "SELECT * FROM ONLY mhu_muutos WHERE validi_aikana @> '2035-07-01 00:00:00.000+00'::timestamp with time zone AND id = %s;" (inc max-id-ennen-tallennusta))))
         ;; tehdään vielä toinen päivitys: tämä varmastaa että historiataulun uniikkius ei rikkoudu triggerin takia
         vastaus-toisen-updaten-jalkeen (filter
                                          #(= "Johtamisen tarve muuttui taas kerran" (:syy %))
@@ -338,7 +344,10 @@
         historirivit-toisen-updaten-jalkeen (q-map (format "SELECT id, versio FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta)))]
     (is (instance? java.util.Date historiarivi-validi-aikana-alku) "onhan pvm")
     (is (instance? java.util.Date historiarivi-validi-aikana-loppu) "onhan pvm")
+    (is (instance? java.util.Date muutosrivi-validi-aikana-alku) "onhan pvm")
+    (is (= (inc max-id-ennen-tallennusta) (:id muutosrivi-validi-aikana-loppu-rivi)) "oikea rivi palautuu pitkänkin ajan päästä")
     (is (pvm/ennen? historiarivi-validi-aikana-alku historiarivi-validi-aikana-loppu) "validi_aikana on ts-range, jossa alku < loppu")
+    (is (pvm/ennen? muutosrivi-validi-aikana-alku muutosrivi-validi-aikana-loppu) "validi_aikana on ts-range, jossa alku < loppu")
 
     (is (= 1 historiassa-rivi-updaten-jalkeen-count) "historiassa on yksi rivi updaten jälkeen")
     (is (nil? historia-tyhja-insertin-jalkeen) "ei vielä historiatietoa, koska vain INSERT tehtiin")
@@ -370,6 +379,7 @@
                               :kulut  [{:kulu-id (ffirst (q "SELECT id FROM kulu WHERE lisatieto = 'Muutoksesta automaattisesti luotu kulu 1'"))
                                         :pvm #inst"2025-10-15T00:00:00.000-00:00"
                                         :tavoitehinnan-muutos 1230}]
+                              :liitteet nil
                               :versio 1}]
     (is (= vastaus odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
 
