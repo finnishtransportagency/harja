@@ -4,3 +4,5 @@
 
 (defqueries "harja/kyselyt/erilliskustannus_kyselyt.sql"
   {:positional? true})
+
+(declare hae-erilliskustannus)

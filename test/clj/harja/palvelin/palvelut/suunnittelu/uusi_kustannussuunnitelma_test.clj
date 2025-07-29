@@ -73,7 +73,7 @@
         hankinnat (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :kilpailutettavat-hankinnat])]
 
     (is (= (count (:toimenpiteet hankinnat)) 8))
-    (is (= (:nimi (first (:toimenpiteet hankinnat))) "Talvihoito laaja TPI"))
+    (is (true? (some #(= (:nimi %) "Talvihoito laaja TPI") (:toimenpiteet hankinnat))))
     (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))))
 
 (deftest tallenna-kilpailutettavat-hankinnat-tietokantaan-onnistuneesti

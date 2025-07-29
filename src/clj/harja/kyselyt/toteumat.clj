@@ -13,6 +13,8 @@
 (defqueries "harja/kyselyt/toteumat.sql"
   {:positional? true})
 
+(declare luo-erilliskustannus<!)
+
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja urakka id:llä: " urakka-id)
   (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id urakka-id))))
