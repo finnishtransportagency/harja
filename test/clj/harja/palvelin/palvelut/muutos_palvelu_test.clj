@@ -1,10 +1,13 @@
 (ns harja.palvelin.palvelut.muutos-palvelu-test
-  (:require [clojure.test :refer :all]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.pvm :as pvm]
-            [harja.testi :refer :all]
+  (:require [clojure.java.io :as io]
+            [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]))
+            [harja.palvelin.komponentit.liitteet :as liitteet-komponentti]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
+            [harja.pvm :as pvm]
+            [harja.testi :refer :all])
+  (:import (org.apache.commons.io IOUtils)))
 
 
 (defn jarjestelma-fixture [testit]
@@ -14,6 +17,9 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :liitteiden-hallinta (component/using
+                                               (liitteet-komponentti/->Liitteet nil nil nil)
+                                               [:db])
                         :hae-urakan-muutostiedot (component/using
                                                    (muutos-palvelu/->Muutos {:kehitysmoodi true})
                                                    [:http-palvelin :db])
@@ -42,10 +48,6 @@
 (deftest hae-urakan-kirjatut-muutokset-ii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
-        toimenpide-id-paall-paikk (ffirst (q "SELECT id FROM toimenpide WHERE koodi = '20107';")) ; Päällystepaikkaukset
-        toimenpide-id-soratiet (ffirst (q "SELECT id FROM toimenpide WHERE koodi = '23124';")) ; Soratiet
-        toimenpide-id-mhu-yllapito (ffirst (q "SELECT id FROM toimenpide WHERE koodi = '20191';")) ; -- MHU Ylläpito
-        liite-id (ffirst (q "SELECT id FROM liite WHERE nimi = 'rumpu.jpg'"))
         vastaus (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                          :valittu-hoitokausi valittu-hoitokausi})
         odotetut-kirjatut-muutokset [{:kulu_kohdistus nil, :kustannusvaikutukset (list {:summa 1000, :toimenpide 2391, :kustannuslaji "hankintakustannukset"}),
@@ -60,7 +62,7 @@
                                       :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
                                       :tehtavat_ja_maarat (list {:tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40} {:tehtava 3029, :uusi_maara 0, :maaramuutos -30, :edellinen_maara 30}),
                                       :urakka 36, :nimi "Tämän hoitovuoden määräpoikkeamamuutos",
-                                      :id 3, :jjh-muutosten-summa nil, :liitteet (list {:liite 11, :muutos 3}), :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "maarapoikkeama"}
+                                      :id 3, :jjh-muutosten-summa nil, :liitteet (list {:id 11, :muutos 3}), :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "maarapoikkeama"}
                                      {:kulu_kohdistus nil, :kustannusvaikutukset nil,
                                       :voimassa_alkaen #inst "2025-06-24T21:00:00.000-00:00", :syy "Työmääräarviot ylittyivät",
                                       :tehtavat_ja_maarat nil, :urakka 36, :nimi nil,
@@ -323,6 +325,12 @@
         ;; validi_aikana on triggeröity special case, joka syytä testata, historiarivi saa ts-rangen loppuarvonsa updatessa
         historiarivi-validi-aikana-alku (ffirst (q (format "SELECT lower(validi_aikana) FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))
         historiarivi-validi-aikana-loppu (ffirst (q (format "SELECT upper(validi_aikana) FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))
+        ;; alkuperäisen rivin validius
+        muutosrivi-validi-aikana-alku (ffirst (q (format "SELECT lower(validi_aikana) FROM ONLY mhu_muutos WHERE id = %s;" (inc max-id-ennen-tallennusta))))
+        muutosrivi-validi-aikana-loppu (ffirst (q (format "SELECT upper(validi_aikana) FROM ONLY mhu_muutos WHERE id = %s;" (inc max-id-ennen-tallennusta))))
+        ;; voimassaolevan rivin tstzrangen loppu on infinity. Sen testaaminen eksplisiittisesti osoittautui hitaaksi, joten
+        ;; tyydytään tässä kohti toteamaan että rivi on voimassa myös esim. vuonna 2035.
+        muutosrivi-validi-aikana-loppu-rivi (first (q-map (format "SELECT * FROM ONLY mhu_muutos WHERE validi_aikana @> '2035-07-01 00:00:00.000+00'::timestamp with time zone AND id = %s;" (inc max-id-ennen-tallennusta))))
         ;; tehdään vielä toinen päivitys: tämä varmastaa että historiataulun uniikkius ei rikkoudu triggerin takia
         vastaus-toisen-updaten-jalkeen (filter
                                          #(= "Johtamisen tarve muuttui taas kerran" (:syy %))
@@ -338,7 +346,10 @@
         historirivit-toisen-updaten-jalkeen (q-map (format "SELECT id, versio FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta)))]
     (is (instance? java.util.Date historiarivi-validi-aikana-alku) "onhan pvm")
     (is (instance? java.util.Date historiarivi-validi-aikana-loppu) "onhan pvm")
+    (is (instance? java.util.Date muutosrivi-validi-aikana-alku) "onhan pvm")
+    (is (= (inc max-id-ennen-tallennusta) (:id muutosrivi-validi-aikana-loppu-rivi)) "oikea rivi palautuu pitkänkin ajan päästä")
     (is (pvm/ennen? historiarivi-validi-aikana-alku historiarivi-validi-aikana-loppu) "validi_aikana on ts-range, jossa alku < loppu")
+    (is (pvm/ennen? muutosrivi-validi-aikana-alku muutosrivi-validi-aikana-loppu) "validi_aikana on ts-range, jossa alku < loppu")
 
     (is (= 1 historiassa-rivi-updaten-jalkeen-count) "historiassa on yksi rivi updaten jälkeen")
     (is (nil? historia-tyhja-insertin-jalkeen) "ei vielä historiatietoa, koska vain INSERT tehtiin")
@@ -370,6 +381,7 @@
                               :kulut  [{:kulu-id (ffirst (q "SELECT id FROM kulu WHERE lisatieto = 'Muutoksesta automaattisesti luotu kulu 1'"))
                                         :pvm #inst"2025-10-15T00:00:00.000-00:00"
                                         :tavoitehinnan-muutos 1230}]
+                              :liitteet nil
                               :versio 1}]
     (is (= vastaus odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
 
@@ -388,3 +400,64 @@
              :valittu-hoitokausi valittu-hoitokausi
              :muutos muutos-payload}))
       "Johto- ja hallintokorvausmuutoksen kulu 2025 ja jälkeen on oltava negatiivinen")))
+
+(defn- muutospayload-liitteilla [muutos-id urakka-id liitteet versio]
+  {:kulu_kohdistus nil,
+   :kustannusvaikutukset (list
+                           {:summa 1000, :toimenpide 700, :kustannuslaji "hankintakustannukset"}),
+   :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00",
+   :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
+   :tehtavat_ja_maarat (list
+                         {:tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40}
+                         {:tehtava 3029, :uusi_maara 0, :maaramuutos -30, :edellinen_maara 30})
+   :urakka urakka-id,
+   :nimi "Tämän hoitovuoden määräpoikkeamamuutos",
+   :id muutos-id,
+   :jjh-muutosten-summa nil,
+   :liitteet liitteet,
+   :versio versio,
+   :luonnos false,
+   :kulut nil,
+   :tavoitehinnan-muutos 1000,
+   :tyyppi "maarapoikkeama"})
+
+(deftest testaa-muutoksen-liitteiden-lisays-ja-poisto
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        muutos-id (ffirst (q "SELECT id FROM mhu_muutos WHERE syy = 'Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.';"))
+        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+        liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
+        tiedosto "dev-resources/images/harja-brand-text.png"
+        tiedoston-sisalto (IOUtils/toByteArray (io/input-stream tiedosto))
+        olemassaoleva-liite-id (ffirst (q "SELECT id FROM liite WHERE nimi = 'rumpu.jpg'"))
+        luotu-liite (liitteet-komponentti/luo-liite liitteiden-hallinta nil (hae-aktiivinen-oulu-testi-id) "harja-brand-text.png" "image/png" 3 tiedoston-sisalto nil "harja-ui")
+        luotu-liite-id (:id luotu-liite)
+        ;; muutoksessa on testidatan kautta ennestään jo yksi liite, lisätään yksi uusi liite
+        liitteet (list
+                   {:id luotu-liite-id :kuvaus nil, :virustarkastettu? true, :urakka urakka-id, :nimi "harja-brand-text.png", :s3hash nil, :lahde "harja-ui", :tyyppi "image/png", :koko 2507}
+                   {:id olemassaoleva-liite-id, :nimi "rumpu.jpg", :kuvaus nil, :tyyppi "image/png", :koko nil, :liite_oid nil, :virustarkastettu? true})
+        liitelinkkien-maara-ennen-tallennusta (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s AND versio = 1;" muutos-id)))
+        muutos-payload (muutospayload-liitteilla muutos-id urakka-id liitteet 1)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tallenna-muutos
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :valittu-hoitokausi valittu-hoitokausi
+                   :muutos muutos-payload})
+        liitelinkkien-maara-tallennuksen-jalkeen (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s AND versio = 2;" muutos-id)))
+        kirjatut (:kirjatut-muutokset vastaus)
+        paivitetty (first (filter #(= (:id %) muutos-id) kirjatut))
+        odotetut-liite-linkit (list {:id olemassaoleva-liite-id, :muutos muutos-id} {:id luotu-liite-id, :muutos muutos-id})
+        liitteet-poistava-payload (muutospayload-liitteilla muutos-id urakka-id [] 2)
+        liitteet-poistettu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :tallenna-muutos
+                                     +kayttaja-jvh+
+                                     {:urakka-id urakka-id
+                                      :valittu-hoitokausi valittu-hoitokausi
+                                      :muutos liitteet-poistava-payload})
+        paivitetty-liitteet-poistettu (first (filter #(= (:id %) muutos-id) (:kirjatut-muutokset liitteet-poistettu-vastaus)))
+        liitelinkkien-maara-liitteiden-poiston-jalkeen (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s AND versio = 3;" muutos-id)))]
+    (is (= 1 liitelinkkien-maara-ennen-tallennusta) "Ennen tallennusta oli yksi liitelinkki muutoksessa")
+    (is (= 2 liitelinkkien-maara-tallennuksen-jalkeen) "Tallennuksen jälkeen kaksi liitelinkkiä")
+    (is (= odotetut-liite-linkit (:liitteet paivitetty)) "Liitteiden linkit on päivitetty muutokseen")
+    (is (= 0 liitelinkkien-maara-liitteiden-poiston-jalkeen) "Liitteiden poistamisen jälkeen ei liitelinkkejä")
+    (is (nil? (:liitteet paivitetty-liitteet-poistettu)) "Ei palaudu enää liitteitä kun ne on poistettu muutoksesta.")))

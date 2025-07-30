@@ -110,6 +110,13 @@
 
     :default))
 
+(defn- poista-liite [app liite-id]
+  (let [liitteet (get-in app [:muokattava-muutos :liitteet])]
+    (assoc-in app [:muokattava-muutos :liitteet]
+      (filter (fn [liite]
+                (not= (:id liite) liite-id))
+        liitteet))))
+
 (extend-protocol tuck/Event
   HoitokausiVaihdettu
   (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
@@ -151,13 +158,15 @@
   (process-event [{vastaus :vastaus
                    muutos :muutos
                    valittu-hoitokausi :valittu-hoitokausi} app]
-    (case (:tyyppi muutos)
-      "johto-ja-hallintokorvaus"
-      (reset! johto-ja-hallintokorvausmuutokset-atom
-        (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus)))
+    (let [uudet-liitteet (:liitteet vastaus)
+          app (assoc-in app [:muokattava-muutos :liitteet] uudet-liitteet)]
+      (case (:tyyppi muutos)
+        "johto-ja-hallintokorvaus"
+        (reset! johto-ja-hallintokorvausmuutokset-atom
+          (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus)))
 
-      :default)
-    app)
+        :default)
+      app))
 
   HaeMuutoksenTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -242,7 +251,9 @@
           {:urakka-id @nav/valittu-urakka-id
            :muutos {:id (:id muutos)
                     :versio (:versio muutos)
-                    :tyyppi (:tyyppi muutos)}}
+                    :tyyppi (:tyyppi muutos)
+                    :liite-idt (into #{}
+                                 (map :id (:liitteet muutos)))}}
           {:onnistui ->HaeMuutoksenTiedotOnnistui
            :onnistui-parametrit [muutos valittu-hoitokausi]
            :epaonnistui ->HaeMuutoksenTiedotEpaonnistui}))
@@ -254,13 +265,12 @@
     [{liite :liite} app]
     (prn "LisaaLiite")
     (-> app
-      (update-in [:muokattava-muutos :liitteet] conj liite)
-      (assoc :uusi-liite liite)))
+      (update-in [:muokattava-muutos :liitteet] conj liite)))
 
   PoistaPoistetutLiitteet
   (process-event
     [{:keys [liite-id]} app]
-    (prn "PoistaPoistetutLiitteet")
+    (prn "PoistaPoistetutLiitteet" liite-id)
 
     (let [liitteet (get-in app [:muokattava-muutos :liitteet])]
       (assoc-in app [:muokattava-muutos :liitteet]
@@ -274,19 +284,19 @@
     (prn "PoistaTallennettuLiite, liite-id: " liite-id)
     (let [{urakka-id :id} @nav/valittu-urakka
           e! (tuck/current-send-function)
-          _ (liitteet/poista-liite-kannasta
-              {:urakka-id urakka-id
-               :domain :muutokset
-               :domain-id (get-in app [:muokattava-muutos :id])
-               :liite-id liite-id
-               :poistettu-fn #(e! (->PoistaPoistetutLiitteet liite-id))})]
-      app))
+          ;; hanskataan tässä myös tilanne, jossa muutosta ei ole vielä tallennettu
+          _ (when (get-in app [:muokattava-muutos :id])
+              (liitteet/poista-liite-kannasta
+                {:urakka-id urakka-id
+                 :domain :muutokset
+                 :domain-id (get-in app [:muokattava-muutos :id])
+                 :liite-id liite-id
+                 :poistettu-fn #(e! (->PoistaPoistetutLiitteet liite-id))}))]
+      (poista-liite app liite-id)))
 
   PoistaLisattyLiite
-  (process-event
-    [_ app]
+  (process-event [_ app]
     (prn "PoistaLisattyLiite")
-
     (assoc app :uusi-liite nil))
 
   LisaaTavoitehintojenMuutos

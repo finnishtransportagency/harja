@@ -218,7 +218,7 @@ $$
 DECLARE
     summa NUMERIC(12, 2);
 BEGIN
-    SELECT COALESCE(SUM(x.summa), 0) AS s
+    SELECT ROUND(COALESCE(SUM(x.summa), 0), 2) AS s
     FROM (
              -- Mahdolliset siirrot edelliseltä vuodelta
              SELECT coalesce(pta.siirron_maara, 0) as summa
@@ -337,8 +337,8 @@ BEGIN
 
             RAISE NOTICE 'Toteutuneet kustannukset: %', toteutuneet_kustannukset_urakalle;
 
-            CASE paatos.tyyppi
-                WHEN 'lupaussanktio'
+            CASE
+                WHEN paatos.tyyppi = 'lupaussanktio' AND urakan_hinnat.tarjous_tavoitehinta > 0
                     THEN RAISE NOTICE 'sanktio tiedot: %', paatos;
                          IF urakka_parametrit.indeksi_kaytossa_sanktiolla = TRUE THEN
                              SELECT korotus
@@ -366,7 +366,7 @@ BEGIN
                                  urakan_tiedot.indeksi, indeksikorotus,
                                  paatos.sanktio_id, paatos."luoja-id", paatos.luotu, paatos.poistettu);
 
-                WHEN 'lupausbonus'
+                WHEN paatos.tyyppi =  'lupausbonus' AND urakan_hinnat.tarjous_tavoitehinta > 0
                     THEN RAISE NOTICE 'bonus tiedot: %', paatos;
                          IF urakka_parametrit.indeksi_kaytossa_bonuksella = TRUE THEN
                              SELECT korotus
@@ -395,7 +395,7 @@ BEGIN
                                  paatos.erilliskustannus_id,
                                  paatos."luoja-id", paatos.luotu, paatos.poistettu);
 
-                WHEN 'tavoitehinnan-alitus'
+                WHEN paatos.tyyppi =  'tavoitehinnan-alitus'
                     THEN RAISE NOTICE 'tavoitehinnan-alitus tiedot: %', paatos;
                          alituksen_maara_urakalle :=
                              urakan_hinnat.hoitovuoden_lopun_tavoitehinta - toteutuneet_kustannukset_urakalle;
@@ -424,7 +424,7 @@ BEGIN
                                  paatos.kulu_id, viimeinen_hoitokausi,
                                  paatos.luotu, paatos."luoja-id",
                                  paatos.poistettu);
-                WHEN 'tavoitehinnan-ylitys'
+                WHEN paatos.tyyppi =  'tavoitehinnan-ylitys' AND urakan_hinnat.tarjous_tavoitehinta > 0
                     THEN RAISE NOTICE 'tavoitehinnan-ylitys tiedot: %', paatos;
 
                     -- Lasketaan tavoitehinnan ylitys.
@@ -460,7 +460,8 @@ BEGIN
                                  paatos."tilaajan-maksu",
                                  paatos."urakoitsijan-maksu", paatos.siirto, paatos.kulu_id,
                                  viimeinen_hoitokausi, paatos.luotu, paatos."luoja-id", paatos.poistettu);
-                WHEN 'kattohinnan-ylitys'
+
+                WHEN paatos.tyyppi =  'kattohinnan-ylitys'
                     THEN RAISE NOTICE 'kattohinnan-ylitys tiedot: %', paatos;
 
                          IF urakka_parametrit.kattohintaylityksen_siirron_prosenttirajoitus > 0 THEN
@@ -486,6 +487,9 @@ BEGIN
                                  viimeinen_hoitokausi, maksimi_siirrettava_maara,
                                  urakka_parametrit.kattohintaylityksen_siirron_prosenttirajoitus, paatos.luotu,
                                  paatos."luoja-id", paatos.poistettu);
+
+                ELSE
+                    RAISE NOTICE 'Tuntematon päätöksen tyyppi: % tai puuttuva tarjous_tavoitehinta: %', paatos.tyyppi, urakan_hinnat.tarjous_tavoitehinta;
 
                 END CASE;
 

@@ -4,15 +4,16 @@
             [harja.domain.kulut :as kulut-domain]
             [harja.domain.mhu :as mhu]
             [harja.domain.muutos-domain :as muutos-domain]
-            [harja.kyselyt.kulut :as kulu-kyselyt]
-            [harja.kyselyt.toimenpideinstanssit :as tpi-q]
-            [harja.kyselyt.urakat :as q-urakat]
             [harja.pvm :as pvm]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.kulut :as kulu-kyselyt]
+            [harja.kyselyt.toimenpideinstanssit :as tpi-q]
+            [harja.kyselyt.urakat :as q-urakat]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
-            [harja.kyselyt [muutos-kyselyt :as muutos-kyselyt]]
+            [harja.kyselyt.liitteet :as liite-kyselyt]
+            [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.yleiset :as yleiset]
@@ -113,25 +114,29 @@
   "Palauttaa yksittäisen muutoksen tarkat tiedot lomaketta varten."
   [db user {:keys [urakka-id muutos]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (let [vastaus (case (:tyyppi muutos)
-                  "johto-ja-hallintokorvaus"
-                  (mapv
-                    (fn [rivi]
-                      (-> rivi
-                        (update :kulut #(mapv (fn [kulu]
-                                                (update kulu :pvm pvm/dateksi))
-                                          (konv/jsonb->clojuremap %)))))
-                    (muutos-kyselyt/hae-johto-ja-hallintokorvausmuutoksen-tiedot db {:id (:id muutos)
-                                                                                     :versio (:versio muutos)
-                                                                                     :urakka urakka-id}))
+  (let [tyypikohtaiset-tiedot (case (:tyyppi muutos)
+                                "johto-ja-hallintokorvaus"
+                                (mapv
+                                  (fn [rivi]
+                                    (-> rivi
+                                      (update :kulut #(mapv (fn [kulu]
+                                                              (update kulu :pvm pvm/dateksi))
+                                                        (konv/jsonb->clojuremap %)))))
+                                  (muutos-kyselyt/hae-johto-ja-hallintokorvausmuutoksen-tiedot db {:id (:id muutos)
+                                                                                                   :versio (:versio muutos)
+                                                                                                   :urakka urakka-id}))
 
-                  ;; tähän puuttuvien muutostyyppien lomakehaut...
-                  nil)]
-    (when (> (count vastaus)  1)
-      (do
-        (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
-        (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on ongelmatilanne. Ota yhteys Harja-palautteeseen."))))
-    (first vastaus)))
+                                ;; tähän puuttuvien muutostyyppien lomakehaut...
+                                [{}])
+        _ (when (> (count tyypikohtaiset-tiedot)  1)
+            (do
+              (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
+              (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on ongelmatilanne. Ota yhteys Harja-palautteeseen."))))
+        liitteet (when-not (empty? (:liite-idt muutos))
+                   (liite-kyselyt/hae-liitteiden-tiedot db {:idt (:liite-idt muutos)
+                                                            :urakka urakka-id}))
+        vastaus (assoc (first tyypikohtaiset-tiedot) :liitteet liitteet)]
+    vastaus))
 
 
 (defn- poista-vanhat-kulutiedot!
@@ -194,6 +199,16 @@
                                        :versio (:versio muutos)
                                        :kayttaja (:id user)})))
 
+(defn- tallenna-muutoksen-liitteet [db muutoksen-paluurivi liitteet]
+  (doseq [liite liitteet]
+    (let [liite-id (:id liite)
+          muutos-id (:id muutoksen-paluurivi)
+          muutos-versio (:versio muutoksen-paluurivi)]
+      (when (and liite-id muutos-id muutos-versio)
+        (muutos-kyselyt/linkita-muutos-ja-liite<! db {:muutos muutos-id
+                                                      :liite liite-id
+                                                      :versio muutos-versio})))))
+
 (defn tallenna-muutos [db user {:keys [urakka-id valittu-hoitokausi muutos] :as tiedot}]
   (log/debug "tallenna-muutos: " tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
@@ -215,6 +230,7 @@
       (let [muutos-paluurivi (if (:id muutos)
                                (muutos-kyselyt/paivita-muutos<! db muutos)
                                (muutos-kyselyt/luo-muutos<! db muutos))]
+        (tallenna-muutoksen-liitteet db muutos-paluurivi liitteet)
         ;; hox: voi tehdä case:lla, kun myöhemmin tulee lisää tyyppejä
         (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
           (tallenna-johto-ja-hallintokorvauksen-muutokset db user urakka muutos-paluurivi kulut)))

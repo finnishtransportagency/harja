@@ -27,17 +27,19 @@
     :tyyppi :komponentti ::lomake/col-luokka "col-xs-12"
     :uusi-rivi? true
     :komponentti (fn [_]
-                   [liitteet/liitteet-ja-lisays
-                    @nav/valittu-urakka-id
-                    (:liitteet muokattava-muutos)
-                    {:uusi-liite-atom (r/wrap uusi-liite
-                                        #(e! (muutos-tiedot/->LisaaLiite %)))
-                     :uusi-liite-teksti "Lisää liite"
-                     :salli-poistaa-lisatty-liite? true
-                     :poista-lisatty-liite-fn #(e! (muutos-tiedot/->PoistaLisattyLiite))
-                     :salli-poistaa-tallennettu-liite? true
-                     :nayta-lisatyt-liitteet? false
-                     :poista-tallennettu-liite-fn #(e! (muutos-tiedot/->PoistaTallennettuLiite %))}])}])
+                   (when (every? :nimi (:liitteet muokattava-muutos))
+                     [liitteet/liitteet-ja-lisays
+                      @nav/valittu-urakka-id
+                      (:liitteet muokattava-muutos)
+                      {:uusi-liite-atom (r/wrap uusi-liite
+                                          #(e! (muutos-tiedot/->LisaaLiite %)))
+                       :uusi-liite-teksti "Lisää liite"
+                       :nayta-lisatyt-liitteet? false
+                       :lisaa-usea-liite? true
+                       :salli-poistaa-lisatty-liite? true
+                       :poista-lisatty-liite-fn #(e! (muutos-tiedot/->PoistaLisattyLiite))
+                       :salli-poistaa-tallennettu-liite? true
+                       :poista-tallennettu-liite-fn #(e! (muutos-tiedot/->PoistaTallennettuLiite %))}]))}])
 
 (defn- muutoslomakkeen-kentat-yhteiset
   "Eri muutostyypeille yhteiset kentät. Voi silti sisältää pienen määrän haaroitusta."
