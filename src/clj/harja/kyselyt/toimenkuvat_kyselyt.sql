@@ -67,6 +67,19 @@ FROM johto_ja_hallintokorvaus_toimenkuva t
 WHERE t.toimenkuva = :nimi
   AND t."urakka-id" = :urakkaid;
 
+-- name: hae-toimenkuva
+-- Haetaan yksittäinen toimenkuva.
+SELECT t.id, t.toimenkuva, COALESCE(t.urakkakohtainen_nimi, '') AS urakkakohtainen_nimi, maksukuukaudet
+FROM johto_ja_hallintokorvaus_toimenkuva t
+WHERE t.toimenkuva = :toimenkuva
+  AND t."urakka-id" IS NULL;
+
+-- name: hae-toimenkuva-idlla
+-- Haetaan yksittäinen toimenkuva.
+SELECT t.id, "urakka-id", t.toimenkuva, COALESCE(t.urakkakohtainen_nimi, '') AS urakkakohtainen_nimi, maksukuukaudet
+FROM johto_ja_hallintokorvaus_toimenkuva t
+WHERE t.id = :id;
+
 -- name: onko-toimenkuva-olemassa?
 -- single?: true
 SELECT exists(SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE id = :toimenkuva-id :: BIGINT);

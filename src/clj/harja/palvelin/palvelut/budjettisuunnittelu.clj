@@ -18,7 +18,8 @@
              [rahavaraukset :as rahavaraus-kyselyt]
              [indeksit :as i-q]
              [konversio :as konv]
-             [tehtavaryhmat :as tr-q]]
+             [tehtavaryhmat :as tr-q]
+             [toimenkuvat-kyselyt :as toimenkuvat-kyselyt]]
             [harja.palvelin.palvelut
              [kiinteahintaiset-tyot :as kiinthint-tyot]
              [kustannusarvioidut-tyot :as kustarv-tyot]]
@@ -690,15 +691,11 @@
                                                  {::ur/id urakka-id}))
           urakan-alkuvuosi (urakat-q/hae-urakan-alkuvuosi db urakka-id)
           toimenkuva-id (or toimenkuva-id
-                          (::bs/id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
-                                            #{::bs/id}
-                                            {::bs/toimenkuva toimenkuva}))))
+                          (:id (first (toimenkuvat-kyselyt/hae-toimenkuva db {:toimenkuva toimenkuva}))))
           maksukuukaudet (::bs/maksukuukaudet (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
                                                        #{::bs/maksukuukaudet}
                                                        {::bs/id toimenkuva-id})))
-          toimenkuvan-urakka-id (::bs/urakka-id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
-                                                         #{::bs/urakka-id}
-                                                         {::bs/id toimenkuva-id})))
+          toimenkuvan-urakka-id (:urakka-id (first (toimenkuvat-kyselyt/hae-toimenkuva-idlla db {:id toimenkuva-id})))
           _ (when-not (or (nil? toimenkuvan-urakka-id) (= urakka-id toimenkuvan-urakka-id))
               (throw (Exception. "Yritetään tallentaa toisen urakan toimenkuvalle")))
           _ (when (nil? toimenkuva-id)
