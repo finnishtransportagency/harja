@@ -3,6 +3,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
             [harja.palvelin.integraatiot.sampo.kasittely.urakat :as urakat]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuvat-kyselyt]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
 (use-fixtures :once tietokantakomponentti-fixture)
@@ -13,9 +15,17 @@
   (poista-urakka))
 
 (deftest maanteiden-hoidon-urakan-tallentuminen
-  (tuo-maanteiden-hoidon-urakka)
-  (is (= 1 (count (hae-urakat))) "Luonnin jälkeen maanteiden hoidon urakka löytyy Sampo id:llä.")
-  (poista-urakka))
+  (let [_ (tuo-maanteiden-hoidon-urakka)
+        urakat (hae-urakat)
+        urakkaid (ffirst urakat)
+        urakan-tiedot (first (urakat-q/hae-urakka (:db jarjestelma) {:id urakkaid}))
+        urakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        urakan-toimenkuvat (toimenkuvat-kyselyt/hae-urakan-toimenkuvat (:db jarjestelma) {:urakkaid urakkaid})]
+    (is (= 1 (count (hae-urakat))) "Luonnin jälkeen maanteiden hoidon urakka löytyy Sampo id:llä.")
+    (is (= 7 (count urakan-toimenkuvat)))
+    (is (= 0.08M (:lupauspaatoksen_bonusprosentti urakan-parametrit)))
+    (is (= #inst "2030-09-29T21:00:00.000-00:00" (:loppupvm urakan-tiedot)))
+    (poista-urakka)))
 
 (deftest urakan-paivittaminen
   (tuo-urakka)

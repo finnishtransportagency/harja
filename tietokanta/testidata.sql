@@ -266,3 +266,12 @@ INSERT INTO analytiikka_toteumat (
     ORDER BY t.alkanut ASC
 )
 ON CONFLICT DO NOTHING;
+
+-- Päivitetään toimenkuvat urakoille
+SELECT lisaa_toimenkuvat_urakalle('2019-10-01'::DATE);
+SELECT lisaa_toimenkuvat_urakalle('2020-10-01'::DATE);
+SELECT lisaa_toimenkuvat_urakalle('2021-10-01'::DATE);
+SELECT lisaa_toimenkuvat_urakalle('2022-10-01'::DATE);
+SELECT lisaa_toimenkuvat_urakalle('2023-10-01'::DATE);
+SELECT lisaa_toimenkuvat_urakalle('2024-10-01'::DATE);
+SELECT lisaa_toimenkuvat_urakalle('2025-10-01'::DATE);

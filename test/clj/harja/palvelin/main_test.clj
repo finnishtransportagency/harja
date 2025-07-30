@@ -163,6 +163,7 @@
     :reikapaikkaukset
     :kustannukset
     :rahavaraukset-hallinta
+    :toimenkuvat-hallinta
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
     :paallystysilmoitukset-hallinta
@@ -253,6 +254,7 @@
     :reikapaikkaukset
     :kustannukset
     :rahavaraukset-hallinta
+    :toimenkuvat-hallinta
     :urakkahenkilot-hallinta
     :api-talvihoitoreitit
     :talvihoitoreitit
