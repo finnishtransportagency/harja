@@ -124,30 +124,16 @@
        :epaonnistui ->ValitseUrakanToimenkuvaEpaonnistui
        :paasta-virhe-lapi? true})
 
-    (if valittu?
-      (-> app
-        (update :urakoiden-toimenkuvat
-          conj {:id (:id toimenkuva)
-                :nimi (:nimi toimenkuva)
-                :urakka-id (:urakka-id urakka)
-                :urakka-nimi (:urakka-nimi urakka)})
-        (assoc :tallennus-kesken? true))
-      (-> app
-        (update :urakoiden-toimenkuvat
-          #(filter %2 %1)
-          #(or
-             (not= (:id %) (:id toimenkuva))
-             (not= (:urakka-id %) (:urakka-id urakka))))
-        (assoc :tallennus-kesken? true))))
+    (assoc app :tallennus-kesken? true))
 
   ValitseUrakanToimenkuvaOnnistui
-  (process-event [_ app]
-    (assoc app :tallennus-kesken? false))
+  (process-event [{:keys [vastaus]} app]
+    (kasittele-toimenkuva-vastaus vastaus app))
 
   ValitseUrakanToimenkuvaEpaonnistui
-  (process-event [_ app]
+  (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Toimenkuvan tallennus epäonnistui" :varoitus)
-    (assoc app :tallennus-kesken? false))
+    (kasittele-toimenkuva-vastaus vastaus app))
 
   ValitseUrakka
   (process-event [{:keys [urakka]} app]
