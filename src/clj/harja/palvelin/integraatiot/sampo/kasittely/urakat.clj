@@ -56,19 +56,23 @@
 
 (defn- tallenna-urakka [db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkanro urakkatyyppi sopimustyyppi
                         ely-id urakoitsija-id]
-  (let [urakka-id (:id (first (urakat-q/hae-id-sampoidlla db sampo-id)))]
+  (let [ urakka-id (:id (first (urakat-q/hae-id-sampoidlla db sampo-id)))]
     (if urakka-id
       (do
         (paivita-urakka db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkanro urakkatyyppi sopimustyyppi
                         ely-id urakoitsija-id)
         ;; Päivitetään urakan parametrit
         (urakat-q/aseta-tai-paivita-urakkaparametrit db {:urakkaid urakka-id})
+        ;; Lisätään urakalle toimenkuvat
+        (urakat-q/aseta-urakan-toimenkuvat db {:alkupvm alkupvm})
         urakka-id)
       (do
         (let [urakka-id (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkanro urakkatyyppi sopimustyyppi
                           ely-id urakoitsija-id)
               ;; Lisätään urakan parametrit
-              _ (urakat-q/aseta-tai-paivita-urakkaparametrit db {:urakkaid urakka-id})]
+              _ (urakat-q/aseta-tai-paivita-urakkaparametrit db {:urakkaid urakka-id})
+              ;; Lisätään urakalle toimenkuvat
+              _ (urakat-q/aseta-urakan-toimenkuvat db {:alkupvm alkupvm})]
           urakka-id)))))
 
 (defn- paivita-yhteyshenkilo [db yhteyshenkilo-sampo-id urakka-id]
