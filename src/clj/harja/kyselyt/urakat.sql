@@ -1282,3 +1282,6 @@ SELECT aseta_tai_paivita_urakka_parametrit_urakalle(:urakkaid);
 select *
   from urakka_parametrit
  WHERE urakkaid = :urakkaid;
+
+-- name: aseta-urakan-toimenkuvat
+SELECT lisaa_toimenkuvat_urakalle(:alkupvm);
