@@ -81,6 +81,7 @@
     [harja.palvelin.palvelut.hallinta.paallystysilmoitukset-hallinta-palvelu :as paallystysilmoitukset-hallinta]
     [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.toimenkuvat-palvelu :as toimenkuvat-hallinta]
     [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
     [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
@@ -864,6 +865,11 @@
       :rahavaraukset-hallinta
       (component/using
         (rahavaraukset-hallinta/->RahavarauksetHallinta)
+        [:http-palvelin :db])
+
+      :toimenkuvat-hallinta
+      (component/using
+        (toimenkuvat-hallinta/->ToimenkuvatHallinta)
         [:http-palvelin :db])
 
       :tieosoitteet-hallinta
