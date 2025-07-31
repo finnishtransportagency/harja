@@ -2,6 +2,12 @@
 CREATE UNIQUE INDEX johto_ja_hallintokorvaus_toimenkuva_urakka_id_index
     on johto_ja_hallintokorvaus_toimenkuva (toimenkuva, "urakka-id");
 
+-- Tietokannassa on muutamia tyhjä string arvoja puutteellisen käyttöliittymän vuoksi.
+-- Muokataan nämä arvot NULL arvoiksi. Niin seuraava unique index toimii oikein.
+UPDATE johto_ja_hallintokorvaus_toimenkuva
+    SET toimenkuva = NULL
+    WHERE toimenkuva = '';
+
 -- Lisätään toimenkuvalle urakkakohtainen nimi
 ALTER TABLE johto_ja_hallintokorvaus_toimenkuva
     ADD COLUMN IF NOT EXISTS urakkakohtainen_nimi VARCHAR(255) NULL;
@@ -18,26 +24,27 @@ BEGIN
         LOOP
 
             RAISE NOTICE 'Lisätään toimenkuvat urakalle: % ', urakkaid;
-            -- Tämä funktio voidaan ajaa monesti, joten tarkistetaan ensin, onko toimenkuva jo lisätty
-            IF EXISTS (SELECT 1 FROM johto_ja_hallintokorvaus_toimenkuva
-                       WHERE "urakka-id" = urakkaid) THEN
-                RAISE NOTICE 'Toimenkuvat on jo lisätty urakalle: %', urakkaid;
-                CONTINUE; -- Jatketaan seuraavaan urakkaan, jos toimenkuvat on jo lisätty
-            END IF;
 
             -- 2019, 2020, 2021 urakoille
             -- Näillä on vanhassa kustiksessa erikoisuutena se, että päätoiminen apulainen ja apulainen/tyonjohtaja
             -- on jaettu kesäkauteen ja talvikauteen ja UI näyttää ne erikseen. Tietokannassa ne on vain yhtenä rivinä.
             CASE WHEN urakan_alkupvm IN ('2019-10-01'::DATE, '2020-10-01'::DATE, '2021-10-01'::DATE) THEN
                 RAISE NOTICE 'Lisätään toimenkuvat 2019, 2020, 2021 urakalle: % alkupäivä: %', urakkaid, urakan_alkupvm;
+                -- Lisätään toimenkuvat yksitellen ja varmistetaan, ettei sitä jo löydy kannasta
                 INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
-                VALUES (urakkaid, 'sopimusvastaava', 'Sopimusvastaava'),
-                       (urakkaid, 'vastuunalainen työnjohtaja', 'Vastuunalainen työnjohtaja'),
-                       (urakkaid, 'päätoiminen apulainen', 'Päätoiminen apulainen'),
-                       (urakkaid, 'apulainen/työnjohtaja', 'Apulainen/työnjohtaja'),
-                       (urakkaid, 'viherhoidosta vastaava henkilö', 'Viherhoidosta vastaava henkilö'),
-                       (urakkaid, 'hankintavastaava', 'Hankintavastaava'),
-                       (urakkaid, 'harjoittelija', 'Harjoittelija');
+                VALUES (urakkaid, 'sopimusvastaava', 'Sopimusvastaava') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES (urakkaid, 'vastuunalainen työnjohtaja', 'Vastuunalainen työnjohtaja') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES (urakkaid, 'päätoiminen apulainen', 'Päätoiminen apulainen') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES (urakkaid, 'apulainen/työnjohtaja', 'Apulainen/työnjohtaja') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES (urakkaid, 'viherhoidosta vastaava henkilö', 'Viherhoidosta vastaava henkilö') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES (urakkaid, 'hankintavastaava', 'Hankintavastaava') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES (urakkaid, 'harjoittelija', 'Harjoittelija') ON CONFLICT DO NOTHING;
                  ELSE RAISE NOTICE 'Ei osu alkupäivään 2019, 2020, 2021 alkupäivä: %', urakan_alkupvm;
                 END CASE;
             -- 2022, 2023 urakoille
@@ -45,13 +52,19 @@ BEGIN
 
                 RAISE NOTICE 'Lisätään toimenkuvat 2022, 2023 urakalle: % alkupäivä: %', urakkaid, urakan_alkupvm;
                 INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
-                VALUES (urakkaid, 'valmistelukausi ennen urakka-ajan alkua', 'Valmistelukausi ennen urakka-ajan alkua'),
-                       (urakkaid, 'vastuunalainen työnjohtaja', 'Vastuunalainen työnjohtaja'),
-                       (urakkaid, 'päätoiminen apulainen', 'Päätoiminen apulainen'),
-                       (urakkaid, 'apulainen/työnjohtaja', 'Apulainen/työnjohtaja'),
-                       (urakkaid, 'viherhoidosta vastaava henkilö', 'Viherhoidosta vastaava henkilö'),
-                       (urakkaid, 'hankintavastaava', 'Hankintavastaava'),
-                       (urakkaid, 'harjoittelija', 'Harjoittelija');
+                VALUES (urakkaid, 'valmistelukausi ennen urakka-ajan alkua', 'Valmistelukausi ennen urakka-ajan alkua') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES       (urakkaid, 'vastuunalainen työnjohtaja', 'Vastuunalainen työnjohtaja') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES       (urakkaid, 'päätoiminen apulainen', 'Päätoiminen apulainen') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES       (urakkaid, 'apulainen/työnjohtaja', 'Apulainen/työnjohtaja') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES       (urakkaid, 'viherhoidosta vastaava henkilö', 'Viherhoidosta vastaava henkilö') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES      (urakkaid, 'hankintavastaava', 'Hankintavastaava') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES       (urakkaid, 'harjoittelija', 'Harjoittelija');
                  ELSE RAISE NOTICE 'Ei osu alkupäivään 2022, 2023 alkupäivä: %', urakan_alkupvm;
                 END CASE;
 
@@ -59,13 +72,19 @@ BEGIN
             CASE WHEN urakan_alkupvm > '2024-09-30'::DATE THEN
                 RAISE NOTICE 'Lisätään toimenkuvat >= 2024 urakalle: %, urakan_alkupvm: %', urakkaid, urakan_alkupvm;
                 INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
-                VALUES (urakkaid, 'valmistelukausi ennen urakka-ajan alkua', 'Valmistelukausi ennen urakka-ajan alkua'),
-                       (urakkaid, 'vastuunalainen työnjohtaja', 'Vastuunalainen työnjohtaja'),
-                       (urakkaid, '2. työnjohtaja', '2. Työnjohtaja'),
-                       (urakkaid, '3. työnjohtaja', '3. Työnjohtaja'),
-                       (urakkaid, 'viherhoidosta vastaava henkilö', 'Viherhoidosta vastaava henkilö'),
-                       (urakkaid, 'hankintavastaava', 'Hankintavastaava'),
-                       (urakkaid, 'harjoittelija', 'Harjoittelija');
+                VALUES (urakkaid, 'valmistelukausi ennen urakka-ajan alkua', 'Valmistelukausi ennen urakka-ajan alkua') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES      (urakkaid, 'vastuunalainen työnjohtaja', 'Vastuunalainen työnjohtaja') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES      (urakkaid, '2. työnjohtaja', '2. Työnjohtaja') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES       (urakkaid, '3. työnjohtaja', '3. Työnjohtaja') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES       (urakkaid, 'viherhoidosta vastaava henkilö', 'Viherhoidosta vastaava henkilö') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES       (urakkaid, 'hankintavastaava', 'Hankintavastaava') ON CONFLICT DO NOTHING;
+                INSERT INTO johto_ja_hallintokorvaus_toimenkuva ("urakka-id", toimenkuva, urakkakohtainen_nimi)
+                VALUES      (urakkaid, 'harjoittelija', 'Harjoittelija') ON CONFLICT DO NOTHING;
                  ELSE RAISE NOTICE 'Ei osu alkupäivään >= 2024 alkupäivä: %', urakan_alkupvm;
                 END CASE;
 
