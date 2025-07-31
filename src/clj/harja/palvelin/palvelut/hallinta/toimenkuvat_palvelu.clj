@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.hallinta.toimenkuvat-palvelu
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.string :as str]
+            [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
@@ -77,7 +78,12 @@
         (toimenkuvat-kyselyt/poista-urakan-toimenkuva<! db {:urakkaid urakka
                                                             :toimenkuvaid (:id urakan-toimenkuva)}))
       ;; Lisätään kokonaan uusi toimenkuva, mutta ei merkitä sitä vielä käyttöön urakalle. Jos urakkakohtainen-nimi on syötetty, niin sitä ei hyödynnetä
-      (toimenkuvat-kyselyt/lisaa-uusi-toimenkuva<! db {:toimenkuva nimi}))
+      (if (and (not (nil? nimi)) (not (empty? (str/trim nimi))))
+
+        ;; Lisätään uusi toimenkuva tietokantaan
+        (toimenkuvat-kyselyt/lisaa-uusi-toimenkuva<! db {:toimenkuva nimi})
+        ;; Jos nimi on tyhjä tai nil niin kerrotaan siitä käyttäjälle
+        (throw (IllegalArgumentException. "Toimenkuvan nimi ei voi olla tyhjä tai nil."))))
 
     ;; Palauta sen jälkeen tietokannasta tuoreet urakan toimenkuvat
     (hae-toimenkuvat db kayttaja)))

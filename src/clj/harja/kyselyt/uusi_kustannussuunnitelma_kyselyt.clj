@@ -22,7 +22,7 @@
   hae-rahavaraus-vuodelta
   paivita-kuukauden-hoidonjohtopalkkio<! tallenna-kuukauden-hoidonjohtopalkkio<!
   hae-johto-ja-hallintokorvaukset-kuukausittain
-  paivita-kuukauden-johto-ja-hallintokorvaus<! tallenna-kuukauden-johto-ja-hallintokorvaus<!
+  paivita-kuukauden-johto-ja-hallintokorvaus<! nollaa-kuukauden-johto-ja-hallintokorvaus<! tallenna-kuukauden-johto-ja-hallintokorvaus<!
   vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
   vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille!
   vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille!
@@ -41,7 +41,11 @@
                                                 :toimenpideinstanssi-id toimenpideinstanssi-id})
                                  kiinteat-alkukausi (filter #(>= (:kuukausi %) 10) kiinteat)
                                  kiinteat-loppukausi (filter #(<= (:kuukausi %) 9) kiinteat)
-                                 alkukausi (if (seq kiinteat-alkukausi) (apply + (map :summa kiinteat-alkukausi)) 0)
+                                 alkukausi (if (seq kiinteat-alkukausi) (apply + (map (fn [rivi]
+                                                                                        (if (:summa rivi)
+                                                                                          (:summa rivi)
+                                                                                          0))
+                                                                                   kiinteat-alkukausi)) 0)
                                  alkukausi-indeksikorjattu (if (seq kiinteat-alkukausi)
                                                              (apply + (map (fn [rivi]
                                                                              (if (:summa_indeksikorjattu rivi)
@@ -49,7 +53,11 @@
                                                                                0))
                                                                         kiinteat-alkukausi))
                                                              0)
-                                 loppukausi (if (seq kiinteat-loppukausi) (apply + (map :summa kiinteat-loppukausi)) 0)
+                                 loppukausi (if (seq kiinteat-loppukausi) (apply + (map (fn [rivi]
+                                                                                          (if (:summa rivi)
+                                                                                            (:summa rivi)
+                                                                                            0))
+                                                                                     kiinteat-loppukausi)) 0)
                                  loppukausi-indeksikorjattu (if (seq kiinteat-loppukausi)
                                                               (apply + (map (fn [rivi]
                                                                               (if (:summa_indeksikorjattu rivi)
@@ -326,11 +334,20 @@
         _ (doseq [rivi johto-ja-hallintokorvaukset]
             (let [dbrivi (first (hae-kuukauden-hoidonjohtopalkkio db {:id (:id rivi)}))
                   t (if (:id dbrivi)
-                      (paivita-kuukauden-johto-ja-hallintokorvaus<! db
-                        {:id (:id dbrivi)
-                         :tuntipalkka (:summa rivi)
-                         :tuntipalkka_indeksikorjattu nil
-                         :muokkaaja (:id kayttaja)})
+                      (do
+                        ;; Koska vanhassa kustiksessa arvot oli toimenpidekohtaisesti, niin nollataan ne pois ensin, jotta
+                        ;; juuri tapahtunut päivitys tulisi näkyviin. Uusi kustis voi käyttää vain yhtä riviä ja yhtä id:tä arvojen päivitykseen.
+                        (println "nollataan kuukausi " (:kuukausi rivi) "vuosi:" (:vuosi rivi) "rivi id:" (:id rivi))
+                        (nollaa-kuukauden-johto-ja-hallintokorvaus<! db
+                          {:kuukausi (:kuukausi rivi)
+                           :vuosi (:vuosi rivi)
+                           :muokkaaja (:id kayttaja)
+                           :urakka-id urakka-id})
+                        (paivita-kuukauden-johto-ja-hallintokorvaus<! db
+                            {:id (:id dbrivi)
+                             :tuntipalkka (:summa rivi)
+                             :tuntipalkka_indeksikorjattu nil
+                             :muokkaaja (:id kayttaja)}))
                       ;; Lisää uusi
                       (tallenna-kuukauden-johto-ja-hallintokorvaus<! db
                         {:urakka-id urakka-id

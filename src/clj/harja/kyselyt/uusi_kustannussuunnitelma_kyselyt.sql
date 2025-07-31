@@ -98,15 +98,17 @@ VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
         'laskutettava-tyo', 'erillishankinnat', :luoja, NOW());
 
 -- name: hae-johto-ja-hallintokorvaukset-kuukausittain
-SELECT id,
+SELECT MIN(id) as id,
        kuukausi,
        vuosi,
-       (tunnit * tuntipalkka)                 as summa,
-       (tunnit * tuntipalkka_indeksikorjattu) as summa_indeksikorjattu
+       SUM((tunnit * tuntipalkka))                 as summa,
+       SUM((tunnit * tuntipalkka_indeksikorjattu)) as summa_indeksikorjattu
 FROM johto_ja_hallintokorvaus
 WHERE "urakka-id" = :urakka-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
-    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9));
+    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+GROUP BY vuosi, kuukausi
+ORDER BY vuosi, kuukausi;
 
 -- name: paivita-kuukauden-johto-ja-hallintokorvaus<!
 UPDATE johto_ja_hallintokorvaus
@@ -115,6 +117,16 @@ SET tuntipalkka                 = :tuntipalkka,
     muokkaaja                   = :muokkaaja,
     muokattu                    = NOW()
 WHERE id = :id;
+
+-- name: nollaa-kuukauden-johto-ja-hallintokorvaus<!
+UPDATE johto_ja_hallintokorvaus
+SET tuntipalkka                 = null,
+    tuntipalkka_indeksikorjattu = null,
+    muokkaaja                   = :muokkaaja,
+    muokattu                    = NOW()
+WHERE vuosi = :vuosi
+  AND kuukausi = :kuukausi
+  AND "urakka-id" = :urakka-id;
 
 -- name: tallenna-kuukauden-johto-ja-hallintokorvaus<!
 INSERT INTO johto_ja_hallintokorvaus

@@ -78,3 +78,17 @@
     
     (is (= (+ 1 (count toimenkuvat-kaikki-ennen)) (count toimenkuvat-kaikki-jalkeen)))
     (is (= (+ 1 (count urakan-toimenkuvat-ennen)) (count urakan-toimenkuvat-jalkeen)))))
+
+(deftest lisaa-urakalle-null-toimenkuva
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+
+        ;; Lisätään uusi NULL toimenkuva tietokantaan
+        null-toimenkuva {:id -1 :nimi nil :urakka urakka-id :valittu? nil}
+        tyhja-toimenkuva {:id -1 :nimi "" :urakka urakka-id :valittu? nil}
+        melkein-tyhja-toimenkuva {:id -1 :nimi "    " :urakka urakka-id :valittu? nil}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                             :paivita-urakan-toimenkuva +kayttaja-jvh+ null-toimenkuva)))
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                             :paivita-urakan-toimenkuva +kayttaja-jvh+ tyhja-toimenkuva)))
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                             :paivita-urakan-toimenkuva +kayttaja-jvh+ melkein-tyhja-toimenkuva)))))

@@ -51,7 +51,7 @@ SELECT u.id                     AS "urakka-id",
 FROM urakka u
          LEFT JOIN johto_ja_hallintokorvaus_toimenkuva t ON t."urakka-id" = u.id
 WHERE u.tyyppi = 'teiden-hoito'
-    ORDER BY t.id ASC;;
+    ORDER BY t.id ASC;
 
 -- name: hae-urakan-toimenkuvat
 -- Haetaan urakalle lisätyt toimenkuvat.
