@@ -159,7 +159,11 @@
                    muutos :muutos
                    valittu-hoitokausi :valittu-hoitokausi} app]
     (let [uudet-liitteet (:liitteet vastaus)
-          app (assoc-in app [:muokattava-muutos :liitteet] uudet-liitteet)]
+          app (-> app
+                (assoc-in [:muokattava-muutos :liitteet] uudet-liitteet)
+                ;; alustetaan lomaketta varten hoitokausi samaksi kuin valittu hoitokausi, mutta ne voivat
+                ;; erkaantua myöhemmin jos käyttäjä niin haluaa (esim. kirjata pysyvän muutoksen eri hoitokaudelle kuin valittu)
+                (assoc-in [:muokattava-muutos :hoitovuosi] valittu-hoitokausi))]
       (case (:tyyppi muutos)
         "johto-ja-hallintokorvaus"
         (reset! johto-ja-hallintokorvausmuutokset-atom

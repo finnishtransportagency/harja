@@ -1,6 +1,7 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
   (:require [clojure.string :as str]
+            [harja.ui.ikonit :as ikonit]
             [reagent.core :as r]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -40,6 +41,9 @@
                        :poista-lisatty-liite-fn #(e! (muutos-tiedot/->PoistaLisattyLiite))
                        :salli-poistaa-tallennettu-liite? true
                        :poista-tallennettu-liite-fn #(e! (muutos-tiedot/->PoistaTallennettuLiite %))}]))}])
+
+(def +pysyva-muutos-vihje+
+  "Pysyvät muutokset huomioidaan osana kustannussuunnitelmaa ja indeksitarkistusta ensimmäisestä täydestä hoitovuodesta alkaen. Muutokset ovat voimassa urakan päättymiseen asti.")
 
 (defn- muutoslomakkeen-kentat-yhteiset
   "Eri muutostyypeille yhteiset kentät. Voi silti sisältää pienen määrän haaroitusta."
@@ -93,10 +97,66 @@
             :pakollinen? true})]
         (liite-kentta e! app)))))
 
+(defn taulukko-pysyvan-muutoksen-vaikutukset
+  [e! app]
+  [:span
+   [grid/muokkaus-grid
+    {:tunniste :toimenpide
+     :luokat ["pysyvan-muutoksen-grid"]
+     :piilota-toiminnot? true
+     :voi-lisata? false
+     :voi-kumota? false
+     :voi-poistaa? (constantly false)
+     :voi-muokata? true}
+
+    ;; taulukon kentät
+    [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :komponentti :leveys 20
+      :komponentti (fn [rivi]
+                         [:span
+                          (:toimenpide rivi)])}
+
+     {:otsikko "Suunniteltu kustannus (€)"
+      :nimi :suunniteltu-kustannus :vaadi-ei-negatiivinen? true
+      :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}
+     {:otsikko "Tavoitehinnan muutos (€)"
+      :nimi :suunniteltu-kustannus :vaadi-ei-negatiivinen? true
+      :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}
+     {:otsikko "Muuttunut kustannus (€)"
+      :nimi :suunniteltu-kustannus :vaadi-ei-negatiivinen? true
+      :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}
+     ]
+    muutos-tiedot/johto-ja-hallintokorvausmuutokset-atom]
+   ])
+
 (defn- muutoslomakkeen-kentat-pysyva
   "Pysyvän muutoksen lomakekomponentti"
-  [e! app]
-  [])
+  [e! {:keys [urakan-hoitokaudet muokattava-muutos] :as app}]
+  (prn "Jarno mitä ryhmä palauttaa " (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}))
+  [{:otsikko "" :nimi :hr :uusi-rivi? true
+    :tyyppi :komponentti :komponentti (fn [] [:hr])}
+   (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}
+
+     {:otsikko "Hoitovuosi" :nimi :hoitovuosi :kaariva-luokka "hoitovuosi-valinta"
+      :tyyppi :valinta :valinnat urakan-hoitokaudet
+      :hae (fn [rivi]
+             (prn "Jarno rivi " rivi)
+             (:hoitovuosi rivi))
+      :valinta-nayta #(if %
+                        (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet "Hoitovuosi")
+                        "Valitse")
+      :valinta-arvo identity}
+     {:otsikko "" :uusi-rivi? true
+      :nimi :vihje :kaariva-luokka "pysyva-muutos-vihje"
+      :tyyppi :komponentti
+      :komponentti (fn []
+                     [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."])}
+
+     ;; Taulukko jossa vaikutkuksia voidaan syöttää
+     {:otsikko "" :uusi-rivi? true
+      :nimi :taulukko-pysyvan-muutoksen-vaikutukset
+      :tyyppi :komponentti
+      :komponentti (fn [e! app]
+                     [taulukko-pysyvan-muutoksen-vaikutukset e! app])})])
 
 
 (defn- muutoslomakkeen-kentat-johto-ja-hallintokorvaus
@@ -150,6 +210,7 @@
         {:otsikko (if (:id muokattava-muutos)
                     "Muokkaa muutosta"
                     "Lisää uusi muutos")
+         :tarkkaile-ulkopuolisia-muutoksia? true
          :muokkaa! #(e! (muutos-tiedot/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
          :footer-fn (fn [muutos]
                       [:span.tallenna-ja-peruuta
@@ -176,8 +237,8 @@
 
               "johto-ja-hallintokorvaus" (muutoslomakkeen-kentat-johto-ja-hallintokorvaus e! app)
 
-              ;; tässä kohti default, että jokaiselle aukeaa jotain... poistunee lopulta kun kaikki toteutettu
-              (muutoslomakkeen-kentat-pysyva e! app))))
+              ;; default: ei lisäkenttiä
+              [])))
         muokattava-muutos]])))
 
 (defn- kehystetty-avattava-grid
