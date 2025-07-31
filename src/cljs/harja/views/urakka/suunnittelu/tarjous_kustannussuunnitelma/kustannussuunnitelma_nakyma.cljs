@@ -54,8 +54,9 @@
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Indeksikorjattu"]
          [:div.body-text (if vahvistettu? (fmt/euro-opt true yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
-         [:div.body-text (when vahvistettu?
-                           (str "(" indeksikerroin " * " (if yhteensa (fmt/euro-opt false yhteensa) "0,00 €") " )"))]]
+         (when vahvistettu?
+           [:div.body-text
+            (str "(" indeksikerroin " * " (if yhteensa (fmt/euro-opt false yhteensa) "0,00 €") " )")])]
         )]]))
 
 (defn kilpailutettavat-hankinnat [e! {:keys [tallennus-kesken? valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
@@ -137,7 +138,7 @@
           :nimi :loppukausi :tyyppi :euro
           :leveys "20%" :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 9999999 2))
           :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea :otsikkorivi-luokka "korkea"}
-         {:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :string :fmt #(fmt/euro-opt false %)  :leveys "20%" :muokattava? (constantly false)
+         {:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :string :fmt #(fmt/euro-opt false %) :leveys "20%" :muokattava? (constantly false)
           :tasaa :oikea :otsikkorivi-luokka "korkea"}]
         taulukon-tiedot]]]
 
@@ -157,7 +158,7 @@
             #(do
                (reset! tallenna-painettu false)
                (e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @grid-hankinnat-atom)))
-            {:disabled (or tallennus-kesken? false)}]]]]])]))
+            {:disabled tallennus-kesken?}]]]]])]))
 
 (defn rahavaraukset [e! {:keys [valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
   (let [rahavaraukset (:rahavaraukset kustannussuunnitelma)
@@ -200,11 +201,8 @@
           :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
          {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
           :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea"}
-         (if-not (= 0 yht-indeksikorjattu)
-           {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-            :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea"}
-           {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :string :tasaa :oikea
-            :fmt #(str "-") :otsikkorivi-luokka "korkea"})]
+         {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+          :fmt #(if-not (= 0 yht-indeksikorjattu) (fmt/euro-opt false %) "-") :otsikkorivi-luokka "korkea"}]
         rahavaraukset]]]]))
 
 (defn erillishankinnat [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
@@ -262,11 +260,8 @@
           :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
          {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
           :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
-         (if-not (= 0 yht-indeksikorjattu)
-           {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-            :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-           {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :string :tasaa :oikea
-            :fmt #(str "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"})]
+         {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+          :fmt #(if-not (= 0 yht-indeksikorjattu) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
         erillishankinnat]]]
 
      (when-not vahvistettu?
@@ -345,11 +340,8 @@
           :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
          {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
           :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
-         (if-not (= 0 yht-indeksikorjattu)
-          {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-           :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-           {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :string :tasaa :oikea
-            :fmt #(str "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"})]
+         {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+          :fmt #(if-not (= 0 yht-indeksikorjattu) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
         johto-ja-hallintokorvaukset]]]
 
      (when-not vahvistettu?
@@ -432,11 +424,8 @@
           :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
          {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
           :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
-         (if-not (= 0 yht-indeksikorjattu)
-          {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-           :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-           {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :string :tasaa :oikea
-            :fmt #(str "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"})]
+         {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+          :fmt #(if-not (= 0 yht-indeksikorjattu) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
         hoidonjohtopalkkiot]]]
 
      (when-not vahvistettu?

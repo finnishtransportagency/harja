@@ -8,7 +8,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.hallinta.urakkatiedot.toimenkuvat-tiedot :as tiedot]))
 
-(defn onko-dis? [rivi]
+(defn onko-muokattava? [rivi]
   (if (= -1 (:id rivi))
     false
     true))
@@ -72,7 +72,7 @@
                                                         (-> % .-target .-checked))))}])
                                 [:label {:for id} ""]]))}
              {:otsikko "Toimenkuva" :nimi :nimi :tyyppi :string :leveys 10}
-             {:otsikko "Urakkakohtainen nimi" :nimi :urakkakohtainen-nimi :tyyppi :string :leveys 10 :muokattava? #(onko-dis? %)}]
+             {:otsikko "Urakkakohtainen nimi" :nimi :urakkakohtainen-nimi :tyyppi :string :leveys 10 :muokattava? #(onko-muokattava? %)}]
             muokatut-toimenkuvat])
          [debug/debug app]]))))
 

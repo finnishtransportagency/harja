@@ -64,7 +64,7 @@
     ;; Tallenna nappula johtaa aina tänne. Joten muokattiin tai poistettiin, aina ollaan samassa paikassa
     (doseq [toimenkuva toimenkuvat]
 
-      (if (:poistettu toimenkuvat)
+      (if (:poistettu toimenkuva)
         ;; Jos poistettiin
         (tuck-apurit/post! :poista-toimenkuva
           {:id (:id toimenkuva)}
