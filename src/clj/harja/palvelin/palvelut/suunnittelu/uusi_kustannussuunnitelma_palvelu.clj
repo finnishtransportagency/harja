@@ -6,6 +6,7 @@
             [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]
+            [harja.kyselyt.toimenpidekoodit :as tehtava-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
@@ -107,6 +108,41 @@
                              [10 11 12 1 2 3 4 5 6 7 8 9]))]
     erillishankinnat))
 
+(defn hae-hoidonjohtopalkkiot [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
+  (let [;; Hae hoidonjohto toimenpideinstannssi
+        ;; Hoindonjohto toimenpide.koodi = 23151
+        hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                         {:urakka urakka-id
+                                          :koodi "23151"})))
+        tehtava (first (tehtava-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"}))
+        hoidonjohtopalkkiot (when hoidonjohto-tpi-id
+                              (suunnitelma-q/hae-hoidonjohtopalkkiot-kuukausittain db
+                                {:sopimus-id sopimus-id
+                                 :vuosi hoitovuoden-alkuvuosi
+                                 :tehtava-id (:id tehtava)
+                                 :toimenpideinstanssi-id hoidonjohto-tpi-id}))
+        hoidonjohtopalkkiot (if (seq hoidonjohtopalkkiot)
+                              ;; Jos on tallennettu jo hoidonjohtopalkkioita, niin lisätään niihin kalenterikuukausi
+                              (map (fn [rivi]
+                                     (merge rivi
+                                       {:kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
+                                                             (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)}))
+                                hoidonjohtopalkkiot)
+                              ;; Jos ei ole tallennettu hoidonjohtopalkkioita, niin luodaan nolla arvot
+                              (mapv (fn [kk]
+                                      (let [vuosi (if (>= kk 10) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi))]
+                                        {:id nil
+                                         :sopimus sopimus-id
+                                         :tehtava (:id tehtava)
+                                         :toimenpideinstanssi hoidonjohto-tpi-id
+                                         :kuukausi kk
+                                         :vuosi vuosi
+                                         :summa 0
+                                         :summa_indeksikorjattu nil
+                                         :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi (pvm/->pvm (str "01." kk "." vuosi)) true)}))
+                                [10 11 12 1 2 3 4 5 6 7 8 9]))]
+    hoidonjohtopalkkiot))
+
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/info "hae-kustannussuunnitelman-tiedot :: tiedot: " tiedot)
@@ -127,12 +163,15 @@
           rahavaraukset (jasenna-rahavaraukset-tarjouksesta tarjous hoitovuoden-alkuvuosi)
           ;; Hae erillishankinnat
           erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+          ;; Hae hoidonjohtopalkkiot
+          hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
 
           k {:urakka-id urakka-id
              :tarjous tarjous
              :kustannussuunnitelma {:kilpailutettavat-hankinnat {:toimenpiteet kiinteat}
                                     :rahavaraukset rahavaraukset
                                     :erillishankinnat erillishankinnat
+                                    :hoidonjohtopalkkiot hoidonjohtopalkkiot
                                     :indeksikerroin indeksikerroin}}]
       k)))
 
@@ -148,6 +187,13 @@
   (log/info "tallenna-erillishankinnat :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id hoitovuoden-alkuvuosi (:erillishankinnat tiedot))
+    (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
+
+(defn tallenna-hoidonjohtopalkkiot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  (log/info "tallenna-hoidonjohtopalkkiot :: tiedot: " tiedot)
+  (jdbc/with-db-transaction [db db]
+    (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id hoitovuoden-alkuvuosi (:hoidonjohtopalkkiot tiedot))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
 (defrecord UusiKustannussuunnitelmaPalvelu []
@@ -167,6 +213,11 @@
       (fn [user tiedot]
         (tallenna-erillishankinnat (:db this) user tiedot))
       {:kysely-spec ::k-domain/erillishankinta})
+    (julkaise-palvelu (:http-palvelin this)
+      :tallenna-hoidonjohtopalkkiot
+      (fn [user tiedot]
+        (tallenna-hoidonjohtopalkkiot (:db this) user tiedot))
+      {:kysely-spec ::k-domain/hoidonjohtopalkkio})
 
     this)
 
@@ -174,5 +225,6 @@
     (poista-palvelut (:http-palvelin this)
       :hae-kustannussuunnitelman-tiedot
       :tallenna-kilpailutettavat-hankinnat
-      :tallenna-erillishankinnat)
+      :tallenna-erillishankinnat
+      :tallenna-hoidonjohtopalkkiot)
     this))
