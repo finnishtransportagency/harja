@@ -14,6 +14,7 @@
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.kyselyt.liitteet :as liite-kyselyt]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
+            [harja.palvelin.palvelut.toteumat :as toteumat]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.yleiset :as yleiset]
@@ -49,12 +50,33 @@
      :toteumat toteumat
      :tavoitehinnan-muutos (- toteumat summa-indeksikorjattu)}))
 
+(defn hae-tehtava-maaramuutokset
+  [db user {:keys [urakka-id tehtavaryhma hoitokauden-alkuvuosi] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  
+  ;; TODO .. 
+  (let [vastaus (mapv
+                  #(assoc % :id (gensym))
+                  (vec (toteumat/mhu-toteumatehtavat db user {:urakka-id urakka-id
+                                                              tehtavaryhma "Kaikki"
+                                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
+        ;; 
+        ]
+
+
+    (println " \n \n tt:: " (toteumat/mhu-toteumatehtavat db user tiedot))
+    vastaus)
+  ;; 
+  )
 
 (defn hae-urakan-muutostiedot
   [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  
   (log/debug "hae-urakan-muutostiedot: " tiedot)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+        ;; TODO, poista 
+        _ (hae-tehtava-maaramuutokset db user (assoc tiedot :hoitokauden-alkuvuosi hoitokauden-alkuvuosi))
         kirjatut-muutokset-vastaus (mapv
                                      (fn [rivi]
                                        (-> rivi
@@ -112,7 +134,7 @@
 
 (defn hae-muutoksen-tiedot
   "Palauttaa yksittäisen muutoksen tarkat tiedot lomaketta varten."
-  [db user {:keys [urakka-id muutos]}]
+  [db user {:keys [urakka-id muutos] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (let [tyypikohtaiset-tiedot (case (:tyyppi muutos)
                                 "johto-ja-hallintokorvaus"
