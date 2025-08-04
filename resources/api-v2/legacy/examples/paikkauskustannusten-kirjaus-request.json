@@ -1,0 +1,49 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2018-01-30T12:00:00Z"
+  },
+  "paikkauskustannukset": [
+    {
+      "paikkauskustannus": {
+        "tunniste": {
+          "id": 123
+        },
+        "paikkauskohde": {
+          "nimi": "Kuusamontien paikkaus",
+          "tunniste": {
+            "id": 567
+          }
+        },
+        "kirjausaika": "2018-01-30T12:00:00Z",
+        "kokonaishintaiset-kustannukset": [
+          {
+            "kokonaishintainen-kustannus": {
+              "selite": "Liikennejärjestelyt",
+              "hinta": 3500
+            }
+          }
+        ],
+        "yksikkohintaiset-kustannukset": [
+          {
+            "yksikkohintainen-kustannus": {
+              "selite": "asfaltti",
+              "yksikko": "tonnia/€",
+              "yksikkohinta": 200,
+              "maara": 13.2
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

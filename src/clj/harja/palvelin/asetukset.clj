@@ -101,7 +101,6 @@
                                            (s/optional-key :tieosoiteverkon-osoite) s/Str
                                            (s/optional-key :tieosoiteverkon-tuontikohde) s/Str
                                            (s/optional-key :laajennetun-tieosoiteverkon-tiedot) s/Str
-                                           (s/optional-key :paivita-kaista-aineisto) s/Bool
                                            (s/optional-key :pohjavesialueen-shapefile) s/Str
                                            (s/optional-key :pohjavesialueen-osoite) s/Str
                                            (s/optional-key :pohjavesialueen-tuontikohde) s/Str
@@ -132,9 +131,6 @@
                                            (s/optional-key :siltojenpalvelusopimusten-shapefile) s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-osoite) s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-tuontikohde) s/Str
-                                           (s/optional-key :turvalaitteiden-shapefile) s/Str
-                                           (s/optional-key :turvalaitteiden-osoite) s/Str
-                                           (s/optional-key :turvalaitteiden-tuontikohde) s/Str
                                            (s/optional-key :kanavien-shapefile) s/Str
                                            (s/optional-key :kanavien-osoite) s/Str
                                            (s/optional-key :kanavien-tuontikohde) s/Str
@@ -156,8 +152,7 @@
                             (s/optional-key :oid-tuonti-suoritusaika) [s/Num]}
 
    (s/optional-key :sms) {:url s/Str
-                          :apiavain s/Str
-                          :aktiivinen? s/Bool}
+                          :apiavain s/Str}
 
    (s/optional-key :virustarkistus) {:url s/Str}
    (s/optional-key :tiedostopesula) {:base-url s/Str}
@@ -188,7 +183,8 @@
 
    (s/optional-key :vkm) {:url s/Str}
 
-   (s/optional-key :liitteet) {(s/optional-key :s3-url) s/Str}
+   (s/optional-key :liitteet) {(s/optional-key :s3-url) s/Str
+                               (s/optional-key :thread-pool-koko) s/Int}
 
    (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    :komponenttien-tila {:itmf {:paivitystiheys-ms s/Int}

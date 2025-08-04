@@ -9,17 +9,17 @@
  :pedantic-warn {:pedantic? :warn}
 
  :dev {:dependencies [
-                      [com.bhauman/rebel-readline-cljs "0.1.4"]
-                      [cider/piggieback "0.5.2"]
+                      [com.bhauman/rebel-readline-cljs "0.1.5"]
+                      [cider/piggieback "0.6.0"]
 
                       ;; Figwheeliä tarvitaan CLJS käännöksessä (dev, prod)
-                      [com.bhauman/figwheel-main "0.2.18"]
+                      [com.bhauman/figwheel-main "0.2.20"]
                       [prismatic/dommy "1.1.0"]
-                      [org.clojure/test.check "0.9.0"]
+                      [org.clojure/test.check "1.1.1"]
                       [data-frisk-reagent "0.4.5"]
 
                       ;; -- PDF-testaukseen --
-                      [org.apache.pdfbox/pdfbox "2.0.30"]
+                      [org.apache.pdfbox/pdfbox "3.0.5"]
 
                       ;; -- Testien ajamista varten (replillä ja ilman) --
                       ;; Fake-HTTP testaukseen
@@ -29,14 +29,14 @@
                       [javax.jms/javax.jms-api "2.0.1"]
 
                       ;; Gatlingin logback versio ei ole vielä ehtinyt päivittyä, niin haetaan se erikseen
-                      [ch.qos.logback/logback-classic "1.4.14" :exclusions [org.slf4j/slf4j-api]]
+                      [ch.qos.logback/logback-classic "1.5.18" :exclusions [org.slf4j/slf4j-api]]
                       [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize
                                                          org.clojure/tools.analyzer org.clojure/data.priority-map io.pebbletemplates/pebble]]
                       ]
        :source-paths ["src/clj-dev" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
        :plugins [[test2junit "1.4.4" :exclusions [org.clojure/clojure]]
-                 [lein-eftest "0.5.0"]
+                 [lein-eftest "0.6.0"]
                  ;; Pprint-pluginin avulla voit nähdä miten profiilit vaikuttavat konfiguraatioon
                  ;; Esim. lein with-profile +test pprint
                  [lein-pprint "1.3.2"]]
@@ -69,10 +69,10 @@
                                   :replace true} [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
                                                   "dev-resources/tmp"
                                                   :target-path]}
- :dev-emacs {:plugins [[cider/cider-nrepl "0.25.3"]
-                       [refactor-nrepl "2.5.0"]]}
- :repl {:dependencies [[cider/piggieback "0.5.2"]]
-        :plugins [[cider/cider-nrepl "0.25.2"]]
+ :dev-emacs {:plugins [[cider/cider-nrepl "0.57.0"]
+                       [refactor-nrepl "3.11.0"]]}
+ :repl {:dependencies [[cider/piggieback "0.6.0"]]
+        :plugins [[cider/cider-nrepl "0.57.0"]]
         :repl-options {:init-ns harja.palvelin.main
                        :init (harja.palvelin.main/-main)
                        :port 4005
@@ -83,21 +83,32 @@
                        ;; Selenium + webdriver depsut pois käytöstä, koska niitä ei enää ajeta
                        #_[clj-webdriver "0.7.2"]
                        #_[org.seleniumhq.selenium/selenium-java "3.8.1"]
-                       #_[org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]
-                       ;; TODO tuosta cljs-react-test riippuvuudesta pitäisi päästä eroon. Testit, jotka
-                       ;; käyttää sitä, voi kirjoittaa uusiksi Cypressillä.
-                       ;; Jotta frontti testit toimii, pitää säilyttää tuo riippuvuus, jonka takia myös
-                       ;; reagentti pitää downgradeta testejä varten.
-                       [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
-                       [cljsjs/react-with-addons "15.6.1-0"]
-                       [cljsjs/react-dom "15.4.2-2" :exclusions [cljsjs/react]]
-                       [cljs-react-test "0.1.4-SNAPSHOT"]]
-        :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]}
+                       #_[org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]]}
+
+ ;; TODO: Hankkiudu eroon PhantomJS:stä
+ ;; Phantomjs testejä varten tarvitaan erillinen profiili, koska se ei tue enää uudempia kirjastoversioita ja JavaScriptin
+ ;; uudemmat ominaisuudet eivät toimi siinä.
+ :phantomjs {:dependencies [
+                            ;; TODO tuosta cljs-react-test riippuvuudesta pitäisi päästä eroon. Testit, jotka
+                            ;; käyttää sitä, voi kirjoittaa uusiksi Cypressillä.
+                            ;; Jotta frontti testit toimii, pitää säilyttää tuo riippuvuus, jonka takia myös
+                            ;; reagentti pitää downgradeta testejä varten.
+                            [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
+                            [cljsjs/react-with-addons "15.6.1-0"]
+                            [cljsjs/react-dom "15.4.2-2" :exclusions [cljsjs/react]]
+                            [cljs-react-test "0.1.4-SNAPSHOT"]
+
+                            ;; Cloju(Script) assertointi ja lokitus
+                            ;; Downgradetettu, koska PhantomJS ei tue uudempia versioita. Mukana tuleva encore.js
+                            ;; käyttää uudempia JS ominaisuuksia, jotka eivät toimi PhantomJS:ssä.
+                            [com.taoensso/truss "1.12.0"]
+                            [com.taoensso/timbre "6.5.0"]]
+             :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]}
  :prod-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
 
  ;; -- Laadunseuranta --
  ;; Ainoastaan laadunseurantaan liittyvät riippuvuudet
- :laadunseuranta-common {:dependencies [[devcards "0.2.4" :exclusions [cljsjs/react]]]}
+ :laadunseuranta-common {:dependencies [[devcards "0.2.7" :exclusions [cljsjs/react]]]}
  :laadunseuranta-dev-paths {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]}
  :laadunseuranta-test-paths {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
                                             "laadunseuranta/test-src/cljs" "test/shared-cljs"]}

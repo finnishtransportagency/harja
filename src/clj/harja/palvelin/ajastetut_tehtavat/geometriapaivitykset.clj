@@ -22,7 +22,6 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.paallystyspalvelusopimukset :as paallystyspalvelusopimusten-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tekniset-laitteet-urakat :as tekniset-laitteet-urakat-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavasulut :as kanavasulut]
             [harja.kyselyt.geometriaaineistot :as geometria-aineistot]
             [harja.domain.geometriaaineistot :as ga]
@@ -56,6 +55,11 @@
       (.replace osoite "[AINEISTO]" (::ga/tiedostonimi aineisto))
       osoite)))
 
+;; Päivitystehtävä hakee aineiston rajapinnan kautta, tallentaa sen hakemistoon ja
+;; käsittelee ja tallentaa tietosisällön tietokantaan. Käsittelyssä ja tallennuksessa hyödynnetään
+;; parametrina saatua paivitys-funktiota.
+;; Määrittele hakuun liittyvät tiedot asetukset.edn-tiedostossa ja ajasta GEOMETRIAPAIVITYS-taulussa.
+;; Lue lisää geometriapäivityksistä confluencesta.
 (defn maarittele-paivitystehtava [paivitystunnus
                                   url-avain
                                   tuontikohdepolku-avain
@@ -81,6 +85,29 @@
                          (fn [] (paivitys (:db this) shapefile))
                          kayttajatunnus
                          salasana)))))
+
+;; Tallennustehtävä suorittaa vain viimeisen geometriapäivitykseen liittyvän askeleen: tallentaa tiedoston tietosisällön
+;; tietokantaan paivitys-funktion avulla. Tiedosto on toimitettava tietosisältöön erikseen.
+;; Parametrit asetukset.edn-tiedostossa, ajastus GEOMETRIAPAIVITYS-taulussa. Lue lisää geometriapäivityksistä confluencesta.
+;; Tätä tarvitaan kaista-aineiston (laajennettu tieverkko) sisäänluvussa. Kaista-aineiston rajapintahausta huolehtii lambda.
+(defn maarittele-tallennustehtava [paivitystunnus
+                                   tiedostoavain
+                                   paivitys]
+  (fn [this {:keys [tuontivali] :as asetukset}]
+    (let [db (:db this)
+          tiedosto (get asetukset tiedostoavain)]
+      (when (and paivitystunnus
+              tuontivali
+              tiedosto)
+        (ajasta-paivitys this
+          paivitystunnus
+          tuontivali
+          nil
+          nil
+          tiedosto
+          (fn [] (paivitys (:db this) tiedosto))
+          nil
+          nil)))))
 
 
 ;; käyttö replissä esim :
@@ -115,15 +142,9 @@
     paallysteen-korjausluokat/vie-korjausluokat-kantaan))
 
 (def tee-laajennetun-tieverkon-paivitystehtava
-  (fn [this asetukset]
-    (when (:paivita-kaista asetukset)
-      (async/thread
-        (tieverkon-tuonti/vie-laajennettu-tieverkko-kantaan (:db this) (:laajennetun-tieosoiteverkon-tiedot asetukset)))))
-  #_(maarittele-paivitystehtava
+  (maarittele-tallennustehtava
     "laajennettu-tieverkko"
-    :laajennetun-tieosoiteverkon-osoite
-    :laajennetun-tieosoiteverkon-tuontikohde
-    :laajennetun-tieosoiteverkon-shapefile
+    :laajennetun-tieosoiteverkon-tiedot
     tieverkon-tuonti/vie-laajennettu-tieverkko-kantaan))
 
 (def tee-pohjavesialueiden-paivitystehtava
@@ -206,14 +227,6 @@
     :siltojenpalvelusopimusten-shapefile
     siltapalvelusopimukset/vie-siltojen-palvelusopimukset-kantaan))
 
-(def tee-turvalaitteiden-paivitystehtava
-  (maarittele-paivitystehtava
-    "turvalaitteet"
-    :turvalaitteiden-osoite
-    :turvalaitteiden-tuontikohde
-    :turvalaitteiden-shapefile
-    turvalaitteet/vie-turvalaitteet-kantaan))
-
 (def tee-kanavien-paivitystehtava
   (maarittele-paivitystehtava
     "kanavat"
@@ -241,7 +254,6 @@
       :paallystyspalvelusopimusten-paivitys (tee-paallystyspalvelusopimusten-paivitystehtava this asetukset)
       :tekniset-laitteet-urakoiden-paivitys (tee-tekniset-laitteet-urakoiden-paivitystehtava this asetukset)
       :siltojen-palvelusopimusten-paivitys (tee-siltojen-palvelusopimusten-paivitystehtava this asetukset)
-      :turvalaitteiden-paivitys (tee-turvalaitteiden-paivitystehtava this asetukset)
       :kanavien-paivitys (tee-kanavien-paivitystehtava this asetukset)))
 
   (stop [this]
@@ -259,7 +271,6 @@
                      :paallystyspalvelusopimusten-paivitys
                      :tekniset-laitteet-urakoiden-paivitys
                      :siltojen-palvelusopimusten-paivitys
-                     :turvalaitteiden-paivitys
                      :kanavien-paivitys]
             :let [lopeta-fn (get this tehtava)]]
       (cond

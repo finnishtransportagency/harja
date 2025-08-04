@@ -82,7 +82,7 @@
  ;        :uudelleenlahetysvali-minuuteissa 30}
 
  :ulkoinen-sahkoposti {:vastausosoite "harja-ala-vastaa@vayla.fi"
-                     ;; :palvelin "solita-service-1.solita.fi"
+                       ;; :palvelin "solita-service-1.solita.fi"
                        }
 
  :api-sahkoposti {:suora? false                              ;; Lokaalisti voit lähettää sähköpostit suoraa ilman apia
@@ -115,7 +115,6 @@
                         :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/tieosoiteverkkoLine.shz"
 
                         :laajennetun-tieosoiteverkon-tiedot "../.harja/kaista-aineisto.csv"
-                        :paivita-kaista-aineisto false
 
                         :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/pohjavesialueetLine.shp"
                         :pohjavesialueen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:pohjavesialueet&outputFormat=SHAPE-ZIP"
@@ -150,10 +149,6 @@
                         :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
 
                         :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
-
-                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/turvalaitteet.shp"
-                        :turvalaitteiden-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:turvalaitteet&outputFormat=SHAPE-ZIP"
-                        :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
 
                         :kanavien-shapefile "file://shp/Vesivaylien_kanavat/sulkukanavat_uusiPolygon.shp"
                         :kanavien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=vesivaylatiedot:sulkukanavat_uusi&outputFormat=SHAPE-ZIP"
@@ -237,7 +232,7 @@
  ;; lisäämällä oikean s3-urlin ja varmistamalla, että järjestelmä pyörii sallitussa IP:ssä
  ;:alusta :aws
  :liitteet {:s3-url nil ;"https://4ydqtenzhk.execute-api.eu-west-1.amazonaws.com/dev/generatepresignedurl"
-            }
+            :thread-pool-koko 50}
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
 

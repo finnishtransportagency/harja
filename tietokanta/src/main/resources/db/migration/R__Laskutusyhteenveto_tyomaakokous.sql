@@ -9,87 +9,89 @@ DROP TYPE IF EXISTS LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
 -- Tähän on sisällytetty kaikki yksittäiset tulokset, jotta koodiin ei jää enää yhtään laskutehtävää tehtäväksi.
 CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
 (
-    talvihoito_hoitokausi_yht             NUMERIC,
-    talvihoito_val_aika_yht               NUMERIC,
-    lyh_hoitokausi_yht                    NUMERIC,
-    lyh_val_aika_yht                      NUMERIC,
-    sora_hoitokausi_yht                   NUMERIC,
-    sora_val_aika_yht                     NUMERIC,
-    paallyste_hoitokausi_yht              NUMERIC,
-    paallyste_val_aika_yht                NUMERIC,
-    yllapito_hoitokausi_yht               NUMERIC,
-    yllapito_val_aika_yht                 NUMERIC,
-    korvausinv_hoitokausi_yht             NUMERIC,
-    korvausinv_val_aika_yht               NUMERIC,
-    hankinnat_hoitokausi_yht              NUMERIC,
-    hankinnat_val_aika_yht                NUMERIC,
-    johtojahallinto_hoitokausi_yht        NUMERIC,
-    johtojahallinto_val_aika_yht          NUMERIC,
-    erillishankinnat_hoitokausi_yht       NUMERIC,
-    erillishankinnat_val_aika_yht         NUMERIC,
-    hjpalkkio_hoitokausi_yht              NUMERIC,
-    hjpalkkio_val_aika_yht                NUMERIC,
-    hoidonjohto_hoitokausi_yht            NUMERIC,
-    hoidonjohto_val_aika_yht              NUMERIC,
-    hankinnat_ja_hoidon_hk_yht            NUMERIC,
-    hankinnat_ja_hoidon_val_yht           NUMERIC,
-    tavhin_hoitokausi_yht                 NUMERIC,
-    tavhin_val_aika_yht                   NUMERIC,
-    hoitokauden_tavoitehinta              NUMERIC,
-    tavoitehinta_on_oikaistu              BOOLEAN,
+    talvihoito_hoitokausi_yht                        NUMERIC,
+    talvihoito_val_aika_yht                          NUMERIC,
+    lyh_hoitokausi_yht                               NUMERIC,
+    lyh_val_aika_yht                                 NUMERIC,
+    sora_hoitokausi_yht                              NUMERIC,
+    sora_val_aika_yht                                NUMERIC,
+    paallyste_hoitokausi_yht                         NUMERIC,
+    paallyste_val_aika_yht                           NUMERIC,
+    yllapito_hoitokausi_yht                          NUMERIC,
+    yllapito_val_aika_yht                            NUMERIC,
+    korvausinv_hoitokausi_yht                        NUMERIC,
+    korvausinv_val_aika_yht                          NUMERIC,
+    hankinnat_hoitokausi_yht                         NUMERIC,
+    hankinnat_val_aika_yht                           NUMERIC,
+    johtojahallinto_hoitokausi_yht                   NUMERIC,
+    johtojahallinto_val_aika_yht                     NUMERIC,
+    erillishankinnat_hoitokausi_yht                  NUMERIC,
+    erillishankinnat_val_aika_yht                    NUMERIC,
+    hjpalkkio_hoitokausi_yht                         NUMERIC,
+    hjpalkkio_val_aika_yht                           NUMERIC,
+    hoidonjohto_hoitokausi_yht                       NUMERIC,
+    hoidonjohto_val_aika_yht                         NUMERIC,
+    hankinnat_ja_hoidon_hk_yht                       NUMERIC,
+    hankinnat_ja_hoidon_val_yht                      NUMERIC,
+    tavhin_hoitokausi_yht                            NUMERIC,
+    tavhin_val_aika_yht                              NUMERIC,
+    hoitokauden_tavoitehinta                         NUMERIC,
+    tavoitehinta_on_oikaistu                         BOOLEAN,
     -- Valikatselmuksesta siirretyt kulut edelliseltä vuodelta
-    hk_valikatselmus_siirrot_ed_vuodelta  NUMERIC,
-    budjettia_jaljella                    NUMERIC,
-    lisatyo_talvihoito_hoitokausi_yht     NUMERIC,
-    lisatyo_talvihoito_val_aika_yht       NUMERIC,
-    lisatyo_lyh_hoitokausi_yht            NUMERIC,
-    lisatyo_lyh_val_aika_yht              NUMERIC,
-    lisatyo_sora_hoitokausi_yht           NUMERIC,
-    lisatyo_sora_val_aika_yht             NUMERIC,
-    lisatyo_paallyste_hoitokausi_yht      NUMERIC,
-    lisatyo_paallyste_val_aika_yht        NUMERIC,
-    lisatyo_yllapito_hoitokausi_yht       NUMERIC,
-    lisatyo_yllapito_val_aika_yht         NUMERIC,
-    lisatyo_korvausinv_hoitokausi_yht     NUMERIC,
-    lisatyo_korvausinv_val_aika_yht       NUMERIC,
-    lisatyo_hoidonjohto_hoitokausi_yht    NUMERIC,
-    lisatyo_hoidonjohto_val_aika_yht      NUMERIC,
-    lisatyot_hoitokausi_yht               NUMERIC,
-    lisatyot_val_aika_yht                 NUMERIC,
-    bonukset_hoitokausi_yht               NUMERIC,
-    bonukset_val_aika_yht                 NUMERIC,
-    sanktiot_hoitokausi_yht               NUMERIC,
-    sanktiot_val_aika_yht                 NUMERIC,
-    paatos_tavoitepalkkio_hoitokausi_yht  NUMERIC,
-    paatos_tavoitepalkkio_val_aika_yht    NUMERIC,
-    paatos_tavoiteh_ylitys_hoitokausi_yht NUMERIC,
-    paatos_tavoiteh_ylitys_val_aika_yht   NUMERIC,
-    paatos_kattoh_ylitys_hoitokausi_yht   NUMERIC,
-    paatos_kattoh_ylitys_val_aika_yht     NUMERIC,
-    muut_kustannukset_hoitokausi_yht      NUMERIC,
-    muut_kustannukset_val_aika_yht        NUMERIC,
-    yhteensa_kaikki_hoitokausi_yht        NUMERIC,
-    yhteensa_kaikki_val_aika_yht          NUMERIC,
-    perusluku                             NUMERIC,
+    hk_valikatselmus_siirrot_ed_vuodelta             NUMERIC,
+    budjettia_jaljella                               NUMERIC,
+    lisatyo_talvihoito_hoitokausi_yht                NUMERIC,
+    lisatyo_talvihoito_val_aika_yht                  NUMERIC,
+    lisatyo_lyh_hoitokausi_yht                       NUMERIC,
+    lisatyo_lyh_val_aika_yht                         NUMERIC,
+    lisatyo_sora_hoitokausi_yht                      NUMERIC,
+    lisatyo_sora_val_aika_yht                        NUMERIC,
+    lisatyo_paallyste_hoitokausi_yht                 NUMERIC,
+    lisatyo_paallyste_val_aika_yht                   NUMERIC,
+    lisatyo_yllapito_hoitokausi_yht                  NUMERIC,
+    lisatyo_yllapito_val_aika_yht                    NUMERIC,
+    lisatyo_korvausinv_hoitokausi_yht                NUMERIC,
+    lisatyo_korvausinv_val_aika_yht                  NUMERIC,
+    lisatyo_hoidonjohto_hoitokausi_yht               NUMERIC,
+    lisatyo_hoidonjohto_val_aika_yht                 NUMERIC,
+    lisatyot_hoitokausi_yht                          NUMERIC,
+    lisatyot_val_aika_yht                            NUMERIC,
+    bonukset_hoitokausi_yht                          NUMERIC,
+    bonukset_val_aika_yht                            NUMERIC,
+    sanktiot_hoitokausi_yht                          NUMERIC,
+    sanktiot_val_aika_yht                            NUMERIC,
+    paatos_tavoitepalkkio_hoitokausi_yht             NUMERIC,
+    paatos_tavoitepalkkio_val_aika_yht               NUMERIC,
+    paatos_tavoiteh_ylitys_hoitokausi_yht            NUMERIC,
+    paatos_tavoiteh_ylitys_val_aika_yht              NUMERIC,
+    paatos_kattoh_ylitys_hoitokausi_yht              NUMERIC,
+    paatos_kattoh_ylitys_val_aika_yht                NUMERIC,
+    paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht NUMERIC,
+    paatos_hoidonjohtopalkkion_muutos_val_aika_yht   NUMERIC,
+    muut_kustannukset_hoitokausi_yht                 NUMERIC,
+    muut_kustannukset_val_aika_yht                   NUMERIC,
+    yhteensa_kaikki_hoitokausi_yht                   NUMERIC,
+    yhteensa_kaikki_val_aika_yht                     NUMERIC,
+    perusluku                                        NUMERIC,
 
     -- Rahavaraukset 
-    rahavaraus_nimet                      TEXT[],
-    hoitokausi_yht_array                  NUMERIC[],
-    val_aika_yht_array                    NUMERIC[],
-    kaikki_rahavaraukset_hoitokausi_yht   NUMERIC,
-    kaikki_rahavaraukset_val_yht          NUMERIC,
+    rahavaraus_nimet                                 TEXT[],
+    hoitokausi_yht_array                             NUMERIC[],
+    val_aika_yht_array                               NUMERIC[],
+    kaikki_rahavaraukset_hoitokausi_yht              NUMERIC,
+    kaikki_rahavaraukset_val_yht                     NUMERIC,
 
     -- Muut kulut, tavoitehintaan vaikuttavat
-    muut_kulut_hoitokausi                 NUMERIC,
-    muut_kulut_val_aika                   NUMERIC,
-    muut_kulut_hoitokausi_yht             NUMERIC,
-    muut_kulut_val_aika_yht               NUMERIC,
+    muut_kulut_hoitokausi                            NUMERIC,
+    muut_kulut_val_aika                              NUMERIC,
+    muut_kulut_hoitokausi_yht                        NUMERIC,
+    muut_kulut_val_aika_yht                          NUMERIC,
 
     -- Ei tavoitehintaan vaikuttavat muut kulut 
-    muut_kulut_ei_tavoite_hoitokausi      NUMERIC,
-    muut_kulut_ei_tavoite_val_aika        NUMERIC,
-    muut_kulut_ei_tavoite_hoitokausi_yht  NUMERIC,
-    muut_kulut_ei_tavoite_val_aika_yht    NUMERIC
+    muut_kulut_ei_tavoite_hoitokausi                 NUMERIC,
+    muut_kulut_ei_tavoite_val_aika                   NUMERIC,
+    muut_kulut_ei_tavoite_hoitokausi_yht             NUMERIC,
+    muut_kulut_ei_tavoite_val_aika_yht               NUMERIC
 
 );
 
@@ -212,6 +214,8 @@ DECLARE
     paatos_tavoiteh_ylitys_val_aika_yht   NUMERIC;
     paatos_kattoh_ylitys_hoitokausi_yht   NUMERIC;
     paatos_kattoh_ylitys_val_aika_yht     NUMERIC;
+    paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht   NUMERIC;
+    paatos_hoidonjohtopalkkion_muutos_val_aika_yht     NUMERIC;
     paatos_rivi                           RECORD;
     muut_kustannukset_hoitokausi_yht      NUMERIC;
     muut_kustannukset_val_aika_yht        NUMERIC;
@@ -341,12 +345,20 @@ BEGIN
     -- Tässä summataan siirretyt kulut yhteen ja ne otetaan huomioon jäljelläolevassa budjetissa alempana
     hk_valikatselmus_siirrot_ed_vuodelta := 0.0;
     hk_valikatselmus_siirrot_ed_vuodelta := hk_valikatselmus_siirrot_ed_vuodelta +
-                                            (SELECT COALESCE(SUM(up.siirto), 0)
-                                               FROM urakka_paatos up
-                                              WHERE up."urakka-id" = ur
-                                                AND up."hoitokauden-alkuvuosi" = (hk_alkuvuosi - 1)
-                                                AND up.siirto != 0
-                                                AND up.poistettu = FALSE);
+    (SELECT COALESCE(SUM(x.siirto), 0)
+    FROM (SELECT COALESCE(SUM(pta.siirron_maara) * -1, 0) as siirto
+          FROM paatos_tavoitehinta_alitus pta
+          WHERE pta.urakkaid = ur
+            AND pta.hoitokauden_alkuvuosi = (hk_alkuvuosi - 1)::INTEGER -- Haetaan edellisen vuoden päätöksestä
+            AND pta.siirron_maara != 0
+            AND pta.poistettu = FALSE
+          UNION ALL
+          SELECT COALESCE(SUM(pk.siirrettava_maara), 0) as siirto
+          FROM paatos_kattohinta pk
+          WHERE pk.urakkaid = ur
+            AND pk.hoitokauden_alkuvuosi = (hk_alkuvuosi - 1)::INTEGER -- Haetaan edellisen vuoden päätöksestä
+            AND pk.siirrettava_maara != 0
+            AND pk.poistettu = FALSE) as x);
 
     RAISE NOTICE '*** hk_valikatselmus_siirrot_ed_vuodelta: % ', hk_valikatselmus_siirrot_ed_vuodelta;
 
@@ -638,7 +650,7 @@ BEGIN
                 RAISE NOTICE 'lisatyo_korvausinv_rivi.summa: %', lisatyo_korvausinv_rivi.summa;
             END IF;
 
-            -- Kohdista MHU Hoindojohto liittyvät lisätyö rivit lisatyo_hoidonjohto_rivi:lle
+            -- Kohdista MHU Hoidonjohto liittyvät lisätyö rivit lisatyo_hoidonjohto_rivi:lle
             IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
             AND rivi.toimenpideinstanssi_id = hoidonjohto_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
@@ -998,7 +1010,10 @@ BEGIN
           AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
           AND l.urakka = ur
           -- J - Johto- ja hallintokorvaus huomioidaan myös muukulu-tyyppiseksi kirjattuna laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä, joten karsitaan pois tässä.
-          AND ((tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54') OR tr.yksiloiva_tunniste IS NULL)
+          -- W - Erillishankinnat, myös omana rivinään, ei lasketa niitä tähän 
+          AND ((tr.yksiloiva_tunniste IS NOT NULL 
+                AND tr.yksiloiva_tunniste NOT IN ('a6614475-1950-4a61-82c6-fda0fd19bb54', '37d3752c-9951-47ad-a463-c1704cf22f4c')) 
+              OR tr.yksiloiva_tunniste IS NULL)
     LOOP
         IF rivi.erapaiva <= aikavali_loppupvm THEN
             --
@@ -1189,6 +1204,8 @@ BEGIN
     paatos_tavoiteh_ylitys_val_aika_yht := 0.0;
     paatos_kattoh_ylitys_hoitokausi_yht := 0.0;
     paatos_kattoh_ylitys_val_aika_yht := 0.0;
+    paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht := 0.0;
+    paatos_hoidonjohtopalkkion_muutos_val_aika_yht := 0.0;
     FOR paatos_rivi IN SELECT summa AS summa, l.erapaiva AS erapaiva, tr.nimi as tehtavaryhma_nimi
                        FROM kulu l
                                 JOIN kulu_kohdistus lk ON lk.kulu = l.id
@@ -1197,11 +1214,12 @@ BEGIN
                                 JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma
                        WHERE lk.maksueratyyppi = 'kokonaishintainen'
                          AND lk.poistettu IS NOT TRUE
+                         AND lk.tavoitehintainen = FALSE
                          AND l.urakka = ur
                          AND lk.tehtavaryhma in
                              (SELECT tr.id
                               FROM tehtavaryhma tr
-                              WHERE tr.nimi ilike 'Hoitovuoden päättäminen%') -- Harmillisesti joutuu käyttämään nimeä, koska tyyppejä ei ole
+                              WHERE tr.nimi ilike 'Hoitovuoden päättäminen%' OR tr.nimi = 'G - Hoidonjohtopalkkio')  -- Harmillisesti joutuu käyttämään nimeä, koska tyyppejä ei ole
                          AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
 
         LOOP
@@ -1254,6 +1272,22 @@ BEGIN
                 END IF;
             END IF;
 
+            IF paatos_rivi.erapaiva <= aikavali_loppupvm AND
+               paatos_rivi.tehtavaryhma_nimi =
+               'G - Hoidonjohtopalkkio' THEN
+                -- Hoitokauden alusta
+                paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht :=
+                    paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht + COALESCE(paatos_rivi.summa, 0.0);
+                RAISE NOTICE 'paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht: %', paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht;
+
+                IF paatos_rivi.erapaiva >= aikavali_alkupvm AND
+                   paatos_rivi.erapaiva <= aikavali_loppupvm THEN
+                    -- Laskutetaan nyt
+                    paatos_hoidonjohtopalkkion_muutos_val_aika_yht :=
+                        paatos_hoidonjohtopalkkion_muutos_val_aika_yht + COALESCE(paatos_rivi.summa, 0.0);
+                END IF;
+            END IF;
+
             RAISE NOTICE 'paatos_rivi: % ', paatos_rivi;
             RAISE NOTICE 'paatos_rivi.summa: %', paatos_rivi.summa;
         end loop;
@@ -1264,14 +1298,16 @@ BEGIN
                                             muut_kulut_ei_tavoite_hoitokausi + 
                                             paatos_tavoitepalkkio_hoitokausi_yht + 
                                             paatos_tavoiteh_ylitys_hoitokausi_yht + 
-                                            paatos_kattoh_ylitys_hoitokausi_yht;
+                                            paatos_kattoh_ylitys_hoitokausi_yht +
+                                            paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht;
 
     muut_kulut_ei_tavoite_val_aika_yht := bonukset_val_aika_yht + 
                                           sanktiot_val_aika_yht + 
                                           muut_kulut_ei_tavoite_val_aika +
                                           paatos_tavoitepalkkio_val_aika_yht + 
                                           paatos_tavoiteh_ylitys_val_aika_yht +
-                                          paatos_kattoh_ylitys_val_aika_yht;
+                                          paatos_kattoh_ylitys_val_aika_yht +
+                                          paatos_hoidonjohtopalkkion_muutos_val_aika_yht;
 
     -- Tavoitehinnan ulkopuoliset kustannukset yhteensä
     muut_kustannukset_hoitokausi_yht := 0.0;
@@ -1280,14 +1316,14 @@ BEGIN
     muut_kustannukset_hoitokausi_yht :=
             muut_kustannukset_hoitokausi_yht + lisatyot_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht +
             paatos_tavoitepalkkio_hoitokausi_yht + paatos_tavoiteh_ylitys_hoitokausi_yht +
-            paatos_kattoh_ylitys_hoitokausi_yht + 
+            paatos_kattoh_ylitys_hoitokausi_yht + paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht +
             -- Ei tavoitehintaiset muut kulut
             muut_kulut_ei_tavoite_hoitokausi;
             
     muut_kustannukset_val_aika_yht :=
             muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht +
             paatos_tavoitepalkkio_val_aika_yht + paatos_tavoiteh_ylitys_val_aika_yht +
-            paatos_kattoh_ylitys_val_aika_yht + 
+            paatos_kattoh_ylitys_val_aika_yht + paatos_hoidonjohtopalkkion_muutos_val_aika_yht +
             -- Ei tavoitehintaiset muut kulut
             muut_kulut_ei_tavoite_val_aika;
 
@@ -1358,6 +1394,8 @@ BEGIN
               paatos_tavoiteh_ylitys_hoitokausi_yht, paatos_tavoiteh_ylitys_val_aika_yht,
         -- Kattohinnan ylitys
               paatos_kattoh_ylitys_hoitokausi_yht, paatos_kattoh_ylitys_val_aika_yht,
+        -- Hoidonjohtopalkkion muutos
+              paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht, paatos_hoidonjohtopalkkion_muutos_val_aika_yht,
         -- Muut kustannukset yhteensä
               muut_kustannukset_hoitokausi_yht, muut_kustannukset_val_aika_yht,
         -- Kaikki yhteensä

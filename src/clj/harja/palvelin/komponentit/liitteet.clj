@@ -1,9 +1,11 @@
 (ns harja.palvelin.komponentit.liitteet
   (:require [clojure.string :as str]
+            [cheshire.core :as cheshire]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.liitteet :as liitteet-q]
             [com.stuartsierra.component :as component]
             [clojure.java.io :as io]
+            [harja.tyokalut.yleiset :as yleiset]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [harja.domain.liite :as t-liitteet]
@@ -21,7 +23,8 @@
            (com.mchange.v2.c3p0 C3P0ProxyConnection)
            (net.coobird.thumbnailator Thumbnailator)
            (net.coobird.thumbnailator.tasks UnsupportedFormatException)
-           (java.util UUID))
+           (java.util UUID)
+           (java.util.concurrent Executors LinkedBlockingQueue ThreadPoolExecutor TimeUnit))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (declare lue-s3-tiedosto)
@@ -47,28 +50,60 @@
         (io/copy in out)
         (.toByteArray out)))))
 
-(def s3-virustarkistusvastaus (atom nil))
-(def s3-virustarkistus-maara (atom 0))
-(def virustarkistus-max-maara 8)
+(def virustarkistus-odotus-max-yritykset 8)
 
-(defn- odota-s3-virustarkistus [db s3-url s3hash]
-  (async/go-loop []
-    (async/<! (async/timeout 15000))
-    (let [_ (reset! s3-virustarkistusvastaus (lue-s3-tiedosto s3-url s3hash db))
-          _ (swap! s3-virustarkistus-maara inc)
-          _ (log/info "odota-s3-virustarkistus :: tulos:" (pr-str @s3-virustarkistusvastaus))]
+
+(defn- odota-s3-virustarkistus-tehtava*
+  [db s3-url s3hash {:keys [max-yritykset odotusaika odotusaika-rnd odotusaika-lisays]
+                     :or {max-yritykset virustarkistus-odotus-max-yritykset
+                          odotusaika 10000
+                          odotusaika-rnd 5000
+                          odotusaika-lisays 2500}}]
+  (loop [n-kierros 1
+         ;; Arvotaan ensimmäiseksi odotusajaksi 10-15 sekuntia,
+         ;; jotta mahdollista isoa liitemassaa ei tarkasteta samanaikaisesti
+         odotusaika (+ odotusaika (rand-int odotusaika-rnd))]
+    (Thread/sleep odotusaika)
+    ;; Itse liitetiedoston payloadia ei tarvitse käsitellä tässä
+    ;; Meille riittää tieto onko tiedosto ladattavissa S3:sta, eli onko virustarkistus suoritettu
+    (let [liite-saatavilla? (try
+                              (boolean (lue-s3-tiedosto s3-url s3hash db))
+                              (catch Exception e
+                                (log/error "Virustarkistuksen tuloksen haku epäonnistui, s3hash: " s3hash ", virhe: " e)
+                                false))]
+      (log/info "Virustarkistuksen tuloksen haku, yritys:" n-kierros "/" max-yritykset
+        ", s3hash:" s3hash ", tulos:" (if liite-saatavilla? "Saatiin S3 vastaus" "Ei S3 vastausta"))
+
       (cond
-        (and (not (nil? @s3-virustarkistusvastaus)) (< @s3-virustarkistus-maara virustarkistus-max-maara) )
+        ;; Jos vastaus saatiin, lopetetaan odotus ja merkitään liite tarkastetuksi
+        liite-saatavilla?
         (do
-          (log/info "Liite on virustarkastettu.")
-          ;; Merkitään se tarkastetuksi
-          (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash}))
-        (and (nil? @s3-virustarkistusvastaus) (< @s3-virustarkistus-maara virustarkistus-max-maara) )
+          (log/info "Liite on virustarkastettu, s3hash:" s3hash)
+          (try
+            (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash})
+            (catch Exception e
+              (log/error "Virustarkastuksen tilan merkitseminen epäonnistui, s3hash: " s3hash ", virhe:" e))))
+
+        ;; Jos vastausta ei saatu, ja voidaan vielä yrittää uudelleen
+        (< n-kierros max-yritykset)
         (do
-          (log/info "Tiedosto tarkastamatta, odotetaan 15 sekuntia...")
-          (recur))
-        (and (nil? @s3-virustarkistusvastaus) (>= @s3-virustarkistus-maara virustarkistus-max-maara) )
-        (log/error "Virustarkastus epäonnistui. Tarkistuskertojen maksimi ylittyi.")))))
+          ;; Kasvatetaan odotusaikaa joka kierroksella
+          (let [uusi-odotusaika (+ odotusaika odotusaika-lisays)]
+            (log/info "Tiedosto tarkastamatta, odotetaan" (yleiset/round2 2 (/ uusi-odotusaika 1000)) "sekuntia, s3hash:" s3hash)
+            (recur
+              (inc n-kierros)
+              uusi-odotusaika)))
+
+        ;; Maksimimäärä yrityksiä käytetty
+        :else
+        (log/error "Virustarkastus epäonnistui. Tarkistuskertojen maksimi ylittyi, s3hash:" s3hash)))))
+
+(defn odota-s3-virustarkistus-saije
+  ([db s3-url s3hash thread-pool]
+   (odota-s3-virustarkistus-saije db s3-url s3hash thread-pool {}))
+  ([db s3-url s3hash thread-pool asetukset]
+   (let [tehtava #(odota-s3-virustarkistus-tehtava* db s3-url s3hash asetukset)]
+     (.submit thread-pool tehtava))))
 
 (defn- tallenna-s3
   "Anna lähetettävä tiedosto java.io.inputstreaminä.
@@ -82,17 +117,17 @@
           ;; tiedostot saadaan sitten haettua
           s3hash (str/trim (str (pvm/iso8601 (pvm/nyt)) "-" (UUID/randomUUID)))
           ;; Generoi presignedurl, johon varsinainen liite lähetetään
-          vastaus @(http/post s3-url {:body (cheshire.core/encode {"key" s3hash "operation" "put"})
+          vastaus @(http/post s3-url {:body (cheshire/encode {"key" s3hash "operation" "put"})
                                       :timeout 50000})
-          _ (log/info "Generoi presignedurl :: vastaus " vastaus)
+          _ (log/info "Generoi presignedurl :: vastaus " (dissoc vastaus :opts :body))
           ;; Vastauksesta parsitaan varsinainen url, johon liite lähetetään
           varsinainen-put-url (when (= 200 (:status vastaus))
-                                 (str/trim (get (cheshire.core/decode (:body vastaus)) "url")))
-          _ (log/info "Lähetetään tiedosto urliin: " varsinainen-put-url)
+                                 (str/trim (get (cheshire/decode (:body vastaus)) "url")))
+          _ (log/debug "Lähetetään tiedosto urliin: " varsinainen-put-url)
           liite-vastaus (when varsinainen-put-url
                           @(http/put varsinainen-put-url {:body input-stream-sisalto}))
           _ (if varsinainen-put-url
-              (log/info "Liitteen tallennuksen vastaus: " liite-vastaus)
+              (log/info "Liitteen tallennuksen vastaus: " (dissoc liite-vastaus :opts :body))
               (log/error "Ei saatu yhteyttä S3:seen. Liitetiedosto jää lähettämättä "))]
 
       ;; Jos lataus osoitetta ei saatu, palautetaan nil
@@ -114,25 +149,25 @@
   (try
     (let [_ (log/info "lue-s3-tiedosto")
           ;; Generoi presignedurl, josta liite haetaan
-          vastaus @(http/post s3-url {:body (cheshire.core/encode {"key" (str s3hash) "operation" "get"})
+          vastaus @(http/post s3-url {:body (cheshire/encode {"key" (str s3hash) "operation" "get"})
                                       :timeout 50000})
-          _ (log/info "lue-s3-tiedosto :: vastaus:" vastaus)
+          _ (log/info "lue-s3-tiedosto :: vastaus:" (dissoc vastaus :opts :body))
           _ (when (not= 200 (:status vastaus))
               (log/error "File: " s3hash " got download error: " (:body vastaus)))
 
           ;; Vastauksesta parsitaan varsinainen url, josta liite ladataan
-          varsinainen-get-url (when (= 200 (:status vastaus)) (str/trim (get (cheshire.core/decode (:body vastaus)) "url")))
-          _ (log/info "lue-s3-tiedosto :: varsinainen-get-url:" varsinainen-get-url)
+          varsinainen-get-url (when (= 200 (:status vastaus)) (str/trim (get (cheshire/decode (:body vastaus)) "url")))
+          ;_ (log/info "lue-s3-tiedosto :: varsinainen-get-url:" varsinainen-get-url)
 
-          liite (when varsinainen-get-url @(http/get varsinainen-get-url))
-          _ (log/info "lue-s3-tiedosto :: liite:" liite)
+          liite-vastaus (when varsinainen-get-url @(http/get varsinainen-get-url))
+          _ (log/info "lue-s3-tiedosto :: liite:" (dissoc liite-vastaus :opts :body))
 
           ;; Jos liite saatiin, merkitään kantaan, että se on virustarkastettu
-          _ (when (= 200 (:status liite)) (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash}))]
+          _ (when (= 200 (:status liite-vastaus)) (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash}))]
       ;; Jos osoitetta ei saatu, palautetaan liitteen sijasta nil
       (when varsinainen-get-url
         (with-open [out (ByteArrayOutputStream.)]
-          (io/copy (:body liite) out)
+          (io/copy (:body liite-vastaus) out)
           (.toByteArray out))))
     (catch Exception e
       (do
@@ -215,14 +250,12 @@
                [{:koodi virheet/+ominaisuus-ei-kaytossa+
                  :viesti (str "Liitteen tallennus ei tällä hetkellä onnistu. Kokeile myöhemmin uudestaan.")}]}))))
 
-(defn- tallenna-liite-s3 [db lahdetiedosto s3-url {:keys [tyyppi koko] :as liite-perustiedot}]
+(defn- tallenna-liite-s3 [db lahdetiedosto s3-url thread-pool {:keys [tyyppi koko] :as liite-perustiedot}]
   (log/debug "Vastaanotettu pyyntö tallentaa liite s3:seen.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
   (log/debug "Koko väitetty / havaittu: " (pr-str koko) (and (instance? java.io.File lahdetiedosto) (.length lahdetiedosto)))
   (log/debug "lahde:" lahdetiedosto)
-  ;; Resetoidaan atomit jokaisen latauksen yhteydessä
-  (reset! s3-virustarkistusvastaus nil)
-  (reset! s3-virustarkistus-maara 0)
+
   (let [koko (if (instance? java.io.File lahdetiedosto)
                (.length lahdetiedosto)
                koko)
@@ -232,7 +265,7 @@
       (do
         (let [liite (tallenna-liite-tietokantaan db lahdetiedosto :aws s3-url liite-perustiedot)
               ;; S3 tallennuksessa käynnistetään virustarkastus
-              _ (when (:s3hash liite) (async/thread (odota-s3-virustarkistus db s3-url (:s3hash liite))))]
+              _ (when (:s3hash liite) (odota-s3-virustarkistus-saije db s3-url (:s3hash liite) thread-pool))]
           liite))
       (do
         (log/debug "Liite hylätty: " (:viesti liitetarkistus))
@@ -295,15 +328,38 @@
 (defn- hae-pikkukuva [db liitteen-id]
   (first (liitteet-q/hae-pikkukuva-lataukseen db liitteen-id)))
 
-(defrecord Liitteet [s3-url alusta]
+(defrecord Liitteet [s3-url thread-pool-koko alusta]
   component/Lifecycle
   (start [this]
-    this)
+    (assoc this
+      :virustarkistus-thread-pool (let [;; Maksimimäärä säikeitä, jotka voivat olla käynnissä samanaikaisesti
+                                        max-pool-koko (or thread-pool-koko 50)
+                                        ;; Aika, jonka idle-säikeet odottavat uusia tehtäviä ennen kuin ne lopetetaan
+                                        keep-alive-time 60
+                                        thread-pool (ThreadPoolExecutor.
+                                                      max-pool-koko max-pool-koko
+                                                      keep-alive-time
+                                                      TimeUnit/SECONDS
+                                                      ;; Rajoittamaton jono
+                                                      (LinkedBlockingQueue.))]
+                                    ;; Kun käytetään rajoittamatonta jonoa, ei ThreadPoolExecutor osaa skaalata threadien
+                                    ;; määrää ylös automattisesti. (Alunperin käytin asetusta core = 0, max = thread-pool-koko)
+                                    ;; Vältetään ongelma asettamalla core threadien määrä samaan kuin max-pool-koko ja
+                                    ;; sallitaan core threadien terminointi idle-tilassa: Threadien määrä tippuu
+                                    ;; nollaan, jos ei ole töitä tehtävänä ja skaalaa takaisin ylös, jos tulee uusia tehtäviä.
+                                    (.allowCoreThreadTimeOut thread-pool true)
+
+                                    thread-pool)))
   (stop [this]
-    this)
+    (when-let [pool ^ThreadPoolExecutor (:virustarkistus-thread-pool this)]
+      (.shutdown pool)
+      (when-not (.awaitTermination pool 60 TimeUnit/SECONDS)
+        (.shutdownNow pool)))
+      (dissoc this :virustarkistus-thread-pool))
 
   LiitteidenHallinta
-  (luo-liite [{db :db virustarkistus :virustarkistus tiedostopesula :tiedostopesula}
+  (luo-liite [{db :db virustarkistus :virustarkistus tiedostopesula :tiedostopesula
+               thread-pool :virustarkistus-thread-pool :as this}
               luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
     (let [liite-perustiedot {:luoja luoja
                              :urakka urakka
@@ -314,7 +370,7 @@
                              :lahdejarjestelma lahdejarjestelma}]
       ; Tallennetaan liitteet s3:een vähemmillä vaiheilla
       (if (and (= :aws alusta) s3-url)
-        (tallenna-liite-s3 db lahde s3-url liite-perustiedot)
+        (tallenna-liite-s3 db lahde s3-url thread-pool liite-perustiedot)
         (tallenna-liite db lahde tiedostopesula virustarkistus liite-perustiedot))))
   (lataa-liite [{db :db :as this} liitteen-id optiot]
     (hae-liite db (:alusta this) s3-url liitteen-id optiot))

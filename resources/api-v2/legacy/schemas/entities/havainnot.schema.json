@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "array",
+  "maxItems" : 1000,
+  "items": [
+    {
+      "id": "urn:harja/havainnot/0",
+      "type": "object",
+      "properties": {
+        "havainto": {
+          "id": "urn:harja/havainnot/0/havainto",
+          "type": "object",
+          "properties": {
+            "kirjaaja": {
+              "id": "urn:harja/havainnot/0/havainto/kirjaaja",
+              "type": "string"
+            },
+            "kuvaus": {
+              "id": "urn:harja/havainnot/0/havainto/kuvaus",
+              "type": "string",
+              "required": true
+            },
+            "liitteet": {
+              "id": "urn:harja/tarkastukset/0/liitteet",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

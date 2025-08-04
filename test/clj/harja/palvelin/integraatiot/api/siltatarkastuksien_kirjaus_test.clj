@@ -1,14 +1,16 @@
 (ns harja.palvelin.integraatiot.api.siltatarkastuksien-kirjaus-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
-            [harja.testi :refer :all]
-            [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
-            [com.stuartsierra.component :as component]
-            [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
-            [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.liitteet :as liitteet])
-  (:import (java.util Date)))
+  (:require
+   [clojure.test :refer [deftest is use-fixtures]]
+   [com.stuartsierra.component :as component]
+   [harja.kyselyt.konversio :as konv]
+   [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
+   [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
+   [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
+   [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+   [harja.palvelin.komponentit.liitteet :as liitteet]
+   [harja.testi :refer :all])
+  (:import
+   (java.util Date)))
 
 (def kayttaja "destia")
 (def kayttaja-jvh "jvh")
@@ -16,7 +18,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :liitteiden-hallinta (component/using (liitteet/->Liitteet nil nil) [:db])
+    :liitteiden-hallinta (component/using (liitteet/->Liitteet nil nil nil) [:db])
     :api-siltatarkastukset (component/using
                              (api-siltatarkastukset/->Siltatarkastukset)
                              [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
@@ -203,3 +205,34 @@
     (is (= liitteiden-maara-jalkeen (+ 1 liitteiden-maara-ennen)))
     (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE poistettu IS NOT TRUE AND ulkoinen_id = '" ulkoinen-id "';")))]
       (is (not (nil? siltatarkastus-kannassa))))))
+
+(deftest tallenna-siltatarkastus-palauttaa-duplikaatti-virheen
+  ;;Tallenna siltatarkastus palauttaa duplikaatti-virheen, jos ulkoinen-id vaihtuu
+  (let [ulkoinen-id 787881
+        siltatunnus (first (second (hae-siltatunnukset)))
+        tarkastusaika "2022-01-10T12:00:00Z"
+        tarkastaja-etunimi "Simo"
+        tarkastaja-sukunimi "Sillantarkastaja"
+        _ (anna-kirjoitusoikeus kayttaja)
+        vastaus-lisays1 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+                          (-> "test/resurssit/api/siltatarkastus.json"
+                            slurp
+                            (.replace "__ID__" (str ulkoinen-id))
+                            (.replace "__ETUNIMI__" tarkastaja-etunimi)
+                            (.replace "__SUKUNIMI__" tarkastaja-sukunimi)
+                            (.replace "__SILTATUNNUS__" (str siltatunnus))
+                            (.replace "__TARKASTUSAIKA__" tarkastusaika)))
+        vastaus-lisays2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+                          (-> "test/resurssit/api/siltatarkastus.json"
+                            slurp
+                            (.replace "__ID__" (str (+ ulkoinen-id 1)))
+                            (.replace "__ETUNIMI__" tarkastaja-etunimi)
+                            (.replace "__SUKUNIMI__" tarkastaja-sukunimi)
+                            (.replace "__SILTATUNNUS__" (str siltatunnus))
+                            (.replace "__TARKASTUSAIKA__" tarkastusaika)))]
+    (is (= 200 (:status vastaus-lisays1)))
+    (is (= 400 (:status vastaus-lisays2)))
+    (let [data (cheshire.core/parse-string (:body vastaus-lisays2) true)
+          koodi (get-in data [:virheet 0 :virhe :koodi])]
+      (is (= virheet/+duplikaatti-siltatarkastus+ koodi)))))
+    

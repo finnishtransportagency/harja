@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "reittitoteuma": {
+      "id": "urn:harja/reittitoteuma",
+      "type": "object",
+      "additionalProperties": false,
+      "required": false,
+      "$ref": "file:resources/api/schemas/entities/reittitoteuma.schema.json"
+    },
+    "reittitoteumat": {
+      "id": "urn:harja/reittitoteumat/0/reittitoteuma",
+      "type": "object",
+      "additionalProperties": false,
+      "required": false,
+      "$ref": "file:resources/api/schemas/entities/reittitoteumat.schema.json"
+    }
+  }
+}

@@ -11,27 +11,6 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["urakka_paatos" ::urakka-paatos
-   {"id" ::paatoksen-id
-    "urakka-id" ::urakka/id
-    "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi
-    "hinnan-erotus" ::hinnan-erotus
-    "urakoitsijan-maksu" ::urakoitsijan-maksu
-    "tilaajan-maksu" ::tilaajan-maksu
-    "siirto" ::siirto
-    "tyyppi" ::tyyppi
-    "lupaus-luvatut-pisteet" ::lupaus-luvatut-pisteet
-    "lupaus-toteutuneet-pisteet" ::lupaus-toteutuneet-pisteet
-    "lupaus-tavoitehinta" ::lupaus-tavoitehinta
-    "erilliskustannus_id" ::erilliskustannus-id
-    "sanktio_id" ::sanktio-id
-    "kulu_id" ::kulu-id
-    "luoja-id" ::muokkaustiedot/luoja-id
-    "luotu" ::muokkaustiedot/luotu
-    "muokattu" ::muokkaustiedot/muokattu
-    "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
-    "poistettu" ::muokkaustiedot/poistettu?}
-   #?(:clj {::lupaus-tavoitehinta (specql.transform/transform (harja-specql/->BigDecimalTransform))})]
   ["tavoitehinnan_oikaisu" ::tavoitehinnan-oikaisu
    {"id" ::oikaisun-id
     "urakka-id" ::urakka/id

@@ -84,11 +84,14 @@
   "Hakee annetun sillan siltatarkastukset"
   [db user {:keys [urakka-id silta-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
-  (konv/sarakkeet-vektoriin
-    (into []
-          kohteet-xf
-          (q/hae-sillan-tarkastukset db silta-id))
-    {:liite :liitteet}))
+  (->> (konv/sarakkeet-vektoriin
+         (into []
+           kohteet-xf
+           (q/hae-sillan-tarkastukset db silta-id))
+         {:liite :liitteet})
+    (sort-by :tarkastusaika)
+    reverse
+    vec))
 
 (defn paivita-siltatarkastuksen-kohteet!
   "Päivittää siltatarkastuksen kohteet"

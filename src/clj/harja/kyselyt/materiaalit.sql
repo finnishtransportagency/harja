@@ -469,7 +469,7 @@ FROM suolatoteuma_reittipiste rp
 WHERE rp.pohjavesialue = :pohjavesialue
   AND rp.aika BETWEEN :alkupvm AND :loppupvm;
 
--- name: hae-urakan-suunniteltu-materiaalin-kaytto
+-- name: hae-urakan-suunniteltu-materiaalin-kaytto-analytiikalle
 -- Hakee kaikki materiaalit, ja palauttaa materiaalin suunnittelutiedot, jos materiaalia on urakkaan suunniteltu.
 -- Jätetaan materiaalityypiltään talvisuola tyyppiset materiaalit pois. Eli talvisuola ja erityisalue
 -- niille on oma hakunsa
@@ -480,6 +480,10 @@ SELECT m.id                               AS materiaali_id,
        ml.nimi                            AS materiaaliluokka,
        ml.yksikko                         AS materiaaliluokka_yksikko,
        ml.materiaalityyppi                AS materiaaliluokka_tyyppi,
+       mk.id                              AS hoito_materiaalimaara_id,
+       NULL                               AS mhu_materiaalimaara_id,
+       NULL                               AS suolaraja_id,
+       NULL                               AS tehtava_id,
        mk.maara,
        mk.muokattu,
        mk.luotu,

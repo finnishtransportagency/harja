@@ -16,12 +16,17 @@ UPDATE urakka_tavoite
    AND hoitokausi = :hoitokausi;
 
 
--- name:hae-budjettitavoite
+-- name: hae-budjettitavoite
 WITH tavoitehinnan_oikaisut AS
          (SELECT sum(summa) AS summa, "urakka-id", "hoitokauden-alkuvuosi"
           FROM tavoitehinnan_oikaisu
           WHERE NOT poistettu
-          GROUP BY "urakka-id", "hoitokauden-alkuvuosi")
+          GROUP BY "urakka-id", "hoitokauden-alkuvuosi"),
+    hoivuoden_lopun_indeksikorjaus AS
+         (SELECT phi.hoitokauden_lopun_indeksikorjaus, phi.hoitokauden_alkuvuosi
+          FROM paatos_hoitokauden_indeksikorjaus phi
+          WHERE phi.poistettu = FALSE
+            AND phi.urakkaid = :urakka)
 SELECT ut.id,
        ut.urakka,
        ut.hoitokausi,
@@ -39,9 +44,15 @@ SELECT ut.id,
        ut.vahvistaja,
        ut.versio,
        (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0))                               AS "tavoitehinta-oikaistu",
-       COALESCE(ko."uusi-kattohinta", (ut.kattohinta_indeksikorjattu
-           + (COALESCE(t.summa,0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
-           AS "kattohinta-oikaistu",
+       (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0) +
+        COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0))                                    AS "hoitovuoden-lopun-tavoitehinta",
+       COALESCE(ko."uusi-kattohinta",
+                (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa,0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
+                                                                                              AS "kattohinta-oikaistu",
+       COALESCE(ko."uusi-kattohinta",
+                (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa, 0) * 1.1)
+                    + (COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista ja hoitovuoden lopun indeksikorjauksista.
+                                                                                              AS "hoitovuoden-lopun-kattohinta",
        (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INTEGER                            AS "hoitokauden-alkuvuosi",
        ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta"
 FROM urakka_tavoite ut
@@ -53,20 +64,26 @@ FROM urakka_tavoite ut
          LEFT JOIN tavoitehinnan_oikaisut t ON u.id = t."urakka-id" AND
                                                EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
                                                t."hoitokauden-alkuvuosi"
+         LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
 WHERE urakka = :urakka
 ORDER BY ut.hoitokausi;
 
 -- name: hae-valikatselmus-siirrot-ed-vuodelta
 -- single?: true
-SELECT COALESCE(SUM(up.siirto), 0)
-  FROM urakka_paatos up
-           JOIN urakka u ON up."urakka-id" = u.id
- WHERE up."urakka-id" = :urakka
-   AND up."hoitokauden-alkuvuosi" = (EXTRACT(YEAR FROM :alkupvm::DATE) - 1)
-   -- Ainoastaan kattohinnan ylityksestä tai tavoitehinnan alituksesta voi tulla siirtoja
-   AND up.tyyppi in ('kattohinnan-ylitys', 'tavoitehinnan-alitus')
-   AND up.siirto != 0
-   AND up.poistettu = FALSE;
+(SELECT COALESCE(SUM(x.siirto), 0)
+ FROM (SELECT COALESCE(SUM(pta.siirron_maara) * -1, 0) as siirto
+       FROM paatos_tavoitehinta_alitus pta
+       WHERE pta.urakkaid = :urakka
+         AND pta.hoitokauden_alkuvuosi = (EXTRACT(YEAR FROM :alkupvm::DATE) - 1) -- Haetaan edellisen vuoden päätöksestä
+         AND pta.siirron_maara != 0
+         AND pta.poistettu = FALSE
+       UNION ALL
+       SELECT COALESCE(SUM(pk.siirrettava_maara), 0) as siirto
+       FROM paatos_kattohinta pk
+       WHERE pk.urakkaid = :urakka
+         AND pk.hoitokauden_alkuvuosi = (EXTRACT(YEAR FROM :alkupvm::DATE) - 1) -- Haetaan edellisen vuoden päätöksestä
+         AND pk.siirrettava_maara != 0
+         AND pk.poistettu = FALSE) as x);
 
 -- name:hae-johto-ja-hallintokorvaukset
 SELECT jh.tunnit,
@@ -103,7 +120,7 @@ WHERE jh."urakka-id" = :urakka-id;
 SELECT id AS "toimenkuva-id",
        toimenkuva
 FROM johto_ja_hallintokorvaus_toimenkuva
-WHERE "urakka-id" = :urakka-id
+WHERE "urakka-id" = :urakka-id;
 
 -- name:lisaa-oma-johto-ja-hallintokorvaus-toimenkuva<!
 INSERT INTO johto_ja_hallintokorvaus_toimenkuva (toimenkuva, "urakka-id")
@@ -150,6 +167,15 @@ UPDATE urakka_tavoite ut
 
 -- name: hae-suunnitelman-tilat
 select * from suunnittelu_kustannussuunnitelman_tila skt where skt.urakka = :urakka;
+
+-- name: onko-kustannussuunnitelma-vahvistettu
+SELECT EXISTS (
+    SELECT vahvistettu
+    FROM suunnittelu_kustannussuunnitelman_tila skt
+    WHERE skt.urakka = :urakkaid
+      AND skt.osio = 'tavoite-ja-kattohinta'::SUUNNITTELU_OSIO
+      AND skt.hoitovuosi = :hoitovuosinro
+      AND skt.vahvistettu = true);
 
 -- name: lisaa-suunnitelmalle-tila
    INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, luoja, vahvistaja, vahvistettu, vahvistus_pvm)
@@ -324,13 +350,8 @@ SELECT u.id                           AS urakka,
        ut.tarjous_tavoitehinta        AS "tarjous-tavoitehinta",
        ut.hoitokausi,
        u.loppupvm < CURRENT_DATE      AS "urakka-paattynyt?",
-       (EXTRACT(YEAR FROM u.loppupvm) - EXTRACT(YEAR FROM u.alkupvm)) + 1   AS urakan_pituus, -- vuosista saadaan yhden liian lyhyt
-       EXISTS(SELECT *
-              FROM urakka_paatos up
-              WHERE up.tyyppi IN ('lupausbonus', 'lupaussanktio')
-                AND up."urakka-id" = ut.urakka
-                AND up."hoitokauden-alkuvuosi" = EXTRACT(YEAR FROM u.alkupvm) + ut.hoitokausi - 1
-                AND up.poistettu = FALSE) AS "on-paatos"
+       u.alkupvm                      as "urakka-alkupvm",
+       (EXTRACT(YEAR FROM u.loppupvm) - EXTRACT(YEAR FROM u.alkupvm)) + 1   AS urakan_pituus -- vuosista saadaan yhden liian lyhyt
 FROM urakka u
      LEFT JOIN urakka_tavoite ut ON ut.urakka = u.id
 WHERE u.tyyppi = 'teiden-hoito'

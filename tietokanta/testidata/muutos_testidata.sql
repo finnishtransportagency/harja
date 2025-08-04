@@ -6,6 +6,8 @@ declare
     _toimenpide_id_paall_paikk INTEGER := (SELECT id FROM toimenpide WHERE koodi = '20107'); -- Päällystepaikkaukset
     _toimenpide_id_sorateiden_hoito INTEGER := (SELECT id FROM toimenpide WHERE koodi = '23124'); -- Sorateiden hoito
     _toimenpide_id_mhu_yllapito INTEGER := (SELECT id FROM toimenpide WHERE koodi = '20191'); -- MHU Ylläpito
+    _toimenpideinstassi_id_hoidon_johto INTEGER := (SELECT id FROM toimenpideinstanssi WHERE urakka = urakka_id AND toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23151'));
+    _johto_ja_hallintokorvaus_tehtavaryhma_id INTEGER := (SELECT id FROM tehtavaryhma WHERE nimi = 'J - Johto- ja hallintokorvaus');
     _tehtava_id_ab_paikkaus INTEGER := (SELECT id FROM tehtava WHERE nimi = 'AB-paikkaus levittäjällä');
     _tehtava_id_soratien_rummut_alle_600mm INTEGER := (SELECT id FROM tehtava WHERE nimi = 'Soratien rumpujen korjaus ja uusiminen  Ø <= 600 mm');
     _tehtava_id_soratien_rummut_600_1000mm INTEGER := (SELECT id FROM tehtava WHERE nimi = 'Rumpujen korjaus ja uusiminen  600 - 1000 mm');
@@ -64,6 +66,21 @@ FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi LO
                     1000, 100, 1100);
 
         END LOOP;
+
+-- Johto- ja hallintokorvauksen muutos
+INSERT INTO mhu_muutos (versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja)
+VALUES  (1, urakka_id, '2025-06-25', 'johto-ja-hallintokorvaus', null, 'Työmääräarviot ylittyivät',
+         (select id from kayttaja where kayttajanimi = 'tero'));
+INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja,  lisatieto, koontilaskun_kuukausi)
+VALUES  (1230, '2025-10-15', 36, (select id from kayttaja where kayttajanimi = 'tero'),
+         'Muutoksesta automaattisesti luotu kulu 1', 'lokakuu/5-hoitovuosi');
+INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, luoja, tyyppi, tavoitehintainen)
+VALUES  ( 0, (SELECT id FROM kulu WHERE lisatieto = 'Muutoksesta automaattisesti luotu kulu 1'), 1230, _toimenpideinstassi_id_hoidon_johto, _johto_ja_hallintokorvaus_tehtavaryhma_id, 'kokonaishintainen',
+          (select id from kayttaja where kayttajanimi = 'tero'), 'jjh-muutos', true);
+INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
+VALUES  (1, (SELECT id FROM mhu_muutos WHERE syy = 'Työmääräarviot ylittyivät'),
+         (SELECT id FROM kulu WHERE lisatieto = 'Muutoksesta automaattisesti luotu kulu 1'));
+
     RETURN TRUE;
 
 end

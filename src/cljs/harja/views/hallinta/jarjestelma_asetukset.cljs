@@ -1,14 +1,12 @@
 (ns harja.views.hallinta.jarjestelma-asetukset
   (:require [harja.ui.komponentti :as komp]
             [tuck.core :refer [tuck]]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallinta.jarjestelma-asetukset :as tiedot]
-            [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
+            [harja.ui.kentat :as kentat]
             [harja.pvm :as pvm]
             [harja.domain.geometriaaineistot :as geometria-aineistot]
             [harja.ui.debug :refer [debug]]
-            [harja.loki :refer [log]]
             [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [chan <!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -121,16 +119,37 @@
           :leveys 1}]
         geometriapaivitykset]])))
 
+(defn asetukset [e! app]
+  (let [validoinnit-poissa (r/atom (get-in app [:asetukset :valikatselmus-validointi]))]
+    [:div
+     [:h2 "Järjestelmään vaikuttavia asetuksia"]
+     [:h4 "Ota välikatselmuksen päätösten validointivaatimukset pois käytöstä"]
+     [:p "Välikatselmuksessa ei voi tehdä päätöksiä, mikäli edellisiä päätöksiä ei ole tehty tai hoitovuosi ei ole loppunut.
+   Tämä hankaloittaa testausta. Ottamalla validoinnit pois päältä, pystyt testaamaan välikatselmusta paremmin tai toisaalta,
+   korjaamaan jonkin ongelmatilanteen. Tuotannossa pitää olla tarkkana, että asetus ei jää pois päältä."]
+     [kentat/tee-kentta {:tyyppi :radio-group
+                         :vaihtoehdot [:true :false]
+                         :vayla-tyyli? true
+                         :nayta-rivina? true
+                         :vaihtoehto-nayta {:true "Validoinnit käytössä"
+                                            :false "Validoinnit poissa"}
+                         :valitse-fn #(e! (tiedot/->ToggleValikatselmusValidoinnit %))}
+      validoinnit-poissa]]))
+
 (defn jarjestelma-asetukset* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
-                      #(e! (tiedot/->Nakymassa? false)))
+    (komp/sisaan-ulos
+      #(do
+         (e! (tiedot/->Nakymassa? true))
+         (e! (tiedot/->HaeJarjestelmanAsetukset)))
+      #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! app]
       [:div
        [debug app]
        [geometria-aineistot e! app]
-       [geometriapaivitykset e! app]])))
+       [geometriapaivitykset e! app]
+       [asetukset e! app]])))
 
 (defn jarjestelma-asetukset []
   [tuck tiedot/tila jarjestelma-asetukset*])

@@ -77,7 +77,7 @@
    tarkoitus on havaita nimenomaan versiota 11 vanhemmat selaimet."
   (let [ua (-> js/window .-navigator .-userAgent)
         ie-versio (maarita-ie-versio-user-agentista ua)]
-    (and (integer? ie-versio) (<= 10 ie-versio))))
+    (and (integer? ie-versio) (<= 10 ^number ie-versio))))
 
 (defn enter-nappain? [event] (= "Enter" (-> event .-key)))
 (defn tab+shift-nappaimet? [event] (and (= "Tab" (-> event .-key)) (-> event .-shiftKey)))

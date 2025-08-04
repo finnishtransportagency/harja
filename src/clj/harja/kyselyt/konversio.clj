@@ -64,7 +64,9 @@
 
   TÄRKEÄÄ! Jos lapsiriviä on useampia, konversio PITÄÄ tehdä yhdellä kutsulla (eli antamalla useampi
   avain-arvo -pari mäppiin). Funktio tunnistaa uniikit rivit kaikista-riveistä poistamalla lapsirivit,
-  joten jos kaikkia lapsirivejä ei määrittele, ei konversio toimi oikein."
+  joten jos kaikkia lapsirivejä ei määrittele, ei konversio toimi oikein.
+  Funktio ei takaa järjestyksen säilymistä. Tarvittaessa kutsuvan funktion tulee 
+  järjestää data uudelleen tämän funktion kutsumisen jälkeen."
   ([kaikki-rivit sarake-vektori]
    (sarakkeet-vektoriin kaikki-rivit sarake-vektori :id :id))
   ([kaikki-rivit sarake-vektori group-fn]

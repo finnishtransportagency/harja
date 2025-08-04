@@ -10,6 +10,28 @@ FROM urakka_tavoite ut
 WHERE ut.urakka = :urakka-id
   AND EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = :hoitokauden-alkuvuosi;
 
+-- name: hae-hoitokauden-alun-indeksikorjattu-tavoitehinta
+-- single?: true
+-- Käytetään esimerkiksi tavoitepalkkion laskemisessa
+SELECT ut.tavoitehinta_indeksikorjattu as tavoitehinta
+  FROM urakka_tavoite ut
+         JOIN urakka u ON ut.urakka = u.id
+ WHERE ut.urakka = :urakka-id
+   AND EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = :hoitokauden-alkuvuosi;
+
+-- name: hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta
+-- single?: true
+-- Käytetään hoidonjohtopalkkion muutoksen laskemisessa
+SELECT ut.tavoitehinta + COALESCE(t.summa, 0) as tavoitehinta
+FROM urakka_tavoite ut
+         JOIN urakka u ON ut.urakka = u.id
+         LEFT JOIN (SELECT SUM(t.summa) AS summa, t."urakka-id", t."hoitokauden-alkuvuosi"
+                    FROM tavoitehinnan_oikaisu t
+                    WHERE NOT t.poistettu
+                    GROUP BY t."urakka-id", t."hoitokauden-alkuvuosi") t ON (ut.urakka = t."urakka-id" AND t."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi)
+WHERE ut.urakka = :urakka-id
+  AND EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = :hoitokauden-alkuvuosi;
+
 
 -- name: hae-oikaistu-kattohinta
 -- single?: true
@@ -31,60 +53,50 @@ WHERE ut.urakka = :urakka-id
 -- name: hintapaatos-tehty?
 -- single?: true
 SELECT EXISTS(
-    SELECT up.id as id
-      FROM urakka_paatos up
-     WHERE up.poistettu = FALSE
-       AND up."hoitokauden-alkuvuosi" in (:vuodet)
-       AND up."urakka-id" = :urakka-id
-       AND up.tyyppi IN ('tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus'));
+           SELECT pta.id
+           FROM paatos_tavoitehinta_alitus pta
+           WHERE pta.urakkaid = :urakka-id
+             AND pta.poistettu = FALSE
+             AND pta.hoitokauden_alkuvuosi in (:vuodet)
+           UNION ALL
+           SELECT pty.id
+           FROM paatos_tavoitehinta_ylitys pty
+           WHERE pty.urakkaid = :urakka-id
+             AND pty.poistettu = FALSE
+             AND pty.hoitokauden_alkuvuosi in (:vuodet)
+           UNION ALL
+           SELECT pk.id
+           FROM paatos_kattohinta pk
+           WHERE pk.urakkaid = :urakka-id
+             AND pk.poistettu = FALSE
+             AND pk.hoitokauden_alkuvuosi in (:vuodet));
 
 -- name: hae-urakan-hintapaatokset
 -- Haetaan vuosittain tulevat välikatselmukset ja niille tieto, että onko päätöstä/välikatselmusta tehty
-SELECT up."hoitokauden-alkuvuosi"
-  FROM urakka_paatos up
- WHERE up.poistettu = FALSE
-   AND up."urakka-id" = :urakka-id
-   AND up.tyyppi IN ('tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus');
+SELECT pta.hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi"
+FROM paatos_tavoitehinta_alitus pta
+WHERE pta.urakkaid = :urakka-id
+AND pta.poistettu = FALSE
+UNION ALL
+SELECT pty.hoitokauden_alkuvuosi  as "hoitokauden-alkuvuosi"
+FROM paatos_tavoitehinta_ylitys pty
+WHERE pty.urakkaid = :urakka-id
+  AND pty.poistettu = FALSE
+UNION ALL
+SELECT pk.hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi"
+FROM paatos_kattohinta pk
+WHERE pk.urakkaid = :urakka-id
+  AND pk.poistettu = FALSE;
 
 -- name: hae-urakan-bonuksen-toimenpideinstanssi-id
 -- single?: true
 SELECT tpi.id AS id
 FROM toimenpideinstanssi tpi
          JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-         JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-     maksuera m
+         JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id
 WHERE tpi.urakka = :urakka-id
-  AND m.toimenpideinstanssi = tpi.id
   AND tpk2.koodi = '23150'
 limit 1;
-
--- name: hae-paatos
-SELECT id, "hoitokauden-alkuvuosi", "urakka-id", "hinnan-erotus", "urakoitsijan-maksu", "tilaajan-maksu",
-       siirto, tyyppi, "lupaus-luvatut-pisteet", "lupaus-toteutuneet-pisteet", "lupaus-tavoitehinta",
-       muokattu, "muokkaaja-id", "luoja-id", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id
-FROM urakka_paatos
-WHERE id = :id;
-
--- name: hae-urakan-hoitovuosien-paatokset-analytiikalle
--- Hakee urakan hoitokauden päättyessa suorittamiin välikatselmuksiin liittyvät tiedot palautettavaksi analytiikalle toteutuneiden kustannusten rajapinnan kautta.
--- Käytetään MH-urakoissa.
-SELECT id                           AS "paatos-id",
-       "hoitokauden-alkuvuosi"      AS "paatoksen-hoitovuosi",
-       tyyppi                       AS "paatostyyppi", -- 'tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus', 'lupausbonus', 'lupaussanktio'
-       "hinnan-erotus"              AS "paatoksen-tulos_kokonaismaara",
-       "urakoitsijan-maksu"         AS "paatoksen-tulos_urakoitsija-maksaa",
-       "tilaajan-maksu"             AS "paatoksen-tulos_tilaaja-maksaa",
-       siirto                       AS "paatoksen-tulos_siirretaan-seuraavalle-hoitovuodelle",
-       "lupaus-tavoitehinta"        AS "paatoksen-tulos_tavoitehinta",
-       "lupaus-luvatut-pisteet"     AS "lupausten-tulos_luvatut-pisteet",
-       "lupaus-toteutuneet-pisteet" AS "lupausten-tulos_toteutuneet-pisteet",
-       kulu_id                      AS "viittaukset-toteutuneisiin-kustannuksiin_kulu-id",
-       sanktio_id                   AS "viittaukset-toteutuneisiin-kustannuksiin_sanktio-id",
-       erilliskustannus_id          AS "viittaukset-toteutuneisiin-kustannuksiin_bonus-id",
-       poistettu                    AS "poistettu"
-FROM urakka_paatos up
-WHERE "urakka-id" = :urakka-id
-ORDER BY "hoitokauden-alkuvuosi", tyyppi;
 
 -- name: hae-urakan-tavoitehintaan-vaikuttavat-muutokset-analytiikalle
 -- Hakee kaikki välikatselmukseen liittyvät tavoitehintaan vaikuttavat muutokset palautettavaksi analytiikalle toteutuneiden kustannusten rajapinnan kautta.
@@ -115,3 +127,17 @@ SELECT s.maara,
            JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka-id AND tpi.id = s.toimenpideinstanssi
  WHERE s.poistettu IS NOT TRUE
    AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE;
+
+-- name: hae-tavoitehinnan-muutokset-hoitokaudelle
+select id, "urakka-id", otsikko, selite, summa
+from tavoitehinnan_oikaisu
+where "urakka-id" = :urakkaid
+  and "hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+  and poistettu is not true;
+
+-- name: poista-tavoitehinnan-muutos!
+UPDATE tavoitehinnan_oikaisu
+SET poistettu = true,
+    muokattu  = now(),
+    "muokkaaja-id" = :muokkaaja-id
+WHERE id = :id;
