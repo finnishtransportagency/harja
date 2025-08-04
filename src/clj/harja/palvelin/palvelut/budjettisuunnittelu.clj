@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.budjettisuunnittelu
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.string :as str]
+            [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [harja.fmt :as fmt]
             [specql.core :refer [fetch update! insert!]]
@@ -967,7 +968,10 @@
 (defn tallenna-toimenkuva
   [db user {:keys [urakka-id toimenkuva-id toimenkuva]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (let [paivitettyjen-rivien-maara (update! db
+  (let [;; Toimenkuva voi olla nil, mutta ei tyhjä
+        toimenkuva (if (= "" (str/trim toimenkuva))
+                     nil toimenkuva)
+        paivitettyjen-rivien-maara (update! db
                                             ::bs/johto-ja-hallintokorvaus-toimenkuva
                                             {::bs/toimenkuva toimenkuva}
                                             {::bs/id toimenkuva-id

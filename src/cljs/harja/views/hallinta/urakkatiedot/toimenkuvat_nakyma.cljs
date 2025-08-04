@@ -28,10 +28,13 @@
                                    toimenkuvat)]
         [:div.toimenkuvien-hallinta
          [:h1 "Toimenkuvat"]
-         [:p "Toimenkuvat ovat mh-urakoiden hallintaan liittyviä asioita, joilla voidaan tarkemmin määrittää, mihin
+         [:p "Toimenkuvat liittyvät vain mh-urakoihin. Toimenkuvien avulla voidaan tarkemmin määrittää tarkemmin, mihin
          urakassa rahoja budjetoidaan ja käytetaään. Alla olevasta urakkavalinnasta löytyy siis vain mh-urakat."]
-         [:p "MH-urakoille on määritelty default toimenkuvia. Ne on asetettu suoraan tietokantaan. Tässä voit
+         [:p "MH-urakoille on määritelty default toimenkuvia. Ne on 19-24 alkavilla urakoilla kovakoodattu ja niitä ei voi vaihtaa.
+         Vuodesta -25 eteenpäin Harjassa on enemmän vapautta toimenkuvien suhteen. Tässä voit
          nimetä niitä uusiksi ja valita mitä toimenkuvia haluat käyttää urakassa."]
+         [:p "Tällä hetkellä voi käsitellä ainoastaan 2025-> eteenpäin olevia urakoita, koska aiemmille toimenkuvat
+         ovat tulleet suoraa koodista ja niiden käsittely on lukittu vanhaan kustannusten suunnitteluun."]
          ;; Urakan valinta
          [yleiset/pudotusvalikko
           "Urakka"

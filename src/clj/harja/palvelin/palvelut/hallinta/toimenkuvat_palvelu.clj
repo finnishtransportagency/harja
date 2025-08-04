@@ -28,10 +28,13 @@
       (throw (SecurityException. (str "Toimenkuvaa " toimenkuva-id " ei ole olemassa.")))
       toimenkuva-id)))
 
-(defn hae-toimenkuvat [db kayttaja]
+(defn hae-toimenkuvat
+  "Haetaan urakat, toimenkuvat ja urakoiden toimenkuvat. Harjassa vain -25 alkavat urakat voivat sisältää tietokannasta
+  peräisin olevia toimenkuvia. Aiemmat urakat käyttävät kovakoodattuja toimenkuvia."
+  [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-rahavaraukset kayttaja)
   {:toimenkuvat (toimenkuvat-kyselyt/hae-toimenkuvat db)
-   :urakoiden-toimenkuvat (toimenkuvat-kyselyt/hae-urakoiden-toimenkuvat db)})
+   :urakoiden-toimenkuvat (toimenkuvat-kyselyt/hae-2025-urakoiden-toimenkuvat db)})
 
 (defn paivita-urakan-toimenkuva [db kayttaja {:keys [id nimi urakkakohtainen-nimi urakka valittu?] :as tiedot}]
   (log/info "paivita-urakan-toimenkuva :: tiedot:" tiedot)

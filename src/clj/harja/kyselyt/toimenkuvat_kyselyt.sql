@@ -42,7 +42,8 @@ SELECT t.id, t.toimenkuva as nimi
  WHERE t."urakka-id" IS NULL
  ORDER BY t.id ASC;
 
--- name: hae-urakoiden-toimenkuvat
+-- name: hae-2025-urakoiden-toimenkuvat
+-- Palautetaan vain 2025-> eteenpäin alkavien urakoiden toimenkuvat, koska aiemmilla toimenkuvat ovat tulleet koodista
 SELECT u.id                     AS "urakka-id",
        u.nimi                   AS "urakka-nimi",
        t.urakkakohtainen_nimi AS "urakkakohtainen-nimi",
@@ -51,6 +52,7 @@ SELECT u.id                     AS "urakka-id",
 FROM urakka u
          LEFT JOIN johto_ja_hallintokorvaus_toimenkuva t ON t."urakka-id" = u.id
 WHERE u.tyyppi = 'teiden-hoito'
+    AND u.alkupvm >= '2025-10-01'::DATE
     ORDER BY t.id ASC;
 
 -- name: hae-urakan-toimenkuvat
