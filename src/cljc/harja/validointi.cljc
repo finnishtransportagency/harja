@@ -3,23 +3,27 @@
   (:require
     [clojure.string :as str]))
 
-   (defn validoi-numero
-     "Validaattori numeroille, params: [numero alaraja ylaraja desimaalien-max-maara]"
-     [numero alaraja ylaraja desimaalien-max-maara]
-     #?(:cljs
-        (let [numero (str/replace numero "," ".")
-              desimaalit (when numero
-                           (count (second (str/split numero #"\."))))]
-          (and
-            (<= alaraja numero ylaraja)
-            ;; Estetään kirjoittamasta , tai . kokonaislukuun
-            (or (not= 0 desimaalien-max-maara) (not (str/includes? numero ".")))
-            (or (nil? numero)
-                (<= desimaalit desimaalien-max-maara))))
+(defn validoi-numero
+  "Validaattori numeroille, params: [numero alaraja ylaraja desimaalien-max-maara]"
+  [numero-str alaraja ylaraja desimaalien-max-maara]
+  #?(:cljs
+     (if (str/blank? numero-str)
+       ;; Jos numeroa ei ole annettu, on se sallittu
+       true
+       ;; Muutoin tarkistetaan että numero on sallituissa rajoissa
+       (let [numero-str (str/replace numero-str "," ".")
+             desimaalit (count (second (str/split numero-str #"\.")))
+             numero (js/Number numero-str)]
 
-        ;; clj-osiolla ei vielä käyttäjiä, tee desim. käsittely jos tarvitaan joskus
-        :clj
-        (<= alaraja numero ylaraja)))
+         (and
+           (<= alaraja numero ylaraja)
+           ;; Estetään kirjoittamasta , tai . kokonaislukuun
+           (or (not= 0 desimaalien-max-maara) (not (str/includes? numero-str ".")))
+           (<= desimaalit desimaalien-max-maara)))))
+
+  ;; clj-osiolla ei vielä käyttäjiä, tee desim. käsittely jos tarvitaan joskus
+  #_:clj
+  #_(<= alaraja numero ylaraja))
 
 (def email-regexp #"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$")
 

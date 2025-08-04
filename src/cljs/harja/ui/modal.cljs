@@ -62,8 +62,8 @@
                                      (.focus @edellinen-fokusoitu-elementti)))
                                  (dom/tee-fokus-ansa modal-ref)))
        :reagent-render
-       (fn [{:keys [otsikko otsikon-alle-komp otsikko-tyyli footer nakyvissa? luokka
-                    leveys content-tyyli body-tyyli modal-luokka sulje-fn sulje-ruksista-fn]} sisalto]
+       (fn [{:keys [otsikko otsikon-alle-komp otsikko-tyyli otsikko-muotoilut footer footer-tyyli nakyvissa? luokka
+                    leveys content-tyyli body-tyyli modal-luokka sulje-fn sulje-ruksista-fn ruksi-tyyli]} sisalto]
          (let [sulje!  #(do
                           (.stopPropagation %)
                           (when sulje-fn
@@ -89,15 +89,16 @@
                                     :ref #(reset! modal-ref %)}
                 (when otsikko
                   [:div.modal-header
-                   [ikonit/sulje-ruksi sulje-ruksista! {:style {:margin 0}}]
+                   [ikonit/sulje-ruksi sulje-ruksista! {:style (if ruksi-tyyli (merge {:margin 0} ruksi-tyyli) {:margin 0})}]
                    [:h2.modal-title {:id "modal-otsikko"
                                      :class (when (= otsikko-tyyli :virhe)
-                                              "modal-otsikko-virhe")}
+                                              "modal-otsikko-virhe")
+                                     :style otsikko-muotoilut}
                     otsikko]
                    (when otsikon-alle-komp
                      [otsikon-alle-komp])])
                 [:div.modal-body {:style body-tyyli} sisalto]
-                (when footer [:div.modal-footer footer])]]]
+                (when footer [:div.modal-footer {:style footer-tyyli} footer])]]]
              ^{:key "ei-modaalia"}
              [:span.modaali-ei-nakyvissa])))})))
 
@@ -107,15 +108,18 @@
   (let [optiot-ja-sisalto @modal-sisalto]
     [modal-container* optiot-ja-sisalto (:sisalto optiot-ja-sisalto)]))
 
-(defn nayta! [{:keys [sulje otsikko otsikon-alle-komp sulje-ruksista-fn sulje-fn otsikko-tyyli
-                      footer luokka leveys content-tyyli body-tyyli modal-luokka modaalin-fokus-elementti]} sisalto] 
+(defn nayta! [{:keys [sulje otsikko otsikon-alle-komp sulje-ruksista-fn ruksi-tyyli sulje-fn otsikko-tyyli otsikko-muotoilut
+                      footer footer-tyyli luokka leveys content-tyyli body-tyyli modal-luokka modaalin-fokus-elementti]} sisalto]
   (reset! modal-sisalto {:otsikko otsikko
                          :otsikon-alle-komp otsikon-alle-komp
                          :otsikko-tyyli otsikko-tyyli
+                         :otsikko-muotoilut otsikko-muotoilut
                          :footer footer
+                         :footer-tyyli footer-tyyli
                          :sisalto sisalto
                          :luokka luokka
                          :sulje-ruksista-fn sulje-ruksista-fn
+                         :ruksi-tyyli ruksi-tyyli
                          :sulje-fn sulje-fn
                          :sulje sulje
                          :nakyvissa? true

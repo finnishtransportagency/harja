@@ -14,7 +14,10 @@
     [harja.tyokalut.testidatan-generointi :as testidatan-generointi]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
     [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
-    [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]))
+    [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
+    [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
+    [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
+    [harja.kyselyt.urakat :as urakka-kyselyt]))
 
 (def kayttaja-yit "yit-rakennus")
 (def kayttaja-analytiikka "analytiikka-testeri")
@@ -41,7 +44,7 @@
 
 (use-fixtures :each jarjestelma-fixture http-fixture)
 
-(defn uusi-kulu-kustannukset-testiin [urakka-id]
+(defn uusi-kulu-kustannukset-testiin [urakka-id summa]
   {:id nil
    :urakka urakka-id
    :viite "12345678"
@@ -50,7 +53,7 @@
    :tyyppi "laskutettava"
    :kohdistukset [{:kohdistus-id nil
                    :rivi 1
-                   :summa 493827160.5
+                   :summa (/ summa 2)
                    :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
                    :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                    :tehtava nil
@@ -58,7 +61,7 @@
                    :tavoitehintainen :true}
                   {:kohdistus-id nil
                    :rivi 2
-                   :summa 493827160.5
+                   :summa (/ summa 2)
                    :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
                    :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
                    :tehtava nil
@@ -71,7 +74,8 @@
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
 
         ;; Luodaan kulu, joka on pakko löytyä aineistosta
-        uusi-kulu (uusi-kulu-kustannukset-testiin urakka-id)
+        kulu-summa 987654321M
+        uusi-kulu (uusi-kulu-kustannukset-testiin urakka-id kulu-summa)
         _ (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
             +kayttaja-jvh+
             {:urakka-id urakka-id
@@ -95,11 +99,11 @@
                                           ORDER BY k.erapaiva ;" urakka-id))
 
         ;; Varmista, että kannasta löytyy juuri luotu kulu
-        juuri-luotu-kulu-kannasta (first (filter #(= (:kulun-kokonaissumma %) 987654321M) kulut-kannasta))
+        juuri-luotu-kulu-kannasta (first (filter #(= (:kulun-kokonaissumma %) kulu-summa) kulut-kannasta))
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
         juuri-luotu-kulu-rajapinnasta (first (filter (fn [k]
-                                                       (= (get-in k [:kulu :kulun-kokonaissumma]) 987654321))
+                                                       (= (get-in k [:kulu :kulun-kokonaissumma]) (bigint kulu-summa)))
                                                (get-in encoodattu-body [:toteutuneet-kustannukset :kulut])))]
     (is (= 200 (:status vastaus)))
     (is (= (:kulun-kokonaissumma juuri-luotu-kulu-kannasta)
@@ -194,34 +198,55 @@
 (deftest hae-toteutuneet-kustannukset-hoitovuoden-paatokset-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
         hoitokauden-alkuvuosi 2023
-        tavoihinta 2000000
+        tavoitehinta 2000000
         kattohinta 2100000
-        tilaajan-maksu 123.12M
-        urakoitsijan-maksu 321.32M
+        ylityksen-maara 100M
+        toteutuneet-kustannukset (+ tavoitehinta ylityksen-maara)
+        tilaajan-prosentti (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit)
+        urakoitsijan-prosentti (- 100 (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit))
+        tilaaja-maksaa (* ylityksen-maara (/ tilaajan-prosentti 100))
+        urakoitsija-maksaa (* ylityksen-maara (/ urakoitsijan-prosentti 100))
+        siirto 0M
+
+        ;; Luodaan kulu, jolla ylitetään tavoitehinta
+        uusi-kulu (uusi-kulu-kustannukset-testiin urakka-id toteutuneet-kustannukset)
+        kulu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
+                       +kayttaja-jvh+
+                       {:urakka-id urakka-id
+                        :kulu-kohdistuksineen uusi-kulu})
+
+        kulu-id (:id kulu-vastaus)
+        ;tilaajan-maksu 123.12M
+        ;urakoitsijan-maksu 321.32M
+        kayttajaid (:id +kayttaja-jvh+)
 
         ;; Lisätään urakalle sopiva tavoitehinta - Poistetaan olemassa oleva, jos sellaisia on
         _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = 5;" urakka-id))
         insert-str (format "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, luotu) VALUES (%s, 5, %s, %s, %s, %s, now());"
-                     urakka-id tavoihinta tavoihinta kattohinta kattohinta)
+                     urakka-id tavoitehinta tavoitehinta kattohinta kattohinta)
         _ (u insert-str)
 
-        uusi-paatos (testidatan-generointi/uusi-paatos-tavoitehinnan-ylitys urakka-id hoitokauden-alkuvuosi tilaajan-maksu urakoitsijan-maksu)
-        _ (valikatselmus-palvelu/tee-paatos-urakalle (:db jarjestelma) +kayttaja-jvh+ uusi-paatos)
+        tavoitehinnan-ylitys-paatos (paatos-apurit/tavoitehinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
+                                      ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
+                                      urakoitsija-maksaa siirto kulu-id true kayttajaid)
+        db-paatos (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) tavoitehinnan-ylitys-paatos)
 
         ;; Varmista, että vastauksesta löytyy juuri luotu oikaisu
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
         juuri-luotu-paatos-rajapinnasta (first (filter (fn [k]
-                                                         (= (bigdec (get-in k [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa])) tilaajan-maksu))
+                                                         (= (bigdec (get-in k [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa])) tilaaja-maksaa))
                                                  (get-in encoodattu-body [:toteutuneet-kustannukset :hoitovuoden-paatokset])))
-        ;; Siivoa roskat
-        _ (testidatan-kaytto/poista-paatos-idlla (:paatos-id juuri-luotu-paatos-rajapinnasta))]
+        ;; Siivoa roskat - Poistetaan päätös
+        _ (paatos-kyselyt/poista-tavoitehinnan-ylityspaatos (:db jarjestelma) urakka-id kayttajaid (:id db-paatos))]
     (is (= 200 (:status vastaus)))
-    (is (= tilaajan-maksu
+    (is (= tilaaja-maksaa
           (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
-    (is (= urakoitsijan-maksu
-          (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :urakoitsija-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")))
+    (is (= urakoitsija-maksaa
+          (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :urakoitsija-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
+    (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
 (deftest hae-kustannussuunnitelma-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU

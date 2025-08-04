@@ -24,6 +24,7 @@
                                              (yhteiset/kustannuslajin-kaikki-kentat "hj_hoitovuoden_paattaminen_tavoitepalkkio")
                                              (yhteiset/kustannuslajin-kaikki-kentat "hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys")
                                              (yhteiset/kustannuslajin-kaikki-kentat "hj_hoitovuoden_paattaminen_kattohinnan_ylitys")
+                                             (yhteiset/kustannuslajin-kaikki-kentat "hj_paattaminen_hoidonjohtopalkkion_muutos")
                                              (yhteiset/kustannuslajin-kaikki-kentat "bonukset")
                                              (yhteiset/kustannuslajin-kaikki-kentat "hj_palkkio")
                                              (yhteiset/kustannuslajin-kaikki-kentat "tavoitehintaiset")
@@ -33,8 +34,8 @@
 
 
 (defn- koosta-yhteenveto [tiedot valikatselmus-siirrot-ed-vuodelta]
-  (let [kaikki-yhteensa-laskutettu (apply + (map #(:kaikki_laskutettu %) tiedot))
-        kaikki-yhteensa-laskutetaan (apply + (map #(:kaikki_laskutetaan %) tiedot))
+  (let [kaikki-yhteensa-laskutettu (apply + (keep #(:kaikki_laskutettu %) tiedot))
+        kaikki-yhteensa-laskutetaan (apply + (keep #(:kaikki_laskutetaan %) tiedot))
         kaikki-tavoitehintaiset-laskutettu (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutettu %)))
                                                             (:tavoitehintaiset_laskutettu %)
                                                             0) tiedot))
@@ -110,7 +111,12 @@
    (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu data))
      (taulukko-rivi data kyseessa-kk-vali?
        "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"
-       :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan false))])
+       :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan false))
+
+   (when (yhteiset/raha-arvo-olemassa? (:hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu data))
+     (taulukko-rivi data kyseessa-kk-vali?
+       "Hoitovuoden päättäminen / Hoidonjohtopalkkion muutos"
+       :hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu :hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan false))])
 
 
 (defn- koosta-tuotekohtainen-taulukko

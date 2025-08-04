@@ -37,6 +37,9 @@
 (defn kk-fmt [kk]
   (get +kuukaudet+ (dec kk)))
 
+(defn kk-pitka-fmt [kk]
+  (get +kuukaudet-pitka-muoto+ (dec kk)))
+
 #?(:cljs
    (do
      (defrecord Aika [tunnit minuutit sekunnit])
@@ -1561,3 +1564,23 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
        joda-timeksi
        suomen-aikavyohykkeeseen
        (df/unparse (df/formatter-local "yyyy-MM-dd")))))
+
+(defn aikavalin-kuukaudet-pvm-vektorina
+  "Palauttaa vektorin jossa annetun aikavälin [alkupvm loppupvm] kuukaudet päivämäärinä. Päivänumeron voi vaihtaa, oletus 15."
+  ([aikavali]
+   (aikavalin-kuukaudet-pvm-vektorina aikavali 15))
+  ([aikavali paiva]
+   (let [[aikavali-alku aikavali-loppu] aikavali
+         alku-vuosi (vuosi aikavali-alku)
+         alku-kuukausi (kuukausi aikavali-alku)
+         loppu-vuosi (vuosi aikavali-loppu)
+         loppu-kuukausi (kuukausi aikavali-loppu)]
+     (loop [v alku-vuosi
+            kk alku-kuukausi
+            acc []]
+       (if (or (> v loppu-vuosi)
+               (and (= v loppu-vuosi) (> kk loppu-kuukausi)))
+         acc
+         (recur (if (= kk 12) (inc v) v)
+                (if (= kk 12) 1 (inc kk))
+                (conj acc (luo-pvm v (dec kk) paiva))))))))

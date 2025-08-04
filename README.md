@@ -1,4 +1,5 @@
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/finnishtransportagency/harja)
 
 # Väylän Harja-järjestelmä #
 
@@ -330,14 +331,12 @@ e2e testit (erillisessä projektissa). Lisäksi nykyään on myös Cypress:illä
 
 ### Fronttitestit
 
-Fronttitestit ajetaan komennolla: `lein doo phantom test`
-Taikka näin:  `lein with-profile +test doo phantom test once`
+Fronttitestit ajetaan komennolla: `lein with-profile +phantomjs doo phantom test once`
 
 Varmista että phantomjs on asennettu, katso https://github.com/bensu/doo ja ohjeet mistä voi saada 
 phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew install phantomjs` 
 
-Laadunseurantatyökalun testit ajetaan komennolla: `lein doo phantom laadunseuranta-test`
-Tai eri profiililla: `lein with-profile +test doo phantom laadunseuranta-test`
+Laadunseurantatyökalun testit ajetaan komennolla: `lein with-profile +phantomjs doo phantom laadunseuranta-test`
 
 Odotetaan, että kaikilla frontin nimiavaruuksilla on testitiedosto ja vähintään yksi
 testi.

@@ -57,7 +57,8 @@ WHERE id IN (
 -- name: hae-liite-meta-tiedoilla
 SELECT nimi, koko FROM liite l
  WHERE l.nimi = :nimi
-   AND l.urakka = :urakka-id;
+   AND l.urakka = :urakka-id
+   AND l.koko = :koko;
 
 -- name: merkitse-liite-virustarkistetuksi!
 -- Merkitsee annetulle s3hash arvolle liitteen virustarkistetuksi.
@@ -72,3 +73,14 @@ SELECT l."virustarkastettu?" as "virustarkastettu?",
        l.s3hash
   FROM liite l
  WHERE l.id = :id;
+
+-- name: hae-liitteiden-tiedot
+SELECT id,
+       nimi,
+       kuvaus,
+       tyyppi,
+       koko,
+       liite_oid,
+       "virustarkastettu?"
+  FROM liite
+ WHERE id IN (:idt) AND urakka = :urakka;
