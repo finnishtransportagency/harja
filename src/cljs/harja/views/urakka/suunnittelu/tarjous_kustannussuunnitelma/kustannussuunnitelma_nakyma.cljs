@@ -300,7 +300,7 @@
                            kirjaamatta-rivi]
           _ (reset! grid-hoidonjohtopalkkiot-atom hoidonjohtopalkkiot)]
       [:div.row.kustannussuunnitelma-osio
-       [otsikkotiedot e! app "Hoidonjohtopalkkiot" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
+       [otsikkotiedot e! app "Hoidonjohtopalkkio" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
        [:div.row
         [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
        [:div#hoidonjohtopalkkio-elementti.row

@@ -7,7 +7,8 @@
             [com.stuartsierra.component :as component]
             [harja.tyokalut.yleiset :refer :all]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]))
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]
+            [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -136,16 +137,20 @@
         hoitovuoden-alkuvuosi 2024
         tietomallin-summa (apply + (map :summa (:erillishankinnat erillishankinnat-tietomalli)))
 
+        hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                         {:urakka urakka-id
+                                          :koodi "23151"})))
+
         _ (uusi-kust-kyselyt/tallenna-erillishankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:erillishankinnat erillishankinnat-tietomalli))
         erillishankinnat-tietokannasta (q-map (format "SELECT SUM(summa) as summa
                                                          FROM kustannusarvioitu_tyo
                                                   WHERE sopimus = %s
-                                                    AND toimenpideinstanssi = 96
+                                                    AND toimenpideinstanssi = %s
                                                     AND tehtavaryhma = 28
                                                     AND (
                                                     (vuosi = %s AND kuukausi in (10,11,12)) OR
                                                     (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
-                                                sopimus-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
+                                                sopimus-id hoidonjohto-tpi-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
 
     (is (= (bigdec tietomallin-summa) (bigdec (:summa (first erillishankinnat-tietokannasta)))))))
 
@@ -229,17 +234,20 @@
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitovuoden-alkuvuosi 2024
+        hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                         {:urakka urakka-id
+                                          :koodi "23151"})))
         tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli)))
         _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli))
         hoidonjohtopalkkiot-tietokannasta (q-map (format "SELECT SUM(summa) as summa
                                                             FROM kustannusarvioitu_tyo
                                                            WHERE sopimus = %s
-                                                             AND toimenpideinstanssi = 96
+                                                             AND toimenpideinstanssi = %s
                                                              AND tehtava = 3061
                                                              AND (
                                                                   (vuosi = %s AND kuukausi in (10,11,12)) OR
                                                                   (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
-                                                   sopimus-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
+                                                   sopimus-id hoidonjohto-tpi-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
 
     (is (= (bigdec tietomallin-summa) (bigdec (:summa (first hoidonjohtopalkkiot-tietokannasta)))))))
 
