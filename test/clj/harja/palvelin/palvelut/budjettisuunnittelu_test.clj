@@ -179,10 +179,9 @@
       (let [jh-korvaukset (:johto-ja-hallintokorvaukset budjetoidut-tyot)
             vakio-johto-ja-hallintokorvaukset (group-by :toimenkuva (:vakiot jh-korvaukset))
             omat-johto-ja-hallintokorvaukset (:omat jh-korvaukset)
-            omat-toimenkuvat (:omat-toimenkuvat jh-korvaukset)
-            _ (println "*** omat-toimenkuvat:" omat-toimenkuvat)]
+            omat-toimenkuvat (:omat-toimenkuvat jh-korvaukset)]
         (is (empty? omat-johto-ja-hallintokorvaukset) "Omat johto ja hallintokorvaukset ei ole tyhjä Pellon urakassa!")
-        (is (= 7 (count omat-toimenkuvat)) "Luotuja toimenkuvia ei ole tasan kaksi sellaiselle urakalle, jolle niitä ei aikasemmin ole määritetty!")
+        (is (= 2 (count omat-toimenkuvat)) "Luotuja toimenkuvia ei ole tasan kaksi sellaiselle urakalle, jolle niitä ei aikasemmin ole määritetty!")
         (is (every? #(contains? % :toimenkuva) omat-toimenkuvat))
         (is (every? #(and (contains? % :toimenkuva-id) (integer? (:toimenkuva-id %))) omat-toimenkuvat))
         (doseq [[toimenkuva tiedot] vakio-johto-ja-hallintokorvaukset]

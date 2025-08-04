@@ -31,29 +31,34 @@
     (is (= tietokantaan-lisatty-maara (count toimenkuvat)))))
 
 (deftest hae-urakan-toimenkuvat
-  (let [;; Toimenkuvat kuuluu teiden-hoito tyyppisille urakoille - Aloitetaan 21 vuosimallista
+  (let [;; Toimenkuvat kuuluu teiden-hoito tyyppisille urakoille - Aloitetaan 21 vuosimallista. Toimenkuvia alkaa olemaan vasta -25 alkavilla urakoilla
         urakka-id-2021 (hae-urakan-id-nimella "Iin MHU 2021-2026")
         urakka-id-2022 (hae-urakan-id-nimella "Tampereen MHU 2022-2026")
         urakka-id-2024 (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        urakka-id-2024 (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        urakka-id-2025 (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
 
         ;; Eri vuosina alkanevilla urakoilla voi olla eri määrä toimenkuvia
-        tietokantaan-lisatty-maara-2021 7
-        tietokantaan-lisatty-maara-2022 7
-        tietokantaan-lisatty-maara-2024 7
+        tietokantaan-lisatty-maara-2021 0
+        tietokantaan-lisatty-maara-2022 0
+        tietokantaan-lisatty-maara-2024 0
+        tietokantaan-lisatty-maara-2025 7
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                 :hae-toimenkuvat +kayttaja-jvh+ {})
         toimenkuvat-2021 (filter #(= urakka-id-2021 (:urakka-id %)) (:urakoiden-toimenkuvat tulos))
         toimenkuvat-2022 (filter #(= urakka-id-2022 (:urakka-id %)) (:urakoiden-toimenkuvat tulos))
-        toimenkuvat-2024 (filter #(= urakka-id-2024 (:urakka-id %)) (:urakoiden-toimenkuvat tulos))]
+        toimenkuvat-2024 (filter #(= urakka-id-2024 (:urakka-id %)) (:urakoiden-toimenkuvat tulos))
+        toimenkuvat-2025 (filter #(= urakka-id-2025 (:urakka-id %)) (:urakoiden-toimenkuvat tulos))]
 
     ;; Jos default rahavarauksia muutetaan, niin tämä tulee failaamaan.
     ;; 2024 alkavilla urakoilla voi olla eri määrä rahavarauksia ja ne pitää silloin ottaa tässä huomioon
     (is (= tietokantaan-lisatty-maara-2021 (count toimenkuvat-2021)))
     (is (= tietokantaan-lisatty-maara-2022 (count toimenkuvat-2022)))
-    (is (= tietokantaan-lisatty-maara-2024 (count toimenkuvat-2024)))))
+    (is (= tietokantaan-lisatty-maara-2024 (count toimenkuvat-2024)))
+    (is (= tietokantaan-lisatty-maara-2025 (count toimenkuvat-2025)))))
 
 (deftest lisaa-urakalle-toimenkuva
-  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
 
         ;; Toimenkuvat ennen lisäämistä
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
