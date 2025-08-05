@@ -60,6 +60,8 @@
         )]]))
 
 (defn kilpailutettavat-hankinnat [e! {:keys [tallennus-kesken? valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
+  (if (nil? (get-in kustannussuunnitelma [:kilpailutettavat-hankinnat :toimenpiteet]))
+    [yleiset/ajax-loader-pieni "Ladataan..."]
   (let [tarjous-hankintakustannukset (filter #(= (:osio %) "hankintakustannukset") (:tarjous tarjous))
         tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
         tarjouksen-maara (:summa (first (filter #(= (:vuosi %) tarjous-vuosi)
@@ -69,9 +71,9 @@
         taulukon-tiedot (butlast toimenpiteet) ;; Jätetään yhteenvetorivi pois tässä kohdassa
         _ (reset! grid-hankinnat-atom taulukon-tiedot)
 
-        yht-alkukausi (:alkukausi (last toimenpiteet))
-        yht-loppukausi (:loppukausi (last toimenpiteet))
-        yht (:yhteensa (last toimenpiteet))
+          yht-alkukausi (:alkukausi (last toimenpiteet))
+          yht-loppukausi (:loppukausi (last toimenpiteet))
+          yht (:yhteensa (last toimenpiteet))
 
         kirjaamatta (- tarjouksen-maara yht)
         kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
@@ -90,9 +92,9 @@
                            {:teksti (fmt/euro-opt false yht) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                           kirjaamatta-rivi]
 
-        kilpailutettavat-hankinnat (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])
-        kilpailutettavat-hankinnat-yhteensa (:yhteensa (last kilpailutettavat-hankinnat))
-        kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))]
+          kilpailutettavat-hankinnat (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])
+          kilpailutettavat-hankinnat-yhteensa (:yhteensa (last kilpailutettavat-hankinnat))
+          kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))]
 
     [:div#kilpailutettavat-hankinnat-elementti.kustannussuunnitelma-osio.osio-976
      [otsikkotiedot e! app "Kilpailutettavat hankinnat" tarjouksen-maara
@@ -108,6 +110,7 @@
       [:div.col-xs-12
 
        [grid/grid {:otsikko ""
+                   :tyhja "Ei tietoja."
                    :luokat ["matala-panel"]
                    :muokkaa-aina (if vahvistettu? false true)
                    :voi-muokata? (if vahvistettu? false true)
@@ -158,9 +161,11 @@
             #(do
                (reset! tallenna-painettu false)
                (e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @grid-hankinnat-atom)))
-            {:disabled tallennus-kesken?}]]]]])]))
+            {:disabled tallennus-kesken?}]]]]])])))
 
 (defn rahavaraukset [e! {:keys [valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
+  (if (nil? (:rahavaraukset kustannussuunnitelma))
+    [yleiset/ajax-loader-pieni "Ladataan..."]
   (let [rahavaraukset (:rahavaraukset kustannussuunnitelma)
         tarjous-rahavaraukset (filter #(= (:osio %) "tavoitehintaiset-rahavaraukset") (:tarjous tarjous))
         tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
@@ -182,6 +187,7 @@
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
+                   :tyhja "Ei tietoja."
                    :luokat ["matala-panel"]
                    :muokkaa-aina false
                    :voi-muokata? false
@@ -203,9 +209,11 @@
           :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea"}
          {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
           :fmt #(if-not (= 0 yht-indeksikorjattu) (fmt/euro-opt false %) "-") :otsikkorivi-luokka "korkea"}]
-        rahavaraukset]]]]))
+        rahavaraukset]]]])))
 
 (defn erillishankinnat [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
+  (if (nil? (get-in app [:kustannussuunnitelma :erillishankinnat]))
+    [yleiset/ajax-loader-pieni "Ladataan..."]
   (let [erillishankinnat (:erillishankinnat kustannussuunnitelma)
         tarjous-erillishankinnat (first (filter #(= (:osio %) "erillishankinnat") (:tarjous tarjous)))
         tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
@@ -237,6 +245,7 @@
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
+                   :tyhja "Ei tietoja."
                    :luokat ["matala-panel"]
                    :muokkaa-aina voi-muokata?
                    :voi-muokata? voi-muokata?
@@ -281,7 +290,7 @@
             #(do
                (reset! tallenna-painettu false)
                (e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
-            {:disabled (or tallennus-kesken? false)}]]]]])]))
+            {:disabled (or tallennus-kesken? false)}]]]]])])))
 
 (defn johto-ja-hallintokorvaus [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (let [johto-ja-hallintokorvaukset (:johto-ja-hallintokorvaukset kustannussuunnitelma)
@@ -369,6 +378,8 @@
             {:disabled (or tallennus-kesken? false)}]]]]])]))
 
 (defn hoidonjohtopalkkiot [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
+  (if (nil? (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot]))
+    [yleiset/ajax-loader-pieni "Ladataan..."]
   (let [hoidonjohtopalkkiot (:hoidonjohtopalkkiot kustannussuunnitelma)
         tarjous-hoidonjohtopalkkio (first (filter #(= (:osio %) "hoidonjohtopalkkio") (:tarjous tarjous)))
         tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
@@ -401,6 +412,7 @@
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
+                   :tyhja "Ei tietoja."
                    :luokat ["matala-panel"]
                    :muokkaa-aina voi-muokata?
                    :voi-muokata? voi-muokata?
@@ -445,7 +457,7 @@
             #(do
                (reset! tallenna-painettu false)
                (e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
-            {:disabled (or tallennus-kesken? false)}]]]]])]))
+            {:disabled (or tallennus-kesken? false)}]]]]])])))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (let [tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
@@ -541,6 +553,7 @@
                                      :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet "Hoitovuosi")
                                      :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
         hoitokaudet]]]
+
      [kilpailutettavat-hankinnat e! app]
      [rahavaraukset e! app]
      [erillishankinnat e! app]
@@ -548,15 +561,14 @@
      [hoidonjohtopalkkiot e! app]
      [tavoite-ja-kattohinta e! app]]))
 
-(defn nakyma* [e! {:keys [tallennus-kesken? valittu-hoitokausi] :as app}]
+(defn nakyma* [e! _app]
   (komp/luo
+    (komp/lippu kust-tiedot/nakymassa?)
     (komp/sisaan #(e! (kust-tiedot/->HaeKustannussuunnitelmanTiedot)))
     (fn [e! app]
-      [:div
-       (if (:haku-kaynnissa? app)
-         [yleiset/ajax-loader {:style {:margin-top "1rem"}}]
-         [kustannussuunnitelma e! app])
-       [debug/debug app]])))
+      (if (:haku-kaynnissa? app)
+        [yleiset/ajax-loader-pieni "Haku käynnissä..."]
+        [kustannussuunnitelma e! app]))))
 
 (defn kustannussuunitelma []
   (tuck/tuck tila/tarjous-kustannussuunnitelma nakyma*))

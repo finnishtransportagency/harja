@@ -8,6 +8,8 @@
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.urakka :as tila]))
 
+(defonce nakymassa? (atom false))
+
 (defn scrollaa-muutoksiin [elementin-id]
   ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat
   (siirrin/siirry-elementin-id elementin-id 450))
@@ -195,7 +197,8 @@
     (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (pvm/vuosi (first (:valittu-hoitokausi app))))
     (-> app
       (assoc :haku-kaynnissa? true)
-      (assoc :tallennus-kesken? false)))
+      (assoc :tallennus-kesken? false)
+      (assoc :kustannussuunnitelma [])))
 
   HaeKustannussuunnitelmanTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
