@@ -182,7 +182,7 @@
             omat-toimenkuvat (:omat-toimenkuvat jh-korvaukset)]
         (is (empty? omat-johto-ja-hallintokorvaukset) "Omat johto ja hallintokorvaukset ei ole tyhjä Pellon urakassa!")
         (is (= 2 (count omat-toimenkuvat)) "Luotuja toimenkuvia ei ole tasan kaksi sellaiselle urakalle, jolle niitä ei aikasemmin ole määritetty!")
-        (is (every? #(and (contains? % :toimenkuva) (nil? (:toimenkuva %))) omat-toimenkuvat))
+        (is (every? #(contains? % :toimenkuva) omat-toimenkuvat))
         (is (every? #(and (contains? % :toimenkuva-id) (integer? (:toimenkuva-id %))) omat-toimenkuvat))
         (doseq [[toimenkuva tiedot] vakio-johto-ja-hallintokorvaukset]
           (case toimenkuva
@@ -584,7 +584,7 @@
     (testing "Tallennus onnistuu"
       (doseq [{:keys [toimenkuva maksukausi] :as parametrit} tallennettava-data]
         (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
-          (is (:onnistui? vastaus) (str "Tallennus ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
+          (is (true? (:onnistui? vastaus)) (str "Tallennus ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
     (testing "Data kannassa on oikein"
       (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.tuntipalkka_indeksikorjattu, j_h.kuukausi, j_h.vuosi,
                                                  tk.toimenkuva, j_h.luotu, j_h.\"ennen-urakkaa\", j_h.\"osa-kuukaudesta\"

@@ -13,7 +13,6 @@
             [ol.style.Stroke]
             [ol.style.Icon]
             [ol.style.Text]
-            [ol.animation]
             [ol.control :as ol-control]
             [ol.interaction :as ol-interaction]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
