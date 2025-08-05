@@ -458,7 +458,6 @@
   VahvistaTaiPeruutaTavoiteJaKattohinta
   (process-event
     [{vahvista? :vahvista?} app]
-    (js/console.log "Vahvista tai peruuta tavoite ja kattohinta" vahvista?)
     (tuck-apurit/post! :vahvista-tavoite-ja-kattohinta
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
@@ -472,7 +471,13 @@
 
   VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin.")
+    (if (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])
+      (viesti/nayta-toast!
+        "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
+        :varoitus
+        viesti/viestin-nayttoaika-keskipitka)
+      (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin."))
+    (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
     (-> app
       (assoc :tallennus-kesken? false)
       (assoc :haku-kaynnissa? false)
@@ -485,5 +490,6 @@
       "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
       :varoitus
       viesti/viestin-nayttoaika-keskipitka)
+    (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
     (-> app
       (assoc :tallennus-kesken? false))))
