@@ -4,6 +4,7 @@
             [harja.validointi :as v]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.tyokalut.yleiset :as tyokalut]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
@@ -75,7 +76,7 @@
           yht-loppukausi (:loppukausi (last toimenpiteet))
           yht (:yhteensa (last toimenpiteet))
 
-        kirjaamatta (- tarjouksen-maara yht)
+        kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
         kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
                                                  {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
@@ -223,8 +224,8 @@
         voi-muokata? (not vahvistettu?)
         yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
         yht-indeksikorjattu (apply + (map (fn [rivi] (:summa_indeksikorjattu rivi 0)) erillishankinnat))
-        kirjaamatta (- tarjouksen-maara yht)
-        kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
+        kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
+        kirjaamatta-luokka (if (= 0.00 (tyokalut/round2 2 kirjaamatta)) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
                                                  {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
                                                  {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
@@ -305,7 +306,7 @@
                             (:summa rivi 0)) johto-ja-hallintokorvaukset))
         yht-indeksikorjattu (apply + (map (fn [rivi]
                                             (:summa_indeksikorjattu rivi 0)) johto-ja-hallintokorvaukset))
-        kirjaamatta (- tarjouksen-maara yht)
+        kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
         kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
                                                  {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
@@ -391,7 +392,7 @@
                             (:summa rivi 0)) hoidonjohtopalkkiot))
         yht-indeksikorjattu (apply + (map (fn [rivi]
                                             (:summa_indeksikorjattu rivi 0)) hoidonjohtopalkkiot))
-        kirjaamatta (- tarjouksen-maara yht)
+        kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
         kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
                                                  {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
