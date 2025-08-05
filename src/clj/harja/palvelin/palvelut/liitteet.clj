@@ -124,7 +124,7 @@
                                        (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id))}
 
    :muutokset {:linkkitaulu ::liite-domain/mhu-muutos<->liite
-               :linkkitaulu-domain-id ::liite-domain/muutos-id
+               :linkkitaulu-domain-id ::liite-domain/mhu-muutos-id
                :linkkitaulu-liite-id ::liite-domain/liite-id
                :domain-taulu ::muutos/muutos
                :domain-taulu-id ::muutos/id

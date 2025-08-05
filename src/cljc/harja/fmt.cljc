@@ -42,8 +42,9 @@
 
 (defn euro
   "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja valinnaisen euromerkin kanssa."
-  ([eur] (euro true eur))
-  ([nayta-euromerkki eur]
+  ([eur] (euro true false eur))
+  ([nayta-euromerkki eur] (euro nayta-euromerkki false eur))
+  ([nayta-euromerkki nayta-plus eur]
    (if (big/big? eur)
      (str (big/fmt-full eur 2)
           (when nayta-euromerkki " \u20AC"))
@@ -55,8 +56,19 @@
           (if (or
                 (or (nil? eur) (and (string? eur) (empty? eur)))
                 (frontin-formatointivirheviestit tulos))
-            (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
-            (if nayta-euromerkki (str tulos " \u20AC") tulos)))
+            (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur)))))
+            (cond
+               (and nayta-euromerkki nayta-plus (< 0 eur))
+               (str "\u002B" tulos " \u20AC")
+
+               (and nayta-euromerkki (not nayta-plus))
+               (str tulos " \u20AC")
+
+               (and (not nayta-euromerkki) nayta-plus (< 0 eur))
+               (str "\u002B" tulos)
+
+               :else
+               tulos))
 
         :clj
         (s/replace (.format
@@ -73,11 +85,12 @@
 
 (defn euro-opt
   "Formatoi euromäärän tai tyhjä, jos nil."
-  ([summa] (euro-opt true summa))
-  ([nayta-euromerkki summa]
+  ([summa] (euro-opt true false summa))
+  ([nayta-euromerkki summa] (euro-opt nayta-euromerkki false summa))
+  ([nayta-euromerkki nayta-plus summa]
    (if (or (nil? summa) (and (string? summa) (empty? summa)))
      ""
-     (euro nayta-euromerkki summa))))
+     (euro nayta-euromerkki nayta-plus summa))))
 
 #?(:clj
    (defn formatoi-arvo-raportille [arvo]
@@ -514,6 +527,23 @@
     (if sisaltaa-koko-kauden? 
       "Kaikki"
       (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi) " (" (hk-fmt valittu-hk) ")")))))
+
+(defn hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
+  "Näyttää hoitokauden esim 1.10.2022 - 30.9.2023 formaatissa '2. hoitovuosi (1.10.2022 - 30.9.2023)'.
+  Olettaa saavansa parametrit kaikki vuosina:
+  valittu-hk: vvvv
+  hoitovuodet: esim. [2012 2013 2014 2015 2016]"
+  [valittu-hk hoitovuodet vuosi-termi]
+  (assert (and (int? valittu-hk) (every? int? hoitovuodet)) "Valittu-hk ja hoitovuodet pitää olla numeroita.")
+
+  (let [monesko (first (keep-indexed (fn [i hk]
+                                       (if (and (int? valittu-hk)
+                                             (< valittu-hk 10))
+                                         valittu-hk
+                                         (when (= hk valittu-hk)
+                                           (inc (int i)))))
+                         hoitovuodet))]
+    (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi) " (" (pvm/pvm (pvm/hoitokauden-alkupvm valittu-hk)) " \u2212 " (pvm/pvm (pvm/hoitokauden-loppupvm (inc valittu-hk))) ")")))
 
 #?(:cljs
    (def desimaali-fmt

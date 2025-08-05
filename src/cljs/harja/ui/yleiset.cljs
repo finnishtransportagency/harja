@@ -52,7 +52,7 @@
   ([viesti] (ajax-loader viesti nil))
   ([viesti {:keys [luokka sama-rivi?] :as opts}]
    [:div {:class (str "ajax-loader-valistys ajax-loader " (when (:luokka opts) (:luokka opts)))}
-    [:img {:src "images/ajax-loader.gif"}]
+    [:img {:alt "Ladataan sisältöä." :src "images/ajax-loader.gif"}]
     (when viesti
       (if sama-rivi?
         [:span.viesti (str " " viesti)]
@@ -403,7 +403,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled disabled-vaihtoehdot itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
-                   pakollinen? tarkenne muokattu? pitka-teksti? placeholder] :as asetukset} vaihtoehdot]
+                   pakollinen? tarkenne muokattu? pitka-teksti? aria-label] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -445,6 +445,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
              :type "button"
              :disabled (if disabled "disabled" "")
              :title title
+             :aria-label (when aria-label aria-label)
              :on-click (partial on-click-fn vaihtoehdot)
              :on-focus on-focus
              :on-key-down (partial on-key-down-fn
@@ -841,7 +842,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    (info-laatikko tyyppi ensisijainen-viesti nil nil {}))
   ([tyyppi ensisijainen-viesti toissijainen-viesti leveys]
    (info-laatikko tyyppi ensisijainen-viesti toissijainen-viesti leveys {}))
-  ([tyyppi ensisijainen-viesti toissijainen-viesti leveys {:keys [luokka sulje-fn sulje-nappi-id]}]
+  ([tyyppi ensisijainen-viesti toissijainen-viesti leveys {:keys [luokka sulje-fn sulje-nappi-id ikoni-fn]}]
    (assert (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus} tyyppi)
      "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
    (let [sulje-nappi-id (keyword sulje-nappi-id)]
@@ -853,9 +854,9 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
          (case tyyppi
            :varoitus (ikonit/livicon-warning-sign)
            :onnistunut (ikonit/livicon-check)
-           :vahva-ilmoitus (ikonit/status-info-inline-svg +vari-black-light+)
+           :vahva-ilmoitus (if ikoni-fn (ikoni-fn) (ikonit/status-info-inline-svg +vari-black-light+))
            :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
-        [:div {:style {:width "95%" :padding-top "14px" :padding-bottom "14px"}}
+        [:div.infolaatikon-teksti
          [:div {:style {:white-space "pre-line" :color +vari-black-default+}}
           ensisijainen-viesti]
          (when toissijainen-viesti

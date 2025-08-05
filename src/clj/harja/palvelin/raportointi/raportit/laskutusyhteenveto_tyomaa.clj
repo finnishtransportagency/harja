@@ -131,7 +131,10 @@
 
                      (when (yhteiset/raha-arvo-olemassa? (:paatos_tavoitepalkkio_hoitokausi_yht data))
                        (taulukko-rivi data kyseessa-kk-vali? "Tavoitepalkkio" :paatos_tavoitepalkkio_hoitokausi_yht :paatos_tavoitepalkkio_hoitokausi_yht false))
-                     
+
+                     (when (yhteiset/raha-arvo-olemassa? (:paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht data))
+                       (taulukko-rivi data kyseessa-kk-vali? "Hoitovuoden päätös / Hoidonjohtopalkkion muutos" :paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht :paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht false))
+
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :muut_kulut_ei_tavoite_hoitokausi_yht :muut_kulut_ei_tavoite_val_aika_yht true)])))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}

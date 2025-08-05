@@ -304,5 +304,7 @@
     "tavoitehinnan-alitus" "Tavoitehinnan alitus"
     "lupausbonus" "Lupausbonus"
     "lupaussanktio" "Lupaussanktio"
+    "bonus" "Lupausbonus"
+    "sanktio" "Lupaussanktio"
 
     "tuntematon tyyppi"))

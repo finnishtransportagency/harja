@@ -11,6 +11,8 @@ BEGIN
      WHERE id = OLD.id
        AND versio = OLD.versio;
 
+    NEW.validi_aikana = TSTZRANGE(CURRENT_TIMESTAMP, 'infinity');
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

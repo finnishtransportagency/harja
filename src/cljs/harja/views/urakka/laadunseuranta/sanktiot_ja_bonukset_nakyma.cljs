@@ -99,9 +99,7 @@
                ;; Estä muokkaus-nappulan käyttö laatupoikkeaman kautta tehdyille sanktioille
                ;; ja urakan_paatos-taulusta haetuille sanktioille ja bonuksille
                ;; TODO: Jos/kun lupaussanktio ja lupausbonus sanktio/bonus lajeille tehdään muokkausmahdollisuus tälle lomakkeelle
-               ;;       niin, poista "lupaus?" ehto.
-               ;;       Tällä hetkellä lupaussanktio ja lupausbonus haetaan urakka_paatos-taulusta, eikä niiden tallentamiselle/poistamiselle
-               ;;       ole polkua sanktio/bonus lomakkeilla.
+               ;;       niin, poista "lupaus?" ehto. Lupausbonus ja lupaussanktio tehdään välikatselmuksessa, kun lupauspäätöstä tehdään.
                {:disabled (or (not suorasanktio?) lupaus?)}]
               (cond
                 (not suorasanktio?)

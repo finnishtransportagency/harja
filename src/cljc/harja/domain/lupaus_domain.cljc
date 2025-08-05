@@ -394,35 +394,14 @@
       (cons edellinen-valinta (etsi-edeltavat-monivalinnan-valitut-arvot (:id edellinen-valinta) vaihtoehdot))
       [])))
 
-(defn lupauspaatokset
-  "Suodata lupaustyyppiset päätökset urakan päätöksistä."
-  [urakan-paatokset]
-  (->> urakan-paatokset
-       (filter #(#{"lupausbonus" "lupaussanktio"} (:harja.domain.kulut.valikatselmus/tyyppi %)))))
-
-(defn valikatselmus-tehty?
-  "Palauttaa true, jos päätöksissä on lupaus-tyyppinen päätös."
-  [urakan-paatokset]
-  (->> (lupauspaatokset urakan-paatokset)
-       first
-       boolean))
-
 (defn paatos->bonus-tai-sanktio
-  [{tyyppi :harja.domain.kulut.valikatselmus/tyyppi
-    tilaajan-maksu :harja.domain.kulut.valikatselmus/tilaajan-maksu
-    urakoitsijan-maksu :harja.domain.kulut.valikatselmus/urakoitsijan-maksu}]
+  [{tyyppi :tyyppi
+    tilaajan-maksu :lupausbonus
+    urakoitsijan-maksu :lupaussanktio}]
   (case tyyppi
-    "lupausbonus" {:bonus tilaajan-maksu}
-    "lupaussanktio" {:sanktio urakoitsijan-maksu}
+    "bonus" {:bonus tilaajan-maksu}
+    "sanktio" {:sanktio urakoitsijan-maksu}
     nil))
-
-(defn urakan-paatokset->lupauspaatos [urakan-paatokset]
-  (first (lupauspaatokset urakan-paatokset)))
-
-(defn urakan-paatokset->bonus-tai-sanktio [urakan-paatokset]
-  (->>
-    (urakan-paatokset->lupauspaatos urakan-paatokset)
-    paatos->bonus-tai-sanktio))
 
 (defn kokoa-vastauspisteet [kayttaja pistekuukaudet urakka-id valittu-hoitokausi
                             valikatselmus-tehty-hoitokaudelle? nykyhetki]

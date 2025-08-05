@@ -15,7 +15,9 @@ CREATE TYPE HJHOITOKAUDENPAATTAMINEN_RIVI AS
     hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu  NUMERIC,
     hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan NUMERIC,
     hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu  NUMERIC,
-    hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan NUMERIC
+    hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan NUMERIC,
+    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu  NUMERIC,
+    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan NUMERIC
 );
 
 CREATE OR REPLACE FUNCTION hj_hoitovuoden_paattaminen_kulut(hk_alkupvm DATE, aikavali_alkupvm DATE,
@@ -44,6 +46,7 @@ DECLARE
                                 AND l.urakka = urakka_id
                                 AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                                 AND lk.tehtavaryhma = tehtavaryhma_id
+                                AND lk.tavoitehintainen = FALSE
         LOOP
             --RAISE NOTICE 'Hoitovuoden päättäminen (tehtäväryhmä %), laskutettu :: summa: %', tehtavaryhma_id, hj_laskutettu_rivi.summa;
             hj_laskutettu := hj_laskutettu + COALESCE(hj_laskutettu_rivi.summa, 0.0);
@@ -58,6 +61,7 @@ DECLARE
                                  AND l.urakka = urakka_id
                                  AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
                                  AND lk.tehtavaryhma = tehtavaryhma_id
+                                 AND lk.tavoitehintainen = FALSE
         LOOP
             --RAISE NOTICE 'Hoitovuoden päättäminen (tehtäväryhmä %) laskutetaan :: summa: %', tehtavaryhma_id, hj_laskutetaan_rivi.summa;
             hj_laskutetaan := hj_laskutetaan + COALESCE(hj_laskutetaan_rivi.summa, 0.0);
@@ -78,6 +82,8 @@ DECLARE
     hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan NUMERIC;
     hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu    NUMERIC;
     hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan   NUMERIC;
+    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu        NUMERIC;
+    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan       NUMERIC;
     tehtavaryhma_id                                             INTEGER;
     kulut                                                       NUMERIC[];
 
@@ -118,11 +124,23 @@ BEGIN
         hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu := kulut[1];
         hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan := kulut[2];
 
+        -- HOITOVUODEN PÄÄTTÄMINEN, HOIDONJOHTOPALKKION MUUTOS
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68'); -- 'G - Hoidonjohtopalkkio'
+        RAISE NOTICE '   Kattohinnan ylitys : Tehtavaryhma_id: % ' , tehtavaryhma_id;
+
+        kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
+                                                  aikavali_loppupvm, t_instanssi,
+                                                  tehtavaryhma_id, urakka_id);
+        hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu := kulut[1];
+        hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan := kulut[2];
+
+
     END IF; -- tuotekoodi = 23150 (Hoidonjohto)
 
     rivi := (hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu, hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan,
              hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu, hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan,
-             hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu, hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan);
+             hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu, hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan,
+             hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu, hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan);
     RETURN NEXT rivi;
 END;
 $$ LANGUAGE plpgsql;
@@ -296,6 +314,7 @@ BEGIN
                                   AND l.urakka = urakka_id_
                                   AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                                   AND lk.tehtavaryhma = tehtavaryhma_id
+                                  AND lk.tavoitehintainen = TRUE -- Tavoitehintainen, koska HJ-Palkkio on tavoitehintainen. Muuten tulee mukaan hoitovuoden päätöksen hoidonjohtopalkkion muutokset
 
             LOOP
                 RAISE NOTICE 'HJ-palkkio laskutettu :: summa: %', laskutettu_rivi.summa;
@@ -515,6 +534,8 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
     hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan NUMERIC,
     hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu    NUMERIC,
     hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan   NUMERIC,
+    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu        NUMERIC,
+    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan       NUMERIC,
     -- Asetukset
     indeksi_puuttuu                                             BOOLEAN,
 
@@ -593,6 +614,8 @@ DECLARE
     hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan NUMERIC;
     hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu    NUMERIC;
     hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan   NUMERIC;
+    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu        NUMERIC;
+    hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan       NUMERIC;
     hj_hoitovuoden_paattaminen_rivi                             HJHOITOKAUDENPAATTAMINEN_RIVI;
 
     -- Asetuksia
@@ -816,6 +839,8 @@ BEGIN
         hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan := 0.0;
         hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu := 0.0;
         hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan := 0.0;
+        hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu := 0.0;
+        hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan := 0.0;
 
         -- Hoidonjohdolla (toimenpidekoodi 23150) omat erilliset mahdolliset kulunsa.
         -- Erilliskustannus-tauluun tallennetaan erilaiset bonukset.
@@ -1018,6 +1043,8 @@ BEGIN
             hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan;
             hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu;
             hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
+            hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu := hj_hoitovuoden_paattaminen_rivi.hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu;
+            hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan := hj_hoitovuoden_paattaminen_rivi.hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan;
 
         END IF; -- <- Bonukset, sanktiot
 
@@ -1207,14 +1234,14 @@ BEGIN
         kaikki_laskutettu :=  sakot_laskutettu + bonukset_laskutettu +
                               hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu + 
                               hj_palkkio_laskutettu + hj_erillishankinnat_laskutettu + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu +
-                              hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu + 
-                              kaikki_rahavaraukset_hoitokausi_yht;
+                              hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu +
+                              hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu + kaikki_rahavaraukset_hoitokausi_yht;
 
         kaikki_laskutetaan := sakot_laskutetaan + bonukset_laskutetaan +
                               hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan + 
                               hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan +
-                              hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan + 
-                              kaikki_rahavaraukset_val_yht;
+                              hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan +
+                              hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan + kaikki_rahavaraukset_val_yht;
 
         -- Tavoitehintaan sisältyy: Hankinnat, Johto- ja Hallintokorvaukset, (hoidonjohto tässä), Erillishankinnat, HJ-Palkkio, Äkilliset hoitotyöt.
         -- Tavoitehintaan ei sisälly: Lisätyöt, Sanktiot, Suolasanktiot, Bonukset, Hoitovuoden päättämiseen liittyvät kulut.
@@ -1250,6 +1277,7 @@ Yhteenveto:';
         RAISE NOTICE 'Hoitovuoden päättäminen (tavoitepalkkio) laskutettu: %', hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu;
         RAISE NOTICE 'Hoitovuoden päättäminen (tavoitehinnan ylitys) laskutettu: %', hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu;
         RAISE NOTICE 'Hoitovuoden päättäminen (kattohinnan ylitys) laskutettu: %', hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu;
+        RAISE NOTICE 'Hoitovuoden päättäminen (hoidonjohtopalkkion muutos) laskutettu: %', hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu;
 
 
         RAISE NOTICE '
@@ -1265,6 +1293,7 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
         RAISE NOTICE 'Hoitovuoden päättäminen (tavoitepalkkio) laskutetaan: %', hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan;
         RAISE NOTICE 'Hoitovuoden päättäminen (tavoitehinnan ylitys) laskutetaan: %', hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan;
         RAISE NOTICE 'Hoitovuoden päättäminen (kattohinnan ylitys) laskutetaan: %', hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
+        RAISE NOTICE 'Hoitovuoden päättäminen (Hoidonjohtopalkkion muutos) laskutetaan: %', hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan;
 
         RAISE NOTICE 'Kaikki laskutettu: %', kaikki_laskutettu;
         RAISE NOTICE 'Kaikki laskutetaan: %', kaikki_laskutetaan;
@@ -1289,6 +1318,7 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
                   hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu, hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan,
                   hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu, hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan,
                   hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu, hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan,
+                  hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu, hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan,
                   indeksi_puuttuu,
                   -- Urakan rahavaraukset ja arvot
                   rahavaraus_nimet, hoitokausi_yht_array, val_aika_yht_array,

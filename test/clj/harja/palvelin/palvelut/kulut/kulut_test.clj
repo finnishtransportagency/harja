@@ -6,7 +6,10 @@
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
+            [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
+            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
+            [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
@@ -420,17 +423,35 @@
 
 (deftest paivita-kulua-eri-erapaivalla-valikatselmuksen-jalkeen
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        ;; Kulu on vuonna 2021
         uusi-kulu-laskun-numerolla (assoc uusi-kulu :laskun-numero "1233333")
         ;; Tallenna alkuperäinen kulu
         tallennettu-kulu (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                           {:urakka-id urakka-id
                            :kulu-kohdistuksineen uusi-kulu-laskun-numerolla})
         ;; Lisätään hoitokauden-alkuvuodelle 2020 uusi välikatselmus, jotta päivitys ei varmasti on
-        _ (u (str "INSERT INTO urakka_paatos
-                  (\"urakka-id\", luotu, \"luoja-id\", \"muokkaaja-id\", tyyppi, siirto, \"tilaajan-maksu\",
-                  \"urakoitsijan-maksu\", \"hoitokauden-alkuvuosi\" ) VALUES
-                  (" urakka-id ", NOW(), " (:id +kayttaja-jvh+) ", " (:id +kayttaja-jvh+) ", 'tavoitehinnan-alitus'::paatoksen_tyyppi,
-        100000, 0, 0, 2020 );"))
+        hoitokauden-alkuvuosi 2020
+        ;; Tehdään tavoitehinnan-alitus-paatos
+
+
+        ;; Hae urakan hoitokauden alun tavoitehinta
+        hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (:db jarjestelma) {:urakka-id urakka-id :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        hoitokauden-lopun-tavoitehinta (valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakka-id :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        ;; Haetaan urakan parametrit
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        kayttajaid (:id +kayttaja-jvh+)
+        toteutuneet-kustannukset 5M
+        alituksen-maara 10M
+        siirron-maara 100M
+        tavoitepalkkio 150M
+        tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
+        kulu-id 1
+        paatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)
+
+        _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)
+
         muokattu-kulu-eri-hoitokausi (assoc tallennettu-kulu
                                        :erapaiva #inst "2021-09-29T21:00:00.000-00:00"
                                        :koontilaskun-kuukausi "syyskuu/2-hoitovuosi")]
@@ -444,14 +465,27 @@
         uusi-kulu-laskun-numerolla (assoc uusi-kulu :laskun-numero "1234567")
         ;; Tallenna alkuperäinen kulu - Menee hoitokaudelle 2021
         tallennettu-kulu (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-                          {:urakka-id urakka-id
-                           :kulu-kohdistuksineen uusi-kulu-laskun-numerolla})
-        ;; Lisätään hoitokauden-alkuvuodelle 2021 uusi välikatselmus, jotta päivitys ei varmasti onnistu
-        _ (u (str "INSERT INTO urakka_paatos
-                  (\"urakka-id\", luotu, \"luoja-id\", \"muokkaaja-id\", tyyppi, siirto, \"tilaajan-maksu\",
-                  \"urakoitsijan-maksu\", \"hoitokauden-alkuvuosi\" ) VALUES
-                  (" urakka-id ", NOW(), " (:id +kayttaja-jvh+) ", " (:id +kayttaja-jvh+) ", 'tavoitehinnan-alitus'::paatoksen_tyyppi,
-        1000, 0, 0, 2021 );"))
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen uusi-kulu-laskun-numerolla})
+        ;; Lisätään hoitokauden-alkuvuodelle 2021 uusi tavoitehinnan-alituspäätös, jotta päivitys ei varmasti onnistu
+        hoitokauden-alkuvuosi 2021
+        ;; Hae urakan hoitokauden alun tavoitehinta
+        hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (:db jarjestelma) {:urakka-id urakka-id :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        hoitokauden-lopun-tavoitehinta (valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakka-id :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        ;; Haetaan urakan parametrit
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        kayttajaid (:id +kayttaja-jvh+)
+        toteutuneet-kustannukset 5M
+        alituksen-maara 10M
+        siirron-maara 100M
+        tavoitepalkkio 150M
+        tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
+        kulu-id 1
+        paatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)
+
+        _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)
         ;; Ja koitetaan siirtää kulu seuraavalle hoitokaudelle, jolla ei ole välikatselmusta tehtynä
         muokattu-kulu-eri-hoitokausi (assoc tallennettu-kulu
                                        :erapaiva #inst "2022-09-29T21:00:00.000-00:00"

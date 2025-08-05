@@ -440,6 +440,11 @@
 (def talvihoitoreitit-default {:haku-kaynnissa? false?
                                :talvihoitoreitit nil})
 
+(def valikatselmus-default {:haku-kaynnissa? false?
+                            :paatokset nil})
+
+(def tiemerkinta-kustannukset-default {})
+
 (def tarjous-kustannussuunnitelma-default {:haku-kaynnissa? false?
                                            :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
                                                                    (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))))]
@@ -458,6 +463,8 @@
                      :paikkaukset paikkaus-default-arvot
                      :kustannusten-seuranta kustannusten-seuranta-default-arvot
                      :talvihoitoreitit talvihoitoreitit-default
+                     :tiemerkinta-kustannukset tiemerkinta-kustannukset-default
+                     :valikatselmus valikatselmus-default
                      :tiemerkinta-korjaukset {}
                      :tiemerkinta-yhteenveto {}
                      :tiemerkinta-muut-kustannukset {}
@@ -482,6 +489,7 @@
 (defonce pot2 (atom pot2-default-arvot))
 
 (defonce kustannusten-seuranta (cursor tila [:kustannusten-seuranta :kustannukset]))
+(defonce valikatselmus (cursor tila [:valikatselmus]))
 (defonce maarien-toteumat (cursor tila [:toteumat :maarien-toteumat]))
 (defonce velho-varusteet (cursor tila [:toteumat :velho-varusteet]))
 (defonce toteuma-pohjavesialueiden-suola (cursor tila [:toteumat :pohjavesialueiden-suolatoteumat]))
@@ -501,8 +509,6 @@
 (defonce tarjous-kustannussuunnitelma (cursor tila [:tarjous-kustannussuunnitelma]))
 
 (defonce suunnittelu-suolarajoitukset (cursor tila [:suunnittelu :suolarajoitukset]))
-
-(defonce tavoitehinnan-oikaisut (cursor tila [:kustannusten-seuranta :kustannukset :tavoitehinnan-oikaisut]))
 
 (defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet nil
                                                              :toteutuneet-maarat nil
