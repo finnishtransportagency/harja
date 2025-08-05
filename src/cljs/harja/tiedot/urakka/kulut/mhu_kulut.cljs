@@ -291,8 +291,8 @@
     (let [app (assoc app :nykyhetki nykyhetki)]
           ;; Aseta pvm-funktioiden käyttämä testipäivämäärä
       (if nykyhetki
-        (pvm/aseta-testi-nykyhetki! nykyhetki)
-        (pvm/poista-testi-nykyhetki!))
+        (pvm/aseta-kehitys-nykyhetki! nykyhetki)
+        (pvm/poista-kehitys-nykyhetki!))
       app))
   
   LisaaKohdistus
