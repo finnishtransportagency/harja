@@ -110,9 +110,25 @@ WHERE "urakka-id" = :urakka-id
 GROUP BY vuosi, kuukausi
 ORDER BY vuosi, kuukausi;
 
+-- name: hae-kuukauden-johto-ja-hallintokorvaus
+SELECT id,
+       kuukausi,
+       vuosi,
+       tunnit,
+       tuntipalkka,
+       tuntipalkka_indeksikorjattu,
+       "urakka-id",
+       luotu,
+       luoja,
+       muokattu,
+       muokkaaja
+FROM johto_ja_hallintokorvaus
+WHERE id = :id;
+
 -- name: paivita-kuukauden-johto-ja-hallintokorvaus<!
 UPDATE johto_ja_hallintokorvaus
 SET tuntipalkka                 = :tuntipalkka,
+    tunnit                      = :tunnit,
     tuntipalkka_indeksikorjattu = :tuntipalkka_indeksikorjattu,
     muokkaaja                   = :muokkaaja,
     muokattu                    = NOW()
@@ -121,6 +137,7 @@ WHERE id = :id;
 -- name: nollaa-kuukauden-johto-ja-hallintokorvaus<!
 UPDATE johto_ja_hallintokorvaus
 SET tuntipalkka                 = null,
+    tunnit                      = null,
     tuntipalkka_indeksikorjattu = null,
     muokkaaja                   = :muokkaaja,
     muokattu                    = NOW()

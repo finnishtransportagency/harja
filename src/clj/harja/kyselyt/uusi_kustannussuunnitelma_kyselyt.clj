@@ -332,22 +332,23 @@
 
         ; Tallenna kuukausittaiset summat
         _ (doseq [rivi johto-ja-hallintokorvaukset]
-            (let [dbrivi (first (hae-kuukauden-hoidonjohtopalkkio db {:id (:id rivi)}))
+            (let [dbrivi (first (hae-kuukauden-johto-ja-hallintokorvaus db {:id (:id rivi)}))
                   t (if (:id dbrivi)
                       (do
                         ;; Koska vanhassa kustiksessa arvot oli toimenpidekohtaisesti, niin nollataan ne pois ensin, jotta
                         ;; juuri tapahtunut päivitys tulisi näkyviin. Uusi kustis voi käyttää vain yhtä riviä ja yhtä id:tä arvojen päivitykseen.
-                        (println "nollataan kuukausi " (:kuukausi rivi) "vuosi:" (:vuosi rivi) "rivi id:" (:id rivi))
                         (nollaa-kuukauden-johto-ja-hallintokorvaus<! db
                           {:kuukausi (:kuukausi rivi)
                            :vuosi (:vuosi rivi)
                            :muokkaaja (:id kayttaja)
                            :urakka-id urakka-id})
+
                         (paivita-kuukauden-johto-ja-hallintokorvaus<! db
-                            {:id (:id dbrivi)
-                             :tuntipalkka (:summa rivi)
-                             :tuntipalkka_indeksikorjattu nil
-                             :muokkaaja (:id kayttaja)}))
+                          {:id (:id dbrivi)
+                           :tuntipalkka (:summa rivi)
+                           :tunnit 1
+                           :tuntipalkka_indeksikorjattu nil
+                           :muokkaaja (:id kayttaja)}))
                       ;; Lisää uusi
                       (tallenna-kuukauden-johto-ja-hallintokorvaus<! db
                         {:urakka-id urakka-id

@@ -3,14 +3,8 @@
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
-            [harja.tyokalut.yleiset :refer [round2]]
-            [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
-            [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]
-            [harja.kyselyt.toimenpidekoodit :as tehtava-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.kustannusarvioidut-tyot :as ka-q]
-            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.domain.oikeudet :as oikeudet]
@@ -67,15 +61,15 @@
 
           ;; Hae erillishankinnat
           erillishankinnat (suunnitelma-q/hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-          erillishankinnat-yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
+          erillishankinnat-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) erillishankinnat))
 
           ;; Hae johto- ja hallintokorvaukset - Eli toimenkuvien kustannukset
           johto-ja-hallintokorvaukset (suunnitelma-q/hae-johto-ja-hallintokorvaukset db urakka-id hoitovuoden-alkuvuosi)
-          johto-ja-hallintokorvaukset-yht (apply + (map (fn [rivi] (:summa rivi 0)) johto-ja-hallintokorvaukset))
+          johto-ja-hallintokorvaukset-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) johto-ja-hallintokorvaukset))
 
           ;; Hae hoidonjohtopalkkiot
           hoidonjohtopalkkiot (suunnitelma-q/hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-          hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (:summa rivi 0)) hoidonjohtopalkkiot))
+          hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) hoidonjohtopalkkiot))
 
           hoitovuoden-alun-tavoitehinta (+ hankinnat-yht rahavaraukset-yht erillishankinnat-yht johto-ja-hallintokorvaukset-yht hoidonjohtopalkkiot-yht)
           pysyvat-muutokset-maara 0
@@ -173,7 +167,7 @@
         (tallenna-hoidonjohtopalkkiot (:db this) user tiedot))
       {:kysely-spec ::k-domain/hoidonjohtopalkkio})
     (julkaise-palvelu (:http-palvelin this)
-      :tallenna-osio-johto-ja-hallintokorvaukset            ;; Lyhyempi nimi konfliktaa vanhan kanssa
+      :tallenna-osio-johto-ja-hallintokorvaukset ;; Lyhyempi nimi konfliktaa vanhan kanssa
       (fn [user tiedot]
         (tallenna-tallenna-johto-ja-hallintokorvaukset (:db this) user tiedot))
       {:kysely-spec ::k-domain/johto-ja-hallintokorvaus})
