@@ -167,15 +167,37 @@ WITH urakan_tehtavat AS
     AND t.poistettu = FALSE
   GROUP BY tt.toimenpidekoodi
 ) 
-SELECT tk.id                                     AS toimenpidekoodi_id,
+SELECT tk.id                                     AS id,
        o.otsikko                                 AS toimenpide,
        tk.nimi                                   AS tehtava,
        tk.id                                     AS tehtava_id,
-       kulut.summa                               AS kirjatut_kulut_summa,
-       SUM(urakan_tehtavat.maara)                AS maara,
+       COALESCE(kulut.summa, 0)                  AS kirjatut_kulut_summa,
+       COALESCE(SUM(urakan_tehtavat.maara), 0)   AS maara,
        SUM(ut.maara)                             AS suunniteltu_maara,
        tk.kasin_lisattava_maara                  AS kasin_lisattava_maara,
-       tk.suunnitteluyksikko                     AS yksikko
+       tk.suunnitteluyksikko                     AS yksikko, 
+       -- ---------------------------------------------------- --
+       -- Määrämuutos  =  Toteutunut määrä - suunniteltu määrä 
+       -- ---------------------------------------------------- --
+       COALESCE(SUM(urakan_tehtavat.maara), 0) - COALESCE(SUM(ut.maara), 0) AS maaramuutos, 
+       -- ---------------------------------------------------- --
+       -- Yksikköhinta =  Kirjatut kulut / toteutunut määrä   
+       -- ---------------------------------------------------- --
+       CASE 
+          WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
+          ELSE COALESCE(kulut.summa, 0) / SUM(urakan_tehtavat.maara)
+       END AS yksikkohinta,
+       -- ---------------------------------------------------- --
+       -- Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
+       -- ---------------------------------------------------- --
+       COALESCE(
+          CASE
+            WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
+            ELSE (COALESCE(SUM(urakan_tehtavat.maara), 0) - 
+                  COALESCE(SUM(ut.maara), 0)) * 
+                  (COALESCE(kulut.summa, 0) / SUM(urakan_tehtavat.maara))
+          END, 
+       0) AS tavoitehinnan_muutos
 FROM tehtava tk
      -- Alataso on linkitetty toimenpidekoodiin
      JOIN tehtavaryhma tr_alataso 

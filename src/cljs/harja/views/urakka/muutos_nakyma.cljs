@@ -352,8 +352,8 @@
         {:otsikko "Suunniteltu määrä" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
         {:otsikko "Kirjattu määrä" :nimi :maara :tyyppi :numero :leveys 15}
         {:otsikko "Määrämuutos (+/-)" :nimi :maaramuutos :tyyppi :numero :leveys 15}
-        {:otsikko "Kirjatut kulut (€)" :nimi :kirjatut-kulut :tyyppi :numero :leveys 15}
-        {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 15}]
+        {:otsikko "Kirjatut kulut (€)" :nimi :kirjatut_kulut_summa :tyyppi :numero :fmt fmt/euro-opt  :leveys 15}
+        {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan_muutos :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 15}]
        tehtava-maaramuutokset])}])
 
 (defn- kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
