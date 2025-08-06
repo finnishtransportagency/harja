@@ -300,3 +300,12 @@ SELECT t.id,
 -- name: hae-tehtavan-nopeusrajoitus
 -- single?: true
 SELECT nopeusrajoitus FROM tehtava WHERE api_tunnus=:tehtava;
+
+-- name: hae-tehtava-tunnisteella
+SELECT id, nimi, yksikko, suunnitteluyksikko, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, tehtavaryhma, luoja, luotu, muokkaaja, muokattu
+  FROM tehtava
+ WHERE yksiloiva_tunniste = :tunniste::UUID
+   AND (voimassaolo_alkuvuosi IS NULL OR voimassaolo_alkuvuosi <= date_part('year', NOW())::INTEGER)
+   AND (voimassaolo_loppuvuosi IS NULL OR voimassaolo_loppuvuosi >= date_part('year', NOW())::INTEGER)
+   AND piilota IS NOT TRUE
+   AND poistettu IS NOT TRUE;

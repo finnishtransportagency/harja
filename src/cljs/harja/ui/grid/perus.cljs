@@ -130,19 +130,26 @@
             [:td {:class (y/luokat "ei-muokattava" tasaus-luokka (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))}
              ((or fmt str) (hae rivi))])))})))
 
-;; Luo funktio etsimään seuraavan input elementin
 (defn etsi-seuraava-input
-  "Fokusoitu-rivi parametri odottaa saavansa fokusoituneen rivin, jonka kautta etsitään seuraava input-elementti.
-  Suunta parametri odottaa saavansa arvot :eteen tai :taakse."
-  [fokusoitu-rivi suunta]
-  (let [edellinen-rivi (.-previousElementSibling (.-parentElement (.-parentElement fokusoitu-rivi)))
-        seuraava-rivi (.-nextElementSibling (.-parentElement (.-parentElement fokusoitu-rivi)))
-        rivi (if (= suunta :taakse) edellinen-rivi seuraava-rivi)
-        ;; Valitaan rivin ensimmäinen tai toinen td, riippuen siitä, että onko ensimmäisessä jokin input-elementti.
-        input (when rivi (or
-                           (-> (.getElementsByTagName rivi "td") (aget 0) (.querySelector "input, button, select, checkbox"))
-                           (-> (.getElementsByTagName rivi "td") (aget 1) (.querySelector "input, button, select, checkbox"))))]
-    input))
+  "Etsii seuraavan input-elementin annetun rivin suunnassa (:eteen tai :taakse).
+   Palauttaa ensimmäisen löytyvän input/button/select/checkbox-elementin seuraavalta riviltä.
+   Ohittaa rivit, joissa ei ole syötettäviä kenttiä (esim. vetolaatikot)."
+  [fokusoitu suunta]
+  (when-let [nykyinen-tr (loop [el fokusoitu]
+                           (cond
+                             (nil? el) nil
+                             (= "TR" (.-tagName el)) el
+                             :else (recur (.-parentElement el))))]
+    (loop [tr (case suunta
+                :taakse (.-previousElementSibling nykyinen-tr)
+                :eteen (.-nextElementSibling nykyinen-tr))]
+      (when (and tr (= "TR" (.-tagName tr)))
+        (let [inputs (.querySelectorAll tr "input, button, select, [type=checkbox]")]
+          (if (pos? (.-length inputs))
+            (aget inputs 0)
+            (recur (case suunta
+                     :taakse (.-previousElementSibling tr)
+                     :eteen (.-nextElementSibling tr)))))))))
 
 (defn- muokkausrivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
                    esta-poistaminen-tooltip piilota-toiminnot? tallennus-kaynnissa?
@@ -681,7 +688,7 @@
                                        salli-valiotsikoiden-piilotus?
                                        piilotetut-valiotsikot tiedot gridin-tietoja
                                        esta-poistaminen-tooltip piilota-toiminnot?
-                                       voi-muokata-rivia? skeema vetolaatikot-auki esta-tiivis-grid? tallenna-id]}]
+                                       voi-muokata-rivia? skeema vetolaatikot-auki esta-tiivis-grid? rivin-luokka tallenna-id]}]
   (let [muokatut @muokatut
         jarjestys @jarjestys
         tulevat-rivit (fn [aloitus-idx]
@@ -713,8 +720,8 @@
                                                   :vetolaatikot vetolaatikot
                                                   :muokkaa! muokkaa!
                                                   :luokka (str (if (even? (+ i 1))
-                                                                 "parillinen"
-                                                                 "pariton"))
+                                                                 (str "parillinen " (when rivin-luokka (rivin-luokka rivi)))
+                                                                 (str "pariton " (when rivin-luokka (rivin-luokka rivi)))))
                                                   :id id
                                                   :rivi-index i
                                                   :rivin-virheet rivin-virheet
@@ -1289,7 +1296,7 @@
               tallenna-id (str "tallenna-" (gensym))]
           [:div.panel.panel-default.livi-grid (merge
                                                 {:id (:id opts)
-                                                 :class luokat}
+                                                 :class (if (seq luokat) (clojure.string/join luokat) luokat)}
                                                 (when data-cy
                                                   {:data-cy data-cy}))
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])
@@ -1357,6 +1364,7 @@
                                            :avattavat-rivit-auki avattavat-rivit-auki
                                            :tallennus-kaynnissa? tallennus-kaynnissa
                                            :esta-tiivis-grid? esta-tiivis-grid?
+                                           :rivin-luokka rivin-luokka
                                            :tallenna-id tallenna-id})
                   (nayttokayttoliittyma {:renderoi-max-rivia renderoi-max-rivia
                                          :tiedot tiedot :colspan colspan :tyhja tyhja

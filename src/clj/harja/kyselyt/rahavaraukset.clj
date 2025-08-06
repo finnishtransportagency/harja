@@ -4,4 +4,5 @@
 (defqueries "harja/kyselyt/rahavaraukset.sql"
   {:positional? true})
 
-(declare hae-urakan-rahavaraukset-ja-tehtavaryhmat hae-rahavarauksen-tehtavaryhmat hae-urakan-rahavaraukset)
+(declare hae-urakan-rahavaraukset-ja-tehtavaryhmat hae-rahavarauksen-tehtavaryhmat hae-urakan-rahavaraukset
+  hae-rahavarauksen-toimenpideinstanssi)
