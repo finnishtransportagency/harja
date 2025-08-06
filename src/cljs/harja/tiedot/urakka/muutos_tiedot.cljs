@@ -19,6 +19,11 @@
 (defrecord HaeUrakanMuutostiedotOnnistui [vastaus])
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
 
+(defrecord HaeTehtavaMaaramuutoksetOnnistui [vastaus])
+(defrecord HaeTehtavaMaaramuutoksetEpaonnistui [vastaus])
+(defrecord KuluhakuOnnistui [vastaus])
+(defrecord KuluhakuEpaonnistui [vastaus])
+
 ;; Vaihda hoitokausi
 (defrecord HoitokausiVaihdettu [urakka hoitokausi])
 (defrecord MuokkaaMuutosta [rivi])
@@ -87,13 +92,33 @@
 
 (defn hae-urakan-muutostiedot
   "Hakee urakan muutostiedot, eli miten tavoitehinta ja tehtävä- ja määräluettelo ovat muuttuneet alkuperäisiin tietoihin nähden."
-  ([app] (hae-urakan-muutostiedot app (:urakka @tila/yleiset)))
-  ([app urakka]
-   (tuck-apurit/post! :hae-urakan-muutostiedot
-     {:urakka-id (:id urakka)
-      :valittu-hoitokausi (:valittu-hoitokausi app)}
-     {:onnistui ->HaeUrakanMuutostiedotOnnistui
-      :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui})))
+  [app]
+  (tuck-apurit/post! :hae-urakan-muutostiedot
+    {:urakka-id (-> @tila/yleiset :urakka :id)
+     :valittu-hoitokausi (:valittu-hoitokausi app)}
+    {:onnistui ->HaeUrakanMuutostiedotOnnistui
+     :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui}))
+
+(defn hae-kirjatut-kulut [app]
+  ;; TODO... voi poistaa, ei tehdä frontissa näitä 
+  (tuck-apurit/post! app :kulut-kohdistuksineen
+    {:urakka-id (-> @tila/yleiset :urakka :id)
+     :alkupvm (-> app :valittu-hoitokausi (first))
+     :loppupvm (-> app :valittu-hoitokausi (second))}
+    {:onnistui ->KuluhakuOnnistui
+     :epaonnistui ->KuluhakuEpaonnistui
+     :epaonnistui-parametrit [{:viesti "Urakan kulujen haku epäonnistui"}]
+     :paasta-virhe-lapi? true}))
+
+(defn hae-tehtava-maaramuutokset [app]
+  (tuck-apurit/post! app :hae-tehtava-maaramuutokset
+    {:urakka-id (-> @tila/yleiset :urakka :id)
+     :valittu-hoitokausi (:valittu-hoitokausi app)}
+    {:onnistui ->HaeTehtavaMaaramuutoksetOnnistui
+     :epaonnistui ->HaeTehtavaMaaramuutoksetEpaonnistui})
+  ;;(hae-kirjatut-kulut app)
+  
+  )
 
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
 
@@ -117,12 +142,14 @@
                 (not= (:id liite) liite-id))
         liitteet))))
 
+
 (extend-protocol tuck/Event
   HoitokausiVaihdettu
   (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
     (let [app (-> app
-                  (assoc :valittu-hoitokausi hoitokausi))]
-      (hae-urakan-muutostiedot app urakka)
+                (assoc :valittu-hoitokausi hoitokausi))]
+      (hae-urakan-muutostiedot app)
+      (hae-tehtava-maaramuutokset app)
       app))
 
   HaeUrakanMuutostiedot
@@ -132,9 +159,10 @@
                 app
                 (assoc app :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (:hoitokauden-alkuvuosi app))
                                                 (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (:hoitokauden-alkuvuosi app))))]))]
-      (do
-        (hae-urakan-muutostiedot app urakka)
-        app)))
+
+      (hae-urakan-muutostiedot app)
+      (hae-tehtava-maaramuutokset app)
+      app))
 
   HaeUrakanMuutostiedotOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -151,7 +179,27 @@
 
   HaeUrakanMuutostiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Muutostietojen hakeminen epäonnistui!" :varoitus)
+    (viesti/nayta-toast! "Muutostietojen hakeminen epäonnistui" :varoitus)
+    app)
+
+  HaeTehtavaMaaramuutoksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    
+    (assoc app :tehtava-maaramuutokset vastaus))
+
+  HaeTehtavaMaaramuutoksetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Tehtävä- ja määrämuutosten haku epäonnistui" :varoitus)
+    app)
+  
+  KuluhakuOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (println "\n kulut: " vastaus)
+    (assoc app :kirjatut-kulut vastaus))
+  
+  KuluhakuEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Kulujen haku epäonnistui" :varoitus)
     app)
 
   HaeMuutoksenTiedotOnnistui
@@ -186,9 +234,9 @@
           muutos (lomake/ilman-lomaketietoja muutos)
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
                                               ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
-                                              (filter #(and (some? (:tavoitehinnan-muutos %))
-                                                         (not= 0 (:tavoitehinnan-muutos %)))
-                                                (vals @johto-ja-hallintokorvausmuutokset-atom)))
+                  (filter #(and (some? (:tavoitehinnan-muutos %))
+                             (not= 0 (:tavoitehinnan-muutos %)))
+                    (vals @johto-ja-hallintokorvausmuutokset-atom)))
           muutos (assoc muutos :kulut kulut)]
       (if-not (empty? puuttuvat-pakolliset-kentat)
         (assoc-in app [:muokattava-muutos :puuttuvat-pakolliset-kentat] puuttuvat-pakolliset-kentat)

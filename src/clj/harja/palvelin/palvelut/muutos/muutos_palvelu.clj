@@ -15,6 +15,7 @@
             [harja.kyselyt.liitteet :as liite-kyselyt]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.palvelin.palvelut.toteumat :as toteumat]
+            [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.yleiset :as yleiset]
@@ -50,22 +51,76 @@
      :toteumat toteumat
      :tavoitehinnan-muutos (- toteumat summa-indeksikorjattu)}))
 
+(defn kulut->flat-map
+  "Etsii kulut-kohdistuksineen kutsusta kiratut kulut tehtävälle
+   Palautuu aina kolmena vektorina, ehkä olisi helpompi ollut tehdä tälle vaan oma kysely"
+  [kirjatut-kulut]
+  (->> kirjatut-kulut
+    (mapcat (fn [tripla-vektori]
+              (some #(when (and
+                             (vector? %)
+                             (map? (first %)))
+                       %)
+                tripla-vektori)))
+    (filter map?)))
+
+(defn summaa-kulut-tehtavineen [kirjatut-kulut]
+  (->>
+    (kulut->flat-map kirjatut-kulut)
+    (filter (comp some? :nimi :tehtava))
+    (group-by #(get-in % [:tehtava :nimi]))
+    (reduce-kv (fn [acc tehtava-nimi items]
+                 (assoc acc tehtava-nimi
+                   (reduce + (map :summa items))))
+      {})))
+
+(defn lisaa-kirjatut-kulut-toteumille
+  [toteumatehtavat kirjatut-kulut]
+  (let [tulos (summaa-kulut-tehtavineen kirjatut-kulut)
+        ;;_ (println "\n \n lookup:: " tulos)
+        ]
+    (mapv (fn [t]
+            (assoc t :kirjatut-kulut (get tulos (:tehtava t) 0M)))
+      toteumatehtavat)))
+
 (defn hae-tehtava-maaramuutokset
-  [db user {:keys [urakka-id tehtavaryhma hoitokauden-alkuvuosi] :as tiedot}]
+  [db user {:keys [urakka-id tehtavaryhma valittu-hoitokausi] :as _tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
 
   ;; TODO .. 
-  (let [toteumatehtavat (toteumat/mhu-toteumatehtavat db user {:urakka-id urakka-id
+  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+        toteumatehtavat (toteumat/mhu-toteumatehtavat db user {:urakka-id urakka-id
                                                                tehtavaryhma 0
                                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+
         ;; Suodata pois tehtävät joille ei ole suunniteltua määrää 
         toteumatehtavat (filter #(some? (:suunniteltu_maara %)) toteumatehtavat)
         toteumatehtavat (mapv #(assoc % :id (gensym)) toteumatehtavat)
+        
+        
+        ;; Hae hoitokauden kirjatut kulut 
+        kirjatut-kulut (kulut/hae-kulut-kohdistuksineen db {:urakka-id urakka-id
+                                                            :alkupvm (-> valittu-hoitokausi (first))
+                                                            :loppupvm (-> valittu-hoitokausi (second))})
+
+
+        #_#_#_#__ (println "\n prams: " {:urakka-id urakka-id
+                                         :alkupvm (-> valittu-hoitokausi (first))
+                                         :loppupvm (-> valittu-hoitokausi (second))})
+            _ (println "\n kulut:  " kirjatut-kulut)
+
+
+        ;; Laskee tehtäville kirjatut kulut :tehtava :nimi 
+        ;; -> Jonka summat lisätään toteumatehtavat mappiin kuuluville tehtäville 
+        toteumatehtavat (lisaa-kirjatut-kulut-toteumille toteumatehtavat kirjatut-kulut)
+
+        _ (println "\n toteumatehtavat: " toteumatehtavat)
+
         ;; 
         ]
 
-    (println "\n lk: " hoitokauden-alkuvuosi)
-    (println " \n \n t:: " toteumatehtavat)
+    ;;(println "\n lk: " hoitokauden-alkuvuosi)
+    ;;(println " \n \n t:: " toteumatehtavat)
     toteumatehtavat)
   ;; 
   )
@@ -77,7 +132,7 @@
   (log/debug "hae-urakan-muutostiedot: " tiedot)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         ;; TODO, poista 
-        _ (hae-tehtava-maaramuutokset db user (assoc tiedot :hoitokauden-alkuvuosi hoitokauden-alkuvuosi))
+        ;;_ (hae-tehtava-maaramuutokset db user (assoc tiedot :hoitokauden-alkuvuosi hoitokauden-alkuvuosi))
         kirjatut-muutokset-vastaus (mapv
                                      (fn [rivi]
                                        (-> rivi
@@ -292,6 +347,10 @@
         (fn [user tiedot]
           (hae-muutoksen-tiedot (:db this) user tiedot))
 
+        :hae-tehtava-maaramuutokset
+        (fn [user tiedot]
+          (hae-tehtava-maaramuutokset (:db this) user tiedot))
+
         :tallenna-muutos
         (fn [user tiedot]
           (tallenna-muutos (:db this) user tiedot))
@@ -305,6 +364,7 @@
     (poista-palvelut (:http-palvelin this)
       :hae-urakan-muutostiedot
       :hae-muutoksen-tiedot
+      :hae-tehtava-maaramuutokset
       :tallenna-muutos
       :tallenna-rahavarausmuutosten-syyt)
     this))

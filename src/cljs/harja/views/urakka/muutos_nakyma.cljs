@@ -321,7 +321,8 @@
 (def lasketut-muutokset-aputeksti
   "Tavoitehintamuutosten laskennassa käytetään Harjan suunniteltuja ja toteutuneita määriä sekä palvelusopimuksen mukaisia kaavoja.")
 
-(defn- lasketut-muutokset [e! {:keys [lasketut-muutokset] :as app}]
+(defn- lasketut-muutokset [e! {:keys [lasketut-muutokset tehtava-maaramuutokset] :as app}]
+  
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :lasketut-muutokset
     :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :lasketut-muutokset))
@@ -341,19 +342,19 @@
         :voi-kumota? false
         :voi-poistaa? (constantly false)
         :voi-muokata? true
+        ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
+        :sivuta 10
         :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
 
-       ;; taulukon kentät
        [{:otsikko "Tehtävä" :nimi :tehtava :tyyppi :string :leveys 15}
         {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys 15}
         {:otsikko "Muutoksen syy / lisätieto" :nimi :syy :tyyppi :string :leveys 35}
         {:otsikko "Suunniteltu määrä" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
-        {:otsikko "Kirjattu määrä" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
-        {:otsikko "Määrämuutos (+/-)" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
-        {:otsikko "Kirjatut kulut (€)" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
-        {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero
-         :fmt fmt/euro-opt :tasaa :oikea :leveys 15}]
-       lasketut-muutokset])}])
+        {:otsikko "Kirjattu määrä" :nimi :maara :tyyppi :numero :leveys 15}
+        {:otsikko "Määrämuutos (+/-)" :nimi :maaramuutos :tyyppi :numero :leveys 15}
+        {:otsikko "Kirjatut kulut (€)" :nimi :kirjatut-kulut :tyyppi :numero :leveys 15}
+        {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 15}]
+       tehtava-maaramuutokset])}])
 
 (defn- kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
   [kehystetty-avattava-grid e! app
