@@ -31,7 +31,7 @@ let valitseKulunPvm = () => {
 let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
     cy.contains('Tallenna').click();
 
-    cy.contains('Kulujen kohdistus');
+    cy.get('h1').contains('Kulujen kohdistus');
 
     cy.get('.pvm-kentta > .pvm-ikoni > input').eq(0).click().wait(3000).type('{selectall}29.09.2021');
     cy.get('.pvm-kentta > .pvm-ikoni > input').eq(1).click().wait(3000).type('{selectall}29.09.2021');
@@ -62,7 +62,7 @@ describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
         cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"]').click();
 
         // Valitse A - Talvihoito
-        cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"] span').contains('A - Talvihoito').click();
+        cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"] span a').contains('A - Talvihoito').click();
 
         valitseKulunPvm();
 
