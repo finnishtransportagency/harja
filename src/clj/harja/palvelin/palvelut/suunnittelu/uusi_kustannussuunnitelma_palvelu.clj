@@ -18,9 +18,7 @@
   (let [tarjous-rahavaraukset (filter #(= "tavoitehintaiset-rahavaraukset" (:osio %)) (:tarjous tarjous))
         rahavaraus-rivit (reduce (fn [lopulliset tarjous-rahavaraus]
                                    (let [vuosittainen-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot tarjous-rahavaraus))))
-                                         suunniteltu-rahavaraus (some #(when (= (:nimi tarjous-rahavaraus) (:nimi %)) %) suunnitellut-rahavaraukset)
-                                         _ (println "** suunniteltu-rahavaraus: " suunniteltu-rahavaraus "tarjous-rahavaraus " tarjous-rahavaraus)
-                                         ]
+                                         suunniteltu-rahavaraus (some #(when (= (:nimi tarjous-rahavaraus) (:nimi %)) %) suunnitellut-rahavaraukset)]
                                      (vec (concat lopulliset [{:nimi (:nimi tarjous-rahavaraus)
                                                                :tarjous-summa vuosittainen-summa
                                                                :suunniteltu-summa (:suunniteltu-summa suunniteltu-rahavaraus)
