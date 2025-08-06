@@ -198,7 +198,6 @@
         tarjous-rahavaraukset (filter #(= (:osio %) "tavoitehintaiset-rahavaraukset") (:tarjous tarjous))
         valittu-vuosi (pvm/vuosi (first valittu-hoitokausi))
         hoitovuosittaiset-arvot (flatten (map :hoitovuosittaiset-arvot tarjous-rahavaraukset))
-        _ (js/console.log "rahavaraukset :: hoitovuosittaiset-arvot" (pr-str hoitovuosittaiset-arvot))
         valitun-vuoden-arvot (filter #(= (:vuosi %) valittu-vuosi) hoitovuosittaiset-arvot)
         tarjouksen-maara (apply + (map :summa valitun-vuoden-arvot))
         pysyvamuutos-maara 0 ;; Toteutus kesken
@@ -273,11 +272,12 @@
         valittu-vuosi (pvm/vuosi (first valittu-hoitokausi))
         hoitovuosittaiset-arvot (:hoitovuosittaiset-arvot tarjous-erillishankinnat)
         tarjouksen-maara (:summa (first (filter #(= (:vuosi %) valittu-vuosi) hoitovuosittaiset-arvot)))
+        pysyvamuutos-maara 0 ;; Toteutus kesken
         vahvistettu? (:vahvistettu? kustannussuunnitelma)
         voi-muokata? (not vahvistettu?)
-        yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
+        suunniteltu-yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
         yht-indeksikorjattu (apply + (map (fn [rivi] (:summa_indeksikorjattu rivi 0)) erillishankinnat))
-        kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
+        kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara suunniteltu-yht))
         kirjaamatta-luokka (if (= 0.00 (tyokalut/round2 2 kirjaamatta)) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
                                                  {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
@@ -286,7 +286,7 @@
 
         yhteenveto-rivi [[^{:luokka "kustannukset-yhteenveto"}
                           {:teksti "Yhteensä" :luokka "yhteensa"}
-                          {:teksti (fmt/euro-opt false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                          {:teksti (fmt/euro-opt false suunniteltu-yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                           {:teksti (if-not (= 0 yht-indeksikorjattu)
                                      (fmt/euro-opt false yht-indeksikorjattu)
                                      "-")
@@ -295,8 +295,8 @@
         _ (reset! grid-erillishankinnat-atom erillishankinnat)]
 
     [:div#erillishankinnat-elementti.row.kustannussuunnitelma-osio.kapea-osio
-     [otsikkotiedot e! app "Erillishankinnat" tarjouksen-maara yht yht-indeksikorjattu
-      {:div1 true :div2 false :div3 false :div4 true} valittu-vuosi]
+     [otsikkotiedot e! app "Erillishankinnat" tarjouksen-maara pysyvamuutos-maara suunniteltu-yht yht-indeksikorjattu
+      {:div1 true :div2 false :div3 (if (< valittu-vuosi rajavuosi) true false) :div4 true} valittu-vuosi]
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
@@ -379,7 +379,7 @@
         _ (reset! grid-johto-ja-hallintokorvaukset-atom johto-ja-hallintokorvaukset)]
     [:div#johto-ja-hallintokorvaus-elementti.row.kustannussuunnitelma-osio.kapea-osio
      [otsikkotiedot e! app "Johto- ja hallintokorvaus" tarjouksen-maara pysyvamuutos-maara yht yht-indeksikorjattu
-      {:div1 true :div2 false :div3 false :div4 true} valittu-vuosi]
+      {:div1 true :div2 false :div3 (if (< valittu-vuosi rajavuosi) true false) :div4 true} valittu-vuosi]
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
@@ -466,7 +466,8 @@
                          kirjaamatta-rivi]
         _ (reset! grid-hoidonjohtopalkkiot-atom hoidonjohtopalkkiot)]
     [:div#hoidonjohtopalkkio-elementti.row.kustannussuunnitelma-osio.kapea-osio
-     [otsikkotiedot e! app "Hoidonjohtopalkkiot" tarjouksen-maara pysyvamuutos-maara suunniteltu-yht suunniteltu-yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true} valittu-vuosi]
+     [otsikkotiedot e! app "Hoidonjohtopalkkiot" tarjouksen-maara pysyvamuutos-maara suunniteltu-yht
+      suunniteltu-yht-indeksikorjattu {:div1 true :div2 false :div3 (if (< valittu-vuosi rajavuosi) true false) :div4 true} valittu-vuosi]
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
@@ -518,8 +519,8 @@
             {:disabled (or tallennus-kesken? false)}]]]]])])))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
-  (let [tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
-        tarjous-yht-rivi (filter #(= tarjous-vuosi (:vuosi %)) (:hoitovuosittaiset-arvot (first (filter #(= "yhteensa" (:osio %)) (:tarjous tarjous)))))
+  (let [valittu-vuosi (pvm/vuosi (first valittu-hoitokausi))
+        tarjous-yht-rivi (filter #(= valittu-vuosi (:vuosi %)) (:hoitovuosittaiset-arvot (first (filter #(= "yhteensa" (:osio %)) (:tarjous tarjous)))))
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
@@ -527,6 +528,7 @@
         pysyvat-muutokset-maara (or (:pysyvat-muutokset-maara kustannussuunnitelma) 0)
         hoitovuoden-alun-tavoitehinta (or (:hoitovuoden-alun-tavoitehinta kustannussuunnitelma) 0)
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (:hoitovuoden-alun-indeksikorjattu-tavoitehinta kustannussuunnitelma) 0)
+        ero-tarjoukseen (- hoitovuoden-alun-tavoitehinta tarjouksen-maara)
         indeksikerroin (:indeksikerroin kustannussuunnitelma)
         kattohintakerroin (:kattohintakerroin kustannussuunnitelma)
         hoitovuoden-alun-kattohinta (or (:hoitovuoden-alun-kattohinta kustannussuunnitelma) 0)
@@ -542,14 +544,20 @@
       [:div.col-xs-12.korkea-rivi.bottom-border-text
        [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti "Tarjouksen tavoitehinta"]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true tarjouksen-maara)]]]
-     [:div.row
-      [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti "Pysyvät muutokset"]
-       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true pysyvat-muutokset-maara)]]]
+     (when (>= valittu-vuosi rajavuosi)
+       [:div.row
+        [:div.col-xs-12.korkea-rivi.bottom-border-text
+         [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti "Pysyvät muutokset"]
+         [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true pysyvat-muutokset-maara)]]])
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
        [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti "Hoitovuoden alun tavoitehinta"]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-tavoitehinta)]]]
+     (when (< valittu-vuosi rajavuosi)
+       [:div.row
+        [:div.col-xs-12.korkea-rivi.bottom-border-text
+         [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti "Ero tarjoukseen"]
+         [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true ero-tarjoukseen)]]])
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
        [:div.col-xs-9.body-text.pull-righ.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun tavoitehinta (" indeksikerroin " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
