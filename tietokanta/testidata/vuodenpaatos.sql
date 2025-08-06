@@ -20,7 +20,8 @@ $$
                                                      FROM johto_ja_hallintokorvaus_toimenkuva
                                                      WHERE toimenkuva IN
                                                            ('sopimusvastaava', 'apulainen/työnjohtaja',
-                                                            'harjoittelija'));
+                                                            'harjoittelija')
+                                                     AND "urakka-id" IS NULL);
         vahvistettavat_osiot  SUUNNITTELU_OSIO[] := ARRAY ['hankintakustannukset', 'erillishankinnat', 'johto-ja-hallintokorvaus', 'hoidonjohtopalkkio', 'tavoite-ja-kattohinta'];
         osio_                 SUUNNITTELU_OSIO;
         kulun_id_             INT;

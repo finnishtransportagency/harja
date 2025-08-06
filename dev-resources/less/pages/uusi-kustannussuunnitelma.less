@@ -1,6 +1,33 @@
 /* Uusi kustannussuunnitelma */
 .kustannussuunnitelma-osio {
+  max-width: @screen-lg;
   border: 1px solid @gray200;
   margin-top: 1rem;
   padding-bottom: 1rem;
+
+  @media screen and (min-width: 768px) {
+    &.kapea-osio {
+      max-width: 768px !important;
+    }
+    &.osio-976 {
+      max-width: 976px !important;
+    }
+  }
+
+  .bottom-border-text {
+    border-bottom: 1px solid @border-color;
+    height: 24px;
+    padding-right: 3rem;
+  }
+  .text-right {
+    text-align: right;
+  }
+  .kohdista-teksti {
+    padding-right: 2rem;
+    padding-top: 0.6rem;
+  }
+
+  .korkea-rivi {
+      height: 2.5rem;
+  }
 }

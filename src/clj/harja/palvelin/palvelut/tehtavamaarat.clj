@@ -41,6 +41,17 @@
                                            :urakka-voimassaolo-alkuvuosi alkuvuosi}))]
     tehtavaryhmat-ja-toimenpiteet))
 
+(defn hae-tehtavaryhman-tehtavat-urakalle
+  [db user {:keys [urakka-id tehtavaryhma-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+  (when (not urakka-id)
+    (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
+  (let [tehtavat (into []
+                   (tehtavamaarat-kyselyt/tehtavaryhman-tehtavat-urakalle db
+                     {:urakka-id urakka-id
+                      :tehtavaryhma-id tehtavaryhma-id}))]
+    tehtavat))
+
 (defn- paivita-tarvittaessa [idt polku arvo]
   (if (nil? (get idt arvo))
     (assoc idt polku arvo)
@@ -417,6 +428,10 @@
         (fn [user tiedot]
           (tehtavaryhmat-ja-toimenpiteet db user tiedot)))
       (julkaise-palvelu
+        :hae-tehtavaryhman-tehtavat-urakalle
+        (fn [user tiedot]
+          (hae-tehtavaryhman-tehtavat-urakalle db user tiedot)))
+      (julkaise-palvelu
         :tallenna-sopimuksen-tehtavamaara
         (fn [user tiedot]
           (tallenna-sopimuksen-tehtavamaara db user tiedot)))
@@ -433,6 +448,7 @@
     (poista-palvelu (:http-palvelin this) :tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tallenna-tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tehtavaryhmat-ja-toimenpiteet)
+    (poista-palvelu (:http-palvelin this) :hae-tehtavaryhman-tehtavat-urakalle)
     (poista-palvelu (:http-palvelin this) :tallenna-sopimuksen-tehtavamaara)
     (poista-palvelu (:http-palvelin this) :tallenna-sopimuksen-tehtavamaara-kaikille-tehtaville-test)
     this))

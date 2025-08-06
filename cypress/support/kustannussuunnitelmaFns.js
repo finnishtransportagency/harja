@@ -418,6 +418,27 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
 }
 
+/**
+ * @param urakkaNimi Avattavan urakan nimi
+ * @param alue Alue, jotta löydetään urakka käyttöliittymältä
+ * @param indeksiArray Array, johon indeksit pusketaan.
+ */
+export function avaaUusiKustannussuunnittelu(urakkaNimi, alue) {
+    cy.visit("/");
+
+    cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
+    cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
+    cy.contains('Näytä päättyneet').click();
+
+    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
+    // Mene suunnittelu välilehdelle
+    cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
+    // Avaa Kustannussuunnitelma
+    cy.get('[data-cy="tabs-taso2-Uusi Kustannussuunnitelma"]').click();
+
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+}
+
 export function valitseHoitokausi(nykyinenHoitokausi, uusiHoitokausi) {
     cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').contains(nykyinenHoitokausi).click();
     cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').contains('span', uusiHoitokausi).click();

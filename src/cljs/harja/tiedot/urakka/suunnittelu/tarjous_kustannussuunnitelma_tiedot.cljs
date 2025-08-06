@@ -60,12 +60,24 @@
 (defrecord TallennaErillishankinnatEpaonnistui [vastaus])
 (defrecord JaaErillishankinnatTasan [summa elementti])
 
-;; Tallenna erillishankinnat
+;; Johto-ja-hallintokorvaus-käsittelyt
+(defrecord TallennaJohtoJaHallintokorvaukset [johto-ja-hallintokorvaukset])
+(defrecord PaivitaJohtoJaHallintokorvaukset [johto-ja-hallintokorvaukset])
+(defrecord TallennaJohtoJaHallintokorvauksetOnnistui [vastaus])
+(defrecord TallennaJohtoJaHallintokorvauksetEpaonnistui [vastaus])
+(defrecord JaaJohtoJaHallintokorvauksetTasan [summa johto-ja-hallintokorvaukset-elementti])
+
+;; Hoidonjohtopalkkio-käsittelyt
 (defrecord TallennaHoidonjohtopalkkiot [hoidonjohtopalkkiot])
 (defrecord PaivitaHoidonjohtopalkkiot [hoidonjohtopalkkiot])
 (defrecord TallennaHoidonjohtopalkkiotOnnistui [vastaus])
 (defrecord TallennaHoidonjohtopalkkiotEpaonnistui [vastaus])
 (defrecord JaaHoidonjohtopalkkiotTasan [summa hoidonjohtopalkkio-elementti])
+
+;; Vahvistukset
+(defrecord VahvistaTaiPeruutaTavoiteJaKattohinta [vahvista?])
+(defrecord VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui [vastaus])
+(defrecord VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui [vastaus])
 
 
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
@@ -101,6 +113,13 @@
                        (js/parseInt (second matches)))
         hoidonjohtopalkkio (nth hoidonjohtopalkkiot virheen-rivi)
         rivin-nimi (:kalenterikuukausi hoidonjohtopalkkio)]
+    (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi " arvossa virhe. Anna positiivinen summa.")))
+
+(defn parsi-johto-ja-hallintokorvaus-virhe [virhe johto-ja-hallintokorvaukset]
+  (let [virheen-rivi (when-let [matches (re-find #"\[:johto-ja-hallintokorvaukset (\d+) :summa\]" virhe)]
+                       (js/parseInt (second matches)))
+        johto-ja-hallintokorvaus (nth johto-ja-hallintokorvaukset virheen-rivi)
+        rivin-nimi (:kalenterikuukausi johto-ja-hallintokorvaus)]
     (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi " arvossa virhe. Anna positiivinen summa.")))
 
 (extend-protocol tuck/Event
@@ -199,15 +218,15 @@
     (let [muuttuneet (vec kilpailutettavat-hankinnat)
           ;; Laske yhteenvedot uusiksi
           muuttuneet (mapv (fn [rivi]
-                            (let [alkukausi (or (:alkukausi rivi) 0)
-                                  loppukausi (or (:loppukausi rivi) 0)]
-                              (merge rivi
-                                {:alkukausi alkukausi
-                                 :loppukausi loppukausi
-                                 :alkukausi-indeksikorjattu nil
-                                 :loppukausi-indeksikorjattu nil
-                                 :yhteensa (+ alkukausi loppukausi)
-                                 :yhteensa-indeksikorjattu nil})))
+                             (let [alkukausi (or (:alkukausi rivi) 0)
+                                   loppukausi (or (:loppukausi rivi) 0)]
+                               (merge rivi
+                                 {:alkukausi alkukausi
+                                  :loppukausi loppukausi
+                                  :alkukausi-indeksikorjattu nil
+                                  :loppukausi-indeksikorjattu nil
+                                  :yhteensa (+ alkukausi loppukausi)
+                                  :yhteensa-indeksikorjattu nil})))
                        muuttuneet)
           yhteenveto {:nimi "Yhteensä"
                       :alkukausi (apply + (map :alkukausi muuttuneet))
@@ -250,9 +269,9 @@
     (let [parsitut-virheet (parsi-kilpailutettavat-hankinnat-virhe (get-in vastaus [:parse-error :original-text])
                              (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet]))]
       (viesti/nayta-toast!
-           parsitut-virheet
-           :varoitus
-           viesti/viestin-nayttoaika-keskipitka)
+        parsitut-virheet
+        :varoitus
+        viesti/viestin-nayttoaika-keskipitka)
       (-> app
         (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] parsitut-virheet)
         (assoc :tallennus-kesken? false))))
@@ -334,9 +353,9 @@
 
   TallennaHoidonjohtopalkkiotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Kilpailutettavat hankinat tallennettiin.")
+    (viesti/nayta-toast! "Hoidonjohtopalkkiot tallennettiin.")
     (-> app
-      (assoc-in [:kustannussuunnitelma :erillishankinnat-virheet] nil)
+      (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot-virheet] nil)
       (assoc :tallennus-kesken? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
@@ -360,12 +379,67 @@
           kk-summa (tyokalut/round2 2 (/ summa 12))
           viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
           hoidonjohtopalkkiot (map-indexed (fn [indeksi rivi]
-                                          (merge rivi
-                                            {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
-                                             :summa_indeksikorjattu nil}))
-                             hoidonjohtopalkkiot)]
+                                             (merge rivi
+                                               {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
+                                                :summa_indeksikorjattu nil}))
+                                hoidonjohtopalkkiot)]
       (scrollaa-muutoksiin hoidonjohtopalkkio-elementti)
       (assoc-in app [:kustannussuunnitelma :hoidonjohtopalkkiot] hoidonjohtopalkkiot)))
+
+  PaivitaJohtoJaHallintokorvaukset
+  (process-event
+    [{johto-ja-hallintokorvaukset :johto-ja-hallintokorvaukset} app]
+    (let [muuttuneet (sort-by (juxt :vuosi :kuukausi) (vec johto-ja-hallintokorvaukset))]
+      (-> app
+        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
+        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet))))
+
+  TallennaJohtoJaHallintokorvaukset
+  (process-event
+    [{johto-ja-hallintokorvaukset :johto-ja-hallintokorvaukset} app]
+    (tuck-apurit/post! :tallenna-osio-johto-ja-hallintokorvaukset
+      {:urakka-id (-> @tila/yleiset :urakka :id)
+       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
+       :johto-ja-hallintokorvaukset johto-ja-hallintokorvaukset}
+      {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
+       :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
+       :paasta-virhe-lapi? true})
+    (assoc app :tallennus-kesken? true))
+
+  TallennaJohtoJaHallintokorvauksetOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Hoidonjohtopalkkiot tallennettiin.")
+    (-> app
+      (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
+      (assoc :tallennus-kesken? false)
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+
+  TallennaJohtoJaHallintokorvauksetEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (let [parsitut-virheet (parsi-johto-ja-hallintokorvaus-virhe (get-in vastaus [:parse-error :original-text])
+                             (get-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))]
+      (viesti/nayta-toast!
+        parsitut-virheet
+        :varoitus
+        viesti/viestin-nayttoaika-keskipitka)
+      (-> app
+        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] parsitut-virheet)
+        (assoc :tallennus-kesken? false))))
+
+  JaaJohtoJaHallintokorvauksetTasan
+  (process-event [{:keys [summa johto-ja-hallintokorvaukset-elementti]} app]
+    (let [johto-ja-hallintokorvaukset (get-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset])
+          kk-summa (tyokalut/round2 2 (/ summa 12))
+          viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
+          johto-ja-hallintokorvaukset (map-indexed (fn [indeksi rivi]
+                                                     (merge rivi
+                                                       {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
+                                                        :summa_indeksikorjattu nil}))
+                                        johto-ja-hallintokorvaukset)]
+      (scrollaa-muutoksiin johto-ja-hallintokorvaukset-elementti)
+      (assoc-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset] johto-ja-hallintokorvaukset)))
 
   ValitseHoitokausiKustannussuunnitelmaan
   (process-event [{vuosi :vuosi} app]
@@ -379,4 +453,37 @@
                 (assoc :hoitokauden-alkuvuosi vuosi))]
       ;; Haetaan kaikki välikatselmuksessa tarvittavat tiedot
       (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) vuosi)
-      (assoc app :haku-kaynnissa? true))))
+      (assoc app :haku-kaynnissa? true)))
+
+  VahvistaTaiPeruutaTavoiteJaKattohinta
+  (process-event
+    [{vahvista? :vahvista?} app]
+    (js/console.log "Vahvista tai peruuta tavoite ja kattohinta" vahvista?)
+    (tuck-apurit/post! :vahvista-tavoite-ja-kattohinta
+      {:urakka-id (-> @tila/yleiset :urakka :id)
+       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
+       :vahvista? vahvista?}
+      {:onnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
+       :epaonnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
+       :paasta-virhe-lapi? true})
+    (-> app
+      (assoc :haku-kaynnissa? true)
+      (assoc :tallennus-kesken? true)))
+
+  VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin.")
+    (-> app
+      (assoc :tallennus-kesken? false)
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+
+  VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast!
+      "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
+      :varoitus
+      viesti/viestin-nayttoaika-keskipitka)
+    (-> app
+      (assoc :tallennus-kesken? false))))

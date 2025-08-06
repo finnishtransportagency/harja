@@ -9,7 +9,8 @@
             [harja.loki :as loki]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.tiedot.urakka :as u]))
+            [harja.tiedot.urakka :as u]
+            [harja.asiakas.kommunikaatio :as k]))
 
 (def kuluva-alkuvuosi
   (if (>= (pvm/kuukausi (pvm/nyt)) 10)
@@ -94,6 +95,7 @@
                   :kulut/negatiivinen-summa    [ei-nil negatiivinen-numero]
                   :kulut/laskun-numero         [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
+                  :kulut/tehtava               [ei-nil ei-tyhja]
                   :kulut/rahavaraus            [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
                   :kulut/koontilaskun-kuukausi [ei-nil ei-tyhja]
@@ -273,8 +275,10 @@
   ([kulu]
    (kulun-validointi-meta kulu {}))
   ([{:keys [kohdistukset] :as _kulu} opts]
-   (let [kohdistusvalidoinnit (mapcat (fn [i]
-                                        (let [kohdistus (get kohdistukset i)]
+   (let [onko-tehtava-validointi-kaytossa? (and (k/kehitysymparistossa?) (pvm/jalkeen? (pvm/nyt) (pvm/->pvm "01.10.2025")))
+         kohdistusvalidoinnit (mapcat (fn [i]
+                                        (let [kohdistus (get kohdistukset i)
+                                              tehtavaryhman-tehtavat? (seq (:tehtavaryhman-tehtavat kohdistus))]
                                           (cond
                                             (= :lisatyo (:tyyppi kohdistus))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
@@ -282,10 +286,14 @@
                                              [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)
                                              [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)]
 
-                                            ;; Hankintakululla on pakko olla tehtäväryhmä
+                                            ;; Hankintakululla on pakko olla tehtäväryhmä ja määritellyillä tehtäväryhmän tehtävillä tehtävä
                                             (= :hankintakulu (:tyyppi kohdistus))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                                             [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)]
+                                             [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
+                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
+                                               [:kohdistukset i :tehtava])
+                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
+                                               (:kulut/tehtava validoinnit))]
 
                                             ;; Rahavarauksella on pakko olla rahavaraus ja tehtäväryhmä
                                             (= :rahavaraus (:tyyppi kohdistus))
@@ -293,11 +301,15 @@
                                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
                                              [:kohdistukset i :rahavaraus] (:kulut/rahavaraus validoinnit)]
 
-                                            ;; Kun Muu kulu on tavoitehintainen tarkistetaan summa, lisätieto ja tehtäväryhmä
+                                            ;; Kun Muu kulu on tavoitehintainen tarkistetaan summa, lisätieto ja tehtäväryhmä ja määritellyillä tehtäväryhmän tehtävillä tehtävä
                                             (and (= :muukulu (:tyyppi kohdistus)) (= :true (:tavoitehintainen kohdistus)))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
-                                             [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)]
+                                             [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
+                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
+                                               [:kohdistukset i :tehtava])
+                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
+                                               (:kulut/tehtava validoinnit))]
 
                                             ;; Kun Muu kulu on ei-tavoitehintainen tarkistetaan summa, lisätieto ja toimenpideinstanssi
                                             (and (= :muukulu (:tyyppi kohdistus)) (= :false (:tavoitehintainen kohdistus)))
@@ -310,7 +322,10 @@
 
      (apply luo-validius-tarkistukset (concat kulun-oletus-validoinnit kohdistusvalidoinnit)))))
 
+
 (def kulut-kohdistus-default {:tehtavaryhma nil
+                              :valittu-tehtava nil
+                              :tehtavaryhman-tehtavat nil
                               :toimenpideinstanssi nil
                               :summa 0
                               :poistettu false
