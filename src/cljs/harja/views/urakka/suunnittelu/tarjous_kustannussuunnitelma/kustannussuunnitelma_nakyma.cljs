@@ -22,12 +22,19 @@
 (defonce grid-hoidonjohtopalkkiot-atom (atom [{}]))
 (defonce grid-johto-ja-hallintokorvaukset-atom (atom [{}]))
 
-(defn- otsikkotiedot [e! {:keys [valittu-hoitokausi kustannussuunnitelma] :as app} otsikko tarjouksen-maara yhteensa yhteensa-indeksikorjattu {:keys [div1 div2 div3 div4] :as opts}]
+;; Rajavuotta aiemmilla ei ole pysyviä muutoksia
+(def rajavuosi 2024)
+
+(defn- otsikkotiedot [e! {:keys [valittu-hoitokausi kustannussuunnitelma] :as app} otsikko tarjouksen-maara
+                      pysyvamuutos-maara suunniteltu-yhteensa suunniteltu-yhteensa-indeksikorjattu
+                      {:keys [div1 div2 div3 div4] :as opts} valittu-vuosi]
   (let [vahvistettu? (:vahvistettu? kustannussuunnitelma)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
-        indeksikerroin (:indeksikerroin kustannussuunnitelma)]
+        indeksikerroin (:indeksikerroin kustannussuunnitelma)
+        tarjous-pysyvat-yhteensa (+ tarjouksen-maara pysyvamuutos-maara)
+        tarjous-pysyvat-yhteensa-indeksikorjattu (* tarjous-pysyvat-yhteensa indeksikerroin)]
     [:div
      [:div.row
       [:div.col-xs-12
@@ -39,26 +46,45 @@
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Tarjouksen määrä"]
          [:div.body-text (if tarjouksen-maara (fmt/euro-opt true tarjouksen-maara) "0,00 €")]])
-      (when div2
+
+      ;; -24 vuodesta eteenpäin näytetään pysyvät muutokset, jos tämä osio aiotaan näyttää
+      (when (and div2 (>= valittu-vuosi rajavuosi))
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Pysyvät muutokset"]
          [:div.body-text "Ei muutoksia"]
          [:div.body-text [yleiset/linkki "Siirry muutoksiin"
                           #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
                              {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]])
-      (when div3
+
+      ;; -24 vuodesta eteenpäin näytetään tarjous + pysyvät muutokset, jos tämä osio aiotaan näyttää
+      (when (and div3 (>= valittu-vuosi rajavuosi))
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Yhteensä"]
-         [:div.body-text (if yhteensa (fmt/euro-opt true yhteensa) "0,00 €")]])
+         [:div.body-text (if tarjous-pysyvat-yhteensa (fmt/euro-opt true tarjous-pysyvat-yhteensa) "0,00 €")]])
 
-      (when div4
+      ;; -23 vuoteen asti näytetään yhteensä suunniteltu määrä
+      (when (and div3 (< valittu-vuosi rajavuosi))
+        [:div.col-xs-12.col-md-3
+         [:div.small-text.bold "Suunniteltu määrä"]
+         [:div.body-text (if suunniteltu-yhteensa (fmt/euro-opt true suunniteltu-yhteensa) "0,00 €")]])
+
+      ;; -24 vuodesta eteenpäin näytetään indeksikorjattu määrä tarjouksen hinnalle, jos tämä osio aiotaan näyttää
+      (when (and div4 (>= valittu-vuosi rajavuosi))
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Indeksikorjattu"]
-         [:div.body-text (if vahvistettu? (fmt/euro-opt true yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
+         [:div.body-text (if vahvistettu? (fmt/euro-opt true tarjous-pysyvat-yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
          (when vahvistettu?
            [:div.body-text
-            (str "(" indeksikerroin " * " (if yhteensa (fmt/euro-opt false yhteensa) "0,00 €") " )")])]
-        )]]))
+            (str "(" indeksikerroin " * " (if tarjous-pysyvat-yhteensa (fmt/euro-opt false tarjous-pysyvat-yhteensa) "0,00 €") " )")])])
+
+      ;; -23 vuoteen asti näytetään indeksikorjattu määrä suunnitellulle summalle, koska tarjousihintoja ja pysyviä muutoksia ei ole ollut
+      (when (and div4 (< valittu-vuosi rajavuosi))
+        [:div.col-xs-12.col-md-3
+         [:div.small-text.bold "Indeksikorjattu"]
+         [:div.body-text (if vahvistettu? (fmt/euro-opt true suunniteltu-yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
+         (when vahvistettu?
+           [:div.body-text
+            (str "(" indeksikerroin " * " (if suunniteltu-yhteensa (fmt/euro-opt false suunniteltu-yhteensa) "0,00 €") " )")])])]]))
 
 (defn kilpailutettavat-hankinnat [e! {:keys [tallennus-kesken? valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
   (if (nil? (get-in kustannussuunnitelma [:kilpailutettavat-hankinnat :toimenpiteet]))
