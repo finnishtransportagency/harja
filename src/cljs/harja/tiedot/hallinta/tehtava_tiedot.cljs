@@ -5,14 +5,9 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tyokalut.tuck :as tuck-apurit]))
 
-(def tila (atom nil))
+(def tila (atom {:valitut-tehtavat {}
+                 :tulostetut-tehtavat []}))
 (def nakymassa? (atom false))
-
-;; Valittujen tehtävien tila: Map, jossa avaimena on tehtävän id ja arvona tehtävän tiedot
-(def valitut-tehtavat (atom {}))
-
-;; Tallennetaan kaikki tulostetut tehtävät
-(def tulostetut-tehtavat (atom []))
 
 (defrecord HaeTehtavaryhmaotsikot [])
 (defrecord HaeTehtavaryhmaotsikotOnnistui [vastaus])
@@ -31,16 +26,10 @@
 (defrecord TyhjaaValitutTehtavat [])
 (defrecord TulostaKaikkiValitut [])
 
-(defn tehtava-valittu? 
+(defn tehtava-valittu?
   "Tarkistaa, onko annettu tehtävä valittujen tehtävien joukossa."
   [tehtava-id]
-  (contains? @valitut-tehtavat tehtava-id))
-
-
-(defn tulosta-kaikki-valitut-tehtavat []
-  (let [valitut (vals @valitut-tehtavat)] 
-    (reset! tulostetut-tehtavat valitut)
-    valitut))
+  (contains? (:valitut-tehtavat @tila) tehtava-id))
 
 (extend-protocol tuck/Event
   ValitseTehtava
@@ -48,20 +37,18 @@
     (let [tehtava-id (:id tehtava)]
       (if valittu?
         ;; Lisää tehtävä valittuihin
-        (swap! valitut-tehtavat assoc tehtava-id tehtava)
+        (assoc-in app [:valitut-tehtavat tehtava-id] tehtava)
         ;; Poista tehtävä valituista
-        (swap! valitut-tehtavat dissoc tehtava-id))
-      app)) 
+        (update app :valitut-tehtavat dissoc tehtava-id)))) 
   
   TulostaKaikkiValitut
   (process-event [_ app]
-    (tulosta-kaikki-valitut-tehtavat)
-    app)
+    (let [valitut (vals (:valitut-tehtavat app))]
+      (assoc app :tulostetut-tehtavat valitut)))
   
   TyhjaaValitutTehtavat
   (process-event [_ app]
-    (reset! valitut-tehtavat {})
-    app)
+    (assoc app :valitut-tehtavat {}))
 
   HaeTehtavaryhmaotsikot
   (process-event [_ app]

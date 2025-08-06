@@ -19,9 +19,9 @@
               :voi-lisata? false
               ::mahdollista-rivin-valinta? true
               :paneelikomponentit [(fn [] [:div.valittujen-tehtavien-toiminnot
-                                           (let [valitut-maara (count @tiedot/valitut-tehtavat)]
+                                           (let [valitut-maara (count (:valitut-tehtavat @tiedot/tila))]
                                              [:span.margin-right-8 (str "Valittuna: " valitut-maara " tehtävää")])
-                                           (when (pos? (count @tiedot/valitut-tehtavat))
+                                           (when (pos? (count (:valitut-tehtavat @tiedot/tila)))
                                              [:<>
                                               [napit/nappi "Tulosta valitut tehtävät migraatiota varten"
                                                #(e! (tiedot/->TulostaKaikkiValitut))
@@ -29,11 +29,11 @@
                                               [napit/nappi "Tyhjennä valinnat"
                                                #(e! (tiedot/->TyhjaaValitutTehtavat))
                                                {:luokka "nappi-toissijainen"}]])
-                                           (when (seq @tiedot/tulostetut-tehtavat)
+                                           (when (seq (:tulostetut-tehtavat @tiedot/tila))
                                              [:div.tulostetut-tehtavat
                                               [:h4 "Tulostetut tehtävät:"]
                                               [:ul
-                                               (for [[idx tehtava] (map-indexed vector @tiedot/tulostetut-tehtavat)]
+                                               (for [[idx tehtava] (map-indexed vector (:tulostetut-tehtavat @tiedot/tila))]
                                                  ^{:key (str "tulostettu-" idx)}
                                                  [:li (str "'"(:nimi tehtava)"'" "," "'"(:yksiloiva_tunniste tehtava)"'")])]])])]
               :tallenna (fn [muokatut-rivit _arvo]
