@@ -143,3 +143,90 @@ UPDATE mhu_muutos
 -- name: linkita-muutos-ja-liite<!
 INSERT INTO mhu_muutos_liite (muutos, liite, versio)
 VALUES (:muutos, :liite, :versio);
+
+
+-- name: hae-tehtava-maaramuutokset
+WITH urakan_tehtavat AS
+(
+  SELECT  tt.toimenpidekoodi  AS toimenpidekoodi,
+          SUM(tt.maara)       AS maara,
+          :urakka             AS urakka,
+          MAX(t.id)           AS toteuma_id,
+          MAX(tt.id)          AS toteuma_tehtava_id
+  FROM toteuma t
+       JOIN toteuma_tehtava tt 
+              ON t.id = tt.toteuma 
+             AND tt.urakka_id = :urakka 
+             AND tt.poistettu = FALSE
+        LEFT JOIN toteuma_materiaali tm
+               ON t.id = tm.toteuma 
+              AND tm.urakka_id = :urakka 
+              AND tm.poistettu = FALSE
+  WHERE t.urakka = :urakka
+    AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+    AND t.poistettu = FALSE
+  GROUP BY tt.toimenpidekoodi
+) 
+SELECT tk.id                                     AS toimenpidekoodi_id,
+       o.otsikko                                 AS toimenpide,
+       tk.nimi                                   AS tehtava,
+       tk.id                                     AS tehtava_id,
+       kulut.summa                               AS kirjatut_kulut_summa,
+       SUM(urakan_tehtavat.maara)                AS maara,
+       SUM(ut.maara)                             AS suunniteltu_maara,
+       tk.kasin_lisattava_maara                  AS kasin_lisattava_maara,
+       tk.suunnitteluyksikko                     AS yksikko
+FROM tehtava tk
+     -- Alataso on linkitetty toimenpidekoodiin
+     JOIN tehtavaryhma tr_alataso 
+        ON tr_alataso.id = tk.tehtavaryhma
+     JOIN tehtavaryhmaotsikko o 
+        ON tr_alataso.tehtavaryhmaotsikko_id = o.id 
+        AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+     LEFT JOIN urakka_tehtavamaara ut 
+        ON ut.urakka = :urakka 
+        AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+        AND ut.poistettu IS NOT TRUE 
+        AND tk.id = ut.tehtava
+     LEFT JOIN urakan_tehtavat 
+        ON tk.id = urakan_tehtavat.toimenpidekoodi
+     JOIN urakka u 
+        ON u.id = :urakka
+     -- Hae tehtävän kulut 
+     LEFT JOIN (
+          SELECT kk.tehtava    AS tehtava_id,
+                 SUM(kk.summa) AS summa
+           FROM kulu k
+                JOIN kulu_kohdistus kk ON k.id = kk.kulu 
+                 AND kk.poistettu IS NOT TRUE
+          WHERE k.urakka = :urakka
+          AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= k.erapaiva)
+          AND (:loppupvm::DATE IS NULL OR k.erapaiva <= :loppupvm::DATE)
+          AND k.poistettu IS NOT TRUE
+          GROUP BY kk.tehtava
+    ) kulut ON kulut.tehtava_id = tk.id
+WHERE
+  -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
+  (tk.aluetieto = FALSE OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
+  -- Rajataan pois ne, jotka eivät ole mhu tehtäviä.
+  AND tk."mhu-tehtava?" = true 
+  AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
+  -- mutta otetaan mukaan Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen ja lisätyöt
+  AND ((tk.suunnitteluyksikko IS NOT NULL AND tk.suunnitteluyksikko != 'euroa') OR
+       tk.yksiloiva_tunniste IN ('49b7388b-419c-47fa-9b1b-3797f1fab21d',
+                                 '63a2585b-5597-43ea-945c-1b25b16a06e2',
+                                 'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
+                                 'e32341fc-775a-490a-8eab-c98b8849f968',
+                                 '0c466f20-620d-407d-87b0-3cbb41e8342e',
+                                 'c058933e-58d3-414d-99d1-352929aa8cf9'))
+  AND (urakan_tehtavat.maara != ut.maara 
+       OR (urakan_tehtavat.maara IS NULL AND ut.maara IS NOT NULL))
+GROUP BY  tk.id, 
+          tk.nimi, 
+          o.otsikko,
+          tk.kasin_lisattava_maara, 
+          tk.suunnitteluyksikko, 
+          kulut.summa
+ORDER BY  o.otsikko ASC, tk.nimi ASC;
