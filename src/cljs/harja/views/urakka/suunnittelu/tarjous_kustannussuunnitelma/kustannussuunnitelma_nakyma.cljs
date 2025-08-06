@@ -90,9 +90,10 @@
   (if (nil? (get-in kustannussuunnitelma [:kilpailutettavat-hankinnat :toimenpiteet]))
     [yleiset/ajax-loader-pieni "Ladataan..."]
   (let [tarjous-hankintakustannukset (filter #(= (:osio %) "hankintakustannukset") (:tarjous tarjous))
-        tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
-        tarjouksen-maara (:summa (first (filter #(= (:vuosi %) tarjous-vuosi)
+        valittu-vuosi (pvm/vuosi (first valittu-hoitokausi))
+        tarjouksen-maara (:summa (first (filter #(= (:vuosi %) valittu-vuosi)
                                           (:hoitovuosittaiset-arvot (first tarjous-hankintakustannukset)))))
+        pysyvamuutos-maara 0 ;; Toteutus kesken
         toimenpiteet (get-in kustannussuunnitelma [:kilpailutettavat-hankinnat :toimenpiteet])
         vahvistettu? (:vahvistettu? kustannussuunnitelma)
         taulukon-tiedot (butlast toimenpiteet) ;; Jätetään yhteenvetorivi pois tässä kohdassa
@@ -124,9 +125,9 @@
           kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))]
 
     [:div#kilpailutettavat-hankinnat-elementti.kustannussuunnitelma-osio.osio-976
-     [otsikkotiedot e! app "Kilpailutettavat hankinnat" tarjouksen-maara
+     [otsikkotiedot e! app "Kilpailutettavat hankinnat" tarjouksen-maara pysyvamuutos-maara
       kilpailutettavat-hankinnat-yhteensa kilpailutettavat-hankinnat-yhteensa-indeksikorjattu
-      {:div1 true :div2 true :div3 true :div4 true}]
+      {:div1 true :div2 true :div3 true :div4 true} valittu-vuosi]
 
      [:div.row
       [:div.row
@@ -243,9 +244,9 @@
     [yleiset/ajax-loader-pieni "Ladataan..."]
   (let [erillishankinnat (:erillishankinnat kustannussuunnitelma)
         tarjous-erillishankinnat (first (filter #(= (:osio %) "erillishankinnat") (:tarjous tarjous)))
-        tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
+        valittu-vuosi (pvm/vuosi (first valittu-hoitokausi))
         hoitovuosittaiset-arvot (:hoitovuosittaiset-arvot tarjous-erillishankinnat)
-        tarjouksen-maara (:summa (first (filter #(= (:vuosi %) tarjous-vuosi) hoitovuosittaiset-arvot)))
+        tarjouksen-maara (:summa (first (filter #(= (:vuosi %) valittu-vuosi) hoitovuosittaiset-arvot)))
         vahvistettu? (:vahvistettu? kustannussuunnitelma)
         voi-muokata? (not vahvistettu?)
         yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
@@ -268,7 +269,8 @@
         _ (reset! grid-erillishankinnat-atom erillishankinnat)]
 
     [:div#erillishankinnat-elementti.row.kustannussuunnitelma-osio.kapea-osio
-     [otsikkotiedot e! app "Erillishankinnat" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
+     [otsikkotiedot e! app "Erillishankinnat" tarjouksen-maara yht yht-indeksikorjattu
+      {:div1 true :div2 false :div3 false :div4 true} valittu-vuosi]
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
@@ -322,10 +324,11 @@
 (defn johto-ja-hallintokorvaus [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (let [johto-ja-hallintokorvaukset (:johto-ja-hallintokorvaukset kustannussuunnitelma)
         tarjous-johto-ja-hallintokorvaukset (filter #(= (:osio %) "johto-ja-hallintokorvaus") (:tarjous tarjous))
-        tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
+        valittu-vuosi (pvm/vuosi (first valittu-hoitokausi))
         hoitovuosittaiset-arvot (flatten (map :hoitovuosittaiset-arvot tarjous-johto-ja-hallintokorvaukset))
-        valitun-vuoden-arvot (filter #(= (:vuosi %) tarjous-vuosi) hoitovuosittaiset-arvot)
+        valitun-vuoden-arvot (filter #(= (:vuosi %) valittu-vuosi) hoitovuosittaiset-arvot)
         tarjouksen-maara (apply + (map :summa valitun-vuoden-arvot))
+        pysyvamuutos-maara 0 ;; Toteutus kesken
         vahvistettu? (:vahvistettu? kustannussuunnitelma)
         voi-muokata? (not vahvistettu?)
         yht (apply + (map (fn [rivi]
@@ -349,7 +352,8 @@
                          kirjaamatta-rivi]
         _ (reset! grid-johto-ja-hallintokorvaukset-atom johto-ja-hallintokorvaukset)]
     [:div#johto-ja-hallintokorvaus-elementti.row.kustannussuunnitelma-osio.kapea-osio
-     [otsikkotiedot e! app "Johto- ja hallintokorvaus" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
+     [otsikkotiedot e! app "Johto- ja hallintokorvaus" tarjouksen-maara pysyvamuutos-maara yht yht-indeksikorjattu
+      {:div1 true :div2 false :div3 false :div4 true} valittu-vuosi]
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
@@ -409,16 +413,17 @@
     [yleiset/ajax-loader-pieni "Ladataan..."]
   (let [hoidonjohtopalkkiot (:hoidonjohtopalkkiot kustannussuunnitelma)
         tarjous-hoidonjohtopalkkio (first (filter #(= (:osio %) "hoidonjohtopalkkio") (:tarjous tarjous)))
-        tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
+        valittu-vuosi (pvm/vuosi (first valittu-hoitokausi))
         hoitovuosittaiset-arvot (:hoitovuosittaiset-arvot tarjous-hoidonjohtopalkkio)
-        tarjouksen-maara (:summa (first (filter #(= (:vuosi %) tarjous-vuosi) hoitovuosittaiset-arvot)))
+        tarjouksen-maara (:summa (first (filter #(= (:vuosi %) valittu-vuosi) hoitovuosittaiset-arvot)))
+        pysyvamuutos-maara 0 ;; Toteutus kesken
         vahvistettu? (:vahvistettu? kustannussuunnitelma)
         voi-muokata? (not vahvistettu?)
-        yht (apply + (map (fn [rivi]
+        suunniteltu-yht (apply + (map (fn [rivi]
                             (:summa rivi 0)) hoidonjohtopalkkiot))
-        yht-indeksikorjattu (apply + (map (fn [rivi]
+        suunniteltu-yht-indeksikorjattu (apply + (map (fn [rivi]
                                             (:summa_indeksikorjattu rivi 0)) hoidonjohtopalkkiot))
-        kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
+        kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara suunniteltu-yht))
         kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
                                                  {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
@@ -427,15 +432,15 @@
 
         yhteenveto-rivi [[^{:luokka "kustannukset-yhteenveto"}
                           {:teksti "Yhteensä" :luokka "yhteensa"}
-                          {:teksti (fmt/euro-opt false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                          {:teksti (if-not (= 0 yht-indeksikorjattu)
-                                     (fmt/euro-opt false yht-indeksikorjattu)
+                          {:teksti (fmt/euro-opt false suunniteltu-yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                          {:teksti (if-not (= 0 suunniteltu-yht-indeksikorjattu)
+                                     (fmt/euro-opt false suunniteltu-yht-indeksikorjattu)
                                      "-")
                            :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                          kirjaamatta-rivi]
         _ (reset! grid-hoidonjohtopalkkiot-atom hoidonjohtopalkkiot)]
     [:div#hoidonjohtopalkkio-elementti.row.kustannussuunnitelma-osio.kapea-osio
-     [otsikkotiedot e! app "Hoidonjohtopalkkiot" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
+     [otsikkotiedot e! app "Hoidonjohtopalkkiot" tarjouksen-maara pysyvamuutos-maara suunniteltu-yht suunniteltu-yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true} valittu-vuosi]
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
@@ -464,7 +469,7 @@
          {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
           :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
          {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-          :fmt #(if-not (= 0 yht-indeksikorjattu) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
+          :fmt #(if-not (= 0 suunniteltu-yht-indeksikorjattu) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
         hoidonjohtopalkkiot]]]
 
      (when-not vahvistettu?
@@ -586,7 +591,8 @@
      [erillishankinnat e! app]
      [johto-ja-hallintokorvaus e! app]
      [hoidonjohtopalkkiot e! app]
-     [tavoite-ja-kattohinta e! app]]))
+     [tavoite-ja-kattohinta e! app]
+     [debug/debug app]]))
 
 (defn nakyma* [e! _app]
   (komp/luo
