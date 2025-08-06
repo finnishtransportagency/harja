@@ -196,8 +196,8 @@ VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
 
 -- name: hae-rahavaraus-vuodelta
 SELECT r.nimi,
-       SUM(summa) as summa,
-       SUM(summa_indeksikorjattu) as "summa-indeksikorjattu"
+       SUM(summa) as "suunniteltu-summa",
+       SUM(summa_indeksikorjattu) as "suunniteltu-summa-indeksikorjattu"
 FROM kustannusarvioitu_tyo kt
      join rahavaraus r on kt.rahavaraus_id = r.id
 WHERE sopimus = :sopimus-id

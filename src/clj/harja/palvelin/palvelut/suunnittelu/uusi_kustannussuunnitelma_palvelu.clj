@@ -14,12 +14,18 @@
 (defn jasenna-rahavaraukset-tarjouksesta
   "Muokkaa tarjouksen tietomallin rahavaraukset sopivaksi kustannussuunnitelman käyttöön.
   Saadaan [{:nimi <rahavarausnimi> :summa <summa> :summa-indeksikorjattu nil} ...]"
-  [tarjous hoitovuoden-alkuvuosi]
-  (let [rahavaraukset (filter #(= "tavoitehintaiset-rahavaraukset" (:osio %)) (:tarjous tarjous))
-        rahavaraus-rivit (reduce (fn [lopulliset rahavaraus]
-                                   (let [vuosittainen-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot rahavaraus))))]
-                                     (vec (concat lopulliset [{:nimi (:nimi rahavaraus) :summa vuosittainen-summa :summa-indeksikorjattu nil}]))))
-                           [] rahavaraukset)]
+  [tarjous suunnitellut-rahavaraukset hoitovuoden-alkuvuosi]
+  (let [tarjous-rahavaraukset (filter #(= "tavoitehintaiset-rahavaraukset" (:osio %)) (:tarjous tarjous))
+        rahavaraus-rivit (reduce (fn [lopulliset tarjous-rahavaraus]
+                                   (let [vuosittainen-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot tarjous-rahavaraus))))
+                                         suunniteltu-rahavaraus (some #(when (= (:nimi tarjous-rahavaraus) (:nimi %)) %) suunnitellut-rahavaraukset)
+                                         _ (println "** suunniteltu-rahavaraus: " suunniteltu-rahavaraus "tarjous-rahavaraus " tarjous-rahavaraus)
+                                         ]
+                                     (vec (concat lopulliset [{:nimi (:nimi tarjous-rahavaraus)
+                                                               :tarjous-summa vuosittainen-summa
+                                                               :suunniteltu-summa (:suunniteltu-summa suunniteltu-rahavaraus)
+                                                               :suunniteltu-summa-indeksikorjattu (:suunniteltu-summa-indeksikorjattu suunniteltu-rahavaraus)}]))))
+                           [] tarjous-rahavaraukset)]
     rahavaraus-rivit))
 
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
@@ -53,11 +59,9 @@
           hankinnat-yht (:yhteensa (last kiinteat))
 
           ;: Hae rahavaraukset
-          rahavaraukset (if indeksikorjaukset-vahvistettu?
-                          (suunnitelma-q/hae-rahavaraukset db sopimus-id hoitovuoden-alkuvuosi)
-                          ;; Jäsennä rahavaraukset tarjouksesta
-                          (jasenna-rahavaraukset-tarjouksesta tarjous hoitovuoden-alkuvuosi))
-          rahavaraukset-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) rahavaraukset))
+          suunnitellut-rahavaraukset (suunnitelma-q/hae-rahavaraukset db sopimus-id hoitovuoden-alkuvuosi)
+          rahavaraukset (jasenna-rahavaraukset-tarjouksesta tarjous suunnitellut-rahavaraukset hoitovuoden-alkuvuosi)
+          rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
 
           ;; Hae erillishankinnat
           erillishankinnat (suunnitelma-q/hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)

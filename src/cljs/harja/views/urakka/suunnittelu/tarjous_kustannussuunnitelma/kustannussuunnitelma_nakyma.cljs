@@ -196,22 +196,35 @@
     [yleiset/ajax-loader-pieni "Ladataan..."]
   (let [rahavaraukset (:rahavaraukset kustannussuunnitelma)
         tarjous-rahavaraukset (filter #(= (:osio %) "tavoitehintaiset-rahavaraukset") (:tarjous tarjous))
-        tarjous-vuosi (pvm/vuosi (first valittu-hoitokausi))
+        valittu-vuosi (pvm/vuosi (first valittu-hoitokausi))
         hoitovuosittaiset-arvot (flatten (map :hoitovuosittaiset-arvot tarjous-rahavaraukset))
-        valitun-vuoden-arvot (filter #(= (:vuosi %) tarjous-vuosi) hoitovuosittaiset-arvot)
+        _ (js/console.log "rahavaraukset :: hoitovuosittaiset-arvot" (pr-str hoitovuosittaiset-arvot))
+        valitun-vuoden-arvot (filter #(= (:vuosi %) valittu-vuosi) hoitovuosittaiset-arvot)
         tarjouksen-maara (apply + (map :summa valitun-vuoden-arvot))
-        yht (apply + (map (fn [rivi] (:summa rivi 0)) rahavaraukset))
-        yht-indeksikorjattu (apply + (map (fn [rivi] (:summa-indeksikorjattu rivi 0)) rahavaraukset))
-        yhteenveto-rivi [[^{:luokka "kustannukset-yhteenveto"}
-                          {:teksti "Yhteensä" :luokka "yhteensa korkea"}
-                          {:teksti (fmt/euro-opt false yht) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                          {:teksti (if-not (= 0 yht-indeksikorjattu)
-                                     (fmt/euro-opt false yht-indeksikorjattu)
-                                     "-")
-                           :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]]]
+        pysyvamuutos-maara 0 ;; Toteutus kesken
+        suunniteltu-yht (apply + (map (fn [rivi] (:suunniteltu-summa rivi 0)) rahavaraukset))
+        suunniteltu-yht-indeksikorjattu (apply + (map (fn [rivi] (:suunniteltu-summa-indeksikorjattu rivi 0)) rahavaraukset))
+        ;; Yhteenvetorivillä on eri määrä kolumneja, jos rajavuosi ei täyty
+        yhteenveto-rivi (if (< valittu-vuosi rajavuosi)
+                          [[^{:luokka "kustannukset-yhteenveto"}
+                            {:teksti "Yhteensä" :luokka "yhteensa korkea"}
+                            {:teksti (fmt/euro-opt false tarjouksen-maara) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                            {:teksti (fmt/euro-opt false suunniteltu-yht) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                            {:teksti (if-not (= 0 suunniteltu-yht-indeksikorjattu)
+                                       (fmt/euro-opt false suunniteltu-yht-indeksikorjattu)
+                                       "-")
+                             :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]]
+                          [[^{:luokka "kustannukset-yhteenveto"}
+                           {:teksti "Yhteensä" :luokka "yhteensa korkea"}
+                           {:teksti (fmt/euro-opt false suunniteltu-yht) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                           {:teksti (if-not (= 0 suunniteltu-yht-indeksikorjattu)
+                                      (fmt/euro-opt false suunniteltu-yht-indeksikorjattu)
+                                      "-")
+                            :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]])]
 
     [:div#rahavaraukset-elementti.row.kustannussuunnitelma-osio.kapea-osio
-     [otsikkotiedot e! app "Rahavaraukset" tarjouksen-maara yht yht-indeksikorjattu {:div1 true :div2 false :div3 false :div4 true}]
+     [otsikkotiedot e! app "Rahavaraukset" tarjouksen-maara pysyvamuutos-maara suunniteltu-yht suunniteltu-yht-indeksikorjattu
+      {:div1 true :div2 false :div3 (if (< valittu-vuosi rajavuosi) true false) :div4 true} valittu-vuosi]
      [:div.row
       [:div.col-xs-12
        [grid/grid {:otsikko "Kustannusten erittely"
@@ -231,12 +244,25 @@
                                       ^{:luokka "yhteenveto"}
                                       yhteenveto-rivi)
                    :rivin-luokka (fn [_] "korkea")}
-        [{:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys "60%"
-          :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-         {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
-          :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea"}
-         {:otsikko "Indeksikorjattu (€)" :nimi :summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-          :fmt #(if-not (= 0 yht-indeksikorjattu) (fmt/euro-opt false %) "-") :otsikkorivi-luokka "korkea"}]
+        ;; Rajavuotta aiemmilla vuosilla näytetään erilainen taulukko
+        (if (< valittu-vuosi rajavuosi)
+          [{:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys "60%"
+            :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Tarjouksen määrä (€)" :nimi :tarjous-summa :leveys "20%" :tyyppi :euro :tasaa :oikea
+            :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Suunniteltu kustannus (€)" :nimi :suunniteltu-summa :leveys "20%" :tyyppi :euro :tasaa :oikea
+            :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea" :solun-luokka (fn [arvo rivi]
+                                                                                 (when (> arvo (:tarjous-summa rivi))
+                                                                                   "rajoitus-ylitetty"))}
+           {:otsikko "Indeksikorjattu (€)" :nimi :suunniteltu-summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+            :fmt #(if-not (= 0 suunniteltu-yht-indeksikorjattu) (fmt/euro-opt false %) "-") :otsikkorivi-luokka "korkea"}]
+
+          [{:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys "60%"
+            :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Suunniteltu kustannus (€)" :nimi :suunniteltu-summa :leveys "20%" :tyyppi :euro :tasaa :oikea
+            :fmt #(when % (fmt/euro-opt false %)) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Indeksikorjattu (€)" :nimi :suunniteltu-summa-indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
+            :fmt #(if-not (= 0 suunniteltu-yht-indeksikorjattu) (fmt/euro-opt false %) "-") :otsikkorivi-luokka "korkea"}])
         rahavaraukset]]]])))
 
 (defn erillishankinnat [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
