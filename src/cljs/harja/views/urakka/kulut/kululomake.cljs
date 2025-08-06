@@ -118,18 +118,19 @@
          [yleiset/ajax-loader-pieni "Ladataan mahdollisia tehtäviä..."]]])]))
 
 (defn lisatieto [e! lisatieto lomake nro]
-  [:div.col-xs-12.col-md-3
-   [kentat/tee-otsikollinen-kentta
-    {:otsikko "Lisätieto"
-     :luokka "poista-label-top-margin"
-     :vayla-tyyli? true
-     :otsikon-luokka ""
-     :arvo-atom (r/wrap lisatieto
-                  #(e! (tiedot/->KohdistuksenLisatieto % nro)))
-     :kentta-params {:tyyppi :string
-                     :vayla-tyyli? true
-                     :aputeksti "Kirjoita tähän halutessasi lisätietoa"
-                     :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]])
+  (when (and (k/kehitysymparistossa?) (pvm/jalkeen? (pvm/nyt) (pvm/->pvm "01.10.2025")))
+    [:div.col-xs-12.col-md-3
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Lisätieto"
+       :luokka "poista-label-top-margin"
+       :vayla-tyyli? true
+       :otsikon-luokka ""
+       :arvo-atom (r/wrap lisatieto
+                    #(e! (tiedot/->KohdistuksenLisatieto % nro)))
+       :kentta-params {:tyyppi :string
+                       :vayla-tyyli? true
+                       :aputeksti "Kirjoita tähän halutessasi lisätietoa"
+                       :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]))
      
 (defn- hankintakulu-kohdistus [e! lomake kohdistus tehtavaryhmat nro]
   (let [;; Hankintakululla ei saa olla kaikkia mahdollisia tehtäväryhmiä. Siivotaan väärät pois tässä
@@ -272,7 +273,7 @@
                                                   (e! (tiedot/->TavoitehintaanKuuluminen :true nro))
                                                   (e! (tiedot/->ValitseRahavarausKohdistukselle % nro)))}
        rahavaraukset]]]
-    [:div.col-xs-12.col-md-6
+    [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
      [:div.label-ja-alasveto {:style {:width "320px"}}
       [:span.alasvedon-otsikko "Tehtäväryhmä*"]
       [yleiset/livi-pudotusvalikko {:valinta (:tehtavaryhma kohdistus)
@@ -281,7 +282,9 @@
                                     :muokattu? true
                                     :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtavaryhma)
                                     :valitse-fn #(e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro))}
-       tehtavaryhmat]]]]))
+       tehtavaryhmat]]]
+    
+    [lisatieto e! (:lisatyon-lisatieto kohdistus) lomake nro]]))
 
 (defn- lisatyo-kohdistus [e! lomake kohdistus toimenpiteet nro]
   (let [lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)]
@@ -421,7 +424,8 @@
         (r/wrap
           (:nykyhetki app)
           #(e! (tiedot/->AsetaNykyhetki %)))]]]
-     [debug/debug app {:otsikko "KULUJEN TUCK STATE"}]]))
+       ;; [debug/debug app {:otsikko "KULUJEN TUCK STATE"}]
+     ]))
 
 (defn kululomake [e! app]
   (let [syottomoodi (:syottomoodi app)
