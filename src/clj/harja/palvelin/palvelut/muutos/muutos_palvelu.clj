@@ -53,19 +53,20 @@
 (defn hae-tehtava-maaramuutokset
   [db user {:keys [urakka-id tehtavaryhma hoitokauden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  
+
   ;; TODO .. 
-  (let [vastaus (mapv
-                  #(assoc % :id (gensym))
-                  (vec (toteumat/mhu-toteumatehtavat db user {:urakka-id urakka-id
-                                                              tehtavaryhma "Kaikki"
-                                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
+  (let [toteumatehtavat (toteumat/mhu-toteumatehtavat db user {:urakka-id urakka-id
+                                                               tehtavaryhma 0
+                                                               :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        ;; Suodata pois tehtävät joille ei ole suunniteltua määrää 
+        toteumatehtavat (filter #(some? (:suunniteltu_maara %)) toteumatehtavat)
+        toteumatehtavat (mapv #(assoc % :id (gensym)) toteumatehtavat)
         ;; 
         ]
 
-
-    (println " \n \n tt:: " (toteumat/mhu-toteumatehtavat db user tiedot))
-    vastaus)
+    (println "\n lk: " hoitokauden-alkuvuosi)
+    (println " \n \n t:: " toteumatehtavat)
+    toteumatehtavat)
   ;; 
   )
 
