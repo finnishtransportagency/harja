@@ -328,7 +328,7 @@
     :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :lasketut-muutokset))
     :otsikko "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"
     :summa (reduce + 0 (map :tavoitehinnan-muutos lasketut-muutokset))
-    :toiminnot (fn [e! app]
+    :toiminnot (fn [_e! _app]
                  ;; Tämä muokkaus mahdollistaa vain syyn lisäämisen
                  [:span
                   [yleiset/vihje lasketut-muutokset-aputeksti]])
@@ -369,64 +369,71 @@
           :piilota-toiminnot? true
           :voi-poistaa? (constantly false)
           ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
-          :sivuta 10
-          ;; Näytetään vain 10 riviä, joten voidaan piilottaa alemmat kontrollit, muuten näyttää jotenkin hassulta 
+          :sivuta 20
           :piilota-sivutus-footer? true
           :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
 
          [{:otsikko "Tehtävä"
-           :solun-luokka solun-luokka-fn
            :nimi :tehtava
-           :leveys 35
+           :solun-luokka solun-luokka-fn
+           :muokattava? (constantly false)
            :tyyppi :komponentti
            :komponentti (fn [{:keys [tehtava valiotsikko]}]
                           (if tehtava
                             [:<> tehtava]
-                            [:div.body-text.strong valiotsikko]))}
+                            [:div.body-text.strong valiotsikko]))
+           :leveys 45}
 
           {:otsikko "Yksikkö"
-           :solun-luokka solun-luokka-fn
            :nimi :yksikko
            :tyyppi :string
+           :solun-luokka solun-luokka-fn
+           :muokattava? (constantly false)
            :leveys 15}
 
           {:otsikko "Muutoksen syy / lisätieto"
-           :solun-luokka solun-luokka-fn
            :nimi :syy
            :tyyppi :string
+           :solun-luokka solun-luokka-fn
+           :muokattava? #(nil? (:valiotsikko %)) ;; Älä anna muokata väliotsikkoja, duh 
            :leveys 35}
 
           {:otsikko "Suunniteltu määrä"
-           :solun-luokka solun-luokka-fn
            :nimi :suunniteltu_maara
            :tyyppi :numero
+           :solun-luokka solun-luokka-fn
+           :muokattava? (constantly false)
            :leveys 15}
 
           {:otsikko "Kirjattu määrä"
-           :solun-luokka solun-luokka-fn
            :nimi :maara
            :tyyppi :numero
+           :solun-luokka solun-luokka-fn
+           :muokattava? (constantly false)
            :leveys 15}
 
           {:otsikko "Määrämuutos (+/-)"
-           :solun-luokka solun-luokka-fn
            :nimi :maaramuutos
            :tyyppi :numero
+           :solun-luokka solun-luokka-fn
+           :muokattava? (constantly false)
            :leveys 15}
 
           {:otsikko "Kirjatut kulut (€)"
-           :solun-luokka solun-luokka-fn
            :nimi :kirjatut_kulut_summa
            :tyyppi :numero
            :fmt fmt/euro-opt
+           :solun-luokka solun-luokka-fn
+           :muokattava? (constantly false)
            :leveys 15}
 
           {:otsikko "Tavoitehinnan muutos (€)"
-           :solun-luokka solun-luokka-fn
            :nimi :tavoitehinnan_muutos
            :tyyppi :numero
            :fmt fmt/euro-opt
            :tasaa :oikea
+           :solun-luokka solun-luokka-fn
+           :muokattava? (constantly false)
            :leveys 15}]
          
          tehtava-maaramuutokset]))}])
