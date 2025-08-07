@@ -344,9 +344,11 @@
         :voi-muokata? true
         ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
         :sivuta 10
+        ;; Näytetään vain 10 riviä, joten voidaan piilottaa alemmat kontrollit, muuten näyttää jotenkin hassulta 
+        :piilota-sivutus-footer? true 
         :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
 
-       [{:otsikko "Tehtävä" :nimi :tehtava :tyyppi :string :leveys 15}
+       [{:otsikko "Tehtävä" :nimi :tehtava :tyyppi :string :leveys 35}
         {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys 15}
         {:otsikko "Muutoksen syy / lisätieto" :nimi :syy :tyyppi :string :leveys 35}
         {:otsikko "Suunniteltu määrä" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
