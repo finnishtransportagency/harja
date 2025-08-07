@@ -230,8 +230,10 @@ FROM tehtava tk
     GROUP BY kk.tehtava
   ) kulut ON kulut.tehtava_id = tk.id
 WHERE
+  -- Tärkeä:: halutaan nimenomaan vain määrämitattavat urakan tehtävät 
+  tk."maaramitattava?" IS TRUE
   -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
-  (tk.aluetieto = FALSE OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
+  AND (tk.aluetieto = FALSE OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
   -- Rajataan pois ne, jotka eivät ole mhu tehtäviä
   AND tk."mhu-tehtava?" = TRUE
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
