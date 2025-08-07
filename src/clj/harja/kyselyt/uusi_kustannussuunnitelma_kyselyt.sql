@@ -2,7 +2,15 @@
 SELECT t.id, t.nimi, t.koodi, tpi.id as "toimenpideinstanssi-id"
 FROM toimenpideinstanssi tpi
          JOIN toimenpide t ON tpi.toimenpide = t.id
-WHERE tpi.urakka = :urakkaid;
+WHERE tpi.urakka = :urakkaid
+  -- Ei haeta kaikkia toimenpiteitä
+  AND (t.koodi = '23104' -- talvihoito
+    OR t.koodi = '23116' -- liikenneympariston-hoito
+    OR t.koodi = '23124' -- sorateiden-hoito
+    OR t.koodi = '20107' -- paallystepaikkaukset
+    OR t.koodi = '20191' -- mhu-yllapito
+    OR t.koodi = '14301' -- mhu-korvausinvestointi
+    );
 
 -- name: hae-kiintea-kustannus-kuukausittain
 SELECT id, vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi,

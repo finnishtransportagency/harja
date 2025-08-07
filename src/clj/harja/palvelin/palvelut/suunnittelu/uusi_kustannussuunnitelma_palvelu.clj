@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu
-  (:require [harja.pvm :as pvm]
+  (:require [harja.domain.mhu :as mhu]
+            [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
@@ -30,7 +31,13 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/info "hae-kustannussuunnitelman-tiedot :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (let [;; Urakan sopimus id
+    (let [toimenpide->nimi {:paallystepaikkaukset "Päällystepaikkaukset"
+                            :mhu-yllapito "MHU Ylläpito"
+                            :talvihoito "Talvihoito"
+                            :liikenneympariston-hoito "Liikenneympäristön hoito"
+                            :sorateiden-hoito "Sorateiden hoito"
+                            :mhu-korvausinvestointi "MHU Korvausinvestointi"}
+          ;; Urakan sopimus id
           sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
           ;; Urakan parametrit
           urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
@@ -42,6 +49,11 @@
           indeksikorjaukset-vahvistettu? (every? true? (flatten (map vals vahvistukset)))
 
           kiinteat (suunnitelma-q/hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+          kiinteat (map (fn [tyo]
+                 (-> tyo
+                   (assoc :toimenpide-avain (mhu/toimenpide->toimenpide-avain (:koodi tyo)))
+                   (assoc :toimenpide-nimi (toimenpide->nimi (mhu/toimenpide->toimenpide-avain (:koodi tyo))))))
+                     kiinteat)
           ;; Indeksikerroin
           indeksikerroin (:indeksikerroin
                            (first

@@ -158,7 +158,7 @@
                                       ^{:luokka "yhteenveto"}
                                       yhteenveto-rivit)
                    :rivin-luokka (fn [_] "korkea")}
-        [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "30%" :muokattava? (constantly false)
+        [{:otsikko "Toimenpide" :nimi :toimenpide-nimi :tyyppi :string :leveys "30%" :muokattava? (constantly false)
           :otsikkorivi-luokka "korkea"}
          {:otsikko "Pysyvät muutokset (€)" :nimi :pysyvat-muutokset :tyyppi :string
           :leveys "20%" :muokattava? (constantly false)}

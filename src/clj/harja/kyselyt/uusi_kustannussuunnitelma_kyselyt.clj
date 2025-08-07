@@ -34,7 +34,7 @@
   (let [;; Haetaan urakan toimenpiteet
         toimenpiteet (hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         ;; Kiinteähintaiset kustannukset
-        kiinteat (reduce (fn [acc {:keys [nimi toimenpideinstanssi-id] :as toimenpide}]
+        kiinteat (reduce (fn [acc {:keys [nimi koodi toimenpideinstanssi-id] :as toimenpide}]
                            (let [kiinteat (hae-kiintea-kustannus-kuukausittain
                                             db {:sopimus-id sopimus-id
                                                 :vuosi hoitovuoden-alkuvuosi
@@ -66,6 +66,7 @@
                                                                          kiinteat-loppukausi))
                                                               0)]
                              (conj acc {:nimi nimi
+                                        :koodi koodi
                                         :toimenpideinstanssi-id toimenpideinstanssi-id
                                         :alkukausi alkukausi
                                         :alkukausi-indeksikorjattu alkukausi-indeksikorjattu
