@@ -190,7 +190,7 @@ $$
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, "ennen-urakkaa", luotu,
                                               "toimenkuva-id")
             VALUES (urakka_id, 5, 40, testidata_indeksikorjaa(40, vuosi, 1, urakka_id), vuosi, 1, ennen_urakkaa, NOW(),
-                    (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+                    (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" IS NULL));
 
         -- Bonukset - 10/2019
         -- Erilliskustannukset - Alihankintabonus - lupausbonus - muubonus - asiakastyytyväisyysbonus

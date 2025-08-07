@@ -42,7 +42,7 @@
     <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
       <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
         programId=\"TESTIHANKE\" vv_transferred_harja=\"2019-09-19T20:27:14+03:00\"
-        schedule_start=\"2019-10-01T08:00:00.0\" schedule_finish=\"2024-09-30T17:00:00.0\"
+        schedule_start=\"2025-10-01T08:00:00.0\" schedule_finish=\"2030-09-30T17:00:00.0\"
         financialDepartmentHash=\"KP981303\"
         vv_alueurakkanro=\"THJ-321\">
         <documentLinks/>
@@ -198,11 +198,13 @@
      (urakat/kasittele-urakat testi/ds urakat))))
 
 (defn poista-urakka []
-  (u "delete from rahavaraus_urakka where urakka_id = (select id from urakka where sampoid = 'TESTIURAKKA')")
-  (u "update sopimus set urakka = null where urakka in (select id from urakka where sampoid = 'TESTIURAKKA')")
-  (u "delete from yhteyshenkilo_urakka where urakka = (select id from urakka where sampoid = 'TESTIURAKKA')")
-  (u "delete from valitavoite where urakka = (select id from urakka where sampoid = 'TESTIURAKKA')")
-  (u "delete from urakka where sampoid = 'TESTIURAKKA'"))
+  (let [urakkaid (:id (first (q-map "SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA';")))]
+    (u (format "DELETE FROM rahavaraus_urakka WHERE urakka_id = %s ;" urakkaid))
+    (u (format "UPDATE sopimus set urakka = null WHERE urakka = %s ;" urakkaid))
+    (u (format "DELETE FROM yhteyshenkilo_urakka WHERE urakka = %s ;" urakkaid))
+    (u (format "DELETE FROM valitavoite WHERE urakka = %s ;" urakkaid))
+    (u (format "DELETE FROM johto_ja_hallintokorvaus_toimenkuva WHERE \"urakka-id\" = %s ;" urakkaid))
+    (u (format "DELETE FROM urakka WHERE id = %s ;" urakkaid))))
 
 (defn hae-urakat []
   (q "select id from urakka where sampoid = 'TESTIURAKKA';"))

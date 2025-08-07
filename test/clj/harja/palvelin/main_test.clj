@@ -108,7 +108,7 @@
     :api-suolasakkojen-lahetys :api-ilmoitukset :api-yllapitokohteet :api-ping
     :api-yhteystiedot :api-tiemerkintatoteuma :api-raportit :laskutusyhteenvetojen-muodostus :status
     :kanavasiltojen-geometriahaku
-    :mobiili-laadunseuranta
+    ;:mobiili-laadunseuranta
     :api-urakan-tyotunnit
     :sopimukset
     :urakan-tyotuntimuistutukset
@@ -163,6 +163,7 @@
     :reikapaikkaukset
     :kustannukset
     :rahavaraukset-hallinta
+    :toimenkuvat-hallinta
     :urakkahenkilot-hallinta
     :lupaukset-hallinta
     :paallystysilmoitukset-hallinta
@@ -198,7 +199,7 @@
     :api-suolasakkojen-lahetys :api-varusteet :api-ilmoitukset :api-yllapitokohteet :api-ping
     :api-yhteystiedot :api-tiemerkintatoteuma :api-raportit :laskutusyhteenvetojen-muodostus :status
     :kanavasiltojen-geometriahaku
-    :mobiili-laadunseuranta
+    ;:mobiili-laadunseuranta
     :api-urakan-tyotunnit
     :sopimukset
     :urakan-tyotuntimuistutukset
@@ -253,6 +254,7 @@
     :reikapaikkaukset
     :kustannukset
     :rahavaraukset-hallinta
+    :toimenkuvat-hallinta
     :urakkahenkilot-hallinta
     :api-talvihoitoreitit
     :talvihoitoreitit

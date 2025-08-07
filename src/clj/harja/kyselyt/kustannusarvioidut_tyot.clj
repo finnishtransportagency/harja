@@ -4,4 +4,5 @@
 (defqueries "harja/kyselyt/kustannusarvioidut_tyot.sql"
   {:positional? false})
 
-(declare merkitse-maksuerat-likaisiksi!)
+(declare merkitse-maksuerat-likaisiksi! hae-rahavarauskustannus
+  hae-tavoitehinnan-ulkopuolisen-rahavarauksen-toimenpideinstanssi paivita-rahavaraus<! lisaa-rahavaraus<!)

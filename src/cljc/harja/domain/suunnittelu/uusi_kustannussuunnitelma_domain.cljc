@@ -13,6 +13,7 @@
 (s/def ::sopimus #(and (pos? %) (number? %)))
 (s/def ::id #(or (nil? %) (and (pos? %) (number? %))))
 (s/def ::tehtavaryhma #(and (pos? %) (number? %)))
+(s/def ::tehtava #(and (pos? %) (number? %)))
 (s/def ::vuosi #(and (int? %) (pos? %) (> % 2000)))
 (s/def ::kuukausi #(and (int? %) (pos? %) (>= % 1) (<= % 12)))
 (s/def ::kalenterikuukausi string?)
@@ -39,6 +40,26 @@
                                              ::tehtavaryhma
                                              ::kalenterikuukausi]
                               :opt-un [::id])))
+(s/def ::hoidonjohtopalkkiot (s/coll-of
+                               (s/keys :req-un [::summa
+                                                ::summa_indeksikorjattu
+                                                ::toimenpideinstanssi
+                                                ::vuosi
+                                                ::kuukausi
+                                                ::sopimus
+                                                ::tehtava
+                                                ::kalenterikuukausi]
+                                 :opt-un [::id])))
+
+(s/def ::johto-ja-hallintokorvaukset (s/coll-of
+                                       (s/keys :req-un [::summa
+                                                        ::summa_indeksikorjattu
+                                                        ::vuosi
+                                                        ::kuukausi
+                                                        ::kalenterikuukausi]
+                                         :opt-un [::id])))
 
 (s/def ::kilpailutettavat-hankinnat (s/keys :req-un [::toimenpiteet ::urakka-id]))
 (s/def ::erillishankinta (s/keys :req-un [::erillishankinnat ::urakka-id]))
+(s/def ::hoidonjohtopalkkio (s/keys :req-un [::hoidonjohtopalkkiot ::urakka-id]))
+(s/def ::johto-ja-hallintokorvaus (s/keys :req-un [::johto-ja-hallintokorvaukset ::urakka-id]))
