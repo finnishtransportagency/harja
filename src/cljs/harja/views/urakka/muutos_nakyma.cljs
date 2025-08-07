@@ -334,29 +334,89 @@
                   [yleiset/vihje lasketut-muutokset-aputeksti]])
     :taulukko
     (fn [e! app]
-      [grid/grid
-       {:tunniste :id
-        :luokat ["lasketut-muutokset-grid"]
-        :tyhja "Ei laskettuja muutoksia."
-        :voi-lisata? false
-        :voi-kumota? false
-        :voi-poistaa? (constantly false)
-        :voi-muokata? true
-        ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
-        :sivuta 10
-        ;; Näytetään vain 10 riviä, joten voidaan piilottaa alemmat kontrollit, muuten näyttää jotenkin hassulta 
-        :piilota-sivutus-footer? true 
-        :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
+      ;; Design haluaa taulukkoon väliotsikot, joten tehdään datalle hieman taikoja
+      ;; Lisätään toimenpiderivien väliin mappi, formaatilla {:valiotsikko "Nimi"}, jossa ei ole mitään muuta sisällä 
+      (let [fn-lisaa-valiotsikot (fn [rivit]
+                                   ;; Ottaa listan, joista jokainen sisältää :toimenpide avaimen
+                                   ;; Palauttaa vektorin, jossa jokaista *uutta* :toimenpide -arvoa kohden 
+                                   ;; lisätään ylimääräinen {:valiotsikko <toimenpide>} ennen ensimmäistä riviä.
+                                   (let [step (fn [[nahty acc] rivi]
+                                                (let [tp (:toimenpide rivi)]
+                                                  (if (contains? nahty tp)
+                                                    ;; kyseinen toimenpide on jo nähty 
+                                                    [nahty (conj acc rivi)]
+                                                    ;; toimenpide ilmestyy ensimmäistä kertaa, lisää väliotsikko
+                                                    [(conj nahty tp)
+                                                     (conj acc {:valiotsikko tp :id (gensym)} rivi)])))]
+                                     ;; bob eno 
+                                     (->> rivit
+                                       (reduce step [#{} []])
+                                       second)))
 
-       [{:otsikko "Tehtävä" :nimi :tehtava :tyyppi :string :leveys 35}
-        {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys 15}
-        {:otsikko "Muutoksen syy / lisätieto" :nimi :syy :tyyppi :string :leveys 35}
-        {:otsikko "Suunniteltu määrä" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
-        {:otsikko "Kirjattu määrä" :nimi :maara :tyyppi :numero :leveys 15}
-        {:otsikko "Määrämuutos (+/-)" :nimi :maaramuutos :tyyppi :numero :leveys 15}
-        {:otsikko "Kirjatut kulut (€)" :nimi :kirjatut_kulut_summa :tyyppi :numero :fmt fmt/euro-opt  :leveys 15}
-        {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan_muutos :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 15}]
-       tehtava-maaramuutokset])}])
+            tehtava-maaramuutokset (fn-lisaa-valiotsikot tehtava-maaramuutokset)]
+
+        [grid/grid
+         {:tunniste :id
+          :luokat ["lasketut-muutokset-grid"]
+          :tyhja "Ei laskettuja muutoksia."
+          :voi-lisata? false
+          :voi-kumota? false
+          :voi-poistaa? (constantly false)
+          :voi-muokata? true
+          ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
+          :sivuta 10
+          ;; Näytetään vain 10 riviä, joten voidaan piilottaa alemmat kontrollit, muuten näyttää jotenkin hassulta 
+          :piilota-sivutus-footer? true
+          :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
+
+         [{:otsikko "Tehtävä"
+           :nimi :tehtava
+           :leveys 35
+           :tyyppi :komponentti
+           :komponentti (fn [{:keys [tehtava valiotsikko]}]
+
+                          (if tehtava
+                            [:<> tehtava]
+                            [:div.body-text.strong valiotsikko]))}
+
+          {:otsikko "Yksikkö"
+           :nimi :yksikko
+           :tyyppi :string
+           :leveys 15}
+
+          {:otsikko "Muutoksen syy / lisätieto"
+           :nimi :syy
+           :tyyppi :string
+           :leveys 35}
+
+          {:otsikko "Suunniteltu määrä"
+           :nimi :suunniteltu_maara
+           :tyyppi :numero
+           :leveys 15}
+
+          {:otsikko "Kirjattu määrä"
+           :nimi :maara
+           :tyyppi :numero
+           :leveys 15}
+
+          {:otsikko "Määrämuutos (+/-)"
+           :nimi :maaramuutos
+           :tyyppi :numero
+           :leveys 15}
+
+          {:otsikko "Kirjatut kulut (€)"
+           :nimi :kirjatut_kulut_summa
+           :tyyppi :numero
+           :fmt fmt/euro-opt
+           :leveys 15}
+
+          {:otsikko "Tavoitehinnan muutos (€)"
+           :nimi :tavoitehinnan_muutos
+           :tyyppi :numero
+           :fmt fmt/euro-opt
+           :tasaa :oikea
+           :leveys 15}]
+         tehtava-maaramuutokset]))}])
 
 (defn- kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
   [kehystetty-avattava-grid e! app
