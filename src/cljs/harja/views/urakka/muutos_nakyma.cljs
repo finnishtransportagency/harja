@@ -318,9 +318,6 @@
            :muokattava? (constantly false)}]
          rivit])}]))
 
-(def lasketut-muutokset-aputeksti
-  "Tavoitehintamuutosten laskennassa käytetään Harjan suunniteltuja ja toteutuneita määriä sekä palvelusopimuksen mukaisia kaavoja.")
-
 (defn- lasketut-muutokset [e! {:keys [lasketut-muutokset tehtava-maaramuutokset] :as app}]
   
   [kehystetty-avattava-grid e! app
@@ -331,7 +328,8 @@
     :toiminnot (fn [_e! _app]
                  ;; Tämä muokkaus mahdollistaa vain syyn lisäämisen
                  [:span
-                  [yleiset/vihje lasketut-muutokset-aputeksti]])
+                  [yleiset/vihje "Tavoitehintamuutosten laskennassa käytetään Harjan suunniteltuja ja toteutuneita määriä sekä palvelusopimuksen mukaisia kaavoja."]])
+    
     :taulukko
     (fn [e! _app]
       ;; Design haluaa taulukkoon väliotsikot, joten tehdään datalle hieman taikoja
@@ -356,7 +354,7 @@
             tehtava-maaramuutokset (fn-lisaa-valiotsikot tehtava-maaramuutokset)
 
             ;; Värjätään tällä väliotsikot design mukaiseksi 
-            solun-luokka-fn (fn [_arvo rivi]  
+            solun-luokka-fn (fn [_arvo rivi]
                               (when (some? (:valiotsikko rivi)) "vaalen-tumma-tausta"))]
 
         [grid/grid
@@ -376,7 +374,7 @@
          [{:otsikko "Tehtävä"
            :nimi :tehtava
            :solun-luokka solun-luokka-fn
-           :muokattava? (constantly false)
+           :muokattava? (constantly true)
            :tyyppi :komponentti
            :komponentti (fn [{:keys [tehtava valiotsikko]}]
                           (if tehtava
@@ -393,9 +391,9 @@
 
           {:otsikko "Muutoksen syy / lisätieto"
            :nimi :syy
-           :tyyppi :string
+           :tyyppi :text
            :solun-luokka solun-luokka-fn
-           :muokattava? #(nil? (:valiotsikko %)) ;; Älä anna muokata väliotsikkoja, duh 
+           :muokattava? #(nil? (:valiotsikko %)) ;; Älä anna muokata väliotsikkoja 
            :leveys 35}
 
           {:otsikko "Suunniteltu määrä"
@@ -435,7 +433,7 @@
            :solun-luokka solun-luokka-fn
            :muokattava? (constantly false)
            :leveys 15}]
-         
+
          tehtava-maaramuutokset]))}])
 
 (defn- kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
