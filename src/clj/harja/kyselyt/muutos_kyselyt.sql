@@ -35,7 +35,7 @@ SELECT m.id,
            WHEN COUNT(lii.*) = 0 THEN NULL
            ELSE json_agg(DISTINCT jsonb_build_object(
                'muutos', lii.muutos,
-               'liite', lii.liite)) END  AS liitteet
+               'id', lii.liite)) END  AS liitteet
 -- ONLY tarvitaan, jottei kysellä historiatauluista
   FROM ONLY mhu_muutos m
            LEFT JOIN ONLY mhu_muutos_kustannusvaikutus kust ON (m.id = kust.muutos AND
@@ -139,3 +139,7 @@ UPDATE mhu_muutos
        muokattu = NOW()
  WHERE id = :id
    AND versio = :versio;
+
+-- name: linkita-muutos-ja-liite<!
+INSERT INTO mhu_muutos_liite (muutos, liite, versio)
+VALUES (:muutos, :liite, :versio);

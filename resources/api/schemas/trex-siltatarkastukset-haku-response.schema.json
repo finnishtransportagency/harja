@@ -144,34 +144,7 @@
                         },
                         "nimi": {
                           "type": "string",
-                          "enum": [
-                            "Maatukien siisteys ja kunto",
-                            "Välitukien siisteys ja kunto",
-                            "Laakeritasojen siisteys ja kunto",
-                            "Kansilaatta",
-                            "Päällysteen kunto",
-                            "Reunapalkin siisteys ja kunto",
-                            "Reunapalkin liikuntasauma",
-                            "Reunapalkin ja päällysteen välisen sauman siisteys ja kunto",
-                            "Sillanpäiden saumat",
-                            "Sillan ja penkereen raja",
-                            "Kaiteiden ja suojaverkkojen vauriot",
-                            "Liikuntasaumalaitteiden siisteys ja kunto",
-                            "Laakerit",
-                            "Syöksytorvet",
-                            "Tippuputket",
-                            "Kosketussuojat ja niiden kiinnitykset",
-                            "Valaistuslaitteet",
-                            "Johdot ja kaapelit",
-                            "Liikennemerkit",
-                            "Kuivatuslaitteiden siisteys ja kunto",
-                            "Etuluiskien siisteys ja kunto",
-                            "Keilojen siisteys ja kunto",
-                            "Tieluiskien siisteys ja kunto",
-                            "Portaiden siisteys ja kunto",
-                            "Tuntematon tarkastuskohde"
-                          ],
-                          "description": "Siltatarkastuskohdetta kuvaava määrämuotoinen teksti. Esim. Laakeritasojen siisteys ja kunto. Teksti vastaa siltatarkastuskohteen id:tä ja arvoa. Esim.(3 - laakeritasojenSiisteysJaKunto - Laakeritasojen siisteys ja kunto)"
+                          "description": "Siltatarkastuskohdetta kuvaava teksti. Esim. Laakeritasojen siisteys ja kunto. Teksti vastaa siltatarkastuskohteen id:tä ja arvoa. Esim.(3 - laakeritasojenSiisteysJaKunto - Laakeritasojen siisteys ja kunto)"
                         },
                         "paarakenneosa": {
                           "type": "object",
@@ -204,33 +177,36 @@
                                 "type": "object",
                                 "additionalProperties": false,
                                 "toimenpidetarve": {
-                                  "koodi": {
-                                    "type": "string",
-                                    "enum": [
-                                      "A",
-                                      "B",
-                                      "C",
-                                      "D",
-                                      "E",
-                                      "-"
-                                    ],
-                                    "description": "Siltatarkastuskohteen toimenpidetarpeen koodi. Tarkastus voi tuottaa yksittäisen koodin lisäksi yhdistelmiä: B+C, B+C+D, C+D. E on uusi koodi, joka on vielä tarkemmin määriteltävä. Viiva tarkoittaa, että kohde ei ole sillan kohdalla relevantti."
-                                  },
-                                  "arvo": {
-                                    "type": "string",
-                                    "enum": [
-                                      "eiToimenpiteita",
-                                      "puhdistettava",
-                                      "urakanKunnostettava",
-                                      "korjausOhjelmoitava",
-                                      "E",
-                                      "eiPade"
-                                    ],
-                                    "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta. Koodi ja arvo ovat kytköksissä toisiinsa. "
-                                  },
-                                  "kuvaus": {
-                                    "type": "string",
-                                    "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta käyttäjäystävällisessä tekstimuodossa. Koodi ja kuvaus ovat kytköksissä toisiinsa."
+                                  "type": "object",
+                                  "properties": {
+                                    "koodi": {
+                                      "type": "string",
+                                      "enum": [
+                                        "A",
+                                        "B",
+                                        "C",
+                                        "D",
+                                        "E",
+                                        "-"
+                                      ],
+                                      "description": "Siltatarkastuskohteen toimenpidetarpeen koodi. Tarkastus voi tuottaa yksittäisen koodin lisäksi yhdistelmiä: B+C, B+C+D, C+D. E on uusi koodi, joka on vielä tarkemmin määriteltävä. Viiva tarkoittaa, että kohde ei ole sillan kohdalla relevantti."
+                                    },
+                                    "arvo": {
+                                      "type": "string",
+                                      "enum": [
+                                        "eiToimenpiteita",
+                                        "puhdistettava",
+                                        "urakanKunnostettava",
+                                        "korjausOhjelmoitava",
+                                        "E",
+                                        "eiPade"
+                                      ],
+                                      "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta. Koodi ja arvo ovat kytköksissä toisiinsa. "
+                                    },
+                                    "kuvaus": {
+                                      "type": "string",
+                                      "description": "Siltatarkastuskohteen toimenpidetarpeen luonnehdinta käyttäjäystävällisessä tekstimuodossa. Koodi ja kuvaus ovat kytköksissä toisiinsa."
+                                    }
                                   }
                                 }
                               }

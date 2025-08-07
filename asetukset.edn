@@ -232,7 +232,7 @@
  ;; lisäämällä oikean s3-urlin ja varmistamalla, että järjestelmä pyörii sallitussa IP:ssä
  ;:alusta :aws
  :liitteet {:s3-url nil ;"https://4ydqtenzhk.execute-api.eu-west-1.amazonaws.com/dev/generatepresignedurl"
-            }
+            :thread-pool-koko 50}
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
 

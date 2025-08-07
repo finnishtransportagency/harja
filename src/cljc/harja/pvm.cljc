@@ -25,6 +25,8 @@
                     (java.text SimpleDateFormat)
                     (org.joda.time DateTime DateTimeZone))))
 
+(def ^:dynamic *kehitys-nykyhetki* nil)
+
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
@@ -36,6 +38,9 @@
 
 (defn kk-fmt [kk]
   (get +kuukaudet+ (dec kk)))
+
+(defn kk-pitka-fmt [kk]
+  (get +kuukaudet-pitka-muoto+ (dec kk)))
 
 #?(:cljs
    (do
@@ -177,8 +182,24 @@
   "Frontissa palauttaa goog.date.Datetimen (käyttäjän laitteen aika)
   Backendissä palauttaa java.util.Daten"
   []
-  #?(:cljs (DateTime.)
+  #?(:cljs (if *kehitys-nykyhetki*
+             *kehitys-nykyhetki*
+             (DateTime.))
      :clj  (Date.)))
+
+#?(:cljs
+(defn aseta-kehitys-nykyhetki!
+  "Asettaa kehitysympäristöön manuaalitestauksenpäivämäärän. Käytä funktiota vain manuaalitestaukseen."
+  [pvm]
+  (set! *kehitys-nykyhetki* (cond
+                            (instance? DateTime pvm) pvm
+                            (instance? js/Date pvm) (goog.date.DateTime. (js/Date. pvm)) 
+                            :else nil))))
+
+(defn poista-kehitys-nykyhetki!
+  "Poistaa kehitysympäristöön testipäivämäärän. Käytä funktiota vain manuaalitestaukseen."
+  []
+  (set! *kehitys-nykyhetki* nil))
 
 #?(:clj
    (defn eilinen
@@ -826,6 +847,22 @@
 
 (defn hoitokauden-alkuvuosi-nykyhetkesta [nyt]
   (hoitokauden-alkuvuosi (vuosi nyt) (kuukausi nyt)))
+
+(defn kuluva-hoitovuosi []
+  (let [vuosi-alkaa (vuosi (nyt))
+        vuosi-loppuu (inc vuosi-alkaa)]
+    (str vuosi-alkaa "-" vuosi-loppuu)))
+
+(defn kulujen-kirjauksen-maarapaiva []
+  (let [vuosi-alkaa (vuosi (nyt))
+        vuosi-loppuu (inc vuosi-alkaa)]
+    (str "15.11." vuosi-loppuu)))
+
+(defn onko-hoitovuosi-loppunut?
+  "Palautetaan true, kun hoitovuosi on päättynyt (ts. kuluva kuukausi on lokakuu tai myöhemmin)." 
+  []
+  (let [nykykuukausi (kuukausi (nyt))]
+    (>= nykykuukausi 10)))
 
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."

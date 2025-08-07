@@ -27,10 +27,12 @@
             [harja.views.hallinta.urakkatiedot.tehtava-nakyma :as tehtava-nakyma]
             [harja.views.hallinta.tarjoushinnat :as tarjoushinnat]
             [harja.views.hallinta.rahavaraukset :as rahavaraukset]
+            [harja.views.hallinta.urakkatiedot.toimenkuvat-nakyma :as toimenkuvat-nakyma]
             [harja.views.hallinta.urakkatiedot.lupaukset-nakyma :as lupaukset]
             [harja.views.hallinta.urakkatiedot.paallystysilmoitukset-nakyma :as paallystysilmoitukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
+            [harja.views.hallinta.urakkatiedot.urakkaparametrit :as urakkaparametrit]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -118,11 +120,24 @@
       ^{:key "rahavarausten-tehtavat"}
       [rahavarausten-tehtavat/rahavarausten-tehtavat])
 
+    "Toimenkuvat"
+    :toimenkuvat
+    (when (oikeudet/hallinta-rahavaraukset)
+      ^{:key "rahavaraukset"}
+      [toimenkuvat-nakyma/toimenkuvat])
+
     "Urakoiden henkilöt"
     :urakkahenkilot
     (when (oikeudet/hallinta-urakkahenkilot)
       ^{:key "urakkahenkilot"}
-      [urakkahenkilot/urakkahenkilot])]
+      [urakkahenkilot/urakkahenkilot])
+
+    "Urakoiden parametrit"
+    :urakkaparametrit
+    ;; TODO: Varmista oikeiat oikeudet
+    (when (oikeudet/hallinta-urakkahenkilot)
+      ^{:key "urakkahenkilot"}
+      [urakkaparametrit/urakkaparametrit])]
 
    "Seuranta"
    :hallinta-seuranta

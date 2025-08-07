@@ -4,6 +4,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.urakat :as q]
+            [harja.kyselyt.jarjestelman-tila :as jarjestelma-kyselyt]
             [clojure.string :as str]))
 
 (defn- parsi-urakkatyyppi [params]
@@ -41,6 +42,17 @@
     (doseq [urakka urakat] (tallenna-urakka-nimi db urakka))
     (hae-urakoiden-nimet db kayttaja haku-parametrit)))
 
+(defn toggle-valikatselmus-validoinnit [db kayttaja tiedot]
+  (let [validointi (boolean (Boolean/valueOf (name (:validointi tiedot))))]
+    ; vaaditaan samoja oikeuksia kuin indeksien hallinnassa, ei tarpeen tehdä omaa roolia
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit kayttaja)
+    (jarjestelma-kyselyt/toggle-valikatselmus-validoinnit! db {:validoinnit validointi :kayttajaid (:id kayttaja)})
+    (keyword (str validointi))))
+
+(defn hae-jarjestelma-asetukset [db kayttaja]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit kayttaja)
+  (first (jarjestelma-kyselyt/hae-jarjestelman-asetukset db)))
+
   (defrecord UrakkaLyhytnimienHallinta []
     component/Lifecycle
     (start [{:keys [http-palvelin db] :as this}]
@@ -50,9 +62,17 @@
       (julkaise-palvelu http-palvelin :tallenna-urakoiden-lyhytnimet
         (fn [kayttaja tiedot]
           (tallenna-urakoiden-lyhytnimet db kayttaja tiedot)))
+      (julkaise-palvelu http-palvelin :toggle-valikatselmus-validoinnit
+        (fn [kayttaja tiedot]
+          (toggle-valikatselmus-validoinnit db kayttaja tiedot)))
+      (julkaise-palvelu http-palvelin :hae-jarjestelma-asetukset
+        (fn [kayttaja]
+          (hae-jarjestelma-asetukset db kayttaja)))
       this)
     (stop [{:keys [http-palvelin] :as this}]
       (poista-palvelut http-palvelin
         :hae-urakoiden-nimet
-        :tallenna-urakoiden-lyhytnimet)
+        :tallenna-urakoiden-lyhytnimet
+        :toggle-valikatselmus-validoinnit
+        :hae-jarjestelma-asetukset)
       this))

@@ -7,3 +7,5 @@
 
 (defqueries "harja/kyselyt/toteutuneet_kustannukset.sql"
             {:positional? true})
+
+(declare siirra-budjetoidut-tyot-toteutumiin)

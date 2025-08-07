@@ -183,7 +183,8 @@
 
    (s/optional-key :vkm) {:url s/Str}
 
-   (s/optional-key :liitteet) {(s/optional-key :s3-url) s/Str}
+   (s/optional-key :liitteet) {(s/optional-key :s3-url) s/Str
+                               (s/optional-key :thread-pool-koko) s/Int}
 
    (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    :komponenttien-tila {:itmf {:paivitystiheys-ms s/Int}

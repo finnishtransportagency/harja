@@ -105,19 +105,20 @@
   (reset! lahetetyt [])
   (let [db (:db jarjestelma)
         fim {}
-        sahkoposti (->FakeSahkoposti)]
+        sahkoposti (->FakeSahkoposti)
+        hoitokaudenalkupaiva (pvm/->pvm "01.10.2019")]
     (with-redefs [lupaus-muistutus/urakan-vastaanottajat (fn [_fim sampoid]
                                                            (case sampoid
                                                              "1242141-II3" [iin-vastaanottaja]
                                                              "1242141-OULU3" [oulun-vastaanottaja]
                                                              []))]
-      (lupausmuistutukset/muistutustehtava db fim sahkoposti (pvm/->pvm "01.10.2019"))
+      (lupausmuistutukset/muistutustehtava db fim sahkoposti hoitokaudenalkupaiva)
       (is
         (empty? @lahetetyt)
         "1.10.2019 ei pitäisi lähteä vielä sähköposteja, koska lokakuun lupauksiin vastataan vasta marraskuussa")
       (reset! lahetetyt [])
 
-      (lupausmuistutukset/muistutustehtava db fim sahkoposti (pvm/->pvm "01.11.2019"))
+      (lupausmuistutukset/muistutustehtava db fim sahkoposti hoitokaudenalkupaiva)
       (is
         (empty? @lahetetyt)
         "Oulun urakalle pitäisi lähteä sähköposti vasta kun luvatut pisteet on tallennettu")
@@ -126,7 +127,8 @@
       (is
         (lupaus-palvelu/tallenna-urakan-luvatut-pisteet db +kayttaja-jvh+
           {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-           :pisteet 77})
+           :pisteet 77
+           :valittu-hoitokausi [hoitokaudenalkupaiva (pvm/->pvm "30.09.2020")]})
         "Luvattujen pisteiden tallennus pitäisi onnistua")
 
       ;; avataan lukko käsin lähetysten välissä, koska todellisuudessa tapahtumien välillä pitkiä aikoja, ja
