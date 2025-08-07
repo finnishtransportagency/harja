@@ -333,7 +333,7 @@
                  [:span
                   [yleiset/vihje lasketut-muutokset-aputeksti]])
     :taulukko
-    (fn [e! app]
+    (fn [e! _app]
       ;; Design haluaa taulukkoon väliotsikot, joten tehdään datalle hieman taikoja
       ;; Lisätään toimenpiderivien väliin mappi, formaatilla {:valiotsikko "Nimi"}, jossa ei ole mitään muuta sisällä 
       (let [fn-lisaa-valiotsikot (fn [rivit]
@@ -353,7 +353,11 @@
                                        (reduce step [#{} []])
                                        second)))
 
-            tehtava-maaramuutokset (fn-lisaa-valiotsikot tehtava-maaramuutokset)]
+            tehtava-maaramuutokset (fn-lisaa-valiotsikot tehtava-maaramuutokset)
+
+            ;; Värjätään tällä väliotsikot design mukaiseksi 
+            solun-luokka-fn (fn [_arvo rivi]  
+                              (when (some? (:valiotsikko rivi)) "vaalen-tumma-tausta"))]
 
         [grid/grid
          {:tunniste :id
@@ -361,8 +365,9 @@
           :tyhja "Ei laskettuja muutoksia."
           :voi-lisata? false
           :voi-kumota? false
-          :voi-poistaa? (constantly false)
           :voi-muokata? true
+          :piilota-toiminnot? true
+          :voi-poistaa? (constantly false)
           ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
           :sivuta 10
           ;; Näytetään vain 10 riviä, joten voidaan piilottaa alemmat kontrollit, muuten näyttää jotenkin hassulta 
@@ -370,52 +375,60 @@
           :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
 
          [{:otsikko "Tehtävä"
+           :solun-luokka solun-luokka-fn
            :nimi :tehtava
            :leveys 35
            :tyyppi :komponentti
            :komponentti (fn [{:keys [tehtava valiotsikko]}]
-
                           (if tehtava
                             [:<> tehtava]
                             [:div.body-text.strong valiotsikko]))}
 
           {:otsikko "Yksikkö"
+           :solun-luokka solun-luokka-fn
            :nimi :yksikko
            :tyyppi :string
            :leveys 15}
 
           {:otsikko "Muutoksen syy / lisätieto"
+           :solun-luokka solun-luokka-fn
            :nimi :syy
            :tyyppi :string
            :leveys 35}
 
           {:otsikko "Suunniteltu määrä"
+           :solun-luokka solun-luokka-fn
            :nimi :suunniteltu_maara
            :tyyppi :numero
            :leveys 15}
 
           {:otsikko "Kirjattu määrä"
+           :solun-luokka solun-luokka-fn
            :nimi :maara
            :tyyppi :numero
            :leveys 15}
 
           {:otsikko "Määrämuutos (+/-)"
+           :solun-luokka solun-luokka-fn
            :nimi :maaramuutos
            :tyyppi :numero
            :leveys 15}
 
           {:otsikko "Kirjatut kulut (€)"
+           :solun-luokka solun-luokka-fn
            :nimi :kirjatut_kulut_summa
            :tyyppi :numero
            :fmt fmt/euro-opt
            :leveys 15}
 
           {:otsikko "Tavoitehinnan muutos (€)"
+           :solun-luokka solun-luokka-fn
            :nimi :tavoitehinnan_muutos
            :tyyppi :numero
            :fmt fmt/euro-opt
            :tasaa :oikea
            :leveys 15}]
+         
          tehtava-maaramuutokset]))}])
 
 (defn- kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
