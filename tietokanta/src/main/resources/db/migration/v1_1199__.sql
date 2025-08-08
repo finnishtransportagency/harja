@@ -5,3 +5,5 @@ DROP TABLE reimari_toimenpide_liite;
 DROP TABLE reimari_turvalaitekomponentti;
 DROP TABLE reimari_turvalaiteryhma;
 DROP TABLE reimari_komponenttityyppi;
+
+DROP TABLE VATU_TURVALAITE;
