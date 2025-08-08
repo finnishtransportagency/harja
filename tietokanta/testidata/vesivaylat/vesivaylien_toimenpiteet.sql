@@ -3,8 +3,6 @@ DO $$ DECLARE
   vantaa_itainen_vaylahoitourakka_id INTEGER := (SELECT id FROM urakka WHERE nimi ILIKE 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL');
   hel_vayla_paasopimus_id INTEGER := (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus');
   kayttaja_id_tero INTEGER := (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero');
-  hietasaaren_poiju_turvalaitenro TEXT := (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju');
-  hietasaaren_viitta_turvalaitenro TEXT := (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren viitta');
   testitoimenpide_2_id INTEGER := 0;
   testitoimenpiteen_hinnoittelu_id INTEGER := 0;
   venepojat_organisaatio_id INTEGER := (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat');
@@ -23,7 +21,6 @@ INSERT INTO vv_vikailmoitus
  "reimari-havaittu", "reimari-kirjattu", "reimari-muokattu", "reimari-luontiaika", "reimari-luoja", "reimari-muokkaaja")
 VALUES
   ('1234', 'Akonniemen kyltti on lähtenyt irti myrskyn takia',
-           (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Akonniemen kyltti'),
            'ilmari vikailmoittaja', -- reimari-ilmoittaja
            'ilmari.vi@example.com +55 5555 5555 5555 555 55', -- reimari-ilmoittajan-yhteystiedot
            TRUE, -- reimari-epakunnossa?
@@ -118,7 +115,6 @@ VALUES
     hel_vayla_paasopimus_id,
      '{"(-2139967544,nimitahan,1022540401)","(-2139967548,toinennimi,1022540402)"}', -- reimari-komponentit (id, nimi, tila)
     '(8881, Poiju 1, 3332)',
-    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     'Kiintiöön kuuluva jutska',
     '2017-08-05T23:23Z',
     '2017-08-05',
@@ -171,7 +167,6 @@ VALUES
     '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     hel_vayla_paasopimus_id,
     '(8882, Poiju 2, 3332)',
-    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     NULL,
     '2017-08-05T23:23Z',
     '2017-08-05',
@@ -270,7 +265,6 @@ VALUES
     '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     hel_vayla_paasopimus_id,
     '(8884, Poiju 4, 3332)',
-    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     NULL,
     '2017-08-08T23:23Z',
     '2017-08-08',
@@ -425,7 +419,6 @@ VALUES
     '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     hel_vayla_paasopimus_id,
     '(8890, Poiju 10, 3332)',
-    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     NULL,
     '2017-08-03T23:23Z',
     '2017-08-03',
@@ -478,7 +471,6 @@ VALUES
     '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     hel_vayla_paasopimus_id,
     '(8891, Poiju 11, 3332)',
-    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     NULL,
     '2017-12-01T23:23Z',
     '2017-08-08',
@@ -541,7 +533,6 @@ VALUES
     '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     hel_vayla_paasopimus_id,
     '(8881, Poiju 1, 3332)',
-    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Poijujen korjausta kuten on sovittu otos 2',
     '2017-11-02T23:23Z',
     '2017-08-08',
@@ -603,7 +594,6 @@ VALUES
     '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     hel_vayla_paasopimus_id,
     '(8881, Poiju 1, 3332)',
-    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Poijujen korjausta kuten on sovittu',
     '2017-10-03T23:23Z',
     '2017-08-08',
@@ -628,7 +618,6 @@ VALUES
     '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     hel_vayla_paasopimus_id,
     '(8881, Poiju 1, 3332)',
-    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Lisää poijujen korjausta',
     '2017-09-04T23:23Z',
     '2017-08-08',
@@ -653,7 +642,6 @@ VALUES
     '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     hel_vayla_paasopimus_id,
     '(666, Poiju 666, 555)',
-    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Oulaisten poijujen korjaus',
     '2017-08-05T23:23Z',
     '2017-08-08',

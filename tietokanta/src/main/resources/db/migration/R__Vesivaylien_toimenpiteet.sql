@@ -120,16 +120,3 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION muodosta_vesivaylaurakan_geometria()
-  RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.turvalaitteet IS NOT NULL
-  THEN
-    NEW.urakka_alue := (SELECT ST_ConvexHull(ST_UNION(geometria))
-                        FROM vatu_turvalaite
-                        WHERE turvalaitenro = ANY ((NEW.turvalaitteet) :: TEXT []));
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
