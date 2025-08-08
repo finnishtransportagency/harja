@@ -19,7 +19,25 @@ FROM kiinteahintainen_tyo
 WHERE sopimus = :sopimus-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
       OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
-  and toimenpideinstanssi = :toimenpideinstanssi-id;
+  AND toimenpideinstanssi = :toimenpideinstanssi-id;
+
+-- name: hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
+SELECT greatest(kt.muokattu, kt.luotu) as viimeisin_muokkaus, concat(k.etunimi, ' ', k.sukunimi) as viimeisin_muokkaaja
+FROM kiinteahintainen_tyo kt
+JOIN kayttaja k ON k.id = greatest(kt.muokkaaja, kt.luoja),
+    toimenpideinstanssi tpi
+JOIN toimenpide t ON tpi.toimenpide = t.id
+WHERE kt.sopimus = :sopimus-id
+  AND tpi.urakka = :urakkaid
+  AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
+    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+  AND (t.koodi = '23104' -- talvihoito
+    OR t.koodi = '23116' -- liikenneympariston-hoito
+    OR t.koodi = '23124' -- sorateiden-hoito
+    OR t.koodi = '20107' -- paallystepaikkaukset
+    OR t.koodi = '20191' -- mhu-yllapito
+    OR t.koodi = '14301' -- mhu-korvausinvestointi
+    );
 
 -- name: poista-kiinteat-kustannukset-kuukausittain!
 UPDATE kiinteahintainen_tyo
@@ -29,7 +47,7 @@ UPDATE kiinteahintainen_tyo
      muokkaaja = :muokkaaja
  WHERE sopimus = :sopimus-id
    AND vuosi = :vuosi
-   and toimenpideinstanssi = :toimenpideinstanssi-id
+   AND toimenpideinstanssi = :toimenpideinstanssi-id
    AND kuukausi in (:kuukaudet);
 
 -- name: hae-kiintea-kustannus-toimenpiteelle-kuukaudelta
@@ -74,7 +92,7 @@ FROM kustannusarvioitu_tyo
 WHERE sopimus = :sopimus-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
     OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
-  and toimenpideinstanssi = :toimenpideinstanssi-id
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
   AND tehtavaryhma = :tehtavaryhma-id;
 
 -- name: hae-kuukauden-erillishankinta
@@ -89,6 +107,16 @@ SELECT id,
        sopimus
 FROM kustannusarvioitu_tyo
 WHERE id = :id;
+
+-- name: hae-viimeisin-muokkaaja-erillishankinnoille
+SELECT greatest(kt.muokattu, kt.luotu) as viimeisin_muokkaus, concat(k.etunimi, ' ', k.sukunimi) as viimeisin_muokkaaja
+FROM kustannusarvioitu_tyo kt
+         JOIN kayttaja k ON k.id = greatest(kt.muokkaaja, kt.luoja)
+WHERE sopimus = :sopimus-id
+  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
+  AND tehtavaryhma = :tehtavaryhma-id;
 
 -- name: paivita-kuukauden-erillishankinta<!
 UPDATE kustannusarvioitu_tyo
@@ -133,6 +161,14 @@ SELECT id,
 FROM johto_ja_hallintokorvaus
 WHERE id = :id;
 
+-- name: hae-viimeisin-muokkaaja-jjh
+SELECT greatest(jjh.muokattu, jjh.luotu) as viimeisin_muokkaus, concat(k.etunimi, ' ', k.sukunimi) as viimeisin_muokkaaja
+FROM johto_ja_hallintokorvaus jjh
+         JOIN kayttaja k ON k.id = greatest(jjh.muokkaaja, jjh.luoja)
+WHERE "urakka-id" = :urakka-id
+  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9));
+
 -- name: paivita-kuukauden-johto-ja-hallintokorvaus<!
 UPDATE johto_ja_hallintokorvaus
 SET tuntipalkka                 = :tuntipalkka,
@@ -172,7 +208,7 @@ FROM kustannusarvioitu_tyo
 WHERE sopimus = :sopimus-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
     OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
-  and toimenpideinstanssi = :toimenpideinstanssi-id
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
   AND tehtava = :tehtava-id;
 
 -- name: hae-kuukauden-hoidonjohtopalkkio
@@ -186,6 +222,16 @@ SELECT id,
        sopimus
 FROM kustannusarvioitu_tyo
 WHERE id = :id;
+
+-- name: hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
+SELECT greatest(kt.muokattu, kt.luotu) as viimeisin_muokkaus, concat(k.etunimi, ' ', k.sukunimi) as viimeisin_muokkaaja
+FROM kustannusarvioitu_tyo kt
+            JOIN kayttaja k ON k.id = greatest(kt.muokkaaja, kt.luoja)
+WHERE sopimus = :sopimus-id
+  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
+  AND tehtava = :tehtava-id;
 
 -- name: paivita-kuukauden-hoidonjohtopalkkio<!
 UPDATE kustannusarvioitu_tyo

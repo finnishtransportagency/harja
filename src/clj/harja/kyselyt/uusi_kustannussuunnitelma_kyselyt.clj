@@ -16,13 +16,17 @@
 (declare hae-urakan-toimenpiteet hae-kiintea-kustannus-toimenpiteelle-kuukaudelta
   hae-kiintea-kustannus-kuukausittain poista-kiinteat-kustannukset-kuukausittain!
   tallenna-kiinteat-kustannukset-kuukaudelta<! paivita-kiinteat-kustannukset-kuukausittain<!
+  hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
   hae-erillishankinta-kuukausittain hae-kuukauden-erillishankinta
   paivita-kuukauden-erillishankinta<! tallenna-kuukauden-erillishankinta<!
-  hae-hoidonjohtopalkkiot-kuukausittain hae-kuukauden-hoidonjohtopalkkio
+  hae-viimeisin-muokkaaja-erillishankinnoille
+  hae-hoidonjohtopalkkiot-kuukausittain hae-kuukauden-hoidonjohtopalkkio hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
   hae-rahavaraus-vuodelta
   paivita-kuukauden-hoidonjohtopalkkio<! tallenna-kuukauden-hoidonjohtopalkkio<!
   hae-johto-ja-hallintokorvaukset-kuukausittain
-  paivita-kuukauden-johto-ja-hallintokorvaus<! nollaa-kuukauden-johto-ja-hallintokorvaus<! tallenna-kuukauden-johto-ja-hallintokorvaus<!
+  hae-kuukauden-johto-ja-hallintokorvaus
+  paivita-kuukauden-johto-ja-hallintokorvaus<! nollaa-kuukauden-johto-ja-hallintokorvaus<!
+  tallenna-kuukauden-johto-ja-hallintokorvaus<! hae-viimeisin-muokkaaja-jjh
   vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
   vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille!
   vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille!
@@ -77,6 +81,10 @@
                                         :pysyvat-muutokset "Ei muutoksia"})))
                    []
                    toimenpiteet)
+        viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
+                                    db {:sopimus-id sopimus-id
+                                        :vuosi hoitovuoden-alkuvuosi
+                                        :urakkaid urakka-id}))
         ;; Yhteenvetorivi
         yhteenveto {:nimi "Yhteensä"
                     :alkukausi (apply + (map :alkukausi kiinteat))
@@ -85,7 +93,9 @@
                     :loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu kiinteat))
                     :yhteensa (+ (apply + (map :alkukausi kiinteat)) (apply + (map :loppukausi kiinteat)))
                     :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu kiinteat)) (apply + (map :loppukausi-indeksikorjattu kiinteat)))
-                    :pysyvat-muutokset "Ei muutoksia"}
+                    :pysyvat-muutokset "Ei muutoksia"
+                    :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                    :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}
         kiinteat (conj kiinteat yhteenveto)]
     kiinteat))
 
@@ -109,12 +119,19 @@
                                  :vuosi hoitovuoden-alkuvuosi
                                  :tehtava-id (:id tehtava)
                                  :toimenpideinstanssi-id hoidonjohto-tpi-id}))
+        viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
+                                    db {:sopimus-id sopimus-id
+                                        :vuosi hoitovuoden-alkuvuosi
+                                        :tehtava-id (:id tehtava)
+                                        :toimenpideinstanssi-id hoidonjohto-tpi-id}))
         hoidonjohtopalkkiot (if (seq hoidonjohtopalkkiot)
                               ;; Jos on tallennettu jo hoidonjohtopalkkioita, niin lisätään niihin kalenterikuukausi
                               (map (fn [rivi]
                                      (merge rivi
                                        {:kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
-                                                             (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)}))
+                                                             (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)
+                                        :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                                        :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
                                 hoidonjohtopalkkiot)
                               ;; Jos ei ole tallennettu hoidonjohtopalkkioita, niin luodaan nolla arvot
                               (mapv (fn [kk]
@@ -127,7 +144,9 @@
                                          :vuosi vuosi
                                          :summa 0
                                          :summa_indeksikorjattu nil
-                                         :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi (pvm/->pvm (str "01." kk "." vuosi)) true)}))
+                                         :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi (pvm/->pvm (str "01." kk "." vuosi)) true)
+                                         :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                                         :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
                                 [10 11 12 1 2 3 4 5 6 7 8 9]))]
     (sort-by (juxt :vuosi :kuukausi) hoidonjohtopalkkiot)))
 
@@ -135,12 +154,17 @@
   (let [johto-ja-hallintokorvaukset (hae-johto-ja-hallintokorvaukset-kuukausittain db
                                       {:urakka-id urakka-id
                                        :vuosi hoitovuoden-alkuvuosi})
+        viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-jjh
+                                    db {:urakka-id urakka-id
+                                        :vuosi hoitovuoden-alkuvuosi}))
         johto-ja-hallintokorvaukset (if (seq johto-ja-hallintokorvaukset)
                                       ;; Jos on tallennettu jo johto-ja-hallintokorvauksia, niin lisätään niihin kalenterikuukausi
                                       (map (fn [rivi]
                                              (merge rivi
                                                {:kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
-                                                                     (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)}))
+                                                                     (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)
+                                                :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                                                :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
                                         johto-ja-hallintokorvaukset)
                                       ;; Jos ei ole tallennettu hoidonjohtopalkkioita, niin luodaan nolla arvot
                                       (mapv (fn [kk]
@@ -151,7 +175,9 @@
                                                  :vuosi vuosi
                                                  :summa 0
                                                  :summa_indeksikorjattu nil
-                                                 :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi (pvm/->pvm (str "01." kk "." vuosi)) true)}))
+                                                 :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi (pvm/->pvm (str "01." kk "." vuosi)) true)
+                                                 :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                                                 :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
                                         [10 11 12 1 2 3 4 5 6 7 8 9]))]
     (sort-by (juxt :vuosi :kuukausi) johto-ja-hallintokorvaukset)))
 
@@ -162,6 +188,13 @@
                                          {:urakka urakka-id
                                           :koodi "23151"})))
         tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
+
+        viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-erillishankinnoille
+                                    db {:sopimus-id sopimus-id
+                                        :vuosi hoitovuoden-alkuvuosi
+                                        :tehtavaryhma-id (:id tehtavaryhma)
+                                        :toimenpideinstanssi-id hoidonjohto-tpi-id}))
+
         erillishankinnat (when hoidonjohto-tpi-id
                            (hae-erillishankinta-kuukausittain db
                              {:sopimus-id sopimus-id
@@ -173,7 +206,9 @@
                            (map (fn [rivi]
                                   (merge rivi
                                     {:kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
-                                                          (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)}))
+                                                          (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)
+                                     :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                                     :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
                              erillishankinnat)
                            ;; Jos ei ole tallennettu erillishankintoja, niin luodaan nolla arvot
                            (mapv (fn [kk]
@@ -186,7 +221,9 @@
                                       :vuosi vuosi
                                       :summa 0
                                       :summa_indeksikorjattu nil
-                                      :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi (pvm/->pvm (str "01." kk "." vuosi)) true)}))
+                                      :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi (pvm/->pvm (str "01." kk "." vuosi)) true)
+                                      :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                                      :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
                              [10 11 12 1 2 3 4 5 6 7 8 9]))]
     (sort-by (juxt :vuosi :kuukausi) erillishankinnat)))
 
