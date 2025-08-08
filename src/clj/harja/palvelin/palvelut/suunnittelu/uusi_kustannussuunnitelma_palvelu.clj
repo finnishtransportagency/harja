@@ -41,6 +41,8 @@
           sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
           ;; Urakan parametrit
           urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
+          urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
+          urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
 
           vahvistukset (suunnitelma-q/indeksikorjaukset-vahvistettu? db
                          {:urakka-id urakka-id
@@ -96,6 +98,7 @@
           hoitovuoden-alun-indeksikorjattu-kattohinta (or (when (and indeksikerroin hoitovuoden-alun-kattohinta)
                                                             (* indeksikerroin hoitovuoden-alun-kattohinta)) 0)
           k {:urakka-id urakka-id
+             :urakan-alkuvuosi urakan-alkuvuosi
              :tarjous tarjous
              :kustannussuunnitelma {:kilpailutettavat-hankinnat {:toimenpiteet kiinteat}
                                     :rahavaraukset rahavaraukset

@@ -79,7 +79,6 @@
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui [vastaus])
 
-
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
 
 (defn hae-kustannussuunnitelman-tiedot
@@ -204,6 +203,7 @@
   (process-event [{:keys [vastaus]} app]
     (-> app
       (assoc :haku-kaynnissa? false)
+      (assoc :urakan-alkuvuosi (:urakan-alkuvuosi vastaus))
       (assoc :tarjous (:tarjous vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
 
