@@ -946,7 +946,8 @@
                     muutokset)
         ;; Päivitä uudet päätöstyypit vanhaan päätöstietomalliin
         paatokset (map (fn [p]
-                         {:hoitovuoden-paatos {:paatoksen-hoitovuosi (:hoitokauden_alkuvuosi p)
+                         {:hoitovuoden-paatos {:paatos {:id (str (name (paatoskone/nimi->avain (:nimi p))) "-" (:id p))}
+                                               :paatoksen-hoitovuosi (:hoitokauden_alkuvuosi p)
                                                :paatostyyppi (paatoskone/nimi->avain (:nimi p))
                                                :poistettu (:poistettu p)
                                                :paatoksen-tulos {:kokonaismaara (cond
