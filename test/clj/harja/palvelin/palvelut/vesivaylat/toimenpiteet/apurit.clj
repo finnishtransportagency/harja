@@ -10,15 +10,6 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]))
 
-(defn hae-kokonaishintaiset-toimenpide-idt []
-  (set (map :id
-            (q-map "SELECT id FROM reimari_toimenpide
-                    WHERE hintatyyppi = 'kokonaishintainen'"))))
-
-(defn hae-toimenpiteiden-kiintio-idt [toimenpide-idt]
-  (set (keep :kiintio-id (q-map (str "SELECT \"kiintio-id\" FROM reimari_toimenpide
-                    WHERE id IN (" (str/join ", " toimenpide-idt) ")")))))
-
 (defn hae-toimenpiteiden-hintaryhma-idt [toimenpide-idt]
   (set (keep :hinnoittelu-id (q-map (str "SELECT \"hinnoittelu-id\" FROM vv_hinnoittelu_toimenpide
                                           WHERE \"toimenpide-id\" IN ( " (str/join ", " toimenpide-idt) ")"
@@ -36,14 +27,3 @@
 
 (defn hae-hintojen-poistotiedot [hinnoittelu-idt]
   (set (map :poistettu (q-map (str "SELECT poistettu FROM vv_hinta WHERE \"hinnoittelu-id\" IN (" (str/join ", " hinnoittelu-idt) ")")))))
-
-
-(defn hae-yksikkohintaiset-toimenpide-idt []
-  (set (map :id
-            (q-map "SELECT id FROM reimari_toimenpide
-                    WHERE hintatyyppi = 'yksikkohintainen'"))))
-
-(defn hae-toimenpiteiden-tyyppi [idt]
-  (set (map :hintatyyppi
-            (q-map "SELECT hintatyyppi FROM reimari_toimenpide
-                    WHERE id IN (" (str/join ", " idt) ");"))))

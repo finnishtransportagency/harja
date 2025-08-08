@@ -144,17 +144,6 @@ E'Vikailmoitukset ovat turvalaitteista löydettyjä vikoja. Viat täytyy korjata
 COMMENT ON TABLE reimari_toimenpide IS
 E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin. reimari-etuliitteelliset sarakkeet sisältävät Reimarista tuotua tietoa, muut kentät on Harjassa luotuja.';
 
-COMMENT ON TABLE reimari_turvalaiteryhma IS
-E'Kuvaa turvalaiteryhmää eli ryhmää turvalaitteita, jotka muodostavat vesiväyläurakka-alueen . Kaikki tiedot tulevat tähän tauluun Reimarista.';
-COMMENT ON COLUMN reimari_turvalaiteryhma."turvalaitteet" IS 'Turvalaiteryhmään kuuluvien turvalaitteiden numerot. Samaa numeroa käytetään turvalaitteen tunnistamiseen myös muualla, esim. vv_turvalaite taulussa.';
-
-
-COMMENT ON TABLE reimari_turvalaitekomponentti IS
-E'Kuvaa turvalaitteeseen liittyvää komponenttia. Kaikki tiedot tulevat tähän tauluun Reimarista.';
-
-COMMENT ON TABLE reimari_komponenttityyppi IS
-E'Kuvaa turvalaitteen komponentin tyyppiä. Kaikki tiedot tulevat tähän tauluun Reimarista.';
-
 COMMENT ON TABLE vv_hinnoittelu_toimenpide IS
 E'Linkkitaulu, jolla toimenpiteet ja hinnoittelut liitetään toisiinsa.';
 
@@ -254,9 +243,6 @@ E'View, joka sisältää hyväksytyt (kts. kan_toimenpide_kommentti) toimenpitee
 
 COMMENT ON table kan_kohde_urakka IS
 E'Linkkitaulu kohteen ja urakan liittämiseen. Urakkaan voi kuulua monta kohdetta, ja kohde voi kuulua useaan urakkaan';
-
-COMMENT ON TABLE reimari_sopimuslinkki IS
-E'Koska Reimari ei hae sopimustietoja Harjasta, täytyy Harjaan asettaa tieto, mikä Reimarin sopimus liittyy mihin Harjan sopiukseen';
 
 COMMENT ON TABLE reimari_toimenpide_liite IS
 E'Vesiväylien toimenpiteisiin liitettyjä liitteitä';

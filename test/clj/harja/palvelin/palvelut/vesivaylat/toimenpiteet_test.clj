@@ -462,37 +462,6 @@
                                                    :siirra-toimenpiteet-yksikkohintaisiin +kayttaja-jvh+
                                                    kysely-params)))))
 
-(deftest liitteen-lisaaminen-ja-poistaminen
-  (let [liite-id 1
-        laske-liitteet #(ffirst (q "SELECT COUNT(*) FROM reimari_toimenpide_liite WHERE poistettu = FALSE;"))
-        kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
-        liitteet-ennen (laske-liitteet)
-        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
-        kysely-params {::toi/urakka-id urakka-id
-                       ::toi/liite-id liite-id
-                       ::toi/id kokonaishintaiset-toimenpide-id}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :lisaa-toimenpiteelle-liite +kayttaja-jvh+
-                                kysely-params)
-        liitteet-lisayksen-jalkeen (laske-liitteet)]
-    (is (s/valid? ::toi/lisaa-toimenpiteelle-liite-kysely kysely-params))
-
-    (is (true? (:ok? vastaus)))
-    (is (= (+ liitteet-ennen 1) liitteet-lisayksen-jalkeen))
-
-    ;; Nyt poista liite
-    (let [kysely-params {::toi/urakka-id urakka-id
-                         ::toi/liite-id liite-id
-                         ::toi/id kokonaishintaiset-toimenpide-id}
-          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :poista-toimenpiteen-liite +kayttaja-jvh+
-                                  kysely-params)
-          liitteet-poiston-jalkeen (laske-liitteet)]
-      (is (s/valid? ::toi/poista-toimenpiteen-liite-kysely kysely-params))
-
-      (is (true? (:ok? vastaus)))
-      (is (= liitteet-ennen liitteet-poiston-jalkeen)))))
-
 (deftest lisaa-liite-ilman-oikeutta
   (let [liite-id 1
         kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))

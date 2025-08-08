@@ -616,21 +616,6 @@ SELECT id, nimi FROM urakka where
                   urakka != :urakkaid) AND
                   (alkupvm, loppupvm) OVERLAPS (:alkupvm::DATE, :loppupvm::DATE);
 
--- name: hae-loytyvat-reimari-turvalaiteryhmat
-SELECT tunnus FROM reimari_turvalaiteryhma
-WHERE tunnus::text IN (:turvalaiteryhma);
-
--- name: tallenna-vv-urakkanro<!
--- Vesiväyläurakoissa urakkanro viittaa vv_urakka_turvalaiteryhma-tauluun,
--- jossa turvalaiteryhmät viittaavat reimari_turvalaiteryhma-tauluun, jonka
--- sisältö tulee Reimarista. Muissa urakkatyypeissä urakkanro viittaa muihin tauluihin, esim.
--- alueurakka-tauluun.
-UPDATE urakka
-SET urakkanro = :urakkanro,
-    muokattu  = NOW(),
-    muokkaaja = :kayttaja
-WHERE id = :urakka;
-
 --name: hae-kaikki-urakat-pvm
 SELECT id, alkupvm, loppupvm
 FROM urakka

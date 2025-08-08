@@ -9,11 +9,6 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-
-
-(define-tables
-  ["reimari_turvalaiteryhma" ::reimari-turvalaiteryhma])
-
 (def turvalaite #{[::turvalaite harja.domain.vesivaylat.turvalaite/perustiedot]})
 
 (def perustiedot

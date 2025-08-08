@@ -7,12 +7,6 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-(define-tables
-  ["reimari_turvalaitekomponentti" ::turvalaitekomponentti
-   {::komponenttityyppi (specql.rel/has-one ::komponentti-id
-                                     ::ktyyppi/komponenttityyppi
-                                     ::ktyyppi/id)}])
-
 (def kentat
   #{::id
     ::lisatiedot

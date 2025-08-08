@@ -6,9 +6,6 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-(define-tables
-  ["reimari_komponenttityyppi" ::komponenttityyppi])
-
 (def kentat
   #{::id
     ::nimi
