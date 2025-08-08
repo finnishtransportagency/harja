@@ -155,6 +155,7 @@
 
 (defn hairiotilanteiden-hakuparametrit [valinnat]
   {::hairiotilanne/urakka-id (get-in valinnat [:urakka :id])
+   ::hairiotilanne/kohde-id (::kohde/id (:kohde valinnat))
    :haku-sopimus-id (:sopimus-id valinnat)
    :haku-vikaluokka (:vikaluokka valinnat)
    :haku-korjauksen-tila (:korjauksen-tila valinnat)
