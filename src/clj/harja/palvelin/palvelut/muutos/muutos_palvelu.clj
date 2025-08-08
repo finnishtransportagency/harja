@@ -112,30 +112,41 @@
 
 (defn hae-muutoksen-tiedot
   "Palauttaa yksittäisen muutoksen tarkat tiedot lomaketta varten."
-  [db user {:keys [urakka-id muutos]}]
+  [db user {:keys [urakka-id hoitokauden-alkuvuosi muutos]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (let [tyypikohtaiset-tiedot (case (:tyyppi muutos)
-                                "johto-ja-hallintokorvaus"
-                                (mapv
-                                  (fn [rivi]
-                                    (-> rivi
-                                      (update :kulut #(mapv (fn [kulu]
-                                                              (update kulu :pvm pvm/dateksi))
-                                                        (konv/jsonb->clojuremap %)))))
-                                  (muutos-kyselyt/hae-johto-ja-hallintokorvausmuutoksen-tiedot db {:id (:id muutos)
-                                                                                                   :versio (:versio muutos)
-                                                                                                   :urakka urakka-id}))
+  (let [toimenpiteiden-tiedot  (mapv
+                                 (fn [rivi]
+                                   (-> rivi
+                                     (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
+                                     (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))))
+                                 (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id (:id muutos)
+                                                                                           :versio (:versio muutos)
+                                                                                           :urakka urakka-id
+                                                                                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+        tyyppikohtaiset-tiedot (case (:tyyppi muutos)
+                                 "johto-ja-hallintokorvaus"
+                                 (mapv
+                                   (fn [rivi]
+                                     (-> rivi
+                                       (update :kulut #(mapv (fn [kulu]
+                                                               (update kulu :pvm pvm/dateksi))
+                                                         (konv/jsonb->clojuremap %)))))
+                                   (muutos-kyselyt/hae-johto-ja-hallintokorvausmuutoksen-tiedot db {:id (:id muutos)
+                                                                                                    :versio (:versio muutos)
+                                                                                                    :urakka urakka-id}))
 
-                                ;; tähän puuttuvien muutostyyppien lomakehaut...
-                                [{}])
-        _ (when (> (count tyypikohtaiset-tiedot)  1)
+                                 ;; tähän puuttuvien muutostyyppien lomakehaut...
+                                 [{}])
+        _ (when (> (count tyyppikohtaiset-tiedot)  1)
             (do
               (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
               (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on ongelmatilanne. Ota yhteys Harja-palautteeseen."))))
         liitteet (when-not (empty? (:liite-idt muutos))
                    (liite-kyselyt/hae-liitteiden-tiedot db {:idt (:liite-idt muutos)
                                                             :urakka urakka-id}))
-        vastaus (assoc (first tyypikohtaiset-tiedot) :liitteet liitteet)]
+        vastaus (assoc (first tyyppikohtaiset-tiedot)
+                  :liitteet liitteet
+                  :toimenpiteiden-tiedot toimenpiteiden-tiedot)]
     vastaus))
 
 

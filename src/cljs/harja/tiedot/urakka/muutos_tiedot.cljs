@@ -61,6 +61,22 @@
         (assoc :urakan-hoitokaudet hoitokaudet)
         (assoc :valittu-hoitokausi uusi-hoitokausi))))
 
+(def pysyvan-muutoksen-rivit-atom (atom nil))
+
+
+;; pidetään app statessa pysyvän muutoksen lomakkeiden tiedot seuraavalla tavalla järjestyksessä:
+;; muokattava-muutos // toimenpiteiden-tiedot // hoitokauden alkuvuosi avaimena (näitä voi olla useita)
+;; // kuusi toimenpideinstanssikohtaista riviä // kunkin toimenpiderivin alle vielä tehtäväkohtaiset tiedot
+;; on oltava mahdollista että sama muutos tallentaa eri hoitokausille hieman eri tiedot, joten välillä on oltava hoitokauden alkuvuosi avaimena
+
+(defn pysyvan-muutoksen-rivit
+  "Tuottaa pysyvän muutoksen kustannuksista muokkaus-gridin hyväksymän rivimuodon, eli map jossa on avain"
+  [rivit lomakkeen-hoitovuosi]
+  (into {}
+    (mapv (fn [rivi]
+            {(:toimenpideinstanssi rivi) rivi})
+      rivit)))
+
 (def johto-ja-hallintokorvausmuutokset-atom (atom nil))
 
 (defn johto-ja-hallintokorvausmuutoksen-rivit
@@ -159,17 +175,21 @@
                    muutos :muutos
                    valittu-hoitokausi :valittu-hoitokausi} app]
     (let [uudet-liitteet (:liitteet vastaus)
+          lomakkeen-hoitokausi (get-in app [:muokattava-muutos :hoitovuosi])
           app (-> app
                 (assoc-in [:muokattava-muutos :liitteet] uudet-liitteet)
+                ;; huom: toimenpiteiden tietoja tarvitaan oikeasti vain atomissa joka menee muokkausgridille
+                ;; tässä vaiheessa pidetään tietoja myös app statessa helpottamaan hahmottamista devausvaiheessa
+                (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] (:toimenpiteiden-tiedot vastaus))
                 ;; alustetaan lomaketta varten hoitokausi samaksi kuin valittu hoitokausi, mutta ne voivat
                 ;; erkaantua myöhemmin jos käyttäjä niin haluaa (esim. kirjata pysyvän muutoksen eri hoitokaudelle kuin valittu)
                 (assoc-in [:muokattava-muutos :hoitovuosi] valittu-hoitokausi))]
-      (case (:tyyppi muutos)
-        "johto-ja-hallintokorvaus"
-        (reset! johto-ja-hallintokorvausmuutokset-atom
-          (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus)))
-
-        :default)
+      ;; annetaan resetoitua atomiin arvoksi nil, jos ei kuluja ole ko. muutoksessa
+      (reset! johto-ja-hallintokorvausmuutokset-atom
+        (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+          (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))))
+      (reset! pysyvan-muutoksen-rivit-atom
+        (pysyvan-muutoksen-rivit (:toimenpiteiden-tiedot vastaus) lomakkeen-hoitokausi))
       app))
 
   HaeMuutoksenTiedotEpaonnistui
@@ -253,6 +273,7 @@
       (when (:id muutos)
         (tuck-apurit/post! :hae-muutoksen-tiedot
           {:urakka-id @nav/valittu-urakka-id
+           :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
            :muutos {:id (:id muutos)
                     :versio (:versio muutos)
                     :tyyppi (:tyyppi muutos)

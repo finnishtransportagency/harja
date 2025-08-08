@@ -3,9 +3,9 @@ CREATE OR REPLACE FUNCTION luo_mhu_muutoksia(urakka_id INTEGER, alkaen_pvm DATE)
 $$
 declare
     _versio INTEGER := 1;
-    _toimenpide_id_paall_paikk INTEGER := (SELECT id FROM toimenpide WHERE koodi = '20107'); -- Päällystepaikkaukset
-    _toimenpide_id_sorateiden_hoito INTEGER := (SELECT id FROM toimenpide WHERE koodi = '23124'); -- Sorateiden hoito
-    _toimenpide_id_mhu_yllapito INTEGER := (SELECT id FROM toimenpide WHERE koodi = '20191'); -- MHU Ylläpito
+    _toimenpideinstanssi_id_paall_paikk INTEGER := (SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '20107') AND urakka = urakka_id); -- Päällystepaikkaukset
+    _toimenpideinstanssi_id_sorateiden_hoito INTEGER := (SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23124') AND urakka = urakka_id); -- Sorateiden hoito
+    _toimenpideinstanssi_id_mhu_yllapito INTEGER := (SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '20191') AND urakka = urakka_id); -- MHU Ylläpito
     _toimenpideinstassi_id_hoidon_johto INTEGER := (SELECT id FROM toimenpideinstanssi WHERE urakka = urakka_id AND toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23151'));
     _johto_ja_hallintokorvaus_tehtavaryhma_id INTEGER := (SELECT id FROM tehtavaryhma WHERE nimi = 'J - Johto- ja hallintokorvaus');
     _tehtava_id_ab_paikkaus INTEGER := (SELECT id FROM tehtava WHERE nimi = 'AB-paikkaus levittäjällä');
@@ -28,18 +28,18 @@ INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja
 VALUES (_versio,urakka_id, alkaen_pvm, 'erillisrahoitettu', 'Erillisrahoitettu sorastusmuutos',
         'Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.', (select id from kayttaja where kayttajanimi = 'tero'),
         NOW());
-INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpide, hoitokauden_alkuvuosi, summa)
+INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
 VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Erillisrahoitettu sorastusmuutos'), 'hankintakustannukset',
-        _toimenpide_id_sorateiden_hoito, ensimmainen_tayden_hkn_alkuvuosi, 3000);
+        _toimenpideinstanssi_id_sorateiden_hoito, ensimmainen_tayden_hkn_alkuvuosi, 3000);
 
 -- muutos 3: poikkeama tehtävä- ja määräluettelon määrästä yksittäisen hoitovuoden osalta, ei tehdäkään sorateiden rumpuja
 INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja, luotu)
 VALUES (_versio,urakka_id, alkaen_pvm, 'maarapoikkeama', 'Tämän hoitovuoden määräpoikkeamamuutos',
         'Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.', (select id from kayttaja where kayttajanimi = 'tero'),
         NOW());
-INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpide, hoitokauden_alkuvuosi, summa)
+INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
 VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Tämän hoitovuoden määräpoikkeamamuutos'), 'hankintakustannukset',
-        _toimenpide_id_mhu_yllapito, ensimmainen_tayden_hkn_alkuvuosi, 1000);
+        _toimenpideinstanssi_id_mhu_yllapito, ensimmainen_tayden_hkn_alkuvuosi, 1000);
 INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
 VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Tämän hoitovuoden määräpoikkeamamuutos'), _tehtava_id_soratien_rummut_alle_600mm,
         ensimmainen_tayden_hkn_alkuvuosi,
@@ -57,9 +57,9 @@ VALUES ((SELECT id FROM mhu_muutos WHERE nimi = 'Tämän hoitovuoden määräpoi
 
 FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi LOOP
             -- muutos 1: päällysteiden paikkausta enemmän - kustannusvaikutus
-            INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpide, hoitokauden_alkuvuosi, summa)
+            INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
             VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Päällysteen paikkausmuutos'), 'hankintakustannukset',
-                    _toimenpide_id_paall_paikk, vuosi, 1000);
+                    _toimenpideinstanssi_id_paall_paikk, vuosi, 1000);
             -- muutos 1: päällysteiden paikkausta enemmän - tehtävä- ja määräluettelon muutokset
             INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
             VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Päällysteen paikkausmuutos'), _tehtava_id_ab_paikkaus, vuosi,

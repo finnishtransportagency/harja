@@ -31,7 +31,7 @@ DO $$
         INSERT INTO urakka_tavoite(urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta,tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu)
         VALUES (urakkaid, 4, 90000, 100000, 110000, testidata_indeksikorjaa(100000, (3 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (3 + alkuvuosi), 10, urakkaid), NOW());
         INSERT INTO urakka_tavoite(urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta, tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu)
-        VALUES (urakkaid, 5, 90000, 100000, 110000, testidata_indeksikorjaa(100000, (4 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (4 + alkuvuosi), 10, urakkaid), NOW());
+        VALUES (urakkaid, 5, 90000, 122400, 134640, testidata_indeksikorjaa(100000, (4 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (4 + alkuvuosi), 10, urakkaid), NOW());
     END
 $$ LANGUAGE plpgsql;
 

@@ -2,6 +2,7 @@
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
   (:require [clojure.string :as str]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.kentat :as kentat]
             [reagent.core :as r]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -97,9 +98,12 @@
             :pakollinen? true})]
         (liite-kentta e! app)))))
 
+;; TODO:
+;; voimassa alkaen vaikuttaa hoitovuosivalintaan! ei voi aiempaa valita kuin voimassa alkaen
+;; myös menneisyyteen ei sallita kirjata
 (defn taulukko-pysyvan-muutoksen-vaikutukset
   [e! app]
-  [:span
+  [:span.toimenpiteiden-tiedot
    [grid/muokkaus-grid
     {:tunniste :toimenpide
      :luokat ["pysyvan-muutoksen-grid"]
@@ -113,19 +117,23 @@
     [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :komponentti :leveys 20
       :komponentti (fn [rivi]
                          [:span
-                          (:toimenpide rivi)])}
+                          [kentat/tee-kentta
+                           {:tyyppi :checkbox
+                            :teksti (:toimenpide rivi)
+                            :disabled? false
+                            :valitse! #(prn "Painettu " %)}
+                           true]])}
 
      {:otsikko "Suunniteltu kustannus (€)"
       :nimi :suunniteltu-kustannus :vaadi-ei-negatiivinen? true
       :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}
      {:otsikko "Tavoitehinnan muutos (€)"
-      :nimi :suunniteltu-kustannus :vaadi-ei-negatiivinen? true
+      :nimi :tavoitehinnan-muutos :vaadi-ei-negatiivinen? true
       :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}
      {:otsikko "Muuttunut kustannus (€)"
-      :nimi :suunniteltu-kustannus :vaadi-ei-negatiivinen? true
-      :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}
-     ]
-    muutos-tiedot/johto-ja-hallintokorvausmuutokset-atom]
+      :nimi :muuttunut-kustannus :vaadi-ei-negatiivinen? true
+      :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}]
+    muutos-tiedot/pysyvan-muutoksen-rivit-atom]
    ])
 
 (defn- muutoslomakkeen-kentat-pysyva
