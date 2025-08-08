@@ -242,6 +242,7 @@
         ;; Siivoa roskat - Poistetaan päätös
         _ (paatos-kyselyt/poista-tavoitehinnan-ylityspaatos (:db jarjestelma) urakka-id kayttajaid (:id db-paatos))]
     (is (= 200 (:status vastaus)))
+    (is (not (nil? (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatos :id]))))
     (is (= tilaaja-maksaa
           (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
     (is (= urakoitsija-maksaa
