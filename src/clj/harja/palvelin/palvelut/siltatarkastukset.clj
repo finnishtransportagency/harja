@@ -3,6 +3,7 @@
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.siltatarkastukset :as q]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.geo :as geo]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -12,20 +13,20 @@
 ;; Parsii array_agg haulla haetut kohteet {kohde [tulos lisätieto] ...} mäpiksi
 (def kohteet-xf
   (comp (map konv/alaviiva->rakenne)
-        (map (fn [rivi]
-               (if-let [kohteet (:kohteet (konv/array->vec rivi :kohteet))]
-                 (assoc rivi
-                   :kohteet
-                   (into {}
-                         (map (fn [kohde]
-                                (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D|BC|BD|CD|BCD|-| ):(.*)$"
-                                                                          kohde)]
-                                  [(Integer/parseInt nro) [(into #{}
-                                                                 (if (= " " tulos)
-                                                                   nil
-                                                                   tulos)) lisatieto]]))
-                              kohteet)))
-                 rivi)))))
+    (map (fn [rivi]
+           (if-let [kohteet (:kohteet (konv/array->vec rivi :kohteet))]
+             (assoc rivi
+               :kohteet
+               (into {}
+                 (map (fn [kohde]
+                        (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D|BC|BD|CD|BCD|-| ):(.*)$"
+                                                        kohde)]
+                          [(Integer/parseInt nro) [(into #{}
+                                                     (if (= " " tulos)
+                                                       nil
+                                                       tulos)) lisatieto]]))
+                   kohteet)))
+             rivi)))))
 
 (defn hae-urakan-sillat
   "Hakee annetun urakan alueen sillat sekä niiden viimeisimmän tarkastuspäivän ja tarkastajan.
@@ -34,50 +35,66 @@
   :kaikki    hakee kaikki sillat (ei kohteita mukana)
   :korjatut  hakee sillat, joilla on ollut puutteita ja jotka on korjattu"
 
-  [db user urakka-id listaus]
+  [db user urakka-id listaus hoitovuoden-alkuvuosi]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
-  (case listaus
-    :kaikki
-    (into []
-      (comp (geo/muunna-pg-tulokset :alue)
-        (map konv/alaviiva->rakenne))
-      (q/hae-urakan-sillat db urakka-id))
+  (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
+        hoitovuodet (range (pvm/vuosi (:alkupvm urakan-tiedot))
+                      (inc (pvm/vuosi (:loppupvm urakan-tiedot))))
+        sillat (case listaus
+                 :kaikki
+                 (into []
+                   (comp (geo/muunna-pg-tulokset :alue)
+                     (map konv/alaviiva->rakenne))
+                   (q/hae-urakan-sillat db {:urakka urakka-id
+                                            :hoitovuoden-alkuvuosi (when-not (= "Kaikki" hoitovuoden-alkuvuosi)
+                                                                     hoitovuoden-alkuvuosi)}))
 
-    :urakan-korjattavat
-    (into []
-          (comp (geo/muunna-pg-tulokset :alue)
-                kohteet-xf
-                (filter #(not (empty? (:kohteet %)))))
-          (q/hae-urakan-sillat-korjattavat db urakka-id))
+                 :urakan-korjattavat
+                 (into []
+                   (comp (geo/muunna-pg-tulokset :alue)
+                     kohteet-xf
+                     (filter #(seq (:kohteet %))))
+                   (q/hae-urakan-sillat-korjattavat db {:urakka urakka-id
+                                                        :hoitovuoden-alkuvuosi (when-not (= "Kaikki" hoitovuoden-alkuvuosi)
+                                                                                 hoitovuoden-alkuvuosi)}))
 
-    :korjaus-ohjelmoitava
-    (into []
-          (comp (geo/muunna-pg-tulokset :alue)
-                kohteet-xf
-                (filter #(not (empty? (:kohteet %)))))
-          (q/hae-urakan-sillat-ohjelmoitavat db urakka-id))
+                 :korjaus-ohjelmoitava
+                 (into []
+                   (comp (geo/muunna-pg-tulokset :alue)
+                     kohteet-xf
+                     (filter #(seq (:kohteet %))))
+                   (q/hae-urakan-sillat-ohjelmoitavat db {:urakka urakka-id
+                                                          :hoitovuoden-alkuvuosi (when-not (= "Kaikki" hoitovuoden-alkuvuosi)
+                                                                                   hoitovuoden-alkuvuosi)}))
 
-    :urakassa-korjatut
-    (into []
-          (comp (geo/muunna-pg-tulokset :alue)
-                kohteet-xf
-                (filter #(and (not= (:rikki-ennen %) 0)
-                              (= (:rikki-nyt %) 0))))
-          (q/hae-urakan-sillat-korjatut db urakka-id))
+                 :urakassa-korjatut
+                 (into []
+                   (comp (geo/muunna-pg-tulokset :alue)
+                     kohteet-xf
+                     (filter #(and (not= (:rikki-ennen %) 0)
+                                (= (:rikki-nyt %) 0))))
+                   (q/hae-urakan-sillat-korjatut db {:urakka urakka-id
+                                                     :hoitovuoden-alkuvuosi (when-not (= "Kaikki" hoitovuoden-alkuvuosi)
+                                                                              hoitovuoden-alkuvuosi)}))
 
-    :korjatut
-    (into []
-          (comp (geo/muunna-pg-tulokset :alue)
-                kohteet-xf
-                (filter #(and (not= (:rikki-ennen %) 0)
-                              (= (:rikki-nyt %) 0))))
-          (q/hae-urakan-sillat-korjatut db urakka-id))))
+                 :korjatut
+                 (into []
+                   (comp (geo/muunna-pg-tulokset :alue)
+                     kohteet-xf
+                     (filter #(and (not= (:rikki-ennen %) 0)
+                                (= (:rikki-nyt %) 0))))
+                   (q/hae-urakan-sillat-korjatut db {:urakka urakka-id
+                                                     :hoitovuoden-alkuvuosi (when-not (= "Kaikki" hoitovuoden-alkuvuosi)
+                                                                              hoitovuoden-alkuvuosi)})))]
+    {:sillat sillat
+     :urakan-hoitovuodet hoitovuodet
+     :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
 
 (defn hae-siltatarkastus [db id]
   (first (konv/sarakkeet-vektoriin
            (into []
-                 kohteet-xf
-                 (q/hae-siltatarkastus db id))
+             kohteet-xf
+             (q/hae-siltatarkastus db id))
            {:liite :liitteet})))
 
 (defn hae-sillan-tarkastukset
@@ -99,12 +116,11 @@
 
   (doseq [[kohde [tulos lisatieto]] kohteet]
     (q/paivita-siltatarkastuksen-kohteet! db
-                                          (konv/seq->array (sort tulos))
-                                          lisatieto
-                                          id
-                                          kohde
-                                          urakka-id)
-    )
+      (konv/seq->array (sort tulos))
+      lisatieto
+      id
+      kohde
+      urakka-id))
   siltatarkastus)
 
 (defn paivita-siltatarkastus!
@@ -115,14 +131,14 @@
 
 (defn- luo-siltatarkastus [db user {:keys [silta-id urakka-id tarkastaja tarkastusaika kohteet]}]
   (let [luotu-tarkastus (q/luo-siltatarkastus<! db silta-id urakka-id (konv/sql-date tarkastusaika)
-                                                tarkastaja (:id user) nil "harja-ui")
+                          tarkastaja (:id user) nil "harja-ui")
         id (:id luotu-tarkastus)]
     (doseq [[kohde [tulos lisatieto]] kohteet]
       (q/luo-siltatarkastuksen-kohde<! db
-                                       (konv/seq->array (sort tulos))
-                                       lisatieto
-                                       id
-                                       kohde))
+        (konv/seq->array (sort tulos))
+        lisatieto
+        id
+        kohde))
     (assoc luotu-tarkastus
       :kohteet kohteet)))
 
@@ -131,13 +147,13 @@
     (let [sillan-urakat (konv/pgarray->vector (q/hae-sillan-urakat db silta-id))]
       (log/debug "Tarkistetaan, että silta " silta-id " kuuluu väitettyyn urakkaan " urakka-id)
       (when (or (empty? sillan-urakat)
-                (not (some #(= urakka-id %) sillan-urakat)))
+              (not (some #(= urakka-id %) sillan-urakat)))
         (throw (SecurityException.
                  (format "Siltatarkastusta ei voi kirjata sillalle (%s), koska se ei kuulu urakkaan (%s).
                           Silta on merkitty kuuluvaksi urakoille: %s"
-                         silta-id
-                         urakka-id
-                         sillan-urakat)))))))
+                   silta-id
+                   urakka-id
+                   sillan-urakat)))))))
 
 (defn tallenna-siltatarkastuksen-liitteet [db tarkastus kohteiden-liitteet]
   (log/debug "Tallenna siltatarkastuksen liitteet: " (pr-str kohteiden-liitteet))
@@ -153,27 +169,26 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (log/debug "Tallennetaan siltatarkastus: " (pr-str siltatarkastus))
   (jdbc/with-db-transaction [db db]
-                            (vaadi-silta-kuuluu-urakkaan db urakka-id silta-id)
-                            (let [tarkastus (if id
-                                              ;; Olemassaoleva tarkastus, päivitetään kohteet
-                                              (paivita-siltatarkastus! db user urakka-id siltatarkastus)
+    (vaadi-silta-kuuluu-urakkaan db urakka-id silta-id)
+    (let [tarkastus (if id
+                      ;; Olemassaoleva tarkastus, päivitetään kohteet
+                      (paivita-siltatarkastus! db user urakka-id siltatarkastus)
 
-                                              ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
-                                              ;; ja sen kohteet.
-                                              (luo-siltatarkastus db user siltatarkastus))]
-                              (log/debug "Kohteet tallennettu!")
-                              (tallenna-siltatarkastuksen-liitteet db tarkastus uudet-liitteet)
-                              (hae-siltatarkastus db (:id tarkastus)))))
+                      ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
+                      ;; ja sen kohteet.
+                      (luo-siltatarkastus db user siltatarkastus))]
+      (log/debug "Kohteet tallennettu!")
+      (tallenna-siltatarkastuksen-liitteet db tarkastus uudet-liitteet)
+      (hae-siltatarkastus db (:id tarkastus)))))
 
 (defn poista-siltatarkastus!
   "Merkitsee siltatarkastuksen poistetuksi"
   [db user {:keys [urakka-id silta-id siltatarkastus-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (jdbc/with-db-transaction [c db]
-                            (do
-                              (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id urakka-id)))
-                            (hae-sillan-tarkastukset c user {:urakka-id urakka-id
-                                                             :silta-id  silta-id})))
+    (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id urakka-id))
+    (hae-sillan-tarkastukset c user {:urakka-id urakka-id
+                                     :silta-id silta-id})))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
@@ -181,17 +196,17 @@
     (let [db (:db this)
           http (:http-palvelin this)]
       (julkaise-palvelu http :hae-urakan-sillat
-                        (fn [user {:keys [urakka-id listaus]}]
-                          (hae-urakan-sillat db user urakka-id listaus)))
+        (fn [user {:keys [urakka-id listaus hoitovuoden-alkuvuosi]}]
+          (hae-urakan-sillat db user urakka-id listaus hoitovuoden-alkuvuosi)))
       (julkaise-palvelu http :hae-sillan-tarkastukset
-                        (fn [user tiedot]
-                          (hae-sillan-tarkastukset db user tiedot)))
+        (fn [user tiedot]
+          (hae-sillan-tarkastukset db user tiedot)))
       (julkaise-palvelu http :tallenna-siltatarkastus
-                        (fn [user tiedot]
-                          (tallenna-siltatarkastus! db user tiedot)))
+        (fn [user tiedot]
+          (tallenna-siltatarkastus! db user tiedot)))
       (julkaise-palvelu http :poista-siltatarkastus
-                        (fn [user tiedot]
-                          (poista-siltatarkastus! db user tiedot)))
+        (fn [user tiedot]
+          (poista-siltatarkastus! db user tiedot)))
       this))
 
   (stop [this]

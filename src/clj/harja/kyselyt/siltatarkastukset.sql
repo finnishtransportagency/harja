@@ -17,14 +17,12 @@ SELECT s.id,
        (s.vastuu_urakka = :urakka) AS "urakan-vastuulla?",
        (SELECT nimi FROM urakka WHERE id = s.vastuu_urakka) AS "vastuu-urakka-nimi"
 FROM silta s
-       LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
-  AND s1.poistettu = FALSE)
-       LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
-  AND s2.tarkastusaika > s1.tarkastusaika
-  AND s2.poistettu = FALSE)
+       LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id AND s1.poistettu = FALSE)
+       LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = FALSE)
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
-  AND s2.id IS NULL;
+  AND s2.id IS NULL
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM s1.tarkastusaika));
 
 -- name: hae-urakan-sillat-puutteet
 -- Hakee alueurakan sillat, joissa on puutteita (tulos muu kuin A) uusimmassa tarkastuksessa.
@@ -50,14 +48,12 @@ SELECT s.id,
         WHERE k.siltatarkastus = s1.id
           AND k.tulos != '{A}') AS kohteet
 FROM silta s
-       LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
-  AND s1.poistettu = FALSE)
-       LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
-  AND s2.tarkastusaika > s1.tarkastusaika
-  AND s2.poistettu = FALSE)
+       LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id AND s1.poistettu = FALSE)
+       LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = FALSE)
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
-  AND s2.id IS NULL;
+  AND s2.id IS NULL
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM s1.tarkastusaika));
 
 --name: hae-urakan-sillat-korjattavat
 -- Hakee sillat, joissa viimeisimmässä tarkastuksessa vähintään 1 B TAI C kohde.
@@ -88,14 +84,12 @@ SELECT s.id,
         WHERE k.siltatarkastus = s1.id
           AND (k.tulos && '{C}' OR k.tulos && '{B}')) AS kohteet
 FROM silta s
-       LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
-  AND s1.poistettu = FALSE)
-       LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
-  AND s2.tarkastusaika > s1.tarkastusaika
-  AND s2.poistettu = FALSE)
+       LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id AND s1.poistettu = FALSE)
+       LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = FALSE)
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
-  AND s2.id IS NULL;
+  AND s2.id IS NULL
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM s1.tarkastusaika));
 
 -- name: hae-urakan-sillat-ohjelmoitavat
 -- Hakee sillat, joiden tulos on D ("Korjaus ohjelmoitava")
@@ -132,7 +126,8 @@ FROM silta s
   AND s2.poistettu = FALSE)
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
-  AND s2.id IS NULL;
+  AND s2.id IS NULL
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM s1.tarkastusaika));
 
 -- name: hae-urakan-sillat-korjatut
 -- Hakee sillat, joille on aiemmassa tarkastuksessa on ollut virheitä.
@@ -176,7 +171,8 @@ FROM siltatarkastus st1
        JOIN silta s ON st1.silta = s.id
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
-  AND st1.poistettu = FALSE;
+  AND st1.poistettu = FALSE
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM s1.tarkastusaika));
 
 -- name: hae-sillan-tarkastukset
 -- Hakee sillan sillantarkastukset
