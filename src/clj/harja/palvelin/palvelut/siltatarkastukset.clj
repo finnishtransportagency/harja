@@ -40,14 +40,16 @@
   (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
         hoitovuodet (range (pvm/vuosi (:alkupvm urakan-tiedot))
                       (inc (pvm/vuosi (:loppupvm urakan-tiedot))))
+        hoitovuoden-alkuvuosi (when-not (or (= "Kaikki" hoitovuoden-alkuvuosi)
+                                           (nil? hoitovuoden-alkuvuosi))
+                                 hoitovuoden-alkuvuosi)
         sillat (case listaus
                  :kaikki
                  (into []
                    (comp (geo/muunna-pg-tulokset :alue)
                      (map konv/alaviiva->rakenne))
                    (q/hae-urakan-sillat db {:urakka urakka-id
-                                            :hoitovuoden-alkuvuosi (when-not (= "Kaikki" hoitovuoden-alkuvuosi)
-                                                                     hoitovuoden-alkuvuosi)}))
+                                            :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
 
                  :urakan-korjattavat
                  (into []
@@ -55,8 +57,7 @@
                      kohteet-xf
                      (filter #(seq (:kohteet %))))
                    (q/hae-urakan-sillat-korjattavat db {:urakka urakka-id
-                                                        :hoitovuoden-alkuvuosi (when-not (= "Kaikki" hoitovuoden-alkuvuosi)
-                                                                                 hoitovuoden-alkuvuosi)}))
+                                                        :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
 
                  :korjaus-ohjelmoitava
                  (into []
@@ -64,8 +65,7 @@
                      kohteet-xf
                      (filter #(seq (:kohteet %))))
                    (q/hae-urakan-sillat-ohjelmoitavat db {:urakka urakka-id
-                                                          :hoitovuoden-alkuvuosi (when-not (= "Kaikki" hoitovuoden-alkuvuosi)
-                                                                                   hoitovuoden-alkuvuosi)}))
+                                                          :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
 
                  :urakassa-korjatut
                  (into []
@@ -74,8 +74,7 @@
                      (filter #(and (not= (:rikki-ennen %) 0)
                                 (= (:rikki-nyt %) 0))))
                    (q/hae-urakan-sillat-korjatut db {:urakka urakka-id
-                                                     :hoitovuoden-alkuvuosi (when-not (= "Kaikki" hoitovuoden-alkuvuosi)
-                                                                              hoitovuoden-alkuvuosi)}))
+                                                     :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
 
                  :korjatut
                  (into []
@@ -84,8 +83,7 @@
                      (filter #(and (not= (:rikki-ennen %) 0)
                                 (= (:rikki-nyt %) 0))))
                    (q/hae-urakan-sillat-korjatut db {:urakka urakka-id
-                                                     :hoitovuoden-alkuvuosi (when-not (= "Kaikki" hoitovuoden-alkuvuosi)
-                                                                              hoitovuoden-alkuvuosi)})))]
+                                                     :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))]
     {:sillat sillat
      :urakan-hoitovuodet hoitovuodet
      :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
