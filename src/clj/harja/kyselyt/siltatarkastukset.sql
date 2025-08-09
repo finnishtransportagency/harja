@@ -172,7 +172,7 @@ FROM siltatarkastus st1
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
   AND st1.poistettu = FALSE
-  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM s1.tarkastusaika));
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM st1.tarkastusaika));
 
 -- name: hae-sillan-tarkastukset
 -- Hakee sillan sillantarkastukset
