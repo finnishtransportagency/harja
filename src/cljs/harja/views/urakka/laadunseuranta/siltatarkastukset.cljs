@@ -147,27 +147,40 @@
       (fn []
         [:div.sillat
          [kartta/kartan-paikka]
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Siltojen hakuehto"]
-          [livi-pudotusvalikko {:valinta    @sillat/listaus
-                                ;;\u2014 on väliviivan unikoodi
-                                :format-fn  #(case %
+         [:div.valinnat
+          [:div.label-ja-alasveto
+           [:span.alasvedon-otsikko "Hoitovuosi"]
+           [yleiset/livi-pudotusvalikko {:valinta @sillat/valittu-vuosi
+                                         ;:disabled haku-menossa
+                                         :vayla-tyyli? true
+                                         :data-cy "hoitokausi-valinta"
+                                         :valitse-fn #(do (reset! sillat/valittu-vuosi %))
+                                         :format-fn #(fmt/hoitovuodesta-hoitokausinumero-ja-kaikki % @sillat/urakan-hoitovuodet true)
+                                         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+            @sillat/urakan-hoitovuodet]]
+          [:div.label-ja-alasveto
+           [:span.alasvedon-otsikko "Siltojen hakuehto"]
+           [livi-pudotusvalikko {:valinta @sillat/listaus
+                                 :vayla-tyyli? true
+                                 ;;\u2014 on väliviivan unikoodi
+                                 :format-fn #(case %
                                                :kaikki "Kaikki"
                                                :urakan-korjattavat "Urakan korjattavat (B-C)"
                                                :urakassa-korjatut "Urakassa korjatut (ei enää B:tä eikä C:tä)"
                                                :korjaus-ohjelmoitava "Korjaus ohjelmoitava (D)"
                                                "Kaikki")
-                                :valitse-fn #(reset! sillat/listaus %)}
-           [:kaikki :urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava]]]
+                                 :valitse-fn #(reset! sillat/listaus %)}
+            [:kaikki :urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava]]]
 
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Järjestä sillat"]
-          [livi-pudotusvalikko {:valinta    @sillat/jarjestys
-                                :format-fn  #(if (= % :nimi)
+          [:div.label-ja-alasveto
+           [:span.alasvedon-otsikko "Järjestä sillat"]
+           [livi-pudotusvalikko {:valinta @sillat/jarjestys
+                                 :vayla-tyyli? true
+                                 :format-fn #(if (= % :nimi)
                                                "Nimen mukaan"
                                                "Siltatunnuksen mukaan")
-                                :valitse-fn #(reset! sillat/jarjestys %)}
-           [:nimi :tunnus]]]
+                                 :valitse-fn #(reset! sillat/jarjestys %)}
+            [:nimi :tunnus]]]]
          [grid/grid
           {:otsikko       "Sillat"
            :rivin-luokka  #(when (sillat/ei-urakan-vastuulla? %) "poistettu-silta")
