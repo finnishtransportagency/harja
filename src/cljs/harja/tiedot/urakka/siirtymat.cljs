@@ -222,6 +222,9 @@
         (nav/aseta-valittu-valilehti! :urakat :suunnittelu)
         (swap! urakka-tila/suunnittelu-kustannussuunnitelma merge app-state)))))
 
+(defn avaa-toteumat []
+  (nav/aseta-valittu-valilehti! :urakat :toteumat))
+
 (defn paallystysten-kohdeluetteloon
   []
   (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystyskohteet))

@@ -126,6 +126,60 @@ FROM tehtavaryhma tr
    AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= :urakka-voimassaolo-alkuvuosi::INTEGER)
  order by tr.jarjestys;
 
+-- name: tehtavaryhman-tehtavat-urakalle
+WITH maaramitattavat_tehtavat AS (
+  SELECT
+    tpk.id,
+    tpk.nimi,
+    tpk.jarjestys,
+    tpk.emo,
+    tpk."maaramitattava?",
+    tpi.id as toimenpideinstanssi
+  FROM tehtava tpk
+    JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk.emo and tpi.urakka = :urakka-id
+  WHERE
+    tpk.tehtavaryhma = :tehtavaryhma-id
+    AND tpk."maaramitattava?" IS TRUE
+    AND tpk."mhu-tehtava?" IS TRUE
+    AND tpk.piilota IS NOT true
+    AND tpk.poistettu IS NOT true
+)
+-- 1. Palautetaan kaikki maaramitattavat tehtävät
+SELECT
+  id,
+  nimi,
+  jarjestys,
+  emo,
+  "maaramitattava?" as "maaramitattava?",
+  toimenpideinstanssi as "toimenpideinstanssi"
+FROM maaramitattavat_tehtavat
+
+UNION ALL
+
+-- 2. Palautetaan "Muu tehtävä", jos ehdot täyttyvät
+SELECT
+  -1 as id,
+  'Muu tehtävä' as nimi,
+  99999 as jarjestys,
+  NULL as emo,
+  true as "maaramitattava?",
+  (SELECT toimenpideinstanssi FROM maaramitattavat_tehtavat LIMIT 1) as "toimenpideinstanssi"
+WHERE
+  -- Ehto 1: On olemassa vähintään yksi maaramitattava tehtävä
+  EXISTS (SELECT 1 FROM maaramitattavat_tehtavat)
+  AND
+  -- Ehto 2: On olemassa vähintään yksi EI-maaramitattava tehtävä
+  EXISTS (
+    SELECT 1 FROM tehtava t2
+    WHERE t2.tehtavaryhma = :tehtavaryhma-id
+      AND t2."maaramitattava?" IS NOT TRUE
+      AND t2."mhu-tehtava?" IS TRUE
+      AND t2.piilota IS NOT true
+      AND t2.poistettu IS NOT true
+  )
+ORDER BY jarjestys, nimi;
+
+
 -- name: hae-sopimuksen-tehtavamaarat-urakalle
 select st.maara                    as "sopimuksen-tehtavamaara",
        st.tehtava                  as "tehtava",

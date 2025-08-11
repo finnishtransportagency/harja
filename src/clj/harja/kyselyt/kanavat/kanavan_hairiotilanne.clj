@@ -23,6 +23,7 @@
 
 (defn hae-sopimuksen-hairiotilanteet-aikavalilta [db hakuehdot]
   (let [urakka-id (::hairiotilanne/urakka-id hakuehdot)
+        kohde-id (::hairiotilanne/kohde-id hakuehdot)
         sopimus-id (:haku-sopimus-id hakuehdot)
         vikaluokka (:haku-vikaluokka hakuehdot)
         korjauksen-tila (:haku-korjauksen-tila hakuehdot)
@@ -33,26 +34,28 @@
         [aikavali-alku aikavali-loppu] (:haku-aikavali hakuehdot)]
 
     (hae-hairiotilanteet db (op/and
-                                 (op/or {::muokkaustiedot/poistettu? op/null?}
-                                        {::muokkaustiedot/poistettu? false})
-                                 (merge
-                                   {::hairiotilanne/urakka-id urakka-id}
-                                   (when sopimus-id
-                                     {::hairiotilanne/sopimus-id sopimus-id})
-                                   (when vikaluokka
-                                     {::hairiotilanne/vikaluokka vikaluokka})
-                                   (when korjauksen-tila
-                                     {::hairiotilanne/korjauksen-tila korjauksen-tila})
-                                   (when (some? paikallinen-kaytto?)
-                                     {::hairiotilanne/paikallinen-kaytto? paikallinen-kaytto?})
-                                   (when (and tie-odotusaika-alku tie-odotusaika-loppu)
-                                     {::hairiotilanne/tieodotusaika-h (op/between tie-odotusaika-alku tie-odotusaika-loppu)})
-                                   (when (and vesi-odotusaika-alku vesi-odotusaika-loppu)
-                                     {::hairiotilanne/vesiodotusaika-h (op/between vesi-odotusaika-alku vesi-odotusaika-loppu)})
-                                   (when (and korjausaika-alku korjausaika-loppu)
-                                     {::hairiotilanne/korjausaika-h (op/between korjausaika-alku korjausaika-loppu)})
-                                   (when (and aikavali-alku aikavali-loppu)
-                                     {::hairiotilanne/havaintoaika (op/between aikavali-alku aikavali-loppu)}))))))
+                              (op/or {::muokkaustiedot/poistettu? op/null?}
+                                {::muokkaustiedot/poistettu? false})
+                              (merge
+                                {::hairiotilanne/urakka-id urakka-id}
+                                (when kohde-id
+                                  {::hairiotilanne/kohde-id kohde-id})
+                                (when sopimus-id
+                                  {::hairiotilanne/sopimus-id sopimus-id})
+                                (when vikaluokka
+                                  {::hairiotilanne/vikaluokka vikaluokka})
+                                (when korjauksen-tila
+                                  {::hairiotilanne/korjauksen-tila korjauksen-tila})
+                                (when (some? paikallinen-kaytto?)
+                                  {::hairiotilanne/paikallinen-kaytto? paikallinen-kaytto?})
+                                (when (and tie-odotusaika-alku tie-odotusaika-loppu)
+                                  {::hairiotilanne/tieodotusaika-h (op/between tie-odotusaika-alku tie-odotusaika-loppu)})
+                                (when (and vesi-odotusaika-alku vesi-odotusaika-loppu)
+                                  {::hairiotilanne/vesiodotusaika-h (op/between vesi-odotusaika-alku vesi-odotusaika-loppu)})
+                                (when (and korjausaika-alku korjausaika-loppu)
+                                  {::hairiotilanne/korjausaika-h (op/between korjausaika-alku korjausaika-loppu)})
+                                (when (and aikavali-alku aikavali-loppu)
+                                  {::hairiotilanne/havaintoaika (op/between aikavali-alku aikavali-loppu)}))))))
 
 (defn tallenna-hairiotilanne [db kayttaja-id hairiotilanne]
   (let [hairiotilanne (update hairiotilanne ::hairiotilanne/sijainti #(when % (geo/geometry (geo/clj->pg %))))]

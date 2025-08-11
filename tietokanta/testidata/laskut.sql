@@ -5,9 +5,9 @@ VALUES ('2019-10-15', 6666.66, (select id from urakka where nimi = 'Oulun MHU 20
 INSERT INTO kulu (erapaiva, kokonaissumma, urakka, luotu, luoja, koontilaskun_kuukausi)
 VALUES ('2019-09-15', 3666.66, (select id from urakka where nimi = 'Oulun MHU 2019-2024'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 'lokakuu/1-hoitovuosi');
 
-INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
+INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja, tehtava) VALUES
 ((select id from kulu where kokonaissumma = 666.66), 1, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'),
- (select id from tehtavaryhma where yksiloiva_tunniste = '405a8a12-70c0-4ef6-91f4-689197493239'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 333.33, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
+ (select id from tehtavaryhma where yksiloiva_tunniste = '405a8a12-70c0-4ef6-91f4-689197493239'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 333.33, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), (select id from tehtava where nimi = 'Runkopuiden poisto'));
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 666.66), 2, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'),
  (select id from tehtavaryhma where yksiloiva_tunniste = '1855032a-2bb3-46d4-b9b4-c6d4e4c25d05'), 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 222.22, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));

@@ -26,7 +26,8 @@
   urakat-paikkaukset-paikkauskohteetkustannukset
   urakat-kulut-valikatselmus
   urakat-valitavoitteet
-  urakat-suunnittelu-kustannussuunnittelu)
+  urakat-suunnittelu-kustannussuunnittelu
+  urakat-laadunseuranta-siltatarkastukset)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
