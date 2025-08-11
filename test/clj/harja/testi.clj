@@ -1236,22 +1236,22 @@
 (def +kayttaja-uuno+ (hae-testi-kayttajan-tiedot {:etunimi "Uuno" :sukunimi "Urakoitsija" }))
 
 (def +kayttaja-yit_uuvh+ (hae-testi-kayttajan-tiedot {:etunimi "Yitin" :sukunimi "Urakkavastaava"
-                                                      :urakkaroolit {(hae-urakan-id-nimella "Oulun alueurakka 2005-2012") "vastuuhenkilo"
-                                                                     (hae-urakan-id-nimella "Oulun alueurakka 2014-2019") "vastuuhenkilo"
-                                                                     (hae-urakan-id-nimella "Iin MHU 2021-2026") "vastuuhenkilo"}}))
+                                                      :urakkaroolit {(hae-urakan-id-nimella "Oulun alueurakka 2005-2012") #{"vastuuhenkilo"}
+                                                                     (hae-urakan-id-nimella "Oulun alueurakka 2014-2019") #{"vastuuhenkilo"}
+                                                                     (hae-urakan-id-nimella "Iin MHU 2021-2026") #{"vastuuhenkilo"}}}))
 
 (def +kayttaja-ulle+ (hae-testi-kayttajan-tiedot {:etunimi "Ulle" :sukunimi "Urakoitsija"
                                                   :organisaatioroolit {(hae-organisaatio-id-nimella "Destia Oy") "Kayttaja"}}))
 
 (def +kayttaja-vastuuhlo-muhos+ (hae-testi-kayttajan-tiedot {:etunimi "Antero" :sukunimi "Asfalttimies"
-                                                             :urakkaroolit {(hae-urakan-id-nimella "Muhoksen päällystysurakka") "vastuuhenkilo"
-                                                                            (hae-urakan-id-nimella "Utajärven päällystysurakka") "vastuuhenkilo"}}))
+                                                             :urakkaroolit {(hae-urakan-id-nimella "Muhoksen päällystysurakka") #{"vastuuhenkilo"}
+                                                                            (hae-urakan-id-nimella "Utajärven päällystysurakka") #{"vastuuhenkilo"}}}))
 (def +kayttaja-vastuuhlo-porvoo+ (hae-testi-kayttajan-tiedot {:etunimi "Veeti" :sukunimi "Velmu"
-                                                              :urakkaroolit {(hae-urakan-id-nimella "Porvoon päällystysurakka") "vastuuhenkilo"
-                                                                             (hae-urakan-id-nimella "Utajärven päällystysurakka") "vastuuhenkilo"}}))
+                                                              :urakkaroolit {(hae-urakan-id-nimella "Porvoon päällystysurakka") #{"vastuuhenkilo"}
+                                                                             (hae-urakan-id-nimella "Utajärven päällystysurakka") #{"vastuuhenkilo"}}}))
 
 (def +kayttaja-paakayttaja-skanska+ (hae-testi-kayttajan-tiedot {:etunimi "Pekka" :sukunimi "Pääjehu"
-                                                                 :organisaatioroolit {(hae-organisaatio-id-nimella "Skanska Asfaltti Oy") "Paakayttaja"}}))
+                                                                 :organisaatioroolit {(hae-organisaatio-id-nimella "Skanska Asfaltti Oy") #{"Paakayttaja"}}}))
 
 (def +kayttaja-laadunvalvoja-kemi+ (hae-testi-kayttajan-tiedot {:etunimi "Keppi" :sukunimi "Laatujärvi" :roolit #{"laadunvalvoja"}}))
 
