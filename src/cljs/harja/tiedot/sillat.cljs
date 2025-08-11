@@ -13,6 +13,8 @@
 (def karttataso-sillat (atom false))
 (def jarjestys (atom :nimi))
 (def listaus (atom :kaikki))
+(def valittu-vuosi (atom nil))
+(def urakan-hoitovuodet (atom nil))
 (def silta-varit {:tarkistettu    "palegreen"
                   :ei-tarkistettu "crimson"
                   :poistettu      "gainsboro"})
@@ -47,26 +49,32 @@
                                 (on-tarkastettu-hoitokautena? silta) 5
                                 :else 6))))
 
-(defn- hae-urakan-siltalistaus [urakka listaus]
+(defn- hae-urakan-siltalistaus [urakka listaus valittu-vuosi]
   (k/post! :hae-urakan-sillat
            {:urakka-id (:id urakka)
-            :listaus   listaus}))
+            :listaus   listaus
+            :hoitovuoden-alkuvuosi valittu-vuosi}))
 
 (defonce paivita-kartta! (atom false))
 
 (def haetut-sillat
   (reaction<! [paalla? @karttataso-sillat
                urakka @nav/valittu-urakka
+               vuosi @valittu-vuosi
                listaus @listaus
                _ @paivita-kartta!]
               {:nil-kun-haku-kaynnissa? true}
               (when (and paalla? urakka)
                 (log "Siltataso päällä, haetaan sillat urakalle: "
                      (:nimi urakka) " (id: " (:id urakka) ")")
-                (go (into []
-                          (comp (map #(assoc % :type :silta))
-                                (map varita-silta))
-                          (<! (hae-urakan-siltalistaus urakka listaus)))))))
+                (go (let [vastaus (<! (hae-urakan-siltalistaus urakka listaus vuosi))
+                          _ (reset! urakan-hoitovuodet (:urakan-hoitovuodet vastaus))
+                          _ (reset! valittu-vuosi (:hoitovuoden-alkuvuosi vastaus))
+                          sillat (:sillat vastaus)]
+                      (into []
+                        (comp (map #(assoc % :type :silta))
+                          (map varita-silta))
+                        sillat))))))
 
 (defn- skaalaa-sillat-zoom-tason-mukaan [koko sillat]
   ;; PENDING: Ei ole optimaalista, että sillat ovat "point", jotka
