@@ -1225,7 +1225,7 @@
   (q "select id, nimi, lyhenne from paikkauskohde_tyomenetelma;"))
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
-(def +kayttaja-tero+ (hae-testi-kayttajan-tiedot {:etunimi "Tero" :sukunimi "Toripolliisi" :roolit #{"ELY_Urakanvalvoja"}
+(def +kayttaja-tero+ (hae-testi-kayttajan-tiedot {:etunimi "Tero" :sukunimi "Toripolliisi" :roolit #{}
                                                   :urakkaroolit {(hae-urakan-id-nimella "Muhoksen päällystysurakka") #{"ELY_Urakanvalvoja"}}}))
 
 
@@ -1241,7 +1241,7 @@
                                                                      (hae-urakan-id-nimella "Iin MHU 2021-2026") #{"vastuuhenkilo"}}}))
 
 (def +kayttaja-ulle+ (hae-testi-kayttajan-tiedot {:etunimi "Ulle" :sukunimi "Urakoitsija"
-                                                  :organisaatioroolit {(hae-organisaatio-id-nimella "Destia Oy") "Kayttaja"}}))
+                                                  :organisaatioroolit {(hae-organisaatio-id-nimella "Destia Oy") #{"Kayttaja"}}}))
 
 (def +kayttaja-vastuuhlo-muhos+ (hae-testi-kayttajan-tiedot {:etunimi "Antero" :sukunimi "Asfalttimies"
                                                              :urakkaroolit {(hae-urakan-id-nimella "Muhoksen päällystysurakka") #{"vastuuhenkilo"}
