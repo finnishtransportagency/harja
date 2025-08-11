@@ -398,19 +398,19 @@
         ;; Kaikki kustannussuunnitelman summat vaikuttaa tavoitehintaan
         ;; Pysyvät muutokset lisätään mukaan joko vähentämään tai lisäämään tavoitehintaa
         kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hankinnat-ok? (and (seq kilpailutettavat-hankinnat)
+        hankinnat-ok? (and (boolean (seq kilpailutettavat-hankinnat))
                         (some (fn [x] (not= (:yhteensa x) 0)) kilpailutettavat-hankinnat))
 
         erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        erillishankinnat-ok? (and (seq erillishankinnat)
+        erillishankinnat-ok? (and (boolean (seq erillishankinnat))
                                (some (fn [x] (not= (:summa x) 0)) erillishankinnat))
 
         hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hoidonjohtopalkkiot-ok? (and (seq hoidonjohtopalkkiot)
+        hoidonjohtopalkkiot-ok? (and (boolean (seq hoidonjohtopalkkiot))
                                   (some (fn [x] (not= (:summa x) 0)) hoidonjohtopalkkiot))
 
         johto-ja-hallintokorvaukset (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        johto-ja-hallintokorvaukset-ok? (and (seq johto-ja-hallintokorvaukset)
+        johto-ja-hallintokorvaukset-ok? (and (boolean (seq johto-ja-hallintokorvaukset))
                                           (some (fn [x] (not= (:summa x) 0)) hoidonjohtopalkkiot))
         voidaan-vahvistaa? (every? true? [hankinnat-ok? erillishankinnat-ok? hoidonjohtopalkkiot-ok?
                                           johto-ja-hallintokorvaukset-ok?])]
