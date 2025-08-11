@@ -83,7 +83,18 @@
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:korjausaika-h uusi}))))
         {:otsikko "Korjausaika (h)"
-         :vain-positiivinen? true}]]]
+         :vain-positiivinen? true}]]
+
+      ;; Kohde alasvetosuodatin
+      [:div.ryhma
+       [valinnat/kanava-kohde
+        (r/wrap (get-in app [:valinnat :kohde])
+          #(do
+             (e! (tiedot/->PaivitaValinnat {:kohde %}))))
+        (into [nil] @kanavaurakka/kanavakohteet)
+        #(if-not (empty? (::kohde/nimi %))
+           (::kohde/nimi %)
+           "Kaikki")]]]
 
      ^{:key "urakkatoiminnot"}
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
