@@ -1550,7 +1550,7 @@
 
       (is (thrown? RuntimeException
                    (kutsu-palvelua (:http-palvelin jarjestelma)
-                                   :tallenna-paallystysilmoitus +kayttaja-tero+
+                                   :tallenna-paallystysilmoitus +kayttaja-yit_uuvh+
                                    {:urakka-id urakka-id
                                     :sopimus-id sopimus-id
                                     :vuosi 2018
