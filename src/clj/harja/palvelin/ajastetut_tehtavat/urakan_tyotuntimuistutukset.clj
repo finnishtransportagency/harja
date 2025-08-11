@@ -1,10 +1,7 @@
 (ns harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset
   "Tekee ajastetun yhteysvarmistuksen API:n"
-  (:require [chime :refer [chime-ch]]
-            [com.stuartsierra.component :as component]
+  (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
-            [clj-time.periodic :refer [periodic-seq]]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.palvelut.viestinta :as viestinta]
             [harja.domain.urakan-tyotunnit :as ut]
@@ -12,7 +9,6 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.urakan-tyotunnit :as q]
             [harja.tyokalut.html :refer [sanitoi]]
-            [hiccup.core :refer [html h]]
             [harja.fmt :as fmt]))
 
 (defn laheta-muistutukset-urakoille [fim email urakat vuosi kolmannes kuluvan-kolmanneksen-paattymispaiva]

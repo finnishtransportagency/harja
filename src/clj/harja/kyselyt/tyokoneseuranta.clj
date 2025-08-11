@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/tyokoneseuranta.sql"
   {:positional? false})
+
+(declare poista-vanhentuneet-havainnot!)

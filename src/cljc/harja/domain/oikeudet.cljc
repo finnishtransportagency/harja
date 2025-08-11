@@ -26,7 +26,9 @@
   urakat-paikkaukset-paikkauskohteetkustannukset
   urakat-kulut-valikatselmus
   urakat-valitavoitteet
-  urakat-suunnittelu-kustannussuunnittelu)
+  urakat-suunnittelu-kustannussuunnittelu
+  urakat-kanavat-kanavakohteet
+  urakat-paikkaukset-paikkauskohteet)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 

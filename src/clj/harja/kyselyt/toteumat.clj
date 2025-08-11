@@ -13,7 +13,9 @@
 (defqueries "harja/kyselyt/toteumat.sql"
   {:positional? true})
 
-(declare luo-erilliskustannus<!)
+(declare luo-erilliskustannus<! onko-olemassa-ulkoisella-idlla onko-toteumalla-suolausta hae-pisteen-hoitoluokat
+  luo-toteuma<! luodun-toteuman-id hae-toteuman-hash siirra-toteumat-analytiikalle
+  hae-reitittomat-mutta-reittipisteelliset-toteumat hae-reitittomat-mutta-osoitteelliset-toteumat)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja urakka id:llä: " urakka-id)
@@ -40,9 +42,8 @@
 (defn luo-uusi-toteuma
   "Luo uuden toteuman ja palauttaa sen id:n"
   [db toteuma]
-  (do
-    (luo-toteuma<! db toteuma)
-    (luodun-toteuman-id db)))
+  (luo-toteuma<! db toteuma)
+  (luodun-toteuman-id db))
 
 (defn ei-ole-lahetetty-aiemmin? [db-replica jsonhash ulkoinen-id]
   ;; Jos hashia ei löydy, ei ole lähetetty aiemmin

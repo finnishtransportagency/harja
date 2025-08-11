@@ -11,9 +11,11 @@
 (defqueries "harja/kyselyt/geometriapaivitykset.sql"
             {:positional? true})
 
+(declare hae-paivitys paivita-viimeisin-paivitys)
+
 (defn pitaako-paivittaa? [db paivitystunnus]
       (let [aineisto (geometria-aineistot/hae-voimassaoleva-geometria-aineisto db paivitystunnus)
-            paivityksen-tiedot (first (harja.kyselyt.geometriapaivitykset/hae-paivitys db paivitystunnus))
+            paivityksen-tiedot (first (hae-paivitys db paivitystunnus))
             viimeisin-paivitys (:viimeisin_paivitys paivityksen-tiedot)
             seuraava-paivitys (:seuraava_paivitys paivityksen-tiedot)
             aja-paikallinen-paivitys (if (nil? paivityksen-tiedot) false (:paikallinen paivityksen-tiedot))
