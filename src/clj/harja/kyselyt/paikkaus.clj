@@ -110,8 +110,8 @@
       [db urakka-id ulkoinen-id]
   (and
     (number? ulkoinen-id)
-    (seq (hae-paikkaukset db {::paikkaus/ulkoinen-id ulkoinen-id
-                                 ::paikkaus/urakka-id urakka-id}))))
+    (boolean (seq (hae-paikkaukset db {::paikkaus/ulkoinen-id ulkoinen-id
+                                       ::paikkaus/urakka-id urakka-id})))))
 
 (defn onko-paikkaustoteuma-olemassa-ulkoisella-idlla?
   "Paikkaustoteuma tunnistetaan urakan ja ulkoisen-id:n perusteella.
@@ -119,8 +119,8 @@
   [db urakka-id ulkoinen-id]
   (and
     (number? ulkoinen-id)
-    (seq (hae-paikkaustoteumat db {::paikkaus/ulkoinen-id ulkoinen-id
-                                      ::paikkaus/urakka-id urakka-id}))))
+    (boolean (seq (hae-paikkaustoteumat db {::paikkaus/ulkoinen-id ulkoinen-id
+                                     ::paikkaus/urakka-id urakka-id})))))
 
 (defn onko-kohde-olemassa-ulkoisella-idlla?
       "Paikkauskohde tunnistetaan urakan ja ulkoisen-id:n perusteella.
@@ -128,8 +128,8 @@
       [db urakka-id ulkoinen-id]
   (and
     (number? ulkoinen-id)
-    (seq (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-id
-                                     ::paikkaus/urakka-id urakka-id}))))
+    (boolean (seq (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-id
+                                    ::paikkaus/urakka-id urakka-id})))))
 
 (defn onko-kohde-olemassa-nimella? [db nimi urakka-id]
   (fetch db
