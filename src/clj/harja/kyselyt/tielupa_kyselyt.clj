@@ -118,7 +118,7 @@
 (defn onko-olemassa-ulkoisella-tunnisteella? [db ulkoinen-id]
   (and
     (number? ulkoinen-id)
-    (seq (hae-tieluvat db {::tielupa/ulkoinen-tunniste ulkoinen-id}))))
+    (boolean (seq (hae-tieluvat db {::tielupa/ulkoinen-tunniste ulkoinen-id})))))
 
 (defn tallenna-tielupa [db tielupa]
   (let [id (::tielupa/id tielupa)

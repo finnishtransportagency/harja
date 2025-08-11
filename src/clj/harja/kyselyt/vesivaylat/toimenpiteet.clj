@@ -40,7 +40,7 @@
     (map #(assoc % ::vv-toimenpide/tyolaji (get vv-toimenpide/reimari-tyolajit (::vv-toimenpide/tyolaji %))
             ::vv-toimenpide/tyoluokka (get vv-toimenpide/reimari-tyoluokat (::vv-toimenpide/tyoluokka %))
             ::vv-toimenpide/toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (::vv-toimenpide/toimenpide %))
-            ::vv-toimenpide/vikakorjauksia? (seq (::vv-toimenpide/vikailmoitukset %))))
+            ::vv-toimenpide/vikakorjauksia? (boolean (seq (::vv-toimenpide/vikailmoitukset %)))))
     (map #(select-keys % [::vv-toimenpide/id
                           ::vv-toimenpide/tyolaji
                           ::vv-toimenpide/vayla
