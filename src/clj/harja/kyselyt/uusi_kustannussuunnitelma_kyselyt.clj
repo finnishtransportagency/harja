@@ -22,6 +22,7 @@
   hae-rahavaraus-vuodelta
   paivita-kuukauden-hoidonjohtopalkkio<! tallenna-kuukauden-hoidonjohtopalkkio<!
   hae-johto-ja-hallintokorvaukset-kuukausittain
+  hae-kuukauden-johto-ja-hallintokorvaus
   paivita-kuukauden-johto-ja-hallintokorvaus<! nollaa-kuukauden-johto-ja-hallintokorvaus<! tallenna-kuukauden-johto-ja-hallintokorvaus<!
   vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
   vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille!
@@ -34,7 +35,7 @@
   (let [;; Haetaan urakan toimenpiteet
         toimenpiteet (hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         ;; Kiinteähintaiset kustannukset
-        kiinteat (reduce (fn [acc {:keys [nimi toimenpideinstanssi-id] :as toimenpide}]
+        kiinteat (reduce (fn [acc {:keys [nimi toimenpideinstanssi-id]}]
                            (let [kiinteat (hae-kiintea-kustannus-kuukausittain
                                             db {:sopimus-id sopimus-id
                                                 :vuosi hoitovuoden-alkuvuosi
@@ -238,7 +239,7 @@
                     :luoja (:id kayttaja)}))]
     tiedot))
 
-(defn tallenna-hankintojen-kuukausittainen-summa [db kk-jakso alkujakso? nimi viimeinen-summa summa hoitovuoden-alkuvuosi sopimus-id
+(defn tallenna-hankintojen-kuukausittainen-summa [db kk-jakso alkujakso? viimeinen-summa summa hoitovuoden-alkuvuosi sopimus-id
                                                   toimenpideinstanssi-id kayttaja-id]
   (let [_ (doseq [kk kk-jakso]
             (let [summa (cond
@@ -250,7 +251,7 @@
                                    :kuukausi kk
                                    :sopimus-id sopimus-id
                                    :toimenpideinstanssi-id toimenpideinstanssi-id}))
-                  t (if (:id dbrivi)
+                  _ (if (:id dbrivi)
                       (paivita-kiinteat-kustannukset-kuukausittain<! db
                         {:id (:id dbrivi)
                          :vuosi hoitovuoden-alkuvuosi
@@ -278,7 +279,7 @@
   ;; Lisätään transktiot, jottei yhden epäonnistuminen päästä muita läpi
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         ; Splittaa alkukauden summat kuukausittain
-        _ (doseq [{:keys [nimi alkukausi loppukausi toimenpideinstanssi-id] :as toimenpide} kilpailutettavat-hankinnat]
+        _ (doseq [{:keys [alkukausi loppukausi toimenpideinstanssi-id]} kilpailutettavat-hankinnat]
             (let [alkukausi (bigdec alkukausi)
 
                   alkukausi-kuukaudet (yleiset/round2 2 (with-precision 4 (/ alkukausi 3)))
@@ -287,14 +288,14 @@
                   loppukausi-kuukaudet (yleiset/round2 2 (with-precision 4 (/ loppukausi 9)))
                   loppukausi-viimeinen-kuukausi (- loppukausi (* 8 loppukausi-kuukaudet))
                   ;; Tallenna alkujakso
-                  _ (tallenna-hankintojen-kuukausittainen-summa db (range 10 13) true nimi alkukausi-viimeinen-kuukausi alkukausi-kuukaudet
+                  _ (tallenna-hankintojen-kuukausittainen-summa db (range 10 13) true alkukausi-viimeinen-kuukausi alkukausi-kuukaudet
                       hoitovuoden-alkuvuosi sopimus-id toimenpideinstanssi-id (:id kayttaja))
                   ;; Tallenna loppujakso
-                  _ (tallenna-hankintojen-kuukausittainen-summa db (range 1 10) false nimi loppukausi-viimeinen-kuukausi loppukausi-kuukaudet
+                  _ (tallenna-hankintojen-kuukausittainen-summa db (range 1 10) false loppukausi-viimeinen-kuukausi loppukausi-kuukaudet
                       (inc hoitovuoden-alkuvuosi) sopimus-id toimenpideinstanssi-id (:id kayttaja))]))]))
 
 (defn tallenna-erillishankinnat
-  [db kayttaja urakka-id hoitovuoden-alkuvuosi erillishankinnat]
+  [db kayttaja urakka-id erillishankinnat]
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         ;; Hae hoidonjohto toimenpideinstannssi
         ;; Hoindonjohto toimenpide.koodi = 23151
@@ -306,7 +307,7 @@
         ; Tallenna kuukausittaiset summat
         _ (doseq [rivi erillishankinnat]
             (let [dbrivi (first (hae-kuukauden-erillishankinta db {:id (:id rivi)}))
-                  t (if (:id dbrivi)
+                  _ (if (:id dbrivi)
                       (paivita-kuukauden-erillishankinta<! db
                         {:id (:id dbrivi)
                          :summa (:summa rivi)
@@ -324,7 +325,7 @@
                          :luoja (:id kayttaja)}))]))]))
 
 (defn tallenna-johto-ja-hallintokorvaukset
-  [db kayttaja urakka-id hoitovuoden-alkuvuosi johto-ja-hallintokorvaukset]
+  [db kayttaja urakka-id johto-ja-hallintokorvaukset]
   (let [;; Toimenkuva on tietokannassa pakollinen.
         ;; Asetetaan jokin toimenkuva, koska oikeaa toimenkuvaa ei voida uudessa kustannusten suunnittelussa asettaa.
         ;; Kuukausittaiset yhteenvetorivit eivät ole riippuvaisia toimenkuvasta, joten voidaan käyttää mitä tahansa.
@@ -333,7 +334,7 @@
         ; Tallenna kuukausittaiset summat
         _ (doseq [rivi johto-ja-hallintokorvaukset]
             (let [dbrivi (first (hae-kuukauden-johto-ja-hallintokorvaus db {:id (:id rivi)}))
-                  t (if (:id dbrivi)
+                  _ (if (:id dbrivi)
                       (do
                         ;; Koska vanhassa kustiksessa arvot oli toimenpidekohtaisesti, niin nollataan ne pois ensin, jotta
                         ;; juuri tapahtunut päivitys tulisi näkyviin. Uusi kustis voi käyttää vain yhtä riviä ja yhtä id:tä arvojen päivitykseen.
@@ -361,7 +362,7 @@
                          :luoja (:id kayttaja)}))]))]))
 
 (defn tallenna-hoidonjohtopalkkiot
-  [db kayttaja urakka-id hoitovuoden-alkuvuosi hoidonjohtopalkkiot]
+  [db kayttaja urakka-id hoidonjohtopalkkiot]
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         ;; Hae hoidonjohto toimenpideinstannssi
         ;; Hoindonjohto toimenpide.koodi = 23151
@@ -372,7 +373,7 @@
         ; Tallenna kuukausittaiset summat
         _ (doseq [rivi hoidonjohtopalkkiot]
             (let [dbrivi (first (hae-kuukauden-hoidonjohtopalkkio db {:id (:id rivi)}))
-                  t (if (:id dbrivi)
+                  _ (if (:id dbrivi)
                       (paivita-kuukauden-hoidonjohtopalkkio<! db
                         {:id (:id dbrivi)
                          :summa (:summa rivi)
@@ -397,19 +398,19 @@
         ;; Kaikki kustannussuunnitelman summat vaikuttaa tavoitehintaan
         ;; Pysyvät muutokset lisätään mukaan joko vähentämään tai lisäämään tavoitehintaa
         kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hankinnat-ok? (and (not (empty? kilpailutettavat-hankinnat))
+        hankinnat-ok? (and (seq kilpailutettavat-hankinnat)
                         (some (fn [x] (not= (:yhteensa x) 0)) kilpailutettavat-hankinnat))
 
         erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        erillishankinnat-ok? (and (not (empty? erillishankinnat))
+        erillishankinnat-ok? (and (seq erillishankinnat)
                                (some (fn [x] (not= (:summa x) 0)) erillishankinnat))
 
         hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hoidonjohtopalkkiot-ok? (and (not (empty? hoidonjohtopalkkiot))
+        hoidonjohtopalkkiot-ok? (and (seq hoidonjohtopalkkiot)
                                   (some (fn [x] (not= (:summa x) 0)) hoidonjohtopalkkiot))
 
         johto-ja-hallintokorvaukset (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        johto-ja-hallintokorvaukset-ok? (and (not (empty? johto-ja-hallintokorvaukset))
+        johto-ja-hallintokorvaukset-ok? (and (seq johto-ja-hallintokorvaukset)
                                           (some (fn [x] (not= (:summa x) 0)) hoidonjohtopalkkiot))
         voidaan-vahvistaa? (every? true? [hankinnat-ok? erillishankinnat-ok? hoidonjohtopalkkiot-ok?
                                           johto-ja-hallintokorvaukset-ok?])]
@@ -450,7 +451,7 @@
                                                                                   :vuosi hoitovuoden-alkuvuosi
                                                                                   :sopimus_id sopimus-id})
 
-                        dbrahavaraus (if (not (empty? kt-rahavaraus-kuukaudet))
+                        dbrahavaraus (if (seq kt-rahavaraus-kuukaudet)
                                        (let [kk (atom 0)] ;; Lokaalisti voi olla vaikka vain kolmena kuukautena summa, vaikka pitäisi olla 12
                                          (doseq [r kt-rahavaraus-kuukaudet
                                                  :let [_ (swap! kk inc)

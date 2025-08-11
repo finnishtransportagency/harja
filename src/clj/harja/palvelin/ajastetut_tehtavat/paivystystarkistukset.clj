@@ -1,13 +1,8 @@
 (ns harja.palvelin.ajastetut-tehtavat.paivystystarkistukset
   (:require [taoensso.timbre :as log]
-            [chime :refer [chime-ch]]
-            [chime :refer [chime-at]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot-q]
-            [harja.palvelin.palvelut.urakat :as urakat]
-            [clj-time.periodic :refer [periodic-seq]]
             [harja.pvm :as pvm]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [clj-time.core :as t]
             [harja.kyselyt.konversio :as konv]
@@ -16,7 +11,6 @@
             [harja.palvelin.tyokalut.lukot :as lukot]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.fmt :as fmt]
-            [clojure.string :as str]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]))
 
 (defn viesti-puuttuvasta-paivystyksesta [urakka-nimi pvm]
@@ -25,8 +19,8 @@
            Päivystäjätietoja tarvitaan tieliikennekeskusilmoitusten välittämiseen. \n\n
            Ystävällisin terveisin,\n
            Harja-järjestelmä"
-          (sanitoi urakka-nimi)
-          (fmt/pvm (c/to-date pvm))))
+    (sanitoi urakka-nimi)
+    (fmt/pvm (c/to-date pvm))))
 
 (defn- laheta-ilmoitus-henkiloille [email urakka-nimi henkilot pvm kehitysmoodi?]
   (doseq [henkilo henkilot]
@@ -49,8 +43,8 @@
     (if-not (empty? ilmoituksen-saajat)
       (laheta-ilmoitus-henkiloille email (:nimi urakka) ilmoituksen-saajat pvm kehitysmoodi?)
       (log/warn (format "Urakalla %s ei ole päivystystä %s ja urakalle ei löydy FIM:stä henkiöä, jolle tehdä ilmoitus."
-                        (:nimi urakka)
-                        pvm)))))
+                  (:nimi urakka)
+                  pvm)))))
 
 (defn- ilmoita-paivystyksettomista-urakoista [urakat-ilman-paivystysta fim email pvm kehitysmoodi?]
   (doseq [urakka urakat-ilman-paivystysta]
@@ -69,16 +63,16 @@
                                       paivystykset)
                 paivystys-annettuna-paivana? (fn [pvm paivystys-alku paivystys-loppu]
                                                (pvm/valissa? pvm
-                                                             paivystys-alku
-                                                             paivystys-loppu
-                                                             true))]
-            (and (not (empty? urakan-paivystykset))
-                 (some?
-                   (some #(paivystys-annettuna-paivana?
-                           pvm
-                           (:paivystys-alku %)
-                           (:paivystys-loppu %))
-                     urakan-paivystykset)))))]
+                                                 paivystys-alku
+                                                 paivystys-loppu
+                                                 true))]
+            (and (seq urakan-paivystykset)
+              (some?
+                (some #(paivystys-annettuna-paivana?
+                         pvm
+                         (:paivystys-alku %)
+                         (:paivystys-loppu %))
+                  urakan-paivystykset)))))]
 
     (filter
       #(not (urakalla-paivystys-annettuna-paivana? paivystykset % pvm))
@@ -87,16 +81,16 @@
 (defn hae-voimassa-olevien-urakoiden-paivystykset
   [db pvm]
   (let [urakoiden-paivystykset (into []
-                                     (map konv/alaviiva->rakenne)
-                                     (yhteyshenkilot-q/hae-kaynissa-olevien-urakoiden-paivystykset
-                                       db
-                                       {:pvm (c/to-sql-time pvm)}))
+                                 (map konv/alaviiva->rakenne)
+                                 (yhteyshenkilot-q/hae-kaynissa-olevien-urakoiden-paivystykset
+                                   db
+                                   {:pvm (c/to-sql-time pvm)}))
         urakoiden-paivystykset (map
                                  #(-> %
-                                      (assoc :paivystys-alku
-                                             (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paivystys-alku %))))
-                                      (assoc :paivystys-loppu
-                                             (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paivystys-loppu %)))))
+                                    (assoc :paivystys-alku
+                                      (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paivystys-alku %))))
+                                    (assoc :paivystys-loppu
+                                      (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paivystys-loppu %)))))
                                  urakoiden-paivystykset)]
     urakoiden-paivystykset))
 
@@ -104,9 +98,9 @@
   ;; TODO Poista urakkatyyppi-filtteri kun kaikki urakat tuotannossa (joku kaunis päivä)
   ([db pvm] (hae-urakat-paivystystarkistukseen db pvm nil))
   ([db pvm urakkatyypit]
-  (yhteyshenkilot-q/hae-urakat-paivystystarkistukseen db {:pvm (c/to-sql-time pvm)
-                                                          :tyypit (when urakkatyypit
-                                                                    (mapv name urakkatyypit))})))
+   (yhteyshenkilot-q/hae-urakat-paivystystarkistukseen db {:pvm (c/to-sql-time pvm)
+                                                           :tyypit (when urakkatyypit
+                                                                     (mapv name urakkatyypit))})))
 
 (defn- paivystyksien-tarkistustehtava [db fim email nykyhetki kehitysmoodi?]
   (let [voimassa-olevat-urakat (hae-urakat-paivystystarkistukseen db nykyhetki #{:valaistus :hoito :teiden-hoito})
@@ -117,18 +111,18 @@
 (defn tee-paivystyksien-tarkistustehtava
   "Tarkistaa, onko urakalle olemassa päivystys tarkistushetkeä seuraavana päivänä.
    Käsittelee vain ne urakat, jotka ovat voimassa annettuna päivänä."
-  [{:keys [db fim api-sahkoposti] :as this} paivittainen-aika kehitysmoodi?]
+  [{:keys [db fim api-sahkoposti]} paivittainen-aika kehitysmoodi?]
   (log/debug "Ajastetaan päivystäjien tarkistus")
   (when paivittainen-aika
     (ajastettu-tehtava/ajasta-paivittain
-     paivittainen-aika
+      paivittainen-aika
       (do
         (log/info "ajasta-paivittain :: paivystyksien-tarkistustehtava :: Alkaa " (pvm/nyt))
         (fn [_]
-            (lukot/yrita-ajaa-lukon-kanssa
-              db
-              "paivystystarkistukset"
-              #(paivystyksien-tarkistustehtava db fim api-sahkoposti (t/plus (t/now) (t/days 1)) kehitysmoodi?)))))))
+          (lukot/yrita-ajaa-lukon-kanssa
+            db
+            "paivystystarkistukset"
+            #(paivystyksien-tarkistustehtava db fim api-sahkoposti (t/plus (t/now) (t/days 1)) kehitysmoodi?)))))))
 
 (defrecord Paivystystarkistukset [asetukset kehitysmoodi?]
   component/Lifecycle

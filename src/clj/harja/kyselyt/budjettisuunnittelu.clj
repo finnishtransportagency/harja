@@ -7,7 +7,7 @@
   {:positional? false})
 
 (declare lisaa-suunnitelmalle-tila hae-budjettitavoite hae-valikatselmus-siirrot-ed-vuodelta
-  onko-kustannussuunnitelma-vahvistettu)
+  onko-kustannussuunnitelma-vahvistettu hae-suunnitelman-tilat)
 
 (defn redusoi-suunnitelutilat
   [tilat tila]

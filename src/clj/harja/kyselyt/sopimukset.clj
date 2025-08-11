@@ -5,7 +5,7 @@
 (defqueries "harja/kyselyt/sopimukset.sql"
   {:positional? true})
 
-(declare hae-urakan-paasopimus)
+(declare hae-urakan-paasopimus onko-olemassa)
 
 (defn onko-olemassa? [db urakka-id sopimus-id]
-  (:exists (first (harja.kyselyt.sopimukset/onko-olemassa db urakka-id sopimus-id))))
+  (:exists (first (onko-olemassa db urakka-id sopimus-id))))
