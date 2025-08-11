@@ -1658,11 +1658,17 @@
   (let [kohde-id (hae-yllapitokohteen-id-nimella "Oulun ohitusramppi")
         payload {::urakka-domain/id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
                  ::paallystysilmoitus-domain/paallystyskohde-id kohde-id
-                 ::paallystysilmoitus-domain/tila :valmis}]
-    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :aseta-paallystysilmoituksen-tila
-                                           +kayttaja-tero+
-                                           payload)))
+                 ::paallystysilmoitus-domain/tila :valmis}
+        tila-ennen (ffirst (q "SELECT tila FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id))
+        ;; tero on urakanvalvoja, hänellä on oikeus avata lukitun potin lukitus (roolit excel: päätös)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :aseta-paallystysilmoituksen-tila
+                  +kayttaja-tero+
+                  payload)
+        tila-jalkeen (ffirst (q "SELECT tila FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id))]
+    (is (= "lukittu" tila-ennen))
+    (is (= (:tila vastaus)) "valmis")
+    (is (= "valmis" tila-jalkeen))
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :aseta-paallystysilmoituksen-tila
                                            +kayttaja-vastuuhlo-muhos+
