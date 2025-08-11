@@ -489,7 +489,9 @@
    "Yksikköhintaiset työt päivittäin" :yksikkohintaiset-tyot
    "Yksikköhintaiset työt tehtävittäin" :yks-hint-tehtavien-summat
    "Ympäristöraportti" :ymparisto
-   "Toimenpiteiden ajoittuminen" :toimenpideajat})
+   "Toimenpiteiden ajoittuminen" :toimenpideajat
+   "Tehtävämäärät" :tehtavamaarat
+   "Välitavoitteet" :valitavoiteraportti})
 
 (defmethod raportin-parametri "checkbox" [p arvo]
   (let [avaimet [(:nimi @valittu-raporttityyppi)
@@ -627,8 +629,27 @@
             (when-not (= :raportoinnissa-ruuhkaa raportti)
               (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)))))))
 
+(defn aseta-checkbox-oletusarvot
+  "Asettaa checkbox-parametrien oletusarvot käyttäjälle vain jos polussa ei ole vielä arvoa."
+  [raporttityyppi muistetut]
+  (let [raportin-nimi (:nimi raporttityyppi)]
+    (reduce
+      (fn [kertyneet parametri]
+        (let [on-checkbox? (= "checkbox" (:tyyppi parametri))
+              oletus? (:oletusarvo parametri)
+              avain (or (:nimi parametri))
+              polku [raportin-nimi avain]
+              _ (prn "polku" polku oletus?)]
+          (if (and on-checkbox? oletus? (nil? (get-in kertyneet polku)))
+            (assoc-in kertyneet polku true)
+            kertyneet)))
+      muistetut
+      (:parametrit raporttityyppi))))
+
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
-  (let [parametrit (sort-by parametrin-sort-avain
+  (let [raportin-nimi (:nimi raporttityyppi)
+        _ (swap! muistetut-parametrit #(aseta-checkbox-oletusarvot raporttityyppi %))
+        parametrit (sort-by parametrin-sort-avain
                             (filter #(let [k (:konteksti %)]
                                       (or (nil? k)
                                           (= k konteksti)))
@@ -640,6 +661,7 @@
                                   (when (nakyvat-parametrit nimi)
                                     arvot))
                                 @parametri-arvot))
+        _ (prn "")
         arvot-nyt (merge arvot-nyt
                          (get @muistetut-parametrit (:nimi raporttityyppi))
                          {:urakkatyyppi (:arvo @nav/urakkatyyppi)}
