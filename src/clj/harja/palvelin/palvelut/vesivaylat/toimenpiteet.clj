@@ -1,21 +1,12 @@
 (ns harja.palvelin.palvelut.vesivaylat.toimenpiteet
   (:require [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
-            [clojure.core.async :as async]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.domain.urakka :as ur]
-            [harja.domain.roolit :as roolit]
-            [harja.geo :as geo]
-            [harja.transit :as transit]
-            [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.vesivaylat.toimenpiteet :as q]
-            [harja.kyselyt.vesivaylat.hinnoittelut :as hinnoittelut-q]
-            [harja.kyselyt.vesivaylat.kiintiot :as kiintiot-q]))
+            [harja.kyselyt.vesivaylat.hinnoittelut :as hinnoittelut-q]))
 
 (defn hae-yksikkohintaiset-toimenpiteet [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)

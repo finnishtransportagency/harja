@@ -66,7 +66,9 @@
     (is (every? #(= haettu-osasto (::tielupa/hakija-osasto %)) vastaus) "Jokainen löytynyt tietue vastaa hakuehtoa")))
 
 (deftest onko-olemassa-ulkoisella-tunnisteella
-  (let [db (:db jarjestelma)]
+  (let [db (:db jarjestelma)
+        _ (println "(tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666)" (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666))
+        _ (println "true?" (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666)))]
     (is (false? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db nil)))
     (is (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666)))
     (is (false? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 2345)))
@@ -80,7 +82,7 @@
 
     ;; uuden luominen
     (tielupa-q/tallenna-tielupa db testitielupa)
-    (is (= (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666123))))
+    (is (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666123)))
     (is (= maara-luonnin-jalkeen (hae-maara)))
 
     ;; paivittaminen ulkoisella tunnisteella

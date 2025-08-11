@@ -29,7 +29,9 @@
   urakat-suunnittelu-kustannussuunnittelu
   urakat-laadunseuranta-siltatarkastukset
   urakat-kanavat-kanavakohteet
-  urakat-paikkaukset-paikkauskohteet)
+  urakat-paikkaukset-paikkauskohteet
+  urakat-vesivaylatoimenpiteet-kokonaishintaiset
+  urakat-vesivaylatoimenpiteet-yksikkohintaiset)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 

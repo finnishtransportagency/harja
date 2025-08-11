@@ -102,7 +102,7 @@
     hinnoittelu-id))
 
 (defn hinnoitteluun-kuuluu-toimenpiteita?* [toimenpiteet]
-  (seq toimenpiteet))
+  (boolean (seq toimenpiteet)))
 
 (defn hinnoitteluun-kuuluu-toimenpiteita? [db hinnoittelu-id]
   (hinnoitteluun-kuuluu-toimenpiteita?*
