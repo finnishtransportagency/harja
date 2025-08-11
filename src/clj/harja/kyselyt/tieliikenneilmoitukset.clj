@@ -8,7 +8,7 @@
   {:positional? true})
 
 (defn ilmoitukselle-olemassa-vastaanottokuittaus? [db ilmoitusid]
-  (seq (onko-ilmoitukselle-vastaanottokuittausta db ilmoitusid)))
+  (boolean (seq (onko-ilmoitukselle-vastaanottokuittausta db ilmoitusid))))
 
 (defn ilmoitus-loytyy-idlla? [db ilmoitusid]
   (:exists (first (ilmoitus-loytyy-idlla db ilmoitusid))))

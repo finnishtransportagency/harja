@@ -48,4 +48,4 @@
 
 (defn yllapitokohde-paikkauskohde? [db yllapitokohde-id]
   (let [paikkauskohde (hae-paikkauskohde-yllapitokohde-idlla db {:yllapitokohde-id yllapitokohde-id})]
-    (seq paikkauskohde)))
+    (boolean (seq paikkauskohde))))
