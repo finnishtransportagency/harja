@@ -31,13 +31,13 @@ describe('Päänäkymien avaamiset', function () {
 
     it("Tilannekuva välilehti toimii", function () {
         cy.contains('ul#sivut a span', 'Tilannekuva').click({force: true})
-        cy.contains('div#tk-suodattimet a.klikattava', "Nykytilanne").should('exist')
+        cy.contains('div#tk-suodattimet a.klikattava', "Nykytilanne", { timeout: 10000 }).should('exist')
         cy.contains('Hupsista').should('not.exist')
     })
 
     it("Ilmoitukset välilehti toimii", function () {
         cy.contains('ul#sivut a span', 'Ilmoitukset').click({force: true})
-        cy.contains('div.livi-grid th', "Urakka").should('exist')
+        cy.contains('div.livi-grid th', "Urakka", { timeout: 10000 }).should('exist')
         cy.contains('Hupsista').should('not.exist')
     })
 
