@@ -1,12 +1,11 @@
 (ns harja.kyselyt.urakan-tyotunnit
   (:require
-    [harja.kyselyt.specql-db :refer [define-tables]]
     [harja.domain.urakan-tyotunnit :as ut]
-    [specql.core :refer [fetch update! insert! upsert!]]
+    [specql.core :refer [fetch upsert!]]
     [jeesql.core :refer [defqueries]]
-    [specql.op :as op]
-    [harja.pvm :as pvm]
-    [harja.kyselyt.konversio :as konv]))
+    [specql.op :as op]))
+
+(declare hae-urakat-joilla-puuttuu-kolmanneksen-tunnit)
 
 (defqueries "harja/kyselyt/urakan_tyotunnit.sql")
 

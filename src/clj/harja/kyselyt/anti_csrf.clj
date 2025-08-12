@@ -7,6 +7,9 @@
 (defqueries "harja/kyselyt/anti_csrf.sql"
   {:positional? true})
 
+(declare poista-kayttajanimen-vanhentuneet-csrf-sessiot! luo-csrf-sessio-kayttajanimelle<!
+  virkista-kayttajanimen-csrf-sessio-jos-voimassa<! hae-kayttajan-voimassaoleva-csrf-token)
+
 (def csrf-voimassa-s (* 60 60 24)) ;; 24h
 
 (defn poista-ja-luo-csrf-sessio

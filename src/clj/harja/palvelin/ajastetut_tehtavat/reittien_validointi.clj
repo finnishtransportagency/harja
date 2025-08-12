@@ -24,16 +24,16 @@
   (log/info "Aloitetaan reittien luonti reittipisteellisille toteumille.")
   (lukko/yrita-ajaa-lukon-kanssa db "reittipiste-reitti-paivitys"
     #(loop [etaisyys reittitoteuma/maksimi-linnuntien-etaisyys]
-     (let [toteumat (toteumat-q/hae-reitittomat-mutta-reittipisteelliset-toteumat db)]
-       (when-not (empty? toteumat)
-         (log/info (format "Löydettiin %s reittipisteellistä toteumaa, jolta reitti puuttuu. Yritetään laskea reitti uusiksi."
-                            (count toteumat)))
-         (jdbc/with-db-transaction
-           [db db]
-           (doseq [{:keys [id]} toteumat]
-             (reittitoteuma/paivita-toteuman-reittigeometria db id etaisyys)))
-         (when-not (<= maksimi-etaisyys etaisyys)
-           (recur (+ etaisyys 200))))))))
+       (let [toteumat (toteumat-q/hae-reitittomat-mutta-reittipisteelliset-toteumat db)]
+         (when-not (empty? toteumat)
+           (log/info (format "Löydettiin %s reittipisteellistä toteumaa, jolta reitti puuttuu. Yritetään laskea reitti uusiksi."
+                       (count toteumat)))
+           (jdbc/with-db-transaction
+             [db db]
+             (doseq [{:keys [id]} toteumat]
+               (reittitoteuma/paivita-toteuman-reittigeometria db id etaisyys)))
+           (when-not (<= maksimi-etaisyys etaisyys)
+             (recur (+ etaisyys 200))))))))
 
 (defn- paivita-osoitteelliset-toteumat
   "Hakee toteumat, joille on tr-osoite, mutta ei reittiä, ja yrittää muodostaa reitin uusiksi."
@@ -41,15 +41,15 @@
   (log/info "Aloitetaan reittien luonti tr-osoitteellisille toteumille.")
   (lukko/yrita-ajaa-lukon-kanssa db "tr-reitti-paivitys"
     #(let [toteumat (toteumat-q/hae-reitittomat-mutta-osoitteelliset-toteumat db)]
-     (when-not (empty? toteumat)
-       (log/info (format "Löydettiin %s toteumaa jolla on tr-osoite, mutta ei reittigeometriaa. Yritetään laskea reitti." (count toteumat)))
-       (jdbc/with-db-transaction
-         [db db]
-         ;; {:id, :numero, :alkuosa; :alkuetaisyys, :loppuosa, :loppuetaisyys}
-         (doseq [tiedot toteumat]
-           (let [reitti (tierekisteri/hae-tr-viiva db tiedot)]
-             (when-not (:virhe reitti)
-               (paivita-toteuman-reittigeometria db (:id tiedot) (first reitti))))))))))
+       (when-not (empty? toteumat)
+         (log/info (format "Löydettiin %s toteumaa jolla on tr-osoite, mutta ei reittigeometriaa. Yritetään laskea reitti." (count toteumat)))
+         (jdbc/with-db-transaction
+           [db db]
+           ;; {:id, :numero, :alkuosa; :alkuetaisyys, :loppuosa, :loppuetaisyys}
+           (doseq [tiedot toteumat]
+             (let [reitti (tierekisteri/hae-tr-viiva db tiedot)]
+               (when-not (:virhe reitti)
+                 (paivita-toteuman-reittigeometria db (:id tiedot) (first reitti))))))))))
 
 (defn tee-toteumien-reittien-tarkistustehtava
   [{:keys [db]} paivittainen-aika]
@@ -59,8 +59,8 @@
       (do
         (log/info "ajasta-paivittain :: paivita-reittipisteelliset-toteumat :: Alkaa " (pvm/nyt))
         (fn [_]
-            (paivita-reittipisteelliset-toteumat db)
-            (paivita-osoitteelliset-toteumat db))))))
+          (paivita-reittipisteelliset-toteumat db)
+          (paivita-osoitteelliset-toteumat db))))))
 
 (defrecord Reittitarkistukset [asetukset]
   component/Lifecycle

@@ -2,7 +2,6 @@
   "Harjan käyttäjäroolit"
 
   (:require
-   [clojure.set :refer [intersection]]
     #?(:cljs [harja.tiedot.istunto :as istunto])
     [taoensso.timbre :as log]
     #?(:clj [slingshot.slingshot :refer [throw+]])))
@@ -17,12 +16,8 @@
 (def tilaajan-rakennuttajakonsultti    "tilaajan rakennuttajakonsultti")
 (def ely-rakennuttajakonsultti         "rakennuttajakonsultti")
 (def urakanvalvoja                     "urakanvalvoja") ;; UHA: uv
-;;(def vaylamuodon-vastuuhenkilo         "vaylamuodon vastuuhenkilo")
 (def liikennepaivystaja                "liikennepaivystaja")
 (def tilaajan-laadunvalvontakonsultti  "tilaajan laadunvalvontakonsultti")
-(def urakoitsijan-paakayttaja          "urakoitsijan paakayttaja")
-(def urakoitsijan-urakan-vastuuhenkilo "urakoitsijan urakan vastuuhenkilo")
-(def urakoitsijan-laatuvastaava        "urakoitsijan laatuvastaava")
 
 (def aikataulunakyman-sahkopostiviestinnan-roolit
   #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"})
@@ -34,10 +29,7 @@
 ;; Ylläolevat saattavat olla osittain vanhentuneita (2021).
 ;; Nykyiset roolit voi tarkastaa roolit.xlsx-tiedoston otsikoista
 ;; tai kutsumalla (keys harja.domain.oikeudet-roolit) REPListä.
-
-(def tilaajan-urakanvalvoja "Tilaajan_Urakanvalvoja")
 (def ely-urakanvalvoja "ELY_Urakanvalvoja")
-(def ely-paakayttaja "ELY_Paakayttaja")
 
 (def urakoitsijaroolit
   #{"Paakayttaja"
