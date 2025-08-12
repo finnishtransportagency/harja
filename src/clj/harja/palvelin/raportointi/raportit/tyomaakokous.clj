@@ -21,7 +21,9 @@
     [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain :as yks-hint-tehtavittain]
     [harja.palvelin.raportointi.raportit.ymparisto :as ymparisto]
     [harja.palvelin.raportointi.raportit.laaduntarkastus :as laaduntarkastus]
-    [harja.palvelin.raportointi.raportit.toimenpideajat :as toimenpideajat]))
+    [harja.palvelin.raportointi.raportit.toimenpideajat :as toimenpideajat]
+    [harja.palvelin.raportointi.raportit.valitavoiteraportti :as valitavoiteraportti]
+    [harja.palvelin.raportointi.raportit.tehtavamaarat :as tehtavamaarat]))
 
 (defn urakkatyypin-laskutusyhteenveto
   "Ohjaa laskutusyhteenvedon oikeaan paikkaan urakkatyypin mukaisesti"
@@ -49,7 +51,7 @@
             [:muutos-ja-lisatyot "Muutos- ja lisätyöt" muutos-ja-lisatyot/suorita]
             [:sanktioraportti "Sanktioiden yhteenveto" sanktiot/suorita]
             [:soratietarkastusraportti "Soratietarkastukset" soratietarkastukset/suorita]
-            [:tehtavamaarat "Tehtävämäärät" tiestotarkastukset/suorita]
+            [:tehtavamaarat "Tehtävämäärät" tehtavamaarat/suorita]
             [:tiestotarkastusraportti "Tiestötarkastukset" tiestotarkastukset/suorita]
             [:toimenpideajat "Toimenpiteiden ajoittuminen" toimenpideajat/suorita]
             [:turvallisuus "Turvallisuusraportti" turvallisuus/suorita]
@@ -57,4 +59,4 @@
             [:yksikkohintaiset-tyot "Yksikköhintaiset työt päivittäin" yks-hint-paivittain/suorita]
             [:yks-hint-tehtavien-summat "Yksikköhintaiset työt tehtävittäin" yks-hint-tehtavittain/suorita]
             [:ymparisto "Ympäristöraportti" ymparisto/suorita]
-            [:valitavoiteraportti "Välitavoitteet" ymparisto/suorita]])])
+            [:valitavoiteraportti "Välitavoitteet" valitavoiteraportti/suorita]])])
