@@ -110,14 +110,14 @@
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
     (assoc app :nakymassa? nakymassa?
-               :karttataso-nakyvissa? nakymassa?))
+      :karttataso-nakyvissa? nakymassa?))
 
   PaivitaValinnat
   ;; Valintojen päivittäminen laukaisee aina myös kantahaun uusimmilla valinnoilla (ellei ole jo käynnissä),
   ;; jotta näkymä pysyy synkassa valintojen kanssa
   (process-event [{tiedot :tiedot} app]
     (let [uudet-valinnat (merge (:valinnat app)
-                                (select-keys tiedot jaettu/valintojen-avaimet))
+                           (select-keys tiedot jaettu/valintojen-avaimet))
           haku (tuck/send-async! ->HaeToimenpiteet)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
@@ -129,13 +129,13 @@
   HaeToimenpiteet
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:toimenpiteiden-haku-kaynnissa? app))
-             (some? (:urakka-id valinnat)))
+          (some? (:urakka-id valinnat)))
       (-> app
-          (tuck-tyokalut/post! :hae-kokonaishintaiset-toimenpiteet
-                               (jaettu/toimenpiteiden-hakukyselyn-argumentit valinnat)
-                               {:onnistui ->ToimenpiteetHaettu
-                                       :epaonnistui ->ToimenpiteetEiHaettu})
-          (assoc :toimenpiteiden-haku-kaynnissa? true))
+        (tuck-tyokalut/post! :hae-kokonaishintaiset-toimenpiteet
+          (jaettu/toimenpiteiden-hakukyselyn-argumentit valinnat)
+          {:onnistui ->ToimenpiteetHaettu
+           :epaonnistui ->ToimenpiteetEiHaettu})
+        (assoc :toimenpiteiden-haku-kaynnissa? true))
       app))
 
   ToimenpiteetHaettu
@@ -143,10 +143,10 @@
     (let [turvalaitteet-kartalle (tuck/send-async! jaettu/->HaeToimenpiteidenTurvalaitteetKartalle)]
       (go (turvalaitteet-kartalle toimenpiteet))
       (assoc app :toimenpiteet (-> toimenpiteet
-                                   jaettu/korosta-harjassa-luodut
-                                   kiintiottomat-toimenpiteet-valiaikaisiin-kiintioihin
-                                   jaettu/toimenpiteet-aikajarjestyksessa)
-                 :toimenpiteiden-haku-kaynnissa? false)))
+                                 jaettu/korosta-harjassa-luodut
+                                 kiintiottomat-toimenpiteet-valiaikaisiin-kiintioihin
+                                 jaettu/toimenpiteet-aikajarjestyksessa)
+        :toimenpiteiden-haku-kaynnissa? false)))
 
   ToimenpiteetEiHaettu
   (process-event [_ app]
@@ -157,18 +157,18 @@
   (process-event [_ app]
     (if-not (:kiintioiden-haku-kaynnissa? app)
       (-> app
-          (tuck-tyokalut/post! :hae-kiintiot
-                               {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
-                                       ::kiintio/sopimus-id (get-in app [:valinnat :sopimus-id])}
-                               {:onnistui ->KiintiotHaettu
-                                       :epaonnistui ->KiintiotEiHaettu})
-          (assoc :kiintioiden-haku-kaynnissa? true))
+        (tuck-tyokalut/post! :hae-kiintiot
+          {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
+           ::kiintio/sopimus-id (get-in app [:valinnat :sopimus-id])}
+          {:onnistui ->KiintiotHaettu
+           :epaonnistui ->KiintiotEiHaettu})
+        (assoc :kiintioiden-haku-kaynnissa? true))
       app))
 
   KiintiotHaettu
   (process-event [{kiintiot :kiintiot} app]
     (assoc app :kiintiot kiintiot
-               :kiintioiden-haku-kaynnissa? false))
+      :kiintioiden-haku-kaynnissa? false))
 
   KiintiotEiHaettu
   (process-event [_ app]
@@ -183,13 +183,13 @@
   (process-event [_ app]
     (if-not (:kiintioon-liittaminen-kaynnissa? app)
       (-> app
-          (tuck-tyokalut/post! :liita-toimenpiteet-kiintioon
-                               {::kiintio/id (:valittu-kiintio-id app)
-                                       ::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
-                                       ::to/idt (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app)))}
-                               {:onnistui ->ToimenpiteetLiitettyKiintioon
-                                       :epaonnistui ->ToimenpiteetEiLiitettyKiintioon})
-          (assoc :kiintioon-liittaminen-kaynnissa? true))
+        (tuck-tyokalut/post! :liita-toimenpiteet-kiintioon
+          {::kiintio/id (:valittu-kiintio-id app)
+           ::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
+           ::to/idt (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app)))}
+          {:onnistui ->ToimenpiteetLiitettyKiintioon
+           :epaonnistui ->ToimenpiteetEiLiitettyKiintioon})
+        (assoc :kiintioon-liittaminen-kaynnissa? true))
       app))
 
   ToimenpiteetLiitettyKiintioon
@@ -198,7 +198,7 @@
       (viesti/nayta! (jaettu/toimenpiteiden-toiminto-suoritettu (count (::to/idt vastaus)) "liitetty") :success)
       (go (toimenpidehaku (:valinnat app)))
       (assoc app :kiintioon-liittaminen-kaynnissa? false
-                 :valittu-kiintio-id nil)))
+        :valittu-kiintio-id nil)))
 
   ToimenpiteetEiLiitettyKiintioon
   (process-event [_ app]
@@ -215,20 +215,4 @@
   (process-event [{id :id} app]
     (if (nil? (:avoimet-kiintiot app))
       app
-      (update app :avoimet-kiintiot disj id)))
-
-  KorostaKiintioKartalla
-  (process-event [{kiintio :kiintio} {:keys [toimenpiteet] :as app}]
-    (let [korostettavat-turvalaitteet (->>
-                                        toimenpiteet
-                                        (filter #(= (get-in % [::to/kiintio ::kiintio/id]) (::kiintio/id kiintio)))
-                                        (map (comp ::to/turvalaite))
-                                        (into #{}))]
-      (-> (jaettu/korosta-kartalla korostettavat-turvalaitteet app)
-          (assoc :korostettu-kiintio (::kiintio/id kiintio)))))
-
-  PoistaKiintionKorostus
-  (process-event [_ app]
-    (->> app
-         (poista-kiintion-korostus)
-         (jaettu/korosta-kartalla nil))))
+      (update app :avoimet-kiintiot disj id))))

@@ -97,13 +97,6 @@
     pvm/jalkeen?
     toimenpiteet))
 
-(defn paivita-kartta [app]
-  (assoc app :turvalaitteet-kartalla (turvalaitteet-kartalle (:turvalaitteet app) app)))
-
-(defn korosta-kartalla [turvalaitenumero-set app]
-  (-> (assoc app :korostetut-turvalaitteet turvalaitenumero-set)
-    (paivita-kartta)))
-
 (defn siirra-valitut! [palvelu app]
   (tuck-tyokalut/post! palvelu
     {::to/urakka-id (get-in app [:valinnat :urakka-id])
@@ -161,19 +154,6 @@
           paivitetyt-idt (into #{} (map ::to/id paivitetyt-toimenpiteet))
           paivittamattomat (remove (comp paivitetyt-idt ::to/id) toimenpiteet)]
       (assoc app :toimenpiteet (concat paivitetyt-toimenpiteet paivittamattomat))))
-
-  AsetaInfolaatikonTila
-  (process-event [{tunniste :tunniste
-                   uusi-tila :uusi-tila
-                   fn :lisa-funktiot} app]
-    (let [fn (or fn [])]
-      ((apply comp fn)
-       (if tunniste
-         (cond->> (assoc app :infolaatikko-nakyvissa (merge (:infolaatikko-nakyvissa app)
-                                                       {tunniste uusi-tila}))
-           (false? uusi-tila)
-           (korosta-kartalla nil))
-         app))))
 
   ToimenpiteetSiirretty
   (process-event [{toimenpiteet :toimenpiteet} app]
@@ -263,17 +243,6 @@
         :turvalaitteet nil
         :korostetut-turvalaitteet nil)))
 
-  TurvalaitteetKartalleHaettu
-  (process-event [{haetut :haetut tulos :tulos} {:keys [kartalle-haettavat-toimenpiteet] :as app}]
-    ;; Jos valmistunut haku ei ole uusin aloitettu, ei tehdä mitään.
-    (if (= haetut kartalle-haettavat-toimenpiteet)
-      (assoc app :kartalle-haettavat-toimenpiteet nil
-        :turvalaitteet-kartalla (turvalaitteet-kartalle tulos app)
-        :turvalaitteet tulos
-        :korostetut-turvalaitteet nil)
-
-      app))
-
   TurvalaitteetKartalleEiHaettu
   (process-event [{haetut :haetut} {:keys [kartalle-haettavat-toimenpiteet] :as app}]
     (if (= haetut kartalle-haettavat-toimenpiteet)
@@ -283,10 +252,4 @@
           :turvalaitteet nil
           :korostetut-turvalaitteet nil))
 
-      app))
-
-  KorostaToimenpideKartalla
-  (process-event [{toimenpide :toimenpide fn :lisa-funktiot} app]
-    (let [fn (or fn [])]
-      ((apply comp fn)
-       (korosta-kartalla #{(get-in toimenpide [::to/turvalaite])} app)))))
+      app)))

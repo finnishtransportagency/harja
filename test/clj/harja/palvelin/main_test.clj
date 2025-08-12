@@ -120,7 +120,6 @@
     :vv-hinnoittelut
     :vv-materiaalit
     :vkm
-    :vv-turvalaitteet
     :hairioilmoitukset
     :vv-alukset
     :kan-kohteet
@@ -211,7 +210,6 @@
     :vv-hinnoittelut
     :vv-materiaalit
     :vkm
-    :vv-turvalaitteet
     :hairioilmoitukset
     :vv-alukset
     :kan-kohteet

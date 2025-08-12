@@ -4,7 +4,7 @@
   ;;; Namespacen alussa on tuck-eventtien testit, niiden jälkeen funktioiden testit
   ;;; 16.9.2017 eventtien ja funktioiden järjestys vastaa varsinaisen namespacen järjestystä
   ;;; **************
-
+  
   (:require [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.loki :refer [log]]
@@ -14,7 +14,6 @@
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
-            [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.tyo :as tyo]
             [harja.domain.muokkaustiedot :as m]
@@ -53,8 +52,7 @@
                                             ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm testiajon-alkupvm
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm testiajon-alkupvm}
                                {::to/id 1
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
@@ -62,7 +60,6 @@
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm testiajon-alkupvm
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}
                                 ::to/oma-hinnoittelu {::h/hinnat [{::hinta/id 2
                                                                    ::hinta/otsikko "Yleiset materiaalit"
                                                                    ::hinta/summa 2
@@ -85,32 +82,28 @@
                                             ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm testiajon-alkupvm
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm testiajon-alkupvm}
                                {::to/id 3
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm testiajon-alkupvm
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm testiajon-alkupvm}
                                {::to/id 4
                                 ::to/tyolaji :kiinteat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm testiajon-alkupvm
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm testiajon-alkupvm}
                                {::to/id 5
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm testiajon-alkupvm
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm testiajon-alkupvm}
                                {::to/id 6
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
@@ -118,8 +111,7 @@
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm testiajon-alkupvm
-                                ::to/liitteet [{:id 666}]
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
+                                ::to/liitteet [{:id 666}]}]})
 
 ;;; **************
 ;;; TUCK-EVENTIEN TESTIT
@@ -805,25 +797,7 @@
 (deftest hintaryhman-hinnoittelu-ei-tallennettu
   (is (= {:hintaryhman-hinnoittelun-tallennus-kaynnissa? false}
          (e! (tiedot/->HintaryhmanHinnoitteluEiTallennettu {:msg :error})
-             {:hintaryhman-hinnoittelun-tallennus-kaynnissa? true}))))
-
-(deftest hintaryhman-korostaminen
-  (testing "Hintaryhmän korostus"
-    (let [tulos (e! (tiedot/->KorostaHintaryhmaKartalla {::h/id 1})
-                    {:turvalaitteet [{::tu/turvalaitenro 1
-                                      ::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
-                     :toimenpiteet [{::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 1}}
-                                    {::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 2}}
-                                    {::to/hintaryhma-id 2 ::to/turvalaite {::tu/turvalaitenro 1}}]})]
-      (is (= 1 (:korostettu-hintaryhma tulos)))
-      (is (= #{1 2} (:korostetut-turvalaitteet tulos)))
-      (is (not-empty (:turvalaitteet-kartalla tulos)))))
-
-  (testing "Hintaryhmän korostamisen poistaminen"
-    (let [tulos (e! (tiedot/->PoistaHintaryhmanKorostus))]
-      ;; false, koska näkymässä on hintaryhmä jonka id on nil
-      (is (= false (:korostettu-hintaryhma tulos)))
-      (is (nil? (:korostetut-turvalaitteet tulos))))))
+           {:hintaryhman-hinnoittelun-tallennus-kaynnissa? true}))))
 
 ;;; **************
 ;;; FUNKTIOIDEN TESTIT

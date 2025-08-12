@@ -7,7 +7,6 @@
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
-            [harja.domain.vesivaylat.turvalaite :as tu]
             [cljs-time.core :as t]
             [cljs.spec.alpha :as s]))
 
@@ -27,8 +26,7 @@
                                             ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm (pvm/nyt)}
                                {::to/id 1
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
@@ -36,7 +34,6 @@
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}
                                 :valittu? true}
                                {::to/id 2
                                 ::to/tyolaji :viitat
@@ -44,40 +41,35 @@
                                             ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm (pvm/nyt)}
                                {::to/id 3
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm (pvm/nyt)}
                                {::to/id 4
                                 ::to/tyolaji :kiinteat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm (pvm/nyt)}
                                {::to/id 5
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm (pvm/nyt)}
                                {::to/id 6
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
+                                ::to/pvm (pvm/nyt)}]})
 
 (deftest pudotusvalikko-valinnat
   (is (= [nil 1 2 3] (tiedot/arvot-pudotusvalikko-valinnoiksi {:1 1 :1a 1 :2 2 :3 3}))))
@@ -152,9 +144,9 @@
 
   (testing "Tilan yhdistäminen muuttaa vain valintoja"
     (let [a (atom {:id 1 :foo :bar})
-         b (atom {:id 2 :baz :barbaz})]
-     (is (= a (tiedot/yhdista-tilat! a b)) "Funktio palauttaa ensimmäisen atomin")
-     (is (= @a @(tiedot/yhdista-tilat! a b)) "Sisältö ei muuttunut kutsun aikana")))
+          b (atom {:id 2 :baz :barbaz})]
+      (is (= a (tiedot/yhdista-tilat! a b)) "Funktio palauttaa ensimmäisen atomin")
+      (is (= @a @(tiedot/yhdista-tilat! a b)) "Sisältö ei muuttunut kutsun aikana")))
 
   (testing "Tilan yhdistäminen yhdistää :valinnat mäpin"
     (let [a (atom {:id 1 :valinnat {:sopimus 1 :urakka 1}})
@@ -164,66 +156,7 @@
     (let [a (atom {:id 1 :valinnat {:sopimus 1 :urakka 1}})
           b (atom {:id 2 :valinnat {:urakka 2 :organisaatio 2}})]
       (is (= {:id 1 :valinnat {:sopimus 1 :urakka 2 :organisaatio 2}}
-            @(tiedot/yhdista-tilat! a b)) ":valinnat avain yhdistettiin"))))
-
-(deftest korosta-kartalla?
-  (let [korosta? (tiedot/korosta-turvalaite-kartalla? {:korostetut-turvalaitteet #{1 2}})]
-    (is (fn? korosta?))
-    (is (true? (korosta? {::tu/turvalaitenro 1})))
-    (is (false? (korosta? {::tu/turvalaitenro 3}))))
-
-  (let [korosta? (tiedot/korosta-turvalaite-kartalla? {:korostetut-turvalaitteet nil})]
-    (is (fn? korosta?))
-    (is (false? (korosta? {::tu/turvalaitenro 1})))
-    (is (false? (korosta? {::tu/turvalaitenro 3})))))
-
-(deftest turvalaitteen-toimenpiteet
-  (let [tulos (tiedot/turvalaitteen-toimenpiteet {::tu/turvalaitenro 1}
-                                                 {:toimenpiteet [{::to/turvalaite {::tu/turvalaitenro 1}
-                                                                  ::to/id 1}
-                                                                 {::to/turvalaite {::tu/turvalaitenro 1}
-                                                                  ::to/id 2}
-                                                                 {::to/turvalaite {::tu/turvalaitenro 2}
-                                                                  ::to/id 3}]})]
-    (is (= [{::to/turvalaite {::tu/turvalaitenro 1}
-             ::to/id 1}
-            {::to/turvalaite {::tu/turvalaitenro 1}
-             ::to/id 2}]
-           tulos))
-    ;; Infopaneelissa kaivetaan tuloksesta kamaa indeksillä, siksi vektori eikä lista
-    (is (vector? tulos) "Turvalaitteiden toimenpiteiden pitää olla vektori, infopaneelin takia.")))
-
-(deftest kartalla-naytettavat
-  (let [tu [{::tu/turvalaitenro 1} {::tu/turvalaitenro 2} ::tu/turvalaitenro 3]]
-    (is (= tu (tiedot/kartalla-naytettavat-turvalaitteet tu {:korostetut-turvalaitteet nil})))
-    (is (= tu (tiedot/kartalla-naytettavat-turvalaitteet tu {:korostetut-turvalaitteet #{}})))
-
-    (is (= [{::tu/turvalaitenro 1} {::tu/turvalaitenro 2}]
-           (tiedot/kartalla-naytettavat-turvalaitteet tu {:korostetut-turvalaitteet #{1 2}})))))
-
-(deftest turvalaitteet-kartalle
-  (let [laitteet [{::tu/turvalaitenro 1
-                   ::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}
-                  {::tu/turvalaitenro 2
-                   ::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
-        tila {:toimenpiteet [{::to/turvalaite {::tu/turvalaitenro 1}
-                              ::to/id 1}
-                             {::to/turvalaite {::tu/turvalaitenro 1}
-                              ::to/id 2}
-                             {::to/turvalaite {::tu/turvalaitenro 2}
-                              ::to/id 3}]}
-        tulos (tiedot/turvalaitteet-kartalle laitteet tila)]
-    (is (or
-          (= [{::to/turvalaite {::tu/turvalaitenro 1}
-               ::to/id 1}
-              {::to/turvalaite {::tu/turvalaitenro 1}
-               ::to/id 2}]
-             (:toimenpiteet (first tulos)))
-          (= [{::to/turvalaite {::tu/turvalaitenro 1}
-               ::to/id 1}
-              {::to/turvalaite {::tu/turvalaitenro 1}
-               ::to/id 2}]
-             (:toimenpiteet (second tulos)))))))
+             @(tiedot/yhdista-tilat! a b)) ":valinnat avain yhdistettiin"))))
 
 (deftest rivin-valinta
   (testing "Rivin asettaminen valituksi"
@@ -400,78 +333,8 @@
 (deftest liite-ei-poistettu
   (let [vanha-tila testitila
         uusi-tila (e! (tiedot/->LiiteEiPoistettu)
-                      vanha-tila)]
+                    vanha-tila)]
     (is (false? (:liitteen-poisto-kaynnissa? uusi-tila)))))
-
-(deftest turvalaitteet-kartalle-event
-  (testing "Turvalaitteiden hakemisen aloitus"
-    (vaadi-async-kutsut
-     #{tiedot/->TurvalaitteetKartalleHaettu tiedot/->TurvalaitteetKartalleEiHaettu}
-
-     (is (= {:kartalle-haettavat-toimenpiteet #{1 2}}
-            (e! (tiedot/->HaeToimenpiteidenTurvalaitteetKartalle [{::to/turvalaite {::tu/turvalaitenro 1}}
-                                                                  {::to/turvalaite {::tu/turvalaitenro 1}}
-                                                                  {::to/turvalaite {::tu/turvalaitenro 2}}]))))))
-
-  (testing "Kartan tyhjennys kun toimenpidelista on tyhjä"
-    (is (= {:kartalle-haettavat-toimenpiteet nil
-            :turvalaitteet-kartalla nil
-            :turvalaitteet nil
-            :korostetut-turvalaitteet nil}
-           (e! (tiedot/->HaeToimenpiteidenTurvalaitteetKartalle []))))
-
-    (is (= {:kartalle-haettavat-toimenpiteet nil
-            :turvalaitteet-kartalla nil
-            :turvalaitteet nil
-            :korostetut-turvalaitteet nil}
-           (e! (tiedot/->HaeToimenpiteidenTurvalaitteetKartalle nil)))))
-
-  (testing "Haun valmistuminen"
-    (let [payload [{::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
-          tulos (e! (tiedot/->TurvalaitteetKartalleHaettu payload #{1 2})
-                    {:kartalle-haettavat-toimenpiteet #{1 2}})]
-      (is (nil? (:kartalle-haettavat-toimenpiteet tulos)))
-      (is (= payload (:turvalaitteet tulos)))
-      (is (nil? (:korostetut-turvalaitteet tulos)))
-      (is (not-empty (:turvalaitteet-kartalla tulos)))))
-
-  (testing "Vanhentuneen haun valmistuminen"
-    (is (= {:kartalle-haettavat-toimenpiteet #{1 2}}
-          (e! (tiedot/->TurvalaitteetKartalleHaettu {} #{3 2})
-              {:kartalle-haettavat-toimenpiteet #{1 2}}))))
-
-  (testing "Haun epäonnistuminen"
-    (is (= {:kartalle-haettavat-toimenpiteet nil
-            :turvalaitteet-kartalla nil
-            :turvalaitteet nil
-            :korostetut-turvalaitteet nil}
-           (e! (tiedot/->TurvalaitteetKartalleEiHaettu nil #{1 2})
-               {:kartalle-haettavat-toimenpiteet #{1 2}}))))
-
-  (testing "Vanhentuneen haun epäonnistuminen"
-    (is (= {:kartalle-haettavat-toimenpiteet #{1 2}}
-          (e! (tiedot/->TurvalaitteetKartalleEiHaettu nil #{3 2})
-              {:kartalle-haettavat-toimenpiteet #{1 2}})))))
-
-(deftest toimenpiteen-korostaminen
-  (let [mun-inc (fn [app] (update app :numero inc))
-        tulos (e! (tiedot/->KorostaToimenpideKartalla {::to/turvalaite {::tu/turvalaitenro 1}}
-                                                      [mun-inc mun-inc])
-                  {:numero 0
-                   :turvalaitteet [{::tu/turvalaitenro 1
-                                    ::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]})]
-    (is (= 2 (:numero tulos)))
-    (is (= #{1} (:korostetut-turvalaitteet tulos)))
-    (is (= [{:harja.domain.vesivaylat.turvalaite/turvalaitenro 1,
-             :tyyppi-kartalla :turvalaite,
-             :sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]},
-             :toimenpiteet [], :type :turvalaite, :nimi "Turvalaite",
-             :selite {:teksti "", :img "images/tuplarajat/pinnit/pinni-musta.svg"},
-             :alue {:scale 1, :img "images/tuplarajat/pinnit/pinni-musta.svg",
-                    :type :merkki,
-                    :color nil
-                    :coordinates '(367529.053512741 7288034.99009309)}}]
-           (:turvalaitteet-kartalla tulos)))))
 
 (deftest valittujen-siirto
   (vaadi-async-kutsut

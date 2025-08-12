@@ -8,7 +8,6 @@
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
-            [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.kiintio :as kiintio]
             [cljs-time.core :as t]
             [cljs.spec.alpha :as s]))
@@ -31,8 +30,7 @@
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
-                                ::to/vikakorjaus true
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/vikakorjaus true}
                                {::to/id 1
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
@@ -40,7 +38,6 @@
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}
                                 :valittu? true}
                                {::to/id 2
                                 ::to/tyolaji :viitat
@@ -48,40 +45,35 @@
                                             ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm (pvm/nyt)}
                                {::to/id 3
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm (pvm/nyt)}
                                {::to/id 4
                                 ::to/tyolaji :kiinteat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm (pvm/nyt)}
                                {::to/id 5
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
+                                ::to/pvm (pvm/nyt)}
                                {::to/id 6
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
+                                ::to/pvm (pvm/nyt)}]})
 
 (deftest valiaikaisiin-kiintioihin
   (is (= [{::to/id 1 ::to/kiintio tiedot/valiaikainen-kiintio}
@@ -338,20 +330,10 @@
                   {:valittu-kiintio-id 123})]
     (is (false? (:kiintioon-liittaminen-kaynnissa? tulos)))))
 
-(deftest kiintion-korostaminen
-  (testing "Hintaryhmän korostus"
-    (let [tulos (e! (tiedot/->KorostaKiintioKartalla {::kiintio/id 1})
-                    {:turvalaitteet [{::tu/turvalaitenro 1
-                                      ::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
-                     :toimenpiteet [{::to/kiintio {::kiintio/id 1} ::to/turvalaite {::tu/turvalaitenro 1}}
-                                    {::to/kiintio {::kiintio/id 1} ::to/turvalaite {::tu/turvalaitenro 2}}
-                                    {::to/kiintio {::kiintio/id 2} ::to/turvalaite {::tu/turvalaitenro 1}}]})]
-      (is (= 1 (:korostettu-kiintio tulos)))
-      (is (= #{1 2} (:korostetut-turvalaitteet tulos)))
-      (is (not-empty (:turvalaitteet-kartalla tulos)))))
+
 
   (testing "Hintaryhmän korostamisen poistaminen"
     (let [tulos (e! (tiedot/->PoistaKiintionKorostus))]
       ;; false, koska näkymässä on hintaryhmä jonka id on nil
       (is (= false (:korostettu-kiintio tulos)))
-      (is (nil? (:korostetut-turvalaitteet tulos))))))
+      (is (nil? (:korostetut-turvalaitteet tulos)))))
