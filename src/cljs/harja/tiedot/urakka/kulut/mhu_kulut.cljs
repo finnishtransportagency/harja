@@ -141,7 +141,6 @@
         kl
         (-> kulu
           (dissoc :suorittaja)
-          (assoc :aliurakoitsija suorittaja)
           (assoc :vuoden-paatos-valittu? (vuoden-paatoksen-kulu? app kulu))
           (update :kohdistukset (fn [kohdistukset]
                                   (mapv (fn [kohdistus]
