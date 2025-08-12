@@ -555,7 +555,7 @@
 (defn- parametrin-sort-avain
   "Parametrin sort avain."
   [{:keys [tyyppi oletusarvo nimi]}]
-  (cond 
+  (cond
     (= nimi "Aikaväli") "1"
     (and (= tyyppi "checkbox") oletusarvo) (str "2" nimi) ; oletus-checkboxit ensin
     (= nimi "Toimenpide") "3"
@@ -638,7 +638,7 @@
     (reduce
       (fn [kertyneet parametri]
         (let [on-checkbox? (= "checkbox" (:tyyppi parametri))
-              oletus? (:oletusarvo parametri) 
+              oletus? (:oletusarvo parametri)
               avain (if (= raportin-nimi :tyomaakokous) 
                       (tyomaakokousraportit (:nimi parametri))
                       (:nimi parametri))
