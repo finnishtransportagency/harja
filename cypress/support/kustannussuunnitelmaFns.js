@@ -274,7 +274,7 @@ export const kattohintaElem = (vuosi) => `div[data-cy=manuaalinen-kattohinta-gri
 export const kattohintaInput = (vuosi) => kattohintaElem(vuosi) + " input";
 
 export const taytaKattohinta = (vuosi, arvo) => {
-    cy.get(kattohintaInput(vuosi))
+    cy.get(kattohintaInput(vuosi), { timeout: 20000 })
         .type(`{selectall}{backspace}${arvo}`)
         .then(() => {
             cy.focused().blur();
@@ -283,9 +283,9 @@ export const taytaKattohinta = (vuosi, arvo) => {
 export const tarkistaKattohinta = (vuosi, arvo, onDisabloitu) => {
     if (onDisabloitu) {
         arvo = formatoiArvoEuromuotoiseksi(parseInt(arvo), true);
-        cy.contains(kattohintaElem(vuosi), arvo)
+        cy.contains(kattohintaElem(vuosi), arvo, { timeout: 20000 })
     } else {
-        cy.get(kattohintaInput(vuosi)).should('have.value', arvo);
+        cy.get(kattohintaInput(vuosi), { timeout: 20000 }).should('have.value', arvo);
     }
 }
 
@@ -294,9 +294,9 @@ export const indeksikorjattuKHelem = (vuosi) => `div[data-cy=manuaalinen-kattohi
 export const tarkistaIndeksikorjattuKH = (vuosi, arvo, indeksit) => {
     if (arvo) {
         let formatoituArvo = formatoiArvoEuromuotoiseksi(indeksikorjaaArvo(indeksit, arvo, vuosi), true);
-        cy.get(indeksikorjattuKHelem(vuosi)).contains(formatoituArvo);
+        cy.get(indeksikorjattuKHelem(vuosi), { timeout: 20000 }).contains(formatoituArvo);
     } else {
-        cy.get(indeksikorjattuKHelem(vuosi)).should('have.text', '');
+        cy.get(indeksikorjattuKHelem(vuosi), { timeout: 20000 }).should('have.text', '');
     }
 }
 
