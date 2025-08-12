@@ -47,12 +47,12 @@
                :erotus "13%"
                :prosentti "10%"})
 
-(defn- lisaa-taulukkoon-tehtava-rivi [nimi budjetoitu indeksikorjattu vahvistettu toteuma erotus prosentti ]
+(defn- lisaa-taulukkoon-tehtava-rivi [nimi budjetoitu indeksikorjattu vahvistettu toteuma erotus prosentti tavoitehinnanoikaisu?]
   [:tr.bottom-border {:key (hash (str nimi toteuma indeksikorjattu budjetoitu))}
    [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
    [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
    [:td {:style {:width (:tehtava leveydet)}} nimi]
-   [:td.numero {:style {:width (:suunniteltu leveydet)}} (when-not (= "0,00" budjetoitu) budjetoitu)]
+   [:td.numero {:style {:width (:suunniteltu leveydet)}} (when (and (not= "0,00" budjetoitu) (not tavoitehinnanoikaisu?)) budjetoitu)]
    [:td.numero {:class (when (false? vahvistettu)
                                 "vahvistamatta")
                 :style {:width (:indeksikorjattu leveydet)}}
@@ -74,7 +74,8 @@
       vahvistettu
       (fmt->big (:toteutunut_summa l) false)
       nil
-      nil)))
+      nil
+      (= (:maksutyyppi l) "tavoitehinnanoikaisu"))))
 
 
 (defn- tehtavatason-rivitys
@@ -100,7 +101,8 @@
                  (muotoile-prosentti
                    (big/->big toteutunut-summa)
                    (big/->big budjetoitu-summa-indeksikorjattu)
-                   neg?)))])))
+                   neg?))
+               nil)])))
       tehtavat)))
 
 (defn- toimenpidetason-rivitys
@@ -195,7 +197,7 @@
                [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
                [:td {:style {:width (:tehtava leveydet)
                              :font-weight "700"}} otsikko]
-               [:td.numero {:style {:width (:suunniteltu leveydet)}} (when nayta-suunnitellut? budjetoitu)]
+               [:td.numero {:style {:width (:suunniteltu leveydet)}} (when (and nayta-suunnitellut? (not (= otsikko "Tavoitehinnan muutokset"))) budjetoitu)]
                [:td.numero {:class (when (or (false? vahvistettu)) "vahvistamatta")
                             :style {:width (:indeksikorjattu leveydet)}
                             ;; Alustavaa hahmotelmaa, miten voitaisiin saada siirtymä kustannusten suunnitteluun

@@ -72,20 +72,20 @@
     true (conj (:indeksikorjaus r))))
 
 (defn- muodosta-otsikot [yllapitourakka?]
-  (let [normaali-leveydet {:kasitelty 1.5
+  (let [normaali-leveydet {:kasitelty 2
                            :laji 3
                            :tyyppi 2
                            :kuvaus 3.5
                            :perustelu 4.5
-                           :maara 1.5
+                           :maara 2
                            :indeksi 1.5}
-        yllapito-leveydet {:kasitelty 1.5
+        yllapito-leveydet {:kasitelty 2
                            :laji 3
                            :kohde 2
                            :kuvaus 3
                            :tyyppi 2
                            :perustelu 4.5
-                           :maara 1.5
+                           :maara 2
                            :indeksi 1.5}
         leveydet (if yllapitourakka?
                    yllapito-leveydet
@@ -133,6 +133,7 @@
                      (contains? kaikki-lajit :sanktiot) (conj ["Sanktiot" (contains? valitut-lajit :sanktiot) 10])
                      (contains? kaikki-lajit :arvonvahennykset) (conj ["Arvonvähennykset" (contains? valitut-lajit :arvonvahennykset) 10]))]
     [:raportti {:nimi raportin-nimi
+                :orientaatio :landscape
                 :raportin-yleiset-tiedot {:raportin-nimi raportin-nimi
                                           :urakka urakan-nimi
                                           :alkupvm (pvm/pvm-opt alkupvm)

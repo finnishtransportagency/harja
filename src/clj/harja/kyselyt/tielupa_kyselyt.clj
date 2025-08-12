@@ -1,19 +1,15 @@
 (ns harja.kyselyt.tielupa-kyselyt
   (:require
-    [harja.kyselyt.specql-db :refer [define-tables]]
-    [specql.core :refer [fetch update! insert! upsert!]]
-    [specql.op :as op]
+    [specql.core :refer [fetch update! insert!]]
     [jeesql.core :refer [defqueries]]
     [clojure.set :as set]
     [harja.id :refer [id-olemassa?]]
     [harja.domain.tielupa :as tielupa]
     [harja.domain.alueurakka-domain :as alueurakka]
     [harja.kyselyt.konversio :as konv]
-    [clojure.data.json :as json]
     [harja.pvm :as pvm]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
-    [taoensso.timbre :as log]
-    [harja.geo :as geo])
+    [taoensso.timbre :as log])
   (:import (net.postgis.jdbc PGgeometry)))
 
 ;; Ajaetaan jeesql:ssä haun yhteydessä
@@ -21,6 +17,8 @@
   (let [avaimet {:hakija-nimi ::tielupa/hakija-nimi}
         hakija (set/rename-keys hakija avaimet)]
     hakija))
+
+(declare hae-tielupien-liitteet hae-tienpidon-luvat tielupien-hakijat)
 
 (defqueries "harja/kyselyt/tielupa_kyselyt.sql"
             {:positional? true})
@@ -68,7 +66,7 @@
                                                  (not= "" (::tielupa/paatoksen-diaarinumero hakuehdot)))
                                            (::tielupa/paatoksen-diaarinumero hakuehdot))
                  :voimassaolon-alkupvm (or (::tielupa/voimassaolon-alkupvm hakuehdot) nil)
-                 :voimassaolon-loppupvm (or (::tielupa/voimassaolon-loppupvm hakuehdot))
+                 :voimassaolon-loppupvm (or (::tielupa/voimassaolon-loppupvm hakuehdot) nil)
                  :myonnetty-alkupvm (when (and (:myonnetty hakuehdot) (first (:myonnetty hakuehdot)))
                                       (first (:myonnetty hakuehdot)))
                  :myonnetty-loppupvm (when (and (:myonnetty hakuehdot) (second (:myonnetty hakuehdot)))
@@ -120,7 +118,7 @@
 (defn onko-olemassa-ulkoisella-tunnisteella? [db ulkoinen-id]
   (and
     (number? ulkoinen-id)
-    (not (empty? (hae-tieluvat db {::tielupa/ulkoinen-tunniste ulkoinen-id})))))
+    (boolean (seq (hae-tieluvat db {::tielupa/ulkoinen-tunniste ulkoinen-id})))))
 
 (defn tallenna-tielupa [db tielupa]
   (let [id (::tielupa/id tielupa)

@@ -24,35 +24,36 @@
   (first (filter #(= nimi (:siltanimi %)) sillat)))
 
 (deftest joutsensillalle-ei-ole-tarkastuksia
-  (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
-                                     :listaus :kaikki})
+  (let [sillat (:sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
+                          {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+                           :listaus :kaikki}))
         joutsensilta (silta-nimella sillat "Joutsensilta")]
     (is joutsensilta "Joutsensilta löytyi")
     (is (nil? (:tarkastusaika joutsensilta)) "Joutsensiltaa ei ole tarkastettu")))
 
 (deftest kempeleen-testisillan-tarkastus
-  (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
-                                     :listaus :kaikki})
+  (let [sillat (:sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
+                          {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+                           :listaus :kaikki}))
         kempele (silta-nimella sillat "Kempeleen testisilta")]
     (is kempele "Kempeleen testisilta löytyy")
     (is (= "Late Lujuuslaskija" (:tarkastaja kempele)))))
 
 
 (deftest korjattuja-siltoja
-  (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
-                                     :listaus :korjatut})
+  (let [sillat (:sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
+                          {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+                           :listaus :korjatut}))
         kajaanintie (silta-nimella sillat "Kajaanintien silta")]
     (is kajaanintie)
     (is (= 24 (:rikki-ennen kajaanintie)) "Ennen oli kaikki rikki")
     (is (= 0 (:rikki-nyt kajaanintie)) "Nyt on kaikki korjattu")))
 
 (deftest oulun-urakan-2005-2012-sillat
-  (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
-                                     :listaus :kaikki})
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        sillat (:sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
+                          {:urakka-id urakka-id
+                           :listaus :kaikki}))
         sillat-ilman-tarkastuksia (filter #(and (not= "Joutsensilta" (:siltanimi %))
                                                 (not= "Pyhäjoen silta" (:siltanimi %))) sillat)]
     (is (= (count sillat) 7))
@@ -61,12 +62,18 @@
 
 (deftest oulun-urakan-2014-2019-sillat
   ;; Tässä uudemmassa urakassa halutaan nähdä vanhassa urakassa tehty viimeisin tarkastus
-  (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-oulun-alueurakan-2014-2019-id)
-                                     :listaus :kaikki})
+  (let [kaikki-sillat (:sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
+                          {:urakka-id (hae-oulun-alueurakan-2014-2019-id)
+                           :listaus :kaikki}))
+        sillat-2007 (:sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
+                                 {:urakka-id (hae-oulun-alueurakan-2014-2019-id)
+                                  :listaus :kaikki
+                                  :hoitovuoden-alkuvuosi 2007}))
+
         sillat-ilman-tarkastuksia (filter #(and (not= "Joutsensilta" (:siltanimi %))
-                                                (not= "Pyhäjoen silta" (:siltanimi %))) sillat)]
-    (is (= (count sillat) 7))
+                                                (not= "Pyhäjoen silta" (:siltanimi %))) kaikki-sillat)]
+    (is (= (count kaikki-sillat) 7))
+    (is (= (count sillat-2007) 2))
     (is (= (count sillat-ilman-tarkastuksia) 4))
     (is (every? #(some? (:tarkastusaika %)) (remove #(= (:siltanimi %) "Tekaistu kuntasilta") sillat-ilman-tarkastuksia)))))
 

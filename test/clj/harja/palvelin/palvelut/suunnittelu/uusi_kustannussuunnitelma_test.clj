@@ -160,7 +160,7 @@
                                          {:urakka urakka-id
                                           :koodi "23151"})))
 
-        _ (uusi-kust-kyselyt/tallenna-erillishankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:erillishankinnat erillishankinnat-tietomalli))
+        _ (uusi-kust-kyselyt/tallenna-erillishankinnat db +kayttaja-jvh+ urakka-id (:erillishankinnat erillishankinnat-tietomalli))
         erillishankinnat-tietokannasta (q-map (format "SELECT SUM(summa) as summa
                                                          FROM kustannusarvioitu_tyo
                                                   WHERE sopimus = %s
@@ -260,7 +260,7 @@
                                          {:urakka urakka-id
                                           :koodi "23151"})))
         tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli)))
-        _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli))
+        _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot db +kayttaja-jvh+ urakka-id (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli))
         hoidonjohtopalkkiot-tietokannasta (q-map (format "SELECT SUM(summa) as summa
                                                             FROM kustannusarvioitu_tyo
                                                            WHERE sopimus = %s
@@ -437,11 +437,11 @@
         hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
         _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
         ;; Lisätään erillishankinnat
-        _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:erillishankinnat erillishankinnat-tietomalli))
+        _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id (:erillishankinnat erillishankinnat-tietomalli))
         ;; Lisätään hoidonjohtopalkkiot
-        _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli))
+        _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli))
         ;; Lisätään johto- ja hallintokorvaukset
-        _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:johto-ja-hallintokorvaukset johto-ja-hallinto-tietomalli))
+        _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id (:johto-ja-hallintokorvaukset johto-ja-hallinto-tietomalli))
 
         ;; Rahavaraukset vaativat tarjouksen täyttämisen.
         kayttaja-id (:id +kayttaja-jvh+)
