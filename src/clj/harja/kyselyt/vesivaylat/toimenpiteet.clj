@@ -362,7 +362,6 @@
                       vv-toimenpide/vikailmoitus
                       vv-toimenpide/urakoitsija
                       vv-toimenpide/sopimus
-                      vv-toimenpide/turvalaite
                       vv-toimenpide/vayla
                       vv-toimenpide/vikailmoitus
                       vv-toimenpide/kiintio
