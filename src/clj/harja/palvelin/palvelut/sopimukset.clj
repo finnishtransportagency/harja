@@ -15,14 +15,11 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (let [sopimukset (into []
-                           (map konv/alaviiva->rakenne)
-                           (q/hae-harjassa-luodut-sopimukset db))
-          diaarinumerot (q/hae-sopimusten-reimari-diaarinumerot db)
-          sopimuksen-diaarinro (fn [id] (:reimari-diaarinro (first (filter #(= (:harja-sopimus-id %) id) diaarinumerot))))
-          sopimukset (mapv (fn [m] (assoc m :reimari-diaarinro (sopimuksen-diaarinro (:id m))))  sopimukset)
+                       (map konv/alaviiva->rakenne)
+                       (q/hae-harjassa-luodut-sopimukset db))
           vastaus (namespacefy sopimukset {:ns :harja.domain.sopimus
                                            :inner {:urakka {:ns :harja.domain.urakka}}})]
-        vastaus)))
+      vastaus)))
 
 (defn vesivayla-kanavien-hoito-sopimukset-vastaus
   [db sopimus-id urakka-id]
@@ -40,7 +37,6 @@
 (defn- paivita-sopimusta! [db user sopimus]
   (let [id (::sopimus/id sopimus)
         nimi (::sopimus/nimi sopimus)
-        reimari-diaarinro (::sopimus/reimari-diaarinro sopimus)
         alkupvm (::sopimus/alkupvm sopimus)
         loppupvm (::sopimus/loppupvm sopimus)
         paasopimus-id (::sopimus/paasopimus-id sopimus)
@@ -49,17 +45,10 @@
                                                                        :nimi nimi
                                                                        :alkupvm alkupvm
                                                                        :loppupvm loppupvm
-                                                                       :paasopimus paasopimus-id})
-        harjassa-luotu-reimari-diaarinumero (if (empty? (q/hae-sopimuksen-reimari-diaarinumero db id))
-                                              (q/luo-reimari-diaarinumero-linkki<! db {:harja-sopimus-id id
-                                                                                       :reimari-diaarinro reimari-diaarinro})
-                                              (q/paivita-reimari-diaarinumero-linkki<! db {:harja-sopimus-id id
-                                                                                           :reimari-diaarinro reimari-diaarinro}))]
-      (assoc harjassa-luotu-sopimus :reimari-diaarinro (:reimari-diaarinro harjassa-luotu-reimari-diaarinumero))))
+                                                                       :paasopimus paasopimus-id})]))
 
 (defn luo-uusi-sopimus! [db user sopimus]
   (let [nimi (::sopimus/nimi sopimus)
-        reimari-diaarinro (::sopimus/reimari-diaarinro sopimus)
         alkupvm (::sopimus/alkupvm sopimus)
         loppupvm (::sopimus/loppupvm sopimus)
         paasopimus-id (::sopimus/paasopimus-id sopimus)
@@ -67,10 +56,7 @@
                                                                    :nimi nimi
                                                                    :alkupvm alkupvm
                                                                    :loppupvm loppupvm
-                                                                   :paasopimus paasopimus-id})
-        harjassa-luotu-reimari-diaarinumero (q/luo-reimari-diaarinumero-linkki<! db {:harja-sopimus-id (:id harjassa-luotu-sopimus)
-                                                                                     :reimari-diaarinro reimari-diaarinro})]
-    (assoc harjassa-luotu-sopimus :reimari-diaarinro (:reimari-diaarinro harjassa-luotu-reimari-diaarinumero))))
+                                                                   :paasopimus paasopimus-id})]))
 
 (defn tallenna-sopimus [db user sopimus]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -86,7 +72,6 @@
 
         {::sopimus/id (:id tallennettu-sopimus)
          ::sopimus/nimi (:nimi tallennettu-sopimus)
-         ::sopimus/reimari-diaarinro (:reimari-diaarinro tallennettu-sopimus)
          ::sopimus/alkupvm (:alkupvm tallennettu-sopimus)
          ::sopimus/loppupvm (:loppupvm tallennettu-sopimus)
          ::sopimus/paasopimus-id (:paasopimus-id tallennettu-sopimus)}))))

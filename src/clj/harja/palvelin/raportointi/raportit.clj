@@ -7,57 +7,56 @@
   - lisää sen nimiavaruus require alle
   - lisää raportin tiedot, konteksti ja parametrit `raportit` vektoriin."
 
- (:require
+  (:require
   ;; vaaditaan built in raportit
-  [harja.palvelin.raportointi.raportit.erilliskustannukset]
-  [harja.palvelin.raportointi.raportit.ilmoitus]
-  [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
-  [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen]
-  [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa]
-  [harja.palvelin.raportointi.raportit.tyomaapaivakirja]
-  [harja.palvelin.raportointi.raportit.ilmoitukset]
-  [harja.palvelin.raportointi.raportit.tehtavamaarat]
-  [harja.palvelin.raportointi.raportit.vemtr]
-  [harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain]
-  [harja.palvelin.raportointi.raportit.materiaali]
-  [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
-  [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
-  [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
-  [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
-  [harja.palvelin.raportointi.raportit.suolasakko]
-  [harja.palvelin.raportointi.raportit.tiestotarkastus]
-  [harja.palvelin.raportointi.raportit.kelitarkastus]
-  [harja.palvelin.raportointi.raportit.laaduntarkastus]
-  [harja.palvelin.raportointi.raportit.laatupoikkeama]
-  [harja.palvelin.raportointi.raportit.siltatarkastus]
-  [harja.palvelin.raportointi.raportit.sanktio]
-  [harja.palvelin.raportointi.raportit.sanktioraportti-yllapito]
-  [harja.palvelin.raportointi.raportit.soratietarkastus]
-  [harja.palvelin.raportointi.raportit.valitavoiteraportti]
-  [harja.palvelin.raportointi.raportit.ymparisto]
-  [harja.palvelin.raportointi.raportit.tyomaakokous]
-  [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
-  [harja.palvelin.raportointi.raportit.toimenpideajat]
-  [harja.palvelin.raportointi.raportit.toimenpidepaivat]
-  [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
-  [harja.palvelin.raportointi.raportit.indeksitarkistus]
-  [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
-  [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
-  [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
-  [harja.palvelin.raportointi.raportit.kanavien-hairiotilanteet]
-  [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
-  [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
-  [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
-  [harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat]
-  [harja.palvelin.raportointi.raportit.kanavien-toimenpiteet]
-  [harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat]
-  [harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat]
-  [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara]
-  [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto]
-  [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu]
-  [harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset]
-  [harja.domain.urakka :as urakka-domain]
-  [clojure.set :as set]))
+   [harja.palvelin.raportointi.raportit.erilliskustannukset]
+   [harja.palvelin.raportointi.raportit.ilmoitus]
+   [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
+   [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen]
+   [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja]
+   [harja.palvelin.raportointi.raportit.ilmoitukset]
+   [harja.palvelin.raportointi.raportit.tehtavamaarat]
+   [harja.palvelin.raportointi.raportit.vemtr]
+   [harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain]
+   [harja.palvelin.raportointi.raportit.materiaali]
+   [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
+   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
+   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
+   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
+   [harja.palvelin.raportointi.raportit.suolasakko]
+   [harja.palvelin.raportointi.raportit.tiestotarkastus]
+   [harja.palvelin.raportointi.raportit.kelitarkastus]
+   [harja.palvelin.raportointi.raportit.laaduntarkastus]
+   [harja.palvelin.raportointi.raportit.laatupoikkeama]
+   [harja.palvelin.raportointi.raportit.siltatarkastus]
+   [harja.palvelin.raportointi.raportit.sanktio]
+   [harja.palvelin.raportointi.raportit.sanktioraportti-yllapito]
+   [harja.palvelin.raportointi.raportit.soratietarkastus]
+   [harja.palvelin.raportointi.raportit.valitavoiteraportti]
+   [harja.palvelin.raportointi.raportit.ymparisto]
+   [harja.palvelin.raportointi.raportit.tyomaakokous]
+   [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
+   [harja.palvelin.raportointi.raportit.toimenpideajat]
+   [harja.palvelin.raportointi.raportit.toimenpidepaivat]
+   [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
+   [harja.palvelin.raportointi.raportit.indeksitarkistus]
+   [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
+   [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
+   [harja.palvelin.raportointi.raportit.kanavien-hairiotilanteet]
+   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
+   [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
+   [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
+   [harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat]
+   [harja.palvelin.raportointi.raportit.kanavien-toimenpiteet]
+   [harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat]
+   [harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat]
+   [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara]
+   [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto]
+   [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu]
+   [harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset]
+   [harja.domain.urakka :as urakka-domain]
+   [clojure.set :as set]))
 
 ;; HOX Muista lisätä uusi raportti myös Roolit-Exceliin!
 
@@ -356,13 +355,6 @@
     :kuvaus       "Vastaanottotarkastusraportti"
     :kuvaus-suuri-konteksti "Päällystysurakoiden yhteenveto"
     :urakkatyyppi #{:paallystys}}
-
-   {:nimi         :vesivaylien-laskutusyhteenveto
-    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :konteksti    #{"urakka" "hallintayksikko"}
-    :kuvaus       "Laskutusyhteenveto"
-    :suorita      #'harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto/suorita
-    :urakkatyyppi urakka-domain/vesivayla-urakkatyypit-ilman-kanavia}
 
    {:nimi         :kanavien-laskutusyhteenveto
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]

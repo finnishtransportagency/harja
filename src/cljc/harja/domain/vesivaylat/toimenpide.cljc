@@ -11,7 +11,6 @@
             [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.domain.vesivaylat.hinta :as vv-hinta]
             [harja.domain.vesivaylat.urakoitsija :as urakoitsija]
-            [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
             [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.sopimus :as sopimus]
@@ -19,9 +18,7 @@
             [harja.domain.vesivaylat.sopimus :as reimari-sopimus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [specql.rel :as rel]
-    #?@(:clj [
-            [harja.kyselyt.specql-db :refer [define-tables]]
-            ])
+            #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]])
             [harja.pvm :as pvm])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
@@ -51,7 +48,6 @@
     ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
     ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
     ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
-    ::turvalaite (specql.rel/has-one ::turvalaitenro ::vv-turvalaite/turvalaite ::vv-turvalaite/turvalaitenro)
     ::sopimus (specql.rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
     ::vayla (specql.rel/has-one ::vaylanro ::vv-vayla/vayla ::vv-vayla/vaylanro)
     ::kiintio (specql.rel/has-one ::kiintio-id ::kiintio/kiintio ::kiintio/id)
@@ -142,7 +138,7 @@
     (some-> tyoluokka name str/capitalize)))
 
 (def ^{:doc "Reimarin toimenpidetyypit."}
-reimari-toimenpidetyypit
+  reimari-toimenpidetyypit
   {"1022542046" :alukset-ja-veneet
    "1022542040" :toimistotyot
    "1022542048" :muu-kuljetuskalusto
@@ -269,34 +265,33 @@ reimari-toimenpidetyypit
 
 (defn reimari-tyolaji-avain->koodi [avain]
   (first (filter #(= (get reimari-tyolajit %) avain)
-                 (keys reimari-tyolajit))))
+           (keys reimari-tyolajit))))
 
 (defn jarjesta-reimari-tyolajit [tyolajit]
   (sort-by reimari-tyolaji-fmt tyolajit))
 
 (defn reimari-tyoluokka-avain->koodi [avain]
   (set (filter #(= (get reimari-tyoluokat %) avain)
-               (keys reimari-tyoluokat))))
+         (keys reimari-tyoluokat))))
 
 (defn jarjesta-reimari-tyoluokat [tyoluokat]
   (sort-by reimari-tyoluokka-fmt tyoluokat))
 
 (defn reimari-toimenpidetyyppi-avain->koodi [avain]
   (set (filter #(= (get reimari-toimenpidetyypit %) avain)
-               (keys reimari-toimenpidetyypit))))
+         (keys reimari-toimenpidetyypit))))
 
 (defn reimari-lisatyo-fmt [lisatyo?]
   (when lisatyo? "Kyllä"))
 
 (defn hintatyyppi-fmt [hintatyyppi]
   (if (keyword? hintatyyppi)
-      (name hintatyyppi)
-      ""))
+    (name hintatyyppi)
+    ""))
 
 (defn jarjesta-reimari-toimenpidetyypit [toimenpidetyypit]
   (sort-by reimari-toimenpidetyyppi-fmt toimenpidetyypit))
 
-(s/def ::reimari-turvalaite (s/keys :req [::vv-turvalaite/r-nro ::vv-turvalaite/r-nimi ::vv-turvalaite/r-ryhma]))
 (s/def ::reimari-alus (s/keys :req [:harja.domain.vesivaylat.alus/r-tunnus :harja.domain.vesivaylat.alus/r-nimi]))
 
 ;; Harjassa työlaji/-luokka/toimenpide esitetään tietyllä avaimella
@@ -315,9 +310,6 @@ reimari-toimenpidetyypit
                              ::vv-vayla/vaylanro
                              ::vv-vayla/nimi]))
 (s/def ::pvm inst?)
-(s/def ::turvalaite (s/nilable (s/keys :opt [::vv-turvalaite/nimi
-                                             ::vv-turvalaite/nro
-                                             ::vv-turvalaite/ryhma])))
 (s/def ::oma-hinnoittelu ::h/hinnoittelu)
 (s/def ::hintaryhma-id ::h/id)
 (s/def ::vikakorjauksia? boolean?)
@@ -365,7 +357,6 @@ reimari-toimenpidetyypit
 (def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
 (def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})
 (def sopimus #{[::sopimus sopimus/perustiedot]})
-(def turvalaite #{[::turvalaite vv-turvalaite/perustiedot]})
 (def vayla #{[::vayla vv-vayla/perustiedot]})
 (def urakka #{[::urakka #{}]})
 (def kiintio #{[::kiintio kiintio/perustiedot]})
@@ -375,7 +366,6 @@ reimari-toimenpidetyypit
     vikailmoitus
     urakoitsija
     sopimus
-    turvalaite
     urakka
     vayla
     kiintio
@@ -413,7 +403,7 @@ reimari-toimenpidetyypit
 
 (defn toimenpiteella-oma-hinnoittelu? [toimenpide]
   (boolean (or (not (empty? (get-in toimenpide [::oma-hinnoittelu ::h/hinnat])))
-               (not (empty? (get-in toimenpide [::oma-hinnoittelu ::h/tyot]))))))
+             (not (empty? (get-in toimenpide [::oma-hinnoittelu ::h/tyot]))))))
 
 (defn toimenpiteilla-kiintioita? [toimenpiteet]
   (not (empty? (keep ::kiintio toimenpiteet))))
@@ -443,16 +433,16 @@ reimari-toimenpidetyypit
                            ::toimenpide
                            ::pvm
                            ::komponentit]
-                     :opt [::vikakorjauksia?
-                           ::vayla
-                           ::suoritettu
-                           ::hintatyyppi
-                           ::lisatieto
-                           ::oma-hinnoittelu
-                           ::hintaryhma-id
-                           ::reimari-urakoitsija
-                           ::turvalaite
-                           ::reimari-sopimus])))
+               :opt [::vikakorjauksia?
+                     ::vayla
+                     ::suoritettu
+                     ::hintatyyppi
+                     ::lisatieto
+                     ::oma-hinnoittelu
+                     ::hintaryhma-id
+                     ::reimari-urakoitsija
+                     ::turvalaite
+                     ::reimari-sopimus])))
 
 (s/def ::hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id
@@ -461,14 +451,14 @@ reimari-toimenpidetyypit
                            ::toimenpide
                            ::pvm
                            ::komponentit]
-                     :opt [::vikakorjauksia?
-                           ::vayla
-                           ::suoritettu
-                           ::hintatyyppi
-                           ::lisatieto
-                           ::turvalaite
-                           ::reimari-urakoitsija
-                           ::reimari-sopimus])))
+               :opt [::vikakorjauksia?
+                     ::vayla
+                     ::suoritettu
+                     ::hintatyyppi
+                     ::lisatieto
+                     ::turvalaite
+                     ::reimari-urakoitsija
+                     ::reimari-sopimus])))
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely
   (s/keys
@@ -492,9 +482,9 @@ reimari-toimenpidetyypit
 
 (s/def ::tallennettava
   (s/keys :req [::sopimus-id ::urakka-id]
-          :opt [::lisatieto
-                ::id ::luoja ::luotu ::muokattu ::muokkaaja ::poistettu ::poistaja
-                ::reimari-tyolaji ::reimari-tyoluokka ::reimari-toimenpidetyyppi]))
+    :opt [::lisatieto
+          ::id ::luoja ::luotu ::muokattu ::muokkaaja ::poistettu ::poistaja
+          ::reimari-tyolaji ::reimari-tyoluokka ::reimari-toimenpidetyyppi]))
 
 (s/def ::hakuehdot ::hae-vesivaylien-toimenpiteet-kysely)
 

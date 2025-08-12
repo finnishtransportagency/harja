@@ -34,12 +34,12 @@
   [db user oikeus-fn urakka-idt]
   (when-not (empty? urakka-idt)
     (into []
-          (comp
-            (filter (fn [{:keys [urakka_id]}]
-                      (oikeus-fn urakka_id user)))
-            (harja.geo/muunna-pg-tulokset :urakka_alue)
-            (map konv/alaviiva->rakenne))
-          (q/hae-urakoiden-geometriat db urakka-idt))))
+      (comp
+        (filter (fn [{:keys [urakka_id]}]
+                  (oikeus-fn urakka_id user)))
+        (harja.geo/muunna-pg-tulokset :urakka_alue)
+        (map konv/alaviiva->rakenne))
+      (q/hae-urakoiden-geometriat db urakka-idt))))
 
 (defn hae-urakka-id-sijainnilla
   [db urakkatyyppi x y]
@@ -48,11 +48,11 @@
     ;; Palautetaan nil, jos ei löydy urakkaa 800 metrin säteeltä.
     ;; Jos on useampia urakoita, palautetaan lähin tai uusin, jos urakat ovat yhtä lähellä.
     (when (and (< radius 801)
-               (< k 10))
-      (let [urakat (distinct (map #(dissoc % :etaisyys :urakkatyyppi )
-                                  (q/hae-urakka-sijainnilla db {:x x :y y
-                                                                :threshold radius
-                                                                :urakkatyyppi urakkatyyppi})))]
+            (< k 10))
+      (let [urakat (distinct (map #(dissoc % :etaisyys :urakkatyyppi)
+                               (q/hae-urakka-sijainnilla db {:x x :y y
+                                                             :threshold radius
+                                                             :urakkatyyppi urakkatyyppi})))]
         (cond
           (empty? urakat) (recur (* 2 radius) (inc k))
           :else (:id (first urakat)))))))
@@ -82,19 +82,19 @@
   [db urakkatyyppi {:keys [x y]}]
   ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 1000 metrin thesholdilla
   (let [urakka-idt (distinct (map #(:id (dissoc % :etaisyys :urakkatyyppi))
-                                  (q/hae-urakka-sijainnilla db {:x x :y y
-                                                                :threshold 1000
-                                                                :urakkatyyppi urakkatyyppi})))]
+                               (q/hae-urakka-sijainnilla db {:x x :y y
+                                                             :threshold 1000
+                                                             :urakkatyyppi urakkatyyppi})))]
     (if (empty? urakka-idt)
       (if (#{"hoito" "teiden-hoito"} urakkatyyppi)
         ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka 10 kilometrin säteellä
         (map :id (q/hae-lahin-hoidon-alueurakka db x y 10000))
 
         ;; Jos ei löytynyt urakkaa annetulla tyypillä, haetaan alueella toimiva hoidon alueurakka
-        (let [hoidon-urakkaidt (distinct (map #(:id (dissoc % :etaisyys :urakkatyyppi ))
-                                              (q/hae-urakka-sijainnilla db {:x x :y y
-                                                                            :threshold 10
-                                                                            :urakkatyyppi "hoito"})))]
+        (let [hoidon-urakkaidt (distinct (map #(:id (dissoc % :etaisyys :urakkatyyppi))
+                                           (q/hae-urakka-sijainnilla db {:x x :y y
+                                                                         :threshold 10
+                                                                         :urakkatyyppi "hoito"})))]
           (if hoidon-urakkaidt
             hoidon-urakkaidt
             ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka 10 kilometrin säteellä
@@ -117,10 +117,10 @@
                    id))]
         (recur (assoc sopimukset
                  id sampoid)
-               (if paasopimus?
-                 id
-                 paasopimus)
-               ss)))))
+          (if paasopimus?
+            id
+            paasopimus)
+          ss)))))
 
 (defn- pura-yhteystiedot
   [{jdbc-array :urakan_yhteystiedot :as urakka}]
@@ -140,19 +140,19 @@
   (comp (muunna-pg-tulokset :alue :alueurakan_alue)
 
         ;; Aseta alue, jos se löytyy
-        (map #(if-let [alueurakka (:alueurakan_alue %)]
-                (-> %
-                    (dissoc :alueurakan_alue)
-                    (assoc :alue alueurakka))
-                (dissoc % :alueurakan_alue)))
+    (map #(if-let [alueurakka (:alueurakan_alue %)]
+            (-> %
+              (dissoc :alueurakan_alue)
+              (assoc :alue alueurakka))
+            (dissoc % :alueurakan_alue)))
 
-        (map #(assoc % :urakoitsija {:id      (:urakoitsija_id %)
-                                     :nimi    (:urakoitsija_nimi %)
-                                     :ytunnus (:urakoitsija_ytunnus %)}))
+    (map #(assoc % :urakoitsija {:id      (:urakoitsija_id %)
+                                 :nimi    (:urakoitsija_nimi %)
+                                 :ytunnus (:urakoitsija_ytunnus %)}))
 
-        (map #(assoc % :loppupvm (pvm/aikana (:loppupvm %) 23 59 59 999))) ; Automaattikonversiolla aika on 00:00
+    (map #(assoc % :loppupvm (pvm/aikana (:loppupvm %) 23 59 59 999))) ; Automaattikonversiolla aika on 00:00
 
-        (map #(assoc % :takuu {:loppupvm (:takuu_loppupvm %)}))
+    (map #(assoc % :takuu {:loppupvm (:takuu_loppupvm %)}))
 
         ;; Sopimukset kannasta vectorina, jossa 1. elementti on id ja
         ;; 2. elementti on sopimuksen tekstikuvaus (sampoid tai nimi):
@@ -161,46 +161,46 @@
 
         ;; Tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"
         ;;                          :paasopimus 3}
-        (map pura-sopimukset)
+    (map pura-sopimukset)
 
-        (map pura-yhteystiedot)
+    (map pura-yhteystiedot)
 
-        (map #(assoc % :hallintayksikko {:id      (:hallintayksikko_id %)
-                                         :nimi    (:hallintayksikko_nimi %)
-                                         :lyhenne (:hallintayksikko_lyhenne %)}))
+    (map #(assoc % :hallintayksikko {:id      (:hallintayksikko_id %)
+                                     :nimi    (:hallintayksikko_nimi %)
+                                     :lyhenne (:hallintayksikko_lyhenne %)}))
 
-        (map #(if-let [tyyppi (:tyyppi %)]
+    (map #(if-let [tyyppi (:tyyppi %)]
                 ;; jos urakkatyypissä on välilyöntejä, korvataan ne väliviivalla, jotta muodostuu validi keyword
-                (assoc % :tyyppi (keyword (str/replace (:tyyppi %) " " "-")))
-                %))
+            (assoc % :tyyppi (keyword (str/replace (:tyyppi %) " " "-")))
+            %))
 
-        (map #(assoc % :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
+    (map #(assoc % :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
 
         ;; Käsitellään päällystysurakan tiedot
 
-        (map #(konv/array->vec % :yha_elyt))
-        (map #(konv/array->vec % :yha_vuodet))
+    (map #(konv/array->vec % :yha_elyt))
+    (map #(konv/array->vec % :yha_vuodet))
 
-        (map #(if (:yha_yhaid %)
-                (assoc % :yhatiedot {:yhatunnus                         (:yha_yhatunnus %)
-                                     :yhaid                             (:yha_yhaid %)
-                                     :yhanimi                           (:yha_yhanimi %)
-                                     :elyt                              (:yha_elyt %)
-                                     :vuodet                            (:yha_vuodet %)
-                                     :kohdeluettelo-paivitetty          (:yha_kohdeluettelo_paivitetty %)
-                                     :kohdeluettelo-paivittaja          (:yha_kohdeluettelo_paivittaja %)
-                                     :kohdeluettelo-paivittaja-etunimi  (:yha_kohdeluettelo_paivittaja_etunimi %)
-                                     :kohdeluettelo-paivittaja-sukunimi (:yha_kohdeluettelo_paivittaja_sukunimi %)
-                                     :sidonta-lukittu?                  (:yha_sidonta_lukittu %)})
-                %))
+    (map #(if (:yha_yhaid %)
+            (assoc % :yhatiedot {:yhatunnus                         (:yha_yhatunnus %)
+                                 :yhaid                             (:yha_yhaid %)
+                                 :yhanimi                           (:yha_yhanimi %)
+                                 :elyt                              (:yha_elyt %)
+                                 :vuodet                            (:yha_vuodet %)
+                                 :kohdeluettelo-paivitetty          (:yha_kohdeluettelo_paivitetty %)
+                                 :kohdeluettelo-paivittaja          (:yha_kohdeluettelo_paivittaja %)
+                                 :kohdeluettelo-paivittaja-etunimi  (:yha_kohdeluettelo_paivittaja_etunimi %)
+                                 :kohdeluettelo-paivittaja-sukunimi (:yha_kohdeluettelo_paivittaja_sukunimi %)
+                                 :sidonta-lukittu?                  (:yha_sidonta_lukittu %)})
+            %))
 
         ;; Poista käsitellyt avaimet
 
-        (map #(dissoc %
-                      :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
-                      :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne
-                      :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet
-                      :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu :takuu_loppupvm))))
+    (map #(dissoc %
+            :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
+            :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne
+            :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet
+            :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu :takuu_loppupvm))))
 
 (defn hallintayksikon-urakat [db {organisaatio :organisaatio :as user} hallintayksikko-id]
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
@@ -210,35 +210,35 @@
         (oikeudet/ei-oikeustarkistusta!)
         [])
       (into []
-            urakka-xf
-            (q/listaa-urakat-hallintayksikolle db
-                                               {:hallintayksikko      hallintayksikko-id
-                                                :kayttajan_org_id     (:id organisaatio)
-                                                :kayttajan_org_tyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))
-                                                :sallitut_urakat      (if (empty? urakat)
+        urakka-xf
+        (q/listaa-urakat-hallintayksikolle db
+          {:hallintayksikko      hallintayksikko-id
+           :kayttajan_org_id     (:id organisaatio)
+           :kayttajan_org_tyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))
+           :sallitut_urakat      (if (empty? urakat)
                                                                         ;; Jos ei urakoita, annetaan
                                                                         ;; dummy, jotta IN toimii
-                                                                        [-1]
-                                                                        urakat)})))))
+                                   [-1]
+                                   urakat)})))))
 
 (defn hae-urakoita [db user teksti]
   (log/debug "Haetaan urakoita tekstihaulla: " teksti)
   (into []
-        urakka-xf
-        (q/hae-urakoita db (str "%" teksti "%"))))
+    urakka-xf
+    (q/hae-urakoita db (str "%" teksti "%"))))
 
 (defn hae-organisaation-urakat [db user organisaatio-id]
   (log/debug "Haetaan urakat organisaatiolle: " organisaatio-id)
   []
   (into []
-        urakka-xf
-        (q/hae-organisaation-urakat db organisaatio-id)))
+    urakka-xf
+    (q/hae-organisaation-urakat db organisaatio-id)))
 
 (defn hae-urakan-organisaatio [db user urakka-id]
   (log/debug "Haetaan organisaatio urakalle: " urakka-id)
   (oikeudet/ei-oikeustarkistusta!)
   (let [organisaatio (first (into []
-                                  (q/hae-urakan-organisaatio db urakka-id)))]
+                              (q/hae-urakan-organisaatio db urakka-id)))]
     (log/debug "Urakan organisaatio saatu: " (pr-str organisaatio))
     organisaatio))
 
@@ -262,8 +262,8 @@
   (log/debug "Hae yksittäinen urakka id:llä: " urakka-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (first (into []
-               urakka-xf
-               (q/hae-yksittainen-urakka db urakka-id))))
+           urakka-xf
+           (q/hae-yksittainen-urakka db urakka-id))))
 
 (defn aseta-takuun-loppupvm [db user {:keys [urakka-id takuu]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
@@ -288,17 +288,17 @@
   (let [_ (log/debug "Aseta urakan kesäaika, id " urakka-id ", alku: " (:alkupvm tiedot) ", loppu " (:loppupvm tiedot))
         alkupvm (pvm->kesa-aika-pvm (:alkupvm tiedot))
         loppupvm (pvm->kesa-aika-pvm (:loppupvm tiedot))]
-  (when-not (roolit/tilaajan-kayttaja? user)
-    (throw (SecurityException. "Vain tilaaja voi asettaa urakan kesäajan")))
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+    (when-not (roolit/tilaajan-kayttaja? user)
+      (throw (SecurityException. "Vain tilaaja voi asettaa urakan kesäajan")))
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
 
-  (if (pvm/ennen? alkupvm loppupvm)
-    (do
-      (q/aseta-urakan-kesa-aika! db {:urakka urakka-id
-                                     :alkupvm alkupvm
-                                     :loppupvm loppupvm})
-      (q/hae-urakan-kesa-aika db urakka-id))
-    (throw (IllegalArgumentException. "Kesäajan alku oltava ennen loppuaikaa.")))))
+    (if (pvm/ennen? alkupvm loppupvm)
+      (do
+        (q/aseta-urakan-kesa-aika! db {:urakka urakka-id
+                                       :alkupvm alkupvm
+                                       :loppupvm loppupvm})
+        (q/hae-urakan-kesa-aika db urakka-id))
+      (throw (IllegalArgumentException. "Kesäajan alku oltava ennen loppuaikaa.")))))
 
 (defn poista-indeksi-kaytosta [db user {:keys [urakka-id]}]
   (when-not (roolit/tilaajan-kayttaja? user)
@@ -310,21 +310,6 @@
       {:urakka urakka-id})
     :ok))
 
-(defn- tallenna-vv-urakkanro! [db user urakka-id urakka-alue]
-  (q/tallenna-vv-urakkanro<! db
-                             {:urakka urakka-id
-                              :urakkanro (or (nil? urakka-alue) (.toString urakka-alue))
-                              :kayttaja  (:id user)}))
-
-(defn- onko-kaikki-turvalaiteryhmat-olemassa?
-  "Tarkistaa kaikki, että kaikki merkkijonona annetut turvalaiteryhmät (esim. 3332,3333) löytyvät turvalaiteryhmien joukosta."
-  [db turvalaiteryhmat]
-  (let [turvalaiteryhmat (into #{} (map #(str/trim %) (str/split turvalaiteryhmat #",")))
-        reimari-turvalaiteryhmat (into [] (q/hae-loytyvat-reimari-turvalaiteryhmat db turvalaiteryhmat))]
-    (or (= (count turvalaiteryhmat)
-           (count reimari-turvalaiteryhmat))
-      (throw (RuntimeException. (str "Kaikkia turvalaiteryhmiä (" turvalaiteryhmat ") ei löydy Harjasta."))))))
-
 (defn- voiko-turvalaiteryhman-kiinnittaa?
   "Turvalaiteryhmä saa kuulua vain yhteen voimassaolevaan vesiväyläurakkaan."
   [db urakka-id turvalaiteryhmat alkupvm loppupvm]
@@ -333,44 +318,38 @@
                                                                :alkupvm          alkupvm
                                                                :loppupvm         loppupvm})]
     (or (empty? urakat)
-        (throw (RuntimeException.
-                 (prn-str "Joku turvalaiteryhmistä" turvalaiteryhmat "on jo kiinnitetty urakkaan" (map #(str (:nimi %)) urakat) ".
+      (throw (RuntimeException.
+               (prn-str "Joku turvalaiteryhmistä" turvalaiteryhmat "on jo kiinnitetty urakkaan" (map #(str (:nimi %)) urakat) ".
              Korjaa kiinnitys tai urakan voimassaoloaika."))))))
 
-(defn- voidaanko-vesivaylaurakka-alue-tallentaa?
-  [db id turvalaiteryhmat alkupvm loppupvm]
-  (and (not (nil? turvalaiteryhmat))
-       (onko-kaikki-turvalaiteryhmat-olemassa? db turvalaiteryhmat)
-       (voiko-turvalaiteryhman-kiinnittaa? db id turvalaiteryhmat alkupvm loppupvm)))
 
 (defn- luo-tai-paivita-vesivaylaurakka-alue!
   "Tallentaa vv-urakan turvalaiteryhmät ja palauttaa tallennetun rivin (urakka-alueen) id:n."
   [db user urakka-id turvalaiteryhmat alkupvm loppupvm]
   (:id (q/luo-tai-paivita-vesivaylaurakan-alue<! db
-                                            {:urakka           urakka-id
-                                             :turvalaiteryhmat (konv/seq->array (map #(str/trim %) (str/split turvalaiteryhmat #",")))
-                                             :kayttaja         (:id user)
-                                             :alkupvm          alkupvm
-                                             :loppupvm         loppupvm})))
+         {:urakka           urakka-id
+          :turvalaiteryhmat (konv/seq->array (map #(str/trim %) (str/split turvalaiteryhmat #",")))
+          :kayttaja         (:id user)
+          :alkupvm          alkupvm
+          :loppupvm         loppupvm})))
 
-  (defn- paivita-urakka! [db user urakka]
-    (log/debug "Päivitetään urakkaa ja urakka-aluetta " (::u/nimi urakka))
-    (let [hallintayksikko (::u/hallintayksikko urakka)
-          urakoitsija (::u/urakoitsija urakka)]
-      (let [urakka-alue (when (voidaanko-vesivaylaurakka-alue-tallentaa? db (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka))
-                          (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka)))
-            paivitetty (q/paivita-harjassa-luotu-urakka<!
-                         db
-                         {:id              (::u/id urakka)
-                          :nimi            (::u/nimi urakka)
-                          :urakkanro       (or (nil? urakka-alue) (.toString urakka-alue))
-                          :alkupvm         (::u/alkupvm urakka)
-                          :loppupvm        (::u/loppupvm urakka)
-                          :alue            (::u/alue urakka)
-                          :hallintayksikko (::o/id hallintayksikko)
-                          :urakoitsija     (::o/id urakoitsija)
-                          :kayttaja        (:id user)})]
-        (assoc urakka ::u/id (:id paivitetty)))))
+(defn- paivita-urakka! [db user urakka]
+  (log/debug "Päivitetään urakkaa ja urakka-aluetta " (::u/nimi urakka))
+  (let [hallintayksikko (::u/hallintayksikko urakka)
+        urakoitsija (::u/urakoitsija urakka)
+        urakka-alue (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka))
+        paivitetty (q/paivita-harjassa-luotu-urakka<!
+                     db
+                     {:id              (::u/id urakka)
+                      :nimi            (::u/nimi urakka)
+                      :urakkanro       (or (nil? urakka-alue) (.toString urakka-alue))
+                      :alkupvm         (::u/alkupvm urakka)
+                      :loppupvm        (::u/loppupvm urakka)
+                      :alue            (::u/alue urakka)
+                      :hallintayksikko (::o/id hallintayksikko)
+                      :urakoitsija     (::o/id urakoitsija)
+                      :kayttaja        (:id user)})]
+    (assoc urakka ::u/id (:id paivitetty))))
 
 (defn luo-vv-urakan-toimenpideinstanssit [db urakka]
   (let [params {:urakka_id (::u/id urakka)
@@ -413,10 +392,7 @@
                        :hanke           (::h/id hanke)
                        :kayttaja        (:id user)})
         urakka (assoc urakka ::u/id (:id tallennettu))
-        urakka-alue (when (voidaanko-vesivaylaurakka-alue-tallentaa? db (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka))
-                      (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka)))]
-    (or (nil? urakka-alue)
-        (tallenna-vv-urakkanro! db user (::u/id urakka) urakka-alue))
+        urakka-alue (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka))]
     (luo-vv-urakan-toimenpideinstanssit db urakka)
     urakka))
 
@@ -438,49 +414,49 @@
       ;; ja päivittää uuteen uusien tietojen pohjalta.
       (log/debug "Puretaan tilapäisesti kaikki urakan sopimukset.")
       (as-> (sopimukset-q/poista-kaikki-sopimukset-urakasta! db {:urakka (::u/id urakka)}) lkm
-            (log/debug lkm " sopimusta purettu."))
+        (log/debug lkm " sopimusta purettu."))
 
       ;; Aseta pääsopimus ja aseta muut sopimukset viittaamaan siihen
       ;; Tärkeää tehdä tässä järjestyksessä, koska urakalla saa olla vain yksi pääsopimus
       (log/debug "Asetetaan pääsopimukseksi " (pr-str urakan-paasopimus))
       (sopimukset-q/aseta-sopimuksien-paasopimus! db
-                                                  {:sopimukset (map ::s/id urakan-sivusopimukset)
-                                                   :paasopimus (::s/id urakan-paasopimus)})
+        {:sopimukset (map ::s/id urakan-sivusopimukset)
+         :paasopimus (::s/id urakan-paasopimus)})
       (sopimukset-q/aseta-sopimus-paasopimukseksi! db
-                                                   {:sopimus (::s/id urakan-paasopimus)})
+        {:sopimus (::s/id urakan-paasopimus)})
 
       ;; Liitä annetut sopimukset urakkaan
       (when-not (empty? urakan-sopimus-idt)
         (log/debug "Tallennetaan urakalle " (::u/id urakka) ", " (count urakan-sopimus-idt) " sopimusta.")
         (as-> (sopimukset-q/liita-sopimukset-urakkaan! db {:urakka     (::u/id urakka)
                                                            :sopimukset urakan-sopimus-idt})
-              lkm
-              (log/debug lkm " sopimusta liitetty onnistuneesti."))))))
+          lkm
+          (log/debug lkm " sopimusta liitetty onnistuneesti."))))))
 
 
 (defn tallenna-vesivaylaurakka [db user urakka]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
     (jdbc/with-db-transaction [db db]
-                              (let [sopimukset (::u/sopimukset urakka)
-                                    urakka (if (id-olemassa? (::u/id urakka))
-                                             (paivita-urakka! db user urakka)
-                                             (luo-uusi-urakka! db user urakka))]
-                                (paivita-urakan-sopimukset! db user urakka sopimukset)
-                                urakka))))
+      (let [sopimukset (::u/sopimukset urakka)
+            urakka (if (id-olemassa? (::u/id urakka))
+                     (paivita-urakka! db user urakka)
+                     (luo-uusi-urakka! db user urakka))]
+        (paivita-urakan-sopimukset! db user urakka sopimukset)
+        urakka))))
 
 (defn hae-harjassa-luodut-urakat [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (let [urakat (konv/sarakkeet-vektoriin
                    (into []
-                         (comp
-                           urakka-xf
-                           (map konv/alaviiva->rakenne)
-                           (map #(assoc % :hanke (when (get-in % [:hanke :id]) (:hanke %))))
-                           (map #(assoc % :urakoitsija (when (get-in % [:urakoitsija :id]) (:urakoitsija %))))
-                           (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
-                         (q/hae-harjassa-luodut-urakat db))
+                     (comp
+                       urakka-xf
+                       (map konv/alaviiva->rakenne)
+                       (map #(assoc % :hanke (when (get-in % [:hanke :id]) (:hanke %))))
+                       (map #(assoc % :urakoitsija (when (get-in % [:urakoitsija :id]) (:urakoitsija %))))
+                       (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
+                     (q/hae-harjassa-luodut-urakat db))
                    {:sopimus      :sopimukset
                     ;; Sähke on poistettu käytöstä, mutta nämä jätetty tähän varmuuden vuoksi.
                     :sahkelahetys :sahkelahetykset})]

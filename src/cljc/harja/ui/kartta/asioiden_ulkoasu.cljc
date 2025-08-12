@@ -5,7 +5,6 @@
             [clojure.string :as str]
 
             [harja.domain.laadunseuranta.tarkastus :as domain-tarkastukset]
-            [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
@@ -32,7 +31,7 @@
   (let [asetukset (partition 3 viiva-leveys-asetukset)
         viivat (mapv (fn [[vari erotus muut-asetukset]]
                        (merge {:color vari :width (- +normaali-leveys+ erotus)} muut-asetukset))
-                     asetukset)
+                 asetukset)
         kapein-viiva (apply min (map :width viivat))]
     (if (> kapein-viiva 1)
       viivat
@@ -53,7 +52,7 @@
   levennetään kaikkia viivoja."
   [& viiva-ja-leveyden-erotus-alternating]
   (apply monivarinen-viiva-leveyksilla-ja-asetuksilla
-         (flatten (interleave (partition 2 viiva-ja-leveyden-erotus-alternating) (repeat {})))))
+    (flatten (interleave (partition 2 viiva-ja-leveyden-erotus-alternating) (repeat {})))))
 
 (defn viiva-mustalla-rajalla
   "Palauttaa kaksivärisen viivan, jossa alin viiva on oletusleveyksinen musta viiva,
@@ -146,7 +145,7 @@
 (defn turvalaitteiden-varit [tyyppi kiintea?]
   (or (let [vari (get vesivaylien-ikonien-varit (when tyyppi (str/lower-case tyyppi)))]
         (if (map? vari) (get vari kiintea?) vari))
-      "musta"))
+    "musta"))
 
 (def tiepuolen-viivojen-varit
   {:yllapito-aloitettu puhtaat/keltainen
@@ -289,20 +288,10 @@
                     :tyhja (:kt-tyhja tiepuolen-ikonien-varit)
                     :avoimia (:kt-avoimia tiepuolen-ikonien-varit)
                     :valmis (:kt-valmis tiepuolen-ikonien-varit))
-                  (:turvallisuuspoikkeama tiepuolen-ikonien-varit)))
+    (:turvallisuuspoikkeama tiepuolen-ikonien-varit)))
 
 (defn reikapaikkaus-ikoni []
   (sijainti-ikoni "vaaleanharmaa" "vihrea"))
-
-(defn turvalaitteen-ikoni-ja-selite [turvalaite]
-  [(pinni-ikoni (turvalaitteiden-varit (::tu/tyyppi turvalaite)
-                                       (::tu/kiintea turvalaite)))
-   (str/capitalize
-     (str (when (and (= (::tu/tyyppi turvalaite) "viitta")
-                    (::tu/kiintea turvalaite))
-           "Kiinteä ")
-         (::tu/tyyppi turvalaite)))])
-
 
 (defn suolatoteuman-nuoli [valittu?]
   [{:paikka [:loppu]
@@ -458,13 +447,13 @@
     :tiedoitus (tiedotuksen-ikoni tila)))
 
 (def ^{:doc "TR-valinnan viivatyyli"}
-tr-viiva {:color puhtaat/tummanharmaa
-          :dash [15 15]
-          :zindex 20})
+  tr-viiva {:color puhtaat/tummanharmaa
+            :dash [15 15]
+            :zindex 20})
 
 (def ^{:doc "TR-valinnan ikoni"}
-tr-ikoni {:img (pinni-ikoni "musta")
-          :zindex 21})
+  tr-ikoni {:img (pinni-ikoni "musta")
+            :zindex 21})
 
 (def tietyomaa
   [{:color puhtaat/musta-raja
@@ -518,17 +507,17 @@ tr-ikoni {:img (pinni-ikoni "musta")
 
 (defn kohteenosa-kohteiden-luonnissa [osa sama-kohde?]
   (cond sama-kohde?
-        (let [[vari teksti] (kohteenosa-pinni-varit #{:sama-kohde (::osa/tyyppi osa)})]
-          [(pinni-ikoni vari) teksti])
+    (let [[vari teksti] (kohteenosa-pinni-varit #{:sama-kohde (::osa/tyyppi osa)})]
+      [(pinni-ikoni vari) teksti])
 
-        (and (some? (::osa/kohde osa))
-             (not (:poistettu osa)))
-        (let [[vari teksti] (kohteenosa-pinni-varit #{:varattu (::osa/tyyppi osa)})]
-          [(pinni-ikoni vari) teksti])
+    (and (some? (::osa/kohde osa))
+      (not (:poistettu osa)))
+    (let [[vari teksti] (kohteenosa-pinni-varit #{:varattu (::osa/tyyppi osa)})]
+      [(pinni-ikoni vari) teksti])
 
-        :default
-        (let [[vari teksti] (kohteenosa-pinni-varit #{:vapaa (::osa/tyyppi osa)})]
-          [(pinni-ikoni vari) teksti])))
+    :default
+    (let [[vari teksti] (kohteenosa-pinni-varit #{:vapaa (::osa/tyyppi osa)})]
+      [(pinni-ikoni vari) teksti])))
 
 (defn kan-kohde [kohde]
   [(pinni-ikoni "syaani") "Kohde"])

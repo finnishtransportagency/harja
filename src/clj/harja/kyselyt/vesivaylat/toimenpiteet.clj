@@ -22,7 +22,6 @@
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [harja.domain.vesivaylat.tyo :as vv-tyo]
             [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
-            [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.hinnoittelu :as vv-hinnoittelu]
             [harja.domain.vesivaylat.hinta :as vv-hinta]
             [harja.domain.vesivaylat.komponentin-tilamuutos :as komp-tila]
@@ -358,50 +357,49 @@
         tyoluokat (::vv-toimenpide/reimari-tyoluokat tiedot)
         toimenpiteet (::vv-toimenpide/reimari-toimenpidetyypit tiedot)
         fetchattu (fetch db ::vv-toimenpide/reimari-toimenpide
-                             (clojure.set/union
-                               vv-toimenpide/perustiedot
+                    (clojure.set/union
+                      vv-toimenpide/perustiedot
                                ;; Haetaan liitteet erikseen,
                                ;; specql 0.6 versio ei osaa hakea 2 has-many
                                ;; joukkoa samalla tasolla
                                ;;vv-toimenpide/liitteet
-                               vv-toimenpide/vikailmoitus
-                               vv-toimenpide/urakoitsija
-                               vv-toimenpide/sopimus
-                               vv-toimenpide/turvalaite
-                               vv-toimenpide/vayla
-                               vv-toimenpide/vikailmoitus
-                               vv-toimenpide/kiintio
-                               vv-toimenpide/reimari-kentat
-                               vv-toimenpide/metatiedot
+                      vv-toimenpide/vikailmoitus
+                      vv-toimenpide/urakoitsija
+                      vv-toimenpide/sopimus
+                      vv-toimenpide/vayla
+                      vv-toimenpide/vikailmoitus
+                      vv-toimenpide/kiintio
+                      vv-toimenpide/reimari-kentat
+                      vv-toimenpide/metatiedot
                                ;; Myös hinnoittelut pitää hakea erikseen, eli hinnoittelutietojen
                                ;; täydentäminen aiheuttaa ylimääräisen haun samaan tauluun
                                ;; vv-toimenpide/hinnoittelu
-                               )
-                             (op/and
-                               {::m/poistettu? false}
-                               {::vv-toimenpide/urakka-id urakka-id}
-                               (when urakoitsija-id
-                                 {::vv-toimenpide/reimari-urakoitsija {::vv-urakoitsija/r-id urakoitsija-id}})
-                               (when kokonaishintaiset?
-                                 {::vv-toimenpide/hintatyyppi :kokonaishintainen})
-                               (when yksikkohintaiset?
-                                 {::vv-toimenpide/hintatyyppi :yksikkohintainen})
-                               (when sopimus-id
-                                 {::vv-toimenpide/sopimus-id sopimus-id})
-                               (when (and alku loppu)
-                                 {::vv-toimenpide/suoritettu (op/between alku loppu)})
-                               (when vaylatyyppi
-                                 {::vv-toimenpide/vayla {::vv-vayla/tyyppi vaylatyyppi}})
-                               (when vaylanro
-                                 {::vv-toimenpide/vaylanro vaylanro})
-                               (when turvalaitenro
-                                 {::vv-toimenpide/turvalaitenro turvalaitenro})
-                               (when tyolaji
-                                 {::vv-toimenpide/reimari-tyolaji tyolaji})
-                               (when tyoluokat
-                                 {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
-                               (when toimenpiteet
-                                 {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
+                      )
+                    (op/and
+                      {::m/poistettu? false}
+                      {::vv-toimenpide/urakka-id urakka-id}
+                      (when urakoitsija-id
+                        {::vv-toimenpide/reimari-urakoitsija {::vv-urakoitsija/r-id urakoitsija-id}})
+                      (when kokonaishintaiset?
+                        {::vv-toimenpide/hintatyyppi :kokonaishintainen})
+                      (when yksikkohintaiset?
+                        {::vv-toimenpide/hintatyyppi :yksikkohintainen})
+                      (when sopimus-id
+                        {::vv-toimenpide/sopimus-id sopimus-id})
+                      (when (and alku loppu)
+                        {::vv-toimenpide/suoritettu (op/between alku loppu)})
+                      (when vaylatyyppi
+                        {::vv-toimenpide/vayla {::vv-vayla/tyyppi vaylatyyppi}})
+                      (when vaylanro
+                        {::vv-toimenpide/vaylanro vaylanro})
+                      (when turvalaitenro
+                        {::vv-toimenpide/turvalaitenro turvalaitenro})
+                      (when tyolaji
+                        {::vv-toimenpide/reimari-tyolaji tyolaji})
+                      (when tyoluokat
+                        {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
+                      (when toimenpiteet
+                        {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
         fetchattu (-> fetchattu
                       (suodata-vikakorjaukset vikailmoitukset?)
                       (lisaa-toimenpiteen-komponentit db)

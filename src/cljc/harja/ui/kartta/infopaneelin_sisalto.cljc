@@ -32,7 +32,7 @@
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
-    #?(:cljs [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]])
+            #?(:cljs [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]])
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
@@ -41,7 +41,6 @@
             [harja.domain.tietyoilmoitus :as t-domain]
             [harja.domain.tieliikenneilmoitukset :as apurit]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.vayla :as v]
             [harja.domain.toimenpidekoodi :as tpk]
             [harja.domain.kayttaja :as kayttaja]
@@ -67,9 +66,9 @@
 (defn- sisaltaa? [data path]
   (let [puuttuu ::avain-puuttuu]
     (not= puuttuu
-          (if (keyword? path)
-            (get data path puuttuu)
-            (get-in data path puuttuu)))))
+      (if (keyword? path)
+        (get data path puuttuu)
+        (get-in data path puuttuu)))))
 
 (defn- hakufunktio
   [validointi-fn-tai-vaaditut-avaimet haku-fn]
@@ -87,8 +86,8 @@
   {:tyyppi :tyokone
    :jarjesta-fn :viimeisin-havainto
    :otsikko (str (pvm/pvm-aika (:viimeisin-havainto tyokone)) " - Työkone: "
-                 (when (:tehtavat tyokone)
-                   (string/join ", " (:tehtavat tyokone))))
+              (when (:tehtavat tyokone)
+                (string/join ", " (:tehtavat tyokone))))
    :tiedot [{:otsikko "Ensimmäinen havainto" :tyyppi :pvm-aika :nimi :ensimmainen-havainto}
             {:otsikko "Viimeisin havainto" :tyyppi :pvm-aika :nimi :viimeisin-havainto}
 
@@ -136,9 +135,8 @@
                        [:span.tietoarvo (pvm/pvm (:kuitattu ilmoitus))]])
                     (when kaikkia-ei-piirretty?
                       [:div (str "...sekä "
-                                 (- kuittauksien-maara nayta-max-kuittausta)
-                                 " muuta toimenpidettä.")])
-                    ]))}]
+                              (- kuittauksien-maara nayta-max-kuittausta)
+                              " muuta toimenpidettä.")])]))}]
      :data ilmoitus}))
 
 (defmethod infopaneeli-skeema :toimenpidepyynto [ilmoitus]
@@ -197,21 +195,21 @@
                                                 :aloitus "aloitetaan"
                                                 :valmistuminen "valmistuu"))))
         kohde-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde kohde-aloitus])
-                                               "Kohde" :aloitus)
+                               "Kohde" :aloitus)
         paallystys-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paallystys-aloitus])
-                                                    "Päällystys" :aloitus)
+                                    "Päällystys" :aloitus)
         paallystys-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paallystys-valmis])
-                                                   "Päällystys" :valmistuminen)
+                                   "Päällystys" :valmistuminen)
         paikkaus-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paikkaus-aloitus])
-                                                  "Paikkaus" :aloitus)
+                                  "Paikkaus" :aloitus)
         paikkaus-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paikkaus-valmis])
-                                                 "Paikkaus" :valmistuminen)
+                                 "Paikkaus" :valmistuminen)
         tiemerkinta-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-aloitus])
-                                                     "Tiemerkintä" :aloitus)
+                                     "Tiemerkintä" :aloitus)
         tiemerkinta-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-valmis])
-                                                    "Tiemerkintä" :valmistuminen)
+                                    "Tiemerkintä" :valmistuminen)
         kohde-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
-                                              "Kohde" :valmistuminen)]
+                              "Kohde" :valmistuminen)]
     {:tyyppi (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
      :jarjesta-fn (let [fn #(get-in % [:yllapitokohde kohde-aloitus])]
                     (if (fn yllapitokohdeosa)
@@ -226,14 +224,14 @@
      :otsikko (case (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
                 ;; Näytetään päällystykselle kohteen nimi ja osan TR-osoite
                 :paallystys (str (:nimi (:yllapitokohde yllapitokohdeosa))
-                                 " (" (tr-domain/tierekisteriosoite-tekstina
-                                        yllapitokohdeosa {:teksti-tie? false}) ")")
+                              " (" (tr-domain/tierekisteriosoite-tekstina
+                                     yllapitokohdeosa {:teksti-tie? false}) ")")
                 :paikkaus "Paikkauskohde"
                 nil)
      :tiedot [{:otsikko "Kohde" :tyyppi :string :hae (hakufunktio #{[:yllapitokohde :nimi]}
-                                                                  #(get-in % [:yllapitokohde :nimi]))}
+                                                       #(get-in % [:yllapitokohde :nimi]))}
               {:otsikko "Kohdenumero" :tyyppi :string :hae (hakufunktio #{[:yllapitokohde :kohdenumero]}
-                                                                        #(get-in % [:yllapitokohde :kohdenumero]))}
+                                                             #(get-in % [:yllapitokohde :kohdenumero]))}
               {:otsikko "Kohteen osoite" :tyyppi :string
                :hae (hakufunktio :yllapitokohde #(tr-domain/tierekisteriosoite-tekstina (:yllapitokohde %)))}
               {:otsikko "Kohteen pituus (m)" :tyyppi :string
@@ -245,7 +243,7 @@
                       #(tr-domain/tierekisteriosoite-tekstina %))}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
                :hae (hakufunktio #{[:yllapitokohde :nykyinen-paallyste]}
-                                 #(paallystys-ja-paikkaus/hae-paallyste-koodilla (get-in % [:yllapitokohde :nykyinen-paallyste])))}
+                      #(paallystys-ja-paikkaus/hae-paallyste-koodilla (get-in % [:yllapitokohde :nykyinen-paallyste])))}
               {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
               {:otsikko "Tila" :tyyppi :string
                :hae (hakufunktio
@@ -328,7 +326,7 @@
                 {:otsikko "Käsitelty" :tyyppi :pvm-aika :nimi kasitelty})
               {:otsikko "Työn\u00ADtekijä" :hae (hakufunktio
                                                   #(or (contains? % :tyontekijanammatti)
-                                                       (contains? % :tyontekijanammattimuu))
+                                                     (contains? % :tyontekijanammattimuu))
                                                   #(turpodomain/kuvaile-tyontekijan-ammatti %))}
               {:otsikko "Vammat" :hae (hakufunktio
                                         :vammat
@@ -343,8 +341,8 @@
                :hae (hakufunktio
                       :korjaavattoimenpiteet
                       #(str (count (filter :suoritettu (:korjaavattoimenpiteet %)))
-                            "/"
-                            (count (:korjaavattoimenpiteet %))))}]
+                         "/"
+                         (count (:korjaavattoimenpiteet %))))}]
      :data turpo}))
 
 (defmethod infopaneeli-skeema :tarkastus [tarkastus]
@@ -352,12 +350,12 @@
                        #?(:clj (constantly nil))
                        #?(:cljs
                           (->> (conj []
-                                     (:havainnot t)
-                                     (tarkastukset/formatoi-vakiohavainnot (:vakiohavainnot t))
-                                     (tarkastukset/formatoi-talvihoitomittaukset (:talvihoitomittaus t))
-                                     (tarkastukset/formatoi-soratiemittaukset (:soratiemittaus t)))
-                               (remove empty?)
-                               (string/join " & "))))]
+                                 (:havainnot t)
+                                 (tarkastukset/formatoi-vakiohavainnot (:vakiohavainnot t))
+                                 (tarkastukset/formatoi-talvihoitomittaukset (:talvihoitomittaus t))
+                                 (tarkastukset/formatoi-soratiemittaukset (:soratiemittaus t)))
+                            (remove empty?)
+                            (string/join " & "))))]
     {:tyyppi :tarkastus
      :jarjesta-fn :aika
      :otsikko (let [tila (cond
@@ -376,17 +374,16 @@
                            :else nil)
                     tila-str (when tila (str ", " tila))
                     otsikko-vektori [(str (pvm/pvm-aika (:aika tarkastus))) (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tila-str)]]
-                otsikko-vektori
-                )
+                otsikko-vektori)
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
               {:otsikko "Tieosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
               {:otsikko "Tarkastaja" :nimi :tarkastaja}
               {:otsikko "Organisaatio" :nimi :organisaatio}
               {:otsikko "Havainnot" :hae (hakufunktio
                                            #(and (contains? % :havainnot)
-                                                 (contains? % :vakiohavainnot)
-                                                 (contains? % :talvihoitomittaus)
-                                                 (contains? % :soratiemittaus))
+                                              (contains? % :vakiohavainnot)
+                                              (contains? % :talvihoitomittaus)
+                                              (contains? % :soratiemittaus))
                                            havainnot-fn)}]
      :data tarkastus}))
 
@@ -402,27 +399,27 @@
                                         #(str (:tekijanimi %) ", " (name (:tekija %))))}
               {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string}
               {:otsikko "Tieosoite" :hae (hakufunktio
-                                                    #(or (sisaltaa? % [:yllapitokohde :tr])
-                                                         (sisaltaa? % :tr))
-                                                    #(if-let [yllapitokohde-tie (get-in % [:yllapitokohde :tr])]
-                                                       (tr-domain/tierekisteriosoite-tekstina
-                                                         yllapitokohde-tie)
-                                                       (tr-domain/tierekisteriosoite-tekstina
-                                                         (:tr %))))}
+                                           #(or (sisaltaa? % [:yllapitokohde :tr])
+                                              (sisaltaa? % :tr))
+                                           #(if-let [yllapitokohde-tie (get-in % [:yllapitokohde :tr])]
+                                              (tr-domain/tierekisteriosoite-tekstina
+                                                yllapitokohde-tie)
+                                              (tr-domain/tierekisteriosoite-tekstina
+                                                (:tr %))))}
               (when (and (get-in laatupoikkeama [:yllapitokohde :numero])
-                         (get-in laatupoikkeama [:yllapitokohde :nimi]))
+                      (get-in laatupoikkeama [:yllapitokohde :nimi]))
                 {:otsikko "Kohde" :hae (hakufunktio
                                          #{[:yllapitokohde :numero] [:yllapitokohde :nimi]}
                                          #(let [yllapitokohde (:yllapitokohde %)]
                                             (str (:numero yllapitokohde)
-                                                 ", "
-                                                 (:nimi yllapitokohde))))})
+                                              ", "
+                                              (:nimi yllapitokohde))))})
               (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
                 {:otsikko "Päätös"
                  :hae (hakufunktio
                         #{[:paatos :paatos] [:paatos :kasittelyaika]}
                         #(str (kuvaile-paatostyyppi (paatos %))
-                              " (" (pvm/pvm-aika (kasittelyaika %)) ")"))})]
+                           " (" (pvm/pvm-aika (kasittelyaika %)) ")"))})]
      :data laatupoikkeama}))
 
 (defmethod infopaneeli-skeema :suljettu-tieosuus [osuus]
@@ -447,9 +444,9 @@
    :jarjesta-fn :alkanut
    :otsikko (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))]
               (str (pvm/pvm-aika (:alkanut toteuma)) " - "
-                   (if (empty? toimenpiteet)
-                     "Toteuma"
-                     (string/join ", " toimenpiteet))))
+                (if (empty? toimenpiteet)
+                  "Toteuma"
+                  (string/join ", " toimenpiteet))))
    :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
                          {:otsikko "Klo (arvio)" :tyyppi :pvm-aika
@@ -465,21 +462,21 @@
                          (when (:tyokonelisatieto toteuma)
                            {:otsikko "Työkoneen lisätieto" :nimi :tyokonelisatieto})]
 
-                        (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
-                          {:otsikko toimenpide
-                           :hae (hakufunktio
+                  (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
+                    {:otsikko toimenpide
+                     :hae (hakufunktio
                                   ;; Näitä ei edes tehdä jos arvot puuttuvat, joten ei
                                   ;; tarvita erityistä validointia.
-                                  (constantly true)
-                                  (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
+                            (constantly true)
+                            (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
 
-                        (for [{{:keys [nimi yksikko]} :materiaali maara :maara} (:materiaalit toteuma)]
-                          {:otsikko nimi
-                           :hae (hakufunktio
-                                  (constantly true)
-                                  (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
-                        (when (:lisatieto toteuma)
-                          [{:otsikko "Lisätieto" :nimi :lisatieto}])))
+                  (for [{{:keys [nimi yksikko]} :materiaali maara :maara} (:materiaalit toteuma)]
+                    {:otsikko nimi
+                     :hae (hakufunktio
+                            (constantly true)
+                            (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
+                  (when (:lisatieto toteuma)
+                    [{:otsikko "Lisätieto" :nimi :lisatieto}])))
    :data toteuma})
 
 (defmethod infopaneeli-skeema :tietyoilmoitus [tietyoilmoitus]
@@ -550,8 +547,7 @@
             #_{:otsikko "Pysäytysten alku" :nimi ::t-domain/pysaytysten-alku}
             #_{:otsikko "Pysäytysten loppu" :nimi ::t-domain/pysaytysten-loppu}
             {:otsikko "Lisätietoja" :nimi ::t-domain/lisatietoja}
-            #_{:otsikko "Urakoitsijan nimi" :nimi ::t-domain/urakoitsijan-nimi}
-            ]
+            #_{:otsikko "Urakoitsijan nimi" :nimi ::t-domain/urakoitsijan-nimi}]
    :data tietyoilmoitus})
 
 (defmethod infopaneeli-skeema :silta [silta]
@@ -587,39 +583,6 @@
                                         #(clojure.string/join ", " (map str (:ajoradat %))))}
             {:otsikko "Nopeusrajoitus" :nimi :nopeusrajoitus}]
    :data tietyomaa})
-
-(defmethod infopaneeli-skeema :turvalaite [turvalaite]
-  (let [nayta-max-toimenpidetta 10]
-    {:tyyppi :turvalaite
-     :jarjesta-fn (constantly false)
-     :otsikko (or (::tu/nimi turvalaite) "Turvalaite")
-     :tiedot (vec
-               (concat
-                 [{:otsikko "Turvalaitenumero" :nimi ::tu/turvalaitenro :tyyppi :string}
-                  {:otsikko "Tyyppi" :nimi ::tu/tyyppi :tyyppi :string}
-                  {:otsikko "Väylä" :tyyppi :string :hae
-                   (hakufunktio
-                     #{[:toimenpiteet 0 ::to/vayla ::v/nimi]}
-                     #(get-in % [:toimenpiteet 0 ::to/vayla ::v/nimi]))}
-                  {:otsikko "Tehdyt toimenpiteet" :nimi :toimenpiteet :tyyppi :komponentti
-                   :komponentti
-                   (fn []
-                     (let [kaikkia-ei-piirretty? (> (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)]
-                       [:div
-                        (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (take nayta-max-toimenpidetta (:toimenpiteet turvalaite)))]
-                          ^{:key (str (::tu/turvalaitenro turvalaite) "-" (::to/id toimenpide))}
-                          [:div (str (if-let [s (or (::to/pvm toimenpide)
-                                                    (::to/suoritettu toimenpide))]
-                                       (pvm/pvm s)
-                                       "-")
-                                     " - " (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide))
-                                     " - " (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide)))])
-                        (when kaikkia-ei-piirretty?
-                          [:div (str "...sekä "
-                                     (- (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)
-                                     " muuta toimenpidettä.")])
-                        ]))}]))
-     :data turvalaite}))
 
 (defmethod infopaneeli-skeema :kohteenosa [osa]
   {:tyyppi :kohteenosa
@@ -704,7 +667,7 @@
             {:otsikko "Pvm" :nimi ::kan-to/pvm :tyyppi :pvm}
             {:otsikko "Huoltokohde"
              :hae (hakufunktio #{[::kan-to/huoltokohde ::huoltokohde/nimi]}
-                               #(get-in % [::kan-to/huoltokohde ::huoltokohde/nimi]))
+                    #(get-in % [::kan-to/huoltokohde ::huoltokohde/nimi]))
              :tyyppi :string}
             {:otsikko "Suorittaja" :nimi ::kan-to/suorittaja :tyyppi :string}
             {:otsikko "Lisätieto" :nimi ::kan-to/lisatieto :tyyppi :string}]
@@ -736,8 +699,8 @@
                     fn
                     (constantly false)))
    :otsikko (str (when (:alkanut suolatoteuma)
-                                  (str " " (pvm/pvm (:alkanut suolatoteuma))))
-                 "Suolatoteuma")
+                   (str " " (pvm/pvm (:alkanut suolatoteuma))))
+              "Suolatoteuma")
    :tiedot [{:otsikko "Materiaali" :nimi :materiaali_nimi}
             {:otsikko "Määrä (t)" :nimi :maara}
             {:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
@@ -771,23 +734,23 @@
                        ^{:key (str i "_" osoite)}
                        [:div osoite])
                      (->> sijainnit
-                          (sort-by (juxt ::tielupa/tie
-                                         ::tielupa/aosa
-                                         ::tielupa/aet
-                                         ::tielupa/losa
-                                         ::tielupa/let))
-                          (map (juxt ::tielupa/tie
-                                     ::tielupa/aosa
-                                     ::tielupa/aet
-                                     ::tielupa/losa
-                                     ::tielupa/let))
-                          (map (partial keep identity))
-                          (map (partial string/join "/")))))))}]
+                       (sort-by (juxt ::tielupa/tie
+                                  ::tielupa/aosa
+                                  ::tielupa/aet
+                                  ::tielupa/losa
+                                  ::tielupa/let))
+                       (map (juxt ::tielupa/tie
+                              ::tielupa/aosa
+                              ::tielupa/aet
+                              ::tielupa/losa
+                              ::tielupa/let))
+                       (map (partial keep identity))
+                       (map (partial string/join "/")))))))}]
    :data lupa})
 
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
-            ", palautetaan tyhjä itemille " (pr-str x))
+    ", palautetaan tyhjä itemille " (pr-str x))
   nil)
 
 (defmethod infopaneeli-skeema :paikkaukset-toteumat [paikkaus]
@@ -802,35 +765,35 @@
               {:otsikko "Tierekistetriosoite"
                :tyyppi :string
                :hae (hakufunktio #{::tr-domain/tie ::tr-domain/aosa ::tr-domain/aet ::tr-domain/losa ::tr-domain/let}
-                                 #(apply str (interpose ", "
-                                                        [(::tr-domain/tie %) (::tr-domain/aosa %) (::tr-domain/aet %)
-                                                         (::tr-domain/losa %) (::tr-domain/let %)])))}
+                      #(apply str (interpose ", "
+                                    [(::tr-domain/tie %) (::tr-domain/aosa %) (::tr-domain/aet %)
+                                     (::tr-domain/losa %) (::tr-domain/let %)])))}
               (toteuman-kentta {:otsikko "Leveys" :nimi ::paikkaus/leveys}
-                               ::paikkaus/leveys)
+                ::paikkaus/leveys)
               (toteuman-kentta {:otsikko "Ajoura" :nimi ::paikkaus/ajourat}
-                               ::paikkaus/ajourat)
+                ::paikkaus/ajourat)
               (toteuman-kentta {:otsikko "Ajorata" :nimi ::paikkaus/ajorata}
-                               ::paikkaus/ajorata)
+                ::paikkaus/ajorata)
               (toteuman-kentta {:otsikko "Reuna"
                                 :tyyppi :string
                                 :hae (hakufunktio ::paikkaus/reunat #(apply str (interpose ", " (::paikkaus/reunat %))))}
-                               ::paikkaus/reunat)
+                ::paikkaus/reunat)
               (toteuman-kentta {:otsikko "Ajouravälit"
                                 :tyyppi :string
                                 :hae (hakufunktio ::paikkaus/ajouravalit #(apply str (interpose ", " (::paikkaus/ajouravalit %))))}
-                               ::paikkaus/ajouravalit)
+                ::paikkaus/ajouravalit)
               (toteuman-kentta {:otsikko "Alkuaika" :nimi ::paikkaus/alkuaika :tyyppi :pvm-aika}
-                               ::paikkaus/alkuaika)
+                ::paikkaus/alkuaika)
               (toteuman-kentta {:otsikko "Loppuaika" :nimi ::paikkaus/loppuaika :tyyppi :pvm-aika}
-                               ::paikkaus/loppuaika)
+                ::paikkaus/loppuaika)
               (toteuman-kentta {:otsikko "Raekoko" :nimi ::paikkaus/raekoko}
-                               ::paikkaus/raekoko)
+                ::paikkaus/raekoko)
               (toteuman-kentta {:otsikko "Massatyyppi" :nimi ::paikkaus/massatyyppi}
-                               ::paikkaus/massatyyppi)
+                ::paikkaus/massatyyppi)
               (toteuman-kentta {:otsikko "Kuulamylly" :nimi ::paikkaus/kuulamylly}
-                               ::paikkaus/kuulamylly)
+                ::paikkaus/kuulamylly)
               (toteuman-kentta {:otsikko "Massamenekki" :nimi ::paikkaus/massamenekki}
-                               ::paikkaus/massamenekki)]}))
+                ::paikkaus/massamenekki)]}))
 
 (defmethod infopaneeli-skeema :paikkaukset-paikkauskohteet [kohde]
   {:tyyppi :paikkaukset-paikkauskohteet
@@ -867,14 +830,14 @@
             {:otsikko "Valmistumispvm" :tyyppi :string :nimi :valmistui}
             {:otsikko "Takuuaika" :tyyppi :string :nimi :takuuaika}
             {:otsikko "Tieosoite" :tyyppi :tierekisteriosoite
-                          :nimi :tierekisteriosoite}]
+             :nimi :tierekisteriosoite}]
    :data (:infopaneelin-tiedot kohde)})
 
 (defn- rivin-skeemavirhe [viesti rivin-skeema infopaneeli-skeema]
   (do
     (log/debug viesti
-               ", rivin-skeema: " (pr-str rivin-skeema)
-               ", infopaneeli-skeema: " (pr-str infopaneeli-skeema))
+      ", rivin-skeema: " (pr-str rivin-skeema)
+      ", infopaneeli-skeema: " (pr-str infopaneeli-skeema))
     nil))
 
 (defn- rivin-skeema-ilman-haun-validointia [skeema]
@@ -893,29 +856,29 @@
       ;; Ei ole otsikkoa
       (nil? otsikko)
       (rivin-skeemavirhe "Rivin skeemasta puuttuu otsikko"
-                         rivin-skeema infopaneeli-skeema)
+        rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa puuttuu kokonaan
       (nil? get-fn)
       (rivin-skeemavirhe (str otsikko " skeemasta puuttuu :nimi tai :hae")
-                         rivin-skeema infopaneeli-skeema)
+        rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa on nimi, mutta datassa ei ole kyseistä avainta
       (and nimi (not (contains? data nimi)))
       (rivin-skeemavirhe
         (str otsikko " tiedossa ei ole nimen mukaista avainta, nimi: "
-             (str nimi))
+          (str nimi))
         rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa on funktio, jolta puuttuu validointi
       (and hae (nil? (:validointi-fn hae)))
       (rivin-skeemavirhe (str otsikko " :hae avaimen pitää sisältää map, jossa on :haku-fn ja :validointi-fn. " (:otsikko rivin-skeema))
-                         rivin-skeema infopaneeli-skeema)
+        rivin-skeema infopaneeli-skeema)
 
       ;; Haun validointi epäonnistuu
       (and hae (not ((:validointi-fn hae) data)))
       (rivin-skeemavirhe (str otsikko " :hae kentän :validointi-fn epäonnistui. Puuttuuko avaimia?")
-                         rivin-skeema infopaneeli-skeema)
+        rivin-skeema infopaneeli-skeema)
 
       ;; Kaikki kunnossa
       :default
@@ -928,21 +891,21 @@
   ([skeema] (validoi-infopaneeli-skeema skeema false))
   ([{:keys [otsikko tiedot data jarjesta-fn] :as infopaneeli-skeema} vaadi-kaikki-skeemat?]
    (let [validoidut-skeemat (map (partial validoi-rivin-skeema infopaneeli-skeema)
-                                 tiedot)
+                              tiedot)
          validit-skeemat (vec (keep identity validoidut-skeemat))
          epaonnistuneet-skeemat-lkm (count (filter nil? validoidut-skeemat))]
      (cond
        (nil? otsikko)
        (do (log/warn (str "Otsikko puuttuu " (pr-str infopaneeli-skeema)))
-           nil)
+         nil)
 
        (nil? jarjesta-fn)
        (do (log/warn (str "jarjesta-fn puuttuu tiedolta " (pr-str infopaneeli-skeema)))
-           nil)
+         nil)
 
        (empty? validit-skeemat)
        (do (log/warn (str "Tiedolla ei ole yhtään validia skeemaa: " (pr-str infopaneeli-skeema)))
-           nil)
+         nil)
 
        (and vaadi-kaikki-skeemat? (pos? epaonnistuneet-skeemat-lkm))
        (do
@@ -980,7 +943,7 @@
   monta riviä, palauttaa vain yhden riveistä."
   [skeemat]
   (let [[tunnisteelliset tunnisteettomat] ((juxt #(get % true) #(get % false))
-                                            (group-by (comp some? :tunniste) skeemat))]
+                                           (group-by (comp some? :tunniste) skeemat))]
     (concat
       (map
         first
@@ -995,9 +958,9 @@
 (defn skeemamuodossa
   ([asiat]
    (as-> asiat $
-         (keep infopaneeli-skeema $)
-         (map skeema-ilman-tyhjia-riveja $)
-         (keep validoi-infopaneeli-skeema $)
-         (vain-uniikit $)
-         (sort-by #((:jarjesta-fn %) (:data %)) jarjesta $)
-         (vec $))))
+     (keep infopaneeli-skeema $)
+     (map skeema-ilman-tyhjia-riveja $)
+     (keep validoi-infopaneeli-skeema $)
+     (vain-uniikit $)
+     (sort-by #((:jarjesta-fn %) (:data %)) jarjesta $)
+     (vec $))))
