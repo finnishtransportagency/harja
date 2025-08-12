@@ -2,7 +2,6 @@
   "Kokoelma pienempiä yleisiä ajastuksia, jotka eivät sovi yhteen isommaksi tarkoitettuun palveluun"
   (:require [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
-            [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.kyselyt.tapahtumat :as tapahtumat-kyselyt]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
@@ -35,11 +34,10 @@
   (log/info "Ajastetaan siivoa tapahtuman tiedot - ajetaan joka tunti.")
   (ajastettu-tehtava/ajasta-minuutin-valein 60 30
     (fn [_]
-      (do
-        (log/info "ajasta-minuutin-valein :: siivoa-tapahtuman-tiedot :: Alkaa " (pvm/nyt))
-        ;; Aseta 30 sekunnin vanhenemisaika lukolle
-        (lukot/yrita-ajaa-lukon-kanssa db "siivoa_tapahtuman_tiedot" #(siivoa-tapahtuman-tiedot db) 30)
-        (log/info "ajasta-minuutin-valein :: siivoa-tapahtuman-tiedot :: Loppuu " (pvm/nyt))))))
+      (log/info "ajasta-minuutin-valein :: siivoa-tapahtuman-tiedot :: Alkaa " (pvm/nyt))
+      ;; Aseta 30 sekunnin vanhenemisaika lukolle
+      (lukot/yrita-ajaa-lukon-kanssa db "siivoa_tapahtuman_tiedot" #(siivoa-tapahtuman-tiedot db) 30)
+      (log/info "ajasta-minuutin-valein :: siivoa-tapahtuman-tiedot :: Loppuu " (pvm/nyt)))))
 
 (defn- ajasta-rajoitusalueen-suolatoteumat [db]
   (log/info "Ajastetaan siivoa tapahtuman tiedot - ajetaan kerran vuorokaudessa.")

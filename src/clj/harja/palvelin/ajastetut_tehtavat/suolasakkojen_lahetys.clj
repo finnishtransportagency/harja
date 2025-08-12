@@ -2,7 +2,6 @@
   "Suolasakkojen lähetys tehdään touko-, kesä-, heinä-, syys- ja elokuun ensimmäisenä päivänä klo 02:00."
   (:require [com.stuartsierra.component :as component]
             [clj-time.core :as t]
-            [clojure.core.async :as a :refer [<! go-loop]]
             [clj-time.periodic :refer [periodic-seq]]
             [taoensso.timbre :as log]
             [harja.kyselyt.maksuerat :as maksuerat]
