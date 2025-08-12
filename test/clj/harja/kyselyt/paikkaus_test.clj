@@ -125,11 +125,11 @@
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)]
 
     (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id testipaikkaus)
-    (is (= (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id testipaikkauksen-ulkoinen-id)))
+    (is (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id testipaikkauksen-ulkoinen-id))
         "Toteuma löytyy ulkoisella id:lla")
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara))
         "Toteumien määrä on noussut yhdellä")
-    (is (= (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id testikohteen-ulkoinen-id)))
+    (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id testikohteen-ulkoinen-id))
         "Kohde löytyy ulkoisella id:lla")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara))
         "Kohteiden määrä on noussut yhdellä")

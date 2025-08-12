@@ -1,8 +1,10 @@
 (ns harja.kyselyt.paivystajatekstiviestit
   (:require [jeesql.core :refer [defqueries]]))
 
+(declare kirjaa-uusi-paivystajatekstiviesti<!)
+
 (defqueries "harja/kyselyt/paivystajatekstiviestit.sql"
   {:positional? true})
 
 (defn kirjaa-uusi-viesti [db yhteyshenkilo-id ilmoitus-id puhelinnumero]
-  (:viestinumero (harja.kyselyt.paivystajatekstiviestit/kirjaa-uusi-paivystajatekstiviesti<! db puhelinnumero ilmoitus-id yhteyshenkilo-id )))
+  (:viestinumero (kirjaa-uusi-paivystajatekstiviesti<! db puhelinnumero ilmoitus-id yhteyshenkilo-id)))

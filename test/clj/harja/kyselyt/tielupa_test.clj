@@ -80,7 +80,7 @@
 
     ;; uuden luominen
     (tielupa-q/tallenna-tielupa db testitielupa)
-    (is (= (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666123))))
+    (is (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666123)))
     (is (= maara-luonnin-jalkeen (hae-maara)))
 
     ;; paivittaminen ulkoisella tunnisteella
