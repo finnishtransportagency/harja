@@ -3,7 +3,6 @@
   (:require [jeesql.core :refer [defqueries]]
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [clojure.string :as str]
-            [harja.kyselyt.konversio :as konv]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.laadunseuranta.talvihoitoreitit-domain :as talvihoitoreitit-domain]
             [taoensso.timbre :as log]
@@ -14,7 +13,8 @@
 
 (declare lisaa-sijainti-talvihoitoreitille<! lisaa-kalusto-sijainnille<! lisaa-talvihoitoreitti<!
   hae-urakan-talvihoitoreitit hae-sijainti-talvihoitoreitille hae-talvihoitoreitti-ulkoisella-idlla
-  hae-leikkaavat-geometriat)
+  hae-leikkaavat-geometriat
+  poista-talvihoitoreitin-sijainnit! paivita-talvihoitoreitti<!)
 
 (defn- hoitoluokkaryhma
   "Hoitoluokat kuuluvat UI:lla kolmeen ryhmään: Kävelyn ja pyöräilyn väylät, Maantiet ja Huoltoaukot ja pysäköintialueet.
@@ -29,15 +29,15 @@
 (defn lisaa-reitit [db talvihoitoreitti-id data]
   ;; Lisää reitit
   (doseq [sijainti (remove nil? (:sijainnit data))
-          :let [sijainti-id (:id (lisaa-sijainti-talvihoitoreitille<! db
-                                   {:talvihoitoreitti_id talvihoitoreitti-id
-                                    :tie (:tie sijainti)
-                                    :alkuosa (:aosa sijainti)
-                                    :alkuetaisyys (:aet sijainti)
-                                    :loppuosa (:losa sijainti)
-                                    :loppuetaisyys (:let sijainti)
-                                    :pituus (:pituus sijainti) ;; Pituus on metreinä
-                                    :hoitoluokka (:hoitoluokka sijainti)}))]]))
+          :let [_ (:id (lisaa-sijainti-talvihoitoreitille<! db
+                         {:talvihoitoreitti_id talvihoitoreitti-id
+                          :tie (:tie sijainti)
+                          :alkuosa (:aosa sijainti)
+                          :alkuetaisyys (:aet sijainti)
+                          :loppuosa (:losa sijainti)
+                          :loppuetaisyys (:let sijainti)
+                          :pituus (:pituus sijainti) ;; Pituus on metreinä
+                          :hoitoluokka (:hoitoluokka sijainti)}))]]))
 
 (defn lisaa-talvihoitoreitti-tietokantaan [db data urakka_id kayttaja_id]
   ;; Generoidaan talvihoitoreitille värikoodi tietokantaan, jotta se ei vaihdu, kun käyttöliittymässä piirretään

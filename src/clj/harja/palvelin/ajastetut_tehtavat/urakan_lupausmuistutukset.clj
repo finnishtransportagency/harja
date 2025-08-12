@@ -1,27 +1,14 @@
 (ns harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset
   "Muistuttaa tarvittaessa urakoitsijoita lupauksista."
-  (:require [chime :refer [chime-ch]]
-            [com.stuartsierra.component :as component]
+  (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.tyokalut.lukot :as lukko]
-            [clj-time.periodic :refer [periodic-seq]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.pvm :as pvm]
             [harja.palvelin.palvelut.lupaus.lupaus-muistutus :as lupaus-muistutus]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
-            [harja.domain.lupaus-domain :as lupaus-domain]
-            [harja.pvm :as pvm]))
-
-(comment
-  ;; Funktion kutsuminen REPListä
-  (try
-    (let [{:keys [db api-sahkoposti fim]} harja.palvelin.main/harja-jarjestelma
-          nykyhetki (harja.pvm/luo-pvm 2021 10 1)]
-      (harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset/muistuta-lupauksista db fim api-sahkoposti {:nykyhetki nykyhetki}))
-    (catch Exception e
-      (taoensso.timbre/error e))))
+            [harja.domain.lupaus-domain :as lupaus-domain]))
 
 (defn hae-kaynnissa-olevat-urakat
   "Hae ei-poistetut teiden-hoito -tyyppiset urakat, joiden alkuvuosi on annettu alkuvuosi.
@@ -81,8 +68,9 @@
     (lukko/yrita-ajaa-lukon-kanssa db "lupaus-muistutukset"
       #(muistuta-lupauksista db fim email {:nykyhetki nykyhetki}))))
 
-(defn ajastus [db fim email]
+(defn ajastus
   "Ajastetaan muistutukset urakan lupauksista ajettavaksi vain kuukauden ensimmäinen päivä."
+  [db fim email]
   (ajastettu-tehtava/ajasta-paivittain
     [10 00 0] ; Lähetetään virka-aikaan, jotta urakoitsijan päivystäjä ei herää turhaan
     (do
@@ -98,3 +86,12 @@
     (let [lopeta (get this :urakan-lupausmuistutukset)]
       (when lopeta (lopeta)))
     this))
+
+#_(comment
+    ;; Funktion kutsuminen REPListä
+    (try
+      (let [{:keys [db api-sahkoposti fim]} main/harja-jarjestelma
+            nykyhetki (harja.pvm/luo-pvm 2021 10 1)]
+        (muistuta-lupauksista db fim api-sahkoposti {:nykyhetki nykyhetki}))
+      (catch Exception e
+        (taoensso.timbre/error e))))

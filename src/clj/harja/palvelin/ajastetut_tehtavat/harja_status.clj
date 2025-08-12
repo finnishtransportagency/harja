@@ -7,7 +7,6 @@
             [harja.palvelin.tyokalut.lukot :as lukot]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.palvelin.integraatiot.jms :as jms-util]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.kyselyt.status :as status-kyselyt]
             [harja.kyselyt.jarjestelman-tila :as jarjestelman-tila-kyselyt])
@@ -86,7 +85,7 @@
             states [:WAITING :RUNNABLE :BLOCKED]
             thread-stack (mapv bean (keys (Thread/getAllStackTraces)))
             thread-maara (fn [tyyppi state]
-                           (->> 
+                           (->>
                              thread-stack
                              (filter #(and (str/includes? (:name %) tyyppi)
                                         (= (:state %) (Thread$State/valueOf (name state)))))
@@ -96,7 +95,7 @@
           (log/info (str
                       "async-dispatch / poolin koko (" state ") : "
                       (thread-maara "async-dispatch" state) " / " threadpool-size)))
-        
+
         (doseq [state states]
           (log/info (str
                       "async-thread-macro count (" state ") : " (thread-maara "async-thread-macro" state))))

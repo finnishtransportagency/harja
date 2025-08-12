@@ -2,3 +2,5 @@
   (:require [jeesql.core :refer [defqueries]]))
 
 (defqueries "harja/kyselyt/tapahtumat.sql")
+
+(declare poista-viimeisimmat-tapahtumat)
