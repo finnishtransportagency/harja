@@ -1,7 +1,5 @@
 (ns harja.kyselyt.specql-db
   (:require [specql.core :as specql]
-            [specql.transform :as xf]
-            [specql.rel :as rel]
             [harja.domain.muokkaustiedot]
             [harja.tyokalut.env :as env]))
 

@@ -5,9 +5,7 @@
             [specql.rel :as rel]
             
             [clojure.java.jdbc :as jdbc]
-            [clojure.set :as set]
             [clojure.spec.alpha :as s]
-            [harja.kyselyt.specql :as specql]
             [harja.kyselyt.specql-db :refer [define-tables]]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.tierekisteri :as tr]
@@ -138,46 +136,6 @@
           ::t/pituus
           [::t/paailmoitus (conj pdf-kentat ::t/pituus)])))
 
-(def ilmoituslomakkeen-kentat
-  #{[::t/paailmoitus #{::t/urakan-nimi ::t/urakoitsijayhteyshenkilo ::t/tilaajayhteyshenkilo
-                       ::t/ilmoittaja
-                       ::t/osoite ::t/tien-nimi ::t/kunnat
-                       ::t/alkusijainnin-kuvaus ::t/loppusijainnin-kuvaus
-                       ::t/tyoajat
-                       ::t/alku ::t/loppu}]
-    ::t/urakka-id
-    ::t/urakan-nimi
-    ::t/ilmoittaja
-    ::t/urakoitsijayhteyshenkilo
-    ::t/tilaajayhteyshenkilo
-    ::t/tyotyypit
-    ::t/luvan-diaarinumero
-    ::t/osoite
-    ::t/tien-nimi
-    ::t/kunnat
-    ::t/alkusijainnin-kuvaus
-    ::t/loppusijainnin-kuvaus
-    ::t/alku
-    ::t/loppu
-    ::t/tyoajat
-    ::t/vaikutussuunta
-    ::t/kaistajarjestelyt
-    ::t/nopeusrajoitukset
-    ::t/tienpinnat
-    ::t/kiertotien-mutkaisuus
-    ::t/kiertotienpinnat
-    ::t/liikenteenohjaus
-    ::t/liikenteenohjaaja
-    ::t/viivastys-normaali-liikenteessa
-    ::t/viivastys-ruuhka-aikana
-    ::t/ajoneuvorajoitukset
-    ::t/huomautukset
-    ::t/ajoittaiset-pysaytykset
-    ::t/ajoittain-suljettu-tie
-    ::t/pysaytysten-alku
-    ::t/pysaytysten-loppu
-    ::t/lisatietoja})
-
 (defn intersects? [threshold geometry]
   (reify op/Op
     (to-sql [this value-accessor _]
@@ -263,7 +221,7 @@
 
 (defn hae-ilmoitukset-tienakymaan [db {:keys [alku
                                               loppu
-                                              sijainti] :as tiedot}]
+                                              sijainti]}]
   (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat
          (op/and
            (overlaps? ::t/alku ::t/loppu alku loppu)

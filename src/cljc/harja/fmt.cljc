@@ -487,6 +487,18 @@
     (pvm-vali vali)
     ""))
 
+(defn hoitovuodesta-hoitokausinumero-ja-kaikki
+  "valittu-hoitovuosi = nil , palauttaa tekstin \"Kaikki\" jos kaikki? parametri on true."
+  [valittu-hoitovuosi hoitokaudet-vuosina kaikki?]
+  (let [nro (first (keep-indexed (fn [i vuosi]
+                                   (when (= vuosi valittu-hoitovuosi)
+                                     (inc (int i))))
+                     hoitokaudet-vuosina))
+        teksti (if (nil? valittu-hoitovuosi)
+                 "Kaikki"
+                 (str nro ". hoitovuosi (" valittu-hoitovuosi "-" (inc valittu-hoitovuosi) ")"))]
+    teksti))
+
 (defn hoitokauden-jarjestysluku-ja-vuodet
   "Näyttää hoitokauden esim 1.10.2022 - 30.9.2023 formaatissa '2. hoitovuosi (2022 — 2023)'.
   Olettaa saavansa parametrit joko kaikki päivämäärinä tai kaikki vuosina:
