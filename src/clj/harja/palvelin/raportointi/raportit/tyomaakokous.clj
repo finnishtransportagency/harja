@@ -49,10 +49,12 @@
             [:muutos-ja-lisatyot "Muutos- ja lisätyöt" muutos-ja-lisatyot/suorita]
             [:sanktioraportti "Sanktioiden yhteenveto" sanktiot/suorita]
             [:soratietarkastusraportti "Soratietarkastukset" soratietarkastukset/suorita]
+            [:tehtavamaarat "Tehtävämäärät" tiestotarkastukset/suorita]
             [:tiestotarkastusraportti "Tiestötarkastukset" tiestotarkastukset/suorita]
             [:toimenpideajat "Toimenpiteiden ajoittuminen" toimenpideajat/suorita]
             [:turvallisuus "Turvallisuusraportti" turvallisuus/suorita]
             [:yks-hint-kuukausiraportti "Yksikköhintaiset työt kuukausittain" yks-hint-kuukausittain/suorita]
             [:yksikkohintaiset-tyot "Yksikköhintaiset työt päivittäin" yks-hint-paivittain/suorita]
             [:yks-hint-tehtavien-summat "Yksikköhintaiset työt tehtävittäin" yks-hint-tehtavittain/suorita]
-            [:ymparisto "Ympäristöraportti" ymparisto/suorita]])])
+            [:ymparisto "Ympäristöraportti" ymparisto/suorita]
+            [:valitavoiteraportti "Välitavoitteet" ymparisto/suorita]])])
