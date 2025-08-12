@@ -17,6 +17,8 @@
 
 (defqueries "harja/kyselyt/kanavat/kohteet.sql")
 
+(declare paivita-kohteiden-jarjestys)
+
 (defn- hae-kohteiden-urakkatiedot* [user kohteet linkit]
   (let [kohde-ja-urakat (->> linkit
                              (group-by ::kohde/kohde-id)

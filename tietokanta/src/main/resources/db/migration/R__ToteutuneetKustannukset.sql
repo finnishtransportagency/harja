@@ -11,7 +11,7 @@ BEGIN
     -- Ja tehtävät: Toimistotarvike- ja ICT-kulut, Hoitourakan työnjohto sekä Hoidonjohtopalkkio
     INSERT INTO toteutuneet_kustannukset (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu,
                                           tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin)
+                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin, muokkaaja, muokattu)
     SELECT k.vuosi,
            k.kuukausi,
            k.summa,
@@ -26,7 +26,9 @@ BEGIN
            (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
            NOW(),
            MD5(CONCAT(k.id, k.vuosi, k.kuukausi, k.summa, k.tyyppi, k.tehtava, k.tehtavaryhma,
-                      k.toimenpideinstanssi, k.sopimus, k.luotu, k.luoja, k.muokattu, k.muokkaaja)::TEXT)
+                      k.toimenpideinstanssi, k.sopimus, k.luotu, k.luoja, k.muokattu, k.muokkaaja)::TEXT),
+            k.muokkaaja,
+            k.muokattu
       FROM kustannusarvioitu_tyo k
      -- Siirretään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
      WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
@@ -47,7 +49,7 @@ BEGIN
     -- Tästä taulusta (johto_ja_hallintokorvaus) siirretään kaikki rivit
     INSERT INTO toteutuneet_kustannukset (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu,
                                           tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin)
+                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin, muokkaaja, muokattu)
     SELECT j.vuosi,
            j.kuukausi,
            (j.tunnit * j.tuntipalkka * j."osa-kuukaudesta")                 AS summa,
@@ -75,7 +77,9 @@ BEGIN
            NOW(),
            MD5(CONCAT(j.id, j."urakka-id", j."toimenkuva-id", j.tunnit, j.tuntipalkka,
                       j.luotu, j.luoja, j.muokattu, j.muokkaaja, j.vuosi, j.kuukausi,
-                      j."ennen-urakkaa", j."osa-kuukaudesta")::TEXT)
+                      j."ennen-urakkaa", j."osa-kuukaudesta")::TEXT),
+            j.muokkaaja, 
+            j.muokattu
       FROM johto_ja_hallintokorvaus j
        -- Siirretään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
        WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
@@ -132,7 +136,7 @@ BEGIN
     RAISE NOTICE 'Ennen ekaa inserttiä';
     INSERT INTO toteutuneet_kustannukset (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu,
                                           tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin)
+                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin, muokkaaja, muokattu)
     SELECT k.vuosi,
            k.kuukausi,
            k.summa,
@@ -147,7 +151,9 @@ BEGIN
            (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
            NOW(),
            MD5(CONCAT(k.id, k.vuosi, k.kuukausi, k.summa, k.tyyppi, k.tehtava, k.tehtavaryhma,
-                      k.toimenpideinstanssi, k.sopimus, k.luotu, k.luoja, k.muokattu, k.muokkaaja)::TEXT)
+                      k.toimenpideinstanssi, k.sopimus, k.luotu, k.luoja, k.muokattu, k.muokkaaja)::TEXT),
+            k.muokkaaja, 
+            k.muokattu
       FROM kustannusarvioitu_tyo k
         -- Siirretään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
         WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
@@ -175,7 +181,7 @@ BEGIN
     -- Tästä taulusta (johto_ja_hallintokorvaus) siirretään kaikki rivit
     INSERT INTO toteutuneet_kustannukset (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu,
                                           tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin)
+                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin, muokkaaja, muokattu)
     SELECT j.vuosi,
            j.kuukausi,
            (j.tunnit * j.tuntipalkka * j."osa-kuukaudesta")                 AS summa,
@@ -203,7 +209,9 @@ BEGIN
            NOW(),
            MD5(CONCAT(j.id, j."urakka-id", j."toimenkuva-id", j.tunnit, j.tuntipalkka,
                       j.luotu, j.luoja, j.muokattu, j.muokkaaja, j.vuosi, j.kuukausi,
-                      j."ennen-urakkaa", j."osa-kuukaudesta")::TEXT)
+                      j."ennen-urakkaa", j."osa-kuukaudesta")::TEXT),
+            j.muokkaaja,
+            j.muokattu
       FROM johto_ja_hallintokorvaus j
         -- Siirretään menneet ja kuluvan kuukauden hommat, jos 10. päivä on mennyt. Kuluvan kuukauden tiedot nousevat siis 10. päivän jälkeen laskutusyhteenvedolle.
         WHERE (SELECT (DATE_TRUNC('MONTH', FORMAT('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < DATE_TRUNC('month', pvm) + interval '10 day'
@@ -283,7 +291,7 @@ BEGIN
             INSERT INTO toteutuneet_kustannukset (vuosi, kuukausi, summa, summa_indeksikorjattu,
                                                   indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma,
                                                   toimenpideinstanssi, sopimus_id,
-                                                  urakka_id, luoja, luotu, rivin_tunnistin)
+                                                  urakka_id, luoja, luotu, rivin_tunnistin, muokkaaja, muokattu)
             VALUES (NEW.vuosi,
                     NEW.kuukausi,
                     (NEW.tunnit * NEW.tuntipalkka * NEW."osa-kuukaudesta"),
@@ -311,7 +319,9 @@ BEGIN
                     NEW."urakka-id",
                     (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
                     NOW(),
-                    uusihash);
+                    uusihash,
+                    NEW.muokkaaja,
+                    NEW.muokattu);
         END IF;
     END IF;
     --
@@ -345,7 +355,7 @@ BEGIN
             -- Luo uusi, jos on päivityshommia kutsuttu
             INSERT INTO toteutuneet_kustannukset (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma,
                                                   toimenpideinstanssi, sopimus_id,
-                                                  urakka_id, luoja, luotu, rivin_tunnistin)
+                                                  urakka_id, luoja, luotu, rivin_tunnistin, muokkaaja, muokattu)
             VALUES (NEW.vuosi,
                     NEW.kuukausi,
                     NEW.summa,
@@ -361,7 +371,9 @@ BEGIN
                     NOW(),
                     MD5(concat(NEW.id, NEW.vuosi, NEW.kuukausi, NEW.summa, NEW.tyyppi, NEW.tehtava, NEW.tehtavaryhma,
                                NEW.toimenpideinstanssi, NEW.sopimus, NEW.luotu, NEW.luoja, NEW.muokattu,
-                               NEW.muokkaaja)::TEXT));
+                               NEW.muokkaaja)::TEXT),
+                    NEW.muokkaaja, 
+                    NEW.muokattu);
         END IF;
     END IF;
     --
