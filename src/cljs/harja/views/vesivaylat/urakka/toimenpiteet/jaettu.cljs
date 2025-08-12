@@ -14,7 +14,6 @@
             [harja.ui.debug :refer [debug]]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
-            [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.organisaatio :as o]
             [harja.domain.vesivaylat.urakoitsija :as urakoitsija]
@@ -69,7 +68,7 @@
     "Toimenpide" (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide))
     "Lisätyö?" (to/reimari-lisatyo-fmt (::to/reimari-lisatyo? toimenpide))
     "Päivämäärä ja aika" (pvm/pvm-aika-opt (::to/pvm toimenpide))
-    "Turvalaite" (get-in toimenpide [::to/turvalaite ::tu/nimi])
+    "Turvalaite" (get-in toimenpide [::to/turvalaite])
     "Henkilömäärä" (::to/reimari-henkilo-lkm toimenpide)
     "Lisätiedot" (::to/lisatieto toimenpide)]
    (when-let [vikailmoitukset (::to/vikailmoitukset toimenpide)]
@@ -115,8 +114,8 @@
     [:div
      [valinnat/vaylatyyppi
       (r/wrap (get-in app [:valinnat :vaylatyyppi])
-              (fn [uusi]
-                (e! (PaivitaValinnatKonstruktori {:vaylatyyppi uusi}))))
+        (fn [uusi]
+          (e! (PaivitaValinnatKonstruktori {:vaylatyyppi uusi}))))
       (sort-by va/tyyppien-jarjestys (into [nil] va/tyypit))
       #(if % (va/tyyppi-fmt %) "Kaikki")]
 
@@ -125,46 +124,37 @@
                                                       :nayta ::va/nimi
                                                       :lahde vaylahaku}
                                       :arvo-atom (r/wrap (get-in app [:valinnat :vayla])
-                                                         (fn [uusi]
-                                                           (e! (PaivitaValinnatKonstruktori {:vaylanro (::va/vaylanro uusi)}))))}]]
-
-    [:div
-     [kentat/tee-otsikollinen-kentta {:otsikko "Turvalaite"
-                                      :kentta-params {:tyyppi :haku
-                                                      :nayta ::tu/nimi
-                                                      :lahde turvalaitehaku}
-                                      :arvo-atom (r/wrap (get-in app [:valinnat :turvalaite])
-                                                         (fn [uusi]
-                                                           (e! (PaivitaValinnatKonstruktori {:turvalaitenro (::tu/turvalaitenro uusi)}))))}]]
+                                                   (fn [uusi]
+                                                     (e! (PaivitaValinnatKonstruktori {:vaylanro (::va/vaylanro uusi)}))))}]]    
 
     (into
       [:div
        [valinnat/tyolaji
         (r/wrap (get-in app [:valinnat :tyolaji])
-                (fn [uusi]
-                  (e! (PaivitaValinnatKonstruktori {:tyolaji uusi}))))
+          (fn [uusi]
+            (e! (PaivitaValinnatKonstruktori {:tyolaji uusi}))))
         (to/jarjesta-reimari-tyolajit (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-tyolajit))
         #(if % (to/reimari-tyolaji-fmt %) "Kaikki")]
 
        [valinnat/tyoluokka
         (r/wrap (get-in app [:valinnat :tyoluokka])
-                (fn [uusi]
-                  (e! (PaivitaValinnatKonstruktori {:tyoluokka uusi}))))
+          (fn [uusi]
+            (e! (PaivitaValinnatKonstruktori {:tyoluokka uusi}))))
         (to/jarjesta-reimari-tyoluokat (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-tyoluokat))
         #(if % (to/reimari-tyoluokka-fmt %) "Kaikki")]
 
        [valinnat/toimenpide
         (r/wrap (get-in app [:valinnat :toimenpide])
-                (fn [uusi]
-                  (e! (PaivitaValinnatKonstruktori {:toimenpide uusi}))))
+          (fn [uusi]
+            (e! (PaivitaValinnatKonstruktori {:toimenpide uusi}))))
         (to/jarjesta-reimari-toimenpidetyypit (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-toimenpidetyypit))
         #(if % (to/reimari-toimenpidetyyppi-fmt %) "Kaikki")]
 
        [kentat/tee-kentta {:tyyppi :checkbox
                            :teksti "Näytä vain vikoihin liittyvät toimenpiteet"}
         (r/wrap (get-in app [:valinnat :vain-vikailmoitukset?])
-                (fn [uusi]
-                  (e! (PaivitaValinnatKonstruktori {:vain-vikailmoitukset? uusi}))))]]
+          (fn [uusi]
+            (e! (PaivitaValinnatKonstruktori {:vain-vikailmoitukset? uusi}))))]]
 
       lisasuodattimet)]
 
@@ -202,8 +192,8 @@
 (def sarake-tyoluokka {:otsikko "Työ\u00ADluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10})
 (def sarake-toimenpide {:otsikko "Toimen\u00ADpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10})
 (def sarake-pvm {:otsikko "Päivä\u00ADmäärä" :nimi ::to/pvm :fmt pvm/pvm-aika-opt :leveys 6})
-(def sarake-turvalaite {:otsikko "Turva\u00ADlaite" :nimi ::to/turvalaite :leveys 5 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
-(def sarake-turvalaitenumero {:otsikko "Turva\u00ADlaite\u00ADnumero" :nimi :turvalaitenumero :leveys 5 :hae #(get-in % [::to/turvalaite ::tu/turvalaitenro])})
+(def sarake-turvalaite {:otsikko "Turva\u00ADlaite" :nimi ::to/turvalaite :leveys 5 :hae #(get-in % [::to/turvalaite])})
+(def sarake-turvalaitenumero {:otsikko "Turva\u00ADlaite\u00ADnumero" :nimi :turvalaitenumero :leveys 5 :hae #(get-in % [::to/turvalaite])})
 (def sarake-vikakorjaus {:otsikko "Vika\u00ADkor\u00ADjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 4})
 (def sarake-vayla {:otsikko "Väy\u00ADlä" :nimi :vayla :hae (comp ::va/nimi ::to/vayla) :leveys 8})
 (def sarake-lisatieto {:otsikko "Li\u00ADsä\u00ADtie\u00ADto" :nimi ::to/lisatieto :leveys 10})

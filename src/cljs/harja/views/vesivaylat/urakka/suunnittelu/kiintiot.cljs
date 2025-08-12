@@ -16,7 +16,6 @@
             [harja.views.urakka.valinnat :as suodattimet]
             [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
@@ -33,7 +32,7 @@
     {:otsikko "Toimen\u00ADpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10}
     {:otsikko "Hinta\u00ADtyyppi" :nimi ::to/hintatyyppi :fmt to/hintatyyppi-fmt :leveys 10}
     {:otsikko "Päivä\u00ADmäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
-    {:otsikko "Turva\u00ADlaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
+    {:otsikko "Turva\u00ADlaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite])}
     (grid/rivinvalintasarake
       {:rivi-valittu?-fn (fn [rivi]
                            (boolean ((:valitut-toimenpide-idt app) (::to/id rivi))))

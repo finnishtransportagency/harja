@@ -5,7 +5,6 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.vayla :as va]
-            [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.tyo :as tyo]
@@ -768,7 +767,7 @@
     (let [korostettavat-turvalaitteet (->>
                                         toimenpiteet
                                         (filter #(= (::to/hintaryhma-id %) (::h/id hintaryhma)))
-                                        (map (comp ::tu/turvalaitenro ::to/turvalaite))
+                                        (map (comp ::to/turvalaite))
                                         (into #{}))]
       (-> (jaettu/korosta-kartalla korostettavat-turvalaitteet app)
           (assoc :korostettu-hintaryhma (::h/id hintaryhma)))))

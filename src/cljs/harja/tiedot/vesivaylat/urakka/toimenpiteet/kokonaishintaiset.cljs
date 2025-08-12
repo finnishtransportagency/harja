@@ -4,7 +4,6 @@
             [harja.loki :refer [log error]]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
-            [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.domain.urakka :as ur]
             [cljs.core.async :as async :refer [<!]]
@@ -223,7 +222,7 @@
     (let [korostettavat-turvalaitteet (->>
                                         toimenpiteet
                                         (filter #(= (get-in % [::to/kiintio ::kiintio/id]) (::kiintio/id kiintio)))
-                                        (map (comp ::tu/turvalaitenro ::to/turvalaite))
+                                        (map (comp ::to/turvalaite))
                                         (into #{}))]
       (-> (jaettu/korosta-kartalla korostettavat-turvalaitteet app)
           (assoc :korostettu-kiintio (::kiintio/id kiintio)))))
