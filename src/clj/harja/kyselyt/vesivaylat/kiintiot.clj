@@ -1,28 +1,22 @@
 (ns harja.kyselyt.vesivaylat.kiintiot
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.spec.alpha :as s]
-            [clojure.set :as set]
-            
-            [jeesql.core :refer [defqueries]]
+  (:require [clojure.set :as set]
+
             [specql.core :refer [fetch update! upsert!]]
             [specql.op :as op]
-            [specql.rel :as rel]
-            [taoensso.timbre :as log]
             [harja.id :refer [id-olemassa?]]
 
             [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.kiintio :as kiintio]
-            [harja.pvm :as pvm]
-            [clj-time.core :as t]))
+            [harja.pvm :as pvm]))
 
 (defn kiintiot-kuuluvat-urakkaan? [db kiintio-idt urakka-id]
   (->>
     (fetch db
-           ::kiintio/kiintio
-           #{::kiintio/urakka-id}
-           {::kiintio/id (op/in kiintio-idt)})
+      ::kiintio/kiintio
+      #{::kiintio/urakka-id}
+      {::kiintio/id (op/in kiintio-idt)})
     (keep ::kiintio/urakka-id)
     (every? (partial = urakka-id))))
 
@@ -37,18 +31,18 @@
       []
       (map #(if toimenpiteet?
               (assoc % ::kiintio/toimenpiteet (into []
-                                                    to-q/toimenpiteet-xf
-                                                    (::kiintio/toimenpiteet %)))
+                                                to-q/toimenpiteet-xf
+                                                (::kiintio/toimenpiteet %)))
               %))
       (fetch db
-             ::kiintio/kiintio
-             (set/union kiintio/perustiedot
-                        (when toimenpiteet?
-                          kiintio/kiintion-toimenpiteet))
-             (op/and
-               {::kiintio/urakka-id urakka-id}
-               {::kiintio/sopimus-id sopimus-id}
-               {::m/poistettu? false})))))
+        ::kiintio/kiintio
+        (set/union kiintio/perustiedot
+          (when toimenpiteet?
+            kiintio/kiintion-toimenpiteet))
+        (op/and
+          {::kiintio/urakka-id urakka-id}
+          {::kiintio/sopimus-id sopimus-id}
+          {::m/poistettu? false})))))
 
 (defn tallenna-kiintiot! [db user tiedot]
   (doseq [kiintio (::kiintio/tallennettavat-kiintiot tiedot)]
@@ -69,28 +63,28 @@
                             ::m/muokkaaja-id (:id user)
                             ::m/muokattu (pvm/nyt)}
 
-                           :default
+                           :else
                            {::m/luoja-id (:id user)
                             ::m/luotu (pvm/nyt)})]
       (upsert! db
-               ::kiintio/kiintio
-               (merge
-                 (-> kiintio
-                     (assoc ::kiintio/sopimus-id sopimus-id
-                            ::kiintio/urakka-id urakka-id)
-                     (dissoc ::kiintio/toimenpiteet))
-                 muokkaustiedot)))))
+        ::kiintio/kiintio
+        (merge
+          (-> kiintio
+            (assoc ::kiintio/sopimus-id sopimus-id
+              ::kiintio/urakka-id urakka-id)
+            (dissoc ::kiintio/toimenpiteet))
+          muokkaustiedot)))))
 
 (defn liita-toimenpiteet-kiintioon [db user tiedot]
   (update! db ::to/reimari-toimenpide
-           {::to/kiintio-id (::kiintio/id tiedot)
-            ::m/muokattu (pvm/nyt)
-            ::m/muokkaaja-id (:id user)}
-           {::to/id (op/in (::to/idt tiedot))}))
+    {::to/kiintio-id (::kiintio/id tiedot)
+     ::m/muokattu (pvm/nyt)
+     ::m/muokkaaja-id (:id user)}
+    {::to/id (op/in (::to/idt tiedot))}))
 
 (defn irrota-toimenpiteet-kiintiosta [db user tiedot]
   (update! db ::to/reimari-toimenpide
-           {::to/kiintio-id nil
-            ::m/muokattu (pvm/nyt)
-            ::m/muokkaaja-id (:id user)}
-           {::to/id (op/in (::to/idt tiedot))}))
+    {::to/kiintio-id nil
+     ::m/muokattu (pvm/nyt)
+     ::m/muokkaaja-id (:id user)}
+    {::to/id (op/in (::to/idt tiedot))}))

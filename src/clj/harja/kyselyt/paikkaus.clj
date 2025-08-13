@@ -2,7 +2,7 @@
   (:require [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [jeesql.core :refer [defqueries]]
-            [specql.core :refer [fetch update! insert! upsert! delete!]]
+            [specql.core :refer [fetch update! insert! delete!] :as specql]
             [specql.op :as op]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]
@@ -14,17 +14,16 @@
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.id :refer [id-olemassa?]]
             [taoensso.timbre :as log]
-            [specql.core :as specql]
             [harja.kyselyt.konversio :as konversio]
             [slingshot.slingshot :refer [throw+]]
             [harja.domain.tierekisteri.validointi :as tr-validointi]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
-            [harja.domain.tierekisteri :as tr-domain]))
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]))
 
 (declare hae-urakan-paikkauskohteet-ja-paikkaukset hae-paikkauskohteen-tyomenetelma hae-paikkauskohde
   hae-paikkauskohteet-ulkoisella-idlla paivita-paikkauskohteen-korjausluokka
   paivita-paikkauskohteen-ilmoitettu-virhe!
-  tallenna-paikkauskohde<! paivita-paikkauskohde! poista-paikkauskohde!)
+  tallenna-paikkauskohde<! paivita-paikkauskohde! poista-paikkauskohde! hae-paikkauskohteen-tierekisteriosoite
+  paikkauskohteet-urakan-alueella paikkauskohteet-elyn-alueella paikkauskohteet-urakalle)
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman.")
@@ -111,16 +110,17 @@
       [db urakka-id ulkoinen-id]
   (and
     (number? ulkoinen-id)
-    (not (empty? (hae-paikkaukset db {::paikkaus/ulkoinen-id ulkoinen-id
-                                      ::paikkaus/urakka-id urakka-id})))))
+    (boolean (seq (hae-paikkaukset db {::paikkaus/ulkoinen-id ulkoinen-id
+                                       ::paikkaus/urakka-id urakka-id})))))
 
-(defn onko-paikkaustoteuma-olemassa-ulkoisella-idlla? [db urakka-id ulkoinen-id]
-      "Paikkaustoteuma tunnistetaan urakan ja ulkoisen-id:n perusteella.
+(defn onko-paikkaustoteuma-olemassa-ulkoisella-idlla?
+  "Paikkaustoteuma tunnistetaan urakan ja ulkoisen-id:n perusteella.
       Paikkaustoteumaa saa muokata urakan käyttäjät ja urakoitsijajärjestelmä."
+  [db urakka-id ulkoinen-id]
   (and
     (number? ulkoinen-id)
-    (not (empty? (hae-paikkaustoteumat db {::paikkaus/ulkoinen-id ulkoinen-id
-                                           ::paikkaus/urakka-id urakka-id})))))
+    (boolean (seq (hae-paikkaustoteumat db {::paikkaus/ulkoinen-id ulkoinen-id
+                                     ::paikkaus/urakka-id urakka-id})))))
 
 (defn onko-kohde-olemassa-ulkoisella-idlla?
       "Paikkauskohde tunnistetaan urakan ja ulkoisen-id:n perusteella.
@@ -128,8 +128,8 @@
       [db urakka-id ulkoinen-id]
   (and
     (number? ulkoinen-id)
-    (not (empty? (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-id
-                                          ::paikkaus/urakka-id urakka-id})))))
+    (boolean (seq (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-id
+                                    ::paikkaus/urakka-id urakka-id})))))
 
 (defn onko-kohde-olemassa-nimella? [db nimi urakka-id]
   (fetch db
@@ -236,20 +236,6 @@
     (update! db ::paikkaus/paikkaus paikkaus ehdot)
     (first (hae-paikkaukset db ehdot))))
 
-(defn- paivita-paikkauskohde
-  "Päivittää paikkauskohteen tiedot, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
-  [db urakka-id paikkauskohde]
-  (let [id (::paikkaus/id paikkauskohde)
-        luoja-id (::muokkaustiedot/luoja-id paikkauskohde)
-        ulkoinen-id (::paikkaus/ulkoinen-id paikkauskohde)
-        ehdot (if (id-olemassa? id)
-                {::paikkaus/id id}
-                {::paikkaus/ulkoinen-id ulkoinen-id
-                 ::paikkaus/urakka-id urakka-id
-                 ::muokkaustiedot/luoja-id luoja-id})]
-    (update! db ::paikkaus/paikkausohde paikkauskohde ehdot)
-    (first (hae-paikkaukset db ehdot))))
-
 (defn- luo-paikkaus
   "Tallentaa tietokantaan uuden paikkauksen."
   [db paikkaus]
@@ -311,14 +297,6 @@
     (first (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-tunniste
                                     ::paikkaus/urakka-id urakka-id})))))
 
-(defn hae-tai-tee-paikkauskohde [db urakka-id kayttaja-id paikkauskohde]
-  (when-let [ulkoinen-id (::paikkaus/ulkoinen-id paikkauskohde)]
-    (or (::paikkaus/id paikkauskohde)
-        (::paikkaus/id (hae-paikkauskohteet db {::paikkaus/urakka-id urakka-id
-                                                ::paikkaus/ulkoinen-id ulkoinen-id
-                                                ::muokkaustiedot/luoja-id kayttaja-id}))
-        (::paikkaus/id (tallenna-paikkauskohde db urakka-id kayttaja-id paikkauskohde)))))
-
 (defn poista-paikkaustoteuma [db kayttaja-id urakka-id ulkoinen-id]
   (delete! db ::paikkaus/paikkaustoteuma {::muokkaustiedot/luoja-id kayttaja-id
                                           ::paikkaus/urakka-id urakka-id
@@ -353,9 +331,9 @@
          massamaara ::paikkaus/massamaara} paikkaus
         paikkaus (cond-> paikkaus
                    (not (nil? massamenekki)) (update ::paikkaus/massamenekki bigdec))
-        tr-osoite-tr-muodossa (tr-domain/tr-alkuiseksi tr-osoite)
+        tr-osoite-tr-muodossa (tierekisteri/tr-alkuiseksi tr-osoite)
         osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db [tr-osoite-tr-muodossa])
-        pituus (tr-domain/laske-tien-pituus (osien-pituudet-tielle (::tierekisteri/tie tr-osoite)) tr-osoite-tr-muodossa)
+        pituus (tierekisteri/laske-tien-pituus (osien-pituudet-tielle (::tierekisteri/tie tr-osoite)) tr-osoite-tr-muodossa)
         pinta-ala (when (and leveys pituus)
                     (* leveys pituus))
         ;; lisätään paikkauksiin pinta-ala ja massamäärä, jos ne luvut saatavilla mistä pystytään johtamaan
@@ -481,8 +459,7 @@
         paikkaus (if paikkaus-id
                    (paivita-paikkaus db (:urakka-id paikkaus) muokattu-paikkaus)
                    (luo-paikkaus db uusi-paikkaus))
-        _ (tallenna-tienkohdat db (::paikkaus/id paikkaus) [tienkohdat])
-        ]
+        _ (tallenna-tienkohdat db (::paikkaus/id paikkaus) [tienkohdat])]
     paikkaus))
 
 (defn tallenna-urem-paikkaus-excelista [db paikkaus]
@@ -494,8 +471,7 @@
 (defn tallenna-paikkaustoteuma
   "Tallentaa paikkauskustannuksiin liittyvän yksittäisen rivin tiedot."
   [db urakka-id kayttaja-id toteuma]
-  (let [ulkoinen-id (::paikkaus/ulkoinen-id toteuma)
-        paikkauskohde-id (::paikkaus/id (tallenna-paikkauskohde db urakka-id kayttaja-id (::paikkaus/paikkauskohde toteuma)))
+  (let [paikkauskohde-id (::paikkaus/id (tallenna-paikkauskohde db urakka-id kayttaja-id (::paikkaus/paikkauskohde toteuma)))
         tallennettava-toteuma (dissoc (assoc toteuma ::paikkaus/paikkauskohde-id paikkauskohde-id
                                                      ::muokkaustiedot/luoja-id kayttaja-id)
                                       ::paikkaus/materiaalit
