@@ -32,8 +32,6 @@
             [harja.ui.openlayers.taso :as taso]
             [harja.ui.kartta.varit.puhtaat :as varit]
             [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
-            [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as vv-yks]
-            [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok]
             [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as koht-luonti]
             [harja.tiedot.urakka.toteumat.suola :as suolatoteumat]
             [harja.tiedot.kanavat.kohteet-kartalla :as kan-kohteet]
@@ -81,8 +79,6 @@
     :tilannekuva-organisaatiot
     :tienakyma-valitut
     :tienakyma-muut
-    :kokonaishintaisten-turvalaitteet
-    :yksikkohintaisten-turvalaitteet
     :kohteenosat-kohteiden-luonnissa
     :suolatoteumat
     :kan-kohteet
@@ -264,8 +260,6 @@
    :tilannekuva-organisaatiot tilannekuva/tilannekuvan-organisaatiot
    :tienakyma-valitut tienakyma-tiedot/valitut-tulokset-kartalla
    :tienakyma-muut tienakyma-tiedot/muut-tulokset-kartalla
-   :kokonaishintaisten-turvalaitteet vv-kok/turvalaitteet-kartalla
-   :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla
    :kohteenosat-kohteiden-luonnissa koht-luonti/kohteenosat-kartalla
    :kan-kohteet kan-kohteet/kohteet-kartalla
    :kan-toimenpiteet kan-toimenpiteet/toimenpiteet-kartalla
@@ -343,8 +337,6 @@
        :sijaintivalitsin (taso :sijaintivalitsin (inc oletus-zindex))
        :tienakyma-valitut (taso :tienakyma-valitut)
        :tienakyma-muut (taso :tienakyma-muut :tienakyma-muut 0.4)
-       :kokonaishintaisten-turvalaitteet (taso :kokonaishintaisten-turvalaitteet)
-       :yksikkohintaisten-turvalaitteet (taso :yksikkohintaisten-turvalaitteet)
        :kohteenosat-kohteiden-luonnissa (taso :kohteenosat-kohteiden-luonnissa)
        :kan-kohteet (taso :kan-kohteet)
        :kan-toimenpiteet (taso :kan-toimenpiteet)
@@ -360,16 +352,16 @@
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
-                      (inc oletus-zindex))
+         (inc oletus-zindex))
        :infopaneelin-merkki (aseta-z-index (vec (vals @(geometrioiden-atomit :infopaneelin-merkki)))
-                                           (+ oletus-zindex 2))
+                              (+ oletus-zindex 2))
        :talvihoitoreitit (taso :talvihoitoreitit)}
       ;; Tilannekuvan geometriat muodostetaan hieman eri tavalla
-     (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
+      (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
         (into {}
-              (map (fn [[tason-nimi tason-sisalto]]
-                     {tason-nimi (aseta-z-index tason-sisalto (kartan-asioiden-z-indeksit tason-nimi))})
-                   @(geometrioiden-atomit :tilannekuva)))))))
+          (map (fn [[tason-nimi tason-sisalto]]
+                 {tason-nimi (aseta-z-index tason-sisalto (kartan-asioiden-z-indeksit tason-nimi))})
+            @(geometrioiden-atomit :tilannekuva)))))))
 
 (def tasojen-nakyvyys-atomit
   {:organisaatio (atom true)
@@ -396,8 +388,6 @@
    :tilannekuva-organisaatiot tilannekuva/karttataso-tilannekuva
    :tienakyma-valitut tienakyma-tiedot/karttataso-tienakyma
    :tienakyma-muut tienakyma-tiedot/karttataso-tienakyma
-   :kokonaishintaisten-turvalaitteet vv-kok/karttataso-kokonaishintaisten-turvalaitteet
-   :yksikkohintaisten-turvalaitteet vv-yks/karttataso-yksikkohintaisten-turvalaitteet
    :kohteenosat-kohteiden-luonnissa koht-luonti/karttataso-kohteenosat-kohteen-luonnissa
    :kan-kohteet kan-kohteet/karttataso-kohteet
    :kan-toimenpiteet kan-toimenpiteet/karttataso-toimenpiteet-vapaassa-sijainnissa

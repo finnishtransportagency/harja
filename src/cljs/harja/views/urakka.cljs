@@ -11,7 +11,6 @@
             [harja.views.urakka.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
             [harja.views.urakka.tyomaapaivakirja.paivakirja :as paivakirja]
             [harja.views.urakka.laskutus :as laskutus]
-            [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
             [harja.views.urakka.yllapitokohteet.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
             [harja.views.urakka.aikataulu :as aikataulu]
             [harja.views.urakka.lupaus-nakyma :as lupaus-nakyma]
@@ -28,8 +27,6 @@
             [harja.views.urakka.kustannusten-kirjaus :as kustannusten-kirjaus]
             [harja.views.urakka.tiemerkinta-kustannukset.yhteenveto :as kustannusten-yhteenveto]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
-            [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
-            [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
             [harja.views.kanavat.urakka.liikenne :as liikenne]
             [harja.views.urakka.valikatselmus.valikatselmus-nakyma :as valikatselmus-nakyma]
             [harja.tiedot.navigaatio :as nav]
@@ -59,18 +56,9 @@
                 (not= sopimustyyppi :mpu)
                 (not= tyyppi :tiemerkinta))
 
-    :toimenpiteet (and
-                    (oikeudet/urakat-vesivaylatoimenpiteet id)
-                    (urakka/vesivaylaurakkatyyppi? tyyppi)
-                    (istunto/ominaisuus-kaytossa? :vesivayla))
-
     :tyomaapaivakirja (and
                         (oikeudet/urakat-tyomaapaivakirja id)
                         (#{:hoito :teiden-hoito} tyyppi))
-
-    :vv-materiaalit (and
-                      (oikeudet/urakat-vesivayla-materiaalit id)
-                      (urakka/vesivaylaurakkatyyppi? tyyppi))
 
     :liikenne (and
                 (oikeudet/urakat-kanavat-liikenne id)
@@ -121,12 +109,6 @@
                 (not= tyyppi :paallystys)
                 (not= tyyppi :tiemerkinta)
                 (not (urakka/vesivaylaurakkatyyppi? tyyppi)))
-
-    :laskutus-vesivaylat (and
-                           (oikeudet/urakat-kulut-vesivaylalaskutusyhteenveto id)
-                           (urakka/vesivaylaurakkatyyppi? tyyppi)
-                           (not (urakka/kanavaurakka? urakka))
-                           (istunto/ominaisuus-kaytossa? :vesivayla))
 
     :tiemerkinnan-kustannukset (and
                                  (oikeudet/urakat-tiemerkinta-kustannukset id)
@@ -231,12 +213,6 @@
          ^{:key "mhu-muutokset"}
          [muutos-nakyma/muutokset-paatason-valilehti ur])
 
-       "Toimenpiteet"
-       :toimenpiteet
-       (when (valilehti-mahdollinen? :toimenpiteet ur)
-         ^{:key "toimenpiteet"}
-         [toimenpiteet/toimenpiteet ur])
-
        "Työmaapäiväkirja"
        :tyomaapaivakirja
        (when (valilehti-mahdollinen? :tyomaapaivakirja ur)
@@ -248,12 +224,6 @@
        (when (valilehti-mahdollinen? :liikenne ur)
          ^{:key "liikenne"}
          [liikenne/liikenne])
-
-       "Materiaalit"
-       :vv-materiaalit
-       (when (valilehti-mahdollinen? :vv-materiaalit ur)
-         ^{:key "vv-materiaalit"}
-         [vv-materiaalit/materiaalit ur])
 
        "Toteutus"
        :toteutus
@@ -330,12 +300,6 @@
        (when (valilehti-mahdollinen? :turvallisuuspoikkeamat ur)
          ^{:key "turvallisuuspoikkeamat"}
          [turvallisuuspoikkeamat/turvallisuuspoikkeamat ur])
-
-       "Laskutus"
-       :laskutus-vesivaylat
-       (when (valilehti-mahdollinen? :laskutus-vesivaylat ur)
-         ^{:key "laskutus"}
-         [laskutus-vesivaylat/laskutus])
 
        "Kustannukset"
        :tiemerkinnan-kustannukset

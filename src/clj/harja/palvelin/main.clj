@@ -189,14 +189,6 @@
     ;; Metriikat
    [harja.palvelin.komponentit.metriikka :as metriikka]
 
-    ;; Vesiväylät
-   [harja.palvelin.palvelut.vesivaylat.toimenpiteet :as vv-toimenpiteet]
-   [harja.palvelin.palvelut.vesivaylat.vaylat :as vv-vaylat]
-   [harja.palvelin.palvelut.vesivaylat.hinnoittelut :as vv-hinnoittelut]
-   [harja.palvelin.palvelut.vesivaylat.kiintiot :as vv-kiintiot]
-   [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
-   [harja.palvelin.palvelut.vesivaylat.alukset :as vv-alukset]
-
     ;; Kanavat
    [harja.palvelin.palvelut.kanavat.kohteet :as kan-kohteet]
 
@@ -412,24 +404,6 @@
       :kustannusten-seuranta (component/using
                                (kustannusten-seuranta/->KustannustenSeuranta)
                                [:http-palvelin :db :db-replica :excel-vienti])
-      :vv-toimenpiteet (component/using
-                         (vv-toimenpiteet/->Toimenpiteet)
-                         [:http-palvelin :db])
-      :vv-vaylat (component/using
-                   (vv-vaylat/->Vaylat)
-                   [:http-palvelin :db])
-      :vv-hinnoittelut (component/using
-                         (vv-hinnoittelut/->Hinnoittelut)
-                         [:http-palvelin :db])
-      :vv-kiintiot (component/using
-                     (vv-kiintiot/->Kiintiot)
-                     [:http-palvelin :db])
-      :vv-materiaalit (component/using
-                        (vv-materiaalit/->Materiaalit)
-                        [:http-palvelin :db :fim :api-sahkoposti])
-      :vv-alukset (component/using
-                    (vv-alukset/->Alukset)
-                    [:http-palvelin :db])
       :kan-kohteet (component/using
                      (kan-kohteet/->Kohteet)
                      [:http-palvelin :db])

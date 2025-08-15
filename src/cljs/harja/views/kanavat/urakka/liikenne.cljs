@@ -23,7 +23,6 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.kanavat.urakka.liikenne :as tiedot]
-            [harja.tiedot.vesivaylat.hallinta.liikennetapahtumien-ketjutus :as hallinta-tiedot]
             [harja.ui.viesti :as viesti]
 
             [harja.domain.kayttaja :as kayttaja]
@@ -36,8 +35,8 @@
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa])
   (:require-macros
-    [harja.makrot :refer [defc]]
-    [harja.tyokalut.ui :refer [for*]]))
+   [harja.makrot :refer [defc]]
+   [harja.tyokalut.ui :refer [for*]]))
 
 (defn edelliset-grid [e! app {:keys [edelliset-alukset]}]
   (let [kuitattavat (tiedot/kuittausta-odottavat app edelliset-alukset)]
@@ -673,7 +672,6 @@
         ;; Tapahtuma valittu, näytä lomake
         (let [sopimus-id (-> app :valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
               urakka-id @nav/valittu-urakka-id]
-          (e! (hallinta-tiedot/->HaeSopimukset sopimus-id urakka-id))
           (lt/paivita-suunnat-ja-toimenpide! valittu-liikennetapahtuma)
           [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet])))))
 

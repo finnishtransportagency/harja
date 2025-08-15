@@ -40,8 +40,6 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.tietyoilmoitus :as t-domain]
             [harja.domain.tieliikenneilmoitukset :as apurit]
-            [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.domain.vesivaylat.vayla :as v]
             [harja.domain.toimenpidekoodi :as tpk]
             [harja.domain.kayttaja :as kayttaja]
             [harja.fmt :as fmt]

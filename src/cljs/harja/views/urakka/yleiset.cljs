@@ -28,7 +28,6 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.viesti :as viesti]
             [harja.domain.roolit :as roolit]
-            [harja.domain.vesivaylat.alus :as alus]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakat :as urakat]
             [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
@@ -637,9 +636,9 @@
         hae! (fn [ur]
                (reset! yhteyshenkilot nil)
                (go (reset! yhteyshenkilot
-                           (filter
-                             #(not= "urakoitsijan paivystaja" (:rooli %))
-                             (<! (tiedot/hae-urakan-yhteyshenkilot (:id ur)))))))]
+                     (filter
+                       #(not= "urakoitsijan paivystaja" (:rooli %))
+                       (<! (tiedot/hae-urakan-yhteyshenkilot (:id ur)))))))]
     (hae! ur)
     (komp/luo
       (komp/kun-muuttuu hae!)
@@ -668,8 +667,8 @@
           {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
                                    nimi
                                    (str (:etunimi %)
-                                        (when-let [suku (:sukunimi %)]
-                                          (str " " suku))))
+                                     (when-let [suku (:sukunimi %)]
+                                       (str " " suku))))
            :pituus-max 64
            :aseta (fn [yht arvo]
                     (assoc yht :nimi arvo))
@@ -680,96 +679,6 @@
           {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 22
            :validoi [[:email "Kirjoita sähköpostiosoite loppuun ilman ääkkösiä."]]}]
          @yhteyshenkilot]))))
-
-(defn alukset [ur]
-  (let [urakoitsijan-alukset (atom nil)
-        muokkausoikeus? (oikeudet/on-muu-oikeus?
-                          "alusten-muokkaus"
-                          oikeudet/urakat-yleiset
-                          (:id @nav/valittu-urakka)
-                          @istunto/kayttaja)
-        hae-urakoitsijan-alukset (fn [ur]
-                                   (reset! urakoitsijan-alukset nil)
-                                   (go
-                                     (reset! urakoitsijan-alukset
-                                               (<! (tiedot/hae-urakoitsijan-alukset
-                                                     (:id ur)
-                                                     (get-in ur [:urakoitsija :id]))))))]
-    (komp/luo
-      (komp/sisaan #(hae-urakoitsijan-alukset ur))
-      (fn [ur]
-        (if (nil? @urakoitsijan-alukset)
-          [yleiset/ajax-loader]
-          [grid/grid
-           {:otsikko "Urakoitsijan alukset"
-            :tyhja "Ei aluksia"
-            :esta-poistaminen?
-            (fn [rivi]
-              (let [alus-kaytossa-urakoissa (::alus/kaytossa-urakoissa rivi)
-                    kaytossa-muissa-urakoissa (set (remove #(= % (:id ur))
-                                                           alus-kaytossa-urakoissa))]
-
-                (or (::alus/kaytossa-urakassa? rivi)
-                    (> (count kaytossa-muissa-urakoissa) 0))))
-            :esta-poistaminen-tooltip (fn [_] "Alus on käytössä urakoissa.")
-            :tunniste :grid-id
-            :muutos (fn [g]
-                      (let [vaatii-kayton-lisatietojen-tyhjennyksen?
-                            (some
-                              #(and (not (::alus/kaytossa-urakassa? %))
-                                    (some? (::alus/urakan-aluksen-kayton-lisatiedot %)))
-                              (vals (grid/hae-muokkaustila g)))]
-                        (when vaatii-kayton-lisatietojen-tyhjennyksen?
-                          (grid/muokkaa-rivit!
-                            g
-                            (fn [rivit]
-                              (map (fn [rivi]
-                                     (if-not (::alus/kaytossa-urakassa? rivi)
-                                       (assoc rivi ::alus/urakan-aluksen-kayton-lisatiedot nil)
-                                       rivi))
-                                   rivit))))))
-            :tallenna (when muokkausoikeus?
-                        (fn [alukset]
-                          (tiedot/tallenna-urakan-alukset (:id ur)
-                                                          (get-in ur [:urakoitsija :id])
-                                                          alukset
-                                                          urakoitsijan-alukset)))}
-           [{:otsikko "MMSI"
-             :nimi ::alus/mmsi
-             :tyyppi :positiivinen-numero :kokonaisluku? true
-             :leveys 7
-             ;; MMSI:n muokkaus ei ole tuettua, jos alus on jo tallennettu, sillä se
-             ;; triggeröisi uuden aluksen tallennuksen.
-             :muokattava? (fn [rivi] (neg? (:grid-id rivi)))
-             :validoi [[:ei-tyhja "Anna MMSI"]
-                       [:uniikki "MMSI on jo käytössä"]]}
-            {:otsikko "Nimi"
-             :nimi ::alus/nimi
-             :tyyppi :string
-             :leveys 7
-             :pituus-max 512}
-            {:otsikko "Lisätiedot"
-             :nimi ::alus/lisatiedot
-             :tyyppi :string
-             :leveys 10
-             :pituus-max 512}
-            {:otsikko "Käytössä tässä urakassa"
-             :nimi ::alus/kaytossa-urakassa?
-             :tyyppi :checkbox
-             :tasaa :keskita
-             :fmt fmt/totuus
-             :leveys 5}
-            {:otsikko "Käyttötarve urakassa"
-             :nimi ::alus/urakan-aluksen-kayton-lisatiedot
-             :muokattava? (fn [rivi]
-                            (::alus/kaytossa-urakassa? rivi))
-             :tyyppi :string
-             :leveys 10
-             :pituus-max 512}]
-           ;; Generoidaan gridin riveille id mmsi:n perusteella, joka on uniikki.
-           ;; Ei käytetä mmsi:tä suoraan gridissä tunnisteena, sillä
-           ;; muuten gridi generoi uuden mmsi:n automaattisesti itse
-           (map #(assoc % :grid-id (::alus/mmsi %)) @urakoitsijan-alukset)])))))
 
 (defn- nayta-yha-tuontidialogi-tarvittaessa
   "Näyttää YHA-tuontidialogin, jos tarvii."
@@ -812,8 +721,6 @@
            [paallystys-indeksit/paallystysurakan-indeksit ur])
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
-         (when (u/vesivaylaurakka-ei-kanava? ur)
-           [alukset ur])
          (when (urakka/paivystys-kaytossa? ur)
            [paivystajat/paivystajat ur])
          (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)

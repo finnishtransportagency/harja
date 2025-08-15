@@ -114,14 +114,8 @@
     :urakan-tyotuntimuistutukset
     :hankkeet
     :urakan-tyotunnit
-    :vv-toimenpiteet
-    :vv-vaylat
-    :vv-kiintiot
-    :vv-hinnoittelut
-    :vv-materiaalit
     :vkm
     :hairioilmoitukset
-    :vv-alukset
     :kan-kohteet
     :kan-liikennetapahtumat
     :kan-hairio
@@ -204,14 +198,8 @@
     :urakan-tyotuntimuistutukset
     :hankkeet
     :urakan-tyotunnit
-    :vv-toimenpiteet
-    :vv-vaylat
-    :vv-kiintiot
-    :vv-hinnoittelut
-    :vv-materiaalit
     :vkm
     :hairioilmoitukset
-    :vv-alukset
     :kan-kohteet
     :kan-liikennetapahtumat
     :komponenttien-tila

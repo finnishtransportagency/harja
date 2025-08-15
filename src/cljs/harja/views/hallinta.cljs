@@ -13,7 +13,6 @@
             [harja.views.hallinta.hairiot :as hairiot]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
-            [harja.views.vesivaylat.hallinta :as vu]
             [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
             [harja.views.hallinta.tyokalut.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
@@ -76,13 +75,6 @@
     (when (oikeudet/hallinta-lampotilat)
       ^{:key "lämpötilat"}
       [lampotilat/lampotilat])
-
-    "Vesiväyläurakat"
-    :vesivayla-hallinta
-    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-            (oikeudet/hallinta-vesivaylat))
-      ^{:key "vesivaylaurakat"}
-      [vu/vesivayla-hallinta])
 
     "MHU Tehtäväryhmät ja tehtävät"
     :tehtavatjatehtavaryhmat

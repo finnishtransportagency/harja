@@ -4,7 +4,6 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [harja.domain.urakka :as urakka]
-            [harja.domain.vesivaylat.alus :as alus]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
@@ -84,18 +83,6 @@
      :matkapuhelin matkapuhelin
      :sahkoposti sahkoposti
      :organisaatio-id organisaatio-id}))
-
-(defn tallenna-urakan-alukset [urakka-id urakoitsija-id alukset tulos-atom]
-  (go (let [vastaus (<! (k/post! :tallenna-urakoitsijan-alukset {::urakka/id urakka-id
-                                                                 ::alus/urakoitsija-id urakoitsija-id
-                                                                 ::alus/tallennettavat-alukset alukset}))]
-        (if (k/virhe? vastaus)
-          (viesti/nayta! "Virhe tallennettaessa aluksia" :danger)
-          (reset! tulos-atom vastaus)))))
-
-(defn hae-urakoitsijan-alukset [urakka-id urakoitsija-id]
-  (k/post! :hae-urakoitsijan-alukset {::urakka/id urakka-id
-                                      ::alus/urakoitsija-id urakoitsija-id}))
 
 (defn tallenna-urakan-paivystajat
   "Tallentaa urakan päivystäjät. Palauttaa kanavan, josta vastauksen voi lukea."
