@@ -111,6 +111,32 @@
                       (lupaus-kyselyt/hae-urakan-lupaustiedot db {:urakka urakka-id
                                                                    :alkupvm hk-alkupvm
                                                                    :loppupvm hk-loppupvm}))
+        ;; Selvitä hoitovuosi-nro suhteessa urakan alkuvuoteen erikoisarvoja varten
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (some-> (:alkupvm urakan-tiedot) pvm/vuosi)
+        hoitovuosi-nro (when (and urakan-alkuvuosi hk-alkupvm)
+                         (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/vuosi hk-alkupvm)))
+        lupaus-idt (mapv :lupaus-id vastaus)
+        erikoisarvot (if (seq lupaus-idt)
+                               ;; Hae erikoisarvot yksi kerrallaan ja ryhmittele
+                       (->> lupaus-idt
+                         (map #(lupaus-kyselyt/hae-lupauksen-hoitovuoden-kirjauskuukaudet db {:lupaus-id %
+                                                                                              :hoitovuosi-nro hoitovuosi-nro}))
+                         (filter seq)
+                         (map first)
+                         (group-by :lupaus-id))
+                       {})
+        ;; Sovelletaan erikoisarvot perusarvoihin ennen domain-muunnoksia  
+        vastaus (mapv (fn [r]
+                        (if-let [erikoisarvo (first (get erikoisarvot (:lupaus-id r)))]
+                          (-> r
+                              (assoc :hoitovuosi-nro hoitovuosi-nro)
+                              (assoc :hoitovuoden-erikoisarvot erikoisarvo)
+                              (assoc :kirjaus-kkt (:kirjaus-kkt erikoisarvo))
+                              (cond-> (not (nil? (:paatos-kk erikoisarvo))) (assoc :paatos-kk (:paatos-kk erikoisarvo)))
+                              (cond-> (not (nil? (:joustovara-kkta erikoisarvo))) (assoc :joustovara-kkta (:joustovara-kkta erikoisarvo))))
+                          r))
+                      vastaus)
         vastaus (->> vastaus
                      (mapv #(update % :vastaukset konversio/jsonb->clojuremap))
                      (mapv #(update % :vastaukset
@@ -291,7 +317,13 @@
                                                        (first (lupaus-kyselyt/hae-lupaus-vastaus db {:id id}))
                                                        tiedot)
         _ (assert lupaus-id)
-        lupaus (first (lupaus-kyselyt/hae-lupaus db {:id lupaus-id}))]
+  lupaus (first (lupaus-kyselyt/hae-lupaus db {:id lupaus-id}))
+  urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+  urakan-alkupvm (:alkupvm urakan-tiedot)
+  ;; Hoitovuoden järjestysnumero (1 = ensimmäinen) perustuen kuukausi/vuosi -parametreihin
+  paivamaara (pvm/luo-pvm vuosi (dec kuukausi) 1)
+  hoitovuosi-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+  hoitovuoden-erikoisarvot nil #_(first (lupaus-kyselyt/hae-lupauksen-hoitovuoden-kirjauskuukaudet db {:lupaus-id lupaus-id :hoitovuosi-nro hoitovuosi-nro}))]
     (assert (false? (valikatselmus-tehty-urakalle? db urakka-id (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
             "Vastauksia ei voi enää muuttaa välikatselmuksen jälkeen")
     ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
@@ -299,7 +331,8 @@
     (tarkista-vastaus-ja-vaihtoehto db lupaus vastaus lupaus-vaihtoehto-id)
     (when-not id
       ;; Tarkista, että kirjaus/päätös tulee sallitulle kuukaudelle.
-      (assert (lupaus-domain/sallittu-kuukausi? lupaus kuukausi paatos)))))
+  (assert (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus kuukausi paatos hoitovuosi-nro hoitovuoden-erikoisarvot)
+      (str "Kuukausi " kuukausi " ei ole sallittu (paatos=" paatos ") hoitovuodelle " hoitovuosi-nro ".")))))
 
 (defn- nykyhetki
   "Mahdollistaa nykyhetken lähettämisen parametrina kehitysympäristössä.

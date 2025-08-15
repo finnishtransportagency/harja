@@ -102,13 +102,15 @@
   (case lupaustyyppi
     "yksittainen" (yksittainen->ennuste lupaus)
     "kysely" (kysely->ennuste lupaus)
-    "monivalinta" (monivalinta->ennuste lupaus)))
+    "monivalinta" (monivalinta->ennuste lupaus)
+    "kustannusennuste" (yksittainen->ennuste lupaus)))
 
 (defn lupaus->toteuma [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi
     "yksittainen" (yksittainen->toteuma lupaus)
     "kysely" (monivalinta->toteuma lupaus)
-    "monivalinta" (monivalinta->toteuma lupaus)))
+    "monivalinta" (monivalinta->toteuma lupaus)
+    "kustannusennuste" (yksittainen->toteuma lupaus)))
 
 (defn lupaus->ennuste-tai-toteuma [lupaus]
   (or (when-let [toteuma (lupaus->toteuma lupaus)]
@@ -320,14 +322,30 @@
 (defn lupausryhmat->merkitsevat-odottaa-kannanottoa [lupausryhmat]
   (rivit->summa lupausryhmat :merkitsevat-odottaa-kannanottoa))
 
-(defn sallittu-kuukausi? [{:keys [kirjaus-kkt paatos-kk] :as lupaus} kuukausi paatos]
+(defn hoitovuoden-kirjauskuukaudet [lupaus _hoitovuosi-nro hoitovuoden-erikoisarvot]
+  (or (:kirjaus-kkt hoitovuoden-erikoisarvot)
+      (:kirjaus-kkt lupaus)))
+
+(defn hoitovuoden-paatos-kk [lupaus _hoitovuosi-nro hoitovuoden-erikoisarvot]
+  (or (:paatos-kk hoitovuoden-erikoisarvot)
+      (:paatos-kk lupaus)))
+
+(defn hoitovuoden-joustovara [lupaus _hoitovuosi-nro hoitovuoden-erikoisarvot]
+  (or (:joustovara-kkta hoitovuoden-erikoisarvot)
+      (:joustovara-kkta lupaus)))
+
+(defn sallittu-kuukausi-hoitovuodelle? [lupaus kuukausi paatos hoitovuosi-nro hoitovuoden-erikoisarvot]
   {:pre [lupaus kuukausi (boolean? paatos)]}
-  (let [sallittu? (if paatos
-                    (or (= paatos-kk kuukausi)
-                        ;; 0 = kaikki
-                        (= paatos-kk 0))
-                    (contains? (set kirjaus-kkt) kuukausi))]
-    sallittu?))
+  (let [kirjaus-kkt (hoitovuoden-kirjauskuukaudet lupaus hoitovuosi-nro hoitovuoden-erikoisarvot)
+        paatos-kk (hoitovuoden-paatos-kk lupaus hoitovuosi-nro hoitovuoden-erikoisarvot)]
+    (if paatos
+      (or (= paatos-kk kuukausi)
+          (= paatos-kk 0))
+      (contains? (set kirjaus-kkt) kuukausi))))
+
+;; Taaksepäinyhteensopivuus: jos ei annettu hoitovuositietoja, käytetään perusarvoja
+(defn sallittu-kuukausi? [lupaus kuukausi paatos]
+  (sallittu-kuukausi-hoitovuodelle? lupaus kuukausi paatos nil nil))
 
 (defn bonus-tai-sanktio
   "Bonuksia tulee kun toteutuneet pisteet ylittää lupauspisteet.

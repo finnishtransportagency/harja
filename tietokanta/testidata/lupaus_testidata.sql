@@ -239,3 +239,36 @@ DO $$
         PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 5,3', 15, null,null, 3, null, ryhma_otsikko_id_2);
     END
 $$ LANGUAGE plpgsql;
+
+-- Kustannusennusten testausta varten
+ INSERT INTO lupaus (
+  jarjestys,
+  "lupausryhma-id",
+  "urakka-id",
+  lupaustyyppi,
+  pisteet,
+  "kirjaus-kkt",
+  "paatos-kk",
+  "joustovara-kkta",
+  kuvaus,
+  sisalto,
+  "urakan-alkuvuosi"
+) VALUES (
+  99, -- testijärjestys, muuta tarvittaessa
+  (SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus' AND "urakan-alkuvuosi" = 2021),
+  null,
+  'kustannusennuste',
+  10,
+  '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9}',
+  9,
+  0,
+  'Testi: Kustannusennustelupaus',
+  'Testilupaus kustannusennusteen syöttöä ja testausta varten.',
+  2019
+);
+
+-- 
+INSERT INTO lupaus_hoitovuoden_kirjauskuukaudet ("lupaus-id", "hoitovuosi-nro", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", luoja)
+VALUES 
+  ((SELECT id FROM lupaus WHERE jarjestys = 99 AND "urakan-alkuvuosi" = 2019 AND kuvaus = 'Testi: Kustannusennustelupaus'), 1, '{10,1,4,6}', 9, 0, 1),  -- Ensimmäinen hoitovuosi: erikoiskuukaudet
+  ((SELECT id FROM lupaus WHERE jarjestys = 99 AND "urakan-alkuvuosi" = 2019 AND kuvaus = 'Testi: Kustannusennustelupaus'), 2, '{10,1,4,6}', 9, 0, 1);  -- Toinen hoitovuosi: samat erikoiskuukaudet
