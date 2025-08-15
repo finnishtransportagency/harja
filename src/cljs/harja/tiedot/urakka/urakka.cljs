@@ -449,7 +449,8 @@
                                            :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
                                                                    (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))))]
                                            :tarjous nil
-                                           :kustannussuunnitelma nil})
+                                           :kustannussuunnitelma nil
+                                           :vetolaatikon-muokkaus true})
 
 (defonce tila (atom {:yleiset {:urakka {}}
                      :hallinta-hairiot {}

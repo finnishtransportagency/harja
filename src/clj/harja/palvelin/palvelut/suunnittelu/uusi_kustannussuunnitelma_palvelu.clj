@@ -27,6 +27,16 @@
                            [] tarjous-rahavaraukset)]
     rahavaraus-rivit))
 
+(defn- laske-2019-jjh-yhteen [johto-ja-hallintokorvaukset]
+  (let [summa (apply + (map
+                         (fn [rivi]
+                           (if (and (:tuntipalkka rivi) (:tunnit rivi))
+                             (* (:tuntipalkka rivi) (:tunnit rivi))
+                             0))
+                         johto-ja-hallintokorvaukset))
+        _ (println "laske-2019-jjh-yhteen :: summa:" summa)]
+    summa))
+
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/info "hae-kustannussuunnitelman-tiedot :: tiedot: " tiedot)
@@ -52,9 +62,9 @@
 
           kiinteat (suunnitelma-q/hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
           kiinteat (map (fn [tyo]
-                 (-> tyo
-                   (assoc :toimenpide-avain (mhu/toimenpide->toimenpide-avain (:koodi tyo)))
-                   (assoc :toimenpide-nimi (toimenpide->nimi (mhu/toimenpide->toimenpide-avain (:koodi tyo))))))
+                          (-> tyo
+                            (assoc :toimenpide-avain (mhu/toimenpide->toimenpide-avain (:koodi tyo)))
+                            (assoc :toimenpide-nimi (toimenpide->nimi (mhu/toimenpide->toimenpide-avain (:koodi tyo))))))
                      kiinteat)
           ;; Indeksikerroin
           indeksikerroin (:indeksikerroin
@@ -80,8 +90,28 @@
           erillishankinnat-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) erillishankinnat))
 
           ;; Hae johto- ja hallintokorvaukset - Eli toimenkuvien kustannukset
-          johto-ja-hallintokorvaukset (suunnitelma-q/hae-johto-ja-hallintokorvaukset db urakka-id hoitovuoden-alkuvuosi)
-          johto-ja-hallintokorvaukset-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) johto-ja-hallintokorvaukset))
+          toimenkuvat-tarjouksesta (filter #(= (:osio %) "johto-ja-hallintokorvaus") (:tarjous tarjous))
+          johto-ja-hallintokorvaukset
+          (cond
+            (and (>= urakan-alkuvuosi 2019) (<= urakan-alkuvuosi 2021))
+            (suunnitelma-q/hae-johto-ja-hallintokorvaukset-2019-2021 db urakka-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta)
+            (>= urakan-alkuvuosi 2025)
+            (suunnitelma-q/hae-johto-ja-hallintokorvaukset db urakka-id hoitovuoden-alkuvuosi toimenkuvat-tarjouksesta)
+            :else (suunnitelma-q/hae-johto-ja-hallintokorvaukset db urakka-id hoitovuoden-alkuvuosi toimenkuvat-tarjouksesta))
+
+          johto-ja-hallintokorvaukset-yht (cond
+                                            ;; 2019 - 2021
+                                            (and (>= urakan-alkuvuosi 2019) (<= urakan-alkuvuosi 2021))
+                                            (laske-2019-jjh-yhteen johto-ja-hallintokorvaukset)
+                                            ;; 2025 -> ja eteenpäin
+                                            (>= urakan-alkuvuosi 2025) (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) johto-ja-hallintokorvaukset))
+                                            :else (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) johto-ja-hallintokorvaukset)))
+
+          ;; Vanhoilla toimenkuvien grouppaaminen on pakollista, koska ne tulevat kannasta kuukausittain ja ui:lla ne näytetään ensin toimenkuvittain
+          ;toimenkuvat johto-ja-hallintokorvaukset #_  (when (<= urakan-alkuvuosi 2024) (group-by :toimenkuva johto-ja-hallintokorvaukset))
+          ;; Testin vuoksi palautetaan vain eka
+          ; toimenkuvat (first toimenkuvat)
+          #_ (println "johto-ja-hallintokorvaukset: " johto-ja-hallintokorvaukset)
 
           ;; Hae hoidonjohtopalkkiot
           hoidonjohtopalkkiot (suunnitelma-q/hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
@@ -135,9 +165,17 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/info "tallenna-johto-ja-hallintokorvaukset :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id hoitovuoden-alkuvuosi (:johto-ja-hallintokorvaukset tiedot))
-    (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
-    (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
+    (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
+          urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+          ;; Valitaan oikea avain riippuen urakan alkamisvuodesta
+          ;; 2019-2024 käytetään vanhaa avainta, 2025- eteenpäin uutta avainta
+
+          avain (if (<= urakan-alkuvuosi 2024)
+                  :johto-ja-hallintokorvaukset-2019
+                  :johto-ja-hallintokorvaukset-2025)]
+      (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id hoitovuoden-alkuvuosi (get tiedot avain))
+      (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
+      (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
 (defn tallenna-hoidonjohtopalkkiot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
@@ -184,10 +222,15 @@
         (tallenna-hoidonjohtopalkkiot (:db this) user tiedot))
       {:kysely-spec ::k-domain/hoidonjohtopalkkio})
     (julkaise-palvelu (:http-palvelin this)
-      :tallenna-osio-johto-ja-hallintokorvaukset ;; Lyhyempi nimi konfliktaa vanhan kanssa
+      :tallenna-johto-ja-hallintokorvaukset-2025 ;; Lyhyempi nimi konfliktaa vanhan kanssa
       (fn [user tiedot]
         (tallenna-tallenna-johto-ja-hallintokorvaukset (:db this) user tiedot))
-      {:kysely-spec ::k-domain/johto-ja-hallintokorvaus})
+      {:kysely-spec ::k-domain/johto-ja-hallintokorvaus-2025})
+    (julkaise-palvelu (:http-palvelin this)
+      :tallenna-johto-ja-hallintokorvaukset-2019 ;; Lyhyempi nimi konfliktaa vanhan kanssa
+      (fn [user tiedot]
+        (tallenna-tallenna-johto-ja-hallintokorvaukset (:db this) user tiedot))
+      {:kysely-spec ::k-domain/johto-ja-hallintokorvaus-2019})
     (julkaise-palvelu (:http-palvelin this)
       :vahvista-tavoite-ja-kattohinta
       (fn [user tiedot]
@@ -201,6 +244,7 @@
       :tallenna-kilpailutettavat-hankinnat
       :tallenna-erillishankinnat
       :tallenna-hoidonjohtopalkkiot
-      :tallenna-osio-johto-ja-hallintokorvaukset
+      :tallenna-johto-ja-hallintokorvaukset-2025
+      :tallenna-johto-ja-hallintokorvaukset-2019
       :vahvista-tavoite-ja-kattohinta)
     this))

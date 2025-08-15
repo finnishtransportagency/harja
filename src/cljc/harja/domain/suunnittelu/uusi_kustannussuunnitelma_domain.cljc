@@ -9,6 +9,7 @@
 (s/def ::loppukausi-indeksikorjattu #(or (nil? %) (and (number? %) (>= % 0))))
 (s/def ::summa #(or (nil? %) (and (number? %) (>= % 0))))
 (s/def ::summa_indeksikorjattu #(or (nil? %) (and (number? %) (>= % 0))))
+(s/def ::summa-indeksikorjattu #(or (nil? %) (and (number? %) (>= % 0))))
 (s/def ::toimenpideinstanssi number?)
 (s/def ::sopimus #(and (pos? %) (number? %)))
 (s/def ::id #(or (nil? %) (and (pos? %) (number? %))))
@@ -17,6 +18,11 @@
 (s/def ::vuosi #(and (int? %) (pos? %) (> % 2000)))
 (s/def ::kuukausi #(and (int? %) (pos? %) (>= % 1) (<= % 12)))
 (s/def ::kalenterikuukausi string?)
+(s/def ::toimenkuva string?)
+(s/def ::toimenkuva-id #(and (pos? %) (number? %)))
+(s/def ::tunnit #(or (nil? %) (and (number? %) (>= % 0))))
+(s/def ::tuntipalkka #(or (nil? %) (and (number? %) (>= % 0))))
+(s/def ::tuntipalkka-indeksikorjattu #(or (nil? %) (and (number? %) (>= % 0))))
 
 (s/def ::toimenpiteet (s/coll-of
                         (s/keys :req-un [::nimi
@@ -51,15 +57,33 @@
                                                 ::kalenterikuukausi]
                                  :opt-un [::id])))
 
-(s/def ::johto-ja-hallintokorvaukset (s/coll-of
-                                       (s/keys :req-un [::summa
-                                                        ::summa_indeksikorjattu
-                                                        ::vuosi
-                                                        ::kuukausi
-                                                        ::kalenterikuukausi]
-                                         :opt-un [::id])))
+(s/def ::johto-ja-hallintokorvaukset-2025 (s/coll-of
+                                            (s/keys :req-un [::summa
+                                                             ::summa_indeksikorjattu
+                                                             ::vuosi
+                                                             ::kuukausi
+                                                             ::kalenterikuukausi]
+                                              :opt-un [::id])))
+(s/def ::jjh-2019 (s/coll-of
+                    (s/keys :req-un [::toimenkuva-id
+                                     ::toimenkuva
+                                     ::tunnit
+                                     ::tuntipalkka
+                                     ::vuosi
+                                     ::kuukausi
+                                     ::kalenterikuukausi]
+                      :opt-un [::tuntipalkka-indeksikorjattu])))
+
+(s/def ::johto-ja-hallintokorvaukset-2019 (s/coll-of
+                                            (s/keys :req-un [::id
+                                                             ::toimenkuva
+                                                             ::kuukaudet (s/coll-of ::jjh-2019)
+                                                             ::tarjous-summa
+                                                             ::summa
+                                                             ::summa-indeksikorjattu])))
 
 (s/def ::kilpailutettavat-hankinnat (s/keys :req-un [::toimenpiteet ::urakka-id]))
 (s/def ::erillishankinta (s/keys :req-un [::erillishankinnat ::urakka-id]))
 (s/def ::hoidonjohtopalkkio (s/keys :req-un [::hoidonjohtopalkkiot ::urakka-id]))
-(s/def ::johto-ja-hallintokorvaus (s/keys :req-un [::johto-ja-hallintokorvaukset ::urakka-id]))
+(s/def ::johto-ja-hallintokorvaus-2019 (s/keys :req-un [::johto-ja-hallintokorvaukset-2019 ::urakka-id]))
+(s/def ::johto-ja-hallintokorvaus-2025 (s/keys :req-un [::johto-ja-hallintokorvaukset-2019 ::urakka-id]))
