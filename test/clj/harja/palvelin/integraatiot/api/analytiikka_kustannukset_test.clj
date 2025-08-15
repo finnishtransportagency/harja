@@ -4,6 +4,7 @@
     [clojure.test :refer [deftest is use-fixtures]]
     [cheshire.core :as cheshire]
     [com.stuartsierra.component :as component]
+    [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]
     [harja.pvm :as pvm]
     [harja.testi :refer :all]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -17,7 +18,8 @@
     [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
     [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
     [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
-    [harja.kyselyt.urakat :as urakka-kyselyt]))
+    [harja.kyselyt.urakat :as urakka-kyselyt]
+    [taoensso.timbre :as log]))
 
 (def kayttaja-yit "yit-rakennus")
 (def kayttaja-analytiikka "analytiikka-testeri")
@@ -247,6 +249,58 @@
           (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
     (is (= urakoitsija-maksaa
           (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :urakoitsija-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
+    (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
+
+(deftest hae-toteutuneet-kustannukset-tavoitehinnan-alituspaatos-onnistuu-test
+  (let [;; Pakotetaan urakaksi Oulu MHU
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        hoitokauden-alkuvuosi 2023
+        hoitokauden-alun-tavoitehinta 2000000
+        hoitokauden-lopun-tavoitehinta 2000000
+        tavoitehinta 2000000
+        kattohinta 2100000
+        alituksen-maara 1000M
+        toteutuneet-kustannukset (- tavoitehinta alituksen-maara)
+        siirron-maara 0M
+        tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
+        tilaaja-maksaa (* alituksen-maara (/ tavoitepalkkion-maksuprosentti 100))
+        tavoitepalkkio tilaaja-maksaa
+
+        ;; Luodaan kulu, jolla alitetaan tavoitehinta
+        uusi-kulu (uusi-kulu-kustannukset-testiin urakka-id toteutuneet-kustannukset)
+        kulu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
+                       +kayttaja-jvh+
+                       {:urakka-id urakka-id
+                        :kulu-kohdistuksineen uusi-kulu})
+
+        kulu-id (:id kulu-vastaus)
+        kayttajaid (:id +kayttaja-jvh+)
+
+        ;; Lisätään urakalle sopiva tavoitehinta - Poistetaan olemassa oleva, jos sellaisia on
+        _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = 5;" urakka-id))
+        insert-str (format "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, luotu) VALUES (%s, 5, %s, %s, %s, %s, now());"
+                     urakka-id tavoitehinta tavoitehinta kattohinta kattohinta)
+        _ (u insert-str)
+
+        tavoitehinnan-alitus-paatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                                      alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id true kayttajaid)
+        db-paatos (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) tavoitehinnan-alitus-paatos)
+
+        ;; Varmista, että vastauksesta löytyy juuri luotu oikaisu
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        juuri-luotu-paatos-rajapinnasta (first (filter (fn [k]
+                                                         (= (bigdec (get-in k [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa])) tilaaja-maksaa))
+                                                 (get-in encoodattu-body [:toteutuneet-kustannukset :hoitovuoden-paatokset])))
+
+        ;; Siivoa roskat - Poistetaan päätös
+        _ (paatos-kyselyt/poista-tavoitehinnan-alituspaatos (:db jarjestelma) urakka-id kayttajaid (:id db-paatos))]
+    (is (= 200 (:status vastaus)))
+    (is (not (nil? (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatos :id]))))
+    (is (= tilaaja-maksaa
+          (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
     (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
 (deftest hae-kustannussuunnitelma-onnistuu-test
