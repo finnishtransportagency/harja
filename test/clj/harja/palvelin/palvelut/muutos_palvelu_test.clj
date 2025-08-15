@@ -368,7 +368,7 @@
              :versio 2}]
           historirivit-toisen-updaten-jalkeen) "historiassa on kaksi riviä toisen updaten jälkeen")))
 
-(deftest hae-yksittaisen-muutoksen-tiedot-lomakkeelle-ii
+(deftest hae-yksittaisen-muutoksen-tiedot-lomakkeelle-ii-johto-ja-hallintokorvaus
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         muutos {:id (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos WHERE syy = 'Työmääräarviot ylittyivät';")),
                 :versio 1, :tyyppi "johto-ja-hallintokorvaus"}
@@ -384,6 +384,83 @@
                               :liitteet nil
                               :versio 1}]
     (is (= vastaus odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
+
+(deftest hae-yksittaisen-muutoksen-tiedot-lomakkeelle-ii-pysyva-muutos
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        muutos {:id (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos WHERE nimi = 'Päällysteen paikkausmuutos';")),
+                :versio 1, :tyyppi "pysyva" :liite-idt #{}}
+        tpi-id-talvihoito (ffirst (q (format "SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23104') AND %s = urakka;" urakka-id))) ; -- Talvihoito
+        tpi-id-liikymp (ffirst (q (format "SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23116') AND %s = urakka;" urakka-id))) ; -- Liikenneympäristön hoito
+        tpi-id-paallpaikk (ffirst (q (format "SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '20107') AND %s = urakka;" urakka-id))) ; -- Päällystepaikkaukset
+        tpi-id-soratiet (ffirst (q (format "SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23124') AND %s = urakka;" urakka-id))) ; -- Sorateiden hoito
+        tpi-id-mhu-yp (ffirst (q (format "SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '20191') AND %s = urakka;" urakka-id))) ; -- MHU Ylläpito
+        tpi-id-korvausinvestointi (ffirst (q (format "SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '14301') AND %s = urakka;" urakka-id))) ; -- MHU Korvausinvestointi
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-muutoksen-tiedot
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :muutos muutos})
+
+        odotettu-muutostieto {:id (:id muutos)
+                              :liite-idt #{}
+                              :liitteet nil
+                              :toimenpiteiden-tiedot [{:budjetoidut_summat (list {:budjetoitu_summa 12000
+                                                                                  :hoitokauden_alkuvuosi 2025})
+                                                       :id (:id muutos)
+                                                       :kustannusvaikutukset nil
+                                                       :tehtavat_ja_maarat nil
+                                                       :toimenpide "Talvihoito"
+                                                       :toimenpideinstanssi tpi-id-talvihoito}
+                                                      {:budjetoidut_summat (list {:budjetoitu_summa 9600
+                                                                                  :hoitokauden_alkuvuosi 2025})
+                                                       :id (:id muutos)
+                                                       :kustannusvaikutukset nil
+                                                       :tehtavat_ja_maarat nil
+                                                       :toimenpide "Liikenneympäristön hoito"
+                                                       :toimenpideinstanssi tpi-id-liikymp}
+                                                      {:budjetoidut_summat nil
+                                                       :id (:id muutos)
+                                                       :kustannusvaikutukset nil
+                                                       :tehtavat_ja_maarat nil
+                                                       :toimenpide "Sorateiden hoito"
+                                                       :toimenpideinstanssi tpi-id-soratiet}
+                                                      {:budjetoidut_summat nil
+                                                       :id (:id muutos)
+                                                       :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
+                                                                                    :kustannuslaji "hankintakustannukset"
+                                                                                    :summa 1000
+                                                                                    :toimenpideinstanssi tpi-id-paallpaikk}
+                                                                               {:hoitokauden_alkuvuosi 2026
+                                                                                :kustannuslaji "hankintakustannukset"
+                                                                                :summa 1000
+                                                                                :toimenpideinstanssi tpi-id-paallpaikk})
+                                                       :tehtavat_ja_maarat (list {:edellinen_maara 1000
+                                                                                  :hoitokauden_alkuvuosi 2025
+                                                                                  :maaramuutos 100
+                                                                                  :tehtava 3117
+                                                                                  :uusi_maara 1100}
+                                                                             {:edellinen_maara 1000
+                                                                              :hoitokauden_alkuvuosi 2026
+                                                                              :maaramuutos 100
+                                                                              :tehtava 3117
+                                                                              :uusi_maara 1100})
+                                                       :toimenpide "Päällysteiden paikkaus"
+                                                       :toimenpideinstanssi tpi-id-paallpaikk}
+                                                      {:budjetoidut_summat nil
+                                                       :id (:id muutos)
+                                                       :kustannusvaikutukset nil
+                                                       :tehtavat_ja_maarat nil
+                                                       :toimenpide "MHU Ylläpito"
+                                                       :toimenpideinstanssi tpi-id-mhu-yp}
+                                                      {:budjetoidut_summat nil
+                                                       :id (:id muutos)
+                                                       :kustannusvaikutukset nil
+                                                       :tehtavat_ja_maarat nil
+                                                       :toimenpide "MHU Korvausinvestointi"
+                                                       :toimenpideinstanssi tpi-id-korvausinvestointi}]
+                              :tyyppi "pysyva"
+                              :versio 1}]
+(is (= vastaus odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
 
 (deftest johto-ja-hallintokorvausmuutoksen-kulu-2025-ja-jalkeen-oltava-negatiivinen
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")

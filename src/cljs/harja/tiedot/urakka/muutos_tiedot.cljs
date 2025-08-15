@@ -178,8 +178,9 @@
           lomakkeen-hoitokausi (get-in app [:muokattava-muutos :hoitovuosi])
           app (-> app
                 (assoc-in [:muokattava-muutos :liitteet] uudet-liitteet)
-                ;; huom: toimenpiteiden tietoja tarvitaan oikeasti vain atomissa joka menee muokkausgridille
-                ;; tässä vaiheessa pidetään tietoja myös app statessa helpottamaan hahmottamista devausvaiheessa
+                ;; huom: toimenpiteiden tietoja tarvitaan lisäksi  atomissa joka menee muokkausgridille
+                ;; on vielä tutkittava, minne kannattaa säilöä muiden kuin lomakkeella valitun hoitokauden tiedot,
+                ;; todennäköisesti app-stateen
                 (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] (:toimenpiteiden-tiedot vastaus))
                 ;; alustetaan lomaketta varten hoitokausi samaksi kuin valittu hoitokausi, mutta ne voivat
                 ;; erkaantua myöhemmin jos käyttäjä niin haluaa (esim. kirjata pysyvän muutoksen eri hoitokaudelle kuin valittu)

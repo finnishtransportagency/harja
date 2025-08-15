@@ -125,7 +125,7 @@
                            true]])}
 
      {:otsikko "Suunniteltu kustannus (€)"
-      :nimi :suunniteltu-kustannus :vaadi-ei-negatiivinen? true
+      :nimi :budjetoitu_summa :vaadi-ei-negatiivinen? true
       :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}
      {:otsikko "Tavoitehinnan muutos (€)"
       :nimi :tavoitehinnan-muutos :vaadi-ei-negatiivinen? true
@@ -139,7 +139,6 @@
 (defn- muutoslomakkeen-kentat-pysyva
   "Pysyvän muutoksen lomakekomponentti"
   [e! {:keys [urakan-hoitokaudet muokattava-muutos] :as app}]
-  (prn "Jarno mitä ryhmä palauttaa " (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}))
   [{:otsikko "" :nimi :hr :uusi-rivi? true
     :tyyppi :komponentti :komponentti (fn [] [:hr])}
    (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}

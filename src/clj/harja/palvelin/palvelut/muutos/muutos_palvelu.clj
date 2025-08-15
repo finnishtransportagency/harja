@@ -117,8 +117,10 @@
   (let [toimenpiteiden-tiedot  (mapv
                                  (fn [rivi]
                                    (-> rivi
+                                     (update :budjetoidut_summat #(konv/jsonb->clojuremap %))
                                      (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
                                      (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))))
+                                 ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
                                  (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id (:id muutos)
                                                                                            :versio (:versio muutos)
                                                                                            :urakka urakka-id
@@ -140,11 +142,12 @@
         _ (when (> (count tyyppikohtaiset-tiedot)  1)
             (do
               (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
-              (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on ongelmatilanne. Ota yhteys Harja-palautteeseen."))))
+              (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on luultavasti ongelmatilanne. Ota yhteys Harja-palautteeseen."))))
         liitteet (when-not (empty? (:liite-idt muutos))
                    (liite-kyselyt/hae-liitteiden-tiedot db {:idt (:liite-idt muutos)
                                                             :urakka urakka-id}))
-        vastaus (assoc (first tyyppikohtaiset-tiedot)
+        vastaus (assoc (merge muutos
+                         (first tyyppikohtaiset-tiedot))
                   :liitteet liitteet
                   :toimenpiteiden-tiedot toimenpiteiden-tiedot)]
     vastaus))
