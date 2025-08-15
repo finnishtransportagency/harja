@@ -114,17 +114,18 @@
   "Palauttaa yksittäisen muutoksen tarkat tiedot lomaketta varten."
   [db user {:keys [urakka-id hoitokauden-alkuvuosi muutos]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (let [toimenpiteiden-tiedot  (mapv
-                                 (fn [rivi]
-                                   (-> rivi
-                                     (update :budjetoidut_summat #(konv/jsonb->clojuremap %))
-                                     (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
-                                     (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))))
-                                 ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
-                                 (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id (:id muutos)
-                                                                                           :versio (:versio muutos)
-                                                                                           :urakka urakka-id
-                                                                                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+  (let [toimenpiteiden-tiedot (when (= (:tyyppi muutos) "pysyva")
+                                (mapv
+                                  (fn [rivi]
+                                    (-> rivi
+                                      (update :budjetoidut_summat #(konv/jsonb->clojuremap %))
+                                      (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
+                                      (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))))
+                                  ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
+                                  (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id (:id muutos)
+                                                                                            :versio (:versio muutos)
+                                                                                            :urakka urakka-id
+                                                                                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
         tyyppikohtaiset-tiedot (case (:tyyppi muutos)
                                  "johto-ja-hallintokorvaus"
                                  (mapv
