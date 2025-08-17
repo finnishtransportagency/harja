@@ -25,8 +25,12 @@
 (defrecord TallennaMuutos [muutos])
 (defrecord TallennaMuutosEpaonnistui [vastaus])
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
+
+;; muutostyyppikohtaisia eventtejä
 (defrecord MuokkaaLaskettujenMuutoksienSyita [])
 (defrecord MuokkaaRahavaraustenMuutoksienSyita [])
+(defrecord KopioiPysyvaMuutosTulevilleHoitovuosille [hoitovuosi rivit])
+
 (defrecord HaeMuutoksenTiedot [muutos])
 (defrecord HaeMuutoksenTiedotOnnistui [vastaus muutos valittu-hoitokausi])
 (defrecord HaeMuutoksenTiedotEpaonnistui [vastaus])
@@ -133,6 +137,19 @@
                 (not= (:id liite) liite-id))
         liitteet))))
 
+(defn pienin-hoitokauden-alkuvuosi-jossa-kirjauksia
+  "Hakee toimenpiteiden tiedoista pienimmän hoitovuoden alkukauden jossa kirjauksia"
+  [rivit]
+  (when (seq rivit)
+    (->> rivit
+      (mapcat (fn [rivi]
+                (concat
+                  (map :hoitokauden_alkuvuosi (:tehtavat_ja_maarat rivi))
+                  (map :hoitokauden_alkuvuosi (:kustannusvaikutukset rivi))
+                  (map :hoitokauden_alkuvuosi (:budjetoidut_summat rivi)))))
+      (remove nil?)
+      (apply min))))
+
 (extend-protocol tuck/Event
   HoitokausiVaihdettu
   (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
@@ -176,19 +193,33 @@
                    valittu-hoitokausi :valittu-hoitokausi} app]
     (let [uudet-liitteet (:liitteet vastaus)
           lomakkeen-hoitokausi (get-in app [:muokattava-muutos :hoitovuosi])
+          toimenpiteiden-tiedot (:toimenpiteiden-tiedot vastaus)
+          ;; lomakkeen on kyettävä käsittelemään usealle hoitovuodelle tehtäviä kirjauksia. Kun ländätään lomakkeelle,
+          ;; halutaan defaulttina näyttää aikaisin hoitovuosi, jossa on kirjauksia. Jos kirjauksia ei ole millekään hoitovuodelle,
+          ;; asetetaan oletuksena edelliseltä sivulta ja app statesta "valittu-hoitovuosi"
+          ;; jos tästä tulee jossain kohti liian hidas, voidaan tarkastelu suorittaa joko backendissä tai tietokannassakin
+          aikaisin-hoitovuosi-jossa-kirjauksia (pienin-hoitokauden-alkuvuosi-jossa-kirjauksia toimenpiteiden-tiedot)
+          ;; vain ne hoitovuodet mahdollisia, jotka ovat voimassa alkaen pvm:n jälkeen eli alkupvm on sen jälkeen
+          mahdolliset-hoitovuodet-lomakkeella (filter #(pvm/jalkeen? (first %) (get-in app [:muokattava-muutos :voimassa_alkaen]))
+                                                (:urakan-hoitokaudet app))
+          hoitovuosi-lomakkeelle (or (when aikaisin-hoitovuosi-jossa-kirjauksia
+                                       (pvm/vuodesta-hoitokausi aikaisin-hoitovuosi-jossa-kirjauksia))
+                                   valittu-hoitokausi)
           app (-> app
                 (assoc-in [:muokattava-muutos :liitteet] uudet-liitteet)
                 ;; huom: toimenpiteiden tietoja tarvitaan lisäksi  atomissa joka menee muokkausgridille
                 ;; on vielä tutkittava, minne kannattaa säilöä muiden kuin lomakkeella valitun hoitokauden tiedot,
                 ;; todennäköisesti app-stateen
-                (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] (:toimenpiteiden-tiedot vastaus))
+                (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] toimenpiteiden-tiedot)
                 ;; alustetaan lomaketta varten hoitokausi samaksi kuin valittu hoitokausi, mutta ne voivat
                 ;; erkaantua myöhemmin jos käyttäjä niin haluaa (esim. kirjata pysyvän muutoksen eri hoitokaudelle kuin valittu)
-                (assoc-in [:muokattava-muutos :hoitovuosi] valittu-hoitokausi))]
+                (assoc-in [:muokattava-muutos :mahdolliset-hoitovuodet-lomakkeella] mahdolliset-hoitovuodet-lomakkeella)
+                (assoc-in [:muokattava-muutos :hoitovuosi] hoitovuosi-lomakkeelle))]
       ;; annetaan resetoitua atomiin arvoksi nil, jos ei kuluja ole ko. muutoksessa
       (reset! johto-ja-hallintokorvausmuutokset-atom
         (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
           (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))))
+      ;; fixme: ehkä tarpeeton tämä atomi, oli muokkaus-gridiä varten
       (reset! pysyvan-muutoksen-rivit-atom
         (pysyvan-muutoksen-rivit (:toimenpiteiden-tiedot vastaus) lomakkeen-hoitokausi))
       app))
@@ -267,6 +298,11 @@
         {:onnistui ->HaeUrakanMuutostiedotOnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
          :epaonnistui ->TallennaRahavarausmuutostenSyytEpaonnistui})
       app))
+
+  KopioiPysyvaMuutosTulevilleHoitovuosille
+  (process-event [{hoitovuosi :hoitovuosi rivit :rivit} app]
+    ;; TODO: tässä hanskattava muutosten kopiointi tuleville hoitovuosille...
+    app)
 
   HaeMuutoksenTiedot
   (process-event [{muutos :muutos} app]

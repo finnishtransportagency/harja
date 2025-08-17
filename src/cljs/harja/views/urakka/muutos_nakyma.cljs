@@ -95,46 +95,74 @@
             :pakollinen? true}
            {:nimi :voimassa_alkaen :otsikko "Voimassa alkaen"
             :tyyppi :pvm :uusi-rivi? true
-            :pakollinen? true})]
+            :pakollinen? true
+            ;; pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
+            ;; pienempi kuin voimassa alkaen, joten kutsuttava :aseta funktiota. Ei vaikuta ainakaan vielä muissa muutostyypeissä
+            :aseta (fn [rivi arvo]
+                     (-> rivi
+                       (assoc :voimassa_alkaen arvo)
+                       (assoc :mahdolliset-hoitovuodet-lomakkeella
+                         (filter #(pvm/jalkeen? (first %) arvo)
+                           (:urakan-hoitokaudet app)))))})]
         (liite-kentta e! app)))))
 
-;; TODO:
-;; voimassa alkaen vaikuttaa hoitovuosivalintaan! ei voi aiempaa valita kuin voimassa alkaen
-;; myös menneisyyteen ei sallita kirjata
 (defn taulukko-pysyvan-muutoksen-vaikutukset
-  [e! app]
+  [e! {:keys [muokattava-muutos] :as app}]
   [:span.toimenpiteiden-tiedot
-   [grid/muokkaus-grid
+   [grid/grid
     {:tunniste :toimenpide
      :luokat ["pysyvan-muutoksen-grid"]
-     :piilota-toiminnot? true
-     :voi-lisata? false
-     :voi-kumota? false
-     :voi-poistaa? (constantly false)
-     :voi-muokata? true}
+     :muokkaa-aina true
+     :custom-toiminto {:teksti "Kopioi tiedot tuleville hoitovuosille"
+                       :toiminto #(e! (muutos-tiedot/->KopioiPysyvaMuutosTulevilleHoitovuosille
+                                        (:hoitovuosi muokattava-muutos)
+                                        (:toimenpiteiden-tiedot muokattava-muutos)))
+                       :opts {:ikoni (ikonit/livicon-plus)
+                              :luokka "nappi-ensisijainen"}}
+     :vetolaatikot ;; TODO, tekemättä
+     {"Talvihoito" [:div 123]
+      "Liikenneympäristön hoito" [:div 456]}
+    :piilota-toiminnot? true
+    :voi-lisata? false
+    :voi-kumota? false
+    :voi-poistaa? (constantly false)
+    :voi-muokata? true }
 
-    ;; taulukon kentät
-    [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :komponentti :leveys 20
-      :komponentti (fn [rivi]
-                         [:span
-                          [kentat/tee-kentta
-                           {:tyyppi :checkbox
-                            :teksti (:toimenpide rivi)
-                            :disabled? false
-                            :valitse! #(prn "Painettu " %)}
-                           true]])}
+;; taulukon kentät
 
-     {:otsikko "Suunniteltu kustannus (€)"
-      :nimi :budjetoitu_summa :vaadi-ei-negatiivinen? true
-      :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}
-     {:otsikko "Tavoitehinnan muutos (€)"
-      :nimi :tavoitehinnan-muutos :vaadi-ei-negatiivinen? true
-      :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}
-     {:otsikko "Muuttunut kustannus (€)"
-      :nimi :muuttunut-kustannus :vaadi-ei-negatiivinen? true
-      :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8}]
-    muutos-tiedot/pysyvan-muutoksen-rivit-atom]
-   ])
+[{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 20 :muokattava? (constantly false)}
+ {:otsikko "Suunniteltu kustannus (€)" :muokattava? (constantly false)
+  :nimi :budjetoitu_summa :vaadi-ei-negatiivinen? true
+  :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8
+  :hae (fn [rivi]
+         (:budjetoitu_summa (first (filter #(when (:hoitovuosi muokattava-muutos)
+                                              (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                                                (:hoitokauden_alkuvuosi %)))
+                                     (get rivi :budjetoidut_summat)))))}
+ {:otsikko "Tavoitehinnan muutos (€)" :muokattava? (constantly false)
+  :nimi :tavoitehinnan-muutos
+  :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8
+  :solun-luokka #(str "tavoitehinnan-muutos-sarake")
+  :hae (fn [rivi]
+         (:summa (first (filter #(when (:hoitovuosi muokattava-muutos)
+                                   (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                                     (:hoitokauden_alkuvuosi %)))
+                          (get rivi :kustannusvaikutukset)))))}
+ {:otsikko "Muuttunut kustannus (€)" :muokattava? (constantly false)
+  :nimi :muuttunut-kustannus :vaadi-ei-negatiivinen? true
+  :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8
+  :hae (fn [rivi]
+         (let [budjetoitu (:budjetoitu_summa (first (filter #(when (:hoitovuosi muokattava-muutos)
+                                                               (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                                                                 (:hoitokauden_alkuvuosi %)))
+                                                      (get rivi :budjetoidut_summat))))
+               muutos (:summa (first (filter #(when (:hoitovuosi muokattava-muutos)
+                                                (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                                                  (:hoitokauden_alkuvuosi %)))
+                                       (get rivi :kustannusvaikutukset))))]
+           (when (and budjetoitu (number? budjetoitu) muutos (number? muutos))
+             (+ budjetoitu muutos))))}]
+    (:toimenpiteiden-tiedot muokattava-muutos)]])
 
 (defn- muutoslomakkeen-kentat-pysyva
   "Pysyvän muutoksen lomakekomponentti"
@@ -144,10 +172,8 @@
    (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}
 
      {:otsikko "Hoitovuosi" :nimi :hoitovuosi :kaariva-luokka "hoitovuosi-valinta"
-      :tyyppi :valinta :valinnat urakan-hoitokaudet
-      :hae (fn [rivi]
-             (prn "Jarno rivi " rivi)
-             (:hoitovuosi rivi))
+      :tarkenne #(str "Oltava lomakkeelle asetetun 'Voimassa alkaen' -pvm:n jälkeen")
+      :tyyppi :valinta :valinnat (or (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos) [])
       :valinta-nayta #(if %
                         (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet "Hoitovuosi")
                         "Valitse")
@@ -158,11 +184,11 @@
       :komponentti (fn []
                      [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."])}
 
-     ;; Taulukko jossa vaikutkuksia voidaan syöttää
+     ;; Taulukko jossa vaikutuksia voidaan syöttää
      {:otsikko "" :uusi-rivi? true
       :nimi :taulukko-pysyvan-muutoksen-vaikutukset
       :tyyppi :komponentti
-      :komponentti (fn [e! app]
+      :komponentti (fn [rivi]
                      [taulukko-pysyvan-muutoksen-vaikutukset e! app])})])
 
 
@@ -461,7 +487,7 @@
   [:span.muutoslistaus
    (when (:valittu-hoitokausi app)
      (if (muutos-tiedot/ennen-muutoksien-kayttoonotto? (:valittu-hoitokausi app))
-       ;; Tähän 1.10.2024 tai sitä aiemmiun alkaneiden hoitokausien "legacy" muutostoiminnot
+       ;; Tähän 1.10.2024 tai sitä aiemmiun alkaneiden hoitokausien " legacy " muutostoiminnot
        [:span.muutostiedot
         [tavoitehinnan-muutokset e! app]
         [suunniteltujen-maarien-muutokset e! app]]

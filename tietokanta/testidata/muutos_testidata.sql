@@ -109,7 +109,32 @@ values  (2025, 10, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '20
         (2026, 6, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.715000', kayttaja_id_tero, null, null, null, null, null, 0),
         (2026, 7, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
         (2026, 8, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 9, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.717000', kayttaja_id_tero, null, null, null, null, null, 0);
+        (2026, 9, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.717000', kayttaja_id_tero, null, null, null, null, null, 0),
+        -- vielä vähän päällysteiden paikkauksia... kahdelle hoitovuodelle
+        (2025, 10, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.631000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2025, 11, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.709000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2025, 12, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.710000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 1, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.712000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 2, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.713000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 3, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.713000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 4, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.714000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 5, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.715000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 6, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.715000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 7, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 8, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 9, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.717000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2026, 10, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.631000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2026, 11, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.709000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2026, 12, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.710000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 1, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.712000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 2, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.713000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 3, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.713000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 4, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.714000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 5, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.715000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 6, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.715000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 7, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 8, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 9, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.717000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0);
 
     RETURN TRUE;
 
