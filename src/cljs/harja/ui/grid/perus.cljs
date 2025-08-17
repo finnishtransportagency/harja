@@ -51,7 +51,8 @@
       :component-will-unmount (fn [this]
                                 (.removeEventListener js/window EventType/RESIZE virhelaatikon-max-koon-asetus))
       :reagent-render
-      (fn [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi komponentti komponentti-args] :as sarake}
+      (fn [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi komponentti komponentti-args
+                   solun-luokka] :as sarake}
            {:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
                    esta-poistaminen-tooltip piilota-toiminnot? tallennus-kaynnissa?
                    fokus aseta-fokus! tulevat-rivit vetolaatikot
@@ -76,6 +77,7 @@
 
             [:td {:class (y/luokat "muokattava"
                                    tasaus-luokka
+                                   (when solun-luokka (solun-luokka arvo rivi))
                                    (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?)
                                    (cond
                                      (not (empty? kentan-virheet)) " sisaltaa-virheen"
@@ -127,7 +129,8 @@
                                      (aseta rivi uusi)))
                       (muokkaa! id assoc nimi uusi))))]])]
 
-            [:td {:class (y/luokat "ei-muokattava" tasaus-luokka (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))}
+            [:td {:class (y/luokat "ei-muokattava" tasaus-luokka (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?)
+                           (when solun-luokka (solun-luokka arvo rivi)))}
              ((or fmt str) (hae rivi))])))})))
 
 (defn etsi-seuraava-input
