@@ -899,6 +899,7 @@
         paatokset (reduce (fn [paatokset kuluva-hoitovuosi]
                             (let [kustannukset (valikatselmus-palvelu/hae-kustannukset-jarjestettyna db urakka-id kuluva-hoitovuosi
                                                  (pvm/hoitokauden-alkupvm kuluva-hoitovuosi) (pvm/hoitokauden-alkupvm kuluva-hoitovuosi))
+                                  _ (log/info "kustannukset" kustannukset)
                                   toteutuneet-kustannukset (get-in kustannukset [:yhteensa :yht-toteutunut-summa])
                                   budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakka-id})
                                   ;; Otetaan käytyn hoitovuoden budjetti
