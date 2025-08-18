@@ -699,26 +699,20 @@
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
         ;; Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan. Esim Lupauspäätöksiä saadaan kolme, mutta niiden järjestysnumero on kaikilla 1, joka
         ;; merkitsee, että ne kuuluvat samaan luokkaan (lupauksiin) ja näin ollen niitä tarvitaan väin yksi.
-        _ (log/info "mahdolliset-paatokset1" (count mahdolliset-paatokset) mahdolliset-paatokset)
         mahdolliset-paatokset (->> mahdolliset-paatokset
                                 (group-by :jarjestys)
                                 (map (fn [[_ paatokset]] (first paatokset)))
                                 (into []))
-        _ (log/info "mahdolliset-paatokset2" (count mahdolliset-paatokset) mahdolliset-paatokset)
         ;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
         mahdolliset-paatokset (if (or (nil? toteutuneet-kustannukset) (nil? kattohinta) (<= toteutuneet-kustannukset kattohinta))
                                 (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) mahdolliset-paatokset)
                                 mahdolliset-paatokset)
-        _ (log/info "mahdolliset-paatokset3" (count mahdolliset-paatokset) mahdolliset-paatokset)
         ;; Poistetaan mahdollinen raporttipäätös
         mahdolliset-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) mahdolliset-paatokset)
-        _ (log/info "mahdolliset-paatokset4" (count mahdolliset-paatokset) mahdolliset-paatokset)
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)
-        _ (log/info "tietokanta-paatokset" (count tietokanta-paatokset) tietokanta-paatokset)
         ;; Poistetaan mahdollinen raporttipäätös
-        tietokanta-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) tietokanta-paatokset)
-        _ (log/info "tietokanta-paatokset2" (count tietokanta-paatokset) tietokanta-paatokset)]
+        tietokanta-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) tietokanta-paatokset)]
     tietokanta-paatokset))
 
 (defn onko-paatoksia-tekematta
@@ -732,7 +726,7 @@
         mhu-tyyppi (paatoskone/urakan-hoitotyyppi mhu+urakka?)
         ;; Haetaan urakan taloustiedot, jotta tiedetään kuuluuko tavoitehinnan alitus, ylitys ja kattohinta pakettiin
         kustannukset (hae-kustannukset-jarjestettyna db urakkaid kuluva-hoitovuosi
-                       (pvm/hoitokauden-alkupvm kuluva-hoitovuosi) (pvm/hoitokauden-alkupvm kuluva-hoitovuosi))
+                       (pvm/hoitokauden-alkupvm kuluva-hoitovuosi) (pvm/hoitokauden-loppupvm (inc kuluva-hoitovuosi)))
         toteutuneet-kustannukset (get-in kustannukset [:yhteensa :yht-toteutunut-summa])
         budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakkaid})
         ;; Otetaan käytyn hoitovuoden budjetti
