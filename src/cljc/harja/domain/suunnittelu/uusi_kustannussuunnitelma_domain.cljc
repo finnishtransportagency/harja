@@ -86,4 +86,4 @@
 (s/def ::erillishankinta (s/keys :req-un [::erillishankinnat ::urakka-id]))
 (s/def ::hoidonjohtopalkkio (s/keys :req-un [::hoidonjohtopalkkiot ::urakka-id]))
 (s/def ::johto-ja-hallintokorvaus-2019 (s/keys :req-un [::johto-ja-hallintokorvaukset-2019 ::urakka-id]))
-(s/def ::johto-ja-hallintokorvaus-2025 (s/keys :req-un [::johto-ja-hallintokorvaukset-2019 ::urakka-id]))
+(s/def ::johto-ja-hallintokorvaus-2025 (s/keys :req-un [::johto-ja-hallintokorvaukset-2025 ::urakka-id]))

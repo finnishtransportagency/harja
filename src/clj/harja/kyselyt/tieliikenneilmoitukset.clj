@@ -1,11 +1,14 @@
 (ns harja.kyselyt.tieliikenneilmoitukset
   (:require [jeesql.core :refer [defqueries]]))
 
+(declare onko-ilmoitukselle-vastaanottokuittausta ilmoitus-loytyy-idlla ilmoitus-on-lahetetty-urakalle
+  paivita-ilmoituksen-urakka!)
+
 (defqueries "harja/kyselyt/tieliikenneilmoitukset.sql"
-            {:positional? true})
+  {:positional? true})
 
 (defn ilmoitukselle-olemassa-vastaanottokuittaus? [db ilmoitusid]
-  (not (empty? (onko-ilmoitukselle-vastaanottokuittausta db ilmoitusid))))
+  (boolean (seq (onko-ilmoitukselle-vastaanottokuittausta db ilmoitusid))))
 
 (defn ilmoitus-loytyy-idlla? [db ilmoitusid]
   (:exists (first (ilmoitus-loytyy-idlla db ilmoitusid))))

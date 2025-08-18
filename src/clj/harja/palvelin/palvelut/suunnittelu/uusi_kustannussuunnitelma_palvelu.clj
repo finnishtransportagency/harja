@@ -7,7 +7,7 @@
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
             [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]))
@@ -53,6 +53,12 @@
           urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
           urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
           urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+          urakan-loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
+          ;; Varmistetaan, että ei edes yritetä hakea tietoja urakkakauden ulkopuolelta
+          hoitovuoden-alkuvuosi (cond
+                                  (< hoitovuoden-alkuvuosi urakan-alkuvuosi) urakan-alkuvuosi
+                                  (> hoitovuoden-alkuvuosi urakan-loppuvuosi) urakan-loppuvuosi
+                                  :else hoitovuoden-alkuvuosi)
 
           vahvistukset (suunnitelma-q/indeksikorjaukset-vahvistettu? db
                          {:urakka-id urakka-id
@@ -107,12 +113,6 @@
                                             (>= urakan-alkuvuosi 2025) (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) johto-ja-hallintokorvaukset))
                                             :else (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) johto-ja-hallintokorvaukset)))
 
-          ;; Vanhoilla toimenkuvien grouppaaminen on pakollista, koska ne tulevat kannasta kuukausittain ja ui:lla ne näytetään ensin toimenkuvittain
-          ;toimenkuvat johto-ja-hallintokorvaukset #_  (when (<= urakan-alkuvuosi 2024) (group-by :toimenkuva johto-ja-hallintokorvaukset))
-          ;; Testin vuoksi palautetaan vain eka
-          ; toimenkuvat (first toimenkuvat)
-          #_ (println "johto-ja-hallintokorvaukset: " johto-ja-hallintokorvaukset)
-
           ;; Hae hoidonjohtopalkkiot
           hoidonjohtopalkkiot (suunnitelma-q/hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
           hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) hoidonjohtopalkkiot))
@@ -129,6 +129,7 @@
                                                             (* indeksikerroin hoitovuoden-alun-kattohinta)) 0)
           k {:urakka-id urakka-id
              :urakan-alkuvuosi urakan-alkuvuosi
+             :valittu-hoitokausi [(pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi)) (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))]
              :tarjous tarjous
              :kustannussuunnitelma {:kilpailutettavat-hankinnat {:toimenpiteet kiinteat}
                                     :rahavaraukset rahavaraukset
@@ -157,7 +158,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/info "tallenna-erillishankinnat :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id hoitovuoden-alkuvuosi (:erillishankinnat tiedot))
+    (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot))
     (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
@@ -181,7 +182,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/info "tallenna-hoidonjohtopalkkiot :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id hoitovuoden-alkuvuosi (:hoidonjohtopalkkiot tiedot))
+    (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id (:hoidonjohtopalkkiot tiedot))
     (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 

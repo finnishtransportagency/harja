@@ -6,7 +6,8 @@
   -25 ja sitä myöhemmät urakat syöttävät vain kuukausisumman.
   Käyttöliittymä yksinkertaistuu vuosien myötä, koska tarkkuus vähenee.
   "
-  (:require [harja.fmt :as fmt]
+  (:require [clojure.string :as str]
+            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :as tyokalut]
             [harja.ui.grid :as grid]
@@ -219,7 +220,7 @@
                                        johto-ja-hallintokorvaukset))}
           [{:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :leveys "60%"
-            :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+            :muokattava? (constantly false) :otsikkorivi-luokka "korkea" :fmt #(when % (str/capitalize %))}
            {:otsikko "Tarjouksen määrä (€)" :nimi :tarjous-summa :leveys "20%" :tyyppi :euro :tasaa :oikea
             :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
            {:otsikko "Vuosipalkka, €" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
@@ -254,7 +255,7 @@
                                        johto-ja-hallintokorvaukset))}
           [{:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :leveys "50%"
-            :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+            :muokattava? (constantly false) :otsikkorivi-luokka "korkea" :fmt #(when % (str/capitalize %))}
            {:otsikko "Tarjouksen määrä (€)" :nimi :tarjous-summa :leveys "25%" :tyyppi :euro :tasaa :oikea
             :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
            {:otsikko "Suunniteltu määrä (€)" :nimi :summa :leveys "25%" :tyyppi :euro :tasaa :oikea

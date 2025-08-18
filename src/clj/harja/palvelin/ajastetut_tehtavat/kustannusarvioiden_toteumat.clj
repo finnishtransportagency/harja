@@ -1,12 +1,11 @@
 (ns harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat
   "Ajastettu tehtävä toteutuneiden kustannusten muodostamiseksi valmiiksi toteutuneet_kustannukset tauluun"
   (:require [com.stuartsierra.component :as component]
-            [harja.kyselyt.toteutuneet_kustannukset :as q]
+            [harja.kyselyt.toteutuneet-kustannukset :as q]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukot]
             [taoensso.timbre :as log]
-            [harja.pvm :as pvm]
-            [clj-time.core :as t]))
+            [harja.pvm :as pvm]))
 
 (defn- onko-toteumat-jo-siirretty?
   "Tarkistetaan onko annetulle kuukaudelle tehty yhtään siirtoa. Jos on, niin ei siirretä uudestaan.
@@ -26,19 +25,8 @@
   [db & args]
   (let [annettu-nyt (first args)
         nyt (or annettu-nyt (pvm/nyt))
-        nyt-vuosi (pvm/vuosi nyt)
-        nyt-kuukausi (pvm/kuukausi nyt)
         nyt-paiva (pvm/paiva nyt)
-        onko-kuukauden-ensimmainen-paiva? (and (= nyt-paiva 1))
-        ;; Edellinen kuukausi voi olla nolla, jos vähennetään tammikuussa 1
-        edellinen-kuukausi (if (= 0 (dec nyt-kuukausi))
-                             12
-                             (dec nyt-kuukausi))
-        ;; Jos tammikuussa katsotaan edellistä kuukautta, pitää myös vuodesta vähentää yksi.
-        vuosi (if (= 0 (dec nyt-kuukausi))
-                    (dec nyt-vuosi)
-                    nyt-vuosi)
-
+        onko-kuukauden-ensimmainen-paiva? (= nyt-paiva 1)
         onko-siirto-tehty? (if onko-kuukauden-ensimmainen-paiva?
                              ;; Kuukauden ensimmäisenä päivänä tehdään aina siirto
                              false

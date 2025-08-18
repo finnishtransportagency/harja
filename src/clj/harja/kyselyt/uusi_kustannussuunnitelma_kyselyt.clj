@@ -403,7 +403,7 @@
                                    :kuukausi kk
                                    :sopimus-id sopimus-id
                                    :toimenpideinstanssi-id toimenpideinstanssi-id}))
-                  t (if (:id dbrivi)
+                  _ (if (:id dbrivi)
                       (paivita-kiinteat-kustannukset-kuukausittain<! db
                         {:id (:id dbrivi)
                          :vuosi hoitovuoden-alkuvuosi
@@ -431,7 +431,7 @@
   ;; Lisätään transktiot, jottei yhden epäonnistuminen päästä muita läpi
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         ; Splittaa alkukauden summat kuukausittain
-        _ (doseq [{:keys [nimi alkukausi loppukausi toimenpideinstanssi-id] :as toimenpide} kilpailutettavat-hankinnat]
+        _ (doseq [{:keys [alkukausi loppukausi toimenpideinstanssi-id]} kilpailutettavat-hankinnat]
             (let [alkukausi (bigdec alkukausi)
 
                   alkukausi-kuukaudet (yleiset/round2 2 (with-precision 4 (/ alkukausi 3)))
@@ -447,7 +447,7 @@
                       (inc hoitovuoden-alkuvuosi) sopimus-id toimenpideinstanssi-id (:id kayttaja))]))]))
 
 (defn tallenna-erillishankinnat
-  [db kayttaja urakka-id hoitovuoden-alkuvuosi erillishankinnat]
+  [db kayttaja urakka-id erillishankinnat]
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         ;; Hae hoidonjohto toimenpideinstannssi
         ;; Hoindonjohto toimenpide.koodi = 23151
@@ -459,7 +459,7 @@
         ; Tallenna kuukausittaiset summat
         _ (doseq [rivi erillishankinnat]
             (let [dbrivi (first (hae-kuukauden-erillishankinta db {:id (:id rivi)}))
-                  t (if (:id dbrivi)
+                  _ (if (:id dbrivi)
                       (paivita-kuukauden-erillishankinta<! db
                         {:id (:id dbrivi)
                          :summa (:summa rivi)
@@ -574,7 +574,7 @@
         _ (kiint-kyselyt/merkitse-maksuerat-likaisiksi-hoidonjohdossa! db {:toimenpideinstanssi toimenpideinstanssi-id})]))
 
 (defn tallenna-hoidonjohtopalkkiot
-  [db kayttaja urakka-id hoitovuoden-alkuvuosi hoidonjohtopalkkiot]
+  [db kayttaja urakka-id hoidonjohtopalkkiot]
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         ;; Hae hoidonjohto toimenpideinstannssi
         ;; Hoindonjohto toimenpide.koodi = 23151

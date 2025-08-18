@@ -6,13 +6,13 @@
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]))
 
 (defqueries "harja/kyselyt/tarjous_kyselyt.sql"
-            {:positional? true})
+  {:positional? true})
 
 (declare tallenna-tarjous<! paivita-tarjous<!
-         tallenna-tarjouskustannus<! paivita-tarjouskustannus<!
-         tallenna-tarjouksen-johto-ja-hallintokorvaus<! paivita-tarjouksen-johto-ja-hallintokorvaus<!
-         hae-tarjouksen-tiedot hae-tarjous-vuodella
-         hae-kustannus-tarjoukselle hae-toimenkuva-tarjoukselle)
+  tallenna-tarjouskustannus<! paivita-tarjouskustannus<!
+  tallenna-tarjouksen-johto-ja-hallintokorvaus<! paivita-tarjouksen-johto-ja-hallintokorvaus<!
+  hae-tarjouksen-tiedot hae-tarjous-vuodella
+  hae-kustannus-tarjoukselle hae-toimenkuva-tarjoukselle)
 
 (def osiojarjestys
   {"hankintakustannukset" 1
@@ -26,18 +26,18 @@
         vuodet (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00}) vuodet)
         ;; Lisätään default tarjoukseen Kilpailutettavat hankinnat, Erillishankinnat ja Hoidonjohtopalkkio
-        tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset"  :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+        tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                   :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}
-                 {:nimi "Erillishankinnat", :osio "erillishankinnat"  :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
+                 {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
                   :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
                  {:nimi "Hoidonjohtopalkkio" :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
                   :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}]
         ; haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
         rahavaraus-rivit (reduce (fn [lopulliset rahavaraus]
-                                 (vec (concat lopulliset [{:nimi (:nimi rahavaraus), :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id (:id rahavaraus)
-                                                           :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}])))
-                                 [] rahavaraukset)
+                                   (vec (concat lopulliset [{:nimi (:nimi rahavaraus), :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id (:id rahavaraus)
+                                                             :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}])))
+                           [] rahavaraukset)
         tarjous (vec (concat tarjous rahavaraus-rivit))
         ;; Pakotetaan tässä vaiheessa kehitystä tietyt toimenkuvat. Nämä voidaan asetaa myöhemmin defaulttina jostain hallintapaneelin käyttiksestä
         ;; id 10, 'Valmistelukausi ennen urakka-ajan alkua',
@@ -48,29 +48,28 @@
         ;; id 7, 'Harjoittelija'
         toimenkuvat [
                      ;; Johto ja hallintokorvaukset eli toimenkuvat
-                     {:nimi "Valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus"  :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                     {:nimi "Valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                     {:nimi "Vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus"  :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                     {:nimi "Vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                     {:nimi "2. työnjohtaja", :osio "johto-ja-hallintokorvaus"  :toimenkuva-id 8 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                     {:nimi "2. työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 8 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                     {:nimi "3. työnjohtaja", :osio "johto-ja-hallintokorvaus"  :toimenkuva-id 9 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                     {:nimi "3. työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 9 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                     {:nimi "Viherhoidosta vastaava henkilö", :osio "johto-ja-hallintokorvaus"  :toimenkuva-id 5 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                     {:nimi "Viherhoidosta vastaava henkilö", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 5 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                     {:nimi "Harjoittelija", :osio "johto-ja-hallintokorvaus"  :toimenkuva-id 7 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+                     {:nimi "Harjoittelija", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 7 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}]
         tarjous (vec (concat tarjous (sort-by :toimenkuva-id toimenkuvat)))
         jarjestetty-tarjous (sort-by (fn [rivi] (get osiojarjestys (:osio rivi)))
-                                     tarjous)]
+                              tarjous)]
 
     jarjestetty-tarjous))
 
 (defn vuodet-tietomallista [malli]
   (reduce (fn [rivit vuosi-rivi]
-            (let [index (inc (count rivit))]
-              (concat rivit [{:vuosi (:vuosi vuosi-rivi)}])))
-          [] (:hoitovuosittaiset-arvot (first (:tarjous malli)))))
+            (concat rivit [{:vuosi (:vuosi vuosi-rivi)}]))
+    [] (:hoitovuosittaiset-arvot (first (:tarjous malli)))))
 
 (defn tarjoustietomallista-vuosittaiset-hinnat [tarjous-tietomalli vuosi]
   (apply + (mapv
@@ -164,9 +163,9 @@
                                                              nil)]
                                            (if kustannusdb
                                              (paivita-tarjouskustannus<! db (assoc kustannusdb :summa (:summa kustannus)
-                                                                                               :muokkaaja kayttaja-id))
+                                                                              :muokkaaja kayttaja-id))
                                              (tallenna-tarjouskustannus<! db (assoc kustannus :tarjous_id (:id tietokantatarjous))))))
-                                       vuosittaiset-kustannukset)
+                                   vuosittaiset-kustannukset)
                                _ (mapv
                                    (fn [toimenkuva]
                                      (let [toimenkuvadb (if (:id tarjousdb)
@@ -180,7 +179,7 @@
                                                           nil)]
                                        (if toimenkuvadb
                                          (paivita-tarjouksen-johto-ja-hallintokorvaus<! db (assoc toimenkuvadb :summa (:summa toimenkuva)
-                                                                                                               :muokkaaja kayttaja-id))
+                                                                                             :muokkaaja kayttaja-id))
                                          (tallenna-tarjouksen-johto-ja-hallintokorvaus<! db (assoc toimenkuva :tarjous_id (:id tietokantatarjous))))))
                                    vuosittaiset-toimenkuvat)]
                            {:tarjousid (:id tietokantatarjous)}))
@@ -192,11 +191,11 @@
         rivit (into [] (sort-by :vuosi (reduce (fn [r rivi]
                                                  (let [r-rivit (keep #(when (= nimi (:nimi %))
                                                                         (dissoc (merge % {:vuosi (:hoitokauden_alkuvuosi rivi)})
-                                                                                :id :nimi :osio :tehtava_id :tehtavaryhma_id :rahavaraus_id
-                                                                                :johto_ja_hallintokorvaus_toimenkuva_id))
-                                                                     (avain rivi))]
+                                                                          :id :nimi :osio :tehtava_id :tehtavaryhma_id :rahavaraus_id
+                                                                          :johto_ja_hallintokorvaus_toimenkuva_id))
+                                                                 (avain rivi))]
                                                    (vec (concat r r-rivit))))
-                                               [] tarjous-rivit)))]
+                                         [] tarjous-rivit)))]
     rivit))
 
 (defn- muodosta-tarjous-rivi [r hoitovuosittaiset-arvot]
@@ -221,7 +220,7 @@
                                     :osio "yhteensa"
                                     :yhteensa (+ (or (:yhteensa yhteenveto) 0) summa)
                                     :hoitovuosittaiset-arvot (into [] (sort-by :vuosi (conj (:hoitovuosittaiset-arvot yhteenveto) hoitovuosittaiset-arvot)))}))
-                               {} vuodet)]
+                         {} vuodet)]
     ; Lisätään yhteenvetorivi tarjoukseen
     (update tarjous :tarjous #(vec (concat % [yhteenvetorivi])))))
 
@@ -232,16 +231,16 @@
         tarjous-rivit (mapv
                         (fn [tarjous]
                           (-> tarjous
-                              (assoc :kustannukset
-                                     (mapv
-                                       (fn [k]
-                                         (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :tehtava_id :long :tehtavaryhma_id :long :rahavaraus_id :long))
-                                       (konversio/pgarray->vector (:kustannukset tarjous))))
-                              (assoc :toimenkuvat
-                                     (mapv
-                                       (fn [k]
-                                         (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :johto_ja_hallintokorvaus_toimenkuva_id :long))
-                                       (konversio/pgarray->vector (:toimenkuvat tarjous))))))
+                            (assoc :kustannukset
+                              (mapv
+                                (fn [k]
+                                  (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :tehtava_id :long :tehtavaryhma_id :long :rahavaraus_id :long))
+                                (konversio/pgarray->vector (:kustannukset tarjous))))
+                            (assoc :toimenkuvat
+                              (mapv
+                                (fn [k]
+                                  (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :johto_ja_hallintokorvaus_toimenkuva_id :long))
+                                (konversio/pgarray->vector (:toimenkuvat tarjous))))))
                         tarjous-rivit)
 
         ;; Muutetaan ui:lle välitettävään muotoon

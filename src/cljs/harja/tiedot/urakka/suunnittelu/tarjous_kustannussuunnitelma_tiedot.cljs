@@ -208,6 +208,7 @@
     (-> app
       (assoc :haku-kaynnissa? false)
       (assoc :urakan-alkuvuosi (:urakan-alkuvuosi vastaus))
+      (assoc :valittu-hoitokausi (:valittu-hoitokausi vastaus))
       (assoc :tarjous (:tarjous vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
 
