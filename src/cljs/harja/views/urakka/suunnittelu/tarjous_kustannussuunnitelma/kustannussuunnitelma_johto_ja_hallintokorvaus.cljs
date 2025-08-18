@@ -82,7 +82,7 @@
                   :luokat ["matala-panel"]
                   :voi-muokata? voi-muokata?
                   :muokattava? voi-muokata?
-                  ;:muokkaa-aina voi-muokata?
+                  :muokkaa-aina voi-muokata?
                   :voi-poistaa? (constantly false)
                   :voi-lisata? false
                   :voi-kumota? false

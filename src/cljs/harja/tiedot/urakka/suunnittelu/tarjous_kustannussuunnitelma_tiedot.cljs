@@ -517,7 +517,5 @@
 
   ToggleVetolaatikonMuokkaus
   (process-event [{:keys [tila]} app]
-    (js/console.log "ToggleVetolaatikonMuokkaus: " (pr-str tila))
     (-> app
-      (assoc :vetolaatikon-muokkaus tila)))
-  )
+      (assoc :vetolaatikon-muokkaus tila))))
