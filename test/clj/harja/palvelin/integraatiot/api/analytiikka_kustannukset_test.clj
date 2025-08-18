@@ -355,9 +355,9 @@
 
     (is (= 200 (:status vastaus)))
     (is (not (nil? (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatos :id]))))
-    #_(is (= urakoitsija-maksaa
+    (is (= urakoitsija-maksaa
             (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :urakoitsija-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
-    #_(is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
+    (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
 
 (deftest hae-kustannussuunnitelma-onnistuu-test
