@@ -54,7 +54,7 @@
      :urakka urakka-id
      :viite "12345678"
      :erapaiva erapaiva
-     :kokonaissumma 987654321
+     :kokonaissumma summa
      :tyyppi "laskutettava"
      :kohdistukset [{:kohdistus-id nil
                      :rivi 1
@@ -330,6 +330,7 @@
 
         ;; Luodaan kulu, jolla ylitetään kattohinta
         uusi-kulu (uusi-kulu-kustannukset-testiin urakka-id toteutuneet-kustannukset hoitokauden-alkuvuosi urakan-alkupvm)
+
         kulu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
                        +kayttaja-jvh+
                        {:urakka-id urakka-id
@@ -342,12 +343,6 @@
                                     ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
         db-paatos (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) kattohinnan-ylitys-paatos)
 
-        db-rivi (q-map "select * from paatos_kattohinta")
-        db-kulut (q-map (format "select * from kulu k
-        join kulu_kohdistus kk on kk.kulu=k.id
-        where k.urakka=%s" urakka-id))
-        _ (log/info "db-kulut" db-kulut)
-        _ (log/info db-rivi)
         ;; Varmista, että vastauksesta löytyy juuri luotu oikaisu
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
