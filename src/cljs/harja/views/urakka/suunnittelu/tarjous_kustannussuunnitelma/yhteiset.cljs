@@ -92,7 +92,9 @@
 
 (defn tallenna-painike-rivi [viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken? tallenna-fn jaa-tasan-fn]
   [:div.row.rivi-container
-   [:div.col-xs-12.text-right (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")
+   [:div.col-xs-12.text-right (if viimeisin-muokkaus
+                                (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")
+                                "Ei tallennettuja muutoksia")
     (when jaa-tasan-fn
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-toissijainen "Jaa tasan joka kuukaudelle"

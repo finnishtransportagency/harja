@@ -1,8 +1,8 @@
 (ns harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-johto-ja-hallintokorvaus
   "Tämä komponentti näyttää Johto- ja hallintokorvaukset kustannussuunnitelmassa.
   Johto- ja hallintokorvaukset koostuvat toimenkuvista, joiden syöttämisen tarkkuus vaihtelee urakan alkuvuoden perusteella.
-  -19 - 22 vuosina alkavat urakat syöttävät tunnit ja tuntihinnat jokaiselle toimenkuvalle.
-  -23 - 24 vuosina alkavat urakat syöttävät kuukausisumman toimenkuvalle.
+  -19 - 21 vuosina alkavat urakat syöttävät tunnit ja tuntihinnat jokaiselle toimenkuvalle.
+  -22 - 24 vuosina alkavat urakat syöttävät kuukausisumman toimenkuvalle.
   -25 ja sitä myöhemmät urakat syöttävät vain kuukausisumman.
   Käyttöliittymä yksinkertaistuu vuosien myötä, koska tarkkuus vähenee.
   "
@@ -15,57 +15,17 @@
             [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as kust-tiedot]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset :as yhteiset]))
 
-(defn toimenkuvat-vetolaatikko
-  "Anna parametrina valittu toimenkuva sekä kaikki mahdolliset kuukaudet, joita voidaan muokata."
-  [e! vetolaatikon-muokkaus toimenkuva-id kuukaudet]
-  (let [vahvistettu? true
-        voi-muokata? true]
-    [:div.col-md-8
-
-     [:div
-      [kentat/tee-kentta {:tyyppi :checkbox
-                          :teksti "Suunnittele kuukausittain"
-                          :disabled? vahvistettu?
-                          :valitse! #(do (js/console.log "Checkbox painettu")
-                                       (e! (kust-tiedot/->ToggleVetolaatikonMuokkaus (-> % .-target .-checked))))}
-       vetolaatikon-muokkaus]
-      [:div.vetolaatikko-border {:style {:border-left "4px solid lightblue" :margin-top "16px" :padding-left "18px"}}
-       [grid/grid {:otsikko ""
-                   :luokat ["matala-panel"]
-                   :muokkaa-aina voi-muokata?
-                   :voi-muokata? voi-muokata?
-                   :muokattava? (constantly voi-muokata?)
-                   :voi-poistaa? (constantly false)
-                   :voi-lisata? false
-                   :voi-kumota? false
-                   :piilota-toiminnot? false
-                   :tunniste (fn [rivi]
-                               (js/console.log "toimenkuvat-vetolaatikko tunniste rivi" (pr-str rivi))
-                               (str (:kalenterikuukausi rivi) - (:toimenkuva-id rivi)))
-                   :muutos #(do
-                              (reset! yhteiset/tallenna-painettu false)
-                              (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom (vals (grid/hae-muokkaustila %)))
-                              (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset (vals (grid/hae-muokkaustila %))))
-                              (reset! yhteiset/virheet-atom (grid/hae-virheet %)))
-                   :rivin-luokka (fn [_] "korkea")}
-        [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "60%"
-          :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-         {:otsikko "Suunniteltu määrä (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
-          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}]
-        kuukaudet]]]]))
-
-(defn toimenkuvat-vetolaatikko-2019
+(defn toimenkuvat-vetolaatikko-2022
   "Anna parametrina valittu toimenkuva sekä kaikki mahdolliset kuukaudet, joita voidaan muokata."
   [e! vetolaatikon-muokkaus toimenkuva-id kuukaudet vahvistettu?]
-  (let [voi-muokata? (and (not vahvistettu?) vetolaatikon-muokkaus)
-        _ (js/console.log "toimenkuvat-vetolaatikko-2019 :: voi-muokata?" voi-muokata?)]
+  (let [voi-muokata? (and (not vahvistettu?) vetolaatikon-muokkaus)]
     [:div
      [kentat/tee-kentta {:tyyppi :checkbox
                          :teksti "Suunnittele kuukausittain"
                          :disabled? vahvistettu?
                          :valitse! #(e! (kust-tiedot/->ToggleVetolaatikonMuokkaus (-> % .-target .-checked)))}
       vetolaatikon-muokkaus]
-     [:div.vetolaatikko-border {:style {:border-left "4px solid lightblue" :margin-top "16px" :padding-left "18px"}}
+     [:div.vetolaatikko-border {:style {:border-left "4px solid lightblue" :padding-left "18px"}}
       [grid/grid {:otsikko ""
                   :luokat ["matala-panel"]
                   :voi-muokata? voi-muokata?
@@ -87,7 +47,57 @@
                                   ;; Lasketaan suunniteltu määrä uusiksi.
                                   kuukaudet (vals (grid/hae-muokkaustila tila))
                                   kuukaudet (map (fn [rivi]
-                                                   (js/console.log "muokataan kuukaudet :: rivi" (pr-str rivi))
+                                                   (assoc rivi :yhteensa-kk (* (if (:tuntipalkka rivi) (:tuntipalkka rivi) 0) (if (:tunnit rivi) (:tunnit rivi) 0))))
+                                              kuukaudet)
+                                  suunniteltu-yht (apply + (map #(if (and (:tuntipalkka %) (:tunnit %)) (* (:tunnit %) (:tuntipalkka %)) 0) kuukaudet))
+                                  toimenkuva (assoc toimenkuva
+                                               :kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
+                                               :summa suunniteltu-yht
+                                               :summa-indeksikorjattu nil) ;; indeksikorjaus lasketaan bäckendissä
+                                  _ (reset! yhteiset/tallenna-painettu false)
+                                  uudet-toimenkuvat (sort-by :id (conj toimenkuvat-ilman-muutettavaa toimenkuva))
+                                  _ (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom uudet-toimenkuvat)
+                                  _ (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset uudet-toimenkuvat))
+                                  _ (reset! yhteiset/virheet-atom (grid/hae-virheet tila))]))
+                  :rivin-luokka (fn [_] "korkea")}
+       [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "70%"
+         :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+        {:otsikko "Suunniteltu määrä (€)" :nimi :tuntipalkka :leveys "30%" :tyyppi :euro :tasaa :oikea
+         :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}]
+       kuukaudet]]]))
+
+(defn toimenkuvat-vetolaatikko-2019
+  "Anna parametrina valittu toimenkuva sekä kaikki mahdolliset kuukaudet, joita voidaan muokata."
+  [e! vetolaatikon-muokkaus toimenkuva-id kuukaudet vahvistettu?]
+  (let [voi-muokata? (and (not vahvistettu?) vetolaatikon-muokkaus)]
+    [:div
+     [kentat/tee-kentta {:tyyppi :checkbox
+                         :teksti "Suunnittele kuukausittain"
+                         :disabled? vahvistettu?
+                         :valitse! #(e! (kust-tiedot/->ToggleVetolaatikonMuokkaus (-> % .-target .-checked)))}
+      vetolaatikon-muokkaus]
+     [:div.vetolaatikko-border {:style {:border-left "4px solid lightblue" :padding-left "18px"}}
+      [grid/grid {:otsikko ""
+                  :luokat ["matala-panel"]
+                  :voi-muokata? voi-muokata?
+                  :muokattava? voi-muokata?
+                  ;:muokkaa-aina voi-muokata?
+                  :voi-poistaa? (constantly false)
+                  :voi-lisata? false
+                  :voi-kumota? false
+                  :piilota-toiminnot? true
+                  :tunniste (fn [rivi]
+                              (str (:kalenterikuukausi rivi) "-" toimenkuva-id))
+                  :muutos (fn [tila]
+                            (let [toimenkuva (first (filter
+                                                      #(= toimenkuva-id (:id %))
+                                                      @yhteiset/grid-johto-ja-hallintokorvaukset-atom))
+                                  toimenkuvat-ilman-muutettavaa (remove
+                                                                  #(= toimenkuva-id (:id %))
+                                                                  @yhteiset/grid-johto-ja-hallintokorvaukset-atom)
+                                  ;; Lasketaan suunniteltu määrä uusiksi.
+                                  kuukaudet (vals (grid/hae-muokkaustila tila))
+                                  kuukaudet (map (fn [rivi]
                                                    (assoc rivi :yhteensa-kk (* (if (:tuntipalkka rivi) (:tuntipalkka rivi) 0) (if (:tunnit rivi) (:tunnit rivi) 0))))
                                               kuukaudet)
                                   suunniteltu-yht (apply + (map #(if (and (:tuntipalkka %) (:tunnit %)) (* (:tunnit %) (:tuntipalkka %)) 0) kuukaudet))
@@ -177,62 +187,23 @@
          [:div.col-xs-12.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]
         (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
           #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi))
-          #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti")))])
+          (when (>= urakan-alkuvuosi 2025) #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti"))))])
 
      [:div.row
       [:div.col-xs-12
        ;; 2019 - 2021
        ;;TODO: Laita urakka_parametrit tauluun tieto, että onko tunnit ja tuntipalkat vai kuukausisumma
        (when (<= urakan-alkuvuosi 2021)
-         [:div (str "(<= urakan-alkuvuosi 2021) :: nyt:" urakan-alkuvuosi)
-
-          [grid/grid {:otsikko ""
-                      :luokat ["matala-panel"]
-                      ;:muokkaa-aina voi-muokata?
-                      :voi-muokata? voi-muokata?
-                      :muokattava? (constantly voi-muokata?)
-                      :voi-poistaa? (constantly false)
-                      :voi-lisata? false
-                      :voi-kumota? false
-                      :piilota-toiminnot? false
-                      :tunniste :id
-                      :muutos #(do
-                                 (reset! yhteiset/tallenna-painettu false)
-                                 (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom (vals (grid/hae-muokkaustila %)))
-                                 (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset (vals (grid/hae-muokkaustila %))))
-                                 (reset! yhteiset/virheet-atom (grid/hae-virheet %)))
-                      ;; Lisätään yhteenveto rivi gridin päätteeksi
-                      :rivi-jalkeen-fn (fn [rivit]
-                                         ^{:luokka "yhteenveto"}
-                                         yhteenveto-rivi)
-                      :rivin-luokka (fn [_] "korkea")
-                      :vetolaatikot (into {}
-                                      (map (juxt :id (fn [rivi] [toimenkuvat-vetolaatikko-2019 e! (:vetolaatikon-muokkaus app) (:id rivi) (:kuukaudet rivi) vahvistettu?]))
-                                        johto-ja-hallintokorvaukset))}
-           [{:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
-            {:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :leveys "60%"
-             :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-            {:otsikko "Tarjouksen määrä (€)" :nimi :tarjous-summa :leveys "20%" :tyyppi :euro :tasaa :oikea
-             :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-            {:otsikko "Suunniteltu määrä (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
-             :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
-            {:otsikko "kk/v" :nimi :kkv :leveys "20%" :tyyppi :euro :tasaa :oikea
-             :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
-           johto-ja-hallintokorvaukset]
-
-          ])
-       ;; 2022 - 2024 asti
-       (when (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024))
          [grid/grid {:otsikko ""
                      :luokat ["matala-panel"]
-                     :muokkaa-aina voi-muokata?
+                     ;:muokkaa-aina voi-muokata?
                      :voi-muokata? voi-muokata?
                      :muokattava? (constantly voi-muokata?)
                      :voi-poistaa? (constantly false)
                      :voi-lisata? false
                      :voi-kumota? false
                      :piilota-toiminnot? false
-                     :tunniste :kalenterikuukausi
+                     :tunniste :id
                      :muutos #(do
                                 (reset! yhteiset/tallenna-painettu false)
                                 (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom (vals (grid/hae-muokkaustila %)))
@@ -244,15 +215,50 @@
                                         yhteenveto-rivi)
                      :rivin-luokka (fn [_] "korkea")
                      :vetolaatikot (into {}
-                                     (map (juxt :id (fn [rivi] [toimenkuvat-vetolaatikko e! (:vetolaatikon-muokkaus app) (:id rivi) (:kuukaudet rivi) johto-ja-hallintokorvaukset]))
+                                     (map (juxt :id (fn [rivi] [toimenkuvat-vetolaatikko-2019 e! (:vetolaatikon-muokkaus app) (:id rivi) (:kuukaudet rivi) vahvistettu?]))
                                        johto-ja-hallintokorvaukset))}
           [{:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :leveys "60%"
             :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
            {:otsikko "Tarjouksen määrä (€)" :nimi :tarjous-summa :leveys "20%" :tyyppi :euro :tasaa :oikea
+            :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Vuosipalkka, €" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
             :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
-           {:otsikko "Suunniteltu määrä (€)" :nimi :suunniteltu-summa :leveys "20%" :tyyppi :euro :tasaa :oikea
-            :fmt #(if-not (= 0 yht-indeksikorjattu) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
+           {:otsikko "kk/v" :nimi :kkv :leveys "20%" :tyyppi :euro :tasaa :oikea
+            :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
+          johto-ja-hallintokorvaukset])
+       ;; 2022 - 2024 asti
+       (when (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024))
+         [grid/grid {:otsikko ""
+                     :luokat ["matala-panel"]
+                     ;:muokkaa-aina voi-muokata?
+                     :voi-muokata? voi-muokata?
+                     :muokattava? (constantly voi-muokata?)
+                     :voi-poistaa? (constantly false)
+                     :voi-lisata? false
+                     :voi-kumota? false
+                     :piilota-toiminnot? false
+                     :tunniste :id
+                     :muutos #(do
+                                (reset! yhteiset/tallenna-painettu false)
+                                (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom (vals (grid/hae-muokkaustila %)))
+                                (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset (vals (grid/hae-muokkaustila %))))
+                                (reset! yhteiset/virheet-atom (grid/hae-virheet %)))
+                     ;; Lisätään yhteenveto rivi gridin päätteeksi
+                     :rivi-jalkeen-fn (fn [rivit]
+                                        ^{:luokka "yhteenveto"}
+                                        yhteenveto-rivi)
+                     :rivin-luokka (fn [_] "korkea")
+                     :vetolaatikot (into {}
+                                     (map (juxt :id (fn [rivi] [toimenkuvat-vetolaatikko-2022 e! (:vetolaatikon-muokkaus app) (:id rivi) (:kuukaudet rivi) vahvistettu?]))
+                                       johto-ja-hallintokorvaukset))}
+          [{:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
+           {:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :leveys "50%"
+            :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Tarjouksen määrä (€)" :nimi :tarjous-summa :leveys "25%" :tyyppi :euro :tasaa :oikea
+            :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Suunniteltu määrä (€)" :nimi :summa :leveys "25%" :tyyppi :euro :tasaa :oikea
+            :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
           johto-ja-hallintokorvaukset])
 
        ;-25 eteenäin
@@ -295,4 +301,4 @@
 
         (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
           #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi))
-          #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti")))])]))
+          (when (>= urakan-alkuvuosi 2025) #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti"))))])]))

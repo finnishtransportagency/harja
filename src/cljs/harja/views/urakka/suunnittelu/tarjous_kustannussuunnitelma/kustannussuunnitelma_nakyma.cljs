@@ -464,9 +464,9 @@
                                      :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
         hoitokaudet]]]
 
-     ;[kilpailutettavat-hankinnat e! app]
-     ;[rahavaraukset e! app]
-     ;[erillishankinnat e! app]
+     [kilpailutettavat-hankinnat e! app]
+     [rahavaraukset e! app]
+     [erillishankinnat e! app]
      [jjh/johto-ja-hallintokorvaus e! app]
 
      [hoidonjohtopalkkiot e! app]
