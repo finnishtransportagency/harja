@@ -10,5 +10,6 @@
   poista-kulun-kohdistukset! hae-kulut-kohdistuksineen-tietoineen-vientiin
   hae-urakan-kulut-kohdistuksineen hae-tehtavan-nimi hae-tehtavaryhman-nimi luo-kulun-kohdistus<!
   paivita-kulun-kohdistus<! hae-pvm-laskun-numerolla poista-kulun-kohdistus!
-  hae-tehtavaryhman-tiedot-tunnisteella hae-urakan-hoidon-johdon-toimenpideinstanssi)
+  hae-tehtavaryhman-tiedot-tunnisteella hae-urakan-hoidon-johdon-toimenpideinstanssi
+  hae-toteutuneet-kustannukset-analytiikalle)
 
