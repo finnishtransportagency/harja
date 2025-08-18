@@ -82,7 +82,7 @@
 
         ;; Luodaan kulu, joka on pakko löytyä aineistosta
         kulu-summa 987654321M
-        uusi-kulu (uusi-kulu-kustannukset-testiin urakka-id kulu-summa 2024 urakan-alkupvm)
+        uusi-kulu (uusi-kulu-kustannukset-testiin urakka-id kulu-summa 2023 urakan-alkupvm)
         _ (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
             +kayttaja-jvh+
             {:urakka-id urakka-id
@@ -115,9 +115,9 @@
     (is (= 200 (:status vastaus)))
     (is (= (:kulun-kokonaissumma juuri-luotu-kulu-kannasta)
           (bigdec (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-kokonaissumma]))) "Tietokannan ja rajapinnan kulu ei täsmää.")
-    (is (= 2024 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-vuosi])))
-    (is (= 8 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-kuukausi])))
-    (is (= "2024-08-01T21:00:00Z" (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :laskun-paivamaara])))
+    (is (= 2023 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-vuosi])))
+    (is (= 11 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-kuukausi])))
+    (is (= "2023-10-31T22:00:00Z" (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :laskun-paivamaara])))
     (is (= true (get-in (first (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulukohdistukset])) [:kulukohdistus :tavoitehintainen])) "Tavoitehintaisuus ei palaudu oikein.")
     (is (= (count kulut-kannasta) (count (get-in encoodattu-body [:toteutuneet-kustannukset :kulut]))))))
 
