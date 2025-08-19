@@ -33,8 +33,7 @@
                            (if (and (:tuntipalkka rivi) (:tunnit rivi))
                              (* (:tuntipalkka rivi) (:tunnit rivi))
                              0))
-                         johto-ja-hallintokorvaukset))
-        _ (println "laske-2019-jjh-yhteen :: summa:" summa)]
+                         johto-ja-hallintokorvaukset))]
     summa))
 
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]

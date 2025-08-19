@@ -416,8 +416,8 @@
                      :tallenna-johto-ja-hallintokorvaukset-2019
                      :tallenna-johto-ja-hallintokorvaukset-2025)
           avain (if (<= urakan-alkuvuosi 2024)
-                     :johto-ja-hallintokorvaukset-2019
-                     :johto-ja-hallintokorvaukset-2025)]
+                  :johto-ja-hallintokorvaukset-2019
+                  :johto-ja-hallintokorvaukset-2025)]
       (tuck-apurit/post! endpoint
         {:urakka-id (-> @tila/yleiset :urakka :id)
          :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))

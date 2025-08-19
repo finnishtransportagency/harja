@@ -258,6 +258,9 @@
                                                                      kuukaudet))
                                     toimenkuva (assoc toimenkuva :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
                                                  :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
+                                                 :tuntipalkka (:tuntipalkka (first kuukaudet))
+                                                 :tunnit (apply + (map (fn [rivi] (or (:tunnit rivi) 0)) kuukaudet))
+                                                 :yhteensa-kk (* (or (:tuntipalkka (first kuukaudet)) 0) (or (:tunnit (first kuukaudet)) 0))
                                                  :summa summa
                                                  :summa-indeksikorjattu summa-indeksikorjattu)]
                                 (conj kuvat toimenkuva)))
