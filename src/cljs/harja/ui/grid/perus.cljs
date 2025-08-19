@@ -483,6 +483,11 @@
                          (peru!))}
          [ui-ikonit/ikoni-ja-teksti [ui-ikonit/kumoa] " Kumoa"]])
 
+      (when custom-toiminto
+        [napit/nappi (:teksti custom-toiminto)
+         (:toiminto custom-toiminto)
+         (:opts custom-toiminto)])
+
       (when-not (= false voi-lisata?)
         [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
                                                                (lisaa-rivi! ohjaus {}))}

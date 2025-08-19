@@ -301,6 +301,7 @@
 
   KopioiPysyvaMuutosTulevilleHoitovuosille
   (process-event [{hoitovuosi :hoitovuosi rivit :rivit} app]
+    (prn "Tämä on vielä tekemättä")
     ;; TODO: tässä hanskattava muutosten kopiointi tuleville hoitovuosille...
     app)
 
