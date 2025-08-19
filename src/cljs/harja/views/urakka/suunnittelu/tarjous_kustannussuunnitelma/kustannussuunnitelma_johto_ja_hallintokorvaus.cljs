@@ -107,7 +107,7 @@
                                                            (and (= (:kuukausi rivi) (:kuukausi kuukausi))
                                                              (= (:vuosi rivi) (:vuosi kuukausi))))
                                                          (:kuukaudet toimenkuva))
-                              
+
                               valittu-kuukausi (assoc valittu-kuukausi :tunnit (:tunnit rivi))
                               uudet-kuukaudet (sort-by :vuosi :kuukausi (conj kuukaudet-ilman-valittua valittu-kuukausi))
 
@@ -156,37 +156,38 @@
         kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (cond (and (<= urakan-alkuvuosi 2021) (not vahvistettu?))
                            [^{:luokka "kustannukset-yhteenveto"}
-                            {:teksti "" :luokka kirjaamatta-luokka}
                             {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
                             {:teksti "" :luokka kirjaamatta-luokka}
+                            {:teksti "" :luokka kirjaamatta-luokka}
+                            {:teksti "" :luokka kirjaamatta-luokka}
                             {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                            {:teksti "" :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
+                            {:teksti "" :luokka kirjaamatta-luokka}]
                            (and (>= urakan-alkuvuosi 2025) (not vahvistettu?))
                            [^{:luokka "kustannukset-yhteenveto"}
                             {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
                             {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                             {:teksti "" :luokka kirjaamatta-luokka}])
-        yhteenveto-rivi (cond
-                          ;; 2019 - 2021
-                          (<= urakan-alkuvuosi 2021) [[^{:luokka "kustannukset-yhteenveto"}
-                                                       {:teksti "" :luokka "yhteensa"}
-                                                       {:teksti "Yhteensä 2021" :luokka "yhteensa"}
-                                                       {:teksti (fmt/euro-opt false tarjouksen-maara) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                                                       {:teksti (if-not (= 0 yht)
-                                                                  (fmt/euro-opt false yht)
-                                                                  "-")
-                                                        :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                                                       {:teksti "" :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
-                                                      kirjaamatta-rivi]
-                          ;; 2025 ->
-                          (>= urakan-alkuvuosi 2025) [[^{:luokka "kustannukset-yhteenveto"}
-                                                       {:teksti "Yhteensä 2025" :luokka "yhteensa"}
-                                                       {:teksti (fmt/euro-opt false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                                                       {:teksti (if-not (= 0 yht-indeksikorjattu)
-                                                                  (fmt/euro-opt false yht-indeksikorjattu)
-                                                                  "-")
-                                                        :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
-                                                      kirjaamatta-rivi])
+        yhteenveto-rivi (cond (and (<= urakan-alkuvuosi 2021) (not vahvistettu?))
+                          [^{:luokka "kustannukset-yhteenveto"}
+                           {:teksti "Yhteensä 2021" :luokka "yhteensa"}
+                           {:teksti "" :luokka "yhteensa"}
+                           {:teksti "" :luokka "yhteensa"}
+                           {:teksti "" :luokka "yhteensa"}
+                           #_ {:teksti (fmt/euro-opt false tarjouksen-maara) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                           {:teksti (if-not (= 0 yht)
+                                      (fmt/euro-opt false yht)
+                                      "-")
+                            :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                           {:teksti "" :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
+                          (>= urakan-alkuvuosi 2025)
+                          [^{:luokka "kustannukset-yhteenveto"}
+                           {:teksti "Yhteensä 2025" :luokka "yhteensa"}
+                           {:teksti (fmt/euro-opt false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                           {:teksti (if-not (= 0 yht-indeksikorjattu)
+                                      (fmt/euro-opt false yht-indeksikorjattu)
+                                      "-")
+                            :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}])
+        yhteenveto-rivit [yhteenveto-rivi kirjaamatta-rivi]
         _ (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom johto-ja-hallintokorvaukset)
         muokkaus-toimenkuvat (into {} (mapv (fn [toimenkuva]
                                               {(:toimenkuva toimenkuva) toimenkuva})
@@ -258,7 +259,9 @@
                            (map (juxt :toimenkuva (fn [rivi] [toimenkuvat-vetolaatikko-2019 e! (:vetolaatikon-muokkaus app) (:id rivi) (:kuukaudet rivi) vahvistettu?]))
                              johto-ja-hallintokorvaukset))
 
-           :vetolaatikko-optiot {:ei-paddingia true}}
+           :vetolaatikko-optiot {:ei-paddingia true}
+           ;; Lisätään yhteenveto rivi gridin päätteeksi
+           :rivi-jalkeen yhteenveto-rivit #_  kirjaamatta-rivi #_ yhteenveto-rivit}
           [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :leveys "35%"
             :muokattava? (constantly false) :otsikkorivi-luokka "korkea" :fmt #(when % (str/capitalize %))}
            {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
@@ -294,7 +297,7 @@
                      ;; Lisätään yhteenveto rivi gridin päätteeksi
                      :rivi-jalkeen-fn (fn [rivit]
                                         ^{:luokka "yhteenveto"}
-                                        yhteenveto-rivi)
+                                        yhteenveto-rivit)
                      :rivin-luokka (fn [_] "korkea")
                      :vetolaatikot (into {}
                                      (map (juxt :id (fn [rivi] [toimenkuvat-vetolaatikko-2022 e! (:vetolaatikon-muokkaus app) (:id rivi) (:kuukaudet rivi) vahvistettu?]))
@@ -328,7 +331,7 @@
                      ;; Lisätään yhteenveto rivi gridin päätteeksi
                      :rivi-jalkeen-fn (fn [rivit]
                                         ^{:luokka "yhteenveto"}
-                                        yhteenveto-rivi)
+                                        yhteenveto-rivit)
                      :rivin-luokka (fn [_] "korkea")}
           [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "60%"
             :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
