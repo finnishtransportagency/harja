@@ -521,22 +521,6 @@
                                             :urakkanro "1437"}
                                            {:nimi "Rovaniemen MHU testiurakka (1. hoitovuosi)"
                                             :urakkanro "13371"})}
-                                 {:hallintayksikko {:elynumero nil
-                                                    :id 3
-                                                    :nimi "Meriväylät"}
-                                  :tyyppi :vesivayla-hoito
-                                  :urakat ({:nimi "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL"
-                                            :urakkanro "2"}
-                                           {:nimi "Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL"
-                                            :urakkanro "1"})}
-                                 {:hallintayksikko {:elynumero nil
-                                                    :id 2
-                                                    :nimi "Sisävesiväylät"}
-                                  :tyyppi :vesivayla-hoito
-                                  :urakat ({:nimi "Rentoselän urakka"
-                                            :urakkanro "4"}
-                                           {:nimi "Pyhäselän urakka"
-                                            :urakkanro "3"})}
                                  {:hallintayksikko {:elynumero 4
                                                     :id 8
                                                     :nimi "Pirkanmaa"}

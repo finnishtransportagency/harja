@@ -45,7 +45,8 @@
                                                                        :nimi nimi
                                                                        :alkupvm alkupvm
                                                                        :loppupvm loppupvm
-                                                                       :paasopimus paasopimus-id})]))
+                                                                       :paasopimus paasopimus-id})]
+    harjassa-luotu-sopimus))
 
 (defn luo-uusi-sopimus! [db user sopimus]
   (let [nimi (::sopimus/nimi sopimus)
@@ -56,7 +57,8 @@
                                                                    :nimi nimi
                                                                    :alkupvm alkupvm
                                                                    :loppupvm loppupvm
-                                                                   :paasopimus paasopimus-id})]))
+                                                                   :paasopimus paasopimus-id})]
+    harjassa-luotu-sopimus))
 
 (defn tallenna-sopimus [db user sopimus]
   (when (ominaisuus-kaytossa? :vesivayla)

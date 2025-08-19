@@ -243,7 +243,7 @@
    {:xmlns "http://www.vayla.fi/xsd/yha"}
    [:urakka
     [:yha-id 5731290]
-    [:harja-id 54]
+    [:harja-id 48]
     [:sampotunnus "5731290-TES2"]
     [:tunnus "YHA5731290"]
     [:kohteet

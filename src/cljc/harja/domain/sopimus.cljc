@@ -64,7 +64,8 @@
 ;; Haut
 
 (s/def ::hae-harjassa-luodut-sopimukset-vastaus
-  (s/coll-of (s/keys :req [::id ::nimi ::reimari-diaarinro ::alkupvm ::loppupvm ::paasopimus-id])))
+  (s/coll-of (s/keys :req [::id ::nimi ::alkupvm ::loppupvm ::paasopimus-id]
+               :opt [::reimari-diaarinro])))
 
 (s/def ::hae-vesivayla-kanavien-hoito-sopimukset-vastaus
   (s/coll-of (s/keys :req [::id ::tyyppi ::nimi ::alkupvm ::loppupvm])))
@@ -75,4 +76,5 @@
                                    :req [::nimi ::alkupvm ::loppupvm]
                                    :opt [::id ::reimari-diaarinro ::paasopimus-id]))
 
-(s/def ::tallenna-sopimus-vastaus (s/keys :req [::id ::nimi ::reimari-diaarinro ::alkupvm ::loppupvm ::paasopimus-id]))
+(s/def ::tallenna-sopimus-vastaus (s/keys :req [::id ::nimi ::alkupvm ::loppupvm ::paasopimus-id]
+                                    :opt [::reimari-diaarinro]))

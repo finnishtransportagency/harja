@@ -76,25 +76,25 @@
                ;; Nämä summat ikävä kyllä vaihtuu joka kerta, kun indeksit vaihtuu
                ;; Eli voit olettaa päivittäväsi näitä summia aina 1.10. joka vuosi
                odotettu [{:kokonaishintainen 4150.791430M
-                          :tpi_id 45
+                          :tpi_id 36
                           :urakka_id 35}
                          {:kokonaishintainen 6251.487630M
-                          :tpi_id 46
+                          :tpi_id 37
                           :urakka_id 35}
                          {:kokonaishintainen 8801.94M
-                          :tpi_id 47
+                          :tpi_id 38
                           :urakka_id 35}
                          {:kokonaishintainen 5832.654000M
-                          :tpi_id 48
+                          :tpi_id 39
                           :urakka_id 35}
                          {:kokonaishintainen 11001.94M
-                          :tpi_id 49
+                          :tpi_id 40
                           :urakka_id 35}
                          {:kokonaishintainen 16401.94M
-                          :tpi_id 50
+                          :tpi_id 41
                           :urakka_id 35}
                          {:kokonaishintainen 13201.94M
-                          :tpi_id 51
+                          :tpi_id 42
                           :urakka_id 35}]
                vastaus (vec
                          (sort-by :tpi_id

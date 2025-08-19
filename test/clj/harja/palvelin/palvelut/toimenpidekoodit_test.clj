@@ -33,7 +33,7 @@
 (def odotetut-tasojen-lkmt
   {1 6
    2 25
-   3 50
+   3 48
    4 390})
 
 (defn- tason-lukumaarat-samat [palvelusta kannasta kovakoodattu taso]

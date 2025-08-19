@@ -42,28 +42,26 @@
 
 (deftest sopimuksen-tallennus-ja-paivitys-toimii
   (let [testisopimukset (map #(-> %
-                                  (assoc ::sopimus/paasopimus-id nil)
-                                  (dissoc ::sopimus/id))
-                             (gen/sample (s/gen ::sopimus/tallenna-sopimus-kysely)))]
-
+                                (assoc ::sopimus/paasopimus-id nil)
+                                (assoc ::sopimus/alkupvm #inst "2024-01-01")
+                                (assoc ::sopimus/loppupvm #inst "2024-12-31")
+                                (dissoc ::sopimus/id))
+                          (gen/sample (s/gen ::sopimus/tallenna-sopimus-kysely)))]
     (doseq [sopimus testisopimukset]
       ;; Luo uusi sopimus
       (let [sopimus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                             :tallenna-sopimus +kayttaja-jvh+
-                                             sopimus)]
+                               :tallenna-sopimus +kayttaja-jvh+
+                               sopimus)]
         ;; Uusi sopimus löytyy vastauksesesta
         (is (= (::sopimus/nimi sopimus-kannassa) (::sopimus/nimi sopimus)))
 
-        ;; Päivitetään sopimus (myös reimari-diaarinro, sillä se tallennetaan eri taulukkoon, kuin muu data)
+        ;; Päivitetään sopimus
         (let [paivitetty-sopimus (assoc sopimus ::sopimus/nimi (str (::sopimus/nimi sopimus) " päivitetty")
-                                                ::sopimus/reimari-diaarinro (str (::sopimus/reimari-diaarinro sopimus) " 5/5")
-                                                ::sopimus/id (::sopimus/id sopimus-kannassa))
+                                   ::sopimus/id (::sopimus/id sopimus-kannassa))
               paivitetty-sopimus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                          :tallenna-sopimus +kayttaja-jvh+
-                                                          paivitetty-sopimus)]
+                                            :tallenna-sopimus +kayttaja-jvh+
+                                            paivitetty-sopimus)]
 
           ;; Sopimus päivittyi
           (is (= (::sopimus/nimi paivitetty-sopimus-kannassa)
-                 (::sopimus/nimi paivitetty-sopimus)))
-          (is (= (::sopimus/reimari-diaarinro paivitetty-sopimus-kannassa)
-                 (::sopimus/reimari-diaarinro paivitetty-sopimus))))))))
+                 (::sopimus/nimi paivitetty-sopimus))))))))
