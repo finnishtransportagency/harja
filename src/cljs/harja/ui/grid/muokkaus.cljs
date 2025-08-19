@@ -458,12 +458,12 @@
                                                                 :disabloi-autocomplete? disabloi-autocomplete?
                                                                 :on-rivi-focus on-rivi-focus
                                                                 :nayta-virheikoni? nayta-virheikoni?}]
-^{:key (str i "-" id "veto")}
+                                                 ^{:key (str i "-" id "veto")}
                                                  [vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan vetolaatikko-optiot]]))]
                         (recur (inc i)
-                               loput-rivit
-                               (map second (rest loput-rivit))
-                               (concat muokkausrivit (piilota-rivi-fn muokkausrivi))))))))))
+                          loput-rivit
+                          (map second (rest loput-rivit))
+                          (concat muokkausrivit (piilota-rivi-fn muokkausrivi))))))))))
            ;; Lisätään rivi-jalkeen eli yhteenvetorivi
            (when rivi-jalkeen
              [:tr {:class (:luokka (meta rivi-jalkeen))}
@@ -505,7 +505,7 @@
   Optiot on mappi optioita:
   :id                             grid pääelementin DOM id
   :otsikko                        h2 teksti taulukon yläpuolelle
-  :otsikko-tyyli                    vapaaehtoinen tyyli otsikolle anna muodossa {:font-size \"1.2rem\"}
+  :otsikko-tyyli                  vapaaehtoinen tyyli otsikolle anna muodossa {:font-size \"1.2rem\"}
   :muokkaa-footer                 optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
   :muutos                         jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                                   Parametrina Grid ohjauskahva
