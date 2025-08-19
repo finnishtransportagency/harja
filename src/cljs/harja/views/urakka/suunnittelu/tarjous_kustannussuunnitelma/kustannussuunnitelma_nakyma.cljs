@@ -468,7 +468,6 @@
      [rahavaraukset e! app]
      [erillishankinnat e! app]
      [jjh/johto-ja-hallintokorvaus e! app]
-
      [hoidonjohtopalkkiot e! app]
      [tavoite-ja-kattohinta e! app]
      [debug/debug app]]))

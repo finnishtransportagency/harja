@@ -466,7 +466,6 @@
                           (concat muokkausrivit (piilota-rivi-fn muokkausrivi))))))))))
            ;; Lisätään rivi-jalkeen eli yhteenvetorivi
            (when (and rivi-jalkeen (not (vector? (first rivi-jalkeen))))
-             (js/console.log "rivi-jalkeen1" (pr-str rivi-jalkeen))
              [:tr {:class (:luokka (meta rivi-jalkeen))}
               (for* [{:keys [teksti sarakkeita luokka tasaa]} rivi-jalkeen]
                 [:td {:colSpan (or sarakkeita 1) :class luokka}
