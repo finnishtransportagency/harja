@@ -379,7 +379,6 @@
                                        :pvm #inst"2025-10-15T00:00:00.000-00:00"
                                        :tavoitehinnan-muutos 1230}]
                               :liitteet nil
-                              :toimenpiteiden-tiedot nil
                               :tyyppi "johto-ja-hallintokorvaus"
                               :versio 1}]
     (is (= vastaus odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
@@ -406,24 +405,28 @@
                               :toimenpiteiden-tiedot [{:budjetoidut_summat (list {:budjetoitu_summa 12000
                                                                                   :hoitokauden_alkuvuosi 2025})
                                                        :id (:id muutos)
-                                                       :kustannusvaikutukset nil
-                                                       :tehtavat_ja_maarat nil
+                                                       :kustannusvaikutukset (list)
+                                                       :tehtavat_ja_maarat (list)
                                                        :toimenpide "Talvihoito"
                                                        :toimenpideinstanssi tpi-id-talvihoito}
                                                       {:budjetoidut_summat (list {:budjetoitu_summa 9600
                                                                                   :hoitokauden_alkuvuosi 2025})
                                                        :id (:id muutos)
-                                                       :kustannusvaikutukset nil
-                                                       :tehtavat_ja_maarat nil
+                                                       :kustannusvaikutukset (list)
+                                                       :tehtavat_ja_maarat (list)
                                                        :toimenpide "Liikenneympäristön hoito"
                                                        :toimenpideinstanssi tpi-id-liikymp}
                                                       {:budjetoidut_summat nil
                                                        :id (:id muutos)
-                                                       :kustannusvaikutukset nil
-                                                       :tehtavat_ja_maarat nil
+                                                       :kustannusvaikutukset (list)
+                                                       :tehtavat_ja_maarat (list)
                                                        :toimenpide "Sorateiden hoito"
                                                        :toimenpideinstanssi tpi-id-soratiet}
-                                                      {:budjetoidut_summat nil
+                                                      {:budjetoidut_summat  (list
+                                                                              {:budjetoitu_summa 120000
+                                                                               :hoitokauden_alkuvuosi 2025}
+                                                                              {:budjetoitu_summa 120000
+                                                                               :hoitokauden_alkuvuosi 2026})
                                                        :id (:id muutos)
                                                        :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
                                                                                     :kustannuslaji "hankintakustannukset"
@@ -447,19 +450,21 @@
                                                        :toimenpideinstanssi tpi-id-paallpaikk}
                                                       {:budjetoidut_summat nil
                                                        :id (:id muutos)
-                                                       :kustannusvaikutukset nil
-                                                       :tehtavat_ja_maarat nil
+                                                       :kustannusvaikutukset (list)
+                                                       :tehtavat_ja_maarat (list)
                                                        :toimenpide "MHU Ylläpito"
                                                        :toimenpideinstanssi tpi-id-mhu-yp}
                                                       {:budjetoidut_summat nil
                                                        :id (:id muutos)
-                                                       :kustannusvaikutukset nil
-                                                       :tehtavat_ja_maarat nil
+                                                       :kustannusvaikutukset (list)
+                                                       :tehtavat_ja_maarat (list)
                                                        :toimenpide "MHU Korvausinvestointi"
                                                        :toimenpideinstanssi tpi-id-korvausinvestointi}]
                               :tyyppi "pysyva"
                               :versio 1}]
-(is (= vastaus odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
+    ;; toimenpiteiden tehtävät on pitkälistaus, tässä kohti ei ole ainakaan mielekästi dumpata odotettua tulosta
+    ;; käytämme niiden hakemiseen valmista palvelua johon on jo omat testinsä.
+(is (= (dissoc vastaus :toimenpiteiden-tehtavat) odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
 
 (deftest johto-ja-hallintokorvausmuutoksen-kulu-2025-ja-jalkeen-oltava-negatiivinen
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")

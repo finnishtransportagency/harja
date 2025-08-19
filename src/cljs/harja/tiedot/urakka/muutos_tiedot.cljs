@@ -45,6 +45,7 @@
 (defrecord PoistaLisattyLiite [])
 (defrecord PoistaTallennettuLiite [liite-id])
 (defrecord PoistaPoistetutLiitteet [liite-id])
+(defrecord PaivitaToimenpiteenTavoitehinnanMuutos [rivi tpi hk-alkuvuosi])
 
 ;; aika ennen 2025-2026 hoitovuotta
 (defrecord LisaaTavoitehintojenMuutos [])
@@ -194,6 +195,7 @@
     (let [uudet-liitteet (:liitteet vastaus)
           lomakkeen-hoitokausi (get-in app [:muokattava-muutos :hoitovuosi])
           toimenpiteiden-tiedot (:toimenpiteiden-tiedot vastaus)
+          toimenpiteiden-tehtavat (:toimenpiteiden-tehtavat vastaus)
           ;; lomakkeen on kyettävä käsittelemään usealle hoitovuodelle tehtäviä kirjauksia. Kun ländätään lomakkeelle,
           ;; halutaan defaulttina näyttää aikaisin hoitovuosi, jossa on kirjauksia. Jos kirjauksia ei ole millekään hoitovuodelle,
           ;; asetetaan oletuksena edelliseltä sivulta ja app statesta "valittu-hoitovuosi"
@@ -211,6 +213,7 @@
                 ;; on vielä tutkittava, minne kannattaa säilöä muiden kuin lomakkeella valitun hoitokauden tiedot,
                 ;; todennäköisesti app-stateen
                 (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] toimenpiteiden-tiedot)
+                (assoc-in [:muokattava-muutos :toimenpiteiden-tehtavat] toimenpiteiden-tehtavat)
                 ;; alustetaan lomaketta varten hoitokausi samaksi kuin valittu hoitokausi, mutta ne voivat
                 ;; erkaantua myöhemmin jos käyttäjä niin haluaa (esim. kirjata pysyvän muutoksen eri hoitokaudelle kuin valittu)
                 (assoc-in [:muokattava-muutos :mahdolliset-hoitovuodet-lomakkeella] mahdolliset-hoitovuodet-lomakkeella)
@@ -361,6 +364,14 @@
   (process-event [_ app]
     (prn "PoistaLisattyLiite")
     (assoc app :uusi-liite nil))
+
+  PaivitaToimenpiteenTavoitehinnanMuutos
+  (process-event [{rivi :rivi
+                   tpi :tpi
+                   hk-alkuvuosi :hk-alkuvuosi} app]
+    (prn "PaivitaToimenpiteenTavoitehinnanMuutos " rivi " tpi " tpi "hk-alkuvuosi " hk-alkuvuosi)
+    ;; TODO: päivitä oikeaan kohtaan dataa tavoitehinnan muutos mahdollista tallennusta varten
+    app)
 
   LisaaTavoitehintojenMuutos
   (process-event [_ app]

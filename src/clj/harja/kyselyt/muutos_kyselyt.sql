@@ -217,9 +217,10 @@ summatut_tyot AS (
 SELECT
     m.id,
     tk.nimi AS toimenpide,
+    tk.koodi AS toimenpidekoodi,
     tpi.id as toimenpideinstanssi,
     CASE
-        WHEN COUNT(tjm.*) = 0 THEN NULL
+        WHEN COUNT(tjm.*) = 0 THEN '[]'::JSON
         ELSE json_agg(DISTINCT jsonb_build_object(
             'tehtava', tjm.tehtava,
             'edellinen_maara', tjm.edellinen_maara,
@@ -228,7 +229,7 @@ SELECT
             'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi))
     END AS tehtavat_ja_maarat,
     CASE
-        WHEN COUNT(kust.*) = 0 THEN NULL
+        WHEN COUNT(kust.*) = 0 THEN '[]'::JSON
         ELSE json_agg(DISTINCT jsonb_build_object(
             'kustannuslaji', kust.kustannuslaji,
             'toimenpideinstanssi', kust.toimenpideinstanssi,
@@ -252,5 +253,5 @@ FROM toimenpiteet tk
                                                                m.versio = tjm.versio AND
                                                                tjm.tehtava IN (SELECT id FROM tehtava WHERE emo = tp.id))
     LEFT JOIN summatut_tyot st ON st.toimenpide = tk.nimi
-GROUP BY m.id, tk.nimi, tpi.id, tk.koodi, tp.jarjestys
+GROUP BY m.id, tk.nimi, tk.koodi, tpi.id, tk.koodi, tp.jarjestys
 ORDER BY tp.jarjestys;

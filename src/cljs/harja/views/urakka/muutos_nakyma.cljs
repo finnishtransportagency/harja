@@ -109,39 +109,65 @@
 (defn- jatkuvan-muutoksen-vetolaatikko
   "Piirtää jatkuvan muutoksen taulukkoon vetolaatikon, jolla hallitaan kustannus- ja tehtävämuutoksia."
   [e! {:keys [urakan-hoitokaudet muokattava-muutos] :as app} rivi]
-  [:span
-   [:h3 "Vaikutus tehtävämääriin"]
-   [:p (str (:toimenpide rivi) ", "
-         (fmt/hoitokauden-jarjestysluku-ja-vuodet (:hoitovuosi muokattava-muutos)
-           urakan-hoitokaudet
-           "Hoitovuosi"))]
-   [grid/grid
-    {:luokat ["vaikutus-tehtaviin-grid"]
-     :muokkaa-aina true
-     :voi-lisata? true
-     :voi-kumota? false
-     :voi-muokata? true
-     :voi-poistaa? (constantly false)}
+  (let [tehtavat-ja-maarat-valittuna-hoitovuonna (filter #(= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                                                            (:hoitokauden_alkuvuosi %))
+                                                   (:tehtavat_ja_maarat rivi))
+        muutos-valittuna-hoitovuonna (or
+                                       (:summa (first (filter #(= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                                                                 (:hoitokauden_alkuvuosi %))
+                                                        (:kustannusvaikutukset rivi))))
+                                       0)
+        toimenpiteen-tehtavat (filter #(= (:toimenpidekoodi %)
+                                         (:toimenpidekoodi rivi))
+                                (:toimenpiteiden-tehtavat muokattava-muutos))]
+    [:span
+    [:h3 "Vaikutus tehtävämääriin"]
+    [:p (str (:toimenpide rivi) ", "
+          (fmt/hoitokauden-jarjestysluku-ja-vuodet (:hoitovuosi muokattava-muutos)
+            urakan-hoitokaudet
+            "Hoitovuosi"))]
+    [grid/grid
+     {:luokat ["vaikutus-tehtaviin-grid"]
+      :tyhja "Ei tietoja"
+      :muokkaa-aina true
+      :voi-lisata? true
+      :voi-kumota? false
+      :voi-muokata? true
+      :voi-poistaa? (constantly false)}
 
-    ;; taulukon kentät
-    [
-     {:otsikko "Tehtävä" :nimi :tehtava :tyyppi :valinta :valinnat [1 2 3] :leveys 20}
-     {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys 3 :muokattava? (constantly false)}
-     {:otsikko "Suunniteltu määrä" :nimi :edellinen_maara :tyyppi :positiivinen-numero :leveys 10 :muokattava? (constantly false)}
-     {:otsikko "Määrämuutos (+/-)" :nimi :maaramuutos :tyyppi :numero :leveys 20 :muokattava? (constantly false)}
-     {:otsikko "Muuttunut määrä" :nimi :muuttunut-maara :tyyppi :numero :leveys 20 :muokattava? (constantly false)
-      :hae (fn [rivi] (+ (:suunniteltu-maara rivi) (:maaramuutos rivi)))}
-     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 9
-      :komponentti (fn [rivi]
-                     [napit/nappi "Poista rivi"
-                      #(prn "Poisto eventti tähän")
-                      {:ikoni (ikonit/livicon-trash)
-                       :luokka "nappi-toissijainen"}])}]
-    (:tehtavat_ja_maarat rivi)]
+     ;; taulukon kentät
+     [{:otsikko "Tehtävä" :nimi :tehtava :tyyppi :valinta :valinnat toimenpiteen-tehtavat :leveys 20
+       :valinta-arvo :tehtava-id :valinta-nayta :tehtava}
+      {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys 3 :muokattava? (constantly false)
+       :hae (fn [rivi]
+              (some #(= (:toimenpidekoodi %)
+                         (:toimenpidekoodi rivi))
+                (:toimenpiteiden-tehtavat muokattava-muutos)))}
+      {:otsikko "Hoitovuosi" :nimi :hoitokauden_alkuvuosi :tyyppi :positiivinen-numero :leveys 5 :muokattava? (constantly false)}
+      {:otsikko "Suunniteltu määrä" :nimi :edellinen_maara :tyyppi :positiivinen-numero :leveys 10 :muokattava? (constantly false)}
+      {:otsikko "Määrämuutos (+/-)" :nimi :maaramuutos :tyyppi :numero :leveys 20 :muokattava? (constantly false)}
+      {:otsikko "Muuttunut määrä" :nimi :muuttunut-maara :tyyppi :numero :leveys 20 :muokattava? (constantly false)
+       :hae (fn [rivi] (+ (:suunniteltu-maara rivi) (:maaramuutos rivi)))}
+      {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 9
+       :komponentti (fn [rivi]
+                      [napit/nappi "Poista rivi"
+                       #(prn "Poisto eventti tähän riville: " rivi)
+                       {:ikoni (ikonit/livicon-trash)
+                        :luokka "nappi-toissijainen"}])}]
+     tehtavat-ja-maarat-valittuna-hoitovuonna]
 
-   [:h4 "Vaikutus tavoitehintaan"]
-   [:div "TODO tähän toinen grid.."]
-   ])
+    [:h4 "Vaikutus tavoitehintaan"]
+     [:label {:for (str "tavoitehintainput-" (:toimenpideinstanssi rivi))
+              :class "tavoitehinta-label"}
+      "Tavoitehinnan muutos euroina (+/-)"]
+     [kentat/tee-kentta {:elementin-id (str "tavoitehintainput-" (:toimenpideinstanssi rivi))
+                         :tyyppi :numero :fmt fmt/euro-opt
+                         :pakollinen? true :input-luokka "tavoitehinnan-muutos-input"
+                         :placeholder "Syötä hintavaikutus"}
+      (r/wrap muutos-valittuna-hoitovuonna
+        #(e! (muutos-tiedot/->PaivitaToimenpiteenTavoitehinnanMuutos %
+               (:toimenpideinstanssi rivi)
+               (:hoitovuosi muokattava-muutos))))]]))
 
 (defn taulukko-pysyvan-muutoksen-vaikutukset
   [e! {:keys [muokattava-muutos] :as app}]

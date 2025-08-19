@@ -4,6 +4,8 @@
             [harja.domain.kulut :as kulut-domain]
             [harja.domain.mhu :as mhu]
             [harja.domain.muutos-domain :as muutos-domain]
+            [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.pvm :as pvm]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
@@ -126,6 +128,11 @@
                                                                                             :versio (:versio muutos)
                                                                                             :urakka urakka-id
                                                                                             :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
+        {:keys [alkupvm loppupvm]} (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        toimenpiteiden-tehtavat (when (= (:tyyppi muutos) "pysyva")
+                                  (tehtavamaarat-kyselyt/mhu-suunniteltavat-tehtavat db {:urakka urakka-id
+                                                                                         :hoitokausi (range (pvm/vuosi alkupvm)
+                                                                                                       (inc (pvm/vuosi loppupvm)))}))
         tyyppikohtaiset-tiedot (case (:tyyppi muutos)
                                  "johto-ja-hallintokorvaus"
                                  (mapv
@@ -148,9 +155,11 @@
                    (liite-kyselyt/hae-liitteiden-tiedot db {:idt (:liite-idt muutos)
                                                             :urakka urakka-id}))
         vastaus (assoc (merge muutos
-                         (first tyyppikohtaiset-tiedot))
-                  :liitteet liitteet
-                  :toimenpiteiden-tiedot toimenpiteiden-tiedot)]
+                         (first tyyppikohtaiset-tiedot)
+                         (when (= (:tyyppi muutos) "pysyva")
+                           {:toimenpiteiden-tiedot toimenpiteiden-tiedot
+                            :toimenpiteiden-tehtavat toimenpiteiden-tehtavat}))
+                  :liitteet liitteet)]
     vastaus))
 
 
