@@ -3,19 +3,79 @@
   Johto- ja hallintokorvaukset koostuvat toimenkuvista, joiden syöttämisen tarkkuus vaihtelee urakan alkuvuoden perusteella.
   -19 - 21 vuosina alkavat urakat syöttävät tunnit ja tuntihinnat jokaiselle toimenkuvalle.
   -22 - 24 vuosina alkavat urakat syöttävät kuukausisumman toimenkuvalle.
-  -25 ja sitä myöhemmät urakat syöttävät vain kuukausisumman.
-  Käyttöliittymä yksinkertaistuu vuosien myötä, koska tarkkuus vähenee.
-  "
+  -25 ja sitä myöhemmät urakat syöttävät vain kuukausisumman koko toimenkuva kokonaisuudelle, kuten se tarjouksessakin on.
+  Käyttöliittymä yksinkertaistuu vuosien myötä, koska tarkkuus vähenee."
   (:require [clojure.string :as str]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.yleiset :as tyokalut]
+            [harja.ui.modal :as modal]
+            [harja.ui.napit :as napit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :as kentat]
             [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as kust-tiedot]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset :as yhteiset]
-            [reagent.core :as r]))
+            [reagent.core :as r])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
+
+(defn- kuukausierat-modaali [valittu-hoitokausi johto-ja-hallintokorvaukset]
+  (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+        urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
+        hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
+        hoitovuoden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+        kalenterikuukaudet (mapv (fn [kuukausi]
+                                   (let [vuosi (if (>= kuukausi 10)
+                                                 hoitovuoden-alkuvuosi
+                                                 (inc hoitovuoden-alkuvuosi))]
+                                     (pvm/koko-kuukausi-ja-vuosi
+                                       (pvm/->pvm (str "01." kuukausi "." vuosi)) true)))
+
+                             [10 11 12 1 2 3 4 5 6 7 8 9])
+        kuukaudet (if (<= urakan-alkuvuosi 2024)
+                    (reduce (fn [lopputulos kalenterikuukausi]
+                              (let [kuukaudet (reduce (fn [kuukaudet toimenkuva]
+                                                        (let [kk (first (filter
+                                                                          #(= (:kalenterikuukausi %) kalenterikuukausi)
+                                                                          (:kuukaudet toimenkuva)))]
+                                                          (conj kuukaudet kk)))
+                                                [] johto-ja-hallintokorvaukset)
+                                    summa (apply + (map :yhteensa-kk kuukaudet))
+                                    summa-indeksikorjattu (apply + (map :yhteensa-indeksikorjattu-kk kuukaudet))]
+
+                                (conj
+                                  lopputulos
+                                  {:kalenterikuukausi kalenterikuukausi
+                                   :summa summa
+                                   :summa-indeksikorjattu summa-indeksikorjattu})))
+                      [] kalenterikuukaudet)
+                    (map (fn [kuukausi]
+                           {:kalenterikuukausi (:kalenterikuukausi kuukausi)
+                            :summa (:summa kuukausi)
+                            :summa-indeksikorjattu (:summa-indeksikorjattu kuukausi)})
+                      johto-ja-hallintokorvaukset))
+        yht (apply + (map :summa kuukaudet))
+        yht-indeksikorjattu (apply + (map :summa-indeksikorjattu kuukaudet))]
+
+    [:div
+     [:div.flex-row
+      [:div.body-text {:style {:margin-top "-15px"}} (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]]
+
+     [:div.row {:style {:padding-top "1rem"}}]
+
+     (for* [kuukausi kuukaudet]
+       [:div.flex-row.kuukausi-rivi
+        [:div.col-xs-6 (:kalenterikuukausi kuukausi)]
+        [:div.col-xs-3.oikealle (fmt/euro-opt true (:summa kuukausi))]
+        [:div.col-xs-3.oikealle (fmt/euro-opt (:summa-indeksikorjattu kuukausi))]])
+
+     [:hr.hr-tiivis]
+
+     [:div.flex-row.laskenta-rivi
+      [:div.col-xs-6 [:strong (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi") " yhteensä"]]
+      [:div.col-xs-3.oikealle [:strong (fmt/euro-opt true yht)]]
+      [:div.col-xs-3.oikealle [:strong (fmt/euro-opt yht-indeksikorjattu)]]]]))
 
 (defn toimenkuvat-vetolaatikko-2019
   "Anna parametrina valittu toimenkuva sekä kaikki mahdolliset kuukaudet, joita voidaan muokata."
@@ -372,7 +432,16 @@
      (when-not vahvistettu?
        [:div
         [:div.row
-         [:div.col-xs-12.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]
+         [:div.col-xs-12.body-text (str "Harja luo kulut kuukausille, kun tallennat tiedot. ")
+          [yleiset/linkki "Näytä kuukausierät"
+           (fn [] (modal/nayta! {:otsikko "Johto- ja hallintokorvauksen kuukausierät"
+                                 :otsikko-muotoilut {:font-size "32px"}
+                                 :body-tyyli {:margin-bottom "16px"}
+                                 :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
+                                 :footer [napit/sulje #(modal/piilota!)]
+                                 :footer-tyyli {:text-align "left"}}
+                    [kuukausierat-modaali valittu-hoitokausi johto-ja-hallintokorvaukset]))
+           {:style {:text-decoration :underline}}]]]
         (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
           #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi))
           (when (>= urakan-alkuvuosi 2025) #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti"))))])

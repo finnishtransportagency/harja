@@ -1,22 +1,14 @@
 (ns harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset
   "Käyttöliittymän yhteisiä komponentteja, joita käytetään eri osioissa
    kustannussuunnitelman tarkastelussa ja muokkauksessa.
-   Tämä sisältää esimerkiksi otsikkotiedot ja tallennusnapit.
-  "
-  (:require [tuck.core :as tuck]
-            [harja.validointi :as v]
-            [harja.fmt :as fmt]
+   Tämä sisältää esimerkiksi otsikkotiedot ja tallennusnapit."
+  (:require [harja.fmt :as fmt]
             [harja.pvm :as pvm]
-            [harja.tyokalut.yleiset :as tyokalut]
-            [harja.ui.komponentti :as komp]
-            [harja.ui.debug :as debug]
-            [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as kust-tiedot]))
+            [harja.tiedot.navigaatio :as nav]))
 
 
 (defonce tallenna-painettu (atom false))
