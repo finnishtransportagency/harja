@@ -207,6 +207,7 @@
                                                 (map (fn [rivi]
                                                        (merge rivi
                                                          {:yhteensa-kk (* (if (:tuntipalkka rivi) (:tuntipalkka rivi) 0) (if (:tunnit rivi) (:tunnit rivi) 0))
+                                                          :yhteensa-indeksikorjattu-kk (* (if (:tuntipalkka-indeksikorjattu rivi) (:tuntipalkka-indeksikorjattu rivi) 0) (if (:tunnit rivi) (:tunnit rivi) 0))
                                                           :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
                                                                                (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)
                                                           :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
@@ -557,22 +558,22 @@
                                          :koodi (mhu/toimenpide-avain->toimenpide :mhu-johto)})))
 
         ; Tallenna kuukausittaiset summat
-        _ (doseq [rivi johto-ja-hallintokorvaukset]
+        _ (doseq [toimenkuva johto-ja-hallintokorvaukset]
             (let [;; rivi voi sisältää joko kuukausisumman kaikille toimenkuville (silloin id 1) tai
                   ;; toimenkuvan, jolla on kuukausittaiset arvot, tunnit ja tuntipalkat.
                   kuukaudet (when (<= urakan-alkuvuosi 2024)
-                              (:kuukaudet rivi))
+                              (:kuukaudet toimenkuva))
 
                   ;; Toimenkuva on tietokannassa pakollinen.
                   ;; Asetetaan jokin toimenkuva myös 2025-> urakoille, koska oikeaa toimenkuvaa ei voida uudessa kustannusten suunnittelussa asettaa.
                   ;; Kuukausittaiset yhteenvetorivit eivät ole riippuvaisia toimenkuvasta, joten voidaan käyttää mitä tahansa.
                   toimenkuva-id (if (>= urakan-alkuvuosi 2025)
                                   1
-                                  (:id rivi))
+                                  (:id toimenkuva))
 
                   _ (if (<= urakan-alkuvuosi 2024)
                       (tallenna-kuukausittaiset-toimenkuvat db kuukaudet urakan-indeksit urakan-tiedot kayttaja urakka-id toimenkuva-id)
-                      (tallenna-vuosittaiset-toimenkuvat db rivi urakan-indeksit urakan-tiedot kayttaja urakka-id toimenkuva-id))]))
+                      (tallenna-vuosittaiset-toimenkuvat db toimenkuva urakan-indeksit urakan-tiedot kayttaja urakka-id toimenkuva-id))]))
         _ (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
         _ (kiint-kyselyt/merkitse-maksuerat-likaisiksi-hoidonjohdossa! db {:toimenpideinstanssi toimenpideinstanssi-id})]))
 

@@ -81,6 +81,8 @@
         {:otsikko "Tunnit/kk, h" :nimi :tunnit :leveys "20%" :tyyppi :euro :tasaa :oikea
          :fmt #(when % (fmt/euro-opt false %)) :voi-muokata? voi-muokata? :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
         {:otsikko "Yhteensa/kk" :nimi :yhteensa-kk :leveys "20%" :tyyppi :euro :tasaa :oikea
+         :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+        {:otsikko "Yhteensa indeksikorjattu/kk" :nimi :yhteensa-indeksikorjattu-kk :leveys "20%" :tyyppi :euro :tasaa :oikea
          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
        kuukaudet-atom]]]))
 
@@ -116,8 +118,11 @@
                                                         viimeneinen-tunnit (- vuoden-tunnit (tyokalut/round2 2 (* (dec kuukausimaara) kk-tunnit)))
                                                         kuukaudet (map-indexed (fn [indeksi rivi]
                                                                                  (merge rivi
-                                                                                   {:tunnit (if (= indeksi (dec kuukausimaara)) viimeneinen-tunnit kk-tunnit)
-                                                                                    :yhteensa-kk (* (if (= indeksi (dec kuukausimaara)) viimeneinen-tunnit kk-tunnit) (:tuntipalkka rivi))}))
+                                                                                   {:tuntipalkka (:tuntipalkka toimenkuva)
+                                                                                    :tuntipalkka-indeksikorjattu nil ;; indeksikorjaus lasketaan bäckendissä
+                                                                                    :tunnit (if (= indeksi (dec kuukausimaara)) viimeneinen-tunnit kk-tunnit)
+                                                                                    :yhteensa-kk (* (if (= indeksi (dec kuukausimaara)) viimeneinen-tunnit kk-tunnit) (:tuntipalkka toimenkuva))
+                                                                                    :yhteensa-indeksikorjattu-kk nil}))
                                                                     (:kuukaudet toimenkuva))
                                                         kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
                                                         toimenkuva (assoc toimenkuva :kuukaudet kuukaudet)]
@@ -138,10 +143,12 @@
 
       :vetolaatikko-optiot {:ei-paddingia true}
       ;; Lisätään yhteenveto rivi gridin päätteeksi
-      :rivi-jalkeen yhteenveto-rivit #_kirjaamatta-rivi #_yhteenveto-rivit}
-     [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :leveys "35%"
+      :rivi-jalkeen yhteenveto-rivit}
+     [{:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+      {:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :leveys "35%"
        :muokattava? (constantly false) :otsikkorivi-luokka "korkea" :fmt #(when % (str/capitalize %))}
-      {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+      {:otsikko "Tarjouksen määrä (€)" :nimi :tarjous-summa :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
+       :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
       {:otsikko "Tunnit/kk, h" :nimi :tunnit :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
       {:otsikko "Tuntipalkka, €" :nimi :tuntipalkka :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
@@ -305,6 +312,7 @@
         kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (cond (and (<= urakan-alkuvuosi 2021) (not vahvistettu?))
                            [^{:luokka "kustannukset-yhteenveto"}
+                            {:teksti "" :luokka kirjaamatta-luokka}
                             {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
                             {:teksti "" :luokka kirjaamatta-luokka}
                             {:teksti "" :luokka kirjaamatta-luokka}
@@ -326,11 +334,11 @@
         yhteenveto-rivi (cond
                           (and (<= urakan-alkuvuosi 2021) (not vahvistettu?))
                           [^{:luokka "kustannukset-yhteenveto"}
+                           {:teksti "" :luokka "yhteensa"}
                            {:teksti "Yhteensä" :luokka "yhteensa"}
+                           {:teksti (fmt/euro-opt false tarjouksen-maara) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                            {:teksti "" :luokka "yhteensa"}
                            {:teksti "" :luokka "yhteensa"}
-                           {:teksti "" :luokka "yhteensa"}
-                           #_{:teksti (fmt/euro-opt false tarjouksen-maara) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                            {:teksti (if-not (= 0 yht)
                                       (fmt/euro-opt false yht)
                                       "-")
