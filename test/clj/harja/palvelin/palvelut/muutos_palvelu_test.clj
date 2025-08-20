@@ -408,20 +408,23 @@
                                                        :kustannusvaikutukset (list)
                                                        :tehtavat_ja_maarat (list)
                                                        :toimenpide "Talvihoito"
-                                                       :toimenpideinstanssi tpi-id-talvihoito}
+                                                       :toimenpideinstanssi tpi-id-talvihoito
+                                                       :toimenpidekoodi "23104"}
                                                       {:budjetoidut_summat (list {:budjetoitu_summa 9600
                                                                                   :hoitokauden_alkuvuosi 2025})
                                                        :id (:id muutos)
                                                        :kustannusvaikutukset (list)
                                                        :tehtavat_ja_maarat (list)
                                                        :toimenpide "Liikenneympäristön hoito"
-                                                       :toimenpideinstanssi tpi-id-liikymp}
+                                                       :toimenpideinstanssi tpi-id-liikymp
+                                                       :toimenpidekoodi "23116"}
                                                       {:budjetoidut_summat nil
                                                        :id (:id muutos)
                                                        :kustannusvaikutukset (list)
                                                        :tehtavat_ja_maarat (list)
                                                        :toimenpide "Sorateiden hoito"
-                                                       :toimenpideinstanssi tpi-id-soratiet}
+                                                       :toimenpideinstanssi tpi-id-soratiet
+                                                       :toimenpidekoodi "23124"}
                                                       {:budjetoidut_summat  (list
                                                                               {:budjetoitu_summa 120000
                                                                                :hoitokauden_alkuvuosi 2025}
@@ -447,19 +450,22 @@
                                                                               :tehtava 3117
                                                                               :uusi_maara 1100})
                                                        :toimenpide "Päällysteiden paikkaus"
-                                                       :toimenpideinstanssi tpi-id-paallpaikk}
+                                                       :toimenpideinstanssi tpi-id-paallpaikk
+                                                       :toimenpidekoodi "20107"}
                                                       {:budjetoidut_summat nil
                                                        :id (:id muutos)
                                                        :kustannusvaikutukset (list)
                                                        :tehtavat_ja_maarat (list)
                                                        :toimenpide "MHU Ylläpito"
-                                                       :toimenpideinstanssi tpi-id-mhu-yp}
+                                                       :toimenpideinstanssi tpi-id-mhu-yp
+                                                       :toimenpidekoodi "20191"}
                                                       {:budjetoidut_summat nil
                                                        :id (:id muutos)
                                                        :kustannusvaikutukset (list)
                                                        :tehtavat_ja_maarat (list)
                                                        :toimenpide "MHU Korvausinvestointi"
-                                                       :toimenpideinstanssi tpi-id-korvausinvestointi}]
+                                                       :toimenpideinstanssi tpi-id-korvausinvestointi
+                                                       :toimenpidekoodi "14301"}]
                               :tyyppi "pysyva"
                               :versio 1}]
     ;; toimenpiteiden tehtävät on pitkälistaus, tässä kohti ei ole ainakaan mielekästi dumpata odotettua tulosta
