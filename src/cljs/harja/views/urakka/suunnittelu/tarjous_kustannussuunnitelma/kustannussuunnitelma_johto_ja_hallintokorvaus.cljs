@@ -195,7 +195,8 @@
                                                              (= (:vuosi rivi) (:vuosi kuukausi))))
                                                          (:kuukaudet toimenkuva))
 
-                              valittu-kuukausi (assoc valittu-kuukausi :tuntipalkka (:tuntipalkka rivi))
+                              valittu-kuukausi (assoc valittu-kuukausi :tuntipalkka (:tuntipalkka rivi)
+                                                 :tuntipalkka-indeksikorjattu nil) ;; indeksikorjaus lasketaan bäckendissä
                               uudet-kuukaudet (sort-by :vuosi :kuukausi (conj kuukaudet-ilman-valittua valittu-kuukausi))
 
 
@@ -217,6 +218,8 @@
        [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "70%"
          :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
         {:otsikko "Suunniteltu määrä (€)" :nimi :tuntipalkka :leveys "30%" :tyyppi :euro :tasaa :oikea
+         :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
+        {:otsikko "Indeksikorjattu (€)" :nimi :tuntipalkka-indeksikorjattu :leveys "30%" :tyyppi :euro :tasaa :oikea
          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}]
        kuukaudet-atom]]]))
 
@@ -236,7 +239,8 @@
                                                                #(= (:id rivi) (:id %))
                                                                @yhteiset/grid-johto-ja-hallintokorvaukset-atom))
                                   ;; Vuoden 2022 toimenkuvissa ei ole enää tunteja ja tuntihintaa frontissa, vaan vain kuukausisumma.
-                                  muokattu-toimenkuva (assoc muokattu-toimenkuva :summa (:summa rivi))
+                                  muokattu-toimenkuva (assoc muokattu-toimenkuva :summa (:summa rivi)
+                                                        :summa-indeksikorjattu nil) ;; indeksikorjaus lasketaan bäckendissä
                                   toimenkuvat-ilman-muutettavaa (remove
                                                                   #(= (:id rivi) (:id %))
                                                                   @yhteiset/grid-johto-ja-hallintokorvaukset-atom)
@@ -250,7 +254,8 @@
                                                               viimeneinen-summa (- summa (tyokalut/round2 2 (* (dec kuukausimaara) kk-summa)))
                                                               kuukaudet (map-indexed (fn [indeksi rivi]
                                                                                        (merge rivi
-                                                                                         {:tuntipalkka (if (= indeksi 11) viimeneinen-summa kk-summa)}))
+                                                                                         {:tuntipalkka (if (= indeksi 11) viimeneinen-summa kk-summa)
+                                                                                          :tuntipalkka-indeksikorjattu nil}))
                                                                           (:kuukaudet toimenkuva))
                                                               toimenkuva (assoc toimenkuva :kuukaudet kuukaudet)]
                                                           (conj uudet-toimenkuvat toimenkuva)))
@@ -321,7 +326,7 @@
         yhteenveto-rivi (cond
                           (and (<= urakan-alkuvuosi 2021) (not vahvistettu?))
                           [^{:luokka "kustannukset-yhteenveto"}
-                           {:teksti "Yhteensä 2021" :luokka "yhteensa"}
+                           {:teksti "Yhteensä" :luokka "yhteensa"}
                            {:teksti "" :luokka "yhteensa"}
                            {:teksti "" :luokka "yhteensa"}
                            {:teksti "" :luokka "yhteensa"}
@@ -334,7 +339,7 @@
                           (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024) (not vahvistettu?))
                           [^{:luokka "kustannukset-yhteenveto"}
                            {:teksti "" :luokka "yhteensa"}
-                           {:teksti "Yhteensä 2022" :luokka "yhteensa"}
+                           {:teksti "Yhteensä" :luokka "yhteensa"}
                            {:teksti (fmt/euro-opt false tarjouksen-maara) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                            {:teksti (if-not (= 0 yht)
                                       (fmt/euro-opt false yht)
@@ -342,7 +347,7 @@
                             :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                           (>= urakan-alkuvuosi 2025)
                           [^{:luokka "kustannukset-yhteenveto"}
-                           {:teksti "Yhteensä 2025" :luokka "yhteensa"}
+                           {:teksti "Yhteensä" :luokka "yhteensa"}
                            {:teksti (fmt/euro-opt false yht) :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                            {:teksti (if-not (= 0 yht-indeksikorjattu)
                                       (fmt/euro-opt false yht-indeksikorjattu)
