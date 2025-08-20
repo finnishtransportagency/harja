@@ -130,9 +130,11 @@
                                                                                             :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
         {:keys [alkupvm loppupvm]} (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         toimenpiteiden-tehtavat (when (= (:tyyppi muutos) "pysyva")
-                                  (tehtavamaarat-kyselyt/mhu-suunniteltavat-tehtavat db {:urakka urakka-id
-                                                                                         :hoitokausi (range (pvm/vuosi alkupvm)
-                                                                                                       (inc (pvm/vuosi loppupvm)))}))
+                                  (map
+                                    #(select-keys % #{:jarjestys :tehtava-id :suunniteltu-maara :toimenpidekoodi :tehtava :yksikko :hoitokauden-alkuvuosi})
+                                    (tehtavamaarat-kyselyt/mhu-suunniteltavat-tehtavat db {:urakka urakka-id
+                                                                                          :hoitokausi (range (pvm/vuosi alkupvm)
+                                                                                                        (inc (pvm/vuosi loppupvm)))})))
         tyyppikohtaiset-tiedot (case (:tyyppi muutos)
                                  "johto-ja-hallintokorvaus"
                                  (mapv

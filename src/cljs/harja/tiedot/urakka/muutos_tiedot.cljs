@@ -45,6 +45,7 @@
 (defrecord PoistaLisattyLiite [])
 (defrecord PoistaTallennettuLiite [liite-id])
 (defrecord PoistaPoistetutLiitteet [liite-id])
+(defrecord PaivitaToimenpiteenTehtavamaarat [taulukon-rivit])
 (defrecord PaivitaToimenpiteenTavoitehinnanMuutos [rivi tpi hk-alkuvuosi])
 
 ;; aika ennen 2025-2026 hoitovuotta
@@ -364,6 +365,12 @@
   (process-event [_ app]
     (prn "PoistaLisattyLiite")
     (assoc app :uusi-liite nil))
+
+  PaivitaToimenpiteenTehtavamaarat
+  (process-event [{taulukon-rivit :taulukon-rivit} app]
+    (prn "PaivitaToimenpiteenTehtavamaarat taulukon-rivit: " taulukon-rivit)
+    ;; TODO: päivitä oikeaan kohtaan dataa tavoitehinnan tehtävämäärät mahdollista tallennusta varten
+    app)
 
   PaivitaToimenpiteenTavoitehinnanMuutos
   (process-event [{rivi :rivi

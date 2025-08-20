@@ -109,17 +109,22 @@
 (defn- jatkuvan-muutoksen-vetolaatikko
   "Piirtää jatkuvan muutoksen taulukkoon vetolaatikon, jolla hallitaan kustannus- ja tehtävämuutoksia."
   [e! {:keys [urakan-hoitokaudet muokattava-muutos] :as app} rivi]
-  (let [tehtavat-ja-maarat-valittuna-hoitovuonna (filter #(= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+  (let [valittu-hoitovuoden-alkuvuosi (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+        tehtavat-ja-maarat-valittuna-hoitovuonna (filter #(= valittu-hoitovuoden-alkuvuosi
                                                             (:hoitokauden_alkuvuosi %))
                                                    (:tehtavat_ja_maarat rivi))
         muutos-valittuna-hoitovuonna (or
-                                       (:summa (first (filter #(= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                                       (:summa (first (filter #(= valittu-hoitovuoden-alkuvuosi
                                                                  (:hoitokauden_alkuvuosi %))
                                                         (:kustannusvaikutukset rivi))))
                                        0)
-        toimenpiteen-tehtavat (filter #(= (:toimenpidekoodi %)
-                                         (:toimenpidekoodi rivi))
-                                (:toimenpiteiden-tehtavat muokattava-muutos))]
+        toimenpiteen-tehtavat (filter #(and
+                                         ;; tehtävien käsittelyä ehkä liikaa frontissa. Jos haluat parantaa,
+                                         ;; harkitse esim. palveluhakua on-demand, ja mahdollisesti hoiy
+                                         (= (:toimenpidekoodi %) (:toimenpidekoodi rivi))
+                                         (= (:hoitokauden-alkuvuosi %) valittu-hoitovuoden-alkuvuosi))
+                                (:toimenpiteiden-tehtavat muokattava-muutos))
+        g (grid/grid-ohjaus)]
     [:span
     [:h3 "Vaikutus tehtävämääriin"]
     [:p (str (:toimenpide rivi) ", "
@@ -128,12 +133,25 @@
             "Hoitovuosi"))]
     [grid/grid
      {:luokat ["vaikutus-tehtaviin-grid"]
+      :tunniste :tehtava
       :tyhja "Ei tietoja"
       :muokkaa-aina true
       :voi-lisata? true
       :voi-kumota? false
       :voi-muokata? true
-      :voi-poistaa? (constantly false)}
+      :voi-poistaa? (constantly false)
+      :ohjaus g
+      :muutos (fn [grid]
+                ;; jokaisesta muutoksesta taulukkoon tulee eventti tähän, ja se pitää esim. Tuck-eventillä käsitellä app-stateen
+                ;; uudet rivit taulukossa saavat negatiivisen id:n (-1, -2, ...), siitä tiedetään että pitää tehdä kantaan INSERT
+                ;; ratkaistava asia: jos uuden tiedon assocaa app-stateen, menee vetolaatikko kiinni
+                ;; täytynee alkaa pitää jossain muuttujassa/atomissa kirjaa vetolaatikoista jotka ovat auki, ja kertoa
+                ;; se gridille optiolla :vetolaatikot-auki
+                (let [rivit (map #(merge (val %)
+                                   {:id (key %)
+                                    :hoitokauden_alkuvuosi valittu-hoitovuoden-alkuvuosi})
+                             (grid/hae-muokkaustila grid))]
+                  (e! (muutos-tiedot/->PaivitaToimenpiteenTehtavamaarat rivit))))}
 
      ;; taulukon kentät
      [{:otsikko "Tehtävä" :nimi :tehtava :tyyppi :valinta :valinnat toimenpiteen-tehtavat :leveys 20
@@ -141,11 +159,11 @@
       {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys 3 :muokattava? (constantly false)
        :hae (fn [rivi]
               (some #(= (:toimenpidekoodi %)
-                         (:toimenpidekoodi rivi))
+                       (:toimenpidekoodi rivi))
                 (:toimenpiteiden-tehtavat muokattava-muutos)))}
       {:otsikko "Hoitovuosi" :nimi :hoitokauden_alkuvuosi :tyyppi :positiivinen-numero :leveys 5 :muokattava? (constantly false)}
       {:otsikko "Suunniteltu määrä" :nimi :edellinen_maara :tyyppi :positiivinen-numero :leveys 10 :muokattava? (constantly false)}
-      {:otsikko "Määrämuutos (+/-)" :nimi :maaramuutos :tyyppi :numero :leveys 20 :muokattava? (constantly false)}
+      {:otsikko "Määrämuutos (+/-)" :nimi :maaramuutos :tyyppi :numero :leveys 20}
       {:otsikko "Muuttunut määrä" :nimi :muuttunut-maara :tyyppi :numero :leveys 20 :muokattava? (constantly false)
        :hae (fn [rivi] (+ (:suunniteltu-maara rivi) (:maaramuutos rivi)))}
       {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 9
