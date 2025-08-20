@@ -898,7 +898,7 @@
         hoitovuodet (range urakan-alkuvuosi (inc urakan-loppuvuosi))
         paatokset (reduce (fn [paatokset kuluva-hoitovuosi]
                             (let [kustannukset (valikatselmus-palvelu/hae-kustannukset-jarjestettyna db urakka-id kuluva-hoitovuosi
-                                                 (pvm/hoitokauden-alkupvm kuluva-hoitovuosi) (pvm/hoitokauden-alkupvm kuluva-hoitovuosi))
+                                                 (pvm/hoitokauden-alkupvm kuluva-hoitovuosi) (pvm/hoitokauden-loppupvm (inc kuluva-hoitovuosi)))
                                   toteutuneet-kustannukset (get-in kustannukset [:yhteensa :yht-toteutunut-summa])
                                   budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakka-id})
                                   ;; Otetaan käytyn hoitovuoden budjetti
@@ -946,7 +946,8 @@
                     muutokset)
         ;; Päivitä uudet päätöstyypit vanhaan päätöstietomalliin
         paatokset (map (fn [p]
-                         {:hoitovuoden-paatos {:paatoksen-hoitovuosi (:hoitokauden_alkuvuosi p)
+                         {:hoitovuoden-paatos {:paatos {:id (str (name (paatoskone/nimi->avain (:nimi p))) "-" (:id p))}
+                                               :paatoksen-hoitovuosi (:hoitokauden_alkuvuosi p)
                                                :paatostyyppi (paatoskone/nimi->avain (:nimi p))
                                                :poistettu (:poistettu p)
                                                :paatoksen-tulos {:kokonaismaara (cond
