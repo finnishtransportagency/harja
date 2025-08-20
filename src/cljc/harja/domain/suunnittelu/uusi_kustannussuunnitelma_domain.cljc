@@ -1,6 +1,15 @@
 (ns harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain
   (:require [clojure.spec.alpha :as s]))
 
+(defn onko-tunnit-samat?
+  "Tarkistaa, onko :tunnit arvo sama, jokaisena kuukautena."
+  [kuukaudet]
+  (let [tunnit-values (map :tunnit kuukaudet)
+        distinct-values (distinct (remove nil? tunnit-values))]
+    (or (empty? distinct-values)      ;; Arvot eivät olleet samat
+      (= 1 (count distinct-values)) ;; Vain yksi distinct arvo tarkoittaa, että kaikki arvot olivat samat
+      )))
+
 (s/def ::hoitovuoden_alkuvuosi #(and (int? %) (pos? %) (> % 2000)))
 (s/def ::urakka-id #(and (int? %) (pos? %) (>= % 1) (< % 99999)))
 (s/def ::alkukausi #(or (nil? %) (and (number? %) (>= % 0))))

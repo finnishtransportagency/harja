@@ -357,7 +357,7 @@ WITH urakka_toimenkuvat AS (SELECT nimike
                             FROM unnest(
                                      CASE
                                          WHEN (:urakan-alkuvuosi >= 2019 AND :urakan-alkuvuosi <= 2021)
-                                             THEN ARRAY ['sopimusvastaava', 'vastuunalainen työnjohtaja', 'päätoiminen apulainen', 'apulainen/työnjohtaja','viherhoidosta vastaava henkilö','hankintavastaava','harjoittelija']
+                                             THEN ARRAY ['sopimusvastaava', 'vastuunalainen työnjohtaja', 'päätoiminen apulainen', 'apulainen/työnjohtaja', 'viherhoidosta vastaava henkilö', 'hankintavastaava', 'harjoittelija']
                                          WHEN (:urakan-alkuvuosi >= 2022 AND :urakan-alkuvuosi <= 2023)
                                              THEN ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja', 'päätoiminen apulainen','apulainen/työnjohtaja', 'viherhoidosta vastaava henkilö', 'hankintavastaava', 'harjoittelija']
                                          WHEN (:urakan-alkuvuosi = 2024)
@@ -390,4 +390,5 @@ FROM johto_ja_hallintokorvaus jh
 WHERE jh."urakka-id" = :urakka-id
   AND ((jh.vuosi = :vuosi AND jh.kuukausi IN (10, 11, 12))
     OR (jh.vuosi = :vuosi + 1 AND jh.kuukausi >= 1 AND jh.kuukausi <= 9))
-AND jh."toimenkuva-id" = :toimenkuva-id;
+AND jh."toimenkuva-id" = :toimenkuva-id
+AND jh.kuukausi IN (:sallitut-kuukaudet);

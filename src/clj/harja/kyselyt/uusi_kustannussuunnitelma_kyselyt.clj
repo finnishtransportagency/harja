@@ -3,6 +3,7 @@
             [jeesql.core :refer [defqueries]]
             [harja.tyokalut.yleiset :refer [round2] :as yleiset]
             [harja.domain.mhu :as mhu]
+            [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as kust-domain]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
@@ -155,31 +156,35 @@
                                 [10 11 12 1 2 3 4 5 6 7 8 9]))]
     (sort-by (juxt :vuosi :kuukausi) hoidonjohtopalkkiot)))
 
-(defn paattele-toimenkuvan-kuukaudet [urakan-alkuvuosi toimenkuva-nimi]
-  (cond
-    (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "sopimusvastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "päätoiminen apulainen")) [10 11 12 1 2 3 4 5 6 7 8 9] ;; Näitä pitäisi olla kaksi, sekä kesälle, että talvelle yksi, mutta mennään nyt yhdellä
-    (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "apulainen/työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [4 5 6 7 8]
-    (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9] ;; Näitäkin on kaksi. Toinen on ennen urakkakautta 4.5kk ja toinen on urakan aikan 12kk, mutta mennään yhdellä
-    (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "harjoittelija")) [5 6 7 8]
+(defn paattele-toimenkuvan-kuukaudet [urakan-alkuvuosi toimenkuva]
+  (let [toimenkuva-nimi (:toimenkuva toimenkuva)
+        toimenkuva-nimike (:nimike toimenkuva)]
+   (cond
+     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "sopimusvastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Päätoiminen apulainen (talvikausi)")) [5 6 7 8 9]
+     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Päätoiminen apulainen (kesäkausi)")) [10 11 12 1 2 3 4]
+     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Apulainen/työnjohtaja (talvikausi)")) [5 6 7 8 9]
+     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Apulainen/työnjohtaja (kesäkausi)")) [10 11 12 1 2 3 4]
+     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [4 5 6 7 8]
+     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "harjoittelija")) [5 6 7 8]
 
-    (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämäkin pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
-    (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "päätoiminen apulainen")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "apulainen/työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämä pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
+     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "päätoiminen apulainen")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "apulainen/työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
 
-    (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämäkin pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
-    (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "2. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "3. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
-    :else [10 11 12 1 2 3 4 5 6 7 8 9]))
+     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämäkin pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
+     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "2. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "3. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
+     :else [10 11 12 1 2 3 4 5 6 7 8 9])))
 
 (defn hae-johto-ja-hallintokorvaukset-2019-2024 [db urakka-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta]
   (let [viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-jjh
@@ -188,21 +193,53 @@
         ;; Haetaan ensin urakkakohtaiset toimenkuvat
         toimenkuvat (hae-urakan-toimenkuvat db {:urakka-id urakka-id
                                                 :urakan-alkuvuosi urakan-alkuvuosi})
+        ;; 2019 - 2021 alkavien urakoiden toimenkuvat eivät löydy tietokantahaulla, koska ne on kovakoodattu fronttiin. Niille on kuitenkin annettu
+        ;; joissain tapauksissa kaksi nimeä, mutta sama id. Joten joudumme taaksepäin yhteensopivuuden vuoksi tekemään muunnoksen
+        toimenkuvat (if (<= urakan-alkuvuosi 2021)
+                      (reduce (fn [uudet-toimenkuvat toimenkuva]
+                                (let [uusi-toimenkuva (cond (= "päätoiminen apulainen" (:toimenkuva toimenkuva))
+                                                        {:toimenkuva "päätoiminen apulainen"
+                                                         :nimike "Päätoiminen apulainen (talvikausi)"
+                                                         :id (:id toimenkuva)
+                                                         :toimenkuva-id (:toimenkuva-id toimenkuva)}
+                                                        (= "apulainen/työnjohtaja" (:toimenkuva toimenkuva))
+                                                        {:toimenkuva "apulainen/työnjohtaja"
+                                                         :nimike "Apulainen/työnjohtaja (talvikausi)"
+                                                         :id (:id toimenkuva)
+                                                         :toimenkuva-id (:toimenkuva-id toimenkuva)}
+                                                        :else nil)
+
+                                      toimenkuva (cond (= "päätoiminen apulainen" (:toimenkuva toimenkuva))
+                                                   (assoc toimenkuva :nimike "Päätoiminen apulainen (kesäkausi)")
+                                                   (= "apulainen/työnjohtaja" (:toimenkuva toimenkuva))
+                                                   (assoc toimenkuva :nimike "Apulainen/työnjohtaja (kesäkausi)")
+                                                   :else (merge toimenkuva {:nimike (:toimenkuva toimenkuva)}))]
+
+                                  ;; Lisätään talvi/kesäkausi vain, jos ne on noita erikois kovakoodattuja toimenkuvia
+                                  (if uusi-toimenkuva
+                                    (conj uudet-toimenkuvat uusi-toimenkuva toimenkuva)
+                                    (conj uudet-toimenkuvat toimenkuva))))
+                        [] toimenkuvat)
+                      toimenkuvat)
+
         ;; Haetaan raskaalla prosessilla toimenkuvakohtaisesti suunnitellut johto-ja-hallintokorvaukset
         toimenkuvat (reduce (fn [kuvat toimenkuva]
                               (let [tarjous-rivi (first (filter #(= (:toimenkuva-id %) (:id toimenkuva)) toimenkuvat-tarjouksesta))
                                     tarjous-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot tarjous-rivi))))
                                     toimenkuva (assoc toimenkuva :tarjous-summa tarjous-summa)
+
+                                    toimenkuvan-kuukaudet (paattele-toimenkuvan-kuukaudet urakan-alkuvuosi toimenkuva)
+
                                     kuukaudet (hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
                                                 db {:urakka-id urakka-id
                                                     :vuosi hoitovuoden-alkuvuosi
-                                                    :toimenkuva-id (:id toimenkuva)})
+                                                    :toimenkuva-id (:id toimenkuva)
+                                                    :sallitut-kuukaudet toimenkuvan-kuukaudet})
+
                                     ;; Jos kuukaudet on nil, niin luodaan lista default arvoilla.
                                     ;; Kuukausilistauksessa on kuitenkin valtavasti hajontaa sen perusteella, että mikä toimenkuva on kyseessä
                                     ;; Tässä on paljon historian painolastia ja kunhan vanhasta kustannusten suunnittelust apäästään kokonaan eroon,
                                     ;; niin toimenkuvat voidaan järkevöittää ja yhdenmukaistaa
-
-                                    toimenkuvan-kuukaudet (paattele-toimenkuvan-kuukaudet urakan-alkuvuosi (:toimenkuva toimenkuva))
                                     kuukaudet (if (seq kuukaudet)
                                                 (map (fn [rivi]
                                                        (merge rivi
@@ -211,12 +248,14 @@
                                                           :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
                                                                                (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)
                                                           :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
-                                                          :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
+                                                          :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
+                                                          :nimike (:nimike toimenkuva)}))
                                                   kuukaudet)
                                                 (mapv (fn [kk]
                                                         (let [vuosi (if (>= kk 10) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi))]
                                                           {:id (:id toimenkuva)
                                                            :toimenkuva (:toimenkuva toimenkuva)
+                                                           :nimike (:nimike toimenkuva)
                                                            :urakka-id urakka-id
                                                            :kuukausi kk
                                                            :yhteensa-kk 0
@@ -237,6 +276,7 @@
                                                             (conj uudet-kuukaudet
                                                               {:id (:id toimenkuva)
                                                                :toimenkuva (:toimenkuva toimenkuva)
+                                                               :nimike (:nimike toimenkuva)
                                                                :urakka-id urakka-id
                                                                :kuukausi kk
                                                                :vuosi (if (>= kk 10) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi))
@@ -257,15 +297,22 @@
                                                                      (fn [rivi] (if (and (:tuntipalkka-indeksikorjattu rivi) (:tunnit rivi))
                                                                                   (* (:tuntipalkka-indeksikorjattu rivi) (:tunnit rivi)) 0))
                                                                      kuukaudet))
-                                    toimenkuva (assoc toimenkuva :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                                    toimenkuva (assoc toimenkuva
+                                                 :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
                                                  :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
                                                  :tuntipalkka (:tuntipalkka (first kuukaudet))
-                                                 :tunnit (apply + (map (fn [rivi] (or (:tunnit rivi) 0)) kuukaudet))
+                                                 :tunnit (if (kust-domain/onko-tunnit-samat? kuukaudet) (:tunnit (first kuukaudet))
+                                                           -1) ;; Aseta arvo -1, jos tunnit eivät ole samat kaikissa kuukausissa
                                                  :yhteensa-kk (* (or (:tuntipalkka (first kuukaudet)) 0) (or (:tunnit (first kuukaudet)) 0))
                                                  :summa summa
                                                  :summa-indeksikorjattu summa-indeksikorjattu)]
                                 (conj kuvat toimenkuva)))
-                      [] toimenkuvat)]
+                      [] toimenkuvat)
+
+        ;; Lisää vielä järjestysnumero toimenkuville
+        toimenkuvat (map-indexed (fn [i toimenkuva]
+                                  (assoc toimenkuva :jarjestys (inc i)))
+                                toimenkuvat)]
     toimenkuvat))
 
 (defn hae-johto-ja-hallintokorvaukset [db urakka-id hoitovuoden-alkuvuosi toimenkuvat-tarjouksesta]
