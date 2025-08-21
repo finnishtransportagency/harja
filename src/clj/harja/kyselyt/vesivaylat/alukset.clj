@@ -1,23 +1,15 @@
 (ns harja.kyselyt.vesivaylat.alukset
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.spec.alpha :as s]
-            [clojure.set :as set]
-            
-            [jeesql.core :refer [defqueries]]
-            [taoensso.timbre :as log]
-            [harja.id :refer [id-olemassa?]]
-            [harja.pvm :as pvm]
+  (:require [jeesql.core :refer [defqueries]]
             [clj-time.core :as t]
             [clj-time.coerce :as coerce]
             [harja.geo :as geo]
-            [specql.core :as specql]
-            [harja.domain.vesivaylat.alus :as alus]
-            [specql.op :as op]
             [namespacefy.core :refer [namespacefy]]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]))
 
 (defqueries "harja/kyselyt/vesivaylat/alukset.sql")
+
+(declare hae-alusten-reitit hae-alusten-reitit-pisteineen)
 
 (defn oletus-alku-reitin-hakemiselle [] (t/minus (t/now) (t/days 2)))
 (defn oletus-loppu-reitin-hakemiselle [] (t/now))

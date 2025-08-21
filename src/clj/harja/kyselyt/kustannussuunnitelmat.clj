@@ -3,15 +3,18 @@
             [harja.kyselyt.urakat :as urakat-q]))
 
 (defqueries "harja/kyselyt/kustannussuunnitelmat.sql"
-            {:positional? true})
+  {:positional? true})
+
+(declare tuotenumero-loytyy hae-urakka-maksueranumerolla hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat
+  hae-hoitourakan-kustannussuunnitelman-yksikkohintaiset-summat)
 
 (defn tuotenumero-loytyy? [db maksueranumero]
-  (:exists (first (harja.kyselyt.kustannussuunnitelmat/tuotenumero-loytyy db maksueranumero))))
+  (:exists (first (tuotenumero-loytyy db maksueranumero))))
 
 (defn hae-kustannussuunnitelman-yksikkohintaiset-summat [db numero]
-  (let [urakka-id (:id (first (harja.kyselyt.kustannussuunnitelmat/hae-urakka-maksueranumerolla db numero)))
+  (let [urakka-id (:id (first (hae-urakka-maksueranumerolla db numero)))
         urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
     (case urakan-tyyppi
-      "vesivayla-kanavien-hoito" (harja.kyselyt.kustannussuunnitelmat/hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat db numero)
-      "vesivayla-kanavien-korjaus" (harja.kyselyt.kustannussuunnitelmat/hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat db numero)
-      "hoito" (harja.kyselyt.kustannussuunnitelmat/hae-hoitourakan-kustannussuunnitelman-yksikkohintaiset-summat db numero))))
+      "vesivayla-kanavien-hoito" (hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat db numero)
+      "vesivayla-kanavien-korjaus" (hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat db numero)
+      "hoito" (hae-hoitourakan-kustannussuunnitelman-yksikkohintaiset-summat db numero))))

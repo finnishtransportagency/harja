@@ -1,8 +1,7 @@
 (ns harja.kyselyt.suolarajoitus-kyselyt
   (:require [jeesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konv]
-            [clj-time.coerce :as c]
-            [taoensso.timbre :as log]))
+            [clj-time.coerce :as c]))
 
 (defqueries "harja/kyselyt/suolarajoitus_kyselyt.sql"
   {:positional? true})
@@ -15,7 +14,8 @@
   paivita-talvisuolan-kayttoraja! tallenna-talvisuolan-kayttoraja! paivita-talvisuolan-kayttoraja-alueurakka!
   tallenna-talvisuolan-kayttoraja-alueurakka<! paivita-rajoitusalueen-suolasanktio! tallenna-rajoitusalueen-suolasanktio!
   hae-rajoitusalueen-suolatoteumasummat hae-rajoitusalueen-paivan-toteumat hae-pohjavesialueidenurakat
-  hae-urakan-siirrettavat-pohjavesialueet onko-urakalla-suolatoteumia)
+  hae-urakan-siirrettavat-pohjavesialueet onko-urakalla-suolatoteumia hae-rajoitusalueet-summatiedoin
+  hae-rajoitusaluetta-muokanneet-urakat paivita-suolatoteumat-urakalle nollaa-paivittyneet-rajoitusalueet!)
 
 (defn hae-suolatoteumat-rajoitusalueittain [db {:keys [hoitokauden-alkuvuosi alkupvm loppupvm urakka-id] :as tiedot}]
   (let [;; Hae formiaatti ja talvisuolan materiaalityyppien id:t, jotta niiden summatiedot on helpompi laskea toteumista
@@ -46,13 +46,13 @@
                                   (> (:formiaattitoteumat rivi) 0)
                                   (> (:ajoratojen_pituus rivi) 0))
                                 (assoc :formiaatit_t_per_ajoratakm
-                                       (with-precision 3 (/ (:formiaattitoteumat rivi) (/ (:ajoratojen_pituus rivi) 1000))))
+                                  (with-precision 3 (/ (:formiaattitoteumat rivi) (/ (:ajoratojen_pituus rivi) 1000))))
                                 (and
                                   (not (nil? (:suolatoteumat rivi)))
                                   (not (nil? (:ajoratojen_pituus rivi)))
                                   (> (:suolatoteumat rivi) 0)
                                   (> (:ajoratojen_pituus rivi) 0))
                                 (assoc :talvisuola_t_per_ajoratakm
-                                       (with-precision 4 (/ (:suolatoteumat rivi) (/ (:ajoratojen_pituus rivi) 1000))))))
+                                  (with-precision 4 (/ (:suolatoteumat rivi) (/ (:ajoratojen_pituus rivi) 1000))))))
                         suolatoteumat)]
     suolatoteumat))

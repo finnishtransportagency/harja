@@ -3,12 +3,14 @@
   (:require [jeesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.geo :as geo]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
 
 (defqueries "harja/kyselyt/laatupoikkeamat.sql"
   {:positional? true})
+
+(declare onko-olemassa-ulkoisella-idlla paivita-laatupoikkeaman-perustiedot<! luo-laatupoikkeama<!
+  poista-laatupoikkeama!)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id urakka-id))))
@@ -22,43 +24,43 @@
     (if id
       (do
         (paivita-laatupoikkeaman-perustiedot<! db
-                                               (konv/sql-timestamp aika)
-                                               (when tekija (name tekija))
-                                               kohde
-                                               (boolean selvitys-pyydetty)
-                                               (:id user)
-                                               kuvaus
-                                               (when sijainti (geo/geometry (geo/clj->pg sijainti)))
-                                               numero
-                                               alkuosa
-                                               loppuosa
-                                               alkuetaisyys
-                                               loppuetaisyys
-                                               yllapitokohde
-                                               sisaltaa-poikkeamaraportin?
-                                               (boolean poistettu)
-                                               id
-                                               urakka)
-         id)
+          (konv/sql-timestamp aika)
+          (when tekija (name tekija))
+          kohde
+          (boolean selvitys-pyydetty)
+          (:id user)
+          kuvaus
+          (when sijainti (geo/geometry (geo/clj->pg sijainti)))
+          numero
+          alkuosa
+          loppuosa
+          alkuetaisyys
+          loppuetaisyys
+          yllapitokohde
+          sisaltaa-poikkeamaraportin?
+          (boolean poistettu)
+          id
+          urakka)
+        id)
 
-     (:id (luo-laatupoikkeama<! db
-                                "harja-ui"
-                                urakka
-                                (konv/sql-timestamp aika)
-                                (when tekija (name tekija))
-                                kohde
-                                (boolean selvitys-pyydetty)
-                                (:id user)
-                                kuvaus
-                                (when sijainti (geo/geometry (geo/clj->pg sijainti)))
-                                numero
-                                alkuosa
-                                loppuosa
-                                alkuetaisyys
-                                loppuetaisyys
-                                yllapitokohde
-                                sisaltaa-poikkeamaraportin?
-                                nil)))))
+      (:id (luo-laatupoikkeama<! db
+             "harja-ui"
+             urakka
+             (konv/sql-timestamp aika)
+             (when tekija (name tekija))
+             kohde
+             (boolean selvitys-pyydetty)
+             (:id user)
+             kuvaus
+             (when sijainti (geo/geometry (geo/clj->pg sijainti)))
+             numero
+             alkuosa
+             loppuosa
+             alkuetaisyys
+             loppuetaisyys
+             yllapitokohde
+             sisaltaa-poikkeamaraportin?
+             nil)))))
 
 (defn poista-laatupoikkeama
   "Merkitsee laatupoikkeaman poistetuksi. Palauttaa laatupoikkeaman ID:n."

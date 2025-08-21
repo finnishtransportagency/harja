@@ -3,9 +3,6 @@
   Tähän nimiavaruuteen voi kerätä yleisiä. Yleisesti konversioiden tulee olla funktioita, jotka prosessoivat
   yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdollisia."
   (:require [cheshire.core :as cheshire]
-            [clj-time.coerce :as coerce]
-            [taoensso.timbre :as log]
-            [clj-time.format :as format]
             [clojure.data.json :as json]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]

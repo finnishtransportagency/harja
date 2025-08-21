@@ -39,6 +39,8 @@
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 
+(declare hae-kanavatoimenpiteet-aikavalilta)
+
 (defn hae-kanavatomenpiteet-jeesql [db hakuehdot]
   (if-let [idt (seq (hae-kanavatoimenpiteet-aikavalilta db hakuehdot))]
     (sort-by ::toimenpide/alkupvm
