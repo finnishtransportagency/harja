@@ -242,6 +242,7 @@
                                     ;; niin toimenkuvat voidaan järkevöittää ja yhdenmukaistaa
                                     kuukaudet (if (seq kuukaudet)
                                                 (map (fn [rivi]
+                                                       (println "Toimenkuva kuukaudet" rivi)
                                                        (merge rivi
                                                          {:yhteensa-kk (* (if (:tuntipalkka rivi) (:tuntipalkka rivi) 0) (if (:tunnit rivi) (:tunnit rivi) 0))
                                                           :yhteensa-indeksikorjattu-kk (* (if (:tuntipalkka-indeksikorjattu rivi) (:tuntipalkka-indeksikorjattu rivi) 0) (if (:tunnit rivi) (:tunnit rivi) 0))
@@ -259,6 +260,7 @@
                                                            :urakka-id urakka-id
                                                            :kuukausi kk
                                                            :yhteensa-kk 0
+                                                           :yhteensa-indeksikorjattu-kk nil
                                                            :vuosi vuosi
                                                            :tuntipalkka 0
                                                            :tuntipalkka-indeksikorjattu nil
@@ -281,6 +283,7 @@
                                                                :kuukausi kk
                                                                :vuosi (if (>= kk 10) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi))
                                                                :yhteensa-kk 0
+                                                               :yhteensa-indeksikorjattu-kk nil
                                                                :tuntipalkka 0
                                                                :tuntipalkka-indeksikorjattu nil
                                                                :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi (pvm/->pvm (str "01." kk "." (if (>= kk 10) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))) true)
@@ -304,6 +307,7 @@
                                                  :tunnit (if (kust-domain/onko-tunnit-samat? kuukaudet) (:tunnit (first kuukaudet))
                                                            nil) ;; Aseta arvo buk, jos tunnit eivät ole samat kaikissa kuukausissa
                                                  :yhteensa-kk (* (or (:tuntipalkka (first kuukaudet)) 0) (or (:tunnit (first kuukaudet)) 0))
+                                                 :yhteensa-indeksikorjattu-kk (* (or (:tuntipalkka-indeksikorjattu (first kuukaudet)) 0) (or (:tunnit (first kuukaudet)) 0))
                                                  :summa summa
                                                  :summa-indeksikorjattu summa-indeksikorjattu)]
                                 (conj kuvat toimenkuva)))

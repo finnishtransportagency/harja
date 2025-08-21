@@ -175,11 +175,7 @@
                                                         summa (if (and (:tuntipalkka toimenkuva) (:tunnit toimenkuva)) (* (:tunnit toimenkuva) (:tuntipalkka toimenkuva)) 0)
                                                         toimenkuva (assoc toimenkuva :summa summa)
 
-                                                        ;; Laske toimenkuvan kuukausille tunnit.
-
-                                                        kuukausimaara (count (:kuukaudet toimenkuva))
-
-
+                                                        ;; Laske toimenkuvan yhteensä summat kuukausista
                                                         kuukaudet (map-indexed (fn [indeksi rivi]
                                                                                  (merge rivi
                                                                                    {:tuntipalkka (:tuntipalkka toimenkuva)
@@ -188,8 +184,10 @@
                                                                                     :yhteensa-kk (* (:tuntipalkka toimenkuva) (:tunnit toimenkuva))
                                                                                     :yhteensa-indeksikorjattu-kk nil}))
                                                                     (:kuukaudet toimenkuva))
+                                                        yht-kk (apply + (map :yhteensa-kk kuukaudet))
                                                         kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
-                                                        toimenkuva (assoc toimenkuva :kuukaudet kuukaudet)]
+                                                        toimenkuva (assoc toimenkuva :kuukaudet kuukaudet
+                                                                     :summa yht-kk)]
                                                     (conj uudet-toimenkuvat toimenkuva)))
                                           [] uudet-toimenkuvat)
                             toimenkuvat (sort-by :id toimenkuvat)]
@@ -208,13 +206,13 @@
       :vetolaatikko-optiot {:ei-paddingia true}
       ;; Lisätään yhteenveto rivi gridin päätteeksi
       :rivi-jalkeen yhteenveto-rivit}
-     [{:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-      {:otsikko "Toimenkuva" :nimi :nimike :tyyppi :string :leveys "35%"
+     [{:otsikko "" :tyyppi :vetolaatikon-tila :leveys "4%" :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+      {:otsikko "Toimenkuva" :nimi :nimike :tyyppi :string :leveys "31%"
        :muokattava? (constantly false) :otsikkorivi-luokka "korkea" :fmt #(when % (str/capitalize %))}
-      {:otsikko "Tarjouksen määrä (€ / vuosi)" :nimi :tarjous-summa :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
+      {:otsikko "Tarjouksen määrä (€ / vuosi)" :nimi :tarjous-summa :leveys "20%" :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
       {:otsikko "Tunnit (h/kk)" :nimi :tunnit :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
-       :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+       :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
       {:otsikko "Tuntipalkka (€/h)" :nimi :tuntipalkka :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly true) :otsikkorivi-luokka "korkea"}
       {:otsikko "Yhteensä (€/vuosi)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
