@@ -140,11 +140,11 @@
         :voi-kumota? false}
        [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "40%"
          :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-        {:otsikko "Tunnit/kk, h" :nimi :tunnit :leveys "20%" :tyyppi :euro :tasaa :oikea
+        {:otsikko "Tunnit (h)" :nimi :tunnit :leveys "20%" :tyyppi :euro :tasaa :oikea
          :fmt #(when % (fmt/euro-opt false %)) :voi-muokata? voi-muokata? :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
-        {:otsikko "Yhteensa/kk" :nimi :yhteensa-kk :leveys "20%" :tyyppi :euro :tasaa :oikea
+        {:otsikko "Yhteensa (€)" :nimi :yhteensa-kk :leveys "20%" :tyyppi :euro :tasaa :oikea
          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-        {:otsikko "Yhteensa indeksikorjattu/kk" :nimi :yhteensa-indeksikorjattu-kk :leveys "20%" :tyyppi :euro :tasaa :oikea
+        {:otsikko "Indeksikorjattu (€)" :nimi :yhteensa-indeksikorjattu-kk :leveys "20%" :tyyppi :euro :tasaa :oikea
          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
        kuukaudet-atom]]]))
 
@@ -211,18 +211,18 @@
      [{:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
       {:otsikko "Toimenkuva" :nimi :nimike :tyyppi :string :leveys "35%"
        :muokattava? (constantly false) :otsikkorivi-luokka "korkea" :fmt #(when % (str/capitalize %))}
-      {:otsikko "Tarjouksen määrä (€)" :nimi :tarjous-summa :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
+      {:otsikko "Tarjouksen määrä (€ / vuosi)" :nimi :tarjous-summa :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-      {:otsikko "Tunnit/kk, h" :nimi :tunnit :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
+      {:otsikko "Tunnit (h/kk)" :nimi :tunnit :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-      {:otsikko "Tuntipalkka, €" :nimi :tuntipalkka :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
+      {:otsikko "Tuntipalkka (€/h)" :nimi :tuntipalkka :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly true) :otsikkorivi-luokka "korkea"}
-      {:otsikko "Vuosipalkka, €" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
+      {:otsikko "Yhteensä (€/vuosi)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %))
        :muokattava? (constantly false)
        :voi-muokata-rivia? (constantly true)
        :otsikkorivi-luokka "korkea"}
-      {:otsikko "kk/v" :nimi :kkv :leveys "10%" :tyyppi :euro :tasaa :oikea
+      {:otsikko "Kk/v" :nimi :kkv :leveys "10%" :tyyppi :euro :tasaa :oikea
        :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
      toimenkuvat-atom]))
 

@@ -485,16 +485,16 @@
         _ (doseq [{:keys [alkukausi loppukausi toimenpideinstanssi-id]} kilpailutettavat-hankinnat]
             (let [alkukausi (bigdec alkukausi)
 
-                  alkukausi-kuukaudet (yleiset/round2 2 (with-precision 4 (/ alkukausi 3)))
-                  alkukausi-viimeinen-kuukausi (- alkukausi (* 2 alkukausi-kuukaudet))
+                  alkukausi-kuukausisumma (yleiset/round2 2 (with-precision 4 (/ alkukausi 3)))
+                  alkukausi-viimeinen-kuukausi (- alkukausi (* 2 alkukausi-kuukausisumma))
                   loppukausi (bigdec loppukausi)
-                  loppukausi-kuukaudet (yleiset/round2 2 (with-precision 4 (/ loppukausi 9)))
-                  loppukausi-viimeinen-kuukausi (- loppukausi (* 8 loppukausi-kuukaudet))
+                  loppukausi-kuukausisumma (yleiset/round2 2 (with-precision 4 (/ loppukausi 9)))
+                  loppukausi-viimeinen-kuukausi (- loppukausi (* 8 loppukausi-kuukausisumma))
                   ;; Tallenna alkujakso
-                  _ (tallenna-hankintojen-kuukausittainen-summa db (range 10 13) true alkukausi-viimeinen-kuukausi alkukausi-kuukaudet
+                  _ (tallenna-hankintojen-kuukausittainen-summa db (range 10 13) true alkukausi-viimeinen-kuukausi alkukausi-kuukausisumma
                       hoitovuoden-alkuvuosi sopimus-id toimenpideinstanssi-id (:id kayttaja))
                   ;; Tallenna loppujakso
-                  _ (tallenna-hankintojen-kuukausittainen-summa db (range 1 10) false loppukausi-viimeinen-kuukausi loppukausi-kuukaudet
+                  _ (tallenna-hankintojen-kuukausittainen-summa db (range 1 10) false loppukausi-viimeinen-kuukausi loppukausi-kuukausisumma
                       (inc hoitovuoden-alkuvuosi) sopimus-id toimenpideinstanssi-id (:id kayttaja))]))]))
 
 (defn tallenna-erillishankinnat
@@ -593,7 +593,7 @@
                :luoja (:id kayttaja)}))]))
 
 (defn tallenna-johto-ja-hallintokorvaukset
-  [db kayttaja urakka-id hoitovuoden-alkuvuosi johto-ja-hallintokorvaukset]
+  [db kayttaja urakka-id johto-ja-hallintokorvaukset]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)

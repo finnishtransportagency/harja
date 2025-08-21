@@ -173,7 +173,7 @@
           avain (if (<= urakan-alkuvuosi 2024)
                   :johto-ja-hallintokorvaukset-2019
                   :johto-ja-hallintokorvaukset-2025)]
-      (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id hoitovuoden-alkuvuosi (get tiedot avain))
+      (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id (get tiedot avain))
       (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
       (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 

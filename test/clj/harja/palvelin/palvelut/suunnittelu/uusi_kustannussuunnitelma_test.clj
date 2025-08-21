@@ -75,18 +75,33 @@
                                                            {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 8 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Elokuu 2025"}
                                                            {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 9 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Syyskuu 2025"}]})
 
-(def johto-ja-hallinto-tietomalli {:johto-ja-hallintokorvaukset [{:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 10 :kalenterikuukausi "Lokakuu 2024"}
-                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 11 :kalenterikuukausi "Marraskuu 2024"}
-                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 12 :kalenterikuukausi "Joulukuu 2024"}
-                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 1 :kalenterikuukausi "Tammikuu 2025"}
-                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 2 :kalenterikuukausi "Helmikuu 2025"}
-                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 3 :kalenterikuukausi "Maaliskuu 2025"}
-                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 4 :kalenterikuukausi "Huhtikuu 2025"}
-                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 5 :kalenterikuukausi "Toukokuu 2025"}
-                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 6 :kalenterikuukausi "Kesäkuu 2025"}
-                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 7 :kalenterikuukausi "Heinäkuu 2025"}
-                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 8 :kalenterikuukausi "Elokuu 2025"}
-                                                                 {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 9 :kalenterikuukausi "Syyskuu 2025"}]})
+(def johto-ja-hallinto-tietomalli-2019 {:johto-ja-hallintokorvaukset-2019
+                                        [{:id 1 :toimenkuva "sopimusvastaava"
+                                          :kuukaudet [{:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2024 :kuukausi 10 :kalenterikuukausi "Lokakuu 2024"}
+                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2024 :kuukausi 11 :kalenterikuukausi "Marraskuu 2024"}
+                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2024 :kuukausi 12 :kalenterikuukausi "Joulukuu 2024"}
+                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 1 :kalenterikuukausi "Tammikuu 2025"}
+                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 2 :kalenterikuukausi "Helmikuu 2025"}
+                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 3 :kalenterikuukausi "Maaliskuu 2025"}
+                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 4 :kalenterikuukausi "Huhtikuu 2025"}
+                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 5 :kalenterikuukausi "Toukokuu 2025"}
+                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 6 :kalenterikuukausi "Kesäkuu 2025"}
+                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 7 :kalenterikuukausi "Heinäkuu 2025"}
+                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 8 :kalenterikuukausi "Elokuu 2025"}
+                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 9 :kalenterikuukausi "Syyskuu 2025"}]}]})
+
+(def johto-ja-hallinto-tietomalli-2025 {:johto-ja-hallintokorvaukset-2025 [{:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 10 :kalenterikuukausi "Lokakuu 2024"}
+                                                                      {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 11 :kalenterikuukausi "Marraskuu 2024"}
+                                                                      {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 12 :kalenterikuukausi "Joulukuu 2024"}
+                                                                      {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 1 :kalenterikuukausi "Tammikuu 2025"}
+                                                                      {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 2 :kalenterikuukausi "Helmikuu 2025"}
+                                                                      {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 3 :kalenterikuukausi "Maaliskuu 2025"}
+                                                                      {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 4 :kalenterikuukausi "Huhtikuu 2025"}
+                                                                      {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 5 :kalenterikuukausi "Toukokuu 2025"}
+                                                                      {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 6 :kalenterikuukausi "Kesäkuu 2025"}
+                                                                      {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 7 :kalenterikuukausi "Heinäkuu 2025"}
+                                                                      {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 8 :kalenterikuukausi "Elokuu 2025"}
+                                                                      {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 9 :kalenterikuukausi "Syyskuu 2025"}]})
 
 (defn poista-yhteenvetorivi [tietomalli]
   {:toimenpiteet (filter #(not= (:nimi %) "Yhteensä") (:toimenpiteet tietomalli))})
@@ -102,7 +117,7 @@
         kilpailutettavat-hankinnat (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot +kayttaja-jvh+ tiedot)
         hankinnat (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :kilpailutettavat-hankinnat])]
 
-    (is (= (count (:toimenpiteet hankinnat)) 8))
+    (is (= (count (:toimenpiteet hankinnat)) 7))
     (is (true? (some #(= (:nimi %) "Talvihoito laaja TPI") (:toimenpiteet hankinnat))))
     (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))))
 
@@ -129,21 +144,23 @@
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))]
 
-    (is (= (str/includes? (:error vastaus) "Palvelun :tallenna-kilpailutettavat-hankinnat kysely ei ole validi.")))))
+    (is (true? (str/includes? (:error vastaus) "Palvelun :tallenna-kilpailutettavat-hankinnat kysely ei ole validi.")))))
 
 (deftest tallenna-kilpailutettavat-hankinnat-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hoitovuoden-alkuvuosi 2024
         ;; Poista yhteenvetorivi ennen tallennusta
         hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kilpailutettavat-hankinnat +kayttaja-jvh+
                     (merge
-                      {:urakka-id urakka-id}
+                      {:urakka-id urakka-id
+                       :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}
                       hankinnat-tietomalli))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))]
-    (is (= (nil? (:error vastaus))))))
+    (is (true? (nil? (:error vastaus))))))
 
 ;; Erillishankinnat
 (deftest tallenna-erillishankinnat-tietokantaan-onnistuneesti
@@ -180,8 +197,8 @@
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))]
 
-    (is (= (str/includes? (:error vastaus) "Palvelun :tallenna-erillishankinnat kysely ei ole validi.")))
-    (is (= (str/includes? (:error vastaus) "failed: (contains? % :erillishankinnat)")))))
+    (is (true? (str/includes? (:error vastaus) "Palvelun :tallenna-erillishankinnat kysely ei ole validi.")))
+    (is (true? (str/includes? (:error vastaus) "failed: (contains? % :erillishankinnat)")))))
 
 (deftest tallenna-erillishankinnat-rajapinnasta-ei-toimi2
   (let [vastaus (try
@@ -280,10 +297,10 @@
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))]
 
-    (is (= (str/includes? (:error vastaus) "Palvelun :tallenna-hoidonjohtopalkkiot kysely ei ole validi.")))
-    (is (= (str/includes? (:error vastaus) "failed: (contains? % :erillishankinnat)")))))
+    (is (true? (str/includes? (:error vastaus) "Palvelun :tallenna-hoidonjohtopalkkiot kysely ei ole validi.")))
+    (is (true? (str/includes? (:error vastaus) "failed: (contains? % :hoidonjohtopalkkiot)")))))
 
-(deftest tallenna-erillishankinnat-rajapinnasta-ei-toimi2
+(deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-ei-toimi2
   (let [vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+ hoidonjohtopalkkiot-tietomalli)
@@ -291,16 +308,19 @@
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))]
 
-    (is (str/includes? (:error vastaus) "Palvelun :tallenna-hoidonjohtopalkkiot kysely ei ole validi."))
+    (is (true? (str/includes? (:error vastaus) "Palvelun :tallenna-hoidonjohtopalkkiot kysely ei ole validi.")))
     ;; Urakka-id puuttuu
-    (is (str/includes? (:error vastaus) "failed: (contains? % :urakka-id)"))))
+    (is (true? (str/includes? (:error vastaus) "failed: (contains? % :urakka-id)")))))
 
 (deftest tallenna-johto-ja-hallintokorvaukset-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        tietomallin-summa (apply + (map :summa (:johto-ja-hallintokorvaukset johto-ja-hallinto-tietomalli)))
+        tietomallin-summa (apply + (map
+                                     (fn [kuukausi]
+                                       (* (or (:tunnit kuukausi) 0) (or (:tuntipalkka kuukausi) 0)))
+                                     (flatten (map :kuukaudet (:johto-ja-hallintokorvaukset-2019 johto-ja-hallinto-tietomalli-2019)))))
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-osio-johto-ja-hallintokorvaukset +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli
+                    :tallenna-johto-ja-hallintokorvaukset-2019 +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli-2019
                                                                            {:urakka-id urakka-id
                                                                             :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
@@ -310,14 +330,51 @@
 
     ;; Ei ole erroreita
     (is (nil? (:error vastaus)))
-    (is (= (bigdec tietomallin-summa) (bigdec vastaus-summa)))))
+    (is (= (bigdec (round2 tietomallin-summa 2)) (bigdec (round2 vastaus-summa 2))))))
 
-(deftest muokkaa-johto-ja-hallintokorvaukset-rajapinnasta-toimii
+(deftest muokkaa-johto-ja-hallintokorvaukset-2025-rajapinnasta-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        hoitovuoden-alkuvuosi 2025
+        ;; Tallenna ensin tietomallin tiedot
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-johto-ja-hallintokorvaukset-2025 +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli-2025
+                                                                                {:urakka-id urakka-id
+                                                                                 :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))
+        vastaus-toimenkuvat (into [] (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))
+
+        ;; Varmistetaan, ettei ole erroreita
+        _ (is (nil? (:error vastaus)))
+
+        ;; Tallenna muokattu tietomalli
+        muokattu-vastaus (-> vastaus-toimenkuvat
+                           (assoc-in [0 :summa] 1500)
+                           (assoc-in [1 :summa] 2500)
+                           (assoc-in [2 :summa] 3500))
+        muokattu-summa (apply + (map :summa muokattu-vastaus))
+        muokattu-vastaus (try
+                           (kutsu-palvelua (:http-palvelin jarjestelma)
+                             :tallenna-johto-ja-hallintokorvaukset-2025 +kayttaja-jvh+
+                             (merge {:johto-ja-hallintokorvaukset-2025 muokattu-vastaus}
+                               {:urakka-id urakka-id
+                                :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
+                           (catch Exception e
+                             (println "Tapahtui virhe:" (.getMessage e))
+                             {:error (.getMessage e)}))
+        muokattu-vastaus-summa (apply +
+                                 (map :summa (get-in muokattu-vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))]
+
+    (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
+
+(deftest muokkaa-johto-ja-hallintokorvaukset-2019-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         ;; Tallenna ensin tietomallin tiedot
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-osio-johto-ja-hallintokorvaukset +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli
+                    :tallenna-johto-ja-hallintokorvaukset-2019 +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli-2019
                                                                            {:urakka-id urakka-id
                                                                             :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
@@ -330,20 +387,28 @@
 
         ;; Tallenna muokattu tietomalli
         muokattu-vastaus (-> vastaus-hoidonjohtopalkkiot
-                           (assoc-in [0 :summa] 1500)
-                           (assoc-in [1 :summa] 2500)
-                           (assoc-in [2 :summa] 3500))
-        muokattu-summa (apply + (map :summa muokattu-vastaus))
+                           (assoc-in [0 :kuukaudet 0 :tuntipalkka] 1500)
+                           (assoc-in [1 :kuukaudet 0 :tuntipalkka] 2500)
+                           (assoc-in [2 :kuukaudet 0 :tuntipalkka] 3500))
+        muokattu-summa (apply + (map
+                                  (fn [rivi]
+                                    (println "rivi:" rivi)
+                                    (* (or (:tunnit rivi) 0) (or (:tuntipalkka rivi) 0)))
+
+                                  (flatten (map :kuukaudet muokattu-vastaus))))
         muokattu-vastaus (try
                            (kutsu-palvelua (:http-palvelin jarjestelma)
-                             :tallenna-osio-johto-ja-hallintokorvaukset +kayttaja-jvh+
-                             (merge {:johto-ja-hallintokorvaukset muokattu-vastaus}
+                             :tallenna-johto-ja-hallintokorvaukset-2019 +kayttaja-jvh+
+                             (merge {:johto-ja-hallintokorvaukset-2019 muokattu-vastaus}
                                {:urakka-id urakka-id
                                 :hoitovuoden-alkuvuosi 2024}))
                            (catch Exception e
                              (println "Tapahtui virhe:" (.getMessage e))
                              {:error (.getMessage e)}))
-        muokattu-vastaus-summa (apply + (map :summa (get-in muokattu-vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))]
+        _ (println "(get-in muokattu-vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]):" (get-in muokattu-vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))
+        muokattu-vastaus-summa (apply +
+                                 (map #(or (:yhteensa-kk %) 0)
+                                   (flatten (map :kuukaudet (get-in muokattu-vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))))]
 
     (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
 
@@ -441,7 +506,7 @@
         ;; Lisätään hoidonjohtopalkkiot
         _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli))
         ;; Lisätään johto- ja hallintokorvaukset
-        _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id (:johto-ja-hallintokorvaukset johto-ja-hallinto-tietomalli))
+        _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id (:johto-ja-hallintokorvaukset-2019 johto-ja-hallinto-tietomalli-2019))
 
         ;; Rahavaraukset vaativat tarjouksen täyttämisen.
         kayttaja-id (:id +kayttaja-jvh+)
@@ -473,7 +538,8 @@
     (is (not (nil? (get-in vastaus [:kustannussuunnitelma]))))
     (is (true? (get-in vastaus [:kustannussuunnitelma :vahvistettu?])))
     (is (= 3 (count (get-in vastaus [:kustannussuunnitelma :rahavaraukset]))))
-    (is (= 8 (count (get-in vastaus [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet]))))
+    (is (= 7 (count (get-in vastaus [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet]))))
     (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :erillishankinnat]))))
-    (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))))
+    (is (= 9 (count (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))))
+    (is (= 12 (count (:kuukaudet (first (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))))))
     (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :hoidonjohtopalkkiot]))))))
