@@ -289,7 +289,7 @@
         {:otsikko "Suunniteltu määrä (€)" :nimi :tuntipalkka :leveys "30%" :tyyppi :euro :tasaa :oikea
          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
         {:otsikko "Indeksikorjattu (€)" :nimi :tuntipalkka-indeksikorjattu :leveys "30%" :tyyppi :euro :tasaa :oikea
-         :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}]
+         :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
        kuukaudet-atom]]]))
 
 (defn taulukko-2022 [e! app voi-muokata? johto-ja-hallintokorvaukset vahvistettu? yhteenveto-rivit]
@@ -447,8 +447,7 @@
                                    :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
                                    :footer [napit/sulje #(modal/piilota!)]
                                    :footer-tyyli {:text-align "left"}}
-                      nil
-                      #_[kuukausierat-modaali valittu-hoitokausi johto-ja-hallintokorvaukset]))
+                      [kuukausierat-modaali valittu-hoitokausi johto-ja-hallintokorvaukset]))
              {:style {:text-decoration :underline}}])]]
         (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
           #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi))
