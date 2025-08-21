@@ -129,7 +129,7 @@
                               suunniteltu-yht (apply + (map #(if (and (:tuntipalkka %) (:tunnit %)) (* (:tunnit %) (:tuntipalkka %)) 0) kuukaudet))
                               toimenkuva (assoc toimenkuva
                                            :tunnit (if (kust-domain/onko-tunnit-samat? kuukaudet) (:tunnit (first kuukaudet))
-                                                     -1) ;; Aseta arvo -1, jos tunnit eivät ole samat kaikissa kuukausissa
+                                                     nil) ;; Aseta arvo nil, jos tunnit eivät ole samat kaikissa kuukausissa
                                            :kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
                                            :summa suunniteltu-yht
                                            :summa-indeksikorjattu nil) ;; indeksikorjaus lasketaan bäckendissä
@@ -163,7 +163,9 @@
                       (let [muokattu-toimenkuva (first (filter
                                                          #(= (:id rivi) (:id %))
                                                          @yhteiset/grid-johto-ja-hallintokorvaukset-atom))
-                            muokattu-toimenkuva (assoc muokattu-toimenkuva :tunnit (:tunnit rivi) :tuntipalkka (:tuntipalkka rivi))
+                            muokattu-toimenkuva (assoc muokattu-toimenkuva
+                                                  :tunnit (if (= nil (:tunnit rivi)) 0 (:tunnit rivi)) ;; nil arvoa käytetään, jos tunnit eivät ole samat kaikissa kuukausissa
+                                                  :tuntipalkka (:tuntipalkka rivi))
                             toimenkuvat-ilman-muutettavaa (remove
                                                             #(= (:id rivi) (:id %))
                                                             @yhteiset/grid-johto-ja-hallintokorvaukset-atom)
@@ -211,11 +213,8 @@
        :muokattava? (constantly false) :otsikkorivi-luokka "korkea" :fmt #(when % (str/capitalize %))}
       {:otsikko "Tarjouksen määrä (€)" :nimi :tarjous-summa :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-      {:otsikko "Tunnit/kk, h" :nimi :tunnit :leveys "15%"
-       :tyyppi #(if (and % (= -1 %)) :string :positiivinen-numero)
-       :tasaa :oikea
-       :fmt #(if (and % (= -1 %)) "vaihtelua/kk" (fmt/euro-opt false %))
-       :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
+      {:otsikko "Tunnit/kk, h" :nimi :tunnit :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
+       :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
       {:otsikko "Tuntipalkka, €" :nimi :tuntipalkka :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly true) :otsikkorivi-luokka "korkea"}
       {:otsikko "Vuosipalkka, €" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
@@ -369,10 +368,14 @@
         pysyvamuutos-maara 0 ;; Toteutus kesken
         vahvistettu? (:vahvistettu? kustannussuunnitelma)
         voi-muokata? (and (not vahvistettu?) (not (:vetolaatikon-muokkaus app)))
-        yht (apply + (map (fn [rivi]
-                            (:summa rivi 0)) johto-ja-hallintokorvaukset))
-        yht-indeksikorjattu (apply + (map (fn [rivi]
-                                            (:summa_indeksikorjattu rivi 0)) johto-ja-hallintokorvaukset))
+        toimenpiteiden-kuukaudet (flatten (map :kuukaudet johto-ja-hallintokorvaukset))
+
+        yht (apply + (if (<= urakan-alkuvuosi 2021)
+                       (map #(:yhteensa-kk % 0) toimenpiteiden-kuukaudet)
+                       (map #(:summa % 0) johto-ja-hallintokorvaukset)))
+        yht-indeksikorjattu (apply + (if (<= urakan-alkuvuosi 2021)
+                                       (map #(:yhteensa-indeksikorjattu-kk % 0) toimenpiteiden-kuukaudet)
+                                      (map #(:summa_indeksikorjattu % 0) johto-ja-hallintokorvaukset)))
         kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
         kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (cond (and (<= urakan-alkuvuosi 2021) (not vahvistettu?))
@@ -438,15 +441,17 @@
        [:div
         [:div.row
          [:div.col-xs-12.body-text (str "Harja luo kulut kuukausille, kun tallennat tiedot. ")
-          [yleiset/linkki "Näytä kuukausierät"
-           (fn [] (modal/nayta! {:otsikko "Johto- ja hallintokorvauksen kuukausierät"
-                                 :otsikko-muotoilut {:font-size "32px"}
-                                 :body-tyyli {:margin-bottom "16px"}
-                                 :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
-                                 :footer [napit/sulje #(modal/piilota!)]
-                                 :footer-tyyli {:text-align "left"}}
-                    [kuukausierat-modaali valittu-hoitokausi johto-ja-hallintokorvaukset]))
-           {:style {:text-decoration :underline}}]]]
+          (when (<= urakan-alkuvuosi 2024)
+            [yleiset/linkki "Näytä kuukausierät"
+             (fn [] (modal/nayta! {:otsikko "Johto- ja hallintokorvauksen kuukausierät"
+                                   :otsikko-muotoilut {:font-size "32px"}
+                                   :body-tyyli {:margin-bottom "16px"}
+                                   :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
+                                   :footer [napit/sulje #(modal/piilota!)]
+                                   :footer-tyyli {:text-align "left"}}
+                      nil
+                      #_[kuukausierat-modaali valittu-hoitokausi johto-ja-hallintokorvaukset]))
+             {:style {:text-decoration :underline}}])]]
         (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
           #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi))
           (when (>= urakan-alkuvuosi 2025) #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti"))))])

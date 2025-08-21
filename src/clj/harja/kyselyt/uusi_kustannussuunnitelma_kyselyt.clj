@@ -302,7 +302,7 @@
                                                  :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
                                                  :tuntipalkka (:tuntipalkka (first kuukaudet))
                                                  :tunnit (if (kust-domain/onko-tunnit-samat? kuukaudet) (:tunnit (first kuukaudet))
-                                                           -1) ;; Aseta arvo -1, jos tunnit eivät ole samat kaikissa kuukausissa
+                                                           nil) ;; Aseta arvo buk, jos tunnit eivät ole samat kaikissa kuukausissa
                                                  :yhteensa-kk (* (or (:tuntipalkka (first kuukaudet)) 0) (or (:tunnit (first kuukaudet)) 0))
                                                  :summa summa
                                                  :summa-indeksikorjattu summa-indeksikorjattu)]
@@ -568,13 +568,12 @@
 
 (defn tallenna-vuosittaiset-toimenkuvat [db rivi urakan-indeksit urakan-tiedot kayttaja urakka-id toimenkuva-id]
   (let [dbrivi (first (hae-kuukauden-johto-ja-hallintokorvaus db {:id (:id rivi)}))
-
         _ (if (:id dbrivi)
 
             (paivita-kuukauden-johto-ja-hallintokorvaus<! db
               {:id (:id dbrivi)
                :tuntipalkka (:summa rivi)
-               :tunnit (:tunnit rivi)
+               :tunnit 1
                :tuntipalkka_indeksikorjattu (when (:summa rivi)
                                               (indeksi-kyselyt/indeksikorjaa
                                                 (indeksi-kyselyt/indeksikerroin urakan-indeksit

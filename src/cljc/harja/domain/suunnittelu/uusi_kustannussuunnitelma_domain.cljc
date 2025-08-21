@@ -86,10 +86,7 @@
 (s/def ::johto-ja-hallintokorvaukset-2019 (s/coll-of
                                             (s/keys :req-un [::id
                                                              ::toimenkuva
-                                                             ::kuukaudet (s/coll-of ::jjh-2019)
-                                                             ::tarjous-summa
-                                                             ::summa
-                                                             ::summa-indeksikorjattu])))
+                                                             ::kuukaudet (s/coll-of ::jjh-2019)])))
 
 (s/def ::kilpailutettavat-hankinnat (s/keys :req-un [::toimenpiteet ::urakka-id]))
 (s/def ::erillishankinta (s/keys :req-un [::erillishankinnat ::urakka-id]))
