@@ -1,35 +1,27 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja/yllapitokohteen-tarkastus",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/yllapitokohteen-tarkastuksen-kirjaus-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "tarkastukset": {
-      "id": "urn:harja/yllapitokohteen-tarkastus/tarkastukset",
       "type": "array",
       "maxItems": 1000,
       "items": {
-        "id": "urn:harja/yllapitokohteen-tarkastus/tarkastukset/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "tarkastus": {
-            "id": "urn:harja/yllapitokohteen-tarkastus/tarkastukset/0/tarkastus",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/tarkastus.schema.json",
-            "required": true
+            "$ref": "file:resources/api/schemas/entities/tarkastus.schema.json"
           },
           "tarkastustyyppi": {
-            "id": "urn:harja/yllapitokohteen-tarkastus/tarkastukset/0/tarkastustyyppi",
-            "required": true,
             "enum": [
               "katselmus",
               "pistokoe",
@@ -37,8 +29,10 @@
               "takuutarkastus"
             ]
           }
-        }
+        },
+        "required": ["tarkastus", "tarkastustyyppi"]
       }
     }
-  }
+  },
+  "required": ["otsikko"]
 }

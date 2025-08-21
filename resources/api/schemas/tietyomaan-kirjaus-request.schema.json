@@ -1,58 +1,43 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tietyomaan-kirjaus-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "tietyomaa": {
-      "id": "urn:harja/tietyomaa",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "id": {
-          "id": "urn:harja/tietyomaa/id",
-          "type": "integer",
-          "required": true
+          "type": "integer"
         },
         "alkuaidan-sijainti": {
-          "id": "urn:harja/tietyomaa/alkuaidan-sijainti",
-          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-          "required": true
+          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
         },
         "loppuaidan-sijainti": {
-          "id": "urn:harja/tietyomaa/loppuaidan-sijainti",
-          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-          "required": true
+          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
         },
         "aika": {
-          "id": "urn:harja/tietyomaa/aika",
           "type": "string",
-          "format": "date-time",
-          "required": true
+          "format": "date-time"
         },
         "ajoradat": {
-          "id": "urn:harja/tietyomaa/ajoradat",
           "type": "array",
           "maxItems": 10,
           "items": {
-            "id": "urn:harja/tietyomaa/ajoradat/0",
             "type": "integer",
             "minimum": 0
           }
         },
         "kaistat": {
-          "id": "urn:harja/tietyomaa/kaistat",
           "type": "array",
           "maxItems": 10,
           "items": {
-            "id": "urn:harja/tietyomaa/kaistat/0",
             "enum": [
               11,
               12,
@@ -77,11 +62,11 @@
           }
         },
         "nopeusrajoitus": {
-          "id": "urn:harja/tietyomaa/nopeusrajoitus",
-          "type": "integer",
-          "required": false
+          "type": "integer"
         }
-      }
+      },
+      "required": ["id", "alkuaidan-sijainti", "loppuaidan-sijainti", "aika"]
     }
-  }
+  },
+  "required": ["otsikko"]
 }

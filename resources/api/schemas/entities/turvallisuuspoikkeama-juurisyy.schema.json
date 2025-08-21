@@ -1,6 +1,6 @@
 {
-    "$schema": "http://json-schema.org/draft-03/schema#",
-    "id": "urn:harja",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "urn:harja/turvallisuuspoikkeama-juurisyy",
     "type": "object",
     "properties": {
         "juurisyy": {
@@ -13,13 +13,13 @@
                 "ohjeiden_vastainen_toiminta_tai_riskinotto",
                 "tyomaan_ulkopuolinen_tekija_tai_olosuhde",
                 "muu"
-            ],
-            "required": true
+            ]
         },
         "selite": {
             "type": "string",
             "maxLength": 200
         }
-    }
+    },
+    "required": ["juurisyy"]
 }
 

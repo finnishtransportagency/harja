@@ -1,22 +1,19 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tehtava",
   "type": "object",
   "properties": {
     "id": {
-      "id": "urn:harja/tehtava/koodi",
-      "type": "integer",
-      "required": true
+      "type": "integer"
     },
     "maara": {
-      "id": "urn:harja/maarat/0/maara",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/maara.schema.json"
     },
     "selite": {
-      "id": "urn:harja/tehtava/selite",
       "type": "string"
     }
-  }
+  },
+  "required": ["id"]
 }

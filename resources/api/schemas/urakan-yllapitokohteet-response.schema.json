@@ -1,25 +1,22 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/urakan-yllapitokohteet-response",
   "type": "object",
   "properties": {
     "yllapitokohteet": {
-      "id": "urn:harja/yllapitokohteet",
       "type": "array",
       "maxItems": 1000,
       "items": {
-        "id": "urn:harja/yllapitokohteet/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "yllapitokohde": {
-            "id": "urn:harja/yllapitokohteet/0/yllapitokohde",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/yllapitokohde.schema.json",
-            "required": true
+            "$ref": "file:resources/api/schemas/entities/yllapitokohde.schema.json"
           }
-        }
+        },
+        "required": ["yllapitokohde"]
       }
     }
   }

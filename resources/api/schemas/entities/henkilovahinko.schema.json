@@ -1,12 +1,10 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/henkilovahinko",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "tyontekijanammatti": {
-      "id": "urn:harja/turvallisuuspoikkeamat/0/tyontekijanammatti",
-      "required": true,
       "enum": [
         "aluksen_paallikko",
         "asentaja",
@@ -41,11 +39,9 @@
       ]
     },
     "ammatinselite": {
-      "id": "urn:harja/turvallisuuspoikkeamat/0/tyontekijaselite",
       "type": "string"
     },
     "aiheutuneetVammat": {
-      "id": "urn:harja/turvallisuuspoikkeamat/0/aiheutuneetVammat",
       "type": "array",
       "maxItems": 100,
       "items": {
@@ -68,7 +64,6 @@
       }
     },
     "vahingoittuneetRuumiinosat": {
-      "id": "urn:harja/turvallisuuspoikkeamat/0/vahingoittuneetRuumiinosat",
       "type": "array",
       "maxItems": 100,
       "items": {
@@ -90,16 +85,14 @@
       }
     },
     "sairauspoissaoloJatkuu": {
-      "id": "urn:harja/turvallisuuspoikkeamat/0/sairauspoissaoloJatkuu",
       "type": "boolean"
     },
     "sairauspoissaolopaivat": {
-      "id": "urn:harja/turvallisuuspoikkeamat/0/sairauspoissaolopaivat",
       "type": "integer"
     },
     "sairaalahoitovuorokaudet": {
-      "id": "urn:harja/turvallisuuspoikkeamat/0/sairaalahoitovuorokaudet",
       "type": "integer"
     }
   }
+  ,"required": ["tyontekijanammatti"]
 }

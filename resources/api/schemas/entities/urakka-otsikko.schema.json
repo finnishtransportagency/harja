@@ -1,68 +1,50 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/urakka-otsikko",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "id": {
-      "id": "urn:harja/id",
-      "type": "integer",
-      "required": true
+      "type": "integer"
     },
     "nimi": {
-      "id": "urn:harja/nimi",
-      "type": "string",
-      "required": true
+      "type": "string"
     },
     "urakoitsija": {
-      "id": "urn:harja/urakoitsija",
       "type": "object",
       "additionalProperties": false,
-      "required": true,
       "properties": {
         "ytunnus": {
-          "id": "urn:harja/urakoitsija/ytunnus",
           "type": "string"
         },
         "nimi": {
-          "id": "urn:harja/urakoitsija/nimi",
-          "type": "string",
-          "required": true
+          "type": "string"
         }
-      }
+      },
+      "required": ["nimi"]
     },
     "lyhyt-nimi": {
-      "id": "urn:harja/lyhyt-nimi",
-      "type": "string",
-      "required": false
+      "type": "string"
     },
     "vaylamuoto": {
-      "id": "urn:harja/vaylamuoto",
-      "type": "string",
-      "required": true
+      "type": "string"
     },
     "tyyppi": {
-      "id": "urn:harja/urakkatyyppi",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/urakkatyyppi.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/urakkatyyppi.schema.json"
     },
     "alkupvm": {
-      "id": "urn:harja/alkupvm",
       "type": "string",
-      "format": "date-time",
-      "required": true
+      "format": "date-time"
     },
     "loppupvm": {
-      "id": "urn:harja/loppupvm",
       "type": "string",
-      "format": "date-time",
-      "required": true
+      "format": "date-time"
     },
     "alueurakkanumero": {
-      "id": "urn:harja/alueurakkanumero",
       "type": "string"
     }
-  }
+  },
+  "required": ["id", "nimi", "urakoitsija", "vaylamuoto", "tyyppi", "alkupvm", "loppupvm"]
 }

@@ -1,34 +1,30 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/paikkausten-kirjaus-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
     },
     "paikkaukset": {
-      "id": "urn:harja/paikkaukset",
       "type": "array",
       "maxItems": 200,
-      "required": true,
       "items": {
-        "id": "urn:harja/paikkaukset/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "paikkaus": {
             "type": "object",
             "additionalProperties": false,
-            "required": true,
             "$ref": "file:resources/api/schemas/entities/paikkaus.schema.json"
           }
-        }
+        },
+        "required": ["paikkaus"]
       }
     }
-  }
+  },
+  "required": ["otsikko", "paikkaukset"]
 }

@@ -1,30 +1,24 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tielupien-haku-response",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "tieluvat": {
-      "id": "urn:harja/tieluvat",
       "type": "array",
       "maxItems" : 1000,
       "items": {
-        "id": "urn:harja/tieluvat/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "tielupa": {
-            "id": "urn:harja/tieluvat/0/tielupa",
             "type": "object",
             "additionalProperties": false,
             "properties": {
               "diaarinumero": {
-                "id": "urn:harja/tieluvat/0/tielupa/diaarinumero",
-                "type": "integer",
-                "required": true
+                "type": "integer"
               },
               "tielupatyyppi": {
-                "id": "urn:harja/tieluvat/0/tielupa/tyyppi",
                 "enum": [
                   "kaapelien-johtojen-ja-putkien-sijoituslupa",
                   "opasteet-ja-mainoslupa",
@@ -32,42 +26,34 @@
                   "tiealueella-tyoskentely-lupa",
                   "ajoneuvosiirtolupa",
                   "vahingonkorvaukset"
-                ],
-                "required": true
+                ]
               },
               "otsikko": {
-                "id": "urn:harja/tieluvat/0/tielupa/otsikko",
                 "type": "string"
               },
               "myonnetty": {
-                "id": "urn:harja/tieluvat/0/tielupa/myonnetty",
                 "type": "string",
                 "format": "date-time"
               },
               "voimassa": {
-                "id": "urn:harja/tieluvat/0/tielupa/voimassa",
                 "type": "object",
                 "additionalProperties": false,
-                "required": true,
                 "properties": {
                   "alkaen": {
-                    "id": "urn:harja/tieluvat/0/tielupa/voimassa/alkaen",
                     "type": "string",
                     "format": "date-time"
                   },
                   "paattyen": {
-                    "id": "urn:harja/tieluvat/0/tielupa/voimassa/paattyen",
                     "type": "string",
                     "format": "date-time"
                   }
                 }
               },
               "sijainti": {
-                "id": "urn:harja/sijainti",
-                "$ref": "file:resources/api/schemas/entities/sijainti-myos-vanhat-kaistat.schema.json",
-                "required": true
+                "$ref": "file:resources/api/schemas/entities/sijainti-myos-vanhat-kaistat.schema.json"
               }
-            }
+            },
+            "required": ["diaarinumero", "myonnetty", "voimassa", "sijainti"]
           }
         }
       }

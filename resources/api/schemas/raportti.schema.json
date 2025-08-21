@@ -1,35 +1,27 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "raportti": {
-      "id": "urn:harja/raportti",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "nimi": {
-          "id": "urn:harja/raportti/raportinnimi",
-          "type": "string",
-          "required": true
+          "type": "string"
         },
         "aikavali": {
-          "id": "urn:harja/paivamaaravali",
-          "$ref": "file:resources/api/schemas/entities/paivamaaravali.schema.json",
-          "required": true
+          "$ref": "file:resources/api/schemas/entities/paivamaaravali.schema.json"
         },
         "alueurakkanumero": {
-          "id": "urn:harja/raportti/alueurakkanumero",
-          "type": ["string", "integer"],
-          "required": true
+          "type": ["string", "integer"]
         },
         "materiaaliraportti": {
-          "id": "urn:harja/raportti/materiaaliraportti",
-          "$ref": "file:resources/api/schemas/entities/raportti-materiaalit.schema.json",
-          "required": false
+          "$ref": "file:resources/api/schemas/entities/raportti-materiaalit.schema.json"
         }
-      }
+      },
+      "required": ["nimi", "aikavali", "alueurakkanumero"]
     }
   }
 }

@@ -1,32 +1,25 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/muutostiedot",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "luotu": {
-      "id": "urn:harja/luotu",
       "type": "string",
-      "format": "date-time",
-      "required": true
+      "format": "date-time"
     },
     "luoja": {
-      "id": "urn:harja/luoja",
       "type": "string",
-      "format": "date-time",
-      "required": true
+      "format": "date-time"
     },
     "muokattu": {
-      "id": "urn:harja/muokattu",
       "type": "string",
-      "format": "date-time",
-      "required": false
+      "format": "date-time"
     },
     "muokkaaja": {
-      "id": "urn:harja/muokkaaja",
       "type": "string",
-      "format": "date-time",
-      "required": false
+      "format": "date-time"
     }
-  }
+  },
+  "required": ["luotu", "luoja"]
 }

@@ -1,47 +1,33 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tieosoitevali-kaistalla-ja-ajoradalla",
   "type": "object",
   "properties": {
     "numero": {
-      "id": "urn:harja/tieosoitevali/numero",
       "type": "integer",
-      "minimum": 0,
-      "required": false
+      "minimum": 0
     },
     "aosa": {
-      "id": "urn:harja/tieosoitevali/aosa",
       "type": "integer",
-      "minimum": 0,
-      "required": true
+      "minimum": 0
     },
     "aet": {
-      "id": "urn:harja/tieosoitevali/aet",
       "type": "integer",
-      "minimum": 0,
-      "required": true
+      "minimum": 0
     },
     "let": {
-      "id": "urn:harja/tieosoitevali/let",
       "type": "integer",
-      "minimum": 0,
-      "required": true
+      "minimum": 0
     },
     "losa": {
-      "id": "urn:harja/tieosoitevali/losa",
       "type": "integer",
-      "minimum": 0,
-      "required": true
+      "minimum": 0
     },
     "ajr": {
-      "id": "urn:harja/sijainti/tie/ajr",
       "type": "integer",
-      "minimum": 0,
-      "required": true
+      "minimum": 0
     },
     "kaista": {
-      "id": "urn:harja/sijainti/tie/kaista",
-      "required": true,
       "enum": [
         11,
         12,
@@ -65,9 +51,16 @@
       ]
     },
     "karttapvm": {
-      "id": "urn:harja/sijainti/tie/karttapvm",
       "type": "string",
       "format": "date-time"
     }
-  }
+  },
+  "required": [
+    "aosa",
+    "aet",
+    "let",
+    "losa",
+    "ajr",
+    "kaista"
+  ]
 }

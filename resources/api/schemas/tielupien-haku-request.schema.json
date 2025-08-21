@@ -1,17 +1,15 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tielupien-haku-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "sijainti": {
-      "id": "urn:harja/sijainti",
-      "$ref": "file:resources/api/schemas/entities/sijainti-myos-vanhat-kaistat.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/sijainti-myos-vanhat-kaistat.schema.json"
     },
     "alueurakkanumero": {
-      "id": "urn:harja/alueurakkanumero",
       "type": ["string", "integer"]
     }
-  }
+  },
+  "required": ["sijainti"]
 }

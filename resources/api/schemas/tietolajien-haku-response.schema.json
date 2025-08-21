@@ -1,25 +1,22 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/tietolajien-haku-response",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "tietolajit": {
-      "id": "urn:harja/tietolajit",
       "type": "array",
       "maxItems": 5000,
       "items": {
-        "id": "urn:harja/tietolajit/0",
         "type": "object",
         "properties": {
           "tietolaji": {
-            "id": "urn:harja/tietolajit/0/tietolaji",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/tietolaji.schema.json",
-            "required": true
+            "$ref": "file:resources/api/schemas/entities/tietolaji.schema.json"
           }
-        }
+        },
+        "required": ["tietolaji"]
       }
     }
   }
