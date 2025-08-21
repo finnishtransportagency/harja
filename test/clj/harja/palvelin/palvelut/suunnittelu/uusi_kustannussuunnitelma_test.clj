@@ -312,7 +312,7 @@
     ;; Urakka-id puuttuu
     (is (true? (str/includes? (:error vastaus) "failed: (contains? % :urakka-id)")))))
 
-(deftest tallenna-johto-ja-hallintokorvaukset-rajapinnasta-toimii
+(deftest tallenna-johto-ja-hallintokorvaukset-2019-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         tietomallin-summa (apply + (map
                                      (fn [kuukausi]
