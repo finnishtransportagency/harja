@@ -73,6 +73,10 @@
 ;; Monivalintojen naytettavat valinnat alustus
 (def naytettavat-valinnat-alustus [1])
 
+;; Kustannusennuste
+(defrecord AsetaKustannusennusteTavoitehinta [arvo])
+(defrecord AsetaKustannusennusteToteutuneet [arvo])
+
 (defn valitse-urakka [app urakka]
   (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)
         vanha-hoitokausi (:valittu-hoitokausi app)
@@ -146,6 +150,51 @@
           (virhe!)
           (tulos!))))
     app))
+
+(defn laske-pisteet-poikkeaman-perusteella [poikkeama-prosentti kuukausi]
+  "Laskee pisteet pisteytystaulukon mukaan"
+  (case kuukausi
+    10 (cond
+         (> poikkeama-prosentti 9.0) 1
+         (<= poikkeama-prosentti 9.0) 4
+         (<= poikkeama-prosentti 7.0) 8
+         :else 1)
+    1 (cond
+        (> poikkeama-prosentti 6.0) 1
+        (<= poikkeama-prosentti 6.0) 4
+        (<= poikkeama-prosentti 4.0) 8
+        :else 1)
+    4 (cond
+        (> poikkeama-prosentti 3.0) 1
+        (<= poikkeama-prosentti 3.0) 4
+        (<= poikkeama-prosentti 2.0) 8
+        :else 1)
+    6 (cond
+        (> poikkeama-prosentti 2.0) 1
+        (<= poikkeama-prosentti 2.0) 4
+        (<= poikkeama-prosentti 1.0) 8
+        :else 1)
+    1))
+
+(defn laske-kustannusennuste-automaattiset-arvot [app]
+  "Laskee poikkeama-prosentin ja pisteet automaattisesti kun tavoitehinta tai toteutuneet kustannukset muuttuvat"
+  (let [kustannusennuste (get-in app [:vastaus-lomake :kustannusennuste])
+        {:keys [tavoitehinta toteutuneet-kustannukset]} kustannusennuste]
+    (if (and tavoitehinta toteutuneet-kustannukset
+          (pos? tavoitehinta))
+      (let [poikkeama-prosentti (abs (/ (* 100 (- toteutuneet-kustannukset tavoitehinta))
+                                        tavoitehinta))
+            pisteet (laske-pisteet-poikkeaman-perusteella poikkeama-prosentti
+                      (get-in app [:vastaus-lomake :vastauskuukausi]))]
+        (-> app
+          (assoc-in [:vastaus-lomake :kustannusennuste :poikkeama-prosentti] poikkeama-prosentti)
+          (assoc-in [:vastaus-lomake :kustannusennuste :pisteet] pisteet)))
+      ;; Jos arvot puuttuvat, nollaa lasketut kentät
+      (-> app
+        (assoc-in [:vastaus-lomake :kustannusennuste :poikkeama-prosentti] nil)
+        (assoc-in [:vastaus-lomake :kustannusennuste :pisteet] nil)))))
+
+
 
 (extend-protocol tuck/Event
   HoitokausiVaihdettu
@@ -470,4 +519,14 @@
   (process-event [{nykyhetki :nykyhetki} app]
     (-> app
         (assoc :nykyhetki nykyhetki)
-        hae-urakan-lupaustiedot)))
+        hae-urakan-lupaustiedot))
+  
+  AsetaKustannusennusteTavoitehinta
+  (process-event [{arvo :arvo} app]
+    (let [uusi-app (assoc-in app [:vastaus-lomake :kustannusennuste :tavoitehinta] arvo)]
+      (laske-kustannusennuste-automaattiset-arvot uusi-app))
+  
+  AsetaKustannusennusteToteutuneet
+  (process-event [{arvo :arvo} app]
+    (let [uusi-app (assoc-in app [:vastaus-lomake :kustannusennuste :toteutuneet-kustannukset] arvo)]
+      (laske-kustannusennuste-automaattiset-arvot uusi-app)))))
