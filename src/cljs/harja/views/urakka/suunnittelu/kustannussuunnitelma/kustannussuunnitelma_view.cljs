@@ -590,7 +590,10 @@
 (defn kustannussuunnitelma
   "Kustannussuunnitelma välilehti"
   []
-  [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])
+  (if (>= (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm)) 2025)
+    [:div {:style {:height "800px" :width "760px"}}
+     [yleiset/info-laatikko :huolto "Kustannussuunnitelma uudistuu. Päivityksen ajan toiminnot ovat pois käytöstä. Tiedotamme muutoksesta tarkemmin sähköpostitse." nil nil nil]]
+    [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*]))
 
 (defn ^:export hae-kustannussuunnitelman-data []
   (e! (t/->HaeKustannussuunnitelma)))
