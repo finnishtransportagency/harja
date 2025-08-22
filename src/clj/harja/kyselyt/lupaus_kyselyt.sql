@@ -287,6 +287,7 @@ WHERE
 ORDER BY r.jarjestys, l.jarjestys;
 
 -- name: hae-lupauksen-hoitovuoden-kirjauskuukaudet
+-- row-fn: muunna-lupaus
 SELECT id,
        "lupaus-id",
        "hoitovuosi-nro",
@@ -294,22 +295,5 @@ SELECT id,
        "paatos-kk",
        "joustovara-kkta"
   FROM lupaus_hoitovuoden_kirjauskuukaudet
- WHERE "lupaus-id" = :lupaus-id
-   AND "hoitovuosi-nro" = :hoitovuosi-nro;
-
--- name: lisaa-lupauksen-hoitovuoden-kirjauskuukaudet<!
-INSERT INTO lupaus_hoitovuoden_kirjauskuukaudet ("lupaus-id", "hoitovuosi-nro", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", luoja)
-VALUES (:lupaus-id, :hoitovuosi-nro, :kirjaus-kkt, :paatos-kk, :joustovara-kkta, :luoja);
-
--- name: paivita-lupauksen-hoitovuoden-kirjauskuukaudet<!
-UPDATE lupaus_hoitovuoden_kirjauskuukaudet
-   SET "kirjaus-kkt" = :kirjaus-kkt,
-       "paatos-kk" = :paatos-kk,
-       "joustovara-kkta" = :joustovara-kkta
- WHERE "lupaus-id" = :lupaus-id
-   AND "hoitovuosi-nro" = :hoitovuosi-nro;
-
--- name: poista-lupauksen-hoitovuoden-kirjauskuukaudet<!
-DELETE FROM lupaus_hoitovuoden_kirjauskuukaudet
  WHERE "lupaus-id" = :lupaus-id
    AND "hoitovuosi-nro" = :hoitovuosi-nro;
