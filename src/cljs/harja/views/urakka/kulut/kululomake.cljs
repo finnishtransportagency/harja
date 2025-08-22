@@ -94,7 +94,7 @@
     ;; Näytä virhe, jos annettu arvo ei ole validi
     (not validi?)))
 
-(defn tehtavan-valinta [{:keys [valitse-fn disabled virhe? valinta format-fn tehtava-haku-menossa]} tehtavat] 
+(defn tehtavan-valinta [{:keys [valitse-fn disabled virhe? valinta format-fn tehtava-haku-menossa]} tehtavat]
     [:<>
      (when (or (seq tehtavat) valinta)
        [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
