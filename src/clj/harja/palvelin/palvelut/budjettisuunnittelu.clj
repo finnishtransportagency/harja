@@ -285,9 +285,9 @@
                                                       ;; Jos tähän tulee sopimusmuutoksia, tee samat muutokset sql funktioon: indeksikorjaa
                                                       ;; 
                                                       ;; 2023 ja jälkeen alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta
-                                                      (>= urakan-akuvuosi 2023) 8
+                                                      (>= urakan-akuvuosi 2023) (pvm/kuukauden-numero "elokuu")
                                                       ;; Muihin aikoihin alkavilla urakoilla käytetään tarkastelukuukautena syyskuuta
-                                                      :else 9))
+                                                      :else (pvm/kuukauden-numero "syyskuu")))
                                   perusluku (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id})))
                                   indeksiluvut-urakan-aikana (when perusluku
                                                                (sequence

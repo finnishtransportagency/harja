@@ -40,13 +40,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/info "hae-kustannussuunnitelman-tiedot :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (let [toimenpide->nimi {:paallystepaikkaukset "Päällystepaikkaukset"
-                            :mhu-yllapito "MHU Ylläpito"
-                            :talvihoito "Talvihoito"
-                            :liikenneympariston-hoito "Liikenneympäristön hoito"
-                            :sorateiden-hoito "Sorateiden hoito"
-                            :mhu-korvausinvestointi "MHU Korvausinvestointi"}
-          ;; Urakan sopimus id
+    (let [;; Urakan sopimus id
           sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
           ;; Urakan parametrit
           urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
@@ -69,7 +63,7 @@
           kiinteat (map (fn [tyo]
                           (-> tyo
                             (assoc :toimenpide-avain (mhu/toimenpide->toimenpide-avain (:koodi tyo)))
-                            (assoc :toimenpide-nimi (toimenpide->nimi (mhu/toimenpide->toimenpide-avain (:koodi tyo))))))
+                            (assoc :toimenpide-nimi (mhu/toimenpide->nimi (mhu/toimenpide->toimenpide-avain (:koodi tyo))))))
                      kiinteat)
           ;; Indeksikerroin
           indeksikerroin (:indeksikerroin
