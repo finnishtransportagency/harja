@@ -278,6 +278,7 @@
                                                                                        {::ur/id urakka-id}))
                                   urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
                                   urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+                                  urakan-vuosien-maara (- urakan-loppuvuosi urakan-alkuvuosi)
                                   vertailu-kk-mhu (fn [urakan-akuvuosi]
                                                     (cond
                                                       ;; HOX!!
@@ -304,7 +305,7 @@
                                                                            :indeksikerroin (pyorista (with-precision 4 (/ arvo perusluku)) 3)})))
                                                                  (i-q/hae-indeksi db {:nimi indeksi})))
                                   urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
-                              (if (= 5 urakan-indeksien-maara)
+                              (if (= urakan-vuosien-maara urakan-indeksien-maara)
                                 (vec indeksiluvut-urakan-aikana)
                                 (mapv (fn [index]
                                         (if (empty? indeksiluvut-urakan-aikana)
@@ -313,7 +314,7 @@
                                           ;; Palautetaan indeksit vain hoitovuosille, joilla on indeksejä.
                                           ;; Lopuille hoitovuosille nil.
                                           (nth indeksiluvut-urakan-aikana index nil)))
-                                      (range 0 5))))))
+                                      (range 0 urakan-vuosien-maara))))))
 
 (defn tallenna-urakan-tavoite
   "Palvelu joka tallentaa urakan budjettiin liittyvät tavoitteet: tavoitehinta, kattohinta ja edelliseltä hoitovuodelta siirretty tavoitehinnan lisä/vähennys.

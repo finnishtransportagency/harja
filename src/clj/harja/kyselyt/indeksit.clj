@@ -28,6 +28,7 @@
                                                           {::ur/id urakka-id}))
           urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
           urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+          urakan-vuosien-maara (- urakan-loppuvuosi urakan-alkuvuosi)
           vertailu-kk-mhu (fn [urakan-akuvuosi]
                             (cond
                               ;; HOX!!
@@ -53,17 +54,18 @@
                                                    ;; että tilastokeskus ilmaisee indeksikertoimen kolmella desimaalilla (prosentin kymmenyksen tarkkuudella).
                                                    :indeksikerroin (pyorista (with-precision 4 (/ arvo perusluku)) 3)})))
                                          (hae-indeksi db {:nimi indeksi})))
-          urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
-      (if (= 5 urakan-indeksien-maara)
-        (vec indeksiluvut-urakan-aikana)
-        (mapv (fn [index]
-                (if (empty? indeksiluvut-urakan-aikana)
-                  ;;Palautetaan nil indeksikertoimeksi urakoille, jotka eivät ole vielä alkaneet.
-                  nil
-                  ;; Palautetaan indeksit vain hoitovuosille, joilla on indeksejä.
-                  ;; Lopuille hoitovuosille nil.
-                  (nth indeksiluvut-urakan-aikana index nil)))
-          (range 0 5))))))
+          urakan-indeksien-maara (count indeksiluvut-urakan-aikana)
+          urakan-indeksit (if (= urakan-vuosien-maara urakan-indeksien-maara)
+                            (vec indeksiluvut-urakan-aikana)
+                            (mapv (fn [index]
+                                    (if (empty? indeksiluvut-urakan-aikana)
+                                      ;;Palautetaan nil indeksikertoimeksi urakoille, jotka eivät ole vielä alkaneet.
+                                      nil
+                                      ;; Palautetaan indeksit vain hoitovuosille, joilla on indeksejä.
+                                      ;; Lopuille hoitovuosille nil.
+                                      (nth indeksiluvut-urakan-aikana index nil)))
+                              (range 0 urakan-vuosien-maara)))]
+      urakan-indeksit)))
 
 (defn indeksikerroin
   "Palauttaa indeksikertoimen annetulle hoitovuoden järjestysnumerolle."
