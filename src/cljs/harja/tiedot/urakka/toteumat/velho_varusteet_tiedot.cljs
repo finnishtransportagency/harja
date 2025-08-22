@@ -94,6 +94,7 @@
 (defrecord HaeNimikkeisto [])
 (defrecord HaeNimikkeistoOnnistui [vastaus])
 (defrecord HaeNimikkeistoEpaonnistui [vastaus])
+(defrecord TyhjennaVarusteListaus [])
 
 (def fin-hk-alkupvm "01.10.")
 (def fin-hk-loppupvm "30.09.")
@@ -259,4 +260,12 @@
   HaeNimikkeistoEpaonnistui
   (process-event [{:keys [_]} app]
     (viesti/nayta-toast! "Kohdeluokkien haku epäonnistui!" :varoitus)
-    app))
+    app)
+
+  TyhjennaVarusteListaus
+  (process-event [_ app]
+    (reset! varusteet-kartalla/karttataso-varusteet nil)
+    (-> app
+      (assoc :haku-paalla false)
+      (assoc :varusteet []))))
+

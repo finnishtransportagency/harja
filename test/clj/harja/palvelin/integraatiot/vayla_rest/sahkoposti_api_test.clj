@@ -30,7 +30,7 @@
   (:import (net.postgis.jdbc PGgeometry)
            (java.util UUID)))
 
-(def ehdon-timeout 20000)
+(def ehdon-timeout 30000)
 (def spostin-vastaanotto-url "/sahkoposti/toimenpidekuittaus")
 (def kayttaja "destia")
 (def kayttaja-yit "yit-rakennus")

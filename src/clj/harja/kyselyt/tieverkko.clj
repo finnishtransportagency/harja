@@ -27,7 +27,7 @@
 
 (defn hae-trpisteiden-valinen-tieto-raaka
   "Raaka tulos 'laske_tr_tiedot' SQL funktiosta"
-  [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as params}]
+  [db params]
   (map (fn [tieto]
          (update tieto :pituudet konv/jsonb->clojuremap))
        (hae-trpisteiden-valinen-tieto db params))  )
@@ -94,7 +94,7 @@
     (vec (map muodosta-ajorata osoitteet-by-ajoradat))))
 
 (defn hae-trpisteiden-valinen-tieto-yhdistaa
-  [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as params}]
+  [db params]
   (let [raaka-osat (hae-trpisteiden-valinen-tieto-raaka db params)
         kasitele-raaka (fn [raaka-osa]
                          (let [pituudet (:pituudet raaka-osa)

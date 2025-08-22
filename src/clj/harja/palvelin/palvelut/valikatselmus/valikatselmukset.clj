@@ -726,7 +726,7 @@
         mhu-tyyppi (paatoskone/urakan-hoitotyyppi mhu+urakka?)
         ;; Haetaan urakan taloustiedot, jotta tiedetään kuuluuko tavoitehinnan alitus, ylitys ja kattohinta pakettiin
         kustannukset (hae-kustannukset-jarjestettyna db urakkaid kuluva-hoitovuosi
-                       (pvm/hoitokauden-alkupvm kuluva-hoitovuosi) (pvm/hoitokauden-alkupvm kuluva-hoitovuosi))
+                       (pvm/hoitokauden-alkupvm kuluva-hoitovuosi) (pvm/hoitokauden-loppupvm (inc kuluva-hoitovuosi)))
         toteutuneet-kustannukset (get-in kustannukset [:yhteensa :yht-toteutunut-summa])
         budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakkaid})
         ;; Otetaan käytyn hoitovuoden budjetti

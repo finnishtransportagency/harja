@@ -1,13 +1,9 @@
 (ns harja.palvelin.ajastetut-tehtavat.geometriapaivitykset
   (:require [taoensso.timbre :as log]
-            [chime :refer [chime-ch]]
             [chime :refer [chime-at]]
             [com.stuartsierra.component :as component]
             [clj-time.periodic :refer [periodic-seq]]
             [clj-time.core :as time]
-            [clj-time.coerce :as coerce]
-            [clojure.java.io :as io]
-            [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.ava :as ava]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieturvallisuusverkko :as tieturvallisuusverkon-tuonti]
@@ -36,17 +32,17 @@
 (defn ajasta-paivitys [this paivitystunnus tuontivali osoite kohdetiedoston-polku shapefile paivitys kayttajatunnus salasana]
   (log/debug (format "[AJASTETTU-GEOMETRIAPAIVITYS] %s päivitystarve ajastetaan tarkistettavaksi %s minuutin välein. Päivitystarpeeseen vaikuttavat GEOMETRIAPAIVITYS-taulun tiedot sekä LUKKO-taulu." paivitystunnus tuontivali))
   (chime-at (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
-            (fn [_]
-              (ava/kaynnista-paivitys (:integraatioloki this)
-                                      (:db this)
-                                      paivitystunnus
-                                      osoite
-                                      kohdetiedoston-polku
-                                      shapefile
-                                      paivitys
-                                      kayttajatunnus
-                                      salasana))
-            virhekasittely))
+    (fn [_]
+      (ava/kaynnista-paivitys (:integraatioloki this)
+        (:db this)
+        paivitystunnus
+        osoite
+        kohdetiedoston-polku
+        shapefile
+        paivitys
+        kayttajatunnus
+        salasana))
+    virhekasittely))
 
 
 (defn rakenna-osoite [db aineiston-nimi osoite]
@@ -72,19 +68,19 @@
           shapefile (rakenna-osoite db paivitystunnus (get asetukset shapefile-avain))
           kayttajatunnus (:kayttajatunnus asetukset)
           salasana (:salasana asetukset)]
-         (when (and tuontivali
-                 url
-                 tuontikohdepolku
-                 shapefile)
+      (when (and tuontivali
+              url
+              tuontikohdepolku
+              shapefile)
         (ajasta-paivitys this
-                         paivitystunnus
-                         tuontivali
-                         url
-                         tuontikohdepolku
-                         shapefile
-                         (fn [] (paivitys (:db this) shapefile))
-                         kayttajatunnus
-                         salasana)))))
+          paivitystunnus
+          tuontivali
+          url
+          tuontikohdepolku
+          shapefile
+          (fn [] (paivitys (:db this) shapefile))
+          kayttajatunnus
+          salasana)))))
 
 ;; Tallennustehtävä suorittaa vain viimeisen geometriapäivitykseen liittyvän askeleen: tallentaa tiedoston tietosisällön
 ;; tietokantaan paivitys-funktion avulla. Tiedosto on toimitettava tietosisältöön erikseen.
@@ -94,8 +90,7 @@
                                    tiedostoavain
                                    paivitys]
   (fn [this {:keys [tuontivali] :as asetukset}]
-    (let [db (:db this)
-          tiedosto (get asetukset tiedostoavain)]
+    (let [tiedosto (get asetukset tiedostoavain)]
       (when (and paivitystunnus
               tuontivali
               tiedosto)
