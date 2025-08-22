@@ -18,14 +18,14 @@ describe('Päänäkymien avaamiset', function () {
     })
 
     it("Urakkavalinta listan kautta toimii", function () {
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click({force: true})
+        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
         cy.contains('.haku-lista-item', 'Aktiivinen Oulu Testi').click()
         cy.contains('Aktiivinen Oulu Testi')
     })
 
     it("Raportit välilehti toimii", function () {
         cy.intercept( '_/hae-raportit' ).as('hae-raportit')
-        cy.contains('ul#sivut a span', 'Raportit').click({force: true})
+        cy.contains('ul#sivut a span', 'Raportit').click()
         // Odota raporttien latautumista, jotta raportti voidaan valita
         cy.wait('@hae-raportit', { timeout: visibleTimeout })
             .its('response.statusCode').should('equal', 200)
@@ -38,25 +38,25 @@ describe('Päänäkymien avaamiset', function () {
     })
 
     it("Tilannekuva välilehti toimii", function () {
-        cy.contains('ul#sivut a span', 'Tilannekuva').click({force: true})
+        cy.contains('ul#sivut a span', 'Tilannekuva').click()
         cy.contains('div#tk-suodattimet a.klikattava', "Nykytilanne", { timeout: 10000 }).should('exist')
         cy.contains('Hupsista').should('not.exist')
     })
 
     it("Ilmoitukset välilehti toimii", function () {
-        cy.contains('ul#sivut a span', 'Ilmoitukset').click({force: true})
+        cy.contains('ul#sivut a span', 'Ilmoitukset').click()
         cy.contains('div.livi-grid th', "Urakka", { timeout: 10000 }).should('exist')
         cy.contains('Hupsista').should('not.exist')
     })
 
     it("Tienpidon luvat välilehti toimii", function () {
-        cy.contains('ul#sivut a span', 'Tienpidon luvat').click({force: true})
+        cy.contains('ul#sivut a span', 'Tienpidon luvat').click()
         cy.contains('button', "Hae lupia", { timeout: visibleTimeout }).should('be.visible');
         cy.contains('Hupsista').should('not.exist')
     })
 
     it("Urakoiden tilanne välilehti toimii", function () {
-        cy.contains('ul#sivut a span', 'Urakoiden tilanne').click({force: true})
+        cy.contains('ul#sivut a span', 'Urakoiden tilanne').click()
         cy.contains('h1', "Urakoiden tilanne", { timeout: visibleTimeout }).should('be.visible');
         cy.contains('Hupsista').should('not.exist')
     })
