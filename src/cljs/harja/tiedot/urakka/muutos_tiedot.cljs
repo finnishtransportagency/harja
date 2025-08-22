@@ -67,22 +67,6 @@
         (assoc :urakan-hoitokaudet hoitokaudet)
         (assoc :valittu-hoitokausi uusi-hoitokausi))))
 
-(def pysyvan-muutoksen-rivit-atom (atom nil))
-
-
-;; pidetään app statessa pysyvän muutoksen lomakkeiden tiedot seuraavalla tavalla järjestyksessä:
-;; muokattava-muutos // toimenpiteiden-tiedot // hoitokauden alkuvuosi avaimena (näitä voi olla useita)
-;; // kuusi toimenpideinstanssikohtaista riviä // kunkin toimenpiderivin alle vielä tehtäväkohtaiset tiedot
-;; on oltava mahdollista että sama muutos tallentaa eri hoitokausille hieman eri tiedot, joten välillä on oltava hoitokauden alkuvuosi avaimena
-
-(defn pysyvan-muutoksen-rivit
-  "Tuottaa pysyvän muutoksen kustannuksista muokkaus-gridin hyväksymän rivimuodon, eli map jossa on avain"
-  [rivit lomakkeen-hoitovuosi]
-  (into {}
-    (mapv (fn [rivi]
-            {(:toimenpideinstanssi rivi) rivi})
-      rivit)))
-
 (def johto-ja-hallintokorvausmuutokset-atom (atom nil))
 
 (defn johto-ja-hallintokorvausmuutoksen-rivit
@@ -223,9 +207,6 @@
       (reset! johto-ja-hallintokorvausmuutokset-atom
         (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
           (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))))
-      ;; fixme: ehkä tarpeeton tämä atomi, oli muokkaus-gridiä varten
-      (reset! pysyvan-muutoksen-rivit-atom
-        (pysyvan-muutoksen-rivit (:toimenpiteiden-tiedot vastaus) lomakkeen-hoitokausi))
       app))
 
   HaeMuutoksenTiedotEpaonnistui
