@@ -131,6 +131,8 @@
         nykyhetki (pvm/luo-pvm 2022 0 1)
         valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                             #inst "2022-09-30T20:59:59.000-00:00"]
+        hoitovuosi-nro 1
+        hoitovuoden-erikoisarvot []
         kuukaudet [;; Menneet kuukaudet
                    {:vuosi 2021
                     :kuukausi 10
@@ -181,26 +183,26 @@
                    {:vuosi 2022 :kuukausi 8 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
                    {:vuosi 2022 :kuukausi 9 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}]]
     (is (= kuukaudet
-           (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi)))
+           (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot)))
     (let [lupaus (dissoc lupaus :vastaukset)
           valittu-hoitokausi [#inst "2022-09-30T21:00:00.000-00:00"
                               #inst "2023-09-30T20:59:59.000-00:00"]
-          lupaus-kuukaudet (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi)]
+          lupaus-kuukaudet (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot)]
       (is (= (repeat 12 false)
              (->> lupaus-kuukaudet (map :odottaa-kannanottoa?)))
-          "Tuleviin hoitokausiin ei oteta kantaa")
+        "Tuleviin hoitokausiin ei oteta kantaa")
       (is (= (repeat 12 :tuleva-kuukausi)
              (->> lupaus-kuukaudet (map :nykyhetkeen-verrattuna)))
-          "Vertailu nykyhetkeen toimii"))
+        "Vertailu nykyhetkeen toimii"))
 
     ;; Muutetaan 11/2021 vastaus myöntäväksi
     (let [lupaus (assoc-in lupaus [:vastaukset 1 :vastaus] true)
           kuukaudet (-> kuukaudet
-                        (assoc-in [1 :vastaus :vastaus] true)
-                        (assoc-in [2 :odottaa-kannanottoa?] true))
+                      (assoc-in [1 :vastaus :vastaus] true)
+                      (assoc-in [2 :odottaa-kannanottoa?] true))
           kuukaudet (map #(assoc % :paatos-hylatty? false) kuukaudet)]
       (is (= kuukaudet
-             (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi))))))
+             (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot))))))
 
 (deftest odottaa-urakoitsijan-kannanottoa?
   (is (true? (lupaus-domain/odottaa-urakoitsijan-kannanottoa?
@@ -245,3 +247,53 @@
                  {:vuosi 2020 :kuukausi 8 :odottaa-vastausta? false}
                  {:vuosi 2020 :kuukausi 9 :odottaa-vastausta? true}]))
     "Ei odota urakoitsijan kannanottoa, koska ainoastaan päättävät pisteet on antamatta"))
+
+
+(deftest hoitovuoden-kirjauskuukaudet-test
+  (let [lupaus {:kirjaus-kkt [10 11 12 1 2 3 4 5 6 7 8 9]}
+        erikoisarvot {:kirjaus-kkt [10 1 4 6]}]
+
+    (testing "Käyttää erikoisarvoja kun ne on annettu"
+      (is (= [10 1 4 6]
+             (lupaus-domain/hoitovuoden-kirjauskuukaudet lupaus 1 erikoisarvot))))
+
+    (testing "Käyttää perusarvoja kun erikoisarvoja ei ole"
+      (is (= [10 11 12 1 2 3 4 5 6 7 8 9]
+             (lupaus-domain/hoitovuoden-kirjauskuukaudet lupaus 1 nil))))
+
+    (testing "Käyttää perusarvoja kun erikoisarvot on tyhjä"
+      (is (= [10 11 12 1 2 3 4 5 6 7 8 9]
+             (lupaus-domain/hoitovuoden-kirjauskuukaudet lupaus 1 {}))))))
+
+(deftest sallittu-kuukausi-hoitovuodelle-test
+  (let [lupaus {:kirjaus-kkt [10 11 12 1 2 3 4 5 6 7 8 9]
+                :paatos-kk 9}
+        erikoisarvot {:kirjaus-kkt [10 1 4 6]  ; Vain neljä kuukautta
+                      :paatos-kk 6}]           ; Kesäkuu päätös
+
+    (testing "Erikoisarvot rajoittavat kirjauskuukausia"
+      (is (true? (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus 10 false 1 erikoisarvot)))
+      (is (true? (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus 1 false 1 erikoisarvot)))
+      (is (false? (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus 11 false 1 erikoisarvot))))
+
+    (testing "Erikoisarvot muuttavat päätöskuukautta"
+      (is (true? (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus 6 true 1 erikoisarvot)))
+      (is (false? (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus 9 true 1 erikoisarvot))))
+
+    (testing "Ilman erikoisarvoja käyttää perusarvoja"
+      (is (true? (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus 11 false 1 nil)))
+      (is (true? (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus 9 true 1 nil))))))
+
+(deftest vaaditut-vastauskuukaudet-hoitovuodelle-test
+  (let [lupaus {:kirjaus-kkt [10 11 12 1 2 3 4 5 6 7 8 9]
+                :paatos-kk 9}
+        erikoisarvot {:kirjaus-kkt [10 1 4 6]
+                      :paatos-kk 6}]
+
+    (testing "Yhdistää erikoisarvojen kirjaus- ja päätöskuukaudet"
+      (is (= #{10 1 4 6}
+             (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle lupaus nil 1 erikoisarvot))))
+
+    (testing "Suodattaa kuluvan kuukauden mukaan"
+      (is (= #{10}
+             (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle lupaus 11 1 erikoisarvot))))))
