@@ -94,8 +94,7 @@
     ;; Näytä virhe, jos annettu arvo ei ole validi
     (not validi?)))
 
-(defn tehtavan-valinta [{:keys [valitse-fn disabled virhe? valinta format-fn tehtava-haku-menossa]} tehtavat]
-  (when (and (k/kehitysymparistossa?) (pvm/jalkeen? (pvm/nyt) (pvm/->pvm "01.10.2025")))
+(defn tehtavan-valinta [{:keys [valitse-fn disabled virhe? valinta format-fn tehtava-haku-menossa]} tehtavat] 
     [:<>
      (when (or (seq tehtavat) valinta)
        [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
@@ -115,10 +114,9 @@
      (when tehtava-haku-menossa
        [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
         [:div.margin-top-32
-         [yleiset/ajax-loader-pieni "Ladataan mahdollisia tehtäviä..."]]])]))
+         [yleiset/ajax-loader-pieni "Ladataan mahdollisia tehtäviä..."]]])])
 
 (defn lisatieto [e! lisatieto lomake nro]
-  (when (and (k/kehitysymparistossa?) (pvm/jalkeen? (pvm/nyt) (pvm/->pvm "01.10.2025")))
     [:div.col-xs-12.col-md-3
      [kentat/tee-otsikollinen-kentta
       {:otsikko "Lisätieto"
@@ -130,7 +128,7 @@
        :kentta-params {:tyyppi :string
                        :vayla-tyyli? true
                        :aputeksti "Kirjoita tähän halutessasi lisätietoa"
-                       :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]))
+                       :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]])
      
 (defn- hankintakulu-kohdistus [e! lomake kohdistus tehtavaryhmat nro]
   (let [;; Hankintakululla ei saa olla kaikkia mahdollisia tehtäväryhmiä. Siivotaan väärät pois tässä
@@ -478,8 +476,6 @@
                            (str "-" (fmt/euro (* -1 summa-yht)))
                            (fmt/euro (or summa-yht 0)))]
     [:div.kululomake
-     [:div.row
-      [testausvalinnat e! app]]
      [:div.row
       ;; Otsikko
       [:div.col-xs-12.col-md-6
