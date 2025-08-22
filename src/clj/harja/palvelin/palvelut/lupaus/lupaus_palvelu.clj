@@ -151,7 +151,7 @@
                                         tulos))))
                      (mapv lupaus-domain/liita-ennuste-tai-toteuma)
                      (mapv #(lupaus-domain/liita-odottaa-kannanottoa % nykyhetki valittu-hoitokausi))
-                     (mapv #(lupaus-domain/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi))
+                     (mapv #(lupaus-domain/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi hoitovuosi-nro (get erikoisarvot (:lupaus-id %))))
                      (mapv #(liita-lupaus-vaihtoehdot db %)))
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
