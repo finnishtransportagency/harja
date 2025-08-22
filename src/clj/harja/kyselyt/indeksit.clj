@@ -9,7 +9,13 @@
 (defqueries "harja/kyselyt/indeksit.sql"
   {:positional? true})
 
-(declare hae-urakan-hoitovuoden-indeksit-kuukausinimilla hae-urakan-indeksin-perusluku hae-indeksi)
+(declare hae-urakan-hoitovuoden-indeksit-kuukausinimilla hae-urakkatyypin-indeksit
+  hae-paallystysurakan-indeksitiedot
+  hae-paallystysurakan-indeksin-urakka-id
+  tallenna-paallystysurakan-indeksitiedot!
+  hae-urakan-indeksin-perusluku hae-indeksi
+  hae-urakan-kuukauden-indeksiarvo listaa-indeksit
+  paivita-indeksi! luo-indeksi<! poista-indeksi!)
 
 ;; Osittain duplikaatti, kunnes vanha kustannussuunnitelma poistetaan
 (defn hae-urakan-indeksikertoimet

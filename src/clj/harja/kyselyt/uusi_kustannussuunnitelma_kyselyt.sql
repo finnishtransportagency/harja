@@ -1,5 +1,5 @@
 -- name: hae-urakan-toimenpiteet
-SELECT t.id, t.nimi, t.koodi, tpi.id as "toimenpideinstanssi-id"
+SELECT t.id, t.nimi, t.koodi, tpi.id AS "toimenpideinstanssi-id"
 FROM toimenpideinstanssi tpi
          JOIN toimenpide t ON tpi.toimenpide = t.id
 WHERE tpi.urakka = :urakkaid
@@ -22,9 +22,9 @@ WHERE sopimus = :sopimus-id
   AND toimenpideinstanssi = :toimenpideinstanssi-id;
 
 -- name: hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
-SELECT greatest(kt.muokattu, kt.luotu) as viimeisin_muokkaus, concat(k.etunimi, ' ', k.sukunimi) as viimeisin_muokkaaja
+SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
 FROM kiinteahintainen_tyo kt
-JOIN kayttaja k ON k.id = greatest(kt.muokkaaja, kt.luoja),
+JOIN kayttaja k ON k.id = GREATEST(kt.muokkaaja, kt.luoja),
     toimenpideinstanssi tpi
 JOIN toimenpide t ON tpi.toimenpide = t.id
 WHERE kt.sopimus = :sopimus-id
@@ -109,9 +109,9 @@ FROM kustannusarvioitu_tyo
 WHERE id = :id;
 
 -- name: hae-viimeisin-muokkaaja-erillishankinnoille
-SELECT greatest(kt.muokattu, kt.luotu) as viimeisin_muokkaus, concat(k.etunimi, ' ', k.sukunimi) as viimeisin_muokkaaja
+SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
 FROM kustannusarvioitu_tyo kt
-         JOIN kayttaja k ON k.id = greatest(kt.muokkaaja, kt.luoja)
+         JOIN kayttaja k ON k.id = GREATEST(kt.muokkaaja, kt.luoja)
 WHERE sopimus = :sopimus-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
     OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
@@ -135,11 +135,11 @@ VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
 
 -- name: hae-johto-ja-hallintokorvaukset-kuukausittain
 -- Käytetään -25 ja myöhemmin alkaville urakoille, kun yksittäisellä toimenkuvalla ei ole merkitystä
-SELECT MIN(id) as id,
+SELECT MIN(id) AS id,
        kuukausi,
        vuosi,
-       SUM((tunnit * tuntipalkka))                 as summa,
-       SUM((tunnit * tuntipalkka_indeksikorjattu)) as summa_indeksikorjattu
+       SUM((tunnit * tuntipalkka))                 AS summa,
+       SUM((tunnit * tuntipalkka_indeksikorjattu)) AS summa_indeksikorjattu
 FROM johto_ja_hallintokorvaus
 WHERE "urakka-id" = :urakka-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
@@ -185,9 +185,9 @@ WHERE "toimenkuva-id" = :toimenkuva-id
 
 
 -- name: hae-viimeisin-muokkaaja-jjh
-SELECT greatest(jjh.muokattu, jjh.luotu) as viimeisin_muokkaus, concat(k.etunimi, ' ', k.sukunimi) as viimeisin_muokkaaja
+SELECT GREATEST(jjh.muokattu, jjh.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
 FROM johto_ja_hallintokorvaus jjh
-         JOIN kayttaja k ON k.id = greatest(jjh.muokkaaja, jjh.luoja)
+         JOIN kayttaja k ON k.id = GREATEST(jjh.muokkaaja, jjh.luoja)
 WHERE "urakka-id" = :urakka-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
     OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9));
@@ -237,9 +237,9 @@ FROM kustannusarvioitu_tyo
 WHERE id = :id;
 
 -- name: hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
-SELECT greatest(kt.muokattu, kt.luotu) as viimeisin_muokkaus, concat(k.etunimi, ' ', k.sukunimi) as viimeisin_muokkaaja
+SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
 FROM kustannusarvioitu_tyo kt
-            JOIN kayttaja k ON k.id = greatest(kt.muokkaaja, kt.luoja)
+            JOIN kayttaja k ON k.id = GREATEST(kt.muokkaaja, kt.luoja)
 WHERE sopimus = :sopimus-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
     OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
@@ -263,8 +263,8 @@ VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
 
 -- name: hae-rahavaraus-vuodelta
 SELECT r.nimi,
-       SUM(summa) as "suunniteltu-summa",
-       SUM(summa_indeksikorjattu) as "suunniteltu-summa-indeksikorjattu"
+       SUM(summa) AS "suunniteltu-summa",
+       SUM(summa_indeksikorjattu) AS "suunniteltu-summa-indeksikorjattu"
 FROM kustannusarvioitu_tyo kt
      join rahavaraus r on kt.rahavaraus_id = r.id
 WHERE sopimus = :sopimus-id
