@@ -23,10 +23,10 @@ WHERE sopimus = :sopimus-id
 
 -- name: hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
-FROM kiinteahintainen_tyo kt
-JOIN kayttaja k ON k.id = GREATEST(kt.muokkaaja, kt.luoja),
-    toimenpideinstanssi tpi
-JOIN toimenpide t ON tpi.toimenpide = t.id
+  FROM kiinteahintainen_tyo kt
+       LEFT JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
+       JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+       JOIN toimenpide t ON tpi.toimenpide = t.id
 WHERE kt.sopimus = :sopimus-id
   AND tpi.urakka = :urakkaid
   AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
@@ -38,6 +38,8 @@ WHERE kt.sopimus = :sopimus-id
     OR t.koodi = '20191' -- mhu-yllapito
     OR t.koodi = '14301' -- mhu-korvausinvestointi
     );
+ORDER BY viimeisin_muokkaus DESC
+LIMIT 1;
 
 -- name: poista-kiinteat-kustannukset-kuukausittain!
 UPDATE kiinteahintainen_tyo
@@ -111,12 +113,14 @@ WHERE id = :id;
 -- name: hae-viimeisin-muokkaaja-erillishankinnoille
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
 FROM kustannusarvioitu_tyo kt
-         JOIN kayttaja k ON k.id = GREATEST(kt.muokkaaja, kt.luoja)
+         LEFT JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
 WHERE sopimus = :sopimus-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
-    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
   AND toimenpideinstanssi = :toimenpideinstanssi-id
-  AND tehtavaryhma = :tehtavaryhma-id;
+  AND tehtavaryhma = :tehtavaryhma-id
+ORDER BY viimeisin_muokkaus DESC
+LIMIT 10;;
 
 -- name: paivita-kuukauden-erillishankinta<!
 UPDATE kustannusarvioitu_tyo
@@ -187,10 +191,12 @@ WHERE "toimenkuva-id" = :toimenkuva-id
 -- name: hae-viimeisin-muokkaaja-jjh
 SELECT GREATEST(jjh.muokattu, jjh.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
 FROM johto_ja_hallintokorvaus jjh
-         JOIN kayttaja k ON k.id = GREATEST(jjh.muokkaaja, jjh.luoja)
+     LEFT JOIN kayttaja k ON COALESCE(jjh.muokkaaja, jjh.luoja) = k.id
 WHERE "urakka-id" = :urakka-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
-    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9));
+      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+ORDER BY viimeisin_muokkaus DESC
+LIMIT 10;
 
 -- name: paivita-kuukauden-johto-ja-hallintokorvaus<!
 -- Käytetään -25 ja myöhemmin alkaville urakoille, kun yksittäisellä toimenkuvalla ei ole merkitystä
@@ -239,12 +245,14 @@ WHERE id = :id;
 -- name: hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
 FROM kustannusarvioitu_tyo kt
-            JOIN kayttaja k ON k.id = GREATEST(kt.muokkaaja, kt.luoja)
+         JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
 WHERE sopimus = :sopimus-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
-    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
   AND toimenpideinstanssi = :toimenpideinstanssi-id
-  AND tehtava = :tehtava-id;
+  AND tehtava = :tehtava-id
+ORDER BY viimeisin_muokkaus DESC
+LIMIT 10;
 
 -- name: paivita-kuukauden-hoidonjohtopalkkio<!
 UPDATE kustannusarvioitu_tyo
