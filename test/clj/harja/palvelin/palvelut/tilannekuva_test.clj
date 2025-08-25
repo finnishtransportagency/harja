@@ -158,6 +158,11 @@
                                             transit/clj->transit
                                             (java.net.URLEncoder/encode))}}))))
 
+(defn jarjesta [vastaus]
+  (->> vastaus
+    (sort-by (juxt (comp :id :hallintayksikko) :tyyppi))
+    (map #(update % :urakat (partial sort-by :urakkanro)))))
+
 (deftest hae-tietyoilmoitukset
   (let [vastaus (hae-tk hakuargumentit-laaja-historia)]    
     ;; Testaa, että toteuma selitteissä on enemmän kuin 1 toimenpidekoodi
@@ -575,7 +580,7 @@
                                   :tyyppi :tiemerkinta
                                   :urakat ({:nimi "Oulun tiemerkinnän palvelusopimus 2017-2024"
                                             :urakkanro "OULU_TIE"})})]
-    (is (= (poista-urakan-alue-ja-id vastaus) odotettu-ilman-alueita))
+    (is (= (jarjesta (poista-urakan-alue-ja-id vastaus)) (jarjesta odotettu-ilman-alueita)))
     (is (>= (count elynumerot) 6)
       "JVH:n pitäisi nähdä kaikki ELY:t")))
 

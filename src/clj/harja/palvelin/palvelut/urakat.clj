@@ -310,162 +310,6 @@
       {:urakka urakka-id})
     :ok))
 
-(defn- voiko-turvalaiteryhman-kiinnittaa?
-  "Turvalaiteryhmä saa kuulua vain yhteen voimassaolevaan vesiväyläurakkaan."
-  [db urakka-id turvalaiteryhmat alkupvm loppupvm]
-  (let [urakat (q/hae-vv-turvalaiteryhmien-nykyiset-urakat db {:urakkaid         urakka-id
-                                                               :turvalaiteryhmat turvalaiteryhmat
-                                                               :alkupvm          alkupvm
-                                                               :loppupvm         loppupvm})]
-    (or (empty? urakat)
-      (throw (RuntimeException.
-               (prn-str "Joku turvalaiteryhmistä" turvalaiteryhmat "on jo kiinnitetty urakkaan" (map #(str (:nimi %)) urakat) ".
-             Korjaa kiinnitys tai urakan voimassaoloaika."))))))
-
-
-(defn- luo-tai-paivita-vesivaylaurakka-alue!
-  "Tallentaa vv-urakan turvalaiteryhmät ja palauttaa tallennetun rivin (urakka-alueen) id:n."
-  [db user urakka-id turvalaiteryhmat alkupvm loppupvm]
-  (:id (q/luo-tai-paivita-vesivaylaurakan-alue<! db
-         {:urakka           urakka-id
-          :turvalaiteryhmat (konv/seq->array (map #(str/trim %) (str/split turvalaiteryhmat #",")))
-          :kayttaja         (:id user)
-          :alkupvm          alkupvm
-          :loppupvm         loppupvm})))
-
-(defn- paivita-urakka! [db user urakka]
-  (log/debug "Päivitetään urakkaa ja urakka-aluetta " (::u/nimi urakka))
-  (let [hallintayksikko (::u/hallintayksikko urakka)
-        urakoitsija (::u/urakoitsija urakka)
-        urakka-alue (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka))
-        paivitetty (q/paivita-harjassa-luotu-urakka<!
-                     db
-                     {:id              (::u/id urakka)
-                      :nimi            (::u/nimi urakka)
-                      :urakkanro       (or (nil? urakka-alue) (.toString urakka-alue))
-                      :alkupvm         (::u/alkupvm urakka)
-                      :loppupvm        (::u/loppupvm urakka)
-                      :alue            (::u/alue urakka)
-                      :hallintayksikko (::o/id hallintayksikko)
-                      :urakoitsija     (::o/id urakoitsija)
-                      :kayttaja        (:id user)})]
-    (assoc urakka ::u/id (:id paivitetty))))
-
-(defn luo-vv-urakan-toimenpideinstanssit [db urakka]
-  (let [params {:urakka_id (::u/id urakka)
-                :alkupvm   (::u/alkupvm urakka)
-                :loppupvm  (::u/loppupvm urakka)}]
-    (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
-                db (merge params {:nimi            "Kauppamerenkulun kustannukset TP"
-                                  :toimenpide_nimi "Kauppamerenkulun kustannukset"}))]
-      (q/luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
-        db {:toimenpideinstanssi_id (:id tpi)
-            :vaylatyyppi            "kauppamerenkulku"}))
-
-    (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
-                db (merge params {:nimi            "Muun vesiliikenteen kustannukset TP"
-                                  :toimenpide_nimi "Muun vesiliikenteen kustannukset"}))]
-      (q/luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
-        db {:toimenpideinstanssi_id (:id tpi)
-            :vaylatyyppi            "muu"}))
-
-    (q/luo-vesivaylaurakan-toimenpideinstanssi<!
-      db (merge params {:nimi            "Urakan yhteiset kustannukset TP"
-                        :toimenpide_nimi "Urakan yhteiset kustannukset"}))))
-
-(defn- luo-uusi-urakka! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
-  (log/debug "Luodaan uusi urakka. Luodaan urakka-alue, jos urakassa on turvalaiteryhm(i)ä." (::u/nimi urakka))
-  (let [hanke (hankkeet-palvelu/tallenna-hanke db user {::h/nimi     (str (::u/nimi urakka) " H")
-                                                        ::h/alkupvm  (::u/alkupvm urakka)
-                                                        ::h/loppupvm (::u/loppupvm urakka)})
-        hallintayksikko (::u/hallintayksikko urakka)
-        urakoitsija (::u/urakoitsija urakka)
-        tallennettu (q/luo-harjassa-luotu-urakka<!
-                      db
-                      {:nimi            (::u/nimi urakka)
-                       :urakkanro       (::u/urakkanro urakka)
-                       :alkupvm         (::u/alkupvm urakka)
-                       :loppupvm        (::u/loppupvm urakka)
-                       :alue            (::u/alue urakka)
-                       :hallintayksikko (::o/id hallintayksikko)
-                       :urakoitsija     (::o/id urakoitsija)
-                       :hanke           (::h/id hanke)
-                       :kayttaja        (:id user)})
-        urakka (assoc urakka ::u/id (:id tallennettu))
-        urakka-alue (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka))]
-    (luo-vv-urakan-toimenpideinstanssit db urakka)
-    urakka))
-
-(defn- paivita-urakan-sopimukset! [db user urakka sopimukset]
-  (when (ominaisuus-kaytossa? :vesivayla)
-    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-
-    (log/debug "Päivitetään urakan " (::u/nimi urakka) " " (count sopimukset) " sopimusta.")
-
-    (let [urakan-sopimus-idt (map ::s/id (remove :poistettu sopimukset))
-          urakan-paasopimus (s/ainoa-paasopimus (remove :poistettu sopimukset))
-          urakan-sivusopimukset (filter #(not= % urakan-paasopimus) sopimukset)]
-
-      (assert urakan-paasopimus "Urakalla oltava yksi pääsopimus!")
-
-      ;; Irrota sopimukset urakasta
-      ;; Palvelimelle lähetetään tietyissä tilanteissa vain "uusi totuus", ei
-      ;; tietoa siitä, mikä on muuttunut. Vanha tilanne täytyy siis pyyhkiä pois,
-      ;; ja päivittää uuteen uusien tietojen pohjalta.
-      (log/debug "Puretaan tilapäisesti kaikki urakan sopimukset.")
-      (as-> (sopimukset-q/poista-kaikki-sopimukset-urakasta! db {:urakka (::u/id urakka)}) lkm
-        (log/debug lkm " sopimusta purettu."))
-
-      ;; Aseta pääsopimus ja aseta muut sopimukset viittaamaan siihen
-      ;; Tärkeää tehdä tässä järjestyksessä, koska urakalla saa olla vain yksi pääsopimus
-      (log/debug "Asetetaan pääsopimukseksi " (pr-str urakan-paasopimus))
-      (sopimukset-q/aseta-sopimuksien-paasopimus! db
-        {:sopimukset (map ::s/id urakan-sivusopimukset)
-         :paasopimus (::s/id urakan-paasopimus)})
-      (sopimukset-q/aseta-sopimus-paasopimukseksi! db
-        {:sopimus (::s/id urakan-paasopimus)})
-
-      ;; Liitä annetut sopimukset urakkaan
-      (when-not (empty? urakan-sopimus-idt)
-        (log/debug "Tallennetaan urakalle " (::u/id urakka) ", " (count urakan-sopimus-idt) " sopimusta.")
-        (as-> (sopimukset-q/liita-sopimukset-urakkaan! db {:urakka     (::u/id urakka)
-                                                           :sopimukset urakan-sopimus-idt})
-          lkm
-          (log/debug lkm " sopimusta liitetty onnistuneesti."))))))
-
-
-(defn tallenna-vesivaylaurakka [db user urakka]
-  (when (ominaisuus-kaytossa? :vesivayla)
-    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-    (jdbc/with-db-transaction [db db]
-      (let [sopimukset (::u/sopimukset urakka)
-            urakka (if (id-olemassa? (::u/id urakka))
-                     (paivita-urakka! db user urakka)
-                     (luo-uusi-urakka! db user urakka))]
-        (paivita-urakan-sopimukset! db user urakka sopimukset)
-        urakka))))
-
-(defn hae-harjassa-luodut-urakat [db user]
-  (when (ominaisuus-kaytossa? :vesivayla)
-    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
-    (let [urakat (konv/sarakkeet-vektoriin
-                   (into []
-                     (comp
-                       urakka-xf
-                       (map konv/alaviiva->rakenne)
-                       (map #(assoc % :hanke (when (get-in % [:hanke :id]) (:hanke %))))
-                       (map #(assoc % :urakoitsija (when (get-in % [:urakoitsija :id]) (:urakoitsija %))))
-                       (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
-                     (q/hae-harjassa-luodut-urakat db))
-                   {:sopimus      :sopimukset
-                    ;; Sähke on poistettu käytöstä, mutta nämä jätetty tähän varmuuden vuoksi.
-                    :sahkelahetys :sahkelahetykset})]
-      (namespacefy urakat {:ns    :harja.domain.urakka
-                           :inner {:hallintayksikko {:ns :harja.domain.organisaatio}
-                                   :urakoitsija     {:ns :harja.domain.organisaatio}
-                                   :sopimukset      {:ns :harja.domain.sopimus}
-                                   :hanke           {:ns :harja.domain.hanke}}}))))
-
 
 (defrecord Urakat []
   component/Lifecycle
@@ -522,18 +366,6 @@
       (fn [user tiedot]
         (aseta-urakan-kesa-aika db user tiedot)))
 
-    (julkaise-palvelu http
-      :tallenna-vesivaylaurakka
-      (fn [user tiedot]
-        (tallenna-vesivaylaurakka db user tiedot))
-      {:kysely-spec ::u/tallenna-urakka-kysely
-       :vastaus-spec ::u/tallenna-urakka-vastaus})
-    (julkaise-palvelu http
-      :hae-harjassa-luodut-urakat
-      (fn [user _]
-        (hae-harjassa-luodut-urakat db user))
-      {:vastaus-spec ::u/hae-harjassa-luodut-urakat-vastaus})
-
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -545,8 +377,6 @@
       :tallenna-urakan-sopimustyyppi
       :tallenna-urakan-tyyppi
       :aseta-takuun-loppupvm
-      :paivita-kesa-aika
-      :tallenna-vesivaylaurakka
-      :hae-harjassa-luodut-urakat)
+      :paivita-kesa-aika)
 
     this))

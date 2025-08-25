@@ -12,32 +12,32 @@
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :liitteiden-hallinta (component/using
-                                               (liitteet-komponentti/->Liitteet nil nil nil)
-                                               [:db])
-                        :hae-urakan-muutostiedot (component/using
-                                                   (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                                                   [:http-palvelin :db])
-                        :hae-muutoksen-tiedot (component/using
-                                                (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                                                [:http-palvelin :db])
-                        :tallenna-muutos (component/using
-                                                   (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                                                   [:http-palvelin :db])
-                        :tallenna-rahavarausmuutosten-syyt (component/using
-                                                             (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                                                             [:http-palvelin :db])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :liitteiden-hallinta (component/using
+                                 (liitteet-komponentti/->Liitteet nil nil nil)
+                                 [:db])
+          :hae-urakan-muutostiedot (component/using
+                                     (muutos-palvelu/->Muutos {:kehitysmoodi true})
+                                     [:http-palvelin :db])
+          :hae-muutoksen-tiedot (component/using
+                                  (muutos-palvelu/->Muutos {:kehitysmoodi true})
+                                  [:http-palvelin :db])
+          :tallenna-muutos (component/using
+                             (muutos-palvelu/->Muutos {:kehitysmoodi true})
+                             [:http-palvelin :db])
+          :tallenna-rahavarausmuutosten-syyt (component/using
+                                               (muutos-palvelu/->Muutos {:kehitysmoodi true})
+                                               [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each
-              urakkatieto-fixture
-              jarjestelma-fixture)
+  urakkatieto-fixture
+  jarjestelma-fixture)
 
 (defn hae-urakan-muutostiedot [kayttaja tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -51,27 +51,26 @@
         vastaus (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                          :valittu-hoitokausi valittu-hoitokausi})
         odotetut-kirjatut-muutokset [{:kulu_kohdistus nil, :kustannusvaikutukset (list {:summa 1000, :toimenpide 2391, :kustannuslaji "hankintakustannukset"}),
-                                      :voimassa_alkaen #inst "2025-05-07T00:00:00.000-00:00", :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot.",
+                                      :voimassa_alkaen #inst "2025-05-06T21:00:00Z", :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot.",
                                       :tehtavat_ja_maarat (list {:tehtava 3117, :uusi_maara 1100, :maaramuutos 100, :edellinen_maara 1000}), :urakka 36, :nimi "Päällysteen paikkausmuutos",
                                       :id 1, :jjh-muutosten-summa nil, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "pysyva"}
                                      {:kulu_kohdistus nil, :kustannusvaikutukset (list {:summa 3000, :toimenpide 608, :kustannuslaji "hankintakustannukset"}),
-                                      :voimassa_alkaen #inst "2025-05-07T00:00:00.000-00:00", :syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.",
+                                      :voimassa_alkaen #inst "2025-05-06T21:00:00Z", :syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.",
                                       :tehtavat_ja_maarat nil, :urakka 36, :nimi "Erillisrahoitettu sorastusmuutos",
                                       :id 2, :jjh-muutosten-summa nil, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 3000, :tyyppi "erillisrahoitettu"}
                                      {:kulu_kohdistus nil, :kustannusvaikutukset (list {:summa 1000, :toimenpide 700, :kustannuslaji "hankintakustannukset"}),
-                                      :voimassa_alkaen #inst "2025-05-07T00:00:00.000-00:00", :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
+                                      :voimassa_alkaen #inst "2025-05-06T21:00:00Z", :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
                                       :tehtavat_ja_maarat (list {:tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40} {:tehtava 3029, :uusi_maara 0, :maaramuutos -30, :edellinen_maara 30}),
                                       :urakka 36, :nimi "Tämän hoitovuoden määräpoikkeamamuutos",
                                       :id 3, :jjh-muutosten-summa nil, :liitteet (list {:id 7, :muutos 3}), :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "maarapoikkeama"}
                                      {:kulu_kohdistus nil, :kustannusvaikutukset nil,
-                                      :voimassa_alkaen #inst "2025-06-25T00:00:00.000-00:00", :syy "Työmääräarviot ylittyivät",
+                                      :voimassa_alkaen #inst "2025-06-24T21:00:00Z", :syy "Työmääräarviot ylittyivät",
                                       :tehtavat_ja_maarat nil, :urakka 36, :nimi nil,
                                       :id 4, :jjh-muutosten-summa 1230M, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 1230M, :tyyppi "johto-ja-hallintokorvaus"}]]
-
+    
     (is (= (count (:kirjatut-muutokset vastaus)) 4) "oikea määrä muutoksia")
     (is (every? (fn [rivi] (some #(= rivi %) (:kirjatut-muutokset vastaus))) odotetut-kirjatut-muutokset)
       "Kaikki muutosrivit löytyvät vastausjoukosta")))
-
 
 (deftest hae-urakan-rahavarausten-muutostiedot-ii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -94,7 +93,7 @@
 
         vastaus (get-in
                   (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                          :valittu-hoitokausi valittu-hoitokausi})
+                                                           :valittu-hoitokausi valittu-hoitokausi})
                   [:budjettitavoitteet :muutosten-vaikutus-yhteensa])]
     (is (= vastaus -28610M) "Muutosten vaikutus yhteensä")))
 
@@ -102,7 +101,7 @@
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         valittu-hoitokausi-22-23 [(pvm/->pvm "1.10.2022") (pvm/->pvm "30.09.2023")]
         vastaus-22-23 (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                         :valittu-hoitokausi valittu-hoitokausi-22-23})
+                                                               :valittu-hoitokausi valittu-hoitokausi-22-23})
         valittu-hoitokausi-23-24 [(pvm/->pvm "1.10.2023") (pvm/->pvm "30.09.2024")]
         vastaus-23-24 (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                :valittu-hoitokausi valittu-hoitokausi-23-24})
@@ -230,7 +229,7 @@
                                         :toteumat              101000M}]]
     ;; assertoidaan luodut, näistä löytyy muokkausmetatiedoista vain luoja ja luotu
     (is (= vastaus-luonnin-jalkeen odotetut-luonnin-jalkeen) "Rahavarausmuutosten syyt luonnin jälkeen")
-(is (= (map #(dissoc % :luotu) kanta-luonnin-jalkeen) (map #(dissoc % :luotu) odotettu-kanta-luonnin-jalkeen-ilman-aikaleimaa)) "Rahavarausmuutosten syyt kannasta luonnin jälkeen")
+    (is (= (map #(dissoc % :luotu) kanta-luonnin-jalkeen) (map #(dissoc % :luotu) odotettu-kanta-luonnin-jalkeen-ilman-aikaleimaa)) "Rahavarausmuutosten syyt kannasta luonnin jälkeen")
     (is (every? #(instance? java.util.Date (:luotu %)) kanta-luonnin-jalkeen) ":luotu on date")
 
     ;; assertoidaan muokatut, näistä löytyy id:llä 1 myös muokattu ja muokkaaja
@@ -260,12 +259,12 @@
         vastaus-luonnin-jalkeen (filter
                                   #(= "Johtamisen tarve muuttui" (:syy %))
                                   (:kirjatut-muutokset
-                                    (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :tallenna-muutos
-                                      +kayttaja-jvh+
-                                      {:urakka-id urakka-id
-                                       :valittu-hoitokausi valittu-hoitokausi
-                                       :muutos muutos-payload})))
+                                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :tallenna-muutos
+                                     +kayttaja-jvh+
+                                     {:urakka-id urakka-id
+                                      :valittu-hoitokausi valittu-hoitokausi
+                                      :muutos muutos-payload})))
         historia-tyhja-insertin-jalkeen (first (q (format "SELECT * FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))
         odotetut-luonnin-jalkeen (list {:id (inc max-id-ennen-tallennusta)
                                         :jjh-muutosten-summa 780M
@@ -285,14 +284,14 @@
         vastaus-updaten-jalkeen (filter
                                   #(= "Johtamisen tarve muuttui taas" (:syy %))
                                   (:kirjatut-muutokset
-                                    (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :tallenna-muutos
-                                      +kayttaja-jvh+
-                                      {:urakka-id urakka-id
-                                       :valittu-hoitokausi valittu-hoitokausi
-                                       :muutos (assoc muutos-payload
-                                                 :id (inc max-id-ennen-tallennusta)
-                                                 :syy "Johtamisen tarve muuttui taas")})))
+                                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :tallenna-muutos
+                                     +kayttaja-jvh+
+                                     {:urakka-id urakka-id
+                                      :valittu-hoitokausi valittu-hoitokausi
+                                      :muutos (assoc muutos-payload
+                                                :id (inc max-id-ennen-tallennusta)
+                                                :syy "Johtamisen tarve muuttui taas")})))
         odotetut-updaten-jalkeen (list {:id (inc max-id-ennen-tallennusta)
                                         :jjh-muutosten-summa 780M
                                         :kulu_kohdistus nil
@@ -335,14 +334,14 @@
         vastaus-toisen-updaten-jalkeen (filter
                                          #(= "Johtamisen tarve muuttui taas kerran" (:syy %))
                                          (:kirjatut-muutokset
-                                           (kutsu-palvelua (:http-palvelin jarjestelma)
-                                             :tallenna-muutos
-                                             +kayttaja-jvh+
-                                             {:urakka-id urakka-id
-                                              :valittu-hoitokausi valittu-hoitokausi
-                                              :muutos (assoc muutos-payload
-                                                        :id (inc max-id-ennen-tallennusta)
-                                                        :syy "Johtamisen tarve muuttui taas kerran")})))
+                                          (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :tallenna-muutos
+                                            +kayttaja-jvh+
+                                            {:urakka-id urakka-id
+                                             :valittu-hoitokausi valittu-hoitokausi
+                                             :muutos (assoc muutos-payload
+                                                       :id (inc max-id-ennen-tallennusta)
+                                                       :syy "Johtamisen tarve muuttui taas kerran")})))
         historirivit-toisen-updaten-jalkeen (q-map (format "SELECT id, versio FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta)))]
     (is (instance? java.util.Date historiarivi-validi-aikana-alku) "onhan pvm")
     (is (instance? java.util.Date historiarivi-validi-aikana-loppu) "onhan pvm")
