@@ -11,6 +11,9 @@
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
+            [harja.kyselyt.urakat :as urakka-kyselyt]
+            [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
+            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
@@ -110,24 +113,26 @@
          :paatos_tavoiteh_ylitys_val_aika_yht (nth raportti 53)
          :paatos_kattoh_ylitys_hoitokausi_yht (nth raportti 54)
          :paatos_kattoh_ylitys_val_aika_yht (nth raportti 55)
-         :muut_kustannukset_hoitokausi_yht (nth raportti 56)
-         :muut_kustannukset_val_aika_yht (nth raportti 57)
-         :yhteensa_kaikki_hoitokausi_yht (nth raportti 58)
-         :yhteensa_kaikki_val_aika_yht (nth raportti 59)
-         :perusluku (nth raportti 60)
-         :rahavaraus_nimet (nth raportti 61)
-         :hoitokausi_yht_array (nth raportti 62)
-         :val_aika_yht_array (nth raportti 63)
-         :kaikki_rahavaraukset_hoitokausi_yht (nth raportti 64)
-         :kaikki_rahavaraukset_val_yht (nth raportti 65)
-         :muut_kulut_hoitokausi (nth raportti 66)
-         :muut_kulut_val_aika (nth raportti 67)
-         :muut_kulut_hoitokausi_yht (nth raportti 68)
-         :muut_kulut_val_aika_yht (nth raportti 69)
-         :muut_kulut_ei_tavoite_hoitokausi (nth raportti 70)
-         :muut_kulut_ei_tavoite_val_aika (nth raportti 71)
-         :muut_kulut_ei_tavoite_hoitokausi_yht (nth raportti 72)
-         :muut_kulut_ei_tavoite_val_aika_yht (nth raportti 73)}]
+         :paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht (nth raportti 56)
+         :paatos_hoidonjohtopalkkion_muutos_val_aika_yht (nth raportti 57)
+         :muut_kustannukset_hoitokausi_yht (nth raportti 58)
+         :muut_kustannukset_val_aika_yht (nth raportti 59)
+         :yhteensa_kaikki_hoitokausi_yht (nth raportti 60)
+         :yhteensa_kaikki_val_aika_yht (nth raportti 61)
+         :perusluku (nth raportti 62)
+         :rahavaraus_nimet (nth raportti 63)
+         :hoitokausi_yht_array (nth raportti 64)
+         :val_aika_yht_array (nth raportti 65)
+         :kaikki_rahavaraukset_hoitokausi_yht (nth raportti 66)
+         :kaikki_rahavaraukset_val_yht (nth raportti 67)
+         :muut_kulut_hoitokausi (nth raportti 68)
+         :muut_kulut_val_aika (nth raportti 69)
+         :muut_kulut_hoitokausi_yht (nth raportti 70)
+         :muut_kulut_val_aika_yht (nth raportti 71)
+         :muut_kulut_ei_tavoite_hoitokausi (nth raportti 72)
+         :muut_kulut_ei_tavoite_val_aika (nth raportti 73)
+         :muut_kulut_ei_tavoite_hoitokausi_yht (nth raportti 74)
+         :muut_kulut_ei_tavoite_val_aika_yht (nth raportti 75)}]
 
     tulos))
 
@@ -162,7 +167,7 @@
         vastaus (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
     (is (not (nil? vastaus)) "Saatiin raportti")
-    (is (= (count (first vastaus)) 74) "Raportilla on oikea määrä rivejä")))
+    (is (= (count (first vastaus)) 76) "Raportilla on oikea määrä rivejä")))
 
 
 (deftest tyomaaraportti-talvihoito-hankinnat-toimii
@@ -296,13 +301,25 @@
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
         aikavali_loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2018                          ;; Päätös pitää olla edellisenä vuotena, jotta se näkyy siirroissa.
         kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        tav_hinta 100000M
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
         siirto-ed-vuodelta 60000.0M
         ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta"
-        _ (i (format "INSERT INTO urakka_paatos (\"hoitokauden-alkuvuosi\", \"urakka-id\", \"hinnan-erotus\", \"urakoitsijan-maksu\", \"tilaajan-maksu\", siirto, tyyppi, \"lupaus-luvatut-pisteet\", \"lupaus-toteutuneet-pisteet\", \"lupaus-tavoitehinta\", muokattu, \"muokkaaja-id\", \"luoja-id\", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id)
-        VALUES (2018, %s, null, 39395.784199999995, 0, %s, 'kattohinnan-ylitys', null, null, null, null, null, %s, '2019-11-01 10:12:11.886000', false, null, null, 51);" urakka-id siirto-ed-vuodelta kayttaja-id))
+        ;; Tehdään kattohinnan ylitys
+        kattohinta 5M
+        toteutuneet-kustannukset 5M
+        ylityksen-maara 10M
+        urakoitsija-maksaa 50M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        viimeinen_hoitokausi false
+        kulu-id 1
+        paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                 ylityksen-maara urakoitsija-maksaa siirto-ed-vuodelta kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttaja-id)
+
+        _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos)
 
         hoitokauden_tavoitehinta (ffirst (q (format "SELECT COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0) as tavoitehinta
                                     from urakka_tavoite ut

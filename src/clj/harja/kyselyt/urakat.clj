@@ -4,13 +4,13 @@
 (defqueries "harja/kyselyt/urakat.sql"
   {:positional? true})
 
-(declare urakan-paasopimus-id)
-
-(declare hae-urakka hae-urakan-tyyppi hae-urakan-sampo-id hae-yksittainen-urakka hae-urakan-ely
-  hae-urakat-tyypilla-ja-hallintayksikolla urakan-hallintayksikko)
+(declare urakan-paasopimus-id hae-urakka hae-urakan-tiedot hae-urakan-tyyppi hae-urakan-sopimukset
+  hae-urakan-sampo-id hae-yksittainen-urakka hae-urakan-ely hae-urakan-parametrit aseta-tai-paivita-urakkaparametrit
+  hae-urakat-tyypilla-ja-hallintayksikolla urakan-hallintayksikko hae-id-sampoidlla aseta-urakan-toimenkuvat
+  hae-urakan-alkuvuosi onko-olemassa onko-urakalla-tehtavaa)
 
 (defn onko-olemassa? [db id]
-  (:exists (first (harja.kyselyt.urakat/onko-olemassa db id))))
+  (:exists (first (onko-olemassa db id))))
 
 (defn onko-urakalla-tehtavaa? [db urakka-id tehtava-id]
-  (:exists (first (harja.kyselyt.urakat/onko-urakalla-tehtavaa db urakka-id tehtava-id))))
+  (:exists (first (onko-urakalla-tehtavaa db urakka-id tehtava-id))))

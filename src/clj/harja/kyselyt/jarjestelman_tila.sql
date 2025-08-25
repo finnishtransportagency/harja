@@ -12,3 +12,12 @@ WHERE "osa-alue"=:osa-alue AND
       (:kehitys? IS TRUE OR
        palvelimen_versio = :palvelimen-versio)
 ORDER BY paivitetty DESC;
+
+-- name: hae-jarjestelman-asetukset
+SELECT valikatselmus_validoinnit_kaytossa FROM jarjestelman_asetukset;
+
+-- name: toggle-valikatselmus-validoinnit!
+UPDATE jarjestelman_asetukset
+   SET valikatselmus_validoinnit_kaytossa = :validoinnit,
+       muokattu = NOW(),
+       muokkaaja = :kayttajaid;

@@ -147,7 +147,7 @@
   {:datasource (tietokanta/luo-yhteyspool temppitietokanta)})
 
 (defn luo-liitteidenhallinta []
-  (liitteet/->Liitteet nil nil))
+  (liitteet/->Liitteet nil nil nil))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -1207,52 +1207,51 @@
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
 
-(defn hae-testi-kayttajan-tiedot [{:keys [etunimi sukunimi roolit]}]
+(defn hae-testi-kayttajan-tiedot [{:keys [etunimi sukunimi roolit urakkaroolit organisaatioroolit]}]
   (let [kayttajan-tiedot (zipmap [:id :etunimi :sukunimi :kayttajanimi :organisaatio :sahkoposti]
                                  (first (q (str "SELECT id, etunimi, sukunimi, kayttajanimi, organisaatio, sahkoposti FROM kayttaja WHERE etunimi='" etunimi "' AND sukunimi='" sukunimi "';"))))
         kayttajan-organisaation-tiedot (when (:organisaatio kayttajan-tiedot)
                                          (zipmap [:id :tyyppi :nimi]
                                                  (first (q (str "SELECT id, tyyppi, nimi FROM organisaatio WHERE id=" (:organisaatio kayttajan-tiedot) ";")))))
-        kayttajan-urakkaroolit (when (:id kayttajan-tiedot)
-                                 (reduce (fn [tulos [urakka rooli]]
-                                           (update tulos urakka #(if %
-                                                                   (conj % rooli)
-                                                                   #{rooli})))
-                                         {} (q (str "SELECT urakka, rooli FROM kayttaja_urakka_rooli WHERE kayttaja=" (:id kayttajan-tiedot) ";"))))
-        kayttajan-organisaatioroolit (when (:id kayttajan-tiedot)
-                                       (reduce (fn [tulos [organisaatio rooli]]
-                                                 (update tulos organisaatio #(if %
-                                                                               (conj % rooli)
-                                                                               #{rooli})))
-                                               {} (q (str "SELECT organisaatio, rooli FROM kayttaja_organisaatio_rooli WHERE kayttaja=" (:id kayttajan-tiedot) ";"))))
         organisaation-urakat (when (:organisaatio kayttajan-tiedot)
                                (into #{} (apply concat (q (str "SELECT id FROM urakka WHERE urakoitsija=" (:organisaatio kayttajan-tiedot))))))]
     (assoc kayttajan-tiedot :organisaatio (or kayttajan-organisaation-tiedot {})
                             :roolit (or roolit #{})
-                            :urakkaroolit (or kayttajan-urakkaroolit {})
-                            :organisaatioroolit (or kayttajan-organisaatioroolit {})
+                            :urakkaroolit (or urakkaroolit {})
+                            :organisaatioroolit (or organisaatioroolit {})
                             :organisaation-urakat (or organisaation-urakat #{}))))
 
 (defn hae-paikkauskohde-tyomenetelmat []
   (q "select id, nimi, lyhenne from paikkauskohde_tyomenetelma;"))
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
-(def +kayttaja-tero+ (hae-testi-kayttajan-tiedot {:etunimi "Tero" :sukunimi "Toripolliisi" :roolit #{"ELY_Urakanvalvoja"}}))
+(def +kayttaja-tero+ (hae-testi-kayttajan-tiedot {:etunimi "Tero" :sukunimi "Toripolliisi" :roolit #{}
+                                                  :urakkaroolit {(hae-urakan-id-nimella "Muhoksen päällystysurakka") #{"ELY_Urakanvalvoja"}}}))
+
 
 ;; id:2 Järjestelmävastuuhenkilö
 (def +kayttaja-jvh+ (hae-testi-kayttajan-tiedot {:etunimi "Jalmari" :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}}))
 
 ;; Organisaation 14 = Destian urakoitsija
-(def +kayttaja-uuno+ (hae-testi-kayttajan-tiedot {:etunimi "Uuno" :sukunimi "Urakoitsija"}))
+(def +kayttaja-uuno+ (hae-testi-kayttajan-tiedot {:etunimi "Uuno" :sukunimi "Urakoitsija" }))
 
-(def +kayttaja-yit_uuvh+ (hae-testi-kayttajan-tiedot {:etunimi "Yitin" :sukunimi "Urakkavastaava"}))
+(def +kayttaja-yit_uuvh+ (hae-testi-kayttajan-tiedot {:etunimi "Yitin" :sukunimi "Urakkavastaava"
+                                                      :urakkaroolit {(hae-urakan-id-nimella "Oulun alueurakka 2005-2012") #{"vastuuhenkilo"}
+                                                                     (hae-urakan-id-nimella "Oulun alueurakka 2014-2019") #{"vastuuhenkilo"}
+                                                                     (hae-urakan-id-nimella "Iin MHU 2021-2026") #{"vastuuhenkilo"}}}))
 
-(def +kayttaja-ulle+ (hae-testi-kayttajan-tiedot {:etunimi "Ulle" :sukunimi "Urakoitsija"}))
+(def +kayttaja-ulle+ (hae-testi-kayttajan-tiedot {:etunimi "Ulle" :sukunimi "Urakoitsija"
+                                                  :organisaatioroolit {(hae-organisaatio-id-nimella "Destia Oy") #{"Kayttaja"}}}))
 
-(def +kayttaja-vastuuhlo-muhos+ (hae-testi-kayttajan-tiedot {:etunimi "Antero" :sukunimi "Asfalttimies"}))
-(def +kayttaja-vastuuhlo-porvoo+ (hae-testi-kayttajan-tiedot {:etunimi "Veeti" :sukunimi "Velmu"}))
+(def +kayttaja-vastuuhlo-muhos+ (hae-testi-kayttajan-tiedot {:etunimi "Antero" :sukunimi "Asfalttimies"
+                                                             :urakkaroolit {(hae-urakan-id-nimella "Muhoksen päällystysurakka") #{"vastuuhenkilo"}
+                                                                            (hae-urakan-id-nimella "Utajärven päällystysurakka") #{"vastuuhenkilo"}}}))
+(def +kayttaja-vastuuhlo-porvoo+ (hae-testi-kayttajan-tiedot {:etunimi "Veeti" :sukunimi "Velmu"
+                                                              :urakkaroolit {(hae-urakan-id-nimella "Porvoon päällystysurakka") #{"vastuuhenkilo"}
+                                                                             (hae-urakan-id-nimella "Utajärven päällystysurakka") #{"vastuuhenkilo"}}}))
 
-(def +kayttaja-paakayttaja-skanska+ (hae-testi-kayttajan-tiedot {:etunimi "Pekka" :sukunimi "Pääjehu"}))
+(def +kayttaja-paakayttaja-skanska+ (hae-testi-kayttajan-tiedot {:etunimi "Pekka" :sukunimi "Pääjehu"
+                                                                 :organisaatioroolit {(hae-organisaatio-id-nimella "Skanska Asfaltti Oy") #{"Paakayttaja"}}}))
 
 (def +kayttaja-laadunvalvoja-kemi+ (hae-testi-kayttajan-tiedot {:etunimi "Keppi" :sukunimi "Laatujärvi" :roolit #{"laadunvalvoja"}}))
 
@@ -1642,7 +1641,7 @@
                                               [:db])
 
                            :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet nil nil)
+                                                  (liitteet/->Liitteet nil nil nil)
                                                   [:db])
 
                            ~@omat))))

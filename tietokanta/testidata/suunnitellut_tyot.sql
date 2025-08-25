@@ -162,14 +162,6 @@ VALUES
   ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Espoo Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
   ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Espoo Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
--- Luodaan Raaseporin urakalle tärkeimmät toimenpideinstanssit
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-VALUES
-    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpide WHERE koodi='23104'), 'Raasepori Talvihoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Raasepori Liikenneympäristön hoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Raasepori Sorateiden hoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-
-
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpide WHERE koodi='23104'), 'Tampere Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Tampere Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Tampere Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
@@ -1343,37 +1335,39 @@ BEGIN
   FOR i IN 1..4
   LOOP
     INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id")
-      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year from NOW()))::INTEGER, 10, urakka_id), (SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year from NOW()))::INTEGER, 10, urakka_id), (SELECT extract(year from NOW())), 10, TRUE, NOW(),
+              (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" IS NULL));
   END LOOP;
   INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id", "osa-kuukaudesta")
-    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year FROM NOW()))::INTEGER, 10, urakka_id),(SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'), 0.5);
+    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year FROM NOW()))::INTEGER, 10, urakka_id),(SELECT extract(year from NOW())), 10, TRUE, NOW(),
+            (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" IS NULL), 0.5);
 
   FOR i IN 10..12 LOOP
     INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" IS NULL));
   END LOOP;
   FOR i IN 1..12 LOOP
     FOR vuosi_ IN 1..4 LOOP
       INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i, urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i, urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i, urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i, urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i, urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i, urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava' AND "urakka-id" IS NULL)),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i, urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja' AND "urakka-id" IS NULL)),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i, urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen' AND "urakka-id" IS NULL)),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i, urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja' AND "urakka-id" IS NULL)),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i, urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" IS NULL));
 
       IF (5 <= i) AND (i <= 8)
       THEN
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'  AND "urakka-id" IS NULL));
       END IF;
       IF (4 <= i) AND (i <= 8)
       THEN
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi),  i, urakka_id), vuosi_ + urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi),  i, urakka_id), vuosi_ + urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö' AND "urakka-id" IS NULL));
       END IF;
     END LOOP;
   END LOOP;
@@ -1384,21 +1378,21 @@ BEGIN
         EXIT;
     END IF;
     INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" IS NULL));
 
       IF (5 <= i) AND (i <= 8)
       THEN
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija' AND "urakka-id" IS NULL));
       END IF;
       IF (4 <= i) AND (i <= 8)
       THEN
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö' AND "urakka-id" IS NULL));
       END IF;
   END LOOP;
 END $$;
@@ -1796,37 +1790,37 @@ BEGIN
   FOR i IN 1..4
       LOOP
           INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id")
-          VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year from NOW()))::INTEGER, 10, urakka_id), (SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+          VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year from NOW()))::INTEGER, 10, urakka_id), (SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" IS NULL));
       END LOOP;
   INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id", "osa-kuukaudesta")
-  VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year FROM NOW()))::INTEGER, 10, urakka_id),(SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'), 0.5);
+  VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year FROM NOW()))::INTEGER, 10, urakka_id),(SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" IS NULL), 0.5);
 
   FOR i IN 10..12 LOOP
     INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" IS NULL));
   END LOOP;
   FOR i IN 1..12 LOOP
     FOR vuosi_ IN 1..4 LOOP
       INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava' AND "urakka-id" IS NULL)),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja' AND "urakka-id" IS NULL)),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen' AND "urakka-id" IS NULL)),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja' AND "urakka-id" IS NULL)),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" IS NULL));
 
       IF (5 <= i) AND (i <= 8)
       THEN
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-          VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
+          VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija' AND "urakka-id" IS NULL));
       END IF;
       IF (4 <= i) AND (i <= 8)
       THEN
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-          VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), vuosi_ + urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
+          VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (vuosi_ + urakan_alkuvuosi), i,  urakka_id), vuosi_ + urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö' AND "urakka-id" IS NULL));
       END IF;
     END LOOP;
   END LOOP;
@@ -1837,21 +1831,21 @@ BEGIN
         EXIT;
     END IF;
     INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja' AND "urakka-id" IS NULL)),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" IS NULL));
 
       IF (5 <= i) AND (i <= 8)
       THEN
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-          VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
+          VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija' AND "urakka-id" IS NULL));
       END IF;
       IF (4 <= i) AND (i <= 8)
       THEN
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
-          VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
+          VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, (5 + urakan_alkuvuosi), i,  urakka_id), (5 + urakan_alkuvuosi), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö' AND "urakka-id" IS NULL));
       END IF;
   END LOOP;
 
@@ -1862,7 +1856,8 @@ DO $$
 DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP', 'MHU ja HJU Hoidon johto'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301', '23151'];
-  urakat TEXT[] := ARRAY ['Ivalon MHU testiurakka (uusi)', 'Iin MHU 2021-2026', 'Tampereen MHU 2022-2026', 'Raahen MHU 2023-2028', 'POP MHU Kajaani 2025-2030'];
+  urakat TEXT[] := ARRAY ['Ivalon MHU testiurakka (uusi)', 'Iin MHU 2021-2026', 'Tampereen MHU 2022-2026',
+      'Raahen MHU 2023-2028', 'UUD Raasepori  MHU 2021- 2026, P', 'POP MHU Kajaani 2024-2029', 'POP MHU Kajaani 2025-2030', 'POP MHU Suomussalmi 2024-2029', 'Kittilän MHU 2025-2030'];
   urakan_nimi TEXT;
   i INTEGER;
 BEGIN

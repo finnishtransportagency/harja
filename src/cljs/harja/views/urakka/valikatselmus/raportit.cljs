@@ -1,0 +1,52 @@
+(ns harja.views.urakka.valikatselmus.raportit
+  (:require [harja.ui.ikonit :as ikonit]
+            [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
+            [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
+
+(defn raportit [e! {:keys [urakkaid virhe id] :as paatos} voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+  (let [paatos-avain :valikatselmuspoytakirjaan-liitettavat-raportit
+        paatos-tehty? (some? id)
+        on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
+        hallintayksikko-id (-> @tila/yleiset :urakka :hallintayksikko :id)]
+
+    ^{:key (str "kattohinnan-ylitys-" (gensym))}
+    [:div.paatos-komponentti-reunuksella
+     [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Raportit" paatos-tehty? paatos-avain avatut-paatokset
+      (partial valikatselmus-tiedot/avaa-tai-sulje-haitari) (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
+
+     (when (not (contains? avatut-paatokset paatos-avain))
+       [:div
+        [:div
+         [yleiset/info-laatikko :neutraali (str "Hoitovuoden raportointi lukitaan 31.12." (inc hoitokauden-alkuvuosi)) nil nil]]
+
+        [:div.flex-row.raportti-teksti
+         [:p "Tarkista, että seuraavien raporttien luvut ovat oikein ja liitä raportit välikatselmuspöytäkirjaan."]]
+
+        [:div.flex-row.ilmoitus
+         [:div
+          [ikonit/livicon-document-full]
+          [harja.ui.yleiset/linkki "Ympäristöraportti"
+           #(siirtymat/avaa-raportti :ymparistoraportti hallintayksikko-id urakkaid hoitokauden-alkuvuosi)
+           {:luokka "klikattava alleviivaa"}]]]
+
+        [:div.flex-row.ilmoitus
+         [:div [ikonit/livicon-document-full]
+          [harja.ui.yleiset/linkki "Laskutusyhteenveto"
+           #(siirtymat/avaa-raportti :laskutusyhteenveto-tyomaa hallintayksikko-id urakkaid hoitokauden-alkuvuosi)
+           {:luokka "klikattava alleviivaa"}]]]
+
+        [:div.flex-row.ilmoitus-matala
+         [:div [ikonit/livicon-document-full]
+          [harja.ui.yleiset/linkki "Tehtävämääräraportti"
+           #(siirtymat/avaa-raportti :tehtavamaarat hallintayksikko-id urakkaid hoitokauden-alkuvuosi)
+           {:luokka "klikattava alleviivaa"}]]]
+
+        [:hr.paatos-hr-matalin]
+        (if virhe
+          [:div.muokkaustoiminnot [yleiset/info-laatikko :vahva-ilmoitus virhe nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]]
+          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+           #(e! (valikatselmus-tiedot/->TallennaPoytakirjanRaporttiPaatos paatos))
+           #(e! (valikatselmus-tiedot/->PoistaPoytakirjanRaporttiPaatos paatos))])])]))

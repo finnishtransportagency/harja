@@ -3,3 +3,4 @@
 
 (defqueries "harja/kyselyt/kanavat/kanavasillat.sql")
 
+(declare luo-kanavasilta<!)

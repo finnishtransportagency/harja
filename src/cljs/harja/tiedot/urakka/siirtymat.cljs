@@ -176,15 +176,18 @@
 
 (defn avaa-valikatselmus
   "Anna valittu-hoitokausi muodossa [#inst '2018-10-01' #inst '2019-09-30']"
-  [valittu-hoitokausi]
+  [hallintayksikko-id urakka-id valittu-hoitokausi]
   (go
     (let [app-state {:valikatselmus-auki? true
                      :hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
                      :valittu-hoitokausi valittu-hoitokausi}]
       (do
-        ;; Aseta oikea välilehti, välikatselmuksella ei ole vielä erillistä sivua, kun välilehden alla on vain yksi tabi.
+        (nav/esta-url-paivitys!)
+        (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
+        (nav/aseta-valittu-valilehti! :sivu :urakat)
         (nav/aseta-valittu-valilehti! :urakat :valikatselmus)
-        (swap! urakka-tila/kustannusten-seuranta merge app-state)))))
+        (nav/salli-url-paivitys!)
+        (swap! urakka-tila/valikatselmus merge app-state)))))
 
 (defn avaa-lupaukset [hoitokauden-alkuvuosi]
   (go
@@ -219,6 +222,9 @@
         (nav/aseta-valittu-valilehti! :urakat :suunnittelu)
         (swap! urakka-tila/suunnittelu-kustannussuunnitelma merge app-state)))))
 
+(defn avaa-toteumat []
+  (nav/aseta-valittu-valilehti! :urakat :toteumat))
+
 (defn paallystysten-kohdeluetteloon
   []
   (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystyskohteet))
@@ -240,3 +246,12 @@
       (nav/salli-url-paivitys!)
       (when (and app-state app-state-atom)
         (swap! app-state-atom merge app-state)))))
+
+(defn avaa-raportti [raporttiavain hallintayksikko-id urakka-id hoitokauden-alkuvuosi]
+  (go
+    (do
+      ;; Kokeile asettaa ensin raportti
+      (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
+      (nav/aseta-valittu-valilehti! :sivu :raportit)
+      (nav/aseta-valittu-valilehti! :raportit raporttiavain)
+      (nav/salli-url-paivitys!))))

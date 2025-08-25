@@ -20,21 +20,20 @@
 (defn- ajasta [db]
   (log/info "Ajastetaan toteumien siirto analytiikan_toteumat tauluun joka päivä.")
   (ajastettu-tehtava/ajasta-paivittain [5 15 0]
-    (do
-      (fn [_]
-        (lukot/yrita-ajaa-lukon-kanssa
-          db
-          "analytiikan_toteumat_siirto"
-          #(do
-             (log/info "ajasta-paivittain :: siirra-analyytikan-toteumat :: Alkaa " (pvm/nyt))
-             (siirra-toteumat db)
-             (log/info "ajasta-paivittain :: siirra-analyytikan-toteumat :: Loppuu " (pvm/nyt))))))))
+    (fn [_]
+      (lukot/yrita-ajaa-lukon-kanssa
+        db
+        "analytiikan_toteumat_siirto"
+        #(do
+           (log/info "ajasta-paivittain :: siirra-analyytikan-toteumat :: Alkaa " (pvm/nyt))
+           (siirra-toteumat db)
+           (log/info "ajasta-paivittain :: siirra-analyytikan-toteumat :: Loppuu " (pvm/nyt)))))))
 
 (defrecord AnalytiikanToteumat []
   component/Lifecycle
   (start [{db :db :as this}]
     (assoc this :analytiikan-toteumien-ajastus
-                (ajasta db)))
+      (ajasta db)))
   (stop [{poista :analytiikan-toteumien-ajastus :as this}]
     (poista)
     (dissoc this :analytiikan-toteumien-ajastus)))

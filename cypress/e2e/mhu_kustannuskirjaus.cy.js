@@ -8,19 +8,6 @@ let avaaKulujenKohdistus = (urakanNimi) => {
     cy.get('[data-cy="tabs-taso1-Kulut"]').click();
 }
 
-let haeUrakanPaatokset = (urakka, hoitokausi) => {
-    return cy.terminaaliKomento().then((tk) => {
-        cy.exec(tk + 'psql -h localhost -U harja harja -c ' +
-            `\"SELECT \\"urakoitsijan-maksu\\" ` + `FROM urakka_paatos ` +
-            `WHERE \\"urakka-id\\" = (SELECT id FROM urakka WHERE nimi = '${urakka}') ` +
-            `AND poistettu = false ` +
-            `AND \\"hoitokauden-alkuvuosi\\" = ${hoitokausi}\"`)
-            .then((dbTulos) => {
-                return Number.parseFloat(dbTulos.stdout.split('\n')[2])
-            });
-    });
-}
-
 let avaaKulunKirjaus = () => {
     cy.get('button').contains('Uusi kulu').click();
     cy.contains("Uusi kulu")
@@ -44,7 +31,7 @@ let valitseKulunPvm = () => {
 let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
     cy.contains('Tallenna').click();
 
-    cy.contains('Kulujen kohdistus');
+    cy.get('h1').contains('Kulujen kohdistus');
 
     cy.get('.pvm-kentta > .pvm-ikoni > input').eq(0).click().wait(3000).type('{selectall}29.09.2021');
     cy.get('.pvm-kentta > .pvm-ikoni > input').eq(1).click().wait(3000).type('{selectall}29.09.2021');
@@ -75,7 +62,7 @@ describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
         cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"]').click();
 
         // Valitse A - Talvihoito
-        cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"] span').contains('A - Talvihoito').click();
+        cy.get('[data-cy="hankintakulu-tehtavaryhma-dropdown"] span a').contains('A - Talvihoito').click();
 
         valitseKulunPvm();
 

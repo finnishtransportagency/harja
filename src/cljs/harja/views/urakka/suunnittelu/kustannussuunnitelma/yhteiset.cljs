@@ -182,7 +182,6 @@
            nappia-painettu-tallenna! parametrit]}]
   (let [toiminto-fn!
         (fn [paivitettava-asia tallenna! asiat]
-          (println "toiminto-fn syote" paivitettava-asia asiat)
           (tallenna! asiat))]
     (merge
       {:tyyppi (if nappi?

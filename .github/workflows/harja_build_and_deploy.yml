@@ -201,7 +201,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download uberjar artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5.0.0
         with:
           name: harja-uberjar
           # Download to the same directory as the uberjar is built to

@@ -274,7 +274,7 @@ export const kattohintaElem = (vuosi) => `div[data-cy=manuaalinen-kattohinta-gri
 export const kattohintaInput = (vuosi) => kattohintaElem(vuosi) + " input";
 
 export const taytaKattohinta = (vuosi, arvo) => {
-    cy.get(kattohintaInput(vuosi))
+    cy.get(kattohintaInput(vuosi), { timeout: 20000 })
         .type(`{selectall}{backspace}${arvo}`)
         .then(() => {
             cy.focused().blur();
@@ -283,9 +283,9 @@ export const taytaKattohinta = (vuosi, arvo) => {
 export const tarkistaKattohinta = (vuosi, arvo, onDisabloitu) => {
     if (onDisabloitu) {
         arvo = formatoiArvoEuromuotoiseksi(parseInt(arvo), true);
-        cy.contains(kattohintaElem(vuosi), arvo)
+        cy.contains(kattohintaElem(vuosi), arvo, { timeout: 20000 })
     } else {
-        cy.get(kattohintaInput(vuosi)).should('have.value', arvo);
+        cy.get(kattohintaInput(vuosi), { timeout: 20000 }).should('have.value', arvo);
     }
 }
 
@@ -294,9 +294,9 @@ export const indeksikorjattuKHelem = (vuosi) => `div[data-cy=manuaalinen-kattohi
 export const tarkistaIndeksikorjattuKH = (vuosi, arvo, indeksit) => {
     if (arvo) {
         let formatoituArvo = formatoiArvoEuromuotoiseksi(indeksikorjaaArvo(indeksit, arvo, vuosi), true);
-        cy.get(indeksikorjattuKHelem(vuosi)).contains(formatoituArvo);
+        cy.get(indeksikorjattuKHelem(vuosi), { timeout: 20000 }).contains(formatoituArvo);
     } else {
-        cy.get(indeksikorjattuKHelem(vuosi)).should('have.text', '');
+        cy.get(indeksikorjattuKHelem(vuosi), { timeout: 20000 }).should('have.text', '');
     }
 }
 
@@ -414,6 +414,27 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
                 indeksiArray.push(transitIndeksiMap?.get(transit.keyword('indeksikerroin')));
             });
         });
+
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+}
+
+/**
+ * @param urakkaNimi Avattavan urakan nimi
+ * @param alue Alue, jotta löydetään urakka käyttöliittymältä
+ * @param indeksiArray Array, johon indeksit pusketaan.
+ */
+export function avaaUusiKustannussuunnittelu(urakkaNimi, alue) {
+    cy.visit("/");
+
+    cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
+    cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
+    cy.contains('Näytä päättyneet').click();
+
+    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
+    // Mene suunnittelu välilehdelle
+    cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
+    // Avaa Kustannussuunnitelma
+    cy.get('[data-cy="tabs-taso2-Uusi Kustannussuunnitelma"]').click();
 
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
 }

@@ -81,13 +81,15 @@
          :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan (nth rivi 28)
          :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu (nth rivi 29)
          :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan (nth rivi 30)
-         :indeksi_puuttuu (nth rivi 31)
+         :hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu (nth rivi 31)
+         :hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan (nth rivi 32)
+         :indeksi_puuttuu (nth rivi 33)
          ;; Urakan rahavaraukset ja arvot
-         :rahavaraus_nimet (nth rivi 32)
-         :hoitokausi_yht_array (nth rivi 33)
-         :val_aika_yht_array (nth rivi 34)
-         :kaikki_rahavaraukset_val_yht (nth rivi 35)
-         :kaikki_rahavaraukset_hoitokausi_yht (nth rivi 36)}]
+         :rahavaraus_nimet (nth rivi 34)
+         :hoitokausi_yht_array (nth rivi 35)
+         :val_aika_yht_array (nth rivi 36)
+         :kaikki_rahavaraukset_val_yht (nth rivi 37)
+         :kaikki_rahavaraukset_hoitokausi_yht (nth rivi 38)}]
     tulos))
 
 

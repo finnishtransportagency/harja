@@ -3,6 +3,10 @@
             [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo]))
 
+(declare hae-sanktiotyypin-tiedot-koodilla hae-sanktio hae-urakan-sanktiot
+  hae-urakan-sanktiot-analytiikalle)
+
+;; Käytössä jeesql:ssä
 (defn muunna-urakan-sanktio
   "Muuntaa hae-urakan-sanktiot rivien tyypit"
   [rivi]
@@ -20,6 +24,7 @@
     (konv/muunna [:kasittelyaika :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)
     (update :laatupoikkeama_sijainti #(when % (geo/pg->clj %)))))
 
+;; Käytössä jeesql:ssä
 (defn muunna-urakan-bonus
   "Muuntaa hae-urakan-bonukset rivien tyypit"
   [rivi]
@@ -29,6 +34,7 @@
     (konv/muunna [:kasittelyaika] konv/java-date)
     (konv/decimal->double :summa :indeksiåkorjaus)))
 
+;; Käytössä jeesql:ssä
 (defn muunna-urakan-lupausbonus
   "Muuntaa hae-urakan-lupausbonukset rivien tyypit"
   [rivi]
