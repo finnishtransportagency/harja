@@ -275,7 +275,7 @@
   ([kulu]
    (kulun-validointi-meta kulu {}))
   ([{:keys [kohdistukset] :as _kulu} opts]
-   (let [onko-tehtava-validointi-kaytossa? (and (k/kehitysymparistossa?) (pvm/jalkeen? (pvm/nyt) (pvm/->pvm "01.10.2025")))
+   (let [onko-tehtava-validointi-kaytossa? true
          kohdistusvalidoinnit (mapcat (fn [i]
                                         (let [kohdistus (get kohdistukset i)
                                               tehtavaryhman-tehtavat? (seq (:tehtavaryhman-tehtavat kohdistus))]
