@@ -76,8 +76,6 @@
 
        [:div.row
         [:div.col-xs-12
-
-         (when (<= urakan-alkuvuosi 2022))
          [grid/grid {:otsikko ""
                      :tyhja "Ei tietoja."
                      :luokat ["matala-panel"]

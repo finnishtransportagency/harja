@@ -30,14 +30,8 @@ SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, 
 WHERE kt.sopimus = :sopimus-id
   AND tpi.urakka = :urakkaid
   AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
-    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
-  AND (t.koodi = '23104' -- talvihoito
-    OR t.koodi = '23116' -- liikenneympariston-hoito
-    OR t.koodi = '23124' -- sorateiden-hoito
-    OR t.koodi = '20107' -- paallystepaikkaukset
-    OR t.koodi = '20191' -- mhu-yllapito
-    OR t.koodi = '14301' -- mhu-korvausinvestointi
-    );
+      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+  AND true = onko_mhu_hankintatoimenpide(t.koodi)
 ORDER BY viimeisin_muokkaus DESC
 LIMIT 1;
 
