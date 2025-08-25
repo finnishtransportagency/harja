@@ -98,6 +98,12 @@ CREATE OR REPLACE FUNCTION paivita_sopimuksen_kaytetty_materiaali_pvm_aikavalill
 RETURNS void AS $$
 DECLARE
 BEGIN
+        -- Poistetaan vanhat rivit
+        DELETE FROM sopimuksen_kaytetty_materiaali
+          WHERE alkupvm BETWEEN alku AND (select date_trunc('day', loppu) + interval '1 day' - interval '1 second')
+            AND sopimus IN (SELECT id FROM sopimus WHERE urakka = urakkaid);
+            
+        -- Luodaan uudet rivit haun perusteella
         INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara, muokattu)
         SELECT t.sopimus, t.alkanut::date as alkupvm, tm.materiaalikoodi, SUM(tm.maara), current_timestamp
           FROM toteuma_materiaali tm join toteuma t ON tm.toteuma=t.id
