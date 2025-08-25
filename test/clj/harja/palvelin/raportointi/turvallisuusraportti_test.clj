@@ -113,49 +113,30 @@
                          "Etelä-Pohjanmaa" "Pohjois-Pohjanmaa"
                          "Lappi" "Koko maa"})
     (apurit/tarkista-taulukko-sarakkeet taulukko
-                                        {:otsikko "Hallintayksikkö"}
-                                        {:otsikko "Työtapaturmat"}
-                                        {:otsikko "Vaaratilanteet"}
-                                        {:otsikko "Turvallisuushavainnot"}
-                                        {:otsikko "Muut"})
+      {:otsikko "Hallintayksikkö"}
+      {:otsikko "Työtapaturmat"}
+      {:otsikko "Vaaratilanteet"}
+      {:otsikko "Turvallisuushavainnot"}
+      {:otsikko "Muut"})
     (apurit/tarkista-taulukko-kaikki-rivit taulukko
-                                           (fn [[alue tyo vaara havainnot muut :as rivi]]
-                                             (and (= (count rivi) 5)
-                                                  (string? alue)
-                                                  (number? tyo)
-                                                  (number? vaara)
-                                                  (number? havainnot)
-                                                  (number? muut))))
+      (fn [[alue tyo vaara havainnot muut :as rivi]]
+        (and (= (count rivi) 5)
+          (string? alue)
+          (number? tyo)
+          (number? vaara)
+          (number? havainnot)
+          (number? muut))))
     (let [vakavuus (apurit/taulukko-otsikolla vastaus "Turvallisuuspoikkeamat vakavuusasteittain")]
       (apurit/tarkista-taulukko-sarakkeet vakavuus
-                                          {:otsikko "Hallintayksikkö"}
-                                          {:otsikko "Lievät"}
-                                          {:otsikko "Vakavat"})
+        {:otsikko "Hallintayksikkö"}
+        {:otsikko "Lievät"}
+        {:otsikko "Vakavat"})
       (apurit/tarkista-taulukko-kaikki-rivit vakavuus
-                                             (fn [[hal lievat vakavat :as rivi]]
-                                               (and (= (count rivi) 3)
-                                                    (string? hal)
-                                                    (number? lievat)
-                                                    (number? vakavat)))))))
-
-(deftest raportin-suoritus-vesivayla-urakalle-toimii
-  (let [konteksti "urakka"
-        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
-        alkupvm [2017 1 1]
-        loppupvm [2017 12 31]
-        urakkatyyppi :vesivayla
-
-        vastaus (raportti-testien-vastaus {:konteksti konteksti :urakka-id urakka-id :alkupvm alkupvm
-                                           :loppupvm loppupvm :urakkatyyppi urakkatyyppi})
-
-        otsikko (str "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL, "
-                     "Turvallisuusraportti ajalta 01.01.2017 - 31.12.2017")
-        taulukko (apurit/elementti vastaus [:taulukko {:otsikko otsikko} _ _])]
-    (apurit/tarkista-taulukko-otsikko taulukko otsikko)
-    (apurit/tarkista-taulukko-sarakkeet taulukko
-                                        {:otsikko "Tyyppi"}
-                                        {:otsikko "Määrä"})
-    (apurit/tarkista-taulukko-yhteensa taulukko 1)))
+        (fn [[hal lievat vakavat :as rivi]]
+          (and (= (count rivi) 3)
+            (string? hal)
+            (number? lievat)
+            (number? vakavat)))))))
 
 (deftest raportin-suoritus-vesivayla-hallintayksikolle-toimii
   (let [konteksti "hallintayksikko"

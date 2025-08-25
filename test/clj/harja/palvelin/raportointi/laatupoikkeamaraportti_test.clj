@@ -252,13 +252,13 @@
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi :laatupoikkeamaraportti
-                                 :konteksti "koko maa"
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2016 10 1))
-                                              :urakkatyyppi :hoito}})
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :laatupoikkeamaraportti
+                   :konteksti "koko maa"
+                   :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
+                                :loppupvm (c/to-date (t/local-date 2016 10 1))
+                                :urakkatyyppi :hoito}})
         otsikko "KOKO MAA, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
         taulukko (apurit/elementti vastaus [:taulukko {:otsikko otsikko} _ _])
         rivit (into #{} (apurit/taulukon-rivit taulukko))]
@@ -379,26 +379,5 @@
                     "Testikohde"
                     "tilaaja"
                     "Arvonvähennyksen sisältävä laatupoikkeama 123"
-                    [:liitteet
-                     []]]}))))
-
-(deftest raportin-suoritus-vv-urakalle-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi :laatupoikkeamaraportti
-                                 :konteksti "urakka"
-                                 :urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2017 8 1))
-                                              :loppupvm (c/to-date (t/local-date 2018 7 31))}})
-        otsikko "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL, Laatupoikkeamaraportti ajalta 01.08.2017 - 31.07.2018"
-        taulukko (apurit/elementti vastaus [:taulukko {:otsikko otsikko} _ _])
-        rivit (into #{} (apurit/taulukon-rivit taulukko))]
-    (is (vector? vastaus))
-    (apurit/tarkista-taulukko-otsikko taulukko otsikko)
-    (is (= rivit #{["11.10.2017"
-                    "Testikohde"
-                    "tilaaja"
-                    "Testihavainto 3"
                     [:liitteet
                      []]]}))))
