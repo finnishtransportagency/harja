@@ -242,7 +242,6 @@
                                     ;; niin toimenkuvat voidaan järkevöittää ja yhdenmukaistaa
                                     kuukaudet (if (seq kuukaudet)
                                                 (map (fn [rivi]
-                                                       (println "Toimenkuva kuukaudet" rivi)
                                                        (merge rivi
                                                          {:yhteensa-kk (* (if (:tuntipalkka rivi) (:tuntipalkka rivi) 0) (if (:tunnit rivi) (:tunnit rivi) 0))
                                                           :yhteensa-indeksikorjattu-kk (* (if (:tuntipalkka-indeksikorjattu rivi) (:tuntipalkka-indeksikorjattu rivi) 0) (if (:tunnit rivi) (:tunnit rivi) 0))
