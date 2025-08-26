@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Tuottaa tagit, joilla julkaistava image merkitään
       # Imagen liittyvissä stepeissä "<image>"-string korvataan imageen viittaavalla stringillä: user/app
@@ -143,7 +143,7 @@ jobs:
       - name: Get cypress version
         id: cypress-version
         if: ${{ inputs.dockerfile == 'harja_cypress' }}
-        run: echo "value=$(node -pe 'require("./package").dependencies.cypress')" >> $GITHUB_OUTPUT
+        run: echo "value=$(node -pe 'require("./package").devDependencies.cypress')" >> $GITHUB_OUTPUT
 
       - name: Build and publish harja_cypress
         uses: docker/build-push-action@v6
