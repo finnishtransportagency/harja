@@ -93,7 +93,7 @@
           johto-ja-hallintokorvaukset
           (cond
             (and (>= urakan-alkuvuosi 2019) (<= urakan-alkuvuosi 2024))
-            (suunnitelma-q/hae-johto-ja-hallintokorvaukset-2019-2024 db urakka-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta)
+            (suunnitelma-q/hae-johto-ja-hallintokorvaukset-2019-2024 db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta)
             (>= urakan-alkuvuosi 2025)
             (suunnitelma-q/hae-johto-ja-hallintokorvaukset db urakka-id hoitovuoden-alkuvuosi toimenkuvat-tarjouksesta)
             :else (suunnitelma-q/hae-johto-ja-hallintokorvaukset db urakka-id hoitovuoden-alkuvuosi toimenkuvat-tarjouksesta))
