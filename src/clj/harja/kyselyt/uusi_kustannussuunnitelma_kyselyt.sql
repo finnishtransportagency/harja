@@ -1,8 +1,16 @@
 -- name: hae-urakan-toimenpiteet
-SELECT t.id, t.nimi, t.koodi, tpi.id as "toimenpideinstanssi-id"
+SELECT t.id, t.nimi, t.koodi, tpi.id AS "toimenpideinstanssi-id"
 FROM toimenpideinstanssi tpi
          JOIN toimenpide t ON tpi.toimenpide = t.id
-WHERE tpi.urakka = :urakkaid;
+WHERE tpi.urakka = :urakkaid
+  -- Ei haeta kaikkia toimenpiteitä
+  AND (t.koodi = '23104' -- talvihoito
+    OR t.koodi = '23116' -- liikenneympariston-hoito
+    OR t.koodi = '23124' -- sorateiden-hoito
+    OR t.koodi = '20107' -- paallystepaikkaukset
+    OR t.koodi = '20191' -- mhu-yllapito
+    OR t.koodi = '14301' -- mhu-korvausinvestointi
+    );
 
 -- name: hae-kiintea-kustannus-kuukausittain
 SELECT id, vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi,
@@ -11,7 +19,21 @@ FROM kiinteahintainen_tyo
 WHERE sopimus = :sopimus-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
       OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
-  and toimenpideinstanssi = :toimenpideinstanssi-id;
+  AND toimenpideinstanssi = :toimenpideinstanssi-id;
+
+-- name: hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
+SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
+  FROM kiinteahintainen_tyo kt
+       LEFT JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
+       JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+       JOIN toimenpide t ON tpi.toimenpide = t.id
+WHERE kt.sopimus = :sopimus-id
+  AND tpi.urakka = :urakkaid
+  AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
+      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+  AND true = onko_mhu_hankintatoimenpide(t.koodi)
+ORDER BY viimeisin_muokkaus DESC
+LIMIT 1;
 
 -- name: poista-kiinteat-kustannukset-kuukausittain!
 UPDATE kiinteahintainen_tyo
@@ -21,7 +43,7 @@ UPDATE kiinteahintainen_tyo
      muokkaaja = :muokkaaja
  WHERE sopimus = :sopimus-id
    AND vuosi = :vuosi
-   and toimenpideinstanssi = :toimenpideinstanssi-id
+   AND toimenpideinstanssi = :toimenpideinstanssi-id
    AND kuukausi in (:kuukaudet);
 
 -- name: hae-kiintea-kustannus-toimenpiteelle-kuukaudelta
@@ -66,7 +88,7 @@ FROM kustannusarvioitu_tyo
 WHERE sopimus = :sopimus-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
     OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
-  and toimenpideinstanssi = :toimenpideinstanssi-id
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
   AND tehtavaryhma = :tehtavaryhma-id;
 
 -- name: hae-kuukauden-erillishankinta
@@ -81,6 +103,18 @@ SELECT id,
        sopimus
 FROM kustannusarvioitu_tyo
 WHERE id = :id;
+
+-- name: hae-viimeisin-muokkaaja-erillishankinnoille
+SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
+FROM kustannusarvioitu_tyo kt
+         LEFT JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
+WHERE sopimus = :sopimus-id
+  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
+  AND tehtavaryhma = :tehtavaryhma-id
+ORDER BY viimeisin_muokkaus DESC
+LIMIT 10;;
 
 -- name: paivita-kuukauden-erillishankinta<!
 UPDATE kustannusarvioitu_tyo
@@ -98,11 +132,12 @@ VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
         'laskutettava-tyo', 'erillishankinnat', :luoja, NOW());
 
 -- name: hae-johto-ja-hallintokorvaukset-kuukausittain
-SELECT MIN(id) as id,
+-- Käytetään -25 ja myöhemmin alkaville urakoille, kun yksittäisellä toimenkuvalla ei ole merkitystä
+SELECT MIN(id) AS id,
        kuukausi,
        vuosi,
-       SUM((tunnit * tuntipalkka))                 as summa,
-       SUM((tunnit * tuntipalkka_indeksikorjattu)) as summa_indeksikorjattu
+       SUM((tunnit * tuntipalkka))                 AS summa,
+       SUM((tunnit * tuntipalkka_indeksikorjattu)) AS summa_indeksikorjattu
 FROM johto_ja_hallintokorvaus
 WHERE "urakka-id" = :urakka-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
@@ -111,6 +146,7 @@ GROUP BY vuosi, kuukausi
 ORDER BY vuosi, kuukausi;
 
 -- name: hae-kuukauden-johto-ja-hallintokorvaus
+-- Käytetään -25 ja myöhemmin alkaville urakoille, kun yksittäisellä toimenkuvalla ei ole merkitystä
 SELECT id,
        kuukausi,
        vuosi,
@@ -125,7 +161,39 @@ SELECT id,
 FROM johto_ja_hallintokorvaus
 WHERE id = :id;
 
+-- name: hae-toimenkuvan-kuukauden-johto-ja-hallintokorvaus
+-- Käytetään -24 ja aiemmin alkaville urakoille, kun yksittäisellä toimenkuvalla on kaikki merkitys
+SELECT id,
+       kuukausi,
+       vuosi,
+       tunnit,
+       tuntipalkka,
+       tuntipalkka_indeksikorjattu,
+       "urakka-id",
+       "toimenkuva-id",
+       luotu,
+       luoja,
+       muokattu,
+       muokkaaja
+FROM johto_ja_hallintokorvaus
+WHERE "toimenkuva-id" = :toimenkuva-id
+  AND kuukausi = :kuukausi
+  AND vuosi = :vuosi
+  AND "urakka-id" = :urakka-id;
+
+
+-- name: hae-viimeisin-muokkaaja-jjh
+SELECT GREATEST(jjh.muokattu, jjh.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
+FROM johto_ja_hallintokorvaus jjh
+     LEFT JOIN kayttaja k ON COALESCE(jjh.muokkaaja, jjh.luoja) = k.id
+WHERE "urakka-id" = :urakka-id
+  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+ORDER BY viimeisin_muokkaus DESC
+LIMIT 10;
+
 -- name: paivita-kuukauden-johto-ja-hallintokorvaus<!
+-- Käytetään -25 ja myöhemmin alkaville urakoille, kun yksittäisellä toimenkuvalla ei ole merkitystä
 UPDATE johto_ja_hallintokorvaus
 SET tuntipalkka                 = :tuntipalkka,
     tunnit                      = :tunnit,
@@ -134,18 +202,7 @@ SET tuntipalkka                 = :tuntipalkka,
     muokattu                    = NOW()
 WHERE id = :id;
 
--- name: nollaa-kuukauden-johto-ja-hallintokorvaus<!
-UPDATE johto_ja_hallintokorvaus
-SET tuntipalkka                 = null,
-    tunnit                      = null,
-    tuntipalkka_indeksikorjattu = null,
-    muokkaaja                   = :muokkaaja,
-    muokattu                    = NOW()
-WHERE vuosi = :vuosi
-  AND kuukausi = :kuukausi
-  AND "urakka-id" = :urakka-id;
-
--- name: tallenna-kuukauden-johto-ja-hallintokorvaus<!
+-- name: lisaa-kuukauden-johto-ja-hallintokorvaus<!
 INSERT INTO johto_ja_hallintokorvaus
     (kuukausi, vuosi, "toimenkuva-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, "urakka-id", luoja, luotu)
 VALUES (:kuukausi, :vuosi, :toimenkuva-id, :tunnit, :tuntipalkka, :tuntipalkka_indeksikorjattu, :urakka-id, :luoja, NOW());
@@ -164,7 +221,7 @@ FROM kustannusarvioitu_tyo
 WHERE sopimus = :sopimus-id
   AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
     OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
-  and toimenpideinstanssi = :toimenpideinstanssi-id
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
   AND tehtava = :tehtava-id;
 
 -- name: hae-kuukauden-hoidonjohtopalkkio
@@ -178,6 +235,18 @@ SELECT id,
        sopimus
 FROM kustannusarvioitu_tyo
 WHERE id = :id;
+
+-- name: hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
+SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
+FROM kustannusarvioitu_tyo kt
+         JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
+WHERE sopimus = :sopimus-id
+  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
+  AND tehtava = :tehtava-id
+ORDER BY viimeisin_muokkaus DESC
+LIMIT 10;
 
 -- name: paivita-kuukauden-hoidonjohtopalkkio<!
 UPDATE kustannusarvioitu_tyo
@@ -196,8 +265,8 @@ VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
 
 -- name: hae-rahavaraus-vuodelta
 SELECT r.nimi,
-       SUM(summa) as summa,
-       SUM(summa_indeksikorjattu) as "summa-indeksikorjattu"
+       SUM(summa) AS "suunniteltu-summa",
+       SUM(summa_indeksikorjattu) AS "suunniteltu-summa-indeksikorjattu"
 FROM kustannusarvioitu_tyo kt
      join rahavaraus r on kt.rahavaraus_id = r.id
 WHERE sopimus = :sopimus-id
@@ -283,3 +352,45 @@ SELECT id, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_in
     FROM urakka_tavoite
 WHERE urakka = :urakka-id
   AND hoitokausi = :hoitokausinumero;
+
+-- name: hae-urakan-toimenkuvat
+-- Hae urakkakohtaiset toimenkuvat
+WITH urakka_toimenkuvat AS (SELECT nimike
+                            FROM unnest(
+                                     CASE
+                                         WHEN (:urakan-alkuvuosi >= 2019 AND :urakan-alkuvuosi <= 2021)
+                                             THEN ARRAY ['sopimusvastaava', 'vastuunalainen työnjohtaja', 'päätoiminen apulainen', 'apulainen/työnjohtaja', 'viherhoidosta vastaava henkilö', 'hankintavastaava', 'harjoittelija']
+                                         WHEN (:urakan-alkuvuosi >= 2022 AND :urakan-alkuvuosi <= 2023)
+                                             THEN ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja', 'päätoiminen apulainen','apulainen/työnjohtaja', 'viherhoidosta vastaava henkilö', 'hankintavastaava', 'harjoittelija']
+                                         WHEN (:urakan-alkuvuosi = 2024)
+                                             THEN ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja','2. työnjohtaja', '3. työnjohtaja', 'viherhoidosta vastaava henkilö', 'harjoittelija']
+                                         ELSE ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja','2. työnjohtaja', '3. työnjohtaja', 'viherhoidosta vastaava henkilö', 'harjoittelija']
+                                         END
+                                 ) AS nimike)
+SELECT id, toimenkuva
+FROM johto_ja_hallintokorvaus_toimenkuva jht
+WHERE jht."urakka-id" = :urakka-id
+AND jht.toimenkuva is not null
+UNION
+SELECT (select MIN(id) from johto_ja_hallintokorvaus_toimenkuva where toimenkuva = ut.nimike) AS id,
+       nimike                                                                                 AS toimenkuva
+from urakka_toimenkuvat ut
+ORDER BY ID;
+
+-- name: hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
+-- Uudessa kustannusten suunnittelussa suunnitellaan edelleen tunnit ja tuntipalkat 19-22 alkaville urakoille
+SELECT jh.tunnit,
+       jh.tuntipalkka,
+       jh.tuntipalkka_indeksikorjattu AS "tuntipalkka-indeksikorjattu",
+       jh.indeksikorjaus_vahvistettu AS "indeksikorjaus-vahvistettu",
+       jh.vuosi,
+       jh.kuukausi,
+       jht.toimenkuva,
+       jh."toimenkuva-id"
+FROM johto_ja_hallintokorvaus jh
+    JOIN johto_ja_hallintokorvaus_toimenkuva jht ON jh."toimenkuva-id" = jht.id
+WHERE jh."urakka-id" = :urakka-id
+  AND ((jh.vuosi = :vuosi AND jh.kuukausi IN (10, 11, 12))
+    OR (jh.vuosi = :vuosi + 1 AND jh.kuukausi >= 1 AND jh.kuukausi <= 9))
+AND jh."toimenkuva-id" = :toimenkuva-id
+AND jh.kuukausi IN (:sallitut-kuukaudet);
