@@ -500,7 +500,6 @@
 
 (deftest vahvista-tavoite-ja-kattohinta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitovuoden-alkuvuosi 2024
 
         ;; Lisätään ensin kilpailutettavat hankinnat
@@ -546,6 +545,6 @@
     (is (= 3 (count (get-in vastaus [:kustannussuunnitelma :rahavaraukset]))))
     (is (= 7 (count (get-in vastaus [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet]))))
     (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :erillishankinnat]))))
-    (is (= 9 (count (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))))
+    (is (= 10 (count (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))))
     (is (= 12 (count (:kuukaudet (first (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))))))
     (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :hoidonjohtopalkkiot]))))))
