@@ -31,6 +31,9 @@
   hae-johto-ja-hallintokorvaukset-2019-mhu
   hae-kuukauden-johto-ja-hallintokorvaus hae-toimenkuvan-kuukauden-johto-ja-hallintokorvaus
   hae-urakan-toimenkuvat hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
+  hae-muut-kulut-toimenkuviin-kuukausittain hae-muut-kulut-kuukaudelle
+  lisaa-kuukauden-muu-kulu<! paivita-kuukauden-muu-kulu<!
+  hae-tehtava-tunnisteella
   paivita-kuukauden-johto-ja-hallintokorvaus<!
   lisaa-kuukauden-johto-ja-hallintokorvaus<! hae-viimeisin-muokkaaja-jjh
   vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!

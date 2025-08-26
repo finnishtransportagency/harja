@@ -394,3 +394,55 @@ WHERE jh."urakka-id" = :urakka-id
     OR (jh.vuosi = :vuosi + 1 AND jh.kuukausi >= 1 AND jh.kuukausi <= 9))
 AND jh."toimenkuva-id" = :toimenkuva-id
 AND jh.kuukausi IN (:sallitut-kuukaudet);
+
+-- name: hae-muut-kulut-toimenkuviin-kuukausittain
+-- Muut kulut on vanhoille -24 ja ennen alkaneille urakoille. Muudemmat -25 ja myöhemmin alkaneet eivät enää käytä tätä.
+SELECT kt.id,
+       kt.kuukausi,
+       kt.vuosi,
+       1 as tunnit,
+       kt.summa as "tuntipalkka",
+       kt.summa_indeksikorjattu as "tuntipalkka-indeksikorjattu",
+       'Muut kulut' as toimenkuva,
+       'Muut kulut' as nimike
+  FROM kustannusarvioitu_tyo kt
+       JOIN tehtava t ON kt.tehtava = t.id AND t.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' -- Muut kulut
+ WHERE kt.sopimus = :sopimus-id
+   AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
+       OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+   AND kt.toimenpideinstanssi = :toimenpideinstanssi-id;
+
+-- name: hae-muut-kulut-kuukaudelle
+SELECT kt.id,
+       kt.kuukausi,
+       kt.vuosi,
+       kt.summa,
+       kt.summa_indeksikorjattu
+  FROM kustannusarvioitu_tyo kt
+       JOIN tehtava t ON kt.tehtava = t.id AND t.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' -- Muut kulut
+ WHERE kt.sopimus = :sopimus-id
+   AND kt.vuosi = :vuosi
+   AND kt.kuukausi = :kuukausi
+   AND toimenpideinstanssi = :toimenpideinstanssi-id;
+
+-- name: lisaa-kuukauden-muu-kulu<!
+INSERT INTO kustannusarvioitu_tyo (kuukausi, vuosi, summa, summa_indeksikorjattu,
+                                   toimenpideinstanssi, tehtava, sopimus, tyyppi, osio, luoja, luotu)
+VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
+        :toimenpideinstanssi-id,  :tehtava-id, :sopimus-id,
+        'laskutettava-tyo', 'johto-ja-hallintokorvaus', :luoja, NOW());
+
+-- name: paivita-kuukauden-muu-kulu<!
+UPDATE kustannusarvioitu_tyo
+   SET summa                 = :summa,
+       summa_indeksikorjattu = :summa_indeksikorjattu,
+       muokkaaja             = :muokkaaja,
+       muokattu              = NOW()
+ WHERE id = :id;
+
+-- name: hae-tehtava-tunnisteella
+SELECT id, nimi, yksikko, suunnitteluyksikko, tehtavaryhma, luoja, luotu, muokkaaja, muokattu
+  FROM tehtava
+ WHERE yksiloiva_tunniste = :tunniste::UUID
+   AND piilota IS NOT TRUE
+   AND poistettu IS NOT TRUE;
