@@ -159,32 +159,32 @@
 (defn paattele-toimenkuvan-kuukaudet [urakan-alkuvuosi toimenkuva]
   (let [toimenkuva-nimi (:toimenkuva toimenkuva)
         toimenkuva-nimike (:nimike toimenkuva)]
-   (cond
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "sopimusvastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Päätoiminen apulainen (talvikausi)")) [5 6 7 8 9]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Päätoiminen apulainen (kesäkausi)")) [10 11 12 1 2 3 4]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Apulainen/työnjohtaja (talvikausi)")) [5 6 7 8 9]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Apulainen/työnjohtaja (kesäkausi)")) [10 11 12 1 2 3 4]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [4 5 6 7 8]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "harjoittelija")) [5 6 7 8]
+    (cond
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "sopimusvastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Päätoiminen apulainen (talvikausi)")) [5 6 7 8 9]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Päätoiminen apulainen (kesäkausi)")) [10 11 12 1 2 3 4]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Apulainen/työnjohtaja (talvikausi)")) [5 6 7 8 9]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Apulainen/työnjohtaja (kesäkausi)")) [10 11 12 1 2 3 4]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [4 5 6 7 8]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "harjoittelija")) [5 6 7 8]
 
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämä pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "päätoiminen apulainen")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "apulainen/työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämä pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "päätoiminen apulainen")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "apulainen/työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
 
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämäkin pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "2. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "3. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     :else [10 11 12 1 2 3 4 5 6 7 8 9])))
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämäkin pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "2. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "3. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      :else [10 11 12 1 2 3 4 5 6 7 8 9])))
 
 (defn hae-johto-ja-hallintokorvaukset-2019-2024 [db urakka-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta]
   (let [viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-jjh
