@@ -314,8 +314,8 @@
 
         ;; Lisää vielä järjestysnumero toimenkuville
         toimenkuvat (map-indexed (fn [i toimenkuva]
-                                  (assoc toimenkuva :jarjestys (inc i)))
-                                toimenkuvat)]
+                                   (assoc toimenkuva :jarjestys (inc i)))
+                      toimenkuvat)]
     toimenkuvat))
 
 (defn hae-johto-ja-hallintokorvaukset [db urakka-id hoitovuoden-alkuvuosi toimenkuvat-tarjouksesta]
