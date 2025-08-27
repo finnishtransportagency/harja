@@ -214,6 +214,7 @@ SELECT
     um.tyyppi as "murske-tyyppi",
     um.rakeisuus,
     um.iskunkestavyys,
+    pot2_alusta_rc_prosentti(pot2a.id) as "rc%",
     p2mt.*
   FROM pot2_alusta pot2a
   JOIN paallystysilmoitus pot ON pot.id = pot2a.pot2_id AND pot.poistettu IS FALSE
