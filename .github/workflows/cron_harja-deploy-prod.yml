@@ -67,7 +67,7 @@ jobs:
       status: ${{ steps.deployment-check.outputs.status }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Get latest successful build
         uses: actions/github-script@v7
@@ -209,7 +209,7 @@ jobs:
       deployments: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Replace latest deployment
         uses: actions/github-script@v7

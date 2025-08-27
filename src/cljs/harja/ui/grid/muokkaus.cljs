@@ -458,20 +458,29 @@
                                                                 :disabloi-autocomplete? disabloi-autocomplete?
                                                                 :on-rivi-focus on-rivi-focus
                                                                 :nayta-virheikoni? nayta-virheikoni?}]
-^{:key (str i "-" id "veto")}
+                                                 ^{:key (str i "-" id "veto")}
                                                  [vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan vetolaatikko-optiot]]))]
                         (recur (inc i)
-                               loput-rivit
-                               (map second (rest loput-rivit))
-                               (concat muokkausrivit (piilota-rivi-fn muokkausrivi))))))))))
+                          loput-rivit
+                          (map second (rest loput-rivit))
+                          (concat muokkausrivit (piilota-rivi-fn muokkausrivi))))))))))
            ;; Lisätään rivi-jalkeen eli yhteenvetorivi
-           (when rivi-jalkeen
+           (when (and rivi-jalkeen (not (vector? (first rivi-jalkeen))))
              [:tr {:class (:luokka (meta rivi-jalkeen))}
               (for* [{:keys [teksti sarakkeita luokka tasaa]} rivi-jalkeen]
                 [:td {:colSpan (or sarakkeita 1) :class luokka}
                  (case tasaa
                    :oikea [:span.pull-right teksti]
-                   teksti)])])]))})))
+                   teksti)])])
+           ;; Lisätään niin monta yhteenvetoriviä, kuin on annettu
+           (when (and rivi-jalkeen (vector? (first rivi-jalkeen)))
+             (for* [rivi rivi-jalkeen]
+               [:tr {:class (:luokka (meta rivi))}
+                   (for* [{:keys [teksti sarakkeita luokka tasaa]} rivi]
+                     [:td {:colSpan (or sarakkeita 1) :class luokka}
+                      (case tasaa
+                        :oikea [:span.pull-right teksti]
+                        teksti)])]))]))})))
 
 (defn- gridin-otsikot
   [skeema rivinumerot? piilota-toiminnot?]
@@ -505,7 +514,7 @@
   Optiot on mappi optioita:
   :id                             grid pääelementin DOM id
   :otsikko                        h2 teksti taulukon yläpuolelle
-  :otsikko-tyyli                    vapaaehtoinen tyyli otsikolle anna muodossa {:font-size \"1.2rem\"}
+  :otsikko-tyyli                  vapaaehtoinen tyyli otsikolle anna muodossa {:font-size \"1.2rem\"}
   :muokkaa-footer                 optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
   :muutos                         jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                                   Parametrina Grid ohjauskahva
@@ -566,7 +575,8 @@
   :piilota-table-header?          True, niin ei piirretä thead -elementtiä.
   :piilota-rivi                   Funktio, jolle passataan rivin tiedot. Piilottaa rivin palautusarvon ollessa truthy
   :korostusrajaus?                Tekee borderin ylä- ja alareunaan korostusborderit
-  :rivi-jalkeen                Vektori, joka on esim yhteensä rivi. Tulee muiden rivien jälkeen. Anna metana esim luokka, joka riville passataan."
+  :rivi-jalkeen                   Vektori, joka on esim yhteensä rivi. Tulee muiden rivien jälkeen. Anna metana esim luokka, joka riville passataan.
+                                  Voi ottaa vastaan myös vektorin vektoreita, jolloin jokainen vektori on oma rivinsä."
 
   [{:keys [otsikko otsikko-tyyli yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
