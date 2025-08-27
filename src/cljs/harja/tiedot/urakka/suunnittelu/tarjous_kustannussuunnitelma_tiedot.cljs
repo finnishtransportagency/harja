@@ -81,6 +81,7 @@
 
 
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
+(defrecord PoistaRivi [rivi])
 
 (defn hae-kustannussuunnitelman-tiedot
   "Haetaan kustannussuunnitelman tiedot, jotta voidaan näyttää ne UI Gridissä.
@@ -149,6 +150,7 @@
   HaeTyhjatTarjouksenTiedot
   (process-event
     [_ app]
+    (println "Tallennus onnistui: " app)
     (tuck-apurit/post! :hae-tyhjat-tarjouksen-tiedot
       {:urakka-id (-> @tila/yleiset :urakka :id)}
       {:onnistui ->HaeTyhjatTarjouksenTiedotOnnistui
@@ -171,6 +173,7 @@
   TallennaTarjouksenTiedot
   (process-event
     [{tarjous :tarjous} app]
+    (println "Tallennus onnistui: " tarjous)
     (let [;; Muutetaan formilta saatu tarjous oikeaan muotoon
           muunnettu-tarjous {:tarjous (map #(muunna-vuodet %) tarjous)}
           muunnettu-tarjous (assoc muunnettu-tarjous :urakka-id (-> @tila/yleiset :urakka :id))]
@@ -182,6 +185,7 @@
 
   TallennaTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
+    (println "Tallennus onnistui: " vastaus)
     (-> app
       (assoc :tallennus-kesken? false)
       (assoc :tarjous (:tarjous vastaus))))
@@ -195,6 +199,7 @@
   (process-event
     [_ app]
     (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (pvm/vuosi (first (:valittu-hoitokausi app))))
+    (println "Tallennus onnistui: " app)
     (-> app
       (assoc :haku-kaynnissa? true)
       (assoc :tallennus-kesken? false)
@@ -217,6 +222,7 @@
     [{kilpailutettavat-hankinnat :kilpailutettavat-hankinnat} app]
     (let [muuttuneet (vec kilpailutettavat-hankinnat)
           ;; Laske yhteenvedot uusiksi
+          _ (println "Tallennus onnistui: " app)
           muuttuneet (mapv (fn [rivi]
                              (let [alkukausi (or (:alkukausi rivi) 0)
                                    loppukausi (or (:loppukausi rivi) 0)]
@@ -237,6 +243,7 @@
                       :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu muuttuneet)) (apply + (map :loppukausi-indeksikorjattu muuttuneet)))
                       :pysyvat-muutokset "Ei muutoksia"}
           muuttuneet (conj muuttuneet yhteenveto)]
+      (println "Muuttuneet; " muuttuneet)
       (-> app
         (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] nil)
         (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet] muuttuneet))))
@@ -486,4 +493,10 @@
       :varoitus
       viesti/viestin-nayttoaika-keskipitka)
     (-> app
-      (assoc :tallennus-kesken? false))))
+      (assoc :tallennus-kesken? false)))
+
+  PoistaRivi
+  (process-event [{:keys [rivi]} app ]
+    (-> app
+      (update :tarjous
+        #(remove (fn [m] (= (:nimi m) (:nimi rivi))) %)))))
