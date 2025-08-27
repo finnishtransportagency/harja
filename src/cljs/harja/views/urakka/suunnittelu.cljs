@@ -51,14 +51,14 @@
 
           "Hoitovuoden alun tavoitehinta"
           :tarjous
-          (if (and
+          (when (and
                 (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
                 (istunto/ominaisuus-kaytossa? :mhu-urakka))
             [tarjous-nakyma/tarjous])
 
           "Uusi Kustannussuunnitelma"
           :uusi-kustannussuunnitelma
-          (if (and
+          (when (and
                 (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
                 (istunto/ominaisuus-kaytossa? :mhu-urakka))
             [kustannussuunitelma-nakyma/kustannussuunitelma])
