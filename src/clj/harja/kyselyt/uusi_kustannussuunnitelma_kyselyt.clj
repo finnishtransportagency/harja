@@ -361,16 +361,13 @@
                   :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
                   :tuntipalkka nil
                   :tunnit nil ;; muilla kuluilla ei koskaan ole oikeasti tunteja.
-                  :yhteensa-kk (if (kust-domain/onko-tuntipalkka-samat? muut-kulut-kuukaudet) (:tuntipalkka (first muut-kulut-kuukaudet))
-                                 nil)
-                  :yhteensa-indeksikorjattu-kk (apply + (map (fn [rivi]
-                                                               (if (:tuntipalkka-indeksikorjattu rivi) (:tuntipalkka-indeksikorjattu rivi) 0))
-                                                          muut-kulut-kuukaudet))
+                  :yhteensa-kk (:yhteensa-kk (first muut-kulut-kuukaudet))
+                  :yhteensa-indeksikorjattu-kk (:yhteensa-indeksikorjattu-kk (first muut-kulut-kuukaudet))
                   :summa (apply + (map (fn [rivi]
-                                         (if (:tuntipalkka rivi) (:tuntipalkka rivi) 0))
+                                         (if (:yhteensa-kk rivi) (:yhteensa-kk rivi) 0))
                                     muut-kulut-kuukaudet))
                   :summa-indeksikorjattu (apply + (map (fn [rivi]
-                                                         (if (:tuntipalkka-indeksikorjattu rivi) (:tuntipalkka-indeksikorjattu rivi) 0))
+                                                         (if (:yhteensa-indeksikorjattu-kk rivi) (:yhteensa-indeksikorjattu-kk rivi) 0))
                                                     muut-kulut-kuukaudet))
                   :kuukaudet muut-kulut-kuukaudet}
 
