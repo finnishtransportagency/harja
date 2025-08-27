@@ -22,15 +22,19 @@ WHERE sopimus = :sopimus-id
   AND toimenpideinstanssi = :toimenpideinstanssi-id;
 
 -- name: hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
-SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
+SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
+       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+            ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
+       END AS viimeisin_muokkaaja
   FROM kiinteahintainen_tyo kt
        LEFT JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
+       LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
        JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
        JOIN toimenpide t ON tpi.toimenpide = t.id
 WHERE kt.sopimus = :sopimus-id
   AND tpi.urakka = :urakkaid
   AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
-      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+      OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
   AND true = onko_mhu_hankintatoimenpide(t.koodi)
 ORDER BY viimeisin_muokkaus DESC
 LIMIT 1;
@@ -104,17 +108,22 @@ SELECT id,
 FROM kustannusarvioitu_tyo
 WHERE id = :id;
 
+
 -- name: hae-viimeisin-muokkaaja-erillishankinnoille
-SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
+SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
+       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+            ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
+           END AS viimeisin_muokkaaja
 FROM kustannusarvioitu_tyo kt
          LEFT JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
-WHERE sopimus = :sopimus-id
-  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
-      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
-  AND toimenpideinstanssi = :toimenpideinstanssi-id
-  AND tehtavaryhma = :tehtavaryhma-id
+         LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
+WHERE kt.sopimus = :sopimus-id
+  AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
+      OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+  AND kt.toimenpideinstanssi = :toimenpideinstanssi-id
+  AND kt.tehtavaryhma = :tehtavaryhma-id
 ORDER BY viimeisin_muokkaus DESC
-LIMIT 10;;
+LIMIT 1;
 
 -- name: paivita-kuukauden-erillishankinta<!
 UPDATE kustannusarvioitu_tyo
@@ -183,14 +192,18 @@ WHERE "toimenkuva-id" = :toimenkuva-id
 
 
 -- name: hae-viimeisin-muokkaaja-jjh
-SELECT GREATEST(jjh.muokattu, jjh.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
+SELECT GREATEST(jjh.muokattu, jjh.luotu) AS viimeisin_muokkaus,
+       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+            ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
+           END AS viimeisin_muokkaaja
 FROM johto_ja_hallintokorvaus jjh
      LEFT JOIN kayttaja k ON COALESCE(jjh.muokkaaja, jjh.luoja) = k.id
-WHERE "urakka-id" = :urakka-id
-  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
-      OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
+     LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
+WHERE jjh."urakka-id" = :urakka-id
+  AND ((jjh.vuosi = :vuosi AND jjh.kuukausi IN (10, 11, 12))
+      OR (jjh.vuosi = :vuosi + 1 AND jjh.kuukausi >= 1 AND jjh.kuukausi <= 9))
 ORDER BY viimeisin_muokkaus DESC
-LIMIT 10;
+LIMIT 1;
 
 -- name: paivita-kuukauden-johto-ja-hallintokorvaus<!
 -- Käytetään -25 ja myöhemmin alkaville urakoille, kun yksittäisellä toimenkuvalla ei ole merkitystä
@@ -237,14 +250,18 @@ FROM kustannusarvioitu_tyo
 WHERE id = :id;
 
 -- name: hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
-SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus, CONCAT(k.etunimi, ' ', k.sukunimi) AS viimeisin_muokkaaja
+SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
+       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+            ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
+           END AS viimeisin_muokkaaja
 FROM kustannusarvioitu_tyo kt
          JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
-WHERE sopimus = :sopimus-id
-  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
+         LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
+WHERE kt.sopimus = :sopimus-id
+  AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
       OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
-  AND toimenpideinstanssi = :toimenpideinstanssi-id
-  AND tehtava = :tehtava-id
+  AND kt.toimenpideinstanssi = :toimenpideinstanssi-id
+  AND kt.tehtava = :tehtava-id
 ORDER BY viimeisin_muokkaus DESC
 LIMIT 10;
 
