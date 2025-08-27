@@ -10,6 +10,8 @@
 (defqueries "harja/kyselyt/tehtavamaarat.sql"
   {:positional? true})
 
+(declare hae-sopimuksen-tehtavamaarat-urakalle)
+
 (defn hae-sopimuksen-tila
   [db {:keys [urakka-id sopimus-id]}]
   (fetch db ::tehtavamaarat/sopimuksen-tehtavamaarat-tallennettu

@@ -11,8 +11,8 @@
 (defonce nakymassa? (atom false))
 
 (defn scrollaa-muutoksiin [elementin-id]
-  ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat
-  (siirrin/siirry-elementin-id elementin-id 450))
+  ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat tai vahvistaa koko kustannussuunnitelman
+  (siirrin/siirry-elementin-id elementin-id 200))
 
 (defn muunna-vuodet
   "Muunnetaan UI Gridin käyttämä tietomalli bäkkärin käyttämään muotoon.
