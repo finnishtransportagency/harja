@@ -25,7 +25,7 @@
   paivita-kuukauden-erillishankinta<! tallenna-kuukauden-erillishankinta<!
   hae-viimeisin-muokkaaja-erillishankinnoille
   hae-hoidonjohtopalkkiot-kuukausittain hae-kuukauden-hoidonjohtopalkkio hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
-  hae-rahavaraus-vuodelta
+  hae-rahavaraus-vuodelta paivita-rahavaraus<! lisaa-rahavaraus<!
   paivita-kuukauden-hoidonjohtopalkkio<! tallenna-kuukauden-hoidonjohtopalkkio<!
   hae-johto-ja-hallintokorvaukset-kuukausittain
   hae-johto-ja-hallintokorvaukset-2019-mhu
@@ -732,10 +732,13 @@
 (defn vahvista-tavoite-ja-kattohinta [db kayttaja urakka-id vahvista? hoitovuoden-alkuvuosi]
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
         hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
         vahvistus-pvm (pvm/nyt)
         hoitokauden-alkupvm (pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi))
         hoitokauden-loppupvm (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))
+
+        ;; Vahvista kiinteähintaiset työt.
         _ (vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille! db
             {:urakka-id urakka-id
              :alkupvm hoitokauden-alkupvm
@@ -748,7 +751,6 @@
         ;; Hae ensin tarjouksen tiedot
         tarjous (tarjous-kyselyt/hae-tarjous db urakka-id)
         rahavaraukset (filter #(= "tavoitehintaiset-rahavaraukset" (:osio %)) (:tarjous tarjous))
-
         _ (mapv (fn [rahavaraus]
                   (let [rahavaraus-id (:rahavaraus-id rahavaraus)
                         vuosittainen-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot rahavaraus))))
@@ -770,23 +772,34 @@
                                                  :let [_ (swap! kk inc)
                                                        kuukausimaara (count kt-rahavaraus-kuukaudet)
                                                        kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (/ vuosittainen-summa kuukausimaara))) ;; Tallenna nil kantaan, jos nil arvo on syötetty
-                                                       viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* (dec kuukausimaara) kuukausisumma))))]]
+                                                       viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* (dec kuukausimaara) kuukausisumma))))
+                                                       summa (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-kuukausisumma kuukausisumma)]]
                                            ;; Rahavarauksesta ei voi muuttua, kuin summa
-                                           (ka-q/paivita-rahavaraus<! db {:summa (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-kuukausisumma kuukausisumma)
-                                                                          :muokattu (pvm/nyt)
-                                                                          :muokkaaja (:id kayttaja)
-                                                                          :id (:id r)})))
+                                           (paivita-rahavaraus<! db {:summa summa
+                                                                     :summa_indeksikorjattu (when summa
+                                                                                              (indeksi-kyselyt/indeksikorjaa
+                                                                                                (indeksi-kyselyt/indeksikerroin urakan-indeksit hoitokausinumero)
+                                                                                                summa))
+                                                                     :muokattu (pvm/nyt)
+                                                                     :muokkaaja (:id kayttaja)
+                                                                     :id (:id r)})))
                                        (doseq [kk (range 1 13)
                                                :let [kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (/ vuosittainen-summa 12)))
-                                                     viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* 11 kuukausisumma))))]]
-                                         (ka-q/lisaa-rahavaraus<! db {:vuosi (if (< kk 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
-                                                                      :kuukausi kk
-                                                                      :sopimus_id sopimus-id
-                                                                      :toimenpideinstanssi_id ensimmainen-toimenpideinstanssi-id
-                                                                      :tehtava_id nil
-                                                                      :rahavaraus_id rahavaraus-id
-                                                                      :summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma)
-                                                                      :luoja (:id kayttaja)})))]
+                                                     viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* 11 kuukausisumma))))
+                                                     vuosi (if (< kk 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
+                                                     summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma)]]
+                                         (lisaa-rahavaraus<! db {:vuosi vuosi
+                                                                 :kuukausi kk
+                                                                 :sopimus_id sopimus-id
+                                                                 :toimenpideinstanssi_id ensimmainen-toimenpideinstanssi-id
+                                                                 :tehtava_id nil
+                                                                 :rahavaraus_id rahavaraus-id
+                                                                 :summa summa
+                                                                 :summa_indeksikorjattu (when summa
+                                                                                          (indeksi-kyselyt/indeksikorjaa
+                                                                                            (indeksi-kyselyt/indeksikerroin urakan-indeksit hoitokausinumero)
+                                                                                            summa))
+                                                                 :luoja (:id kayttaja)})))]
                     dbrahavaraus))
             rahavaraukset)
 

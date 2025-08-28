@@ -291,47 +291,61 @@ WHERE sopimus = :sopimus-id
    OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
 GROUP BY r.id;
 
+-- name: paivita-rahavaraus<!
+UPDATE kustannusarvioitu_tyo
+SET summa = :summa,
+    summa_indeksikorjattu = :summa_indeksikorjattu,
+    muokattu = NOW(),
+    muokkaaja = :muokkaaja
+WHERE id = :id;
+
+-- name: lisaa-rahavaraus<!
+INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, sopimus,
+                                   toimenpideinstanssi, tehtava, rahavaraus_id, tyyppi, osio, luoja, luotu)
+VALUES (:vuosi, :kuukausi, :summa, :summa_indeksikorjattu, :sopimus_id, :toimenpideinstanssi_id,
+        :tehtava_id, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
+        :luoja, NOW());
+
 --name: vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
 UPDATE kiinteahintainen_tyo kt
 SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP ELSE NULL END,
     vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja ELSE NULL END,
-    summa_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(kt.summa::NUMERIC, kt.vuosi::INTEGER, kt.kuukausi::INTEGER, :urakka-id::INTEGER) ELSE NULL END
+    summa_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(kt.summa::NUMERIC, kt.vuosi::INTEGER, kt.kuukausi::INTEGER, :urakka-id::INTEGER) ELSE kt.summa_indeksikorjattu END
 FROM toimenpideinstanssi tpi
+     JOIN toimenpide t ON tpi.toimenpide = t.id
 WHERE kt.toimenpideinstanssi = tpi.id
   AND tpi.urakka = :urakka-id
   AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-  AND kt.versio = 0;
+  AND true = onko_mhu_hankintatoimenpide(t.koodi);
 
 --name: vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille!
+-- Vahvistaa käytännössä rahavaraukset, hoidonjohtopalkkiot ja erillishankinnat
 UPDATE kustannusarvioitu_tyo kt
 SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP ELSE NULL END,
     vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja ELSE NULL END,
-    summa_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(kt.summa::NUMERIC, kt.vuosi::INTEGER, kt.kuukausi::INTEGER, :urakka-id::INTEGER) ELSE NULL END
+    summa_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(kt.summa::NUMERIC, kt.vuosi::INTEGER, kt.kuukausi::INTEGER, :urakka-id::INTEGER) ELSE kt.summa_indeksikorjattu END
 FROM toimenpideinstanssi tpi
 WHERE kt.toimenpideinstanssi = tpi.id
   AND tpi.urakka = :urakka-id
-  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-  AND kt.versio = 0;
+  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE);
 
 --name: vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille!
 UPDATE johto_ja_hallintokorvaus jh
 SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
     vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END,
-    tuntipalkka_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(jh.tuntipalkka::NUMERIC, jh.vuosi::INTEGER, jh.kuukausi::INTEGER, :urakka-id::INTEGER) ELSE NULL END
+    tuntipalkka_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(jh.tuntipalkka::NUMERIC, jh.vuosi::INTEGER, jh.kuukausi::INTEGER, :urakka-id::INTEGER) ELSE jh.tuntipalkka_indeksikorjattu END
 WHERE jh."urakka-id" = :urakka-id
-  AND (CONCAT(jh.vuosi, '-', jh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-  AND jh.versio = 0;
+  AND (CONCAT(jh.vuosi, '-', jh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE);
 
 --name: vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille!
 UPDATE urakka_tavoite ut
 SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
     vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END,
-    tavoitehinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.tavoitehinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE NULL END,
-    kattohinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.kattohinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE NULL END
+    tavoitehinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.tavoitehinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE ut.tavoitehinta_indeksikorjattu END,
+    kattohinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.kattohinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE ut.kattohinta_indeksikorjattu END
 WHERE ut.urakka = :urakka-id
   -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
-  AND ut.hoitokausi = :hoitovuosi-nro
-  AND ut.versio = 0;
+  AND ut.hoitokausi = :hoitovuosi-nro;
 
 -- name: paivita-tavoite-ja-kattohinta<!
 UPDATE urakka_tavoite
@@ -353,7 +367,6 @@ FROM kiinteahintainen_tyo kt
 WHERE tpi.urakka = :urakka-id
   AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND kt.indeksikorjaus_vahvistettu IS NOT NULL
-  AND kt.versio = 0
 
 UNION ALL
 SELECT COUNT(*) > 0 AS "arvioidut-vahvistettu?"
@@ -362,7 +375,13 @@ FROM kustannusarvioitu_tyo kt
 WHERE tpi.urakka = :urakka-id
   AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND kt.indeksikorjaus_vahvistettu IS NOT NULL
-  AND kt.versio = 0;
+
+UNION ALL
+SELECT COUNT(*) > 0 AS "arvioidut-vahvistettu?"
+FROM johto_ja_hallintokorvaus jjh
+WHERE jjh."urakka-id" = :urakka-id
+  AND (CONCAT(jjh.vuosi, '-', jjh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND jjh.indeksikorjaus_vahvistettu IS NOT NULL;
 
 -- name: hae-urakan-hoitovuoden-tavoitetiedot
 SELECT id, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, tarjous_tavoitehinta
