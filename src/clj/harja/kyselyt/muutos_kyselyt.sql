@@ -183,12 +183,10 @@ SELECT
   -- ---------------------------------------------------- --
   -- Yksikköhinta =  Kirjatut kulut / toteutunut määrä   
   -- ---------------------------------------------------- --
-  COALESCE(
-    CASE
-        WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
-        ELSE kulut.summa / SUM(urakan_tehtavat.maara)
-    END, 0.0
-  )                                               AS yksikkohinta,
+  CASE
+    WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
+    ELSE ROUND(kulut.summa / SUM(urakan_tehtavat.maara), 2)
+  END                                             AS yksikkohinta,
   -- ---------------------------------------------------- --
   -- Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
   -- ---------------------------------------------------- --
@@ -211,6 +209,7 @@ FROM tehtava tk
     AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
     AND ut.poistettu IS NOT TRUE
     AND tk.id = ut.tehtava
+    AND (CAST(:tehtava AS INTEGER) IS NULL OR tk.id = :tehtava)
   LEFT JOIN urakan_tehtavat
     ON tk.id = urakan_tehtavat.toimenpidekoodi
   JOIN urakka u

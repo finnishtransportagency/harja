@@ -51,6 +51,34 @@
      :toteumat toteumat
      :tavoitehinnan-muutos (- toteumat summa-indeksikorjattu)}))
 
+
+(defn hae-hoitovuosien-yksikkohinnat
+  [db user {:keys [urakka-id hoitokaudet tehtava_id] :as _tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+
+  (map-indexed (fn [idx valittu-hoitokausi]
+                 (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+                       alkupvm (str hoitokauden-alkuvuosi "-10-01")
+                       loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
+                       parameterssit {:urakka urakka-id
+                                      :tehtavaryhma nil
+                                      :tehtava (or tehtava_id nil)
+                                      :alkupvm alkupvm
+                                      :loppupvm loppupvm
+                                      :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}
+                       yksikkohinta (->
+                                      (muutos-kyselyt/hae-tehtava-maaramuutokset db parameterssit)
+                                      first
+                                      :yksikkohinta)]
+                   ;; esim:: 7,90 (1. hoitovuoden yksikköhinta)
+                   {:valinta (str
+                               yksikkohinta " "
+                               "(" (inc idx) ". hoitovuoden yksikköhinta)")
+                    :arvo yksikkohinta
+                    :hk-nro (inc idx)}))
+    hoitokaudet))
+
+
 (defn hae-tehtava-maaramuutokset
   [db user {:keys [urakka-id valittu-hoitokausi] :as _tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
@@ -60,6 +88,7 @@
         loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
         parameterssit {:urakka urakka-id
                        :tehtavaryhma nil
+                       :tehtava nil
                        :alkupvm alkupvm
                        :loppupvm loppupvm
                        :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}
@@ -67,10 +96,10 @@
         vastaus (muutos-kyselyt/hae-tehtava-maaramuutokset db parameterssit)]
     vastaus))
 
+
 (defn hae-urakan-muutostiedot
   [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  
   (log/debug "hae-urakan-muutostiedot: " tiedot)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         kirjatut-muutokset-vastaus (mapv
@@ -290,7 +319,11 @@
         :hae-tehtava-maaramuutokset
         (fn [user tiedot]
           (hae-tehtava-maaramuutokset (:db this) user tiedot))
-
+        
+        :hae-hoitovuosien-yksikkohinnat
+        (fn [user tiedot]
+          (hae-hoitovuosien-yksikkohinnat (:db this) user tiedot))
+        
         :tallenna-muutos
         (fn [user tiedot]
           (tallenna-muutos (:db this) user tiedot))
@@ -305,6 +338,7 @@
       :hae-urakan-muutostiedot
       :hae-muutoksen-tiedot
       :hae-tehtava-maaramuutokset
+      :hae-hoitovuosien-yksikkohinnat
       :tallenna-muutos
       :tallenna-rahavarausmuutosten-syyt)
     this))

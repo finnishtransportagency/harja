@@ -19,6 +19,9 @@
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
 
 
+(defrecord HaeYksikkohinnatOnnistui [vastaus])
+(defrecord HaeYksikkohinnatEpaonnistui [vastaus])
+
 (defrecord HaeTehtavaMaaramuutoksetOnnistui [vastaus])
 (defrecord HaeTehtavaMaaramuutoksetEpaonnistui [vastaus])
 (defrecord KuluhakuOnnistui [vastaus])
@@ -60,7 +63,8 @@
 
 
 ;; Yksikköhinta modal 
-(defrecord AsetaYksikohinta [])
+(defrecord AvaaYksikkohintaModal [valittu-modal-tehtava tehtava_id])
+(defrecord SuljeYksikkohintaModal [])
 
 
 (defn valitse-urakka [app urakka]
@@ -111,16 +115,13 @@
      :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui}))
 
 
-(defn hae-kirjatut-kulut [app]
-  ;; TODO... voi poistaa, ei tehdä frontissa näitä 
-  (tuck-apurit/post! app :kulut-kohdistuksineen
+(defn hae-hoitovuosien-yksikkohinnat [app hoitokaudet tehtava_id]
+  (tuck-apurit/post! app :hae-hoitovuosien-yksikkohinnat
     {:urakka-id (-> @tila/yleiset :urakka :id)
-     :alkupvm (-> app :valittu-hoitokausi (first))
-     :loppupvm (-> app :valittu-hoitokausi (second))}
-    {:onnistui ->KuluhakuOnnistui
-     :epaonnistui ->KuluhakuEpaonnistui
-     :epaonnistui-parametrit [{:viesti "Urakan kulujen haku epäonnistui"}]
-     :paasta-virhe-lapi? true}))
+     :hoitokaudet hoitokaudet
+     :tehtava_id tehtava_id}
+    {:onnistui ->HaeYksikkohinnatOnnistui
+     :epaonnistui ->HaeYksikkohinnatEpaonnistui}))
 
 
 (defn hae-tehtava-maaramuutokset [app]
@@ -128,9 +129,7 @@
     {:urakka-id (-> @tila/yleiset :urakka :id)
      :valittu-hoitokausi (:valittu-hoitokausi app)}
     {:onnistui ->HaeTehtavaMaaramuutoksetOnnistui
-     :epaonnistui ->HaeTehtavaMaaramuutoksetEpaonnistui})
-  ;;(hae-kirjatut-kulut app)
-  )
+     :epaonnistui ->HaeTehtavaMaaramuutoksetEpaonnistui}))
 
 
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
@@ -169,13 +168,21 @@
       (hae-tehtava-maaramuutokset app)
       app))
 
-  AsetaYksikohinta
+  AvaaYksikkohintaModal
+  (process-event [{:keys [valittu-modal-tehtava tehtava_id]}
+                  {:keys [yksikkohinta-modal-auki?] :as app}]
+    (hae-hoitovuosien-yksikkohinnat app @u/valitun-urakan-hoitokaudet tehtava_id)
+    (assoc app
+      :ladataan-modal? true
+      :yksikkohinta-modal-auki? true
+      :valittu-modal-tehtava valittu-modal-tehtava))
+
+  SuljeYksikkohintaModal
   (process-event [_
                   {:keys [yksikkohinta-modal-auki?] :as app}]
-    (println "Auki:: " (boolean yksikkohinta-modal-auki?)
-      ;;
-      )
-    (assoc app :yksikkohinta-modal-auki? true))
+    (assoc app
+      :valittu-modal-tehtava nil
+      :yksikkohinta-modal-auki? false))
 
   HaeUrakanMuutostiedot
   (process-event [{urakka :urakka} app]
@@ -207,14 +214,25 @@
     (viesti/nayta-toast! "Muutostietojen hakeminen epäonnistui" :varoitus)
     app)
 
+  HaeYksikkohinnatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (println "\n vastaus::: " vastaus)
+    (assoc app :hoitokausien-yksikkohinnat vastaus :ladataan-modal? false))
+
+  HaeYksikkohinnatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Yksikköhintojen haku epäonnistui" :varoitus)
+    (assoc app :ladataan-modal? false))
+
+
   HaeTehtavaMaaramuutoksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :tehtava-maaramuutokset vastaus))
+    (assoc app :tehtava-maaramuutokset vastaus :ladataan-modal? false))
 
   HaeTehtavaMaaramuutoksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Tehtävä- ja määrämuutosten haku epäonnistui" :varoitus)
-    app)
+    (assoc app :ladataan-modal? false))
 
   KuluhakuOnnistui
   (process-event [{vastaus :vastaus} app]

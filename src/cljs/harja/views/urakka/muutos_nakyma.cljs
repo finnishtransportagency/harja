@@ -8,6 +8,7 @@
             [harja.pvm :as pvm]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
+            [harja.ui.modal :as modal]
             [harja.ui.lomake :as lomake]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ui-ikonit]
@@ -319,7 +320,67 @@
            :muokattava? (constantly false)}]
          rivit])}]))
 
-(defn- lasketut-muutokset [e! {:keys [lasketut-muutokset tehtava-maaramuutokset] :as app}]
+
+(defn- aseta-yksikkohinta-modal [e!
+                                 {:keys [yksikkohinta-modal-auki? hoitokausien-yksikkohinnat] :as app}
+                                 {:keys [tehtava] :as valittu-rivi}]
+  (let [;; voi-lahettaa? (::tila/validi? lomake)
+        ;;
+        voi-tallentaa? true
+        voi-kirjoittaa? true
+        hoitokausien-yksikkohinnat (filter #(some? (:arvo %)) hoitokausien-yksikkohinnat)
+        
+        yksikkohinta-tyypit (list {:tyyppi "test1"} {:tyyppi "test2"})
+        yksikkohinta-valinnat {:test1 "7,90 (1. hoitovuoden yksikköhinta)"
+                               :test2 "17,90 (2. hoitovuoden yksikköhinta)"}]
+
+    [modal/modal
+     {:otsikko ""
+      :nakyvissa? yksikkohinta-modal-auki?
+      :sulje-fn #(e! (muutos-tiedot/->SuljeYksikkohintaModal))}
+
+     ;; Moodalin sisältö 
+     [lomake/lomake
+      {:ei-borderia? true
+       :voi-muokata? voi-kirjoittaa?
+       :tarkkaile-ulkopuolisia-muutoksia? true
+       :muokkaa! #(e! (muutos-tiedot/->SuljeYksikkohintaModal))
+
+       :header [:div.col-md-12
+                [:h2.header-yhteiset "Aseta tehtävän yksikköhinta"]
+                [:hr]
+                [:div.body-caption.lihavoitu "Tehtävä"]
+                [:div.body tehtava]]
+
+       :footer (let [;; TODO 
+                     peruuta-fn #(e! (muutos-tiedot/->SuljeYksikkohintaModal))
+                     tallenna-fn #(e! (muutos-tiedot/->SuljeYksikkohintaModal))]
+                 [:<>
+                  [:hr]
+                  [:div.muokkaus-modal-napit
+                   [napit/tallenna "Tallenna" #(tallenna-fn) {:disabled (not voi-tallentaa?)}]
+                   [napit/yleinen-toissijainen "Peruuta" #(peruuta-fn)]]])}
+
+      [(lomake/rivi
+         {:otsikko "Yksikköhinta"
+          :nimi :tyyppi
+          :tyyppi :valinta
+          :pakollinen? true
+          :vayla-tyyli? true
+          :valinnat (map :valinta hoitokausien-yksikkohinnat)
+          ;; TODO 
+          ;; :valinta-nayta #(get hoitokausien-yksikkohinnat :hk-nro)
+          ;; :validoi [#(when (and virheita? (nil? %)) "Valitse tyyppi")]
+          ::lomake/col-luokka "col-xs-6"})]
+      valittu-rivi]
+
+     ;; Pitäs olla dropdown, jos tehtävätoteumia (urakan.tehtavat.maara) ei oo tehty ollenkaan. 
+     ;; Dropdownissa pitäs tarjota tilanteen mukaan edellisten vuosien laskettu yksikköhinta
+     ;; Jos niitä ei oo, niin tavoitehintamuutos pitää syöttää käsin, koska ei pysty laskemaan
+     ]))
+
+
+(defn- lasketut-muutokset [e! {:keys [lasketut-muutokset tehtava-maaramuutokset valittu-modal-tehtava] :as app}]
   
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :lasketut-muutokset
@@ -358,105 +419,107 @@
             solun-luokka-fn (fn [_arvo rivi]
                               (when (some? (:valiotsikko rivi)) "vaalen-tumma-tausta"))]
 
-        [grid/grid
-         {:tunniste :id
-          :luokat ["lasketut-muutokset-grid"]
-          :tyhja "Ei laskettuja muutoksia."
-          :voi-lisata? false
-          :voi-kumota? false
-          :voi-muokata? true
-          :piilota-toiminnot? true
-          :voi-poistaa? (constantly false)
-          ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
-          :sivuta 20
-          :piilota-sivutus-footer? true
-          :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
+        [:<>
+         [aseta-yksikkohinta-modal e! app valittu-modal-tehtava]
+         [grid/grid
+          {:tunniste :id
+           :luokat ["lasketut-muutokset-grid"]
+           :tyhja "Ei laskettuja muutoksia."
+           :voi-lisata? false
+           :voi-kumota? false
+           :voi-muokata? true
+           :piilota-toiminnot? true
+           :voi-poistaa? (constantly false)
+           ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
+           :sivuta 20
+           :piilota-sivutus-footer? true
+           :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
 
-         [{:otsikko "Tehtävä"
-           :nimi :tehtava
-           :solun-luokka solun-luokka-fn
-           :muokattava? (constantly true)
-           :tyyppi :komponentti
-           :komponentti (fn [{:keys [tehtava valiotsikko]}]
-                          (if tehtava
-                            [:<> tehtava]
-                            [:div.body-text.strong valiotsikko]))
-           :leveys 45}
+          [{:otsikko "Tehtävä"
+            :nimi :tehtava
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly true)
+            :tyyppi :komponentti
+            :komponentti (fn [{:keys [tehtava valiotsikko]}]
+                           (if tehtava
+                             [:<> tehtava]
+                             [:div.body-text.strong valiotsikko]))
+            :leveys 45}
 
-          {:otsikko "Yksikkö"
-           :nimi :yksikko
-           :tyyppi :string
-           :solun-luokka solun-luokka-fn
-           :muokattava? (constantly false)
-           :leveys 15}
+           {:otsikko "Yksikkö"
+            :nimi :yksikko
+            :tyyppi :string
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
 
-          {:otsikko "Muutoksen syy / lisätieto"
-           :nimi :syy
-           :tyyppi :text
-           :solun-luokka solun-luokka-fn
-           :muokattava? #(nil? (:valiotsikko %)) ;; Älä anna muokata väliotsikkoja 
-           :leveys 35}
+           {:otsikko "Muutoksen syy / lisätieto"
+            :nimi :syy
+            :tyyppi :text
+            :solun-luokka solun-luokka-fn
+            :muokattava? #(nil? (:valiotsikko %)) ;; Älä anna muokata väliotsikkoja 
+            :leveys 35}
 
-          {:otsikko "Suunniteltu määrä"
-           :nimi :suunniteltu_maara
-           :tyyppi :numero
-           :solun-luokka solun-luokka-fn
-           :muokattava? (constantly false)
-           :leveys 15}
+           {:otsikko "Suunniteltu määrä"
+            :nimi :suunniteltu_maara
+            :tyyppi :numero
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
 
-          {:otsikko "Kirjattu määrä"
-           :nimi :maara
-           :tyyppi :numero
-           :solun-luokka solun-luokka-fn
-           :muokattava? (constantly false)
-           :leveys 15}
+           {:otsikko "Kirjattu määrä"
+            :nimi :maara
+            :tyyppi :numero
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
 
-          {:otsikko "Määrämuutos (+/-)"
-           :nimi :maaramuutos
-           :tyyppi :numero
-           :solun-luokka solun-luokka-fn
-           :muokattava? (constantly false)
-           :leveys 15}
+           {:otsikko "Määrämuutos (+/-)"
+            :nimi :maaramuutos
+            :tyyppi :numero
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
 
-          {:otsikko "Kirjatut kulut (€)"
-           :nimi :kirjatut_kulut_summa
-           :tyyppi :numero
-           :fmt fmt/euro-opt
-           :solun-luokka solun-luokka-fn
-           :muokattava? (constantly false)
-           :leveys 15}
+           {:otsikko "Kirjatut kulut (€)"
+            :nimi :kirjatut_kulut_summa
+            :tyyppi :numero
+            :fmt fmt/euro-opt
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
 
-          {:otsikko "Yksikkö-hinta (€)"
-           :nimi :yksikkohinta
-           :tyyppi :numero
-           :fmt fmt/euro-opt
-           :solun-luokka solun-luokka-fn
-           :muokattava? (constantly false)
-           :leveys 15}
+           {:otsikko "Yksikkö-hinta (€)"
+            :nimi :yksikkohinta
+            :tyyppi :numero
+            :fmt fmt/euro-opt
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
 
+           {:otsikko "Tavoitehinnan muutos (€)"
+            :nimi :tavoitehinnan_muutos
+            :tyyppi :numero
+            :fmt fmt/euro-opt
+            :tasaa :oikea
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
 
-          {:otsikko "Tavoitehinnan muutos (€)"
-           :nimi :tavoitehinnan_muutos
-           :tyyppi :numero
-           :fmt fmt/euro-opt
-           :tasaa :oikea
-           :solun-luokka solun-luokka-fn
-           :muokattava? (constantly false)
-           :leveys 15}
+           {:otsikko ""
+            :tyyppi :komponentti
+            :solun-luokka solun-luokka-fn
+            :komponentti (fn [{:keys [maara kirjatut_kulut_summa tehtava_id] :as valittu-rivi}]
+                           [:<>
+                           ;; (println "Valittu tehtävä id:: " tehtava_id)
+                           ;; Näytä valinta jos suunniteltu määrä on 0
+                           ;; Ja kirjattuja kuluja on olemassa 
+                            (when (and maara (= maara 0) (> kirjatut_kulut_summa 0))
+                              [:div.nappi-toissijainen
+                               {:on-click #(e! (muutos-tiedot/->AvaaYksikkohintaModal valittu-rivi tehtava_id))} "Aseta yksikköhinta"])])
+            :leveys 27}]
 
-          {:otsikko ""
-           :tyyppi :komponentti
-           :solun-luokka solun-luokka-fn
-           :komponentti (fn [{:keys [yksikkohinta] :as _rivi}]
-                          [:<>
-                           (when (and yksikkohinta
-                                   (= yksikkohinta 0))
-                             [:div.nappi-toissijainen 
-                              {:on-click #(e! (muutos-tiedot/->AsetaYksikohinta))}
-                              "Aseta yksikköhinta"])])
-           :leveys 27}]
-
-         tehtava-maaramuutokset]))}])
+          tehtava-maaramuutokset]]))}])
 
 (defn- kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
   [kehystetty-avattava-grid e! app
