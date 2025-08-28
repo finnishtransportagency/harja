@@ -103,9 +103,10 @@
                     :yhteensa (+ (apply + (map :alkukausi kiinteat)) (apply + (map :loppukausi kiinteat)))
                     :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu kiinteat)) (apply + (map :loppukausi-indeksikorjattu kiinteat)))
                     :pysyvat-muutokset "Ei muutoksia"
+                    :toimenpideinstanssi-id 999999999 ;; Joku iso luku, jolla saadaan yhteenvetorivi listan loppuun
                     :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
                     :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}
-        kiinteat (conj kiinteat yhteenveto)]
+        kiinteat (vec (sort-by :toimenpideinstanssi-id (conj kiinteat yhteenveto)))]
     kiinteat))
 
 (defn hae-rahavaraukset
@@ -337,8 +338,7 @@
                                  muut-kulut-kuukaudet)
                                (mapv (fn [kk]
                                        (let [vuosi (if (>= kk 10) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi))]
-                                         {:id 999
-                                          :toimenkuva "Muut kulut"
+                                         {:toimenkuva "Muut kulut"
                                           :nimike "Muut kulut"
                                           :urakka-id urakka-id
                                           :kuukausi kk
@@ -389,11 +389,11 @@
         johto-ja-hallintokorvaukset (if (seq johto-ja-hallintokorvaukset)
                                       ;; Jos on tallennettu jo johto-ja-hallintokorvauksia, niin lisätään niihin kalenterikuukausi
                                       (mapv (fn [rivi]
-                                             (merge rivi
-                                               {:kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
-                                                                     (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)
-                                                :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
-                                                :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
+                                              (merge rivi
+                                                {:kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
+                                                                      (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)
+                                                 :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                                                 :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
                                         johto-ja-hallintokorvaukset)
                                       ;; Jos ei ole tallennettu hoidonjohtopalkkioita, niin luodaan nolla arvot
                                       (mapv (fn [kk]

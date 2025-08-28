@@ -38,7 +38,7 @@
 
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-  (log/info "hae-kustannussuunnitelman-tiedot :: tiedot: " tiedot)
+  (log/debug "hae-kustannussuunnitelman-tiedot :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (let [;; Urakan sopimus id
           sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
@@ -141,7 +141,7 @@
 
 (defn tallenna-kilpailutettavat-hankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-  (log/info "tallenna-kilpailutettavat-hankinnat :: tiedot: " tiedot)
+  (log/debug "tallenna-kilpailutettavat-hankinnat :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id hoitovuoden-alkuvuosi (:toimenpiteet tiedot))
     (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
@@ -149,7 +149,7 @@
 
 (defn tallenna-erillishankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-  (log/info "tallenna-erillishankinnat :: tiedot: " tiedot)
+  (log/debug "tallenna-erillishankinnat :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot))
     (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
@@ -157,7 +157,7 @@
 
 (defn tallenna-tallenna-johto-ja-hallintokorvaukset [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-  (log/info "tallenna-johto-ja-hallintokorvaukset :: tiedot: " tiedot)
+  (log/debug "tallenna-johto-ja-hallintokorvaukset :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
           urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
@@ -173,7 +173,7 @@
 
 (defn tallenna-hoidonjohtopalkkiot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-  (log/info "tallenna-hoidonjohtopalkkiot :: tiedot: " tiedot)
+  (log/debug "tallenna-hoidonjohtopalkkiot :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id (:hoidonjohtopalkkiot tiedot))
     (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
