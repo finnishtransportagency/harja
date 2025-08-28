@@ -433,7 +433,6 @@
                               (reset! yhteiset/tallenna-painettu false)
                               (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom toimenkuvat)
                               (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset toimenkuvat))))
-            :jarjesta :id
             :piilota-toiminnot? true
             :voi-muokata? voi-muokata?
             :voi-poistaa? (constantly false)

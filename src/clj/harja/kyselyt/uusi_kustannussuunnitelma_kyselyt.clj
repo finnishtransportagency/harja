@@ -1,5 +1,6 @@
 (ns harja.kyselyt.uusi-kustannussuunnitelma-kyselyt
-  (:require [harja.pvm :as pvm]
+  (:require [clojure.string :as str]
+            [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
             [harja.tyokalut.yleiset :refer [round2] :as yleiset]
             [harja.domain.mhu :as mhu]
@@ -190,6 +191,26 @@
       (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
       :else [10 11 12 1 2 3 4 5 6 7 8 9])))
 
+(defn paattele-toimenkuvan-jarjestys
+  "Pakotetaan toimenkuvat oikeaan järjestykseen kovakoodauksen avulla."
+  [toimenkuva-nimike]
+  (case (str/lower-case toimenkuva-nimike)
+    "valmistelukausi ennen urakka-ajan alkua" 0
+    "sopimusvastaava" 1
+    "vastuunalainen työnjohtaja" 2
+    "2. työnjohtaja" 3
+    "3. työnjohtaja" 4
+    "päätoiminen apulainen" 5
+    "päätoiminen apulainen (talvikausi)" 5
+    "päätoiminen apulainen (kesäkausi)" 6
+    "apulainen/työnjohtaja" 7
+    "apulainen/työnjohtaja (talvikausi)" 7
+    "apulainen/työnjohtaja (kesäkausi)" 8
+    "viherhoidosta vastaava henkilö" 9
+    "hankintavastaava" 10
+    "harjoittelija" 11
+    99)) ;; Muu toimenkuva, joka ei ole listassa
+
 (defn hae-johto-ja-hallintokorvaukset-2019-2024 [db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta]
   (let [viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-jjh
                                     db {:urakka-id urakka-id
@@ -224,6 +245,11 @@
                                     (conj uudet-toimenkuvat uusi-toimenkuva toimenkuva)
                                     (conj uudet-toimenkuvat toimenkuva))))
                         [] toimenkuvat)
+                      toimenkuvat)
+
+        ;; Järjestetään toimenkuvat järkevään järjestykseen
+        toimenkuvat (map (fn [toimenkuva]
+                           (assoc toimenkuva :jarjestys (paattele-toimenkuvan-jarjestys (:nimike toimenkuva))))
                       toimenkuvat)
 
         ;; Haetaan raskaalla prosessilla toimenkuvakohtaisesti suunnitellut johto-ja-hallintokorvaukset
@@ -368,13 +394,12 @@
                   :summa-indeksikorjattu (apply + (map (fn [rivi]
                                                          (if (:yhteensa-indeksikorjattu-kk rivi) (:yhteensa-indeksikorjattu-kk rivi) 0))
                                                     muut-kulut-kuukaudet))
-                  :kuukaudet muut-kulut-kuukaudet}
+                  :kuukaudet muut-kulut-kuukaudet
+                  :jarjestys 99                             ;; Varmistetaan, että on viimeisenä ui:lla listassa
+                  }
 
         toimenkuvat (conj toimenkuvat muu-kulu)
-        ;; Lisää vielä järjestysnumero toimenkuville
-        toimenkuvat (vec (map-indexed (fn [i toimenkuva]
-                                        (assoc toimenkuva :jarjestys (inc i)))
-                           toimenkuvat))]
+        toimenkuvat (vec (sort-by :jarjestys toimenkuvat))]
     toimenkuvat))
 
 (defn hae-johto-ja-hallintokorvaukset [db urakka-id hoitovuoden-alkuvuosi toimenkuvat-tarjouksesta]

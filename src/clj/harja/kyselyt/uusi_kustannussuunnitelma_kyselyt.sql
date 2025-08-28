@@ -367,13 +367,14 @@ WITH urakka_toimenkuvat AS (SELECT nimike
                                          ELSE ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja','2. työnjohtaja', '3. työnjohtaja', 'viherhoidosta vastaava henkilö', 'harjoittelija']
                                          END
                                  ) AS nimike)
-SELECT id, toimenkuva
+SELECT id, toimenkuva, toimenkuva as nimike
 FROM johto_ja_hallintokorvaus_toimenkuva jht
 WHERE jht."urakka-id" = :urakka-id
 AND jht.toimenkuva is not null
 UNION
 SELECT (select MIN(id) from johto_ja_hallintokorvaus_toimenkuva where toimenkuva = ut.nimike) AS id,
-       nimike                                                                                 AS toimenkuva
+       nimike                                                                                 AS toimenkuva,
+       nimike
 from urakka_toimenkuvat ut
 ORDER BY ID;
 
