@@ -103,6 +103,16 @@
   (let [lupauspaatos (first (paatos-kyselyt/hae-lupauspaatokset db {:urakkaid urakka-id :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))]
     (boolean lupauspaatos)))
 
+(defn hae-lupauksen-kustannusennusteet
+  "Hakee lupauksen kaikki kustannusennusteet hoitokaudelle"
+  [db lupaus-id urakka-id hoitokauden-alkuvuosi]
+  (when (and lupaus-id urakka-id hoitokauden-alkuvuosi)
+    ;; Haetaan kaikki kustannusennusteet kerralla
+    (lupaus-kyselyt/hae-lupauksen-kaikki-kustannusennusteet 
+      db {:lupaus-id lupaus-id
+          :urakka-id urakka-id
+          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
+
 (defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
@@ -151,7 +161,9 @@
                                         tulos))))
                      (mapv lupaus-domain/liita-ennuste-tai-toteuma)
                      (mapv #(lupaus-domain/liita-odottaa-kannanottoa % nykyhetki valittu-hoitokausi))
-                     (mapv #(lupaus-domain/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi hoitovuosi-nro (get erikoisarvot (:lupaus-id %))))
+                     (mapv #(let [kustannusennusteet (when (= "kustannusennuste" (:lupaustyyppi %))
+                                                       (hae-lupauksen-kustannusennusteet db (:lupaus-id %) urakka-id hoitokauden-alkuvuosi))]
+                              (lupaus-domain/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi hoitovuosi-nro (get erikoisarvot (:lupaus-id %)) kustannusennusteet)))
                      (mapv #(liita-lupaus-vaihtoehdot db %)))
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
@@ -292,21 +304,96 @@
     ;; Sallitaan nil-arvon asettaminen.
     true))
 
-(defn- tarkista-vastaus-ja-vaihtoehto
-  "Tarkista, että 'yksittainen'-tyyppiselle lupaukselle on annettu boolean 'vastaus',
-  ja muun tyyppiselle sallittu 'lupaus-vaihtoehto-id'.
-  vastaus / lupaus-vaihtoehto-id voidaan asettaa nil-arvoon."
-  [db lupaus vastaus lupaus-vaihtoehto-id]
-  (cond (= "yksittainen" (:lupaustyyppi lupaus))
-        (assert (nil? lupaus-vaihtoehto-id))
+(defn laske-kustannusennuste-pisteet
+  "Laskee pisteet poikkeamaprosentin ja määräpäivän perusteella"
+  [db lupaus-id poikkeama-prosentti maarapaiva-kk]
+  (let [pisterajat (lupaus-kyselyt/hae-kustannusennusteen-pisterajat
+                     db {:lupaus-id lupaus-id})]
+    ;; Etsi sopiva pisteraja kuukauden ja poikkeaman perusteella
+    (->> pisterajat
+      (filter #(= (:maarapaiva-kk %) maarapaiva-kk))
+      (filter #(<= poikkeama-prosentti (:tarkkuus-prosentti %)))
+      (sort-by :tarkkuus-prosentti)
+      first
+      :pisteet
+      (or 1)))) ; Oletuspisteet jos ei löydy sopivaa rajaa
 
-        (or (= "monivalinta" (:lupaustyyppi lupaus))
-            (= "kysely" (:lupaustyyppi lupaus)))
-        (do (assert (nil? vastaus))
-            (assert (sallittu-vaihtoehto? db (:id lupaus) lupaus-vaihtoehto-id)))))
+(defn- kustannusennuste-poikkeama
+  "Laskee kustannusennusteen poikkeama-prosentin"
+  [{:keys [tavoitehinta toteutuneet-kustannukset]}]
+  (when (and tavoitehinta toteutuneet-kustannukset (pos? tavoitehinta))
+    (Math/abs (double (/ (* 100 (- toteutuneet-kustannukset tavoitehinta))
+                         tavoitehinta)))))
+
+(defn- tallenna-kustannusennuste-vastaus [db user {:keys [lupaus-id urakka-id kuukausi vuosi
+                                                          kustannusennuste] :as tiedot}]
+  ;; Laske pisteet automaattisesti
+  (let [poikkeama-prosentti (kustannusennuste-poikkeama kustannusennuste)
+        pisteet (laske-kustannusennuste-pisteet db lupaus-id poikkeama-prosentti kuukausi)
+        maarapaiva (pvm/luo-pvm vuosi (dec kuukausi) 15) ; 15. päivä
+        syotetty-pvm (pvm/nyt)
+        
+        ;; Laske hoitovuosi-alkuvuosi
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkupvm (:alkupvm urakan-tiedot)
+        paivamaara (pvm/luo-pvm vuosi (dec kuukausi) 1)
+        hoitovuosi-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+        hoitovuosi-alkuvuosi (pvm/hoitokauden-alkuvuosi vuosi kuukausi)
+
+        ;; Tarkista onko kustannusennuste jo olemassa
+        olemassa-oleva-id (lupaus-kyselyt/hae-kustannusennuste-id
+                            db {:lupaus-id lupaus-id
+                                :urakka-id urakka-id
+                                :maarapaiva maarapaiva})]
+
+    (if olemassa-oleva-id
+      ;; Päivitä olemassa oleva
+      (lupaus-kyselyt/paivita-kustannusennuste<!
+        db (merge kustannusennuste
+             {:id olemassa-oleva-id
+              :pisteet pisteet
+              :syotetty-pvm syotetty-pvm
+              :hoitovuosi-alkuvuosi hoitovuosi-alkuvuosi
+              :kayttaja (:id user)}))
+      ;; Luo uusi
+      (lupaus-kyselyt/lisaa-kustannusennuste<!
+        db (merge kustannusennuste
+             {:lupaus-id lupaus-id
+              :urakka-id urakka-id
+              :maarapaiva maarapaiva
+              :pisteet pisteet
+              :syotetty-pvm syotetty-pvm
+              :hoitovuosi-alkuvuosi hoitovuosi-alkuvuosi
+              :kayttaja (:id user)})))
+
+    ;; Palauta kustannusennusteen tiedot
+    (lupaus-kyselyt/hae-kustannusennuste db
+      {:lupaus-id lupaus-id
+       :urakka-id urakka-id
+       :maarapaiva maarapaiva})))
+
+(defn- tarkista-vastaus-ja-vaihtoehto
+  "Tarkista vastaustyyppi lupauksen tyypin mukaan"
+  [db lupaus vastaus lupaus-vaihtoehto-id kustannusennuste]
+  (cond
+    (= "yksittainen" (:lupaustyyppi lupaus))
+    (assert (nil? lupaus-vaihtoehto-id))
+
+    (= "kustannusennuste" (:lupaustyyppi lupaus))
+    (do
+      (assert (nil? vastaus))
+      (assert (nil? lupaus-vaihtoehto-id))
+      (assert kustannusennuste "Kustannusennuste on pakollinen")
+      (assert (:tavoitehinta kustannusennuste) "Tavoitehinta on pakollinen")
+      (assert (:toteutuneet-kustannukset kustannusennuste) "Toteutuneet kustannukset pakolliset"))
+
+    (or (= "monivalinta" (:lupaustyyppi lupaus))
+      (= "kysely" (:lupaustyyppi lupaus)))
+    (do (assert (nil? vastaus))
+      (assert (sallittu-vaihtoehto? db (:id lupaus) lupaus-vaihtoehto-id)))))
 
 (defn- tarkista-lupaus-vastaus
-  [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id] :as tiedot}]
+  [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id kustannusennuste] :as tiedot}]
   {:pre [db user tiedot]}
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (when (and paatos (not (roolit/tilaajan-kayttaja? user)))
@@ -328,7 +415,7 @@
             "Vastauksia ei voi enää muuttaa välikatselmuksen jälkeen")
     ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
     ;; ja muun tyyppiselle sallittu "lupaus-vaihtoehto-id".
-    (tarkista-vastaus-ja-vaihtoehto db lupaus vastaus lupaus-vaihtoehto-id)
+    (tarkista-vastaus-ja-vaihtoehto db lupaus vastaus lupaus-vaihtoehto-id kustannusennuste)
     (when-not id
       ;; Tarkista, että kirjaus/päätös tulee sallitulle kuukaudelle.
   (assert (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus kuukausi paatos hoitovuosi-nro hoitovuoden-erikoisarvot)
@@ -346,14 +433,19 @@
   (assoc tiedot :nykyhetki (nykyhetki tiedot asetukset)))
 
 (defn- vastaa-lupaukseen
-  [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id] :as tiedot}]
+  [db user {:keys [id lupaus-id] :as tiedot}]
   {:pre [db user tiedot]}
   (log/debug "vastaa-lupaukseen " tiedot)
   (tarkista-lupaus-vastaus db user tiedot)
+
   (jdbc/with-db-transaction [db db]
-                            (if id
-                              (paivita-lupaus-vastaus db (:id user) tiedot)
-                              (lisaa-lupaus-vastaus db (:id user) tiedot))))
+    (if (= "kustannusennuste" (:lupaustyyppi (first (lupaus-kyselyt/hae-lupaus db {:id lupaus-id}))))
+      ;; Kustannusennustelogiikka
+      (tallenna-kustannusennuste-vastaus db user tiedot)
+      ;; Tavallinen lupausvastaus
+      (if id
+        (paivita-lupaus-vastaus db (:id user) tiedot)
+        (lisaa-lupaus-vastaus db (:id user) tiedot)))))
 
 (defn- kommentit
   [db user {:keys [lupaus-id urakka-id aikavali] :as tiedot}]

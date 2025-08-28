@@ -303,15 +303,21 @@
    :odottaa-kannanottoa? false,
    :paattava-kuukausi? true,
    :nykyhetkeen-verrattuna :mennyt-kuukausi,
-   :vastaus true}"
-  [{:keys [vastaukset] :as lupaus}
+   :vastaus true,
+   :kustannusennuste {...}}"
+  [{:keys [vastaukset kustannusennusteet] :as lupaus}
    nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
         kuluva-vuosi (pvm/vuosi nykyhetki)
         kuluva-kuukausi (pvm/kuukausi nykyhetki)
         kk->vastaus (into {}
                           (map (fn [vastaus] [(:kuukausi vastaus) vastaus]))
-                          vastaukset) 
+                          vastaukset)
+        ;; Lisätään kustannusennusteiden map kuukauden mukaan
+        kk->kustannusennuste (when kustannusennusteet
+                               (into {}
+                                     (map (fn [ke] [(pvm/kuukausi (:maarapaiva ke)) ke]))
+                                     kustannusennusteet)) 
         kaytettavat-kirjaus-kkt (set (hoitovuoden-kirjauskuukaudet lupaus hoitovuosi-nro hoitovuoden-erikoisarvot))
         kaytettava-paatos-kk (hoitovuoden-paatos-kk lupaus hoitovuosi-nro hoitovuoden-erikoisarvot)
         puuttuvat-kkt (odottaa-kannanottoa-kkt-hoitokaudelle lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot)
@@ -320,7 +326,9 @@
         kirjaus-kkt kaytettavat-kirjaus-kkt
         paatos-hylatty? (paatos-hylatty? vastaukset kaytettava-joustovara)]
     (for [{:keys [vuosi kuukausi]} (hoitokuukaudet (pvm/vuosi hk-alkupvm))]
-      (let [vastaus (kk->vastaus kuukausi)]
+      (let [vastaus (kk->vastaus kuukausi)
+            kustannusennuste (when kk->kustannusennuste
+                               (kk->kustannusennuste kuukausi))]
         (merge
           {:vuosi vuosi
            :kuukausi kuukausi
@@ -333,13 +341,23 @@
                                                        {:vuosi vuosi
                                                         :kuukausi kuukausi})}
           (when vastaus
-            {:vastaus vastaus}))))))
+            {:vastaus vastaus})
+          ;; Lisätään kustannusennuste jos löytyy
+          (when kustannusennuste
+            {:kustannusennuste kustannusennuste}))))))
 
-(defn liita-lupaus-kuukaudet [lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot]
-  (assoc lupaus :lupaus-kuukaudet
-                (lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi
-                  hoitovuosi-nro
-                  hoitovuoden-erikoisarvot)))
+(defn liita-lupaus-kuukaudet 
+  ([lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot]
+   ;; Perus signature ilman kustannusennusteita (nil-käsittely)
+   (liita-lupaus-kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot nil))
+  ([lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot kustannusennusteet]
+   ;; Täysi signature kustannusennusteilla - nil käsitellään automaattisesti
+   (let [lupaus-kustannusennusteilla (if kustannusennusteet
+                                       (assoc lupaus :kustannusennusteet kustannusennusteet)
+                                       lupaus)]
+     (assoc lupaus-kustannusennusteilla :lupaus-kuukaudet
+                                        (lupaus->kuukaudet lupaus-kustannusennusteilla nykyhetki valittu-hoitokausi
+                                          hoitovuosi-nro hoitovuoden-erikoisarvot)))))
 
 (defn liita-odottaa-kannanottoa [lupaus nykyhetki valittu-hoitokausi]
   (assoc lupaus :odottaa-kannanottoa?
