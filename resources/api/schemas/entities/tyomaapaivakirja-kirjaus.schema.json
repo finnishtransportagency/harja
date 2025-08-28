@@ -240,7 +240,6 @@
         "tieston-toimenpiteet": {
             "id": "urn:harja/tieston-toimenpiteet",
             "type": "array",
-            "minItems": 1,
             "description": "Yleiskuvaus tärkeimmistä tapahtumista: esim. ”pistehiekoituksia”. Näytetään tehdyt työnimikkeet ilman määriä mitattavilta ajankohdilta.",
             "items": {
                 "id": "urn:harja/tieston-toimenpiteet/0",
