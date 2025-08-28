@@ -71,7 +71,7 @@
    [:p "Hoitovuoden toteutuneet lupauspisteet todetaan laskemalla lupaustaulukon mukaan saatujen pisteiden keskiarvo. "
     [:strong "Mikäli jotain ennustetta ei tehdä määräaikaan mennessä, ennusteesta ei saa yhtään pistettä."]]])
 
-(defn- sisalto [e! vastaus]
+(defn- sisalto [_e! vastaus]
   [:div {:id "vastauslomake-sisalto"}
    [:hr]
    [:div.row
@@ -87,8 +87,9 @@
         (str "Pisteet 0 - " (:kyselypisteet vastaus)))]]
     [:div.caption.vastauslomake-lupaus-kuvaus (:kuvaus vastaus)]
     [:div.sisalto {:dangerouslySetInnerHTML {:__html (:sisalto vastaus)}}]
-    [kustannusennuste-taulukko]
-    ]])
+    ;; Näytä kustannusennuste-taulukko vain "kustannusennuste" lupaustyypille
+    (when (= "kustannusennuste" (:lupaustyyppi vastaus))
+      [kustannusennuste-taulukko])]])
 
 (defn- kommentti-rivi [e! {:keys [id luotu luoja etunimi sukunimi kommentti poistettu]}]
   [:div.kommentti-rivi
@@ -228,81 +229,95 @@
       :kaari-flex-row? false}
      kuukauden-vastaus-atom]]])
 
-(defn- kustannusennuste-syottokentit [e! {:keys [kohdekuukausi kohdevuosi lupaus disabled? ladataan?]}]
-  [:div.kustannusennuste-syottokentit
-   
-   ;; Ensimmäinen rivi - Tavoitehinta ja Ennuste
-   [:div.row
-    [:div.lihavoitu.sivupalkki-footer-otsikko.col-xs-12.col-md-12
-     [:h5 "Kustannusennusteen tiedot"]]
-    [:div.col-xs-12.col-md-6
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Tavoitehinta € *"
-       :luokka "poista-label-top-margin"
-       :vayla-tyyli? true
-       :arvo-atom (r/atom nil)
-       :kentta-params {:tyyppi :numero
-                       :vayla-tyyli? true
-                       :disabled? disabled?
-                       :kokonaisosan-maara 10
-                       :desimaalien-maara 2
-                       :placeholder "0,00"}}]]
+(defn- kustannusennuste-syottokentit [e! {:keys [kohdekuukausi kohdevuosi lupaus disabled? ladataan?]} app]
+  (let [;; Hae kuukauden tiedot samalla tavalla kuin muut vastaukset
+        lupaus-kuukausi (lupaus-domain/etsi-lupaus-kuukausi 
+                          (get-in app [:vastaus-lomake :lupaus-kuukaudet]) 
+                          kohdekuukausi)
+        ;; Hae kuukauden kustannusennuste samalla tavalla kuin kuukauden-vastaus
+        kuukauden-kustannusennuste (:kustannusennuste lupaus-kuukausi)
+        ;; Jos on lähetetty vastaus, käytä sitä (kuten muissakin vastauksissa)
+        lahetetty-vastaus (get-in app [:vastaus-lomake :lahetetty-vastaus])
+        kustannusennuste (if (:kustannusennuste lahetetty-vastaus)
+                          (:kustannusennuste lahetetty-vastaus)
+                          kuukauden-kustannusennuste)
+        ;; Tarkista onko tallentaminen käynnissä
+        tallentaa-kustannusennustetta? (and 
+                                        (= (get-in app [:lupausta-lahetataan :tyyppi]) :kustannusennuste)
+                                        (= (get-in app [:lupausta-lahetataan :kohdekuukausi]) kohdekuukausi)
+                                        (= (get-in app [:lupausta-lahetataan :lupaus-id]) (:lupaus-id lupaus)))]
+    [:div.kustannusennuste-syottokentit
 
-    [:div.col-xs-12.col-md-6
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Ennuste € *"
-       :luokka "poista-label-top-margin"
-       :vayla-tyyli? true
-       :arvo-atom (r/atom nil)
-       :kentta-params {:tyyppi :numero
-                       :vayla-tyyli? true
-                       :disabled? disabled?
-                       :kokonaisosan-maara 10
-                       :desimaalien-maara 2
-                       :placeholder "0,00"}}]]]
+     ;; Ensimmäinen rivi - Tavoitehinta ja Ennuste
+     [:div.row
+      [:div.lihavoitu.sivupalkki-footer-otsikko.col-xs-12.col-md-12
+       [:h5 "Kustannusennusteen tiedot"]]
+      [:div.col-xs-12.col-md-6
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Tavoitehinta € *"
+         :luokka "poista-label-top-margin"
+         :vayla-tyyli? true
+         :arvo-atom (r/wrap (:tavoitehinta kustannusennuste)
+                      #(e! (lupaus-tiedot/->AsetaKustannusennusteTavoitehinta %)))
+         :kentta-params {:tyyppi :numero
+                         :vayla-tyyli? true
+                         :disabled? disabled?
+                         :kokonaisosan-maara 10
+                         :desimaalien-maara 2
+                         :placeholder "0,00"}}]]]
 
-   ;; Toinen rivi - Toteutunut ja Poikkeama
-   [:div.row
-    [:div.col-xs-12.col-md-6
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Toteutuneet kustannukset € *"
-       :luokka "poista-label-top-margin"
-       :vayla-tyyli? true
-       :arvo-atom (r/atom nil)
-       :kentta-params {:tyyppi :numero
-                       :vayla-tyyli? true
-                       :disabled? disabled?
-                       :kokonaisosan-maara 10
-                       :desimaalien-maara 2
-                       :placeholder "0,00"}}]]
+     ;; Toinen rivi - Toteutunut ja Poikkeama
+     [:div.row
+      [:div.col-xs-12.col-md-6
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Toteutuneet kustannukset € *"
+         :luokka "poista-label-top-margin"
+         :vayla-tyyli? true
+         :arvo-atom (r/wrap (:toteutuneet-kustannukset kustannusennuste)
+                      #(e! (lupaus-tiedot/->AsetaKustannusennusteToteutuneet %)))
+         :kentta-params {:tyyppi :numero
+                         :vayla-tyyli? true
+                         :disabled? disabled?
+                         :kokonaisosan-maara 10
+                         :desimaalien-maara 2
+                         :placeholder "0,00"}}]]
 
-    [:div.col-xs-12.col-md-6
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Poikkeama %"
-       :luokka "poista-label-top-margin"
-       :vayla-tyyli? true
-       :arvo-atom (r/atom nil)
-       :kentta-params {:tyyppi :numero
-                       :vayla-tyyli? true
-                       :disabled? true ;; Laskettu automaattisesti
-                       :kokonaisosan-maara 3
-                       :desimaalien-maara 1
-                       :placeholder "0,0"}}]]]
+      [:div.col-xs-12.col-md-6
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Poikkeama %"
+         :luokka "poista-label-top-margin"
+         :vayla-tyyli? true
+         :arvo-atom (r/atom (:poikkeama-prosentti kustannusennuste))
+         :kentta-params {:tyyppi :numero
+                         :vayla-tyyli? true
+                         :disabled? true ;; Laskettu automaattisesti
+                         :kokonaisosan-maara 3
+                         :desimaalien-maara 1
+                         :placeholder "0,0"}}]]]
 
-   ;; Kolmas rivi - Pisteet (keskitetty)
-   [:div.row
-    [:div.col-xs-12.col-md-6
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Pisteet"
-       :luokka "poista-label-top-margin"
-       :vayla-tyyli? true
-       :arvo-atom (r/atom nil)
-       :kentta-params {:tyyppi :numero
-                       :vayla-tyyli? true
-                       :disabled? true ;; Laskettu automaattisesti
-                       :kokonaisosan-maara 2
-                       :desimaalien-maara 0
-                       :placeholder "0"}}]]]])
+     ;; Kolmas rivi - Pisteet
+     [:div.row
+      [:div.col-xs-12.col-md-6
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Pisteet"
+         :luokka "poista-label-top-margin"
+         :vayla-tyyli? true
+         :arvo-atom (r/atom (:pisteet kustannusennuste))
+         :kentta-params {:tyyppi :numero
+                         :vayla-tyyli? true
+                         :disabled? true ;; Laskettu automaattisesti
+                         :kokonaisosan-maara 2
+                         :desimaalien-maara 0
+                         :placeholder "0"}}]]]
+     [:div.row
+      [:div.col-xs-12
+       [:div.margin-top-16.text-right
+        [napit/tallenna
+         "Tallenna kustannusennuste"
+         #(e! (lupaus-tiedot/->TallennaKustannusennuste))
+         {:disabled (or disabled? ladataan? tallentaa-kustannusennustetta?)
+          :vayla-tyyli? true
+          :luokka "btn-primary"}]]]]]))
 
 
 (defn- vastaukset [e! app luokka]
@@ -349,7 +364,7 @@
                                            :kohdevuosi kohdevuosi
                                            :lupaus lupaus
                                            :disabled? disabled?
-                                           :ladataan? ladataan?}]
+                                           :ladataan? ladataan?} app]
         [sulje-nappi e! {:luokka "pull-right"}]]
     
        ;; Yksittäinen lupaus (kyllä/ei)
@@ -419,6 +434,7 @@
     (fn [e! app]
       [:div.overlay-oikealla.ei-sulje-sivupaneelia {:style {:width "632px"}
                                                     :id "lupaukset-sivupaneeli"}
+       [debug app]
        [:div.sivupalkki-sisalto {:class (lupaus-css-luokka app)}
         [otsikko e! app]
         [sisalto e! (:vastaus-lomake app)]
