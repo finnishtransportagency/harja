@@ -354,8 +354,7 @@
         muut-kulut-kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) muut-kulut-kuukaudet))
 
         ;; Muut kulut -rivi simuloi toimenkuvariviä.
-        muu-kulu {:id 999
-                  :toimenkuva "Muut kulut"
+        muu-kulu {:toimenkuva "Muut kulut"
                   :nimike "Muut kulut"
                   :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
                   :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
