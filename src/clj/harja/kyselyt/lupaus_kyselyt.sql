@@ -297,3 +297,81 @@ SELECT id,
   FROM lupaus_hoitovuoden_kirjauskuukaudet
  WHERE "lupaus-id" = :lupaus-id
    AND "hoitovuosi-nro" = :hoitovuosi-nro;
+
+-- name: hae-kustannusennuste-id
+-- single?: true
+SELECT id 
+FROM lupaus_kustannusennuste ke
+WHERE ke."lupaus-id" = :lupaus-id
+  AND ke."urakka-id" = :urakka-id
+  AND ke.maarapaiva = :maarapaiva;
+
+-- name: hae-kustannusennuste
+-- single?: true  
+SELECT ke.id,
+       ke."lupaus-id",
+       ke."urakka-id", 
+       ke.hoitovuosi_alkuvuosi,
+       ke.maarapaiva,
+       ke.ennustettu_tavoitehinta AS tavoitehinta,
+       ke.ennustetut_kustannukset AS "toteutuneet-kustannukset",
+       ke.syotetty_pvm,
+       ke.lasketut_pisteet as pisteet,
+       ke.luoja,
+       ke.muokkaaja,
+       ke.luotu,
+       ke.muokattu
+FROM lupaus_kustannusennuste ke
+WHERE ke."lupaus-id" = :lupaus-id
+  AND ke."urakka-id" = :urakka-id  
+  AND ke.maarapaiva = :maarapaiva;
+
+-- name: lisaa-kustannusennuste<!
+INSERT INTO lupaus_kustannusennuste 
+  ("lupaus-id", "urakka-id", hoitovuosi_alkuvuosi, maarapaiva, 
+   ennustettu_tavoitehinta, ennustetut_kustannukset, syotetty_pvm, 
+   lasketut_pisteet, luoja)
+VALUES (:lupaus-id, :urakka-id, :hoitovuosi-alkuvuosi, :maarapaiva,
+        :tavoitehinta, :toteutuneet-kustannukset, :syotetty-pvm,
+        :pisteet, :kayttaja);
+
+-- name: paivita-kustannusennuste<!
+UPDATE lupaus_kustannusennuste
+SET ennustettu_tavoitehinta = :tavoitehinta,
+    ennustetut_kustannukset = :toteutuneet-kustannukset,
+    syotetty_pvm = :syotetty-pvm,
+    lasketut_pisteet = :pisteet,
+    muokkaaja = :kayttaja,
+    muokattu = NOW()
+WHERE id = :id;
+
+-- name: hae-lupauksen-kaikki-kustannusennusteet
+SELECT ke.id,
+       ke."lupaus-id",
+       ke."urakka-id", 
+       ke.hoitovuosi_alkuvuosi,
+       ke.maarapaiva,
+       ke.ennustettu_tavoitehinta AS tavoitehinta,
+       ke.ennustetut_kustannukset AS "toteutuneet-kustannukset",
+       ke.syotetty_pvm,
+       ke.lasketut_pisteet as pisteet,
+       ke.luoja,
+       ke.muokkaaja,
+       ke.luotu,
+       ke.muokattu,
+       EXTRACT(MONTH FROM ke.maarapaiva) as maarapaiva_kk
+FROM lupaus_kustannusennuste ke
+WHERE ke."lupaus-id" = :lupaus-id
+  AND ke."urakka-id" = :urakka-id
+  AND ke.hoitovuosi_alkuvuosi = :hoitokauden-alkuvuosi
+ORDER BY ke.maarapaiva;
+
+-- name: hae-kustannusennusteen-pisterajat
+SELECT pr.id,
+       pr."lupaus-id",
+       pr.maarapaiva_kk,
+       pr.tarkkuus_prosentti,
+       pr.pisteet
+FROM lupaus_kustannusennuste_pisteraja pr  
+WHERE pr."lupaus-id" = :lupaus-id
+ORDER BY pr.maarapaiva_kk, pr.tarkkuus_prosentti;
