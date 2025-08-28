@@ -183,10 +183,12 @@ SELECT
   -- ---------------------------------------------------- --
   -- Yksikköhinta =  Kirjatut kulut / toteutunut määrä   
   -- ---------------------------------------------------- --
-  CASE
-    WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
-    ELSE COALESCE(kulut.summa, 0) / SUM(urakan_tehtavat.maara)
-  END                                              AS yksikkohinta,
+  COALESCE(
+    CASE
+        WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
+        ELSE kulut.summa / SUM(urakan_tehtavat.maara)
+    END, 0.0
+  )                                               AS yksikkohinta,
   -- ---------------------------------------------------- --
   -- Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
   -- ---------------------------------------------------- --

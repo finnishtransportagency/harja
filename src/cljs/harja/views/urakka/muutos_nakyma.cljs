@@ -1,24 +1,25 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
-  (:require [clojure.string :as str]
-            [reagent.core :as r]
+  (:require [reagent.core :as r]
             [tuck.core :as tuck]
-            [harja.tyokalut.tuck :as tuck-apurit]
+            [clojure.string :as str]
+
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
+            [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ui-ikonit]
-            [harja.ui.grid :as grid]
             [harja.ui.debug :refer [debug]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
-            [harja.domain.muutos-domain :as muutos-domain]))
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.domain.muutos-domain :as muutos-domain]
+            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]))
 
 (defn liite-kentta
   "Lomakkeen liitekenttä, joka näyttää liitteiden listauksen ja mahdollistaa uusien liitteiden lisäämisen."
@@ -425,6 +426,15 @@
            :muokattava? (constantly false)
            :leveys 15}
 
+          {:otsikko "Yksikkö-hinta (€)"
+           :nimi :yksikkohinta
+           :tyyppi :numero
+           :fmt fmt/euro-opt
+           :solun-luokka solun-luokka-fn
+           :muokattava? (constantly false)
+           :leveys 15}
+
+
           {:otsikko "Tavoitehinnan muutos (€)"
            :nimi :tavoitehinnan_muutos
            :tyyppi :numero
@@ -432,7 +442,19 @@
            :tasaa :oikea
            :solun-luokka solun-luokka-fn
            :muokattava? (constantly false)
-           :leveys 15}]
+           :leveys 15}
+
+          {:otsikko ""
+           :tyyppi :komponentti
+           :solun-luokka solun-luokka-fn
+           :komponentti (fn [{:keys [yksikkohinta] :as _rivi}]
+                          [:<>
+                           (when (and yksikkohinta
+                                   (= yksikkohinta 0))
+                             [:div.nappi-toissijainen 
+                              {:on-click #(e! (muutos-tiedot/->AsetaYksikohinta))}
+                              "Aseta yksikköhinta"])])
+           :leveys 27}]
 
          tehtava-maaramuutokset]))}])
 

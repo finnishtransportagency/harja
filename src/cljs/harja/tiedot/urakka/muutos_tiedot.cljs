@@ -1,28 +1,29 @@
 (ns harja.tiedot.urakka.muutos-tiedot
   "Urakan muutosten tiedot."
-  (:require [harja.ui.lomake :as lomake]
+  (:require [tuck.core :as tuck]
             [reagent.core :refer [atom]]
-            [tuck.core :as tuck]
+
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.ui.liitteet :as liitteet]
+            [harja.ui.lomake :as lomake]
             [harja.ui.viesti :as viesti]
-            [harja.tiedot.navigaatio :as nav])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction]]))
+            [harja.ui.liitteet :as liitteet]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tyokalut.tuck :as tuck-apurit]))
+
 
 ;; Hae muutostiedot
 (defrecord HaeUrakanMuutostiedot [urakka])
 (defrecord HaeUrakanMuutostiedotOnnistui [vastaus])
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
 
+
 (defrecord HaeTehtavaMaaramuutoksetOnnistui [vastaus])
 (defrecord HaeTehtavaMaaramuutoksetEpaonnistui [vastaus])
 (defrecord KuluhakuOnnistui [vastaus])
 (defrecord KuluhakuEpaonnistui [vastaus])
+
 
 ;; Vaihda hoitokausi
 (defrecord HoitokausiVaihdettu [urakka hoitokausi])
@@ -35,7 +36,6 @@
 (defrecord HaeMuutoksenTiedot [muutos])
 (defrecord HaeMuutoksenTiedotOnnistui [vastaus muutos valittu-hoitokausi])
 (defrecord HaeMuutoksenTiedotEpaonnistui [vastaus])
-
 (defrecord TallennaLaskettujenMuutostenSyyt [rivit])
 (defrecord TallennaRahavarausmuutostenSyyt [rivit])
 (defrecord TallennaRahavarausmuutostenSyytEpaonnistui [vastaus])
@@ -47,14 +47,21 @@
 (defrecord PoistaTallennettuLiite [liite-id])
 (defrecord PoistaPoistetutLiitteet [liite-id])
 
+
 ;; aika ennen 2025-2026 hoitovuotta
 (defrecord LisaaTavoitehintojenMuutos [])
 (defrecord LisaaSuunniteltujenMaarienMuutos [])
+
+
 ;; Päänäkymä ja listaus
 (defrecord ValitseUrakka [urakka])
 (defrecord NakymastaPoistuttiin [])
-
 (defrecord PaivitaLomake [lomake])
+
+
+;; Yksikköhinta modal 
+(defrecord AsetaYksikohinta [])
+
 
 (defn valitse-urakka [app urakka]
   (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)
@@ -66,7 +73,9 @@
         (assoc :urakan-hoitokaudet hoitokaudet)
         (assoc :valittu-hoitokausi uusi-hoitokausi))))
 
+
 (def johto-ja-hallintokorvausmuutokset-atom (atom nil))
+
 
 (defn johto-ja-hallintokorvausmuutoksen-rivit
   "Luo johto-ja-hallintokorvausmuutoksen rivit eli kulut. Yhdistää tyhjät rivit ja kannasta tulevat kulut."
@@ -84,11 +93,13 @@
                 normalisoidut-avaimet)]
     (apply array-map parit)))
 
+
 (def pakolliset-kentat-fmt
   {:voimassa_alkaen "Voimassa alkaen"
    :nimi "Nimi"
    :syy "Muutoksen syy"
    :tyyppi "Tyyppi"})
+
 
 (defn hae-urakan-muutostiedot
   "Hakee urakan muutostiedot, eli miten tavoitehinta ja tehtävä- ja määräluettelo ovat muuttuneet alkuperäisiin tietoihin nähden."
@@ -98,6 +109,7 @@
      :valittu-hoitokausi (:valittu-hoitokausi app)}
     {:onnistui ->HaeUrakanMuutostiedotOnnistui
      :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui}))
+
 
 (defn hae-kirjatut-kulut [app]
   ;; TODO... voi poistaa, ei tehdä frontissa näitä 
@@ -110,6 +122,7 @@
      :epaonnistui-parametrit [{:viesti "Urakan kulujen haku epäonnistui"}]
      :paasta-virhe-lapi? true}))
 
+
 (defn hae-tehtava-maaramuutokset [app]
   (tuck-apurit/post! app :hae-tehtava-maaramuutokset
     {:urakka-id (-> @tila/yleiset :urakka :id)
@@ -117,15 +130,17 @@
     {:onnistui ->HaeTehtavaMaaramuutoksetOnnistui
      :epaonnistui ->HaeTehtavaMaaramuutoksetEpaonnistui})
   ;;(hae-kirjatut-kulut app)
-  
   )
 
+
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
+
 
 (defn ennen-muutoksien-kayttoonotto? [valittu-hoitokausi]
   (when valittu-hoitokausi
     (< (pvm/vuosi (first valittu-hoitokausi))
       muutoksien-kayttoonoton-hoitokauden-alkuvuosi)))
+
 
 (defn alusta-tyyppikohtaisia-arvoja [tyyppi valittu-hoitokausi]
   (case tyyppi
@@ -134,6 +149,7 @@
       (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi []))
 
     :default))
+
 
 (defn- poista-liite [app liite-id]
   (let [liitteet (get-in app [:muokattava-muutos :liitteet])]
@@ -144,6 +160,7 @@
 
 
 (extend-protocol tuck/Event
+
   HoitokausiVaihdettu
   (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
     (let [app (-> app
@@ -151,6 +168,14 @@
       (hae-urakan-muutostiedot app)
       (hae-tehtava-maaramuutokset app)
       app))
+
+  AsetaYksikohinta
+  (process-event [_
+                  {:keys [yksikkohinta-modal-auki?] :as app}]
+    (println "Auki:: " (boolean yksikkohinta-modal-auki?)
+      ;;
+      )
+    (assoc app :yksikkohinta-modal-auki? true))
 
   HaeUrakanMuutostiedot
   (process-event [{urakka :urakka} app]
@@ -184,19 +209,18 @@
 
   HaeTehtavaMaaramuutoksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    
     (assoc app :tehtava-maaramuutokset vastaus))
 
   HaeTehtavaMaaramuutoksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Tehtävä- ja määrämuutosten haku epäonnistui" :varoitus)
     app)
-  
+
   KuluhakuOnnistui
   (process-event [{vastaus :vastaus} app]
     (println "\n kulut: " vastaus)
     (assoc app :kirjatut-kulut vastaus))
-  
+
   KuluhakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Kulujen haku epäonnistui" :varoitus)
@@ -350,6 +374,7 @@
   LisaaTavoitehintojenMuutos
   (process-event [_ app]
     app)
+
   LisaaSuunniteltujenMaarienMuutos
   (process-event [_ app]
     app)
