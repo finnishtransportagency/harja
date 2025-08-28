@@ -97,6 +97,24 @@
     vastaus))
 
 
+(defn tallenna-tehtava-maaramuutokset 
+  [db user {:keys [urakka-id valittu-hoitokausi tehtava_id] :as _tiedot}]
+   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  
+   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+         
+
+         parameterssit {:urakka urakka-id
+                        :tehtavaryhma nil
+                        :tehtava nil
+                        :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}
+         ]
+     
+     )
+  ;; 
+  )
+
+
 (defn hae-urakan-muutostiedot
   [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
@@ -324,6 +342,10 @@
         (fn [user tiedot]
           (hae-hoitovuosien-yksikkohinnat (:db this) user tiedot))
         
+        :tallenna-tehtava-maaramuutokset
+        (fn [user tiedot]
+          (tallenna-tehtava-maaramuutokset (:db this) user tiedot))
+        
         :tallenna-muutos
         (fn [user tiedot]
           (tallenna-muutos (:db this) user tiedot))
@@ -340,5 +362,6 @@
       :hae-tehtava-maaramuutokset
       :hae-hoitovuosien-yksikkohinnat
       :tallenna-muutos
+      :tallenna-tehtava-maaramuutokset
       :tallenna-rahavarausmuutosten-syyt)
     this))
