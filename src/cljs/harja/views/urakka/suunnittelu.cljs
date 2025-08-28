@@ -49,7 +49,7 @@
          [bs/tabs {:style :tabs :classes "tabs-taso2"
                    :active (nav/valittu-valilehti-atom :suunnittelu)}
 
-          "Hoitovuoden alun tavoitehinta"
+          "Tarjouksen tiedot"
           :tarjous
           (when (and
                 (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)

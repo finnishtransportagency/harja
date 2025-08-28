@@ -207,10 +207,7 @@
 
       (if-not (empty? virhe)
         (assoc-in vastaus [:kustannussuunnitelma :vahvistus-virhe] (str/join " " virhe))
-        vastaus)
-
-
-      )))
+        vastaus))))
 
 (defrecord UusiKustannussuunnitelmaPalvelu []
   component/Lifecycle
