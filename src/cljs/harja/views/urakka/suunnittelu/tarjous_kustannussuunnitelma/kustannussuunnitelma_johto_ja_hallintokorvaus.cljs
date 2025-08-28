@@ -398,6 +398,7 @@
     [:div [grid/muokkaus-grid
            {:otsikko ""
             :id "toimenkuvat-taulukko-2022"
+            :jarjesta :jarjestys
             :luokat ["poista-bottom-margin"]
             :voi-lisata? false
             :voi-kumota? false
