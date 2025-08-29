@@ -124,6 +124,7 @@
 (defn hae-tehtava-maaramuutokset [app]
   (tuck-apurit/post! app :hae-tehtava-maaramuutokset
     {:urakka-id (-> @tila/yleiset :urakka :id)
+     :hoitokaudet @u/valitun-urakan-hoitokaudet
      :valittu-hoitokausi (:valittu-hoitokausi app)}
     {:onnistui ->HaeTehtavaMaaramuutoksetOnnistui
      :epaonnistui ->HaeTehtavaMaaramuutoksetEpaonnistui}))
@@ -308,6 +309,7 @@
     (let [_ (println "\n laheta::rivi:: " rivi)
           parametrit {:rivi rivi
                       :urakka-id (-> @tila/yleiset :urakka :id)
+                      :hoitokaudet @u/valitun-urakan-hoitokaudet
                       :valittu-hoitokausi (:valittu-hoitokausi app)}]
 
       (tuck-apurit/post! app :tallenna-maaramuutos-yksikkohinta

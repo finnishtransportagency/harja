@@ -278,10 +278,9 @@ WHERE
       'c058933e-58d3-414d-99d1-352929aa8cf9'
     )
   )
-  AND (
-    urakan_tehtavat.maara != ut.maara OR
-    (urakan_tehtavat.maara IS NULL AND ut.maara IS NOT NULL)
-  )
+  -- Näkymään halutaan vain tehtävät jotka suunniteltu 
+  AND ut.maara IS NOT NULL 
+  AND ut.maara > 0
 GROUP BY
   tk.id,
   tk.nimi,

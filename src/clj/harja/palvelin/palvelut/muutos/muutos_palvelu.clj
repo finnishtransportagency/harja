@@ -81,7 +81,7 @@
 
 
 (defn hae-tehtava-maaramuutokset
-  [db user {:keys [urakka-id valittu-hoitokausi] :as _tiedot}]
+  [db user {:keys [urakka-id valittu-hoitokausi hoitokaudet] :as _tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
 
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
@@ -93,9 +93,40 @@
                        :alkupvm alkupvm
                        :loppupvm loppupvm
                        :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}
-        ;; Lasketaan kaikki tietokannassa, huomattavasti helpompaa kun että aletaan mäppäilemään clojurella 
-        vastaus (muutos-kyselyt/hae-tehtava-maaramuutokset db parameterssit)]
-    vastaus))
+        vastaus (muutos-kyselyt/hae-tehtava-maaramuutokset db parameterssit)
+
+        vastaus-yksikkohinta-tarkistettu (map (fn [rivi]
+                                                ;;(println "\n\n rivit:: " rivi)
+                                                (let [tehtavalla-ei-toteumia? (or
+                                                                                (not (:maara rivi))
+                                                                                (>= (:maara rivi) 0))
+
+                                                      aikaisemmat-yksikkohinnat (when tehtavalla-ei-toteumia?
+                                                                                  (hae-hoitovuosien-yksikkohinnat db user {:urakka-id urakka-id
+                                                                                                                           :hoitokaudet hoitokaudet
+                                                                                                                           :tehtava_id (:tehtava_id rivi)}))
+
+                                                      ;;_ (println "\n aikaisemmat-yksikkohinnat PRE:: " aikaisemmat-yksikkohinnat)
+                                                      aikaisemmat-yksikkohinnat (filter #(and
+                                                                                           ;; Vaadi että jokin yksikköhinta saatavilla 
+                                                                                           (some? (:arvo %))
+                                                                                           ;; Suodata kuluva hk pois, tulee mukaan esim jos yksikköhinnan lähde on aseta  
+                                                                                           (not= hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi %))) aikaisemmat-yksikkohinnat)
+
+                                                      ;;_ (println "\n aikaisemmat-yksikkohinnat POST:: " aikaisemmat-yksikkohinnat)
+
+                                                      loytyi-aikaisemmat-yksikkohinnat? (some? (seq aikaisemmat-yksikkohinnat))
+                                                      ;;_ (println "\n löytyi aikaisemmat:: " loytyi-aikaisemmat-yksikkohinnat?)
+
+                                                      anna-kirjata-tavoitehinta? (and
+                                                                                   tehtavalla-ei-toteumia?
+                                                                                   (not loytyi-aikaisemmat-yksikkohinnat?))]
+
+                                                  (assoc rivi :anna-kirjata-tavoitehinta? anna-kirjata-tavoitehinta?))) vastaus)
+
+        ;;_ (println "\n merkitse:: " merkitse-tehtavat)
+        ]
+    vastaus-yksikkohinta-tarkistettu))
 
 
 (defn tallenna-tehtava-maaramuutokset
@@ -113,7 +144,7 @@
 
 (defn tallenna-maaramuutos-yksikkohinta [db
                                          {:keys [id] :as kayttaja}
-                                         {:keys [urakka-id valittu-hoitokausi rivi] :as _tiedot}]
+                                         {:keys [urakka-id valittu-hoitokausi rivi hoitokaudet] :as _tiedot}]
 
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
@@ -141,6 +172,7 @@
     (muutos-kyselyt/paivita-tehtava-maaramuutos<! db parameterssit)
     (hae-tehtava-maaramuutokset db kayttaja (assoc parameterssit
                                               :urakka-id urakka-id
+                                              :hoitokaudet hoitokaudet
                                               :valittu-hoitokausi valittu-hoitokausi))))
 
 

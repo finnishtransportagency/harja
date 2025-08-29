@@ -333,7 +333,9 @@
                                               ;; Vaadi että jokin yksikköhinta saatavilla 
                                               (some? (:arvo %))
                                               ;; Suodata kuluva hk pois, tulee mukaan esim jos yksikköhinnan lähde on aseta  
-                                              (not= @u/valittu-urakan-vuosi (:hoitokauden-alkuvuosi %))) hoitokausien-yksikkohinnat)]
+                                              (not= @u/valittu-urakan-vuosi (:hoitokauden-alkuvuosi %))) hoitokausien-yksikkohinnat)
+        _ (println "\n hoitokausien-yksikkohinnat:: " hoitokausien-yksikkohinnat)
+        ]
 
     [modal/modal
      {:otsikko ""
@@ -457,7 +459,7 @@
            ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
            :sivuta 20
            :piilota-sivutus-footer? true
-           ;; :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))
+           :tallenna #(e! (muutos-tiedot/->TallennaYksikkohinta %))
 
            ;; 
            }
@@ -530,18 +532,22 @@
             :fmt fmt/euro-opt
             :tasaa :oikea
             :solun-luokka solun-luokka-fn
-            :muokattava? (constantly false)
+            ;; Annetaanko kirjata tavoitehinta päätellään takapäässä
+            :muokattava? #(:anna-kirjata-tavoitehinta? %)
             :leveys 15}
            
            ;; Aseta yksikköhinta
            {:otsikko ""
             :tyyppi :komponentti
             :solun-luokka solun-luokka-fn
-            :komponentti (fn [{:keys [maara kirjatut_kulut_summa tehtava_id] :as valittu-rivi}]
+            :komponentti (fn [{:keys [maara tehtava_id] :as valittu-rivi}]
                            [:<>
-                            ;; Näytä valinta jos suunniteltu määrä on 0,
-                            ;; ja kirjattuja kuluja on olemassa 
-                            (when (and maara (= maara 0) (> kirjatut_kulut_summa 0))
+                            ;; Näytä valinta mikäli toteumia ei ole 
+                            ;; sekä aikaisemman vuoden yksikköhinta on saatavilla (anna-kirjata-tavoitehinta? kertoo tämän)
+                            (when (and 
+                                    maara 
+                                    (= maara 0)
+                                    (not (:anna-kirjata-tavoitehinta? valittu-rivi)))
                               [:div.nappi-toissijainen
                                {:on-click #(e! (muutos-tiedot/->AvaaYksikkohintaModal valittu-rivi tehtava_id))} "Aseta yksikköhinta"])])
             :leveys 27}]
