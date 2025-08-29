@@ -327,7 +327,7 @@
                                  {:keys [tehtava] :as valittu-rivi}]
   (let [;; voi-lahettaa? (::tila/validi? lomake)
         ;;
-        voi-tallentaa? true
+        voi-tallentaa? (some? (:yksikkohinta valittu-rivi))
         voi-kirjoittaa? true
         hoitokausien-yksikkohinnat (filter #(and
                                               ;; Vaadi että jokin yksikköhinta saatavilla 
@@ -345,7 +345,7 @@
       {:ei-borderia? true
        :voi-muokata? voi-kirjoittaa?
        :tarkkaile-ulkopuolisia-muutoksia? true
-       :muokkaa! #(e! (muutos-tiedot/->SuljeYksikkohintaModal))
+       :muokkaa! #(e! (muutos-tiedot/->MuokkaaYksikkohintaa (lomake/ilman-lomaketietoja %) hoitokausien-yksikkohinnat))
 
        :header [:div.col-md-12
                 [:h2.header-yhteiset "Aseta tehtävän yksikköhinta"]
@@ -375,7 +375,11 @@
           ;; Täsmää :yksikkohinta valintojen kentän :arvo avaimeen 
           :valinta-arvo #(:arvo %)
           :validoi [#(when (nil? %) "Valitse yksikköhinta")]
-          ::lomake/col-luokka "col-xs-6"})]
+          ::lomake/col-luokka "col-xs-6"})
+       
+       
+       
+       ]
       valittu-rivi]
 
      ;; Hyrrän kuvaus: 
