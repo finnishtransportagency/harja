@@ -75,7 +75,8 @@
                                yksikkohinta " "
                                "(" (inc idx) ". hoitovuoden yksikköhinta)")
                     :arvo yksikkohinta
-                    :hk-nro (inc idx)}))
+                    :hk-nro (inc idx)
+                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
     hoitokaudet))
 
 

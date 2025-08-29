@@ -170,6 +170,10 @@ SELECT
   o.otsikko                                        AS toimenpide,
   tk.nimi                                          AS tehtava,
   tk.id                                            AS tehtava_id,
+  mmt.syy                                          AS syy,
+  mmt.lahde                                        AS yksikkohinnan_lahde,
+  mmt.valitun_yksikkohinnan_hk_alkuvuosi           AS yksikkohinnan_alkuvuosi,
+  mmt.kasin_syotetty_tavoitehintamuutos            AS syotetty_tavoitehintamuutos,
   COALESCE(kulut.summa, 0)                         AS kirjatut_kulut_summa,
   COALESCE(SUM(urakan_tehtavat.maara), 0)          AS maara,
   SUM(ut.maara)                                    AS suunniteltu_maara,
@@ -184,20 +188,35 @@ SELECT
   -- Yksikköhinta =  Kirjatut kulut / toteutunut määrä   
   -- ---------------------------------------------------- --
   CASE
-    WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
-    ELSE ROUND(kulut.summa / SUM(urakan_tehtavat.maara), 2)
-  END                                             AS yksikkohinta,
+    -- 
+	  WHEN mmt.lahde IS NULL OR mmt.lahde = 'laskettu'
+	    THEN ROUND(kulut.summa / NULLIF(SUM(urakan_tehtavat.maara), 0), 2)
+    -- 
+    -- Yksikköhinta asetettu käyttöliittymästä 
+	  WHEN mmt.lahde = 'aseta'
+	    THEN mmt.asetettu_yksikkohinta
+    -- 
+	  ELSE NULL
+	END                                             AS yksikkohinta,
   -- ---------------------------------------------------- --
   -- Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
   -- ---------------------------------------------------- --
-  COALESCE((
-    CASE
-      WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
-      ELSE (COALESCE(SUM(urakan_tehtavat.maara), 0) -
-            COALESCE(SUM(ut.maara), 0)) *
-           (COALESCE(kulut.summa, 0) / SUM(urakan_tehtavat.maara))
-    END
-  ), 0)                                            AS tavoitehinnan_muutos
+  CASE 
+    -- Tavoitehinnan muutos syötetty käsin 
+    WHEN mmt.lahde = 'manuaali' 
+      THEN mmt.kasin_syotetty_tavoitehintamuutos
+    -- Seuraaviin tarvitaan toteumia 
+    WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
+    -- Yksikköhinta on laskettu itsestään 
+  	WHEN mmt.lahde IS NULL OR mmt.lahde = 'laskettu' 
+      THEN (COALESCE(SUM(urakan_tehtavat.maara), 0) -
+		            COALESCE(SUM(ut.maara), 0)) *
+		           (COALESCE(kulut.summa, 0) / SUM(urakan_tehtavat.maara))  
+    -- Yksikköhinta asetettu edelliseltä vuodelta, käytä sitä 
+    WHEN mmt.lahde = 'aseta' 
+      THEN (COALESCE(SUM(urakan_tehtavat.maara), 0) -
+		            COALESCE(SUM(ut.maara), 0)) * mmt.asetettu_yksikkohinta
+  END                                            AS tavoitehinnan_muutos
 FROM tehtava tk
   JOIN tehtavaryhma tr_alataso
     ON tr_alataso.id = tk.tehtavaryhma
@@ -214,6 +233,13 @@ FROM tehtava tk
     ON tk.id = urakan_tehtavat.toimenpidekoodi
   JOIN urakka u
     ON u.id = :urakka
+  -- --------------------------------------------------------------------------------
+  -- Uusi muutos taulu, vedetään täältä syy sekä yksikköhinta / kirjattu tavoitehinta
+  -- -------------------------------------------------------------------------------- 
+  LEFT JOIN mhu_muutos_tehtavamaaramuutokset mmt 
+    ON mmt.urakka = :urakka 
+    AND mmt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+    AND tk.id = mmt.tehtava 
   -- Hae tehtävän kulut
   LEFT JOIN (
     SELECT
@@ -262,7 +288,12 @@ GROUP BY
   o.otsikko,
   tk.kasin_lisattava_maara,
   tk.suunnitteluyksikko,
-  kulut.summa
+  kulut.summa,
+  mmt.syy,
+  mmt.lahde,
+  mmt.asetettu_yksikkohinta,
+  mmt.valitun_yksikkohinnan_hk_alkuvuosi,
+  mmt.kasin_syotetty_tavoitehintamuutos
 ORDER BY
   o.otsikko ASC,
   tk.nimi ASC;

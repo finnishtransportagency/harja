@@ -216,7 +216,6 @@
   
   HaeYksikkohinnatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "\n vastaus::: " vastaus)
     (assoc app :hoitokausien-yksikkohinnat vastaus :ladataan-modal? false))
 
   

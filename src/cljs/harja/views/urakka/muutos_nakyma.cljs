@@ -20,7 +20,8 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.muutos-domain :as muutos-domain]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]))
+            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
+            [harja.tiedot.urakka :as u]))
 
 (defn liite-kentta
   "Lomakkeen liitekenttä, joka näyttää liitteiden listauksen ja mahdollistaa uusien liitteiden lisäämisen."
@@ -328,11 +329,11 @@
         ;;
         voi-tallentaa? true
         voi-kirjoittaa? true
-        hoitokausien-yksikkohinnat (filter #(some? (:arvo %)) hoitokausien-yksikkohinnat)
-        
-        yksikkohinta-tyypit (list {:tyyppi "test1"} {:tyyppi "test2"})
-        yksikkohinta-valinnat {:test1 "7,90 (1. hoitovuoden yksikköhinta)"
-                               :test2 "17,90 (2. hoitovuoden yksikköhinta)"}]
+        hoitokausien-yksikkohinnat (filter #(and
+                                              ;; Vaadi että jokin yksikköhinta saatavilla 
+                                              (some? (:arvo %))
+                                              ;; Suodata kuluva hk pois, tulee mukaan esim jos yksikköhinnan lähde on aseta  
+                                              (not= @u/valittu-urakan-vuosi (:hoitokauden-alkuvuosi %))) hoitokausien-yksikkohinnat)]
 
     [modal/modal
      {:otsikko ""
@@ -363,20 +364,31 @@
 
       [(lomake/rivi
          {:otsikko "Yksikköhinta"
-          :nimi :tyyppi
+          :nimi :yksikkohinta
           :tyyppi :valinta
           :pakollinen? true
           :vayla-tyyli? true
-          :valinnat (map :valinta hoitokausien-yksikkohinnat)
-          ;; TODO 
-          ;; :valinta-nayta #(get hoitokausien-yksikkohinnat :hk-nro)
-          ;; :validoi [#(when (and virheita? (nil? %)) "Valitse tyyppi")]
+          ;; Vektori jossa mappeja,  rakenne -> hae-hoitovuosien-yksikkohinnat
+          :valinnat (into [] hoitokausien-yksikkohinnat)
+          ;; Näytä :valinta -> hoitokausien-yksikkohinnat
+          :valinta-nayta #(:valinta %)
+          ;; Täsmää :yksikkohinta valintojen kentän :arvo avaimeen 
+          :valinta-arvo #(:arvo %)
+          :validoi [#(when (nil? %) "Valitse yksikköhinta")]
           ::lomake/col-luokka "col-xs-6"})]
       valittu-rivi]
 
-     ;; Pitäs olla dropdown, jos tehtävätoteumia (urakan.tehtavat.maara) ei oo tehty ollenkaan. 
+     ;; Hyrrän kuvaus: 
+     ;; Näytetään Modal / dropdown, jos tehtävätoteumia (urakan.tehtavat.maara) ei oo tehty ollenkaan 
      ;; Dropdownissa pitäs tarjota tilanteen mukaan edellisten vuosien laskettu yksikköhinta
-     ;; Jos niitä ei oo, niin tavoitehintamuutos pitää syöttää käsin, koska ei pysty laskemaan
+     ;; Jos niitäkään ei ole, modalia ei näytetä, ja tavoitehintamuutos pitää syöttää käsin
+
+     ;; Jätetään "Aseta yksikköhinta"" valinta riville jos se on asetettu  
+     ;; -> eli mahdollisuus päivittää 
+     ;; Päivitetään näkymään tullessa valittu yksikkö hinta jos mahdollista (mikäli data muuttunut) 
+     ;; Jos ei saatavilla, valitaa ei näytetä, vaan annetaan kirjata tavoitehinnan muutos manuaalisesti 
+     ;; Jos kirjattu tavoitehinta manuaalisesti, ja viimevuoden dataa tulee, anna "aseta yksikköhinta" valinta 
+     ;; Aina kun valitaan ""Aseta yksikköhinta"" ->  ota muokkaus vaihtoehto pois tavoitehinnasta (ei voi kirjata manuaalisesti enää) 
      ]))
 
 
@@ -420,7 +432,11 @@
                               (when (some? (:valiotsikko rivi)) "vaalen-tumma-tausta"))]
 
         [:<>
+         ;; "Aseta yksikköhinta" modal joka aukeaa kun rivin nappia painetaan
+         ;; Tälle passataan valittu rivi / valittu tehtävä 
          [aseta-yksikkohinta-modal e! app valittu-modal-tehtava]
+         
+         ;; Tehtävä ja määrämuutos taulukko 
          [grid/grid
           {:tunniste :id
            :luokat ["lasketut-muutokset-grid"]
@@ -433,7 +449,10 @@
            ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
            :sivuta 20
            :piilota-sivutus-footer? true
-           :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
+           ;; :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))
+
+           ;; 
+           }
 
           [{:otsikko "Tehtävä"
             :nimi :tehtava
@@ -505,15 +524,15 @@
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
             :leveys 15}
-
+           
+           ;; Aseta yksikköhinta
            {:otsikko ""
             :tyyppi :komponentti
             :solun-luokka solun-luokka-fn
             :komponentti (fn [{:keys [maara kirjatut_kulut_summa tehtava_id] :as valittu-rivi}]
                            [:<>
-                           ;; (println "Valittu tehtävä id:: " tehtava_id)
-                           ;; Näytä valinta jos suunniteltu määrä on 0
-                           ;; Ja kirjattuja kuluja on olemassa 
+                            ;; Näytä valinta jos suunniteltu määrä on 0,
+                            ;; ja kirjattuja kuluja on olemassa 
                             (when (and maara (= maara 0) (> kirjatut_kulut_summa 0))
                               [:div.nappi-toissijainen
                                {:on-click #(e! (muutos-tiedot/->AvaaYksikkohintaModal valittu-rivi tehtava_id))} "Aseta yksikköhinta"])])
