@@ -355,7 +355,7 @@
 
        :footer (let [;; TODO 
                      peruuta-fn #(e! (muutos-tiedot/->SuljeYksikkohintaModal))
-                     tallenna-fn #(e! (muutos-tiedot/->SuljeYksikkohintaModal))]
+                     tallenna-fn #(e! (muutos-tiedot/->TallennaYksikkohinta valittu-rivi))]
                  [:<>
                   [:hr]
                   [:div.muokkaus-modal-napit

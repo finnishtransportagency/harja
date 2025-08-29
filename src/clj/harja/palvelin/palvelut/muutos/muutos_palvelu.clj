@@ -98,22 +98,30 @@
     vastaus))
 
 
-(defn tallenna-tehtava-maaramuutokset 
+(defn tallenna-tehtava-maaramuutokset
   [db user {:keys [urakka-id valittu-hoitokausi tehtava_id] :as _tiedot}]
-   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  
-   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-         
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
 
-         parameterssit {:urakka urakka-id
-                        :tehtavaryhma nil
-                        :tehtava nil
-                        :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}
-         ]
-     
-     )
-  ;; 
+  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+        parameterssit {:urakka urakka-id
+                       :tehtavaryhma nil
+                       :tehtava nil
+                       :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}])
+  ;; TODO 
   )
+
+
+(defn tallenna-maaramuutos-yksikkohinta 
+[db user {:keys [urakka-id valittu-hoitokausi tehtava_id] :as _tiedot}]
+ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+
+ (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+       parameterssit {:urakka urakka-id
+                      :tehtavaryhma nil
+                      :tehtava nil
+                      :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}])
+  ;; TODO 
+ )
 
 
 (defn hae-urakan-muutostiedot
@@ -347,6 +355,10 @@
         (fn [user tiedot]
           (tallenna-tehtava-maaramuutokset (:db this) user tiedot))
         
+        :tallenna-maaramuutos-yksikkohinta
+        (fn [user tiedot]
+          (tallenna-maaramuutos-yksikkohinta (:db this) user tiedot))
+        
         :tallenna-muutos
         (fn [user tiedot]
           (tallenna-muutos (:db this) user tiedot))
@@ -364,5 +376,6 @@
       :hae-hoitovuosien-yksikkohinnat
       :tallenna-muutos
       :tallenna-tehtava-maaramuutokset
+      :tallenna-maaramuutos-yksikkohinta
       :tallenna-rahavarausmuutosten-syyt)
     this))

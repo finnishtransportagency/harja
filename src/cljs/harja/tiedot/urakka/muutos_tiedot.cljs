@@ -77,7 +77,9 @@
 (defrecord TallennaTehtavaMaaramuutoksetOnnistui [vastaus])
 (defrecord TallennaTehtavaMaaramuutoksetEpaonnistui [vastaus])
 (defrecord MuokkaaYksikkohintaa [rivi hoitokausien-yksikkohinnat])
-
+(defrecord TallennaYksikkohinta [rivi])
+(defrecord TallennaYksikkohintaOnnistui [vastaus])
+(defrecord TallennaYksikkohintaEpaonnistui [vastaus])
 
 ;; ---------------------------------------------
 ;; 
@@ -151,7 +153,7 @@
 ;; ------------------------------------
 ;; Tuck 
 (extend-protocol tuck/Event
-  
+
   HoitokausiVaihdettu
   (process-event [{:keys [_urakka hoitokausi]} app]
     (let [app (-> app
@@ -160,7 +162,7 @@
       (hae-tehtava-maaramuutokset app)
       app))
 
-  
+
   AvaaYksikkohintaModal
   (process-event [{:keys [valittu-modal-tehtava tehtava_id]}
                   {:keys [_yksikkohinta-modal-auki?] :as app}]
@@ -177,14 +179,14 @@
         :yksikkohinta-modal-auki? true
         :valittu-modal-tehtava valittu-modal-tehtava)))
 
-  
+
   SuljeYksikkohintaModal
   (process-event [_ {:keys [_yksikkohinta-modal-auki?] :as app}]
     (assoc app
       :valittu-modal-tehtava nil
       :yksikkohinta-modal-auki? false))
 
-  
+
   HaeUrakanMuutostiedot
   (process-event [{:keys [_urakka]} app]
     (let [;; Lupauksia voidaan hakea myös välikatselmuksesta, niin tarkistetaan hoitokauden tila sitä ennen
@@ -196,7 +198,7 @@
       (hae-tehtava-maaramuutokset app)
       app))
 
-  
+
   HaeUrakanMuutostiedotOnnistui
   (process-event [{:keys [vastaus]} app]
     (assoc app
@@ -210,7 +212,7 @@
       :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
       :budjettitavoitteet (:budjettitavoitteet vastaus)))
 
-  
+
   HaeUrakanMuutostiedotEpaonnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Muutostietojen hakeminen epäonnistui" :varoitus)
@@ -287,7 +289,7 @@
 
 
   TallennaTehtavaMaaramuutokset
-  (process-event [{:keys [_rivit]} 
+  (process-event [{:keys [_rivit]}
                   {:keys [_valittu-rivi] :as app}]
     (let [parametrit {:urakka-id (-> @tila/yleiset :urakka :id)
                       :valittu-hoitokausi (:valittu-hoitokausi app)}]
@@ -300,15 +302,54 @@
         (assoc :tehtava-maaramuutokset nil))))
 
 
+  TallennaYksikkohinta
+  (process-event [{:keys [rivi]}
+                  {:keys [_valittu-rivi] :as app}]
+    ;; TODO
+    (println "\n tallenna... rivi:: " rivi)
+    #_ (let [parametrit {:urakka-id (-> @tila/yleiset :urakka :id)
+                      :valittu-hoitokausi (:valittu-hoitokausi app)}]
+
+      (tuck-apurit/post! app :tallenna-maaramuutos-yksikkohinta
+        parametrit
+        {:onnistui ->TallennaYksikkohintaOnnistui
+         :epaonnistui ->TallennaYksikkohintaOnnistui})
+
+      (-> app
+        (assoc :haku-kaynnissa? true)
+        (assoc :tehtava-maaramuutokset nil)))
+    
+    app 
+    )
+
+
   TallennaTehtavaMaaramuutoksetOnnistui
   (process-event [{vastaus :vastaus} app]
     ;; TODO 
-    (assoc app :tehtava-maaramuutokset vastaus :ladataan-modal? false))
+    (assoc app
+      :ladataan-modal? false
+      :haku-kaynnissa? false
+      :tehtava-maaramuutokset vastaus))
 
 
   TallennaTehtavaMaaramuutoksetEpaonnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Tehtävä- ja määrämuutosten tallennus epäonnistui" :varoitus)
+    (assoc app :ladataan-modal? false))
+
+
+  TallennaYksikkohintaOnnistui
+  (process-event [{vastaus :vastaus} app]
+   ;; TODO 
+   (assoc app
+     :ladataan-modal? false
+     :haku-kaynnissa? false
+     :tehtava-maaramuutokset vastaus))
+
+
+  TallennaYksikkohintaEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta-toast! "Yksikköhinnan tallennus epäonnistui" :varoitus)
     (assoc app :ladataan-modal? false))
 
 
