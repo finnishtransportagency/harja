@@ -51,6 +51,13 @@
    :mhu-korvausinvestointi "14301"
    :mhu-johto "23151"})
 
+(def toimenpide->nimi {:paallystepaikkaukset "Päällystepaikkaukset"
+                       :mhu-yllapito "MHU Ylläpito"
+                       :talvihoito "Talvihoito"
+                       :liikenneympariston-hoito "Liikenneympäristön hoito"
+                       :sorateiden-hoito "Sorateiden hoito"
+                       :mhu-korvausinvestointi "MHU Korvausinvestointi"})
+
 ; nämä viittaavat toimenpidekoodien yksilöiviin tunnisteisiin, sillä nimet voivat muuttua tai vanheta (?), niin näillä sitten löytyvät ne kurantit toimenpidekoodit aina tarvittaessa
 (def hoidonjohtopalkkio-tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8")
 (def toimistokulut-tunniste "8376d9c4-3daf-4815-973d-cd95ca3bb388")
