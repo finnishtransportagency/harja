@@ -16,18 +16,28 @@
 
   .bottom-border-text {
     border-bottom: 1px solid @border-color;
-    height: 24px;
-    padding-right: 3rem;
+    height: @valistys-24;
+    padding-right: @valistys-48;
   }
   .text-right {
     text-align: right;
   }
   .kohdista-teksti {
-    padding-right: 2rem;
+    padding-right: @valistys-32;
     padding-top: 0.6rem;
   }
 
   .korkea-rivi {
       height: 2.5rem;
   }
+  .rivi-container {
+    line-height: @valistys-32;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Taulukon rivien korkeuden vuoksi vetolaatikon nuoli ei ole täysin yhteensopiva muiden kanssa*/
+.vetolaatikon-sailio {
+  margin-top: -20px;
 }

@@ -56,19 +56,19 @@
           (if (or
                 (or (nil? eur) (and (string? eur) (empty? eur)))
                 (frontin-formatointivirheviestit tulos))
-            (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur)))))
+            (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
             (cond
-               (and nayta-euromerkki nayta-plus (< 0 eur))
-               (str "\u002B" tulos " \u20AC")
+              (and nayta-euromerkki nayta-plus (< 0 eur))
+              (str "\u002B" tulos " \u20AC")
 
-               (and nayta-euromerkki (not nayta-plus))
-               (str tulos " \u20AC")
+              (and nayta-euromerkki (not nayta-plus))
+              (str tulos " \u20AC")
 
-               (and (not nayta-euromerkki) nayta-plus (< 0 eur))
-               (str "\u002B" tulos)
+              (and (not nayta-euromerkki) nayta-plus (< 0 eur))
+              (str "\u002B" tulos)
 
-               :else
-               tulos))
+              :else
+              tulos)))
 
         :clj
         (s/replace (.format
@@ -88,9 +88,10 @@
   ([summa] (euro-opt true false summa))
   ([nayta-euromerkki summa] (euro-opt nayta-euromerkki false summa))
   ([nayta-euromerkki nayta-plus summa]
-   (if (or (nil? summa) (and (string? summa) (empty? summa)))
-     ""
-     (euro nayta-euromerkki nayta-plus summa))))
+   (let [summa (if (= -0 summa) 0 summa)]
+     (if (or (nil? summa) (and (string? summa) (empty? summa)))
+       ""
+       (euro nayta-euromerkki nayta-plus summa)))))
 
 #?(:clj
    (defn formatoi-arvo-raportille [arvo]

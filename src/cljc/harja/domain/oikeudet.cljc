@@ -27,10 +27,13 @@
   urakat-kulut-valikatselmus
   urakat-valitavoitteet
   urakat-suunnittelu-kustannussuunnittelu
+  urakat-laadunseuranta-siltatarkastukset
   urakat-kanavat-kanavakohteet
   urakat-paikkaukset-paikkauskohteet
   urakat-vesivaylatoimenpiteet-kokonaishintaiset
-  urakat-vesivaylatoimenpiteet-yksikkohintaiset)
+  urakat-vesivaylatoimenpiteet-yksikkohintaiset
+  hallinta-indeksit
+  urakat-yleiset)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
