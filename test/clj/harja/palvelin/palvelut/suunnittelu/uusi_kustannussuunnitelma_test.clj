@@ -330,7 +330,10 @@
 
     ;; Ei ole erroreita
     (is (nil? (:error vastaus)))
-    (is (= (bigdec (round2 tietomallin-summa 2)) (bigdec (round2 vastaus-summa 2))))))
+    (is (= (bigdec (round2 tietomallin-summa 2)) (bigdec (round2 vastaus-summa 2))))
+    ;; Viimeinen rivi on "Muut kulut"
+    (is (= "Muut kulut" (:toimenkuva (last (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))))))
+
 
 (deftest muokkaa-johto-ja-hallintokorvaukset-2025-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
@@ -367,7 +370,9 @@
         muokattu-vastaus-summa (apply +
                                  (map :summa (get-in muokattu-vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))]
 
-    (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
+    (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))
+    ;; Viimeinen rivi ei ole "Muut kulut" - -25 urakoilla ei ole muita kuluja
+    (is (not= "Muut kulut" (:toimenkuva (last (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))))))
 
 (deftest muokkaa-johto-ja-hallintokorvaukset-2019-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -405,7 +410,7 @@
                            (catch Exception e
                              (println "Tapahtui virhe:" (.getMessage e))
                              {:error (.getMessage e)}))
-        _ (println "(get-in muokattu-vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]):" (get-in muokattu-vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))
+
         muokattu-vastaus-summa (apply +
                                  (map #(or (:yhteensa-kk %) 0)
                                    (flatten (map :kuukaudet (get-in muokattu-vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))))]
@@ -540,6 +545,6 @@
     (is (= 3 (count (get-in vastaus [:kustannussuunnitelma :rahavaraukset]))))
     (is (= 7 (count (get-in vastaus [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet]))))
     (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :erillishankinnat]))))
-    (is (= 9 (count (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))))
+    (is (= 10 (count (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))))
     (is (= 12 (count (:kuukaudet (first (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))))))
     (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :hoidonjohtopalkkiot]))))))
