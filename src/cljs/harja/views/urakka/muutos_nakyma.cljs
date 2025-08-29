@@ -9,8 +9,8 @@
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.ui.modal :as modal]
+            [harja.tiedot.urakka :as u]
             [harja.ui.lomake :as lomake]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ui-ikonit]
             [harja.ui.debug :refer [debug]]
             [harja.ui.komponentti :as komp]
@@ -21,7 +21,7 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.muutos-domain :as muutos-domain]
             [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
-            [harja.tiedot.urakka :as u]))
+            [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]))
 
 (defn liite-kentta
   "Lomakkeen liitekenttä, joka näyttää liitteiden listauksen ja mahdollistaa uusien liitteiden lisäämisen."
@@ -396,7 +396,9 @@
      ]))
 
 
-(defn- lasketut-muutokset [e! {:keys [lasketut-muutokset tehtava-maaramuutokset valittu-modal-tehtava] :as app}]
+(defn- lasketut-muutokset [e! 
+                           {:keys [lasketut-muutokset tehtava-maaramuutokset 
+                                   valittu-modal-tehtava haku-kaynnissa?] :as app}]
   
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :lasketut-muutokset
@@ -444,7 +446,9 @@
          [grid/grid
           {:tunniste :id
            :luokat ["lasketut-muutokset-grid"]
-           :tyhja "Ei laskettuja muutoksia."
+           :tyhja (if haku-kaynnissa?
+                    [ajax-loader-pieni "Haku käynnissä..."]
+                    "Aikavälille ei löytynyt tuloksia.")
            :voi-lisata? false
            :voi-kumota? false
            :voi-muokata? true

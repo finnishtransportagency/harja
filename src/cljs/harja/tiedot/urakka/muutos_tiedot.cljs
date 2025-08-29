@@ -215,7 +215,7 @@
 
   HaeUrakanMuutostiedotEpaonnistui
   (process-event [_ app]
-    (viesti/nayta-toast! "Muutostietojen hakeminen epäonnistui" :varoitus)
+    (viesti/nayta-toast! "Muutostietojen hakeminen epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
 
@@ -226,7 +226,7 @@
 
   HaeYksikkohinnatEpaonnistui
   (process-event [_ app]
-    (viesti/nayta-toast! "Yksikköhintojen haku epäonnistui" :varoitus)
+    (viesti/nayta-toast! "Yksikköhintojen haku epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :ladataan-modal? false))
 
 
@@ -237,7 +237,7 @@
 
   HaeTehtavaMaaramuutoksetEpaonnistui
   (process-event [_ app]
-    (viesti/nayta-toast! "Tehtävä- ja määrämuutosten haku epäonnistui" :varoitus)
+    (viesti/nayta-toast! "Tehtävä- ja määrämuutosten haku epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :ladataan-modal? false))
 
 
@@ -249,7 +249,7 @@
 
   KuluhakuEpaonnistui
   (process-event [_ app]
-    (viesti/nayta-toast! "Kulujen haku epäonnistui" :varoitus)
+    (viesti/nayta-toast! "Kulujen haku epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
 
@@ -270,7 +270,7 @@
 
   HaeMuutoksenTiedotEpaonnistui
   (process-event [_ app]
-    (viesti/nayta-toast! "Muutoksen tietojen hakeminen epäonnistui!" :varoitus)
+    (viesti/nayta-toast! "Muutoksen tietojen hakeminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
 
@@ -305,26 +305,23 @@
   TallennaYksikkohinta
   (process-event [{:keys [rivi]}
                   {:keys [_valittu-rivi] :as app}]
-    ;; TODO
-    (println "\n tallenna... rivi:: " rivi)
-    #_ (let [parametrit {:urakka-id (-> @tila/yleiset :urakka :id)
+    (let [_ (println "\n laheta::rivi:: " rivi)
+          parametrit {:rivi rivi
+                      :urakka-id (-> @tila/yleiset :urakka :id)
                       :valittu-hoitokausi (:valittu-hoitokausi app)}]
 
       (tuck-apurit/post! app :tallenna-maaramuutos-yksikkohinta
         parametrit
         {:onnistui ->TallennaYksikkohintaOnnistui
-         :epaonnistui ->TallennaYksikkohintaOnnistui})
+         :epaonnistui ->TallennaYksikkohintaEpaonnistui})
 
       (-> app
-        (assoc :haku-kaynnissa? true)
-        (assoc :tehtava-maaramuutokset nil)))
-    
-    app 
-    )
+        (assoc
+          :haku-kaynnissa? true))))
 
 
   TallennaTehtavaMaaramuutoksetOnnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{:keys [vastaus]} app]
     ;; TODO 
     (assoc app
       :ladataan-modal? false
@@ -334,22 +331,23 @@
 
   TallennaTehtavaMaaramuutoksetEpaonnistui
   (process-event [_ app]
-    (viesti/nayta-toast! "Tehtävä- ja määrämuutosten tallennus epäonnistui" :varoitus)
+    (viesti/nayta-toast! "Tehtävä- ja määrämuutosten tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :ladataan-modal? false))
 
 
   TallennaYksikkohintaOnnistui
-  (process-event [{vastaus :vastaus} app]
-   ;; TODO 
-   (assoc app
-     :ladataan-modal? false
-     :haku-kaynnissa? false
-     :tehtava-maaramuutokset vastaus))
+  (process-event [{:keys [vastaus]} app]
+    ;; TODO 
+    (println "\n saadut:: " (second vastaus))
+    (viesti/nayta-toast! "Yksikköhinta tallennettu" :onnistui viesti/viestin-nayttoaika-keskipitka)
+    (assoc app
+      :haku-kaynnissa? false
+      :tehtava-maaramuutokset vastaus))
 
 
   TallennaYksikkohintaEpaonnistui
   (process-event [_ app]
-    (viesti/nayta-toast! "Yksikköhinnan tallennus epäonnistui" :varoitus)
+    (viesti/nayta-toast! "Yksikköhinnan tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :ladataan-modal? false))
 
 
@@ -387,13 +385,13 @@
   TallennaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! (str "Muutoksen tallentaminen epäonnistui! "
-                           (get-in vastaus [:response :virhe])) :varoitus)
+                           (get-in vastaus [:response :virhe])) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :tallennus-kesken? false))
 
 
   TallennaRahavarausmuutostenSyytEpaonnistui
-  (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Rahavarauksien muutosten syiden tallentaminen epäonnistui!" :varoitus)
+  (process-event [{:keys [_vastaus]} app]
+    (viesti/nayta-toast! "Rahavarauksien muutosten syiden tallentaminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
 

@@ -297,3 +297,42 @@ GROUP BY
 ORDER BY
   o.otsikko ASC,
   tk.nimi ASC;
+
+
+-- name: paivita-tehtava-maaramuutos<!
+INSERT INTO mhu_muutos_tehtavamaaramuutokset (
+  urakka,
+  tehtava,
+  hoitokauden_alkuvuosi,
+  valitun_yksikkohinnan_hk_alkuvuosi,
+  kasin_syotetty_tavoitehintamuutos,
+  lahde,
+  asetettu_yksikkohinta,
+  syy,
+  luotu,
+  luoja,
+  muokattu,
+  muokkaaja
+) VALUES (
+  :urakka,
+  :tehtava,
+  :hk_alkuvousi,
+  :yksikkohinta_hk_alkuvuosi,
+  :kasin_syotetty_tavoitehinta,
+  :lahde::muutos_yksikkohinta_lahde_enum,
+  :asetettu_yksikkohinta,
+  :syy,
+  NOW(),
+  :kayttaja,
+  NULL,
+  NULL
+)
+ON CONFLICT (urakka, tehtava, hoitokauden_alkuvuosi)
+DO UPDATE SET
+  valitun_yksikkohinnan_hk_alkuvuosi = EXCLUDED.valitun_yksikkohinnan_hk_alkuvuosi,
+  kasin_syotetty_tavoitehintamuutos  = EXCLUDED.kasin_syotetty_tavoitehintamuutos,
+  asetettu_yksikkohinta              = EXCLUDED.asetettu_yksikkohinta,
+  lahde                              = EXCLUDED.lahde::muutos_yksikkohinta_lahde_enum,
+  syy                                = EXCLUDED.syy,
+  muokattu                           = NOW(),
+  muokkaaja                          = EXCLUDED.luoja;

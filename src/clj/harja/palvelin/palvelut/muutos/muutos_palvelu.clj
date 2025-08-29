@@ -111,17 +111,37 @@
   )
 
 
-(defn tallenna-maaramuutos-yksikkohinta 
-[db user {:keys [urakka-id valittu-hoitokausi tehtava_id] :as _tiedot}]
- (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+(defn tallenna-maaramuutos-yksikkohinta [db
+                                         {:keys [id] :as kayttaja}
+                                         {:keys [urakka-id valittu-hoitokausi rivi] :as _tiedot}]
 
- (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-       parameterssit {:urakka urakka-id
-                      :tehtavaryhma nil
-                      :tehtava nil
-                      :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}])
-  ;; TODO 
- )
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+
+  (let [{:keys [syy
+                tehtava_id
+                yksikkohinta
+                yksikkohinnan_alkuvuosi
+                syotetty_tavoitehintamuutos]} rivi
+        
+        ;; TODO 
+        lahde "aseta"#_(cond
+                         (and
+                           (some? yksikkohinnan_alkuvuosi)))
+        hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+        parameterssit {:urakka urakka-id
+                       :tehtava tehtava_id
+                       :hk_alkuvousi hoitokauden-alkuvuosi
+                       :yksikkohinta_hk_alkuvuosi yksikkohinnan_alkuvuosi
+                       :kasin_syotetty_tavoitehinta syotetty_tavoitehintamuutos
+                       :lahde lahde
+                       :asetettu_yksikkohinta yksikkohinta
+                       :syy syy
+                       :kayttaja id}
+        _ (println "\n params:: " parameterssit " \n")]
+    (muutos-kyselyt/paivita-tehtava-maaramuutos<! db parameterssit)
+    (hae-tehtava-maaramuutokset db kayttaja (assoc parameterssit
+                                              :urakka-id urakka-id
+                                              :valittu-hoitokausi valittu-hoitokausi))))
 
 
 (defn hae-urakan-muutostiedot
