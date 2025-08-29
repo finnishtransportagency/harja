@@ -1,6 +1,7 @@
 (ns harja.views.urakka.laadunseuranta.siltatarkastukset
   "Urakan 'Siltatarkastukset' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
+            [goog.Uri :as Uri]
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -557,18 +558,41 @@
               vinkki])])))))
 
 (defn siltatarkastukset []
+  (let [url-parametrit-kasitelty (atom false)]
+    (komp/luo
+      (komp/sisaan-ulos #(do
+                           (kartta-tasot/taso-paalle! :sillat)
+                           (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                           (nav/vaihda-kartan-koko! :L))
+        #(do
+           (kartta-tasot/taso-pois! :sillat)
+           (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+           (reset! url-parametrit-kasitelty false)))
+      (fn []
+        (let [hash-url (subs (.-href js/location) (inc (.indexOf (.-href js/location) "#")))
+              uri (Uri/parse hash-url)
+              parametrit (.getQueryData uri)
+              sil (some-> (.get parametrit "sil") js/parseInt)
+              st (some-> (.get parametrit "st") js/parseInt)]
 
-  (komp/luo
-    (komp/sisaan-ulos #(do
-                         (kartta-tasot/taso-paalle! :sillat)
-                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                         (nav/vaihda-kartan-koko! :L))
-                      #(do
-                         (kartta-tasot/taso-pois! :sillat)
-                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
-    (fn []
-      (if @muokattava-tarkastus
-        [tarkastuksen-muokkauslomake muokattava-tarkastus]
-        (if-let [vs @st/valittu-silta]
-          [sillan-tarkastukset vs]
-          [sillat])))))
+          (when (and sil
+                  @sillat/sillat-kartalla
+                  (not @st/valittu-silta)
+                  (seq @sillat/sillat-kartalla))
+            (when-let [silta (first (filter (fn [s] (= (:id s) sil)) @sillat/sillat-kartalla))]
+              (reset! st/valittu-silta silta)))
+          
+          (when (and st
+                  @st/valitun-sillan-tarkastukset
+                  (seq @st/valitun-sillan-tarkastukset)
+                  (not @url-parametrit-kasitelty)
+                  (not= (:id @st/valittu-tarkastus) st))
+            (when-let [tarkastus (first (filter (fn [t] (= (:id t) st)) @st/valitun-sillan-tarkastukset))]
+              (reset! st/valittu-tarkastus tarkastus)
+              (reset! url-parametrit-kasitelty true))))
+
+        (if @muokattava-tarkastus
+          [tarkastuksen-muokkauslomake muokattava-tarkastus]
+          (if-let [vs @st/valittu-silta]
+            [sillan-tarkastukset vs]
+            [sillat]))))))
