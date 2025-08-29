@@ -84,8 +84,7 @@
                       :opt-un [::tuntipalkka-indeksikorjattu])))
 
 (s/def ::johto-ja-hallintokorvaukset-2019 (s/coll-of
-                                            (s/keys :req-un [::id
-                                                             ::toimenkuva
+                                            (s/keys :req-un [::toimenkuva
                                                              ::kuukaudet (s/coll-of ::jjh-2019)])))
 
 (s/def ::kilpailutettavat-hankinnat (s/keys :req-un [::toimenpiteet ::urakka-id]))

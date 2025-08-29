@@ -62,9 +62,20 @@
 (defn onko-alustatoimenpide-verkko? [koodi]
   (= koodi 3))
 
+(defn asfalttirouheen-osuus-massassa [massa]
+  (->> massa
+    ::pot2-domain/runkoaineet
+    (filter #(= pot2-domain/+runkoainetyyppi-asfalttirouhe+ (:runkoaine/tyyppi %)))
+    first
+    :runkoaine/massaprosentti))
+
+(defn koko-toimenpiteen-rc-pros [massamenekki massa]
+  (when (and massamenekki (< massamenekki 100))
+    (fmt/desimaaliluku (+ (- 100 massamenekki) (* massamenekki (/ (asfalttirouheen-osuus-massassa massa) 100))) 0 false)))
+
 (defn toimenpiteen-tiedot
-  [{:keys [koodistot]} rivi]
-  (fn [{:keys [koodistot]} rivi]
+  [{:keys [koodistot]} rivi massat]
+  (fn [{:keys [koodistot]} {:keys [massa rc% toimenpide massamenekki] :as rivi} massat]
     [:div.pot2-toimenpiteen-tiedot
      ;; Kaivetaan metatiedosta sopivat kentät. Tähän mahdollisimman geneerinen ratkaisu olisi hyvä
      (when (some? rivi)
@@ -88,10 +99,15 @@
                                                                   :sideaine :sideainepitoisuus :sideaine2
                                                                   :massamenekki :kokonaismassamaara} nimi))]
 
-                                   (str (when otsikko? (str otsikko ": ")) teksti)))]
-           (str/join "; " (->> (pot2-domain/alusta-toimenpidespesifit-metadata rivi)
-                               (filter kuuluu-kentalle?)
-                               (map muotoile-kentta))))))]))
+                                   (str (when otsikko? (str otsikko ": ")) teksti)))
+               toimenpide-tiedot (str/join "; " (->> (pot2-domain/alusta-toimenpidespesifit-metadata rivi)
+                                                  (filter kuuluu-kentalle?)
+                                                  (map muotoile-kentta)))
+               massan-tiedot (some #(when (= (:harja.domain.pot2/massa-id %) massa) %) massat)
+               rc-pros (koko-toimenpiteen-rc-pros massamenekki massan-tiedot)
+               alustakerros-rc-pros (when (= pot2-domain/+rem-tas-toimenpide+ toimenpide)
+                                      (str "; rc%: " rc-pros))]
+           (str toimenpide-tiedot alustakerros-rc-pros))))]))
 
 (defn merkitse-muokattu [app]
   (assoc-in app [:paallystysilmoitus-lomakedata :muokattu?] true))
