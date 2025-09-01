@@ -871,8 +871,8 @@
       (is (not (nil? paallystysilmoitus-kannassa)))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
       (is (= (:tila paallystysilmoitus-kannassa) :valmis))
-      (is (= 98.1M (get-in paallystysilmoitus-kannassa [:paallystekerros 0 :rc-prosentti])))
-      (is (= 98.1M (get-in paallystysilmoitus-kannassa [:paallystekerros 1 :rc-prosentti])))
+      (is (= 98M (get-in paallystysilmoitus-kannassa [:paallystekerros 0 :rc-prosentti])))
+      (is (= 98M (get-in paallystysilmoitus-kannassa [:paallystekerros 1 :rc-prosentti])))
       (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id))))
 
 (deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan-ja-laske-rc-prosentti-kar-ja-mp-toimenpiteilla
@@ -1266,7 +1266,7 @@
         [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         alustarivi-jalkeen (first (:alusta paallystysilmoitus-kannassa-jalkeen))]
-    (is (= 76.25M (get-in alustarivi-jalkeen [:rc%])))
+    (is (= 76M (get-in alustarivi-jalkeen [:rc%])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-lisaa-alustarivi
