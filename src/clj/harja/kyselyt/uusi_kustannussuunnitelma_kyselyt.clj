@@ -402,7 +402,10 @@
         toimenkuvat (vec (sort-by :jarjestys toimenkuvat))]
     toimenkuvat))
 
-(defn hae-johto-ja-hallintokorvaukset-2025 [db urakka-id hoitovuoden-alkuvuosi]
+(defn hae-johto-ja-hallintokorvaukset-2025
+  "Käytetään haettaessa johto-ja-hallintokorvauksia 2025 ja myöhemmin alkaville urakoille.
+   -25 vuodesta eteenpäin toimenkuvat on kustannussuunnitelmassa könttäsummana kuukausittain. Ei yksittäisinä toimenkuvina."
+  [db urakka-id hoitovuoden-alkuvuosi]
   (let [johto-ja-hallintokorvaukset (hae-johto-ja-hallintokorvaukset-kuukausittain db
                                       {:urakka-id urakka-id
                                        :vuosi hoitovuoden-alkuvuosi})
