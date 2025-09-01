@@ -119,8 +119,10 @@
 (defn hae-rahavaraukset
   "Haetaan rahavaraukset tietokannsta kustannussuunnitelmaan.
   Saadaan [{:nimi <rahavarausnimi> :summa <summa> :summa-indeksikorjattu nil} ...]"
-  [db sopimus-id hoitovuoden-alkuvuosi]
-  (let [rahavaraukset (hae-rahavaraus-vuodelta db {:sopimus-id sopimus-id :vuosi hoitovuoden-alkuvuosi})]
+  [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
+  (let [rahavaraukset (hae-rahavaraus-vuodelta db {:urakkaid urakka-id
+                                                   :sopimusid sopimus-id
+                                                   :vuosi hoitovuoden-alkuvuosi})]
     rahavaraukset))
 
 (defn hae-hoidonjohtopalkkiot [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
@@ -502,7 +504,7 @@
         kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
         hankinnat-yht (:yhteensa (last kilpailutettavat-hankinnat))
 
-        rahavaraukset (hae-rahavaraukset db sopimus-id hoitovuoden-alkuvuosi)
+        rahavaraukset (hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
         rahavaraukset-yht (apply + (map (fn [rivi] (:summa rivi 0)) rahavaraukset))
 
         erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)

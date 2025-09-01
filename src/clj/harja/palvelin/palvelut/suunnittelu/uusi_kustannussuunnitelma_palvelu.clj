@@ -19,14 +19,14 @@
   Saadaan [{:nimi <rahavarausnimi> :summa <summa> :summa-indeksikorjattu nil} ...]"
   [tarjous suunnitellut-rahavaraukset hoitovuoden-alkuvuosi]
   (let [tarjous-rahavaraukset (filter #(= "tavoitehintaiset-rahavaraukset" (:osio %)) (:tarjous tarjous))
-        rahavaraus-rivit (reduce (fn [lopulliset tarjous-rahavaraus]
-                                   (let [vuosittainen-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot tarjous-rahavaraus))))
-                                         suunniteltu-rahavaraus (some #(when (= (:nimi tarjous-rahavaraus) (:nimi %)) %) suunnitellut-rahavaraukset)]
+        rahavaraus-rivit (reduce (fn [lopulliset suunniteltu-rahavaraus]
+                                   (let [tarjous-rahavaraus (first (filter #(= (:rahavaraus_id suunniteltu-rahavaraus) (:rahavaraus-id %)) tarjous-rahavaraukset))
+                                         tarjous-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot tarjous-rahavaraus))))]
                                      (vec (concat lopulliset [{:nimi (:nimi tarjous-rahavaraus)
-                                                               :tarjous-summa vuosittainen-summa
+                                                               :tarjous-summa tarjous-summa
                                                                :suunniteltu-summa (:suunniteltu-summa suunniteltu-rahavaraus)
                                                                :suunniteltu-summa-indeksikorjattu (:suunniteltu-summa-indeksikorjattu suunniteltu-rahavaraus)}]))))
-                           [] tarjous-rahavaraukset)]
+                           [] suunnitellut-rahavaraukset)]
     rahavaraus-rivit))
 
 (defn- laske-2019-jjh-yhteen [johto-ja-hallintokorvaukset]
@@ -52,7 +52,7 @@
           ;; Varmistetaan, että ei edes yritetä hakea tietoja urakkakauden ulkopuolelta
           hoitovuoden-alkuvuosi (cond
                                   (< hoitovuoden-alkuvuosi urakan-alkuvuosi) urakan-alkuvuosi
-                                  (> hoitovuoden-alkuvuosi urakan-loppuvuosi) urakan-loppuvuosi
+                                  (>= hoitovuoden-alkuvuosi urakan-loppuvuosi) (dec urakan-loppuvuosi)
                                   :else hoitovuoden-alkuvuosi)
 
           vahvistukset (suunnitelma-q/indeksikorjaukset-vahvistettu? db
@@ -82,7 +82,8 @@
           hankinnat-yht (:yhteensa (last kiinteat))
 
           ;: Hae rahavaraukset
-          suunnitellut-rahavaraukset (suunnitelma-q/hae-rahavaraukset db sopimus-id hoitovuoden-alkuvuosi)
+          suunnitellut-rahavaraukset (suunnitelma-q/hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+
           rahavaraukset (jasenna-rahavaraukset-tarjouksesta tarjous suunnitellut-rahavaraukset hoitovuoden-alkuvuosi)
           rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
 
