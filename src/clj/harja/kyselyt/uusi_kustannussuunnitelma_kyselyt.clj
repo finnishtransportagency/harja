@@ -201,14 +201,14 @@
     "2. työnjohtaja" 3
     "3. työnjohtaja" 4
     "päätoiminen apulainen" 5
-    "päätoiminen apulainen (talvikausi)" 5
-    "päätoiminen apulainen (kesäkausi)" 6
-    "apulainen/työnjohtaja" 7
-    "apulainen/työnjohtaja (talvikausi)" 7
-    "apulainen/työnjohtaja (kesäkausi)" 8
-    "viherhoidosta vastaava henkilö" 9
-    "hankintavastaava" 10
-    "harjoittelija" 11
+    "päätoiminen apulainen (talvikausi)" 6
+    "päätoiminen apulainen (kesäkausi)" 7
+    "apulainen/työnjohtaja" 8
+    "apulainen/työnjohtaja (talvikausi)" 9
+    "apulainen/työnjohtaja (kesäkausi)" 10
+    "viherhoidosta vastaava henkilö" 11
+    "hankintavastaava" 12
+    "harjoittelija" 13
     99)) ;; Muu toimenkuva, joka ei ole listassa
 
 (defn hae-johto-ja-hallintokorvaukset-2019-2024 [db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta]

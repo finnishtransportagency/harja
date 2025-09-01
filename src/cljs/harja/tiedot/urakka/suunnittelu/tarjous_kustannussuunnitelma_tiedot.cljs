@@ -262,7 +262,7 @@
 
   TallennaKilpailutettavatHankinnatOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Kilpailutettavat hankinat tallennettiin.")
+    (viesti/nayta-toast! "Kilpailutettavat hankinnat tallennettiin.")
     (-> app
       (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
@@ -430,7 +430,7 @@
 
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Hoidonjohtopalkkiot tallennettiin.")
+    (viesti/nayta-toast! "Johto- ja Hallintokorvaukset tallennettiin.")
     (-> app
       (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
       (assoc :tallennus-kesken? false)
