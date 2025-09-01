@@ -30,11 +30,7 @@
     rahavaraus-rivit))
 
 (defn- laske-2019-jjh-yhteen [johto-ja-hallintokorvaukset]
-  (let [summa (apply + (map
-                         (fn [rivi]
-                           (if (and (:tuntipalkka rivi) (:tunnit rivi))
-                             (* (:tuntipalkka rivi) (:tunnit rivi))
-                             0))
+  (let [summa (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0))
                          johto-ja-hallintokorvaukset))]
     summa))
 
