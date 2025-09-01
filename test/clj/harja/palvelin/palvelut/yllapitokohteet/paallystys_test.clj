@@ -843,6 +843,70 @@
         (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 0M))
         (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))))
 
+(deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan-ja-laske-rc-prosentti-rem-toimenpiteilla
+  (let [;; Ei saa olla POT ilmoitusta
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")]
+    (is (some? paallystyskohde-id))
+    (is (= 28 paallystyskohde-id))
+    (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Wut' WHERE yllapitokohde = 28"))
+    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi pot2 ilmoitus")
+    (let [paallystysilmoitus (-> pot2-testidata
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:paallystekerros 0 :toimenpide] 31)
+                               (assoc-in [:paallystekerros 1 :toimenpide] 33)
+                               (assoc-in [:paallystekerros 0 :materiaali] 2)
+                               (assoc-in [:paallystekerros 1 :materiaali] 2)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
+          maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+          [urakka-id sopimus-id] (tallenna-testipaallystysilmoitus
+                                   paallystysilmoitus
+                                   paallystysilmoitus-domain/pot2-vuodesta-eteenpain)
+          maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+          paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :urakan-paallystysilmoitus-paallystyskohteella
+                                        +kayttaja-jvh+ {:urakka-id urakka-id
+                                                        :sopimus-id sopimus-id
+                                                        :paallystyskohde-id paallystyskohde-id})]
+      (log/debug "Testitallennus valmis. POTTI kannassa: " (pr-str paallystysilmoitus-kannassa))
+      (is (not (nil? paallystysilmoitus-kannassa)))
+      (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
+      (is (= (:tila paallystysilmoitus-kannassa) :valmis))
+      (is (= 98.1M (get-in paallystysilmoitus-kannassa [:paallystekerros 0 :rc-prosentti])))
+      (is (= 98.1M (get-in paallystysilmoitus-kannassa [:paallystekerros 1 :rc-prosentti])))
+      (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id))))
+
+(deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan-ja-laske-rc-prosentti-kar-ja-mp-toimenpiteilla
+  (let [;; Ei saa olla POT ilmoitusta
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")]
+    (is (some? paallystyskohde-id))
+    (is (= 28 paallystyskohde-id))
+    (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Wut' WHERE yllapitokohde = 28"))
+    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi pot2 ilmoitus")
+    (let [paallystysilmoitus (-> pot2-testidata
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:paallystekerros 0 :toimenpide] 41)
+                               (assoc-in [:paallystekerros 1 :toimenpide] 21)
+                               (assoc-in [:paallystekerros 0 :materiaali] 2)
+                               (assoc-in [:paallystekerros 1 :materiaali] 2)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
+          maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+          [urakka-id sopimus-id] (tallenna-testipaallystysilmoitus
+                                   paallystysilmoitus
+                                   paallystysilmoitus-domain/pot2-vuodesta-eteenpain)
+          maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+          paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :urakan-paallystysilmoitus-paallystyskohteella
+                                        +kayttaja-jvh+ {:urakka-id urakka-id
+                                                        :sopimus-id sopimus-id
+                                                        :paallystyskohde-id paallystyskohde-id})]
+      (log/debug "Testitallennus valmis. POTTI kannassa: " (pr-str paallystysilmoitus-kannassa))
+      (is (not (nil? paallystysilmoitus-kannassa)))
+      (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
+      (is (= (:tila paallystysilmoitus-kannassa) :valmis))
+      (is (= 100M (get-in paallystysilmoitus-kannassa [:paallystekerros 0 :rc-prosentti])))
+      (is (= 5.0M (get-in paallystysilmoitus-kannassa [:paallystekerros 1 :rc-prosentti])))
+      (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id))))
+
 (deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan-vaikka-paallystyskerros-ei-validi
   (let [;; Ei saa olla POT ilmoitusta
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")]
@@ -1188,6 +1252,21 @@
         alustarivi-17 (alustarivi-idlla alustarivit-jalkeen 17)]
     (is (= {:kasittelysyvyys 55, :sideaine 1, :sideainepitoisuus 10.0M, :murske nil, :massamenekki nil}
            (select-keys alustarivi-17 [:kasittelysyvyys :sideaine :sideainepitoisuus :murske :massamenekki])))
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
+(deftest tallenna-pot2-lisaa-alustarivi-rem-tas-toimenpiteella-ja-laske-rc-prosentti
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
+        paallystysilmoitus (-> pot2-alustatestien-ilmoitus
+                             (assoc-in [:alusta 0 :toimenpide] 4)
+                             (assoc-in [:alusta 0 :kokonaismassamaara] 1)
+                             (assoc-in [:alusta 0 :massa] 2)
+                             (assoc-in [:alusta 0 :massamenekki] 25))
+        [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
+                                                  urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
+        alustarivi-jalkeen (first (:alusta paallystysilmoitus-kannassa-jalkeen))]
+    (is (= 76.25M (get-in alustarivi-jalkeen [:rc%])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-lisaa-alustarivi
@@ -1941,4 +2020,3 @@
 (deftest hyppya-ei-ole-koska-tienosa-vaihtuu
   (let [hyppyjen-lkm (paallystys/laske-kulutuskerroksen-hypyt testidata-hypyton-tienosa-vaihtuu 0 0)]
     (is (= 0 hyppyjen-lkm) "ei hyppyä")))
-
