@@ -376,20 +376,14 @@ export function alustaKanta(urakkaNimi) {
             .then((tulos) => {
                 console.log("Poista muutoshistoria - tulos:", tulos)});
 
-        // poista kulut
+        // Poista mhu muutokset
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"UPDATE mhu_muutos SET poistettu = true " +
             `WHERE urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
                 console.log("Poista kulujen linkitukset muutoksiin - tulos:", tulos)});
 
-        //cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-        //    "\"DELETE FROM mhu_muutos_kulu mmk " +
-        //    `WHERE mmk.kulu IN (SELECT id FROM kulu k WHERE k.urakka = ` +
-        //    `(SELECT id FROM urakka WHERE nimi = '${urakkaNimi}'));\"`)
-        //    .then((tulos) => {
-        //        console.log("Poista kulujen linkitukset muutoskuluihin - tulos:", tulos)});
-
+        // Poista kulu kohdistukset
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"DELETE FROM kulu_kohdistus kt " +
             `WHERE kt.toimenpideinstanssi IN (SELECT id FROM toimenpideinstanssi t WHERE t.urakka = ` +
@@ -397,11 +391,14 @@ export function alustaKanta(urakkaNimi) {
             .then((tulos) => {
                 console.log("Poista kulujen kohdistukset - tulos:", tulos)});
 
+        // Poista kulut
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"UPDATE kulu SET poistettu = true " +
             `WHERE urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
                 console.log("Poista kulut - tulos:", tulos)});
+
+        // TODO: Kuhan tarjouspuoli valmistuu, niin poista myös tarjouksen tiedot
 
     });
 }
