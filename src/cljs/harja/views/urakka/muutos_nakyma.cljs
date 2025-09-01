@@ -323,18 +323,13 @@
 
 
 (defn- aseta-yksikkohinta-modal [e!
-                                 {:keys [yksikkohinta-modal-auki? hoitokausien-yksikkohinnat] :as app}
-                                 {:keys [tehtava] :as valittu-rivi}]
+                                 {:keys [yksikkohinta-modal-auki?] :as _app}
+                                 {:keys [tehtava aikaisemmat-yksikkohinnat] :as valittu-rivi}]
   (let [;; voi-lahettaa? (::tila/validi? lomake)
         ;;
         voi-tallentaa? (some? (:yksikkohinta valittu-rivi))
         voi-kirjoittaa? true
-        hoitokausien-yksikkohinnat (filter #(and
-                                              ;; Vaadi että jokin yksikköhinta saatavilla 
-                                              (some? (:arvo %))
-                                              ;; Suodata kuluva hk pois, tulee mukaan esim jos yksikköhinnan lähde on aseta  
-                                              (not= @u/valittu-urakan-vuosi (:hoitokauden-alkuvuosi %))) hoitokausien-yksikkohinnat)
-        _ (println "\n hoitokausien-yksikkohinnat:: " hoitokausien-yksikkohinnat)
+        _ (println "\n aikaisemmat-yksikkohinnat:: " aikaisemmat-yksikkohinnat)
         ]
 
     [modal/modal
@@ -347,7 +342,7 @@
       {:ei-borderia? true
        :voi-muokata? voi-kirjoittaa?
        :tarkkaile-ulkopuolisia-muutoksia? true
-       :muokkaa! #(e! (muutos-tiedot/->MuokkaaYksikkohintaa (lomake/ilman-lomaketietoja %) hoitokausien-yksikkohinnat))
+       :muokkaa! #(e! (muutos-tiedot/->MuokkaaYksikkohintaa (lomake/ilman-lomaketietoja %) aikaisemmat-yksikkohinnat))
 
        :header [:div.col-md-12
                 [:h2.header-yhteiset "Aseta tehtävän yksikköhinta"]
@@ -371,8 +366,8 @@
           :pakollinen? true
           :vayla-tyyli? true
           ;; Vektori jossa mappeja,  rakenne -> hae-hoitovuosien-yksikkohinnat
-          :valinnat (into [] hoitokausien-yksikkohinnat)
-          ;; Näytä :valinta -> hoitokausien-yksikkohinnat
+          :valinnat (into [] aikaisemmat-yksikkohinnat)
+          ;; Näytä :valinta -> aikaisemmat-yksikkohinnat
           :valinta-nayta #(:valinta %)
           ;; Täsmää :yksikkohinta valintojen kentän :arvo avaimeen 
           :valinta-arvo #(:arvo %)
@@ -443,7 +438,7 @@
          ;; "Aseta yksikköhinta" modal joka aukeaa kun rivin nappia painetaan
          ;; Tälle passataan valittu rivi / valittu tehtävä 
          [aseta-yksikkohinta-modal e! app valittu-modal-tehtava]
-         
+
          ;; Tehtävä ja määrämuutos taulukko 
          [grid/grid
           {:tunniste :id
@@ -452,17 +447,15 @@
                     [ajax-loader-pieni "Haku käynnissä..."]
                     "Aikavälille ei löytynyt tuloksia.")
            :voi-lisata? false
-           :voi-kumota? false
+           :voi-kumota? true
            :voi-muokata? true
            :piilota-toiminnot? true
            :voi-poistaa? (constantly false)
            ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
            :sivuta 20
            :piilota-sivutus-footer? true
-           :tallenna #(e! (muutos-tiedot/->TallennaYksikkohinta %))
-
-           ;; 
-           }
+           :tallenna (fn [sisalto]
+                       (tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaTehtavaMaaramuutokset sisalto))}
 
           [{:otsikko "Tehtävä"
             :nimi :tehtava
@@ -480,14 +473,17 @@
             :tyyppi :string
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
-            :leveys 15}
+            :leveys 10}
 
            {:otsikko "Muutoksen syy / lisätieto"
             :nimi :syy
             :tyyppi :text
             :solun-luokka solun-luokka-fn
-            :muokattava? #(nil? (:valiotsikko %)) ;; Älä anna muokata väliotsikkoja 
-            :leveys 35}
+            :muokattava? #(and
+                            (not haku-kaynnissa?)
+                            ;; Älä anna muokata väliotsikkoja 
+                            (nil? (:valiotsikko %)))
+            :leveys 25}
 
            {:otsikko "Suunniteltu määrä"
             :nimi :suunniteltu_maara
@@ -528,14 +524,16 @@
 
            {:otsikko "Tavoitehinnan muutos (€)"
             :nimi :tavoitehinnan_muutos
-            :tyyppi :numero
-            :fmt fmt/euro-opt
+            :tyyppi :euro
+            :fmt (fn [v r] (if (:valiotsikko r) v (fmt/euro-opt v)))
             :tasaa :oikea
             :solun-luokka solun-luokka-fn
             ;; Annetaanko kirjata tavoitehinta päätellään takapäässä
-            :muokattava? #(:anna-kirjata-tavoitehinta? %)
-            :leveys 15}
-           
+            :muokattava? #(and
+                            (not haku-kaynnissa?)
+                            (true? (:anna-kirjata-tavoitehinta? %)))
+            :leveys 22}
+
            ;; Aseta yksikköhinta
            {:otsikko ""
             :tyyppi :komponentti
@@ -544,8 +542,8 @@
                            [:<>
                             ;; Näytä valinta mikäli toteumia ei ole 
                             ;; sekä aikaisemman vuoden yksikköhinta on saatavilla (anna-kirjata-tavoitehinta? kertoo tämän)
-                            (when (and 
-                                    maara 
+                            (when (and
+                                    maara
                                     (= maara 0)
                                     (not (:anna-kirjata-tavoitehinta? valittu-rivi)))
                               [:div.nappi-toissijainen

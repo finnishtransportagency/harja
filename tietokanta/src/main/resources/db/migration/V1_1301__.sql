@@ -3,7 +3,7 @@
 --  -----------------------------------------
 
 
--- Onko tehtävä-määrämuutos yksikköhinta laskettu vai asetettu manuaalisesti 
+-- Onko tehtävä-määrämuutos yksikköhinta laskettu, asetettu, vai onko tavoitehinta syötetty manuaalisesti 
 CREATE TYPE muutos_yksikkohinta_lahde_enum AS ENUM ('laskettu','aseta','manuaali');
 
 

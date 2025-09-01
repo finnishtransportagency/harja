@@ -70,7 +70,8 @@
                                       (muutos-kyselyt/hae-tehtava-maaramuutokset db parameterssit)
                                       first
                                       :yksikkohinta)]
-                   ;; esim:: 7,90 (1. hoitovuoden yksikköhinta)
+                   ;; esim:: 
+                   ;; 7,90 (1. hoitovuoden yksikköhinta)
                    {:valinta (str
                                yksikkohinta " "
                                "(" (inc idx) ". hoitovuoden yksikköhinta)")
@@ -96,79 +97,110 @@
         vastaus (muutos-kyselyt/hae-tehtava-maaramuutokset db parameterssit)
 
         vastaus-yksikkohinta-tarkistettu (map (fn [rivi]
-                                                ;;(println "\n\n rivit:: " rivi)
                                                 (let [tehtavalla-ei-toteumia? (or
                                                                                 (not (:maara rivi))
-                                                                                (>= (:maara rivi) 0))
+                                                                                (<= (:maara rivi) 0))
 
+                                                      ;; Jos toteumia ei ole, ei voida yksikköhintaa laskea
+                                                      ;; => Yritä hakea yksikköhinta edellisiltä vuosilta 
                                                       aikaisemmat-yksikkohinnat (when tehtavalla-ei-toteumia?
                                                                                   (hae-hoitovuosien-yksikkohinnat db user {:urakka-id urakka-id
                                                                                                                            :hoitokaudet hoitokaudet
                                                                                                                            :tehtava_id (:tehtava_id rivi)}))
-
-                                                      ;;_ (println "\n aikaisemmat-yksikkohinnat PRE:: " aikaisemmat-yksikkohinnat)
+                                                      ;; Jos edellisiltä vuosilta löytyi yksikköhinta, tarjotaan niitä gridiin 
                                                       aikaisemmat-yksikkohinnat (filter #(and
                                                                                            ;; Vaadi että jokin yksikköhinta saatavilla 
                                                                                            (some? (:arvo %))
                                                                                            ;; Suodata kuluva hk pois, tulee mukaan esim jos yksikköhinnan lähde on aseta  
                                                                                            (not= hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi %))) aikaisemmat-yksikkohinnat)
 
-                                                      ;;_ (println "\n aikaisemmat-yksikkohinnat POST:: " aikaisemmat-yksikkohinnat)
-
                                                       loytyi-aikaisemmat-yksikkohinnat? (some? (seq aikaisemmat-yksikkohinnat))
-                                                      ;;_ (println "\n löytyi aikaisemmat:: " loytyi-aikaisemmat-yksikkohinnat?)
-
+                                                      
+                                                      ;; Jos ei edellisiä yksikköhintojakaan löytynyt, anna kirjata tavoitehinta manuaalisesti 
                                                       anna-kirjata-tavoitehinta? (and
                                                                                    tehtavalla-ei-toteumia?
                                                                                    (not loytyi-aikaisemmat-yksikkohinnat?))]
 
-                                                  (assoc rivi :anna-kirjata-tavoitehinta? anna-kirjata-tavoitehinta?))) vastaus)
-
-        ;;_ (println "\n merkitse:: " merkitse-tehtavat)
-        ]
+                                                  (assoc rivi
+                                                    :aikaisemmat-yksikkohinnat aikaisemmat-yksikkohinnat
+                                                    :anna-kirjata-tavoitehinta? anna-kirjata-tavoitehinta?))) vastaus)]
     vastaus-yksikkohinta-tarkistettu))
 
 
 (defn tallenna-tehtava-maaramuutokset
-  [db user {:keys [urakka-id valittu-hoitokausi tehtava_id] :as _tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  [db
+   {:keys [id] :as kayttaja}
+   {:keys [urakka-id valittu-hoitokausi hoitokaudet rivit] :as _tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  ;; 
+  ;; Kutsutaan gridin tallenna painikkeesta 
+  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))]
+    (jdbc/with-db-transaction [_c db]
+      (doseq [rivi rivit]
+        (let [{:keys [syy
+                      tehtava_id
+                      yksikkohinta
+                      valitun_yksikkohinnan_hk_alkuvuosi
+                      tavoitehinnan_muutos
+                      anna-kirjata-tavoitehinta?]} rivi
 
-  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-        parameterssit {:urakka urakka-id
-                       :tehtavaryhma nil
-                       :tehtava nil
-                       :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}])
-  ;; TODO 
-  )
+              lahde (cond
+                      ;; Tavoitehinta on kirjattu käsin 
+                      ;; => manuaali
+                      (and
+                        tavoitehinnan_muutos
+                        anna-kirjata-tavoitehinta?
+                        (> tavoitehinnan_muutos 0))
+                      "manuaali"
+
+                      ;; Yksikköhinta on asetettu edelliseltä vuodelta 
+                      ;; => aseta 
+                      (and
+                        valitun_yksikkohinnan_hk_alkuvuosi
+                        (> valitun_yksikkohinnan_hk_alkuvuosi 0))
+                      "aseta"
+
+                      ;; Muulloin yksikköhinta on laskettu automaattisesti (kaikki data on saatavilla)
+                      :else "laskettu")
+
+              parameterssit {:urakka urakka-id
+                             :tehtava tehtava_id
+                             :hk_alkuvousi hoitokauden-alkuvuosi
+                             :yksikkohinta_hk_alkuvuosi valitun_yksikkohinnan_hk_alkuvuosi
+                             :kasin_syotetty_tavoitehinta (when (= lahde "manuaali") tavoitehinnan_muutos)
+                             :lahde lahde
+                             :asetettu_yksikkohinta yksikkohinta
+                             :syy syy
+                             :kayttaja id}]
+          (muutos-kyselyt/paivita-tehtava-maaramuutos<! db parameterssit))))
+
+    (hae-tehtava-maaramuutokset db kayttaja {:urakka-id urakka-id
+                                             :hoitokaudet hoitokaudet
+                                             :valittu-hoitokausi valittu-hoitokausi})))
 
 
 (defn tallenna-maaramuutos-yksikkohinta [db
                                          {:keys [id] :as kayttaja}
                                          {:keys [urakka-id valittu-hoitokausi rivi hoitokaudet] :as _tiedot}]
-
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-
+  ;; Valitun rivin tiedot 
   (let [{:keys [syy
                 tehtava_id
                 yksikkohinta
-                yksikkohinnan_alkuvuosi
-                syotetty_tavoitehintamuutos]} rivi
-        
-        ;; TODO 
-        lahde "aseta"#_(cond
-                         (and
-                           (some? yksikkohinnan_alkuvuosi)))
+                yksikkohinnan_alkuvuosi]} rivi
+        ;; Tätä kutsutaan modalista, joten lähde on aina aseta
+        ;; (yksikköhinta on asetettu edellisiltä hoitokausilta)
+        lahde "aseta"
         hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         parameterssit {:urakka urakka-id
                        :tehtava tehtava_id
                        :hk_alkuvousi hoitokauden-alkuvuosi
                        :yksikkohinta_hk_alkuvuosi yksikkohinnan_alkuvuosi
-                       :kasin_syotetty_tavoitehinta syotetty_tavoitehintamuutos
+                       :kasin_syotetty_tavoitehinta nil
                        :lahde lahde
                        :asetettu_yksikkohinta yksikkohinta
                        :syy syy
-                       :kayttaja id}
-        _ (println "\n params:: " parameterssit " \n")]
+                       :kayttaja id}]
     (muutos-kyselyt/paivita-tehtava-maaramuutos<! db parameterssit)
     (hae-tehtava-maaramuutokset db kayttaja (assoc parameterssit
                                               :urakka-id urakka-id
@@ -194,8 +226,8 @@
                                      #(select-keys % [:id :nimi :summa-indeksikorjattu])
                                      (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id
                                                                                                                ;; haetaan vain valitulle hoitovuodelle
-                                                                                                               :alkuvuosi hoitokauden-alkuvuosi
-                                                                                                               :loppuvuosi (inc hoitokauden-alkuvuosi)}))
+                                                                                                                :alkuvuosi hoitokauden-alkuvuosi
+                                                                                                                :loppuvuosi (inc hoitokauden-alkuvuosi)}))
         rahavarausten-toteumat (muutos-kyselyt/rahavarausten-toteumat db {:urakka urakka-id
                                                                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         rahavaraukset (yleiset/yhdista-mapit-avaimella rahavarausten-suunnitelmat rahavarausten-toteumat :id)
@@ -207,7 +239,7 @@
                         #(if (and (:summa-indeksikorjattu %)
                                (:toteumat %))
                            (assoc % :tavoitehinnan-muutos (- (:toteumat %)
-                                                            (:summa-indeksikorjattu %)))
+                                                             (:summa-indeksikorjattu %)))
                            %)
                         rahavaraukset)
         rahavaraukset-yhteensa (rahavarausten-summarivi rahavaraukset)
@@ -232,9 +264,9 @@
                           :muutosten-vaikutus-yhteensa muutosten-vaikutus-yhteensa
                           :hoitovuoden-lopun-tavoitehinta (when (:tavoitehinta-indeksikorjattu budjettitavoiteet)
                                                             (+
-                                                              (:tavoitehinta-indeksikorjattu budjettitavoiteet)
-                                                              ;; TODO: tässä huomioitava kaikkien muutosten vaikutus, työversiossa vasta kirjatut muutokset mukana
-                                                              muutosten-vaikutus-yhteensa))}}))
+                                                             (:tavoitehinta-indeksikorjattu budjettitavoiteet)
+                                                             ;; TODO: tässä huomioitava kaikkien muutosten vaikutus, työversiossa vasta kirjatut muutokset mukana
+                                                             muutosten-vaikutus-yhteensa))}}))
 
 (defn hae-muutoksen-tiedot
   "Palauttaa yksittäisen muutoksen tarkat tiedot lomaketta varten."
