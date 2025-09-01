@@ -402,7 +402,7 @@
         toimenkuvat (vec (sort-by :jarjestys toimenkuvat))]
     toimenkuvat))
 
-(defn hae-johto-ja-hallintokorvaukset [db urakka-id hoitovuoden-alkuvuosi toimenkuvat-tarjouksesta]
+(defn hae-johto-ja-hallintokorvaukset-2025 [db urakka-id hoitovuoden-alkuvuosi]
   (let [johto-ja-hallintokorvaukset (hae-johto-ja-hallintokorvaukset-kuukausittain db
                                       {:urakka-id urakka-id
                                        :vuosi hoitovuoden-alkuvuosi})
@@ -844,10 +844,10 @@
 
         johto-ja-hallintokorvaukset (cond
                                       (and (>= urakan-alkuvuosi 2019) (<= urakan-alkuvuosi 2024))
-                                      (hae-johto-ja-hallintokorvaukset-2019-2024 db urakka-id hoitovuoden-alkuvuosi urakan-alkuvuosi nil)
+                                      (hae-johto-ja-hallintokorvaukset-2019-2024 db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-alkuvuosi nil)
                                       (>= urakan-alkuvuosi 2025)
-                                      (hae-johto-ja-hallintokorvaukset db urakka-id hoitovuoden-alkuvuosi nil)
-                                      :else (hae-johto-ja-hallintokorvaukset db urakka-id hoitovuoden-alkuvuosi nil))
+                                      (hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi)
+                                      :else (hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi))
 
         puuttuvat (if-not (and (boolean (seq johto-ja-hallintokorvaukset))
                             (cond

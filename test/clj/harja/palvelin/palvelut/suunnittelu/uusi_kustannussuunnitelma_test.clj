@@ -554,7 +554,7 @@
     (is (= 3 (count (get-in vastaus [:kustannussuunnitelma :rahavaraukset]))) "Rahavarauksia pitäisi olla 3")
     (is (= 7 (count (get-in vastaus [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet]))) "Kilpailutettavia hankintoja pitäisi olla 7")
     (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :erillishankinnat]))) "Erillishankintoja pitäisi olla 12 kuukautta")
-    (is (= 9 (count (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))) "Johto- ja hallintokorvauksia pitäisi olla 9 toimenkuvaa")
+    (is (= 10 (count (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))) "Johto- ja hallintokorvauksia pitäisi olla 9 toimenkuvaa")
     (is (= 12 (count (:kuukaudet (first (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))))) "Ensimmäisellä johto- ja hallintokorvauksella / toimenkuvalla pitäisi olla 12 kuukautta")
     (is (= 12 (count (get-in vastaus [:kustannussuunnitelma :hoidonjohtopalkkiot]))) "Hoidonjohtopalkkioissa pitäisi olla 12 kuukautta")
 
