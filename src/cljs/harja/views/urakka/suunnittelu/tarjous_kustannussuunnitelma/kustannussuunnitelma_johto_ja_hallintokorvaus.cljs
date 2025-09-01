@@ -499,7 +499,7 @@
                             {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                             {:teksti "" :luokka kirjaamatta-luokka}])
         yhteenveto-rivi (cond
-                          (and (<= urakan-alkuvuosi 2021) (not vahvistettu?))
+                          (<= urakan-alkuvuosi 2021)
                           [^{:luokka "kustannukset-yhteenveto"}
                            {:teksti "" :luokka "yhteensa"}
                            {:teksti "Yhteensä" :luokka "yhteensa"}
@@ -511,7 +511,7 @@
                                       "-")
                             :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                            {:teksti "" :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
-                          (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024) (not vahvistettu?))
+                          (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024))
                           [^{:luokka "kustannukset-yhteenveto"}
                            {:teksti "" :luokka "yhteensa"}
                            {:teksti "Yhteensä" :luokka "yhteensa"}
