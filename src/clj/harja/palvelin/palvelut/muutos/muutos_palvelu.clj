@@ -52,8 +52,7 @@
 
 
 (defn hae-hoitovuosien-yksikkohinnat
-  [db kayttaja {:keys [urakka-id hoitokaudet tehtava_id] :as _tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  [db _kayttaja {:keys [urakka-id hoitokaudet tehtava_id] :as _tiedot}]
   (map-indexed (fn [idx valittu-hoitokausi]
                  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
                        alkupvm (str hoitokauden-alkuvuosi "-10-01")
@@ -451,10 +450,6 @@
         (fn [kayttaja tiedot]
           (hae-tehtava-maaramuutokset (:db this) kayttaja tiedot))
 
-        :hae-hoitovuosien-yksikkohinnat
-        (fn [kayttaja tiedot]
-          (hae-hoitovuosien-yksikkohinnat (:db this) kayttaja tiedot))
-
         :tallenna-tehtava-maaramuutokset
         (fn [kayttaja tiedot]
           (tallenna-tehtava-maaramuutokset (:db this) kayttaja tiedot))
@@ -478,7 +473,6 @@
       :hae-muutoksen-tiedot
       :hae-urakan-muutostiedot
       :hae-tehtava-maaramuutokset
-      :hae-hoitovuosien-yksikkohinnat
       :tallenna-tehtava-maaramuutokset
       :tallenna-maaramuutos-yksikkohinta
       :tallenna-rahavarausmuutosten-syyt)

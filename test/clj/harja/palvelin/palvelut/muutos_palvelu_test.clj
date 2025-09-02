@@ -2,11 +2,12 @@
   (:require [clojure.java.io :as io]
             [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.liitteet :as liitteet-komponentti]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
+
             [harja.pvm :as pvm]
-            [harja.testi :refer :all])
+            [harja.testi :refer :all]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.komponentit.liitteet :as liitteet-komponentti]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu])
   (:import (org.apache.commons.io IOUtils)))
 
 
@@ -461,3 +462,164 @@
     (is (= odotetut-liite-linkit (:liitteet paivitetty)) "Liitteiden linkit on päivitetty muutokseen")
     (is (= 0 liitelinkkien-maara-liitteiden-poiston-jalkeen) "Liitteiden poistamisen jälkeen ei liitelinkkejä")
     (is (nil? (:liitteet paivitetty-liitteet-poistettu)) "Ei palaudu enää liitteitä kun ne on poistettu muutoksesta.")))
+
+
+(defn- hae-maaramuutos-alkutiedot []
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hoitokaudet (mapv (fn [vuosi]
+                            [(pvm/hoitokauden-alkupvm vuosi)
+                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                      (range 2021 2026))
+
+        valittu-hoitokausi (last hoitokaudet)
+        hae-maaramuutokset-fn #(kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-tehtava-maaramuutokset
+                                 +kayttaja-jvh+
+                                 %)]
+    
+    (hae-maaramuutokset-fn {:urakka-id urakka-id
+                            :hoitokaudet hoitokaudet
+                            :valittu-hoitokausi valittu-hoitokausi})))
+
+
+(deftest hae-tehtava-maaramuutokset-toimii
+  (let [maaramuutokset (hae-maaramuutos-alkutiedot)
+        reunapaalujen-uusiminen (first maaramuutokset)
+        suunniteltu (-> reunapaalujen-uusiminen :suunniteltu_maara)
+        kulut (-> reunapaalujen-uusiminen :kirjatut_kulut_summa)
+        toteumat (-> reunapaalujen-uusiminen :maara)
+        maaramuutos (-> reunapaalujen-uusiminen :maaramuutos)
+        tav-hinta-muutos (-> reunapaalujen-uusiminen :tavoitehinnan_muutos)
+        yksikkohinta (-> reunapaalujen-uusiminen :yksikkohinta)]
+
+    
+    (testing "Tehtävä määrähaku palauttaa vastauksen"
+      (is (= (-> reunapaalujen-uusiminen :toimenpide)
+             "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen")
+        "Toimenpide nimi täsmää")
+      
+      (is (> suunniteltu 0M) "Suunniteltu määrä palauttaa arvon")
+      (is (> kulut 0M) "Kirjatut kulut palauttaa arvon")
+      (is (> toteumat 0M) "Toteumat palauttaa arvon")
+      (is (> maaramuutos 0M) "Määrämuutos palauttaa arvon")
+      (is (> tav-hinta-muutos 0M) "Tavoitehinnan muutos palauttaa arvon")
+      (is (> yksikkohinta 0M) "Yksikköhinta palauttaa arvon"))
+
+    
+    (testing "Tehtävä- määrämuutosten sarakkeet lasketaan kaavojen mukaan"
+      ;; Määrämuutos  =  Toteutunut määrä - suunniteltu määrä 
+      ;; Tavoitehinnan muutos = Määrämuutos * yksikköhinta
+      ;; Yksikköhinta =  Kirjatut kulut / toteutunut määrä   
+      (is (= maaramuutos
+             (- toteumat suunniteltu)) "Määrämuutos = toteumat - suunniteltu")
+
+      (is (= tav-hinta-muutos
+             (* maaramuutos yksikkohinta)) "Tavoitehinnan muutos = määrämuutos * yksikköhinta")
+
+      (is (= yksikkohinta
+             (/ kulut toteumat)) "Yksikköhinta = kulut / toteumat"))
+
+    
+    (testing "Reunapaalujen uusiminen vastaa testidataa"
+      (is (= suunniteltu 6M))
+      (is (= kulut 255M))
+      (is (= toteumat 10M))
+      (is (= maaramuutos 4M))
+      (is (= tav-hinta-muutos 102.0M))
+      (is (= yksikkohinta 25.5M)))))
+
+
+(deftest hae-tehtava-maaramuutokset-logiikka-toimii
+  (let [;; Tyhjennä data kokonaan, jäljelle jää vaan suunnitellut määrät
+        _ (i "TRUNCATE TABLE kulu CASCADE;")
+        _ (i "TRUNCATE TABLE kulu_kohdistus CASCADE;")
+        _ (i "TRUNCATE TABLE toteuma CASCADE;")
+        _ (i "TRUNCATE TABLE toteuma_tehtava CASCADE;")
+
+         ;; Pitäisi pitkälti näyttää nollaa 
+        maaramuutokset-tyhja-kanta (hae-maaramuutos-alkutiedot)
+        opastustaulun-uusiminen (first maaramuutokset-tyhja-kanta)
+        tehtava_id (-> opastustaulun-uusiminen :tehtava_id)
+
+        lisatty-kulu 77777
+        lisatty-toteuma 10
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+
+        ;; Lisää toteuma 
+        _ (i (format
+               "INSERT INTO toteuma 
+                  (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) 
+                  VALUES (%s, 'harja-ui'::lahde, %s, %s, 
+                  '2025-11-30 17:00:00.000000', '2025-11-30 17:00:00.000000', '2025-11-30 18:05:00.000000', 
+                  NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 1');"
+               (:id +kayttaja-jvh+) urakka-id sopimus-id))
+
+        _ (i (format
+               "INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto) 
+                VALUES (%s, (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 1'), 
+                '2025-11-30 17:00:00.000000', %s, %s, %s, '[Muutokset] Määrämitattava toteuma 1');"
+               (:id +kayttaja-jvh+) tehtava_id lisatty-toteuma urakka-id))
+
+        ;; Lisää kulu tehtävälle 
+        _ (i (format
+               "INSERT INTO kulu 
+                (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi)
+                VALUES (%s,'2026-06-01',%s,'2025-09-01 14:18:52.450004',
+                %s,NULL,NULL,false,NULL,'[Muutokset] Määrämitattava','kesakuu/5-hoitovuosi');"
+               lisatty-kulu urakka-id (:id +kayttaja-jvh+)))
+
+        toimenpide-instanssi (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 Liikenneympäristön hoito TP")
+        tehtavaryhma (ffirst (q "select id from tehtavaryhma where yksiloiva_tunniste = '87a3bd38-ae0a-4c74-ad0d-38a6d5d512ad'"))
+
+        _ (i (format
+               "INSERT INTO kulu_kohdistus 
+                (rivi,kulu,summa,toimenpideinstanssi,tehtavaryhma,maksueratyyppi,luotu,luoja,muokattu,
+                muokkaaja,poistettu,lisatyon_lisatieto,rahavaraus_id,tyyppi,tavoitehintainen,tehtava) 
+                VALUES (0, (SELECT id FROM kulu WHERE kokonaissumma = %s AND erapaiva = '2026-06-01'),
+                %s, %s, %s, 'kokonaishintainen','2025-09-01 14:18:52.450',
+                %s,NULL,NULL,false,NULL,NULL,'hankintakulu',true, %s);"
+               lisatty-kulu lisatty-kulu
+               toimenpide-instanssi tehtavaryhma (:id +kayttaja-jvh+) tehtava_id))
+
+        maaramuutokset-jalkeen (hae-maaramuutos-alkutiedot)
+
+        tehtavan-maaramuutokset (first
+                                  (filter #(= (:tehtava_id %) tehtava_id) maaramuutokset-jalkeen))
+
+        suunniteltu (-> tehtavan-maaramuutokset :suunniteltu_maara)
+        kulut (-> tehtavan-maaramuutokset :kirjatut_kulut_summa)
+        toteumat (-> tehtavan-maaramuutokset :maara)
+        maaramuutos (-> tehtavan-maaramuutokset :maaramuutos)
+        tav-hinta-muutos (-> tehtavan-maaramuutokset :tavoitehinnan_muutos)
+        yksikkohinta (-> tehtavan-maaramuutokset :yksikkohinta)]
+
+    
+    (testing "Alkutiedot näyttävät nollaa"
+       ;; Looppaile kaikki rivit läpi 
+      (is (every? (fn [rivi]
+                    (and
+                      (= (:maara rivi) 0M)
+                      (= (:yksikkohinta rivi) 0.0)
+                      (= (:kirjatut_kulut_summa rivi) 0M)
+                      (= (:tavoitehinnan_muutos rivi) 0.0)
+                      (true? (:anna-kirjata-tavoitehinta? rivi))))
+            maaramuutokset-tyhja-kanta)))
+
+    
+    ;; Testaa että kaavat täsmäävät juuri lisäämän toteuman, sekä kulun perusteella
+    (testing "Määrämuutokset lasketaan oikein toteuman sekä kulun lisäyksen jälkeen"
+      (is (= suunniteltu 6M))
+      (is (= kulut (bigdec lisatty-kulu)))
+      (is (= toteumat (bigdec lisatty-toteuma)))
+      (is (= maaramuutos 4M))
+      (is (= tav-hinta-muutos 31110.8M))
+      (is (= yksikkohinta 7777.7M))
+      (is (false? (:anna-kirjata-tavoitehinta? tehtavan-maaramuutokset)))
+
+      (is (= maaramuutos
+             (- toteumat suunniteltu)) "Määrämuutos = toteumat - suunniteltu")
+      (is (= tav-hinta-muutos
+             (* maaramuutos yksikkohinta)) "Tavoitehinnan muutos = määrämuutos * yksikköhinta")
+      (is (= yksikkohinta
+             (/ kulut toteumat)) "Yksikköhinta = kulut / toteumat"))))
