@@ -93,7 +93,7 @@ SELECT * FROM luo_mhu_muutoksia((SELECT id FROM harja.public.urakka WHERE nimi =
 
 
 -- ==================================================
--- Määrämitattavat tehtävämäärämuutokset - iin mhu 
+-- Määrämitattavat tehtävämäärämuutokset - kulut
 -- ==================================================
 CREATE OR REPLACE FUNCTION luo_maaramitattavat_muutos_kulut(p_summat int[])
 RETURNS void LANGUAGE plpgsql AS $$
@@ -135,11 +135,11 @@ BEGIN
 
   -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   INSERT INTO kulu (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi) VALUES
-    (p_summat[2],'2026-06-01',urakka_id_ii_mhu,'2025-09-01 14:18:52.450004',kayttaja_id,NULL,NULL,false,NULL,'[Muutokset] Määrämitattava ','kesakuu/5-hoitovuosi');
+    (p_summat[2],'2025-06-01',urakka_id_ii_mhu,'2025-09-01 14:18:52.450004',kayttaja_id,NULL,NULL,false,NULL,'[Muutokset] Määrämitattava ','kesakuu/4-hoitovuosi');
 
   INSERT INTO kulu_kohdistus (rivi,kulu,summa,toimenpideinstanssi,tehtavaryhma,"maksueratyyppi",luotu,luoja,muokattu,muokkaaja,poistettu,lisatyon_lisatieto,rahavaraus_id,tyyppi,tavoitehintainen,tehtava) VALUES
-  (1,
-  (SELECT id FROM kulu WHERE kokonaissumma = p_summat[2] AND erapaiva = '2026-06-01'),
+  (0,
+  (SELECT id FROM kulu WHERE kokonaissumma = p_summat[2] AND erapaiva = '2025-06-01'),
   p_summat[2],
   tinst_ii_mhu_liikenne,
   tehtavaryhma_liikennemerkit,'kokonaishintainen','2025-09-01 14:18:52.450',kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
@@ -147,11 +147,11 @@ BEGIN
 
   -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   INSERT INTO kulu (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi) VALUES
-    (p_summat[3],'2025-06-01',urakka_id_ii_mhu,'2025-09-01 14:18:52.450004',kayttaja_id,NULL,NULL,false,NULL,'[Muutokset] Määrämitattava ','kesakuu/4-hoitovuosi');
+    (p_summat[3],'2024-06-01',urakka_id_ii_mhu,'2025-09-01 14:18:52.450004',kayttaja_id,NULL,NULL,false,NULL,'[Muutokset] Määrämitattava ','kesakuu/3-hoitovuosi');
 
   INSERT INTO kulu_kohdistus (rivi,kulu,summa,toimenpideinstanssi,tehtavaryhma,"maksueratyyppi",luotu,luoja,muokattu,muokkaaja,poistettu,lisatyon_lisatieto,rahavaraus_id,tyyppi,tavoitehintainen,tehtava) VALUES
   (0,
-  (SELECT id FROM kulu WHERE kokonaissumma = p_summat[3] AND erapaiva = '2025-06-01'),
+  (SELECT id FROM kulu WHERE kokonaissumma = p_summat[3] AND erapaiva = '2024-06-01'),
   p_summat[3],
   tinst_ii_mhu_liikenne,
   tehtavaryhma_liikennemerkit,'kokonaishintainen','2025-09-01 14:18:52.450',kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
@@ -159,11 +159,11 @@ BEGIN
 
   -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   INSERT INTO kulu (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi) VALUES
-    (p_summat[4],'2024-06-01',urakka_id_ii_mhu,'2025-09-01 14:18:52.450004',kayttaja_id,NULL,NULL,false,NULL,'[Muutokset] Määrämitattava ','kesakuu/3-hoitovuosi');
+    (p_summat[4],'2023-06-01',urakka_id_ii_mhu,'2025-09-01 14:18:52.450004',kayttaja_id,NULL,NULL,false,NULL,'[Muutokset] Määrämitattava ','kesakuu/2-hoitovuosi');
 
   INSERT INTO kulu_kohdistus (rivi,kulu,summa,toimenpideinstanssi,tehtavaryhma,"maksueratyyppi",luotu,luoja,muokattu,muokkaaja,poistettu,lisatyon_lisatieto,rahavaraus_id,tyyppi,tavoitehintainen,tehtava) VALUES
   (0,
-  (SELECT id FROM kulu WHERE kokonaissumma = p_summat[4] AND erapaiva = '2024-06-01'),
+  (SELECT id FROM kulu WHERE kokonaissumma = p_summat[4] AND erapaiva = '2023-06-01'),
   p_summat[4],
   tinst_ii_mhu_liikenne,
   tehtavaryhma_liikennemerkit,'kokonaishintainen','2025-09-01 14:18:52.450',kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
@@ -187,11 +187,11 @@ BEGIN
   -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   -- O - Sorapientareet
   INSERT INTO kulu (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi) VALUES
-    (p_summat[6],'2026-06-01',urakka_id_ii_mhu,'2025-09-01 14:18:52.450004',kayttaja_id,NULL,NULL,false,NULL,'[Muutokset] Määrämitattava ','kesakuu/5-hoitovuosi');
+    (p_summat[6],'2025-06-01',urakka_id_ii_mhu,'2025-09-01 14:18:52.450004',kayttaja_id,NULL,NULL,false,NULL,'[Muutokset] Määrämitattava ','kesakuu/4-hoitovuosi');
 
   INSERT INTO kulu_kohdistus (rivi,kulu,summa,toimenpideinstanssi,tehtavaryhma,"maksueratyyppi",luotu,luoja,muokattu,muokkaaja,poistettu,lisatyon_lisatieto,rahavaraus_id,tyyppi,tavoitehintainen,tehtava) VALUES
   (0,
-  (SELECT id FROM kulu WHERE kokonaissumma = p_summat[6] AND erapaiva = '2026-06-01'),
+  (SELECT id FROM kulu WHERE kokonaissumma = p_summat[6] AND erapaiva = '2025-06-01'),
   p_summat[6],
   tinst_ii_mhu_liikenne,
   tehtavaryhma_soratie,'kokonaishintainen','2025-09-01 14:18:52.450',kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
@@ -265,3 +265,178 @@ END $$;
 
 
 SELECT luo_maaramitattavat_muutos_kulut(ARRAY[255, 147, 389, 532, 1212, 344, 1420, 4200, 1101, 7850, 3600]);
+
+
+
+
+-- ==================================================
+-- Määrämitattavat tehtävämäärämuutokset - toteumat
+-- ==================================================
+CREATE OR REPLACE FUNCTION maaramitattava_toteuma_testidata_mhu(
+    p_urakka text         -- 'Iin MHU 2021-%'
+) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE
+    v_urakka_id int;
+    v_sopimus_id int;
+    v_kayttaja_id int;
+BEGIN
+    SELECT id INTO v_urakka_id FROM urakka WHERE nimi LIKE p_urakka LIMIT 1;
+    SELECT id INTO v_sopimus_id FROM sopimus WHERE urakka = v_urakka_id;
+    SELECT id INTO v_kayttaja_id FROM kayttaja WHERE kayttajanimi = 'jvh' LIMIT 1;
+
+    IF v_urakka_id IS NULL THEN  
+        RAISE EXCEPTION 'Urakkaa ei löydy: %', p_urakka;
+    END IF;
+
+    IF v_kayttaja_id IS NULL THEN
+        RAISE EXCEPTION 'Käyttäjää ei löydy.';
+    END IF;
+
+    -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    INSERT INTO toteuma (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) 
+    VALUES 
+    (v_kayttaja_id, 'harja-ui'::lahde, v_urakka_id, v_sopimus_id, 
+    '2025-11-30 17:00:00.000000', '2025-11-30 17:00:00.000000', 
+    '2025-11-30 18:05:00.000000', NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 1');
+
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto) 
+    VALUES
+    (v_kayttaja_id, 
+    (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 1'), 
+    '2025-11-30 17:00:00.000000', 
+    (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen'), 
+    10, v_urakka_id, 
+    '[Muutokset] Määrämitattava toteuma 1');
+
+    -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    INSERT INTO toteuma (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) 
+    VALUES 
+    (v_kayttaja_id, 'harja-ui'::lahde, v_urakka_id, v_sopimus_id, 
+    '2024-11-30 17:00:00.000000', '2024-11-30 17:00:00.000000', 
+    '2024-11-30 18:05:00.000000', NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 2');
+
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto) 
+    VALUES
+    (v_kayttaja_id, 
+    (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 2'), 
+    '2024-11-30 17:00:00.000000', 
+    (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)'), 
+    4, v_urakka_id, 
+    '[Muutokset] Määrämitattava toteuma 2');
+
+    -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    INSERT INTO toteuma (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) 
+    VALUES 
+    (v_kayttaja_id, 'harja-ui'::lahde, v_urakka_id, v_sopimus_id, 
+    '2023-11-30 17:00:00.000000', '2023-11-30 17:00:00.000000', 
+    '2023-11-30 18:05:00.000000', NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 3');
+
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto) 
+    VALUES
+    (v_kayttaja_id, 
+    (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 3'), 
+    '2023-11-30 17:00:00.000000', 
+    (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)'), 
+    4, v_urakka_id, 
+    '[Muutokset] Määrämitattava toteuma 3');
+
+    -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    INSERT INTO toteuma (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) 
+    VALUES 
+    (v_kayttaja_id, 'harja-ui'::lahde, v_urakka_id, v_sopimus_id, 
+    '2024-11-30 17:00:00.000000', '2024-11-30 17:00:00.000000', 
+    '2024-11-30 18:05:00.000000', NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 4');
+
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto) 
+    VALUES
+    (v_kayttaja_id, 
+    (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 4'), 
+    '2024-11-30 17:00:00.000000', 
+    (SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden palteiden poisto'), 
+    5, v_urakka_id, 
+    '[Muutokset] Määrämitattava toteuma 4');
+
+    -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    INSERT INTO toteuma (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) 
+    VALUES 
+    (v_kayttaja_id, 'harja-ui'::lahde, v_urakka_id, v_sopimus_id, 
+    '2025-11-30 17:00:00.000000', '2025-11-30 17:00:00.000000', 
+    '2025-11-30 18:05:00.000000', NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 5');
+
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto) 
+    VALUES
+    (v_kayttaja_id, 
+    (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 5'), 
+    '2025-11-30 17:00:00.000000', 
+    (SELECT id FROM tehtava WHERE nimi = 'Maakivien (>1m3) poisto'), 
+    43, v_urakka_id, 
+    '[Muutokset] Määrämitattava toteuma 5');
+
+    -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    INSERT INTO toteuma (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) 
+    VALUES 
+    (v_kayttaja_id, 'harja-ui'::lahde, v_urakka_id, v_sopimus_id, 
+    '2025-11-30 17:00:00.000000', '2025-11-30 17:00:00.000000', 
+    '2025-11-30 18:05:00.000000', NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 6');
+
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto) 
+    VALUES
+    (v_kayttaja_id, 
+    (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 6'), 
+    '2025-11-30 17:00:00.000000', 
+    (SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen Ø <= 600 mm'), 
+    38, v_urakka_id, 
+    '[Muutokset] Määrämitattava toteuma 6');
+
+    -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    INSERT INTO toteuma (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) 
+    VALUES 
+    (v_kayttaja_id, 'harja-ui'::lahde, v_urakka_id, v_sopimus_id, 
+    '2025-11-30 17:00:00.000000', '2025-11-30 17:00:00.000000', 
+    '2025-11-30 18:05:00.000000', NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 7');
+
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto) 
+    VALUES
+    (v_kayttaja_id, 
+    (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 7'), 
+    '2025-11-30 17:00:00.000000', 
+    (SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø > 400 mm ≤ 600 mm, päällystetyt tiet'), 
+    15, v_urakka_id, 
+    '[Muutokset] Määrämitattava toteuma 7');
+
+    -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    INSERT INTO toteuma (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) 
+    VALUES 
+    (v_kayttaja_id, 'harja-ui'::lahde, v_urakka_id, v_sopimus_id, 
+    '2025-11-30 17:00:00.000000', '2025-11-30 17:00:00.000000', 
+    '2025-11-30 18:05:00.000000', NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 8');
+
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto) 
+    VALUES
+    (v_kayttaja_id, 
+    (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 8'), 
+    '2025-11-30 17:00:00.000000', 
+    (SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet'), 
+    2450, v_urakka_id, 
+    '[Muutokset] Määrämitattava toteuma 8');
+
+    -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    INSERT INTO toteuma (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) 
+    VALUES 
+    (v_kayttaja_id, 'harja-ui'::lahde, v_urakka_id, v_sopimus_id, 
+    '2025-11-30 17:00:00.000000', '2025-11-30 17:00:00.000000', 
+    '2025-11-30 18:05:00.000000', NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 9');
+
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto) 
+    VALUES
+    (v_kayttaja_id, 
+    (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 9'), 
+    '2025-11-30 17:00:00.000000', 
+    (SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet (kaapeli kaivualueella)'), 
+    3854, v_urakka_id, 
+    '[Muutokset] Määrämitattava toteuma 9');
+
+END $$;
+
+
+SELECT maaramitattava_toteuma_testidata_mhu('Iin MHU 2021-%');
