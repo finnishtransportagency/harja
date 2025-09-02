@@ -131,7 +131,7 @@
                               muut-kulut (assoc muut-kulut-toimenkuva
                                            :tunnit nil
                                            :tuntipalkka nil
-                                           :kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
+                                           :kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) kuukaudet))
                                            :summa suunniteltu-yht
                                            :summa-indeksikorjattu nil) ;; indeksikorjaus lasketaan bäckendissä
                               _ (reset! yhteiset/tallenna-painettu false)
@@ -200,7 +200,7 @@
                               toimenkuva (assoc toimenkuva
                                            :tunnit (if (kust-domain/onko-tunnit-samat? kuukaudet) (:tunnit (first kuukaudet))
                                                      nil) ;; Aseta arvo nil, jos tunnit eivät ole samat kaikissa kuukausissa
-                                           :kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
+                                           :kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) kuukaudet))
                                            :summa suunniteltu-yht
                                            :summa-indeksikorjattu nil) ;; indeksikorjaus lasketaan bäckendissä
                               _ (reset! yhteiset/tallenna-painettu false)
@@ -281,7 +281,7 @@
                                                                                     :yhteensa-indeksikorjattu-kk nil}))
                                                                     (:kuukaudet toimenkuva))
                                                         yht-kk (apply + (map :yhteensa-kk kuukaudet))
-                                                        kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
+                                                        kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) kuukaudet))
                                                         toimenkuva (assoc toimenkuva :kuukaudet kuukaudet
                                                                      :summa yht-kk)]
                                                     (conj uudet-toimenkuvat toimenkuva)))
@@ -344,6 +344,7 @@
         :voi-lisata? false
         :piilota-toiminnot? true
         :muokkauspaneeli? false
+        :jarjesta (juxt :vuosi :kuukausi)
         :voi-muokata? (not vahvistettu?)
         :on-rivi-blur (fn [rivi]
                         (let [toimenkuva (first (filter
@@ -375,7 +376,7 @@
                               suunniteltu-yht (apply + (map #(if (and (:tuntipalkka %) (:tunnit %)) (* (:tunnit %) (:tuntipalkka %)) 0) kuukaudet))
                               toimenkuva (assoc toimenkuva
                                            :tunnit (apply + (map (fn [rivi] (or (:tunnit rivi) 0)) kuukaudet))
-                                           :kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
+                                           :kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) kuukaudet))
                                            :summa suunniteltu-yht
                                            :summa-indeksikorjattu nil) ;; indeksikorjaus lasketaan bäckendissä
                               _ (reset! yhteiset/tallenna-painettu false)
@@ -428,7 +429,7 @@
                                                                                          (when (= "Muut kulut" (:toimenkuva toimenkuva))
                                                                                            {:yhteensa-kk (if (= indeksi 11) viimeneinen-summa kk-summa)})))
                                                                           (:kuukaudet toimenkuva))
-                                                              toimenkuva (assoc toimenkuva :kuukaudet kuukaudet)]
+                                                              toimenkuva (assoc toimenkuva :kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) kuukaudet)))]
                                                           (conj uudet-toimenkuvat toimenkuva)))
                                                 [] uudet-toimenkuvat)
                                   toimenkuvat (sort-by :jarjestys toimenkuvat)]
