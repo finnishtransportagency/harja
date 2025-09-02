@@ -21,8 +21,6 @@ CREATE TABLE mhu_muutos_tehtavamaaramuutokset (
   
   -- Kun yksikköhinta on asetettu modalista, tallennetaan käytetty hk  
   valitun_yksikkohinnan_hk_alkuvuosi INTEGER,
-  -- Kun yksikköhinta asetettu, tallenna se 
-  asetettu_yksikkohinta NUMERIC(12,2),
   
   -- Kun edellisten hk yksikköhintaa ei ole saatavilla, syötetään tav.hinnan muutos manuaalisesti 
   kasin_syotetty_tavoitehintamuutos NUMERIC(12,2),
@@ -42,29 +40,20 @@ CREATE TABLE mhu_muutos_tehtavamaaramuutokset (
   -- Tehdään myös tällainen constraintti 
   -- Evaluoidaan kun insertataan tai päivitetään 
   CHECK (
-    -- Kun lähde on laskettu 
-    --     mitään näistä ei ole 
-    --     yksikköhinta voidaan laskea suoraa
+    -- Kun lähde on laskettu, yksikköhinta voidaan laskea suoraa
     (lahde = 'laskettu' 
     AND valitun_yksikkohinnan_hk_alkuvuosi IS NULL 
-    AND kasin_syotetty_tavoitehintamuutos IS NULL
-    AND asetettu_yksikkohinta IS NULL)
+    AND kasin_syotetty_tavoitehintamuutos IS NULL)
     OR
-    -- Kun lähde on manuaali
-    --     käsin syötetty tavoitehinta hinta on 
-    --     valittua yksikköhintaa ei ole  
+    -- Kun lähde on manuaali, käsin syötetty tavoitehinta hinta on olemassa
     (lahde = 'manuaali' 
     AND kasin_syotetty_tavoitehintamuutos IS NOT NULL 
-    AND valitun_yksikkohinnan_hk_alkuvuosi IS NULL
-    AND asetettu_yksikkohinta  IS NULL)
+    AND valitun_yksikkohinnan_hk_alkuvuosi IS NULL)
     OR 
-    -- Kun lähde on aseta 
-    --     valittu yksikköhinta hinta on 
-    --     käsin syötettyä tavoitehintaa ei ole 
+    -- Kun lähde on aseta, valittu yksikköhinta hinta on olemassa
     (lahde = 'aseta' 
     AND kasin_syotetty_tavoitehintamuutos IS NULL 
-    AND valitun_yksikkohinnan_hk_alkuvuosi IS NOT NULL
-    AND asetettu_yksikkohinta IS NOT NULL)
+    AND valitun_yksikkohinnan_hk_alkuvuosi IS NOT NULL)
   )
 );
 

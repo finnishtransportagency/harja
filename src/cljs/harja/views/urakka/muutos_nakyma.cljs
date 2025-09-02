@@ -15,11 +15,11 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
-            [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.muutos-domain :as muutos-domain]
+            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]))
 
@@ -325,12 +325,8 @@
 (defn- aseta-yksikkohinta-modal [e!
                                  {:keys [yksikkohinta-modal-auki?] :as _app}
                                  {:keys [tehtava aikaisemmat-yksikkohinnat] :as valittu-rivi}]
-  (let [;; voi-lahettaa? (::tila/validi? lomake)
-        ;;
-        voi-tallentaa? (some? (:yksikkohinta valittu-rivi))
-        voi-kirjoittaa? true
-        _ (println "\n aikaisemmat-yksikkohinnat:: " aikaisemmat-yksikkohinnat)
-        ]
+  (let [voi-kirjoittaa? true
+        voi-tallentaa? (some? (:yksikkohinta valittu-rivi))]
 
     [modal/modal
      {:otsikko ""
@@ -350,8 +346,7 @@
                 [:div.body-caption.lihavoitu "Tehtävä"]
                 [:div.body tehtava]]
 
-       :footer (let [;; TODO 
-                     peruuta-fn #(e! (muutos-tiedot/->SuljeYksikkohintaModal))
+       :footer (let [peruuta-fn #(e! (muutos-tiedot/->SuljeYksikkohintaModal))
                      tallenna-fn #(e! (muutos-tiedot/->TallennaYksikkohinta valittu-rivi))]
                  [:<>
                   [:hr]
@@ -372,11 +367,7 @@
           ;; Täsmää :yksikkohinta valintojen kentän :arvo avaimeen 
           :valinta-arvo #(:arvo %)
           :validoi [#(when (nil? %) "Valitse yksikköhinta")]
-          ::lomake/col-luokka "col-xs-6"})
-       
-       
-       
-       ]
+          ::lomake/col-luokka "col-xs-6"})]
       valittu-rivi]
 
      ;; Hyrrän kuvaus: 
@@ -432,28 +423,36 @@
 
             ;; Värjätään tällä väliotsikot design mukaiseksi 
             solun-luokka-fn (fn [_arvo rivi]
-                              (when (some? (:valiotsikko rivi)) "vaalen-tumma-tausta"))]
+                              (when (or 
+                                      haku-kaynnissa? 
+                                      (some? (:valiotsikko rivi))) "vaalen-tumma-tausta"))]
 
         [:<>
          ;; "Aseta yksikköhinta" modal joka aukeaa kun rivin nappia painetaan
          ;; Tälle passataan valittu rivi / valittu tehtävä 
          [aseta-yksikkohinta-modal e! app valittu-modal-tehtava]
 
+         (when haku-kaynnissa?
+           [:div.lasketut-muutokset-grid-haku
+            [ajax-loader-pieni "Haku käynnissä..."]])
+
          ;; Tehtävä ja määrämuutos taulukko 
          [grid/grid
           {:tunniste :id
+           ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
+           :sivuta 20
+           :voi-kumota? false
+           :voi-lisata? false
+           :piilota-toiminnot? true
+           :tallenna-vain-muokatut true
+           :piilota-sivutus-footer? true
+           :voi-poistaa? (constantly false)
+           :voi-muokata? (not haku-kaynnissa?)
            :luokat ["lasketut-muutokset-grid"]
+           ;; Tietoja ladataan ensimmäistä kertaa, näytä loaderi 
            :tyhja (if haku-kaynnissa?
                     [ajax-loader-pieni "Haku käynnissä..."]
                     "Aikavälille ei löytynyt tuloksia.")
-           :voi-lisata? false
-           :voi-kumota? true
-           :voi-muokata? true
-           :piilota-toiminnot? true
-           :voi-poistaa? (constantly false)
-           ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
-           :sivuta 20
-           :piilota-sivutus-footer? true
            :tallenna (fn [sisalto]
                        (tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaTehtavaMaaramuutokset sisalto))}
 
@@ -466,7 +465,7 @@
                            (if tehtava
                              [:<> tehtava]
                              [:div.body-text.strong valiotsikko]))
-            :leveys 45}
+            :leveys 35}
 
            {:otsikko "Yksikkö"
             :nimi :yksikko
@@ -548,7 +547,7 @@
                                     (not (:anna-kirjata-tavoitehinta? valittu-rivi)))
                               [:div.nappi-toissijainen
                                {:on-click #(e! (muutos-tiedot/->AvaaYksikkohintaModal valittu-rivi tehtava_id))} "Aseta yksikköhinta"])])
-            :leveys 27}]
+            :leveys 22}]
 
           tehtava-maaramuutokset]]))}])
 
@@ -621,33 +620,31 @@
 
 
 (defn muutokset-alempi-valilehti*
-  [e! app]
-  (let [urakka (:urakka @tila/yleiset)]
-    (komp/luo
-      (komp/sisaan-ulos
-        #(do
-           (when urakka
-             (e! (muutos-tiedot/->ValitseUrakka urakka))
-             (e! (muutos-tiedot/->HaeUrakanMuutostiedot urakka))))
-        #(e! (muutos-tiedot/->NakymastaPoistuttiin)))
-      (komp/watcher nav/valittu-urakka
-        (fn [_ _ urakka]
-          (when urakka
-            (e! (muutos-tiedot/->ValitseUrakka urakka)))))
-      (fn [e! app]
+  [e! _app]
+    (komp/luo 
+      (komp/lippu muutos-tiedot/nakymassa?)
+      (komp/sisaan #(e! (muutos-tiedot/->HaeUrakanMuutostiedot)))
+      
+      (fn [e! {:keys [haku-kaynnissa?] :as app}]
         [:span.muutokset-sivu
          (if (:muokattava-muutos app)
+           ;; Jos muokattava muutos valittu? onkohan vielä tehty 
            [muutoslomake e! app]
+           
+           ;; Muutosten listaus 
            [:valinnat-ja-listaus
+            ;; Näkymän otsikko 
             [:h1 "Muutosten hallinta"]
             [:div.otsikko-ja-hoitokausi
-             [valinnat/urakan-hoitokausi-tuck (:valittu-hoitokausi app)
-              (:urakan-hoitokaudet app)
-              #(e! (muutos-tiedot/->HoitokausiVaihdettu urakka %))]]
+             ;; Hoitokausi valinta 
+             [urakka-valinnat/paivittava-urakkavuosi-tuck
+              @u/valittu-aikavali
+              #(e! (muutos-tiedot/->HaeUrakanMuutostiedot)) haku-kaynnissa?  false]]
+            
             [muutosten-vaikutus e! app]
             [muutoslistaus e! app]])
-         [debug app]]))))
+         [debug app]])))
 
-(defn muutokset-paatason-valilehti [ur]
-  (fn [ur]
-    [tuck/tuck tila/muutokset muutokset-alempi-valilehti*]))
+
+(defn muutokset-paatason-valilehti [_ur]
+  (fn [_ur] [tuck/tuck tila/muutokset muutokset-alempi-valilehti*]))

@@ -193,8 +193,7 @@ SELECT
 	    THEN ROUND(kulut.summa / NULLIF(SUM(urakan_tehtavat.maara), 0), 2)
     -- 
     -- Yksikköhinta asetettu käyttöliittymästä 
-	  WHEN mmt.lahde = 'aseta'
-	    THEN mmt.asetettu_yksikkohinta
+	  WHEN mmt.lahde = 'aseta' THEN NULL
     -- 
 	  ELSE NULL
 	END                                             AS yksikkohinta,
@@ -202,21 +201,29 @@ SELECT
   -- Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
   -- ---------------------------------------------------- --
   CASE 
+    -- ============================================================
     -- Tavoitehinnan muutos syötetty käsin 
+    -- ============================================================
     WHEN mmt.lahde = 'manuaali' 
       THEN mmt.kasin_syotetty_tavoitehintamuutos
-    -- Seuraaviin tarvitaan toteumia 
+    -- ============================================================
+    -- Seuraaviin tarvitaan toteumia, ei jatketa muuten
+    -- ============================================================
     WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
-    -- Yksikköhinta on laskettu itsestään 
+    -- ============================================================
+    -- Tavoitehinta lasketaan itsestään, joten lasketaan se tässä 
+    -- ============================================================
   	WHEN mmt.lahde IS NULL OR mmt.lahde = 'laskettu' 
+      -- Toteutunut  - suunniteltu 
       THEN (COALESCE(SUM(urakan_tehtavat.maara), 0) -
-		            COALESCE(SUM(ut.maara), 0)) *
-		           (COALESCE(kulut.summa, 0) / SUM(urakan_tehtavat.maara))  
-    -- Yksikköhinta asetettu edelliseltä vuodelta, käytä sitä 
-    WHEN mmt.lahde = 'aseta' 
-      THEN (COALESCE(SUM(urakan_tehtavat.maara), 0) -
-		            COALESCE(SUM(ut.maara), 0)) * mmt.asetettu_yksikkohinta
-  END                                            AS tavoitehinnan_muutos
+		        COALESCE(SUM(ut.maara), 0)
+           )  -- Kertaa yksikköhinta 
+           * (COALESCE(kulut.summa, 0) / SUM(urakan_tehtavat.maara))  
+    -- ============================================================
+    -- Yksikköhinta asetettu, lasketaan endpointissa erikseen => palauta null
+    -- ============================================================
+    WHEN mmt.lahde = 'aseta' THEN NULL
+  END                                             AS tavoitehinnan_muutos
 FROM tehtava tk
   JOIN tehtavaryhma tr_alataso
     ON tr_alataso.id = tk.tehtavaryhma
@@ -234,7 +241,7 @@ FROM tehtava tk
   JOIN urakka u
     ON u.id = :urakka
   -- --------------------------------------------------------------------------------
-  -- Uusi muutos taulu, vedetään täältä syy sekä yksikköhinta / kirjattu tavoitehinta
+  -- Uusi muutos taulu, vedetään täältä syy sekä yksikköhinnan hk / kirjattu tavoitehinta
   -- -------------------------------------------------------------------------------- 
   LEFT JOIN mhu_muutos_tehtavamaaramuutokset mmt 
     ON mmt.urakka = :urakka 
@@ -290,7 +297,6 @@ GROUP BY
   kulut.summa,
   mmt.syy,
   mmt.lahde,
-  mmt.asetettu_yksikkohinta,
   mmt.valitun_yksikkohinnan_hk_alkuvuosi,
   mmt.kasin_syotetty_tavoitehintamuutos
 ORDER BY
@@ -306,7 +312,6 @@ INSERT INTO mhu_muutos_tehtavamaaramuutokset (
   valitun_yksikkohinnan_hk_alkuvuosi,
   kasin_syotetty_tavoitehintamuutos,
   lahde,
-  asetettu_yksikkohinta,
   syy,
   luotu,
   luoja,
@@ -319,7 +324,6 @@ INSERT INTO mhu_muutos_tehtavamaaramuutokset (
   :yksikkohinta_hk_alkuvuosi,
   :kasin_syotetty_tavoitehinta,
   :lahde::muutos_yksikkohinta_lahde_enum,
-  :asetettu_yksikkohinta,
   :syy,
   NOW(),
   :kayttaja,
@@ -330,7 +334,6 @@ ON CONFLICT (urakka, tehtava, hoitokauden_alkuvuosi)
 DO UPDATE SET
   valitun_yksikkohinnan_hk_alkuvuosi = EXCLUDED.valitun_yksikkohinnan_hk_alkuvuosi,
   kasin_syotetty_tavoitehintamuutos  = EXCLUDED.kasin_syotetty_tavoitehintamuutos,
-  asetettu_yksikkohinta              = EXCLUDED.asetettu_yksikkohinta,
   lahde                              = EXCLUDED.lahde::muutos_yksikkohinta_lahde_enum,
   syy                                = EXCLUDED.syy,
   muokattu                           = NOW(),

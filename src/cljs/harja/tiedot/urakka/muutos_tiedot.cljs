@@ -13,22 +13,36 @@
             [harja.tyokalut.tuck :as tuck-apurit]))
 
 
+(defonce nakymassa? (atom false))
 (def johto-ja-hallintokorvausmuutokset-atom (atom nil))
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
 (def pakolliset-kentat-fmt {:nimi "Nimi"
                             :tyyppi "Tyyppi"
                             :syy "Muutoksen syy"
                             :voimassa_alkaen "Voimassa alkaen"})
+(defonce ^{:private true} nollatut-valinnat {:muokattava-muutos nil
+                                             :haku-kaynnissa? false
+                                             :tallennus-kesken? false
+                                             :kirjatut-muutokset nil
+                                             :tehtava-maaramuutokset nil
+                                             :rahavarausten-muutokset nil
+                                             :tavoitehinnan-muutokset nil
+                                             :suunniteltujen-maarien-muutokset nil
+                                             :budjettitavoitteet nil
+                                             :taulukko-nakyvissa? {:kirjatut-muutokset true
+                                                                   :lasketut-muutokset true
+                                                                   :rahavarausten-muutokset true
+                                                                   :tavoitehinnan-muutokset true
+                                                                   :suunniteltujen-maarien-muutokset true}})
 
 
 ;; Hae muutostiedot
-(defrecord HaeUrakanMuutostiedot [urakka])
+(defrecord HaeUrakanMuutostiedot [])
 (defrecord HaeUrakanMuutostiedotOnnistui [vastaus])
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
 
 
 ;; Vaihda hoitokausi
-(defrecord HoitokausiVaihdettu [urakka hoitokausi])
 (defrecord MuokkaaMuutosta [rivi])
 (defrecord TallennaMuutos [muutos])
 (defrecord TallennaMuutosEpaonnistui [vastaus])
@@ -40,6 +54,7 @@
 (defrecord HaeMuutoksenTiedotEpaonnistui [vastaus])
 (defrecord TallennaRahavarausmuutostenSyyt [rivit])
 (defrecord TallennaRahavarausmuutostenSyytEpaonnistui [vastaus])
+(defrecord TallennaRahavarausmuutostenSyytOnnistui [vastaus])
 
 
 ;; Liitteet
@@ -55,16 +70,12 @@
 
 
 ;; Päänäkymä ja listaus
-(defrecord ValitseUrakka [urakka])
-(defrecord NakymastaPoistuttiin [])
 (defrecord PaivitaLomake [lomake])
 
 
 ;; Tehtävä- määrämuutokset 
 (defrecord AvaaYksikkohintaModal [valittu-modal-tehtava tehtava_id])
 (defrecord SuljeYksikkohintaModal [])
-(defrecord HaeTehtavaMaaramuutoksetOnnistui [vastaus])
-(defrecord HaeTehtavaMaaramuutoksetEpaonnistui [vastaus])
 (defrecord TallennaTehtavaMaaramuutokset [rivit])
 (defrecord TallennaTehtavaMaaramuutoksetOnnistui [vastaus])
 (defrecord TallennaTehtavaMaaramuutoksetEpaonnistui [vastaus])
@@ -73,19 +84,8 @@
 (defrecord TallennaYksikkohintaOnnistui [vastaus])
 (defrecord TallennaYksikkohintaEpaonnistui [vastaus])
 
+
 ;; ---------------------------------------------
-;; 
-(defn valitse-urakka [app urakka]
-  (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)
-        vanha-hoitokausi (:valittu-hoitokausi app)
-        uusi-hoitokausi (if (contains? (set hoitokaudet) vanha-hoitokausi)
-                          vanha-hoitokausi
-                          (u/paattele-valittu-hoitokausi hoitokaudet))]
-    (-> @tila/muutokset
-        (assoc :urakan-hoitokaudet hoitokaudet)
-        (assoc :valittu-hoitokausi uusi-hoitokausi))))
-
-
 (defn johto-ja-hallintokorvausmuutoksen-rivit
   "Luo johto-ja-hallintokorvausmuutoksen rivit eli kulut. Yhdistää tyhjät rivit ja kannasta tulevat kulut."
   [valittu-hoitokausi kulut]
@@ -108,18 +108,10 @@
   [app]
   (tuck-apurit/post! app :hae-urakan-muutostiedot
     {:urakka-id (-> @tila/yleiset :urakka :id)
+     :hoitokaudet @u/valitun-urakan-hoitokaudet
      :valittu-hoitokausi (:valittu-hoitokausi app)}
     {:onnistui ->HaeUrakanMuutostiedotOnnistui
      :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui}))
-
-
-(defn hae-tehtava-maaramuutokset [app]
-  (tuck-apurit/post! app :hae-tehtava-maaramuutokset
-    {:urakka-id (-> @tila/yleiset :urakka :id)
-     :hoitokaudet @u/valitun-urakan-hoitokaudet
-     :valittu-hoitokausi (:valittu-hoitokausi app)}
-    {:onnistui ->HaeTehtavaMaaramuutoksetOnnistui
-     :epaonnistui ->HaeTehtavaMaaramuutoksetEpaonnistui}))
 
 
 (defn ennen-muutoksien-kayttoonotto? [valittu-hoitokausi]
@@ -143,76 +135,44 @@
         liitteet))))
 
 
+(defn- vastaus-haku-onnistui [app vastaus]
+  (assoc app
+    ;; suljetaan aina lomake kun on saatu uudet muutostiedot
+    :muokattava-muutos nil
+    :haku-kaynnissa? false
+    :tallennus-kesken? false
+    :kirjatut-muutokset (:kirjatut-muutokset vastaus)
+    :tehtava-maaramuutokset (:lasketut-muutokset vastaus)
+    :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
+    :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus)
+    :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
+    :budjettitavoitteet (:budjettitavoitteet vastaus)))
+
+
 ;; ------------------------------------
 ;; Tuck 
 (extend-protocol tuck/Event
 
-  HoitokausiVaihdettu
-  (process-event [{:keys [_urakka hoitokausi]} app]
-    (let [app (-> app
-                (assoc :valittu-hoitokausi hoitokausi))]
-      (hae-urakan-muutostiedot app)
-      (hae-tehtava-maaramuutokset app)
-      app))
-
-
-  AvaaYksikkohintaModal
-  (process-event [{:keys [valittu-modal-tehtava _tehtava_id]}
-                  {:keys [_yksikkohinta-modal-auki?] :as app}]
-    (assoc app
-      :yksikkohinta-modal-auki? true
-      :valittu-modal-tehtava valittu-modal-tehtava))
-
-
-  SuljeYksikkohintaModal
-  (process-event [_ {:keys [_yksikkohinta-modal-auki?] :as app}]
-    (assoc app
-      :valittu-modal-tehtava nil
-      :yksikkohinta-modal-auki? false))
-
-
   HaeUrakanMuutostiedot
-  (process-event [{:keys [_urakka]} app]
-    (let [;; Lupauksia voidaan hakea myös välikatselmuksesta, niin tarkistetaan hoitokauden tila sitä ennen
-          app (if (:valittu-hoitokausi app)
-                app
-                (assoc app :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (:hoitokauden-alkuvuosi app))
-                                                (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (:hoitokauden-alkuvuosi app))))]))]
-      (hae-urakan-muutostiedot app)
-      (hae-tehtava-maaramuutokset app)
-      app))
-
-
+  (process-event [_ app]
+    (hae-urakan-muutostiedot
+      (assoc
+        (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
+        :haku-kaynnissa? true
+        :valittu-hoitokausi @u/valittu-hoitokausi
+        :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet)))
+  
+  
   HaeUrakanMuutostiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (assoc app
-      ;; suljetaan aina lomake kun on saatu uudet muutostiedot
-      :muokattava-muutos nil
-      :tallennus-kesken? false ;; tallennuksen jälkeinen haku tulee tähän handleriin
-      :kirjatut-muutokset (:kirjatut-muutokset vastaus)
-      :lasketut-muutokset (:lasketut-muutokset vastaus)
-      :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
-      :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus)
-      :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
-      :budjettitavoitteet (:budjettitavoitteet vastaus)))
-
-
+    (vastaus-haku-onnistui app vastaus))
+  
+  
   HaeUrakanMuutostiedotEpaonnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Muutostietojen hakeminen epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
-
-
-  HaeTehtavaMaaramuutoksetOnnistui
-  (process-event [{:keys [vastaus]} app]
-    (assoc app :tehtava-maaramuutokset vastaus))
-
-
-  HaeTehtavaMaaramuutoksetEpaonnistui
-  (process-event [_ app]
-    (viesti/nayta-toast! "Tehtävä- ja määrämuutosten haku epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
-
+  
 
   HaeMuutoksenTiedotOnnistui
   (process-event [{vastaus :vastaus
@@ -297,7 +257,7 @@
   TallennaTehtavaMaaramuutoksetEpaonnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Tehtävä- ja määrämuutosten tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
+    (assoc app :haku-kaynnissa? false))
 
 
   TallennaYksikkohintaOnnistui
@@ -311,7 +271,22 @@
   TallennaYksikkohintaEpaonnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Yksikköhinnan tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
+    (assoc app :haku-kaynnissa? false))
+  
+
+  AvaaYksikkohintaModal
+  (process-event [{:keys [valittu-modal-tehtava _tehtava_id]}
+                  {:keys [_yksikkohinta-modal-auki?] :as app}]
+    (assoc app
+      :yksikkohinta-modal-auki? true
+      :valittu-modal-tehtava valittu-modal-tehtava))
+  
+  
+  SuljeYksikkohintaModal
+  (process-event [_ {:keys [_yksikkohinta-modal-auki?] :as app}]
+    (assoc app
+      :valittu-modal-tehtava nil
+      :yksikkohinta-modal-auki? false))
 
 
   MuokkaaMuutosta
@@ -356,6 +331,12 @@
   (process-event [{:keys [_vastaus]} app]
     (viesti/nayta-toast! "Rahavarauksien muutosten syiden tallentaminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
+  
+
+  TallennaRahavarausmuutostenSyytOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+    (vastaus-haku-onnistui app vastaus))
 
 
   ToggleTaulukonNakyvyys
@@ -382,7 +363,7 @@
         {:urakka-id (:id urakka)
          :valittu-hoitokausi (:valittu-hoitokausi app)
          :rivit (map #(select-keys % [:id :syy]) rivit)}
-        {:onnistui ->HaeUrakanMuutostiedotOnnistui         ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
+        {:onnistui ->TallennaRahavarausmuutostenSyytOnnistui
          :epaonnistui ->TallennaRahavarausmuutostenSyytEpaonnistui})
       app))
 
@@ -450,16 +431,6 @@
 
 
   LisaaSuunniteltujenMaarienMuutos
-  (process-event [_ app]
-    app)
-
-
-  ValitseUrakka
-  (process-event [{urakka :urakka} app]
-    (valitse-urakka app urakka))
-
-
-  NakymastaPoistuttiin
   (process-event [_ app]
     app)
 
