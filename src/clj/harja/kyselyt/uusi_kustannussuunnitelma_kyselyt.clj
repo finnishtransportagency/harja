@@ -183,7 +183,7 @@
       (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
       (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "harjoittelija")) [5 6 7 8]
 
-      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämä pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [10] ;; Tämä pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
       (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
       (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "päätoiminen apulainen")) [10 11 12 1 2 3 4 5 6 7 8 9]
       (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "apulainen/työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
@@ -220,7 +220,9 @@
     99)) ;; Muu toimenkuva, joka ei ole listassa
 
 (defn hae-johto-ja-hallintokorvaukset-2019-2024 [db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta]
-  (let [viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-jjh
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        hoitovuosi-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+        viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-jjh
                                     db {:urakka-id urakka-id
                                         :vuosi hoitovuoden-alkuvuosi}))
         ;; Haetaan ensin urakkakohtaiset toimenkuvat
@@ -253,6 +255,13 @@
                                     (conj uudet-toimenkuvat uusi-toimenkuva toimenkuva)
                                     (conj uudet-toimenkuvat toimenkuva))))
                         [] toimenkuvat)
+                      toimenkuvat)
+
+        ;; Urakan toimenkuviin kuuluu -2021 jälkeen aina 'valmistelukausi ennen urakka-ajan alkua'
+        ;; Mutta tuota toimenkuvaa ei voida näyttää, mikäli ei ole menossa ensimmäinen hoitovuosi.
+        ;; Poistetaan se tarpeen mukaan
+        toimenkuvat (if (> hoitovuosi-nro 1)
+                      (remove #(= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva %)) toimenkuvat)
                       toimenkuvat)
 
         ;; Järjestetään toimenkuvat järkevään järjestykseen
