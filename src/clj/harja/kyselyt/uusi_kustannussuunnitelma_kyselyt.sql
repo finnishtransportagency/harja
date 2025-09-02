@@ -281,17 +281,18 @@ VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
         'laskutettava-tyo', 'hoidonjohtopalkkio', :luoja, NOW());
 
 -- name: hae-rahavaraus-vuodelta
-SELECT kt.rahavaraus_id as rahavaraus_id,
-    COALESCE(ru.urakkakohtainen_nimi, r.nimi) AS nimi,
-        SUM(kt.summa) AS "suunniteltu-summa",
-        SUM(kt.summa_indeksikorjattu) AS "suunniteltu-summa-indeksikorjattu"
-FROM kustannusarvioitu_tyo kt
-         join rahavaraus_urakka ru on ru.urakka_id = :urakkaid AND ru.rahavaraus_id = kt.rahavaraus_id
-         join rahavaraus r on r.id = ru.rahavaraus_id
-WHERE kt.sopimus = :sopimusid
-  AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
-    OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
-GROUP BY kt.rahavaraus_id, ru.urakkakohtainen_nimi, r.nimi;
+SELECT ru.rahavaraus_id                          as rahavaraus_id,
+       COALESCE(ru.urakkakohtainen_nimi, r.nimi) AS nimi,
+       SUM(kt.summa)                             AS "suunniteltu-summa",
+       SUM(kt.summa_indeksikorjattu)             AS "suunniteltu-summa-indeksikorjattu"
+  FROM rahavaraus_urakka ru
+           LEFT JOIN kustannusarvioitu_tyo kt ON ru.rahavaraus_id = kt.rahavaraus_id
+   AND kt.sopimus = :sopimusid
+   AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
+        OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+         left join rahavaraus r on r.id = ru.rahavaraus_id
+ WHERE ru.urakka_id = :urakkaid
+GROUP BY ru.rahavaraus_id, ru.urakkakohtainen_nimi, r.nimi;
 
 -- name: paivita-rahavaraus<!
 UPDATE kustannusarvioitu_tyo
