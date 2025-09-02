@@ -350,6 +350,28 @@ WHERE ut.urakka = :urakka-id
   -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
   AND ut.hoitokausi = :hoitovuosi-nro;
 
+-- name: hae-kustannussuunnitelman-osiot
+SELECT *
+  FROM suunnittelu_kustannussuunnitelman_tila skt
+ WHERE skt.urakka = :urakkaid
+   AND skt.hoitovuosi = :hoitovuosinro;
+
+-- name: lisaa-kustannussuunnitelma-osio
+INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, luoja, vahvistaja, vahvistettu, vahvistus_pvm)
+VALUES (:urakkaid, :osio::SUUNNITTELU_OSIO, :hoitovuosi, :luoja, :vahvistaja, :vahvistettu, :vahvistus_pvm)
+ON CONFLICT DO NOTHING
+RETURNING id;
+
+-- name: paivita-kustannussuunnitelma-osio
+UPDATE suunnittelu_kustannussuunnitelman_tila
+SET vahvistettu   = :vahvistettu,
+    muokattu      = CURRENT_TIMESTAMP,
+    muokkaaja     = :muokkaaja,
+    vahvistaja    = :vahvistaja,
+    vahvistus_pvm = :vahvistus_pvm
+WHERE id = :id
+RETURNING id;
+
 -- name: paivita-tavoite-ja-kattohinta<!
 UPDATE urakka_tavoite
 SET tavoitehinta = :tavoitehinta,

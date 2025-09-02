@@ -42,7 +42,8 @@
   vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille!
   vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille!
   indeksikorjaukset-vahvistettu? paivita-tavoite-ja-kattohinta<!
-  lisaa-tavoite-ja-kattohinta<! hae-urakan-hoitovuoden-tavoitetiedot)
+  lisaa-tavoite-ja-kattohinta<! hae-urakan-hoitovuoden-tavoitetiedot
+  hae-kustannussuunnitelman-osiot lisaa-kustannussuunnitelma-osio paivita-kustannussuunnitelma-osio)
 
 (defn- laske-indeksikorjattu-summa
   "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä. Jos summaa ei ole annettu, palautetaan nil."
@@ -833,14 +834,34 @@
                     (conj puuttuvat "Johto-ja-hallintokorvaukset") puuttuvat)]
     puuttuvat))
 
+(defn paivita-kustannussuunnitelman-tila [db vahvistetut-osiot vahvista? hoitovuoden-nro urakka-id osio kayttaja-id]
+  (let [osio-olemassa (first (filter #(= (name osio) (:osio %)) vahvistetut-osiot))]
+    (if-not osio-olemassa
+      (lisaa-kustannussuunnitelma-osio db {:urakkaid urakka-id
+                                           :hoitovuosi hoitovuoden-nro
+                                           :osio osio
+                                           :luoja kayttaja-id
+                                           :vahvistaja (if vahvista? kayttaja-id nil)
+                                           :vahvistettu vahvista?
+                                           :vahvistus_pvm (if vahvista? (pvm/nyt) nil)})
+      (paivita-kustannussuunnitelma-osio db {:id (:id osio-olemassa)
+                                             :urakkaid urakka-id
+                                             :hoitovuosinro hoitovuoden-nro
+                                             :osio osio
+                                             :muokkaaja kayttaja-id
+                                             :vahvistettu vahvista?
+                                             :vahvistaja (if vahvista? kayttaja-id nil)
+                                             :vahvistus_pvm (if vahvista? (pvm/nyt) nil)}))))
+
 (defn vahvista-tavoite-ja-kattohinta [db kayttaja urakka-id vahvista? hoitovuoden-alkuvuosi]
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
-        hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+        hoitovuosinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
         vahvistus-pvm (pvm/nyt)
         hoitokauden-alkupvm (pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi))
         hoitokauden-loppupvm (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))
+        vahvistetut-osiot (hae-kustannussuunnitelman-osiot db {:urakkaid urakka-id :hoitovuosinro hoitovuosinro})
 
         ;; Vahvista kiinteähintaiset työt.
         _ (vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille! db
@@ -850,6 +871,12 @@
              :vahvista? vahvista?
              :vahvistaja (:id kayttaja)
              :vahvistus-pvm vahvistus-pvm})
+        ;; Lisää hankintakustannusosiotieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "hankintakustannukset" (:id kayttaja))
+        ;; Lisää erillishankinnat tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "erillishankinnat" (:id kayttaja))
+        ;; Lisää hoidonjohtopalkkio tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "hoidonjohtopalkkio" (:id kayttaja))
 
         ;; Rahavaraukset on näytetty tähän asti tarjouksen tiedoista. Kopioidaan ne nyt kustannusarvoitu_tyo tauluun
         ;; Hae ensin tarjouksen tiedot
@@ -880,7 +907,7 @@
                                                        summa (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-kuukausisumma kuukausisumma)]]
                                            ;; Rahavarauksesta ei voi muuttua, kuin summa
                                            (paivita-rahavaraus<! db {:summa summa
-                                                                     :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitokausinumero)
+                                                                     :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitovuosinro)
                                                                      :muokattu (pvm/nyt)
                                                                      :muokkaaja (:id kayttaja)
                                                                      :id (:id r)})))
@@ -896,10 +923,14 @@
                                                                  :tehtava_id nil
                                                                  :rahavaraus_id rahavaraus-id
                                                                  :summa summa
-                                                                 :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitokausinumero)
+                                                                 :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitovuosinro)
                                                                  :luoja (:id kayttaja)})))]
                     dbrahavaraus))
             rahavaraukset)
+
+        ;; Lisää rahavarausosio tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "tilaajan-rahavaraukset" (:id kayttaja))
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "tavoitehintaiset-rahavaraukset" (:id kayttaja))
 
         _ (vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille! db
             {:urakka-id urakka-id
@@ -915,10 +946,14 @@
              :vahvista? vahvista?
              :vahvistaja (:id kayttaja)
              :vahvistus-pvm vahvistus-pvm})
+        ;; Lisää johto-ja-hallintokorvaus tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "johto-ja-hallintokorvaus" (:id kayttaja))
         _ (vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille! db
             {:urakka-id urakka-id
              :vuosi hoitovuoden-alkuvuosi
-             :hoitovuosi-nro hoitokausinumero
+             :hoitovuosi-nro hoitovuosinro
              :vahvista? vahvista?
              :vahvistaja (:id kayttaja)
-             :vahvistus-pvm vahvistus-pvm})]))
+             :vahvistus-pvm vahvistus-pvm})
+        ;; Lisää tavoite-ja-kattohinta tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "tavoite-ja-kattohinta" (:id kayttaja))]))
