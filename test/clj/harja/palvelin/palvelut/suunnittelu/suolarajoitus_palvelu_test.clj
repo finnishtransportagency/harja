@@ -834,8 +834,7 @@
                             WHERE urakka = %s
                               AND \"hoitokauden-alkuvuosi\" = %s
                               AND maara = %s" urakka-id hk-alkuvuosi talvisuolaraja))
-        _ (t/u (format "DELETE from sopimuksen_tehtavamaarat_tallennettu
-                            WHERE urakka = %s" urakka-id))
+        _ (t/u (format "DELETE from sopimuksen_tehtavamaarat_tallennettu WHERE urakka = %s" urakka-id))
 
         _ (aseta-urakalle-talvisuolaraja talvisuolaraja urakka-id hk-alkuvuosi)
         kayttoraja {:urakka-id urakka-id
@@ -886,7 +885,10 @@
         talvisuolaraja 1000M
         sanktio_ylittavalta_tonnilta 30000M
         muokattu_sanktio_ylittavalta_tonnilta 30000M
+
+        _ (t/u (format "DELETE from sopimuksen_tehtavamaarat_tallennettu WHERE urakka = %s" urakka-id))
         _ (aseta-urakalle-talvisuolaraja talvisuolaraja urakka-id hk-alkuvuosi)
+
         kayttoraja {:urakka-id urakka-id
                     :tyyppi "kokonaismaara"
                     :hoitokauden-alkuvuosi hk-alkuvuosi
@@ -908,11 +910,11 @@
                      :hoitokauden-alkuvuosi hk-alkuvuosi})
 
         ;; Siivotaan kanta
-        _ (t/u (str "DELETE from suolasakko WHERE urakka = " urakka-id))
-        _ (t/u (str (format "DELETE from urakka_tehtavamaara
+        _ (t/u "DELETE from suolasakko WHERE urakka = " urakka-id)
+        _ (t/u (format "DELETE from urakka_tehtavamaara
                             WHERE urakka = %s
                               AND \"hoitokauden-alkuvuosi\" = %s
-                              AND maara = %s" urakka-id hk-alkuvuosi talvisuolaraja)))]
+                              AND maara = %s" urakka-id hk-alkuvuosi talvisuolaraja))]
 
     ;; Tarkistetaan tallennuksen vastauksen tiedot
     (is (not (nil? (:id uusi-kayttoraja))))
