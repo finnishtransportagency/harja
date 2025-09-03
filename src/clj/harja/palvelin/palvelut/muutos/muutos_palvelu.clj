@@ -83,7 +83,7 @@
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         alkupvm (str hoitokauden-alkuvuosi "-10-01")
         loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
-        params {:tehtava nil 
+        params {:tehtava nil
                 :tehtavaryhma nil
                 :urakka urakka-id
                 :alkupvm alkupvm
@@ -91,52 +91,56 @@
                 :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}
         vastaus (muutos-kyselyt/hae-tehtava-maaramuutokset db params)
 
-        vastaus-yksikkohinta-tarkistettu (map (fn [{:keys [maara
-                                                           yksikkohinta
-                                                           suunniteltu_maara
-                                                           tavoitehinnan_muutos
-                                                           yksikkohinnan_alkuvuosi] :as rivi}]
+        tarkistetut-rivit (map (fn [{:keys [maara
+                                            yksikkohinta
+                                            suunniteltu_maara
+                                            tavoitehinnan_muutos
+                                            yksikkohinnan_alkuvuosi] :as rivi}]
 
-                                                (let [tehtavalla-ei-toteumia? (or
-                                                                                (not (:maara rivi))
-                                                                                (<= (:maara rivi) 0))
+                                 (let [tehtavalla-ei-toteumia? (or
+                                                                 (not (:maara rivi))
+                                                                 (<= (:maara rivi) 0))
 
-                                                      ;; Jos toteumia ei ole, ei voida yksikköhintaa laskea
-                                                      ;; => Yritä hakea yksikköhinta edellisiltä vuosilta 
-                                                      kaikki-yksikkohinnat (when tehtavalla-ei-toteumia?
-                                                                             (hae-hoitovuosien-yksikkohinnat db kayttaja {:urakka-id urakka-id
-                                                                                                                          :hoitokaudet hoitokaudet
-                                                                                                                          :tehtava_id (:tehtava_id rivi)}))
-                                                      ;; Jos edellisiltä vuosilta löytyi yksikköhinta, tarjotaan niitä gridiin 
-                                                      aikaisemmat-yksikkohinnat (filter #(and
-                                                                                           ;; Vaadi että jokin yksikköhinta saatavilla 
-                                                                                           (some? (:arvo %))
-                                                                                           ;; Suodata kuluva hk pois, tulee mukaan esim jos yksikköhinnan lähde on aseta  
-                                                                                           (not= hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi %))) kaikki-yksikkohinnat)
+                                       ;; Jos  yksikköhinta on asetettu, mutta tehtävälle tuleekin toteumia
+                                       ;; tilanne täytyy pävittää kantaan jotta harja tietää mitä harjailee 
 
-                                                      loytyi-aikaisemmat-yksikkohinnat? (some? (seq aikaisemmat-yksikkohinnat))
 
-                                                      ;; Jos ei edellisiä yksikköhintojakaan löytynyt, anna kirjata tavoitehinta manuaalisesti 
-                                                      anna-kirjata-tavoitehinta? (and
-                                                                                   tehtavalla-ei-toteumia?
-                                                                                   (not loytyi-aikaisemmat-yksikkohinnat?))
+                                       ;; Jos toteumia ei ole, ei voida yksikköhintaa laskea
+                                       ;; => Yritä hakea yksikköhinta edellisiltä vuosilta 
+                                       kaikki-yksikkohinnat (when tehtavalla-ei-toteumia?
+                                                              (hae-hoitovuosien-yksikkohinnat db kayttaja {:urakka-id urakka-id
+                                                                                                           :hoitokaudet hoitokaudet
+                                                                                                           :tehtava_id (:tehtava_id rivi)}))
+                                       ;; Jos edellisiltä vuosilta löytyi yksikköhinta, tarjotaan niitä gridiin 
+                                       aikaisemmat-yksikkohinnat (filter #(and
+                                                                            ;; Vaadi että jokin yksikköhinta saatavilla 
+                                                                            (some? (:arvo %))
+                                                                            ;; Suodata kuluva hk pois, tulee mukaan esim jos yksikköhinnan lähde on aseta  
+                                                                            (not= hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi %))) kaikki-yksikkohinnat)
 
-                                                      ;; Hae nykyhetken asetettu hoitokauden yksikköhinta 
-                                                      asetettu-yksikkohinta (filter #(= (:hoitokauden-alkuvuosi %) yksikkohinnan_alkuvuosi)
-                                                                              kaikki-yksikkohinnat)
-                                                      yksikkohinta (or (-> asetettu-yksikkohinta first :arvo) yksikkohinta 0.0)
+                                       loytyi-aikaisemmat-yksikkohinnat? (some? (seq aikaisemmat-yksikkohinnat))
 
-                                                      ;; Määrämuutos  =  Toteutunut määrä - suunniteltu määrä 
-                                                      ;; Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
-                                                      tavoitehinnan_muutos (or tavoitehinnan_muutos
-                                                                             (* (- maara suunniteltu_maara) yksikkohinta))]
+                                       ;; Jos ei edellisiä yksikköhintojakaan löytynyt, anna kirjata tavoitehinta manuaalisesti 
+                                       anna-kirjata-tavoitehinta? (and
+                                                                    tehtavalla-ei-toteumia?
+                                                                    (not loytyi-aikaisemmat-yksikkohinnat?))
 
-                                                  (assoc rivi
-                                                    :yksikkohinta yksikkohinta
-                                                    :tavoitehinnan_muutos tavoitehinnan_muutos
-                                                    :aikaisemmat-yksikkohinnat aikaisemmat-yksikkohinnat
-                                                    :anna-kirjata-tavoitehinta? anna-kirjata-tavoitehinta?))) vastaus)]
-    vastaus-yksikkohinta-tarkistettu))
+                                       ;; Hae nykyhetken asetettu hoitokauden yksikköhinta 
+                                       asetettu-yksikkohinta (filter #(= (:hoitokauden-alkuvuosi %) yksikkohinnan_alkuvuosi)
+                                                               kaikki-yksikkohinnat)
+                                       yksikkohinta (or (-> asetettu-yksikkohinta first :arvo) yksikkohinta 0.0)
+
+                                       ;; Määrämuutos  =  Toteutunut määrä - suunniteltu määrä 
+                                       ;; Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
+                                       tavoitehinnan_muutos (or tavoitehinnan_muutos
+                                                              (* (- maara suunniteltu_maara) yksikkohinta))]
+
+                                   (assoc rivi
+                                     :yksikkohinta yksikkohinta
+                                     :tavoitehinnan_muutos tavoitehinnan_muutos
+                                     :aikaisemmat-yksikkohinnat aikaisemmat-yksikkohinnat
+                                     :anna-kirjata-tavoitehinta? anna-kirjata-tavoitehinta?))) vastaus)]
+    tarkistetut-rivit))
 
 
 (defn tallenna-tehtava-maaramuutokset

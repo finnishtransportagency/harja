@@ -377,10 +377,8 @@
 
      ;; Jätetään "Aseta yksikköhinta"" valinta riville jos se on asetettu  
      ;; -> eli mahdollisuus päivittää 
-     ;; Päivitetään näkymään tullessa valittu yksikkö hinta jos mahdollista (mikäli data muuttunut) 
-     ;; Jos ei saatavilla, valitaa ei näytetä, vaan annetaan kirjata tavoitehinnan muutos manuaalisesti 
+     ;; Haetaan näkymään tullessa aina nykytilanne (mikäli data muuttunut) 
      ;; Jos kirjattu tavoitehinta manuaalisesti, ja viimevuoden dataa tulee, anna "aseta yksikköhinta" valinta 
-     ;; Aina kun valitaan ""Aseta yksikköhinta"" ->  ota muokkaus vaihtoehto pois tavoitehinnasta (ei voi kirjata manuaalisesti enää) 
      ]))
 
 

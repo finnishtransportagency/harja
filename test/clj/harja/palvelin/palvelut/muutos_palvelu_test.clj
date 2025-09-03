@@ -482,6 +482,37 @@
                             :valittu-hoitokausi valittu-hoitokausi})))
 
 
+(defn- tallenna-maaramuutokset [rivi tallenna-yksikkohinta?]
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hoitokaudet (mapv (fn [vuosi]
+                            [(pvm/hoitokauden-alkupvm vuosi)
+                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                      (range 2021 2026))
+        valittu-hoitokausi (last hoitokaudet)
+
+        params {:urakka-id urakka-id
+                :hoitokaudet hoitokaudet
+                :valittu-hoitokausi valittu-hoitokausi}
+        
+        ;; Testataan molemmant endpointit tällä 
+        ;; Ainoa mikä parametreissa muuttuu, on rivi 
+        ;; tallenna-maaramuutos-yksikkohinta =>  passataan pelkkä rivi {..}
+        ;; tallenna-tehtava-maaramuutokset => passataan muokatut rivit grid vectorina [{..}]
+        params (merge params
+                 (if tallenna-yksikkohinta?
+                   {:rivi rivi}
+                   {:rivit rivi}))
+
+        endpoint (if tallenna-yksikkohinta?
+                   :tallenna-maaramuutos-yksikkohinta
+                   :tallenna-tehtava-maaramuutokset)]
+
+    (kutsu-palvelua (:http-palvelin jarjestelma)
+      endpoint
+      +kayttaja-jvh+
+      params)))
+
+
 (deftest hae-tehtava-maaramuutokset-toimii
   (let [maaramuutokset (hae-maaramuutos-alkutiedot)
         reunapaalujen-uusiminen (first maaramuutokset)
@@ -549,24 +580,41 @@
         ;; Lisää toteuma 
         _ (i (format
                "INSERT INTO toteuma 
-                  (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) 
-                  VALUES (%s, 'harja-ui'::lahde, %s, %s, 
-                  '2025-11-30 17:00:00.000000', '2025-11-30 17:00:00.000000', '2025-11-30 18:05:00.000000', 
-                  NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 1');"
+                (
+                luoja, lahde, urakka, sopimus, 
+                luotu, alkanut, paattynyt, 
+                suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto
+                ) 
+                VALUES (
+                %s, 'harja-ui'::lahde, %s, %s, 
+                '2025-11-30 17:00:00.000000', '2025-11-30 17:00:00.000000', '2025-11-30 18:05:00.000000', 
+                NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 1'
+                );"
                (:id +kayttaja-jvh+) urakka-id sopimus-id))
 
         _ (i (format
-               "INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto) 
-                VALUES (%s, (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 1'), 
-                '2025-11-30 17:00:00.000000', %s, %s, %s, '[Muutokset] Määrämitattava toteuma 1');"
+               "INSERT INTO toteuma_tehtava (
+                luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto
+                ) 
+                VALUES (
+                %s, (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 1'), 
+                '2025-11-30 17:00:00.000000', %s, %s, %s, '[Muutokset] Määrämitattava toteuma 1'
+                );"
                (:id +kayttaja-jvh+) tehtava_id lisatty-toteuma urakka-id))
 
         ;; Lisää kulu tehtävälle 
         _ (i (format
                "INSERT INTO kulu 
-                (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi)
-                VALUES (%s,'2026-06-01',%s,'2025-09-01 14:18:52.450004',
-                %s,NULL,NULL,false,NULL,'[Muutokset] Määrämitattava','kesakuu/5-hoitovuosi');"
+                (
+                kokonaissumma, erapaiva, urakka,
+                luotu, luoja, muokattu, muokkaaja, poistettu,
+                laskun_numero, lisatieto, koontilaskun_kuukausi
+                ) 
+                VALUES ( 
+                %s, '2026-06-01', %s,
+                '2025-09-01 14:18:52.450004', %s, NULL, NULL, false,
+                NULL, '[Muutokset] Määrämitattava', 'kesakuu/5-hoitovuosi'
+                );"
                lisatty-kulu urakka-id (:id +kayttaja-jvh+)))
 
         toimenpide-instanssi (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 Liikenneympäristön hoito TP")
@@ -574,11 +622,17 @@
 
         _ (i (format
                "INSERT INTO kulu_kohdistus 
-                (rivi,kulu,summa,toimenpideinstanssi,tehtavaryhma,maksueratyyppi,luotu,luoja,muokattu,
-                muokkaaja,poistettu,lisatyon_lisatieto,rahavaraus_id,tyyppi,tavoitehintainen,tehtava) 
-                VALUES (0, (SELECT id FROM kulu WHERE kokonaissumma = %s AND erapaiva = '2026-06-01'),
-                %s, %s, %s, 'kokonaishintainen','2025-09-01 14:18:52.450',
-                %s,NULL,NULL,false,NULL,NULL,'hankintakulu',true, %s);"
+                ( 
+                rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi,
+                luotu, luoja, muokattu, muokkaaja, poistettu,
+                lisatyon_lisatieto, rahavaraus_id, tyyppi, tavoitehintainen,tehtava 
+                ) 
+                VALUES ( 
+                0, (SELECT id FROM kulu WHERE kokonaissumma = %s AND erapaiva = '2026-06-01'),
+                %s, %s, %s, 'kokonaishintainen',
+                '2025-09-01 14:18:52.450', %s, NULL, NULL, false,
+                NULL, NULL, 'hankintakulu', true, %s
+                );"
                lisatty-kulu lisatty-kulu
                toimenpide-instanssi tehtavaryhma (:id +kayttaja-jvh+) tehtava_id))
 
@@ -623,3 +677,113 @@
              (* maaramuutos yksikkohinta)) "Tavoitehinnan muutos = määrämuutos * yksikköhinta")
       (is (= yksikkohinta
              (/ kulut toteumat)) "Yksikköhinta = kulut / toteumat"))))
+
+
+(deftest tallenna-tehtava-maaramuutokset-toimii
+  (let [maaramuutokset (hae-maaramuutos-alkutiedot)
+        ;; --------------------------------------------------------
+        ;; Haetut 
+        opastetaulun-uusiminen (second maaramuutokset)
+        suunniteltu (-> opastetaulun-uusiminen :suunniteltu_maara)
+        kulut (-> opastetaulun-uusiminen :kirjatut_kulut_summa)
+        toteumat (-> opastetaulun-uusiminen :maara)
+        maaramuutos (-> opastetaulun-uusiminen :maaramuutos)
+        tav-hinta-muutos (-> opastetaulun-uusiminen :tavoitehinnan_muutos)
+        yksikkohinta (-> opastetaulun-uusiminen :yksikkohinta)
+        aikaisemmat-yksikkohinnat (-> opastetaulun-uusiminen :aikaisemmat-yksikkohinnat)
+        anna-kirjata? (-> opastetaulun-uusiminen :anna-kirjata-tavoitehinta?)
+        ;; Valitse yksikköhinta, ja tallenna se 
+        tallenna-yksikkohinta? true
+        ;; Valitse ensimmäinen alasvedossa oleva yksikköhinta 
+        yksikkohinta-valinta (-> aikaisemmat-yksikkohinnat first :arvo)
+        yksikkohinta-valinta-hk (-> aikaisemmat-yksikkohinnat first :hoitokauden-alkuvuosi)
+
+        
+        ;; ----------------------------------------
+        ;; Yksikköhinta tallennus 
+        tallenna-rivi (-> opastetaulun-uusiminen
+                        ;; Lisää riviin yksikköhinta, sekä sen alkuvuosi, ja kutsu tähän tallenna 
+                        (assoc
+                          ;; Yksikköhinta asetetaan -> lähde on aseta 
+                          :yksikkohinnan_lahde "aseta"
+                          :yksikkohinta yksikkohinta-valinta
+                          :yksikkohinnan_alkuvuosi yksikkohinta-valinta-hk))
+
+        _ (tallenna-maaramuutokset tallenna-rivi tallenna-yksikkohinta?)
+
+        ;; --------------------------------------------------------
+        ;; Tallennetut (yksikköhinta)
+        tallennetut-maaramuutokset (hae-maaramuutos-alkutiedot)
+        opastetaulun-uusiminen-tallennettu (second tallennetut-maaramuutokset)
+        maaramuutos-t (-> opastetaulun-uusiminen-tallennettu :maaramuutos)
+        tav-hinta-muutos-t (-> opastetaulun-uusiminen-tallennettu :tavoitehinnan_muutos)
+        yksikkohinta-t (-> opastetaulun-uusiminen-tallennettu :yksikkohinta)
+        suunniteltu-t (-> opastetaulun-uusiminen-tallennettu :suunniteltu_maara)
+        toteumat-t (-> opastetaulun-uusiminen-tallennettu :maara)
+
+
+        ;; --------------------------------------------------------
+        ;; Grid tallennus 
+        tallenna-yksikkohinta? false
+        runkopuiden-poisto (nth maaramuutokset 2)
+        palteiden-poisto (nth maaramuutokset 3)
+        maakiven-poisto (nth maaramuutokset 4)
+        manuaali-muutos 123123123
+        syy-1 "Muutoksia 1"
+        syy-2 "Muutoksia 2"
+        syy-3 "Muutoksia 3"
+
+        ;; Laitetaan rivit grid dataksi, eli vec [ {..} {..} ]
+        rivit (vec (conj []
+                     (assoc runkopuiden-poisto
+                       :syy syy-1
+                       :tavoitehinnan_muutos manuaali-muutos
+                       :yksikkohinnan_lahde "manuaali")
+
+                     (assoc palteiden-poisto :syy syy-2)
+                     (assoc maakiven-poisto :syy syy-3)))
+
+        _ (tallenna-maaramuutokset rivit tallenna-yksikkohinta?)
+
+        tallennetut-grid (hae-maaramuutos-alkutiedot)
+        runkopuiden-poisto-t (nth tallennetut-grid 2)
+        palteiden-poisto-t (nth tallennetut-grid 3)
+        maakiven-poisto-t (nth tallennetut-grid 4)
+
+        runko-lahde (-> runkopuiden-poisto-t :yksikkohinnan_lahde)
+        runko-tav-hinta (-> runkopuiden-poisto-t :syotetty_tavoitehintamuutos)
+        runko-syy (-> runkopuiden-poisto-t :syy)
+        palteet-syy (-> palteiden-poisto-t :syy)
+        maakivi-syy (-> maakiven-poisto-t :syy)]
+
+
+    (testing "Opastetaulun uusiminen vastaa testidataa"
+      (is (= suunniteltu 20M))
+      (is (= kulut 0M))
+      (is (= toteumat 0M))
+      (is (= maaramuutos -20M))
+      (is (= tav-hinta-muutos 0.0))
+      (is (= yksikkohinta 0.0))
+      (is (= 2 (count aikaisemmat-yksikkohinnat)))
+      (is (false? anna-kirjata?)))
+
+
+    (testing "Yksikköhinnan tallennus toimii"
+      (is (= (-> opastetaulun-uusiminen-tallennettu :yksikkohinnan_alkuvuosi) yksikkohinta-valinta-hk)
+        "Rivi vastaa tallennettua arvoa")
+      (is (= (-> opastetaulun-uusiminen-tallennettu :yksikkohinnan_lahde) "aseta") "Lähde on aseta (yksikköhinta asetettu)"))
+
+
+    (testing "Kaavat täsmää yksikköhinnan valinnan jälkeen"
+      (is (= maaramuutos-t
+             (- toteumat-t suunniteltu-t)) "Määrämuutos = toteumat - suunniteltu")
+      (is (= tav-hinta-muutos-t
+             (* maaramuutos-t yksikkohinta-t)) "Tavoitehinnan muutos = määrämuutos * yksikköhinta"))
+
+
+    (testing "Grid tallennus toimii"
+      (is (= runko-lahde "manuaali"))
+      (is (= runko-tav-hinta (bigdec manuaali-muutos)))
+      (is (= runko-syy syy-1))
+      (is (= palteet-syy syy-2))
+      (is (= maakivi-syy syy-3)))))

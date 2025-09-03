@@ -217,7 +217,6 @@
                       :urakka-id (-> @tila/yleiset :urakka :id)
                       :hoitokaudet @u/valitun-urakan-hoitokaudet
                       :valittu-hoitokausi (:valittu-hoitokausi app)}]
-      ;; 
       ;; Kutsutaan gridin tallenna napista, ei modalista 
       (tuck-apurit/post! app :tallenna-tehtava-maaramuutokset
         parametrit
@@ -230,7 +229,6 @@
   TallennaYksikkohinta
   (process-event [{:keys [rivi]}
                   {:keys [_valittu-rivi] :as app}]
-    ;; 
     ;; Kutsutaan kun modalista tallennetaan valittu yksikköhinta 
     (let [parametrit {:rivi rivi
                       :urakka-id (-> @tila/yleiset :urakka :id)
@@ -241,9 +239,10 @@
         parametrit
         {:onnistui ->TallennaYksikkohintaOnnistui
          :epaonnistui ->TallennaYksikkohintaEpaonnistui})
-      ;; Anna jokin loaderi flagi, tässä voi kestää sekunti  
       (-> app
-        (assoc :haku-kaynnissa? true))))
+        (assoc 
+          :haku-kaynnissa? true
+          :yksikkohinta-modal-auki? false))))
 
 
   TallennaTehtavaMaaramuutoksetOnnistui
