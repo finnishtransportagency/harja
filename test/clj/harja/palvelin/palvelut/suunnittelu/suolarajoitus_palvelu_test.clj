@@ -817,9 +817,10 @@
         _ (t/u (str (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
         (%s, %s, %s, %s)" urakka-id hk-alkuvuosi suolaus-tehtava-id talvisuolaraja)))
 
-        ;; Merkitse urakan sopimus tallennetuksi
-        _ (t/u (str (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s,true)"
-                      urakka-id)))]))
+        ;; Tarjouksen määrät pitää merkata vielä tallennetuksi 
+        ;; Mutta, tämä on nykyisessä testidatassa tehty jo. jätän tämän kommentin, voi olla arvokas 
+        ;; _ (t/u  (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s,true)"urakka-id))
+        ]))
 
 (deftest tallenna-ja-hae-suolarajoituksen-kokonaiskayttoraja-onnistuu-mhu-test
   (let [ ;; Kokonais talvisuolaraja on tallennettu tehtäviin ja määriin tehtävälle "Suolaus"
