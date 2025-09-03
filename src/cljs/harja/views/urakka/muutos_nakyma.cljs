@@ -392,34 +392,15 @@
     :otsikko "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"
     :summa (reduce + 0 (map :tavoitehinnan-muutos lasketut-muutokset))
     :toiminnot (fn [_e! _app]
-                 ;; Tämä muokkaus mahdollistaa vain syyn lisäämisen
                  [:span
-                  [yleiset/vihje "Tavoitehintamuutosten laskennassa käytetään Harjan suunniteltuja ja toteutuneita määriä sekä palvelusopimuksen mukaisia kaavoja."]])
+                  [yleiset/vihje (str 
+                                   "Tavoitehintamuutosten laskennassa käytetään Harjan suunniteltuja ja toteutuneita määriä sekä palvelusopimuksen mukaisia kaavoja. " 
+                                   "Kirjatun määrän puuttuessa yksikköhinnan voi asettaa aikaisempien hoitovuosien perusteella. " 
+                                   "Yksikköhintatietojen puuttuessa tulee tavoitehinnan muutos asettaa käsin.")]])
     
     :taulukko
     (fn [e! _app]
-      ;; Design haluaa taulukkoon väliotsikot, joten tehdään datalle hieman taikoja
-      ;; Lisätään toimenpiderivien väliin mappi, formaatilla {:valiotsikko "Nimi"}, jossa ei ole mitään muuta sisällä 
-      (let [fn-lisaa-valiotsikot (fn [rivit]
-                                   ;; Ottaa listan, joista jokainen sisältää :toimenpide avaimen
-                                   ;; Palauttaa vektorin, jossa jokaista *uutta* :toimenpide -arvoa kohden 
-                                   ;; lisätään ylimääräinen {:valiotsikko <toimenpide>} ennen ensimmäistä riviä.
-                                   (let [step (fn [[nahty acc] rivi]
-                                                (let [tp (:toimenpide rivi)]
-                                                  (if (contains? nahty tp)
-                                                    ;; kyseinen toimenpide on jo nähty 
-                                                    [nahty (conj acc rivi)]
-                                                    ;; toimenpide ilmestyy ensimmäistä kertaa, lisää väliotsikko
-                                                    [(conj nahty tp)
-                                                     (conj acc {:valiotsikko tp :id (gensym)} rivi)])))]
-                                     ;; bob eno 
-                                     (->> rivit
-                                       (reduce step [#{} []])
-                                       second)))
-
-            tehtava-maaramuutokset (fn-lisaa-valiotsikot tehtava-maaramuutokset)
-
-            ;; Värjätään tällä väliotsikot design mukaiseksi 
+      (let [;; Värjätään tällä väliotsikot design mukaiseksi 
             solun-luokka-fn (fn [_arvo rivi]
                               (when (or 
                                       haku-kaynnissa? 

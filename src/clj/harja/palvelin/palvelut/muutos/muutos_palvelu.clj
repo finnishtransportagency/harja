@@ -78,7 +78,9 @@
 
 
 (defn hae-tehtava-maaramuutokset
-  [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet] :as _tiedot}]
+  [db 
+   {:keys [id] :as kayttaja} 
+   {:keys [urakka-id valittu-hoitokausi hoitokaudet] :as _tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         alkupvm (str hoitokauden-alkuvuosi "-10-01")
@@ -91,18 +93,66 @@
                 :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}
         vastaus (muutos-kyselyt/hae-tehtava-maaramuutokset db params)
 
-        tarkistetut-rivit (map (fn [{:keys [maara
-                                            yksikkohinta
+        fn-lisaa-valiotsikot (fn [rivit]
+                               ;; Ottaa gridin rivit, joista jokainen sisältää :toimenpide arvon 
+                               ;; Jokaista uutta :toimenpide -arvoa kohden lisätään {:valiotsikko <toimenpide>} 
+                               (let [step (fn [[nahty acc] rivi]
+                                            (let [tp (:toimenpide rivi)]
+                                              (if (contains? nahty tp)
+                                                ;; kyseinen toimenpide on jo nähty 
+                                                [nahty (conj acc rivi)]
+                                                ;; toimenpide ilmestyy ensimmäistä kertaa, lisää väliotsikko
+                                                [(conj nahty tp)
+                                                 (conj acc {:valiotsikko tp :id (gensym)} rivi)])))]
+
+                                 (->> rivit
+                                   (reduce step [#{} []]) second)))
+
+        tarkistetut-rivit (map (fn [{:keys [syy
+                                            maara
+                                            tehtava_id
                                             suunniteltu_maara
-                                            tavoitehinnan_muutos
+                                            kirjatut_kulut_summa
                                             yksikkohinnan_alkuvuosi] :as rivi}]
 
                                  (let [tehtavalla-ei-toteumia? (or
-                                                                 (not (:maara rivi))
-                                                                 (<= (:maara rivi) 0))
+                                                                 (not maara)
+                                                                 (<= maara 0))
+
+                                       ;; Yksikköhinta = kulut / toteumat 
+                                       laskettu-yksikkohinta (when
+                                                               (and
+                                                                 (> (bigdec maara) 0M)
+                                                                 (> (bigdec kirjatut_kulut_summa) 0M))
+                                                               (with-precision 4
+                                                                 (/ (bigdec kirjatut_kulut_summa) (bigdec maara))))
+
+                                       laskettu-maaramuutos (- maara suunniteltu_maara)
 
                                        ;; Jos  yksikköhinta on asetettu, mutta tehtävälle tuleekin toteumia
                                        ;; tilanne täytyy pävittää kantaan jotta harja tietää mitä harjailee 
+                                       rivi (if (and
+                                                  (> maara 0) ;; tälle vuodelle olemassa toteumia 
+                                                  yksikkohinnan_alkuvuosi) ;; mutta yksikköhinta asetettu? => päivitä kanta 
+                                              (do
+                                                (muutos-kyselyt/paivita-tehtava-maaramuutos<! db {:syy syy
+                                                                                                  :lahde "laskettu"
+                                                                                                  :kayttaja id
+                                                                                                  :urakka urakka-id
+                                                                                                  :tehtava tehtava_id
+                                                                                                  :hk_alkuvousi hoitokauden-alkuvuosi
+                                                                                                  :yksikkohinta_hk_alkuvuosi nil
+                                                                                                  :kasin_syotetty_tavoitehinta nil})
+                                                (assoc rivi
+                                                  :lahde "laskettu"
+                                                  :yksikkohinta_hk_alkuvuosi nil
+                                                  :kasin_syotetty_tavoitehinta nil
+                                                  :yksikkohinta laskettu-yksikkohinta
+                                                  ;; Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
+                                                  :tavoitehinnan_muutos (*
+                                                                         laskettu-maaramuutos
+                                                                         laskettu-yksikkohinta)))
+                                              rivi)
 
 
                                        ;; Jos toteumia ei ole, ei voida yksikköhintaa laskea
@@ -128,18 +178,25 @@
                                        ;; Hae nykyhetken asetettu hoitokauden yksikköhinta 
                                        asetettu-yksikkohinta (filter #(= (:hoitokauden-alkuvuosi %) yksikkohinnan_alkuvuosi)
                                                                kaikki-yksikkohinnat)
-                                       yksikkohinta (or (-> asetettu-yksikkohinta first :arvo) yksikkohinta 0.0)
+
+                                       yksikkohinta (or
+                                                      (-> asetettu-yksikkohinta first :arvo)
+                                                      (:yksikkohinta rivi)
+                                                      0.0)
 
                                        ;; Määrämuutos  =  Toteutunut määrä - suunniteltu määrä 
                                        ;; Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
-                                       tavoitehinnan_muutos (or tavoitehinnan_muutos
+                                       tavoitehinnan_muutos (or (:tavoitehinnan_muutos rivi)
                                                               (* (- maara suunniteltu_maara) yksikkohinta))]
 
                                    (assoc rivi
                                      :yksikkohinta yksikkohinta
                                      :tavoitehinnan_muutos tavoitehinnan_muutos
                                      :aikaisemmat-yksikkohinnat aikaisemmat-yksikkohinnat
-                                     :anna-kirjata-tavoitehinta? anna-kirjata-tavoitehinta?))) vastaus)]
+                                     :anna-kirjata-tavoitehinta? anna-kirjata-tavoitehinta?))) vastaus)
+        
+        ;; Lisätään taulukkoon vielä design mukaiset väliotsikot
+        tarkistetut-rivit (fn-lisaa-valiotsikot tarkistetut-rivit)]
     tarkistetut-rivit))
 
 

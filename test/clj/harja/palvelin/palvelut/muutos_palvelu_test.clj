@@ -475,11 +475,16 @@
         hae-maaramuutokset-fn #(kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-tehtava-maaramuutokset
                                  +kayttaja-jvh+
-                                 %)]
-    
-    (hae-maaramuutokset-fn {:urakka-id urakka-id
-                            :hoitokaudet hoitokaudet
-                            :valittu-hoitokausi valittu-hoitokausi})))
+                                 %)
+
+        maaramuutokset (hae-maaramuutokset-fn {:urakka-id urakka-id
+                                               :hoitokaudet hoitokaudet
+                                               :valittu-hoitokausi valittu-hoitokausi})
+        ;; Bäkkärissä lisätään gridiin väliotsikot 
+        ;; otetaan ne pois, palautetaan raaka data 
+        maaramuutokset-ei-valiotsikoita (filter #(not (:valiotsikko %)) maaramuutokset)]
+
+    maaramuutokset-ei-valiotsikoita))
 
 
 (defn- tallenna-maaramuutokset [rivi tallenna-yksikkohinta?]
@@ -521,11 +526,12 @@
         toteumat (-> reunapaalujen-uusiminen :maara)
         maaramuutos (-> reunapaalujen-uusiminen :maaramuutos)
         tav-hinta-muutos (-> reunapaalujen-uusiminen :tavoitehinnan_muutos)
-        yksikkohinta (-> reunapaalujen-uusiminen :yksikkohinta)]
+        yksikkohinta (-> reunapaalujen-uusiminen :yksikkohinta)
+        toimenpide (-> reunapaalujen-uusiminen :toimenpide)]
 
     
     (testing "Tehtävä määrähaku palauttaa vastauksen"
-      (is (= (-> reunapaalujen-uusiminen :toimenpide)
+      (is (= toimenpide
              "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen")
         "Toimenpide nimi täsmää")
       
