@@ -78,6 +78,75 @@
       [:div.col-xs-3.oikealle [:strong (fmt/euro-opt true yht)]]
       [:div.col-xs-3.oikealle [:strong (fmt/euro-opt yht-indeksikorjattu)]]]]))
 
+(defn muut-kulut-vetolaatikko
+  "Muut kulut ei ole toimenkuva, joten joudumme renderöimään sen vetolaatikon eritavalla"
+  [e! vetolaatikon-muokkaus kuukaudet vahvistettu?]
+  (let [voi-muokata? (and (not vahvistettu?) vetolaatikon-muokkaus)
+        muokkaus-kuukaudet (into {} (mapv (fn [kuukausi]
+                                            {(:kalenterikuukausi kuukausi) kuukausi})
+                                      kuukaudet))
+        kuukaudet-atom (r/atom muokkaus-kuukaudet)]
+    [:div
+     [kentat/tee-kentta {:tyyppi :checkbox
+                         :teksti "Suunnittele kuukausittain"
+                         :disabled? vahvistettu?
+                         :valitse! #(e! (kust-tiedot/->ToggleVetolaatikonMuokkaus (-> % .-target .-checked)))}
+      vetolaatikon-muokkaus]
+     [:div.vetolaatikko-border {:style {:border-left "4px solid lightblue" :padding-left "18px"}}
+      [grid/muokkaus-grid
+       {:id (str "kuukausitaulukko-muut-kulut")
+        :voi-poistaa? (constantly false)
+        :voi-lisata? false
+        :piilota-toiminnot? true
+        :muokkauspaneeli? false
+        :jarjesta (juxt :vuosi :kuukausi)
+        :voi-muokata? (not vahvistettu?)
+        :on-rivi-blur (fn [kuukausi-rivi]
+                        (let [muut-kulut-toimenkuva (first (filter
+                                                  #(= "Muut kulut" (:toimenkuva %))
+                                                  @yhteiset/grid-johto-ja-hallintokorvaukset-atom))
+                              toimenkuvat-ilman-muutettavaa (remove
+                                                              #(= "Muut kulut" (:toimenkuva %))
+                                                              @yhteiset/grid-johto-ja-hallintokorvaukset-atom)
+                              valittu-kuukausi (first (filter
+                                                        (fn [kuukausi]
+                                                          (and (= (:kuukausi kuukausi-rivi) (:kuukausi kuukausi))
+                                                            (= (:vuosi kuukausi-rivi) (:vuosi kuukausi))))
+                                                        (:kuukaudet muut-kulut-toimenkuva)))
+                              kuukaudet-ilman-valittua (remove
+                                                         (fn [kuukausi]
+                                                           (and (= (:kuukausi kuukausi-rivi) (:kuukausi kuukausi))
+                                                             (= (:vuosi kuukausi-rivi) (:vuosi kuukausi))))
+                                                         (:kuukaudet muut-kulut-toimenkuva))
+
+                              valittu-kuukausi (assoc valittu-kuukausi :yhteensa-kk (:yhteensa-kk kuukausi-rivi))
+                              uudet-kuukaudet (sort-by :vuosi :kuukausi (conj kuukaudet-ilman-valittua valittu-kuukausi))
+
+
+                              ;; Lasketaan suunniteltu määrä uusiksi.
+                              kuukaudet (map (fn [rivi]
+                                               (assoc rivi :yhteensa-kk (if (:yhteensa-kk rivi) (:yhteensa-kk rivi) 0)))
+                                          uudet-kuukaudet)
+                              suunniteltu-yht (apply + (map #(if (:yhteensa-kk %) (:yhteensa-kk %) 0) kuukaudet))
+                              muut-kulut (assoc muut-kulut-toimenkuva
+                                           :tunnit nil
+                                           :tuntipalkka nil
+                                           :kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
+                                           :summa suunniteltu-yht
+                                           :summa-indeksikorjattu nil) ;; indeksikorjaus lasketaan bäckendissä
+                              _ (reset! yhteiset/tallenna-painettu false)
+                              uudet-toimenkuvat (sort-by :id (conj toimenkuvat-ilman-muutettavaa muut-kulut))
+                              _ (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom uudet-toimenkuvat)
+                              _ (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset uudet-toimenkuvat))]))
+        :voi-kumota? false}
+       [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "40%"
+         :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
+        {:otsikko "Yhteensa (€)" :nimi :yhteensa-kk :leveys "20%" :tyyppi :euro :tasaa :oikea
+         :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
+        {:otsikko "Indeksikorjattu (€)" :nimi :yhteensa-indeksikorjattu-kk :leveys "20%" :tyyppi :euro :tasaa :oikea
+         :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
+       kuukaudet-atom]]]))
+
 (defn toimenkuvat-vetolaatikko-2019
   "Anna parametrina valittu toimenkuva sekä kaikki mahdolliset kuukaudet, joita voidaan muokata."
   [e! vetolaatikon-muokkaus toimenkuva-id kuukaudet vahvistettu?]
@@ -99,6 +168,7 @@
         :voi-lisata? false
         :piilota-toiminnot? true
         :muokkauspaneeli? false
+        :jarjesta (juxt :vuosi :kuukausi)
         :voi-muokata? (not vahvistettu?)
         :on-rivi-blur (fn [kuukausi-rivi]
                         (let [toimenkuva (first (filter
@@ -152,7 +222,17 @@
   (let [muokkaus-toimenkuvat (into {} (mapv (fn [toimenkuva]
                                               {(:nimike toimenkuva) toimenkuva})
                                         johto-ja-hallintokorvaukset))
-        toimenkuvat-atom (r/atom muokkaus-toimenkuvat)]
+        toimenkuvat-atom (r/atom muokkaus-toimenkuvat)
+
+        voiko-muokata? (fn [rivi voi-muokata? on-muu-kulu-kolumni?]
+                         (cond
+                           (and (= "Muut kulut" (:toimenkuva rivi)) voi-muokata? on-muu-kulu-kolumni?)
+                           true
+                           (and (= "Muut kulut" (:toimenkuva rivi)) (false? voi-muokata?))
+                           false
+                           (not= "Muut kulut" (:toimenkuva rivi))
+                           voi-muokata?
+                           :else false))]
     [grid/muokkaus-grid
      {:otsikko ""
       :id "toimenkuvat-taulukko"
@@ -164,16 +244,29 @@
                                                          #(= (:id rivi) (:id %))
                                                          @yhteiset/grid-johto-ja-hallintokorvaukset-atom))
                             muokattu-toimenkuva (assoc muokattu-toimenkuva
-                                                  :tunnit (if (= nil (:tunnit rivi)) 0 (:tunnit rivi)) ;; nil arvoa käytetään, jos tunnit eivät ole samat kaikissa kuukausissa
-                                                  :tuntipalkka (:tuntipalkka rivi))
+                                                  :tunnit (if (and (not= (:toimenkuva rivi) "Muut kulut") (= nil (:tunnit rivi))) 0 (:tunnit rivi)) ;; nil arvoa käytetään, jos tunnit eivät ole samat kaikissa kuukausissa
+                                                  :tuntipalkka (if (and (not= (:toimenkuva rivi) "Muut kulut") (= nil (:tuntipalkka rivi))) 0 (:tuntipalkka rivi))
+                                                  :summa (:summa rivi))
                             toimenkuvat-ilman-muutettavaa (remove
                                                             #(= (:id rivi) (:id %))
                                                             @yhteiset/grid-johto-ja-hallintokorvaukset-atom)
                             uudet-toimenkuvat (sort-by :id (conj toimenkuvat-ilman-muutettavaa muokattu-toimenkuva))
                             toimenkuvat (reduce (fn [uudet-toimenkuvat toimenkuva]
                                                   (let [;; Laske toimenkuvan kokonaissumma kuudaudelle
-                                                        summa (if (and (:tuntipalkka toimenkuva) (:tunnit toimenkuva)) (* (:tunnit toimenkuva) (:tuntipalkka toimenkuva)) 0)
+                                                        summa (cond
+                                                                ;; Toimenkuvat
+                                                                (and (:tuntipalkka toimenkuva) (:tunnit toimenkuva) (not= (:toimenkuva rivi) "Muut kulut"))
+                                                                (* (:tunnit toimenkuva) (:tuntipalkka toimenkuva))
+                                                                ;; Muut kulut
+                                                                (and (:summa toimenkuva) (= (:toimenkuva rivi) "Muut kulut"))
+                                                                (:summa toimenkuva)
+                                                                :else 0)
+
                                                         toimenkuva (assoc toimenkuva :summa summa)
+
+                                                        ;; Koskee vain Muut Kulut riviä.
+                                                        kk-summa (tyokalut/round2 2 (/ summa 12))
+                                                        viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
 
                                                         ;; Laske toimenkuvan yhteensä summat kuukausista
                                                         kuukaudet (map-indexed (fn [indeksi rivi]
@@ -181,7 +274,9 @@
                                                                                    {:tuntipalkka (:tuntipalkka toimenkuva)
                                                                                     :tuntipalkka-indeksikorjattu nil ;; indeksikorjaus lasketaan bäckendissä
                                                                                     :tunnit (:tunnit toimenkuva)
-                                                                                    :yhteensa-kk (* (:tuntipalkka toimenkuva) (:tunnit toimenkuva))
+                                                                                    :yhteensa-kk (if (not= (:toimenkuva rivi) "Muut kulut")
+                                                                                                   (* (:tuntipalkka toimenkuva) (:tunnit toimenkuva))
+                                                                                                   (if (= indeksi 11) viimeneinen-summa kk-summa))
                                                                                     :yhteensa-indeksikorjattu-kk nil}))
                                                                     (:kuukaudet toimenkuva))
                                                         yht-kk (apply + (map :yhteensa-kk kuukaudet))
@@ -190,7 +285,7 @@
                                                                      :summa yht-kk)]
                                                     (conj uudet-toimenkuvat toimenkuva)))
                                           [] uudet-toimenkuvat)
-                            toimenkuvat (sort-by :id toimenkuvat)]
+                            toimenkuvat (sort-by :jarjesta toimenkuvat)]
 
                         (reset! yhteiset/tallenna-painettu false)
                         (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom toimenkuvat)
@@ -200,7 +295,10 @@
       :voi-muokata? true
       :voi-poistaa? (constantly false)
       :vetolaatikot (into {}
-                      (map (juxt :nimike (fn [rivi] [toimenkuvat-vetolaatikko-2019 e! (:vetolaatikon-muokkaus app) (:id rivi) (:kuukaudet rivi) vahvistettu?]))
+                      (map (juxt :nimike (fn [rivi]
+                                           (if (= "Muut kulut" (:nimike rivi))
+                                             [muut-kulut-vetolaatikko e! (:vetolaatikon-muokkaus app) (:kuukaudet rivi) vahvistettu?]
+                                             [toimenkuvat-vetolaatikko-2019 e! (:vetolaatikon-muokkaus app) (:id rivi) (:kuukaudet rivi) vahvistettu?])))
                         johto-ja-hallintokorvaukset))
 
       :vetolaatikko-optiot {:ei-paddingia true}
@@ -212,12 +310,12 @@
       {:otsikko "Tarjouksen määrä (€ / vuosi)" :nimi :tarjous-summa :leveys "20%" :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
       {:otsikko "Tunnit (h/kk)" :nimi :tunnit :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
-       :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
+       :fmt #(when % (fmt/euro-opt false %)) :muokattava? #(voiko-muokata? % voi-muokata? false) :otsikkorivi-luokka "korkea"}
       {:otsikko "Tuntipalkka (€/h)" :nimi :tuntipalkka :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
-       :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly true) :otsikkorivi-luokka "korkea"}
+       :fmt #(when % (fmt/euro-opt false %)) :muokattava? #(voiko-muokata? % voi-muokata? false) :otsikkorivi-luokka "korkea"}
       {:otsikko "Yhteensä (€/vuosi)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %))
-       :muokattava? (constantly false)
+       :muokattava? #(voiko-muokata? % voi-muokata? true)
        :voi-muokata-rivia? (constantly true)
        :otsikkorivi-luokka "korkea"}
       {:otsikko "Kk/v" :nimi :kkv :leveys "10%" :tyyppi :euro :tasaa :oikea
@@ -300,6 +398,7 @@
     [:div [grid/muokkaus-grid
            {:otsikko ""
             :id "toimenkuvat-taulukko-2022"
+            :jarjesta :jarjestys
             :luokat ["poista-bottom-margin"]
             :voi-lisata? false
             :voi-kumota? false
@@ -324,7 +423,9 @@
                                                               kuukaudet (map-indexed (fn [indeksi rivi]
                                                                                        (merge rivi
                                                                                          {:tuntipalkka (if (= indeksi 11) viimeneinen-summa kk-summa)
-                                                                                          :tuntipalkka-indeksikorjattu nil}))
+                                                                                          :tuntipalkka-indeksikorjattu nil}
+                                                                                         (when (= "Muut kulut" (:toimenkuva toimenkuva))
+                                                                                           {:yhteensa-kk (if (= indeksi 11) viimeneinen-summa kk-summa)})))
                                                                           (:kuukaudet toimenkuva))
                                                               toimenkuva (assoc toimenkuva :kuukaudet kuukaudet)]
                                                           (conj uudet-toimenkuvat toimenkuva)))
@@ -333,7 +434,6 @@
                               (reset! yhteiset/tallenna-painettu false)
                               (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom toimenkuvat)
                               (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset toimenkuvat))))
-            :jarjesta :id
             :piilota-toiminnot? true
             :voi-muokata? voi-muokata?
             :voi-poistaa? (constantly false)
@@ -373,7 +473,7 @@
                        (map #(:summa % 0) johto-ja-hallintokorvaukset)))
         yht-indeksikorjattu (apply + (if (<= urakan-alkuvuosi 2021)
                                        (map #(:yhteensa-indeksikorjattu-kk % 0) toimenpiteiden-kuukaudet)
-                                      (map #(:summa_indeksikorjattu % 0) johto-ja-hallintokorvaukset)))
+                                       (map #(:summa_indeksikorjattu % 0) johto-ja-hallintokorvaukset)))
         kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
         kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
         kirjaamatta-rivi (cond (and (<= urakan-alkuvuosi 2021) (not vahvistettu?))
