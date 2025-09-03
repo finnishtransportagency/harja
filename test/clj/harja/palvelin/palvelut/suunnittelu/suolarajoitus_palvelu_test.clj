@@ -810,20 +810,18 @@
 
 (defn- aseta-urakalle-talvisuolaraja [talvisuolaraja urakka-id hk-alkuvuosi]
   (let [;; Hae suolauksen tehtävän id
-        toimenpidekoodi (t/q-map (str "select id from tehtava where suunnitteluyksikko = 'kuivatonnia' AND suoritettavatehtava = 'suolaus'"))
+        toimenpidekoodi (t/q-map "select id from tehtava where suunnitteluyksikko = 'kuivatonnia' AND suoritettavatehtava = 'suolaus'")
         suolaus-tehtava-id (:id (first toimenpidekoodi))
 
         ;; Lisää tehtävälle suunniteltu määrä
-        _ (t/u (str (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
-        (%s, %s, %s, %s)" urakka-id hk-alkuvuosi suolaus-tehtava-id talvisuolaraja)))
+        _ (t/u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
+        (%s, %s, %s, %s)" urakka-id hk-alkuvuosi suolaus-tehtava-id talvisuolaraja))
 
         ;; Tarjouksen määrät pitää merkata vielä tallennetuksi 
-        ;; Mutta, tämä on nykyisessä testidatassa tehty jo. jätän tämän kommentin, voi olla arvokas 
-        ;; _ (t/u  (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s,true)"urakka-id))
-        ]))
+        _ (t/u  (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s,true)" urakka-id))]))
 
 (deftest tallenna-ja-hae-suolarajoituksen-kokonaiskayttoraja-onnistuu-mhu-test
-  (let [ ;; Kokonais talvisuolaraja on tallennettu tehtäviin ja määriin tehtävälle "Suolaus"
+  (let [;; Kokonais talvisuolaraja on tallennettu tehtäviin ja määriin tehtävälle "Suolaus"
         ;; Joten lisätään annetulle urakalle urakka_tehtavamaarat tauluun suunniteltuja määriä
         talvisuolaraja 1000M
         sanktio_ylittavalta_tonnilta 100000M
@@ -831,13 +829,13 @@
         hk-alkuvuosi 2022
 
         ;; Siivotaan kanta alkuun
-        _ (t/u (str "DELETE from suolasakko WHERE urakka = " urakka-id))
-        _ (t/u (str (format "DELETE from urakka_tehtavamaara
+        _ (t/u "DELETE from suolasakko WHERE urakka = " urakka-id)
+        _ (t/u (format "DELETE from urakka_tehtavamaara
                             WHERE urakka = %s
                               AND \"hoitokauden-alkuvuosi\" = %s
-                              AND maara = %s" urakka-id hk-alkuvuosi talvisuolaraja)))
-        _ (t/u (str (format "DELETE from sopimuksen_tehtavamaarat_tallennettu
-                            WHERE urakka = %s" urakka-id)))
+                              AND maara = %s" urakka-id hk-alkuvuosi talvisuolaraja))
+        _ (t/u (format "DELETE from sopimuksen_tehtavamaarat_tallennettu
+                            WHERE urakka = %s" urakka-id))
 
         _ (aseta-urakalle-talvisuolaraja talvisuolaraja urakka-id hk-alkuvuosi)
         kayttoraja {:urakka-id urakka-id
@@ -856,13 +854,13 @@
                     {:urakka-id urakka-id
                      :hoitokauden-alkuvuosi hk-alkuvuosi})
         ;; Siivotaan kanta
-        _ (t/u (str "DELETE from suolasakko WHERE urakka = " urakka-id))
-        _ (t/u (str (format "DELETE from urakka_tehtavamaara
+        _ (t/u "DELETE from suolasakko WHERE urakka = " urakka-id)
+        _ (t/u (format "DELETE from urakka_tehtavamaara
                             WHERE urakka = %s
                               AND \"hoitokauden-alkuvuosi\" = %s
-                              AND maara = %s" urakka-id hk-alkuvuosi talvisuolaraja)))
-        _ (t/u (str (format "DELETE from sopimuksen_tehtavamaarat_tallennettu
-                            WHERE urakka = %s" urakka-id)))]
+                              AND maara = %s" urakka-id hk-alkuvuosi talvisuolaraja))
+        _ (t/u (format "DELETE from sopimuksen_tehtavamaarat_tallennettu
+                            WHERE urakka = %s" urakka-id))]
 
     ;; Tarkistetaan tallennuksen vastauksen tiedot
     (is (not (nil? (:id vastaus))))

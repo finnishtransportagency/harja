@@ -20,7 +20,7 @@ CREATE TABLE mhu_muutos_tehtavamaaramuutokset (
   lahde muutos_yksikkohinta_lahde_enum NOT NULL DEFAULT 'laskettu',
   
   -- Kun yksikköhinta on asetettu modalista, tallennetaan käytetty hk  
-  valitun_yksikkohinnan_hk_alkuvuosi INTEGER,
+  valitun_yksikkohinnan_hoitokausi INTEGER,
   
   -- Kun edellisten hk yksikköhintaa ei ole saatavilla, syötetään tav.hinnan muutos manuaalisesti 
   kasin_syotetty_tavoitehintamuutos NUMERIC(12,2),
@@ -42,18 +42,18 @@ CREATE TABLE mhu_muutos_tehtavamaaramuutokset (
   CHECK (
     -- Kun lähde on laskettu, yksikköhinta voidaan laskea suoraa
     (lahde = 'laskettu' 
-    AND valitun_yksikkohinnan_hk_alkuvuosi IS NULL 
+    AND valitun_yksikkohinnan_hoitokausi IS NULL 
     AND kasin_syotetty_tavoitehintamuutos IS NULL)
     OR
     -- Kun lähde on manuaali, käsin syötetty tavoitehinta hinta on olemassa
     (lahde = 'manuaali' 
     AND kasin_syotetty_tavoitehintamuutos IS NOT NULL 
-    AND valitun_yksikkohinnan_hk_alkuvuosi IS NULL)
+    AND valitun_yksikkohinnan_hoitokausi IS NULL)
     OR 
     -- Kun lähde on aseta, valittu yksikköhinta hinta on olemassa
     (lahde = 'aseta' 
     AND kasin_syotetty_tavoitehintamuutos IS NULL 
-    AND valitun_yksikkohinnan_hk_alkuvuosi IS NOT NULL)
+    AND valitun_yksikkohinnan_hoitokausi IS NOT NULL)
   )
 );
 

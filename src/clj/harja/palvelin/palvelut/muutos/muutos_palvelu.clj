@@ -212,7 +212,7 @@
         (let [{:keys [syy
                       tehtava_id
                       _yksikkohinta
-                      valitun_yksikkohinnan_hk_alkuvuosi
+                      valitun_yksikkohinnan_hoitokausi
                       tavoitehinnan_muutos
                       anna-kirjata-tavoitehinta?]} rivi
 
@@ -228,8 +228,8 @@
                       ;; Yksikköhinta on asetettu edelliseltä vuodelta 
                       ;; => aseta 
                       (and
-                        valitun_yksikkohinnan_hk_alkuvuosi
-                        (> valitun_yksikkohinnan_hk_alkuvuosi 0))
+                        valitun_yksikkohinnan_hoitokausi
+                        (> valitun_yksikkohinnan_hoitokausi 0))
                       "aseta"
 
                       ;; Muulloin yksikköhinta on laskettu automaattisesti (kaikki data on saatavilla)
@@ -241,7 +241,7 @@
                       :urakka urakka-id
                       :tehtava tehtava_id
                       :hk_alkuvousi hoitokauden-alkuvuosi
-                      :yksikkohinta_hk_alkuvuosi valitun_yksikkohinnan_hk_alkuvuosi
+                      :yksikkohinta_hk_alkuvuosi valitun_yksikkohinnan_hoitokausi
                       :kasin_syotetty_tavoitehinta (when (= lahde "manuaali") tavoitehinnan_muutos)}]
           (muutos-kyselyt/paivita-tehtava-maaramuutos<! db params))))
 

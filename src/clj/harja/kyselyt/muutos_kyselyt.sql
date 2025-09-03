@@ -172,7 +172,7 @@ SELECT
   tk.id                                            AS tehtava_id,
   mmt.syy                                          AS syy,
   mmt.lahde                                        AS yksikkohinnan_lahde,
-  mmt.valitun_yksikkohinnan_hk_alkuvuosi           AS yksikkohinnan_alkuvuosi,
+  mmt.valitun_yksikkohinnan_hoitokausi             AS yksikkohinnan_alkuvuosi,
   mmt.kasin_syotetty_tavoitehintamuutos            AS syotetty_tavoitehintamuutos,
   COALESCE(kulut.summa, 0)                         AS kirjatut_kulut_summa,
   COALESCE(SUM(urakan_tehtavat.maara), 0)          AS maara,
@@ -297,7 +297,7 @@ GROUP BY
   kulut.summa,
   mmt.syy,
   mmt.lahde,
-  mmt.valitun_yksikkohinnan_hk_alkuvuosi,
+  mmt.valitun_yksikkohinnan_hoitokausi,
   mmt.kasin_syotetty_tavoitehintamuutos
 ORDER BY
   o.otsikko ASC,
@@ -309,7 +309,7 @@ INSERT INTO mhu_muutos_tehtavamaaramuutokset (
   urakka,
   tehtava,
   hoitokauden_alkuvuosi,
-  valitun_yksikkohinnan_hk_alkuvuosi,
+  valitun_yksikkohinnan_hoitokausi,
   kasin_syotetty_tavoitehintamuutos,
   lahde,
   syy,
@@ -332,7 +332,7 @@ INSERT INTO mhu_muutos_tehtavamaaramuutokset (
 )
 ON CONFLICT (urakka, tehtava, hoitokauden_alkuvuosi)
 DO UPDATE SET
-  valitun_yksikkohinnan_hk_alkuvuosi = EXCLUDED.valitun_yksikkohinnan_hk_alkuvuosi,
+  valitun_yksikkohinnan_hoitokausi   = EXCLUDED.valitun_yksikkohinnan_hoitokausi,
   kasin_syotetty_tavoitehintamuutos  = EXCLUDED.kasin_syotetty_tavoitehintamuutos,
   lahde                              = EXCLUDED.lahde::muutos_yksikkohinta_lahde_enum,
   syy                                = EXCLUDED.syy,
