@@ -16,6 +16,7 @@
             [harja.kyselyt.toimenpideinstanssit :as tpi-q]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
@@ -361,7 +362,7 @@
                                                                                             :versio (:versio muutos)
                                                                                             :urakka urakka-id
                                                                                             :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
-        {:keys [alkupvm loppupvm]} (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        {:keys [alkupvm loppupvm]} (first (q-urakat/hae-urakka db {:id urakka-id}))
         toimenpiteiden-tehtavat (when (= (:tyyppi muutos) "pysyva")
                                   (map
                                     #(select-keys % #{:jarjestys :tehtava-id :suunniteltu-maara :toimenpidekoodi :tehtava :yksikko :hoitokauden-alkuvuosi})

@@ -1,9 +1,6 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
-  (:require [clojure.string :as str]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]
-            [reagent.core :as r]
+  (:require [reagent.core :as r]
             [tuck.core :as tuck]
             [clojure.string :as str]
 
@@ -14,7 +11,8 @@
             [harja.ui.modal :as modal]
             [harja.tiedot.urakka :as u]
             [harja.ui.lomake :as lomake]
-            [harja.ui.ikonit :as ui-ikonit]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.kentat :as kentat]
             [harja.ui.debug :refer [debug]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
@@ -397,9 +395,9 @@
     [:div.collapsoitava-osio
      [:div.otsikkorivi.klikattava {:on-click taulukon-nakyvyys-event}
       [:span
-       [ui-ikonit/navigation-ympyrassa (if sisalto-nakyvissa?
-                                         :down
-                                         :right)]
+       [ikonit/navigation-ympyrassa (if sisalto-nakyvissa?
+                                      :down
+                                      :right)]
        [:h2 otsikko]]
       (when-not (= summa :ei-summaa)
         [:div.summa {:aria-label (str otsikko " yhteensä " summa " euroa")}
