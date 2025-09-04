@@ -71,9 +71,10 @@
          (when (= "pysyva" (:tyyppi muokattava-muutos))
            {:tyyppi :komponentti
             :uusi-rivi? true
-            :komponentti (fn [rivi]
-                           [yleiset/info-laatikko :neutraali
-                            "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."])})
+            :komponentti (fn [_rivi]
+                           [:div.perustiedot
+                            [yleiset/info-laatikko :neutraali
+                            "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."]])})
          (lomake/ryhma {:otsikko "Perustiedot"}
            (when (= "johto-ja-hallintokorvaus" (:tyyppi muokattava-muutos))
              {:nimi :hoitovuosi :tyyppi :string :otsikko "Hoitovuosi" :muokattava? (constantly false)
@@ -83,7 +84,8 @@
               :otsikko "Nimi"
               :tyyppi :string
               :uusi-rivi? true
-              :pakollinen? true})
+              :pakollinen? true
+              ::lomake/col-luokka "perustiedot col-sm-6"})
            {:nimi :syy
             :otsikko "Muutoksen syy"
             :tyyppi :text
@@ -92,7 +94,8 @@
             :aputeksti "Kuvaile muutos mahdollisimman tarkasti. Ethän syötä kenttään henkilö- tai muuta arkaluontoista tietoa."
             :pituus-max 1000
             :uusi-rivi? true
-            :pakollinen? true}
+            :pakollinen? true
+            ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"}
            {:nimi :voimassa_alkaen :otsikko "Voimassa alkaen"
             :tyyppi :pvm :uusi-rivi? true
             :pakollinen? true
@@ -194,60 +197,85 @@
                                    (fn [rivi]
                                      [jatkuvan-muutoksen-vetolaatikko e! app rivi]))
                               (:toimenpiteiden-tiedot muokattava-muutos)))]
-    [:span.toimenpiteiden-tiedot
-    [grid/grid
-     {:tunniste :toimenpideinstanssi
-      :luokat ["pysyvan-muutoksen-grid"]
-      :muokkaa-aina true
-      :custom-toiminto {:teksti "Kopioi tiedot tuleville hoitovuosille"
-                        :toiminto #(e! (muutos-tiedot/->KopioiPysyvaMuutosTulevilleHoitovuosille
-                                         (:hoitovuosi muokattava-muutos)
-                                         (:toimenpiteiden-tiedot muokattava-muutos)))
-                        :opts {:ikoni (ikonit/action-copy)
-                               :luokka "nappi-toissijainen pysyvan-muutoksen-kopiointinappi"}}
-      :vetolaatikot vetolaatikkorivit
-      :piilota-toiminnot? true
-      :voi-lisata? false
-      :voi-kumota? false
-      :voi-poistaa? (constantly false)
-      :voi-muokata? true}
 
-     ;; taulukon kentät
+    [:div.toimenpiteiden-tiedot
+     ;; Header vihje sekä nappi 
+     [:div.pysyvan-muutoksen-grid-header
+      [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
 
-     [{:tyyppi :vetolaatikon-tila :leveys 2}
-      {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 20 :muokattava? (constantly false)}
-      {:otsikko "Suunniteltu kustannus (€)" :muokattava? (constantly false)
-       :nimi :budjetoitu_summa :vaadi-ei-negatiivinen? true
-       :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8
-       :hae (fn [rivi]
-              (:budjetoitu_summa (first (filter #(when (:hoitovuosi muokattava-muutos)
-                                                   (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
-                                                     (:hoitokauden_alkuvuosi %)))
-                                          (get rivi :budjetoidut_summat)))))}
-      {:otsikko "Tavoitehinnan muutos (€)" :muokattava? (constantly false)
-       :nimi :tavoitehinnan-muutos
-       :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8
-       :solun-luokka #(str "tavoitehinnan-muutos-sarake")
-       :hae (fn [rivi]
-              (:summa (first (filter #(when (:hoitovuosi muokattava-muutos)
-                                        (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
-                                          (:hoitokauden_alkuvuosi %)))
-                               (get rivi :kustannusvaikutukset)))))}
-      {:otsikko "Muuttunut kustannus (€)" :muokattava? (constantly false)
-       :nimi :muuttunut-kustannus :vaadi-ei-negatiivinen? true
-       :tyyppi :numero :fmt fmt/euro-opt :tasaa :oikea :leveys 8
-       :hae (fn [rivi]
-              (let [budjetoitu (:budjetoitu_summa (first (filter #(when (:hoitovuosi muokattava-muutos)
-                                                                    (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
-                                                                      (:hoitokauden_alkuvuosi %)))
-                                                           (get rivi :budjetoidut_summat))))
-                    muutos (:summa (first (filter #(when (:hoitovuosi muokattava-muutos)
-                                                     (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+      [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
+       #(e! (muutos-tiedot/->KopioiPysyvaMuutosTulevilleHoitovuosille
+              (:hoitovuosi muokattava-muutos)
+              (:toimenpiteiden-tiedot muokattava-muutos)))
+       {:ikoni (ikonit/action-copy)
+        :luokka "nappi-toissijainen pysyvan-muutoksen-kopiointinappi"}]]
+
+     [grid/grid
+      {:tunniste :toimenpideinstanssi
+       :luokat ["pysyvan-muutoksen-grid"]
+       :muokkaa-aina true
+       :vetolaatikot vetolaatikkorivit
+       :piilota-toiminnot? true
+       :voi-lisata? false
+       :voi-kumota? false
+       :voi-poistaa? (constantly false)
+       :voi-muokata? true}
+
+      [{:tyyppi :vetolaatikon-tila :leveys 2}
+       {:otsikko "Toimenpide" 
+        :nimi :toimenpide 
+        :tyyppi :string 
+        :leveys 20 
+        :muokattava? (constantly false)}
+       
+       {:otsikko "Suunniteltu kustannus (€)" 
+        :muokattava? (constantly false)
+        :nimi :budjetoitu_summa 
+        :vaadi-ei-negatiivinen? true
+        :tyyppi :numero 
+        :fmt fmt/euro-opt 
+        :tasaa :oikea 
+        :leveys 8
+        :hae (fn [rivi]
+               (:budjetoitu_summa (first (filter #(when (:hoitovuosi muokattava-muutos)
+                                                    (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
                                                        (:hoitokauden_alkuvuosi %)))
-                                            (get rivi :kustannusvaikutukset))))]
-                (when (and budjetoitu (number? budjetoitu) muutos (number? muutos))
-                  (+ budjetoitu muutos))))}]
-     (:toimenpiteiden-tiedot muokattava-muutos)]]))
+                                           (get rivi :budjetoidut_summat)))))}
+       
+       {:otsikko "Tavoitehinnan muutos (€)" 
+        :muokattava? (constantly false)
+        :nimi :tavoitehinnan-muutos
+        :tyyppi :numero 
+        :fmt fmt/euro-opt 
+        :tasaa :oikea 
+        :leveys 8
+        :solun-luokka #(str "tavoitehinnan-muutos-sarake")
+        :hae (fn [rivi]
+               (:summa (first (filter #(when (:hoitovuosi muokattava-muutos)
+                                         (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                                            (:hoitokauden_alkuvuosi %)))
+                                (get rivi :kustannusvaikutukset)))))}
+       
+       {:otsikko "Muuttunut kustannus (€)" 
+        :muokattava? (constantly false)
+        :nimi :muuttunut-kustannus 
+        :vaadi-ei-negatiivinen? true
+        :tyyppi :numero 
+        :fmt fmt/euro-opt 
+        :tasaa :oikea 
+        :leveys 8
+        :hae (fn [rivi]
+               (let [budjetoitu (:budjetoitu_summa (first (filter #(when (:hoitovuosi muokattava-muutos)
+                                                                     (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                                                                        (:hoitokauden_alkuvuosi %)))
+                                                            (get rivi :budjetoidut_summat))))
+                     muutos (:summa (first (filter #(when (:hoitovuosi muokattava-muutos)
+                                                      (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                                                         (:hoitokauden_alkuvuosi %)))
+                                             (get rivi :kustannusvaikutukset))))]
+                 (when (and budjetoitu (number? budjetoitu) muutos (number? muutos))
+                   (+ budjetoitu muutos))))}]
+      (:toimenpiteiden-tiedot muokattava-muutos)]]))
 
 (defn- muutoslomakkeen-kentat-pysyva
   "Pysyvän muutoksen lomakekomponentti"
@@ -263,11 +291,6 @@
                         (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet "Hoitovuosi")
                         "Valitse")
       :valinta-arvo identity}
-     {:otsikko "" :uusi-rivi? true
-      :nimi :vihje :kaariva-luokka "pysyva-muutos-vihje"
-      :tyyppi :komponentti
-      :komponentti (fn []
-                     [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."])}
 
      ;; Taulukko jossa vaikutuksia voidaan syöttää
      {:otsikko "" :uusi-rivi? true
@@ -331,20 +354,22 @@
          :tarkkaile-ulkopuolisia-muutoksia? true
          :muokkaa! #(e! (muutos-tiedot/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
          :footer-fn (fn [muutos]
-                      [:span.tallenna-ja-peruuta
+                      [:div
                        [:hr]
-                       (when-not (empty? (:puuttuvat-pakolliset-kentat muokattava-muutos))
-                         [yleiset/info-laatikko :varoitus
-                          (str "Lomakkeelta puuttuu pakollisia kenttiä: "
-                            (str/join ", " (:puuttuvat-pakolliset-kentat muokattava-muutos))
-                            ". Korjaa ne ja yritä uudelleen.")])
-                       [napit/tallenna "Tallenna"
-                        #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos
-                           muutos)
-                        {:disabled tallennus-kesken?}]
-                       [napit/peruuta "Peruuta"
-                        #(e! (muutos-tiedot/->MuokkaaMuutosta nil))
-                        {:disabled tallennus-kesken?}]])}
+                       [:div.tallenna-ja-peruuta
+                        (when-not (empty? (:puuttuvat-pakolliset-kentat muokattava-muutos))
+                          [yleiset/info-laatikko :varoitus
+                           (str
+                             "Lomakkeelta puuttuu pakollisia kenttiä: " (str/join ", " (:puuttuvat-pakolliset-kentat muokattava-muutos))
+                             ". Korjaa ne ja yritä uudelleen.")])
+                        
+                        [napit/tallenna "Tallenna"
+                         #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos muutos)
+                         {:disabled tallennus-kesken?}]
+                        
+                        [napit/peruuta "Peruuta"
+                         #(e! (muutos-tiedot/->MuokkaaMuutosta nil))
+                         {:disabled tallennus-kesken?}]]])}
         ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
         (into []
           (concat
