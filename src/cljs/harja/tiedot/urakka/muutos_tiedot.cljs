@@ -302,10 +302,12 @@
           muutos (lomake/ilman-lomaketietoja muutos)
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
                   ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
-                  (filter #(and (some? (:tavoitehinnan-muutos %))
+                  (filter #(and 
+                             (some? (:tavoitehinnan-muutos %))
                              (not= 0 (:tavoitehinnan-muutos %)))
                     (vals @johto-ja-hallintokorvausmuutokset-atom)))
           muutos (assoc muutos :kulut kulut)]
+      
       (if-not (empty? puuttuvat-pakolliset-kentat)
         (assoc-in app [:muokattava-muutos :puuttuvat-pakolliset-kentat] puuttuvat-pakolliset-kentat)
         (do
