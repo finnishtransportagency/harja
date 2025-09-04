@@ -97,7 +97,7 @@
                   (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                           :valittu-hoitokausi valittu-hoitokausi})
                   [:budjettitavoitteet :muutosten-vaikutus-yhteensa])]
-    (is (= vastaus -28610M) "Muutosten vaikutus yhteensä")))
+    (is (= (Math/round vastaus) -37048) "Muutosten vaikutus yhteensä")))
 
 (deftest hae-urakan-muutostiedot-ii-kun-annetuilla-ehdoilla-ei-loydy
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
