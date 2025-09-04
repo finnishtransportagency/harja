@@ -312,6 +312,7 @@
           (tuck-apurit/post! :tallenna-muutos
             {:urakka-id (:id urakka)
              :valittu-hoitokausi (:valittu-hoitokausi app)
+             :hoitokaudet @u/valitun-urakan-hoitokaudet
              :muutos muutos}
             {:onnistui ->HaeUrakanMuutostiedotOnnistui ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
              :epaonnistui ->TallennaMuutosEpaonnistui
@@ -360,6 +361,7 @@
     (let [urakka (:urakka @tila/yleiset)]
       (tuck-apurit/post! :tallenna-rahavarausmuutosten-syyt
         {:urakka-id (:id urakka)
+         :hoitokaudet @u/valitun-urakan-hoitokaudet
          :valittu-hoitokausi (:valittu-hoitokausi app)
          :rivit (map #(select-keys % [:id :syy]) rivit)}
         {:onnistui ->TallennaRahavarausmuutostenSyytOnnistui

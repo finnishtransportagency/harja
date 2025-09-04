@@ -383,14 +383,14 @@
 
 
 (defn- lasketut-muutokset [e! 
-                           {:keys [lasketut-muutokset tehtava-maaramuutokset 
+                           {:keys [tehtava-maaramuutokset 
                                    valittu-modal-tehtava haku-kaynnissa?] :as app}]
   
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :lasketut-muutokset
     :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :lasketut-muutokset))
     :otsikko "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"
-    :summa (reduce + 0 (map :tavoitehinnan-muutos lasketut-muutokset))
+    :summa (reduce + 0 (map :tavoitehinnan_muutos tehtava-maaramuutokset))
     :toiminnot (fn [_e! _app]
                  [:span
                   [yleiset/vihje (str 
@@ -401,6 +401,7 @@
     :taulukko
     (fn [e! _app]
       (let [;; Värjätään tällä väliotsikot design mukaiseksi 
+            ;; Väliotsikot asetetaan backend 
             solun-luokka-fn (fn [_arvo rivi]
                               (when (or 
                                       haku-kaynnissa? 
@@ -582,7 +583,7 @@
 
 (defn- muutosten-vaikutus
   "Yhteenveto muutosten vaikutuksista."
-  [e! {:keys [budjettitavoitteet] :as app}]
+  [_e! {:keys [budjettitavoitteet] :as _app}]
   (let [indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu? budjettitavoitteet)]
     [:div.muutosten-vaikutus
     [:h2 "Muutosten vaikutus"]
