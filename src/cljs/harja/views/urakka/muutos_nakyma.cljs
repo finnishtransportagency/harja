@@ -358,20 +358,21 @@
          :footer-fn (fn [muutos]
                       [:div
                        [:hr]
-                       [:div.tallenna-ja-peruuta
-                        (when-not (empty? (:puuttuvat-pakolliset-kentat muokattava-muutos))
-                          [yleiset/info-laatikko :varoitus
-                           (str
-                             "Lomakkeelta puuttuu pakollisia kenttiä: " (str/join ", " (:puuttuvat-pakolliset-kentat muokattava-muutos))
-                             ". Korjaa ne ja yritä uudelleen.")])
-                        
-                        [napit/tallenna "Tallenna"
-                         #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos muutos)
-                         {:disabled tallennus-kesken?}]
-                        
-                        [napit/peruuta "Peruuta"
-                         #(e! (muutos-tiedot/->MuokkaaMuutosta nil))
-                         {:disabled tallennus-kesken?}]]])}
+                       (when-not (empty? (:puuttuvat-pakolliset-kentat muokattava-muutos))
+                         [yleiset/info-laatikko :varoitus
+                          (str "Lomakkeelta puuttuu pakollisia kenttiä: "
+                            (str/join ", " (:puuttuvat-pakolliset-kentat muokattava-muutos))
+                            ". Korjaa ne ja yritä uudelleen.")])
+                       [napit/tallenna "Tallenna"
+                        #(do 
+                           (muutos-tiedot/scrollaa-viimeksi-valitulle-riville)
+                           (tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos muutos))
+                        {:disabled tallennus-kesken?}]
+                       [napit/peruuta "Peruuta"
+                        #(do 
+                           (muutos-tiedot/scrollaa-viimeksi-valitulle-riville)
+                           (e! (muutos-tiedot/->MuokkaaMuutosta nil)))
+                        {:disabled tallennus-kesken?}]])}
         ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
         (into []
           (concat
@@ -498,6 +499,7 @@
           :voi-kumota? false
           :voi-poistaa? (constantly false)
           :voi-muokata? true
+          :piilota-toiminnot? true
           :tallenna #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaRahavarausmuutostenSyyt %)
           :rivi-jalkeen-fn (fn []
                              [{:teksti "Tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :yhteenveto-vayla true}
@@ -720,19 +722,22 @@
            {:otsikko ""
             :tyyppi :komponentti
             :solun-luokka solun-luokka-fn
-            :komponentti (fn [{:keys [maara tehtava_id] :as valittu-rivi}]
+            :komponentti (fn [{:keys [maara tehtava_id] :as valittu-rivi}
+                              {:keys [muokataan?] :as _grid}]
                            [:<>
                             ;; Näytä valinta mikäli toteumia ei ole 
                             ;; sekä aikaisemman vuoden yksikköhinta on saatavilla (anna-kirjata-tavoitehinta? kertoo tämän)
                             (when (and
                                     maara
                                     (= maara 0)
+                                    (not muokataan?)
                                     (not (:anna-kirjata-tavoitehinta? valittu-rivi)))
                               [:div.nappi-toissijainen
                                {:on-click #(e! (muutos-tiedot/->AvaaYksikkohintaModal valittu-rivi tehtava_id))} "Aseta yksikköhinta"])])
             :leveys 22}]
 
           tehtava-maaramuutokset]]))}])
+
 
 (defn- kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
   [kehystetty-avattava-grid e! app
@@ -751,21 +756,47 @@
         :voi-lisata? false
         :voi-kumota? false
         :voi-poistaa? (constantly false)
-        :voi-muokata? false}
+        :voi-muokata? false
+        :rivin-luokka (fn [arvo _]
+                        (let [rivin-id (:id arvo)
+                              viimeksi-klikattu-id (-> app :viimeksi-valittu :id)]
+                          (when (= viimeksi-klikattu-id rivin-id) "viimeksi-valittu-tausta")))}
 
        ;; taulukon kentät
-       [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys 15
+       [{:otsikko "Tyyppi"
+         :nimi :tyyppi
+         :tyyppi :string
+         :leveys 15
          :fmt (fn [arvo]
                 (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))}
-        {:otsikko "Muutoksen syy" :nimi :syy :tyyppi :string :leveys 35}
-        {:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :pvm :leveys 15}
-        {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero
-         :fmt fmt/euro-opt :tasaa :oikea :leveys 15}
-        {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 10 :tasaa :oikea
+
+        {:otsikko "Muutoksen syy"
+         :nimi :syy
+         :tyyppi :string
+         :leveys 35}
+
+        {:otsikko "Voimassa alkaen"
+         :nimi :voimassa_alkaen
+         :tyyppi :pvm
+         :leveys 15}
+
+        {:otsikko "Tavoitehinnan muutos (€)"
+         :nimi :tavoitehinnan-muutos
+         :tyyppi :numero
+         :fmt fmt/euro-opt
+         :tasaa :oikea
+         :leveys 15}
+
+        {:otsikko ""
+         :nimi :toiminnot
+         :tyyppi :komponentti
+         :leveys 10
+         :tasaa :oikea
          :komponentti (fn [rivi]
                         [napit/muokkaa "Muokkaa"
                          #(e! (muutos-tiedot/->MuokkaaMuutosta rivi))])}]
        kirjatut-muutokset])}])
+
 
 (defn muutoslistaus [e! app]
   [:span.muutoslistaus
@@ -804,29 +835,27 @@
 
 (defn muutokset-alempi-valilehti*
   [e! _app]
-    (komp/luo 
-      (komp/lippu muutos-tiedot/nakymassa?)
-      (komp/sisaan #(e! (muutos-tiedot/->HaeUrakanMuutostiedot)))
-      
-      (fn [e! {:keys [haku-kaynnissa?] :as app}]
-        [:span.muutokset-sivu
-         (if (:muokattava-muutos app)
-           ;; Jos muokattava muutos valittu? onkohan vielä tehty 
-           [muutoslomake e! app]
-           
-           ;; Muutosten listaus 
-           [:valinnat-ja-listaus
-            ;; Näkymän otsikko 
-            [:h1 "Muutosten hallinta"]
-            [:div.otsikko-ja-hoitokausi
-             ;; Hoitokausi valinta 
-             [urakka-valinnat/paivittava-urakkavuosi-tuck
-              @u/valittu-aikavali
-              #(e! (muutos-tiedot/->HaeUrakanMuutostiedot)) haku-kaynnissa?  false]]
-            
-            [muutosten-vaikutus e! app]
-            [muutoslistaus e! app]])
-         [debug app]])))
+  (komp/luo
+    (komp/lippu muutos-tiedot/nakymassa?)
+    (komp/sisaan #(e! (muutos-tiedot/->HaeUrakanMuutostiedot)))
+
+    (fn [e! {:keys [haku-kaynnissa?] :as app}]
+      [:span.muutokset-sivu
+       (if (:muokattava-muutos app)
+         ;; Jos muokattava muutos valittu? onkohan vielä tehty 
+         [muutoslomake e! app]
+         ;; Muutosten listaus 
+         [:valinnat-ja-listaus
+          ;; Näkymän otsikko 
+          [:h1 "Muutosten hallinta"]
+          [:div.otsikko-ja-hoitokausi
+           ;; Hoitokausi valinta 
+           [urakka-valinnat/paivittava-urakkavuosi-tuck
+            @u/valittu-aikavali
+            #(e! (muutos-tiedot/->HaeUrakanMuutostiedot)) haku-kaynnissa?  false]]
+
+          [muutosten-vaikutus e! app]
+          [muutoslistaus e! app]])])))
 
 
 (defn muutokset-paatason-valilehti [_ur]

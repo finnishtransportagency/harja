@@ -282,6 +282,7 @@ SELECT
   o.otsikko                                        AS toimenpide,
   tk.nimi                                          AS tehtava,
   tk.id                                            AS tehtava_id,
+  mmt.versio                                       AS versio,
   mmt.syy                                          AS syy,
   mmt.lahde                                        AS yksikkohinnan_lahde,
   mmt.valitun_yksikkohinnan_hoitokausi             AS yksikkohinnan_alkuvuosi,
@@ -352,13 +353,18 @@ FROM tehtava tk
     ON tk.id = urakan_tehtavat.toimenpidekoodi
   JOIN urakka u
     ON u.id = :urakka
-  -- --------------------------------------------------------------------------------
-  -- Uusi muutos taulu, vedetään täältä syy sekä yksikköhinnan hk / kirjattu tavoitehinta
-  -- -------------------------------------------------------------------------------- 
-  LEFT JOIN mhu_muutos_tehtavamaaramuutokset mmt 
-    ON mmt.urakka = :urakka 
-    AND mmt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-    AND tk.id = mmt.tehtava 
+  -- --------------------------------------------------------------------
+  -- Vedetään täältä syy sekä yksikköhinnan hk / kirjattu tavoitehinta
+  -- --------------------------------------------------------------------
+  LEFT JOIN LATERAL (
+    SELECT mmt.*
+     FROM mhu_muutos_tehtava_tiedot mmt
+    WHERE mmt.urakka = :urakka
+      AND mmt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+      AND mmt.tehtava = tk.id
+    ORDER BY mmt.versio DESC
+    LIMIT 1
+  ) mmt ON TRUE
   -- Hae tehtävän kulut
   LEFT JOIN (
     SELECT
@@ -407,6 +413,7 @@ GROUP BY
   tk.kasin_lisattava_maara,
   tk.suunnitteluyksikko,
   kulut.summa,
+  mmt.versio,
   mmt.syy,
   mmt.lahde,
   mmt.valitun_yksikkohinnan_hoitokausi,
@@ -417,7 +424,7 @@ ORDER BY
 
 
 -- name: paivita-tehtava-maaramuutos<!
-INSERT INTO mhu_muutos_tehtavamaaramuutokset (
+INSERT INTO mhu_muutos_tehtava_tiedot (
   urakka,
   tehtava,
   hoitokauden_alkuvuosi,

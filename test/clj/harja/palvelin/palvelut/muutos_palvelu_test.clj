@@ -94,7 +94,7 @@
                   (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                           :valittu-hoitokausi valittu-hoitokausi})
                   [:budjettitavoitteet :muutosten-vaikutus-yhteensa])]
-    (is (= vastaus -28610M) "Muutosten vaikutus yhteensä")))
+    (is (= (Math/round vastaus) -37048) "Muutosten vaikutus yhteensä")))
 
 (deftest hae-urakan-muutostiedot-ii-kun-annetuilla-ehdoilla-ei-loydy
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -785,13 +785,14 @@
         yksikkohinta (-> opastetaulun-uusiminen :yksikkohinta)
         aikaisemmat-yksikkohinnat (-> opastetaulun-uusiminen :aikaisemmat-yksikkohinnat)
         anna-kirjata? (-> opastetaulun-uusiminen :anna-kirjata-tavoitehinta?)
+        versio-ennen (-> opastetaulun-uusiminen :versio)
         ;; Valitse yksikköhinta, ja tallenna se 
         tallenna-yksikkohinta? true
         ;; Valitse ensimmäinen alasvedossa oleva yksikköhinta 
         yksikkohinta-valinta (-> aikaisemmat-yksikkohinnat first :arvo)
         yksikkohinta-valinta-hk (-> aikaisemmat-yksikkohinnat first :hoitokauden-alkuvuosi)
 
-        
+
         ;; ----------------------------------------
         ;; Yksikköhinta tallennus 
         tallenna-rivi (-> opastetaulun-uusiminen
@@ -813,7 +814,7 @@
         yksikkohinta-t (-> opastetaulun-uusiminen-tallennettu :yksikkohinta)
         suunniteltu-t (-> opastetaulun-uusiminen-tallennettu :suunniteltu_maara)
         toteumat-t (-> opastetaulun-uusiminen-tallennettu :maara)
-
+        versio-jalkeen (-> opastetaulun-uusiminen-tallennettu :versio)
 
         ;; --------------------------------------------------------
         ;; Grid tallennus 
@@ -847,7 +848,26 @@
         runko-tav-hinta (-> runkopuiden-poisto-t :syotetty_tavoitehintamuutos)
         runko-syy (-> runkopuiden-poisto-t :syy)
         palteet-syy (-> palteiden-poisto-t :syy)
-        maakivi-syy (-> maakiven-poisto-t :syy)]
+        maakivi-syy (-> maakiven-poisto-t :syy)
+
+        ;; Versiointi 
+        rivit (vec (conj []
+                     (assoc runkopuiden-poisto
+                       :syy "test versio"
+                       :tavoitehinnan_muutos manuaali-muutos
+                       :yksikkohinnan_lahde "manuaali")
+                     (assoc palteiden-poisto :syy "test versio")
+                     (assoc maakiven-poisto :syy "test versio")))
+        
+        _ (tallenna-maaramuutokset rivit tallenna-yksikkohinta?)
+        
+        tallennetut-grid (hae-maaramuutos-alkutiedot)
+        runkopuiden-poisto-t (nth tallennetut-grid 2)
+        palteiden-poisto-t (nth tallennetut-grid 3)
+        maakiven-poisto-t (nth tallennetut-grid 4)
+        versio-runkopuut (-> runkopuiden-poisto-t :versio)
+        versio-palteet (-> palteiden-poisto-t :versio)
+        versio-maakivet (-> maakiven-poisto-t :versio)]
 
 
     (testing "Opastetaulun uusiminen vastaa testidataa"
@@ -879,4 +899,11 @@
       (is (= runko-tav-hinta (bigdec manuaali-muutos)))
       (is (= runko-syy syy-1))
       (is (= palteet-syy syy-2))
-      (is (= maakivi-syy syy-3)))))
+      (is (= maakivi-syy syy-3)))
+
+    (testing "Versiointi toimii"
+      (is (= versio-ennen nil))
+      (is (= versio-jalkeen 1))
+      (is (= versio-runkopuut 2))
+      (is (= versio-palteet 2))
+      (is (= versio-maakivet 2)))))
