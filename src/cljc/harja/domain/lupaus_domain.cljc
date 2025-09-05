@@ -14,7 +14,7 @@
 
 (def ennusteiden-tilat
   #{;; "Ei vielä ennustetta"
-    ;; Ensimmäiset ennusteet annetaan lokakuun alussa, kun tiedot on syötetty ensimmäiseltä  kuukaudelta.
+    ;; Ensimmäiset ennusteet annetaan lokakuun alussa, kun pidetty ensimmäiseltä kuukaudelta.
     :ei-viela-ennustetta
 
     ;; "Huhtikuun ennusteen mukaan urakalle on tulossa Bonusta 5200 €"
@@ -98,19 +98,56 @@
   (or (:pisteet (viimeisin-vastaus vastaukset))
       kyselypisteet))
 
+(defn kustannusennuste->ennuste
+  "Laskee kustannusennusteen ennusteen kuukausittaisten kustannusennusteiden perusteella.
+   Jos kaikki kuukaudet eivät ole täytetty, palauttaa viimeisimmän annetun ennusteen.
+   Jos dataa ei löydy, palauttaa 0."
+  [{:keys [lupaus-kuukaudet]}]
+  (let [;; Hae kaikki kuukaudet, joissa on kustannusennusteita
+        kuukaudet-pisteilla (->> lupaus-kuukaudet
+                              (filter #(get-in % [:kustannusennuste :pisteet]))
+                              (sort-by :kuukausi))
+        ;; Jos on annettu kustannusennusteita, käytä viimeisintä
+        viimeisin-pisteet (when (seq kuukaudet-pisteilla)
+                            (get-in (last kuukaudet-pisteilla) [:kustannusennuste :pisteet]))]
+    ;; Palauta 0 jos ei ole dataa, muuten viimeisin pistemäärä
+    (or viimeisin-pisteet 0)))
+
+(defn kustannusennuste->toteuma
+  "Laskee kustannusennusteen toteuman kun se on mahdollista.
+   Toteuma = keskiarvo kaikista 4 ennustekuukaudesta (10,1,4,6).
+   Puuttuvat ennusteet = 0 pistettä keskiarvossa.
+   
+   HUOM: Toteuma lasketaan vain kun kaikki ennustekuukaudet on ohitettu ajallisesti.
+   Tämän tarkistuksen tulee tapahtua kutsuvassa koodissa hoitovuoden tilan perusteella."
+  [{:keys [lupaus-kuukaudet hoitovuosi-paattynyt?]}]
+  (when hoitovuosi-paattynyt?
+    ;; Vaaditut ennustekuukaudet (lokakuu, tammikuu, huhtikuu, kesäkuu)
+    (let [vaaditut-kuukaudet #{10 1 4 6}
+          ;; Hae pisteet kaikille vaadituille kuukausille
+          kuukauden-pisteet (reduce (fn [pisteet kk]
+                                      (let [kuukausi-data (first (filter #(= (:kuukausi %) kk) lupaus-kuukaudet))
+                                            pisteet-kuukaudelle (get-in kuukausi-data [:kustannusennuste :pisteet] 0)]
+                                        (conj pisteet pisteet-kuukaudelle)))
+                                    []
+                                    vaaditut-kuukaudet)
+          ;; Laske keskiarvo (puuttuvat = 0 pistettä)
+          keskiarvo (/ (reduce + kuukauden-pisteet) (count kuukauden-pisteet))]
+      (Math/round keskiarvo))))
+
 (defn lupaus->ennuste [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi
     "yksittainen" (yksittainen->ennuste lupaus)
     "kysely" (kysely->ennuste lupaus)
     "monivalinta" (monivalinta->ennuste lupaus)
-    "kustannusennuste" (yksittainen->ennuste lupaus)))
+    "kustannusennuste" (kustannusennuste->ennuste lupaus)))
 
 (defn lupaus->toteuma [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi
     "yksittainen" (yksittainen->toteuma lupaus)
     "kysely" (monivalinta->toteuma lupaus)
     "monivalinta" (monivalinta->toteuma lupaus)
-    "kustannusennuste" (yksittainen->toteuma lupaus)))
+    "kustannusennuste" (kustannusennuste->toteuma lupaus)))
 
 (defn lupaus->ennuste-tai-toteuma [lupaus]
   (or (when-let [toteuma (lupaus->toteuma lupaus)]
@@ -578,6 +615,120 @@
   [urakka]
   (-> urakka :alkupvm pvm/vuosi vuosi-19-20?))
 
+(defn validoi-kustannusennuste-syotteet
+  "Validoi että kaikki syötteet ovat valideja laskentaa varten"
+  [{:keys [ennustettu-tavoitehinta toteutunut-tavoitehinta 
+           ennustettu-kustannus toteutunut-kustannus
+           hoitovuoden-alun-tavoitehinta] :as syotteet}]
+  {:pre [syotteet]}
+  (cond
+    (not (every? number? [ennustettu-tavoitehinta toteutunut-tavoitehinta 
+                          ennustettu-kustannus toteutunut-kustannus
+                          hoitovuoden-alun-tavoitehinta]))
+    {:virhe "Kaikki arvot on oltava numeroita"}
+
+    (zero? hoitovuoden-alun-tavoitehinta)
+    {:virhe "Hoitovuoden tavoitehinta ei voi olla nolla (nollajako)"}
+
+    (neg? hoitovuoden-alun-tavoitehinta)
+    {:virhe "Hoitovuoden tavoitehinta ei voi olla negatiivinen"}
+
+    :else
+    {:ok true}))
+
+(defn laske-kustannusennusteen-tarkkuus
+  "Laskee kustannusennusteen tarkkuuden kaavan mukaan.
+   
+   Kaava: x = [(Te - Tt)/Th × 0,05 + (Ke - Kt)/Th × 0,05 + [(Ke - Te) - (Kt - Tt)]/Th × 0,9]
+   
+   Parametrit mapissa:
+   - ennustettu-tavoitehinta (Te): Ennustettu tavoitehinta
+   - toteutunut-tavoitehinta (Tt): Toteutunut tavoitehinta  
+   - ennustettu-kustannus (Ke): Ennustettu kustannus
+   - toteutunut-kustannus (Kt): Toteutunut kustannus
+   - hoitovuoden-tavoitehinta (Th): Hoitovuoden alun tavoitehinta
+   
+   Palauttaa: {:tarkkuus-prosentti x} tai {:virhe 'virheviesti'}"
+  [{:keys [ennustettu-tavoitehinta toteutunut-tavoitehinta 
+           ennustettu-kustannus toteutunut-kustannus
+           hoitovuoden-alun-tavoitehinta] :as syotteet}]
+  (let [validointi (validoi-kustannusennuste-syotteet syotteet)]
+    (if (:virhe validointi)
+      validointi
+      (let [te ennustettu-tavoitehinta
+            tt toteutunut-tavoitehinta
+            ke ennustettu-kustannus
+            kt toteutunut-kustannus
+            th hoitovuoden-alun-tavoitehinta
+            
+            ;; Kaavan osat
+            tavoitehinta-ero (/ (- te tt) th)
+            kustannus-ero (/ (- ke kt) th)
+            riski-ero (/ (- (- ke te) (- kt tt)) th)
+            
+            ;; Lopullinen kaava
+            tarkkuus (+ (* tavoitehinta-ero 0.05)
+                        (* kustannus-ero 0.05)
+                        (* riski-ero 0.9))
+            
+            ;; Muutetaan prosenteiksi ja pyöristetään yhteen desimaaliin
+            tarkkuus-prosentti (/ (Math/round (* tarkkuus 1000.0)) 10.0)]
+        
+        {:tarkkuus-prosentti tarkkuus-prosentti}))))
+
+(defn maarita-kustannusennuste-pisteet
+  "Määrittää pisteet tarkkuuden ja kuukauden perusteella.
+   Kuukausikohtaiset raja-arvot määrittävät pistemäärän."
+  [tarkkuus-prosentti kuukausi]
+  {:pre [(number? tarkkuus-prosentti) (number? kuukausi)]}
+  (let [tarkkuus-itseisarvo (Math/abs tarkkuus-prosentti)]
+    (cond
+      ;; Lokakuu - tammikuu (ensimmäiset 4 kuukautta)
+      (#{10 11 12 1} kuukausi)
+      (cond
+        (<= tarkkuus-itseisarvo 15.0) 5
+        (<= tarkkuus-itseisarvo 25.0) 3
+        (<= tarkkuus-itseisarvo 35.0) 1
+        :else 0)
+
+      ;; Helmikuu - huhtikuu (kuukaudet 5-7)
+      (#{2 3 4} kuukausi)
+      (cond
+        (<= tarkkuus-itseisarvo 10.0) 5
+        (<= tarkkuus-itseisarvo 20.0) 3
+        (<= tarkkuus-itseisarvo 30.0) 1
+        :else 0)
+
+      ;; Toukokuu - heinäkuu (kuukaudet 8-10)
+      (#{5 6 7} kuukausi)
+      (cond
+        (<= tarkkuus-itseisarvo 7.5) 5
+        (<= tarkkuus-itseisarvo 15.0) 3
+        (<= tarkkuus-itseisarvo 22.5) 1
+        :else 0)
+
+      ;; Elokuu - syyskuu (kuukaudet 11-12)
+      (#{8 9} kuukausi)
+      (cond
+        (<= tarkkuus-itseisarvo 5.0) 5
+        (<= tarkkuus-itseisarvo 10.0) 3
+        (<= tarkkuus-itseisarvo 15.0) 1
+        :else 0)
+
+      :else 0)))
+
+(defn laske-kustannusennuste-tulos
+  "Laskee kustannusennusteen kokonaistulon (tarkkuus + pisteet).
+   Yhdistää tarkkuuslaskennan ja pisteiden määrityksen."
+  [syotteet kuukausi]
+  {:pre [(map? syotteet) (number? kuukausi)]}
+  (let [tarkkuus-tulos (laske-kustannusennusteen-tarkkuus syotteet)]
+    (if (:virhe tarkkuus-tulos)
+      tarkkuus-tulos
+      (let [tarkkuus (:tarkkuus-prosentti tarkkuus-tulos)
+            pisteet (maarita-kustannusennuste-pisteet tarkkuus kuukausi)]
+        (assoc tarkkuus-tulos :pisteet pisteet)))))
+
 (defn odottaa-urakoitsijan-kannanottoa?
   "Odottaako 19/20 alkanut urakka urakoitsijan kannanottoa."
   [kuukausipisteet]
@@ -594,3 +745,29 @@
         (filter :odottaa-vastausta?)
         first
         boolean))))
+
+(comment
+  (laske-kustannusennuste-tulos
+    {:ennustettu-tavoitehinta 1000000
+     :ennustettu-kustannus 800000
+     :toteutunut-tavoitehinta 950000
+     :toteutunut-kustannus 780000
+     :hoitovuoden-alun-tavoitehinta 1200000}
+    3)
+  
+  ;; Testaa kustannusennuste-integrointi
+  (let [kustannusennuste-lupaus {:lupaustyyppi "kustannusennuste"
+                                 :hoitovuosi-paattynyt? true
+                                 :lupaus-kuukaudet [{:kuukausi 10 :kustannusennuste {:pisteet 5}}
+                                                   {:kuukausi 1 :kustannusennuste {:pisteet 3}}
+                                                   {:kuukausi 4 :kustannusennuste {:pisteet 4}}
+                                                   ;; Kesäkuu puuttuu = 0 pistettä
+                                                   {:kuukausi 6}]}]
+    ;; Ennuste: 4 (viimeisin annettu)
+    (kustannusennuste->ennuste kustannusennuste-lupaus)
+    ;; Toteuma: (5+3+4+0)/4 = 3 (keskiarvo, puuttuva kesäkuu = 0)
+    (kustannusennuste->toteuma kustannusennuste-lupaus)
+    ;; Integrointi:
+    (lupaus->ennuste kustannusennuste-lupaus)
+    (lupaus->toteuma kustannusennuste-lupaus))
+  )
