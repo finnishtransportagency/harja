@@ -208,6 +208,10 @@
                 },
                 "murske": {
                   "$ref": "#/definitions/murske"
+                },
+                "rc%": {
+                  "type": "number",
+                  "description": "Asfalttirouheen osuus massasta"
                 }
               }
             }
