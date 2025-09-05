@@ -9,6 +9,7 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.navigaatio :as nav]
+            [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]))
 
@@ -47,7 +48,6 @@
 (defrecord TallennaMuutos [muutos])
 (defrecord TallennaMuutosEpaonnistui [vastaus])
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
-(defrecord MuokkaaLaskettujenMuutoksienSyita [])
 (defrecord MuokkaaRahavaraustenMuutoksienSyita [])
 (defrecord HaeMuutoksenTiedot [muutos])
 (defrecord HaeMuutoksenTiedotOnnistui [vastaus muutos valittu-hoitokausi])
@@ -86,6 +86,10 @@
 
 
 ;; ---------------------------------------------
+(defn scrollaa-viimeksi-valitulle-riville []
+  (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))
+
+
 (defn johto-ja-hallintokorvausmuutoksen-rivit
   "Luo johto-ja-hallintokorvausmuutoksen rivit eli kulut. Yhdistää tyhjät rivit ja kannasta tulevat kulut."
   [valittu-hoitokausi kulut]
@@ -161,18 +165,18 @@
         :haku-kaynnissa? true
         :valittu-hoitokausi @u/valittu-hoitokausi
         :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet)))
-  
-  
+
+
   HaeUrakanMuutostiedotOnnistui
   (process-event [{:keys [vastaus]} app]
     (vastaus-haku-onnistui app vastaus))
-  
-  
+
+
   HaeUrakanMuutostiedotEpaonnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Muutostietojen hakeminen epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
-  
+
 
   HaeMuutoksenTiedotOnnistui
   (process-event [{vastaus :vastaus
@@ -240,7 +244,7 @@
         {:onnistui ->TallennaYksikkohintaOnnistui
          :epaonnistui ->TallennaYksikkohintaEpaonnistui})
       (-> app
-        (assoc 
+        (assoc
           :haku-kaynnissa? true
           :yksikkohinta-modal-auki? false))))
 
@@ -271,7 +275,7 @@
   (process-event [_ app]
     (viesti/nayta-toast! "Yksikköhinnan tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))
-  
+
 
   AvaaYksikkohintaModal
   (process-event [{:keys [valittu-modal-tehtava _tehtava_id]}
@@ -279,8 +283,8 @@
     (assoc app
       :yksikkohinta-modal-auki? true
       :valittu-modal-tehtava valittu-modal-tehtava))
-  
-  
+
+
   SuljeYksikkohintaModal
   (process-event [_ {:keys [_yksikkohinta-modal-auki?] :as app}]
     (assoc app
@@ -290,7 +294,9 @@
 
   MuokkaaMuutosta
   (process-event [{:keys [rivi]} app]
-    (assoc app :muokattava-muutos rivi))
+    (if (some? rivi)
+      (assoc app  :viimeksi-valittu rivi :muokattava-muutos rivi)
+      (assoc app :muokattava-muutos rivi)))
 
 
   TallennaMuutos
@@ -302,12 +308,12 @@
           muutos (lomake/ilman-lomaketietoja muutos)
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
                   ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
-                  (filter #(and 
+                  (filter #(and
                              (some? (:tavoitehinnan-muutos %))
                              (not= 0 (:tavoitehinnan-muutos %)))
                     (vals @johto-ja-hallintokorvausmuutokset-atom)))
           muutos (assoc muutos :kulut kulut)]
-      
+
       (if-not (empty? puuttuvat-pakolliset-kentat)
         (assoc-in app [:muokattava-muutos :puuttuvat-pakolliset-kentat] puuttuvat-pakolliset-kentat)
         (do
@@ -333,7 +339,7 @@
   (process-event [{:keys [_vastaus]} app]
     (viesti/nayta-toast! "Rahavarauksien muutosten syiden tallentaminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
-  
+
 
   TallennaRahavarausmuutostenSyytOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -345,12 +351,6 @@
   (process-event [{taulukon-avain :taulukon-avain} app]
     (assoc-in app [:taulukko-nakyvissa? taulukon-avain]
       (not (get-in app [:taulukko-nakyvissa? taulukon-avain]))))
-
-
-  MuokkaaLaskettujenMuutoksienSyita
-  (process-event [_ app]
-    ;; TODO: aloita laskettujen muutosten syiden muokkaus taulukossa, ei avata lomaketta
-    app)
 
 
   MuokkaaRahavaraustenMuutoksienSyita
@@ -440,5 +440,5 @@
 
   PaivitaLomake
   (process-event [{:keys [lomake]} app]
-    (prn "PaivitaLomake: " lomake)
+    ;; (prn "PaivitaLomake: " lomake)
     (assoc app :muokattava-muutos lomake)))
