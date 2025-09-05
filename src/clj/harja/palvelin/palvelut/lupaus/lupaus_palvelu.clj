@@ -13,6 +13,8 @@
             [harja.domain.roolit :as roolit]
             [harja.domain.urakka :as urakka]
             [harja.domain.kulut.valikatselmus :as valikatselmus-domain]
+            [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
+            [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta-palvelu]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
             [harja.kyselyt.konversio :as konversio]
@@ -113,6 +115,15 @@
           :urakka-id urakka-id
           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
 
+(defn- hae-lupaus-kustannukset-jarjestettyna [db urakkaid hoitovuosi hoitokauden-alkupvm hoitokauden-loppupvm]
+  (let [kustannukset (kustannusten-seuranta-palvelu/hae-urakan-kustannusten-seuranta-paaryhmittain-ilman-validointia
+                       db {:urakka-id urakkaid
+                           :hoitokauden-alkuvuosi hoitovuosi
+                           :alkupvm hoitokauden-alkupvm
+                           :loppupvm hoitokauden-loppupvm})
+        kustannukset-jarjestettyna (kustannusten-seuranta/jarjesta-tehtavat kustannukset)]
+    kustannukset-jarjestettyna))
+
 (defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
@@ -174,6 +185,24 @@
         merkitsevat-odottaa-kannanottoa (lupaus-domain/lupausryhmat->merkitsevat-odottaa-kannanottoa lupausryhmat)
         odottaa-urakoitsijan-kannanottoa? (> odottaa-kannanottoa merkitsevat-odottaa-kannanottoa)
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
+        ;; Hae oikaistu tavoitehinta välikatselmuksesta vertailua varten
+        oikaistu-tavoitehinta-data (try
+                                     (when hk-alkupvm
+                                       (valikatselmus-q/hae-oikaistu-tavoitehinta 
+                                         db {:urakka-id urakka-id 
+                                             :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+                                     (catch Exception e
+                                       (log/warn "Oikaistun tavoitehinnan haku epäonnistui:" (.getMessage e))
+                                       nil))
+        kustannukset-jarjestettyna (try
+                                     (when hk-alkupvm
+                                       (hae-lupaus-kustannukset-jarjestettyna
+                                         db urakka-id hoitokauden-alkuvuosi hk-alkupvm hk-loppupvm))
+                                     (catch Exception e
+                                       (log/warn "Kustannusten haku epäonnistui:" (.getMessage e))
+                                       nil))
+        oikaistu-tavoitehinta oikaistu-tavoitehinta-data
+        oikaistu-toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])
         tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
         luvatut-pisteet-puuttuu? (not (:pisteet lupaus-sitoutuminen))
         tallennettu-paatos (hae-lupauspaatos db urakka-id (pvm/vuosi hk-alkupvm))
@@ -189,6 +218,8 @@
         ennusteen-voi-tehda? (and (pvm/sama-tai-jalkeen? nykyhetki hk-alkupvm)
                                   bonus-tai-sanktio)
         hoitovuosi-valmis? (boolean piste-toteuma)
+        _ (prn "ennusteen-voi-tehda?" ennusteen-voi-tehda?)
+        _ (prn "bonus-tai-sanktio" bonus-tai-sanktio tallennettu-bonus-tai-sanktio)
         ennusteen-tila (cond tallennettu-bonus-tai-sanktio
                              :katselmoitu-toteuma
 
@@ -222,6 +253,9 @@
                                   ;; Näytetään päätökseen tallennettu tavoitehinta, jos saatavilla
                                   (:tavoitehinta tallennettu-paatos)
                                   tavoitehinta)
+                  ;; Lisätään oikaistu tavoitehinta välikatselmuksesta
+                  :oikaistu-tavoitehinta oikaistu-tavoitehinta
+                  :oikaistu-toteutuneet-kustannukset oikaistu-toteutuneet-kustannukset
                   :odottaa-kannanottoa odottaa-kannanottoa
                   :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa
                   :odottaa-urakoitsijan-kannanottoa? odottaa-urakoitsijan-kannanottoa?
@@ -304,73 +338,49 @@
     ;; Sallitaan nil-arvon asettaminen.
     true))
 
-(defn laske-kustannusennuste-pisteet
-  "Laskee pisteet poikkeamaprosentin ja määräpäivän perusteella"
-  [db lupaus-id poikkeama-prosentti maarapaiva-kk]
-  (let [pisterajat (lupaus-kyselyt/hae-kustannusennusteen-pisterajat
-                     db {:lupaus-id lupaus-id})]
-    ;; Etsi sopiva pisteraja kuukauden ja poikkeaman perusteella
-    (->> pisterajat
-      (filter #(= (:maarapaiva-kk %) maarapaiva-kk))
-      (filter #(<= poikkeama-prosentti (:tarkkuus-prosentti %)))
-      (sort-by :tarkkuus-prosentti)
-      first
-      :pisteet
-      (or 1)))) ; Oletuspisteet jos ei löydy sopivaa rajaa
-
-(defn- kustannusennuste-poikkeama
-  "Laskee kustannusennusteen poikkeama-prosentin"
-  [{:keys [tavoitehinta toteutuneet-kustannukset]}]
-  (when (and tavoitehinta toteutuneet-kustannukset (pos? tavoitehinta))
-    (Math/abs (double (/ (* 100 (- toteutuneet-kustannukset tavoitehinta))
-                         tavoitehinta)))))
 
 (defn- tallenna-kustannusennuste-vastaus [db user {:keys [lupaus-id urakka-id kuukausi vuosi
-                                                          kustannusennuste] :as tiedot}]
-  ;; Laske pisteet automaattisesti
-  (let [poikkeama-prosentti (kustannusennuste-poikkeama kustannusennuste)
-        pisteet (laske-kustannusennuste-pisteet db lupaus-id poikkeama-prosentti kuukausi)
-        maarapaiva (pvm/luo-pvm vuosi (dec kuukausi) 15) ; 15. päivä
-        syotetty-pvm (pvm/nyt)
-        
-        ;; Laske hoitovuosi-alkuvuosi
-        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
-        urakan-alkupvm (:alkupvm urakan-tiedot)
-        paivamaara (pvm/luo-pvm vuosi (dec kuukausi) 1)
-        hoitovuosi-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
-        hoitovuosi-alkuvuosi (pvm/hoitokauden-alkuvuosi vuosi kuukausi)
+                                                           kustannusennuste] :as tiedot}]
+  ;; EI lasketa pisteitä automaattisesti - ne lasketaan vasta välikatselmuksessa
+   (let [maarapaiva (pvm/luo-pvm vuosi (dec kuukausi) 15)
+         syotetty-pvm (pvm/nyt)
+         hoitovuosi-alkuvuosi (pvm/hoitokauden-alkuvuosi vuosi kuukausi)
 
         ;; Tarkista onko kustannusennuste jo olemassa
-        olemassa-oleva-id (lupaus-kyselyt/hae-kustannusennuste-id
-                            db {:lupaus-id lupaus-id
-                                :urakka-id urakka-id
-                                :maarapaiva maarapaiva})]
+         olemassa-oleva-id (lupaus-kyselyt/hae-kustannusennuste-id
+                             db {:lupaus-id lupaus-id
+                                 :urakka-id urakka-id
+                                 :maarapaiva maarapaiva})]
 
-    (if olemassa-oleva-id
+     (if olemassa-oleva-id
       ;; Päivitä olemassa oleva
-      (lupaus-kyselyt/paivita-kustannusennuste<!
-        db (merge kustannusennuste
-             {:id olemassa-oleva-id
-              :pisteet pisteet
-              :syotetty-pvm syotetty-pvm
-              :hoitovuosi-alkuvuosi hoitovuosi-alkuvuosi
-              :kayttaja (:id user)}))
+       (lupaus-kyselyt/paivita-kustannusennuste<! db
+         {:id olemassa-oleva-id
+          :tavoitehinta (:tavoitehinta kustannusennuste)
+          :toteutuneet-kustannukset (:toteutuneet-kustannukset kustannusennuste)
+          :syotetty-pvm syotetty-pvm
+         ;; EI tallenneta pisteitä vielä - ne lasketaan välikatselmuksessa
+          :pisteet nil
+          :kayttaja (:id user)})
+
       ;; Luo uusi
-      (lupaus-kyselyt/lisaa-kustannusennuste<!
-        db (merge kustannusennuste
-             {:lupaus-id lupaus-id
-              :urakka-id urakka-id
-              :maarapaiva maarapaiva
-              :pisteet pisteet
-              :syotetty-pvm syotetty-pvm
-              :hoitovuosi-alkuvuosi hoitovuosi-alkuvuosi
-              :kayttaja (:id user)})))
+       (lupaus-kyselyt/lisaa-kustannusennuste<! db
+         {:lupaus-id lupaus-id
+          :urakka-id urakka-id
+          :maarapaiva maarapaiva
+          :tavoitehinta (:tavoitehinta kustannusennuste)
+          :toteutuneet-kustannukset (:toteutuneet-kustannukset kustannusennuste)
+          :syotetty-pvm syotetty-pvm
+          :hoitovuosi-alkuvuosi hoitovuosi-alkuvuosi
+         ;; EI tallenneta pisteitä vielä - ne lasketaan välikatselmuksessa
+          :pisteet nil
+          :kayttaja (:id user)}))
 
     ;; Palauta kustannusennusteen tiedot
-    (lupaus-kyselyt/hae-kustannusennuste db
-      {:lupaus-id lupaus-id
-       :urakka-id urakka-id
-       :maarapaiva maarapaiva})))
+   (lupaus-kyselyt/hae-kustannusennuste db
+     {:lupaus-id lupaus-id
+      :urakka-id urakka-id
+      :maarapaiva maarapaiva})))
 
 (defn- tarkista-vastaus-ja-vaihtoehto
   "Tarkista vastaustyyppi lupauksen tyypin mukaan"
@@ -559,6 +569,9 @@
          valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-urakalle? db urakka-id (pvm/vuosi hk-alkupvm))
          ;; Koko urakkakauden sitoutumispisteisiin vaikuttaa onko urakalle tehty yhtään välitkaselmusta
          valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id vuosi)
+         ;; Hae välikatselmuksen vahvistetut kustannusennusteet
+         vahvistetut-kustannusennusteet (lupaus-kyselyt/hae-valikatselmuksen-vahvistetut-kustannusennusteet db {:urakka-id urakka-id
+                                                                                                              :hoitokauden-alkuvuosi vuosi})
          lopulliset-pisteet (lupaus-domain/kokoa-vastauspisteet kayttaja kuukausipisteet urakka-id
                               valittu-hoitokausi valikatselmus-tehty-hoitokaudelle?
                               nykyhetki)
@@ -617,7 +630,112 @@
                    :odottaa-urakoitsijan-kannanottoa? odottaa-urakoitsijan-kannanottoa?
                    :valikatselmus-tehty-urakalle? valikatselmus-tehty-urakalle?
                    :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
-                   :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}})))
+                   :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?
+                   :vahvistetut-kustannusennusteet vahvistetut-kustannusennusteet}})))
+
+(defn laske-lopullinen-kustannusennuste!
+  "Laskee lopulliset pisteet kustannusennusteille kun välikatselmus on saatavilla.
+   Kutsutaan välikatselmuksen päätöksestä."
+  [db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta toteutunut-kustannus valikatselmus-pvm user-id]
+  (try
+    (log/info (format "Lasketaan lopulliset kustannusennuste pisteet urakalle %s hoitokaudelle %s"
+                urakka-id hoitokauden-alkuvuosi))
+
+    ;; Hae hoitovuoden alun tavoitehinta  
+    (let [hk-alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+          hoitovuoden-alun-tavoitehinta (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm)]
+      
+      ;; Tallenna ensin lopputilanne
+      (when (resolve 'lupaus-kyselyt/tallenna-lopputilanne!)
+        (lupaus-kyselyt/tallenna-lopputilanne! db {:urakka-id urakka-id
+                                                   :hoitovuosi-alkuvuosi hoitokauden-alkuvuosi
+                                                   :lopullinen-tavoitehinta toteutunut-tavoitehinta
+                                                   :lopulliset-kustannukset toteutunut-kustannus
+                                                   :valikatselmus-pvm valikatselmus-pvm
+                                                   :vahvistaja user-id}))
+
+      ;; Hae kaikki kustannusennusteet lupausten kautta
+      (let [lupaukset (lupaus-kyselyt/hae-urakan-lupaukset db {:urakka-id urakka-id})
+            kustannusennuste-lupaukset (filter #(= "kustannusennuste" (:lupaustyyppi %)) lupaukset)]
+
+        ;; Käy läpi jokainen kustannusennuste-lupaus
+        (doseq [lupaus kustannusennuste-lupaukset]
+          (let [lupaus-id (:id lupaus)
+                kustannusennusteet (lupaus-kyselyt/hae-lupauksen-kaikki-kustannusennusteet
+                                     db {:lupaus-id lupaus-id
+                                         :urakka-id urakka-id
+                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+
+            (doseq [ke kustannusennusteet]
+              (let [ennustettu-tavoitehinta (:tavoitehinta ke)
+                    ennustetut-kustannukset (:toteutuneet-kustannukset ke)
+                    maarapaiva (:maarapaiva ke)
+                    kustannusennuste-id (:id ke)]
+
+                ;; Laske lopulliset pisteet domain-logiikalla
+                (when (and ennustettu-tavoitehinta ennustetut-kustannukset hoitovuoden-alun-tavoitehinta)
+                  (let [lopulliset-pisteet (lupaus-domain/laske-kustannusennuste-tulos
+                                             {:ennustettu-tavoitehinta ennustettu-tavoitehinta
+                                              :ennustettu-kustannus ennustetut-kustannukset
+                                              :toteutunut-tavoitehinta toteutunut-tavoitehinta
+                                              :toteutunut-kustannus toteutunut-kustannus
+                                              :hoitovuoden-alun-tavoitehinta hoitovuoden-alun-tavoitehinta}
+                                             (pvm/kuukausi maarapaiva))]
+
+                    ;; Päivitä lopulliset pisteet tietokantaan
+                    (lupaus-kyselyt/paivita-kustannusennuste-lopulliset-pisteet!
+                      db {:kustannusennuste-id kustannusennuste-id
+                          :ennustettu-tavoitehinta ennustettu-tavoitehinta
+                          :ennustetut-kustannukset ennustetut-kustannukset
+                          :lasketut-pisteet lopulliset-pisteet
+                          :muokkaaja user-id})
+
+                    (log/info (format "Päivitettiin kustannusennuste %s lopulliset pisteet: %s"
+                                kustannusennuste-id lopulliset-pisteet)))))))))
+
+      (log/info (format "Lopulliset kustannusennuste pisteet laskettu urakalle %s hoitokaudelle %s"
+                  urakka-id hoitokauden-alkuvuosi)))
+
+    (catch Exception e
+      (log/error e (format "Virhe laskettaessa lopullisia kustannusennuste pisteitä urakalle %s: %s"
+                     urakka-id (.getMessage e)))
+      (throw e))))
+
+(defn laske-lopullinen-kustannusennuste
+  "Laskee hoitovuoden lopulliset kustannusennusteen pisteet kustannustietojen perusteella.
+   
+   Tätä funktiota kutsutaan välikatselmuksessa, kun hoitokauden lopun hintapäätös tehdään.
+   Funktio:
+   1. Hakee toteutuneet kustannukset hoitokaudelta
+   2. Kutsuu lupaus-palvelun kustannusennuste-logiikkaa 
+   3. Palauttaa päivitetyn päätöksen tai nil jos laskenta epäonnistuu
+   
+   Parametrit:
+   - db: Tietokantayhteys
+   - urakka-id: Urakan tunniste
+   - hoitokauden-alkuvuosi: Hoitokauden alkuvuosi (esim. 2024)
+   - paatos: Välikatselmuksen päätös (map)
+   - kayttaja: Käyttäjän tiedot"
+  [db urakka-id hoitokauden-alkuvuosi paatos kayttaja]
+  (try
+    (log/info (format "Lasketaan lopulliset kustannusennuste pisteet urakalle %s hoitokaudelle %s"
+                urakka-id hoitokauden-alkuvuosi))
+
+    ;; Haetaan toteutuneet kustannukset päätöksestä
+    (let [toteutunut-tavoitehinta (:tavoitehinta paatos)
+          toteutuneet-kustannukset (:toteutuneet_kustannukset paatos)
+          paatos-pvm (:paatosten_asettamisaika paatos)
+          user-id (:id kayttaja)]
+
+      ;; Kutsutaan aiempaa logiikkaa
+      (laske-lopullinen-kustannusennuste! db urakka-id hoitokauden-alkuvuosi
+        toteutunut-tavoitehinta toteutuneet-kustannukset
+        paatos-pvm user-id)
+      ;; Palauta päätös jossa on toteutuneet kustannukset
+      (assoc paatos :toteutuneet_kustannukset toteutuneet-kustannukset))
+    (catch Exception e
+      (log/error e "Virhe kustannusennusteen laskennassa")
+      nil)))
 
 (defn hae-kuukausittaiset-pisteet [db user {:keys [urakka-id valittu-hoitokausi nykyhetki] :as tiedot}]
   {:pre [db user tiedot (number? urakka-id) (not (nil? valittu-hoitokausi)) (number? (:id user))]}
