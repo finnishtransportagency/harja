@@ -48,68 +48,173 @@
 (def +pysyva-muutos-vihje+
   "Pysyvät muutokset huomioidaan osana kustannussuunnitelmaa ja indeksitarkistusta ensimmäisestä täydestä hoitovuodesta alkaen. Muutokset ovat voimassa urakan päättymiseen asti.")
 
+
+(defn- muutos-lomake-syy-ja-voimassa [e! app]
+  (lomake/ryhma
+    (lomake/rivi
+      {:nimi :syy
+       :otsikko "Muutoksen syy"
+       :tyyppi :text
+       :palstoja 2
+       :koko [90 4]
+       :aputeksti "Kuvaile muutos mahdollisimman tarkasti. Ethän syötä kenttään henkilö- tai muuta arkaluontoista tietoa."
+       :pituus-max 1000
+       :uusi-rivi? true
+       :pakollinen? true
+       ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"})
+
+    (lomake/rivi
+      {:otsikko "Voimassa alkaen"
+       :nimi :voimassa_alkaen
+       :tyyppi :pvm
+       :uusi-rivi? true
+       :pakollinen? true
+       ;; pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
+       ;; pienempi kuin voimassa alkaen, joten kutsuttava :aseta funktiota. Ei vaikuta ainakaan vielä muissa muutostyypeissä
+       :aseta (fn [rivi arvo]
+                (-> rivi
+                  (assoc :voimassa_alkaen arvo)
+                  (assoc :mahdolliset-hoitovuodet-lomakkeella
+                    (filter #(pvm/jalkeen? (first %) arvo)
+                      (:urakan-hoitokaudet app)))))})))
+
+
+(defn- muutostyo-lomake-kentat [e! app]
+  (lomake/ryhma
+
+    (lomake/rivi
+      {:tyyppi :komponentti
+       :uusi-rivi? true
+       :komponentti (fn [_rivi]
+                      [:div.perustiedot
+                       [yleiset/info-laatikko :neutraali
+                        "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."]])})
+
+    (lomake/rivi
+      {:otsikko "Kyseessä on"
+       :nimi :muutostyo-laji
+       :vayla-tyyli? true
+       :tyyppi :radio-group
+       :vaihtoehto-nayta muutos-domain/+muutostyo-valinnat+
+       :vaihtoehdot (keys muutos-domain/+muutostyo-valinnat+)
+       :oletusarvo :erillis ;; Toistaiseksi vain erillisrahoitus käytössä
+       :vaihtoehto-opts {:poikkeaminen {:disabloitu? true}} ;; Ei vielä käytössä  
+       })
+
+    (lomake/rivi
+      {:otsikko "Muutostyön nimi"
+       :nimi :muutostyo-nimi
+       :tyyppi :string
+       :pakollinen? true
+       :salli-kirjoitus? true
+       :piilota-checkbox? true
+       :piilota-dropdown? true
+       :validoi [#(when (nil? (seq %)) "Kirjoita muutostyön nimi")]
+       :aputeksti "Anna muutokselle tunnistettava nimi. Nimeä käytetään kulujen kohdistamiseen."
+       ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"})
+
+    (muutos-lomake-syy-ja-voimassa e! app)
+
+    (lomake/rivi
+      {:otsikko "Tavoitehinnan muutos"
+       :pakollinen? true
+       :vayla-tyyli? true
+       :nimi :muutostyo-tavoitehinnan-muutos
+       :tyyppi :euro
+       :teksti-oikealla "EUR"
+       :validoi [#(when (nil? %) "Syötä tavoitehinnan muutos")
+                 [:rajattu-numero -999999999 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
+       ::lomake/col-luokka "perustiedot col-xs-6"})
+
+    ;; 
+    ))
+
+
 (defn- muutoslomakkeen-kentat-yhteiset
-  "Eri muutostyypeille yhteiset kentät. Voi silti sisältää pienen määrän haaroitusta."
   [e! {:keys [muokattava-muutos valittu-hoitokausi urakan-hoitokaudet] :as app}]
-  (vec
-    (keep identity
-      (concat
-        [{:otsikko "Tyyppi"
-          :nimi :tyyppi
-          :pakollinen? true
-          ;; sallitaan muokkaus vain uudelle muutokselle
-          :muokattava? (fn [rivi] (nil? (:id rivi)))
-          :aseta (fn [rivi arvo]
-                   (muutos-tiedot/alusta-tyyppikohtaisia-arvoja arvo valittu-hoitokausi)
-                   (assoc rivi :tyyppi arvo))
-          :kaariva-luokka "muutostyyppivalinta"
-          :tyyppi :valinta
-          :vayla-tyyli? true
-          :valinnat muutos-domain/+muutostyypit-lomakkeella+
-          :valinta-arvo identity
-          :valinta-nayta (fn [arvo]
-                           (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))
-          :uusi-rivi? true}
-         (when (= "pysyva" (:tyyppi muokattava-muutos))
-           {:tyyppi :komponentti
-            :uusi-rivi? true
-            :komponentti (fn [_rivi]
-                           [:div.perustiedot
-                            [yleiset/info-laatikko :neutraali
-                            "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."]])})
-         (lomake/ryhma {:otsikko "Perustiedot"}
-           (when (= "johto-ja-hallintokorvaus" (:tyyppi muokattava-muutos))
-             {:nimi :hoitovuosi :tyyppi :string :otsikko "Hoitovuosi" :muokattava? (constantly false)
-              :hae #(fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hoitokausi urakan-hoitokaudet "Hoitovuosi")})
-           (when (= "pysyva" (:tyyppi muokattava-muutos))
-             {:nimi :nimi
-              :otsikko "Nimi"
-              :tyyppi :string
-              :uusi-rivi? true
-              :pakollinen? true
-              ::lomake/col-luokka "perustiedot col-sm-6"})
-           {:nimi :syy
-            :otsikko "Muutoksen syy"
-            :tyyppi :text
-            :palstoja 2
-            :koko [90 4]
-            :aputeksti "Kuvaile muutos mahdollisimman tarkasti. Ethän syötä kenttään henkilö- tai muuta arkaluontoista tietoa."
-            :pituus-max 1000
-            :uusi-rivi? true
+  (let [tyyppi (:tyyppi muokattava-muutos)]
+    ;; Heitä tämä vaan eriin namespaceen? 
+    (vec
+      (keep identity
+        (concat
+          [{:otsikko "Tyyppi"
+            :nimi :tyyppi
             :pakollinen? true
-            ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"}
-           {:nimi :voimassa_alkaen :otsikko "Voimassa alkaen"
-            :tyyppi :pvm :uusi-rivi? true
-            :pakollinen? true
-            ;; pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
-            ;; pienempi kuin voimassa alkaen, joten kutsuttava :aseta funktiota. Ei vaikuta ainakaan vielä muissa muutostyypeissä
+            :muokattava? (fn [rivi] (nil? (:id rivi))) ;; sallitaan muokkaus vain uudelle muutokselle
             :aseta (fn [rivi arvo]
-                     (-> rivi
-                       (assoc :voimassa_alkaen arvo)
-                       (assoc :mahdolliset-hoitovuodet-lomakkeella
-                         (filter #(pvm/jalkeen? (first %) arvo)
-                           (:urakan-hoitokaudet app)))))})]
-        (liite-kentta e! app)))))
+                     (muutos-tiedot/alusta-tyyppikohtaisia-arvoja arvo valittu-hoitokausi)
+                     (assoc rivi :tyyppi arvo))
+            :kaariva-luokka "muutostyyppivalinta perustiedot tyyppi"
+            :tyyppi :valinta
+            :vayla-tyyli? true
+            :valinnat muutos-domain/+muutostyypit-lomakkeella+
+            :valinta-arvo identity
+            :valinta-nayta (fn [arvo]
+                             (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))
+            :uusi-rivi? true}
+
+           
+           ;; TODO .. 
+           (cond
+             (= "pysyva" tyyppi)
+             nil
+
+             (= "johto-ja-hallintokorvaus" tyyppi)
+             nil
+
+             (= "muutostyo" tyyppi)
+             (muutostyo-lomake-kentat e! app)
+
+             ;;
+             )
+
+           #_(lomake/ryhma {:otsikko "Perustiedot"}
+               (cond
+                 (= "johto-ja-hallintokorvaus" tyyppi)
+                 {:nimi :hoitovuosi
+                  :tyyppi :string
+                  :otsikko "Hoitovuosi"
+                  :muokattava? (constantly false)
+                  :hae #(fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hoitokausi urakan-hoitokaudet "Hoitovuosi")}
+
+
+
+
+                 (= "pysyva" tyyppi)
+                 {:nimi :nimi
+                  :otsikko "Nimi"
+                  :tyyppi :string
+                  :uusi-rivi? true
+                  :pakollinen? true
+                  ::lomake/col-luokka "perustiedot col-sm-6"})
+
+               {:nimi :syy
+                :otsikko "Muutoksen syy"
+                :tyyppi :text
+                :palstoja 2
+                :koko [90 4]
+                :aputeksti "Kuvaile muutos mahdollisimman tarkasti. Ethän syötä kenttään henkilö- tai muuta arkaluontoista tietoa."
+                :pituus-max 1000
+                :uusi-rivi? true
+                :pakollinen? true
+                ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"}
+
+
+               {:otsikko "Voimassa alkaen"
+                :nimi :voimassa_alkaen
+                :tyyppi :pvm
+                :uusi-rivi? true
+                :pakollinen? true
+              ;; pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
+              ;; pienempi kuin voimassa alkaen, joten kutsuttava :aseta funktiota. Ei vaikuta ainakaan vielä muissa muutostyypeissä
+                :aseta (fn [rivi arvo]
+                         (-> rivi
+                           (assoc :voimassa_alkaen arvo)
+                           (assoc :mahdolliset-hoitovuodet-lomakkeella
+                             (filter #(pvm/jalkeen? (first %) arvo)
+                               (:urakan-hoitokaudet app)))))})]
+
+          (liite-kentta e! app))))))
 
 (defn- jatkuvan-muutoksen-vetolaatikko
   "Piirtää jatkuvan muutoksen taulukkoon vetolaatikon, jolla hallitaan kustannus- ja tehtävämuutoksia."
@@ -358,21 +463,30 @@
          :footer-fn (fn [muutos]
                       [:div
                        [:hr]
+
                        (when-not (empty? (:puuttuvat-pakolliset-kentat muokattava-muutos))
                          [yleiset/info-laatikko :varoitus
                           (str "Lomakkeelta puuttuu pakollisia kenttiä: "
                             (str/join ", " (:puuttuvat-pakolliset-kentat muokattava-muutos))
                             ". Korjaa ne ja yritä uudelleen.")])
+
+                       (when (= (:tyyppi muokattava-muutos) "muutostyo")
+                         [:div.perustiedot
+                          [yleiset/info-laatikko :neutraali
+                           "Tallentamisen jälkeen muutostyölle voi kohdistaa kuluja."]])
+
                        [napit/tallenna "Tallenna"
-                        #(do 
+                        #(do
                            (muutos-tiedot/scrollaa-viimeksi-valitulle-riville)
                            (tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos muutos))
                         {:disabled tallennus-kesken?}]
+
                        [napit/peruuta "Peruuta"
-                        #(do 
+                        #(do
                            (muutos-tiedot/scrollaa-viimeksi-valitulle-riville)
                            (e! (muutos-tiedot/->MuokkaaMuutosta nil)))
                         {:disabled tallennus-kesken?}]])}
+        
         ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
         (into []
           (concat
