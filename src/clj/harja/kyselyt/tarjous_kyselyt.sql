@@ -86,3 +86,20 @@ SET summa = :summa,
     muokkaaja = :muokkaaja,
     muokattu = NOW()
 WHERE id = :id;
+
+-- name: hae-urakan-tarjous-tavoitehinnat
+SELECT id, hoitokausi as hoitovuosinro, urakka, tarjous_tavoitehinta
+  FROM urakka_tavoite
+ WHERE urakka = :urakkaid
+ ORDER BY hoitokausi;
+
+-- name: lisaa-urakan-tavoite-tarjous<!
+INSERT INTO urakka_tavoite (hoitokausi, urakka, tarjous_tavoitehinta, luoja, luotu)
+VALUES (:hoitovuosinro, :urakkaid, :tarjous_tavoitehinta, :luoja, NOW());
+
+-- name: paivita-urakan-tavoite-tarjous<!
+UPDATE urakka_tavoite
+SET tarjous_tavoitehinta = :tarjous_tavoitehinta,
+    muokkaaja = :muokkaaja,
+    muokattu = NOW()
+WHERE id = :id;
