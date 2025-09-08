@@ -60,7 +60,8 @@
 (defn muodosta-urakka-tiedot [tarkastus]
   {:harja-id (:urakka_id tarkastus)
    :tunnus (:urakka_tunnus tarkastus)
-   :nimi (:urakka_nimi tarkastus)})
+   :nimi (:urakka_nimi tarkastus)
+   :hallintayksikko (:urakka_hallintayksikko tarkastus)})
 
 (defn muodosta-silta-tiedot [tarkastus]
   {:harja-id (:silta_id tarkastus)
@@ -101,6 +102,17 @@
                :havainnot (muodosta-havainnot kohde)}})
         kohteet))))
 
+(defn muodosta-harja-url [tarkastus base-url]
+  (when (and (:urakka_hallintayksikko tarkastus)
+          (:urakka_id tarkastus)
+          (:silta_id tarkastus)
+          (:siltatarkastus_id tarkastus))
+    (str base-url "/#urakat/laadunseuranta/siltatarkastukset?&hy="
+      (:urakka_hallintayksikko tarkastus)
+      "&u=" (:urakka_id tarkastus)
+      "&sil=" (:silta_id tarkastus)
+      "&st=" (:siltatarkastus_id tarkastus))))
+
 (defn hae-siltatarkastukset
   "Hakee siltatarkastukset annettujen alku- ja loppuajan puitteissa."
   [db {:keys [alkuaika loppuaika] :as parametrit} _kayttaja]
@@ -120,6 +132,7 @@
                                         :tarkastusaika (when (:tarkastusaika tarkastus)
                                                          (pvm/aika-iso8601-aikavyohykkeen-kanssa (:tarkastusaika tarkastus)))
                                         :tarkastaja (:tarkastaja tarkastus)
+                                        :harja-url (muodosta-harja-url tarkastus "http://harja.testi")
                                         :luotu (when (:luotu tarkastus)
                                                  (pvm/aika-iso8601-aikavyohykkeen-kanssa (:luotu tarkastus)))
                                         :muokattu (when (:muokattu tarkastus)

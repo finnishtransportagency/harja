@@ -64,12 +64,17 @@
                   "nimi": {
                     "type": "string",
                     "description": "Urakka jossa siltatarkastus on tehty. Urakan nimi."
+                  },
+                  "hallintayksikko": {
+                    "type": "integer",
+                    "description": "Urakan hallintayksikön tunniste"
                   }
                 },
                 "required": [
                   "harja-id",
                   "tunnus",
-                  "nimi"
+                  "nimi",
+                  "hallintayksikko"
                 ]
               },
               "silta": {
