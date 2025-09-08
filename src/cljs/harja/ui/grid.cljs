@@ -10,6 +10,7 @@
 (def otsikko? protokollat/otsikko?)
 (def aseta-virhe! protokollat/aseta-virhe!)
 (def hae-muokkaustila protokollat/hae-muokkaustila)
+(def vetolaatikko-auki? protokollat/vetolaatikko-auki?)
 (def poista-virhe! protokollat/poista-virhe!)
 (def nollaa-historia! protokollat/nollaa-historia!)
 (def hae-virheet protokollat/hae-virheet)

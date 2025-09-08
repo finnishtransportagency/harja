@@ -843,7 +843,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   ([tyyppi ensisijainen-viesti toissijainen-viesti leveys]
    (info-laatikko tyyppi ensisijainen-viesti toissijainen-viesti leveys {}))
   ([tyyppi ensisijainen-viesti toissijainen-viesti leveys {:keys [luokka sulje-fn sulje-nappi-id ikoni-fn]}]
-   (assert (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus} tyyppi)
+   (assert (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto} tyyppi)
      "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
    (let [sulje-nappi-id (keyword sulje-nappi-id)]
      (when (or (nil? (get @infolaatikko-nakyvissa? sulje-nappi-id))
@@ -855,7 +855,8 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
            :varoitus (ikonit/livicon-warning-sign)
            :onnistunut (ikonit/livicon-check)
            :vahva-ilmoitus (if ikoni-fn (ikoni-fn) (ikonit/status-info-inline-svg +vari-black-light+))
-           :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
+           :neutraali (ikonit/status-info-inline-svg +vari-black-light+)
+           :huolto (ikonit/livicon-wrench))]
         [:div.infolaatikon-teksti
          [:div {:style {:white-space "pre-line" :color +vari-black-default+}}
           ensisijainen-viesti]

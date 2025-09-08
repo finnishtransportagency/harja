@@ -1,6 +1,8 @@
 import * as ks from "../support/kustannussuunnitelmaFns.js";
-let clickTimeout = 6000;
-let urakanNimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';
+const clickTimeout = 6000;
+const visibleTimeout = 30000;
+const ladataanHarjaaTimeout = 30000;
+const urakanNimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';
 
 // Alustetaan yllänimetty urakka Kustannussuunnittelua varten
 function alustaUrakkaKustannussuunnitteluun() {
@@ -9,17 +11,24 @@ function alustaUrakkaKustannussuunnitteluun() {
 
 describe('Päänäkymien avaamiset', function () {
     beforeEach(function () {
+        cy.viewport(1100, 2000)
         cy.visit("/")
+        // Varmista, että pääsivu on ladattu ennen testien aloitusta
+        cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
     })
 
     it("Urakkavalinta listan kautta toimii", function () {
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click({force: true})
+        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
         cy.contains('.haku-lista-item', 'Aktiivinen Oulu Testi').click()
         cy.contains('Aktiivinen Oulu Testi')
     })
 
     it("Raportit välilehti toimii", function () {
-        cy.contains('ul#sivut a span', 'Raportit').click({force: true})
+        cy.intercept( '_/hae-raportit' ).as('hae-raportit')
+        cy.contains('ul#sivut a span', 'Raportit').click()
+        // Odota raporttien latautumista, jotta raportti voidaan valita
+        cy.wait('@hae-raportit', { timeout: visibleTimeout })
+            .its('response.statusCode').should('equal', 200)
         cy.contains('div.valittu', 'Valitse').click()
         cy.contains('.harja-alasvetolistaitemi a', "Ilmoitusraportti").click()
         cy.contains('label.checkbox-label', "Valittu aikaväli").should('exist')
@@ -29,26 +38,26 @@ describe('Päänäkymien avaamiset', function () {
     })
 
     it("Tilannekuva välilehti toimii", function () {
-        cy.contains('ul#sivut a span', 'Tilannekuva').click({force: true})
-        cy.contains('div#tk-suodattimet a.klikattava', "Nykytilanne").should('exist')
+        cy.contains('ul#sivut a span', 'Tilannekuva').click()
+        cy.contains('div#tk-suodattimet a.klikattava', "Nykytilanne", { timeout: 10000 }).should('exist')
         cy.contains('Hupsista').should('not.exist')
     })
 
     it("Ilmoitukset välilehti toimii", function () {
-        cy.contains('ul#sivut a span', 'Ilmoitukset').click({force: true})
-        cy.contains('div.livi-grid th', "Urakka").should('exist')
+        cy.contains('ul#sivut a span', 'Ilmoitukset').click()
+        cy.contains('div.livi-grid th', "Urakka", { timeout: 10000 }).should('exist')
         cy.contains('Hupsista').should('not.exist')
     })
 
     it("Tienpidon luvat välilehti toimii", function () {
-        cy.contains('ul#sivut a span', 'Tienpidon luvat').click({force: true})
-        cy.contains('button', "Hae lupia", { timeout: 10000 }).should('be.visible');
+        cy.contains('ul#sivut a span', 'Tienpidon luvat').click()
+        cy.contains('button', "Hae lupia", { timeout: visibleTimeout }).should('be.visible');
         cy.contains('Hupsista').should('not.exist')
     })
 
     it("Urakoiden tilanne välilehti toimii", function () {
-        cy.contains('ul#sivut a span', 'Urakoiden tilanne').click({force: true})
-        cy.contains('h1', "Urakoiden tilanne", { timeout: 10000 }).should('be.visible');
+        cy.contains('ul#sivut a span', 'Urakoiden tilanne').click()
+        cy.contains('h1', "Urakoiden tilanne", { timeout: visibleTimeout }).should('be.visible');
         cy.contains('Hupsista').should('not.exist')
     })
 
@@ -61,12 +70,17 @@ describe('Päänäkymien avaamiset', function () {
 })
 
 describe('MH-Urakan näkymien avaamiset', function () {
-    it("Avaa Yleiset, Työmaapäiväkirja Turvallisuus", function () {
-        alustaUrakkaKustannussuunnitteluun();
+    beforeEach(function () {
         cy.viewport(1100, 2000)
         cy.visit("/")
+        // Varmista, että pääsivu on ladattu ennen testien aloitusta
+        cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
+    })
+
+    it("Avaa Yleiset, Työmaapäiväkirja Turvallisuus", function () {
+        alustaUrakkaKustannussuunnitteluun();
         cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
         cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click()
@@ -82,10 +96,8 @@ describe('MH-Urakan näkymien avaamiset', function () {
 
     // Ohitetaan testi sen flakeyden takia. Kustannussuunnitelma avataan tässä testissä jotenkin siten, että sen tila ei ole alustunut ja testi kaatuu kokonaan
     it("Avaa Suunnittelun alatabit", function () {
-        cy.viewport(1100, 2000)
-        cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
         cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click()
@@ -102,10 +114,8 @@ describe('MH-Urakan näkymien avaamiset', function () {
     })
 
     it("Avaa Kulut ja sen alatabit", function () {
-        cy.viewport(1100, 2000)
-        cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
         cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click()
@@ -124,10 +134,8 @@ describe('MH-Urakan näkymien avaamiset', function () {
     })
 
     it("Avaa Toteumat ja sen alatabit", function () {
-        cy.viewport(1100, 2000)
-        cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
         cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click()
@@ -155,10 +163,8 @@ describe('MH-Urakan näkymien avaamiset', function () {
     })
 
     it("Avaa Laadunseuranta ja sen alatabit", function () {
-        cy.viewport(1100, 2000)
-        cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.wait(100)
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
@@ -182,10 +188,8 @@ describe('MH-Urakan näkymien avaamiset', function () {
     })
 
     it("Avaa Lupaukset ja tavoitteet ja sen alatabit", function () {
-        cy.viewport(1100, 2000)
-        cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
         cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click()
@@ -201,10 +205,8 @@ describe('MH-Urakan näkymien avaamiset', function () {
 
 
     it("Avaa Paikkaukset ja sen alatabit", function () {
-        cy.viewport(1100, 2000)
-        cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
         cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click()

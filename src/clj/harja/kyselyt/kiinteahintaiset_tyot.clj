@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/kiinteahintaiset_tyot.sql"
   {:positional? true})
+
+(declare merkitse-maksuerat-likaisiksi-hoidonjohdossa!)

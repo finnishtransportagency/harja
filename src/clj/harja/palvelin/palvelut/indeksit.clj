@@ -140,8 +140,9 @@
                        (q/hae-paallystysurakan-indeksitiedot db {:urakka urakka-id}))]
     indeksit))
 
-(defn vaadi-paallystysurakan-indeksi-kuuluu-urakkaan [db urakka-id paallystysurakan-indeksi-id]
+(defn vaadi-paallystysurakan-indeksi-kuuluu-urakkaan
   "Tarkistaa, että päällystysurakan indeksitieto kuuluu annettuun urakkaan"
+  [db urakka-id paallystysurakan-indeksi-id]
   (assert (and urakka-id paallystysurakan-indeksi-id) "Ei voida suorittaa tarkastusta")
   (let [indeksin-urakka-id-kannasta (:urakka (first (q/hae-paallystysurakan-indeksin-urakka-id db {:id paallystysurakan-indeksi-id})))]
     (when (not= urakka-id indeksin-urakka-id-kannasta)
@@ -198,8 +199,7 @@
                         (fn [user tiedot]
                           (tallenna-paallystysurakan-indeksitiedot (:db this) user tiedot))
                         {:kysely-spec ::d/paallystysurakan-indeksit
-                         :vastaus-spec ::d/paallystysurakan-indeksit})
-      )
+                         :vastaus-spec ::d/paallystysurakan-indeksit}))
     this)
 
   (stop [this]

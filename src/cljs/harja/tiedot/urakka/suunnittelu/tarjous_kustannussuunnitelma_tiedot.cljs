@@ -11,8 +11,8 @@
 (defonce nakymassa? (atom false))
 
 (defn scrollaa-muutoksiin [elementin-id]
-  ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat
-  (siirrin/siirry-elementin-id elementin-id 450))
+  ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat tai vahvistaa koko kustannussuunnitelman
+  (siirrin/siirry-elementin-id elementin-id 200))
 
 (defn muunna-vuodet
   "Muunnetaan UI Gridin käyttämä tietomalli bäkkärin käyttämään muotoon.
@@ -61,8 +61,9 @@
 (defrecord JaaErillishankinnatTasan [summa elementti])
 
 ;; Johto-ja-hallintokorvaus-käsittelyt
-(defrecord TallennaJohtoJaHallintokorvaukset [johto-ja-hallintokorvaukset])
+(defrecord TallennaJohtoJaHallintokorvaukset [johto-ja-hallintokorvaukset urakan-alkuvuosi])
 (defrecord PaivitaJohtoJaHallintokorvaukset [johto-ja-hallintokorvaukset])
+(defrecord PaivitaJohtoJaHallintokorvaukset2019 [johto-ja-hallintokorvaukset toimenkuva])
 (defrecord TallennaJohtoJaHallintokorvauksetOnnistui [vastaus])
 (defrecord TallennaJohtoJaHallintokorvauksetEpaonnistui [vastaus])
 (defrecord JaaJohtoJaHallintokorvauksetTasan [summa johto-ja-hallintokorvaukset-elementti])
@@ -79,6 +80,7 @@
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui [vastaus])
 
+(defrecord ToggleVetolaatikonMuokkaus [tila])
 
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
 (defrecord PoistaRivi [rivi])
@@ -209,6 +211,8 @@
   (process-event [{:keys [vastaus]} app]
     (-> app
       (assoc :haku-kaynnissa? false)
+      (assoc :urakan-alkuvuosi (:urakan-alkuvuosi vastaus))
+      (assoc :valittu-hoitokausi (:valittu-hoitokausi vastaus))
       (assoc :tarjous (:tarjous vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
 
@@ -241,7 +245,9 @@
                       :loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu muuttuneet))
                       :yhteensa (+ (apply + (map :alkukausi muuttuneet)) (apply + (map :loppukausi muuttuneet)))
                       :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu muuttuneet)) (apply + (map :loppukausi-indeksikorjattu muuttuneet)))
-                      :pysyvat-muutokset "Ei muutoksia"}
+                      :pysyvat-muutokset "Ei muutoksia"
+                      :viimeisin-muokkaus (:viimeisin-muokkaus (last (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])))
+                      :viimeisin-muokkaaja (:viimeisin-muokkaaja (last (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])))}
           muuttuneet (conj muuttuneet yhteenveto)]
       (println "Muuttuneet; " muuttuneet)
       (-> app
@@ -401,17 +407,33 @@
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet))))
 
+  ;; Vanhat toimenkuvat vaativat toimenkuvan kokonaissumman uudelleen laskennan
+  PaivitaJohtoJaHallintokorvaukset2019
+  (process-event
+    [{johto-ja-hallintokorvaukset :johto-ja-hallintokorvaukset toimenkuva :toimenkuva} app]
+    (let [muuttuneet (sort-by (juxt :vuosi :kuukausi) (vec johto-ja-hallintokorvaukset))
+          muuttunut (filter #(= (:toimenkuva %) toimenkuva) muuttuneet)]
+      (-> app
+        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
+        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet))))
+
   TallennaJohtoJaHallintokorvaukset
   (process-event
-    [{johto-ja-hallintokorvaukset :johto-ja-hallintokorvaukset} app]
-    (tuck-apurit/post! :tallenna-osio-johto-ja-hallintokorvaukset
-      {:urakka-id (-> @tila/yleiset :urakka :id)
-       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
-       :johto-ja-hallintokorvaukset johto-ja-hallintokorvaukset}
-      {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
-       :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
-       :paasta-virhe-lapi? true})
-    (assoc app :tallennus-kesken? true))
+    [{johto-ja-hallintokorvaukset :johto-ja-hallintokorvaukset urakan-alkuvuosi :urakan-alkuvuosi} app]
+    (let [endpoint (if (<= urakan-alkuvuosi 2024)
+                     :tallenna-johto-ja-hallintokorvaukset-2019
+                     :tallenna-johto-ja-hallintokorvaukset-2025)
+          avain (if (<= urakan-alkuvuosi 2024)
+                  :johto-ja-hallintokorvaukset-2019
+                  :johto-ja-hallintokorvaukset-2025)]
+      (tuck-apurit/post! endpoint
+        {:urakka-id (-> @tila/yleiset :urakka :id)
+         :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
+         avain johto-ja-hallintokorvaukset}
+        {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
+         :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
+         :paasta-virhe-lapi? true})
+      (assoc app :tallennus-kesken? true)))
 
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -465,7 +487,6 @@
   VahvistaTaiPeruutaTavoiteJaKattohinta
   (process-event
     [{vahvista? :vahvista?} app]
-    (js/console.log "Vahvista tai peruuta tavoite ja kattohinta" vahvista?)
     (tuck-apurit/post! :vahvista-tavoite-ja-kattohinta
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
@@ -479,7 +500,13 @@
 
   VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin.")
+    (if (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])
+      (viesti/nayta-toast!
+        "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
+        :varoitus
+        viesti/viestin-nayttoaika-keskipitka)
+      (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin."))
+    (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
     (-> app
       (assoc :tallennus-kesken? false)
       (assoc :haku-kaynnissa? false)
@@ -492,6 +519,7 @@
       "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
       :varoitus
       viesti/viestin-nayttoaika-keskipitka)
+    (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
     (-> app
       (assoc :tallennus-kesken? false)))
 
@@ -499,4 +527,9 @@
   (process-event [{:keys [rivi]} app ]
     (-> app
       (update :tarjous
-        #(remove (fn [m] (= (:nimi m) (:nimi rivi))) %)))))
+        #(remove (fn [m] (= (:nimi m) (:nimi rivi))) %))))
+
+  ToggleVetolaatikonMuokkaus
+  (process-event [{:keys [tila]} app]
+    (-> app
+      (assoc :vetolaatikon-muokkaus tila))))

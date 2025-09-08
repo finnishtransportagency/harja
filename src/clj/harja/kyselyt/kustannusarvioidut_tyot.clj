@@ -5,4 +5,5 @@
   {:positional? false})
 
 (declare merkitse-maksuerat-likaisiksi! hae-rahavarauskustannus
-  hae-tavoitehinnan-ulkopuolisen-rahavarauksen-toimenpideinstanssi paivita-rahavaraus<! lisaa-rahavaraus<!)
+  hae-tavoitehinnan-ulkopuolisen-rahavarauksen-toimenpideinstanssi
+  merkitse-kustannussuunnitelmat-likaisiksi!)

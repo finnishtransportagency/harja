@@ -49,16 +49,16 @@
          [bs/tabs {:style :tabs :classes "tabs-taso2"
                    :active (nav/valittu-valilehti-atom :suunnittelu)}
 
-          "Hoitovuoden alun tavoitehinta"
+          "Tarjouksen tiedot"
           :tarjous
-          (if (and
+          (when (and
                 (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
                 (istunto/ominaisuus-kaytossa? :mhu-urakka))
             [tarjous-nakyma/tarjous])
 
           "Uusi Kustannussuunnitelma"
           :uusi-kustannussuunnitelma
-          (if (and
+          (when (and
                 (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
                 (istunto/ominaisuus-kaytossa? :mhu-urakka))
             [kustannussuunitelma-nakyma/kustannussuunitelma])
