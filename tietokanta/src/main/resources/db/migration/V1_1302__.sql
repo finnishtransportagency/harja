@@ -88,7 +88,7 @@ BEGIN
       (OLD.urakka, OLD.tehtava, OLD.hoitokauden_alkuvuosi, OLD.lahde,
        OLD.valitun_yksikkohinnan_hoitokausi, OLD.kasin_syotetty_tavoitehintamuutos, OLD.syy,
        OLD.luotu, OLD.luoja, OLD.muokattu, OLD.muokkaaja,
-       versio_seur, TSTZRANGE(COALESCE(OLD.muokattu, OLD.luotu, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP));
+       versio_seur, TSTZRANGE(LOWER(OLD.validi_aikana), CURRENT_TIMESTAMP));
   END IF;
 
   IF TG_OP = 'UPDATE' THEN
