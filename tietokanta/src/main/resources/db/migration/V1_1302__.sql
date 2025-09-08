@@ -8,7 +8,7 @@ CREATE TYPE muutos_yksikkohinta_lahde_enum AS ENUM ('laskettu','aseta','manuaali
 CREATE TABLE mhu_muutos_tehtava_tiedot (
 
   versio INTEGER NOT NULL DEFAULT 1,  -- Versioinnilla oma taulu, ei liity mhu_muutos tauluun   (nämä eivät ole varsinaisia muutoksia)
-  validi_aikana TSTZRANGE NOT NULL DEFAULT TSTZRANGE(CURRENT_TIMESTAMP, NULL), -- Kertoo koska versio ollut aktiivinen 
+  validi_aikana TSTZRANGE NOT NULL DEFAULT TSTZRANGE(CURRENT_TIMESTAMP, 'infinity'::timestamp with time zone), -- Kertoo koska versio ollut aktiivinen 
   urakka    INTEGER NOT NULL REFERENCES urakka(id),                            -- Näillä joinataan data näkymään 
   tehtava   INTEGER NOT NULL REFERENCES tehtava(id),
   hoitokauden_alkuvuosi INTEGER NOT NULL,
