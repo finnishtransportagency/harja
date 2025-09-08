@@ -93,7 +93,7 @@ BEGIN
 
   IF TG_OP = 'UPDATE' THEN
     NEW.versio := OLD.versio +1;
-    NEW.validi_aikana := TSTZRANGE(CURRENT_TIMESTAMP, NULL);
+    NEW.validi_aikana := TSTZRANGE(CURRENT_TIMESTAMP, 'infinity'::timestamp with time zone);
     RETURN NEW;
   ELSE
     RETURN OLD;
