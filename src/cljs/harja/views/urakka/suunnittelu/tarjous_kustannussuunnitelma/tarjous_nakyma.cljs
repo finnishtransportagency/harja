@@ -1,6 +1,7 @@
 (ns harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.tarjous-nakyma
   "Kustannussuunnitelman etusivu määrittää, että renderöidäänkö tarjous vai kustannussuunnitelma"
   (:require [harja.fmt :as fmt]
+            [clojure.string :as str]
             [harja.ui.debug :as debug]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.ikonit :as ikonit]
@@ -40,11 +41,11 @@
                                              (:hoitovuosittaiset-arvot yhteenveto)))
 ;; Lisätään vielä yhteenveto yhteenvetoriviin)
 
-(defn poista-rivi [rivi rivit app e!]
+(defn poista-rivi [e! rivi]
   (e! (tarjous-tiedot/->PoistaRivi rivi)))
 
 (defn laske-rivit-yhteen [rivi]
-  (let [kustannukset (vals (filter #(clojure.string/starts-with? (name (key %)) "vuosi-") rivi))]
+  (let [kustannukset (vals (filter #(str/starts-with? (name (key %)) "vuosi-") rivi))]
     (reduce + kustannukset)))
 
 (defn laske-vuosisummat [rivit vuosikentat]
@@ -58,8 +59,7 @@
                :luokka "yhteensa lihavoitu"
                :tyyppi :euro
                :tasaa :oikea
-               :fmt fmt/euro-opt
-               })))))
+               :fmt fmt/euro-opt})))))
 
 (defn tarjous-nakyma [e! app]
   (let [tarjouksen-tiedot (:tarjous app)
@@ -220,7 +220,7 @@
           :komponentti (fn [rivi rivit]
                          (napit/yleinen "Poista rivi"
                            :toissijainen
-                           #(poista-rivi rivi rivit app e!)
+                           #(poista-rivi e! rivi)
                            {:ikoni (ikonit/livicon-trash) :luokka "btn-xs"}))
           :leveys (str vuosi-leveys "%")}]
         (mapv #(assoc % :muokattava false) vuositaulukon-otsikot)
@@ -302,9 +302,7 @@
          [:div
           [:div.row
            [:div.col-xs-12.col-md-6
-            [:h1 "Tarjouksen tiedot"]
-            ;;[:div (-> @tila/yleiset :urakka :nimi)]
-            ]]
+            [:h1 "Tarjouksen tiedot"]]]
           [:div.row
            [yleiset/info-laatikko :neutraali "Tarkempi kustannusten suunnittelu tehdään tarjouksen tietojen tallentamisen jälkeen." nil nil {:sulje-nappi-id (gensym)}]]
           [tarjous-nakyma e! app]
