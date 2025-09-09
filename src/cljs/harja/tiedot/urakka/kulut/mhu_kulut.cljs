@@ -19,7 +19,7 @@
 (defrecord TavoitehintaanKuuluminen [tavoitehinta nro])
 (defrecord ValitseRahavarausKohdistukselle [rahavaraus nro])
 (defrecord ValitseToimenpideKohdistukselle [toimenpide nro])
-(defrecord ValitseTehtavaKohdistukselle [tehtava nro]) 
+(defrecord ValitseTehtavaKohdistukselle [tehtava nro])
 (defrecord KohdistuksenLisatieto [lisatieto nro])
 (defrecord KohdistuksenSumma [summa nro])
 (defrecord KoontilaskunKuukausi [arvo])
@@ -179,7 +179,7 @@
   ;; Onko päätös tehty vuodelle eg. "joulukuu/2-hoitovuosi" 
   (let [hoitovuosi (palauta-hk-valitusta-kk s)
         alkuvuosi (pvm/vuosi (:alkupvm @navigaatio/valittu-urakka))
-        rivin-vuosi (hoitovuosi-vuodeksi alkuvuosi hoitovuosi)] 
+        rivin-vuosi (hoitovuosi-vuodeksi alkuvuosi hoitovuosi)]
     (some #(and (= rivin-vuosi (:vuosi %)) (:paatos-tehty? %))
       (:vuosittaiset-valikatselmukset app))))
 
@@ -216,11 +216,11 @@
                      (= (pvm/iso8601 (get-in app [:lomake :erapaiva])) (pvm/iso8601 (pvm/nyt)))
                      (pvm/sama-tai-jalkeen? (pvm/nyt) urakan-alkupvm))
                    (get-in app [:lomake :erapaiva])
-                   
+
                    ;; Jos eräpäpivä on ennen urakan alkua, niin siirretään eräpäivä urakan ensimmäiselle päivälle
                    :else
                    urakan-alkupvm)
-        
+
         kuluva-kuukausi (pvm/kuukauden-nimi (pvm/kuukausi pienin-nyt-hetki))
         nyky-hoitokausi-lukittu? (some #(and
                                           (= (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)) (:vuosi %))
@@ -231,7 +231,7 @@
                                             kuluva-hoitovuoden-nro
                                             (not= "kk ei välillä 1-12" kuluva-kuukausi))
                                       (str kuluva-kuukausi "/" kuluva-hoitovuoden-nro "-hoitovuosi"))
-        
+
         koontilaskun-kuukaudet (palauta-urakan-mahdolliset-koontilaskun-kuukaudet app (-> @tila/tila :yleiset :urakka))
 
         ;; Jos nykyinen kk ei ole voimassa urakassa, aseta defaultti urakan viimeiseksi kuukaudeksi
@@ -286,7 +286,7 @@
   (keep-indexed #(when (not= %1 n) %2) coll))
 
 (extend-protocol tuck/Event
-  
+
   AsetaNykyhetki
   (process-event [{nykyhetki :nykyhetki} app]
     (let [app (assoc app :nykyhetki nykyhetki)]
@@ -295,7 +295,7 @@
         (pvm/aseta-kehitys-nykyhetki! nykyhetki)
         (pvm/poista-kehitys-nykyhetki!))
       app))
-  
+
   LisaaKohdistus
   (process-event [{lomake :lomake} app]
     (let [kohdistukset (into [] (:kohdistukset lomake))
@@ -389,7 +389,7 @@
                 (assoc-in [:lomake :kohdistukset nro :toimenpide] toimenpide)
                 (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi toimenpide)))]
       app))
-  
+
   ValitseTehtavaKohdistukselle
   (process-event [{tehtava :tehtava nro :nro} app]
     (assoc-in app [:lomake :kohdistukset nro :tehtava] tehtava))
@@ -404,7 +404,6 @@
 
   KoontilaskunKuukausi
   (process-event [{arvo :arvo} app]
-    (println "Valittu kk: " arvo)
     (let [paatos-tehty? (paatos-tehty-rivin-vuodelle? app arvo)
           erapaiva (kulut/koontilaskun-kuukausi->pvm
                      arvo
@@ -599,20 +598,23 @@
        :paasta-virhe-lapi? true})
     (update-in app [:parametrit :haetaan] inc))
 
+  ;; Kutsu tätä myös silloin, kun tehtäväryhmä on null, jos tietorakenteen elementit tarvitaan.
+  ;; Esim. kulukohdistusten esittäminen vaatii, että tietorakenne on kokonainen.
+  ;; Tehtävien haku tehdään vain, kun tehtäväryhmä-id on olemassa.
   HaeUrakanTehtavaryhmanTehtavat
   (process-event
     [{:keys [urakka tehtavaryhma nro]} app]
-    (tuck-apurit/post! :hae-tehtavaryhman-tehtavat-urakalle
-      {:urakka-id (:id urakka)
-       :tehtavaryhma-id (:id tehtavaryhma)}
-      {:onnistui           ->HaeUrakanTehtavaryhmanTehtavatOnnistui
-       :onnistui-parametrit [{:nro nro}]
-       :epaonnistui        ->KutsuEpaonnistui
-       :epaonnistui-parametrit [{:viesti "Tehtävien haku epäonnistui"}]
-       :paasta-virhe-lapi? true})
-       (-> app (assoc-in [:lomake :kohdistukset nro :tehtavaryhman-tehtavat] nil)
-               (assoc-in [:lomake :kohdistukset nro :tehtava] nil)
-               (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] true)))
+    (when  (and tehtavaryhma (:id tehtavaryhma)) (tuck-apurit/post! :hae-tehtavaryhman-tehtavat-urakalle
+                                                  {:urakka-id (:id urakka)
+                                                   :tehtavaryhma-id (:id tehtavaryhma)}
+                                                  {:onnistui ->HaeUrakanTehtavaryhmanTehtavatOnnistui
+                                                   :onnistui-parametrit [{:nro nro}]
+                                                   :epaonnistui ->KutsuEpaonnistui
+                                                   :epaonnistui-parametrit [{:viesti "Tehtävien haku epäonnistui"}]
+                                                   :paasta-virhe-lapi? true}))
+    (-> app (assoc-in [:lomake :kohdistukset nro :tehtavaryhman-tehtavat] nil)
+      (assoc-in [:lomake :kohdistukset nro :tehtava] nil)
+      (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] true)))
 
 
   HaeUrakanTehtavaryhmanTehtavatOnnistui
@@ -629,18 +631,19 @@
             ;; Aseta ainoa tehtävä valinnaksi
         (assoc-in app [:lomake :kohdistukset nro :tehtava] (first tulos))
         app)))
-  
+
   HaeTehtavatKaikilleKohdistuksille
   (process-event [{lomake :lomake} app]
     (let [urakka (-> @tila/yleiset :urakka)]
       (doseq [idx (range (count (:kohdistukset lomake)))]
         (let [kohdistus (get-in lomake [:kohdistukset idx])
               tehtavaryhma (:tehtavaryhma kohdistus)]
-          (when (and tehtavaryhma (:id tehtavaryhma))
-            ((tuck/current-send-function)
-             (->HaeUrakanTehtavaryhmanTehtavat urakka tehtavaryhma idx)))))
+          ((tuck/current-send-function)
+           ;; Ei rajata tässä kohtaa tehtävähakua, vaikka tehtäväryhmää ei kohdistuksessa olisikaan.
+           ;; Käsittelijä rakentaa kohdistusten esittämisessä tarvittavan tietorakenteen.
+           (->HaeUrakanTehtavaryhmanTehtavat urakka tehtavaryhma idx))))
       app))
-  
+
   KuluHaettuLomakkeelle
   (process-event [{kulu :kulu} app]
     (let [lomake (kulu->lomake app kulu)
