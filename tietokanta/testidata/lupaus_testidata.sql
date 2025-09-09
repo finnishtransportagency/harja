@@ -259,7 +259,7 @@ $$ LANGUAGE plpgsql;
   null,
   'kustannusennuste',
   10,
-  '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9}',
+  '{1,4,6,8}',
   9,
   0,
   'Testi: Kustannusennustelupaus',
@@ -270,5 +270,4 @@ $$ LANGUAGE plpgsql;
 -- 
 INSERT INTO lupaus_hoitovuoden_kirjauskuukaudet ("lupaus-id", "hoitovuosi-nro", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", luoja)
 VALUES 
-  ((SELECT id FROM lupaus WHERE jarjestys = 99 AND "urakan-alkuvuosi" = 2019 AND kuvaus = 'Testi: Kustannusennustelupaus'), 1, '{10,1,4,6}', 9, 0, 1),  -- Ensimmäinen hoitovuosi: erikoiskuukaudet
-  ((SELECT id FROM lupaus WHERE jarjestys = 99 AND "urakan-alkuvuosi" = 2019 AND kuvaus = 'Testi: Kustannusennustelupaus'), 2, '{10,1,4,6}', 9, 0, 1);  -- Toinen hoitovuosi: samat erikoiskuukaudet
+  ((SELECT id FROM lupaus WHERE jarjestys = 99 AND "urakan-alkuvuosi" = 2019 AND kuvaus = 'Testi: Kustannusennustelupaus'), 1, '{10,1,4,6}', 9, 0, 1);  -- Ensimmäinen hoitovuosi: erikoiskuukaudet
