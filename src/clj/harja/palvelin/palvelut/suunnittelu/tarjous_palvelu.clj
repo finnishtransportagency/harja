@@ -13,7 +13,7 @@
   palauttaa tyhjät tiedot, jotka voidaan täyttää uudelleen."
   [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user (:urakka-id tiedot))
-  (let [tarjous (tarjous-kyselyt/hae-tarjous db (:urakka-id tiedot))]
+  (let [tarjous {:urakka-id (:urakka-id tiedot) :tarjous (tarjous-kyselyt/luo-default-tarjous db (:urakka-id tiedot))}]
     tarjous))
 
 (defn tallenna-tarjous [db kayttaja {:keys [urakka-id] :as tiedot}]
