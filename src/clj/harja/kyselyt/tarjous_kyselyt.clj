@@ -21,9 +21,54 @@
    "johto-ja-hallintokorvaus" 4
    "hoidonjohtopalkkio" 5})
 
+(defn hae-urakan-toimenkuvat [db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot]
+  (let [toimenkuvat (toimenkuva-kyselyt/hae-urakan-toimenkuvat-alkuvuoden-perusteella db {:urakka-id urakka-id
+                                                                                          :urakan-alkuvuosi urakan-alkuvuosi})
+        toimenkuvat (if (<= urakan-alkuvuosi 2021)
+                      (reduce (fn [uudet-toimenkuvat toimenkuva]
+                                (let [uusi-toimenkuva (cond (= "päätoiminen apulainen" (:toimenkuva toimenkuva))
+                                                        {:toimenkuva "päätoiminen apulainen"
+                                                         :nimike "Päätoiminen apulainen (talvikausi)"
+                                                         :id (:id toimenkuva)
+                                                         :toimenkuva-id (:toimenkuva-id toimenkuva)}
+                                                        (= "apulainen/työnjohtaja" (:toimenkuva toimenkuva))
+                                                        {:toimenkuva "apulainen/työnjohtaja"
+                                                         :nimike "Apulainen/työnjohtaja (talvikausi)"
+                                                         :id (:id toimenkuva)
+                                                         :toimenkuva-id (:toimenkuva-id toimenkuva)}
+                                                        :else nil)
+
+                                      toimenkuva (cond (= "päätoiminen apulainen" (:toimenkuva toimenkuva))
+                                                   (assoc toimenkuva :nimike "Päätoiminen apulainen (kesäkausi)")
+                                                   (= "apulainen/työnjohtaja" (:toimenkuva toimenkuva))
+                                                   (assoc toimenkuva :nimike "Apulainen/työnjohtaja (kesäkausi)")
+                                                   :else (merge toimenkuva {:nimike (:toimenkuva toimenkuva)}))]
+
+                                  ;; Lisätään talvi/kesäkausi vain, jos ne on noita erikois kovakoodattuja toimenkuvia
+                                  (if uusi-toimenkuva
+                                    (conj uudet-toimenkuvat uusi-toimenkuva toimenkuva)
+                                    (conj uudet-toimenkuvat toimenkuva))))
+                        [] toimenkuvat)
+                      toimenkuvat)
+
+        ;; Järjestetään toimenkuvat järkevään järjestykseen
+        toimenkuvat (mapv (fn [toimenkuva]
+                            (-> toimenkuva
+                              (assoc :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:nimike toimenkuva))
+                                :nimi (str/capitalize (:nimike toimenkuva))
+                                :toimenkuva-id (:id toimenkuva)
+                                :osio "johto-ja-hallintokorvaus"
+                                :tehtava-id nil
+                                :tehtavaryhma-id nil
+                                :rahavaraus-id nil
+                                :hoitovuosittaiset-arvot hoitovuosittaiset-arvot)))
+                      toimenkuvat)]
+    toimenkuvat))
+
 (defn luo-default-tarjous [db urakka-id]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
-        vuodet (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot)))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00}) vuodet)
         ;; Lisätään default tarjoukseen Kilpailutettavat hankinnat, Erillishankinnat ja Hoidonjohtopalkkio
         tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
@@ -39,28 +84,8 @@
                                                              :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}])))
                            [] rahavaraukset)
         tarjous (vec (concat tarjous rahavaraus-rivit))
-        ;; Pakotetaan tässä vaiheessa kehitystä tietyt toimenkuvat. Nämä voidaan asetaa myöhemmin defaulttina jostain hallintapaneelin käyttiksestä
-        ;; id 10, 'Valmistelukausi ennen urakka-ajan alkua',
-        ;; id 2, 'Vastuunalainen työnjohtaja'
-        ;; id 8, '2. työnjohtaja'
-        ;; id 9, '3. työnjohtaja'
-        ;; id 5, 'Viherhoidosta vastaava henkilö'
-        ;; id 7, 'Harjoittelija'
-        toimenkuvat [
-                     ;; Johto ja hallintokorvaukset eli toimenkuvat
-                     {:nimi "Valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
-                      :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                     {:nimi "Vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
-                      :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                     {:nimi "2. työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 8 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
-                      :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                     {:nimi "3. työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 9 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
-                      :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                     {:nimi "Viherhoidosta vastaava henkilö", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 5 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
-                      :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                     {:nimi "Harjoittelija", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 7 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
-                      :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}]
-        tarjous (vec (concat tarjous (sort-by :toimenkuva-id toimenkuvat)))
+        toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
+        tarjous (vec (concat tarjous (sort-by :jarjestys toimenkuvat)))
         jarjestetty-tarjous (sort-by (fn [rivi] (get osiojarjestys (:osio rivi)))
                               tarjous)]
 
@@ -226,7 +251,9 @@
 
 
 (defn hae-tarjous [db urakka-id]
-  (let [tarjous-rivit (hae-tarjouksen-tiedot db {:urakka_id urakka-id})
+  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        tarjous-rivit (hae-tarjouksen-tiedot db {:urakka_id urakka-id})
         ;; Mäppää tarjouksen tietokantarivit clojure-mapeiksi.
         tarjous-rivit (mapv
                         (fn [tarjous]
@@ -248,11 +275,17 @@
         toimenkuva-rivit (mapv #(muodosta-tarjous-rivi % (hae-tarjouksesta-rivit-vuodelle :toimenkuvat tarjous-rivit (:nimi %))) (:toimenkuvat (first tarjous-rivit)))
         tarjousrivit (into [] (sort-by (fn [rivi] (get osiojarjestys (:osio rivi))) (vec (concat kustannus-rivit toimenkuva-rivit))))
 
+        kaikki-toimenkuvat (if (>= urakan-alkuvuosi 2025)
+                             (map #(assoc % :nimi (str/capitalize (:nimi %))) (toimenkuva-kyselyt/hae-toimenkuvat db))
+                             nil)
         tarjous {:urakka-id urakka-id
+                 :kaikki-toimenkuvat kaikki-toimenkuvat
                  :tarjous tarjousrivit}
         ;; Tarkistetaan, että tarjous ei ole tyhjä
         tarjous (if (empty? (first (:tarjous tarjous)))
-                  {:urakka-id urakka-id :tarjous (luo-default-tarjous db urakka-id)}
+                  {:urakka-id urakka-id
+                   :kaikki-toimenkuvat kaikki-toimenkuvat
+                   :tarjous (luo-default-tarjous db urakka-id)}
                   tarjous)
 
         tarjous (lisaa-yhteenvetorivi-tarjoukseen tarjous)]
