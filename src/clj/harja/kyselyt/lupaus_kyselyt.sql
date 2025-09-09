@@ -375,3 +375,71 @@ SELECT pr.id,
 FROM lupaus_kustannusennuste_pisteraja pr  
 WHERE pr."lupaus-id" = :lupaus-id
 ORDER BY pr.maarapaiva_kk, pr.tarkkuus_prosentti;
+
+-- name: hae-valikatselmuksen-vahvistetut-kustannusennusteet
+SELECT pty.tavoitehinta AS "vahvistettu-tavoitehinta",
+       pty.toteutuneet_kustannukset AS "vahvistetut-toteutuneet-kustannukset",
+       pty.hoitokauden_alkuvuosi,
+       pta.hoitokauden_lopun_tavoitehinta AS "alitus-tavoitehinta", 
+       pta.toteutuneet_kustannukset AS "alitus-toteutuneet-kustannukset",
+       pta.hoitokauden_alkuvuosi AS "alitus-hoitokauden-alkuvuosi"
+FROM paatos_tavoitehinta_ylitys pty
+FULL OUTER JOIN paatos_tavoitehinta_alitus pta ON (
+    pty.urakkaid = pta.urakkaid 
+    AND pty.hoitokauden_alkuvuosi = pta.hoitokauden_alkuvuosi
+)
+WHERE (pty.urakkaid = :urakka-id OR pta.urakkaid = :urakka-id)
+  AND (pty.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi OR pta.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi)
+  AND (pty.poistettu = FALSE OR pty.poistettu IS NULL)
+  AND (pta.poistettu = FALSE OR pta.poistettu IS NULL);
+
+-- name: hae-urakan-kustannusennuste-lupaukset
+-- Hakee urakan kustannusennuste-lupaukset hoitokaudelle
+SELECT l.id AS "lupaus-id",
+       l.kuvaus,
+       l.sisalto,
+       l.jarjestys,
+       ke.id AS "kustannusennuste-id",
+       ke.ennustettu_tavoitehinta,
+       ke.ennustetut_kustannukset,
+       ke.maarapaiva,
+       ke.lasketut_pisteet
+FROM lupaus l
+JOIN lupaus_kustannusennuste ke ON l.id = ke."lupaus-id"
+WHERE l.lupaustyyppi = 'kustannusennuste'::lupaustyyppi
+  AND ke."urakka-id" = :urakka-id
+  AND ke.hoitovuosi_alkuvuosi = :hoitokauden-alkuvuosi;
+
+-- name: tallenna-lopputilanne!
+-- Tallentaa hoitovuoden lopputilanteen
+INSERT INTO lupaus_hoitovuosi_lopputilanne
+       ("urakka-id", hoitovuosi_alkuvuosi, lopullinen_tavoitehinta, 
+        lopulliset_kustannukset, valikatselmus_pvm, vahvistaja, vahvistettu)
+VALUES (:urakka-id, :hoitovuosi-alkuvuosi, :lopullinen-tavoitehinta,
+        :lopulliset-kustannukset, :valikatselmus-pvm, :vahvistaja, NOW())
+    ON CONFLICT ("urakka-id", hoitovuosi_alkuvuosi)
+    DO UPDATE SET
+        lopullinen_tavoitehinta = EXCLUDED.lopullinen_tavoitehinta,
+        lopulliset_kustannukset = EXCLUDED.lopulliset_kustannukset,
+        valikatselmus_pvm = EXCLUDED.valikatselmus_pvm,
+        vahvistaja = EXCLUDED.vahvistaja,
+        vahvistettu = NOW();
+
+-- name: hae-hoitovuoden-lopputilanne
+-- Hakee hoitovuoden lopputilanteen
+SELECT lopullinen_tavoitehinta,
+       lopulliset_kustannukset,
+       valikatselmus_pvm,
+       vahvistaja,
+       vahvistettu
+FROM lupaus_hoitovuosi_lopputilanne
+WHERE "urakka-id" = :urakka-id
+  AND hoitovuosi_alkuvuosi = :hoitovuosi-alkuvuosi;
+
+-- name: paivita-kustannusennuste-lopulliset-pisteet!
+-- Päivittää kustannusennusteen lopulliset pisteet
+UPDATE lupaus_kustannusennuste
+SET lasketut_pisteet = :lopulliset-pisteet,
+    muokkaaja = :muokkaaja,
+    muokattu = NOW()
+WHERE id = :kustannusennuste-id;
