@@ -157,7 +157,7 @@
     app))
 
 (defn laske-pisteet-poikkeaman-perusteella
-  "Laskee pisteet pisteytystaulukon mukaan" 
+  "Laskee pisteet pisteytystaulukon mukaan."
   [poikkeama-prosentti kuukausi] 
   (case kuukausi
     10 (cond
@@ -203,10 +203,11 @@
     (if (and tavoitehinta toteutuneet-kustannukset (pos? tavoitehinta))
       (let [poikkeama-prosentti (Math/abs (/ (* 100 (- toteutuneet-kustannukset tavoitehinta))
                                              tavoitehinta))
-            pisteet (laske-pisteet-poikkeaman-perusteella poikkeama-prosentti kohdekuukausi)]
+            pisteet (laske-pisteet-poikkeaman-perusteella poikkeama-prosentti kohdekuukausi)
+            pyoristetty-poikkeama (/ (Math/round (* poikkeama-prosentti 10)) 10)]
         ;; Päivitä lupaus-kuukaudet rakenteeseen
         (-> app
-          (paivita-kuukauden-kustannusennuste kohdekuukausi :poikkeama-prosentti poikkeama-prosentti)
+          (paivita-kuukauden-kustannusennuste kohdekuukausi :poikkeama-prosentti pyoristetty-poikkeama)
           (paivita-kuukauden-kustannusennuste kohdekuukausi :pisteet pisteet)))
       ;; Jos arvot puuttuvat, nollaa lasketut kentät 
       (-> app
