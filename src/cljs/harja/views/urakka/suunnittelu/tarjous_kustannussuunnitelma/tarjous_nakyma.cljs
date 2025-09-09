@@ -2,6 +2,7 @@
   "Kustannussuunnitelman etusivu määrittää, että renderöidäänkö tarjous vai kustannussuunnitelma"
   (:require [harja.fmt :as fmt]
             [clojure.string :as str]
+            [harja.pvm :as pvm]
             [harja.ui.debug :as debug]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.ikonit :as ikonit]
@@ -15,6 +16,9 @@
 (defonce tallenna-painettu (atom false))
 (defonce virheet-atom (atom {}))
 (defonce grid-tiedot-atom (atom [{}]))
+;; Määritellään kaikkien kolumnien leveyksiä
+(def nimi-leveys 20)
+(def yhteensa-leveys 20)
 
 (defn- tallennus-painikkeet [e! {:keys [tallennus-kesken?] :as app}]
   [:div.painikkeet.text-right
@@ -67,55 +71,69 @@
                    :fmt fmt/euro-opt})]
     v))
 
-(defn johto-ja-hallintokorvaukset [e! joha-tiedot vuositaulukon-otsikot yhteenveto nimi-leveys vuosi-leveys yhteensa-leveys]
-  [grid/grid
-   {:otsikko ""
-    :muokkaa-aina true
-    :voi-muokata? true
-    :muokattava? (constantly true)
-    :voi-poistaa? (constantly false)
-    :voi-lisata? true
-    :voi-kumota? false
-    :piilota-toiminnot? false
-    :tunniste :nimi
-    :muutos #(do
-               (reset! tallenna-painettu false)
-               (reset! grid-tiedot-atom (vals (grid/hae-muokkaustila %)))
-               (reset! virheet-atom (grid/hae-virheet %)))
-    :rivi-jalkeen-fn (fn [rivit]
-                       (let [vuosi-arvot (map :nimi vuositaulukon-otsikot)
-                             yhteenvetorivi (laske-vuosisummat rivit vuosi-arvot)]
-                         ^{:luokka "yhteenveto"}
-                         (lopullinen-yhteenvetorivi "Johto- ja hallintokorvaus yhteensä" yhteenvetorivi)))}
+(defn johto-ja-hallintokorvaukset [e! joha-tiedot vuositaulukon-otsikot vuosi-leveys]
+  (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))]
+    [grid/grid
+        {:otsikko ""
+         :muokkaa-aina true
+         :voi-muokata? true
+         :muokattava? (constantly true)
+         :voi-poistaa? (constantly false)
+         :voi-lisata? true
+         :voi-kumota? false
+         :piilota-toiminnot? false
+         :tunniste :nimi
+         :muutos #(do
+                    (reset! tallenna-painettu false)
+                    (reset! grid-tiedot-atom (vals (grid/hae-muokkaustila %)))
+                    (reset! virheet-atom (grid/hae-virheet %)))
+         :rivi-jalkeen-fn (fn [rivit]
+                            (let [vuosi-arvot (map :nimi vuositaulukon-otsikot)
+                                  yhteenvetorivi (laske-vuosisummat rivit vuosi-arvot)]
+                              ^{:luokka "yhteenveto"}
+                              (lopullinen-yhteenvetorivi "Johto- ja hallintokorvaus yhteensä" yhteenvetorivi)))}
 
-   ;; Otsikot
-   (concat [{:otsikko "Johto- ja hallintokorvaus"
-             :nimi :nimi
-             :tyyppi :valinta
-             :valinnat (map :nimi joha-tiedot)
-             :luokka "yhteensa"
-             :leveys (str nimi-leveys "%")
-             :muokattava? (constantly true)}]
-     [{:otsikko ""
-       :tyyppi :komponentti
-       :komponentti (fn [rivi]
-                      (napit/yleinen "Poista rivi"
-                        :toissijainen
-                        #(poista-rivi e! rivi)
-                        {:ikoni (ikonit/livicon-trash) :luokka "btn-xs"}))
-       :leveys (str vuosi-leveys "%")}]
-     (mapv #(assoc % :muokattava false) vuositaulukon-otsikot)
-     [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
-       :muokattava? (constantly false) :luokka "yhteensa"
-       :hae (fn [rivi] (laske-rivit-yhteen rivi))
-       :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%") :tasaa :oikea}])
-   joha-tiedot])
+        ;; Otsikot
+        (concat [;; ennen 2025 alkaneet urakat eivät voi valita toimenkuvia tästä tarjouslomakkeesta
+                 (if (< urakan-alkuvuosi 2025)
+                   {:otsikko "Johto- ja hallintokorvaus (vain 2025 tai myöhemmin alkaville urakoille)"
+                    :nimi :nimi
+                    :tyyppi :string
+                    :luokka "yhteensa disabled"
+                    :leveys (str nimi-leveys "%")
+                    :muokattava? (constantly false)}
+                   {:otsikko "Johto- ja hallintokorvaus"
+                    :nimi :nimi
+                    :tyyppi :valinta
+                    :valinnat (map :nimi joha-tiedot)
+                    :luokka "yhteensa"
+                    :leveys (str nimi-leveys "%")
+                    :muokattava? (constantly true)})]
+          [;; Poista nappi vain 2025 tai jälkeen alkaneissa urakoissa
+           (if (>= urakan-alkuvuosi 2025)
+            {:otsikko ""
+             :tyyppi :komponentti
+             :komponentti (fn [rivi]
+                            (napit/yleinen "Poista rivi"
+                              :toissijainen
+                              #(poista-rivi e! rivi)
+                              {:ikoni (ikonit/livicon-trash) :luokka "btn-xs"}))
+             :leveys (str vuosi-leveys "%")}
+             {:otsikko ""
+              :tyyppi :komponentti
+              :komponentti (fn [rivi]
+                             [:span])
+              :leveys (str vuosi-leveys "%")})]
+          (mapv #(assoc % :muokattava false) vuositaulukon-otsikot)
+          [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
+            :muokattava? (constantly false) :luokka "yhteensa"
+            :hae (fn [rivi] (laske-rivit-yhteen rivi))
+            :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%") :tasaa :oikea}])
+        joha-tiedot]))
 
 (defn tarjous-nakyma [e! app]
   (let [tarjouksen-tiedot (:tarjous app)
         hoitokausien-maara (count (:hoitovuosittaiset-arvot (first tarjouksen-tiedot)))
-        nimi-leveys 20
-        yhteensa-leveys 20
         vuosi-leveys (/ (- 100 nimi-leveys yhteensa-leveys) hoitokausien-maara)
         ;; Muodostetaan otsikot, jotka voivat olla erilaisia eri mittaisilla urakoilla
         vuositaulukon-otsikot (reduce (fn [rivit vuosi-rivi]
@@ -237,7 +255,7 @@
       [{:nimi "Erillishankinnat" :yhteensa 0 :vuosi-2021 0 :vuosi-2022 0 :vuosi-2023 0 :vuosi-2024 0 :vuosi-2025 0 :eperhoitovuosi 0}]]
 
      ;;Johto- ja hallintokorvaus
-     (johto-ja-hallintokorvaukset e! joha-tiedot vuositaulukon-otsikot yhteenveto nimi-leveys vuosi-leveys yhteensa-leveys)
+     (johto-ja-hallintokorvaukset e! joha-tiedot vuositaulukon-otsikot vuosi-leveys)
 
      ;;Hoidonjohtopalkkio
      [grid/grid
