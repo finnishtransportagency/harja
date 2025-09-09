@@ -1890,10 +1890,11 @@
           [:div.kentta
            [tee-kentta kentta-params arvo-atom]])]])
 
-(defn nayta-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka]}]
-  [:span {:class (or luokka "label-ja-kentta")}
+(defn nayta-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit]}]
+  [:span {:class (str (or luokka "label-ja-kentta") " lukutila-kentta")
+          :style tyylit}
    [:span.kentan-otsikko otsikko]
-   [:div.kentta
+   [:div.kentta.lukutila-arvo
     [nayta-arvo kentta-params arvo-atom]]])
 
 (def aika-pattern #"^(\d{1,2})(:(\d{1,2}))(:(\d{1,2}))?$")
