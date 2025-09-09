@@ -636,6 +636,14 @@
     :else
     {:ok true}))
 
+(defn turvallinen-jako
+  "Turvallinen jakolasku joka välttää BigDecimal-ongelmat ja toimii sekä CLJ että CLJS:ssä"
+  [a b]
+  (if (zero? b)
+    0.0
+    #?(:clj (double (/ (double a) (double b)))
+       :cljs (/ a b))))
+
 (defn laske-kustannusennusteen-tarkkuus
   "Laskee kustannusennusteen tarkkuuden kaavan mukaan.
    
@@ -649,31 +657,31 @@
    - hoitovuoden-tavoitehinta (Th): Hoitovuoden alun tavoitehinta
    
    Palauttaa: {:tarkkuus-prosentti x} tai {:virhe 'virheviesti'}"
-  [{:keys [ennustettu-tavoitehinta toteutunut-tavoitehinta 
+  [{:keys [ennustettu-tavoitehinta toteutunut-tavoitehinta
            ennustettu-kustannus toteutunut-kustannus
            hoitovuoden-alun-tavoitehinta] :as syotteet}]
   (let [validointi (validoi-kustannusennuste-syotteet syotteet)]
     (if (:virhe validointi)
       validointi
-      (let [te ennustettu-tavoitehinta
-            tt toteutunut-tavoitehinta
-            ke ennustettu-kustannus
-            kt toteutunut-kustannus
-            th hoitovuoden-alun-tavoitehinta
-            
-            ;; Kaavan osat
-            tavoitehinta-ero (/ (- te tt) th)
-            kustannus-ero (/ (- ke kt) th)
-            riski-ero (/ (- (- ke te) (- kt tt)) th)
-            
+      (let [te (double ennustettu-tavoitehinta)           ;; Muunnetaan doubleiksi
+            tt (double toteutunut-tavoitehinta)
+            ke (double ennustettu-kustannus)
+            kt (double toteutunut-kustannus)
+            th (double hoitovuoden-alun-tavoitehinta)
+
+            ;; Kaavan osat turvallisella jaolla
+            tavoitehinta-ero (turvallinen-jako (- te tt) th)
+            kustannus-ero (turvallinen-jako (- ke kt) th)
+            riski-ero (turvallinen-jako (- (- ke te) (- kt tt)) th)
+
             ;; Lopullinen kaava
             tarkkuus (+ (* tavoitehinta-ero 0.05)
                         (* kustannus-ero 0.05)
                         (* riski-ero 0.9))
-            
+
             ;; Muutetaan prosenteiksi ja pyöristetään yhteen desimaaliin
             tarkkuus-prosentti (/ (Math/round (* tarkkuus 1000.0)) 10.0)]
-        
+
         {:tarkkuus-prosentti tarkkuus-prosentti}))))
 
 (defn maarita-kustannusennuste-pisteet
