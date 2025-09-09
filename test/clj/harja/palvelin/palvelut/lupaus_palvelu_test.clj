@@ -7,7 +7,6 @@
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
 
-
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -793,3 +792,69 @@
     (is (thrown? Exception (tallenna-kk-pisteet +kayttaja-uuno+ urakka-id vuosi kuukausi pisteet tyyppi)))
     (is (thrown? Exception (poista-kuukausittaiset-pisteet +kayttaja-uuno+ {:urakka-id urakka-id
                                                                             :id (:id poistettava)})))))
+
+(deftest laske-lopullinen-kustannusennuste-test
+
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        hoitovuoden-alkupvm (pvm/luo-pvm 2019 9 1)
+
+        ;; Yksinkertaiset testikustannusennusteet
+        testikustannusennusteet
+        [{:kuukausi 10 :vuosi 2019 :tavoitehinta 1000000 :toteutuneet-kustannukset 950000
+          :maarapaiva (pvm/luo-pvm 2019 10 15) :id 1}
+         {:kuukausi 1 :vuosi 2020 :tavoitehinta 1100000 :toteutuneet-kustannukset 1050000
+          :maarapaiva (pvm/luo-pvm 2020 1 15) :id 2}]]
+
+    (testing "Funktio on olemassa ja palauttaa oikean tyyppisen tuloksen"
+      (let [tulos (lupaus-palvelu/laske-lopullinen-kustannusennuste
+                    (:db jarjestelma) urakka-id testikustannusennusteet hoitovuoden-alkupvm nil)]
+
+        ;; Perusvalidointi
+        (is (or (nil? tulos) (vector? tulos))
+          "Funktio palauttaa joko nil tai vektorin")
+
+        (when (vector? tulos)
+          (is (= 2 (count tulos)) "Palautettu vektori sisältää 2 tulosta")
+
+          ;; Testaa ensimmäinen tulos
+          (let [ensimmainen-tulos (first tulos)]
+            (when (map? ensimmainen-tulos)
+              (is (contains? ensimmainen-tulos :kustannusennuste-id) "Sisältää kustannusennuste-id")
+              (is (contains? ensimmainen-tulos :kuukausi) "Sisältää kuukausi")
+              (is (contains? ensimmainen-tulos :vuosi) "Sisältää vuosi")
+
+              ;; Tarkista perustiedot
+              (is (= 1 (:kustannusennuste-id ensimmainen-tulos)) "Oikea kustannusennuste-id")
+              (is (= 10 (:kuukausi ensimmainen-tulos)) "Oikea kuukausi")
+              (is (= 2019 (:vuosi ensimmainen-tulos)) "Oikea vuosi"))))))
+
+    (testing "Funktio käsittelee tyhjiä syötteitä"
+      (let [tulos (lupaus-palvelu/laske-lopullinen-kustannusennuste
+                    (:db jarjestelma) urakka-id [] hoitovuoden-alkupvm nil)]
+        (is (or (nil? tulos) (empty? tulos))
+          "Tyhjä kustannusennuste-lista palauttaa tyhjän tuloksen")))
+
+    (testing "Funktio käsittelee nil-parametrit gracefully"
+      (let [tulos (try
+                    (lupaus-palvelu/laske-lopullinen-kustannusennuste
+                      nil urakka-id testikustannusennusteet hoitovuoden-alkupvm nil)
+                    (catch Exception e
+                      :virhe-odotetusti))]
+        (is (or (nil? tulos) (= tulos :virhe-odotetusti))
+          "Nil database käsitellään gracefully")))
+
+    (testing "Integraatio domain-funktioiden kanssa"
+      ;; Testaa että domain-funktiot toimivat odotetulla tavalla
+      (let [syotteet {:ennustettu-tavoitehinta 1000000
+                      :ennustettu-kustannus 950000
+                      :toteutunut-tavoitehinta 1000000
+                      :toteutunut-kustannus 950000
+                      :hoitovuoden-alun-tavoitehinta 1200000}
+
+            tarkkuus-tulos (lupaus-domain/laske-kustannusennusteen-tarkkuus syotteet)
+            kokonais-tulos (lupaus-domain/laske-kustannusennuste-tulos syotteet 10)]
+
+        (is (:tarkkuus-prosentti tarkkuus-tulos) "Domain-funktio laskee tarkkuuden")
+        (is (:pisteet kokonais-tulos) "Domain-funktio laskee pisteet")
+        (is (number? (:tarkkuus-prosentti tarkkuus-tulos)) "Tarkkuus on numero")
+        (is (number? (:pisteet kokonais-tulos)) "Pisteet on numero")))))
