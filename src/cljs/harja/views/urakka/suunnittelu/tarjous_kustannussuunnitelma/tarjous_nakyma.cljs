@@ -29,17 +29,14 @@
        (e! (tarjous-tiedot/->TallennaTarjouksenTiedot @grid-tiedot-atom)))
     {:disabled (or tallennus-kesken? false)}]])
 
-(defn- yhteenvetorivi [otsikko yhteenveto]
-  (reduce (fn [y rivi]
-            (conj y {:teksti (fmt/euro false (:summa rivi)) :tasaa :oikea :luokka "yhteensa lihavoitu"}))
-    [{:teksti otsikko
-      :luokka "yhteensa disabled lihavoitu"
-      :yhteenveto-vayla true
-      :tyyppi :euro
-      :fmt #(fmt/euro false %)}
-     {:teksti ""
-      :luokka "yhteensa lihavoitu"}]
-    (:hoitovuosittaiset-arvot yhteenveto)))
+(defn- lopullinen-yhteenvetorivi [otsikko rivi]
+  (flatten (conj [{:teksti otsikko
+                   :luokka "yhteensa disabled lihavoitu"
+                   :yhteenveto-vayla true
+                   :tyyppi :string}
+                  {:teksti ""
+                   :luokka "yhteensa lihavoitu"}]
+             rivi)))
 ;; Lisätään vielä yhteenveto yhteenvetoriviin)
 
 (defn poista-rivi [e! rivi]
@@ -56,13 +53,14 @@
         v (->> vuosidata
             (sort-by key)
             (mapv (fn [[_ arvo]]
-                    {:teksti arvo
+                    {:teksti (fmt/euro-opt false arvo)
                      :luokka "yhteensa lihavoitu"
                      :tyyppi :euro
+                     :summa arvo
                      :tasaa :oikea
                      :fmt fmt/euro-opt})))
-        yhteensa (apply + (map #(get % :teksti 0) v))
-        v (conj v {:teksti yhteensa
+        yhteensa (apply + (map #(get % :summa 0) v))
+        v (conj v {:teksti (fmt/euro-opt false yhteensa)
                    :luokka "yhteensa lihavoitu"
                    :tyyppi :euro
                    :tasaa :oikea
@@ -86,10 +84,9 @@
                (reset! virheet-atom (grid/hae-virheet %)))
     :rivi-jalkeen-fn (fn [rivit]
                        (let [vuosi-arvot (map :nimi vuositaulukon-otsikot)
-                             summat (laske-vuosisummat rivit vuosi-arvot)]
+                             yhteenvetorivi (laske-vuosisummat rivit vuosi-arvot)]
                          ^{:luokka "yhteenveto"}
-                         (into (yhteenvetorivi "Johto- ja hallintokorvaus yhteensä" (:hoitovuosittaiset-arvot yhteenveto))
-                           summat)))}
+                         (lopullinen-yhteenvetorivi "Johto- ja hallintokorvaus yhteensä" yhteenvetorivi)))}
 
    ;; Otsikot
    (concat [{:otsikko "Johto- ja hallintokorvaus"
