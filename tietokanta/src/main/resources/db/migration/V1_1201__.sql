@@ -12,6 +12,7 @@ CREATE TABLE lupaus_kustannusennuste (
     ennustetut_kustannukset DECIMAL(15,2),
     syotetty_pvm TIMESTAMP,
     lasketut_pisteet INTEGER, -- Tämän ennusteen saamat pisteet
+    tarkkuus_prosentti DECIMAL(5,2),
     luoja INTEGER NOT NULL REFERENCES kayttaja (id),
     luotu TIMESTAMP NOT NULL DEFAULT NOW(),
     muokkaaja INTEGER REFERENCES kayttaja (id),

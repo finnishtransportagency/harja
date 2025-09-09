@@ -692,6 +692,7 @@
                             :ennustettu-tavoitehinta ennustettu-tavoitehinta
                             :ennustetut-kustannukset ennustetut-kustannukset
                             :lopulliset-pisteet (:pisteet lopulliset-pisteet)
+                            :tarkkuus-prosentti (:tarkkuus-prosentti lopulliset-pisteet)
                             :muokkaaja user-id})
                 
                       (log/info (format "Päivitettiin kustannusennuste %s lopulliset pisteet: %s"

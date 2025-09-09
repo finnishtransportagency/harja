@@ -440,6 +440,7 @@ WHERE "urakka-id" = :urakka-id
 -- Päivittää kustannusennusteen lopulliset pisteet
 UPDATE lupaus_kustannusennuste
 SET lasketut_pisteet = :lopulliset-pisteet,
+    tarkkuus_prosentti = :tarkkuus-prosentti,
     muokkaaja = :muokkaaja,
     muokattu = NOW()
 WHERE id = :kustannusennuste-id;
