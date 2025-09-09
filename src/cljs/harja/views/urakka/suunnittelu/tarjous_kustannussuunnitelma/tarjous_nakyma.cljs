@@ -21,7 +21,7 @@
    [napit/yleinen-toissijainen "Tyhjennä"
     #(do
        (reset! tallenna-painettu false)
-       (e! (tarjous-tiedot/->HaeTarjouksenTiedot)))
+       (e! (tarjous-tiedot/->HaeTyhjatTarjouksenTiedot)))
     {:disabled (or tallennus-kesken? false)}]
    [napit/yleinen-ensisijainen "Tallenna muutokset"
     #(do
