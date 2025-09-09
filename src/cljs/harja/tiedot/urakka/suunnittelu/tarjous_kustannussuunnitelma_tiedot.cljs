@@ -83,6 +83,7 @@
 (defrecord ToggleVetolaatikonMuokkaus [tila])
 
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
+(defrecord PoistaRivi [rivi])
 
 (defn hae-kustannussuunnitelman-tiedot
   "Haetaan kustannussuunnitelman tiedot, jotta voidaan näyttää ne UI Gridissä.
@@ -515,6 +516,12 @@
     (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
     (-> app
       (assoc :tallennus-kesken? false)))
+
+  PoistaRivi
+  (process-event [{:keys [rivi]} app ]
+    (-> app
+      (update :tarjous
+        #(remove (fn [m] (= (:nimi m) (:nimi rivi))) %))))
 
   ToggleVetolaatikonMuokkaus
   (process-event [{:keys [tila]} app]
