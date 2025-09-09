@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.muutos-tiedot
   "Urakan muutosten tiedot."
-  (:require [tuck.core :as tuck]
+  (:require [taoensso.timbre :as log]
+            [tuck.core :as tuck]
             [reagent.core :refer [atom]]
 
             [harja.pvm :as pvm]
@@ -199,6 +200,8 @@
   (process-event [{vastaus :vastaus
                    muutos :muutos
                    valittu-hoitokausi :valittu-hoitokausi} app]
+    (log/debug "HaeMuutoksenTiedotOnnistui")
+
     (let [uudet-liitteet (:liitteet vastaus)
           lomakkeen-hoitokausi (get-in app [:muokattava-muutos :hoitovuosi])
           toimenpiteiden-tiedot (:toimenpiteiden-tiedot vastaus)
@@ -418,6 +421,8 @@
 
   HaeMuutoksenTiedot
   (process-event [{:keys [muutos]} app]
+    (log/debug "HaeMuutoksenTiedot")
+
     (let [valittu-hoitokausi (:valittu-hoitokausi app)]
       (when (:id muutos)
         (tuck-apurit/post! :hae-muutoksen-tiedot

@@ -199,8 +199,10 @@
                                    (fn [rivi]
                                      [jatkuvan-muutoksen-vetolaatikko e! app rivi]))
                               (:toimenpiteiden-tiedot muokattava-muutos)))]
-
     [:div.toimenpiteiden-tiedot
+     ;; Näytä debug-info kehittäjille
+     [debug app]
+
      ;; Header vihje sekä nappi 
      [:div.pysyvan-muutoksen-grid-header
       [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
@@ -345,7 +347,7 @@
 (defn muutoslomake [e! {:keys [muokattava-muutos tallennus-kesken?] :as app}]
   (komp/luo
     (komp/sisaan-ulos
-      #(e! (muutos-tiedot/->HaeMuutoksenTiedot muokattava-muutos))
+      #(e! (do (println "###" muokattava-muutos) (muutos-tiedot/->HaeMuutoksenTiedot muokattava-muutos)))
       #(e! (muutos-tiedot/->MuokkaaMuutosta nil)))
     (fn [e! {:keys [muokattava-muutos tallennus-kesken?] :as app}]
       [:span.muutoslomake
