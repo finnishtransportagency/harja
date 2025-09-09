@@ -28,9 +28,11 @@
 
 (defn tallenna-tarjous [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-  (let [kattohintakerroin 1.1                               ;; Odotellaan vielä urakka_parametrit taulua
-        tarjousdb (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) kattohintakerroin tiedot)]
-    (tarjous-kyselyt/hae-tarjous db (:urakka-id tiedot))))
+  (jdbc/with-db-transaction [db db]
+    (let [urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
+          kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+          _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) kattohintakerroin tiedot)]
+      (tarjous-kyselyt/hae-tarjous db (:urakka-id tiedot)))))
 
 
 (defrecord Tarjous []

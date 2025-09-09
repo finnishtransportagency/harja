@@ -86,3 +86,8 @@ SET summa = :summa,
     muokkaaja = :muokkaaja,
     muokattu = NOW()
 WHERE id = :id;
+
+-- name: poista-tarjouksen-johto-ja-hallintokorvaus<!
+DELETE FROM tarjous_johto_ja_hallintokorvaus
+ WHERE johto_ja_hallintokorvaus_toimenkuva_id = :toimenkuvaid
+   AND urakka_id = :urakkaid;

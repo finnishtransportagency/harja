@@ -1,9 +1,11 @@
 (ns harja.kyselyt.tarjous-kyselyt
-  (:require [harja.kyselyt.urakat :as urakat-kyselyt]
+  (:require [clojure.string :as str]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konversio]
-            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]))
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]))
 
 (defqueries "harja/kyselyt/tarjous_kyselyt.sql"
   {:positional? true})
@@ -12,7 +14,7 @@
   tallenna-tarjouskustannus<! paivita-tarjouskustannus<!
   tallenna-tarjouksen-johto-ja-hallintokorvaus<! paivita-tarjouksen-johto-ja-hallintokorvaus<!
   hae-tarjouksen-tiedot hae-tarjous-vuodella
-  hae-kustannus-tarjoukselle hae-toimenkuva-tarjoukselle)
+  hae-kustannus-tarjoukselle hae-toimenkuva-tarjoukselle poista-tarjouksen-johto-ja-hallintokorvaus<!)
 
 (def osiojarjestys
   {"hankintakustannukset" 1
@@ -113,13 +115,13 @@
 (defn tallenna-tarjous-tietokantaan
   "Tarjous koostuu kolmesta kokonaisuudesta: Tarjouksen kokonaissummasta eli Tavoite- ja Kattohinnasta, Johto-ja-hallintokorvauksista (toimenkuvat) sekä
   Hankinnoista (Kilpailutettavat hankinnat, Erillishankinnat, Rahavarauksista, Hoidonjohtopalkkiosta)."
-  [db urakka-id kayttaja-id kattohintakerroin tarjous-tietomalli]
+  [db urakka-id kayttaja-id kattohintakerroin tarjous]
   (let [;; Vuodet ovat dynaamisia. Päätellään ne tietomallista
-        vuodet (vuodet-tietomallista tarjous-tietomalli)
+        vuodet (vuodet-tietomallista tarjous)
         ;; Muokkaa tietomallin vuosittaiset summat tarjous- ja kattohinnaksi
         vuosittaiset-tarjoushinnat (mapv
                                      (fn [vuosi-rivi]
-                                       (let [summa (tarjoustietomallista-vuosittaiset-hinnat tarjous-tietomalli (:vuosi vuosi-rivi))]
+                                       (let [summa (tarjoustietomallista-vuosittaiset-hinnat tarjous (:vuosi vuosi-rivi))]
                                          {:hoitokauden_alkuvuosi (:vuosi vuosi-rivi)
                                           :tarjous_tavoitehinta summa
                                           :urakka_id urakka-id,
@@ -128,7 +130,7 @@
                                      vuodet)
         hankinta-osiot #{"hankintakustannukset", "erillishankinnat", "hoidonjohtopalkkio", "tavoitehintaiset-rahavaraukset"}
         johto-ja-hallintokorvausosiot #{"johto-ja-hallintokorvaus"}
-        kustannukset-tarjouksesta (filter #(contains? hankinta-osiot (:osio %)) (:tarjous tarjous-tietomalli))
+        kustannukset-tarjouksesta (filter #(contains? hankinta-osiot (:osio %)) (:tarjous tarjous))
         kustannuksetlistaus (flatten (reduce
                                        (fn [kaikki rivi]
                                          (let [uudet-rivit (mapv
@@ -144,7 +146,19 @@
                                                              (:hoitovuosittaiset-arvot rivi))]
                                            (conj kaikki uudet-rivit)))
                                        [] kustannukset-tarjouksesta))
-        toimenkuvat-tarjouksesta (filter #(contains? johto-ja-hallintokorvausosiot (:osio %)) (:tarjous tarjous-tietomalli))
+        toimenkuvat-tarjouksesta (filter #(contains? johto-ja-hallintokorvausosiot (:osio %)) (:tarjous tarjous))
+        ;; Poistettavat toimenkuvat
+        poistettavat-toimenkuvat (filter #(true? (:poistettu %)) toimenkuvat-tarjouksesta)
+        ;; Poistetaan toimenkuvat tietokanansta
+        _ (mapv
+            (fn [poistettava]
+              (poista-tarjouksen-johto-ja-hallintokorvaus<! db {:urakkaid urakka-id
+                                                                :toimenkuvaid (:toimenkuva-id poistettava)})
+              (toimenkuva-kyselyt/poista-toimenkuva! db (:id poistettava)))
+            poistettavat-toimenkuvat)
+        paivitettavat-toimenkuvat (remove #(true? (:poistettu %)) toimenkuvat-tarjouksesta)
+
+
         toimenkuvatlistaus (flatten (reduce
                                       (fn [kaikki rivi]
                                         (let [uudet-rivit (mapv
@@ -159,7 +173,7 @@
                                                                :luoja kayttaja-id})
                                                             (:hoitovuosittaiset-arvot rivi))]
                                           (conj kaikki uudet-rivit)))
-                                      [] toimenkuvat-tarjouksesta))
+                                      [] paivitettavat-toimenkuvat))
 
         ;; Tallennetaan tarjous- ja kattohinnat tarjouksen päätauluun, johon muut tiedot linkitetään
         tallennukset (mapv
@@ -174,7 +188,6 @@
                                                    (tallenna-tarjous<! db rivi))
                                ;; Tallennetaan tarjouksen kustannukset ja toimenkuvat tietokantaan
                                vuosittaiset-kustannukset (filter #(= (:hoitokauden_alkuvuosi rivi) (:hoitokauden_alkuvuosi %)) kustannuksetlistaus)
-                               vuosittaiset-toimenkuvat (filter #(= (:hoitokauden_alkuvuosi rivi) (:hoitokauden_alkuvuosi %)) toimenkuvatlistaus)
                                _ (mapv (fn [kustannus]
                                          (let [; tarkistetaan, että löytyykö jo tietokannasta
                                                kustannusdb (if (:id tarjousdb)
@@ -191,6 +204,7 @@
                                                                               :muokkaaja kayttaja-id))
                                              (tallenna-tarjouskustannus<! db (assoc kustannus :tarjous_id (:id tietokantatarjous))))))
                                    vuosittaiset-kustannukset)
+                               vuosittaiset-toimenkuvat (filter #(= (:hoitokauden_alkuvuosi rivi) (:hoitokauden_alkuvuosi %)) toimenkuvatlistaus)
                                _ (mapv
                                    (fn [toimenkuva]
                                      (let [toimenkuvadb (if (:id tarjousdb)
