@@ -619,7 +619,6 @@
 
   HaeUrakanTehtavaryhmanTehtavatOnnistui
    (process-event [{tulos :tulos {:keys [nro]} :parametrit} app]
-     (println "NUmero " nro " TULO" tulos)
     (let
       [lomake (:lomake app)
        lomake (-> lomake
