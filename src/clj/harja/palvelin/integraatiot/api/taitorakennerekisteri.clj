@@ -102,12 +102,13 @@
                :havainnot (muodosta-havainnot kohde)}})
         kohteet))))
 
-(defn muodosta-harja-url [tarkastus base-url]
+(defn muodosta-harja-url [tarkastus domain-nimi]
   (when (and (:urakka_hallintayksikko tarkastus)
           (:urakka_id tarkastus)
           (:silta_id tarkastus)
           (:siltatarkastus_id tarkastus))
-    (str base-url "/#urakat/laadunseuranta/siltatarkastukset?&hy="
+    (str (:harja-domain-url domain-nimi)
+      "/#urakat/laadunseuranta/siltatarkastukset?&hy="
       (:urakka_hallintayksikko tarkastus)
       "&u=" (:urakka_id tarkastus)
       "&sil=" (:silta_id tarkastus)
@@ -115,7 +116,7 @@
 
 (defn hae-siltatarkastukset
   "Hakee siltatarkastukset annettujen alku- ja loppuajan puitteissa."
-  [db {:keys [alkuaika loppuaika] :as parametrit} _kayttaja]
+  [db {:keys [alkuaika loppuaika] :as parametrit} _kayttaja domain-nimi]
   (log/info "Taitorakennerekisteri API, siltatarkastusten haku, parametrit: " (pr-str parametrit))
   (tarkista-api-parametrit parametrit :aikavali)
   
@@ -132,7 +133,7 @@
                                         :tarkastusaika (when (:tarkastusaika tarkastus)
                                                          (pvm/aika-iso8601-aikavyohykkeen-kanssa (:tarkastusaika tarkastus)))
                                         :tarkastaja (:tarkastaja tarkastus)
-                                        :harja-url (muodosta-harja-url tarkastus "http://harja.testi")
+                                        :harja-url (muodosta-harja-url tarkastus domain-nimi)
                                         :luotu (when (:luotu tarkastus)
                                                  (pvm/aika-iso8601-aikavyohykkeen-kanssa (:luotu tarkastus)))
                                         :muokattu (when (:muokattu tarkastus)
@@ -153,7 +154,7 @@
 
 (defn hae-sillan-siltatarkastukset
   "Hakee siltatarkastukset sillalle sillan silta_oid:n perusteella."
-  [db {:keys [silta-oid] :as parametrit} _kayttaja]
+  [db {:keys [silta-oid] :as parametrit} _kayttaja domain-nimi]
   (log/info "Taitorakennerekisteri API, sillan siltatarkastusten haku, parametrit: " (pr-str parametrit))
   (tarkista-api-parametrit parametrit :silta-oid)
 
@@ -169,6 +170,7 @@
                                           :tarkastusaika (when (:tarkastusaika tarkastus)
                                                            (pvm/aika-iso8601-aikavyohykkeen-kanssa (:tarkastusaika tarkastus)))
                                           :tarkastaja (:tarkastaja tarkastus)
+                                          :harja-url (muodosta-harja-url tarkastus domain-nimi)
                                           :luotu (when (:luotu tarkastus)
                                                    (pvm/aika-iso8601-aikavyohykkeen-kanssa (:luotu tarkastus)))
                                           :muokattu (when (:muokattu tarkastus)
@@ -180,7 +182,7 @@
                                    siltatarkastukset)]
       {:siltatarkastukset muunnetut-tarkastukset})))
 
-(defrecord Taitorakennerekisteri []
+(defrecord Taitorakennerekisteri [domain-nimi]
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
@@ -189,7 +191,7 @@
         (kasittele-get-kutsu db integraatioloki :hae-siltatarkastukset parametrit
           json-skeemat/+taitorakennerekisteri-siltatarkastukset-haku-vastaus+
           (fn [parametrit kayttaja db]
-            (hae-siltatarkastukset db parametrit kayttaja))
+            (hae-siltatarkastukset db parametrit kayttaja domain-nimi))
           :taitorakenne "trex")))
     (julkaise-reitti
       http :hae-sillan-siltatarkastukset
@@ -197,7 +199,7 @@
         (kasittele-get-kutsu db integraatioloki :hae-sillan-siltatarkastukset parametrit
           json-skeemat/+taitorakennerekisteri-siltatarkastukset-haku-vastaus+
           (fn [parametrit kayttaja db]
-            (hae-sillan-siltatarkastukset db parametrit kayttaja))
+            (hae-sillan-siltatarkastukset db parametrit kayttaja domain-nimi))
           :taitorakenne "trex")))
     this)
 

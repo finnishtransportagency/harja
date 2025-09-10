@@ -339,7 +339,7 @@
 (defn- tarkastus-kuuluu-nykyiseen-urakkaan? [tarkastus nykyinen-urakka-id]
   (= (:urakka tarkastus) nykyinen-urakka-id))
 
-(defn poista-siltatarkastus-parametrit []
+(defn poista-taitorakennerekisterin-siltatarkastus-parametrit []
   (let [hash-url (subs (.-href js/location) (inc (.indexOf (.-href js/location) "#")))
         uri (Uri/parse hash-url)
         parametrit (.getQueryData uri)
@@ -382,7 +382,7 @@
         [:div.siltatarkastukset
          [napit/takaisin "Takaisin siltaluetteloon" #(do
                                                        (reset! st/valittu-silta nil)
-                                                       (poista-siltatarkastus-parametrit))]
+                                                       (poista-taitorakennerekisterin-siltatarkastus-parametrit))]
 
          [sillan-perustiedot @st/valittu-silta]
 
@@ -590,6 +590,8 @@
          (kartta-tasot/taso-pois! :sillat)
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
          (reset! url-parametrit-kasitelty false)))
+    ;; Lisätty mahdollisuus luoda suora linkki sillan siltatarkastukseen taitorakennerekisterin siltatarkastusintegraatiota varten.
+    ;; TODO mahdollistaa sama harjan käyttäjille
     (fn []
       (let [hash-url (subs (.-href js/location) (inc (.indexOf (.-href js/location) "#")))
             uri (Uri/parse hash-url)

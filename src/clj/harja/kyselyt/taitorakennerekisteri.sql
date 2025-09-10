@@ -68,7 +68,8 @@ SELECT
   -- Urakka tiedot
   u.id as urakka_id,
   u.nimi as urakka_nimi,
-  u.sampoid as urakka_tunnus,
+  u.sampoid as urakka_tunnus,  
+  u.hallintayksikko as urakka_hallintayksikko,
   -- Silta tiedot
   s.id as silta_id,
   s.siltatunnus,
