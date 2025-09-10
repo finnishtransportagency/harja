@@ -71,7 +71,8 @@
           :valinta-arvo identity
           :valinta-nayta (fn [arvo]
                            (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))
-          :uusi-rivi? true}
+          :uusi-rivi? true
+          ::lomake/col-luokka "perustiedot col-sm-6"}
          (when (= "pysyva" (:tyyppi muokattava-muutos))
            {:tyyppi :komponentti
             :uusi-rivi? true
