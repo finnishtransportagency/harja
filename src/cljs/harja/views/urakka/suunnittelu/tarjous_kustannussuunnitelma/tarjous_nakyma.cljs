@@ -70,68 +70,89 @@
   (let [;; Estetään käyttöliittymässä poistettujen toimenkuvien näkyminen listauksessa, vaikka ei ole vielä tallennettu muutoksia kantaan
         toimenkuvat (remove #(true? (:poistettu %)) joha-tiedot)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+        urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         ;; Rajaa toimenkuvavalinnaksi vain ne, jotka eivät ole vielä käytössä
         muut-toimenkuvat (filter
                            (fn [toimenkuva]
                              (not (some #(= (:nimi toimenkuva) (:nimi %)) toimenkuvat)))
-                           kaikki-toimenkuvat)]
+                           kaikki-toimenkuvat)
+        vuosiavaimet (flatten (map :nimi vuositaulukon-otsikot))
+        vuosi-map (zipmap vuosiavaimet (repeat 0))]
     [grid/grid
-        {:otsikko ""
-         :muokkaa-aina true
-         :voi-muokata? true
-         :muokattava? (constantly true)
-         :voi-poistaa? (constantly false)
-         :voi-lisata? true
-         :voi-kumota? false
-         :piilota-toiminnot? false
-         :tunniste :nimi
-         :muutos #(do
-                    (reset! tallenna-painettu false)
-                    (reset! tarjous-tiedot/grid-toimenkuvat-atom (vals (grid/hae-muokkaustila %)))
-                    (reset! virheet-atom (grid/hae-virheet %)))
-         :rivi-jalkeen-fn (fn [rivit]
-                            (let [vuosi-arvot (map :nimi vuositaulukon-otsikot)
-                                  yhteenvetorivi (laske-vuosisummat rivit vuosi-arvot)]
-                              ^{:luokka "yhteenveto"}
-                              (lopullinen-yhteenvetorivi "Johto- ja hallintokorvaus yhteensä" yhteenvetorivi)))}
+     {:otsikko ""
+      :muokkaa-aina true
+      :voi-muokata? true
+      :muokattava? (constantly true)
+      :voi-poistaa? (constantly false)
+      :voi-lisata? true
+      :uusi-rivi (fn [rivi]
+                   (merge (assoc rivi :id -1 :nimi "" :yhteensa 0)
+                     vuosi-map))
+      :voi-kumota? false
+      :piilota-toiminnot? false
+      :tunniste :nimi
+      :muutos #(do
+                 (let [toimenkuvat (vals (grid/hae-muokkaustila %))
+                       ;; Jos muutos on ollut uuden rivin lisäys, niin asetetaan valittu toimenkuva
+                       toimenkuvat (map (fn [toimenkuva]
+                                          (if (= -1 (:id toimenkuva))
+                                            (let [uusi-toimenkuva-kaikista (first (filter (fn [t]
+                                                                                            (= (:nimi t) (:nimi toimenkuva)))
+                                                                                    kaikki-toimenkuvat))]
+                                              (assoc toimenkuva
+                                                :osio "johto-ja-hallintokorvaus"
+                                                :poistettu nil
+                                                :yhteensa 0
+                                                :rahavaraus-id nil
+                                                :toimenkuva-id (:id uusi-toimenkuva-kaikista)))
+                                            toimenkuva))
+                                     toimenkuvat)]
+                   (reset! tallenna-painettu false)
+                   (reset! tarjous-tiedot/grid-toimenkuvat-atom toimenkuvat)
+                   (reset! virheet-atom (grid/hae-virheet %))))
+      :rivi-jalkeen-fn (fn [rivit]
+                         (let [vuosi-arvot (map :nimi vuositaulukon-otsikot)
+                               yhteenvetorivi (laske-vuosisummat rivit vuosi-arvot)]
+                           ^{:luokka "yhteenveto"}
+                           (lopullinen-yhteenvetorivi "Johto- ja hallintokorvaus yhteensä" yhteenvetorivi)))}
 
-        ;; Otsikot
-        (concat [;; ennen 2025 alkaneet urakat eivät voi valita toimenkuvia tästä tarjouslomakkeesta
-                 (if (< urakan-alkuvuosi 2025)
-                   {:otsikko "Johto- ja hallintokorvaus (vain 2025 tai myöhemmin alkaville urakoille)"
-                    :nimi :nimi
-                    :tyyppi :string
-                    :luokka "yhteensa disabled"
-                    :leveys (str nimi-leveys "%")
-                    :muokattava? (constantly false)}
-                   {:otsikko "Johto- ja hallintokorvaus"
-                    :nimi :nimi
-                    :tyyppi :valinta
-                    ;:valinnat #(map :nimi (conj muut-toimenkuvat %))
-                    :valinnat-fn #(map :nimi muut-toimenkuvat)
-                    :luokka "yhteensa"
-                    :leveys (str nimi-leveys "%")
-                    :muokattava? (constantly true)})]
-          [;; Poista nappi vain 2025 tai jälkeen alkaneissa urakoissa
-           (if (>= urakan-alkuvuosi 2025)
-             {:otsikko ""
-              :tyyppi :komponentti
-             :komponentti (fn [rivi]
-                            (napit/yleinen "Poista rivi"
-                              :toissijainen
-                              #(e! (tarjous-tiedot/->PoistaToimenkuva rivi))
-                              {:ikoni (ikonit/livicon-trash) :luokka "btn-xs"}))
-             :leveys (str vuosi-leveys "%")}
-             {:otsikko ""
-              :tyyppi :komponentti
-              :komponentti (fn [rivi]
-                             [:span])
-              :leveys (str vuosi-leveys "%")})]
-          (mapv #(assoc % :muokattava false) vuositaulukon-otsikot)
-          [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
-            :muokattava? (constantly false) :luokka "yhteensa"
-            :hae (fn [rivi] (laske-rivit-yhteen rivi))
-            :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%") :tasaa :oikea}])
+     ;; Otsikot
+     (concat [;; ennen 2025 alkaneet urakat eivät voi valita toimenkuvia tästä tarjouslomakkeesta
+              (if (< urakan-alkuvuosi 2025)
+                {:otsikko "Johto- ja hallintokorvaus (vain 2025 tai myöhemmin alkaville urakoille)"
+                 :nimi :nimi
+                 :tyyppi :string
+                 :luokka "yhteensa disabled"
+                 :leveys (str nimi-leveys "%")
+                 :muokattava? (constantly false)}
+                {:otsikko "Johto- ja hallintokorvaus"
+                 :nimi :nimi
+                 :tyyppi :valinta
+                 ;:valinnat #(map :nimi (conj muut-toimenkuvat %))
+                 :valinnat-fn #(map :nimi muut-toimenkuvat)
+                 :luokka "yhteensa"
+                 :leveys (str nimi-leveys "%")
+                 :muokattava? (constantly true)})]
+       [;; Poista nappi vain 2025 tai jälkeen alkaneissa urakoissa
+        (if (>= urakan-alkuvuosi 2025)
+          {:otsikko ""
+           :tyyppi :komponentti
+           :komponentti (fn [rivi]
+                          (napit/yleinen "Poista rivi"
+                            :toissijainen
+                            #(e! (tarjous-tiedot/->PoistaToimenkuva rivi))
+                            {:ikoni (ikonit/livicon-trash) :luokka "btn-xs"}))
+           :leveys (str vuosi-leveys "%")}
+          {:otsikko ""
+           :tyyppi :komponentti
+           :komponentti (fn [rivi]
+                          [:span])
+           :leveys (str vuosi-leveys "%")})]
+       (mapv #(assoc % :muokattava false) vuositaulukon-otsikot)
+       [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
+         :muokattava? (constantly false) :luokka "yhteensa"
+         :hae (fn [rivi] (laske-rivit-yhteen rivi))
+         :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%") :tasaa :oikea}])
      toimenkuvat]))
 
 (defn tarjous-nakyma [e! app]

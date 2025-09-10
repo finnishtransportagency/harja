@@ -116,8 +116,10 @@
   "Tarjous koostuu kolmesta kokonaisuudesta: Tarjouksen kokonaissummasta eli Tavoite- ja Kattohinnasta, Johto-ja-hallintokorvauksista (toimenkuvat) sekä
   Hankinnoista (Kilpailutettavat hankinnat, Erillishankinnat, Rahavarauksista, Hoidonjohtopalkkiosta)."
   [db urakka-id kayttaja-id kattohintakerroin tarjous]
-  (let [;; Vuodet ovat dynaamisia. Päätellään ne tietomallista
-        vuodet (vuodet-tietomallista tarjous)
+  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        vuodet (map (fn [vuosi]
+                      {:vuosi vuosi}) (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot))))
+
         ;; Muokkaa tietomallin vuosittaiset summat tarjous- ja kattohinnaksi
         vuosittaiset-tarjoushinnat (mapv
                                      (fn [vuosi-rivi]
@@ -128,6 +130,7 @@
                                           :tarjous_kattohinta (* summa kattohintakerroin),
                                           :luoja kayttaja-id}))
                                      vuodet)
+        ;; Erota toimenkuvat ja muut kustannukset toisistaan
         hankinta-osiot #{"hankintakustannukset", "erillishankinnat", "hoidonjohtopalkkio", "tavoitehintaiset-rahavaraukset"}
         johto-ja-hallintokorvausosiot #{"johto-ja-hallintokorvaus"}
         kustannukset-tarjouksesta (filter #(contains? hankinta-osiot (:osio %)) (:tarjous tarjous))
@@ -147,6 +150,7 @@
                                            (conj kaikki uudet-rivit)))
                                        [] kustannukset-tarjouksesta))
         toimenkuvat-tarjouksesta (filter #(contains? johto-ja-hallintokorvausosiot (:osio %)) (:tarjous tarjous))
+
         ;; Poistettavat toimenkuvat
         poistettavat-toimenkuvat (filter #(true? (:poistettu %)) toimenkuvat-tarjouksesta)
         ;; Poistetaan toimenkuvat tietokanansta
@@ -156,14 +160,16 @@
                                                                 :toimenkuvaid (:toimenkuva-id poistettava)})
               (toimenkuva-kyselyt/poista-toimenkuva! db (:id poistettava)))
             poistettavat-toimenkuvat)
+
         paivitettavat-toimenkuvat (remove #(true? (:poistettu %)) toimenkuvat-tarjouksesta)
-
-
+        ;; Muutetaan toimenkuvat listaksi, jossa on yksi rivi per hoitovuosi
         toimenkuvatlistaus (flatten (reduce
                                       (fn [kaikki rivi]
                                         (let [uudet-rivit (mapv
                                                             (fn [r]
-                                                              {:urakka_id urakka-id
+                                                              {:id (:id rivi)
+                                                               :nimi (:nimi rivi)
+                                                               :urakka_id urakka-id
                                                                :hoitokauden_alkuvuosi (:vuosi r)
                                                                :johto_ja_hallintokorvaus_toimenkuva_id (:toimenkuva-id rivi)
                                                                :tehtava_id (:tehtava-id rivi)
@@ -204,22 +210,39 @@
                                                                               :muokkaaja kayttaja-id))
                                              (tallenna-tarjouskustannus<! db (assoc kustannus :tarjous_id (:id tietokantatarjous))))))
                                    vuosittaiset-kustannukset)
+
                                vuosittaiset-toimenkuvat (filter #(= (:hoitokauden_alkuvuosi rivi) (:hoitokauden_alkuvuosi %)) toimenkuvatlistaus)
+
                                _ (mapv
                                    (fn [toimenkuva]
-                                     (let [toimenkuvadb (if (:id tarjousdb)
-                                                          (first (hae-toimenkuva-tarjoukselle db {:tarjous_id (:id tarjousdb)
-                                                                                                  :urakka_id urakka-id
-                                                                                                  :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi toimenkuva)
-                                                                                                  :johto_ja_hallintokorvaus_toimenkuva_id (:johto_ja_hallintokorvaus_toimenkuva_id toimenkuva)
-                                                                                                  :tehtava_id (:tehtava_id toimenkuva)
-                                                                                                  :tehtavaryhma_id (:tehtavaryhma_id toimenkuva)
-                                                                                                  :osio (:osio toimenkuva)}))
+                                     (let [uusi-db-toimenkuva (when (= -1 (:id toimenkuva))
+                                                                ;; Tämä map pyörähtää jokaisena hoitovuonna. Mutta toimenkuvan kannalta riittää
+                                                                ;; että toimenkuvia lisätään vain kerran urakalle
+                                                                ;; Tarkistetaan siis, ettei toimenkuvaa löydy jo tietokannasta
+                                                                (when-not (seq (toimenkuva-kyselyt/hae-urakan-toimenkuva db {:nimi (:nimi toimenkuva)
+                                                                                                                         :urakkaid urakka-id}))
+                                                                  (toimenkuva-kyselyt/lisaa-urakan-toimenkuva<! db {:toimenkuva (:nimi toimenkuva)
+                                                                                                                  :urakkaid urakka-id
+                                                                                                                  :urakkakohtainen-nimi (:nimi toimenkuva)})))
+                                           toimenkuvadb (if (:id tarjousdb)
+                                                          (first (hae-toimenkuva-tarjoukselle db
+                                                                   {:tarjous_id (:id tarjousdb)
+                                                                    :urakka_id urakka-id
+                                                                    :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi toimenkuva)
+                                                                    :johto_ja_hallintokorvaus_toimenkuva_id (or (:id uusi-db-toimenkuva) (:johto_ja_hallintokorvaus_toimenkuva_id toimenkuva))
+                                                                    :tehtava_id (:tehtava_id toimenkuva)
+                                                                    :tehtavaryhma_id (:tehtavaryhma_id toimenkuva)
+                                                                    :osio (:osio toimenkuva)}))
                                                           nil)]
                                        (if toimenkuvadb
-                                         (paivita-tarjouksen-johto-ja-hallintokorvaus<! db (assoc toimenkuvadb :summa (:summa toimenkuva)
+                                         (paivita-tarjouksen-johto-ja-hallintokorvaus<! db (assoc toimenkuvadb
+                                                                                             :summa (:summa toimenkuva)
                                                                                              :muokkaaja kayttaja-id))
-                                         (tallenna-tarjouksen-johto-ja-hallintokorvaus<! db (assoc toimenkuva :tarjous_id (:id tietokantatarjous))))))
+                                         (let [toimenkuva (if uusi-db-toimenkuva
+                                                            (assoc toimenkuva :johto_ja_hallintokorvaus_toimenkuva_id (:id uusi-db-toimenkuva))
+                                                            toimenkuva)]
+                                           (tallenna-tarjouksen-johto-ja-hallintokorvaus<! db (assoc toimenkuva
+                                                                                                :tarjous_id (:id tietokantatarjous)))))))
                                    vuosittaiset-toimenkuvat)]
                            {:tarjousid (:id tietokantatarjous)}))
                        vuosittaiset-tarjoushinnat)]
