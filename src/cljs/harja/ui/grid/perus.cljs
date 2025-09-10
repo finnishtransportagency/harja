@@ -847,6 +847,11 @@
   :otsikko                              ihmiselle näytettävä otsikko
   :otsikko-komp                         jos haluaa viedä sarakkeen yläriviin (theadin th) toiminnallisuutta, kuten checkboxin
   :muokattava?                          funktio, jonka avulla päätellään, voiko solun tietoja muokata. Anna esim. (constantly false) - Olisi hyvä, jos tämä voitaisiin joskus nimetä :solu-muokattava?
+   
+  :sivuta                               Ottaa integerin montako riviä näkyy yhdellä sivulla. Lisää sivutuksen (paginaation) taulukkoon
+                                        Tälle olemassa myös muuttuja grid/vakiosivutus, mutta voi antaa minkä vaan numeron 
+  :piilota-sivutus-footer?              Boolean mikäli halutaan piilottaa taulukon alapuolen sivutuskontrollit,
+                                        tällöin kontrollit näkyy pelkästään ylhäällä. Mieluusti käytetään silloin kun sivulla pieni määrä rivejä
 
   :solun-luokka                         funktio, joka palauttaa solun luokan\n
   :tyyppi                               kentän tietotyyppi,  #{:string :puhelin :email :pvm}
@@ -955,7 +960,7 @@
            nollaa-muokkaustiedot-tallennuksen-jalkeen? tallennus-ei-mahdollinen-tooltip
            aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
            taulukko-validointi taulukko-varoitus taulukko-huomautus 
-           piilota-border?] :as opts} skeema tiedot]
+           piilota-border? piilota-sivutus-footer?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         taulukon-ref (atom nil)
@@ -1434,7 +1439,9 @@
                                 :virhe-viesti virhe-viesti}
                                skeema
                                tiedot)])
-           (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))
+           ;; Taulukon alhaalla näkyvät sivutuskontrollit
+           (when (and sivuta (not piilota-sivutus-footer?)) 
+             [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))
 
 ;; Yleisiä apureita gridiin
 

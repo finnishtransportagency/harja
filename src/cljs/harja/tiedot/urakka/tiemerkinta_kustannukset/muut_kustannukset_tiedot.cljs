@@ -118,7 +118,7 @@
 
   TallennaRivi
   (process-event [{:keys [rivi virheita?]} {:keys [valittu-rivi] :as app}]
-    ;; Tämä enabloi lomakkeen validoinnin
+    ;; Tämä enabloi lomakkeen validoinnin 
     ;; Saavutettavuusmielessä, näytetään validointi tallennus painalluksen yhteydessä
     (if (or
           virheita?
