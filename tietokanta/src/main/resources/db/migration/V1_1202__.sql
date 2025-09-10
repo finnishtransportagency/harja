@@ -1,0 +1,37 @@
+-- Muutoksia tehtäviin, tehtäväryhmiin ja rahavarauksiin
+
+-- Rahavarausten muutokset
+-- Käyttöliittymässä lisätty uudet rahavaraukset: Jääteiden hoito, Reikäpaikkaukset
+
+-- Jääteiden hoito linkittyy T4-tehtäväryhmään.
+-- TODO: epäselvyyksiä tehtävän ja toimenpiteen kanssa
+
+-- Pysäkkikatosten uusinen linkittyy T4-tehtäväryhmään
+-- TODO: se linkittyy jo E-tehtäväryhmään, Tuomo selvittää
+
+-- Uusi tehtväryhmä T5 - KT-reikävaluasfalttipaikkaus
+-- Tehtäväryhmälle kohdistetut kustannukset kuuluvat MHU Ylläpito-toimenpiteelle
+-- Jotta tehtäväryhmän voi linkittää rahavarauksiin ja jotta tietomalli on kokonainen, tarivitaan tehäväryhmälle tehtävä, vaikka sille ei vaadittaisikaan toteumakirjauksia
+
+INSERT INTO tehtavaryhma (nimi, jarjestys, nakyva, poistettu, luotu, luoja, yksiloiva_tunniste,
+                          tehtavaryhmaotsikko_id, voimassaolo_alkuvuosi, toimenpide_id)
+VALUES ('T5 - KT-reikävaluasfalttipaikkaus', 208, true, false, current_timestamp,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'), '3d9772fb-3c52-4310-9976-db3b260cc235',
+        (select id from tehtavaryhmaotsikko where otsikko = '8 MUUTA'), 2025,
+        (select id from toimenpide where koodi = '20191'));
+
+INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, hinnoittelu, api_seuranta, tehtavaryhma, "mhu-tehtava?",
+                     yksiloiva_tunniste, suunnitteluyksikko,
+                     voimassaolo_alkuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", aluetieto,
+                     "maaramitattava?")
+VALUES ('KT-reikävaluasfalttipaikkaus (ELY-rahoitus)', (select id from toimenpide where koodi = '20191'),
+        current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 'kpl', '{kokonaishintainen}',
+        false, (select id from tehtavaryhma where yksiloiva_tunniste = '3d9772fb-3c52-4310-9976-db3b260cc235'), true,
+        'f5f1dde9-93ea-47be-9f5d-aff9ead7add9', 'kpl', 2025, true, false, false, true);
+
+-- Linkitetään uusi tehtäväryhmä Reikävalu-rahavarauksen edellä luodun tehtävän kautta
+INSERT INTO rahavaraus_tehtava(rahavaraus_id, tehtava_id, luotu, luoja)
+VALUES ((select id from rahavaraus where nimi = 'Reikävalu'),
+        (select id from tehtava where yksiloiva_tunniste = 'f5f1dde9-93ea-47be-9f5d-aff9ead7add9'), current_timestamp,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'));
+
