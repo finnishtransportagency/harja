@@ -166,7 +166,7 @@
                                        aikaisemmat-yksikkohinnat (filter #(and
                                                                             ;; Vaadi että jokin yksikköhinta saatavilla 
                                                                             (some? (:arvo %))
-                                                                            ;; Suodata kuluva hk pois, tulee mukaan esim jos yksikköhinnan lähde on aseta  
+                                                                            ;; Suodata kuluva hk pois, tulee mukaan esim jos yksikköhinnan lähde on valittu  
                                                                             (not= hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi %))) kaikki-yksikkohinnat)
 
                                        loytyi-aikaisemmat-yksikkohinnat? (some? (seq aikaisemmat-yksikkohinnat))
@@ -219,19 +219,19 @@
 
               lahde (cond
                       ;; Tavoitehinta on kirjattu käsin 
-                      ;; => manuaali
+                      ;; => yksikköhinta puuttuu
                       (and
                         tavoitehinnan_muutos
                         anna-kirjata-tavoitehinta?
                         (> tavoitehinnan_muutos 0))
-                      "manuaali"
+                      "puuttuu"
 
-                      ;; Yksikköhinta on asetettu edelliseltä vuodelta 
-                      ;; => aseta 
+                      ;; Yksikköhinta on valittu edelliseltä vuodelta 
+                      ;; => valittu 
                       (and
                         valitun_yksikkohinnan_hoitokausi
                         (> valitun_yksikkohinnan_hoitokausi 0))
-                      "aseta"
+                      "valittu"
 
                       ;; Muulloin yksikköhinta on laskettu automaattisesti (kaikki data on saatavilla)
                       :else "laskettu")
@@ -243,7 +243,7 @@
                       :tehtava tehtava_id
                       :hk_alkuvousi hoitokauden-alkuvuosi
                       :yksikkohinta_hk_alkuvuosi valitun_yksikkohinnan_hoitokausi
-                      :kasin_syotetty_tavoitehinta (when (= lahde "manuaali") tavoitehinnan_muutos)}]
+                      :kasin_syotetty_tavoitehinta (when (= lahde "puuttuu") tavoitehinnan_muutos)}]
           (muutos-kyselyt/paivita-tehtava-maaramuutos<! conn params))))
 
     (hae-tehtava-maaramuutokset db kayttaja {:urakka-id urakka-id
@@ -259,9 +259,9 @@
   (let [{:keys [syy
                 tehtava_id
                 yksikkohinnan_alkuvuosi]} rivi
-        ;; Tätä kutsutaan modalista, joten lähde on aina aseta
+        ;; Tätä kutsutaan modalista, joten lähde on aina valittu
         ;; (yksikköhinta on asetettu edellisiltä hoitokausilta)
-        lahde "aseta"
+        lahde "valittu"
         hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         params {:syy syy
                 :lahde lahde

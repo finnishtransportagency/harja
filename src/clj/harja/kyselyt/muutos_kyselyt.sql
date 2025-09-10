@@ -305,8 +305,8 @@ SELECT
 	  WHEN mmt.lahde IS NULL OR mmt.lahde = 'laskettu'
 	    THEN ROUND(kulut.summa / NULLIF(SUM(urakan_tehtavat.maara), 0), 2)
     -- 
-    -- Yksikköhinta asetettu käyttöliittymästä 
-	  WHEN mmt.lahde = 'aseta' THEN NULL
+    -- Yksikköhinta valittu käyttöliittymästä 
+	  WHEN mmt.lahde = 'valittu' THEN NULL
     -- 
 	  ELSE NULL
 	END                                             AS yksikkohinta,
@@ -315,9 +315,9 @@ SELECT
   -- ---------------------------------------------------- --
   CASE 
     -- ============================================================
-    -- Tavoitehinnan muutos syötetty käsin 
+    -- Yksikköhinta puuttuu -> muutos syötetään käsin 
     -- ============================================================
-    WHEN mmt.lahde = 'manuaali' 
+    WHEN mmt.lahde = 'puuttuu' 
       THEN mmt.kasin_syotetty_tavoitehintamuutos
     -- ============================================================
     -- Seuraaviin tarvitaan toteumia, ei jatketa muuten
@@ -333,9 +333,9 @@ SELECT
            )  -- Kertaa yksikköhinta 
            * (COALESCE(kulut.summa, 0) / SUM(urakan_tehtavat.maara))  
     -- ============================================================
-    -- Yksikköhinta asetettu, lasketaan endpointissa erikseen => palauta null
+    -- Yksikköhinta valittu, lasketaan endpointissa erikseen => palauta null
     -- ============================================================
-    WHEN mmt.lahde = 'aseta' THEN NULL
+    WHEN mmt.lahde = 'valittu' THEN NULL
   END                                             AS tavoitehinnan_muutos
 FROM tehtava tk
   JOIN tehtavaryhma tr_alataso
