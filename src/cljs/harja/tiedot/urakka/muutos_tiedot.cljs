@@ -16,6 +16,7 @@
 
 
 (defonce nakymassa? (atom false))
+(def +indeksikorjausta-ei-vahvistettu-txt+ "Indeksikorjausta ei saatavilla")
 (def johto-ja-hallintokorvausmuutokset-atom (atom nil))
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
 (def pakolliset-kentat-fmt {:nimi "Nimi"
