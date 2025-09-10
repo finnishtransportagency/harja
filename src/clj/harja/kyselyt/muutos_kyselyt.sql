@@ -91,8 +91,7 @@ RETURNING id, versio;
 
 -- name: paivita-muutos<!
 UPDATE ONLY mhu_muutos
-   SET versio = versio + 1,
-       muokattu = NOW(),
+   SET muokattu = NOW(),
        muokkaaja = :kayttaja,
        nimi = :nimi,
        tyyppi = :tyyppi::MHU_MUUTOSTYYPPI,
