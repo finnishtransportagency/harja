@@ -346,10 +346,25 @@
                                                              ;; TODO: tässä huomioitava kaikkien muutosten vaikutus, työversiossa vasta kirjatut muutokset mukana
                                                               muutosten-vaikutus-yhteensa))}}))
 
+
+
+(defn hae-mhu-suunniteltavat-tehtavat [db urakka-id alkupvm loppupvm]
+  (tehtavamaarat-kyselyt/mhu-suunniteltavat-tehtavat db {:urakka urakka-id
+                                                         :hoitokausi (range (pvm/vuosi alkupvm)
+                                                                       (inc (pvm/vuosi loppupvm)))}))
+
+
+;; TODO: Refaktoroi koodia. Tässä on paljon tyypin perusteella iffittelyä, joka menee helposti hankalalukuiseksi
+;;       Mieti uudestaan miten muutostyypin perusteella kannattaa lomakkeen perustietoja hakea
+;;       Olemassaolevaa muutosta muokatessa on myös tarpeen hakea muutoksen id:n perusteella lisää tietoja
 (defn hae-muutoksen-tiedot
   "Palauttaa yksittäisen muutoksen tarkat tiedot lomaketta varten."
   [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+
+  ;; TODO: Tätä tietoa tarvitaan aina pysyvän muutoksen lomakkeella tehtiinpä uutta muutosta tai muokattiinpa vanhaa
+  ;;       Tieto generoi taulukon rivit pysyvän muutoksen lomakkeelle
+  ;;       Tutki kyselyä uuden muutoksen luonnin näkökulmasta
   (let [toimenpiteiden-tiedot (when (= (:tyyppi muutos) "pysyva")
                                 (mapv
                                   (fn [rivi]
@@ -363,30 +378,32 @@
                                                                                             :urakka urakka-id
                                                                                             :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
         {:keys [alkupvm loppupvm]} (first (q-urakat/hae-urakka db {:id urakka-id}))
+
+        ;; TODO: Tätä tietoa tarvitaan aina pysyvän muutoksen lomakkeella tehtiinpä uutta muutosta tai muokattiinpa vanhaa
+        ;;       Tieto generoi taulukon rivit pysyvän muutoksen lomakkeelle
         toimenpiteiden-tehtavat (when (= (:tyyppi muutos) "pysyva")
                                   (map
                                     #(select-keys % #{:jarjestys :tehtava-id :suunniteltu-maara :toimenpidekoodi :tehtava :yksikko :hoitokauden-alkuvuosi})
-                                    (tehtavamaarat-kyselyt/mhu-suunniteltavat-tehtavat db {:urakka urakka-id
-                                                                                          :hoitokausi (range (pvm/vuosi alkupvm)
-                                                                                                        (inc (pvm/vuosi loppupvm)))})))
+                                    (hae-mhu-suunniteltavat-tehtavat db urakka-id alkupvm loppupvm)))
         tyyppikohtaiset-tiedot (case (:tyyppi muutos)
                                  "johto-ja-hallintokorvaus"
-                                 (mapv
-                                   (fn [rivi]
-                                     (-> rivi
-                                       (update :kulut #(mapv (fn [kulu]
-                                                               (update kulu :pvm pvm/dateksi))
-                                                         (konv/jsonb->clojuremap %)))))
-                                   (muutos-kyselyt/hae-johto-ja-hallintokorvausmuutoksen-tiedot db {:id (:id muutos)
-                                                                                                    :versio (:versio muutos)
-                                                                                                    :urakka urakka-id}))
+                                 (when (:id muutos)
+                                   (mapv
+                                     (fn [rivi]
+                                       (-> rivi
+                                         (update :kulut #(mapv (fn [kulu]
+                                                                 (update kulu :pvm pvm/dateksi))
+                                                           (konv/jsonb->clojuremap %)))))
+                                     (muutos-kyselyt/hae-johto-ja-hallintokorvausmuutoksen-tiedot db {:id (:id muutos)
+                                                                                                      :versio (:versio muutos)
+                                                                                                      :urakka urakka-id})))
 
                                  ;; tähän puuttuvien muutostyyppien lomakehaut...
                                  [{}])
+
         _ (when (> (count tyyppikohtaiset-tiedot)  1)
-            (do
-              (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
-              (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on luultavasti ongelmatilanne. Ota yhteys Harja-palautteeseen."))))
+            (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
+            (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on luultavasti ongelmatilanne. Ota yhteys Harja-palautteeseen.")))
         liitteet (when-not (empty? (:liite-idt muutos))
                    (liite-kyselyt/hae-liitteiden-tiedot db {:idt (:liite-idt muutos)
                                                             :urakka urakka-id}))

@@ -419,23 +419,24 @@
     app)
 
 
+  ;; Hakee muutoksen lomakkeen tarvitsemat tiedot muutoksen tyypin tai id:n perusteella
+  ;; TODO: Refaktoroi logiikkaa.
   HaeMuutoksenTiedot
   (process-event [{:keys [muutos]} app]
     (log/debug "HaeMuutoksenTiedot")
 
     (let [valittu-hoitokausi (:valittu-hoitokausi app)]
-      (when (:id muutos)
-        (tuck-apurit/post! :hae-muutoksen-tiedot
-          {:urakka-id @nav/valittu-urakka-id
-           :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
-           :muutos {:id (:id muutos)
-                    :versio (:versio muutos)
-                    :tyyppi (:tyyppi muutos)
-                    :liite-idt (into #{}
-                                 (map :id (:liitteet muutos)))}}
-          {:onnistui ->HaeMuutoksenTiedotOnnistui
-           :onnistui-parametrit [muutos valittu-hoitokausi]
-           :epaonnistui ->HaeMuutoksenTiedotEpaonnistui}))
+      (tuck-apurit/post! :hae-muutoksen-tiedot
+        {:urakka-id @nav/valittu-urakka-id
+         :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+         :muutos {:id (:id muutos)
+                  :versio (:versio muutos)
+                  :tyyppi (:tyyppi muutos)
+                  :liite-idt (into #{}
+                               (map :id (:liitteet muutos)))}}
+        {:onnistui ->HaeMuutoksenTiedotOnnistui
+         :onnistui-parametrit [muutos valittu-hoitokausi]
+         :epaonnistui ->HaeMuutoksenTiedotEpaonnistui})
       app))
 
 

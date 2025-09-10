@@ -60,8 +60,10 @@
           ;; sallitaan muokkaus vain uudelle muutokselle
           :muokattava? (fn [rivi] (nil? (:id rivi)))
           :aseta (fn [rivi arvo]
-                   (muutos-tiedot/alusta-tyyppikohtaisia-arvoja arvo valittu-hoitokausi)
-                   (assoc rivi :tyyppi arvo))
+                   (let [rivi (assoc rivi :tyyppi arvo)]
+                     (e! (muutos-tiedot/->HaeMuutoksenTiedot rivi))
+                     (muutos-tiedot/alusta-tyyppikohtaisia-arvoja arvo valittu-hoitokausi)
+                     rivi))
           :kaariva-luokka "muutostyyppivalinta"
           :tyyppi :valinta
           :vayla-tyyli? true
