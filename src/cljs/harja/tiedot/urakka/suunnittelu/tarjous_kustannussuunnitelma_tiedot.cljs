@@ -11,8 +11,8 @@
 (defonce nakymassa? (atom false))
 
 (defn scrollaa-muutoksiin [elementin-id]
-  ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat
-  (siirrin/siirry-elementin-id elementin-id 450))
+  ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat tai vahvistaa koko kustannussuunnitelman
+  (siirrin/siirry-elementin-id elementin-id 200))
 
 (defn muunna-vuodet
   "Muunnetaan UI Gridin käyttämä tietomalli bäkkärin käyttämään muotoon.
@@ -83,6 +83,7 @@
 (defrecord ToggleVetolaatikonMuokkaus [tila])
 
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
+(defrecord PoistaRivi [rivi])
 
 (defn hae-kustannussuunnitelman-tiedot
   "Haetaan kustannussuunnitelman tiedot, jotta voidaan näyttää ne UI Gridissä.
@@ -515,6 +516,12 @@
     (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
     (-> app
       (assoc :tallennus-kesken? false)))
+
+  PoistaRivi
+  (process-event [{:keys [rivi]} app ]
+    (-> app
+      (update :tarjous
+        #(remove (fn [m] (= (:nimi m) (:nimi rivi))) %))))
 
   ToggleVetolaatikonMuokkaus
   (process-event [{:keys [tila]} app]

@@ -83,16 +83,3 @@ SELECT 'Tavoitehinnan ulkopuoliset rahavaraukset' AS nimi, -- Tämä on johto ja
                               (kt.vuosi = y.year + 1 AND kt.kuukausi <= 9))
  GROUP BY kt.indeksikorjaus_vahvistettu, hoitokauden_alkuvuosi
  ORDER BY hoitokauden_alkuvuosi;
-
--- name: paivita-rahavaraus<!
-UPDATE kustannusarvioitu_tyo
-   SET summa = :summa,
-       muokattu = NOW(),
-       muokkaaja = :muokkaaja
- WHERE id = :id;
-
--- name: lisaa-rahavaraus<!
-INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, sopimus,
-                                   toimenpideinstanssi, tehtava, rahavaraus_id, tyyppi, osio, luoja, luotu)
-VALUES (:vuosi, :kuukausi, :summa, :sopimus_id, :toimenpideinstanssi_id, :tehtava_id, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
-        :luoja, NOW());

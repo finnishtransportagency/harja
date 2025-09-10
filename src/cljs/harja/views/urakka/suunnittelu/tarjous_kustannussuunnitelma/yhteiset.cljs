@@ -68,8 +68,8 @@
       (when (and div4 (>= valittu-vuosi rajavuosi))
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Indeksikorjattu"]
-         [:div.body-text (if vahvistettu? (fmt/euro-opt true tarjous-pysyvat-yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
-         (when vahvistettu?
+         [:div.body-text (if indeksikerroin (fmt/euro-opt true tarjous-pysyvat-yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
+         (when indeksikerroin
            [:div.body-text
             (str "(" indeksikerroin " * " (if tarjous-pysyvat-yhteensa (fmt/euro-opt false tarjous-pysyvat-yhteensa) "0,00 €") " )")])])
 
@@ -77,8 +77,8 @@
       (when (and div4 (< valittu-vuosi rajavuosi))
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Indeksikorjattu"]
-         [:div.body-text (if vahvistettu? (fmt/euro-opt true suunniteltu-yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
-         (when vahvistettu?
+         [:div.body-text (if indeksikerroin (fmt/euro-opt true suunniteltu-yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
+         (when indeksikerroin
            [:div.body-text
             (str "(" indeksikerroin " * " (if suunniteltu-yhteensa (fmt/euro-opt false suunniteltu-yhteensa) "0,00 €") " )")])])]]))
 
