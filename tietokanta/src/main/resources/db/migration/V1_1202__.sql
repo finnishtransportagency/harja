@@ -35,3 +35,5 @@ VALUES ((select id from rahavaraus where nimi = 'Reikävalu'),
         (select id from tehtava where yksiloiva_tunniste = 'f5f1dde9-93ea-47be-9f5d-aff9ead7add9'), current_timestamp,
         (select id from kayttaja where kayttajanimi = 'Integraatio'));
 
+-- Päivitetään vielä parempi nimi reikävalurahavaraukselle
+UPDATE rahavaraus SET nimi = 'Tilaajan rahavaraus KT-reikävaluasfalttipaikkaus' WHERE nimi = 'Reikävalu';
