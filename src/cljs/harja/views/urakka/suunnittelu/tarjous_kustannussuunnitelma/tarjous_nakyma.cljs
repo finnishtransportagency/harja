@@ -180,25 +180,9 @@
                                                           :tasaa :oikea}])))
                                 [] (:hoitovuosittaiset-arvot (first tarjouksen-tiedot)))
 
-        taulukon-tiedot (into [] (reduce (fn [rivit tarjous-rivi]
-                                           (let [vuosiarvot (reduce (fn [uusi rivi]
-                                                                      (-> uusi
-                                                                        (assoc :poistettu (:poistettu tarjous-rivi))
-                                                                        (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
-                                                                        (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
-                                                                        (assoc :tehtava-id (:tehtava-id tarjous-rivi))
-                                                                        (assoc :tehtavaryhma-id (:tehtavaryhma-id tarjous-rivi))
-                                                                        (assoc :osio (:osio tarjous-rivi))
-                                                                        (assoc (keyword (str "vuosi-" (:vuosi rivi))) (:summa rivi))))
-                                                              {} (:hoitovuosittaiset-arvot tarjous-rivi))
-                                                 nimiarvot {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)}
-                                                 lopputulos (merge vuosiarvot nimiarvot)]
-                                             (concat rivit [lopputulos])))
-                                   [] (drop-last tarjouksen-tiedot))) ;; Jätetään viimeinen rivi pois, koska se on yhteenvetorivi
-        hankinnat-tiedot (into [] (filter #(some #{"hankintakustannukset" "tavoitehintaiset-rahavaraukset"}
-                                             [(:osio %)]) taulukon-tiedot))
-        joha-tiedot (into [] (filter #(some #{"johto-ja-hallintokorvaus"}
-                                        [(:osio %)]) taulukon-tiedot))]
+        taulukon-tiedot (tarjous-tiedot/konvertoi-grid-muotoon (drop-last tarjouksen-tiedot)) ;; Jätetään viimeinen rivi pois, koska se on yhteenvetorivi
+        hankinnat-tiedot (into [] (filter #(some #{"hankintakustannukset" "tavoitehintaiset-rahavaraukset"} [(:osio %)]) taulukon-tiedot))
+        joha-tiedot (into [] (filter #(some #{"johto-ja-hallintokorvaus"} [(:osio %)]) taulukon-tiedot))]
 
     [:div
      [:hr]

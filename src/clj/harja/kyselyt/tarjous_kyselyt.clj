@@ -64,7 +64,8 @@
                                 :tehtavaryhma-id nil
                                 :rahavaraus-id nil
                                 :hoitovuosittaiset-arvot hoitovuosittaiset-arvot)))
-                      toimenkuvat)]
+                      toimenkuvat)
+        toimenkuvat (sort-by :jarjestys toimenkuvat)]
     toimenkuvat))
 
 (defn luo-default-tarjous [db urakka-id]
@@ -87,7 +88,7 @@
                            [] rahavaraukset)
         tarjous (vec (concat tarjous rahavaraus-rivit))
         toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
-        tarjous (vec (concat tarjous (sort-by :jarjestys toimenkuvat)))
+        tarjous (vec (concat tarjous toimenkuvat))
         jarjestetty-tarjous (sort-by (fn [rivi] (get osiojarjestys (:osio rivi)))
                               tarjous)]
 
@@ -304,9 +305,7 @@
 
 
 (defn hae-tarjous [db urakka-id]
-  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        tarjous-rivit (hae-tarjouksen-tiedot db {:urakka_id urakka-id})
+  (let [tarjous-rivit (hae-tarjouksen-tiedot db {:urakka_id urakka-id})
         ;; Mäppää tarjouksen tietokantarivit clojure-mapeiksi.
         tarjous-rivit (mapv
                         (fn [tarjous]

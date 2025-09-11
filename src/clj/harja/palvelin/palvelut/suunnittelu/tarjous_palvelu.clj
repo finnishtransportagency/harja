@@ -18,9 +18,7 @@
   palauttaa tyhjät tiedot, jotka voidaan täyttää uudelleen."
   [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user (:urakka-id tiedot))
-  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id (:urakka-id tiedot)}))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        tarjous {:urakka-id (:urakka-id tiedot)
+  (let [tarjous {:urakka-id (:urakka-id tiedot)
                  :kaikki-toimenkuvat (map #(assoc % :nimi (str/capitalize (:nimi %))) (toimenkuva-kyselyt/hae-toimenkuvat db))
                  :tarjous (tarjous-kyselyt/luo-default-tarjous db (:urakka-id tiedot))}]
     tarjous))
