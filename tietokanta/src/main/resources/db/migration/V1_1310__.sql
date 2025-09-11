@@ -33,6 +33,8 @@ CREATE TABLE mhu_muutos_kustannusvaikutus_historia
     LIKE mhu_muutos_kustannusvaikutus EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
 
+CREATE INDEX muutos_kustannusvaikutus_historia_idx ON mhu_muutos_kustannusvaikutus_historia (muutos, versio, hoitokauden_alkuvuosi);
+
 --
 
 CREATE TABLE mhu_muutos_tehtava_ja_maaraluettelo_historia

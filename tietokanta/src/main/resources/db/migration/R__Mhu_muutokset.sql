@@ -50,9 +50,17 @@ CREATE OR REPLACE FUNCTION paivita_mhu_muutos_kustannusvaikutus_historia()
     RETURNS TRIGGER AS
 $$
 BEGIN
-    INSERT INTO mhu_muutos_kustannusvaikutus_historia
-    VALUES (OLD.*);
-    RETURN NEW;
+    IF TG_OP IN ('UPDATE', 'DELETE') THEN
+        INSERT INTO mhu_muutos_kustannusvaikutus_historia
+        VALUES (OLD.*);
+    END IF;
+
+    IF TG_OP = 'UPDATE' THEN
+        NEW.versio := OLD.versio + 1;
+        RETURN NEW;
+    ELSE
+        RETURN OLD;
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 
