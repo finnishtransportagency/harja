@@ -80,8 +80,10 @@
 
 
 (defn +rivi-muutos-voimassa+ [app]
-  {:nimi :voimassa_alkaen :otsikko "Voimassa alkaen"
-   :tyyppi :pvm :uusi-rivi? true
+  {:otsikko "Voimassa alkaen"
+   :nimi :voimassa_alkaen 
+   :tyyppi :pvm 
+   :uusi-rivi? true
    :pakollinen? true
    :validoi [#(when (nil? %) "Anna muutoksen voimassaolo alkupvm")]
    ;; Pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
