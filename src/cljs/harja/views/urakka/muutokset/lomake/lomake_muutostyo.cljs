@@ -8,7 +8,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.muutos-domain :as muutos-domain]
             [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]))
+            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]))
 
 
 (defn lomake-muutostyo
