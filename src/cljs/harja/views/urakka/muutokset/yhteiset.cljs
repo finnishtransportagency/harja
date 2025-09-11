@@ -75,6 +75,7 @@
    :pituus-max 1000
    :uusi-rivi? true
    :pakollinen? true
+   :validoi [#(when (nil? (seq %)) "Kirjoita muutoksen syy")]
    ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"})
 
 
@@ -82,6 +83,7 @@
   {:nimi :voimassa_alkaen :otsikko "Voimassa alkaen"
    :tyyppi :pvm :uusi-rivi? true
    :pakollinen? true
+   :validoi [#(when (nil? %) "Anna muutoksen voimassaolo alkupvm")]
    ;; Pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
    ;; pienempi kuin voimassa alkaen, joten kutsuttava :aseta funktiota. Ei vaikuta ainakaan vielä muissa muutostyypeissä
    :aseta (fn [rivi arvo]

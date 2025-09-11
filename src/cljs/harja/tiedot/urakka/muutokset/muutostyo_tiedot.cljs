@@ -1,1 +1,0 @@
-(ns harja.tiedot.urakka.muutokset.muutostyo-tiedot)
