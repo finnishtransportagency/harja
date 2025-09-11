@@ -72,7 +72,7 @@
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
-        hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00}) vuodet)
+        hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
         ;; Lisätään default tarjoukseen Kilpailutettavat hankinnat, Erillishankinnat ja Hoidonjohtopalkkio
         tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                   :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}
@@ -305,7 +305,11 @@
 
 
 (defn hae-tarjous [db urakka-id]
-  (let [tarjous-rivit (hae-tarjouksen-tiedot db {:urakka_id urakka-id})
+  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        vuodet (map (fn [vuosi]
+                      {:vuosi vuosi}) (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot))))
+        hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi (:vuosi vuosi) :summa 0.00M}) vuodet)
+        tarjous-rivit (hae-tarjouksen-tiedot db {:urakka_id urakka-id})
         ;; Mäppää tarjouksen tietokantarivit clojure-mapeiksi.
         tarjous-rivit (mapv
                         (fn [tarjous]
@@ -325,6 +329,18 @@
         ;; Muutetaan ui:lle välitettävään muotoon
         kustannus-rivit (mapv #(muodosta-tarjous-rivi % (hae-tarjouksesta-rivit-vuodelle :kustannukset tarjous-rivit (:nimi %))) (:kustannukset (first tarjous-rivit)))
         toimenkuva-rivit (mapv #(muodosta-tarjous-rivi % (hae-tarjouksesta-rivit-vuodelle :toimenkuvat tarjous-rivit (:nimi %))) (:toimenkuvat (first tarjous-rivit)))
+
+        ;; Tarjouksen mukana ei välttämättä tule kaikkia toimenkuvia, jos niitä on tarjouksen tallentamisen jälkeen lisätty urakkalle hallintapaneelista.
+        ;; Varmistetaan siis, että kaikki urakan toimenkuvat ovat mukana, kun ne renderöidään frontilla
+        kaikki-urakan-toimenkuvat (hae-urakan-toimenkuvat db urakka-id (pvm/vuosi (:alkupvm urakan-tiedot)) hoitovuosittaiset-arvot)
+        ;; Vertaillaan toimenkuvat-rivit ja kaikki-urakan-toimenkuvat ja lisätään puuttuvat toimenkuvat nollasummilla
+        puuttuvat-toimenkuvat (filter
+                                (fn [kt]
+                                  (not (some #(= (:toimenkuva-id kt) (:toimenkuva-id %)) toimenkuva-rivit)))
+                                kaikki-urakan-toimenkuvat)
+
+        toimenkuva-rivit (vec (concat toimenkuva-rivit puuttuvat-toimenkuvat))
+
         toimenkuva-rivit (sort-by :jarjestys (map
                                                #(assoc % :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:nimi %)))
                                                toimenkuva-rivit))
