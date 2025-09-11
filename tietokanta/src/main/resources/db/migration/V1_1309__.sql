@@ -68,3 +68,6 @@ CREATE TRIGGER muutos_kustannusvaikutus_update_trigger
 CREATE TRIGGER muutos_kustannusvaikutus_delete_trigger
   BEFORE DELETE ON mhu_muutos_kustannusvaikutus
   FOR EACH ROW EXECUTE FUNCTION paivita_mhu_muutos_kustannusvaikutus_historia();
+
+
+ALTER TYPE kohdistustyyppi ADD VALUE 'erillisrahoitettu-muutos';

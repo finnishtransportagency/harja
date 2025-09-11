@@ -84,6 +84,8 @@
     :rahavaraus "Rahavaraukselle kohdistettava kulu"
     :lisatyo "Lisätyö"
     :paatos "Hoitovuoden päätös"
+    :jjh-muutos "Muutostyö (Johto- ja hallintokorvaus)"
+    :erillisrahoitettu-muutos "Muutostyö (erillisrahoitettu)"
     "Tuntematon"))
 
 (defn- nayta-kohdistuksen-virhe? [lomake nro avain]
@@ -345,6 +347,51 @@
                         :muokattu? true
                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]))
 
+(defn- erillisrahoitettu-muutostyo-kohdistus [e! lomake kohdistus toimenpiteet nro]
+  (let [lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)]
+    [:<>
+     [:div.row
+      [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
+       [:div.label-ja-alasveto {:style {:width "320px"}}
+
+        ;; TODO .. 
+        ;; Vedä jostain urakalle syötetyt muutostyöt
+        [:span.alasvedon-otsikko "Muutostyö*"]
+        [yleiset/livi-pudotusvalikko {:valinta (:toimenpide kohdistus)
+                                      :vayla-tyyli? true
+                                      :format-fn :toimenpide
+                                      :muokattu? true
+                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :toimenpide)
+                                      :valitse-fn #(e! (tiedot/->ValitseToimenpideKohdistukselle % nro))}
+         toimenpiteet]]
+
+       [:div.label-ja-alasveto {:style {:width "320px"}}
+        [:span.alasvedon-otsikko "Toimenpide*"]
+        [yleiset/livi-pudotusvalikko {:valinta (:toimenpide kohdistus)
+                                      :vayla-tyyli? true
+                                      :format-fn :toimenpide
+                                      :muokattu? true
+                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :toimenpide)
+                                      :valitse-fn #(e! (tiedot/->ValitseToimenpideKohdistukselle % nro))}
+         toimenpiteet]]]]
+
+     ;; TODO .. 
+     [:div.row
+      [:div.col-xs-12.lomakeryhman-rivi-tausta {:style {:width "350px"}}
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Lisätieto *"
+         :luokka "poista-label-top-margin"
+         :vayla-tyyli? true
+         :otsikon-luokka ""
+         :arvo-atom (r/wrap lisatyon-lisatieto
+                      #(e! (tiedot/->KohdistuksenLisatieto % nro)))
+         :kentta-params {:tyyppi :text
+                         :palstoja 2
+                         :koko [90 4]
+                         :pituus-max 1000
+                         :uusi-rivi? true
+                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]]))
+
 (defn- nayta-kohdistus [e! lomake nro kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa?]
   (let [kohdistustyyppi (:tyyppi kohdistus)
         ;; Varmistetaan, että tehtäväryhmissä ei ole vääriä juttuja tälle kohdistukselle
@@ -352,7 +399,7 @@
         ;; Kohdistustyypit vaihtelee sen mukaan, onko hoitovuoden päätöstä valittu. Jos on, niin kulun tyyppiä ei voi vaihtaa
         kohdistustyyppit (if (:vuoden-paatos-valittu? lomake)
                            [:paatos]
-                           [:hankintakulu :rahavaraus :lisatyo :muukulu])
+                           [:hankintakulu :rahavaraus :lisatyo :muukulu :erillisrahoitettu-muutos])
         voiko-muokata? (cond
                         ;; Jos kohdistus on hoitovuoden päätös, sitä ei voi muokata
                          (= :paatos kohdistustyyppi) false
@@ -391,7 +438,9 @@
        :rahavaraus [rahavaraus-kohdistus e! lomake kohdistus rahavaraukset nro]
        :lisatyo [lisatyo-kohdistus e! lomake kohdistus toimenpiteet nro]
        :paatos [hoitovuodenpaatos-kohdistus e! lomake kohdistus nro]
-       :jjh-muutos [:<> "Sisältöä ei löytynyt."])
+       :erillisrahoitettu-muutos [erillisrahoitettu-muutostyo-kohdistus e! lomake kohdistus toimenpiteet nro]
+
+       [:<> "Sisältöä ei löytynyt."])
 
      ;; Kohdistuksen summa
      [:div.row
