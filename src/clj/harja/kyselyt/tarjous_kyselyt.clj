@@ -151,16 +151,31 @@
                                        [] kustannukset-tarjouksesta))
         toimenkuvat-tarjouksesta (filter #(contains? johto-ja-hallintokorvausosiot (:osio %)) (:tarjous tarjous))
 
-        ;; Poistettavat toimenkuvat
-        poistettavat-toimenkuvat (filter #(true? (:poistettu %)) toimenkuvat-tarjouksesta)
-        ;; Poistetaan toimenkuvat tietokanansta
+        ;; Vaihdetut toimenkuvat jättää jälkensä :uusi-nimi arvoon. Haetaan sen nimen perusteella toimenkuvan id
+        toimenkuvat-tarjouksesta (mapv
+                                  (fn [rivi]
+                                    (if (and (seq (:uusi-nimi rivi))
+                                             (not= (:uusi-nimi rivi) (:nimi rivi)))
+                                      (let [uusi-toimenkuva (first (toimenkuva-kyselyt/hae-toimenkuvat db {:nimi (:uusi-nimi rivi)}))]
+                                        (assoc rivi
+                                          :vanha-id (:toimenkuva-id rivi)
+                                          :toimenkuva-id (:id uusi-toimenkuva)
+                                          :nimi (:nimi uusi-toimenkuva)))
+                                      rivi))
+                                  toimenkuvat-tarjouksesta)
+
+        ;; Poistettavat toimenkuvat - Poistetaan myös vaihtuneet toimenkuvat, koska ne on korvattu uusilla
+        poistettavat-toimenkuvat (filter #(or (true? (:poistettu %)) (not (nil? (:vanha-id %)))) toimenkuvat-tarjouksesta)
+        ;; Poistetaan toimenkuvat tietokannasta
         _ (mapv
             (fn [poistettava]
               (poista-tarjouksen-johto-ja-hallintokorvaus<! db {:urakkaid urakka-id
-                                                                :toimenkuvaid (:toimenkuva-id poistettava)})
+                                                                :toimenkuvaid (or (:vanha-id poistettava)
+                                                                                (:toimenkuva-id poistettava))})
               (toimenkuva-kyselyt/poista-toimenkuva! db (:id poistettava)))
             poistettavat-toimenkuvat)
 
+        ;; Päivitetään vain halutut toimenkuvat normaaliprosessilla
         paivitettavat-toimenkuvat (remove #(true? (:poistettu %)) toimenkuvat-tarjouksesta)
         ;; Muutetaan toimenkuvat listaksi, jossa on yksi rivi per hoitovuosi
         toimenkuvatlistaus (flatten (reduce
@@ -213,6 +228,7 @@
 
                                vuosittaiset-toimenkuvat (filter #(= (:hoitokauden_alkuvuosi rivi) (:hoitokauden_alkuvuosi %)) toimenkuvatlistaus)
 
+                               ;; Loopataan vuosittaiset toimenkuvat ja lisätään tarvittaessa uudet ja päivitetään olemassaolevat
                                _ (mapv
                                    (fn [toimenkuva]
                                      (let [uusi-db-toimenkuva (when (= -1 (:id toimenkuva))
@@ -310,11 +326,13 @@
         ;; Muutetaan ui:lle välitettävään muotoon
         kustannus-rivit (mapv #(muodosta-tarjous-rivi % (hae-tarjouksesta-rivit-vuodelle :kustannukset tarjous-rivit (:nimi %))) (:kustannukset (first tarjous-rivit)))
         toimenkuva-rivit (mapv #(muodosta-tarjous-rivi % (hae-tarjouksesta-rivit-vuodelle :toimenkuvat tarjous-rivit (:nimi %))) (:toimenkuvat (first tarjous-rivit)))
+        toimenkuva-rivit (sort-by :jarjestys (map
+                                               #(assoc % :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:nimi %)))
+                                               toimenkuva-rivit))
         tarjousrivit (into [] (sort-by (fn [rivi] (get osiojarjestys (:osio rivi))) (vec (concat kustannus-rivit toimenkuva-rivit))))
 
-        kaikki-toimenkuvat (if (>= urakan-alkuvuosi 2025)
-                             (map #(assoc % :nimi (str/capitalize (:nimi %))) (toimenkuva-kyselyt/hae-toimenkuvat db))
-                             nil)
+        kaikki-toimenkuvat (map #(assoc % :nimi (str/capitalize (:nimi %))) (toimenkuva-kyselyt/hae-toimenkuvat db))
+
         tarjous {:urakka-id urakka-id
                  :kaikki-toimenkuvat kaikki-toimenkuvat
                  :tarjous tarjousrivit}
