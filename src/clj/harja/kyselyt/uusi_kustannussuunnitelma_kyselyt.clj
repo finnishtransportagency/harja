@@ -13,7 +13,8 @@
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.kustannusarvioidut-tyot :as ka-q]
             [harja.kyselyt.kiinteahintaiset-tyot :as kiint-kyselyt]
-            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]))
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]))
 
 (defqueries "harja/kyselyt/uusi_kustannussuunnitelma_kyselyt.sql"
   {:positional? true})
@@ -31,7 +32,7 @@
   hae-johto-ja-hallintokorvaukset-kuukausittain
   hae-johto-ja-hallintokorvaukset-2019-mhu
   hae-kuukauden-johto-ja-hallintokorvaus hae-toimenkuvan-kuukauden-johto-ja-hallintokorvaus
-  hae-urakan-toimenkuvat hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
+  hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
   hae-muut-kulut-toimenkuviin-kuukausittain hae-muut-kulut-kuukaudelle
   lisaa-kuukauden-muu-kulu<! paivita-kuukauden-muu-kulu<!
   hae-tehtava-tunnisteella
@@ -197,32 +198,12 @@
       (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
       :else [10 11 12 1 2 3 4 5 6 7 8 9])))
 
-(defn paattele-toimenkuvan-jarjestys
-  "Pakotetaan toimenkuvat oikeaan järjestykseen kovakoodauksen avulla."
-  [toimenkuva-nimike]
-  (case (str/lower-case toimenkuva-nimike)
-    "valmistelukausi ennen urakka-ajan alkua" 0
-    "sopimusvastaava" 1
-    "vastuunalainen työnjohtaja" 2
-    "2. työnjohtaja" 3
-    "3. työnjohtaja" 4
-    "päätoiminen apulainen" 5
-    "päätoiminen apulainen (talvikausi)" 5
-    "päätoiminen apulainen (kesäkausi)" 6
-    "apulainen/työnjohtaja" 7
-    "apulainen/työnjohtaja (talvikausi)" 7
-    "apulainen/työnjohtaja (kesäkausi)" 8
-    "viherhoidosta vastaava henkilö" 9
-    "hankintavastaava" 10
-    "harjoittelija" 11
-    99)) ;; Muu toimenkuva, joka ei ole listassa
-
 (defn hae-johto-ja-hallintokorvaukset-2019-2024 [db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta]
   (let [viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-jjh
                                     db {:urakka-id urakka-id
                                         :vuosi hoitovuoden-alkuvuosi}))
         ;; Haetaan ensin urakkakohtaiset toimenkuvat
-        toimenkuvat (hae-urakan-toimenkuvat db {:urakka-id urakka-id
+        toimenkuvat (toimenkuva-kyselyt/hae-urakan-toimenkuvat-alkuvuoden-perusteella db {:urakka-id urakka-id
                                                 :urakan-alkuvuosi urakan-alkuvuosi})
         ;; 2019 - 2021 alkavien urakoiden toimenkuvat eivät löydy tietokantahaulla, koska ne on kovakoodattu fronttiin. Niille on kuitenkin annettu
         ;; joissain tapauksissa kaksi nimeä, mutta sama id. Joten joudumme taaksepäin yhteensopivuuden vuoksi tekemään muunnoksen
@@ -255,7 +236,7 @@
 
         ;; Järjestetään toimenkuvat järkevään järjestykseen
         toimenkuvat (map (fn [toimenkuva]
-                           (assoc toimenkuva :jarjestys (paattele-toimenkuvan-jarjestys (:nimike toimenkuva))))
+                           (assoc toimenkuva :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:nimike toimenkuva))))
                       toimenkuvat)
 
         ;; Haetaan raskaalla prosessilla toimenkuvakohtaisesti suunnitellut johto-ja-hallintokorvaukset
