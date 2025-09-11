@@ -111,7 +111,7 @@
     "Kesäsuola sorateiden pölynsidonta" {:arvo "Kesäsuola" :selite "sorateiden pölynsidonta"}
     "Kesäsuola sorateiden kevätkunnostus" {:arvo "Kesäsuola" :selite "sorateiden kevätkunnostus"}
     "Kesäsuola päällystettyjen teiden pölynsidonta" {:arvo "Kesäsuola" :selite "päällystettyjen teiden pölynsidonta"}
-    "Kesäsuola yhteensä" {:arvo "Kesäsuola yhteensä" :selite "100% kuivatonnia"}
+    "Kesäsuola yhteensä" {:arvo "Kesäsuola yhteensä" :selite "77% kuivatonnia"}
     "Murskeet yhteensä" {:arvo "Murskeet yhteensä" :selite "tonnia"}
 
     ;; default
