@@ -798,8 +798,8 @@
         tallenna-rivi (-> opastetaulun-uusiminen
                         ;; Lisää riviin yksikköhinta, sekä sen alkuvuosi, ja kutsu tähän tallenna 
                         (assoc
-                          ;; Yksikköhinta asetetaan -> lähde on aseta 
-                          :yksikkohinnan_lahde "aseta"
+                          ;; Yksikköhinta valitaan -> lähde on valittu 
+                          :yksikkohinnan_lahde "valittu"
                           :yksikkohinta yksikkohinta-valinta
                           :yksikkohinnan_alkuvuosi yksikkohinta-valinta-hk))
 
@@ -822,7 +822,7 @@
         runkopuiden-poisto (nth maaramuutokset 2)
         palteiden-poisto (nth maaramuutokset 3)
         maakiven-poisto (nth maaramuutokset 4)
-        manuaali-muutos 123123123
+        puuttuu-muutos 123123123
         syy-1 "Muutoksia 1"
         syy-2 "Muutoksia 2"
         syy-3 "Muutoksia 3"
@@ -831,8 +831,8 @@
         rivit (vec (conj []
                      (assoc runkopuiden-poisto
                        :syy syy-1
-                       :tavoitehinnan_muutos manuaali-muutos
-                       :yksikkohinnan_lahde "manuaali")
+                       :tavoitehinnan_muutos puuttuu-muutos
+                       :yksikkohinnan_lahde "puuttuu")
 
                      (assoc palteiden-poisto :syy syy-2)
                      (assoc maakiven-poisto :syy syy-3)))
@@ -854,8 +854,8 @@
         rivit (vec (conj []
                      (assoc runkopuiden-poisto
                        :syy "test versio"
-                       :tavoitehinnan_muutos manuaali-muutos
-                       :yksikkohinnan_lahde "manuaali")
+                       :tavoitehinnan_muutos puuttuu-muutos
+                       :yksikkohinnan_lahde "puuttuu")
                      (assoc palteiden-poisto :syy "test versio")
                      (assoc maakiven-poisto :syy "test versio")))
         
@@ -884,7 +884,7 @@
     (testing "Yksikköhinnan tallennus toimii"
       (is (= (-> opastetaulun-uusiminen-tallennettu :yksikkohinnan_alkuvuosi) yksikkohinta-valinta-hk)
         "Rivi vastaa tallennettua arvoa")
-      (is (= (-> opastetaulun-uusiminen-tallennettu :yksikkohinnan_lahde) "aseta") "Lähde on aseta (yksikköhinta asetettu)"))
+      (is (= (-> opastetaulun-uusiminen-tallennettu :yksikkohinnan_lahde) "valittu") "Lähde on valittu (yksikköhinta valittu)"))
 
 
     (testing "Kaavat täsmää yksikköhinnan valinnan jälkeen"
@@ -895,8 +895,8 @@
 
 
     (testing "Grid tallennus toimii"
-      (is (= runko-lahde "manuaali"))
-      (is (= runko-tav-hinta (bigdec manuaali-muutos)))
+      (is (= runko-lahde "puuttuu"))
+      (is (= runko-tav-hinta (bigdec puuttuu-muutos)))
       (is (= runko-syy syy-1))
       (is (= palteet-syy syy-2))
       (is (= maakivi-syy syy-3)))

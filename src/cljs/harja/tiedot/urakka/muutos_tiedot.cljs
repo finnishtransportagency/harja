@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.muutos-tiedot
   "Urakan muutosten tiedot."
-  (:require [tuck.core :as tuck]
+  (:require [taoensso.timbre :as log]
+            [tuck.core :as tuck]
             [reagent.core :refer [atom]]
 
             [harja.pvm :as pvm]
@@ -15,6 +16,7 @@
 
 
 (defonce nakymassa? (atom false))
+(def +indeksikorjausta-ei-vahvistettu-txt+ "Indeksikorjausta ei saatavilla")
 (def johto-ja-hallintokorvausmuutokset-atom (atom nil))
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
 (def pakolliset-kentat-fmt {:nimi "Nimi"
@@ -199,6 +201,8 @@
   (process-event [{vastaus :vastaus
                    muutos :muutos
                    valittu-hoitokausi :valittu-hoitokausi} app]
+    (log/debug "HaeMuutoksenTiedotOnnistui")
+
     (let [uudet-liitteet (:liitteet vastaus)
           lomakkeen-hoitokausi (get-in app [:muokattava-muutos :hoitovuosi])
           toimenpiteiden-tiedot (:toimenpiteiden-tiedot vastaus)
@@ -416,21 +420,24 @@
     app)
 
 
+  ;; Hakee muutoksen lomakkeen tarvitsemat tiedot muutoksen tyypin tai id:n perusteella
+  ;; TODO: Refaktoroi logiikkaa.
   HaeMuutoksenTiedot
   (process-event [{:keys [muutos]} app]
+    (log/debug "HaeMuutoksenTiedot")
+
     (let [valittu-hoitokausi (:valittu-hoitokausi app)]
-      (when (:id muutos)
-        (tuck-apurit/post! :hae-muutoksen-tiedot
-          {:urakka-id @nav/valittu-urakka-id
-           :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
-           :muutos {:id (:id muutos)
-                    :versio (:versio muutos)
-                    :tyyppi (:tyyppi muutos)
-                    :liite-idt (into #{}
-                                 (map :id (:liitteet muutos)))}}
-          {:onnistui ->HaeMuutoksenTiedotOnnistui
-           :onnistui-parametrit [muutos valittu-hoitokausi]
-           :epaonnistui ->HaeMuutoksenTiedotEpaonnistui}))
+      (tuck-apurit/post! :hae-muutoksen-tiedot
+        {:urakka-id @nav/valittu-urakka-id
+         :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+         :muutos {:id (:id muutos)
+                  :versio (:versio muutos)
+                  :tyyppi (:tyyppi muutos)
+                  :liite-idt (into #{}
+                               (map :id (:liitteet muutos)))}}
+        {:onnistui ->HaeMuutoksenTiedotOnnistui
+         :onnistui-parametrit [muutos valittu-hoitokausi]
+         :epaonnistui ->HaeMuutoksenTiedotEpaonnistui})
       app))
 
 

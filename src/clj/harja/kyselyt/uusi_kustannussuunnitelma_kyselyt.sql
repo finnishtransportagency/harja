@@ -389,31 +389,6 @@ SELECT id, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_in
 WHERE urakka = :urakka-id
   AND hoitokausi = :hoitokausinumero;
 
--- name: hae-urakan-toimenkuvat
--- Hae urakkakohtaiset toimenkuvat
-WITH urakka_toimenkuvat AS (SELECT nimike
-                            FROM unnest(
-                                     CASE
-                                         WHEN (:urakan-alkuvuosi >= 2019 AND :urakan-alkuvuosi <= 2021)
-                                             THEN ARRAY ['sopimusvastaava', 'vastuunalainen työnjohtaja', 'päätoiminen apulainen', 'apulainen/työnjohtaja', 'viherhoidosta vastaava henkilö', 'hankintavastaava', 'harjoittelija']
-                                         WHEN (:urakan-alkuvuosi >= 2022 AND :urakan-alkuvuosi <= 2023)
-                                             THEN ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja', 'päätoiminen apulainen','apulainen/työnjohtaja', 'viherhoidosta vastaava henkilö', 'hankintavastaava', 'harjoittelija']
-                                         WHEN (:urakan-alkuvuosi = 2024)
-                                             THEN ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja','2. työnjohtaja', '3. työnjohtaja', 'viherhoidosta vastaava henkilö', 'harjoittelija']
-                                         ELSE ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja','2. työnjohtaja', '3. työnjohtaja', 'viherhoidosta vastaava henkilö', 'harjoittelija']
-                                         END
-                                 ) AS nimike)
-SELECT id, toimenkuva, toimenkuva as nimike
-FROM johto_ja_hallintokorvaus_toimenkuva jht
-WHERE jht."urakka-id" = :urakka-id
-AND jht.toimenkuva is not null
-UNION
-SELECT (select MIN(id) from johto_ja_hallintokorvaus_toimenkuva where toimenkuva = ut.nimike) AS id,
-       nimike                                                                                 AS toimenkuva,
-       nimike
-from urakka_toimenkuvat ut
-ORDER BY ID;
-
 -- name: hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
 -- Uudessa kustannusten suunnittelussa suunnitellaan edelleen tunnit ja tuntipalkat 19-22 alkaville urakoille
 SELECT jh.tunnit,
