@@ -245,25 +245,24 @@
                                        aputeksti regex focus on-focus on-blur lomake?
                                        toiminta-f  disabled? vihje elementin-id muokattu?] :as kentta}
                                data]
-  [:div
-   [:input {:class (cond-> nil
-                     (and lomake?
-                       (not vayla-tyyli?)) (str "form-control ")
-                     vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
-                     disabled? (str "disabled"))
-            :placeholder (placeholder kentta data)
-            :on-change #(let [v (-> % .-target .-value)]
-                          (when (or (not regex) (re-matches regex v))
-                            (reset! data v)
-                            (when toiminta-f
-                              (toiminta-f v))))
-            :disabled disabled?
-            :on-focus on-focus
-            :on-blur on-blur
-            :value @data
-            :id (or elementin-id nil)
-            :max-length pituus-max}]
-   (when aputeksti [:div.aputeksti aputeksti])])
+
+  [:input {:class (cond-> nil
+                    (and lomake?
+                      (not vayla-tyyli?)) (str "form-control ")
+                    vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
+                    disabled? (str "disabled"))
+           :placeholder (placeholder kentta data)
+           :on-change #(let [v (-> % .-target .-value)]
+                         (when (or (not regex) (re-matches regex v))
+                           (reset! data v)
+                           (when toiminta-f
+                             (toiminta-f v))))
+           :disabled disabled?
+           :on-focus on-focus
+           :on-blur on-blur
+           :value @data
+           :id (or elementin-id nil)
+           :max-length pituus-max}])
 
 (defmethod tee-kentta :linkki [opts data]
   [tee-kentta (assoc opts :tyyppi :string) data])
