@@ -38,57 +38,66 @@
                                                                    :tavoitehinnan-muutokset true
                                                                    :suunniteltujen-maarien-muutokset true}})
 
+;; -- Yleiset ---
 
 ;; Hae muutostiedot
 (defrecord HaeUrakanMuutostiedot [])
 (defrecord HaeUrakanMuutostiedotOnnistui [vastaus])
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
 
+;; Päänäkymä ja listaus
+(defrecord ToggleTaulukonNakyvyys [taulukon-avain])
+(defrecord PaivitaLomake [lomake])
 
-;; Vaihda hoitokausi
 (defrecord MuokkaaMuutosta [rivi])
 (defrecord TallennaMuutos [muutos])
 (defrecord TallennaMuutosEpaonnistui [vastaus])
-(defrecord ToggleTaulukonNakyvyys [taulukon-avain])
-(defrecord MuokkaaRahavaraustenMuutoksienSyita [])
-(defrecord KopioiPysyvaMuutosTulevilleHoitovuosille [hoitovuosi rivit])
 
 (defrecord HaeMuutoksenTiedot [muutos])
 (defrecord HaeMuutoksenTiedotOnnistui [vastaus muutos valittu-hoitokausi])
 (defrecord HaeMuutoksenTiedotEpaonnistui [vastaus])
-(defrecord TallennaRahavarausmuutostenSyyt [rivit])
-(defrecord TallennaRahavarausmuutostenSyytEpaonnistui [vastaus])
-(defrecord TallennaRahavarausmuutostenSyytOnnistui [vastaus])
-
 
 ;; Liitteet
 (defrecord LisaaLiite [liite])
 (defrecord PoistaLisattyLiite [])
 (defrecord PoistaTallennettuLiite [liite-id])
 (defrecord PoistaPoistetutLiitteet [liite-id])
+
+
+;; --- Muutostyyppikohtaiset ---
+
+;; -- Kirjatut muutokset -- ALKAA
+;; Pysyvät muutokset
+(defrecord KopioiPysyvaMuutosTulevilleHoitovuosille [hoitovuosi rivit])
 (defrecord PaivitaToimenpiteenTehtavamaarat [taulukon-rivit])
 (defrecord PaivitaToimenpiteenTavoitehinnanMuutos [rivi tpi hk-alkuvuosi])
+;; -- Kirjatut muutokset -- LOPPUU
 
-
-;; aika ennen 2025-2026 hoitovuotta
-(defrecord LisaaTavoitehintojenMuutos [])
-(defrecord LisaaSuunniteltujenMaarienMuutos [])
-
-
-;; Päänäkymä ja listaus
-(defrecord PaivitaLomake [lomake])
-
-
-;; Tehtävä- määrämuutokset 
-(defrecord AvaaYksikkohintaModal [valittu-modal-tehtava tehtava_id])
-(defrecord SuljeYksikkohintaModal [])
+;; -- Lasketut muutokset -- ALKAA
+;; Tehtävä- määrämuutokset
 (defrecord TallennaTehtavaMaaramuutokset [rivit])
 (defrecord TallennaTehtavaMaaramuutoksetOnnistui [vastaus])
 (defrecord TallennaTehtavaMaaramuutoksetEpaonnistui [vastaus])
+(defrecord AvaaYksikkohintaModal [valittu-modal-tehtava tehtava_id])
+(defrecord SuljeYksikkohintaModal [])
 (defrecord MuokkaaYksikkohintaa [rivi hoitokausien-yksikkohinnat])
 (defrecord TallennaYksikkohinta [rivi])
 (defrecord TallennaYksikkohintaOnnistui [vastaus])
 (defrecord TallennaYksikkohintaEpaonnistui [vastaus])
+;; -- Lasketut muutokset -- LOPPUU
+
+;; -- Rahavarausten muutokset -- ALKAA
+(defrecord MuokkaaRahavaraustenMuutoksienSyita [])
+(defrecord TallennaRahavarausmuutostenSyyt [rivit])
+(defrecord TallennaRahavarausmuutostenSyytEpaonnistui [vastaus])
+(defrecord TallennaRahavarausmuutostenSyytOnnistui [vastaus])
+;; -- Rahavarausten muutokset -- LOPPUU
+
+
+;; -- Aika ennen 2025-2026 hoitovuotta
+(defrecord LisaaTavoitehintojenMuutos [])
+(defrecord LisaaSuunniteltujenMaarienMuutos [])
+
 
 
 ;; ---------------------------------------------
@@ -175,7 +184,6 @@
 ;; ------------------------------------
 ;; Tuck 
 (extend-protocol tuck/Event
-
   HaeUrakanMuutostiedot
   (process-event [_ app]
     (hae-urakan-muutostiedot
@@ -196,6 +204,34 @@
     (viesti/nayta-toast! "Muutostietojen hakeminen epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
+  ToggleTaulukonNakyvyys
+  (process-event [{taulukon-avain :taulukon-avain} app]
+    (assoc-in app [:taulukko-nakyvissa? taulukon-avain]
+      (not (get-in app [:taulukko-nakyvissa? taulukon-avain]))))
+
+  PaivitaLomake
+  (process-event [{:keys [lomake]} app]
+    ;; (prn "PaivitaLomake: " lomake)
+    (assoc app :muokattava-muutos lomake))
+
+  ;; Hakee olemassaolevan muutoksen kaikki tiedot muokkausta varten
+  HaeMuutoksenTiedot
+  (process-event [{:keys [muutos]} app]
+    (log/debug "HaeMuutoksenTiedot")
+    (when (:id muutos)
+      (let [valittu-hoitokausi (:valittu-hoitokausi app)]
+        (tuck-apurit/post! :hae-muutoksen-tiedot
+          {:urakka-id @nav/valittu-urakka-id
+           :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+           :muutos {:id (:id muutos)
+                    :versio (:versio muutos)
+                    :tyyppi (:tyyppi muutos)
+                    :liite-idt (into #{}
+                                 (map :id (:liitteet muutos)))}}
+          {:onnistui ->HaeMuutoksenTiedotOnnistui
+           :onnistui-parametrit [muutos valittu-hoitokausi]
+           :epaonnistui ->HaeMuutoksenTiedotEpaonnistui})))
+    app)
 
   HaeMuutoksenTiedotOnnistui
   (process-event [{vastaus :vastaus
@@ -242,103 +278,10 @@
     app)
 
 
-  MuokkaaYksikkohintaa
-  (process-event [{:keys [rivi hoitokausien-yksikkohinnat]} app]
-    (let [valittu-hoitokauden-alkuvuosi (->>
-                                          hoitokausien-yksikkohinnat
-                                          (filter #(= (:arvo %) (:yksikkohinta rivi)))
-                                          first
-                                          :hoitokauden-alkuvuosi)]
-      ;; Kutsutaan kun modalista valitaan yksikköhinta (ei tallenneta vielä)
-      (-> app
-        ;; Päivitä yksikköhinta 
-        (update :valittu-modal-tehtava merge rivi)
-        ;; Päivitä valittu yksikköhinnan hk 
-        (assoc-in [:valittu-modal-tehtava :yksikkohinnan_alkuvuosi] valittu-hoitokauden-alkuvuosi))))
-
-
-  TallennaTehtavaMaaramuutokset
-  (process-event [{:keys [rivit]}
-                  {:keys [_valittu-rivi] :as app}]
-    (let [parametrit {:rivit rivit
-                      :urakka-id (-> @tila/yleiset :urakka :id)
-                      :hoitokaudet @u/valitun-urakan-hoitokaudet
-                      :valittu-hoitokausi (:valittu-hoitokausi app)}]
-      ;; Kutsutaan gridin tallenna napista, ei modalista 
-      (tuck-apurit/post! app :tallenna-tehtava-maaramuutokset
-        parametrit
-        {:onnistui ->TallennaTehtavaMaaramuutoksetOnnistui
-         :epaonnistui ->TallennaTehtavaMaaramuutoksetEpaonnistui})
-      (-> app
-        (assoc :haku-kaynnissa? true))))
-
-
-  TallennaYksikkohinta
-  (process-event [{:keys [rivi]}
-                  {:keys [_valittu-rivi] :as app}]
-    ;; Kutsutaan kun modalista tallennetaan valittu yksikköhinta 
-    (let [parametrit {:rivi rivi
-                      :urakka-id (-> @tila/yleiset :urakka :id)
-                      :hoitokaudet @u/valitun-urakan-hoitokaudet
-                      :valittu-hoitokausi (:valittu-hoitokausi app)}]
-
-      (tuck-apurit/post! app :tallenna-maaramuutos-yksikkohinta
-        parametrit
-        {:onnistui ->TallennaYksikkohintaOnnistui
-         :epaonnistui ->TallennaYksikkohintaEpaonnistui})
-      (-> app
-        (assoc
-          :haku-kaynnissa? true
-          :yksikkohinta-modal-auki? false))))
-
-
-  TallennaTehtavaMaaramuutoksetOnnistui
-  (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-    (assoc app
-      :tehtava-maaramuutokset vastaus
-      :haku-kaynnissa? false))
-
-
-  TallennaTehtavaMaaramuutoksetEpaonnistui
-  (process-event [_ app]
-    (viesti/nayta-toast! "Tehtävä- ja määrämuutosten tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
-    (assoc app :haku-kaynnissa? false))
-
-
-  TallennaYksikkohintaOnnistui
-  (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Yksikköhinta tallennettu" :onnistui viesti/viestin-nayttoaika-lyhyt)
-    (assoc app
-      :haku-kaynnissa? false
-      :tehtava-maaramuutokset vastaus))
-
-
-  TallennaYksikkohintaEpaonnistui
-  (process-event [_ app]
-    (viesti/nayta-toast! "Yksikköhinnan tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
-    (assoc app :haku-kaynnissa? false))
-
-
-  AvaaYksikkohintaModal
-  (process-event [{:keys [valittu-modal-tehtava _tehtava_id]}
-                  {:keys [_yksikkohinta-modal-auki?] :as app}]
-    (assoc app
-      :yksikkohinta-modal-auki? true
-      :valittu-modal-tehtava valittu-modal-tehtava))
-
-
-  SuljeYksikkohintaModal
-  (process-event [_ {:keys [_yksikkohinta-modal-auki?] :as app}]
-    (assoc app
-      :valittu-modal-tehtava nil
-      :yksikkohinta-modal-auki? false))
-
-
   MuokkaaMuutosta
   (process-event [{:keys [rivi]} app]
     (if (some? rivi)
-      (assoc app  :viimeksi-valittu rivi :muokattava-muutos rivi)
+      (assoc app :viimeksi-valittu rivi :muokattava-muutos rivi)
       (assoc app :muokattava-muutos rivi)))
 
 
@@ -378,69 +321,7 @@
     (assoc app :tallennus-kesken? false))
 
 
-  TallennaRahavarausmuutostenSyytEpaonnistui
-  (process-event [{:keys [_vastaus]} app]
-    (viesti/nayta-toast! "Rahavarauksien muutosten syiden tallentaminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
-
-
-  TallennaRahavarausmuutostenSyytOnnistui
-  (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-    (vastaus-haku-onnistui app vastaus))
-
-
-  ToggleTaulukonNakyvyys
-  (process-event [{taulukon-avain :taulukon-avain} app]
-    (assoc-in app [:taulukko-nakyvissa? taulukon-avain]
-      (not (get-in app [:taulukko-nakyvissa? taulukon-avain]))))
-
-
-  MuokkaaRahavaraustenMuutoksienSyita
-  (process-event [_ app]
-    (assoc app :rahavarausten-syyt-muokattavana? true))
-
-
-  TallennaRahavarausmuutostenSyyt
-  (process-event [{:keys [rivit]} app]
-    (let [urakka (:urakka @tila/yleiset)]
-      (tuck-apurit/post! :tallenna-rahavarausmuutosten-syyt
-        {:urakka-id (:id urakka)
-         :hoitokaudet @u/valitun-urakan-hoitokaudet
-         :valittu-hoitokausi (:valittu-hoitokausi app)
-         :rivit (map #(select-keys % [:id :syy]) rivit)}
-        {:onnistui ->TallennaRahavarausmuutostenSyytOnnistui
-         :epaonnistui ->TallennaRahavarausmuutostenSyytEpaonnistui})
-      app))
-
-  KopioiPysyvaMuutosTulevilleHoitovuosille
-  (process-event [{hoitovuosi :hoitovuosi rivit :rivit} app]
-    (prn "Tämä on vielä tekemättä")
-    ;; TODO: tässä hanskattava muutosten kopiointi tuleville hoitovuosille...
-    app)
-
-
-  ;; Hakee muutoksen lomakkeen tarvitsemat tiedot muutoksen tyypin tai id:n perusteella
-  ;; TODO: Refaktoroi logiikkaa.
-  HaeMuutoksenTiedot
-  (process-event [{:keys [muutos]} app]
-    (log/debug "HaeMuutoksenTiedot")
-
-    (let [valittu-hoitokausi (:valittu-hoitokausi app)]
-      (tuck-apurit/post! :hae-muutoksen-tiedot
-        {:urakka-id @nav/valittu-urakka-id
-         :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
-         :muutos {:id (:id muutos)
-                  :versio (:versio muutos)
-                  :tyyppi (:tyyppi muutos)
-                  :liite-idt (into #{}
-                               (map :id (:liitteet muutos)))}}
-        {:onnistui ->HaeMuutoksenTiedotOnnistui
-         :onnistui-parametrit [muutos valittu-hoitokausi]
-         :epaonnistui ->HaeMuutoksenTiedotEpaonnistui})
-      app))
-
-
+  ;; Liitteet
   LisaaLiite
   (process-event
     [{:keys [liite]} app]
@@ -448,15 +329,10 @@
     (-> app
       (update-in [:muokattava-muutos :liitteet] conj liite)))
 
-  PoistaPoistetutLiitteet
-  (process-event
-    [{:keys [liite-id]} app]
-    (let [liitteet (get-in app [:muokattava-muutos :liitteet])]
-      (assoc-in app [:muokattava-muutos :liitteet]
-        (filter (fn [liite]
-                  (not= (:id liite) liite-id))
-          liitteet))))
-
+  PoistaLisattyLiite
+  (process-event [_ app]
+    (prn "PoistaLisattyLiite")
+    (assoc app :uusi-liite nil))
 
   PoistaTallennettuLiite
   (process-event
@@ -474,11 +350,23 @@
                  :poistettu-fn #(e! (->PoistaPoistetutLiitteet liite-id))}))]
       (poista-liite app liite-id)))
 
+  PoistaPoistetutLiitteet
+  (process-event
+    [{:keys [liite-id]} app]
+    (let [liitteet (get-in app [:muokattava-muutos :liitteet])]
+      (assoc-in app [:muokattava-muutos :liitteet]
+        (filter (fn [liite]
+                  (not= (:id liite) liite-id))
+          liitteet))))
 
-  PoistaLisattyLiite
-  (process-event [_ app]
-    (prn "PoistaLisattyLiite")
-    (assoc app :uusi-liite nil))
+
+  ;; -- Kirjatut muutokset -- ALKAA
+  ;; Pysyvät muutokset
+  KopioiPysyvaMuutosTulevilleHoitovuosille
+  (process-event [{hoitovuosi :hoitovuosi rivit :rivit} app]
+    (prn "Tämä on vielä tekemättä")
+    ;; TODO: tässä hanskattava muutosten kopiointi tuleville hoitovuosille...
+    app)
 
   PaivitaToimenpiteenTehtavamaarat
   (process-event [{taulukon-rivit :taulukon-rivit} app]
@@ -494,6 +382,136 @@
     ;; TODO: päivitä oikeaan kohtaan dataa tavoitehinnan muutos mahdollista tallennusta varten
     app)
 
+  ;; -- Kirjatut muutokset -- LOPPUU
+
+  ;; ----
+
+  ;; -- Lasketut muutokset --- ALKAA
+  ;; Tehtävä- ja määrämuutokset
+  TallennaTehtavaMaaramuutokset
+  (process-event [{:keys [rivit]}
+                  {:keys [_valittu-rivi] :as app}]
+    (let [parametrit {:rivit rivit
+                      :urakka-id (-> @tila/yleiset :urakka :id)
+                      :hoitokaudet @u/valitun-urakan-hoitokaudet
+                      :valittu-hoitokausi (:valittu-hoitokausi app)}]
+      ;; Kutsutaan gridin tallenna napista, ei modalista 
+      (tuck-apurit/post! app :tallenna-tehtava-maaramuutokset
+        parametrit
+        {:onnistui ->TallennaTehtavaMaaramuutoksetOnnistui
+         :epaonnistui ->TallennaTehtavaMaaramuutoksetEpaonnistui})
+      (-> app
+        (assoc :haku-kaynnissa? true))))
+
+  TallennaTehtavaMaaramuutoksetOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+    (assoc app
+      :tehtava-maaramuutokset vastaus
+      :haku-kaynnissa? false))
+
+
+  TallennaTehtavaMaaramuutoksetEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta-toast! "Tehtävä- ja määrämuutosten tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (assoc app :haku-kaynnissa? false))
+
+  AvaaYksikkohintaModal
+  (process-event [{:keys [valittu-modal-tehtava _tehtava_id]}
+                  {:keys [_yksikkohinta-modal-auki?] :as app}]
+    (assoc app
+      :yksikkohinta-modal-auki? true
+      :valittu-modal-tehtava valittu-modal-tehtava))
+
+
+  SuljeYksikkohintaModal
+  (process-event [_ {:keys [_yksikkohinta-modal-auki?] :as app}]
+    (assoc app
+      :valittu-modal-tehtava nil
+      :yksikkohinta-modal-auki? false))
+
+  MuokkaaYksikkohintaa
+  (process-event [{:keys [rivi hoitokausien-yksikkohinnat]} app]
+    (let [valittu-hoitokauden-alkuvuosi (->>
+                                          hoitokausien-yksikkohinnat
+                                          (filter #(= (:arvo %) (:yksikkohinta rivi)))
+                                          first
+                                          :hoitokauden-alkuvuosi)]
+      ;; Kutsutaan kun modalista valitaan yksikköhinta (ei tallenneta vielä)
+      (-> app
+        ;; Päivitä yksikköhinta
+        (update :valittu-modal-tehtava merge rivi)
+        ;; Päivitä valittu yksikköhinnan hk
+        (assoc-in [:valittu-modal-tehtava :yksikkohinnan_alkuvuosi] valittu-hoitokauden-alkuvuosi))))
+
+  TallennaYksikkohinta
+  (process-event [{:keys [rivi]}
+                  {:keys [_valittu-rivi] :as app}]
+    ;; Kutsutaan kun modalista tallennetaan valittu yksikköhinta 
+    (let [parametrit {:rivi rivi
+                      :urakka-id (-> @tila/yleiset :urakka :id)
+                      :hoitokaudet @u/valitun-urakan-hoitokaudet
+                      :valittu-hoitokausi (:valittu-hoitokausi app)}]
+
+      (tuck-apurit/post! app :tallenna-maaramuutos-yksikkohinta
+        parametrit
+        {:onnistui ->TallennaYksikkohintaOnnistui
+         :epaonnistui ->TallennaYksikkohintaEpaonnistui})
+      (-> app
+        (assoc
+          :haku-kaynnissa? true
+          :yksikkohinta-modal-auki? false))))
+
+  TallennaYksikkohintaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Yksikköhinta tallennettu" :onnistui viesti/viestin-nayttoaika-lyhyt)
+    (assoc app
+      :haku-kaynnissa? false
+      :tehtava-maaramuutokset vastaus))
+
+  TallennaYksikkohintaEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta-toast! "Yksikköhinnan tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (assoc app :haku-kaynnissa? false))
+
+  ;; -- Lasketut muutokset --- LOPPUU
+
+  ;; ----
+
+  ;; -- Rahavarausten muutokset -- ALKAA
+  MuokkaaRahavaraustenMuutoksienSyita
+  (process-event [_ app]
+    (assoc app :rahavarausten-syyt-muokattavana? true))
+
+  TallennaRahavarausmuutostenSyyt
+  (process-event [{:keys [rivit]} app]
+    (let [urakka (:urakka @tila/yleiset)]
+      (tuck-apurit/post! :tallenna-rahavarausmuutosten-syyt
+        {:urakka-id (:id urakka)
+         :hoitokaudet @u/valitun-urakan-hoitokaudet
+         :valittu-hoitokausi (:valittu-hoitokausi app)
+         :rivit (map #(select-keys % [:id :syy]) rivit)}
+        {:onnistui ->TallennaRahavarausmuutostenSyytOnnistui
+         :epaonnistui ->TallennaRahavarausmuutostenSyytEpaonnistui})
+      app))
+
+  TallennaRahavarausmuutostenSyytEpaonnistui
+  (process-event [{:keys [_vastaus]} app]
+    (viesti/nayta-toast! "Rahavarauksien muutosten syiden tallentaminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+
+
+  TallennaRahavarausmuutostenSyytOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+    (vastaus-haku-onnistui app vastaus))
+
+
+  ;; -- Rahavarausten muutokset -- LOPPUU
+
+  ;; ----
+
+  ;; -- Aika ennen 2025-2026 hoitovuotta -- ALKAA
 
   LisaaTavoitehintojenMuutos
   (process-event [_ app]
@@ -502,10 +520,6 @@
 
   LisaaSuunniteltujenMaarienMuutos
   (process-event [_ app]
-    app)
+    app))
 
-
-  PaivitaLomake
-  (process-event [{:keys [lomake]} app]
-    ;; (prn "PaivitaLomake: " lomake)
-    (assoc app :muokattava-muutos lomake)))
+;; -- Aika ennen 2025-2026 hoitovuotta -- LOPPUU
