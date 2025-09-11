@@ -241,25 +241,29 @@
   (or placeholder
     (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe? regex focus on-focus on-blur lomake? toiminta-f disabled? vihje elementin-id muokattu?]
-                                :as kentta} data]
-  [:input {:class (cond-> nil
-                    (and lomake?
-                      (not vayla-tyyli?)) (str "form-control ")
-                    vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
-                    disabled? (str "disabled"))
-           :placeholder (placeholder kentta data)
-           :on-change #(let [v (-> % .-target .-value)]
-                         (when (or (not regex) (re-matches regex v))
-                           (reset! data v)
-                           (when toiminta-f
-                             (toiminta-f v))))
-           :disabled disabled?
-           :on-focus on-focus
-           :on-blur on-blur
-           :value @data
-           :id (or elementin-id nil)
-           :max-length pituus-max}])
+(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe?
+                                       aputeksti regex focus on-focus on-blur lomake?
+                                       toiminta-f  disabled? vihje elementin-id muokattu?] :as kentta}
+                               data]
+  [:<>
+   [:input {:class (cond-> nil
+                     (and lomake?
+                       (not vayla-tyyli?)) (str "form-control ")
+                     vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
+                     disabled? (str "disabled"))
+            :placeholder (placeholder kentta data)
+            :on-change #(let [v (-> % .-target .-value)]
+                          (when (or (not regex) (re-matches regex v))
+                            (reset! data v)
+                            (when toiminta-f
+                              (toiminta-f v))))
+            :disabled disabled?
+            :on-focus on-focus
+            :on-blur on-blur
+            :value @data
+            :id (or elementin-id nil)
+            :max-length pituus-max}]
+   (when aputeksti [:div.aputeksti aputeksti])])
 
 (defmethod tee-kentta :linkki [opts data]
   [tee-kentta (assoc opts :tyyppi :string) data])
@@ -793,12 +797,14 @@
                     :lukutila? true ;; read only tilan ero vain disablediin: ei ole niin "harmaa". Kumpaakaan ei voi muokata
                     :arvo @data})])
 
-(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? kaari-flex-row? muutos-fn opts radio-luokka nayta-rivina?]}]
+(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? 
+                            disabloitu? kaari-flex-row? muutos-fn opts radio-luokka nayta-rivina?]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
   (let [checked (if oletus-valittu?
                   {:default-checked oletus-valittu?}
                   {:checked valittu?})
         selite (:selite opts)
+        vaihtoehto-disabloitu? (:disabloitu? opts)
         valittu-komponentti (:valittu-komponentti opts)]
     [:<>
      [:div {:class (if (false? kaari-flex-row?)
@@ -807,7 +813,7 @@
        (merge {:id id
                :type :radio
                :name ryhma
-               :disabled disabloitu?
+               :disabled (if vaihtoehto-disabloitu? vaihtoehto-disabloitu? disabloitu?)
                :class radio-luokka
                :on-change muutos-fn}
          checked)]

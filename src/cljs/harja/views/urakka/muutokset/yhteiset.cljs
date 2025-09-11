@@ -75,13 +75,17 @@
    :pituus-max 1000
    :uusi-rivi? true
    :pakollinen? true
+   :validoi [#(when (nil? (seq %)) "Kirjoita muutoksen syy")]
    ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"})
 
 
 (defn +rivi-muutos-voimassa+ [app]
-  {:nimi :voimassa_alkaen :otsikko "Voimassa alkaen"
-   :tyyppi :pvm :uusi-rivi? true
+  {:otsikko "Voimassa alkaen"
+   :nimi :voimassa_alkaen 
+   :tyyppi :pvm 
+   :uusi-rivi? true
    :pakollinen? true
+   :validoi [#(when (nil? %) "Anna muutoksen voimassaolo alkupvm")]
    ;; Pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
    ;; pienempi kuin voimassa alkaen, joten kutsuttava :aseta funktiota. Ei vaikuta ainakaan vielä muissa muutostyypeissä
    :aseta (fn [rivi arvo]
@@ -92,9 +96,22 @@
                   (:urakan-hoitokaudet app)))))})
 
 
+(defn +rivi-muutos-tavoitehinta+ []
+  {:otsikko "Tavoitehinnan muutos"
+   :pakollinen? true
+   :vayla-tyyli? true
+   :nimi :tavoitehinnan-muutos
+   :tyyppi :euro
+   :teksti-oikealla "EUR"
+   :validoi [#(when (nil? %) "Syötä tavoitehinnan muutos")
+             [:rajattu-numero -999999999 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
+   ::lomake/col-luokka "perustiedot col-xs-6"})
+
+
 (defn lomake-yhteinen [e! app]
   (concat
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (+rivi-muutoksen-syy+)
-       (+rivi-muutos-voimassa+ app))]
+       (+rivi-muutos-voimassa+ app)
+       (+rivi-muutos-tavoitehinta+))]
     (liite-kentta e! app)))

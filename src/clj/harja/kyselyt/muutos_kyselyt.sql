@@ -83,14 +83,32 @@ VALUES
                       muokattu = NOW();
 
 -- name: luo-muutos<!
-INSERT INTO mhu_muutos
-   (urakka, tyyppi, nimi, syy, kulu_kohdistus, luonnos, voimassa_alkaen, luoja, luotu)
-   VALUES
-       (:urakka, :tyyppi::MHU_MUUTOSTYYPPI, :nimi, :syy, :kulu_kohdistus, :luonnos, :voimassa_alkaen, :kayttaja, NOW())
-RETURNING id, versio;
+INSERT INTO mhu_muutos (
+    urakka, 
+    tyyppi, 
+    nimi, 
+    syy, 
+    kulu_kohdistus, 
+    luonnos, 
+    voimassa_alkaen, 
+    luoja, 
+    luotu,
+    alityyppi
+  ) VALUES (
+    :urakka, 
+    :tyyppi::MHU_MUUTOSTYYPPI, 
+    :nimi, 
+    :syy, 
+    :kulu_kohdistus,
+    :luonnos, 
+    :voimassa_alkaen, 
+    :kayttaja, 
+    NOW(),
+    :alityyppi::MHU_MUUTOS_ALITYYPPI
+) RETURNING id, versio;
 
 -- name: paivita-muutos<!
-UPDATE ONLY mhu_muutos
+UPDATE mhu_muutos
    SET versio = versio + 1,
        muokattu = NOW(),
        muokkaaja = :kayttaja,
@@ -99,9 +117,33 @@ UPDATE ONLY mhu_muutos
        syy = :syy,
        kulu_kohdistus = :kulu_kohdistus,
        luonnos = :luonnos,
-       voimassa_alkaen = :voimassa_alkaen
- WHERE id = :id
+       voimassa_alkaen = :voimassa_alkaen,
+       alityyppi = :alityyppi::MHU_MUUTOS_ALITYYPPI
+ WHERE id = :id 
 RETURNING id, versio;
+
+
+-- name: luo-tai-paivita-muutos-kustannusvaikutus<!
+INSERT INTO mhu_muutos_kustannusvaikutus (
+    versio, 
+    muutos, 
+    kustannuslaji, 
+    toimenpideinstanssi, 
+    hoitokauden_alkuvuosi, 
+    summa
+  ) VALUES (
+    :versio, 
+    :id, 
+    :kustannuslaji,
+    :tpi, 
+    :hoitokauden_alkuvuosi, 
+    :summa
+) ON CONFLICT (muutos, hoitokauden_alkuvuosi)
+DO UPDATE SET
+  kustannuslaji        = EXCLUDED.kustannuslaji,
+  toimenpideinstanssi  = EXCLUDED.toimenpideinstanssi,
+  summa                = EXCLUDED.summa;
+
 
 -- name: luo-muutos-kulu-linkitys<!
 INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)

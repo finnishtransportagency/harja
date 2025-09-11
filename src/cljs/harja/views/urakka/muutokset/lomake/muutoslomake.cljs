@@ -15,10 +15,11 @@
 
             ;; Lomake tyypit, näitä voi lisäillä tarvittaessa 
             [harja.views.urakka.muutokset.lomake.lomake-pysyva :as pysyva]
-            [harja.views.urakka.muutokset.lomake.lomake-johto-hallinto :as johto-ja-hallinto]))
+            [harja.views.urakka.muutokset.lomake.lomake-johto-hallinto :as johto-ja-hallinto]
+            [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]))
 
 
-(defn- lomakkeen-footer [muutos 
+(defn- lomakkeen-footer [muutos tyyppi
                          e! {:keys [tallennus-kesken? muokattava-muutos] :as _app}]
   [:div
    [:hr]
@@ -29,11 +30,19 @@
         (str/join ", " (:puuttuvat-pakolliset-kentat muokattava-muutos))
         ". Korjaa ne ja yritä uudelleen.")])
 
+   ;; Muutostyö lomakkeeseen design mukaan infolaatikko
+   (when (= tyyppi "muutostyo")
+     [yleiset/info-laatikko :neutraali
+      "Tallentamisen jälkeen muutostyölle voi kohdistaa kuluja."
+      nil nil
+      {:luokka "perustiedot"}])
+
    [napit/tallenna "Tallenna"
     #(do
        (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
        (tuck-apurit/e-kanavalla! e! t-yhteiset/->TallennaMuutos muutos))
-    {:disabled tallennus-kesken?}]
+    ;; Älä anna tallentaa, jos tietoja syöttämättä
+    {:disabled (or (lomake/virheita? muutos) tallennus-kesken?)}]
 
    [napit/peruuta "Peruuta"
     #(do
@@ -80,7 +89,7 @@
         {:otsikko (if (:id muokattava-muutos) "Muokkaa muutosta" "Lisää uusi muutos")
          :tarkkaile-ulkopuolisia-muutoksia? true
          :muokkaa! #(e! (t-yhteiset/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
-         :footer-fn (fn [muutos] (lomakkeen-footer muutos e! app))}
+         :footer-fn (fn [muutos] (lomakkeen-footer muutos (:tyyppi muokattava-muutos) e! app))}
 
         ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
         (into []
@@ -93,6 +102,10 @@
               "maarapoikkeama" (yhteiset/lomake-yhteinen e! app)
               "pysyva" (pysyva/lomake-pysyva e! app)
               "toteutuneet-maarat" (yhteiset/lomake-yhteinen e! app)
-              ;; default: ei lisäkenttiä
-              [])))
+              "muutostyo" (muutostyo/lomake-muutostyo e! app)
+
+              nil  [(lomake/ryhma {:otsikko "Valitse tyyppi"})]
+
+              ;; Default - jos mikään ylläolevista ei osu
+              [(lomake/ryhma {:otsikko "Sisältöä ei saatavilla."})])))
         muokattava-muutos]])))

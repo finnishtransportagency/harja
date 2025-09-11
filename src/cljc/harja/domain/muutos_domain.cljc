@@ -12,6 +12,8 @@
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistettu?-sarake])
 
+(def +muutostyo-valinnat+ {:erillisrahoitus "Erillisrahoituksella tehtävä muutostyö"
+                           :poikkeama "Poikkeaminen tehtävä- ja määräluettelon määrästä"})
 
 ;; TODO: Figma-speksissä muutostyypit ovat lomaketasolla nykyisin:
 ;;       Muutostyö: Sisältää erillisrahoitettu ja maarapoikkeama tyypit
@@ -26,7 +28,8 @@
    "johto-ja-hallintokorvaus"
    "maarapoikkeama"
    "pysyva"
-   "toteutuneet-maarat"])
+   "toteutuneet-maarat"
+   "muutostyo"])
 
 
 ;; TODO: Tarkista lomakkeen valinna ja niiden nimitykset
@@ -40,7 +43,8 @@
                                  "Johto- ja hallintokorvauksen muutos")
     "erillisrahoitettu" "Erillisrahoitettu"
     "toteutuneet-maarat" "Toteutuneet määrät"
-    "maarapoikkeama" "Määräpoikkeama"} tyyppi))
+    "maarapoikkeama" "Määräpoikkeama"
+    "muutostyo" "Muutostyö"} tyyppi))
 
 (defn jjh-korvaus-muutos-vai-vahennys?
   "Johto- ja hallintokorvauksen muutos on :muutos jos urakka alkanut 1.10.2024 tai aiemmin, muutoin vähennys"

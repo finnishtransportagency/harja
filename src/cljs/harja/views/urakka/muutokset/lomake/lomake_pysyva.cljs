@@ -238,6 +238,7 @@
       :tyyppi :string
       :uusi-rivi? true
       :pakollinen? true
+      :validoi [#(when (nil? (seq %)) "Kirjoita nimi")]
       ::lomake/col-luokka "perustiedot col-sm-6"}
 
      (yhteiset/+rivi-muutoksen-syy+)
@@ -245,11 +246,14 @@
 
    (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}
 
-     {:otsikko "Hoitovuosi" :nimi :hoitovuosi :kaariva-luokka "hoitovuosi-valinta"
-      :tarkenne #(str
+     {:otsikko "Hoitovuosi"
+      :nimi :hoitovuosi
+      :kaariva-luokka "hoitovuosi-valinta"
+      :tarkenne #(str 
                    "Oltava lomakkeelle asetetun "
                    "'Voimassa alkaen' -pvm:n jälkeen")
-      :tyyppi :valinta :valinnat (or (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos) [])
+      :tyyppi :valinta
+      :valinnat (or (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos) [])
       :valinta-nayta #(if %
                         (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet "Hoitovuosi")
                         "Valitse")
