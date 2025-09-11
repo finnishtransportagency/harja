@@ -21,7 +21,7 @@ DO $$
         sopimus_id_kajaani_2014_2019 =  (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Kajaanin alueurakka 2014-2019' AND paasopimus IS NULL));
 
         toimenpidekoodi_suolaus = (SELECT id FROM tehtava WHERE nimi = 'Suolaus');
-        materiaalikoodi_hiekoitushiekka = (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka');
+        materiaalikoodi_hiekoitushiekka = (SELECT id FROM materiaalikoodi WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5'); -- Hiekoitushiekka, liukkaudentorjunta
 
 -- Oulun alueurakka 2005-2012
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, NOW(), '2005-10-01 00:00:00+02', '2005-10-02 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'Reitillinen yksikköhintainen toteuma 1', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
