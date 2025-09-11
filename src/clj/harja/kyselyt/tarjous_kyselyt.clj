@@ -63,7 +63,9 @@
                                 :tehtava-id nil
                                 :tehtavaryhma-id nil
                                 :rahavaraus-id nil
-                                :hoitovuosittaiset-arvot hoitovuosittaiset-arvot)))
+                                ;; Poistetaan hoitovuosittaiset arvot kovakoodatusti Valmistelukausi ennen urakka-ajan alkua toimenkuvalta
+                                :hoitovuosittaiset-arvot (if (= "valmistelukausi ennen urakka-ajan alkua" (:nimike toimenkuva))
+                                                           (first hoitovuosittaiset-arvot) hoitovuosittaiset-arvot))))
                       toimenkuvat)
         toimenkuvat (sort-by :jarjestys toimenkuvat)]
     toimenkuvat))
