@@ -7,7 +7,8 @@
             [harja.ui.lomake :as lomake]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
+            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+            [harja.tiedot.urakka.muutokset.lasketut-muutokset-tiedot :as t-lasketut]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]))
 
 
@@ -20,14 +21,14 @@
     [modal/modal
      {:otsikko ""
       :nakyvissa? yksikkohinta-modal-auki?
-      :sulje-fn #(e! (muutos-tiedot/->SuljeYksikkohintaModal))}
+      :sulje-fn #(e! (t-lasketut/->SuljeYksikkohintaModal))}
 
      ;; Moodalin sisältö 
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? voi-kirjoittaa?
        :tarkkaile-ulkopuolisia-muutoksia? true
-       :muokkaa! #(e! (muutos-tiedot/->MuokkaaYksikkohintaa (lomake/ilman-lomaketietoja %) aikaisemmat-yksikkohinnat))
+       :muokkaa! #(e! (t-lasketut/->MuokkaaYksikkohintaa (lomake/ilman-lomaketietoja %) aikaisemmat-yksikkohinnat))
 
        :header [:div.col-md-12
                 [:h2.header-yhteiset "Aseta tehtävän yksikköhinta"]
@@ -35,8 +36,8 @@
                 [:div.body-caption.lihavoitu "Tehtävä"]
                 [:div.body tehtava]]
 
-       :footer (let [peruuta-fn #(e! (muutos-tiedot/->SuljeYksikkohintaModal))
-                     tallenna-fn #(e! (muutos-tiedot/->TallennaYksikkohinta valittu-rivi))]
+       :footer (let [peruuta-fn #(e! (t-lasketut/->SuljeYksikkohintaModal))
+                     tallenna-fn #(e! (t-lasketut/->TallennaYksikkohinta valittu-rivi))]
                  [:<>
                   [:hr]
                   [:div.muokkaus-modal-napit
@@ -77,7 +78,7 @@
 
   [yhteiset/kehystetty-avattava-grid e! app
    {:taulukon-avain :lasketut-muutokset
-    :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :lasketut-muutokset))
+    :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :lasketut-muutokset))
     :otsikko "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"
     :summa (reduce + 0 (map :tavoitehinnan_muutos tehtava-maaramuutokset))
     :toiminnot (fn [_e! _app]
@@ -123,7 +124,7 @@
                     [ajax-loader-pieni "Haku käynnissä..."]
                     "Aikavälille ei löytynyt tuloksia.")
            :tallenna (fn [sisalto]
-                       (tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaTehtavaMaaramuutokset sisalto))}
+                       (tuck-apurit/e-kanavalla! e! t-lasketut/->TallennaTehtavaMaaramuutokset sisalto))}
 
           [{:otsikko "Tehtävä"
             :nimi :tehtava
@@ -217,7 +218,7 @@
                                     (not muokataan?)
                                     (not (:anna-kirjata-tavoitehinta? valittu-rivi)))
                               [:div.nappi-toissijainen
-                               {:on-click #(e! (muutos-tiedot/->AvaaYksikkohintaModal valittu-rivi tehtava_id))} "Aseta yksikköhinta"])])
+                               {:on-click #(e! (t-lasketut/->AvaaYksikkohintaModal valittu-rivi tehtava_id))} "Aseta yksikköhinta"])])
             :leveys 22}]
 
           tehtava-maaramuutokset]]))}])

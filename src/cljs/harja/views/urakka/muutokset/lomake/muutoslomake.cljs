@@ -9,7 +9,7 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.muutos-domain :as muutos-domain]
             [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
+            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
             [harja.ui.yleiset :as yleiset]
 
 
@@ -31,14 +31,14 @@
 
    [napit/tallenna "Tallenna"
     #(do
-       (muutos-tiedot/scrollaa-viimeksi-valitulle-riville)
-       (tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos muutos))
+       (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
+       (tuck-apurit/e-kanavalla! e! t-yhteiset/->TallennaMuutos muutos))
     {:disabled tallennus-kesken?}]
 
    [napit/peruuta "Peruuta"
     #(do
-       (muutos-tiedot/scrollaa-viimeksi-valitulle-riville)
-       (e! (muutos-tiedot/->MuokkaaMuutosta nil)))
+       (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
+       (e! (t-yhteiset/->MuokkaaMuutosta nil)))
     {:disabled tallennus-kesken?}]])
 
 
@@ -54,7 +54,7 @@
           :muokattava? #(nil? (:id %))
           :aseta (fn [rivi arvo]
                    (let [rivi (assoc rivi :tyyppi arvo)]
-                     (muutos-tiedot/alusta-tyyppikohtaisia-arvoja arvo valittu-hoitokausi)
+                     (t-yhteiset/alusta-tyyppikohtaisia-arvoja arvo valittu-hoitokausi)
                      rivi))
           :kaariva-luokka "muutostyyppivalinta"
           :tyyppi :valinta
@@ -70,8 +70,8 @@
 (defn muutoslomake [e! {:keys [muokattava-muutos] :as _app}]
   (komp/luo
     (komp/sisaan-ulos
-      #(e! (muutos-tiedot/->HaeMuutoksenTiedot muokattava-muutos))
-      #(e! (muutos-tiedot/->MuokkaaMuutosta nil)))
+      #(e! (t-yhteiset/->HaeMuutoksenTiedot muokattava-muutos))
+      #(e! (t-yhteiset/->MuokkaaMuutosta nil)))
 
     (fn [e! {:keys [muokattava-muutos] :as app}]
       [:span.muutoslomake
@@ -79,7 +79,7 @@
        [lomake/lomake
         {:otsikko (if (:id muokattava-muutos) "Muokkaa muutosta" "Lisää uusi muutos")
          :tarkkaile-ulkopuolisia-muutoksia? true
-         :muokkaa! #(e! (muutos-tiedot/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+         :muokkaa! #(e! (t-yhteiset/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
          :footer-fn (fn [muutos] (lomakkeen-footer muutos e! app))}
 
         ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat

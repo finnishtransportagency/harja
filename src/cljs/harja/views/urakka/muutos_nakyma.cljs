@@ -9,7 +9,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
+            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
             [harja.ui.yleiset :as yleiset]
 
             ;; Osiot / lomake 
@@ -23,12 +23,12 @@
 (defn- tavoitehinnan-muutokset [e! {:keys [tavoitehinnan-muutokset] :as app}]
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :tavoitehinnan-muutokset
-    :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :tavoitehinnan-muutokset))
+    :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :tavoitehinnan-muutokset))
     :otsikko "Tavoitehinnan muutokset"
     :summa (reduce + 0 (map :tavoitehinnan-muutos tavoitehinnan-muutokset)) ;; todo
     :toiminnot (fn [e! app]
                  [::span
-                  [napit/uusi "Lisää muutos" #(e! (muutos-tiedot/->LisaaTavoitehintojenMuutos))]])
+                  [napit/uusi "Lisää muutos" #(e! (t-yhteiset/->LisaaTavoitehintojenMuutos))]])
     :taulukko
     (fn [e! app]
       [grid/grid
@@ -63,12 +63,12 @@
 (defn- suunniteltujen-maarien-muutokset [e! {:keys [suunniteltujen-maarien-muutokset] :as app}]
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :suunniteltujen-maarien-muutokset
-    :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :suunniteltujen-maarien-muutokset))
+    :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :suunniteltujen-maarien-muutokset))
     :otsikko "Suunniteltujen määrien muutokset"
     :summa :ei-summaa
     :toiminnot (fn [e! app]
                  [::span
-                  [napit/uusi "Lisää muutos" #(e! (muutos-tiedot/->LisaaSuunniteltujenMaarienMuutos))]])
+                  [napit/uusi "Lisää muutos" #(e! (t-yhteiset/->LisaaSuunniteltujenMaarienMuutos))]])
     :taulukko
     (fn [e! app]
       [grid/grid
@@ -103,14 +103,14 @@
          :tasaa :oikea
          :komponentti (fn [rivi]
                         [napit/muokkaa "Muokkaa"
-                         #(e! (muutos-tiedot/->MuokkaaMuutosta rivi))])}]
+                         #(e! (t-yhteiset/->MuokkaaMuutosta rivi))])}]
        suunniteltujen-maarien-muutokset])}])
 
 
 (defn muutoslistaus [e! app]
   [:span.muutoslistaus
    (when (:valittu-hoitokausi app)
-     (if (muutos-tiedot/ennen-muutoksien-kayttoonotto? (:valittu-hoitokausi app))
+     (if (t-yhteiset/ennen-muutoksien-kayttoonotto? (:valittu-hoitokausi app))
        ;; Tähän 1.10.2024 tai sitä aiemmiun alkaneiden hoitokausien " legacy " muutostoiminnot
        [:span.muutostiedot
         [tavoitehinnan-muutokset e! app]
@@ -132,11 +132,11 @@
     [yleiset/tietoja {:class "muutosten-vaikutus-container body-text"
                       :tietorivi-luokka "padding-8"}
      "Hoitovuoden alun indeksikorjattu tavoitehinta" (if-not indeksikorjaus-vahvistettu?
-                                                       muutos-tiedot/+indeksikorjausta-ei-vahvistettu-txt+
+                                                       t-yhteiset/+indeksikorjausta-ei-vahvistettu-txt+
                                                        (fmt/euro-opt (:hoitovuoden-alun-indeksikorjattu-tavoitehinta budjettitavoitteet)))
      "Tavoitehinnan muutokset" (fmt/euro-opt (:muutosten-vaikutus-yhteensa budjettitavoitteet))
      "Hoitovuoden lopun tavoitehinta" (if-not indeksikorjaus-vahvistettu?
-                                        muutos-tiedot/+indeksikorjausta-ei-vahvistettu-txt+
+                                        t-yhteiset/+indeksikorjausta-ei-vahvistettu-txt+
                                         (fmt/euro-opt (:hoitovuoden-lopun-tavoitehinta budjettitavoitteet)))]
      (when-not indeksikorjaus-vahvistettu? [yleiset/vihje "Indeksikorjaus vahvistetaan kustannussuunnitelmassa."])]))
 
@@ -148,7 +148,7 @@
     
     [urakka-valinnat/paivittava-urakkavuosi-tuck
      @u/valittu-aikavali
-     #(e! (muutos-tiedot/->HaeUrakanMuutostiedot)) haku-kaynnissa? false]]
+     #(e! (t-yhteiset/->HaeUrakanMuutostiedot)) haku-kaynnissa? false]]
 
    [muutosten-vaikutus e! app]
    [muutoslistaus e! app]])
@@ -157,8 +157,8 @@
 (defn muutokset-alempi-valilehti*
   [e! _app]
   (komp/luo
-    (komp/lippu muutos-tiedot/nakymassa?)
-    (komp/sisaan #(e! (muutos-tiedot/->HaeUrakanMuutostiedot)))
+    (komp/lippu t-yhteiset/nakymassa?)
+    (komp/sisaan #(e! (t-yhteiset/->HaeUrakanMuutostiedot)))
     (fn [e! 
          {:keys [muokattava-muutos] :as app}]
       [:span.muutokset-sivu

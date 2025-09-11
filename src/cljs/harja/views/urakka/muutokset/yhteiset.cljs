@@ -8,7 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]))
+            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]))
 
 
 (defn liite-kentta
@@ -26,14 +26,14 @@
                       @nav/valittu-urakka-id
                       (:liitteet muokattava-muutos)
                       {:uusi-liite-atom (r/wrap uusi-liite
-                                          #(e! (muutos-tiedot/->LisaaLiite %)))
+                                          #(e! (t-yhteiset/->LisaaLiite %)))
                        :uusi-liite-teksti "Lisää liite"
                        :nayta-lisatyt-liitteet? false
                        :lisaa-usea-liite? true
                        :salli-poistaa-lisatty-liite? true
-                       :poista-lisatty-liite-fn #(e! (muutos-tiedot/->PoistaLisattyLiite))
+                       :poista-lisatty-liite-fn #(e! (t-yhteiset/->PoistaLisattyLiite))
                        :salli-poistaa-tallennettu-liite? true
-                       :poista-tallennettu-liite-fn #(e! (muutos-tiedot/->PoistaTallennettuLiite %))}]))}])
+                       :poista-tallennettu-liite-fn #(e! (t-yhteiset/->PoistaTallennettuLiite %))}]))}])
 
 
 (defn kehystetty-avattava-grid 

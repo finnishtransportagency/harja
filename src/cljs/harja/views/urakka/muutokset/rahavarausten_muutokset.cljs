@@ -3,13 +3,15 @@
   (:require [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
+            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+            [harja.tiedot.urakka.muutokset.rahavarausten-muutokset-tiedot :as t-rahavaraukset]
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.muutokset.yhteiset :as yhteiset]))
 
 
 (defn rahavarausten-muutokset
-  "Näyttää rahavarausten muutokset taulukossa sekä yhteenvedon. Taulukko on avattava ja suljettava. Sisältö automaattisesti laskettu muista tauluista."
+  "Näyttää rahavarausten muutokset taulukossa sekä yhteenvedon.
+  Taulukko on avattava ja suljettava. Sisältö automaattisesti laskettu muista tauluista."
   [e! {:keys [rahavarausten-muutokset] :as app}]
   (let [rivit (butlast rahavarausten-muutokset)
         yhteenveto (last rahavarausten-muutokset)
@@ -18,7 +20,7 @@
                                                (zero? (:summa-indeksikorjattu %))) rivit)]
     [yhteiset/kehystetty-avattava-grid e! app
      {:taulukon-avain :rahavarausten-muutokset
-      :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :rahavarausten-muutokset))
+      :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :rahavarausten-muutokset))
       :otsikko "Rahavarausten muutokset"
       :summa (:tavoitehinnan-muutos yhteenveto)
       :toiminnot (fn [e! app]
@@ -39,7 +41,7 @@
           :voi-poistaa? (constantly false)
           :voi-muokata? true
           :piilota-toiminnot? true
-          :tallenna #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaRahavarausmuutostenSyyt %)
+          :tallenna #(tuck-apurit/e-kanavalla! e! t-rahavaraukset/->TallennaRahavarausmuutostenSyyt %)
           :rivi-jalkeen-fn (fn []
                              [{:teksti "Tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :yhteenveto-vayla true}
                               {:teksti "" :sarakkeita 1 :luokka "yhteensa"}

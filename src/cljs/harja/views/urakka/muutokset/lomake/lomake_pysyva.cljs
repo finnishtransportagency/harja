@@ -11,7 +11,7 @@
             [harja.ui.kentat :as kentat]
             [harja.ui.debug :refer [debug]]
             [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
+            [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
             [harja.ui.yleiset :as yleiset]))
 
 
@@ -20,11 +20,11 @@
   [e! {:keys [urakan-hoitokaudet muokattava-muutos] :as app} rivi]
   (let [valittu-hoitovuoden-alkuvuosi (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
         tehtavat-ja-maarat-valittuna-hoitovuonna (filter #(= valittu-hoitovuoden-alkuvuosi
-                                                             (:hoitokauden_alkuvuosi %))
+                                                            (:hoitokauden_alkuvuosi %))
                                                    (:tehtavat_ja_maarat rivi))
         muutos-valittuna-hoitovuonna (or
                                        (:summa (first (filter #(= valittu-hoitovuoden-alkuvuosi
-                                                                  (:hoitokauden_alkuvuosi %))
+                                                                 (:hoitokauden_alkuvuosi %))
                                                         (:kustannusvaikutukset rivi))))
                                        0)
         toimenpiteen-tehtavat (filter #(and
@@ -62,54 +62,54 @@
                                      {:id (key %)
                                       :hoitokauden_alkuvuosi valittu-hoitovuoden-alkuvuosi})
                                (grid/hae-muokkaustila grid))]
-                   (e! (muutos-tiedot/->PaivitaToimenpiteenTehtavamaarat rivit))))}
+                   (e! (t-kirjatut/->PaivitaToimenpiteenTehtavamaarat rivit))))}
 
       ;; Taulukon kentät
-      [{:otsikko "Tehtävä" 
-        :nimi :tehtava 
-        :tyyppi :valinta 
-        :valinnat toimenpiteen-tehtavat 
+      [{:otsikko "Tehtävä"
+        :nimi :tehtava
+        :tyyppi :valinta
+        :valinnat toimenpiteen-tehtavat
         :leveys 20
-        :valinta-arvo :tehtava-id 
+        :valinta-arvo :tehtava-id
         :valinta-nayta :tehtava}
-       
+
        {:otsikko "Yksikkö"
-        :nimi :yksikko 
-        :tyyppi :string 
-        :leveys 3 
+        :nimi :yksikko
+        :tyyppi :string
+        :leveys 3
         :muokattava? (constantly false)
         :hae (fn [rivi]
                (some #(= (:toimenpidekoodi %)
-                         (:toimenpidekoodi rivi))
+                        (:toimenpidekoodi rivi))
                  (:toimenpiteiden-tehtavat muokattava-muutos)))}
-       
-       {:otsikko "Hoitovuosi" 
-        :nimi :hoitokauden_alkuvuosi 
-        :tyyppi :positiivinen-numero 
-        :leveys 5 
+
+       {:otsikko "Hoitovuosi"
+        :nimi :hoitokauden_alkuvuosi
+        :tyyppi :positiivinen-numero
+        :leveys 5
         :muokattava? (constantly false)}
 
-       {:otsikko "Suunniteltu määrä" 
-        :nimi :edellinen_maara 
-        :tyyppi :positiivinen-numero 
-        :leveys 10 
+       {:otsikko "Suunniteltu määrä"
+        :nimi :edellinen_maara
+        :tyyppi :positiivinen-numero
+        :leveys 10
         :muokattava? (constantly false)}
 
-       {:otsikko "Määrämuutos (+/-)" 
-        :nimi :maaramuutos 
-        :tyyppi :numero 
+       {:otsikko "Määrämuutos (+/-)"
+        :nimi :maaramuutos
+        :tyyppi :numero
         :leveys 20}
 
-       {:otsikko "Muuttunut määrä" 
-        :nimi :muuttunut-maara 
-        :tyyppi :numero 
-        :leveys 20 
+       {:otsikko "Muuttunut määrä"
+        :nimi :muuttunut-maara
+        :tyyppi :numero
+        :leveys 20
         :muokattava? (constantly false)
         :hae (fn [rivi] (+ (:suunniteltu-maara rivi) (:maaramuutos rivi)))}
-       
-       {:otsikko "" 
-        :nimi :toiminnot 
-        :tyyppi :komponentti 
+
+       {:otsikko ""
+        :nimi :toiminnot
+        :tyyppi :komponentti
         :leveys 9
         :komponentti (fn [rivi]
                        [napit/nappi "Poista rivi"
@@ -127,7 +127,7 @@
                          :pakollinen? true :input-luokka "tavoitehinnan-muutos-input"
                          :placeholder "Syötä hintavaikutus"}
       (r/wrap muutos-valittuna-hoitovuonna
-        #(e! (muutos-tiedot/->PaivitaToimenpiteenTavoitehinnanMuutos %
+        #(e! (t-kirjatut/->PaivitaToimenpiteenTavoitehinnanMuutos %
                (:toimenpideinstanssi rivi)
                (:hoitovuosi muokattava-muutos))))]]))
 
@@ -148,7 +148,7 @@
       [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
-       #(e! (muutos-tiedot/->KopioiPysyvaMuutosTulevilleHoitovuosille
+       #(e! (t-kirjatut/->KopioiPysyvaMuutosTulevilleHoitovuosille
               (:hoitovuosi muokattava-muutos)
               (:toimenpiteiden-tiedot muokattava-muutos)))
        {:ikoni (ikonit/action-copy)
@@ -183,7 +183,7 @@
         :hae (fn [rivi]
                (:budjetoitu_summa (first (filter #(when (:hoitovuosi muokattava-muutos)
                                                     (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
-                                                       (:hoitokauden_alkuvuosi %)))
+                                                      (:hoitokauden_alkuvuosi %)))
                                            (get rivi :budjetoidut_summat)))))}
 
        {:otsikko "Tavoitehinnan muutos (€)"
@@ -197,7 +197,7 @@
         :hae (fn [rivi]
                (:summa (first (filter #(when (:hoitovuosi muokattava-muutos)
                                          (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
-                                            (:hoitokauden_alkuvuosi %)))
+                                           (:hoitokauden_alkuvuosi %)))
                                 (get rivi :kustannusvaikutukset)))))}
 
        {:otsikko "Muuttunut kustannus (€)"
@@ -211,11 +211,11 @@
         :hae (fn [rivi]
                (let [budjetoitu (:budjetoitu_summa (first (filter #(when (:hoitovuosi muokattava-muutos)
                                                                      (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
-                                                                        (:hoitokauden_alkuvuosi %)))
+                                                                       (:hoitokauden_alkuvuosi %)))
                                                             (get rivi :budjetoidut_summat))))
                      muutos (:summa (first (filter #(when (:hoitovuosi muokattava-muutos)
                                                       (= (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
-                                                         (:hoitokauden_alkuvuosi %)))
+                                                        (:hoitokauden_alkuvuosi %)))
                                              (get rivi :kustannusvaikutukset))))]
                  (when (and budjetoitu (number? budjetoitu) muutos (number? muutos))
                    (+ budjetoitu muutos))))}]
@@ -246,7 +246,7 @@
    (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}
 
      {:otsikko "Hoitovuosi" :nimi :hoitovuosi :kaariva-luokka "hoitovuosi-valinta"
-      :tarkenne #(str 
+      :tarkenne #(str
                    "Oltava lomakkeelle asetetun "
                    "'Voimassa alkaen' -pvm:n jälkeen")
       :tyyppi :valinta :valinnat (or (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos) [])
@@ -256,7 +256,7 @@
       :valinta-arvo identity}
 
      ;; Taulukko jossa vaikutuksia voidaan syöttää
-     {:otsikko "" 
+     {:otsikko ""
       :uusi-rivi? true
       :nimi :taulukko-pysyvan-muutoksen-vaikutukset
       :tyyppi :komponentti
@@ -264,4 +264,3 @@
                      [taulukko-pysyvan-muutoksen-vaikutukset e! app])})
 
    (first (yhteiset/liite-kentta e! app))])
- 

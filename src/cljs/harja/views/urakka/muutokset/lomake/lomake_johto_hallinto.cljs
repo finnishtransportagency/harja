@@ -8,14 +8,14 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.muutos-domain :as muutos-domain]
             [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]))
+            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]))
 
 
 (defn lomake-johto-ja-hallintokorvaus
   "johto-ja-hallintokorvaus muutoksen lomakekomponentti"
   [e! {:keys [valittu-hoitokausi urakan-hoitokaudet] :as app}]
   (let [muutostapa (muutos-domain/jjh-korvaus-muutos-vai-vahennys? (:alkupvm @nav/valittu-urakka))
-        summa (reduce + 0 (map :tavoitehinnan-muutos (vals @muutos-tiedot/johto-ja-hallintokorvausmuutokset-atom)))]
+        summa (reduce + 0 (map :tavoitehinnan-muutos (vals @t-yhteiset/johto-ja-hallintokorvausmuutokset-atom)))]
 
     [(lomake/ryhma {:otsikko "Perustiedot"}
        {:nimi :hoitovuosi
@@ -68,7 +68,7 @@
             :fmt fmt/euro-opt 
             :tasaa :oikea 
             :leveys 8}]
-          muutos-tiedot/johto-ja-hallintokorvausmuutokset-atom]
+          t-yhteiset/johto-ja-hallintokorvausmuutokset-atom]
 
          [yleiset/info-laatikko :neutraali
           "Harja luo oikaisevat kulut automaattisesti tallentamisen jälkeen."

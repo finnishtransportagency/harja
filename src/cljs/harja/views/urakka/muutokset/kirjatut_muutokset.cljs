@@ -6,17 +6,17 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.muutos-domain :as muutos-domain]
             [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-            [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]))
+            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]))
 
 
 (defn kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
   [yhteiset/kehystetty-avattava-grid e! app
    {:taulukon-avain :kirjatut-muutokset
-    :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :kirjatut-muutokset))
+    :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :kirjatut-muutokset))
     :otsikko "Kirjatut muutokset"
     :summa (reduce + 0 (map :tavoitehinnan-muutos kirjatut-muutokset))
     :toiminnot (fn [e! app]
-                 [napit/uusi "Lisää uusi" #(e! (muutos-tiedot/->MuokkaaMuutosta {}))])
+                 [napit/uusi "Lisää uusi" #(e! (t-yhteiset/->MuokkaaMuutosta {}))])
     :taulukko
     (fn [e! app]
       [grid/grid
@@ -64,5 +64,5 @@
          :tasaa :oikea
          :komponentti (fn [rivi]
                         [napit/muokkaa "Muokkaa"
-                         #(e! (muutos-tiedot/->MuokkaaMuutosta rivi))])}]
+                         #(e! (t-yhteiset/->MuokkaaMuutosta rivi))])}]
        kirjatut-muutokset])}])
