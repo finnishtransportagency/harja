@@ -495,6 +495,9 @@
   (let [urakka (first (q-urakat/hae-urakka db urakka-id))
         kulut (:kulut muutos)
         liitteet (:liitteet muutos)
+        tavoitehinnan-muutos (:tavoitehinnan-muutos muutos)
+        alityyppi (when (= (:tyyppi muutos) "muutostyo")
+                    (-> muutos :alityyppi name))
         muutos {:id (:id muutos)
                 :versio (:versio muutos)
                 :urakka urakka-id
@@ -505,15 +508,34 @@
                 :luonnos (:luonnos muutos)
                 :hoitokauden_alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
                 :tyyppi (:tyyppi muutos)
-                :kayttaja (:id kayttaja)}]
+                :kayttaja (:id kayttaja)
+                :alityyppi alityyppi}
+
+        kustannusvaikutus {:kustannuslaji (:kustannuslaji muutos)
+                           :tpi (:tpi muutos)
+                           :hoitokauden_alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+                           :summa tavoitehinnan-muutos}]
+
     (jdbc/with-db-transaction [conn db]
       (let [muutos-paluurivi (if (:id muutos)
                                (muutos-kyselyt/paivita-muutos<! conn muutos)
-                               (muutos-kyselyt/luo-muutos<! conn muutos))]
+                               (muutos-kyselyt/luo-muutos<! conn muutos))
+            versio (:versio muutos-paluurivi)
+            muutos-id (:id muutos-paluurivi)
+            kustannusvaikutus (assoc kustannusvaikutus :id muutos-id :versio (or versio 1))]
+
+        ;; Tallenna liitteet 
         (tallenna-muutoksen-liitteet conn muutos-paluurivi liitteet)
-        ;; hox: voi tehdä case:lla, kun myöhemmin tulee lisää tyyppejä
-        (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+
+        ;; Tallenna kustannusvaikutukset
+        (muutos-kyselyt/luo-tai-paivita-muutos-kustannusvaikutus<! conn kustannusvaikutus)
+
+        ;; Tallenna kulut
+        (case
+          (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
           (tallenna-johto-ja-hallintokorvauksen-muutokset conn kayttaja urakka muutos-paluurivi kulut)))
+      
+      ;; Palauta päivitetty listaus 
       (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
                                               :hoitokaudet hoitokaudet
                                               :valittu-hoitokausi valittu-hoitokausi}))))

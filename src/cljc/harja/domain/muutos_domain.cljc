@@ -12,8 +12,8 @@
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistettu?-sarake])
 
-(def +muutostyo-valinnat+ {:erillis "Erillisrahoituksella tehtävä muutostyö"
-                           :poikkeaminen "Poikkeaminen tehtävä- ja määräluettelon määrästä"})
+(def +muutostyo-valinnat+ {:erillisrahoitus "Erillisrahoituksella tehtävä muutostyö"
+                           :poikkeama "Poikkeaminen tehtävä- ja määräluettelon määrästä"})
 
 ;; TODO: Figma-speksissä muutostyypit ovat lomaketasolla nykyisin:
 ;;       Muutostyö: Sisältää erillisrahoitettu ja maarapoikkeama tyypit

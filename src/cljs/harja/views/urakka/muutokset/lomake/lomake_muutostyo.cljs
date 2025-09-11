@@ -17,18 +17,20 @@
   [(lomake/ryhma {:otsikko "Perustiedot"}
      (lomake/rivi
        {:otsikko "Kyseessä on"
-        :nimi :muutostyo-laji
-        :vayla-tyyli? true
+        :nimi :alityyppi
         :tyyppi :radio-group
+        :vayla-tyyli? true
+        :pakollinen? true
+        :validoi [#(when (nil? %) "Anna alityyppi")]
         :vaihtoehto-nayta muutos-domain/+muutostyo-valinnat+
         :vaihtoehdot (keys muutos-domain/+muutostyo-valinnat+)
-        :oletusarvo :erillis ;; Toistaiseksi vain erillisrahoitus käytössä
-        :vaihtoehto-opts {:poikkeaminen {:disabloitu? true}} ;; Tämä ei käytössä, eikä ole vielä tarkoitus toteuttaa  
+        :oletusarvo :erillisrahoitus ;; Toistaiseksi vain erillisrahoitus käytössä
+        :vaihtoehto-opts {:poikkeama {:disabloitu? true}} ;; Tämä ei käytössä, eikä ole vielä tarkoitus toteuttaa  
         })
 
      (lomake/rivi
        {:otsikko "Muutostyön nimi"
-        :nimi :muutostyo-nimi
+        :nimi :nimi
         :tyyppi :string
         :pakollinen? true
         :salli-kirjoitus? true
@@ -40,16 +42,6 @@
 
      (yhteiset/+rivi-muutoksen-syy+)
      (yhteiset/+rivi-muutos-voimassa+ app)
-
-     (lomake/rivi
-       {:otsikko "Tavoitehinnan muutos"
-        :pakollinen? true
-        :vayla-tyyli? true
-        :nimi :muutostyo-tavoitehinnan-muutos
-        :tyyppi :euro
-        :teksti-oikealla "EUR"
-        :validoi [#(when (nil? %) "Syötä tavoitehinnan muutos")
-                  [:rajattu-numero -999999999 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
-        ::lomake/col-luokka "perustiedot col-xs-6"})
+     (yhteiset/+rivi-muutos-tavoitehinta+)
 
      (first (yhteiset/liite-kentta e! app)))])

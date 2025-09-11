@@ -48,6 +48,7 @@
 ;; Vaihda hoitokausi
 (defrecord MuokkaaMuutosta [rivi])
 (defrecord TallennaMuutos [muutos])
+(defrecord TallennaMuutosOnnistui [vastaus])
 (defrecord TallennaMuutosEpaonnistui [vastaus])
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
 (defrecord MuokkaaRahavaraustenMuutoksienSyita [])
@@ -365,11 +366,15 @@
              :valittu-hoitokausi (:valittu-hoitokausi app)
              :hoitokaudet @u/valitun-urakan-hoitokaudet
              :muutos muutos}
-            {:onnistui ->HaeUrakanMuutostiedotOnnistui ;; voidaan käyttää samaa eventtiä, koska haetaan uudet muutostiedot tallennuksen jälkeen
+            {:onnistui ->TallennaMuutosOnnistui
              :epaonnistui ->TallennaMuutosEpaonnistui
              :paasta-virhe-lapi? true})
           (assoc app :tallennus-kesken? true)))))
 
+  TallennaMuutosOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Muutoksen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+    (vastaus-haku-onnistui app vastaus))
 
   TallennaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]
