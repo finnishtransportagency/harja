@@ -124,12 +124,15 @@
                  :tyyppi :valinta
                  :valinnat-fn #(map :nimi muut-toimenkuvat)
                  :aseta (fn [rivi arvo]
-                          (assoc rivi :id -1
-                            :nimi arvo
-                            :uusi-nimi arvo
-                            :vanha-id (:toimenkuva-id rivi)
-                            :osio "johto-ja-hallintokorvaus"
-                            :rahavaraus-id nil))
+                          (merge
+                            (assoc rivi :id -1
+                                   :nimi arvo
+                                   :toimenkuva (str/lower-case arvo)
+                                   :uusi-nimi arvo
+                                   :vanha-id (:toimenkuva-id rivi)
+                                   :osio "johto-ja-hallintokorvaus"
+                                   :rahavaraus-id nil)
+                            vuosi-map))
                  :luokka "yhteensa"
                  :leveys (str nimi-leveys "%")
                  :muokattava? (fn [rivi arvo] (if (= -1 (:id rivi)) true false))}
@@ -138,11 +141,24 @@
                  :tyyppi :valinta
                  :valinnat-fn #(map :nimi muut-toimenkuvat)
                  :aseta (fn [rivi arvo]
-                          (assoc rivi :id -1 :nimi arvo :paivtetty? true :uusi-nimi arvo :vanha-id (:toimenkuva-id rivi)))
+                          (merge (assoc rivi :id -1
+                                   :nimi arvo
+                                   :toimenkuva (str/lower-case arvo)
+                                   :paivtetty? true
+                                   :uusi-nimi arvo
+                                   :vanha-id (:toimenkuva-id rivi)
+                                   :osio "johto-ja-hallintokorvaus"
+                                   :rahavaraus-id nil)
+                            vuosi-map))
                  :luokka "yhteensa"
                  :leveys (str nimi-leveys "%")
-                 ;; Jos on vielä mahdollista vaihtaa toimenkuvaa, niin näytä valikko. Muuten ei näytetä valikkoa.
-                 :muokattava? (if (seq muut-toimenkuvat) (constantly true) (constantly false))})]
+                 ;; Jos on vielä mahdollista vaihtaa toimenkuvaa ja toimenkuva ei ole 'Valmistelukausi ennen urakka-ajan alkua'
+                 ;; niin näytä valikko. Muuten ei näytetä valikkoa.
+                 :muokattava? (fn [rivi]
+                                (if (and
+                                      (not= "Valmistelukausi ennen urakka-ajan alkua" (:nimi rivi))
+                                      (seq muut-toimenkuvat))
+                                  true false))})]
        [;; Poista nappi vain 2025 tai jälkeen alkaneissa urakoissa
         (if (>= urakan-alkuvuosi 2025)
           {:otsikko ""

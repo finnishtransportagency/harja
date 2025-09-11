@@ -66,7 +66,7 @@ SELECT t.id, t.toimenkuva, COALESCE(t.urakkakohtainen_nimi, '') AS urakkakohtain
 -- Haetaan yksittäinen toimenkuva.
 SELECT t.id, t.toimenkuva, COALESCE(t.urakkakohtainen_nimi, '') AS urakkakohtainen_nimi
 FROM johto_ja_hallintokorvaus_toimenkuva t
-WHERE t.toimenkuva = :nimi
+WHERE t.toimenkuva = :toimenkuva
   AND t."urakka-id" = :urakkaid;
 
 -- name: hae-toimenkuva

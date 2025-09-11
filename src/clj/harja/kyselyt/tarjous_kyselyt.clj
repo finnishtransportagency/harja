@@ -156,26 +156,28 @@
 
         ;; Vaihdetut toimenkuvat jättää jälkensä :uusi-nimi arvoon. Haetaan sen nimen perusteella toimenkuvan id
         toimenkuvat-tarjouksesta (mapv
-                                  (fn [rivi]
-                                    (if (and (seq (:uusi-nimi rivi))
-                                             (not= (:uusi-nimi rivi) (:nimi rivi)))
-                                      (let [uusi-toimenkuva (first (toimenkuva-kyselyt/hae-toimenkuvat db {:nimi (:uusi-nimi rivi)}))]
-                                        (assoc rivi
-                                          :vanha-id (:toimenkuva-id rivi)
-                                          :toimenkuva-id (:id uusi-toimenkuva)
-                                          :nimi (:nimi uusi-toimenkuva)))
-                                      rivi))
-                                  toimenkuvat-tarjouksesta)
+                                   (fn [rivi]
+                                     (if (and (seq (:uusi-nimi rivi))
+                                           (not= (:uusi-nimi rivi) (:nimi rivi)))
+                                       (let [uusi-toimenkuva (first (toimenkuva-kyselyt/hae-toimenkuvat db {:nimi (:uusi-nimi rivi)}))]
+                                         (assoc rivi
+                                           :vanha-id (:toimenkuva-id rivi)
+                                           :toimenkuva-id (:id uusi-toimenkuva)
+                                           :nimi (:nimi uusi-toimenkuva)))
+                                       rivi))
+                                   toimenkuvat-tarjouksesta)
 
         ;; Poistettavat toimenkuvat - Poistetaan myös vaihtuneet toimenkuvat, koska ne on korvattu uusilla
         poistettavat-toimenkuvat (filter #(or (true? (:poistettu %)) (not (nil? (:vanha-id %)))) toimenkuvat-tarjouksesta)
         ;; Poistetaan toimenkuvat tietokannasta
         _ (mapv
             (fn [poistettava]
-              (poista-tarjouksen-johto-ja-hallintokorvaus<! db {:urakkaid urakka-id
-                                                                :toimenkuvaid (or (:vanha-id poistettava)
-                                                                                (:toimenkuva-id poistettava))})
-              (toimenkuva-kyselyt/poista-toimenkuva! db (:id poistettava)))
+              (let [;; Poista toimenkuva tarjoukselta
+                    _ (poista-tarjouksen-johto-ja-hallintokorvaus<! db {:urakkaid urakka-id
+                                                                        :toimenkuvaid (or (:vanha-id poistettava)
+                                                                                        (:toimenkuva-id poistettava))})
+                    ;; Poista toimenkuva urakalta
+                    _ (toimenkuva-kyselyt/poista-toimenkuva! db (:toimenkuva-id poistettava))]))
             poistettavat-toimenkuvat)
 
         ;; Päivitetään vain halutut toimenkuvat normaaliprosessilla
@@ -187,6 +189,7 @@
                                                             (fn [r]
                                                               {:id (:id rivi)
                                                                :nimi (:nimi rivi)
+                                                               :toimenkuva (:toimenkuva rivi)
                                                                :urakka_id urakka-id
                                                                :hoitokauden_alkuvuosi (:vuosi r)
                                                                :johto_ja_hallintokorvaus_toimenkuva_id (:toimenkuva-id rivi)
@@ -238,11 +241,11 @@
                                                                 ;; Tämä map pyörähtää jokaisena hoitovuonna. Mutta toimenkuvan kannalta riittää
                                                                 ;; että toimenkuvia lisätään vain kerran urakalle
                                                                 ;; Tarkistetaan siis, ettei toimenkuvaa löydy jo tietokannasta
-                                                                (when-not (seq (toimenkuva-kyselyt/hae-urakan-toimenkuva db {:nimi (:nimi toimenkuva)
-                                                                                                                         :urakkaid urakka-id}))
-                                                                  (toimenkuva-kyselyt/lisaa-urakan-toimenkuva<! db {:toimenkuva (:nimi toimenkuva)
-                                                                                                                  :urakkaid urakka-id
-                                                                                                                  :urakkakohtainen-nimi (:nimi toimenkuva)})))
+                                                                (when-not (seq (toimenkuva-kyselyt/hae-urakan-toimenkuva db {:toimenkuva (:toimenkuva toimenkuva)
+                                                                                                                             :urakkaid urakka-id}))
+                                                                  (toimenkuva-kyselyt/lisaa-urakan-toimenkuva<! db {:toimenkuva (:toimenkuva toimenkuva)
+                                                                                                                    :urakkaid urakka-id
+                                                                                                                    :urakkakohtainen-nimi (:nimi toimenkuva)})))
                                            toimenkuvadb (if (:id tarjousdb)
                                                           (first (hae-toimenkuva-tarjoukselle db
                                                                    {:tarjous_id (:id tarjousdb)
@@ -348,7 +351,9 @@
                                                toimenkuva-rivit))
         tarjousrivit (into [] (sort-by (fn [rivi] (get osiojarjestys (:osio rivi))) (vec (concat kustannus-rivit toimenkuva-rivit))))
 
-        kaikki-toimenkuvat (map #(assoc % :nimi (str/capitalize (:nimi %))) (toimenkuva-kyselyt/hae-toimenkuvat db))
+        kaikki-toimenkuvat (map #(assoc %
+                                   :toimenkuva (:nimi %)
+                                   :nimi (str/capitalize (:nimi %))) (toimenkuva-kyselyt/hae-toimenkuvat db))
 
         tarjous {:urakka-id urakka-id
                  :kaikki-toimenkuvat kaikki-toimenkuvat
