@@ -245,7 +245,7 @@
                                        aputeksti regex focus on-focus on-blur lomake?
                                        toiminta-f  disabled? vihje elementin-id muokattu?] :as kentta}
                                data]
-  [:<>
+  [:div
    [:input {:class (cond-> nil
                      (and lomake?
                        (not vayla-tyyli?)) (str "form-control ")
