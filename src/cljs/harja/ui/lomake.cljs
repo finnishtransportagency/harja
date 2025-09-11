@@ -369,9 +369,10 @@ ja kaikki pakolliset kentät on täytetty"
 
                                (do
                                  (have #(contains? % :tyyppi) s)
-                                 [:<>
-                                  [tee-kentta lomakkeen-opts arvo]
-                                  (when (and aputeksti tyyppi-string?) [:div.aputeksti aputeksti])]))
+                                 (if (and aputeksti tyyppi-string?)
+                                   [:<>
+                                    [tee-kentta lomakkeen-opts arvo] [:div.aputeksti aputeksti]]
+                                   [tee-kentta lomakkeen-opts arvo])))
                              [:div {:class (str "form-control-static lomake-arvo " kentan-arvon-luokka)}
                               (if fmt
                                 (fmt ((or hae #(let [get-fn (if (vector? nimi)
