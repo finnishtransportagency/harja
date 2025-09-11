@@ -347,25 +347,31 @@ ja kaikki pakolliset kentät on täytetty"
               (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo))
               (reset! init-arvo data-arvo)
               (reset! arvo data-arvo)))))
-      (let [kentta (cond
+      (let [lomakkeen-opts (merge opts (assoc s :lomake? true))
+            tyyppi-string? (= (get lomakkeen-opts :tyyppi) :string)
+            aputeksti (get lomakkeen-opts :aputeksti)
+            kentta (cond
                      (= tyyppi :komponentti) [:div.komponentti (apply komponentti {:muokkaa-lomaketta (muokkaa s)
                                                                                    :data              data} komponentti-args)]
                      (= tyyppi :reagent-komponentti) [:div.komponentti (vec (concat [komponentti {:muokkaa-lomaketta (muokkaa s)
                                                                                                   :data              data}]
-                                                                                    komponentti-args))]
+                                                                              komponentti-args))]
                      :else (if muokattava?
                              (if (and valitse-ainoa?
-                                      (= :valinta tyyppi)
-                                      (= 1 (count (or (:valinnat s) ((:valinnat-fn s) data)))))
+                                   (= :valinta tyyppi)
+                                   (= 1 (count (or (:valinnat s) ((:valinnat-fn s) data)))))
                                (do (reset! arvo (if-let [hae (:valinta-arvo s)]
                                                   (hae (first (:valinnat s)))
                                                   (first (:valinnat s))))
-                                   [:div {:class (str "form-control-static lomake-arvo")}
-                                    ;; :valinta-kentän nayta-arvo käyttää sisäisesti :valinta-nayta optiota
-                                    (nayta-arvo s arvo)])
+                                 [:div {:class (str "form-control-static lomake-arvo")}
+                                  ;; :valinta-kentän nayta-arvo käyttää sisäisesti :valinta-nayta optiota
+                                  (nayta-arvo s arvo)])
 
-                               (do (have #(contains? % :tyyppi) s)
-                                   [tee-kentta (merge opts (assoc s :lomake? true)) arvo]))
+                               (do
+                                 (have #(contains? % :tyyppi) s)
+                                 [:<>
+                                  [tee-kentta lomakkeen-opts arvo]
+                                  (when (and aputeksti tyyppi-string?) [:div.aputeksti aputeksti])]))
                              [:div {:class (str "form-control-static lomake-arvo " kentan-arvon-luokka)}
                               (if fmt
                                 (fmt ((or hae #(let [get-fn (if (vector? nimi)
