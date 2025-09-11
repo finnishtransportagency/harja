@@ -91,6 +91,7 @@
       :voi-kumota? false
       :piilota-toiminnot? false
       :tunniste :nimi
+      :jarjesta :toimenkuva-id
       :muutos #(do
                  (let [toimenkuvat (vals (grid/hae-muokkaustila %))
                        ;; Jos muutos on ollut uuden rivin lisäys, niin asetetaan valittu toimenkuva
@@ -119,17 +120,21 @@
      ;; Otsikot
      (concat [;; ennen 2025 alkaneet urakat eivät voi valita toimenkuvia tästä tarjouslomakkeesta
               (if (< urakan-alkuvuosi 2025)
-                {:otsikko "Johto- ja hallintokorvaus (vain 2025 tai myöhemmin alkaville urakoille)"
-                 :nimi :nimi
-                 :tyyppi :string
-                 :luokka "yhteensa disabled"
-                 :leveys (str nimi-leveys "%")
-                 :muokattava? (constantly false)}
                 {:otsikko "Johto- ja hallintokorvaus"
                  :nimi :nimi
                  :tyyppi :valinta
-                 ;:valinnat #(map :nimi (conj muut-toimenkuvat %))
                  :valinnat-fn #(map :nimi muut-toimenkuvat)
+                 :aseta (fn [rivi arvo]
+                          (assoc rivi :id -1 :nimi arvo :paivtetty? true :uusi-nimi arvo :vanha-id (:toimenkuva-id rivi)))
+                 :luokka "yhteensa"
+                 :leveys (str nimi-leveys "%")
+                 :muokattava? (fn [rivi arvo] (if (= -1 (:id rivi)) true false))}
+                {:otsikko "Johto- ja hallintokorvaus"
+                 :nimi :nimi
+                 :tyyppi :valinta
+                 :valinnat-fn #(map :nimi muut-toimenkuvat)
+                 :aseta (fn [rivi arvo]
+                          (assoc rivi :id -1 :nimi arvo :paivtetty? true :uusi-nimi arvo :vanha-id (:toimenkuva-id rivi)))
                  :luokka "yhteensa"
                  :leveys (str nimi-leveys "%")
                  :muokattava? (constantly true)})]
