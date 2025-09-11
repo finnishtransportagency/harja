@@ -63,7 +63,6 @@
           :muokattava? #(nil? (:id %))
           :aseta (fn [rivi arvo]
                    (let [rivi (assoc rivi :tyyppi arvo)]
-                     (e! (muutos-tiedot/->HaeMuutoksenTiedot rivi))
                      (muutos-tiedot/alusta-tyyppikohtaisia-arvoja arvo valittu-hoitokausi)
                      rivi))
           :kaariva-luokka "muutostyyppivalinta"

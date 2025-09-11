@@ -141,7 +141,7 @@
      (when-not indeksikorjaus-vahvistettu? [yleiset/vihje "Indeksikorjaus vahvistetaan kustannussuunnitelmassa."])]))
 
 
-(defn muutosten-hallinta-header [e! {:keys [haku-kaynnissa?] :as app}]
+(defn muutosten-hallinta-sisalto [e! {:keys [haku-kaynnissa?] :as app}]
   [:valinnat-ja-listaus
    [:h1 "Muutosten hallinta"]
    [:div.otsikko-ja-hoitokausi
@@ -166,7 +166,7 @@
          ;; Jos valittuna rivi, näytä lomake 
          [muutoslomake/muutoslomake e! app]
          ;; Muuten näytä sivun sisältö 
-         [muutosten-hallinta-header e! app])])))
+         [muutosten-hallinta-sisalto e! app])])))
 
 
 (defn muutokset-paatason-valilehti [_ur]
