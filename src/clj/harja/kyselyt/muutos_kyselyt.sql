@@ -132,12 +132,12 @@ INSERT INTO mhu_muutos_kustannusvaikutus (
     summa
   ) VALUES (
     :versio,
-    :id,
+    :muutos-id,
     :kustannuslaji,
     :tpi,
     :hoitokauden_alkuvuosi,
     :summa
-) ON CONFLICT (muutos, hoitokauden_alkuvuosi)
+) ON CONFLICT (muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi)
 DO UPDATE SET
   kustannuslaji        = EXCLUDED.kustannuslaji,
   toimenpideinstanssi  = EXCLUDED.toimenpideinstanssi,

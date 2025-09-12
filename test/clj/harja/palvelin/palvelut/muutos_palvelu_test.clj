@@ -268,7 +268,7 @@
         odotetut-luonnin-jalkeen (list {:id (inc max-id-ennen-tallennusta)
                                         :jjh-muutosten-summa 780M
                                         :kulu_kohdistus nil
-                                        :kustannusvaikutukset (list {:summa nil, :kustannuslaji nil, :toimenpideinstanssi nil})
+                                        :kustannusvaikutukset nil
                                         :liitteet nil
                                         :luonnos nil
                                         :nimi nil
@@ -294,7 +294,7 @@
         odotetut-updaten-jalkeen (list {:id (inc max-id-ennen-tallennusta)
                                         :jjh-muutosten-summa 780M
                                         :kulu_kohdistus nil
-                                        :kustannusvaikutukset (list {:summa nil, :kustannuslaji nil, :toimenpideinstanssi nil})
+                                        :kustannusvaikutukset nil
                                         :liitteet nil
                                         :luonnos nil
                                         :nimi nil
