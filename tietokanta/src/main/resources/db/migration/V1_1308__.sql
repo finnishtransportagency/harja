@@ -1,3 +1,5 @@
+-- Pysyvien muutosten tietomallimuutokset
+
 -- On joitakin tilanteita, missä toimenpiteet halutaan käyttöliittymässä järjestää ao. mukaisesti
 ALTER TABLE toimenpide ADD COLUMN jarjestys INTEGER;
 
@@ -21,3 +23,5 @@ ALTER TABLE mhu_muutos_kustannusvaikutus
     FOREIGN KEY (toimenpideinstanssi)
     REFERENCES toimenpideinstanssi(id);
 
+ALTER TABLE mhu_muutos_tehtava_ja_maaraluettelo
+    ADD CONSTRAINT uniikki_muutos_tehtava_ja_maara UNIQUE (muutos, versio, tehtava, hoitokauden_alkuvuosi);

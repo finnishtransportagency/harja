@@ -1,11 +1,11 @@
+-- Muutosten historiataulujen uudelleenluonti LIKE patternilla
+
 DROP TABLE IF EXISTS mhu_muutos_historia;
 DROP TABLE IF EXISTS mhu_muutos_liite_historia;
 DROP TABLE IF EXISTS mhu_muutos_kustannusvaikutus_historia;
 DROP TABLE IF EXISTS mhu_muutos_tehtava_ja_maaraluettelo_historia;
 DROP TABLE IF EXISTS mhu_muutos_kulu_historia;
 
-
--- TODO: Tarkista mitä asioita ei haluta kopioida historiatauluihin LIKE komennolla käyttäen EXCLUDING
 -- Historiataulut --
 -- https://www.postgresql.org/docs/current/sql-createtable.html#SQL-CREATETABLE-PARMS-LIKE
 
@@ -26,6 +26,8 @@ CREATE TABLE mhu_muutos_liite_historia
     LIKE mhu_muutos_liite EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
 
+CREATE INDEX mhu_muutos_liite_historia_mv_idx ON mhu_muutos_liite (muutos, versio);
+
 --
 
 CREATE TABLE mhu_muutos_kustannusvaikutus_historia
@@ -33,7 +35,9 @@ CREATE TABLE mhu_muutos_kustannusvaikutus_historia
     LIKE mhu_muutos_kustannusvaikutus EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
 
-CREATE INDEX muutos_kustannusvaikutus_historia_idx ON mhu_muutos_kustannusvaikutus_historia (muutos, versio, hoitokauden_alkuvuosi);
+-- Sama rajoite, kuin perustaulussa
+CREATE UNIQUE INDEX mhu_muutos_kustannusvaikutus_historia_unique ON mhu_muutos_kustannusvaikutus_historia (muutos, hoitokauden_alkuvuosi);
+CREATE INDEX muutos_kustannusvaikutus_historia_mvt_idx ON mhu_muutos_kustannusvaikutus_historia (muutos, versio, toimenpideinstanssi);
 
 --
 
@@ -42,9 +46,16 @@ CREATE TABLE mhu_muutos_tehtava_ja_maaraluettelo_historia
     LIKE mhu_muutos_tehtava_ja_maaraluettelo EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
 
+-- Sama rajoite, kuin perustaulussa
+CREATE UNIQUE INDEX mhu_muutos_tehtava_ja_maaraluettelo_historia_unique ON mhu_muutos_tehtava_ja_maaraluettelo_historia (muutos, versio, tehtava, hoitokauden_alkuvuosi);
+CREATE INDEX mhu_muutos_tehtava_ja_maaraluettelo_historia_mvt_idx ON mhu_muutos_tehtava_ja_maaraluettelo_historia (muutos, versio, tehtava);
+
 --
 
 CREATE TABLE mhu_muutos_kulu_historia
 (
     LIKE mhu_muutos_kulu EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
+
+-- Sama rajoite, kuin perustaulussa
+CREATE UNIQUE INDEX mhu_muutos_kulu_historia_unique ON mhu_muutos_kulu_historia (muutos, versio, kulu);
