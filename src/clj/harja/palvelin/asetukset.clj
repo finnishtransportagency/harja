@@ -35,7 +35,7 @@
    (s/optional-key :testikayttajat) [{:kayttajanimi s/Str :kuvaus s/Str}]
    :tietokanta Tietokanta
    :tietokanta-replica Tietokanta
-   (s/optional-key :domain-nimi) {:harja-domain-url s/Str}
+   (s/optional-key :domain-nimi) s/Str
    :tarkkailija {:loop-odotus s/Int}
    :fim {:url s/Str
          (s/optional-key :tiedosto) s/Str
