@@ -2,12 +2,15 @@
   (:require [clojure.test :refer [deftest testing use-fixtures compose-fixtures is]]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
+            [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.tyokalut.yleiset :refer :all]
             [harja.palvelin.palvelut.suunnittelu.apurit :as apurit]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
-            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]))
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
+            [harja.kyselyt.urakat :as urakat-kyselyt]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -28,19 +31,14 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
-(defn muodosta-tarjous-toimenkuvista [toimenkuvat vuodet]
+(defn generoi-toimenkuville-vuosisummat [toimenkuvat vuodet]
   {:tarjous (mapv
               (fn [toimenkuva]
-                {:nimi (:nimi toimenkuva)
-                 :osio (:osio toimenkuva)
-                 :toimenkuva-id (:toimenkuva-id toimenkuva)
-                 :tehtava-id (:tehtava-id toimenkuva)
-                 :tehtavaryhma-id (:tehtavaryhma-id toimenkuva)
-                 :rahavaraus-id (:rahavaraus-id toimenkuva)
-                 :hoitovuosittaiset-arvot (mapv
-                                            (fn [vuosi]
-                                              {:vuosi (:vuosi vuosi) :summa (rand-int 1000)}) ;; Generoidaan satunnaiset summat
-                                            vuodet)})
+                (merge toimenkuva
+                  {:hoitovuosittaiset-arvot (mapv
+                                              (fn [vuosi]
+                                                {:vuosi (:vuosi vuosi) :summa (rand-int 1000)}) ;; Generoidaan satunnaiset summat
+                                              vuodet)}))
               toimenkuvat)})
 
 (deftest tallenna-yksinkertainen-tarjous-tietokantaan-onnistuneesti
@@ -177,7 +175,7 @@
 
         ;; Vuodet tietomallista
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli)
-        tarjous (muodosta-tarjous-toimenkuvista johto-ja-hallintokorvaukset vuodet)
+        tarjous (generoi-toimenkuville-vuosisummat johto-ja-hallintokorvaukset vuodet)
 
         vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
         tarjoukset-tietokannasta (q-map "SELECT * from tarjous")
@@ -188,28 +186,155 @@
     (is (= (count tarjoukset-tietokannasta) (count vuosittaiset-tarjoushinnat)))
     (is (= (count tietokantajohto-ja-hallintokorvaukset) (* (count vuodet) (count johto-ja-hallintokorvaukset))) "Tietokannasta löytyy johto-ja-hallintokorvaukset jokaiselle vuodelle.")))
 
-(deftest tallenna-ja-hae-johto-ja-hallintokorvaukset-tarjoukselle-onnistuu
+(deftest tallenna-ja-hae-johto-ja-hallintokorvaukset-tarjoukselle-2019-onnistuu
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+
+        vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
+        hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
         kayttaja-id (:id +kayttaja-jvh+)
-        ;; Käytetään kattohintana 1.1 x tavoitehintaa
-        kattohintakerroin 1.1
 
         ;; Muodostetaan johto-ja-hallinto-kustannuksia, joilla voi testata tallennuksia
         ;; Muodostetaan hankintakustannuksia, joilla voi testata tallennuksia
-        johto-ja-hallintokorvaukset [{:nimi "Valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
-                                     {:nimi "Vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
-                                     {:nimi "Päätoiminen apulainen / työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 4 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}]
+        muokattavat-jjh-korvaukset [{:nimi "Sopimusvastaava" :toimenkuva "sopimusvastaava" :osio "johto-ja-hallintokorvaus" :toimenkuva-id 1 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
+                                    {:nimi "Vastuunalainen työnjohtaja", :toimenkuva "Vastuunalainen työnjohtaja" :osio "johto-ja-hallintokorvaus" :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
+                                    {:nimi "Viherhoidosta vastaava henkilö", :toimenkuva "viherhoidosta vastaava henkilö" :osio "johto-ja-hallintokorvaus" :toimenkuva-id 3 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}]
 
-
-        ;; Vuodet tietomallista
-        vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli)
-        tarjous (muodosta-tarjous-toimenkuvista johto-ja-hallintokorvaukset vuodet)
+        tarjous (generoi-toimenkuville-vuosisummat muokattavat-jjh-korvaukset hoitovuosittaiset-arvot)
 
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
-        tarjoukset-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
+        tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
 
-    (is (= (count (butlast tarjoukset-tietokannasta)) (count johto-ja-hallintokorvaukset)))))
+        ;; Haetaan default toimenkuvat tietokannasta
+        urakan-toimenkuvat (tarjous-kyselyt/hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
+
+        toimenkuvat-tarjouksesta (filter #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) tarjous-tietokannasta)]
+
+    (is (= (count toimenkuvat-tarjouksesta) (count urakan-toimenkuvat)))))
+
+(deftest tallenna-ja-hae-johto-ja-hallintokorvaukset-tarjoukselle-2025-onnistuu
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+
+        vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
+        hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
+        kayttaja-id (:id +kayttaja-jvh+)
+
+        kaikki-urakan-toimenkuvat (tarjous-kyselyt/hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
+        kaikki-urakan-toimenkuvat (tarjous-kyselyt/jasenna-toimenkuvat-maksukausittain kaikki-urakan-toimenkuvat urakan-alkuvuosi)
+
+        tarjous (generoi-toimenkuville-vuosisummat kaikki-urakan-toimenkuvat hoitovuosittaiset-arvot)
+
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
+
+        ;; Haetaan default toimenkuvat tietokannasta
+        urakan-toimenkuvat (tarjous-kyselyt/hae-urakan-toimenkuvat db urakka-id (pvm/vuosi (:alkupvm urakan-tiedot)) hoitovuosittaiset-arvot)
+
+        toimenkuvat-tarjouksesta (filter #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) tarjous-tietokannasta)]
+
+    (is (= (count toimenkuvat-tarjouksesta) (count urakan-toimenkuvat)))
+    (is (= (:hoitovuosittaiset-arvot (first toimenkuvat-tarjouksesta)) (:hoitovuosittaiset-arvot (first urakan-toimenkuvat))))))
+
+(deftest muokkaa-johto-ja-hallintokorvaukset-tarjoukselle-2025-onnistuu
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+
+        vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
+        hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
+        kayttaja-id (:id +kayttaja-jvh+)
+
+        kaikki-urakan-toimenkuvat (tarjous-kyselyt/hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
+        kaikki-urakan-toimenkuvat (tarjous-kyselyt/jasenna-toimenkuvat-maksukausittain kaikki-urakan-toimenkuvat urakan-alkuvuosi)
+
+        tarjous (generoi-toimenkuville-vuosisummat kaikki-urakan-toimenkuvat hoitovuosittaiset-arvot)
+
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
+
+        ;; Haetaan default toimenkuvat tietokannasta
+        urakan-toimenkuvat (tarjous-kyselyt/hae-urakan-toimenkuvat db urakka-id (pvm/vuosi (:alkupvm urakan-tiedot)) hoitovuosittaiset-arvot)
+
+        toimenkuvat-tarjouksesta (filter #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) tarjous-tietokannasta)
+
+        ;; Varmistetaan, että tallennuksen jälkeen summat ovat oikein
+        _ (is (= (count toimenkuvat-tarjouksesta) (count urakan-toimenkuvat)))
+        _ (is (= (:hoitovuosittaiset-arvot (second toimenkuvat-tarjouksesta)) (:hoitovuosittaiset-arvot (second urakan-toimenkuvat))))
+
+        ;; Muokataan toisen toimenkuvan summia - Ensimmäinen on vain ennen urakkakauden alkua, joten se on vähä poikkeus
+        vuosisumma 999.0
+        muokatut-toimenkuvat (mapv (fn [toimenkuva]
+                                     (if (= (:toimenkuva-id toimenkuva) (:toimenkuva-id (second toimenkuvat-tarjouksesta)))
+                                       (assoc toimenkuva :hoitovuosittaiset-arvot (mapv (fn [vuosi]
+                                                                                          (if (= (:vuosi vuosi) urakan-alkuvuosi)
+                                                                                            (assoc vuosi :summa vuosisumma)
+                                                                                            vuosi))
+                                                                                    (:hoitovuosittaiset-arvot toimenkuva)))
+                                       toimenkuva))
+                               toimenkuvat-tarjouksesta)
+
+        ;; Poista vanhat toimenkuvat
+        muokattu-tarjous (remove #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) tarjous-tietokannasta)
+        ;; Päivitä tilalle muokatut
+        muokattu-tarjous (vec (concat muokattu-tarjous muokatut-toimenkuvat))
+
+        ;; Tallennetaan muokatut toimenkuvat
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin {:tarjous muokattu-tarjous})
+        muokattu-tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
+
+        muokatut-toimenkuvat-tarjouksesta (filter #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) muokattu-tarjous-tietokannasta)
+        _ (is (= vuosisumma (:summa (first (:hoitovuosittaiset-arvot (second muokatut-toimenkuvat-tarjouksesta))))))]))
+
+(deftest poista-toimenkuva-2025-onnistuu
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+
+        vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
+        hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
+        kayttaja-id (:id +kayttaja-jvh+)
+
+        kaikki-urakan-toimenkuvat (tarjous-kyselyt/hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
+        kaikki-urakan-toimenkuvat (tarjous-kyselyt/jasenna-toimenkuvat-maksukausittain kaikki-urakan-toimenkuvat urakan-alkuvuosi)
+
+        tarjous (generoi-toimenkuville-vuosisummat kaikki-urakan-toimenkuvat hoitovuosittaiset-arvot)
+
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
+        toimenkuvat-tarjouksesta (filter #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) tarjous-tietokannasta)
+        ;; Merkitään yksi poistetuksi
+        muokatut-toimenkuvat (mapv (fn [toimenkuva]
+                                     (if (= (:toimenkuva-id toimenkuva) (:toimenkuva-id (second toimenkuvat-tarjouksesta)))
+                                       (assoc toimenkuva :poistettu true)
+                                       toimenkuva))
+                               toimenkuvat-tarjouksesta)
+        ;; Poista vanhat toimenkuvat
+        muokattu-tarjous (remove #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) tarjous-tietokannasta)
+        ;; Päivitä tilalle muokatut
+        muokattu-tarjous (vec (concat muokattu-tarjous muokatut-toimenkuvat))
+
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin {:tarjous muokattu-tarjous})
+        muokattu-tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
+        muokatut-toimenkuvat-tarjouksesta (filter #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) muokattu-tarjous-tietokannasta)]
+
+    ;; Toimenkuvia on poiston jälkeen yksi vähemmän
+    (is (= (dec (count toimenkuvat-tarjouksesta)) (count muokatut-toimenkuvat-tarjouksesta)))))
+
 
 ;; Rajanpintatestit
 (deftest tallenna-tarjous-rajapinnasta-onnistuu
