@@ -1,14 +1,15 @@
 (ns harja.tiedot.urakka.kulut.mhu-kulut
   (:require
-    [tuck.core :as tuck]
-    [harja.ui.viesti :as viesti]
-    [harja.tyokalut.tuck :as tuck-apurit]
-    [harja.tiedot.urakka.urakka :as tila]
-    [harja.domain.kulut :as kulut]
-    [reagent.core :as r]
-    [clojure.string :as str]
-    [harja.tiedot.navigaatio :as navigaatio]
-    [harja.pvm :as pvm])
+   [tuck.core :as tuck]
+   [clojure.string :as str]
+
+   [harja.pvm :as pvm]
+   [harja.tiedot.urakka :as u]
+   [harja.ui.viesti :as viesti]
+   [harja.domain.kulut :as kulut]
+   [harja.tyokalut.tuck :as tuck-apurit]
+   [harja.tiedot.urakka.urakka :as tila]
+   [harja.tiedot.navigaatio :as navigaatio])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
 (defrecord AsetaNykyhetki [nykyhetki])
@@ -50,6 +51,7 @@
 (defrecord HaeUrakanKulut [hakuparametrit])
 (defrecord HaeUrakanToimenpiteet [hakuparametrit])
 (defrecord OnkoLaskunNumeroKaytossa [laskun-numero])
+(defrecord HaeUrakanMuutostyot [hakuparametrit])
 
 (defrecord KutsuEpaonnistui [tulos parametrit])
 
@@ -58,6 +60,7 @@
 (defrecord ToimenpidehakuOnnistui [tulos])
 (defrecord HaeUrakanTehtavaryhmanTehtavatOnnistui [tulos parametrit])
 (defrecord KuluhakuOnnistui [tulos])
+(defrecord HaeUrakanMuutostyotOnnistui [tulos])
 
 (defrecord LataaLiite [id])
 (defrecord PoistaLiite [id])
@@ -439,7 +442,9 @@
         (fn [e!]
           (e! (->HaeUrakanKulut {:id (-> @tila/tila :yleiset :urakka :id)
                                  :alkupvm alkupvm
-                                 :loppupvm loppupvm}))))
+                                 :loppupvm loppupvm})
+            (e! (->HaeUrakanMuutostyot {:alkupvm alkupvm
+                                        :loppupvm loppupvm})))))
 
       (-> app
         (assoc :valittu-hoitokausi [alkupvm loppupvm])
@@ -570,6 +575,24 @@
          :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] + 1))
 
+  HaeUrakanMuutostyot
+  (process-event [{:keys [hakuparametrit]} app]
+    (varmista-kasittelyjen-jarjestys
+      (tuck-apurit/post! :hae-urakan-muutostyot
+        {:valittu-hoitokausi [(:alkupvm hakuparametrit) (:loppupvm hakuparametrit)]
+         :urakka-id @navigaatio/valittu-urakka-id}
+        {:onnistui           ->HaeUrakanMuutostyotOnnistui
+         :epaonnistui        ->KutsuEpaonnistui
+         :epaonnistui-parametrit [{:viesti "Urakan tehtäväryhmien ja toimenpiteiden haku epäonnistui"}]
+         :paasta-virhe-lapi? true}))
+    (update-in app [:parametrit :haetaan] + 1))
+
+  HaeUrakanMuutostyotOnnistui
+  (process-event [{tulos :tulos} app]
+    (-> app
+      (update-in [:parametrit :haetaan] dec)
+      (assoc :urakan-muutostyot tulos)))
+
   HaeUrakanKulut
   (process-event [{{:keys [id alkupvm loppupvm kuukausi] :as viimeisin-haku} :hakuparametrit} app]
     (let [alkupvm (or alkupvm (first kuukausi))
@@ -605,20 +628,20 @@
   (process-event
     [{:keys [urakka tehtavaryhma nro]} app]
     (when  (and tehtavaryhma (:id tehtavaryhma)) (tuck-apurit/post! :hae-tehtavaryhman-tehtavat-urakalle
-                                                  {:urakka-id (:id urakka)
-                                                   :tehtavaryhma-id (:id tehtavaryhma)}
-                                                  {:onnistui ->HaeUrakanTehtavaryhmanTehtavatOnnistui
-                                                   :onnistui-parametrit [{:nro nro}]
-                                                   :epaonnistui ->KutsuEpaonnistui
-                                                   :epaonnistui-parametrit [{:viesti "Tehtävien haku epäonnistui"}]
-                                                   :paasta-virhe-lapi? true}))
+                                                   {:urakka-id (:id urakka)
+                                                    :tehtavaryhma-id (:id tehtavaryhma)}
+                                                   {:onnistui ->HaeUrakanTehtavaryhmanTehtavatOnnistui
+                                                    :onnistui-parametrit [{:nro nro}]
+                                                    :epaonnistui ->KutsuEpaonnistui
+                                                    :epaonnistui-parametrit [{:viesti "Tehtävien haku epäonnistui"}]
+                                                    :paasta-virhe-lapi? true}))
     (-> app (assoc-in [:lomake :kohdistukset nro :tehtavaryhman-tehtavat] nil)
       (assoc-in [:lomake :kohdistukset nro :tehtava] nil)
       (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] true)))
 
 
   HaeUrakanTehtavaryhmanTehtavatOnnistui
-   (process-event [{tulos :tulos {:keys [nro]} :parametrit} app]
+  (process-event [{tulos :tulos {:keys [nro]} :parametrit} app]
     (let
       [lomake (:lomake app)
        lomake (-> lomake

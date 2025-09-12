@@ -499,3 +499,14 @@ DO UPDATE SET
   syy                                = EXCLUDED.syy,
   muokattu                           = NOW(),
   muokkaaja                          = EXCLUDED.luoja;
+
+
+-- name: hae-urakan-muutostyot
+SELECT  tyyppi, 
+        nimi, 
+        voimassa_alkaen  
+ FROM mhu_muutos 
+WHERE tyyppi =  'muutostyo'::MHU_MUUTOSTYYPPI
+  AND urakka = :urakka
+  AND (voimassa_alkaen BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND poistettu IS FALSE;

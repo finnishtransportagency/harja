@@ -541,6 +541,19 @@
                                               :valittu-hoitokausi valittu-hoitokausi}))))
 
 
+(defn hae-urakan-muutostyot
+  "Hakee kululomakkeeseen laaditut muutostyöt, jotta näille voi kirjata kuluja"
+  [db kayttaja
+   {:keys [urakka-id valittu-hoitokausi] :as _tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+        alkupvm (str hoitokauden-alkuvuosi "-10-01")
+        loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")]
+    (muutos-kyselyt/hae-urakan-muutostyot db {:urakka urakka-id
+                                              :alkupvm alkupvm
+                                              :loppupvm loppupvm})))
+
+
 (defn tallenna-rahavarausmuutosten-syyt
   [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet rivit]}]
   (log/debug "Tallenna rahavarausmuutosten syyt" urakka-id valittu-hoitokausi rivit)
@@ -590,6 +603,10 @@
         :tallenna-muutos
         (fn [kayttaja tiedot]
           (tallenna-muutos (:db this) kayttaja tiedot))
+        
+        :hae-urakan-muutostyot
+        (fn [kayttaja tiedot]
+          (hae-urakan-muutostyot (:db this) kayttaja tiedot))
 
         :tallenna-rahavarausmuutosten-syyt
         (fn [kayttaja tiedot]
