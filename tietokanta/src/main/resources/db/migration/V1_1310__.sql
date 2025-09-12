@@ -35,8 +35,6 @@ CREATE TABLE mhu_muutos_kustannusvaikutus_historia
     LIKE mhu_muutos_kustannusvaikutus EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
 
--- Sama rajoite, kuin perustaulussa
-CREATE UNIQUE INDEX mhu_muutos_kustannusvaikutus_historia_unique ON mhu_muutos_kustannusvaikutus_historia (muutos, hoitokauden_alkuvuosi);
 CREATE INDEX muutos_kustannusvaikutus_historia_mvt_idx ON mhu_muutos_kustannusvaikutus_historia (muutos, versio, toimenpideinstanssi);
 
 --
@@ -46,8 +44,6 @@ CREATE TABLE mhu_muutos_tehtava_ja_maaraluettelo_historia
     LIKE mhu_muutos_tehtava_ja_maaraluettelo EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
 
--- Sama rajoite, kuin perustaulussa
-CREATE UNIQUE INDEX mhu_muutos_tehtava_ja_maaraluettelo_historia_unique ON mhu_muutos_tehtava_ja_maaraluettelo_historia (muutos, versio, tehtava, hoitokauden_alkuvuosi);
 CREATE INDEX mhu_muutos_tehtava_ja_maaraluettelo_historia_mvt_idx ON mhu_muutos_tehtava_ja_maaraluettelo_historia (muutos, versio, tehtava);
 
 --

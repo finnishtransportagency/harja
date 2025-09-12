@@ -32,6 +32,9 @@ CREATE OR REPLACE FUNCTION paivita_mhu_muutos_liite_historia()
     RETURNS TRIGGER AS
 $$
 BEGIN
+    -- Vanha rivi talteen historiaan, mutta ei inkrementoida versiota tai päivitetä validi_aikana-saraketta.
+    -- Uusi versionumero saadaan mhu_muutos-taulua päivittämällä, joka välitetään sitten eteenpäin lapsitauluihin niiden
+    -- rivejä päivittäessä
     INSERT INTO mhu_muutos_liite_historia
     VALUES (OLD.*);
     RETURN NEW;
@@ -50,17 +53,12 @@ CREATE OR REPLACE FUNCTION paivita_mhu_muutos_kustannusvaikutus_historia()
     RETURNS TRIGGER AS
 $$
 BEGIN
-    IF TG_OP IN ('UPDATE', 'DELETE') THEN
-        INSERT INTO mhu_muutos_kustannusvaikutus_historia
-        VALUES (OLD.*);
-    END IF;
-
-    IF TG_OP = 'UPDATE' THEN
-        NEW.versio := OLD.versio + 1;
-        RETURN NEW;
-    ELSE
-        RETURN OLD;
-    END IF;
+    -- Vanha rivi talteen historiaan, mutta ei inkrementoida versiota tai päivitetä validi_aikana-saraketta.
+    -- Uusi versionumero saadaan mhu_muutos-taulua päivittämällä, joka välitetään sitten eteenpäin lapsitauluihin niiden
+    -- rivejä päivittäessä
+    INSERT INTO mhu_muutos_kustannusvaikutus_historia
+    VALUES (OLD.*);
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -76,6 +74,9 @@ CREATE OR REPLACE FUNCTION paivita_mhu_muutos_tehtava_ja_maaraluettelo_historia(
     RETURNS TRIGGER AS
 $$
 BEGIN
+    -- Vanha rivi talteen historiaan, mutta ei inkrementoida versiota tai päivitetä validi_aikana-saraketta.
+    -- Uusi versionumero saadaan mhu_muutos-taulua päivittämällä, joka välitetään sitten eteenpäin lapsitauluihin niiden
+    -- rivejä päivittäessä
     INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo_historia
     VALUES (OLD.*);
     RETURN NEW;
