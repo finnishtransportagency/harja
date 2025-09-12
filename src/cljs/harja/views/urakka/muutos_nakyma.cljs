@@ -1,24 +1,26 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
-  (:require [clojure.string :as str]
-            [reagent.core :as r]
+  (:require [reagent.core :as r]
             [tuck.core :as tuck]
-            [harja.tyokalut.tuck :as tuck-apurit]
+            [clojure.string :as str]
+
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
+            [harja.ui.modal :as modal]
+            [harja.tiedot.urakka :as u]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ui-ikonit]
-            [harja.ui.grid :as grid]
-            [harja.ui.debug :refer [debug]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
-            [harja.ui.valinnat :as valinnat]
-            [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.domain.muutos-domain :as muutos-domain]
+            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.urakka.muutos-tiedot :as muutos-tiedot]
-            [harja.domain.muutos-domain :as muutos-domain]))
+            [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]))
 
 (defn liite-kentta
   "Lomakkeen liitekenttä, joka näyttää liitteiden listauksen ja mahdollistaa uusien liitteiden lisäämisen."
@@ -160,11 +162,14 @@
                             (str/join ", " (:puuttuvat-pakolliset-kentat muokattava-muutos))
                             ". Korjaa ne ja yritä uudelleen.")])
                        [napit/tallenna "Tallenna"
-                        #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos
-                           muutos)
+                        #(do 
+                           (muutos-tiedot/scrollaa-viimeksi-valitulle-riville)
+                           (tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaMuutos muutos))
                         {:disabled tallennus-kesken?}]
                        [napit/peruuta "Peruuta"
-                        #(e! (muutos-tiedot/->MuokkaaMuutosta nil))
+                        #(do 
+                           (muutos-tiedot/scrollaa-viimeksi-valitulle-riville)
+                           (e! (muutos-tiedot/->MuokkaaMuutosta nil)))
                         {:disabled tallennus-kesken?}]])}
         ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
         (into []
@@ -292,6 +297,7 @@
           :voi-kumota? false
           :voi-poistaa? (constantly false)
           :voi-muokata? true
+          :piilota-toiminnot? true
           :tallenna #(tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaRahavarausmuutostenSyyt %)
           :rivi-jalkeen-fn (fn []
                              [{:teksti "Tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :yhteenveto-vayla true}
@@ -318,43 +324,218 @@
            :muokattava? (constantly false)}]
          rivit])}]))
 
-(def lasketut-muutokset-aputeksti
-  "Tavoitehintamuutosten laskennassa käytetään Harjan suunniteltuja ja toteutuneita määriä sekä palvelusopimuksen mukaisia kaavoja.")
 
-(defn- lasketut-muutokset [e! {:keys [lasketut-muutokset] :as app}]
+(defn- aseta-yksikkohinta-modal [e!
+                                 {:keys [yksikkohinta-modal-auki?] :as _app}
+                                 {:keys [tehtava aikaisemmat-yksikkohinnat] :as valittu-rivi}]
+  (let [voi-kirjoittaa? true
+        voi-tallentaa? (some? (:yksikkohinta valittu-rivi))]
+
+    [modal/modal
+     {:otsikko ""
+      :nakyvissa? yksikkohinta-modal-auki?
+      :sulje-fn #(e! (muutos-tiedot/->SuljeYksikkohintaModal))}
+
+     ;; Moodalin sisältö 
+     [lomake/lomake
+      {:ei-borderia? true
+       :voi-muokata? voi-kirjoittaa?
+       :tarkkaile-ulkopuolisia-muutoksia? true
+       :muokkaa! #(e! (muutos-tiedot/->MuokkaaYksikkohintaa (lomake/ilman-lomaketietoja %) aikaisemmat-yksikkohinnat))
+
+       :header [:div.col-md-12
+                [:h2.header-yhteiset "Aseta tehtävän yksikköhinta"]
+                [:hr]
+                [:div.body-caption.lihavoitu "Tehtävä"]
+                [:div.body tehtava]]
+
+       :footer (let [peruuta-fn #(e! (muutos-tiedot/->SuljeYksikkohintaModal))
+                     tallenna-fn #(e! (muutos-tiedot/->TallennaYksikkohinta valittu-rivi))]
+                 [:<>
+                  [:hr]
+                  [:div.muokkaus-modal-napit
+                   [napit/tallenna "Tallenna" #(tallenna-fn) {:disabled (not voi-tallentaa?)}]
+                   [napit/yleinen-toissijainen "Peruuta" #(peruuta-fn)]]])}
+
+      [(lomake/rivi
+         {:otsikko "Yksikköhinta"
+          :nimi :yksikkohinta
+          :tyyppi :valinta
+          :pakollinen? true
+          :vayla-tyyli? true
+          ;; Vektori jossa mappeja,  rakenne -> hae-hoitovuosien-yksikkohinnat
+          :valinnat (into [] aikaisemmat-yksikkohinnat)
+          ;; Näytä :valinta -> aikaisemmat-yksikkohinnat
+          :valinta-nayta #(:valinta %)
+          ;; Täsmää :yksikkohinta valintojen kentän :arvo avaimeen 
+          :valinta-arvo #(:arvo %)
+          :validoi [#(when (nil? %) "Valitse yksikköhinta")]
+          ::lomake/col-luokka "col-xs-6"})]
+      valittu-rivi]
+
+     ;; Hyrrän kuvaus: 
+     ;; Näytetään Modal / dropdown, jos tehtävätoteumia (urakan.tehtavat.maara) ei oo tehty ollenkaan 
+     ;; Dropdownissa pitäs tarjota tilanteen mukaan edellisten vuosien laskettu yksikköhinta
+     ;; Jos niitäkään ei ole, modalia ei näytetä, ja tavoitehintamuutos pitää syöttää käsin
+
+     ;; Jätetään "Aseta yksikköhinta"" valinta riville jos se on asetettu  
+     ;; -> eli mahdollisuus päivittää 
+     ;; Haetaan näkymään tullessa aina nykytilanne (mikäli data muuttunut) 
+     ;; Jos kirjattu tavoitehinta manuaalisesti, ja viimevuoden dataa tulee, anna "aseta yksikköhinta" valinta 
+     ]))
+
+
+(defn- lasketut-muutokset [e! 
+                           {:keys [tehtava-maaramuutokset 
+                                   valittu-modal-tehtava haku-kaynnissa?] :as app}]
+  
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :lasketut-muutokset
     :taulukon-nakyvyys-event #(e! (muutos-tiedot/->ToggleTaulukonNakyvyys :lasketut-muutokset))
     :otsikko "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"
-    :summa (reduce + 0 (map :tavoitehinnan-muutos lasketut-muutokset))
-    :toiminnot (fn [e! app]
-                 ;; Tämä muokkaus mahdollistaa vain syyn lisäämisen
+    :summa (reduce + 0 (map :tavoitehinnan_muutos tehtava-maaramuutokset))
+    :toiminnot (fn [_e! _app]
                  [:span
-                  [yleiset/vihje lasketut-muutokset-aputeksti]])
+                  [yleiset/vihje (str 
+                                   "Tavoitehintamuutosten laskennassa käytetään Harjan suunniteltuja ja toteutuneita määriä sekä palvelusopimuksen mukaisia kaavoja. " 
+                                   "Kirjatun määrän puuttuessa yksikköhinnan voi asettaa aikaisempien hoitovuosien perusteella. " 
+                                   "Yksikköhintatietojen puuttuessa tulee tavoitehinnan muutos asettaa käsin.")]])
+    
     :taulukko
-    (fn [e! app]
-      [grid/grid
-       {:tunniste :id
-        :luokat ["lasketut-muutokset-grid"]
-        :tyhja "Ei laskettuja muutoksia."
-        :voi-lisata? false
-        :voi-kumota? false
-        :voi-poistaa? (constantly false)
-        :voi-muokata? true
-        :tallenna #(e! (muutos-tiedot/->TallennaLaskettujenMuutostenSyyt %))}
+    (fn [e! _app]
+      (let [;; Värjätään tällä väliotsikot design mukaiseksi 
+            ;; Väliotsikot asetetaan backend 
+            solun-luokka-fn (fn [_arvo rivi]
+                              (when (or 
+                                      haku-kaynnissa? 
+                                      (some? (:valiotsikko rivi))) "vaalen-tumma-tausta"))]
 
-       ;; taulukon kentät
-       [{:otsikko "Tehtävä" :nimi :tehtava :tyyppi :string :leveys 15}
-        {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys 15}
-        {:otsikko "Muutoksen syy / lisätieto" :nimi :syy :tyyppi :string :leveys 35}
-        {:otsikko "Suunniteltu määrä" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
-        {:otsikko "Kirjattu määrä" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
-        {:otsikko "Määrämuutos (+/-)" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
-        {:otsikko "Kirjatut kulut (€)" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
-        {:otsikko "Kirjatut kulut (€)" :nimi :suunniteltu_maara :tyyppi :numero :leveys 15}
-        {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero
-         :fmt fmt/euro-opt :tasaa :oikea :leveys 15}]
-       lasketut-muutokset])}])
+        [:<>
+         ;; "Aseta yksikköhinta" modal joka aukeaa kun rivin nappia painetaan
+         ;; Tälle passataan valittu rivi / valittu tehtävä 
+         [aseta-yksikkohinta-modal e! app valittu-modal-tehtava]
+
+         (when haku-kaynnissa?
+           [:div.lasketut-muutokset-grid-haku
+            [ajax-loader-pieni "Haku käynnissä..."]])
+
+         ;; Tehtävä ja määrämuutos taulukko 
+         [grid/grid
+          {:tunniste :id
+           ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
+           :sivuta 20
+           :voi-kumota? false
+           :voi-lisata? false
+           :piilota-toiminnot? true
+           :tallenna-vain-muokatut true
+           :piilota-sivutus-footer? true
+           :voi-poistaa? (constantly false)
+           :voi-muokata? (not haku-kaynnissa?)
+           :luokat ["lasketut-muutokset-grid"]
+           ;; Tietoja ladataan ensimmäistä kertaa, näytä loaderi 
+           :tyhja (if haku-kaynnissa?
+                    [ajax-loader-pieni "Haku käynnissä..."]
+                    "Aikavälille ei löytynyt tuloksia.")
+           :tallenna (fn [sisalto]
+                       (tuck-apurit/e-kanavalla! e! muutos-tiedot/->TallennaTehtavaMaaramuutokset sisalto))}
+
+          [{:otsikko "Tehtävä"
+            :nimi :tehtava
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly true)
+            :tyyppi :komponentti
+            :komponentti (fn [{:keys [tehtava valiotsikko]}]
+                           (if tehtava
+                             [:<> tehtava]
+                             [:div.body-text.strong valiotsikko]))
+            :leveys 35}
+
+           {:otsikko "Yksikkö"
+            :nimi :yksikko
+            :tyyppi :string
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 10}
+
+           {:otsikko "Muutoksen syy / lisätieto"
+            :nimi :syy
+            :tyyppi :text
+            :solun-luokka solun-luokka-fn
+            :muokattava? #(and
+                            (not haku-kaynnissa?)
+                            ;; Älä anna muokata väliotsikkoja 
+                            (nil? (:valiotsikko %)))
+            :leveys 25}
+
+           {:otsikko "Suunniteltu määrä"
+            :nimi :suunniteltu_maara
+            :tyyppi :numero
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
+
+           {:otsikko "Kirjattu määrä"
+            :nimi :maara
+            :tyyppi :numero
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
+
+           {:otsikko "Määrämuutos (+/-)"
+            :nimi :maaramuutos
+            :tyyppi :numero
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
+
+           {:otsikko "Kirjatut kulut (€)"
+            :nimi :kirjatut_kulut_summa
+            :tyyppi :numero
+            :fmt fmt/euro-opt
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
+
+           {:otsikko "Yksikkö-hinta (€)"
+            :nimi :yksikkohinta
+            :tyyppi :numero
+            :fmt fmt/euro-opt
+            :solun-luokka solun-luokka-fn
+            :muokattava? (constantly false)
+            :leveys 15}
+
+           {:otsikko "Tavoitehinnan muutos (€)"
+            :nimi :tavoitehinnan_muutos
+            :tyyppi :euro
+            :fmt (fn [v r] (if (:valiotsikko r) v (fmt/euro-opt v)))
+            :tasaa :oikea
+            :solun-luokka solun-luokka-fn
+            ;; Annetaanko kirjata tavoitehinta päätellään takapäässä
+            :muokattava? #(and
+                            (not haku-kaynnissa?)
+                            (true? (:anna-kirjata-tavoitehinta? %)))
+            :leveys 22}
+
+           ;; Aseta yksikköhinta
+           {:otsikko ""
+            :tyyppi :komponentti
+            :solun-luokka solun-luokka-fn
+            :komponentti (fn [{:keys [maara tehtava_id] :as valittu-rivi}
+                              {:keys [muokataan?] :as _grid}]
+                           [:<>
+                            ;; Näytä valinta mikäli toteumia ei ole 
+                            ;; sekä aikaisemman vuoden yksikköhinta on saatavilla (anna-kirjata-tavoitehinta? kertoo tämän)
+                            (when (and
+                                    maara
+                                    (= maara 0)
+                                    (not muokataan?)
+                                    (not (:anna-kirjata-tavoitehinta? valittu-rivi)))
+                              [:div.nappi-toissijainen
+                               {:on-click #(e! (muutos-tiedot/->AvaaYksikkohintaModal valittu-rivi tehtava_id))} "Aseta yksikköhinta"])])
+            :leveys 22}]
+
+          tehtava-maaramuutokset]]))}])
+
 
 (defn- kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
   [kehystetty-avattava-grid e! app
@@ -373,21 +554,47 @@
         :voi-lisata? false
         :voi-kumota? false
         :voi-poistaa? (constantly false)
-        :voi-muokata? false}
+        :voi-muokata? false
+        :rivin-luokka (fn [arvo _]
+                        (let [rivin-id (:id arvo)
+                              viimeksi-klikattu-id (-> app :viimeksi-valittu :id)]
+                          (when (= viimeksi-klikattu-id rivin-id) "viimeksi-valittu-tausta")))}
 
        ;; taulukon kentät
-       [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys 15
+       [{:otsikko "Tyyppi"
+         :nimi :tyyppi
+         :tyyppi :string
+         :leveys 15
          :fmt (fn [arvo]
                 (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))}
-        {:otsikko "Muutoksen syy" :nimi :syy :tyyppi :string :leveys 35}
-        {:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :pvm :leveys 15}
-        {:otsikko "Tavoitehinnan muutos (€)" :nimi :tavoitehinnan-muutos :tyyppi :numero
-         :fmt fmt/euro-opt :tasaa :oikea :leveys 15}
-        {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 10 :tasaa :oikea
+
+        {:otsikko "Muutoksen syy"
+         :nimi :syy
+         :tyyppi :string
+         :leveys 35}
+
+        {:otsikko "Voimassa alkaen"
+         :nimi :voimassa_alkaen
+         :tyyppi :pvm
+         :leveys 15}
+
+        {:otsikko "Tavoitehinnan muutos (€)"
+         :nimi :tavoitehinnan-muutos
+         :tyyppi :numero
+         :fmt fmt/euro-opt
+         :tasaa :oikea
+         :leveys 15}
+
+        {:otsikko ""
+         :nimi :toiminnot
+         :tyyppi :komponentti
+         :leveys 10
+         :tasaa :oikea
          :komponentti (fn [rivi]
                         [napit/muokkaa "Muokkaa"
                          #(e! (muutos-tiedot/->MuokkaaMuutosta rivi))])}]
        kirjatut-muutokset])}])
+
 
 (defn muutoslistaus [e! app]
   [:span.muutoslistaus
@@ -408,7 +615,7 @@
 
 (defn- muutosten-vaikutus
   "Yhteenveto muutosten vaikutuksista."
-  [e! {:keys [budjettitavoitteet] :as app}]
+  [_e! {:keys [budjettitavoitteet] :as _app}]
   (let [indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu? budjettitavoitteet)]
     [:div.muutosten-vaikutus
     [:h2 "Muutosten vaikutus"]
@@ -425,33 +632,29 @@
 
 
 (defn muutokset-alempi-valilehti*
-  [e! app]
-  (let [urakka (:urakka @tila/yleiset)]
-    (komp/luo
-      (komp/sisaan-ulos
-        #(do
-           (when urakka
-             (e! (muutos-tiedot/->ValitseUrakka urakka))
-             (e! (muutos-tiedot/->HaeUrakanMuutostiedot urakka))))
-        #(e! (muutos-tiedot/->NakymastaPoistuttiin)))
-      (komp/watcher nav/valittu-urakka
-        (fn [_ _ urakka]
-          (when urakka
-            (e! (muutos-tiedot/->ValitseUrakka urakka)))))
-      (fn [e! app]
-        [:span.muutokset-sivu
-         (if (:muokattava-muutos app)
-           [muutoslomake e! app]
-           [:valinnat-ja-listaus
-            [:h1 "Muutosten hallinta"]
-            [:div.otsikko-ja-hoitokausi
-             [valinnat/urakan-hoitokausi-tuck (:valittu-hoitokausi app)
-              (:urakan-hoitokaudet app)
-              #(e! (muutos-tiedot/->HoitokausiVaihdettu urakka %))]]
-            [muutosten-vaikutus e! app]
-            [muutoslistaus e! app]])
-         [debug app]]))))
+  [e! _app]
+  (komp/luo
+    (komp/lippu muutos-tiedot/nakymassa?)
+    (komp/sisaan #(e! (muutos-tiedot/->HaeUrakanMuutostiedot)))
 
-(defn muutokset-paatason-valilehti [ur]
-  (fn [ur]
-    [tuck/tuck tila/muutokset muutokset-alempi-valilehti*]))
+    (fn [e! {:keys [haku-kaynnissa?] :as app}]
+      [:span.muutokset-sivu
+       (if (:muokattava-muutos app)
+         ;; Jos muokattava muutos valittu? onkohan vielä tehty 
+         [muutoslomake e! app]
+         ;; Muutosten listaus 
+         [:valinnat-ja-listaus
+          ;; Näkymän otsikko 
+          [:h1 "Muutosten hallinta"]
+          [:div.otsikko-ja-hoitokausi
+           ;; Hoitokausi valinta 
+           [urakka-valinnat/paivittava-urakkavuosi-tuck
+            @u/valittu-aikavali
+            #(e! (muutos-tiedot/->HaeUrakanMuutostiedot)) haku-kaynnissa?  false]]
+
+          [muutosten-vaikutus e! app]
+          [muutoslistaus e! app]])])))
+
+
+(defn muutokset-paatason-valilehti [_ur]
+  (fn [_ur] [tuck/tuck tila/muutokset muutokset-alempi-valilehti*]))
