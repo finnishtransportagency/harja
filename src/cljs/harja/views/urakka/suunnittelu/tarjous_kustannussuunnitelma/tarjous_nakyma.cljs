@@ -100,6 +100,7 @@
                                                                                     kaikki-toimenkuvat))]
                                               (merge (assoc toimenkuva
                                                        :osio "johto-ja-hallintokorvaus"
+                                                       :maksukausi "vuosi"
                                                        :poistettu nil
                                                        :yhteensa 0
                                                        :rahavaraus-id nil
@@ -126,12 +127,13 @@
                  :aseta (fn [rivi arvo]
                           (merge
                             (assoc rivi :id -1
-                                   :nimi arvo
-                                   :toimenkuva (str/lower-case arvo)
-                                   :uusi-nimi arvo
-                                   :vanha-id (:toimenkuva-id rivi)
-                                   :osio "johto-ja-hallintokorvaus"
-                                   :rahavaraus-id nil)
+                              :nimi arvo
+                              :toimenkuva (str/lower-case arvo)
+                              :uusi-nimi arvo
+                              :vanha-id (:toimenkuva-id rivi)
+                              :osio "johto-ja-hallintokorvaus"
+                              :maksukausi "vuosi"
+                              :rahavaraus-id nil)
                             vuosi-map))
                  :luokka "yhteensa"
                  :leveys (str nimi-leveys "%")
@@ -148,6 +150,7 @@
                                    :uusi-nimi arvo
                                    :vanha-id (:toimenkuva-id rivi)
                                    :osio "johto-ja-hallintokorvaus"
+                                   :maksukausi "vuosi"
                                    :rahavaraus-id nil)
                             vuosi-map))
                  :luokka "yhteensa"

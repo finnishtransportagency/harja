@@ -20,6 +20,7 @@
   (into [] (reduce (fn [rivit tarjous-rivi]
                      (let [vuosiarvot (reduce (fn [uusi rivi]
                                                 (-> uusi
+                                                  (assoc :maksukausi (:maksukausi tarjous-rivi))
                                                   (assoc :poistettu (:poistettu tarjous-rivi))
                                                   (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
                                                   (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
