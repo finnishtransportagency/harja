@@ -24,16 +24,9 @@
       (* eperhoitovuosi vuosien-maara)
       vuosikohtainen-summa)))
 
-(defn yhdista-gridin-data-metadatan-kanssa [muutetut-rivit alkuperaiset-rivit]
-  "Yhdistää gridin muokatun datan alkuperäisten rivien metadata-kenttien kanssa"
-  (map (fn [muutettu-rivi]
-         (if-let [alkuperainen (first (filter #(= (:nimi %) (:nimi muutettu-rivi)) alkuperaiset-rivit))]
-           (merge alkuperainen muutettu-rivi) ; Metadata alkuperäisestä, uudet arvot muutetusta
-           muutettu-rivi)) ; Jos ei löydy alkuperäistä, käytä sellaisenaan
-    muutetut-rivit))
-
-(defn jyvita-eperhoitovuosi-hoitovuosille [rivi]
-  "Jyvittää € / hoitovuosi arvon hoitovuosikohtaisille kentille"
+(defn jyvita-eperhoitovuosi-hoitovuosille 
+  "Jyvittää € / hoitovuosi arvon hoitovuosikohtaisille kentille" 
+  [rivi]
   (let [eperhoitovuosi (:eperhoitovuosi rivi 0)
         vuosiavaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))]
     (if (> eperhoitovuosi 0)
@@ -41,9 +34,9 @@
         (merge rivi jyvitetyt-arvot))
       rivi)))
 
-;; Apufunktiot datan filttaamiseen ja muuntamiseen
-(defn muunna-tarjous-data [tarjous-tiedot]
+(defn muunna-tarjous-data 
   "Muuntaa bäkkärin tarjous-datan UI-gridille sopivaan muotoon"
+  [tarjous-tiedot]
   (when tarjous-tiedot
     (into [] (reduce (fn [rivit tarjous-rivi]
                        (let [vuosiarvot (reduce (fn [uusi rivi]
@@ -61,24 +54,29 @@
                          (concat rivit [lopputulos])))
                  [] (drop-last tarjous-tiedot))))) ; Jätetään viimeinen rivi pois, koska se on yhteenvetorivi
 
-(defn filtteri-hankinnat [taulukon-tiedot]
+(defn filtteri-hankinnat 
   "Filttaa hankinnat-tiedot taulukosta"
+  [taulukon-tiedot] 
   (into [] (filter #(some #{"hankintakustannukset" "tavoitehintaiset-rahavaraukset"} [(:osio %)]) taulukon-tiedot)))
 
-(defn filtteri-erillishankinnat [taulukon-tiedot]
+(defn filtteri-erillishankinnat 
   "Filttaa erillishankinnat-tiedot taulukosta"
+  [taulukon-tiedot]
   (into [] (filter #(some #{"erillishankinnat"} [(:osio %)]) taulukon-tiedot)))
 
-(defn filtteri-hoidonjohtopalkkiot [taulukon-tiedot]
+(defn filtteri-hoidonjohtopalkkiot 
   "Filttaa hoidonjohtopalkkio-tiedot taulukosta"
+  [taulukon-tiedot]
   (into [] (filter #(some #{"hoidonjohtopalkkio"} [(:osio %)]) taulukon-tiedot)))
 
-(defn filtteri-toimenkuvat [taulukon-tiedot]
-  "Filttaa johto-ja-hallintokorvaus (toimenkuvat) tiedot taulukosta"
+(defn filtteri-toimenkuvat
+   "Filttaa johto-ja-hallintokorvaus (toimenkuvat) tiedot taulukosta"
+  [taulukon-tiedot]
   (into [] (filter #(some #{"johto-ja-hallintokorvaus"} [(:osio %)]) taulukon-tiedot)))
 
-(defn laske-kaikkien-gridien-yhteensa [hankinnat erillishankinnat hoidonjohtopalkkiot joha vuositaulukon-otsikot]
+(defn laske-kaikkien-gridien-yhteensa 
   "Laskee kaikkien gridien hoitovuosikohtaiset arvot yhteen"
+  [hankinnat erillishankinnat hoidonjohtopalkkiot joha vuositaulukon-otsikot]
   (let [vuosiavaimet (map :nimi vuositaulukon-otsikot)
         kaikki-rivit (concat hankinnat erillishankinnat hoidonjohtopalkkiot joha)
         
