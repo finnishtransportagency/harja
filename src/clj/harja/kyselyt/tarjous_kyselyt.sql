@@ -18,7 +18,7 @@ INSERT INTO tarjous_johto_ja_hallintokorvaus (tarjous_id, urakka_id, hoitokauden
 VALUES (:tarjous_id, :urakka_id, :hoitokauden_alkuvuosi, :summa, :osio::suunnittelu_osio, :johto_ja_hallintokorvaus_toimenkuva_id, :tehtavaryhma_id, :tehtava_id, :luoja, NOW());
 
 -- name: hae-tarjouksen-tiedot
-select t.id as "tarjous-id", t.hoitokauden_alkuvuosi, t.urakka_id, t.tarjous_tavoitehinta, t.tarjous_kattohinta,
+SELECT t.id as "tarjous-id", t.hoitokauden_alkuvuosi, t.urakka_id, t.tarjous_tavoitehinta, t.tarjous_kattohinta,
        (SELECT array_agg(row(tk.id,
            CASE WHEN tk.osio = 'tavoitehintaiset-rahavaraukset'::suunnittelu_osio THEN r.nimi
                 WHEN tk.osio = 'hankintakustannukset'::suunnittelu_osio THEN 'Kilpailutettavat hankinnat'
@@ -33,8 +33,9 @@ select t.id as "tarjous-id", t.hoitokauden_alkuvuosi, t.urakka_id, t.tarjous_tav
         FROM tarjous_johto_ja_hallintokorvaus tj
                  LEFT JOIN johto_ja_hallintokorvaus_toimenkuva jjht ON jjht.id = tj.johto_ja_hallintokorvaus_toimenkuva_id
         WHERE tj.tarjous_id = t.id) as toimenkuvat
-from tarjous t
-where t.urakka_id = :urakka_id;
+  FROM tarjous t
+ WHERE t.urakka_id = :urakka_id
+ ORDER BY t.hoitokauden_alkuvuosi ASC;
 
 -- name: hae-tarjous-vuodella
 -- Haetaan tarjousrivi urakan ja vuoden perusteella.
@@ -86,6 +87,11 @@ SET summa = :summa,
     muokkaaja = :muokkaaja,
     muokattu = NOW()
 WHERE id = :id;
+
+-- name: poista-tarjouksen-johto-ja-hallintokorvaus<!
+DELETE FROM tarjous_johto_ja_hallintokorvaus
+ WHERE johto_ja_hallintokorvaus_toimenkuva_id = :toimenkuvaid
+   AND urakka_id = :urakkaid;
 
 -- name: hae-urakan-tarjous-tavoitehinnat
 SELECT id, hoitokausi as hoitovuosinro, urakka, tarjous_tavoitehinta

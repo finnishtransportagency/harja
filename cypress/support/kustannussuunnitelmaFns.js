@@ -8,6 +8,8 @@ import transit from "transit-js";
  * @param {boolean|undefined} onkoVahvistettu
  */
 
+const ladataanHarjaaTimeout = 30000;
+
 export function testaaTilayhteenveto(hoitovuosi, osionNimi, onkoVahvistettu) {
     // Valitse aluksi haluttu hoitovuosi, jotta kohdistetaan testaus tietylle hoitovuodelle yhteenvedossa.
     cy.get('[data-cy="hoitokausi-jarjestysluvulla"]')
@@ -413,6 +415,9 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
 
     cy.visit("/");
 
+    // Varmista, että pääsivu on ladattu ennen testien aloitusta
+    cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
+
     cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
     cy.contains('Näytä päättyneet').click();
@@ -443,6 +448,9 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
  */
 export function avaaUusiKustannussuunnittelu(urakkaNimi, alue) {
     cy.visit("/");
+
+    // Varmista, että pääsivu on ladattu ennen testien aloitusta
+    cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
 
     cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');

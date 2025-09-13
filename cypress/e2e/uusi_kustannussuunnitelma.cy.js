@@ -322,9 +322,9 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
             cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Muut kulut');
 
             // Löytyyhän lukuja
-            tarkistaToimenkuva2019Luvut('Sopimusvastaava', '', '', '0,00', '0,00', '12');
+            tarkistaToimenkuva2019Luvut('Sopimusvastaava', '0,00', '', '0,00', '0,00', '12');
             tarkistaToimenkuva2019Luvut('Vastuunalainen työnjohtaja', '0,00', '', '0,00', '0,00', '12');
-            tarkistaToimenkuva2019Luvut('Päätoiminen apulainen (talvikausi)', '', '', '0,00', '0,00', '5');
+            tarkistaToimenkuva2019Luvut('Päätoiminen apulainen (talvikausi)', '0,00', '', '0,00', '0,00', '5');
         });
 
         it('Muokkaa Johto- ja hallintokorvaus 2019', function () {

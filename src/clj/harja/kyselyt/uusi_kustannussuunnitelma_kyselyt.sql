@@ -287,12 +287,12 @@ SELECT ru.rahavaraus_id                          as rahavaraus_id,
        SUM(kt.summa_indeksikorjattu)             AS "suunniteltu-summa-indeksikorjattu"
   FROM rahavaraus_urakka ru
            LEFT JOIN kustannusarvioitu_tyo kt ON ru.rahavaraus_id = kt.rahavaraus_id
-   AND kt.sopimus = :sopimusid
-   AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
-        OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
-         left join rahavaraus r on r.id = ru.rahavaraus_id
+                 AND kt.sopimus = :sopimusid
+                 AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
+                       OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+           LEFT JOIN rahavaraus r on r.id = ru.rahavaraus_id
  WHERE ru.urakka_id = :urakkaid
-GROUP BY ru.rahavaraus_id, ru.urakkakohtainen_nimi, r.nimi;
+GROUP BY ru.rahavaraus_id, COALESCE(ru.urakkakohtainen_nimi, r.nimi);
 
 -- name: paivita-rahavaraus<!
 UPDATE kustannusarvioitu_tyo
@@ -413,31 +413,6 @@ SELECT id, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_in
     FROM urakka_tavoite
 WHERE urakka = :urakka-id
   AND hoitokausi = :hoitokausinumero;
-
--- name: hae-urakan-toimenkuvat
--- Hae urakkakohtaiset toimenkuvat
-WITH urakka_toimenkuvat AS (SELECT nimike
-                            FROM unnest(
-                                     CASE
-                                         WHEN (:urakan-alkuvuosi >= 2019 AND :urakan-alkuvuosi <= 2021)
-                                             THEN ARRAY ['sopimusvastaava', 'vastuunalainen työnjohtaja', 'päätoiminen apulainen', 'apulainen/työnjohtaja', 'viherhoidosta vastaava henkilö', 'hankintavastaava', 'harjoittelija']
-                                         WHEN (:urakan-alkuvuosi >= 2022 AND :urakan-alkuvuosi <= 2023)
-                                             THEN ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja', 'päätoiminen apulainen','apulainen/työnjohtaja', 'viherhoidosta vastaava henkilö', 'hankintavastaava', 'harjoittelija']
-                                         WHEN (:urakan-alkuvuosi = 2024)
-                                             THEN ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja','2. työnjohtaja', '3. työnjohtaja', 'viherhoidosta vastaava henkilö', 'harjoittelija']
-                                         ELSE ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja','2. työnjohtaja', '3. työnjohtaja', 'viherhoidosta vastaava henkilö', 'harjoittelija']
-                                         END
-                                 ) AS nimike)
-SELECT id, toimenkuva, toimenkuva as nimike
-FROM johto_ja_hallintokorvaus_toimenkuva jht
-WHERE jht."urakka-id" = :urakka-id
-AND jht.toimenkuva is not null
-UNION
-SELECT (select MIN(id) from johto_ja_hallintokorvaus_toimenkuva where toimenkuva = ut.nimike) AS id,
-       nimike                                                                                 AS toimenkuva,
-       nimike
-from urakka_toimenkuvat ut
-ORDER BY ID;
 
 -- name: hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
 -- Uudessa kustannusten suunnittelussa suunnitellaan edelleen tunnit ja tuntipalkat 19-22 alkaville urakoille

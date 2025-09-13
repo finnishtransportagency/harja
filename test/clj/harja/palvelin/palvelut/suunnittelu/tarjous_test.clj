@@ -89,9 +89,10 @@
         ;; Tallenna tarjous kantaan
         vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
         ;; Hae tarjous tietokannasta
-        tarjous-rivit-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
+        tarjousdb (tarjous-kyselyt/hae-tarjous db urakka-id)
+        tarjous-rivit-tietokannasta (filter #(contains? #{"tavoitehintaiset-rahavaraukset"} (:osio %)) (:tarjous tarjousdb))]
 
-    (is (= (count (butlast tarjous-rivit-tietokannasta)) (count rahavaraukset)) "Rahavarausten lisäksi tarjous palauttaa yhteenvetorivin.")))
+    (is (= (count tarjous-rivit-tietokannasta) (count rahavaraukset)) "Rahavarausten lisäksi tarjous palauttaa yhteenvetorivin.")))
 
 (deftest tallenna-laajat-kustannukset-ja-hae-kustannukset-tarjoukselle-onnistuu
   (let [db (:db jarjestelma)
@@ -110,17 +111,18 @@
         tarjous (update tarjous :tarjous (fn [rivit]
                                            (vec (concat rivit
                                                   [{:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
-                                                    :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
+                                                    :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
                                                    {:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
-                                                    :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
+                                                    :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
                                                    {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
-                                                    :hoitovuosittaiset-arvot [{:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}]))))
+                                                    :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}]))))
         ;; Tallenna tarjous kantaan
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
         ;; Hae tarjous tietokannasta
-        tarjoukset-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))]
+        tarjousdb (tarjous-kyselyt/hae-tarjous db urakka-id)
+        tarjoukset-tietokannasta (filter #(contains? #{"tavoitehintaiset-rahavaraukset" "erillishankinnat" "hoidonjohtopalkkio" "hankintakustannukset"} (:osio %)) (:tarjous tarjousdb))]
     ;; Varmistetaan, että tietokannasta löytyy oikea määrä rivejä
-    (is (= (count (butlast tarjoukset-tietokannasta)) (+ 3 (count rahavaraukset))))))
+    (is (= (count tarjoukset-tietokannasta) (+ 3 (count rahavaraukset))))))
 
 (deftest tallenna-hankintoja-tarjoukselle-onnistuu
   (let [db (:db jarjestelma)
@@ -231,7 +233,7 @@
         muokattu-tarjous (assoc-in tarjous [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa] uusi-summa)
         muokkausvastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ muokattu-tarjous)
         muokkausvastaus-kustannus (first (:tarjous muokkausvastaus))]
-    (is (= 10.00 (get-in ensivastaus-kustannus [:hoitovuosittaiset-arvot 0 :summa])))
+    (is (= 10.00 (get-in ensivastaus-kustannus [:hoitovuosittaiset-arvot 2 :summa])) "Vuoden 2023 summa on 10")
     (is (= uusi-summa (bigdec (get-in muokkausvastaus-kustannus [:hoitovuosittaiset-arvot 0 :summa]))))
     ;; Ensivastauksen rivimäärä on sama
     (is (= (count (:tarjous apurit/tarjous-tietomalli)) (count (:tarjous ensivastaus))))

@@ -13,7 +13,8 @@
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.kustannusarvioidut-tyot :as ka-q]
             [harja.kyselyt.kiinteahintaiset-tyot :as kiint-kyselyt]
-            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]))
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]))
 
 (defqueries "harja/kyselyt/uusi_kustannussuunnitelma_kyselyt.sql"
   {:positional? true})
@@ -31,7 +32,7 @@
   hae-johto-ja-hallintokorvaukset-kuukausittain
   hae-johto-ja-hallintokorvaukset-2019-mhu
   hae-kuukauden-johto-ja-hallintokorvaus hae-toimenkuvan-kuukauden-johto-ja-hallintokorvaus
-  hae-urakan-toimenkuvat hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
+  hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
   hae-muut-kulut-toimenkuviin-kuukausittain hae-muut-kulut-kuukaudelle
   lisaa-kuukauden-muu-kulu<! paivita-kuukauden-muu-kulu<!
   hae-tehtava-tunnisteella
@@ -227,7 +228,7 @@
                                     db {:urakka-id urakka-id
                                         :vuosi hoitovuoden-alkuvuosi}))
         ;; Haetaan ensin urakkakohtaiset toimenkuvat
-        toimenkuvat (hae-urakan-toimenkuvat db {:urakka-id urakka-id
+        toimenkuvat (toimenkuva-kyselyt/hae-urakan-toimenkuvat-alkuvuoden-perusteella db {:urakka-id urakka-id
                                                 :urakan-alkuvuosi urakan-alkuvuosi})
         ;; 2019 - 2021 alkavien urakoiden toimenkuvat eivät löydy tietokantahaulla, koska ne on kovakoodattu fronttiin. Niille on kuitenkin annettu
         ;; joissain tapauksissa kaksi nimeä, mutta sama id. Joten joudumme taaksepäin yhteensopivuuden vuoksi tekemään muunnoksen
@@ -267,7 +268,7 @@
 
         ;; Järjestetään toimenkuvat järkevään järjestykseen
         toimenkuvat (map (fn [toimenkuva]
-                           (assoc toimenkuva :jarjestys (paattele-toimenkuvan-jarjestys (:nimike toimenkuva))))
+                           (assoc toimenkuva :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:nimike toimenkuva))))
                       toimenkuvat)
 
         ;; Haetaan raskaalla prosessilla toimenkuvakohtaisesti suunnitellut johto-ja-hallintokorvaukset
@@ -515,13 +516,13 @@
         hankinnat-yht (:yhteensa (last kilpailutettavat-hankinnat))
 
         rahavaraukset (hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        rahavaraukset-yht (apply + (map (fn [rivi] (:summa rivi 0)) rahavaraukset))
+        rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
 
         erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        erillishankinnat-yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
+        erillishankinnat-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) erillishankinnat))
 
         hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (:summa rivi 0)) hoidonjohtopalkkiot))
+        hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) hoidonjohtopalkkiot))
         ;; TODO: kun muutokset on valmiita, niin hae tiedot
         pysyvat-muutokset-maara 0
 

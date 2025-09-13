@@ -9,6 +9,8 @@
             [harja.tiedot.urakka.urakka :as tila]))
 
 (defonce nakymassa? (atom false))
+(defonce grid-tiedot-atom (atom [{}]))
+(defonce grid-toimenkuvat-atom (atom [{}]))
 
 (defn scrollaa-muutoksiin [elementin-id]
   ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat tai vahvistaa koko kustannussuunnitelman
@@ -43,7 +45,7 @@
 (defrecord HaeTyhjatTarjouksenTiedotEpaonnistui [vastaus])
 
 ;; Tallennetaan tarjouksen data
-(defrecord TallennaTarjouksenTiedot [tarjous])
+(defrecord TallennaTarjouksenTiedot [tarjous toimenkuvat])
 (defrecord TallennaTarjouksenTiedotOnnistui [vastaus])
 (defrecord TallennaTarjouksenTiedotEpaonnistui [vastaus])
 
@@ -83,6 +85,7 @@
 (defrecord ToggleVetolaatikonMuokkaus [tila])
 
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
+(defrecord PoistaToimenkuva [rivi])
 
 (defn hae-kustannussuunnitelman-tiedot
   "Haetaan kustannussuunnitelman tiedot, jotta voidaan näyttää ne UI Gridissä.
@@ -141,7 +144,9 @@
   (process-event [{:keys [vastaus]} app]
     (-> app
       (assoc :haku-kaynnissa? false)
-      (assoc :tarjous (:tarjous vastaus))))
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
+      (assoc :urakka-id (:urakka-id vastaus))))
 
   HaeTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -172,9 +177,12 @@
 
   TallennaTarjouksenTiedot
   (process-event
-    [{tarjous :tarjous} app]
+    [{tarjous :tarjous toimenkuvat :toimenkuvat} app]
     (let [;; Muutetaan formilta saatu tarjous oikeaan muotoon
-          muunnettu-tarjous {:tarjous (map #(muunna-vuodet %) tarjous)}
+          muunnetut-tarjousrivit (map #(muunna-vuodet %) tarjous)
+          muunnetut-toimenkuvarivit (map #(muunna-vuodet %) toimenkuvat)
+          tarjous (concat muunnetut-tarjousrivit muunnetut-toimenkuvarivit)
+          muunnettu-tarjous {:tarjous tarjous}
           muunnettu-tarjous (assoc muunnettu-tarjous :urakka-id (-> @tila/yleiset :urakka :id))]
       (tuck-apurit/post! :tallenna-tarjouksen-tiedot
         muunnettu-tarjous
@@ -515,6 +523,22 @@
     (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
     (-> app
       (assoc :tallennus-kesken? false)))
+
+  PoistaToimenkuva
+  (process-event [{:keys [rivi]} app ]
+    (let [toimenkuvat (into [] (filter #(some #{"johto-ja-hallintokorvaus"}
+                                          [(:osio %)]) (:tarjous app)))
+          muokatut-toimenkuvat (map (fn [m]
+                                         (if (= (:nimi m) (:nimi rivi))
+                                           (assoc m :poistettu true)
+                                           m)) toimenkuvat)
+          _ (reset! grid-toimenkuvat-atom muokatut-toimenkuvat)])
+    (-> app
+      (update :tarjous
+        #(map (fn [m]
+                (if (= (:nimi m) (:nimi rivi))
+                  (assoc m :poistettu true)
+                  m)) %))))
 
   ToggleVetolaatikonMuokkaus
   (process-event [{:keys [tila]} app]
