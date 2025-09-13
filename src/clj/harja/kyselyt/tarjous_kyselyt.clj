@@ -203,14 +203,16 @@
                                                    (tallenna-tarjous<! db rivi))
                                ;; Päivitetään tarjouksen tiedot myös urakka_tavoite -tauluun, jota muut Harjan osa-alueet käyttävät
                                urakka-tavoite-db (first (filter #(= kuluva-hoitovuosi-nro (:hoitovuosinro %)) urakan-tavoitteet-tietokannasta))
-                               dbvastaus (if urakka-tavoite-db
-                                           (paivita-urakan-tavoite-tarjous<! db (assoc urakka-tavoite-db
-                                                                                  :tarjous_tavoitehinta (:tarjous_tavoitehinta rivi)
-                                                                                  :muokkaaja kayttaja-id))
-                                           (lisaa-urakan-tavoite-tarjous<! db {:urakkaid urakka-id
-                                                                               :hoitovuosinro kuluva-hoitovuosi-nro
-                                                                               :tarjous_tavoitehinta (:tarjous_tavoitehinta rivi)
-                                                                               :luoja kayttaja-id}))
+                               _ (if urakka-tavoite-db
+                                   (paivita-urakan-tavoite-tarjous<! db (assoc urakka-tavoite-db
+                                                                          :tarjous_tavoitehinta (:tarjous_tavoitehinta rivi)
+                                                                          :muokkaaja kayttaja-id))
+                                   ;; Ei lisätä 0 arvoja ollenkaan.
+                                   (when-not (zero? (:tarjous_tavoitehinta rivi))
+                                     (lisaa-urakan-tavoite-tarjous<! db {:urakkaid urakka-id
+                                                                         :hoitovuosinro kuluva-hoitovuosi-nro
+                                                                         :tarjous_tavoitehinta (:tarjous_tavoitehinta rivi)
+                                                                         :luoja kayttaja-id})))
 
                                ;; Tallennetaan tarjouksen kustannukset ja toimenkuvat tietokantaan
                                vuosittaiset-kustannukset (filter #(= (:hoitokauden_alkuvuosi rivi) (:hoitokauden_alkuvuosi %)) kustannuksetlistaus)
@@ -240,10 +242,10 @@
                                                                 ;; että toimenkuvia lisätään vain kerran urakalle
                                                                 ;; Tarkistetaan siis, ettei toimenkuvaa löydy jo tietokannasta
                                                                 (when-not (seq (toimenkuva-kyselyt/hae-urakan-toimenkuva db {:nimi (:nimi toimenkuva)
-                                                                                                                         :urakkaid urakka-id}))
+                                                                                                                             :urakkaid urakka-id}))
                                                                   (toimenkuva-kyselyt/lisaa-urakan-toimenkuva<! db {:toimenkuva (:nimi toimenkuva)
-                                                                                                                  :urakkaid urakka-id
-                                                                                                                  :urakkakohtainen-nimi (:nimi toimenkuva)})))
+                                                                                                                    :urakkaid urakka-id
+                                                                                                                    :urakkakohtainen-nimi (:nimi toimenkuva)})))
                                            toimenkuvadb (if (:id tarjousdb)
                                                           (first (hae-toimenkuva-tarjoukselle db
                                                                    {:tarjous_id (:id tarjousdb)
