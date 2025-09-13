@@ -287,12 +287,12 @@ SELECT ru.rahavaraus_id                          as rahavaraus_id,
        SUM(kt.summa_indeksikorjattu)             AS "suunniteltu-summa-indeksikorjattu"
   FROM rahavaraus_urakka ru
            LEFT JOIN kustannusarvioitu_tyo kt ON ru.rahavaraus_id = kt.rahavaraus_id
-   AND kt.sopimus = :sopimusid
-   AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
-        OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
-         left join rahavaraus r on r.id = ru.rahavaraus_id
+                 AND kt.sopimus = :sopimusid
+                 AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
+                       OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+           LEFT JOIN rahavaraus r on r.id = ru.rahavaraus_id
  WHERE ru.urakka_id = :urakkaid
-GROUP BY ru.rahavaraus_id, ru.urakkakohtainen_nimi, r.nimi;
+GROUP BY ru.rahavaraus_id, COALESCE(ru.urakkakohtainen_nimi, r.nimi);
 
 -- name: paivita-rahavaraus<!
 UPDATE kustannusarvioitu_tyo

@@ -516,13 +516,13 @@
         hankinnat-yht (:yhteensa (last kilpailutettavat-hankinnat))
 
         rahavaraukset (hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        rahavaraukset-yht (apply + (map (fn [rivi] (:summa rivi 0)) rahavaraukset))
+        rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
 
         erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        erillishankinnat-yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
+        erillishankinnat-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) erillishankinnat))
 
         hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (:summa rivi 0)) hoidonjohtopalkkiot))
+        hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) hoidonjohtopalkkiot))
         ;; TODO: kun muutokset on valmiita, niin hae tiedot
         pysyvat-muutokset-maara 0
 
