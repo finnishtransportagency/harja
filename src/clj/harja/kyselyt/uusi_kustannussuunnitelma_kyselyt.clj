@@ -43,7 +43,8 @@
   vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille!
   vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille!
   indeksikorjaukset-vahvistettu? paivita-tavoite-ja-kattohinta<!
-  lisaa-tavoite-ja-kattohinta<! hae-urakan-hoitovuoden-tavoitetiedot)
+  lisaa-tavoite-ja-kattohinta<! hae-urakan-hoitovuoden-tavoitetiedot
+  hae-kustannussuunnitelman-osiot lisaa-kustannussuunnitelma-osio paivita-kustannussuunnitelma-osio)
 
 (defn- laske-indeksikorjattu-summa
   "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä. Jos summaa ei ole annettu, palautetaan nil."
@@ -120,8 +121,10 @@
 (defn hae-rahavaraukset
   "Haetaan rahavaraukset tietokannsta kustannussuunnitelmaan.
   Saadaan [{:nimi <rahavarausnimi> :summa <summa> :summa-indeksikorjattu nil} ...]"
-  [db sopimus-id hoitovuoden-alkuvuosi]
-  (let [rahavaraukset (hae-rahavaraus-vuodelta db {:sopimus-id sopimus-id :vuosi hoitovuoden-alkuvuosi})]
+  [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
+  (let [rahavaraukset (hae-rahavaraus-vuodelta db {:urakkaid urakka-id
+                                                   :sopimusid sopimus-id
+                                                   :vuosi hoitovuoden-alkuvuosi})]
     rahavaraukset))
 
 (defn hae-hoidonjohtopalkkiot [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
@@ -182,7 +185,7 @@
       (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
       (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "harjoittelija")) [5 6 7 8]
 
-      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämä pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [10] ;; Tämä pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
       (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
       (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "päätoiminen apulainen")) [10 11 12 1 2 3 4 5 6 7 8 9]
       (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "apulainen/työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
@@ -198,8 +201,30 @@
       (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
       :else [10 11 12 1 2 3 4 5 6 7 8 9])))
 
+(defn paattele-toimenkuvan-jarjestys
+  "Pakotetaan toimenkuvat oikeaan järjestykseen kovakoodauksen avulla."
+  [toimenkuva-nimike]
+  (case (str/lower-case toimenkuva-nimike)
+    "valmistelukausi ennen urakka-ajan alkua" 0
+    "sopimusvastaava" 1
+    "vastuunalainen työnjohtaja" 2
+    "2. työnjohtaja" 3
+    "3. työnjohtaja" 4
+    "päätoiminen apulainen" 5
+    "päätoiminen apulainen (talvikausi)" 6
+    "päätoiminen apulainen (kesäkausi)" 7
+    "apulainen/työnjohtaja" 8
+    "apulainen/työnjohtaja (talvikausi)" 9
+    "apulainen/työnjohtaja (kesäkausi)" 10
+    "viherhoidosta vastaava henkilö" 11
+    "hankintavastaava" 12
+    "harjoittelija" 13
+    99)) ;; Muu toimenkuva, joka ei ole listassa
+
 (defn hae-johto-ja-hallintokorvaukset-2019-2024 [db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta]
-  (let [viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-jjh
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        hoitovuosi-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+        viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-jjh
                                     db {:urakka-id urakka-id
                                         :vuosi hoitovuoden-alkuvuosi}))
         ;; Haetaan ensin urakkakohtaiset toimenkuvat
@@ -232,6 +257,13 @@
                                     (conj uudet-toimenkuvat uusi-toimenkuva toimenkuva)
                                     (conj uudet-toimenkuvat toimenkuva))))
                         [] toimenkuvat)
+                      toimenkuvat)
+
+        ;; Urakan toimenkuviin kuuluu -2021 jälkeen aina 'valmistelukausi ennen urakka-ajan alkua'
+        ;; Mutta tuota toimenkuvaa ei voida näyttää, mikäli ei ole menossa ensimmäinen hoitovuosi.
+        ;; Poistetaan se tarpeen mukaan
+        toimenkuvat (if (> hoitovuosi-nro 1)
+                      (remove #(= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva %)) toimenkuvat)
                       toimenkuvat)
 
         ;; Järjestetään toimenkuvat järkevään järjestykseen
@@ -483,14 +515,14 @@
         kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
         hankinnat-yht (:yhteensa (last kilpailutettavat-hankinnat))
 
-        rahavaraukset (hae-rahavaraukset db sopimus-id hoitovuoden-alkuvuosi)
-        rahavaraukset-yht (apply + (map (fn [rivi] (:summa rivi 0)) rahavaraukset))
+        rahavaraukset (hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+        rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
 
         erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        erillishankinnat-yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
+        erillishankinnat-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) erillishankinnat))
 
         hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (:summa rivi 0)) hoidonjohtopalkkiot))
+        hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) hoidonjohtopalkkiot))
         ;; TODO: kun muutokset on valmiita, niin hae tiedot
         pysyvat-muutokset-maara 0
 
@@ -803,14 +835,34 @@
                     (conj puuttuvat "Johto-ja-hallintokorvaukset") puuttuvat)]
     puuttuvat))
 
+(defn paivita-kustannussuunnitelman-tila [db vahvistetut-osiot vahvista? hoitovuoden-nro urakka-id osio kayttaja-id]
+  (let [osio-olemassa (first (filter #(= (name osio) (:osio %)) vahvistetut-osiot))]
+    (if-not osio-olemassa
+      (lisaa-kustannussuunnitelma-osio db {:urakkaid urakka-id
+                                           :hoitovuosi hoitovuoden-nro
+                                           :osio osio
+                                           :luoja kayttaja-id
+                                           :vahvistaja (if vahvista? kayttaja-id nil)
+                                           :vahvistettu vahvista?
+                                           :vahvistus_pvm (if vahvista? (pvm/nyt) nil)})
+      (paivita-kustannussuunnitelma-osio db {:id (:id osio-olemassa)
+                                             :urakkaid urakka-id
+                                             :hoitovuosinro hoitovuoden-nro
+                                             :osio osio
+                                             :muokkaaja kayttaja-id
+                                             :vahvistettu vahvista?
+                                             :vahvistaja (if vahvista? kayttaja-id nil)
+                                             :vahvistus_pvm (if vahvista? (pvm/nyt) nil)}))))
+
 (defn vahvista-tavoite-ja-kattohinta [db kayttaja urakka-id vahvista? hoitovuoden-alkuvuosi]
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
-        hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+        hoitovuosinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
         vahvistus-pvm (pvm/nyt)
         hoitokauden-alkupvm (pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi))
         hoitokauden-loppupvm (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))
+        vahvistetut-osiot (hae-kustannussuunnitelman-osiot db {:urakkaid urakka-id :hoitovuosinro hoitovuosinro})
 
         ;; Vahvista kiinteähintaiset työt.
         _ (vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille! db
@@ -820,6 +872,12 @@
              :vahvista? vahvista?
              :vahvistaja (:id kayttaja)
              :vahvistus-pvm vahvistus-pvm})
+        ;; Lisää hankintakustannusosiotieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "hankintakustannukset" (:id kayttaja))
+        ;; Lisää erillishankinnat tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "erillishankinnat" (:id kayttaja))
+        ;; Lisää hoidonjohtopalkkio tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "hoidonjohtopalkkio" (:id kayttaja))
 
         ;; Rahavaraukset on näytetty tähän asti tarjouksen tiedoista. Kopioidaan ne nyt kustannusarvoitu_tyo tauluun
         ;; Hae ensin tarjouksen tiedot
@@ -850,7 +908,7 @@
                                                        summa (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-kuukausisumma kuukausisumma)]]
                                            ;; Rahavarauksesta ei voi muuttua, kuin summa
                                            (paivita-rahavaraus<! db {:summa summa
-                                                                     :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitokausinumero)
+                                                                     :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitovuosinro)
                                                                      :muokattu (pvm/nyt)
                                                                      :muokkaaja (:id kayttaja)
                                                                      :id (:id r)})))
@@ -866,10 +924,14 @@
                                                                  :tehtava_id nil
                                                                  :rahavaraus_id rahavaraus-id
                                                                  :summa summa
-                                                                 :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitokausinumero)
+                                                                 :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitovuosinro)
                                                                  :luoja (:id kayttaja)})))]
                     dbrahavaraus))
             rahavaraukset)
+
+        ;; Lisää rahavarausosio tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "tilaajan-rahavaraukset" (:id kayttaja))
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "tavoitehintaiset-rahavaraukset" (:id kayttaja))
 
         _ (vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille! db
             {:urakka-id urakka-id
@@ -885,10 +947,14 @@
              :vahvista? vahvista?
              :vahvistaja (:id kayttaja)
              :vahvistus-pvm vahvistus-pvm})
+        ;; Lisää johto-ja-hallintokorvaus tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "johto-ja-hallintokorvaus" (:id kayttaja))
         _ (vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille! db
             {:urakka-id urakka-id
              :vuosi hoitovuoden-alkuvuosi
-             :hoitovuosi-nro hoitokausinumero
+             :hoitovuosi-nro hoitovuosinro
              :vahvista? vahvista?
              :vahvistaja (:id kayttaja)
-             :vahvistus-pvm vahvistus-pvm})]))
+             :vahvistus-pvm vahvistus-pvm})
+        ;; Lisää tavoite-ja-kattohinta tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "tavoite-ja-kattohinta" (:id kayttaja))]))

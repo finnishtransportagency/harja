@@ -8,6 +8,8 @@ import transit from "transit-js";
  * @param {boolean|undefined} onkoVahvistettu
  */
 
+const ladataanHarjaaTimeout = 30000;
+
 export function testaaTilayhteenveto(hoitovuosi, osionNimi, onkoVahvistettu) {
     // Valitse aluksi haluttu hoitovuosi, jotta kohdistetaan testaus tietylle hoitovuodelle yhteenvedossa.
     cy.get('[data-cy="hoitokausi-jarjestysluvulla"]')
@@ -309,7 +311,7 @@ export function alustaKanta(urakkaNimi) {
             "WHERE kht.toimenpideinstanssi = tpi.id AND " +
             `      tpi.urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
-                console.log("Poista kiinteähintaiset työt tulos:", tulos)
+                console.log("Poista kiinteähintaiset työt - tulos:", tulos)
             });
         // Poista kustannusarvioidut työt
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
@@ -318,7 +320,7 @@ export function alustaKanta(urakkaNimi) {
             "WHERE kat.toimenpideinstanssi = tpi.id AND " +
             `      tpi.urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
-                console.log("Poista kustannusarvioidut työt tulos:", tulos)
+                console.log("Poista kustannusarvioidut työt - tulos:", tulos)
             });
 
         // Poista johto- ja hallintokorvauksiin liittyvät asiat
@@ -326,7 +328,7 @@ export function alustaKanta(urakkaNimi) {
             "\"DELETE FROM johto_ja_hallintokorvaus jjh " +
             `WHERE jjh.\\\"urakka-id\\\" = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
-                console.log("Poista johto- ja hallintokorvaukset tulos:", tulos)
+                console.log("Poista johto- ja hallintokorvaukset - tulos:", tulos)
             })
 
         // Poista toteutuneet kustannukset
@@ -334,7 +336,7 @@ export function alustaKanta(urakkaNimi) {
             "\"DELETE FROM toteutuneet_kustannukset tk " +
             `WHERE tk.urakka_id = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
-                console.log("Poista toteutuneet kustannukset tulos:", tulos)
+                console.log("Poista toteutuneet kustannukset - tulos:", tulos)
             })
 
         // Poista osioiden tilaan liittyvät asiat
@@ -342,7 +344,7 @@ export function alustaKanta(urakkaNimi) {
             "\"DELETE FROM suunnittelu_kustannussuunnitelman_tila skt " +
             `WHERE skt.\\\"urakka\\\" = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
-                console.log("Poista osioiden tilaan liittyvät asiat tulos:", tulos)
+                console.log("Poista osioiden tilaan liittyvät asiat - tulos:", tulos)
             })
 
         // Poista manuaaliseen kattohintaan liittyvät asiat
@@ -350,7 +352,7 @@ export function alustaKanta(urakkaNimi) {
             "\"DELETE FROM urakka_tavoite ut " +
             `WHERE ut.\\\"urakka\\\" = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
-                console.log("Poista manuaaliseen kattohintaan liittyvät asiat tulos:", tulos)
+                console.log("Poista manuaaliseen kattohintaan liittyvät asiat - tulos:", tulos)
             })
 
         // Poista tehdyt päätökset
@@ -358,29 +360,47 @@ export function alustaKanta(urakkaNimi) {
             "\"DELETE FROM urakka_paatos up " +
             `WHERE up.\\\"urakka-id\\\" = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
-                console.log("Poista tehtyihin päätöksiin liittyvät asiat tulos:", tulos)
+                console.log("Poista tehtyihin päätöksiin liittyvät asiat - tulos:", tulos)
             })
 
         // Nollaa vahvistukset
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"DELETE FROM suunnittelu_kustannussuunnitelman_tila skt " +
-            `WHERE skt.\\\"urakka\\\" = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
+            `WHERE skt.urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
-                console.log("Poista tilan vahvistukseen liittyvät asiat tulos:", tulos)
-            })
+                console.log("Poista tilan vahvistukseen liittyvät asiat - tulos:", tulos)
+            });
 
-        // poista kulut
+        // Poista muutokset
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM mhu_muutos_historia mmh " +
+            `WHERE mmh.urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
+            .then((tulos) => {
+                console.log("Poista muutoshistoria - tulos:", tulos)});
+
+        // Poista mhu muutokset
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"UPDATE mhu_muutos SET poistettu = true " +
+            `WHERE urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
+            .then((tulos) => {
+                console.log("Poista kulujen linkitukset muutoksiin - tulos:", tulos)});
+
+        // Poista kulu kohdistukset
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"DELETE FROM kulu_kohdistus kt " +
             `WHERE kt.toimenpideinstanssi IN (SELECT id FROM toimenpideinstanssi t WHERE t.urakka = ` +
             `(SELECT id FROM urakka WHERE nimi = '${urakkaNimi}'));\"`)
             .then((tulos) => {
-                console.log("Poista kulujen kohdistukset tulos:", tulos)})
+                console.log("Poista kulujen kohdistukset - tulos:", tulos)});
+
+        // Poista kulut
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM kulu k " +
-            `WHERE k.urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
+            "\"UPDATE kulu SET poistettu = true " +
+            `WHERE urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
-                console.log("Poista kulut tulos:", tulos)})
+                console.log("Poista kulut - tulos:", tulos)});
+
+        // TODO: Kuhan tarjouspuoli valmistuu, niin poista myös tarjouksen tiedot
 
     });
 }
@@ -394,6 +414,9 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
     cy.intercept('POST', '_/budjettisuunnittelun-indeksit').as('budjettisuunnittelun-indeksit');
 
     cy.visit("/");
+
+    // Varmista, että pääsivu on ladattu ennen testien aloitusta
+    cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
 
     cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
@@ -426,6 +449,9 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
 export function avaaUusiKustannussuunnittelu(urakkaNimi, alue) {
     cy.visit("/");
 
+    // Varmista, että pääsivu on ladattu ennen testien aloitusta
+    cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
+
     cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
     cy.contains('Näytä päättyneet').click();
@@ -433,7 +459,7 @@ export function avaaUusiKustannussuunnittelu(urakkaNimi, alue) {
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
     // Mene suunnittelu välilehdelle
     cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
-    // Avaa Kustannussuunnitelma
+    // Avaa Uusi Kustannussuunnitelma
     cy.get('[data-cy="tabs-taso2-Uusi Kustannussuunnitelma"]').click();
 
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
