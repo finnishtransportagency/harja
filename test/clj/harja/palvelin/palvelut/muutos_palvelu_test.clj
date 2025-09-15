@@ -239,6 +239,9 @@
 
 ;; TODO: Korjaa kulun luominen ja päivittäminen, kun teet johto- ja hallintokorvaus muutoksia
 ;;       Pitää pystyä päivittämään vanhaa kulu-riviä siten, että uudet kulutiedot korvaavat vanhat ja versio päivittyy
+;; TODO: Testaa mhu_muutos_kulun historia, historia ei tällä hetkellä tallennu koska kulun päivitys ei toimi
+;;       mhu_muutos_kulu tauluun, vaan koodi luo vain uusia rivejä version muuttuessa
+
 (deftest tallenna-johto-ja-hallintokorvausmuutos-ii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
