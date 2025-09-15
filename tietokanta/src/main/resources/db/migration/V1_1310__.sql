@@ -53,5 +53,4 @@ CREATE TABLE mhu_muutos_kulu_historia
     LIKE mhu_muutos_kulu EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
 
--- Sama rajoite, kuin perustaulussa
 CREATE UNIQUE INDEX mhu_muutos_kulu_historia_unique ON mhu_muutos_kulu_historia (muutos, versio, kulu);
