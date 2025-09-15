@@ -420,6 +420,7 @@
   "Asettaa poistetuksi vanhat kulutiedot, jotta ne eivät näy käyttöliittymässä tai raporteissa."
   ;; halutaan saada historiatieto talteen, tämä on siihen käytännöllinen tapa tekemättä valtavaa refaktorointia kulu tauluun (ja sille omaa historiataulua ja triggereitä)
   [db kayttaja rivi]
+  ;; FIXME: Tämä on näemmä vielä kesken. Rivin mukana ei tule vielä kulu-id:tä ainakaan testeissä
   (let [kulu-id (:kulu-id rivi)]
     (when kulu-id
       (log/info "Poistetaan vanha kulu id:llä " kulu-id)
@@ -462,9 +463,17 @@
                                        :kayttaja (:id kayttaja)
                                        :tyyppi "jjh-muutos"})]]
 
-      (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio (:versio muutos-id-ja-versio)
-                                                     :muutos (:id muutos-id-ja-versio)
-                                                     :kulu kulu-id-db})
+      ;; TODO: Korjaa kulun luominen ja päivittäminen, kun teet johto- ja hallintokorvaus muutoksia
+      ;;       Pitää pystyä päivittämään vanhaa kulu-riviä siten, että uudet kulutiedot korvaavat vanhat ja versio päivittyy
+      ;; FIXME: Tämä on näemmä vielä kesken. Rivin mukana ei tule vielä kulu-id:tä ainakaan testeissä
+      (if (:kulu-id rivi)
+        (muutos-kyselyt/paivita-muutos-kulu-linkitys! db {:versio (:versio muutos-id-ja-versio)
+                                                          :muutos (:id muutos-id-ja-versio)
+                                                          :vanha-kulu (:kulu-id rivi)
+                                                          :uusi-kulu kulu-id-db})
+        (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio (:versio muutos-id-ja-versio)
+                                                       :muutos (:id muutos-id-ja-versio)
+                                                       :kulu kulu-id-db}))
       (poista-vanhat-kulutiedot! db kayttaja rivi))))
 
 
@@ -478,16 +487,25 @@
                                        :versio (:versio muutos)
                                        :kayttaja (:id kayttaja)})))
 
-(defn- tallenna-muutoksen-liitteet [db muutoksen-paluurivi liitteet]
+(defn- tallenna-muutoksen-liitteet [db aiti-muutoksen-paluurivi liitteet]
   (doseq [liite liitteet]
     (let [liite-id (:id liite)
-          muutos-id (:id muutoksen-paluurivi)
-          muutos-versio (:versio muutoksen-paluurivi)]
+          muutos-id (:id aiti-muutoksen-paluurivi)
+          muutos-versio (:versio aiti-muutoksen-paluurivi)]
       (when (and liite-id muutos-id muutos-versio)
         (muutos-kyselyt/linkita-muutos-ja-liite<! db {:muutos muutos-id
                                                       :liite liite-id
                                                       :versio muutos-versio})))))
 
+(defn- tallenna-muutoksen-kustannusvaikutukset [db aiti-muutoksen-paluurivi hoitokauden_alkuvuosi kustannusvaikutukset]
+  (let [muutos-id (:id aiti-muutoksen-paluurivi)
+        muutos-versio (:versio aiti-muutoksen-paluurivi)]
+    (doseq [kustannusvaikutus kustannusvaikutukset]
+      (let [kustannusvaikutus (assoc kustannusvaikutus
+                                :muutos-id muutos-id
+                                :versio (or muutos-versio 1)
+                                :hoitokauden_alkuvuosi hoitokauden_alkuvuosi)]
+        (muutos-kyselyt/luo-tai-paivita-muutos-kustannusvaikutus<! db kustannusvaikutus)))))
 
 (defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos] :as tiedot}]
   (log/debug "tallenna-muutos: " tiedot)
@@ -510,25 +528,22 @@
                 :tyyppi (:tyyppi muutos)
                 :kayttaja (:id kayttaja)
                 :alityyppi alityyppi}
-
-        kustannusvaikutus {:kustannuslaji (:kustannuslaji muutos)
-                           :tpi (:tpi muutos)
-                           :hoitokauden_alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-                           :summa tavoitehinnan-muutos}]
+        kustannusvaikutukset (:kustannusvaikutukset muutos)]
 
     (jdbc/with-db-transaction [conn db]
+      ;; Muutos-id ja muutos-versio kuljetetaan äiti-muutokselta (mhu_muutos-taulu) lapsitauluille
+      ;; Nämä tiedot saadaan muutos-paluurivistä
       (let [muutos-paluurivi (if (:id muutos)
                                (muutos-kyselyt/paivita-muutos<! conn muutos)
-                               (muutos-kyselyt/luo-muutos<! conn muutos))
-            versio (:versio muutos-paluurivi)
-            muutos-id (:id muutos-paluurivi)
-            kustannusvaikutus (assoc kustannusvaikutus :id muutos-id :versio (or versio 1))]
+                               (muutos-kyselyt/luo-muutos<! conn muutos))]
 
-        ;; Tallenna liitteet 
-        (tallenna-muutoksen-liitteet conn muutos-paluurivi liitteet)
+        ;; Tallenna liitteet
+        (when (pos? (count liitteet))
+          (tallenna-muutoksen-liitteet conn muutos-paluurivi liitteet))
 
         ;; Tallenna kustannusvaikutukset
-        (muutos-kyselyt/luo-tai-paivita-muutos-kustannusvaikutus<! conn kustannusvaikutus)
+        (when (pos? (count kustannusvaikutukset))
+          (tallenna-muutoksen-kustannusvaikutukset conn muutos-paluurivi (pvm/vuosi (first valittu-hoitokausi)) kustannusvaikutukset))
 
         ;; Tallenna kulut
         (case

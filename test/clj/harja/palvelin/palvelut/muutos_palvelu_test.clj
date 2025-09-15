@@ -236,6 +236,12 @@
     (is (instance? java.util.Date (:muokattu (first (filter #(= (:rahavaraus_id %) 1) kanta-muokkauksen-jalkeen)))) "Muokatun syyn muokkausaika on asetettu")
     (is (= vastaus-muokkauksen-jalkeen odotetut-muokkauksen-jalkeen) "Rahavarausmuutosten syyt muokkauksen jälkeen")))
 
+
+;; TODO: Korjaa kulun luominen ja päivittäminen, kun teet johto- ja hallintokorvaus muutoksia
+;;       Pitää pystyä päivittämään vanhaa kulu-riviä siten, että uudet kulutiedot korvaavat vanhat ja versio päivittyy
+;; TODO: Testaa mhu_muutos_kulun historia, historia ei tällä hetkellä tallennu koska kulun päivitys ei toimi
+;;       mhu_muutos_kulu tauluun, vaan koodi luo vain uusia rivejä version muuttuessa
+
 (deftest tallenna-johto-ja-hallintokorvausmuutos-ii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
@@ -268,7 +274,7 @@
         odotetut-luonnin-jalkeen (list {:id (inc max-id-ennen-tallennusta)
                                         :jjh-muutosten-summa 780M
                                         :kulu_kohdistus nil
-                                        :kustannusvaikutukset (list {:summa nil, :kustannuslaji nil, :toimenpideinstanssi nil})
+                                        :kustannusvaikutukset nil
                                         :liitteet nil
                                         :luonnos nil
                                         :nimi nil
@@ -294,7 +300,7 @@
         odotetut-updaten-jalkeen (list {:id (inc max-id-ennen-tallennusta)
                                         :jjh-muutosten-summa 780M
                                         :kulu_kohdistus nil
-                                        :kustannusvaikutukset (list {:summa nil, :kustannuslaji nil, :toimenpideinstanssi nil})
+                                        :kustannusvaikutukset nil
                                         :liitteet nil
                                         :luonnos nil
                                         :nimi nil
@@ -489,7 +495,7 @@
              :muutos muutos-payload}))
       "Johto- ja hallintokorvausmuutoksen kulu 2025 ja jälkeen on oltava negatiivinen")))
 
-(defn- muutospayload-liitteilla [muutos-id urakka-id liitteet versio]
+(defn- muutospayload-liitteilla [muutos-id urakka-id liitteet]
   {:kulu_kohdistus nil,
    :kustannusvaikutukset (list
                            {:summa 1000, :toimenpide 700, :kustannuslaji "hankintakustannukset"}),
@@ -503,7 +509,6 @@
    :id muutos-id,
    :jjh-muutosten-summa nil,
    :liitteet liitteet,
-   :versio versio,
    :luonnos false,
    :kulut nil,
    :tavoitehinnan-muutos 1000,
@@ -524,7 +529,7 @@
                    {:id luotu-liite-id :kuvaus nil, :virustarkastettu? true, :urakka urakka-id, :nimi "harja-brand-text.png", :s3hash nil, :lahde "harja-ui", :tyyppi "image/png", :koko 2507}
                    {:id olemassaoleva-liite-id, :nimi "rumpu.jpg", :kuvaus nil, :tyyppi "image/png", :koko nil, :liite_oid nil, :virustarkastettu? true})
         liitelinkkien-maara-ennen-tallennusta (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s AND versio = 1;" muutos-id)))
-        muutos-payload (muutospayload-liitteilla muutos-id urakka-id liitteet 1)
+        muutos-payload (muutospayload-liitteilla muutos-id urakka-id liitteet)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :tallenna-muutos
                   +kayttaja-jvh+
@@ -535,7 +540,7 @@
         kirjatut (:kirjatut-muutokset vastaus)
         paivitetty (first (filter #(= (:id %) muutos-id) kirjatut))
         odotetut-liite-linkit (list {:id olemassaoleva-liite-id, :muutos muutos-id} {:id luotu-liite-id, :muutos muutos-id})
-        liitteet-poistava-payload (muutospayload-liitteilla muutos-id urakka-id [] 2)
+        liitteet-poistava-payload (muutospayload-liitteilla muutos-id urakka-id [])
         liitteet-poistettu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :tallenna-muutos
                                      +kayttaja-jvh+

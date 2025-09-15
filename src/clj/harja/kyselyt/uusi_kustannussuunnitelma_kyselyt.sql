@@ -281,15 +281,18 @@ VALUES (:kuukausi, :vuosi, :summa, :summa_indeksikorjattu,
         'laskutettava-tyo', 'hoidonjohtopalkkio', :luoja, NOW());
 
 -- name: hae-rahavaraus-vuodelta
-SELECT r.nimi,
-       SUM(summa) AS "suunniteltu-summa",
-       SUM(summa_indeksikorjattu) AS "suunniteltu-summa-indeksikorjattu"
-FROM kustannusarvioitu_tyo kt
-     join rahavaraus r on kt.rahavaraus_id = r.id
-WHERE sopimus = :sopimus-id
-  AND ((vuosi = :vuosi AND kuukausi IN (10, 11, 12))
-   OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
-GROUP BY r.id;
+SELECT ru.rahavaraus_id                          as rahavaraus_id,
+       COALESCE(ru.urakkakohtainen_nimi, r.nimi) AS nimi,
+       SUM(kt.summa)                             AS "suunniteltu-summa",
+       SUM(kt.summa_indeksikorjattu)             AS "suunniteltu-summa-indeksikorjattu"
+  FROM rahavaraus_urakka ru
+           LEFT JOIN kustannusarvioitu_tyo kt ON ru.rahavaraus_id = kt.rahavaraus_id
+                 AND kt.sopimus = :sopimusid
+                 AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
+                       OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+           LEFT JOIN rahavaraus r on r.id = ru.rahavaraus_id
+ WHERE ru.urakka_id = :urakkaid
+GROUP BY ru.rahavaraus_id, COALESCE(ru.urakkakohtainen_nimi, r.nimi);
 
 -- name: paivita-rahavaraus<!
 UPDATE kustannusarvioitu_tyo
@@ -346,6 +349,28 @@ SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahv
 WHERE ut.urakka = :urakka-id
   -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
   AND ut.hoitokausi = :hoitovuosi-nro;
+
+-- name: hae-kustannussuunnitelman-osiot
+SELECT *
+  FROM suunnittelu_kustannussuunnitelman_tila skt
+ WHERE skt.urakka = :urakkaid
+   AND skt.hoitovuosi = :hoitovuosinro;
+
+-- name: lisaa-kustannussuunnitelma-osio
+INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, luoja, vahvistaja, vahvistettu, vahvistus_pvm)
+VALUES (:urakkaid, :osio::SUUNNITTELU_OSIO, :hoitovuosi, :luoja, :vahvistaja, :vahvistettu, :vahvistus_pvm)
+ON CONFLICT DO NOTHING
+RETURNING id;
+
+-- name: paivita-kustannussuunnitelma-osio
+UPDATE suunnittelu_kustannussuunnitelman_tila
+SET vahvistettu   = :vahvistettu,
+    muokattu      = CURRENT_TIMESTAMP,
+    muokkaaja     = :muokkaaja,
+    vahvistaja    = :vahvistaja,
+    vahvistus_pvm = :vahvistus_pvm
+WHERE id = :id
+RETURNING id;
 
 -- name: paivita-tavoite-ja-kattohinta<!
 UPDATE urakka_tavoite

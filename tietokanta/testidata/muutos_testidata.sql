@@ -18,54 +18,69 @@ declare
     viimeinen_tayden_hkn_alkuvuosi INTEGER := (SELECT EXTRACT(YEAR FROM (SELECT loppupvm FROM urakka WHERE id = urakka_id)) :: INTEGER);
     kayttaja_id_tero INTEGER := (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero');
 
+    -- Muutosten id:t talteen, jotta voidaan viitata suoraan niihin
+    muutos_id_1 INTEGER := NULL;
+    muutos_id_2 INTEGER := NULL;
+    muutos_id_2_liite_1 INTEGER := NULL;
+    muutos_id_3 INTEGER := NULL;
+    muutos_id_4 INTEGER := NULL;
+    muutos_id_4_kulu_1 INTEGER := NULL;
+
 BEGIN
 -- itse muutoksia on vain yksi, ja siitä tallennetaan kaikille tuleville hoitokausille kustannus- ja määrävaikutus
--- muutos 1: päällysteiden paikkausta enemmän
-    INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja, luotu)
-    VALUES (_versio,urakka_id, alkaen_pvm, 'pysyva', 'Päällysteen paikkausmuutos',
-            'Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot.', kayttaja_id_tero,
-            NOW());
 
--- muutos 2: erillisrahoitettu sorastus
+-- Muutos 1: päällysteiden paikkausta enemmän
+   INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja, luotu)
+   VALUES (_versio, urakka_id, alkaen_pvm, 'pysyva', 'Päällysteen paikkausmuutos',
+           'Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot.', kayttaja_id_tero,
+           NOW())
+RETURNING id INTO muutos_id_1;
+
+-- Muutos 2: erillisrahoitettu sorastus
 INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja, luotu)
 VALUES (_versio,urakka_id, alkaen_pvm, 'erillisrahoitettu', 'Erillisrahoitettu sorastusmuutos',
         'Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.', kayttaja_id_tero,
-        NOW());
+        NOW())
+RETURNING id INTO muutos_id_2;
+
 INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
-VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Erillisrahoitettu sorastusmuutos'), 'hankintakustannukset',
+VALUES (_versio, muutos_id_1, 'hankintakustannukset',
         _toimenpideinstanssi_id_sorateiden_hoito, ensimmainen_tayden_hkn_alkuvuosi, 3000);
 
--- muutos 3: poikkeama tehtävä- ja määräluettelon määrästä yksittäisen hoitovuoden osalta, ei tehdäkään sorateiden rumpuja
+-- Muutos 3: poikkeama tehtävä- ja määräluettelon määrästä yksittäisen hoitovuoden osalta, ei tehdäkään sorateiden rumpuja
 INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja, luotu)
 VALUES (_versio,urakka_id, alkaen_pvm, 'maarapoikkeama', 'Tämän hoitovuoden määräpoikkeamamuutos',
         'Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.', kayttaja_id_tero,
-        NOW());
+        NOW())
+RETURNING id INTO muutos_id_3;
+
 INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
-VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Tämän hoitovuoden määräpoikkeamamuutos'), 'hankintakustannukset',
+VALUES (_versio, muutos_id_2, 'hankintakustannukset',
         _toimenpideinstanssi_id_mhu_yllapito, ensimmainen_tayden_hkn_alkuvuosi, 1000);
 INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
-VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Tämän hoitovuoden määräpoikkeamamuutos'), _tehtava_id_soratien_rummut_alle_600mm,
+VALUES (_versio, muutos_id_2, _tehtava_id_soratien_rummut_alle_600mm,
         ensimmainen_tayden_hkn_alkuvuosi,
         30, -30, 0);
 INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
-VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Tämän hoitovuoden määräpoikkeamamuutos'), _tehtava_id_soratien_rummut_600_1000mm,
+VALUES (_versio, muutos_id_2, _tehtava_id_soratien_rummut_600_1000mm,
         ensimmainen_tayden_hkn_alkuvuosi,
         40, -40, 0);
 INSERT INTO liite (nimi, tyyppi, lahde, urakka, luotu, luoja)
 VALUES ('rumpu.jpg', 'image/png', 'harja-ui'::lahde,
-        urakka_id, NOW(), kayttaja_id_tero);
+        urakka_id, NOW(), kayttaja_id_tero)
+RETURNING id INTO muutos_id_2_liite_1;
+
 INSERT INTO mhu_muutos_liite (muutos, liite)
-VALUES ((SELECT id FROM mhu_muutos WHERE nimi = 'Tämän hoitovuoden määräpoikkeamamuutos'),
-        (SELECT id FROM liite WHERE nimi = 'rumpu.jpg'));
+VALUES (muutos_id_2,muutos_id_2_liite_1);
 
 FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi LOOP
             -- muutos 1: päällysteiden paikkausta enemmän - kustannusvaikutus
             INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
-            VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Päällysteen paikkausmuutos'), 'hankintakustannukset',
+            VALUES (_versio, muutos_id_3, 'hankintakustannukset',
                     _toimenpideinstanssi_id_paall_paikk, vuosi, 1000);
             -- muutos 1: päällysteiden paikkausta enemmän - tehtävä- ja määräluettelon muutokset
             INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
-            VALUES (_versio, (SELECT id FROM mhu_muutos WHERE nimi = 'Päällysteen paikkausmuutos'), _tehtava_id_ab_paikkaus, vuosi,
+            VALUES (_versio, muutos_id_3, _tehtava_id_ab_paikkaus, vuosi,
                     1000, 100, 1100);
 
         END LOOP;
@@ -73,16 +88,19 @@ FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi LO
 -- Johto- ja hallintokorvauksen muutos
 INSERT INTO mhu_muutos (versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja)
 VALUES  (1, urakka_id, '2025-06-25', 'johto-ja-hallintokorvaus', null, 'Työmääräarviot ylittyivät',
-         kayttaja_id_tero);
+         kayttaja_id_tero)
+RETURNING id INTO muutos_id_4;
+
 INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja,  lisatieto, koontilaskun_kuukausi)
 VALUES  (1230, '2025-10-15', 36, kayttaja_id_tero,
-         'Muutoksesta automaattisesti luotu kulu 1', 'lokakuu/5-hoitovuosi');
+         'Muutoksesta automaattisesti luotu kulu 1', 'lokakuu/5-hoitovuosi')
+RETURNING id INTO muutos_id_4_kulu_1;
+
 INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, luoja, tyyppi, tavoitehintainen)
-VALUES  ( 0, (SELECT id FROM kulu WHERE lisatieto = 'Muutoksesta automaattisesti luotu kulu 1'), 1230, _toimenpideinstassi_id_hoidon_johto, _johto_ja_hallintokorvaus_tehtavaryhma_id, 'kokonaishintainen',
+VALUES  ( 0, muutos_id_4_kulu_1, 1230, _toimenpideinstassi_id_hoidon_johto, _johto_ja_hallintokorvaus_tehtavaryhma_id, 'kokonaishintainen',
           kayttaja_id_tero, 'jjh-muutos', true);
 INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
-VALUES  (1, (SELECT id FROM mhu_muutos WHERE syy = 'Työmääräarviot ylittyivät'),
-         (SELECT id FROM kulu WHERE lisatieto = 'Muutoksesta automaattisesti luotu kulu 1'));
+VALUES  (1, muutos_id_4,muutos_id_4_kulu_1);
 
 -- Iihin vähän kiinteähintaista työtä, jotta nähdään että nousee oikein pysyävän muutoksen lomakkeelle
 insert into public.kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, tehtavaryhma, tehtava, sopimus, luotu, luoja, muokattu, muokkaaja, summa_indeksikorjattu, indeksikorjaus_vahvistettu, vahvistaja, versio)
@@ -144,6 +162,9 @@ $$ language plpgsql;
 
 SELECT * FROM luo_mhu_muutoksia((SELECT id FROM harja.public.urakka WHERE nimi = 'Iin MHU 2021-2026'),
               '2025-05-07');
+
+SELECT * FROM luo_mhu_muutoksia((SELECT id FROM harja.public.urakka WHERE nimi = 'POP MHU Suomussalmi 2024-2029'),
+                                '2025-05-07');
 
 
 
