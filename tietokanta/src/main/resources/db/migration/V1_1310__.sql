@@ -26,7 +26,7 @@ CREATE TABLE mhu_muutos_liite_historia
     LIKE mhu_muutos_liite EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
 
-CREATE INDEX mhu_muutos_liite_historia_mv_idx ON mhu_muutos_liite (muutos, versio);
+CREATE INDEX mhu_muutos_liite_historia_mv_idx ON mhu_muutos_liite_historia (muutos, versio);
 
 --
 
