@@ -374,7 +374,7 @@
 
 (deftest hae-yksittaisen-muutoksen-tiedot-lomakkeelle-ii-johto-ja-hallintokorvaus
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        muutos {:id (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos WHERE syy = 'Työmääräarviot ylittyivät';")),
+        muutos {:id (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos WHERE urakka = " urakka-id " AND syy = 'Työmääräarviot ylittyivät';")),
                 :versio 1, :tyyppi "johto-ja-hallintokorvaus"}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-muutoksen-tiedot
@@ -392,7 +392,7 @@
 
 (deftest hae-yksittaisen-muutoksen-tiedot-lomakkeelle-ii-pysyva-muutos
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        muutos {:id (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos WHERE nimi = 'Päällysteen paikkausmuutos';")),
+        muutos {:id (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos WHERE urakka = " urakka-id " AND nimi = 'Päällysteen paikkausmuutos';")),
                 :versio 1, :tyyppi "pysyva" :liite-idt #{}}
         tpi-id-talvihoito (ffirst (q (format "SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23104') AND %s = urakka;" urakka-id))) ; -- Talvihoito
         tpi-id-liikymp (ffirst (q (format "SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23116') AND %s = urakka;" urakka-id))) ; -- Liikenneympäristön hoito
@@ -516,7 +516,7 @@
 
 (deftest testaa-muutoksen-liitteiden-lisays-ja-poisto
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        muutos-id (ffirst (q "SELECT id FROM mhu_muutos WHERE syy = 'Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.';"))
+        muutos-id (ffirst (q "SELECT id FROM mhu_muutos WHERE urakka = " urakka-id " AND syy = 'Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.';"))
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
         liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
         tiedosto "dev-resources/images/harja-brand-text.png"
