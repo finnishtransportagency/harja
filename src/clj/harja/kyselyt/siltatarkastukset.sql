@@ -22,7 +22,7 @@ FROM silta s
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
   AND s2.id IS NULL
-  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM s1.tarkastusaika));
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR s1.tarkastusaika BETWEEN make_date(:hoitovuoden-alkuvuosi::INTEGER, 10, 01) AND make_date(:hoitovuoden-alkuvuosi::INTEGER + 1, 09, 30));
 
 -- name: hae-urakan-sillat-puutteet
 -- Hakee alueurakan sillat, joissa on puutteita (tulos muu kuin A) uusimmassa tarkastuksessa.
@@ -53,7 +53,7 @@ FROM silta s
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
   AND s2.id IS NULL
-  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM s1.tarkastusaika));
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR s1.tarkastusaika BETWEEN make_date(:hoitovuoden-alkuvuosi::INTEGER, 10, 01) AND make_date(:hoitovuoden-alkuvuosi::INTEGER + 1, 09, 30));
 
 --name: hae-urakan-sillat-korjattavat
 -- Hakee sillat, joissa viimeisimmässä tarkastuksessa vähintään 1 B TAI C kohde.
@@ -89,7 +89,7 @@ FROM silta s
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
   AND s2.id IS NULL
-  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM s1.tarkastusaika));
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR s1.tarkastusaika BETWEEN make_date(:hoitovuoden-alkuvuosi::INTEGER, 10, 01) AND make_date(:hoitovuoden-alkuvuosi::INTEGER + 1, 09, 30));
 
 -- name: hae-urakan-sillat-ohjelmoitavat
 -- Hakee sillat, joiden tulos on D ("Korjaus ohjelmoitava")
@@ -127,7 +127,7 @@ FROM silta s
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
   AND s2.id IS NULL
-  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM s1.tarkastusaika));
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR s1.tarkastusaika BETWEEN make_date(:hoitovuoden-alkuvuosi::INTEGER, 10, 01) AND make_date(:hoitovuoden-alkuvuosi::INTEGER + 1, 09, 30));
 
 -- name: hae-urakan-sillat-korjatut
 -- Hakee sillat, joille on aiemmassa tarkastuksessa on ollut virheitä.
@@ -172,7 +172,7 @@ FROM siltatarkastus st1
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
   AND st1.poistettu = FALSE
-  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR :hoitovuoden-alkuvuosi = EXTRACT(YEAR FROM st1.tarkastusaika));
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR s1.tarkastusaika BETWEEN make_date(:hoitovuoden-alkuvuosi::INTEGER, 10, 01) AND make_date(:hoitovuoden-alkuvuosi::INTEGER + 1, 09, 30));
 
 -- name: hae-sillan-tarkastukset
 -- Hakee sillan sillantarkastukset
