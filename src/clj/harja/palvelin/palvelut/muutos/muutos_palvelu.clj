@@ -420,6 +420,7 @@
   "Asettaa poistetuksi vanhat kulutiedot, jotta ne eivät näy käyttöliittymässä tai raporteissa."
   ;; halutaan saada historiatieto talteen, tämä on siihen käytännöllinen tapa tekemättä valtavaa refaktorointia kulu tauluun (ja sille omaa historiataulua ja triggereitä)
   [db kayttaja rivi]
+  ;; FIXME: Tämä on näemmä vielä kesken. Rivin mukana ei tule vielä kulu-id:tä ainakaan testeissä
   (let [kulu-id (:kulu-id rivi)]
     (when kulu-id
       (log/info "Poistetaan vanha kulu id:llä " kulu-id)
@@ -462,9 +463,17 @@
                                        :kayttaja (:id kayttaja)
                                        :tyyppi "jjh-muutos"})]]
 
-      (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio (:versio muutos-id-ja-versio)
-                                                     :muutos (:id muutos-id-ja-versio)
-                                                     :kulu kulu-id-db})
+      ;; TODO: Korjaa kulun luominen ja päivittäminen, kun teet johto- ja hallintokorvaus muutoksia
+      ;;       Pitää pystyä päivittämään vanhaa kulu-riviä siten, että uudet kulutiedot korvaavat vanhat ja versio päivittyy
+      ;; FIXME: Tämä on näemmä vielä kesken. Rivin mukana ei tule vielä kulu-id:tä ainakaan testeissä
+      (if (:kulu-id rivi)
+        (muutos-kyselyt/paivita-muutos-kulu-linkitys! db {:versio (:versio muutos-id-ja-versio)
+                                                          :muutos (:id muutos-id-ja-versio)
+                                                          :vanha-kulu (:kulu-id rivi)
+                                                          :uusi-kulu kulu-id-db})
+        (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio (:versio muutos-id-ja-versio)
+                                                       :muutos (:id muutos-id-ja-versio)
+                                                       :kulu kulu-id-db}))
       (poista-vanhat-kulutiedot! db kayttaja rivi))))
 
 

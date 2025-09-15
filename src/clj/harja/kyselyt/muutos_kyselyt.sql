@@ -148,6 +148,14 @@ DO UPDATE SET
 INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
 VALUES (:versio, :muutos, :kulu);
 
+-- name: paivita-muutos-kulu-linkitys!
+-- Kulu luodaan aina uusiksi taustalla, joten rivi päivitetään muutos-id:n ja vanhan kulun id:n perusteella
+UPDATE mhu_muutos_kulu
+   SET versio = :versio,
+       kulu = :uusi-kulu
+ WHERE muutos = :muutos
+   AND kulu = :vanha-kulu;
+
 -- name: luo-jjh-kulun-kohdistus<!
 INSERT INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
                             tavoitehintainen)
