@@ -172,7 +172,7 @@ FROM siltatarkastus st1
 WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
   AND s.poistettu IS NOT TRUE
   AND st1.poistettu = FALSE
-  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR s1.tarkastusaika BETWEEN make_date(:hoitovuoden-alkuvuosi::INTEGER, 10, 01) AND make_date(:hoitovuoden-alkuvuosi::INTEGER + 1, 09, 30));
+  AND (:hoitovuoden-alkuvuosi::INTEGER IS NULL OR st1.tarkastusaika BETWEEN make_date(:hoitovuoden-alkuvuosi::INTEGER, 10, 01) AND make_date(:hoitovuoden-alkuvuosi::INTEGER + 1, 09, 30));
 
 -- name: hae-sillan-tarkastukset
 -- Hakee sillan sillantarkastukset
