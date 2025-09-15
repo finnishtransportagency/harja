@@ -39,12 +39,24 @@ SELECT m.id,
 -- ONLY tarvitaan, jottei kysellä historiatauluista
   FROM ONLY mhu_muutos m
            LEFT JOIN ONLY mhu_muutos_kustannusvaikutus kust ON (m.id = kust.muutos AND
-                                                           m.versio = kust.versio AND
+                                                          -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
+                                                          --       liittyy yhteen muutokseen. Purettava mahdollisesti versiointia
+                                                          --       ja antaa alitaulujen yksittäisten rivien elää itsenäisemmin elämää historian suhteen
+                                                          --       mhu_muutos taulun versio voisi edustaa ylintä versionnumeroa
+                                                          --       joka löytyy jostakin lapsitaulun riveistä. Vanhat versiot on
+                                                          --       silti löydettävissä äiti muutos id:n avulla.
+                                                           --m.versio = kust.versio AND
                                                            kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi)
            LEFT JOIN ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm ON (m.id = tjm.muutos AND
-                                                                 m.versio = tjm.versio AND
+                                                                  -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
+                                                                  --       liittyy yhteen muutokseen. .. sama teksti kuin yllä
+                                                                 --m.versio = tjm.versio AND
                                                                  tjm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi)
-           LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos AND m.versio = lii.versio)
+           LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos
+                                                  -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
+                                                  --       liittyy yhteen muutokseen. .. sama teksti kuin yllä
+                                                  -- AND m.versio = lii.versio
+                                                  )
  WHERE m.urakka = :urakka
        -- hox: on myös sellaisia muutoksia, jotka ovat voimassa vain meneillään olevan hoitokauden
        -- niiden käsittely puuttuu vielä tästä kyselystä
@@ -139,6 +151,7 @@ INSERT INTO mhu_muutos_kustannusvaikutus (
     :summa
 ) ON CONFLICT (muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi)
 DO UPDATE SET
+  versio               = EXCLUDED.versio,
   kustannuslaji        = EXCLUDED.kustannuslaji,
   toimenpideinstanssi  = EXCLUDED.toimenpideinstanssi,
   summa                = EXCLUDED.summa;
@@ -294,12 +307,24 @@ SELECT
 FROM toimenpiteet tk
     LEFT JOIN toimenpide tp ON tp.koodi = tk.koodi
     LEFT JOIN toimenpideinstanssi tpi ON tp.id = tpi.toimenpide AND tpi.urakka = :urakka
-    LEFT JOIN ONLY mhu_muutos m ON (m.id = :id AND m.versio = :versio AND m.poistettu IS FALSE)
+    LEFT JOIN ONLY mhu_muutos m ON (m.id = :id AND
+                                    -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
+                                    --       liittyy yhteen muutokseen. Purettava mahdollisesti versiointia
+                                    --       ja antaa alitaulujen yksittäisten rivien elää itsenäisemmin elämää historian suhteen
+                                    --       mhu_muutos taulun versio voisi edustaa ylintä versionnumeroa
+                                    --       joka löytyy jostakin lapsitaulun riveistä. Vanhat versiot on
+                                    --       silti löydettävissä äiti muutos id:n avulla.
+                                    --m.versio = :versio AND
+                                    m.poistettu IS FALSE)
     LEFT JOIN ONLY mhu_muutos_kustannusvaikutus kust ON (m.id = kust.muutos AND
-                                                         m.versio = kust.versio AND
+                                                         -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
+                                                         --       liittyy yhteen muutokseen. ... sama teksti kuin yllä
+                                                         --m.versio = kust.versio AND
                                                          kust.toimenpideinstanssi = tpi.id)
     LEFT JOIN ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm ON (m.id = tjm.muutos AND
-                                                               m.versio = tjm.versio AND
+                                                                -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
+                                                                --       liittyy yhteen muutokseen. ... sama teksti kuin yllä
+                                                               --m.versio = tjm.versio AND
                                                                tjm.tehtava IN (SELECT id FROM tehtava WHERE emo = tp.id))
     LEFT JOIN summatut_tyot st ON st.toimenpide = tk.nimi
 GROUP BY m.id, tk.nimi, tk.koodi, tpi.id, tk.koodi, tp.jarjestys
@@ -471,7 +496,8 @@ ORDER BY
   o.otsikko ASC,
   tk.nimi ASC;
 
-
+-- FIXME Termistö hiukan sekaisin tässä. Tässä oikeastaan pitäisi puhua yksikköhinnan/tavoitehinnan muutoksesta
+--       Varsinaisia tehtävien määrämuutoksia tulee pysyvistä muutoksista ja muutostöistä, joten niissä käytetään määrämuutos termiä.
 -- name: paivita-tehtava-maaramuutos<!
 INSERT INTO mhu_muutos_tehtava_tiedot (
   urakka,
