@@ -107,8 +107,7 @@
             :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea :otsikkorivi-luokka "korkea"}
            {:otsikko (str "Tammi-syyskuu " (pvm/vuosi (second valittu-hoitokausi)) " (€)")
             :nimi :loppukausi :tyyppi :euro :vaadi-ei-negatiivinen? true
-            :leveys "20%" :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 9999999 2))
-            :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea :otsikkorivi-luokka "korkea"}
+            :leveys "20%" :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea :otsikkorivi-luokka "korkea"}
            {:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :string :fmt #(fmt/euro-opt false %) :leveys "20%" :muokattava? (constantly false)
             :tasaa :oikea :otsikkorivi-luokka "korkea"}]
           taulukon-tiedot]]]
@@ -240,7 +239,8 @@
            [:div.col-xs-12.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]
           (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
             #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom))
-            #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))])
+            (when (and tarjouksen-maara (> tarjouksen-maara 0))
+              #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti"))))])
 
        [:div.row
         [:div.col-xs-12
@@ -277,7 +277,8 @@
        (when-not vahvistettu?
          (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
            #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom))
-           #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti"))))])))
+           (when (and tarjouksen-maara (> tarjouksen-maara 0))
+             #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))))])))
 
 (defn hoidonjohtopalkkiot [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (if (nil? (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot]))
@@ -324,7 +325,8 @@
            [:div.col-xs-12.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]
           (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
             #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom))
-            #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))])
+            (when (and tarjouksen-maara (> tarjouksen-maara 0))
+              #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti"))))])
 
        [:div.row
         [:div.col-xs-12
@@ -361,7 +363,8 @@
        (when-not vahvistettu?
          (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
            #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom))
-           #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti"))))])))
+           (when (and tarjouksen-maara (> tarjouksen-maara 0))
+            #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))))])))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (let [valittu-vuosi (pvm/vuosi (first valittu-hoitokausi))

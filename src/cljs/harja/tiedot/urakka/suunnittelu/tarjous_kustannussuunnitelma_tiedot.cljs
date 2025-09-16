@@ -10,6 +10,8 @@
             [harja.tiedot.urakka.urakka :as tila]))
 
 (defonce nakymassa? (atom false))
+(defonce grid-tiedot-atom (atom [{}]))
+(defonce grid-toimenkuvat-atom (atom [{}]))
 
 (defn laske-rivit-yhteen [rivi]
   (let [vuosikohtaiset-avaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))
@@ -95,6 +97,24 @@
 (defn scrollaa-muutoksiin [elementin-id]
   ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat tai vahvistaa koko kustannussuunnitelman
   (siirrin/siirry-elementin-id elementin-id 200))
+
+(defn konvertoi-grid-muotoon [data]
+  (into [] (reduce (fn [rivit tarjous-rivi]
+                     (let [vuosiarvot (reduce (fn [uusi rivi]
+                                                (-> uusi
+                                                  (assoc :maksukausi (:maksukausi tarjous-rivi))
+                                                  (assoc :poistettu (:poistettu tarjous-rivi))
+                                                  (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
+                                                  (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
+                                                  (assoc :tehtava-id (:tehtava-id tarjous-rivi))
+                                                  (assoc :tehtavaryhma-id (:tehtavaryhma-id tarjous-rivi))
+                                                  (assoc :osio (:osio tarjous-rivi))
+                                                  (assoc (keyword (str "vuosi-" (:vuosi rivi))) (:summa rivi))))
+                                        {} (:hoitovuosittaiset-arvot tarjous-rivi))
+                           nimiarvot {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)}
+                           lopputulos (merge vuosiarvot nimiarvot)]
+                       (concat rivit [lopputulos])))
+             [] data)))
 
 (defn muunna-vuodet
   "Muunnetaan UI Gridin käyttämä tietomalli bäkkärin käyttämään muotoon.
@@ -233,16 +253,15 @@
 
   HaeTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (let [tarjous-tiedot (:tarjous vastaus)
-          taulukon-tiedot (muunna-tarjous-data tarjous-tiedot)]
-      (-> app
-        (assoc :haku-kaynnissa? false)
-        (assoc :urakka-id (:urakka-id vastaus))
-        (assoc :tarjous tarjous-tiedot)
-        (assoc :hankinnat (filtteri-hankinnat taulukon-tiedot))
-        (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))
-        (assoc :hoidonjohtopalkkiot (filtteri-hoidonjohtopalkkiot taulukon-tiedot))
-        (assoc :toimenkuvat (filtteri-toimenkuvat taulukon-tiedot)))))
+    (-> app
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
+      (assoc :urakka-id (:urakka-id vastaus))
+      (assoc :hankinnat (filtteri-hankinnat taulukon-tiedot))
+      (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))
+      (assoc :hoidonjohtopalkkiot (filtteri-hoidonjohtopalkkiot taulukon-tiedot))
+      (assoc :toimenkuvat (filtteri-toimenkuvat taulukon-tiedot))))
 
   HaeTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -262,9 +281,15 @@
 
   HaeTyhjatTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (-> app
-      (assoc :haku-kaynnissa? false)
-      (assoc :tarjous (:tarjous vastaus))))
+    (let [toimenkuvat (filter #(some #{"johto-ja-hallintokorvaus"} [(:osio %)]) (:tarjous vastaus))
+          toimenkuva-rivit (konvertoi-grid-muotoon toimenkuvat)
+          ;; Asetetaan tyhjät tiedot grid atomeihin
+          _ (reset! grid-toimenkuvat-atom toimenkuva-rivit)]
+
+      (-> app
+        (assoc :haku-kaynnissa? false)
+        (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
+        (assoc :tarjous (:tarjous vastaus)))))
 
   HaeTyhjatTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -368,7 +393,7 @@
 
   TallennaKilpailutettavatHankinnatOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Kilpailutettavat hankinat tallennettiin.")
+    (viesti/nayta-toast! "Kilpailutettavat hankinnat tallennettiin.")
     (-> app
       (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
@@ -536,7 +561,7 @@
 
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Hoidonjohtopalkkiot tallennettiin.")
+    (viesti/nayta-toast! "Johto- ja Hallintokorvaukset tallennettiin.")
     (-> app
       (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
       (assoc :tallennus-kesken? false)
@@ -626,16 +651,16 @@
   (process-event [{:keys [rivi]} app]
     (let [toimenkuvat (:toimenkuvat app)
           muokatut-toimenkuvat (map (fn [m]
-                                      (if (= (:nimi m) (:nimi rivi))
-                                        (assoc m :poistettu true)
-                                        m)) toimenkuvat)]
-      (-> app
-        (assoc :toimenkuvat muokatut-toimenkuvat)
-        (update :tarjous
-          #(map (fn [m]
-                  (if (= (:nimi m) (:nimi rivi))
-                    (assoc m :poistettu true)
-                    m)) %)))))
+                                         (if (= (:nimi m) (:nimi rivi))
+                                           (assoc m :poistettu true)
+                                           m)) toimenkuvat)]
+    (-> app
+      (assoc :toimenkuvat muokatut-toimenkuvat)
+      (update :tarjous
+        #(map (fn [m]
+                (if (= (:nimi m) (:nimi rivi))
+                  (assoc m :poistettu true)
+                  m)) %)))))
 
   PaivitaHankinnatGrid
   (process-event [{:keys [hankinnat]} app]
