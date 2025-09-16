@@ -268,7 +268,7 @@
 
         ;; Järjestetään toimenkuvat järkevään järjestykseen
         toimenkuvat (map (fn [toimenkuva]
-                           (assoc toimenkuva :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:nimike toimenkuva))))
+                           (assoc toimenkuva :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:toimenkuva toimenkuva))))
                       toimenkuvat)
 
         ;; Haetaan raskaalla prosessilla toimenkuvakohtaisesti suunnitellut johto-ja-hallintokorvaukset
