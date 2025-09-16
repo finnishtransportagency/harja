@@ -29,23 +29,28 @@ function tarkistaToimenpideLuvut(toimenpide, luku1, luku2) {
         .should('have.value', luku2);
 }
 
-function tarkistaRahavarausLuvut(rahavaraus, luku1, luku2) {
+function tarkistaRahavarausLuvut(rahavaraus, luku1, luku2, luku3,) {
+    cy.get('#rahavaraukset-elementti table.grid')
+        .contains('td', rahavaraus)
+        .closest('tr')
+        .find('td').eq(1)
+        .contains(luku1);
     // Tyhjät arvot on parempi tarkistaa näin
-    if(luku1 === '') {
+    if(luku2 === '') {
        // Ei tarvitse tarkastaa mitään.
     } else {
         cy.get('#rahavaraukset-elementti table.grid')
             .contains('td', rahavaraus)
             .closest('tr')
-            .find('td').eq(1)
-            .contains(luku1);
+            .find('td').eq(2)
+            .contains(luku2);
     }
     // Indeksikorjattu luku
     cy.get('#rahavaraukset-elementti table.grid')
         .contains('td', rahavaraus)
         .closest('tr')
-        .find('td').eq(2)
-        .contains(luku2);
+        .find('td').eq(3)
+        .contains(luku3);
 }
 
 function tarkistaErillishankinnanLuvut(kuukausi, luku1, luku2) {
@@ -227,9 +232,9 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
 
             // Löytyyhän lukuja - Olisi hyvä, jos tarjouspuolella käytäisiin lisäämässä jotain, mitä tässä verrata,
             // mutta tätä tehtäessä tarjouspuoli on vielä niin kesken, ettei kannata vielä tehdä sinne cypress-testejä
-            tarkistaRahavarausLuvut('Tilaajan rahavaraus kannustinjärjestelmään', '', '-');
-            tarkistaRahavarausLuvut('Äkilliset hoitotyöt', '', '-');
-            tarkistaRahavarausLuvut('Vahinkojen korjaukset', '', '-');
+            tarkistaRahavarausLuvut('Tilaajan rahavaraus kannustinjärjestelmään', '0,00', '', '-');
+            tarkistaRahavarausLuvut('Äkilliset hoitotyöt', '0,00', '', '-');
+            tarkistaRahavarausLuvut('Vahinkojen korjaukset', '0,00', '', '-');
         });
     });
 
