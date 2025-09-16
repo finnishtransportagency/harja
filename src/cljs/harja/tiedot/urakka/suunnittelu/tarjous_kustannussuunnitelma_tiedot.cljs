@@ -233,6 +233,7 @@
       (-> app
         (assoc :haku-kaynnissa? false)
         (assoc :urakka-id (:urakka-id vastaus))
+        (assoc :kattohintakerroin (:kattohintakerroin vastaus))
         (assoc :tarjous tarjous-tiedot)
         (assoc :hankinnat (filtteri-hankinnat taulukon-tiedot))
         (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))

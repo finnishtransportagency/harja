@@ -216,10 +216,10 @@
                              (:vuosikohtaiset-summat gridien-yhteensa)
                              {:yhteensa (:yhteensa gridien-yhteensa)})
          kattohinta-rivi (merge
-                           {:nimi "Tarjouksen kattohinta (1,1 x tarjouksen tavoitehinta)" :eperhoitovuosi 0}
+                           {:nimi (str "Tarjouksen kattohinta (" kattohintakerroin " x tarjouksen tavoitehinta)") :eperhoitovuosi 0}
                            (zipmap (keys (:vuosikohtaiset-summat gridien-yhteensa))
-                             (map #(* 1.1 %) (vals (:vuosikohtaiset-summat gridien-yhteensa))))
-                           {:yhteensa (* 1.1 (:yhteensa gridien-yhteensa))})]
+                             (map #(* kattohintakerroin %) (vals (:vuosikohtaiset-summat gridien-yhteensa))))
+                           {:yhteensa (* kattohintakerroin (:yhteensa gridien-yhteensa))})]
      [tavoitehinta-rivi kattohinta-rivi])]))
 
 (defn johto-ja-hallintokorvaukset [e! kaikki-toimenkuvat vuositaulukon-otsikot vuosi-leveys app]

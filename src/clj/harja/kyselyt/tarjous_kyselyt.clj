@@ -289,24 +289,30 @@
 
 (defn hae-tarjous [db urakka-id]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        urakan-alkuvuosi (when (:alkupvm urakan-tiedot) (pvm/vuosi (:alkupvm urakan-tiedot)))
+        urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
+        kattohintakerroin (or (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) 1.1)
         tarjous-rivit (hae-tarjouksen-tiedot db {:urakka_id urakka-id})
-        ;; Mäppää tarjouksen tietokantarivit clojure-mapeiksi.
+        ;; Mäppää tarjouksen tietokantarivit clojure-mapeiksi. 
         tarjous-rivit (mapv
                         (fn [tarjous]
                           (-> tarjous
                             (assoc :kustannukset
-                              (mapv
-                                (fn [k]
-                                  (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :tehtava_id :long :tehtavaryhma_id :long :rahavaraus_id :long))
-                                (konversio/pgarray->vector (:kustannukset tarjous))))
+                              (if (:kustannukset tarjous)
+                                (mapv
+                                  (fn [k]
+                                    (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :tehtava_id :long :tehtavaryhma_id :long :rahavaraus_id :long))
+                                  (konversio/pgarray->vector (:kustannukset tarjous)))
+                                []))
                             (assoc :toimenkuvat
-                              (mapv
-                                (fn [k]
-                                  (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :johto_ja_hallintokorvaus_toimenkuva_id :long))
-                                (konversio/pgarray->vector (:toimenkuvat tarjous))))))
+                              (if (:toimenkuvat tarjous)
+                                (mapv
+                                  (fn [k]
+                                    (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :johto_ja_hallintokorvaus_toimenkuva_id :long))
+                                  (konversio/pgarray->vector (:toimenkuvat tarjous)))
+                                []))))
                         tarjous-rivit)
-
+         
         ;; Muutetaan ui:lle välitettävään muotoon
         kustannus-rivit (mapv #(muodosta-tarjous-rivi % (hae-tarjouksesta-rivit-vuodelle :kustannukset tarjous-rivit (:nimi %))) (:kustannukset (first tarjous-rivit)))
         toimenkuva-rivit (mapv #(muodosta-tarjous-rivi % (hae-tarjouksesta-rivit-vuodelle :toimenkuvat tarjous-rivit (:nimi %))) (:toimenkuvat (first tarjous-rivit)))
@@ -317,11 +323,13 @@
                              nil)
         tarjous {:urakka-id urakka-id
                  :kaikki-toimenkuvat kaikki-toimenkuvat
+                 :kattohintakerroin kattohintakerroin
                  :tarjous tarjousrivit}
         ;; Tarkistetaan, että tarjous ei ole tyhjä
         tarjous (if (empty? (first (:tarjous tarjous)))
                   {:urakka-id urakka-id
                    :kaikki-toimenkuvat kaikki-toimenkuvat
+                   :kattohintakerroin kattohintakerroin
                    :tarjous (luo-default-tarjous db urakka-id)}
                   tarjous)
 
