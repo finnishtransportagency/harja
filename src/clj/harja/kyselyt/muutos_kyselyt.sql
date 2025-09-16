@@ -206,6 +206,16 @@ UPDATE mhu_muutos
 INSERT INTO mhu_muutos_liite (muutos, liite, versio)
 VALUES (:muutos, :liite, :versio);
 
+-- name: hae-muutoksen-liite-idt
+SELECT liite
+  FROM mhu_muutos_liite
+ WHERE muutos = :muutos;
+
+-- name: poista-muutos-liite-linkitys!
+DELETE FROM mhu_muutos_liite
+ WHERE muutos = :muutos
+   AND liite = :liite;
+
 
 -- name: hae-pysyvan-muutoksen-kustannustiedot
 WITH toimenpiteet AS (

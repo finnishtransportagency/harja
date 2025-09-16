@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.muutos.muutos-palvelu
-  (:require [taoensso.timbre :as log]
+  (:require [clojure.set :as set]
+            [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
 
@@ -489,14 +490,35 @@
                                        :kayttaja (:id kayttaja)})))
 
 (defn- tallenna-muutoksen-liitteet [db aiti-muutos-id-ja-versio liitteet]
-  (doseq [liite liitteet]
-    (let [liite-id (:id liite)
-          muutos-id (:id aiti-muutos-id-ja-versio)
-          muutos-versio (:versio aiti-muutos-id-ja-versio)]
-      (when (and liite-id muutos-id muutos-versio)
+  (let [{muutos-id :id uusi-muutos-versio :versio} aiti-muutos-id-ja-versio
+        vanhat-liite-idt (set (map :liite
+                                (muutos-kyselyt/hae-muutoksen-liite-idt db {:muutos muutos-id})))
+        uudet-liite-idt (set (map :id liitteet))
+        poistettavat-liite-idt (set/difference vanhat-liite-idt uudet-liite-idt)
+        lisattavat-liite-idt (set/difference uudet-liite-idt vanhat-liite-idt)]
+
+    (log/debug " Vanhojen liitteiden idt: " vanhat-liite-idt
+               " Uusien liitteiden idt: " uudet-liite-idt
+               " Poistettavat liite-idt: " poistettavat-liite-idt
+               " Lisättävät liite-idt: " lisattavat-liite-idt)
+
+    ;; Poistetaan vanhat liitteiden linkitykset
+    (doseq [liite-id poistettavat-liite-idt]
+      (when (and liite-id muutos-id)
+        (log/debug "### Poistetaan liite linkitys: " {:muutos muutos-id
+                                                      :liite liite-id})
+        (muutos-kyselyt/poista-muutos-liite-linkitys! db {:muutos muutos-id
+                                                          :liite liite-id})))
+
+    ;; Lisätään uudet liitteet
+    (doseq [liite-id lisattavat-liite-idt]
+      (when (and liite-id muutos-id uusi-muutos-versio)
+        (log/debug "### Lisätään liite linkitys: " {:muutos muutos-id
+                                                    :liite liite-id
+                                                    :versio uusi-muutos-versio})
         (muutos-kyselyt/linkita-muutos-ja-liite<! db {:muutos muutos-id
                                                       :liite liite-id
-                                                      :versio muutos-versio})))))
+                                                      :versio uusi-muutos-versio})))))
 
 (defn- tallenna-muutoksen-kustannusvaikutukset [db aiti-muutos-id-ja-versio hoitokauden_alkuvuosi kustannusvaikutukset]
   (let [muutos-id (:id aiti-muutos-id-ja-versio)

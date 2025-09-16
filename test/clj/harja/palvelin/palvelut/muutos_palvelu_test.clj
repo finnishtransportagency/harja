@@ -528,7 +528,7 @@
         liitteet (list
                    {:id luotu-liite-id :kuvaus nil, :virustarkastettu? true, :urakka urakka-id, :nimi "harja-brand-text.png", :s3hash nil, :lahde "harja-ui", :tyyppi "image/png", :koko 2507}
                    {:id olemassaoleva-liite-id, :nimi "rumpu.jpg", :kuvaus nil, :tyyppi "image/png", :koko nil, :liite_oid nil, :virustarkastettu? true})
-        liitelinkkien-maara-ennen-tallennusta (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s AND versio = 1;" muutos-id)))
+        liitelinkkien-maara-ennen-tallennusta (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s;" muutos-id)))
         muutos-payload (muutospayload-liitteilla muutos-id urakka-id liitteet)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :tallenna-muutos
@@ -536,7 +536,7 @@
                   {:urakka-id urakka-id
                    :valittu-hoitokausi valittu-hoitokausi
                    :muutos muutos-payload})
-        liitelinkkien-maara-tallennuksen-jalkeen (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s AND versio = 2;" muutos-id)))
+        liitelinkkien-maara-tallennuksen-jalkeen (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s;" muutos-id)))
         kirjatut (:kirjatut-muutokset vastaus)
         paivitetty (first (filter #(= (:id %) muutos-id) kirjatut))
         odotetut-liite-linkit (list {:id olemassaoleva-liite-id, :muutos muutos-id} {:id luotu-liite-id, :muutos muutos-id})
@@ -548,7 +548,7 @@
                                       :valittu-hoitokausi valittu-hoitokausi
                                       :muutos liitteet-poistava-payload})
         paivitetty-liitteet-poistettu (first (filter #(= (:id %) muutos-id) (:kirjatut-muutokset liitteet-poistettu-vastaus)))
-        liitelinkkien-maara-liitteiden-poiston-jalkeen (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s AND versio = 3;" muutos-id)))]
+        liitelinkkien-maara-liitteiden-poiston-jalkeen (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s;" muutos-id)))]
     (is (= 1 liitelinkkien-maara-ennen-tallennusta) "Ennen tallennusta oli yksi liitelinkki muutoksessa")
     (is (= 2 liitelinkkien-maara-tallennuksen-jalkeen) "Tallennuksen jälkeen kaksi liitelinkkiä")
     (is (= odotetut-liite-linkit (:liitteet paivitetty)) "Liitteiden linkit on päivitetty muutokseen")
