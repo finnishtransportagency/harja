@@ -509,7 +509,8 @@ DO UPDATE SET
 
 
 -- name: hae-urakan-muutostyot
-SELECT  tyyppi, 
+SELECT  id, 
+        tyyppi, 
         nimi, 
         voimassa_alkaen  
  FROM mhu_muutos 

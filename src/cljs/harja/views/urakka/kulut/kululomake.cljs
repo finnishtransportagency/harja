@@ -347,23 +347,21 @@
                         :muokattu? true
                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]))
 
-(defn- erillisrahoitettu-muutostyo-kohdistus [e! lomake kohdistus toimenpiteet nro]
+(defn- erillisrahoitettu-muutostyo-kohdistus [e! lomake urakan-muutostyot kohdistus toimenpiteet nro]
   (let [lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)]
     [:<>
      [:div.row
       [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
        [:div.label-ja-alasveto {:style {:width "320px"}}
 
-        ;; TODO .. 
-        ;; Vedä jostain urakalle syötetyt muutostyöt
         [:span.alasvedon-otsikko "Muutostyö*"]
-        [yleiset/livi-pudotusvalikko {:valinta (:toimenpide kohdistus)
+        [yleiset/livi-pudotusvalikko {:valinta (:muutostyo kohdistus)
                                       :vayla-tyyli? true
-                                      :format-fn :toimenpide
+                                      :format-fn :nimi
                                       :muokattu? true
-                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :toimenpide)
-                                      :valitse-fn #(e! (tiedot/->ValitseToimenpideKohdistukselle % nro))}
-         toimenpiteet]]
+                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :muutostyo)
+                                      :valitse-fn #(e! (tiedot/->ValitseMuutostyoKohdistukselle % nro))}
+         (vec urakan-muutostyot)]]
 
        [:div.label-ja-alasveto {:style {:width "320px"}}
         [:span.alasvedon-otsikko "Toimenpide*"]
@@ -392,7 +390,7 @@
                          :uusi-rivi? true
                          :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]]))
 
-(defn- nayta-kohdistus [e! lomake nro kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa?]
+(defn- nayta-kohdistus [e! lomake nro kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa? urakan-muutostyot]
   (let [kohdistustyyppi (:tyyppi kohdistus)
         ;; Varmistetaan, että tehtäväryhmissä ei ole vääriä juttuja tälle kohdistukselle
         tehtavaryhmat (tiedot/kasittele-tehtavaryhmat tehtavaryhmat (:tehtavaryhma kohdistus))
@@ -438,7 +436,7 @@
        :rahavaraus [rahavaraus-kohdistus e! lomake kohdistus rahavaraukset nro]
        :lisatyo [lisatyo-kohdistus e! lomake kohdistus toimenpiteet nro]
        :paatos [hoitovuodenpaatos-kohdistus e! lomake kohdistus nro]
-       :erillisrahoitettu-muutos [erillisrahoitettu-muutostyo-kohdistus e! lomake kohdistus toimenpiteet nro]
+       :erillisrahoitettu-muutos [erillisrahoitettu-muutostyo-kohdistus e! lomake urakan-muutostyot kohdistus toimenpiteet nro]
 
        [:<> "Sisältöä ei löytynyt."])
 
@@ -486,6 +484,7 @@
         koontilaskun-kuukausi (:koontilaskun-kuukausi lomake)
         tehtavaryhma (:tehtavaryhma lomake)
         paatos-tehty? (:paatos-tehty? lomake)
+        urakan-muutostyot (:urakan-muutostyot app)
         ;; Jos kulun eräpäivä osuu vuodelle, josta on välikatselmus pidetty, kulu lukitaan
         erapaivan-hoitovuosi (when erapaiva
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
@@ -581,7 +580,7 @@
      (map-indexed
        (fn [index kohdistus]
          ^{:key (str "kohdistus-" index)}
-         [nayta-kohdistus e! lomake index kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa?])
+         [nayta-kohdistus e! lomake index kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa? urakan-muutostyot])
        kohdistukset)
 
      (when (not kulu-lukittu?)

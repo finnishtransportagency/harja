@@ -20,6 +20,7 @@
 (defrecord TavoitehintaanKuuluminen [tavoitehinta nro])
 (defrecord ValitseRahavarausKohdistukselle [rahavaraus nro])
 (defrecord ValitseToimenpideKohdistukselle [toimenpide nro])
+(defrecord ValitseMuutostyoKohdistukselle [muutostyo nro])
 (defrecord ValitseTehtavaKohdistukselle [tehtava nro])
 (defrecord KohdistuksenLisatieto [lisatieto nro])
 (defrecord KohdistuksenSumma [summa nro])
@@ -392,6 +393,10 @@
                 (assoc-in [:lomake :kohdistukset nro :toimenpide] toimenpide)
                 (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi toimenpide)))]
       app))
+  
+  ValitseMuutostyoKohdistukselle
+  (process-event [{:keys [muutostyo nro]} app]
+    (assoc-in app [:lomake :kohdistukset nro :muutostyo] muutostyo))
 
   ValitseTehtavaKohdistukselle
   (process-event [{tehtava :tehtava nro :nro} app]
@@ -440,11 +445,11 @@
       ;; Haetaan koko hoitovuoden kulut
       (tuck/action!
         (fn [e!]
+          (e! (->HaeUrakanMuutostyot {:alkupvm alkupvm
+                                      :loppupvm loppupvm}))
           (e! (->HaeUrakanKulut {:id (-> @tila/tila :yleiset :urakka :id)
                                  :alkupvm alkupvm
-                                 :loppupvm loppupvm})
-            (e! (->HaeUrakanMuutostyot {:alkupvm alkupvm
-                                        :loppupvm loppupvm})))))
+                                 :loppupvm loppupvm}))))
 
       (-> app
         (assoc :valittu-hoitokausi [alkupvm loppupvm])
@@ -583,7 +588,7 @@
          :urakka-id @navigaatio/valittu-urakka-id}
         {:onnistui           ->HaeUrakanMuutostyotOnnistui
          :epaonnistui        ->KutsuEpaonnistui
-         :epaonnistui-parametrit [{:viesti "Urakan tehtäväryhmien ja toimenpiteiden haku epäonnistui"}]
+         :epaonnistui-parametrit [{:viesti "Urakan muutostöiden haku epäonnistui"}]
          :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] + 1))
 

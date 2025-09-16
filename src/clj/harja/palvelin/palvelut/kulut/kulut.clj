@@ -334,7 +334,7 @@
   Päivittää kulun tai kohdistuksen tiedot, jos rivi on jo kannassa.
   Palauttaa tallennetut tiedot."
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
-                             lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as tiedot}]
+                             lisatieto koontilaskun-kuukausi id kohdistukset liitteet muutostyo] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (log/debug "luo-tai-paivita-kulukohdistukset :: tiedot:" (pr-str tiedot))
   (validoi-kulu db tiedot urakka-id)
@@ -348,15 +348,16 @@
                 :kayttaja (:id user)
                 :koontilaskun-kuukausi koontilaskun-kuukausi}
           kuludb (if (nil? id)
-                 (q/luo-kulu<! db kulu)
-                 (q/paivita-kulu<! db (assoc kulu :id id)))
+                   (q/luo-kulu<! db kulu)
+                   (q/paivita-kulu<! db (assoc kulu :id id)))
+
           vanhat-kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kuludb) :urakka_id urakka-id})
           sisaan-tulevat-kohdistus-idt (into #{} (map :kohdistus-id kohdistukset))
           puuttuvat-kohdistukset (remove
                                    #(sisaan-tulevat-kohdistus-idt (:kohdistus-id %))
-                                   vanhat-kohdistukset)]
-      (when-not (or (nil? liitteet)
-                  (empty? liitteet))
+                                   vanhat-kohdistukset)
+          liitteet-tyhjia? (or (nil? liitteet) (empty? liitteet))]
+      (when-not liitteet-tyhjia?
         (doseq [liite liitteet]
           (q/linkita-kulu-ja-liite<! db {:kulu-id (:id kuludb)
                                          :liite-id (:liite-id liite)
@@ -373,10 +374,10 @@
       (doseq [kohdistusrivi kohdistukset]
         (let [;; Tarkistetaan kohdistusrivi
               yhteensopiva? (:tarkista_t_tr_ti_yhteensopivuus
-                              (first (q/tarkista-kohdistuksen-yhteensopivuus db
-                                       {:tehtava-id nil
-                                        :tehtavaryhma-id (:tehtavaryhma kohdistusrivi)
-                                        :toimenpideinstanssi-id (:toimenpideinstanssi kohdistusrivi)})))]
+                             (first (q/tarkista-kohdistuksen-yhteensopivuus db
+                                      {:tehtava-id nil
+                                       :tehtavaryhma-id (:tehtavaryhma kohdistusrivi)
+                                       :toimenpideinstanssi-id (:toimenpideinstanssi kohdistusrivi)})))]
           (if yhteensopiva?
             (as-> kohdistusrivi r
               (update r :summa big/unwrap)
