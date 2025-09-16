@@ -23,32 +23,39 @@
    "johto-ja-hallintokorvaus" 4
    "hoidonjohtopalkkio" 5})
 
-(defn jasenna-toimenkuvat-maksukausittain [toimenkuvat urakan-alkuvuosi]
+(defn jasenna-toimenkuvat-maksukausittain
+  "Tietokannasta saadaan vain osa toimenkuvista 2019-2024 alkavilla urakoilla. Näillä urakoilla osa toimenkuvista
+  on kovakoodattu frontissa. Tästä syystä otetaan tietokannasta saadut toimenkuvat ja lisätään niihin samalla
+  toimenkuva-id:llä uusia toimenkuvia ja muutetaan nimi ja maksukausi arvot maksukausittain."
+  [toimenkuvat urakan-alkuvuosi]
   (if (<= urakan-alkuvuosi 2021)
     (reduce (fn [uudet-toimenkuvat toimenkuva]
-              (let [uusi-toimenkuva (cond (= "päätoiminen apulainen" (:toimenkuva toimenkuva))
+              (let [;; Tässä lisätään puuttuva aiemmin frontin puolella kovakoodattu talvikauden toimenkuva
+                    uusi-toimenkuva (cond (= "päätoiminen apulainen" (:toimenkuva toimenkuva))
                                       {:toimenkuva "päätoiminen apulainen"
-                                       :nimike "Päätoiminen apulainen (talvikausi)"
+                                       :nimi "Päätoiminen apulainen (talvikausi)"
+                                       :toimenkuva-id (:id toimenkuva)
                                        :id (:id toimenkuva)
-                                       :toimenkuva-id (:toimenkuva-id toimenkuva)
                                        :maksukausi "talvi"}
                                       (= "apulainen/työnjohtaja" (:toimenkuva toimenkuva))
                                       {:toimenkuva "apulainen/työnjohtaja"
-                                       :nimike "Apulainen/työnjohtaja (talvikausi)"
+                                       :nimi "Apulainen/työnjohtaja (talvikausi)"
+                                       :toimenkuva-id (:id toimenkuva)
                                        :id (:id toimenkuva)
-                                       :toimenkuva-id (:toimenkuva-id toimenkuva)
                                        :maksukausi "talvi"}
                                       :else nil)
-
+                    ;; Tässä muokataan kannasta saatu toimenkuva olemaan kesäkauden toimenkuva
                     toimenkuva (cond (= "päätoiminen apulainen" (:toimenkuva toimenkuva))
                                  (assoc toimenkuva
-                                   :nimike "Päätoiminen apulainen (kesäkausi)"
+                                   :nimi "Päätoiminen apulainen (kesäkausi)"
+                                   :toimenkuva-id (:id toimenkuva)
                                    :maksukausi "kesä")
                                  (= "apulainen/työnjohtaja" (:toimenkuva toimenkuva))
                                  (assoc toimenkuva
-                                   :nimike "Apulainen/työnjohtaja (kesäkausi)"
+                                   :nimi "Apulainen/työnjohtaja (kesäkausi)"
+                                   :toimenkuva-id (:id toimenkuva)
                                    :maksukausi "kesä")
-                                 :else (merge toimenkuva {:nimike (:toimenkuva toimenkuva)
+                                 :else (merge toimenkuva {:nimi (str/capitalize (:toimenkuva toimenkuva))
                                                           :maksukausi "vuosi"}))]
 
                 ;; Lisätään talvi/kesäkausi vain, jos ne on noita erikois kovakoodattuja toimenkuvia
@@ -56,27 +63,34 @@
                   (conj uudet-toimenkuvat uusi-toimenkuva toimenkuva)
                   (conj uudet-toimenkuvat toimenkuva))))
       [] toimenkuvat)
-    toimenkuvat))
+    ;; -25 urakoiden toimenkuvat
+    (map (fn [toimenkuva]
+           (assoc toimenkuva :nimi (:toimenkuva toimenkuva)))
+      toimenkuvat)))
 
-(defn hae-urakan-toimenkuvat [db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot]
+(defn hae-urakan-toimenkuvat
+  "Haetaan urakan toimenkuvat urakan alkuvuoden perusteella.
+  1. Lisätään niitä tarvittaessa, koska tietokannasta ei löydy vanhoille urakoille kaikkia toimenkuvia (lisäämällä kesä ja talvikausille omat).
+  2. Päivitetään toimenkuvalle hoitovuosittaiset arvot frontilla käsittelyä helpottamaan.
+  3. Järjestetään toimenkuvat järkevään järjestykseen."
+  [db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot]
   (let [toimenkuvat (toimenkuva-kyselyt/hae-urakan-toimenkuvat-alkuvuoden-perusteella db {:urakka-id urakka-id
                                                                                           :urakan-alkuvuosi urakan-alkuvuosi})
         toimenkuvat (jasenna-toimenkuvat-maksukausittain toimenkuvat urakan-alkuvuosi)
-
         ;; Järjestetään toimenkuvat järkevään järjestykseen
         toimenkuvat (mapv (fn [toimenkuva]
                             (-> toimenkuva
-                              (assoc :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:nimike toimenkuva))
-                                :toimenkuva (str/lower-case (:nimike toimenkuva))
+                              (assoc
+                                :id (:id toimenkuva)
+                                :toimenkuva-id (:id toimenkuva)
+                                :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:toimenkuva toimenkuva))
+                                :toimenkuva (:toimenkuva toimenkuva)
                                 :maksukausi (or (:maksukausi toimenkuva) "vuosi")
-                                :nimi (str/capitalize (:nimike toimenkuva))
+                                :nimi (str/capitalize (:nimi toimenkuva))
                                 :toimenkuva-id (:id toimenkuva)
                                 :osio "johto-ja-hallintokorvaus"
-                                :tehtava-id nil
-                                :tehtavaryhma-id nil
-                                :rahavaraus-id nil
-                                ;; Poistetaan hoitovuosittaiset arvot kovakoodatusti Valmistelukausi ennen urakka-ajan alkua toimenkuvalta
-                                :hoitovuosittaiset-arvot (if (= "valmistelukausi ennen urakka-ajan alkua" (:nimike toimenkuva))
+                                ;; Poistetaan hoitovuosittaiset arvot kovakoodatusti 'Valmistelukausi ennen urakka-ajan alkua' -toimenkuvalta
+                                :hoitovuosittaiset-arvot (if (= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva toimenkuva))
                                                            [(first hoitovuosittaiset-arvot)] hoitovuosittaiset-arvot))))
                       toimenkuvat)
         toimenkuvat (sort-by :jarjestys toimenkuvat)]
@@ -206,8 +220,6 @@
                                                                :urakka_id urakka-id
                                                                :hoitokauden_alkuvuosi (:vuosi r)
                                                                :johto_ja_hallintokorvaus_toimenkuva_id (:toimenkuva-id rivi)
-                                                               :tehtava_id (:tehtava-id rivi)
-                                                               :tehtavaryhma_id (:tehtavaryhma-id rivi)
                                                                :summa (:summa r)
                                                                :osio (:osio rivi)
                                                                :luoja kayttaja-id})
@@ -295,10 +307,10 @@
                                          [] tarjous-rivit)))]
     rivit))
 
-(defn hae-toimenkuvista-rivit-vuodelle [avain tarjous-rivit nimi maksukausi]
-  (let [;; Etsitään kustannus, joka vastaa annettua nimeä
+(defn hae-toimenkuvista-rivit-vuodelle [avain tarjous-rivit id maksukausi]
+  (let [;; Etsitään toimenkuva, joka vastaa annettua nimeä ja maksukautta
         rivit (into [] (sort-by :vuosi (reduce (fn [r rivi]
-                                                 (let [r-rivit (keep #(when (and (= nimi (:nimi %)) (= maksukausi (:maksukausi %)))
+                                                 (let [r-rivit (keep #(when (and (= id (:johto_ja_hallintokorvaus_toimenkuva_id %)) (= maksukausi (:maksukausi %)))
                                                                         (dissoc (merge % {:vuosi (:hoitokauden_alkuvuosi rivi)})
                                                                           :id :nimi :maksukausi :osio :tehtava_id :tehtavaryhma_id :rahavaraus_id
                                                                           :johto_ja_hallintokorvaus_toimenkuva_id))
@@ -318,9 +330,11 @@
        :yhteensa (apply + (mapv :summa hoitovuosittaiset-arvot))}))
 
 (defn- muodosta-toimenkuvarivi [r hoitovuosittaiset-arvot]
-  (-> {:osio (:osio r)
+  (-> {:id (:id r)
+       :osio (:osio r)
        :maksukausi (:maksukausi r)
        :nimi (:nimi r)
+       :toimenkuva (str/lower-case (:nimi r))
        :toimenkuva-id (:johto_ja_hallintokorvaus_toimenkuva_id r)
        :hoitovuosittaiset-arvot hoitovuosittaiset-arvot
        :yhteensa (apply + (mapv :summa hoitovuosittaiset-arvot))}))
@@ -365,30 +379,29 @@
                                     :maksukausi :string :osio :string :johto_ja_hallintokorvaus_toimenkuva_id :long))
                                 (konversio/pgarray->vector (:toimenkuvat tarjous))))))
                         tarjous-rivit)
-
         ;; Muutetaan ui:lle välitettävään muotoon
         kustannus-rivit (mapv #(muodosta-kustannusrivi % (hae-kustannuksista-rivit-vuodelle :kustannukset tarjous-rivit (:nimi %))) (:kustannukset (first tarjous-rivit)))
-        toimenkuva-rivit (mapv #(muodosta-toimenkuvarivi % (hae-toimenkuvista-rivit-vuodelle :toimenkuvat tarjous-rivit (:nimi %) (:maksukausi %))) (:toimenkuvat (first tarjous-rivit)))
+        toimenkuva-rivit (mapv #(muodosta-toimenkuvarivi % (hae-toimenkuvista-rivit-vuodelle :toimenkuvat tarjous-rivit (:johto_ja_hallintokorvaus_toimenkuva_id %) (:maksukausi %))) (:toimenkuvat (first tarjous-rivit)))
         ;; Päivitä mahdolliset toimenkuvan nimet, jos kesä ja talvikausi on vaikuttamassa tilanteeseen
         toimenkuva-rivit (mapv (fn [rivi]
-                                  (let [toimenkuva (str/lower-case (:nimi rivi))
-                                        nimi (cond
-                                               (and (= "Päätoiminen apulainen" (:nimi rivi)) (= "talvi" (:maksukausi rivi)))
-                                               "Päätoiminen apulainen (talvikausi)"
-                                               (and (= "Päätoiminen apulainen" (:nimi rivi)) (= "kesä" (:maksukausi rivi)))
-                                               "Päätoiminen apulainen (kesäkausi)"
-                                               (and (= "Apulainen/työnjohtaja" (:nimi rivi)) (= "talvi" (:maksukausi rivi)))
-                                               "Apulainen/työnjohtaja (talvikausi)"
-                                               (and (= "Apulainen/työnjohtaja" (:nimi rivi)) (= "kesä" (:maksukausi rivi)))
-                                               "Apulainen/työnjohtaja (kesäkausi)"
-                                               :else (:nimi rivi))]
-                                    (assoc rivi :nimi nimi :toimenkuva toimenkuva)))
-                                toimenkuva-rivit)
+                                 (let [toimenkuva (str/lower-case (:nimi rivi))
+                                       nimi (cond
+                                              (and (= "päätoiminen apulainen" toimenkuva) (= "talvi" (:maksukausi rivi)))
+                                              "Päätoiminen apulainen (talvikausi)"
+                                              (and (= "päätoiminen apulainen" toimenkuva) (= "kesä" (:maksukausi rivi)))
+                                              "Päätoiminen apulainen (kesäkausi)"
+                                              (and (= "apulainen/työnjohtaja" toimenkuva) (= "talvi" (:maksukausi rivi)))
+                                              "Apulainen/työnjohtaja (talvikausi)"
+                                              (and (= "apulainen/työnjohtaja" toimenkuva) (= "kesä" (:maksukausi rivi)))
+                                              "Apulainen/työnjohtaja (kesäkausi)"
+                                              :else (:nimi rivi))]
+                                   (assoc rivi :nimi nimi :toimenkuva toimenkuva)))
+                           toimenkuva-rivit)
 
         ;; Tarjouksen mukana ei välttämättä tule kaikkia toimenkuvia, jos niitä on tarjouksen tallentamisen jälkeen lisätty urakkalle hallintapaneelista.
         ;; Varmistetaan siis, että kaikki urakan toimenkuvat ovat mukana, kun ne renderöidään frontilla
         kaikki-urakan-toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
-        kaikki-urakan-toimenkuvat (jasenna-toimenkuvat-maksukausittain kaikki-urakan-toimenkuvat urakan-alkuvuosi)
+        ;kaikki-urakan-toimenkuvat (jasenna-toimenkuvat-maksukausittain kaikki-urakan-toimenkuvat urakan-alkuvuosi)
 
         ;; Vertaillaan toimenkuvat-rivit ja kaikki-urakan-toimenkuvat ja lisätään puuttuvat toimenkuvat nollasummilla
         puuttuvat-toimenkuvat (filter
@@ -397,9 +410,8 @@
                                 kaikki-urakan-toimenkuvat)
 
         toimenkuva-rivit (vec (concat toimenkuva-rivit puuttuvat-toimenkuvat))
-
         toimenkuva-rivit (sort-by :jarjestys (map
-                                               #(assoc % :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:nimi %)))
+                                               #(assoc % :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:toimenkuva %)))
                                                toimenkuva-rivit))
         tarjousrivit (into [] (sort-by (fn [rivi] (get osiojarjestys (:osio rivi))) (vec (concat kustannus-rivit toimenkuva-rivit))))
 
