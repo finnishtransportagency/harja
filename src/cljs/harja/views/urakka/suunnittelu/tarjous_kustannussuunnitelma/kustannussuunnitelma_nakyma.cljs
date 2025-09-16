@@ -39,12 +39,13 @@
 
           kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
           kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
-          kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
-                                                   {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
-                                                   {:teksti "" :luokka kirjaamatta-luokka}
-                                                   {:teksti "" :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                                                   {:teksti "" :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                                                   {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}])
+          kirjaamatta-rivi (when (and (not vahvistettu?) (>= valittu-vuosi yhteiset/rajavuosi))
+                             [^{:luokka "kustannukset-yhteenveto"}
+                              {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
+                              {:teksti "" :luokka kirjaamatta-luokka}
+                              {:teksti "" :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                              {:teksti "" :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                              {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}])
 
           yhteenveto-rivit [[^{:luokka "kustannukset-yhteenveto"}
                              {:teksti "Yhteensä" :luokka "yhteensa korkea"}
@@ -211,10 +212,11 @@
           yht-indeksikorjattu (apply + (map (fn [rivi] (:summa_indeksikorjattu rivi 0)) erillishankinnat))
           kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara suunniteltu-yht))
           kirjaamatta-luokka (if (= 0.00 (tyokalut/round2 2 kirjaamatta)) "yhteensa" "yhteensa-punainen")
-          kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
-                                                   {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
-                                                   {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                                                   {:teksti "" :luokka kirjaamatta-luokka}])
+          kirjaamatta-rivi (when (and (not vahvistettu?) (>= valittu-vuosi yhteiset/rajavuosi))
+                             [^{:luokka "kustannukset-yhteenveto"}
+                              {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
+                              {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                              {:teksti "" :luokka kirjaamatta-luokka}])
 
           yhteenveto-rivi [[^{:luokka "kustannukset-yhteenveto"}
                             {:teksti "Yhteensä" :luokka "yhteensa"}
@@ -297,10 +299,11 @@
                                                           (:summa_indeksikorjattu rivi 0)) hoidonjohtopalkkiot))
           kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara suunniteltu-yht))
           kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
-          kirjaamatta-rivi (when-not vahvistettu? [^{:luokka "kustannukset-yhteenveto"}
-                                                   {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
-                                                   {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
-                                                   {:teksti "" :luokka kirjaamatta-luokka}])
+          kirjaamatta-rivi (when (and (not vahvistettu?) (>= valittu-vuosi yhteiset/rajavuosi))
+                             [^{:luokka "kustannukset-yhteenveto"}
+                              {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
+                              {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
+                              {:teksti "" :luokka kirjaamatta-luokka}])
 
           yhteenveto-rivi [[^{:luokka "kustannukset-yhteenveto"}
                             {:teksti "Yhteensä" :luokka "yhteensa"}
