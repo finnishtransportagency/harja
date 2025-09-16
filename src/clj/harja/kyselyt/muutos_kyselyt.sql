@@ -331,6 +331,25 @@ GROUP BY m.id, tk.nimi, tk.koodi, tpi.id, tk.koodi, tp.jarjestys
 ORDER BY tp.jarjestys;
 
 
+-- name: luo-tai-paivita-tehtavan-maaramuutos<!
+-- Poikkeaminen tehtävä- ja määräluettelon määrästä
+INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara,
+                                                 maaramuutos, uusi_maara)
+VALUES (:versio,
+        :muutos-id,
+        :tehtava,
+        :hoitokauden_alkuvuosi,
+        :edellinen-maara,
+        :maaramuutos,
+        :uusi-maara)
+    ON CONFLICT (muutos, tehtava, hoitokauden_alkuvuosi)
+        DO UPDATE SET versio          = EXCLUDED.versio,
+                      edellinen_maara = EXCLUDED.edellinen_maara,
+                      maaramuutos     = EXCLUDED.maaramuutos,
+                      uusi_maara      = EXCLUDED.uusi_maara;
+
+
+
 -- name: hae-tehtava-maaramuutokset
 WITH urakan_tehtavat AS (
   SELECT

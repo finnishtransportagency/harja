@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
 
             [harja.pvm :as pvm]
+            [harja.kokoelmat :as kokoelmat]
             [harja.domain.mhu :as mhu]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
@@ -487,19 +488,19 @@
                                        :versio (:versio muutos)
                                        :kayttaja (:id kayttaja)})))
 
-(defn- tallenna-muutoksen-liitteet [db aiti-muutoksen-paluurivi liitteet]
+(defn- tallenna-muutoksen-liitteet [db aiti-muutos-id-ja-versio liitteet]
   (doseq [liite liitteet]
     (let [liite-id (:id liite)
-          muutos-id (:id aiti-muutoksen-paluurivi)
-          muutos-versio (:versio aiti-muutoksen-paluurivi)]
+          muutos-id (:id aiti-muutos-id-ja-versio)
+          muutos-versio (:versio aiti-muutos-id-ja-versio)]
       (when (and liite-id muutos-id muutos-versio)
         (muutos-kyselyt/linkita-muutos-ja-liite<! db {:muutos muutos-id
                                                       :liite liite-id
                                                       :versio muutos-versio})))))
 
-(defn- tallenna-muutoksen-kustannusvaikutukset [db aiti-muutoksen-paluurivi hoitokauden_alkuvuosi kustannusvaikutukset]
-  (let [muutos-id (:id aiti-muutoksen-paluurivi)
-        muutos-versio (:versio aiti-muutoksen-paluurivi)]
+(defn- tallenna-muutoksen-kustannusvaikutukset [db aiti-muutos-id-ja-versio hoitokauden_alkuvuosi kustannusvaikutukset]
+  (let [muutos-id (:id aiti-muutos-id-ja-versio)
+        muutos-versio (:versio aiti-muutos-id-ja-versio)]
     (doseq [kustannusvaikutus kustannusvaikutukset]
       (let [kustannusvaikutus (assoc kustannusvaikutus
                                 :muutos-id muutos-id
@@ -507,9 +508,24 @@
                                 :hoitokauden_alkuvuosi hoitokauden_alkuvuosi)]
         (muutos-kyselyt/luo-tai-paivita-muutos-kustannusvaikutus<! db kustannusvaikutus)))))
 
+(defn tallenna-tehtavan-maaramuutokset
+  "Poikkeaminen tehtävä- ja määräluettelon määristä"
+  [db aiti-muutos-id-ja-versio hoitokauden_alkuvuosi maaramuutokset]
+  (let [muutos-id (:id aiti-muutos-id-ja-versio)
+        muutos-versio (:versio aiti-muutos-id-ja-versio)]
+    (doseq [maaramuutos maaramuutokset]
+      (let [maaramuutos (assoc maaramuutos
+                           :muutos-id muutos-id
+                           :versio (or muutos-versio 1)
+                           :hoitokauden_alkuvuosi hoitokauden_alkuvuosi)]
+        (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos)))))
+
+
+
 (defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos] :as tiedot}]
-  (log/debug "tallenna-muutos: " tiedot)
+  (log/debug "tallenna-muutos: " (kokoelmat/dissoc-in tiedot [:muutos :toimenpiteiden-tehtavat]))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+
   (let [urakka (first (q-urakat/hae-urakka db urakka-id))
         kulut (:kulut muutos)
         liitteet (:liitteet muutos)
@@ -528,35 +544,42 @@
                 :tyyppi (:tyyppi muutos)
                 :kayttaja (:id kayttaja)
                 :alityyppi alityyppi}
-        kustannusvaikutukset (:kustannusvaikutukset muutos)]
+        kustannusvaikutukset (:kustannusvaikutukset muutos)
+        ;; Pysyvien muutosten tehtävien määrämuutokset
+        maaramuutokset (:tehtavat_ja_maarat muutos)]
 
     (jdbc/with-db-transaction [conn db]
       ;; Muutos-id ja muutos-versio kuljetetaan äiti-muutokselta (mhu_muutos-taulu) lapsitauluille
       ;; Nämä tiedot saadaan muutos-paluurivistä
-      (let [muutos-paluurivi (if (:id muutos)
-                               (muutos-kyselyt/paivita-muutos<! conn muutos)
-                               (muutos-kyselyt/luo-muutos<! conn muutos))]
+      (let [aiti-muutos-id-ja-versio (if (:id muutos)
+                                       (muutos-kyselyt/paivita-muutos<! conn muutos)
+                                       (muutos-kyselyt/luo-muutos<! conn muutos))]
 
         ;; Tallenna liitteet
-        (when (pos? (count liitteet))
-          (tallenna-muutoksen-liitteet conn muutos-paluurivi liitteet))
+
+        (tallenna-muutoksen-liitteet conn aiti-muutos-id-ja-versio liitteet)
 
         ;; Tallenna kustannusvaikutukset
         (when (pos? (count kustannusvaikutukset))
-          (tallenna-muutoksen-kustannusvaikutukset conn muutos-paluurivi (pvm/vuosi (first valittu-hoitokausi)) kustannusvaikutukset))
+          (tallenna-muutoksen-kustannusvaikutukset conn aiti-muutos-id-ja-versio (pvm/vuosi (first valittu-hoitokausi)) kustannusvaikutukset))
+
+        ;; Tallenna määrämuutokset
+        (when (pos? (count maaramuutokset))
+          (tallenna-tehtavan-maaramuutokset conn aiti-muutos-id-ja-versio (pvm/vuosi (first valittu-hoitokausi)) maaramuutokset))
 
         ;; Tallenna kulut
         (case
           (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
-          (tallenna-johto-ja-hallintokorvauksen-muutokset conn kayttaja urakka muutos-paluurivi kulut)))
-      
-      ;; Palauta päivitetty listaus 
+          (tallenna-johto-ja-hallintokorvauksen-muutokset conn kayttaja urakka aiti-muutos-id-ja-versio kulut)))
+
+      ;; Palauta päivitetty listaus
       (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
                                               :hoitokaudet hoitokaudet
                                               :valittu-hoitokausi valittu-hoitokausi}))))
 
 
 (defn tallenna-rahavarausmuutosten-syyt
+  "Rahavarausmuutosten syiden tallennus on irtallaan mhu_muutos logiikasta, eikä syiden historiaa tallenneta _historia tauluun."
   [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet rivit]}]
   (log/debug "Tallenna rahavarausmuutosten syyt" urakka-id valittu-hoitokausi rivit)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
