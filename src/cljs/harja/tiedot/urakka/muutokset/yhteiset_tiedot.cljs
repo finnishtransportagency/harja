@@ -40,9 +40,6 @@
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
 
 (defonce nakymassa? (atom false))
-;; TODO: Pilkotaanko erilleen yhteisistä?
-(def johto-ja-hallintokorvausmuutokset-atom (atom nil))
-
 
 (defn johto-ja-hallintokorvausmuutoksen-rivit
   "Luo johto-ja-hallintokorvausmuutoksen rivit eli kulut. Yhdistää tyhjät rivit ja kannasta tulevat kulut."
@@ -59,14 +56,6 @@
                                {:pvm pvm :tavoitehinnan-muutos 0})])
                 normalisoidut-avaimet)]
     (apply array-map parit)))
-
-
-(defn alusta-tyyppikohtaisia-arvoja [tyyppi valittu-hoitokausi]
-  (case tyyppi
-    "johto-ja-hallintokorvaus"
-    (reset! johto-ja-hallintokorvausmuutokset-atom
-      (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi []))
-    :default))
 
 (defn ennen-muutoksien-kayttoonotto?
   "Aika ennen muutoksien käyttöönottohoitovuotta"
@@ -87,6 +76,7 @@
 (defrecord PaivitaLomake [lomake])
 
 (defrecord MuokkaaMuutosta [rivi])
+(defrecord MuokkaaJohtoJaHallintoMuutosta [rivi])
 (defrecord TallennaMuutos [muutos])
 (defrecord TallennaMuutosOnnistui [vastaus])
 (defrecord TallennaMuutosEpaonnistui [vastaus])
@@ -224,6 +214,7 @@
           hoitovuosi-lomakkeelle (or (when aikaisin-hoitovuosi-jossa-kirjauksia
                                        (pvm/vuodesta-hoitokausi aikaisin-hoitovuosi-jossa-kirjauksia))
                                    valittu-hoitokausi)
+          johto-ja-hallinto (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))
           app (-> app
                 (assoc-in [:muokattava-muutos :liitteet] uudet-liitteet)
                 ;; huom: toimenpiteiden tietoja tarvitaan lisäksi  atomissa joka menee muokkausgridille
@@ -234,14 +225,8 @@
                 ;; alustetaan lomaketta varten hoitokausi samaksi kuin valittu hoitokausi, mutta ne voivat
                 ;; erkaantua myöhemmin jos käyttäjä niin haluaa (esim. kirjata pysyvän muutoksen eri hoitokaudelle kuin valittu)
                 (assoc-in [:muokattava-muutos :mahdolliset-hoitovuodet-lomakkeella] mahdolliset-hoitovuodet-lomakkeella)
-                (assoc-in [:muokattava-muutos :hoitovuosi] hoitovuosi-lomakkeelle))]
-
-      ;; TODO: Tyyppispesifistä iffittelyä, tämä on vähän liian geneerinen handleri
-      ;;       Pitää vähän pohtia tätä jakoa vielä paremmaksi
-      ;; annetaan resetoitua atomiin arvoksi nil, jos ei kuluja ole ko. muutoksessa
-      (reset! johto-ja-hallintokorvausmuutokset-atom
-        (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
-          (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))))
+                (assoc-in [:muokattava-muutos :hoitovuosi] hoitovuosi-lomakkeelle)
+                (assoc-in [:muokattava-muutos :johto-ja-hallintokorvaukset] johto-ja-hallinto))]
       app))
 
 
@@ -256,6 +241,11 @@
     (if (some? rivi)
       (assoc app :viimeksi-valittu rivi :muokattava-muutos rivi)
       (assoc app :muokattava-muutos rivi)))
+  
+
+  MuokkaaJohtoJaHallintoMuutosta
+  (process-event [{:keys [rivi]} app]
+    (assoc-in app [:muokattava-muutos :johto-ja-hallintokorvaukset] rivi))
 
 
   TallennaMuutos
@@ -270,7 +260,8 @@
                   (filter #(and
                              (some? (:tavoitehinnan-muutos %))
                              (not= 0 (:tavoitehinnan-muutos %)))
-                    (vals @johto-ja-hallintokorvausmuutokset-atom)))
+                    (vals (:johto-ja-hallintokorvaukset muutos))))
+    
           muutos (assoc muutos :kulut kulut)]
 
       (if-not (empty? puuttuvat-pakolliset-kentat)

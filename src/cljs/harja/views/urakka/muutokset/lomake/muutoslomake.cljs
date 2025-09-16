@@ -59,12 +59,12 @@
         [{:otsikko "Tyyppi"
           :nimi :tyyppi
           :pakollinen? true
+          :aseta (fn [rivi arvo]
+                   (assoc rivi
+                     :tyyppi arvo
+                     :johto-ja-hallintokorvaukset (t-yhteiset/johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi [])))
           ;; Sallitaan muokkaus vain uudelle muutokselle
           :muokattava? #(nil? (:id %))
-          :aseta (fn [rivi arvo]
-                   (let [rivi (assoc rivi :tyyppi arvo)]
-                     (t-yhteiset/alusta-tyyppikohtaisia-arvoja arvo valittu-hoitokausi)
-                     rivi))
           :kaariva-luokka "muutostyyppivalinta"
           :tyyppi :valinta
           :vayla-tyyli? true
