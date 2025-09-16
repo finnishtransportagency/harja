@@ -71,7 +71,7 @@
          [:div.body-text (if indeksikerroin (fmt/euro-opt true tarjous-pysyvat-yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
          (when indeksikerroin
            [:div.body-text
-            (str "(" indeksikerroin " * " (if tarjous-pysyvat-yhteensa (fmt/euro-opt false tarjous-pysyvat-yhteensa) "0,00 €") " )")])])
+            (str "(" (fmt/desimaaliluku indeksikerroin nil nil false ) " * " (if tarjous-pysyvat-yhteensa (fmt/euro-opt false tarjous-pysyvat-yhteensa) "0,00 €") " )")])])
 
       ;; -23 vuoteen asti näytetään indeksikorjattu määrä suunnitellulle summalle, koska tarjousihintoja ja pysyviä muutoksia ei ole ollut
       (when (and div4 (< valittu-vuosi rajavuosi))
@@ -80,7 +80,7 @@
          [:div.body-text (if indeksikerroin (fmt/euro-opt true suunniteltu-yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
          (when indeksikerroin
            [:div.body-text
-            (str "(" indeksikerroin " * " (if suunniteltu-yhteensa (fmt/euro-opt false suunniteltu-yhteensa) "0,00 €") " )")])])]]))
+            (str "(" (fmt/desimaaliluku indeksikerroin nil nil false ) " * " (if suunniteltu-yhteensa (fmt/euro-opt false suunniteltu-yhteensa) "0,00 €") " )")])])]]))
 
 (defn tallenna-painike-rivi [viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken? tallenna-fn jaa-tasan-fn]
   [:div.row.rivi-container
