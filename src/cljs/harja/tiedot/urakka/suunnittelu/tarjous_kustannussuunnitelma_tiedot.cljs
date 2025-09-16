@@ -146,6 +146,8 @@
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
       (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
+      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
+      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))
       (assoc :urakka-id (:urakka-id vastaus))))
 
   HaeTarjouksenTiedotEpaonnistui

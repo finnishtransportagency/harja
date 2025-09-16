@@ -14,7 +14,8 @@
   tallenna-tarjouskustannus<! paivita-tarjouskustannus<!
   tallenna-tarjouksen-johto-ja-hallintokorvaus<! paivita-tarjouksen-johto-ja-hallintokorvaus<!
   hae-tarjouksen-tiedot hae-tarjous-vuodella
-  hae-kustannus-tarjoukselle hae-toimenkuva-tarjoukselle poista-tarjouksen-johto-ja-hallintokorvaus<!)
+  hae-kustannus-tarjoukselle hae-toimenkuva-tarjoukselle poista-tarjouksen-johto-ja-hallintokorvaus<!
+  hae-tarjouksen-viimeisin-muokkaaja)
 
 (def osiojarjestys
   {"hankintakustannukset" 1
@@ -291,6 +292,8 @@
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         tarjous-rivit (hae-tarjouksen-tiedot db {:urakka_id urakka-id})
+        ;; Tarjouksen viimeisin muokkaaja
+        viimeisin-muokkaus (first (hae-tarjouksen-viimeisin-muokkaaja db {:urakkaid urakka-id}))
         ;; Mäppää tarjouksen tietokantarivit clojure-mapeiksi.
         tarjous-rivit (mapv
                         (fn [tarjous]
@@ -317,6 +320,8 @@
                              nil)
         tarjous {:urakka-id urakka-id
                  :kaikki-toimenkuvat kaikki-toimenkuvat
+                 :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                 :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
                  :tarjous tarjousrivit}
         ;; Tarkistetaan, että tarjous ei ole tyhjä
         tarjous (if (empty? (first (:tarjous tarjous)))
