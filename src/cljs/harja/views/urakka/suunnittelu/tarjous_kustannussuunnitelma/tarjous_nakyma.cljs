@@ -89,12 +89,11 @@
       :muokattava? (constantly true)
       :voi-poistaa? (constantly false)
       :voi-lisata? true
-      :uusi-rivi (fn [rivi]
-                   (merge (assoc rivi :id -1 :nimi "" :yhteensa 0)
-                     vuosi-map))
+      :uusi-rivi (fn [rivi] (merge (assoc rivi :id -1 :nimi "" :yhteensa 0) vuosi-map))
       :voi-kumota? false
       :piilota-toiminnot? false
       :tunniste :nimi
+      :jarjesta :toimenkuva-id
       :muutos #(do
                  (let [toimenkuvat (vals (grid/hae-muokkaustila %))
                        ;; Jos muutos on ollut uuden rivin lisäys, niin asetetaan valittu toimenkuva
@@ -103,12 +102,14 @@
                                             (let [uusi-toimenkuva-kaikista (first (filter (fn [t]
                                                                                             (= (:nimi t) (:nimi toimenkuva)))
                                                                                     kaikki-toimenkuvat))]
-                                              (assoc toimenkuva
-                                                :osio "johto-ja-hallintokorvaus"
-                                                :poistettu nil
-                                                :yhteensa 0
-                                                :rahavaraus-id nil
-                                                :toimenkuva-id (:id uusi-toimenkuva-kaikista)))
+                                              (merge (assoc toimenkuva
+                                                       :osio "johto-ja-hallintokorvaus"
+                                                       :maksukausi "vuosi"
+                                                       :poistettu nil
+                                                       :yhteensa 0
+                                                       :rahavaraus-id nil
+                                                       :toimenkuva-id (:id uusi-toimenkuva-kaikista))
+                                                vuosi-map))
                                             toimenkuva))
                                      toimenkuvat)]
                    (reset! tallenna-painettu false)
@@ -123,20 +124,48 @@
      ;; Otsikot
      (concat [;; ennen 2025 alkaneet urakat eivät voi valita toimenkuvia tästä tarjouslomakkeesta
               (if (< urakan-alkuvuosi 2025)
-                {:otsikko "Johto- ja hallintokorvaus (vain 2025 tai myöhemmin alkaville urakoille)"
-                 :nimi :nimi
-                 :tyyppi :string
-                 :luokka "yhteensa disabled"
-                 :leveys (str nimi-leveys "%")
-                 :muokattava? (constantly false)}
                 {:otsikko "Johto- ja hallintokorvaus"
                  :nimi :nimi
                  :tyyppi :valinta
-                 ;:valinnat #(map :nimi (conj muut-toimenkuvat %))
                  :valinnat-fn #(map :nimi muut-toimenkuvat)
+                 :aseta (fn [rivi arvo]
+                          (merge
+                            (assoc rivi :id -1
+                              :nimi arvo
+                              :toimenkuva (str/lower-case arvo)
+                              :uusi-nimi arvo
+                              :vanha-id (:toimenkuva-id rivi)
+                              :osio "johto-ja-hallintokorvaus"
+                              :maksukausi "vuosi"
+                              :rahavaraus-id nil)
+                            vuosi-map))
                  :luokka "yhteensa"
                  :leveys (str nimi-leveys "%")
-                 :muokattava? (constantly true)})]
+                 :muokattava? (fn [rivi arvo] (if (= -1 (:id rivi)) true false))}
+                {:otsikko "Johto- ja hallintokorvaus"
+                 :nimi :nimi
+                 :tyyppi :valinta
+                 :valinnat-fn #(map :nimi muut-toimenkuvat)
+                 :aseta (fn [rivi arvo]
+                          (merge (assoc rivi :id -1
+                                   :nimi arvo
+                                   :toimenkuva (str/lower-case arvo)
+                                   :paivtetty? true
+                                   :uusi-nimi arvo
+                                   :vanha-id (:toimenkuva-id rivi)
+                                   :osio "johto-ja-hallintokorvaus"
+                                   :maksukausi "vuosi"
+                                   :rahavaraus-id nil)
+                            vuosi-map))
+                 :luokka "yhteensa"
+                 :leveys (str nimi-leveys "%")
+                 ;; Jos on vielä mahdollista vaihtaa toimenkuvaa ja toimenkuva ei ole 'Valmistelukausi ennen urakka-ajan alkua'
+                 ;; niin näytä valikko. Muuten ei näytetä valikkoa.
+                 :muokattava? (fn [rivi]
+                                (if (and
+                                      (not= "Valmistelukausi ennen urakka-ajan alkua" (:nimi rivi))
+                                      (seq muut-toimenkuvat))
+                                  true false))})]
        [;; Poista nappi vain 2025 tai jälkeen alkaneissa urakoissa
         (if (>= urakan-alkuvuosi 2025)
           {:otsikko ""
@@ -152,7 +181,7 @@
            :komponentti (fn [rivi]
                           [:span])
            :leveys (str vuosi-leveys "%")})]
-       (mapv #(assoc % :muokattava false) vuositaulukon-otsikot)
+       vuositaulukon-otsikot
        [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
          :muokattava? (constantly false) :luokka "yhteensa"
          :hae (fn [rivi] (laske-rivit-yhteen rivi))
@@ -170,7 +199,9 @@
                                                           :nimi (keyword (str "vuosi-" (:vuosi vuosi-rivi)))
                                                           :tyyppi :euro
                                                           :leveys (str vuosi-leveys "%")
-                                                          :muokattava? (fn [rivi] (if (or (= (:nimi rivi) "Äkilliset hoitotyöt")
+                                                          :muokattava? (fn [rivi] (if (or
+                                                                                        (and (not= 1 index) (= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua"))
+                                                                                        (= (:nimi rivi) "Äkilliset hoitotyöt")
                                                                                         (= (:nimi rivi) "Hoidonjohtopalkkio")
                                                                                         (= (:nimi rivi) "Erillishankinnat")
                                                                                         (= (:nimi rivi) "Vahinkojen korjaukset")
@@ -179,25 +210,9 @@
                                                           :tasaa :oikea}])))
                                 [] (:hoitovuosittaiset-arvot (first tarjouksen-tiedot)))
 
-        taulukon-tiedot (into [] (reduce (fn [rivit tarjous-rivi]
-                                           (let [vuosiarvot (reduce (fn [uusi rivi]
-                                                                      (-> uusi
-                                                                        (assoc :poistettu (:poistettu tarjous-rivi))
-                                                                        (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
-                                                                        (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
-                                                                        (assoc :tehtava-id (:tehtava-id tarjous-rivi))
-                                                                        (assoc :tehtavaryhma-id (:tehtavaryhma-id tarjous-rivi))
-                                                                        (assoc :osio (:osio tarjous-rivi))
-                                                                        (assoc (keyword (str "vuosi-" (:vuosi rivi))) (:summa rivi))))
-                                                              {} (:hoitovuosittaiset-arvot tarjous-rivi))
-                                                 nimiarvot {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)}
-                                                 lopputulos (merge vuosiarvot nimiarvot)]
-                                             (concat rivit [lopputulos])))
-                                   [] (drop-last tarjouksen-tiedot))) ;; Jätetään viimeinen rivi pois, koska se on yhteenvetorivi
-        hankinnat-tiedot (into [] (filter #(some #{"hankintakustannukset" "tavoitehintaiset-rahavaraukset"}
-                                             [(:osio %)]) taulukon-tiedot))
-        joha-tiedot (into [] (filter #(some #{"johto-ja-hallintokorvaus"}
-                                        [(:osio %)]) taulukon-tiedot))]
+        taulukon-tiedot (tarjous-tiedot/konvertoi-grid-muotoon (drop-last tarjouksen-tiedot)) ;; Jätetään viimeinen rivi pois, koska se on yhteenvetorivi
+        hankinnat-tiedot (into [] (filter #(some #{"hankintakustannukset" "tavoitehintaiset-rahavaraukset"} [(:osio %)]) taulukon-tiedot))
+        joha-tiedot (into [] (filter #(some #{"johto-ja-hallintokorvaus"} [(:osio %)]) taulukon-tiedot))]
 
     [:div
      [:hr]

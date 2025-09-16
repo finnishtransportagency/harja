@@ -16,6 +16,24 @@
   ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat tai vahvistaa koko kustannussuunnitelman
   (siirrin/siirry-elementin-id elementin-id 200))
 
+(defn konvertoi-grid-muotoon [data]
+  (into [] (reduce (fn [rivit tarjous-rivi]
+                     (let [vuosiarvot (reduce (fn [uusi rivi]
+                                                (-> uusi
+                                                  (assoc :maksukausi (:maksukausi tarjous-rivi))
+                                                  (assoc :poistettu (:poistettu tarjous-rivi))
+                                                  (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
+                                                  (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
+                                                  (assoc :tehtava-id (:tehtava-id tarjous-rivi))
+                                                  (assoc :tehtavaryhma-id (:tehtavaryhma-id tarjous-rivi))
+                                                  (assoc :osio (:osio tarjous-rivi))
+                                                  (assoc (keyword (str "vuosi-" (:vuosi rivi))) (:summa rivi))))
+                                        {} (:hoitovuosittaiset-arvot tarjous-rivi))
+                           nimiarvot {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)}
+                           lopputulos (merge vuosiarvot nimiarvot)]
+                       (concat rivit [lopputulos])))
+             [] data)))
+
 (defn muunna-vuodet
   "Muunnetaan UI Gridin käyttämä tietomalli bäkkärin käyttämään muotoon.
   UI Grille on oltava jokainen vuosi omassa avaimeessaa tyyliin :vuosi-2023, :vuosi-2024 jne.
@@ -168,9 +186,15 @@
 
   HaeTyhjatTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (-> app
-      (assoc :haku-kaynnissa? false)
-      (assoc :tarjous (:tarjous vastaus))))
+    (let [toimenkuvat (filter #(some #{"johto-ja-hallintokorvaus"} [(:osio %)]) (:tarjous vastaus))
+          toimenkuva-rivit (konvertoi-grid-muotoon toimenkuvat)
+          ;; Asetetaan tyhjät tiedot grid atomeihin
+          _ (reset! grid-toimenkuvat-atom toimenkuva-rivit)]
+
+      (-> app
+        (assoc :haku-kaynnissa? false)
+        (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
+        (assoc :tarjous (:tarjous vastaus)))))
 
   HaeTyhjatTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]

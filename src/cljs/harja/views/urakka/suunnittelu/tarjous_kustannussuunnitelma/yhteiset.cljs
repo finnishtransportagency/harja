@@ -19,7 +19,7 @@
 (defonce grid-johto-ja-hallintokorvaukset-atom (atom [{}]))
 
 ;; Rajavuotta aiemmilla ei ole pysyviä muutoksia
-(def rajavuosi 2024)
+(def rajavuosi 2025)
 
 (defn otsikkotiedot [valittu-hoitokausi kustannussuunnitelma otsikko tarjouksen-maara
                       pysyvamuutos-maara suunniteltu-yhteensa suunniteltu-yhteensa-indeksikorjattu
