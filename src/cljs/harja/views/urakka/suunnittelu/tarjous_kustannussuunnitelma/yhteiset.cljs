@@ -21,11 +21,10 @@
 ;; Rajavuotta aiemmilla ei ole pysyviä muutoksia
 (def rajavuosi 2024)
 
-(defn otsikkotiedot [e! {:keys [valittu-hoitokausi kustannussuunnitelma] :as app} otsikko tarjouksen-maara
+(defn otsikkotiedot [valittu-hoitokausi kustannussuunnitelma otsikko tarjouksen-maara
                       pysyvamuutos-maara suunniteltu-yhteensa suunniteltu-yhteensa-indeksikorjattu
                       {:keys [div1 div2 div3 div4] :as opts} valittu-vuosi]
-  (let [vahvistettu? (:vahvistettu? kustannussuunnitelma)
-        urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+  (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
         indeksikerroin (:indeksikerroin kustannussuunnitelma)
@@ -100,3 +99,16 @@
          (reset! tallenna-painettu false)
          (tallenna-fn))
       {:disabled tallennus-kesken?}]]]])
+
+(defn grid-perusasetukset [voi-muokata? tunniste]
+  {:tyhja "Ei tietoja."
+   :luokat ["matala-panel"]
+   :muokkaa-aina voi-muokata?
+   :voi-muokata? voi-muokata?
+   :muokattava? (constantly voi-muokata?)
+   :voi-poistaa? (constantly false)
+   :voi-lisata? false
+   :voi-kumota? false
+   :piilota-toiminnot? false
+   :tunniste tunniste
+   :rivin-luokka (fn [_] "korkea")})
