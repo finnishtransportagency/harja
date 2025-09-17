@@ -73,7 +73,9 @@
    {:id "info"
     :href "#"
     :class (str "info-nakyma" (when (= s :info) " aktiivinen"))
-    :on-click #(nav/vaihda-sivu! :info)}
+    :on-click #(do
+                 (.preventDefault %)
+                 (nav/vaihda-sivu! :info))}
 
    [ikonit/ikoni-ja-teksti (ikonit/livicon-info-circle) "INFO"]])
 
