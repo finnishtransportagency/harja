@@ -388,10 +388,12 @@
                         tarjous-rivit)
         ;; Muutetaan ui:lle välitettävään muotoon
         kustannus-rivit (mapv #(muodosta-kustannusrivi % (hae-kustannuksista-rivit-vuodelle :kustannukset tarjous-rivit (:nimi %))) (:kustannukset (first tarjous-rivit)))
-        toimenkuva-rivit (mapv #(muodosta-toimenkuvarivi % (hae-toimenkuvista-rivit-vuodelle :toimenkuvat tarjous-rivit (:johto_ja_hallintokorvaus_toimenkuva_id %) (:maksukausi %))) (:toimenkuvat (first tarjous-rivit)))
+        toimenkuva-rivit (map #(merge % {:toimenkuva (:nimi %)}) (:toimenkuvat (first tarjous-rivit)))
+        toimenkuva-rivit (mapv #(muodosta-toimenkuvarivi % (hae-toimenkuvista-rivit-vuodelle :toimenkuvat tarjous-rivit (:johto_ja_hallintokorvaus_toimenkuva_id %) (:maksukausi %))) toimenkuva-rivit)
+
         ;; Päivitä mahdolliset toimenkuvan nimet, jos kesä ja talvikausi on vaikuttamassa tilanteeseen
         toimenkuva-rivit (mapv (fn [rivi]
-                                 (let [toimenkuva (str/lower-case (:nimi rivi))
+                                 (let [toimenkuva (:toimenkuva rivi)
                                        nimi (cond
                                               (and (= "päätoiminen apulainen" toimenkuva) (= "talvi" (:maksukausi rivi)))
                                               "Päätoiminen apulainen (talvikausi)"
@@ -408,14 +410,11 @@
         ;; Tarjouksen mukana ei välttämättä tule kaikkia toimenkuvia, jos niitä on tarjouksen tallentamisen jälkeen lisätty urakkalle hallintapaneelista.
         ;; Varmistetaan siis, että kaikki urakan toimenkuvat ovat mukana, kun ne renderöidään frontilla
         kaikki-urakan-toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
-        ;kaikki-urakan-toimenkuvat (jasenna-toimenkuvat-maksukausittain kaikki-urakan-toimenkuvat urakan-alkuvuosi)
-
         ;; Vertaillaan toimenkuvat-rivit ja kaikki-urakan-toimenkuvat ja lisätään puuttuvat toimenkuvat nollasummilla
         puuttuvat-toimenkuvat (filter
                                 (fn [kt]
                                   (not (some #(= (:toimenkuva-id kt) (:toimenkuva-id %)) toimenkuva-rivit)))
                                 kaikki-urakan-toimenkuvat)
-
         toimenkuva-rivit (vec (concat toimenkuva-rivit puuttuvat-toimenkuvat))
         toimenkuva-rivit (sort-by :jarjestys (map
                                                #(assoc % :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:toimenkuva %)))
