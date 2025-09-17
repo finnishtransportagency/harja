@@ -170,7 +170,7 @@
 
   PaivitaLomake
   (process-event [{:keys [lomake]} app]
-    ;; (prn "PaivitaLomake: " lomake)
+    (log/debug "PaivitaLomake")
     (assoc app :muokattava-muutos lomake))
 
   ;; Hakee olemassaolevan muutoksen kaikki tiedot muokkausta varten

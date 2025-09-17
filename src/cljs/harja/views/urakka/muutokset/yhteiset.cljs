@@ -79,7 +79,7 @@
    ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"})
 
 
-(defn +rivi-muutos-voimassa+ [app]
+(defn +rivi-muutos-voimassa+ [urakan-hoitokaudet]
   {:otsikko "Voimassa alkaen"
    :nimi :voimassa_alkaen 
    :tyyppi :pvm 
@@ -93,7 +93,7 @@
               (assoc :voimassa_alkaen arvo)
               (assoc :mahdolliset-hoitovuodet-lomakkeella
                 (filter #(pvm/jalkeen? (first %) arvo)
-                  (:urakan-hoitokaudet app)))))})
+                  urakan-hoitokaudet))))})
 
 
 (defn +rivi-muutos-tavoitehinta+ []
@@ -112,6 +112,6 @@
   (concat
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (+rivi-muutoksen-syy+)
-       (+rivi-muutos-voimassa+ app)
+       (+rivi-muutos-voimassa+ (get-in app [:urakan-hoitokaudet]))
        (+rivi-muutos-tavoitehinta+))]
     (liite-kentta e! app)))
