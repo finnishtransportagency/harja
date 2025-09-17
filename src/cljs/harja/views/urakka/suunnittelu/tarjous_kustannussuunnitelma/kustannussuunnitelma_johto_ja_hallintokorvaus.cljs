@@ -529,10 +529,10 @@
                                       (fmt/euro-opt false yht-indeksikorjattu)
                                       "-")
                             :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}])
-        yhteenveto-rivit [yhteenveto-rivi kirjaamatta-rivi]
+        yhteenveto-rivit [yhteenveto-rivi (when (>= urakan-alkuvuosi yhteiset/rajavuosi) kirjaamatta-rivi)]
         _ (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom johto-ja-hallintokorvaukset)]
     [:div#johto-ja-hallintokorvaus-elementti.row.kustannussuunnitelma-osio.osio-976
-     [yhteiset/otsikkotiedot e! app "Johto- ja hallintokorvaus" tarjouksen-maara pysyvamuutos-maara yht yht-indeksikorjattu
+     [yhteiset/otsikkotiedot valittu-hoitokausi kustannussuunnitelma "Johto- ja hallintokorvaus" tarjouksen-maara pysyvamuutos-maara yht yht-indeksikorjattu
       {:div1 true :div2 false :div3 (if (< valittu-vuosi yhteiset/rajavuosi) true false) :div4 true} valittu-vuosi]
 
      [:div.row [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
