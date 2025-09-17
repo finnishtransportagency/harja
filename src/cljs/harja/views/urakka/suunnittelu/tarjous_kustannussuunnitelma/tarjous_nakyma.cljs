@@ -1,39 +1,54 @@
 (ns harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.tarjous-nakyma
   "Kustannussuunnitelman etusivu määrittää, että renderöidäänkö tarjous vai kustannussuunnitelma"
-  (:require [harja.fmt :as fmt]
-            [clojure.string :as str]
-            [harja.pvm :as pvm]
-            [harja.ui.debug :as debug]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :as yleiset]
-            [harja.ui.komponentti :as komp]
-            [harja.ui.napit :as napit]
-            [harja.ui.grid :as grid]
-            [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as tarjous-tiedot]
-            [tuck.core :as tuck]))
+  (:require
+   [clojure.string :as str]
+   [harja.fmt :as fmt]
+   [harja.pvm :as pvm]
+   [harja.tiedot.navigaatio :as nav]
+   [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as tarjous-tiedot]
+   [harja.tiedot.urakka.urakka :as tila]
+   [harja.ui.debug :as debug]
+   [harja.ui.grid :as grid]
+   [harja.ui.ikonit :as ikonit]
+   [harja.ui.komponentti :as komp]
+   [harja.ui.napit :as napit]
+   [harja.ui.yleiset :as yleiset]
+   [tuck.core :as tuck]))
 
-(defonce tallenna-painettu (atom false))
 (defonce virheet-atom (atom {}))
+
 ;; Määritellään kaikkien kolumnien leveyksiä
 (def nimi-leveys 20)
 (def yhteensa-leveys 20)
 
 (defn- tallennus-painikkeet [e! {:keys [tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja] :as app}]
   [:div.painikkeet.text-right
-   (if viimeisin-muokkaus
-     (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")
-     "Ei tallennettuja muutoksia")
+   [:div.grid-status-viestit
+    (cond
+      (and (tarjous-tiedot/onko-muutoksia?) viimeisin-muokkaus)
+      [:<>
+       [:div.status-viesti.tallennettu
+        (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
+       [:div.status-viesti.tallentamatta
+        "Tallentamattomia muutoksia"]]
+      
+      (tarjous-tiedot/onko-muutoksia?)
+      [:div.status-viesti.tallentamatta
+       "Tallentamattomia muutoksia"]
+      
+      viimeisin-muokkaus
+      [:div.status-viesti.tallennettu
+       (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
+      
+      :else
+      [:div.status-viesti.ei-muutoksia
+       "Ei tallennettuja muutoksia"])]
    [:span {:style {:margin-left "1rem"}}
     [napit/yleinen-toissijainen "Tyhjennä"
-     #(do
-        (reset! tallenna-painettu false)
-        (e! (tarjous-tiedot/->HaeTyhjatTarjouksenTiedot)))
+     #(e! (tarjous-tiedot/->HaeTyhjatTarjouksenTiedot))
      {:disabled (or tallennus-kesken? false)}]
     [napit/yleinen-ensisijainen "Tallenna muutokset"
-     #(do
-        (reset! tallenna-painettu false)
-        (e! (tarjous-tiedot/->TallennaTarjouksenTiedot (:hankinnat app) (:toimenkuvat app))))
+     #(e! (tarjous-tiedot/->TallennaTarjouksenTiedot (:hankinnat app) (:toimenkuvat app)))
      {:disabled (or tallennus-kesken? false)}]]])
 
 (defn- lopullinen-yhteenvetorivi [otsikko rivi]
@@ -109,7 +124,6 @@
                                                 vuosi-map))
                                             toimenkuva))
                                      toimenkuvat)]
-                   (reset! tallenna-painettu false)
                    (e! (tarjous-tiedot/->PaivitaToimenkuvatGrid toimenkuvat))
                    (reset! virheet-atom (grid/hae-virheet %))))
       :rivi-jalkeen-fn (fn [rivit]
@@ -198,7 +212,6 @@
     :piilota-toiminnot? false
     :tunniste :nimi
     :muutos #(do
-               (reset! tallenna-painettu false)
                (e! (tarjous-tiedot/->PaivitaHankinnatGrid (vals (grid/hae-muokkaustila %))))
                (reset! virheet-atom (grid/hae-virheet %)))
     :rivi-jalkeen-fn (fn [rivit]
@@ -233,7 +246,6 @@
     :muutos #(do
                (let [muutetut-rivit (vals (grid/hae-muokkaustila %))
                      jyvitetyt-rivit (map tarjous-tiedot/jyvita-eperhoitovuosi-hoitovuosille muutetut-rivit)]
-                 (reset! tallenna-painettu false)
                  (e! (tarjous-tiedot/->PaivitaErillishankinnatGrid jyvitetyt-rivit))
                  (reset! virheet-atom (grid/hae-virheet %))))}
    (concat [{:otsikko "Erillishankinnat" :nimi :nimi :tyyppi :string :luokka "yhteensa" :leveys (str nimi-leveys "%") :muokattava? (constantly false)}]
@@ -269,7 +281,6 @@
       :muutos #(do
                  (let [muutetut-rivit (vals (grid/hae-muokkaustila %))
                        jyvitetyt-rivit (map tarjous-tiedot/jyvita-eperhoitovuosi-hoitovuosille muutetut-rivit)]
-                   (reset! tallenna-painettu false)
                    (e! (tarjous-tiedot/->PaivitaHoidonjohtopalkkioGrid jyvitetyt-rivit))
                    (reset! virheet-atom (grid/hae-virheet %))))
       :rivi-jalkeen-fn nil}
@@ -309,7 +320,6 @@
       :piilota-toiminnot? false
       :tunniste :nimi
       :muutos #(do
-                 (reset! tallenna-painettu false)
                  (reset! virheet-atom (grid/hae-virheet %)))
       :rivi-jalkeen-fn nil}
 
@@ -387,23 +397,34 @@
      ;; Custom-toteutus. Tallennusnapit on taulukon jälkeen
      [tallennus-painikkeet e! app]]))
 
-(defn nakyma* [e! app]
-  (komp/luo
-    (komp/sisaan #(e! (tarjous-tiedot/->HaeTarjouksenTiedot)))
-    (fn [e! app]
-      [:div
-       (when (or (:tarjous app) (seq (concat (:hankinnat app)
-                                       (:erillishankinnat app)
-                                       (:hoidonjohtopalkkiot app)
-                                       (:toimenkuvat app))))
-         [:div
-          [:div.row
-           [:div.col-xs-12.col-md-6
-            [:h1 "Tarjouksen tiedot"]]]
-          [:div.row
-           [yleiset/info-laatikko :neutraali "Tarkempi kustannusten suunnittelu tehdään tarjouksen tietojen tallentamisen jälkeen." nil nil {:sulje-nappi-id (gensym)}]]
-          [tarjous-nakyma e! app]
-          [debug/debug app]])])))
+(defn nakyma* [e! _app]
+  (let [{:keys [sisaan ulos]} (nav/luo-muutosten-hallinta
+                                :tarjous-nakyma/muutokset
+                                tarjous-tiedot/tallentamattomia-muutoksia
+                                :beforeunload-viesti "Tarjouslomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
+    (komp/luo
+      (komp/sisaan
+        #(do
+           (e! (tarjous-tiedot/->HaeTarjouksenTiedot))
+           (sisaan)))
+      (komp/ulos
+        #(do
+           (tarjous-tiedot/nollaa-muutokset!)
+           (ulos)))
+      (fn [e! app]
+        [:div
+         (when (or (:tarjous app) (seq (concat (:hankinnat app)
+                                         (:erillishankinnat app)
+                                         (:hoidonjohtopalkkiot app)
+                                         (:toimenkuvat app))))
+           [:div
+            [:div.row
+             [:div.col-xs-12.col-md-6
+              [:h1 "Tarjouksen tiedot"]]]
+            [:div.row
+             [yleiset/info-laatikko :neutraali "Tarkempi kustannusten suunnittelu tehdään tarjouksen tietojen tallentamisen jälkeen." nil nil {:sulje-nappi-id (gensym)}]]
+            [tarjous-nakyma e! app]
+            [debug/debug app]])]))))
 
 (defn tarjous []
   (tuck/tuck tila/tarjous-kustannussuunnitelma nakyma*))

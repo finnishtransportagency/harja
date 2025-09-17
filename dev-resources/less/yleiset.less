@@ -789,3 +789,37 @@ button > .ajax-loader {
 .poista-label-top-margin > label {
   margin-top: 0px;
 }
+
+// Tallentamisen tatus-viestien tyylit
+.grid-status-viestit {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  
+  .status-viesti {
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    border: 1px solid;
+    
+    &.tallennettu {
+      background-color: #f3f4f6;
+      border-color: #d1d5db;
+      color: #374151;
+    }
+    
+    &.tallentamatta {
+      background-color: #fef2f2;
+      border-color: #fecaca;
+      color: #dc2626;
+    }
+    
+    &.ei-muutoksia {
+      background-color: #f9fafb;
+      border-color: #e5e7eb;
+      color: #6b7280;
+    }
+  }
+}
