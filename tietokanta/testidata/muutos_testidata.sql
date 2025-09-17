@@ -17,12 +17,15 @@ declare
     ensimmainen_tayden_hkn_alkuvuosi INTEGER := (SELECT EXTRACT(YEAR FROM alkaen_pvm) :: INTEGER);
     viimeinen_tayden_hkn_alkuvuosi INTEGER := (SELECT EXTRACT(YEAR FROM (SELECT loppupvm FROM urakka WHERE id = urakka_id)) :: INTEGER);
     kayttaja_id_tero INTEGER := (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero');
+    urakka_sopimus_id INTEGER := (SELECT id FROM sopimus WHERE urakka = urakka_id);
 
     -- Muutosten id:t talteen, jotta voidaan viitata suoraan niihin
     muutos_id_1 INTEGER := NULL;
     muutos_id_2 INTEGER := NULL;
-    muutos_id_2_liite_1 INTEGER := NULL;
+
     muutos_id_3 INTEGER := NULL;
+    muutos_id_3_liite_1 INTEGER := NULL;
+
     muutos_id_4 INTEGER := NULL;
     muutos_id_4_kulu_1 INTEGER := NULL;
 
@@ -44,7 +47,7 @@ VALUES (_versio,urakka_id, alkaen_pvm, 'erillisrahoitettu', 'Erillisrahoitettu s
 RETURNING id INTO muutos_id_2;
 
 INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
-VALUES (_versio, muutos_id_1, 'hankintakustannukset',
+VALUES (_versio, muutos_id_2, 'hankintakustannukset',
         _toimenpideinstanssi_id_sorateiden_hoito, ensimmainen_tayden_hkn_alkuvuosi, 3000);
 
 -- Muutos 3: poikkeama tehtävä- ja määräluettelon määrästä yksittäisen hoitovuoden osalta, ei tehdäkään sorateiden rumpuja
@@ -55,44 +58,45 @@ VALUES (_versio,urakka_id, alkaen_pvm, 'maarapoikkeama', 'Tämän hoitovuoden m�
 RETURNING id INTO muutos_id_3;
 
 INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
-VALUES (_versio, muutos_id_2, 'hankintakustannukset',
+VALUES (_versio, muutos_id_3, 'hankintakustannukset',
         _toimenpideinstanssi_id_mhu_yllapito, ensimmainen_tayden_hkn_alkuvuosi, 1000);
 INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
-VALUES (_versio, muutos_id_2, _tehtava_id_soratien_rummut_alle_600mm,
+VALUES (_versio, muutos_id_3, _tehtava_id_soratien_rummut_alle_600mm,
         ensimmainen_tayden_hkn_alkuvuosi,
         30, -30, 0);
 INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
-VALUES (_versio, muutos_id_2, _tehtava_id_soratien_rummut_600_1000mm,
+VALUES (_versio, muutos_id_3, _tehtava_id_soratien_rummut_600_1000mm,
         ensimmainen_tayden_hkn_alkuvuosi,
         40, -40, 0);
 INSERT INTO liite (nimi, tyyppi, lahde, urakka, luotu, luoja)
 VALUES ('rumpu.jpg', 'image/png', 'harja-ui'::lahde,
         urakka_id, NOW(), kayttaja_id_tero)
-RETURNING id INTO muutos_id_2_liite_1;
+RETURNING id INTO muutos_id_3_liite_1;
 
 INSERT INTO mhu_muutos_liite (muutos, liite)
-VALUES (muutos_id_2,muutos_id_2_liite_1);
+VALUES (muutos_id_3,muutos_id_3_liite_1);
 
+-- Usean hoitokauden muutokset
 FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi LOOP
             -- muutos 1: päällysteiden paikkausta enemmän - kustannusvaikutus
             INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
-            VALUES (_versio, muutos_id_3, 'hankintakustannukset',
+            VALUES (_versio, muutos_id_1, 'hankintakustannukset',
                     _toimenpideinstanssi_id_paall_paikk, vuosi, 1000);
             -- muutos 1: päällysteiden paikkausta enemmän - tehtävä- ja määräluettelon muutokset
             INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
-            VALUES (_versio, muutos_id_3, _tehtava_id_ab_paikkaus, vuosi,
+            VALUES (_versio, muutos_id_1, _tehtava_id_ab_paikkaus, vuosi,
                     1000, 100, 1100);
 
         END LOOP;
 
--- Johto- ja hallintokorvauksen muutos
+-- Muutos 4: Johto- ja hallintokorvauksen muutos
 INSERT INTO mhu_muutos (versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja)
 VALUES  (1, urakka_id, '2025-06-25', 'johto-ja-hallintokorvaus', null, 'Työmääräarviot ylittyivät',
          kayttaja_id_tero)
 RETURNING id INTO muutos_id_4;
 
 INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja,  lisatieto, koontilaskun_kuukausi)
-VALUES  (1230, '2025-10-15', 36, kayttaja_id_tero,
+VALUES  (1230, '2025-10-15', urakka_id, kayttaja_id_tero,
          'Muutoksesta automaattisesti luotu kulu 1', 'lokakuu/5-hoitovuosi')
 RETURNING id INTO muutos_id_4_kulu_1;
 
@@ -103,56 +107,57 @@ INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
 VALUES  (1, muutos_id_4,muutos_id_4_kulu_1);
 
 -- Iihin vähän kiinteähintaista työtä, jotta nähdään että nousee oikein pysyävän muutoksen lomakkeelle
+-- TODO: Tämä ei välttämättä ole tarpeeksi geneerinen eri urakoihin, mutta toimii ainakin Iissä
 insert into public.kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, tehtavaryhma, tehtava, sopimus, luotu, luoja, muokattu, muokkaaja, summa_indeksikorjattu, indeksikorjaus_vahvistettu, vahvistaja, versio)
-values  (2025, 10, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.802000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2025, 11, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.880000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2025, 12, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.881000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 1, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.882000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 2, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.883000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 3, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.884000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 4, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.884000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 5, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.885000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 6, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.886000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 7, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.886000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 8, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.887000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 9, 1000, _toimenpideinstanssi_id_talvihoito, null, null, 45, '2025-08-12 15:51:33.888000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2025, 10, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.631000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2025, 11, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.709000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2025, 12, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.710000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 1, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.712000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 2, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.713000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 3, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.713000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 4, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.714000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 5, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.715000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 6, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.715000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 7, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 8, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 9, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, 45, '2025-08-12 15:51:43.717000', kayttaja_id_tero, null, null, null, null, null, 0),
+values  (2025, 10, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.802000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2025, 11, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.880000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2025, 12, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.881000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 1, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.882000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 2, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.883000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 3, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.884000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 4, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.884000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 5, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.885000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 6, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.886000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 7, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.886000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 8, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.887000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 9, 1000, _toimenpideinstanssi_id_talvihoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:33.888000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2025, 10, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.631000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2025, 11, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.709000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2025, 12, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.710000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 1, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.712000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 2, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.713000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 3, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.713000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 4, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.714000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 5, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.715000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 6, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.715000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 7, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 8, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 9, 800, _toimenpideinstanssi_id_liikymp_hoito, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.717000', kayttaja_id_tero, null, null, null, null, null, 0),
         -- vielä vähän päällysteiden paikkauksia... kahdelle hoitovuodelle
-        (2025, 10, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.631000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2025, 11, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.709000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2025, 12, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.710000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 1, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.712000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 2, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.713000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 3, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.713000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 4, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.714000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 5, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.715000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 6, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.715000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 7, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 8, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
-        (2026, 9, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.717000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2026, 10, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.631000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2026, 11, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.709000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2026, 12, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.710000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2027, 1, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.712000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2027, 2, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.713000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2027, 3, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.713000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2027, 4, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.714000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2027, 5, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.715000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2027, 6, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.715000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2027, 7, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2027, 8, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.716000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
-        (2027, 9, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, 45, '2025-08-12 15:51:43.717000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0);
+        (2025, 10, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.631000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2025, 11, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.709000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2025, 12, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.710000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 1, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.712000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 2, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.713000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 3, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.713000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 4, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.714000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 5, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.715000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 6, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.715000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 7, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 8, 10000, _toimenpideinstanssi_id_paall_paikk, null, null, urakka_sopimus_id, '2025-08-12 15:51:43.716000', kayttaja_id_tero, null, null, null, null, null, 0),
+        (2026, 9, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.717000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2026, 10, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.631000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2026, 11, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.709000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2026, 12, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.710000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 1, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.712000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 2, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.713000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 3, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.713000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 4, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.714000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 5, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.715000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 6, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.715000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 7, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.716000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 8, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.716000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0),
+        (2027, 9, 10000, _toimenpideinstanssi_id_paall_paikk, NULL, NULL, urakka_sopimus_id, '2025-08-12 15:51:43.717000', kayttaja_id_tero, NULL, NULL, NULL, NULL, NULL, 0);
 
     RETURN TRUE;
 

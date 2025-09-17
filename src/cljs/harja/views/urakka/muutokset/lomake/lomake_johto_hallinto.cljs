@@ -1,21 +1,26 @@
 (ns harja.views.urakka.muutokset.lomake.lomake-johto-hallinto
   "Muutokset välilehden lomakkeet - Johto- ja hallintokorvauksen muutos"
-  (:require [harja.fmt :as fmt]
+  (:require [reagent.core :as r]
+            
+            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.muutos-domain :as muutos-domain]
+            [harja.ui.grid.protokollat :as grid-protokollat]
             [harja.views.urakka.muutokset.yhteiset :as yhteiset]
             [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]))
 
 
 (defn lomake-johto-ja-hallintokorvaus
   "johto-ja-hallintokorvaus muutoksen lomakekomponentti"
-  [e! {:keys [valittu-hoitokausi urakan-hoitokaudet] :as app}]
+  [e! {:keys [valittu-hoitokausi urakan-hoitokaudet muokattava-muutos] :as app}]
   (let [muutostapa (muutos-domain/jjh-korvaus-muutos-vai-vahennys? (:alkupvm @nav/valittu-urakka))
-        summa (reduce + 0 (map :tavoitehinnan-muutos (vals @t-yhteiset/johto-ja-hallintokorvausmuutokset-atom)))]
+        rivit (:johto-ja-hallintokorvaukset muokattava-muutos)
+        summa (reduce + 0 (map :tavoitehinnan-muutos (vec (vals rivit))))
+        rivit-atom (r/atom rivit)]
 
     [(lomake/ryhma {:otsikko "Perustiedot"}
        {:nimi :hoitovuosi
@@ -32,10 +37,10 @@
      {:nimi :johto-ja-hallintokorvaus-muutokset
       :otsikko ""
       :palstoja 2
-      :tyyppi :komponentti 
+      :tyyppi :komponentti
       :uusi-rivi? true
       :komponentti
-      (fn [e! {:keys [johto-ja-hallintokorvausten-muutokset valittu-hoitokausi]}]
+      (fn [_e! _]
         [:span
          [:hr]
          [:h3 "Muutokset tavoitehintaan ja kuluihin"]
@@ -47,30 +52,31 @@
            :voi-lisata? false
            :voi-kumota? false
            :voi-poistaa? (constantly false)
+           :muutos #(e! (t-yhteiset/->MuokkaaJohtoJaHallintoMuutosta (grid-protokollat/hae-muokkaustila %)))
            :voi-muokata? true
            :rivi-jalkeen [{:teksti "Yhteensä" :sarakkeita 1 :luokka "yhteensa"}
                           {:teksti (fmt/euro-opt summa) :tasaa :oikea :luokka "yhteensa"}]}
 
           ;; Taulukon kentät
-          [{:otsikko "Kalenterikuukausi" 
-            :nimi :pvm 
+          [{:otsikko "Kalenterikuukausi"
+            :nimi :pvm
             :tyyppi :string
             :leveys 20
             :muokattava? (constantly false)
             :fmt #(when % (pvm/koko-kuukausi-ja-vuosi % true))}
-           
+
            {:otsikko (if (= muutostapa :muutos)
                        "Muutos € (+/-)"
                        "Vähennys (€)")
-            :nimi :tavoitehinnan-muutos 
+            :nimi :tavoitehinnan-muutos
             :vaadi-negatiivinen? (when (= muutostapa :vahennys) true)
-            :tyyppi :numero 
-            :fmt fmt/euro-opt 
-            :tasaa :oikea 
+            :tyyppi :numero
+            :fmt fmt/euro-opt
+            :tasaa :oikea
             :leveys 8}]
-          t-yhteiset/johto-ja-hallintokorvausmuutokset-atom]
+          rivit-atom]
 
          [yleiset/info-laatikko :neutraali
           "Harja luo oikaisevat kulut automaattisesti tallentamisen jälkeen."
-          nil nil 
+          nil nil
           {:luokka "johto-ja-hallintokorvaus-muutokset-info"}]])}]))
