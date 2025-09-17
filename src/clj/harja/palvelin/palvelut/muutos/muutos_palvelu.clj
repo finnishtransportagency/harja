@@ -283,7 +283,6 @@
 (defn hae-urakan-muutostiedot
   [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-  (log/debug "hae-urakan-muutostiedot: " tiedot)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         kirjatut-muutokset-vastaus (mapv
                                      (fn [rivi]
@@ -435,7 +434,6 @@
 (defn- tallenna-johto-ja-hallintokorvauksen-muutokset
   "Tallentaa johto- ja hallintokorvauksen muutokset tietokantaan kuluiksi, linkittää muutokseen."
   [db kayttaja urakka muutos-id-ja-versio rivit]
-  (log/debug "Tallennetaan johto- ja hallintokorvauksen muutokset: " rivit " muutos-id-ja-versio" muutos-id-ja-versio)
   (let [hoidon-johto-tpi-id (:id (first
                                    (tpi-q/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
                                      {:urakka (:id urakka)
@@ -484,7 +482,6 @@
   ;; Hox: tätä ei vielä käytetä. Jossain kohti tulee varmasti lomakkeelle poistaminen mahdolliseksi
   [db kayttaja muutos]
   (when (and (:id muutos) (:versio muutos))
-    (log/debug "Poistetaan muutos id:llä " (:id muutos))
     (muutos-kyselyt/poista-muutos! db {:id (:id muutos)
                                        :versio (:versio muutos)
                                        :kayttaja (:id kayttaja)})))
@@ -545,15 +542,20 @@
 
 
 (defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos] :as tiedot}]
-  (log/debug "tallenna-muutos: " (kokoelmat/dissoc-in tiedot [:muutos :toimenpiteiden-tehtavat]))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
   (let [urakka (first (q-urakat/hae-urakka db urakka-id))
         kulut (:kulut muutos)
         liitteet (:liitteet muutos)
+        hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         tavoitehinnan-muutos (:tavoitehinnan-muutos muutos)
-        alityyppi (when (= (:tyyppi muutos) "muutostyo")
-                    (-> muutos :alityyppi name))
+        tyyppi-pysyva? (= (:tyyppi muutos) "pysyva")
+        tyyppi-muutostyo? (= (:tyyppi muutos) "muutostyo")
+        tyyppi-johto-ja-hallinto? (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+
+        ;; Alityyppi pelkästään olemassa muutostyöllä 
+        alityyppi (when tyyppi-muutostyo? (-> muutos :alityyppi name))
+
         muutos {:id (:id muutos)
                 :versio (:versio muutos)
                 :urakka urakka-id
@@ -562,11 +564,23 @@
                 :syy (:syy muutos)
                 :kulu_kohdistus (:kulu-kohdistus muutos)
                 :luonnos (:luonnos muutos)
-                :hoitokauden_alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+                :hoitokauden_alkuvuosi hk-alkuvuosi
                 :tyyppi (:tyyppi muutos)
                 :kayttaja (:id kayttaja)
                 :alityyppi alityyppi}
-        kustannusvaikutukset (:kustannusvaikutukset muutos)
+
+        kustannusvaikutukset (cond
+                               ;; Pysyvä muutos 
+                               tyyppi-pysyva?
+                               (:kustannusvaikutukset muutos)
+
+                               ;; Muutostyö
+                               tyyppi-muutostyo?
+                               (list {:summa tavoitehinnan-muutos
+                                      :kustannuslaji "erillishankinnat"
+                                      :hoitokauden_alkuvuosi hk-alkuvuosi
+                                      :tpi nil}))
+
         ;; Pysyvien muutosten tehtävien määrämuutokset
         maaramuutokset (:tehtavat_ja_maarat muutos)]
 
@@ -578,7 +592,6 @@
                                        (muutos-kyselyt/luo-muutos<! conn muutos))]
 
         ;; Tallenna liitteet
-
         (tallenna-muutoksen-liitteet conn aiti-muutos-id-ja-versio liitteet)
 
         ;; Tallenna kustannusvaikutukset
@@ -591,7 +604,7 @@
 
         ;; Tallenna kulut
         (case
-          (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+          tyyppi-johto-ja-hallinto?
           (tallenna-johto-ja-hallintokorvauksen-muutokset conn kayttaja urakka aiti-muutos-id-ja-versio kulut)))
 
       ;; Palauta päivitetty listaus
@@ -616,7 +629,6 @@
 (defn tallenna-rahavarausmuutosten-syyt
   "Rahavarausmuutosten syiden tallennus on irtallaan mhu_muutos logiikasta, eikä syiden historiaa tallenneta _historia tauluun."
   [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet rivit]}]
-  (log/debug "Tallenna rahavarausmuutosten syyt" urakka-id valittu-hoitokausi rivit)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))]
     (jdbc/with-db-transaction [conn db]

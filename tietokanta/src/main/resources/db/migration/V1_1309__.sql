@@ -1,5 +1,6 @@
 -- Muutostyöt tietomallimuutoksia, erillisrahoitettu muutostyö
 
+ALTER TYPE kohdistustyyppi ADD VALUE 'erillisrahoitettu-muutos';
 ALTER TYPE MHU_MUUTOSTYYPPI ADD VALUE 'muutostyo' AFTER 'maarapoikkeama';
 
 
