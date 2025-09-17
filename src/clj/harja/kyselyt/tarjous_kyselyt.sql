@@ -14,8 +14,8 @@ INSERT INTO tarjous_kustannukset (tarjous_id, urakka_id, hoitokauden_alkuvuosi, 
 VALUES (:tarjous_id, :urakka_id, :hoitokauden_alkuvuosi, :summa, :osio::suunnittelu_osio, :tehtava_id, :tehtavaryhma_id, :rahavaraus_id, :luoja, NOW());
 
 -- name: tallenna-tarjouksen-johto-ja-hallintokorvaus<!
-INSERT INTO tarjous_johto_ja_hallintokorvaus (tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio, johto_ja_hallintokorvaus_toimenkuva_id, tehtavaryhma_id, tehtava_id, luoja, luotu)
-VALUES (:tarjous_id, :urakka_id, :hoitokauden_alkuvuosi, :summa, :osio::suunnittelu_osio, :johto_ja_hallintokorvaus_toimenkuva_id, :tehtavaryhma_id, :tehtava_id, :luoja, NOW());
+INSERT INTO tarjous_johto_ja_hallintokorvaus (tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, maksukausi, osio, johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu)
+VALUES (:tarjous_id, :urakka_id, :hoitokauden_alkuvuosi, :summa, :maksukausi,:osio::suunnittelu_osio, :johto_ja_hallintokorvaus_toimenkuva_id, :luoja, NOW());
 
 -- name: hae-tarjouksen-tiedot
 SELECT t.id as "tarjous-id", t.hoitokauden_alkuvuosi, t.urakka_id, t.tarjous_tavoitehinta, t.tarjous_kattohinta,
@@ -29,13 +29,13 @@ SELECT t.id as "tarjous-id", t.hoitokauden_alkuvuosi, t.urakka_id, t.tarjous_tav
         FROM tarjous_kustannukset tk
                  LEFT JOIN rahavaraus r ON r.id = tk.rahavaraus_id
         WHERE tk.tarjous_id = t.id) as kustannukset,
-       (SELECT array_agg(row(tj.id, UPPER(LEFT(jjht.toimenkuva, 1)) || RIGHT(jjht.toimenkuva, -1), tj.summa, tj.osio, tj.johto_ja_hallintokorvaus_toimenkuva_id))
+       (SELECT array_agg(row(tj.id, UPPER(LEFT(jjht.toimenkuva, 1)) || RIGHT(jjht.toimenkuva, -1), tj.summa, tj.maksukausi, tj.osio, tj.johto_ja_hallintokorvaus_toimenkuva_id))
         FROM tarjous_johto_ja_hallintokorvaus tj
                  LEFT JOIN johto_ja_hallintokorvaus_toimenkuva jjht ON jjht.id = tj.johto_ja_hallintokorvaus_toimenkuva_id
         WHERE tj.tarjous_id = t.id) as toimenkuvat
   FROM tarjous t
  WHERE t.urakka_id = :urakka_id
- ORDER BY t.hoitokauden_alkuvuosi ASC;
+ ORDER BY t.hoitokauden_alkuvuosi;
 
 -- name: hae-tarjous-vuodella
 -- Haetaan tarjousrivi urakan ja vuoden perusteella.
@@ -66,24 +66,22 @@ SET summa = :summa,
 WHERE id = :id;
 
 -- name: hae-toimenkuva-tarjoukselle
-SELECT id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio::text,
-       johto_ja_hallintokorvaus_toimenkuva_id, tehtavaryhma_id, tehtava_id
+SELECT id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, maksukausi, osio::text,
+       johto_ja_hallintokorvaus_toimenkuva_id
   FROM tarjous_johto_ja_hallintokorvaus
  WHERE tarjous_id = :tarjous_id
    AND johto_ja_hallintokorvaus_toimenkuva_id = :johto_ja_hallintokorvaus_toimenkuva_id
    AND urakka_id = :urakka_id
    AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
    AND osio = :osio::suunnittelu_osio
-   AND (:tehtava_id::INTEGER IS NULL OR tehtava_id = :tehtava_id)
-   AND (:tehtavaryhma_id::INTEGER IS NULL OR tehtavaryhma_id = :tehtavaryhma_id);
+   AND maksukausi = :maksukausi;
 
 -- name: paivita-tarjouksen-johto-ja-hallintokorvaus<!
 UPDATE tarjous_johto_ja_hallintokorvaus
 SET summa = :summa,
+    maksukausi = :maksukausi,
     osio = :osio::suunnittelu_osio,
     johto_ja_hallintokorvaus_toimenkuva_id = :johto_ja_hallintokorvaus_toimenkuva_id,
-    tehtavaryhma_id = :tehtavaryhma_id,
-    tehtava_id = :tehtava_id,
     muokkaaja = :muokkaaja,
     muokattu = NOW()
 WHERE id = :id;
@@ -92,3 +90,15 @@ WHERE id = :id;
 DELETE FROM tarjous_johto_ja_hallintokorvaus
  WHERE johto_ja_hallintokorvaus_toimenkuva_id = :toimenkuvaid
    AND urakka_id = :urakkaid;
+
+-- name: hae-tarjouksen-viimeisin-muokkaaja
+SELECT GREATEST(t.muokattu, t.luotu) AS viimeisin_muokkaus,
+       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+            ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
+           END AS viimeisin_muokkaaja
+  FROM tarjous t
+         LEFT JOIN kayttaja k ON COALESCE(t.muokkaaja, t.luoja) = k.id
+         LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
+ WHERE t.urakka_id = :urakkaid
+ ORDER BY viimeisin_muokkaus DESC
+ LIMIT 1;

@@ -19,18 +19,22 @@
 (def nimi-leveys 20)
 (def yhteensa-leveys 20)
 
-(defn- tallennus-painikkeet [e! {:keys [tallennus-kesken?] :as app}]
+(defn- tallennus-painikkeet [e! {:keys [tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja] :as app}]
   [:div.painikkeet.text-right
-   [napit/yleinen-toissijainen "Tyhjennä"
-    #(do
-       (reset! tallenna-painettu false)
-       (e! (tarjous-tiedot/->HaeTyhjatTarjouksenTiedot)))
-    {:disabled (or tallennus-kesken? false)}]
-   [napit/yleinen-ensisijainen "Tallenna muutokset"
-    #(do
-       (reset! tallenna-painettu false)
-       (e! (tarjous-tiedot/->TallennaTarjouksenTiedot @tarjous-tiedot/grid-tiedot-atom @tarjous-tiedot/grid-toimenkuvat-atom)))
-    {:disabled (or tallennus-kesken? false)}]])
+   (if viimeisin-muokkaus
+     (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")
+     "Ei tallennettuja muutoksia")
+   [:span {:style {:margin-left "1rem"}}
+    [napit/yleinen-toissijainen "Tyhjennä"
+     #(do
+        (reset! tallenna-painettu false)
+        (e! (tarjous-tiedot/->HaeTyhjatTarjouksenTiedot)))
+     {:disabled (or tallennus-kesken? false)}]
+    [napit/yleinen-ensisijainen "Tallenna muutokset"
+     #(do
+        (reset! tallenna-painettu false)
+        (e! (tarjous-tiedot/->TallennaTarjouksenTiedot (:hankinnat app) (:toimenkuvat app))))
+     {:disabled (or tallennus-kesken? false)}]]])
 
 (defn- lopullinen-yhteenvetorivi [otsikko rivi]
   (flatten (conj [{:teksti otsikko
@@ -40,10 +44,6 @@
                   {:teksti ""
                    :luokka "yhteensa lihavoitu"}]
              rivi)))
-
-(defn laske-rivit-yhteen [rivi]
-  (let [kustannukset (vals (filter #(str/starts-with? (name (key %)) "vuosi-") rivi))]
-    (reduce + kustannukset)))
 
 (defn laske-vuosisummat [rivit vuosikentat]
   (let [vuosidata (->> rivit
@@ -66,8 +66,9 @@
                    :fmt fmt/euro-opt})]
     v))
 
-(defn johto-ja-hallintokorvaukset [e! joha-tiedot kaikki-toimenkuvat vuositaulukon-otsikot vuosi-leveys]
+(defn johto-ja-hallintokorvaukset [e! kaikki-toimenkuvat vuositaulukon-otsikot vuosi-leveys app]
   (let [;; Estetään käyttöliittymässä poistettujen toimenkuvien näkyminen listauksessa, vaikka ei ole vielä tallennettu muutoksia kantaan
+        joha-tiedot (:toimenkuvat app)
         toimenkuvat (remove #(true? (:poistettu %)) joha-tiedot)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
@@ -85,12 +86,11 @@
       :muokattava? (constantly true)
       :voi-poistaa? (constantly false)
       :voi-lisata? true
-      :uusi-rivi (fn [rivi]
-                   (merge (assoc rivi :id -1 :nimi "" :yhteensa 0)
-                     vuosi-map))
+      :uusi-rivi (fn [rivi] (merge (assoc rivi :id -1 :nimi "" :yhteensa 0) vuosi-map))
       :voi-kumota? false
       :piilota-toiminnot? false
       :tunniste :nimi
+      :jarjesta :toimenkuva-id
       :muutos #(do
                  (let [toimenkuvat (vals (grid/hae-muokkaustila %))
                        ;; Jos muutos on ollut uuden rivin lisäys, niin asetetaan valittu toimenkuva
@@ -99,16 +99,18 @@
                                             (let [uusi-toimenkuva-kaikista (first (filter (fn [t]
                                                                                             (= (:nimi t) (:nimi toimenkuva)))
                                                                                     kaikki-toimenkuvat))]
-                                              (assoc toimenkuva
-                                                :osio "johto-ja-hallintokorvaus"
-                                                :poistettu nil
-                                                :yhteensa 0
-                                                :rahavaraus-id nil
-                                                :toimenkuva-id (:id uusi-toimenkuva-kaikista)))
+                                              (merge (assoc toimenkuva
+                                                       :osio "johto-ja-hallintokorvaus"
+                                                       :maksukausi "vuosi"
+                                                       :poistettu nil
+                                                       :yhteensa 0
+                                                       :rahavaraus-id nil
+                                                       :toimenkuva-id (:id uusi-toimenkuva-kaikista))
+                                                vuosi-map))
                                             toimenkuva))
                                      toimenkuvat)]
                    (reset! tallenna-painettu false)
-                   (reset! tarjous-tiedot/grid-toimenkuvat-atom toimenkuvat)
+                   (e! (tarjous-tiedot/->PaivitaToimenkuvatGrid toimenkuvat))
                    (reset! virheet-atom (grid/hae-virheet %))))
       :rivi-jalkeen-fn (fn [rivit]
                          (let [vuosi-arvot (map :nimi vuositaulukon-otsikot)
@@ -119,20 +121,48 @@
      ;; Otsikot
      (concat [;; ennen 2025 alkaneet urakat eivät voi valita toimenkuvia tästä tarjouslomakkeesta
               (if (< urakan-alkuvuosi 2025)
-                {:otsikko "Johto- ja hallintokorvaus (vain 2025 tai myöhemmin alkaville urakoille)"
-                 :nimi :nimi
-                 :tyyppi :string
-                 :luokka "yhteensa disabled"
-                 :leveys (str nimi-leveys "%")
-                 :muokattava? (constantly false)}
                 {:otsikko "Johto- ja hallintokorvaus"
                  :nimi :nimi
                  :tyyppi :valinta
-                 ;:valinnat #(map :nimi (conj muut-toimenkuvat %))
                  :valinnat-fn #(map :nimi muut-toimenkuvat)
+                 :aseta (fn [rivi arvo]
+                          (merge
+                            (assoc rivi :id -1
+                              :nimi arvo
+                              :toimenkuva (str/lower-case arvo)
+                              :uusi-nimi arvo
+                              :vanha-id (:toimenkuva-id rivi)
+                              :osio "johto-ja-hallintokorvaus"
+                              :maksukausi "vuosi"
+                              :rahavaraus-id nil)
+                            vuosi-map))
                  :luokka "yhteensa"
                  :leveys (str nimi-leveys "%")
-                 :muokattava? (constantly true)})]
+                 :muokattava? (fn [rivi arvo] (if (= -1 (:id rivi)) true false))}
+                {:otsikko "Johto- ja hallintokorvaus"
+                 :nimi :nimi
+                 :tyyppi :valinta
+                 :valinnat-fn #(map :nimi muut-toimenkuvat)
+                 :aseta (fn [rivi arvo]
+                          (merge (assoc rivi :id -1
+                                   :nimi arvo
+                                   :toimenkuva (str/lower-case arvo)
+                                   :paivtetty? true
+                                   :uusi-nimi arvo
+                                   :vanha-id (:toimenkuva-id rivi)
+                                   :osio "johto-ja-hallintokorvaus"
+                                   :maksukausi "vuosi"
+                                   :rahavaraus-id nil)
+                            vuosi-map))
+                 :luokka "yhteensa"
+                 :leveys (str nimi-leveys "%")
+                 ;; Jos on vielä mahdollista vaihtaa toimenkuvaa ja toimenkuva ei ole 'Valmistelukausi ennen urakka-ajan alkua'
+                 ;; niin näytä valikko. Muuten ei näytetä valikkoa.
+                 :muokattava? (fn [rivi]
+                                (if (and
+                                      (not= "Valmistelukausi ennen urakka-ajan alkua" (:nimi rivi))
+                                      (seq muut-toimenkuvat))
+                                  true false))})]
        [;; Poista nappi vain 2025 tai jälkeen alkaneissa urakoissa
         (if (>= urakan-alkuvuosi 2025)
           {:otsikko ""
@@ -148,184 +178,212 @@
            :komponentti (fn [rivi]
                           [:span])
            :leveys (str vuosi-leveys "%")})]
-       (mapv #(assoc % :muokattava false) vuositaulukon-otsikot)
+       vuositaulukon-otsikot
        [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
          :muokattava? (constantly false) :luokka "yhteensa"
-         :hae (fn [rivi] (laske-rivit-yhteen rivi))
+         :hae (fn [rivi] (tarjous-tiedot/laske-rivit-yhteen rivi))
          :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%") :tasaa :oikea}])
      toimenkuvat]))
 
+(defn hankinnat-grid [e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys app]
+  [grid/grid
+   {:otsikko ""
+    :data-cy "tarjous-hankinnat-grid"
+    :muokkaa-aina true
+    :voi-muokata? true
+    :muokattava? (constantly true)
+    :voi-poistaa? (constantly false)
+    :voi-lisata? false
+    :voi-kumota? false
+    :piilota-toiminnot? false
+    :tunniste :nimi
+    :muutos #(do
+               (reset! tallenna-painettu false)
+               (e! (tarjous-tiedot/->PaivitaHankinnatGrid (vals (grid/hae-muokkaustila %))))
+               (reset! virheet-atom (grid/hae-virheet %)))
+    :rivi-jalkeen-fn (fn [rivit]
+                       (let [vuosi-arvot (map :nimi vuositaulukon-otsikot)
+                             summat (laske-vuosisummat rivit vuosi-arvot)]
+                         (into
+                           [{:teksti "Kaikki hankinnat yhteensä", :luokka "yhteensa lihavoitu" :yhteenveto-vayla true :tyyppi :euro}]
+                           summat)))}
+   (concat [{:otsikko "Hankinnat" :nimi :nimi :tyyppi :string :luokka "yhteensa" :leveys (str nimi-leveys "%") :muokattava? (constantly false)}]
+     vuositaulukon-otsikot
+     [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
+       :fmt (fn [arvo]
+              (if arvo (fmt/euro false arvo) 0.00))
+       :leveys (str yhteensa-leveys "%")
+       :hae (fn [rivi] (tarjous-tiedot/laske-rivit-yhteen rivi))
+       :tasaa :oikea
+       :muokattava? (fn [rivi] (if (:yhteensa rivi) false true))}])
+   (:hankinnat app)])
+
+(defn erillishankinnat-grid [e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys app]
+  [grid/grid
+   {:otsikko ""
+    :data-cy "tarjous-erillishankinnat-grid"
+    :muokkaa-aina true
+    :voi-muokata? true
+    :muokattava? (constantly true)
+    :voi-poistaa? (constantly false)
+    :voi-lisata? false
+    :voi-kumota? false
+    :piilota-toiminnot? false
+    :tunniste :nimi
+    :muutos #(do
+               (let [muutetut-rivit (vals (grid/hae-muokkaustila %))
+                     jyvitetyt-rivit (map tarjous-tiedot/jyvita-eperhoitovuosi-hoitovuosille muutetut-rivit)]
+                 (reset! tallenna-painettu false)
+                 (e! (tarjous-tiedot/->PaivitaErillishankinnatGrid jyvitetyt-rivit))
+                 (reset! virheet-atom (grid/hae-virheet %))))}
+   (concat [{:otsikko "Erillishankinnat" :nimi :nimi :tyyppi :string :luokka "yhteensa" :leveys (str nimi-leveys "%") :muokattava? (constantly false)}]
+     [{:otsikko "€ / hoitovuosi" :nimi :eperhoitovuosi :tyyppi :euro :leveys (str vuosi-leveys "%") :muokattava? (constantly true)}]
+     vuositaulukon-otsikot
+     [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
+       :fmt (fn [arvo]
+              (if arvo (fmt/euro false arvo) 0.00))
+       :leveys (str yhteensa-leveys "%")
+       :hae (fn [rivi] (tarjous-tiedot/laske-rivit-yhteen rivi))
+       :tasaa :oikea
+       :muokattava? (constantly false)}])
+   (let [erillishankinnat-tiedot (:erillishankinnat app)]
+     (if (empty? erillishankinnat-tiedot)
+       ;; Jos ei ole tietoja, näytetään tyhjä rivi muokkausta varten
+       [{:nimi "Erillishankinnat" :yhteensa 0 :vuosi-2021 0 :vuosi-2022 0 :vuosi-2023 0 :vuosi-2024 0 :vuosi-2025 0 :eperhoitovuosi 0 :osio "erillishankinnat"}]
+       ;; Muutoin käytetään oikeaa dataa
+       erillishankinnat-tiedot))])
+
+(defn hoidonjohtopalkkio-grid [e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys app]
+  (let [hoidonjohtopalkkio-tiedot (:hoidonjohtopalkkiot app)]
+    [grid/grid
+     {:otsikko ""
+      :data-cy "tarjous-hoidonjohtopalkkio-grid"
+      :muokkaa-aina true
+      :voi-muokata? true
+      :muokattava? (constantly true)
+      :voi-poistaa? (constantly false)
+      :voi-lisata? true
+      :voi-kumota? false
+      :piilota-toiminnot? false
+      :tunniste :nimi
+      :muutos #(do
+                 (let [muutetut-rivit (vals (grid/hae-muokkaustila %))
+                       jyvitetyt-rivit (map tarjous-tiedot/jyvita-eperhoitovuosi-hoitovuosille muutetut-rivit)]
+                   (reset! tallenna-painettu false)
+                   (e! (tarjous-tiedot/->PaivitaHoidonjohtopalkkioGrid jyvitetyt-rivit))
+                   (reset! virheet-atom (grid/hae-virheet %))))
+      :rivi-jalkeen-fn nil}
+
+     (concat [{:otsikko "Hoidonjohtopalkkio"
+               :nimi :nimi
+               :tyyppi :string
+               :leveys (str nimi-leveys "%")
+               :muokattava? (constantly false)}]
+       [{:otsikko "€ / hoitovuosi" :nimi :eperhoitovuosi :tyyppi :euro :leveys (str vuosi-leveys "%") :muokattava? (constantly true)}]
+       vuositaulukon-otsikot
+
+       [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro :tasaa :oikea
+         :muokattava? (constantly false) :luokka "yhteensa"
+         :hae (fn [rivi] (tarjous-tiedot/laske-rivit-yhteen rivi))
+         :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%")}])
+
+     (if (empty? hoidonjohtopalkkio-tiedot)
+       ;; Jos ei ole tietoja, näytetään tyhjä rivi muokkausta varten
+       [{:nimi "Hoidonjohtopalkkio" :yhteensa 0 :vuosi-2021 0 :vuosi-2022 0 :vuosi-2023 0 :vuosi-2024 0 :vuosi-2025 0 :eperhoitovuosi 0 :osio "hoidonjohtopalkkio"}]
+       ;; Muutoin käytetään oikeaa dataa
+       hoidonjohtopalkkio-tiedot)]))
+
+(defn tavoite-ja-kattohinta-grid [e! vuositaulukon-otsikot nimi-leveys yhteensa-leveys app]
+  (let [hankinnat-tiedot (:hankinnat app)
+        erillishankinnat-tiedot (:erillishankinnat app)
+        hoidonjohtopalkkio-tiedot (:hoidonjohtopalkkiot app)
+        joha-tiedot (:toimenkuvat app)
+        kattohintakerroin (:kattohintakerroin app)]
+    [grid/grid
+     {:otsikko ""
+      :data-cy "tarjous-tavoite-kattohinta-grid"
+      :muokattava? (constantly false)
+      :voi-poistaa? (constantly false)
+      :voi-lisata? false
+      :voi-kumota? false
+      :piilota-toiminnot? false
+      :tunniste :nimi
+      :muutos #(do
+                 (reset! tallenna-painettu false)
+                 (reset! virheet-atom (grid/hae-virheet %)))
+      :rivi-jalkeen-fn nil}
+
+     (concat [{:otsikko "Tavoite- ja kattohinta"
+               :nimi :nimi
+               :tyyppi :string
+               :leveys (str nimi-leveys "%")
+               :muokattava? (constantly false)}]
+       vuositaulukon-otsikot
+       [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
+         :muokattava? (constantly false) :tasaa :oikea
+         :hae (fn [rivi] (tarjous-tiedot/laske-rivit-yhteen rivi))
+         :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%")}])
+     (let [gridien-yhteensa (tarjous-tiedot/laske-kaikkien-gridien-yhteensa
+                              hankinnat-tiedot
+                              erillishankinnat-tiedot
+                              hoidonjohtopalkkio-tiedot
+                              joha-tiedot
+                              vuositaulukon-otsikot)
+           tavoitehinta-rivi (merge
+                               {:nimi "Tarjouksen tavoitehinta" :fmt (fmt/euro false ) :eperhoitovuosi 0}
+                               (:vuosikohtaiset-summat gridien-yhteensa)
+                               {:yhteensa (:yhteensa gridien-yhteensa)})
+           kattohinta-rivi (merge
+                             {:nimi (str "Tarjouksen kattohinta (" (fmt/desimaaliluku kattohintakerroin nil nil false) " x tarjouksen tavoitehinta)") :fmt (fmt/euro false) :eperhoitovuosi 0}
+                             (zipmap (keys (:vuosikohtaiset-summat gridien-yhteensa))
+                               (map #(* kattohintakerroin %) (vals (:vuosikohtaiset-summat gridien-yhteensa))))
+                             {:yhteensa (* kattohintakerroin (:yhteensa gridien-yhteensa))})]
+       [tavoitehinta-rivi kattohinta-rivi])]))
+
 (defn tarjous-nakyma [e! app]
-  (let [tarjouksen-tiedot (:tarjous app)
-        hoitokausien-maara (count (:hoitovuosittaiset-arvot (first tarjouksen-tiedot)))
-        vuosi-leveys (/ (- 100 nimi-leveys yhteensa-leveys) hoitokausien-maara)
-        ;; Muodostetaan otsikot, jotka voivat olla erilaisia eri mittaisilla urakoilla
-        vuositaulukon-otsikot (reduce (fn [rivit vuosi-rivi]
-                                        (let [index (inc (count rivit))]
-                                          (concat rivit [{:otsikko (str index ". Hoitovuosi " (:vuosi vuosi-rivi) " - " (inc (:vuosi vuosi-rivi)) " (€)")
-                                                          :nimi (keyword (str "vuosi-" (:vuosi vuosi-rivi)))
-                                                          :tyyppi :euro
-                                                          :leveys (str vuosi-leveys "%")
-                                                          :muokattava? (fn [rivi] (if (or (= (:nimi rivi) "Äkilliset hoitotyöt")
-                                                                                        (= (:nimi rivi) "Hoidonjohtopalkkio")
-                                                                                        (= (:nimi rivi) "Erillishankinnat")
-                                                                                        (= (:nimi rivi) "Vahinkojen korjaukset")
-                                                                                        (= (:nimi rivi) "Tarjouksen tavoitehinta")
-                                                                                        (= (:nimi rivi) "Tarjouksen kattohinta (1,1 x tarjouksen tavoitehinta)")) false true))
-                                                          :tasaa :oikea}])))
-                                [] (:hoitovuosittaiset-arvot (first tarjouksen-tiedot)))
+  (let [kaikki-tiedot (concat (:hankinnat app) (:erillishankinnat app)
+                        (:hoidonjohtopalkkiot app) (:toimenkuvat app))
+        ensimmainen-rivi-jossa-hoitovuodet (first (filter #(seq (:hoitovuosittaiset-arvot %)) kaikki-tiedot))
 
-        taulukon-tiedot (into [] (reduce (fn [rivit tarjous-rivi]
-                                           (let [vuosiarvot (reduce (fn [uusi rivi]
-                                                                      (-> uusi
-                                                                        (assoc :poistettu (:poistettu tarjous-rivi))
-                                                                        (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
-                                                                        (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
-                                                                        (assoc :tehtava-id (:tehtava-id tarjous-rivi))
-                                                                        (assoc :tehtavaryhma-id (:tehtavaryhma-id tarjous-rivi))
-                                                                        (assoc :osio (:osio tarjous-rivi))
-                                                                        (assoc (keyword (str "vuosi-" (:vuosi rivi))) (:summa rivi))))
-                                                              {} (:hoitovuosittaiset-arvot tarjous-rivi))
-                                                 nimiarvot {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)}
-                                                 lopputulos (merge vuosiarvot nimiarvot)]
-                                             (concat rivit [lopputulos])))
-                                   [] (drop-last tarjouksen-tiedot))) ;; Jätetään viimeinen rivi pois, koska se on yhteenvetorivi
-        hankinnat-tiedot (into [] (filter #(some #{"hankintakustannukset" "tavoitehintaiset-rahavaraukset"}
-                                             [(:osio %)]) taulukon-tiedot))
-        joha-tiedot (into [] (filter #(some #{"johto-ja-hallintokorvaus"}
-                                        [(:osio %)]) taulukon-tiedot))]
+        ;; Jos ei ole dataa, käytetään oletusarvoja 5 vuodelle
+        hoitovuosittaiset-arvot (or (:hoitovuosittaiset-arvot ensimmainen-rivi-jossa-hoitovuodet)
+                                  [{:vuosi 2021} {:vuosi 2022} {:vuosi 2023} {:vuosi 2024} {:vuosi 2025}])
 
+        hoitokausien-maara (count hoitovuosittaiset-arvot)
+        vuosi-leveys (if (> hoitokausien-maara 0)
+                       (/ (- 100 nimi-leveys yhteensa-leveys) hoitokausien-maara)
+                       10)
+
+        ;; Muodostetaan otsikot hoitovuosittaiset-arvot perusteella
+        vuositaulukon-otsikot (map-indexed
+                                (fn [index vuosi-rivi]
+                                  {:otsikko (str (inc index) ". Hoitovuosi " (:vuosi vuosi-rivi) " - " (inc (:vuosi vuosi-rivi)) " (€)")
+                                   :nimi (keyword (str "vuosi-" (:vuosi vuosi-rivi)))
+                                   :tyyppi :euro
+                                   :fmt (partial fmt/euro-opt false)
+                                   :leveys (str vuosi-leveys "%")
+                                   :tasaa :oikea})
+                                hoitovuosittaiset-arvot)]
     [:div
      [:hr]
      ;; Custom toteutus - Tallennusnapit on taulukon yläpuolella
      [tallennus-painikkeet e! app]
 
      ;;Hankinnat
-     [grid/grid
-      {:otsikko ""
-       :muokkaa-aina true
-       :voi-muokata? true
-       :muokattava? (constantly true)
-       :voi-poistaa? (constantly false)
-       :voi-lisata? false
-       :voi-kumota? false
-       :piilota-toiminnot? false
-       :tunniste :nimi
-       :muutos #(do
-                  (reset! tallenna-painettu false)
-                  (reset! tarjous-tiedot/grid-tiedot-atom (vals (grid/hae-muokkaustila %)))
-                  (reset! virheet-atom (grid/hae-virheet %)))
-       :rivi-jalkeen-fn (fn [rivit]
-                          (let [vuosi-arvot (map :nimi vuositaulukon-otsikot)
-                                summat (laske-vuosisummat rivit vuosi-arvot)]
-                            (into
-                              [{:teksti "Kaikki hankinnat yhteensä", :luokka "yhteensa lihavoitu" :yhteenveto-vayla true :tyyppi :euro}
-                               {:teksti "" :luokka "yhteensa lihavoitu"}]
-                              summat)))}
+     [hankinnat-grid e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys app]
 
-      (concat [{:otsikko "Hankinnat" :nimi :nimi :tyyppi :string :luokka "yhteensa" :leveys (str nimi-leveys "%") :muokattava? (constantly false)}]
-        [{:otsikko "€ / hoitovuosi" :nimi :eperhoitovuosi :tyyppi :euro :leveys (str vuosi-leveys "%")
-          :muokattava? (fn [rivi] (if (or (= "Äkilliset hoitotyöt" (:nimi rivi)) (= "Vahinkojen korjaukset" (:nimi rivi))) true false))}]
-        vuositaulukon-otsikot
-        [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
-          :fmt (fn [arvo]
-                 (if arvo (fmt/euro false arvo) 0.00))
-          :leveys (str yhteensa-leveys "%")
-          :hae (fn [rivi] (laske-rivit-yhteen rivi))
-          :tasaa :oikea
-          :muokattava? (fn [rivi] (if (:yhteensa rivi) false true))}])
-      hankinnat-tiedot]
+     ;;Erillishankinnat
+     [erillishankinnat-grid e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys app]
 
-     ;;Erillisihankinnat
-     [grid/grid
-      {:otsikko ""
-       :muokkaa-aina true
-       :voi-muokata? true
-       :muokattava? (constantly false)
-       :voi-poistaa? (constantly false)
-       :voi-lisata? false
-       :voi-kumota? false
-       :piilota-toiminnot? false
-       :tunniste :nimi
-       :muutos #(do
-                  (reset! tallenna-painettu false)
-                  (reset! tarjous-tiedot/grid-tiedot-atom (vals (grid/hae-muokkaustila %)))
-                  (reset! virheet-atom (grid/hae-virheet %)))}
-      (concat [{:otsikko "Erillishankinnat" :nimi :nimi :tyyppi :string :luokka "yhteensa" :leveys (str nimi-leveys "%") :muokattava? (constantly false)}]
-        [{:otsikko "€ / hoitovuosi" :nimi :eperhoitovuosi :tyyppi :euro :leveys (str vuosi-leveys "%") :muokattava? (constantly true)}]
-        (map #(assoc % :hae (fn [rivi] (:eperhoitovuosi rivi))) vuositaulukon-otsikot)
-        [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
-          :fmt (fn [arvo]
-                 (if arvo (fmt/euro false arvo) 0.00))
-          :leveys (str yhteensa-leveys "%")
-          :hae (fn [rivi] (laske-rivit-yhteen rivi))
-          :tasaa :oikea
-          :muokattava? (constantly false)}])
-      [{:nimi "Erillishankinnat" :yhteensa 0 :vuosi-2021 0 :vuosi-2022 0 :vuosi-2023 0 :vuosi-2024 0 :vuosi-2025 0 :eperhoitovuosi 0}]]
-
-     ;;Johto- ja hallintokorvaus
-     (johto-ja-hallintokorvaukset e! joha-tiedot (:kaikki-toimenkuvat app) vuositaulukon-otsikot vuosi-leveys)
+     ;;Johto-ja-hallintokorvaus
+     [johto-ja-hallintokorvaukset e! (:kaikki-toimenkuvat app) vuositaulukon-otsikot vuosi-leveys app]
 
      ;;Hoidonjohtopalkkio
-     [grid/grid
-      {:otsikko ""
-       :muokkaa-aina true
-       :voi-muokata? true
-       :muokattava? (constantly true)
-       :voi-poistaa? (constantly false)
-       :voi-lisata? true
-       :voi-kumota? false
-       :piilota-toiminnot? false
-       :tunniste :nimi
-       :muutos #(do
-                  (reset! tallenna-painettu false)
-                  (reset! tarjous-tiedot/grid-tiedot-atom (vals (grid/hae-muokkaustila %)))
-                  (reset! virheet-atom (grid/hae-virheet %)))
-       :rivi-jalkeen-fn nil}
+     [hoidonjohtopalkkio-grid e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys app]
 
-      (concat [{:otsikko "Hoidonjohtopalkkio"
-                :nimi :nimi
-                :tyyppi :string
-                :leveys (str nimi-leveys "%")
-                :muokattava? (constantly false)}]
-        [{:otsikko "€ / hoitovuosi" :nimi :eperhoitovuosi :tyyppi :euro :leveys (str vuosi-leveys "%") :muokattava? (constantly true)}]
-        (map #(assoc % :hae (fn [rivi] (:eperhoitovuosi rivi))) vuositaulukon-otsikot)
+     ;;Tavoite-ja-kattohinta
+     [tavoite-ja-kattohinta-grid e! vuositaulukon-otsikot nimi-leveys yhteensa-leveys app]
 
-        [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro :tasaa :oikea
-          :muokattava? (constantly false) :luokka "yhteensa"
-          :hae (fn [rivi] (laske-rivit-yhteen rivi))
-          :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%")}])
-
-      [{:nimi "Hoidonjohtopalkkio" :yhteensa 0 :vuosi-2021 0 :vuosi-2022 0 :vuosi-2023 0 :vuosi-2024 0 :vuosi-2025 0 :eperhoitovuosi 0}]]
-
-     ;;Tavoite- ja kattohinta
-     [grid/grid
-      {:otsikko ""
-       :muokkaa-aina true
-       :voi-muokata? true
-       :muokattava? (constantly true)
-       :voi-poistaa? (constantly false)
-       :voi-lisata? true
-       :voi-kumota? false
-       :piilota-toiminnot? false
-       :tunniste :nimi
-       :muutos #(do
-                  (reset! tallenna-painettu false)
-                  (reset! tarjous-tiedot/grid-tiedot-atom (vals (grid/hae-muokkaustila %)))
-                  (reset! virheet-atom (grid/hae-virheet %)))
-       :rivi-jalkeen-fn nil}
-
-      (concat [{:otsikko "Tavoite- ja kattohinta"
-                :nimi :nimi
-                :tyyppi :string
-                :leveys (str nimi-leveys "%")
-                :muokattava? (constantly false)}]
-        vuositaulukon-otsikot
-        [{:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :euro
-          :muokattava? (constantly false) :luokka "yhteensa" :tasaa :oikea
-          :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%")}])
-      [{:nimi "Tarjouksen tavoitehinta" :yhteensa 0 :vuosi-2021 0 :vuosi-2022 0 :vuosi-2023 0 :vuosi-2024 0 :vuosi-2025 0 :eperhoitovuosi 0}
-       {:nimi "Tarjouksen kattohinta (1,1 x tarjouksen tavoitehinta)" :yhteensa 0 :vuosi-2021 0 :vuosi-2022 0 :vuosi-2023 0 :vuosi-2024 0 :vuosi-2025 0 :eperhoitovuosi 0}]]
      ;; Custom-toteutus. Tallennusnapit on taulukon jälkeen
      [tallennus-painikkeet e! app]]))
 
@@ -334,7 +392,10 @@
     (komp/sisaan #(e! (tarjous-tiedot/->HaeTarjouksenTiedot)))
     (fn [e! app]
       [:div
-       (when (:tarjous app)
+       (when (or (:tarjous app) (seq (concat (:hankinnat app)
+                                       (:erillishankinnat app)
+                                       (:hoidonjohtopalkkiot app)
+                                       (:toimenkuvat app))))
          [:div
           [:div.row
            [:div.col-xs-12.col-md-6

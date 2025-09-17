@@ -66,7 +66,7 @@ SELECT t.id, t.toimenkuva, COALESCE(t.urakkakohtainen_nimi, '') AS urakkakohtain
 -- Haetaan yksittäinen toimenkuva.
 SELECT t.id, t.toimenkuva, COALESCE(t.urakkakohtainen_nimi, '') AS urakkakohtainen_nimi
 FROM johto_ja_hallintokorvaus_toimenkuva t
-WHERE t.toimenkuva = :nimi
+WHERE t.toimenkuva = :toimenkuva
   AND t."urakka-id" = :urakkaid;
 
 -- name: hae-toimenkuva
@@ -88,7 +88,7 @@ SELECT exists(SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE id = :toi
 
 -- name: hae-urakan-toimenkuvat-alkuvuoden-perusteella
 -- Hae urakkakohtaiset toimenkuvat
-WITH urakka_toimenkuvat AS (SELECT nimike
+WITH urakka_toimenkuvat AS (SELECT toimenkuva
                             FROM unnest(
                                      CASE
                                          WHEN (:urakan-alkuvuosi >= 2019 AND :urakan-alkuvuosi <= 2021)
@@ -98,14 +98,13 @@ WITH urakka_toimenkuvat AS (SELECT nimike
                                          WHEN (:urakan-alkuvuosi = 2024)
                                              THEN ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja','2. työnjohtaja', '3. työnjohtaja', 'viherhoidosta vastaava henkilö', 'harjoittelija']
                                          END
-                                 ) AS nimike)
-SELECT id, toimenkuva, toimenkuva as nimike
+                                 ) AS toimenkuva)
+SELECT id, toimenkuva
 FROM johto_ja_hallintokorvaus_toimenkuva jht
 WHERE jht."urakka-id" = :urakka-id
   AND jht.toimenkuva is not null
 UNION
-SELECT (select MIN(id) from johto_ja_hallintokorvaus_toimenkuva where toimenkuva = ut.nimike) AS id,
-       nimike                                                                                 AS toimenkuva,
-       nimike
+SELECT (select MIN(id) from johto_ja_hallintokorvaus_toimenkuva where toimenkuva = ut.toimenkuva) AS id,
+       toimenkuva
 from urakka_toimenkuvat ut
 ORDER BY ID;

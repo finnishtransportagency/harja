@@ -22,7 +22,7 @@
         rahavaraus-rivit (reduce (fn [lopulliset suunniteltu-rahavaraus]
                                    (let [tarjous-rahavaraus (first (filter #(= (:rahavaraus_id suunniteltu-rahavaraus) (:rahavaraus-id %)) tarjous-rahavaraukset))
                                          tarjous-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot tarjous-rahavaraus))))]
-                                     (vec (concat lopulliset [{:nimi (:nimi tarjous-rahavaraus)
+                                     (vec (concat lopulliset [{:nimi (:nimi suunniteltu-rahavaraus)
                                                                :tarjous-summa tarjous-summa
                                                                :suunniteltu-summa (:suunniteltu-summa suunniteltu-rahavaraus)
                                                                :suunniteltu-summa-indeksikorjattu (:suunniteltu-summa-indeksikorjattu suunniteltu-rahavaraus)}]))))
