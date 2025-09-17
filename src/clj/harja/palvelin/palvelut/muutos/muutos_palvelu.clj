@@ -53,6 +53,31 @@
      :toteumat toteumat
      :tavoitehinnan-muutos (- toteumat summa-indeksikorjattu)}))
 
+(defn luo-tai-paivita-muutostyo-kulu-linktys
+  "Kululomake kutsuu, ei liity automaattisiin kuluihin"
+  [db muutostyo kuludb]
+  ;; muutostyo tässä on == hae-urakan-muutostyot
+  (cond
+    ;; Vanhaa kulua muokataan, mahdollista muutos id:n vaihto 
+    (and
+      (:id muutostyo)
+      (:vanha_versio muutostyo))
+    (do
+      (log/debug "Päivitetään muutostyö kulu linkitys:: " muutostyo)
+      (muutos-kyselyt/paivita-muutostyo-kulu! db {:uusi-kulu (:id kuludb)
+                                                  :muutos (:id muutostyo)
+                                                  :vanha-muutos (:vanha_muutos muutostyo)
+                                                  :vanha-kulu (:vanha_kulu muutostyo)
+                                                  :versio (inc (:vanha_versio muutostyo))}))
+    ;; Uusi kulu tehtiin
+    (and
+      (:id muutostyo)
+      (nil? (:vanha_versio muutostyo)))
+    (do
+      (log/debug "Luodaan muutostyö kulu linkitys:: " muutostyo)
+      (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio 1
+                                                     :kulu (:id kuludb)
+                                                     :muutos (:id muutostyo)}))))
 
 (defn hae-hoitovuosien-yksikkohinnat
   [db _kayttaja {:keys [urakka-id hoitokaudet tehtava_id] :as _tiedot}]

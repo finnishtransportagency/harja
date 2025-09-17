@@ -147,7 +147,7 @@ WHERE k.urakka = :urakka
 -- name: hae-urakan-kulut-kohdistuksineen
 -- Hakee urakan kulut ja niihin liittyvät kohdistukset annetulta aikaväliltä
 SELECT m.numero                AS "maksuera-numero",
- 	   k.id                    AS "id",
+ 	     k.id                    AS "id",
        k.kokonaissumma         AS "kokonaissumma",
        k.erapaiva              AS "erapaiva",
        k.laskun_numero         AS "laskun-numero",
@@ -163,12 +163,15 @@ SELECT m.numero                AS "maksuera-numero",
        kk.rahavaraus_id        AS rahavaraus,
        kk.tyyppi               AS tyyppi,
        kk.tehtava              AS "tehtava_id",
-       t.nimi                  AS "tehtava_nimi"
+       t.nimi                  AS "tehtava_nimi",
+       mmk.*
 FROM   kulu k
        JOIN kulu_kohdistus kk ON k.id = kk.kulu 
        AND kk.poistettu IS NOT TRUE
        LEFT JOIN maksuera m ON kk.toimenpideinstanssi = m.toimenpideinstanssi
        LEFT JOIN tehtava t ON kk.tehtava = t.id
+       LEFT JOIN mhu_muutos_kulu mmk ON mmk.kulu = k.id 
+       LEFT JOIN mhu_muutos muutos ON muutos.id = mmk.muutos 
 WHERE  k.urakka = :urakka
 AND    (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= k.erapaiva)
 AND    (:loppupvm::DATE IS NULL OR k.erapaiva <= :loppupvm::DATE)
@@ -223,11 +226,14 @@ SELECT kk.id                                      AS "kohdistus-id",
            'maaramitattava?', t."maaramitattava?",
            'toimenpideinstanssi', kk.toimenpideinstanssi
          )
-       ELSE NULL END                              AS "tehtava"
+       ELSE NULL END                              AS "tehtava",
+       mmk.*
   FROM kulu_kohdistus kk
            LEFT JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
            LEFT JOIN rahavaraus_urakka ru ON rv.id = ru.rahavaraus_id AND ru.urakka_id = :urakka_id
            LEFT JOIN tehtava t ON kk.tehtava = t.id
+           LEFT JOIN mhu_muutos_kulu mmk ON mmk.kulu = kk.kulu 
+           LEFT JOIN mhu_muutos muutos ON muutos.id = mmk.muutos 
  WHERE kk.kulu = :kulu
    AND kk.poistettu IS NOT TRUE
  ORDER BY kk.id;

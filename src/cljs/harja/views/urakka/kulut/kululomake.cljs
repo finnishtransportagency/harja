@@ -353,13 +353,12 @@
      [:div.row
       [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
        [:div.label-ja-alasveto {:style {:width "320px"}}
-
         [:span.alasvedon-otsikko "Muutostyö*"]
-        [yleiset/livi-pudotusvalikko {:valinta (:muutostyo kohdistus)
-                                      :vayla-tyyli? true
+        [yleiset/livi-pudotusvalikko {:valinta (:valittu-muutostyo kohdistus)
                                       :format-fn :nimi
+                                      :vayla-tyyli? true
                                       :muokattu? true
-                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :muutostyo)
+                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :valittu-muutostyo)
                                       :valitse-fn #(e! (tiedot/->ValitseMuutostyoKohdistukselle % nro))}
          (vec urakan-muutostyot)]]
 
@@ -372,8 +371,7 @@
                                       :virhe? (nayta-kohdistuksen-virhe? lomake nro :toimenpide)
                                       :valitse-fn #(e! (tiedot/->ValitseToimenpideKohdistukselle % nro))}
          toimenpiteet]]]]
-
-     ;; TODO .. 
+     
      [:div.row
       [:div.col-xs-12.lomakeryhman-rivi-tausta {:style {:width "350px"}}
        [kentat/tee-otsikollinen-kentta

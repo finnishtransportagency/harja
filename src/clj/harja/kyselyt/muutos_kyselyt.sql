@@ -173,6 +173,14 @@ UPDATE mhu_muutos_kulu
  WHERE muutos = :muutos
    AND kulu = :vanha-kulu;
 
+-- name: paivita-muutostyo-kulu!
+UPDATE mhu_muutos_kulu
+   SET kulu = :uusi-kulu,
+       versio = :versio,
+       muutos = :muutos 
+ WHERE muutos = :vanha-muutos
+   AND kulu = :vanha-kulu;
+
 -- name: luo-jjh-kulun-kohdistus<!
 INSERT INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
                             tavoitehintainen)
@@ -568,12 +576,16 @@ DO UPDATE SET
 
 
 -- name: hae-urakan-muutostyot
-SELECT  id, 
-        tyyppi, 
-        nimi, 
-        voimassa_alkaen  
- FROM mhu_muutos 
-WHERE tyyppi =  'muutostyo'::MHU_MUUTOSTYYPPI
-  AND urakka = :urakka
-  AND (voimassa_alkaen BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-  AND poistettu IS FALSE;
+SELECT  m.id, 
+        m.tyyppi, 
+        m.nimi, 
+        m.voimassa_alkaen,
+        k.kulu AS vanha_kulu,
+        k.muutos AS vanha_muutos,
+        k.versio AS vanha_versio
+ FROM mhu_muutos m
+         LEFT JOIN mhu_muutos_kulu k ON k.muutos = m.id
+WHERE m.tyyppi =  'muutostyo'::MHU_MUUTOSTYYPPI
+  AND m.urakka =  :urakka
+  AND (m.voimassa_alkaen BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND m.poistettu IS FALSE;

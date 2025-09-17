@@ -22,6 +22,7 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.raportointi.excel :as excel]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -334,7 +335,7 @@
   Päivittää kulun tai kohdistuksen tiedot, jos rivi on jo kannassa.
   Palauttaa tallennetut tiedot."
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
-                             lisatieto koontilaskun-kuukausi id kohdistukset liitteet muutostyo] :as tiedot}]
+                             lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (log/debug "luo-tai-paivita-kulukohdistukset :: tiedot:" (pr-str tiedot))
   (validoi-kulu db tiedot urakka-id)
@@ -347,16 +348,19 @@
                 :lisatieto lisatieto
                 :kayttaja (:id user)
                 :koontilaskun-kuukausi koontilaskun-kuukausi}
+
           kuludb (if (nil? id)
                    (q/luo-kulu<! db kulu)
                    (q/paivita-kulu<! db (assoc kulu :id id)))
-
+          
           vanhat-kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kuludb) :urakka_id urakka-id})
           sisaan-tulevat-kohdistus-idt (into #{} (map :kohdistus-id kohdistukset))
           puuttuvat-kohdistukset (remove
                                    #(sisaan-tulevat-kohdistus-idt (:kohdistus-id %))
                                    vanhat-kohdistukset)
           liitteet-tyhjia? (or (nil? liitteet) (empty? liitteet))]
+
+      ;; Liitteet 
       (when-not liitteet-tyhjia?
         (doseq [liite liitteet]
           (q/linkita-kulu-ja-liite<! db {:kulu-id (:id kuludb)
@@ -372,22 +376,32 @@
            :kohdistus puuttuva-kohdistus}))
 
       (doseq [kohdistusrivi kohdistukset]
-        (let [;; Tarkistetaan kohdistusrivi
+        (let [muutostyo (:valittu-muutostyo kohdistusrivi)
+              vanha-muutos (:muutos kohdistusrivi)
+              vanha-versio (:versio kohdistusrivi)
+              muutostyo (assoc muutostyo
+                          :vanha_kulu (:id kuludb)
+                          :vanha_muutos (or (:vanha_muutos muutostyo) vanha-muutos)
+                          :vanha_versio (or (:vanha_versio muutostyo) vanha-versio))
               yhteensopiva? (:tarkista_t_tr_ti_yhteensopivuus
                              (first (q/tarkista-kohdistuksen-yhteensopivuus db
                                       {:tehtava-id nil
                                        :tehtavaryhma-id (:tehtavaryhma kohdistusrivi)
                                        :toimenpideinstanssi-id (:toimenpideinstanssi kohdistusrivi)})))]
           (if yhteensopiva?
-            (as-> kohdistusrivi r
-              (update r :summa big/unwrap)
-              (assoc r :kulu (:id kuludb))
-              (if (true? (:poistettu r))
-                (poista-kulun-kohdistus db user {:id id
-                                                 :urakka-id urakka-id
-                                                 :kohdistuksen-id (:kohdistus-id r)
-                                                 :kohdistus r})
-                (luo-tai-paivita-kulun-kohdistus db user urakka (:id kuludb) r)))
+            (do
+              ;; Tee muutoslinkitys, jos tämä on muutostyölle kirjattu kulu 
+              (muutos-palvelu/luo-tai-paivita-muutostyo-kulu-linktys db muutostyo kuludb)
+              (as-> kohdistusrivi r
+                (update r :summa big/unwrap)
+                (assoc r :kulu (:id kuludb))
+                (if (true? (:poistettu r))
+                  (poista-kulun-kohdistus db user {:id id
+                                                   :urakka-id urakka-id
+                                                   :kohdistuksen-id (:kohdistus-id r)
+                                                   :kohdistus r})
+                  (luo-tai-paivita-kulun-kohdistus db user urakka (:id kuludb) r))))
+
             (throw+ {:type virheet/+viallinen-kutsu+
                      :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
                                 :viesti (str "Tehtäväryhmä ja toimenpideinstanssi ristiriidassa! ")}]}))))

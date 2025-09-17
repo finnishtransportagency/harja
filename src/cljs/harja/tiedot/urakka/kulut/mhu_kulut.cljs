@@ -148,7 +148,11 @@
           (assoc :vuoden-paatos-valittu? (vuoden-paatoksen-kulu? app kulu))
           (update :kohdistukset (fn [kohdistukset]
                                   (mapv (fn [kohdistus]
-                                          (let [toimenpide (some #(when (= (:toimenpideinstanssi kohdistus) (:toimenpideinstanssi %))
+                                          (let [kohdistus-muutostyo-id (:muutos kohdistus)
+                                                muutostyot (:urakan-muutostyot app)
+                                                valittu-muutostyo (filter #(= (:id %) kohdistus-muutostyo-id) muutostyot)
+                                                valittu-muutostyo (first valittu-muutostyo)
+                                                toimenpide (some #(when (= (:toimenpideinstanssi kohdistus) (:toimenpideinstanssi %))
                                                                     %) (:toimenpiteet app))
                                                 tehtavaryhma (some #(when (= (:tehtavaryhma kohdistus) (:id %))
                                                                       %) (:tehtavaryhmat app))
@@ -166,6 +170,7 @@
                                               (assoc :tyyppi kohdistustyyppi)
                                               (assoc :toimenpide toimenpide)
                                               (assoc :tehtavaryhma tehtavaryhma)
+                                              (assoc :valittu-muutostyo valittu-muutostyo)
                                               (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi))))
                                     kohdistukset))))
         kl (with-meta kl (tila/kulun-validointi-meta kl))]
@@ -396,7 +401,7 @@
   
   ValitseMuutostyoKohdistukselle
   (process-event [{:keys [muutostyo nro]} app]
-    (assoc-in app [:lomake :kohdistukset nro :muutostyo] muutostyo))
+    (assoc-in app [:lomake :kohdistukset nro :valittu-muutostyo] muutostyo))
 
   ValitseTehtavaKohdistukselle
   (process-event [{tehtava :tehtava nro :nro} app]
