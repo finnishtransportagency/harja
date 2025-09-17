@@ -57,25 +57,21 @@
 (defn poista-tallentamattomia-muutoksia-atomi!
   "Poista atomi rekisteristä ja puhdista beforeunload-kuuntelija"
   [atomi-avain]
-  (when-let [entry (get @tallentamattomia-muutoksia-atomit atomi-avain)]
-    (when-let [handler (:beforeunload-handler entry)]
-      ;; Poista beforeunload-kuuntelija
-      (.removeEventListener js/window "beforeunload" handler))
+  (let [{:keys [beforeunload-handler]} (get @tallentamattomia-muutoksia-atomit atomi-avain)]
+    (when beforeunload-handler
+      (.removeEventListener js/window "beforeunload" beforeunload-handler))
     (swap! tallentamattomia-muutoksia-atomit dissoc atomi-avain)))
 
-;; Sisäinen funktio beforeunload-käsittelijälle
 (defn- luo-beforeunload-handler [atomi viesti]
   (fn [event]
     (when @atomi
       (set! (.-returnValue event) viesti)
       viesti)))
 
-;; Päivitetty rekisteröintifunktio joka luo myös beforeunload-käsittelijän
 (defn- paivita-beforeunload-kuuntelijat! []
   (doseq [[atomi-avain entry] @tallentamattomia-muutoksia-atomit]
     (let [{:keys [atomi beforeunload-viesti beforeunload-handler]} entry]
       (when-not beforeunload-handler
-        ;; Luo uusi beforeunload-käsittelijä
         (let [handler (luo-beforeunload-handler atomi beforeunload-viesti)]
           (.addEventListener js/window "beforeunload" handler)
           (swap! tallentamattomia-muutoksia-atomit
