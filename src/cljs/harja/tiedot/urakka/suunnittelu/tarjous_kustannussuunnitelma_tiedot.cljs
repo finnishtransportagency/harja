@@ -10,7 +10,6 @@
             [harja.tiedot.urakka.urakka :as tila]))
 
 (defonce nakymassa? (atom false))
-(defonce grid-tiedot-atom (atom [{}]))
 (defonce grid-toimenkuvat-atom (atom [{}]))
 
 (defn laske-rivit-yhteen [rivi]
@@ -129,11 +128,6 @@
                       vuosi-avaimet)
         muut-avaimet (apply dissoc m vuosi-avaimet)]
     (assoc muut-avaimet :hoitovuosittaiset-arvot (vec (flatten vuosisummat)))))
-
-;;Haetaan katto ja tavoitehinta
-(defrecord HaeTavoiteJaKattohinta [])
-(defrecord HaeKattoJaTavoitehintaOnnistui [vastaus])
-(defrecord HaeKattoJaTavoitehintaEpaonnistui [vastaus])
 
 ;; Haetaan tarjouksen data
 (defrecord HaeTarjouksenTiedot [])
